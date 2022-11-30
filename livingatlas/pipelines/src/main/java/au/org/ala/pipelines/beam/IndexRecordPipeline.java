@@ -185,7 +185,7 @@ public class IndexRecordPipeline {
     }
 
     PCollection<KV<String, ALASensitivityRecord>> alaSensitiveDataCollection = null;
-    if (options.getIncludeSensitiveData()) {
+    if (options.getIncludeSensitiveDataChecks()) {
       alaSensitiveDataCollection =
           p.apply("Read sensitive data", alaSensitiveDataRecordTransform.read(pathFn))
               .apply("Map sensitive data to KV", alaSensitiveDataRecordTransform.toKv());
@@ -207,7 +207,7 @@ public class IndexRecordPipeline {
             alaUuidTransform.getTag(),
             options.getIncludeImages() ? imageRecordTupleTag : null,
             options.getIncludeSpeciesLists() ? speciesListsRecordTupleTag : null,
-            options.getIncludeSensitiveData() ? alaSensitiveDataRecordTransform.getTag() : null,
+            options.getIncludeSensitiveDataChecks() ? alaSensitiveDataRecordTransform.getTag() : null,
             options.getDatasetId(),
             lastLoadedDate,
             lastProcessedDate);
@@ -243,7 +243,7 @@ public class IndexRecordPipeline {
       kpct = kpct.and(taxonomyTransform.getTag(), taxonCollection);
     }
 
-    if (options.getIncludeSensitiveData()) {
+    if (options.getIncludeSensitiveDataChecks()) {
       kpct = kpct.and(alaSensitiveDataRecordTransform.getTag(), alaSensitiveDataCollection);
     }
 

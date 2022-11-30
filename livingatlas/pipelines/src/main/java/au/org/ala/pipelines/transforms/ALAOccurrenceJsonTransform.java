@@ -95,6 +95,7 @@ public class ALAOccurrenceJsonTransform implements Serializable {
   @NonNull private final TupleTag<LocationInheritedRecord> locationInheritedRecordTag;
   @NonNull private final TupleTag<TemporalInheritedRecord> temporalInheritedRecordTag;
   @NonNull private final TupleTag<EventInheritedRecord> eventInheritedRecordTag;
+  @NonNull private final TupleTag<ALASensitivityRecord> sensitivityRecordTag;
 
   // Determines if the output record is a parent-child record
   @Builder.Default private final boolean asParentChildRecord = false;
@@ -146,6 +147,13 @@ public class ALAOccurrenceJsonTransform implements Serializable {
                     temporalInheritedRecordTag,
                     TemporalInheritedRecord.newBuilder().setId(k).build());
 
+            ALASensitivityRecord sr =
+                    v.getOnly(
+                            sensitivityRecordTag,
+                            ALASensitivityRecord.newBuilder().setId(k).build());
+
+            String json = null;
+
             ALAOccurrenceJsonConverter occurrenceJsonConverter =
                 ALAOccurrenceJsonConverter.builder()
                     .uuid(uuidr)
@@ -160,20 +168,23 @@ public class ALAOccurrenceJsonTransform implements Serializable {
                     .eventInheritedRecord(eir)
                     .locationInheritedRecord(lir)
                     .temporalInheritedRecord(tir)
+                    .sensitivityRecord(sr)
                     .build();
             if (asParentChildRecord) {
-              c.output(
-                  ALAParentJsonConverter.builder()
+              json = ALAParentJsonConverter.builder()
                       .occurrenceJsonRecord(occurrenceJsonConverter.convert())
                       .metadata(mdr)
                       .verbatim(er)
                       .build()
-                      .toJson());
+                      .toJson();
             } else {
-              c.output(occurrenceJsonConverter.toJson());
+              json = occurrenceJsonConverter.toJson();
             }
 
-            counter.inc();
+            if (json != null){
+              c.output(json);
+              counter.inc();
+            }
           }
         };
 

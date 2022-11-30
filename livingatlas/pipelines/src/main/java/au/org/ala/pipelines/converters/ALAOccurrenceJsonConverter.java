@@ -36,7 +36,17 @@ public class ALAOccurrenceJsonConverter {
 
   private final MeasurementOrFactRecord measurementOrFact;
 
+  private final ALASensitivityRecord sensitivityRecord;
+
   public OccurrenceJsonRecord convert() {
+
+    // if a record is deemed sensitive and is associated with an event
+    // block indexing
+    if (sensitivityRecord != null &&
+            (sensitivityRecord.getIsSensitive() !=null &&  sensitivityRecord.getIsSensitive()
+                    && eventCore.getId() != null)){
+      return null;
+    }
 
     OccurrenceJsonRecord.Builder builder = OccurrenceJsonRecord.newBuilder();
     builder.setId(uuid.getUuid());

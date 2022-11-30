@@ -10,6 +10,7 @@ import au.org.ala.kvs.client.SDSConservationServiceFactory;
 import au.org.ala.pipelines.transforms.ALASensitiveDataRecordTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.util.VersionInfo;
+import au.org.ala.utils.ArchiveUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.IOException;
@@ -33,6 +34,11 @@ import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
+import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
+import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
+import org.gbif.pipelines.transforms.core.EventCoreTransform;
+import org.gbif.pipelines.transforms.core.InheritedFieldsTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -79,6 +85,11 @@ public class ALAInterpretedToSensitivePipeline {
     UnaryOperator<String> inputPathFn =
         t ->
             PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Occurrence, t, ALL_AVRO);
+
+    UnaryOperator<String> eventPathFn =
+            t ->
+                    PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Event, t, ALL_AVRO);
+
     UnaryOperator<String> outputPathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Occurrence, t, id);
 
@@ -89,6 +100,7 @@ public class ALAInterpretedToSensitivePipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
+    EventCoreTransform eventCoreTransform= EventCoreTransform.builder().create();
 
     // ALA specific
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
@@ -122,6 +134,36 @@ public class ALAInterpretedToSensitivePipeline {
     PCollection<KV<String, ALATaxonRecord>> inputAlaTaxonCollection =
         p.apply("Read Taxon", alaTaxonomyTransform.read(inputPathFn))
             .apply("Map Taxon to KV", alaTaxonomyTransform.toCoreIdKv());
+
+    if (ArchiveUtils.isEventCore(options)) {
+
+      PCollection<KV<String, EventCoreRecord>> eventCoreCollection =
+              p.apply("Read Events", eventCoreTransform.read(eventPathFn))
+                      .apply("Map Taxon to KV", eventCoreTransform.toKv());
+
+      InheritedFields inheritedFields =
+              InheritedFields.builder()
+                      .inheritedFieldsTransform(InheritedFieldsTransform.builder().build())
+                      .locationCollection(inputLocationCollection)
+                      .locationTransform(locationTransform)
+                      .temporalCollection(inputTemporalCollection)
+                      .temporalTransform(temporalTransform)
+                      .eventCoreCollection(eventCoreCollection)
+                      .eventCoreTransform(eventCoreTransform)
+                      .build();
+
+
+      // key-ed on eventID
+      PCollection<KV<String, LocationInheritedRecord>> locationInheritedRecords =
+              inheritedFields.inheritLocationFields();
+
+      PCollection<KV<String, TemporalInheritedRecord>> temporalInheritedRecords =
+              inheritedFields.inheritTemporalFields();
+
+      PCollection<KV<String, EventInheritedRecord>> eventInheritedRecords =
+              inheritedFields.inheritEventFields();
+    }
+
 
     KeyedPCollectionTuple<String> inputTuples =
         KeyedPCollectionTuple

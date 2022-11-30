@@ -4,6 +4,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 import au.org.ala.pipelines.transforms.ALAMetadataTransform;
 import au.org.ala.pipelines.transforms.ALAOccurrenceJsonTransform;
+import au.org.ala.pipelines.transforms.ALASensitiveDataRecordTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.ALAUUIDTransform;
 import au.org.ala.utils.ALAFsUtils;
@@ -18,6 +19,7 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.extensions.joinlibrary.Join;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.Filter;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
@@ -195,6 +197,8 @@ public class ALAOccurrenceToEsIndexPipeline {
 
     private final boolean asParentChildRecord;
 
+    private final boolean sensitiveDataCheck;
+
     // Init transforms
     private final EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
     private final ALAUUIDTransform uuidTransform = ALAUUIDTransform.create();
@@ -205,6 +209,10 @@ public class ALAOccurrenceToEsIndexPipeline {
     private final ALATaxonomyTransform taxonomyTransform = ALATaxonomyTransform.builder().create();
     private final LocationTransform locationTransform = LocationTransform.builder().create();
     private final MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
+
+    private final ALASensitiveDataRecordTransform sensitiveDataRecordTransform =
+            ALASensitiveDataRecordTransform.builder().create();
+
     private final MeasurementOrFactTransform measurementOrFactTransform =
         MeasurementOrFactTransform.builder().create();
 
@@ -273,6 +281,16 @@ public class ALAOccurrenceToEsIndexPipeline {
               .apply("Read occurrence Location", locationTransform.read(eventsPathFn))
               .apply("Map occurrence Location to KV", locationTransform.toKv());
 
+      PCollection<KV<String, ALASensitivityRecord>> alaSensitiveDataCollection = null;
+      if (sensitiveDataCheck){
+          alaSensitiveDataCollection =
+                  pipeline.apply("Read sensitive data", sensitiveDataRecordTransform.read(occurrencePathFn))
+                          .apply("Map sensitive data to KV", sensitiveDataRecordTransform.toKv());
+      } else {
+        alaSensitiveDataCollection = pipeline.apply(
+                Create.empty(new TypeDescriptor<KV<String, ALASensitivityRecord>>() {}));
+      }
+
       InheritedFields inheritedFields =
           InheritedFields.builder()
               .inheritedFieldsTransform(InheritedFieldsTransform.builder().build())
@@ -299,6 +317,7 @@ public class ALAOccurrenceToEsIndexPipeline {
               .temporalInheritedRecordTag(InheritedFieldsTransform.TIR_TAG)
               .eventInheritedRecordTag(InheritedFieldsTransform.EIR_TAG)
               .eventCoreRecordTag(eventCoreTransform.getTag())
+              .sensitivityRecordTag(sensitiveDataRecordTransform.getTag())
               .metadataView(metadataView)
               .asParentChildRecord(asParentChildRecord)
               .build()
@@ -331,7 +350,8 @@ public class ALAOccurrenceToEsIndexPipeline {
           .and(verbatimTransform.getTag(), verbatimCollection)
           .and(measurementOrFactTransform.getTag(), measurementOrFactCollection)
           .and(eventCoreTransform.getTag(), eventCoreRecords)
-          //          // Inherited
+          .and(sensitiveDataRecordTransform.getTag(), alaSensitiveDataCollection)
+          // Inherited
           .and(InheritedFieldsTransform.LIR_TAG, locationInheritedRecords)
           .and(InheritedFieldsTransform.TIR_TAG, temporalInheritedRecords)
           .and(InheritedFieldsTransform.EIR_TAG, eventInheritedRecords)

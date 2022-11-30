@@ -33,7 +33,9 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs
 import org.slf4j.LoggerFactory
 
 import java.nio.channels.Channels
+import java.nio.file.Files
 import java.util
+import scala.collection.mutable.ArrayBuffer
 import scala.xml.{Elem, Node, PrettyPrinter}
 
 @Parameters(separators = "=")
@@ -667,11 +669,7 @@ object PredicateExportDwCAPipeline {
       if (!file.getName.endsWith(datasetId + ".zip")) {
         log.info("Zipping " + file.getName)
         zip.putNextEntry(new ZipEntry(file.getName))
-        val in = new BufferedInputStream(new FileInputStream(file))
-        Stream.continually(in.read()).takeWhile(_ > -1).foreach { b =>
-          zip.write(b)
-        }
-        in.close()
+        Files.copy(file.toPath, zip)
         zip.flush()
         zip.closeEntry()
       }

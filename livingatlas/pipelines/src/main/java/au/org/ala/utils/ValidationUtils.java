@@ -81,7 +81,7 @@ public class ValidationUtils {
         options.getInputPath(),
         options.getDatasetId(),
         options.getAttempt(),
-        options.getIncludeSensitiveData());
+        options.getIncludeSensitiveDataChecks());
   }
 
   /** Checks a dataset can be indexed. */

@@ -290,7 +290,7 @@ public class IndexRecordPipeline {
     Map<String, ALATaxonRecord> alaTaxonMap = alaTaxonMapFeature.get();
     Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
     Map<String, ALASensitivityRecord> alaSensitivityMap =
-        options.getIncludeSensitiveData() ? alaSensitiveMapFeature.get() : Collections.emptyMap();
+        options.getIncludeSensitiveDataChecks() ? alaSensitiveMapFeature.get() : Collections.emptyMap();
     Map<String, ImageRecord> imageServiceMap =
         options.getIncludeImages() ? imageServiceMapFeature.get() : Collections.emptyMap();
 
