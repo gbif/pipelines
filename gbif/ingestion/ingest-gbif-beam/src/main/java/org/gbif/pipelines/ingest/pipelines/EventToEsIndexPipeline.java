@@ -264,7 +264,6 @@ public class EventToEsIndexPipeline {
             .eventCoreRecordTag(eventCoreTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
-            .taxonRecordTag(taxonomyTransform.getTag())
             .multimediaRecordTag(multimediaTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
@@ -283,7 +282,6 @@ public class EventToEsIndexPipeline {
             .of(eventCoreTransform.getTag(), eventCoreCollection)
             .and(temporalTransform.getTag(), temporalCollection)
             .and(locationTransform.getTag(), locationCollection)
-            .and(taxonomyTransform.getTag(), taxonCollection)
             // Extension
             .and(multimediaTransform.getTag(), multimediaCollection)
             .and(imageTransform.getTag(), imageCollection)
@@ -563,7 +561,7 @@ public class EventToEsIndexPipeline {
       return KeyedPCollectionTuple.of(eventCoreTransform.getTag(), eventCoreCollection)
           .and(eventCoreTransform.getEdgeTag(), parentEdgeEvents)
           // Join EventCore collections with parents
-          .apply("Join events with parent collections", CoGroupByKey.<String>create())
+          .apply("Join events with parent collections", CoGroupByKey.create())
           // Extract the parents only
           .apply(
               "Extract the parents only",
