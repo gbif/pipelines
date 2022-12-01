@@ -156,9 +156,9 @@ public class CompleteIngestPipelineTestIT {
     // check validation - should be false as UUIDs not generated
     assertFalse(ValidationUtils.checkValidationFile(dwcaOptions).getValid());
 
-    InterpretationPipelineOptions interpretationOptions =
+    ALAInterpretationPipelineOptions interpretationOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            ALAInterpretationPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",

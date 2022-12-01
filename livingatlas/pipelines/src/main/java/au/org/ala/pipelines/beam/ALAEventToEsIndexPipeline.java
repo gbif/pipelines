@@ -4,7 +4,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 import static org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory.create;
 import static org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory.registerHdfs;
 
-
 import au.org.ala.pipelines.options.ALAEsIndexingPipelineOptions;
 import au.org.ala.pipelines.transforms.ALADerivedMetadataTransform;
 import au.org.ala.pipelines.transforms.ALAMetadataTransform;

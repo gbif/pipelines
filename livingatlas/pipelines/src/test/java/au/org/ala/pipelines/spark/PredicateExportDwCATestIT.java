@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline;
 import au.org.ala.pipelines.beam.ALAEventToSearchAvroPipeline;
+import au.org.ala.pipelines.beam.ALAInterpretationPipelineOptions;
 import au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline;
 import au.org.ala.pipelines.beam.ALAUUIDMintingPipeline;
 import au.org.ala.pipelines.beam.ALAVerbatimToEventPipeline;
@@ -224,9 +225,9 @@ public class PredicateExportDwCATestIT {
     // check validation - should be false as UUIDs not generated
     assertFalse(ValidationUtils.checkValidationFile(dwcaOptions).getValid());
 
-    InterpretationPipelineOptions interpretationOptions =
+    ALAInterpretationPipelineOptions interpretationOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            ALAInterpretationPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--runner=DirectRunner",

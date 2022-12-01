@@ -4,14 +4,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import au.org.ala.pipelines.options.DwcaToVerbatimPipelineOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.util.ElasticUtils;
 import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import org.apache.commons.io.FileUtils;
-import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
-import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -52,9 +51,9 @@ public class CompleteEventPipelineTestIT {
 
   public void loadTestDataset(String datasetID, String inputPath) throws Exception {
 
-    DwcaPipelineOptions dwcaOptions =
+    DwcaToVerbatimPipelineOptions dwcaOptions =
         PipelinesOptionsFactory.create(
-            DwcaPipelineOptions.class,
+            DwcaToVerbatimPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
@@ -63,22 +62,22 @@ public class CompleteEventPipelineTestIT {
               "--targetPath=/tmp/la-pipelines-test/complete-event-pipeline",
               "--inputPath=" + inputPath
             });
-    DwcaToVerbatimPipeline.run(dwcaOptions);
+    ALADwcaToVerbatimPipeline.run(dwcaOptions);
 
     // check validation - should be false as UUIDs not generated
     assertFalse(ValidationUtils.checkValidationFile(dwcaOptions).getValid());
 
-    InterpretationPipelineOptions interpretationOptions =
+    ALAInterpretationPipelineOptions interpretationOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            ALAInterpretationPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
-              "--runner=DirectRunner",
+              "--runner=SparkRunner",
               "--interpretationTypes=ALL",
               "--metaFileName=" + ValidationUtils.INTERPRETATION_METRICS,
               "--targetPath=/tmp/la-pipelines-test/complete-event-pipeline",
-              "--inputPath=/tmp/la-pipelines-test/complete-event-pipeline/dr18391/1/verbatim.avro",
+              "--inputPath=/tmp/la-pipelines-test/complete-event-pipeline/dr18391/1/verbatim/*.avro",
               "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });
@@ -105,13 +104,13 @@ public class CompleteEventPipelineTestIT {
     // check validation - should be true as UUIDs are validated and generated
     assertTrue(ValidationUtils.checkValidationFile(uuidOptions).getValid());
 
-    InterpretationPipelineOptions sensitivityOptions =
+    ALAInterpretationPipelineOptions sensitivityOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            ALAInterpretationPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
-              "--runner=DirectRunner",
+              "--runner=SparkRunner",
               "--metaFileName=" + ValidationUtils.SENSITIVE_METRICS,
               "--targetPath=/tmp/la-pipelines-test/complete-event-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-event-pipeline",
@@ -119,21 +118,6 @@ public class CompleteEventPipelineTestIT {
               "--useExtendedRecordId=true"
             });
     ALAInterpretedToSensitivePipeline.run(sensitivityOptions);
-
-    // run verbatim to event pipeline
-    InterpretationPipelineOptions verbatimEventOptions =
-        PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
-            new String[] {
-              "--datasetId=" + datasetID,
-              "--attempt=1",
-              "--runner=DirectRunner",
-              "--interpretationTypes=ALL",
-              "--targetPath=/tmp/la-pipelines-test/complete-event-pipeline",
-              "--inputPath=/tmp/la-pipelines-test/complete-event-pipeline/dr18391/1/verbatim.avro",
-              "--properties=" + itUtils.getPropertiesFilePath()
-            });
-    ALAVerbatimToEventPipeline.run(verbatimEventOptions);
 
     String esSchemaPath =
         new File("src/test/resources/complete-event-pipeline/es-event-core-schema.json")

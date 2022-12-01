@@ -10,7 +10,6 @@ import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.util.Map;
 import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
-import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -64,9 +63,9 @@ public class SpeciesListPipelineIT {
     // check validation - should be false as UUIDs not generated
     assertFalse(ValidationUtils.checkValidationFile(dwcaOptions).getValid());
 
-    InterpretationPipelineOptions interpretationOptions =
+    ALAInterpretationPipelineOptions interpretationOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            ALAInterpretationPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",

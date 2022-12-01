@@ -207,7 +207,9 @@ public class IndexRecordPipeline {
             alaUuidTransform.getTag(),
             options.getIncludeImages() ? imageRecordTupleTag : null,
             options.getIncludeSpeciesLists() ? speciesListsRecordTupleTag : null,
-            options.getIncludeSensitiveDataChecks() ? alaSensitiveDataRecordTransform.getTag() : null,
+            options.getIncludeSensitiveDataChecks()
+                ? alaSensitiveDataRecordTransform.getTag()
+                : null,
             options.getDatasetId(),
             lastLoadedDate,
             lastProcessedDate);

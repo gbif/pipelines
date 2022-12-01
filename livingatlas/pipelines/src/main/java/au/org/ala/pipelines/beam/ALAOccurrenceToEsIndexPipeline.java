@@ -211,7 +211,7 @@ public class ALAOccurrenceToEsIndexPipeline {
     private final MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
 
     private final ALASensitiveDataRecordTransform sensitiveDataRecordTransform =
-            ALASensitiveDataRecordTransform.builder().create();
+        ALASensitiveDataRecordTransform.builder().create();
 
     private final MeasurementOrFactTransform measurementOrFactTransform =
         MeasurementOrFactTransform.builder().create();
@@ -282,13 +282,14 @@ public class ALAOccurrenceToEsIndexPipeline {
               .apply("Map occurrence Location to KV", locationTransform.toKv());
 
       PCollection<KV<String, ALASensitivityRecord>> alaSensitiveDataCollection = null;
-      if (sensitiveDataCheck){
-          alaSensitiveDataCollection =
-                  pipeline.apply("Read sensitive data", sensitiveDataRecordTransform.read(occurrencePathFn))
-                          .apply("Map sensitive data to KV", sensitiveDataRecordTransform.toKv());
+      if (sensitiveDataCheck) {
+        alaSensitiveDataCollection =
+            pipeline
+                .apply("Read sensitive data", sensitiveDataRecordTransform.read(occurrencePathFn))
+                .apply("Map sensitive data to KV", sensitiveDataRecordTransform.toKv());
       } else {
-        alaSensitiveDataCollection = pipeline.apply(
-                Create.empty(new TypeDescriptor<KV<String, ALASensitivityRecord>>() {}));
+        alaSensitiveDataCollection =
+            pipeline.apply(Create.empty(new TypeDescriptor<KV<String, ALASensitivityRecord>>() {}));
       }
 
       InheritedFields inheritedFields =
