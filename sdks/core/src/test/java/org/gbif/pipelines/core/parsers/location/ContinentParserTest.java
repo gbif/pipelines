@@ -26,9 +26,9 @@ public class ContinentParserTest {
 
   static {
     KeyValueTestStore testStore = new KeyValueTestStore();
-    testStore.put(new LatLng(38.7, 29.6), toGeocodeResponse(Continent.ASIA, Country.TURKEY));
-    testStore.put(new LatLng(30.0, -20.0), toGeocodeResponse(Country.SPAIN));
-    testStore.put(new LatLng(10.3, -1.8961), toGeocodeResponse(Continent.AFRICA, Country.GHANA));
+    testStore.put(LatLng.create(38.7, 29.6), toGeocodeResponse(Continent.ASIA, Country.TURKEY));
+    testStore.put(LatLng.create(30.0, -20.0), toGeocodeResponse(Country.SPAIN));
+    testStore.put(LatLng.create(10.3, -1.8961), toGeocodeResponse(Continent.AFRICA, Country.GHANA));
 
     GEOCODE_KV_STORE = GeocodeKvStore.create(testStore);
   }

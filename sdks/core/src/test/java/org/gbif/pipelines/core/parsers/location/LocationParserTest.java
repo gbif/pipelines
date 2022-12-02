@@ -36,14 +36,15 @@ public class LocationParserTest {
 
   static {
     KeyValueTestStore testStore = new KeyValueTestStore();
-    testStore.put(new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA), toGeocodeResponse(Country.CANADA));
-    testStore.put(new LatLng(30.2d, 100.2344349d), toGeocodeResponse(Country.CHINA));
-    testStore.put(new LatLng(30.2d, 100.234435d), toGeocodeResponse(Country.CHINA));
-    testStore.put(new LatLng(71.7d, -42.6d), toGeocodeResponse(Country.GREENLAND));
-    testStore.put(new LatLng(-17.65, -149.46), toGeocodeResponse(Country.FRENCH_POLYNESIA));
-    testStore.put(new LatLng(27.15, -13.20), toGeocodeResponse(Country.MOROCCO));
     testStore.put(
-        new LatLng(LATITUDE_ALMOST_ZIMBABWE, LONGITUDE_ALMOST_ZIMBABWE),
+        LatLng.create(LATITUDE_CANADA, LONGITUDE_CANADA), toGeocodeResponse(Country.CANADA));
+    testStore.put(LatLng.create(30.2d, 100.2344349d), toGeocodeResponse(Country.CHINA));
+    testStore.put(LatLng.create(30.2d, 100.234435d), toGeocodeResponse(Country.CHINA));
+    testStore.put(LatLng.create(71.7d, -42.6d), toGeocodeResponse(Country.GREENLAND));
+    testStore.put(LatLng.create(-17.65, -149.46), toGeocodeResponse(Country.FRENCH_POLYNESIA));
+    testStore.put(LatLng.create(27.15, -13.20), toGeocodeResponse(Country.MOROCCO));
+    testStore.put(
+        LatLng.create(LATITUDE_ALMOST_ZIMBABWE, LONGITUDE_ALMOST_ZIMBABWE),
         toGeocodeResponse(Country.ZAMBIA, Country.ZIMBABWE, DISTANCE_ALMOST_ZIMBABWE_TO_ZIMBABWE));
     GEOCODE_KV_STORE = GeocodeKvStore.create(testStore);
   }

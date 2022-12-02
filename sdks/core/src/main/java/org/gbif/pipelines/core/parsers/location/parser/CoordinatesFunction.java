@@ -18,13 +18,13 @@ import org.gbif.kvs.geocode.LatLng;
 public class CoordinatesFunction {
 
   public static final UnaryOperator<LatLng> NEGATED_LAT_FN =
-      latLng -> new LatLng(-1d * latLng.getLatitude(), latLng.getLongitude());
+      latLng -> LatLng.create(-1d * latLng.getLatitude(), latLng.getLongitude());
   public static final UnaryOperator<LatLng> NEGATED_LNG_FN =
-      latLng -> new LatLng(latLng.getLatitude(), -1d * latLng.getLongitude());
+      latLng -> LatLng.create(latLng.getLatitude(), -1d * latLng.getLongitude());
   public static final UnaryOperator<LatLng> NEGATED_COORDS_FN =
-      latLng -> new LatLng(-1d * latLng.getLatitude(), -1d * latLng.getLongitude());
+      latLng -> LatLng.create(-1d * latLng.getLatitude(), -1d * latLng.getLongitude());
   public static final UnaryOperator<LatLng> SWAPPED_COORDS_FN =
-      latLng -> new LatLng(latLng.getLongitude(), latLng.getLatitude());
+      latLng -> LatLng.create(latLng.getLongitude(), latLng.getLatitude());
 
   public static Set<String> getIssueTypes(UnaryOperator<LatLng> transformation) {
     if (transformation == NEGATED_LAT_FN) {

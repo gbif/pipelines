@@ -20,7 +20,7 @@ public class GadmParser {
     Objects.requireNonNull(kvStore, "GeocodeService kvStore is required");
 
     // Take parsed values
-    LatLng latLng = new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude());
+    LatLng latLng = LatLng.create(lr.getDecimalLatitude(), lr.getDecimalLongitude());
 
     // Use these to retrieve the GADM areas.
     // Check parameters
