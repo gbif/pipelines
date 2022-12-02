@@ -41,7 +41,7 @@ public class ExtendedRecordConverter {
     builder.setCoreTerms(convertToMap(core));
     builder.setExtensions(
         extensions.entrySet().stream()
-            .filter(rl -> !rl.getValue().isEmpty())
+            // .filter(rl -> !rl.getValue().isEmpty())
             .collect(
                 Collectors.toMap(
                     entry -> entry.getKey().qualifiedName(),
