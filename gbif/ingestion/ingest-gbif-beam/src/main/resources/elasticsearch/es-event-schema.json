@@ -44,6 +44,113 @@
       }
     },
 
+    "derivedMetadata": {
+      "type": "object",
+      "properties": {
+        "wktConvexHull": {
+          "type": "geo_shape"
+        },
+        "temporalCoverage": {
+          "type": "date_range", "format": "yyyy-MM-dd'T'HH:mm:ss.SSSXXX||yyyy-MM-dd'T'HH:mm:ssXXX||yyyy-MM-dd'T'HH:mmXXX||yyyy-MM-dd'T'HH:mm:ss.SSS||yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm||yyyy-MM-dd||yyyy-MM||yyyy"
+        },
+        "taxonomicCoverage": {
+          "type": "object",
+          "properties": {
+            "acceptedUsage": {
+              "properties": {
+                "key": {"type": "long" },
+                "name": {"type": "text", "index":  false, "boost": 100.0, "copy_to": "all"},
+                "rank": {"type": "keyword", "index":  false}
+              }
+            },
+            "classification": {
+              "properties": {
+                "key": {"type": "long"},
+                "name": {"type": "text", "boost": 90.0, "copy_to": "all"},
+                "rank": {"type": "keyword"},
+                "synonym": {"type": "boolean"}
+              }
+            },
+            "classificationPath": {"type": "keyword"},
+            "diagnostics": {
+              "properties": {
+                "matchType": {"type": "keyword"},
+                "note": {"type": "text","index":  false},
+                "status": {"type": "keyword"}
+              }
+            },
+            "kingdom": {"type": "text"},
+            "kingdomKey": {"type": "long"},
+            "phylum": {"type": "text"},
+            "phylumKey": {"type": "long"},
+            "class": {"type": "text"},
+            "classKey": {"type": "long"},
+            "order": {"type": "text"},
+            "orderKey": {"type": "long"},
+            "family": {"type": "text"},
+            "familyKey": {"type": "long"},
+            "genus": {"type": "text"},
+            "genusKey": {"type": "long"},
+            "species": {"type": "text"},
+            "speciesKey": {"type": "long"},
+            "synonym": {"type": "boolean"},
+            "taxonID": {"type": "keyword"},
+            "taxonKey": {"type": "long"},
+            "usage": {
+              "properties": {
+                "key": {"type": "long"},
+                "name": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
+                "rank": {"type": "keyword"}
+              }
+            },
+            "usageParsedName": {
+              "properties": {
+                "abbreviated": {"type": "boolean", "index":  false},
+                "autonym": {"type": "boolean", "index":  false},
+                "basionymAuthorship": {
+                  "enabled": false,
+                  "properties": {
+                    "authors": {"type": "text"},
+                    "empty": {"type": "boolean"},
+                    "exAuthors": {"type": "text"},
+                    "year": {"type": "keyword"}
+                  }
+                },
+                "binomial": {"type": "boolean", "index":  false},
+                "candidatus": {"type": "boolean", "index":  false},
+                "code": {"type": "text", "index":  false},
+                "combinationAuthorship": {
+                  "enabled": false,
+                  "properties": {
+                    "authors": {"type": "text"},
+                    "empty": {"type": "boolean"},
+                    "exAuthors": {"type": "text"},
+                    "year": {"type": "keyword"}
+                  }
+                },
+                "doubtful": {"type": "boolean", "index":  false},
+                "genericName": {"type": "text"},
+                "genus": {"type": "text", "index":  false},
+                "incomplete": {"type": "boolean", "index":  false},
+                "indetermined": {"type": "boolean", "index":  false},
+                "infraspecificEpithet": {"type": "text"},
+                "notho": {"type": "keyword", "index":  false},
+                "rank": {"type": "keyword", "index":  false},
+                "specificEpithet": {"type": "text"},
+                "state": {"type": "keyword", "index":  false},
+                "terminalEpithet": {"type": "text", "index":  false},
+                "trinomial": {"type": "boolean", "index":  false},
+                "type": {"type": "keyword", "index":  false},
+                "uninomial": {"type": "text", "index":  false}
+              }
+            },
+            "verbatimScientificName": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
+            "iucnRedListCategoryCode": {"type": "keyword"}
+          }
+        }
+      }
+    },
+
     "event": {
       "type": "object",
       "properties": {
@@ -187,210 +294,10 @@
           "properties": {
             "license": {"type": "keyword"}
           }
-        },
-        "gbifClassification": {
-          "type": "object",
-          "properties": {
-            "acceptedUsage": {
-              "properties": {
-                "key": {"type": "long" },
-                "name": {"type": "text", "index":  false, "boost": 100.0, "copy_to": "all"},
-                "rank": {"type": "keyword", "index":  false}
-              }
-            },
-            "classification": {
-              "properties": {
-                "key": {"type": "long"},
-                "name": {"type": "text", "boost": 90.0, "copy_to": "all"},
-                "rank": {"type": "keyword"},
-                "synonym": {"type": "boolean"}
-              }
-            },
-            "classificationPath": {"type": "keyword"},
-            "diagnostics": {
-              "properties": {
-                "matchType": {"type": "keyword"},
-                "note": {"type": "text","index":  false},
-                "status": {"type": "keyword"}
-              }
-            },
-            "kingdom": {"type": "text"},
-            "kingdomKey": {"type": "long"},
-            "phylum": {"type": "text"},
-            "phylumKey": {"type": "long"},
-            "class": {"type": "text"},
-            "classKey": {"type": "long"},
-            "order": {"type": "text"},
-            "orderKey": {"type": "long"},
-            "family": {"type": "text"},
-            "familyKey": {"type": "long"},
-            "genus": {"type": "text"},
-            "genusKey": {"type": "long"},
-            "species": {"type": "text"},
-            "speciesKey": {"type": "long"},
-            "synonym": {"type": "boolean"},
-            "taxonID": {"type": "keyword"},
-            "taxonKey": {"type": "long"},
-            "usage": {
-              "properties": {
-                "key": {"type": "long"},
-                "name": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
-                "rank": {"type": "keyword"}
-              }
-            },
-            "usageParsedName": {
-              "properties": {
-                "abbreviated": {"type": "boolean", "index":  false},
-                "autonym": {"type": "boolean", "index":  false},
-                "basionymAuthorship": {
-                  "enabled": false,
-                  "properties": {
-                    "authors": {"type": "text"},
-                    "empty": {"type": "boolean"},
-                    "exAuthors": {"type": "text"},
-                    "year": {"type": "keyword"}
-                  }
-                },
-                "binomial": {"type": "boolean", "index":  false},
-                "candidatus": {"type": "boolean", "index":  false},
-                "code": {"type": "text", "index":  false},
-                "combinationAuthorship": {
-                  "enabled": false,
-                  "properties": {
-                    "authors": {"type": "text"},
-                    "empty": {"type": "boolean"},
-                    "exAuthors": {"type": "text"},
-                    "year": {"type": "keyword"}
-                  }
-                },
-                "doubtful": {"type": "boolean", "index":  false},
-                "genericName": {"type": "text"},
-                "genus": {"type": "text", "index":  false},
-                "incomplete": {"type": "boolean", "index":  false},
-                "indetermined": {"type": "boolean", "index":  false},
-                "infraspecificEpithet": {"type": "text"},
-                "notho": {"type": "keyword", "index":  false},
-                "rank": {"type": "keyword", "index":  false},
-                "specificEpithet": {"type": "text"},
-                "state": {"type": "keyword", "index":  false},
-                "terminalEpithet": {"type": "text", "index":  false},
-                "trinomial": {"type": "boolean", "index":  false},
-                "type": {"type": "keyword", "index":  false},
-                "uninomial": {"type": "text", "index":  false}
-              }
-            },
-            "verbatimScientificName": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
-            "iucnRedListCategoryCode": {"type": "keyword"}
-          }
-        },
-        "derivedMetadata": {
-          "type": "object",
-          "properties": {
-            "wktConvexHull": {
-              "type": "geo_shape"
-            },
-            "temporalCoverage": {
-              "type": "date_range", "format": "yyyy-MM-dd'T'HH:mm:ss.SSSXXX||yyyy-MM-dd'T'HH:mm:ssXXX||yyyy-MM-dd'T'HH:mmXXX||yyyy-MM-dd'T'HH:mm:ss.SSS||yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm||yyyy-MM-dd||yyyy-MM||yyyy"
-            },
-            "taxonomicCoverage": {
-              "type": "object",
-              "properties": {
-                "acceptedUsage": {
-                  "properties": {
-                    "key": {"type": "long" },
-                    "name": {"type": "text", "index":  false, "boost": 100.0, "copy_to": "all"},
-                    "rank": {"type": "keyword", "index":  false}
-                  }
-                },
-                "classification": {
-                  "properties": {
-                    "key": {"type": "long"},
-                    "name": {"type": "text", "boost": 90.0, "copy_to": "all"},
-                    "rank": {"type": "keyword"},
-                    "synonym": {"type": "boolean"}
-                  }
-                },
-                "classificationPath": {"type": "keyword"},
-                "diagnostics": {
-                  "properties": {
-                    "matchType": {"type": "keyword"},
-                    "note": {"type": "text","index":  false},
-                    "status": {"type": "keyword"}
-                  }
-                },
-                "kingdom": {"type": "text"},
-                "kingdomKey": {"type": "long"},
-                "phylum": {"type": "text"},
-                "phylumKey": {"type": "long"},
-                "class": {"type": "text"},
-                "classKey": {"type": "long"},
-                "order": {"type": "text"},
-                "orderKey": {"type": "long"},
-                "family": {"type": "text"},
-                "familyKey": {"type": "long"},
-                "genus": {"type": "text"},
-                "genusKey": {"type": "long"},
-                "species": {"type": "text"},
-                "speciesKey": {"type": "long"},
-                "synonym": {"type": "boolean"},
-                "taxonID": {"type": "keyword"},
-                "taxonKey": {"type": "long"},
-                "usage": {
-                  "properties": {
-                    "key": {"type": "long"},
-                    "name": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
-                    "rank": {"type": "keyword"}
-                  }
-                },
-                "usageParsedName": {
-                  "properties": {
-                    "abbreviated": {"type": "boolean", "index":  false},
-                    "autonym": {"type": "boolean", "index":  false},
-                    "basionymAuthorship": {
-                      "enabled": false,
-                      "properties": {
-                        "authors": {"type": "text"},
-                        "empty": {"type": "boolean"},
-                        "exAuthors": {"type": "text"},
-                        "year": {"type": "keyword"}
-                      }
-                    },
-                    "binomial": {"type": "boolean", "index":  false},
-                    "candidatus": {"type": "boolean", "index":  false},
-                    "code": {"type": "text", "index":  false},
-                    "combinationAuthorship": {
-                      "enabled": false,
-                      "properties": {
-                        "authors": {"type": "text"},
-                        "empty": {"type": "boolean"},
-                        "exAuthors": {"type": "text"},
-                        "year": {"type": "keyword"}
-                      }
-                    },
-                    "doubtful": {"type": "boolean", "index":  false},
-                    "genericName": {"type": "text"},
-                    "genus": {"type": "text", "index":  false},
-                    "incomplete": {"type": "boolean", "index":  false},
-                    "indetermined": {"type": "boolean", "index":  false},
-                    "infraspecificEpithet": {"type": "text"},
-                    "notho": {"type": "keyword", "index":  false},
-                    "rank": {"type": "keyword", "index":  false},
-                    "specificEpithet": {"type": "text"},
-                    "state": {"type": "keyword", "index":  false},
-                    "terminalEpithet": {"type": "text", "index":  false},
-                    "trinomial": {"type": "boolean", "index":  false},
-                    "type": {"type": "keyword", "index":  false},
-                    "uninomial": {"type": "text", "index":  false}
-                  }
-                },
-                "verbatimScientificName": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
-                "iucnRedListCategoryCode": {"type": "keyword"}
-              }
-            }
-          }
         }
       }
     },
+
     "occurrence": {
       "type": "object",
       "properties": {
@@ -1374,7 +1281,9 @@
         }
       }
     },
+
     "verbatim": {"type": "object", "enabled": false},
+
     "joinRecord": { "type": "join", "relations": { "event": "occurrence" }, "eager_global_ordinals": false}
   }
 }
