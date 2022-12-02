@@ -9,7 +9,6 @@ import au.org.ala.pipelines.beam.ALAEventToSearchAvroPipeline;
 import au.org.ala.pipelines.beam.ALAInterpretationPipelineOptions;
 import au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline;
 import au.org.ala.pipelines.beam.ALAUUIDMintingPipeline;
-import au.org.ala.pipelines.beam.ALAVerbatimToEventPipeline;
 import au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline;
 import au.org.ala.pipelines.options.DwcaToVerbatimPipelineOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
@@ -230,7 +229,7 @@ public class PredicateExportDwCATestIT {
             ALAInterpretationPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
-              "--runner=DirectRunner",
+              "--runner=SparkRunner",
               "--attempt=1",
               "--interpretationTypes=ALL",
               "--metaFileName=" + ValidationUtils.INTERPRETATION_METRICS,
@@ -267,7 +266,7 @@ public class PredicateExportDwCATestIT {
             InterpretationPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
-              "--runner=DirectRunner",
+              "--runner=SparkRunner",
               "--attempt=1",
               "--metaFileName=" + ValidationUtils.SENSITIVE_METRICS,
               "--targetPath=/tmp/la-pipelines-test/event-download",
@@ -276,21 +275,6 @@ public class PredicateExportDwCATestIT {
               "--useExtendedRecordId=true"
             });
     ALAInterpretedToSensitivePipeline.run(sensitivityOptions);
-
-    // run verbatim to event pipeline
-    InterpretationPipelineOptions verbatimEventOptions =
-        PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
-            new String[] {
-              "--datasetId=" + datasetID,
-              "--runner=DirectRunner",
-              "--attempt=1",
-              "--interpretationTypes=ALL",
-              "--targetPath=/tmp/la-pipelines-test/event-download",
-              "--inputPath=/tmp/la-pipelines-test/event-download/dr18391/1/verbatim/*.avro",
-              "--properties=" + itUtils.getPropertiesFilePath()
-            });
-    ALAVerbatimToEventPipeline.run(verbatimEventOptions);
 
     // run event to search AVRO pipeline
     InterpretationPipelineOptions avroOptions =

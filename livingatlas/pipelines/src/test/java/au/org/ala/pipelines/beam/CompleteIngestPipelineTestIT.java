@@ -221,7 +221,7 @@ public class CompleteIngestPipelineTestIT {
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
               "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline/all-datasets",
               "--properties=" + itUtils.getPropertiesFilePath(),
-              "--includeSensitiveData=true",
+              "--includeSensitiveDataChecks=true",
               "--includeImages=false"
             });
 
@@ -265,7 +265,7 @@ public class CompleteIngestPipelineTestIT {
               "--zkHost=" + String.join(",", SolrUtils.getZkHosts()),
               "--solrCollection=" + INDEX_NAME,
               "--includeSampling=true",
-              "--includeSensitiveData=true",
+              "--includeSensitiveDataChecks=true",
               "--includeImages=false",
               "--numOfPartitions=10"
             });
