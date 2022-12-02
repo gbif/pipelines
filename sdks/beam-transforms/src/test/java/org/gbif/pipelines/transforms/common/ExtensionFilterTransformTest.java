@@ -1,15 +1,20 @@
 package org.gbif.pipelines.transforms.common;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -92,15 +97,17 @@ public class ExtensionFilterTransformTest {
   @Test
   public void allowExtensionBeamTest() {
 
+    Map<String, List<Map<String, String>>> extMap = new HashMap<>();
+    extMap.put("ext", Collections.singletonList(Collections.singletonMap("test", "test")));
+    extMap.put("ext-empt", Collections.emptyList());
+
     // State
     final List<ExtendedRecord> input =
         Collections.singletonList(
             ExtendedRecord.newBuilder()
                 .setId("777")
                 .setCoreTerms(Collections.singletonMap("test", "test"))
-                .setExtensions(
-                    Collections.singletonMap(
-                        "ext", Collections.singletonList(Collections.singletonMap("test", "test"))))
+                .setExtensions(extMap)
                 .build());
 
     final List<ExtendedRecord> expected =
@@ -113,7 +120,7 @@ public class ExtensionFilterTransformTest {
                         "ext", Collections.singletonList(Collections.singletonMap("test", "test"))))
                 .build());
 
-    final Set<String> allowSet = Collections.singleton("ext");
+    final Set<String> allowSet = new HashSet<>(Arrays.asList("ext", "ext-empt"));
 
     // When
     PCollection<ExtendedRecord> result =

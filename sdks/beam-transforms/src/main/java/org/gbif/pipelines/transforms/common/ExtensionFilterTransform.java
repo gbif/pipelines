@@ -4,12 +4,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import lombok.AllArgsConstructor;
+
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+
+import lombok.AllArgsConstructor;
 
 /** Transform allows extensions in ExtendedRecord only from allowExtenstionsSet */
 @AllArgsConstructor(staticName = "create")
@@ -59,6 +62,7 @@ public class ExtensionFilterTransform
 
     er.getExtensions().entrySet().stream()
         .filter(es -> allowExtenstionsSet.contains(es.getKey()))
+        .filter(es -> !es.getValue().isEmpty())
         .forEach(es -> extensions.put(es.getKey(), es.getValue()));
 
     return ExtendedRecord.newBuilder()
