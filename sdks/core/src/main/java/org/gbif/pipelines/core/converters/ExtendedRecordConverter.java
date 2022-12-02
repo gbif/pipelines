@@ -5,15 +5,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
 /** Converters from *.class to {@link ExtendedRecord} */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

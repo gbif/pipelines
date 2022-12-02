@@ -4,15 +4,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
+import lombok.AllArgsConstructor;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
-
-import lombok.AllArgsConstructor;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /** Transform allows extensions in ExtendedRecord only from allowExtenstionsSet */
 @AllArgsConstructor(staticName = "create")
