@@ -469,8 +469,7 @@ object PredicateExportDwCAPipeline {
       val (exportDF, fields) =
         generateInterpretedExportDF(
           joinOccDF,
-          skippedFields,
-          Array("Occurrence")
+          skippedFields
         )
 
       log.info("Export interpreted occurrence data")
@@ -542,7 +541,7 @@ object PredicateExportDwCAPipeline {
 
     (
       occDFCoalesce,
-      Array("Search.id") ++ exportFields //++ issuesAliases.map(alias => s"${alias}_issues").toArray[String]
+      Array("Search.id") ++ exportFields // ++ issuesAliases.map(alias => s"${alias}_issues").toArray[String]
     )
   }
 

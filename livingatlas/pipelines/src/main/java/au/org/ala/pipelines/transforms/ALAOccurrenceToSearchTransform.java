@@ -10,16 +10,13 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.JsonConverter;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
-import org.gbif.pipelines.io.avro.ALAMetadataRecord;
 import org.gbif.pipelines.io.avro.ALASensitivityRecord;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.ALAUUIDRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.OccurrenceSearchRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -54,26 +51,26 @@ public class ALAOccurrenceToSearchTransform implements Serializable {
             String k = c.element().getKey();
 
             ALAUUIDRecord uur =
-                    v.getOnly(alaUuidRecordTTag, ALAUUIDRecord.newBuilder().setId(k).build());
+                v.getOnly(alaUuidRecordTTag, ALAUUIDRecord.newBuilder().setId(k).build());
             ALAAttributionRecord ar =
-                    v.getOnly(alaAttributionTag, ALAAttributionRecord.newBuilder().setId(k).build());
-            BasicRecord br =
-                    v.getOnly(basicRecordTag, BasicRecord.newBuilder().setId(k).build());            
+                v.getOnly(alaAttributionTag, ALAAttributionRecord.newBuilder().setId(k).build());
+            BasicRecord br = v.getOnly(basicRecordTag, BasicRecord.newBuilder().setId(k).build());
             // Core
             TemporalRecord tr =
                 v.getOnly(temporalRecordTag, TemporalRecord.newBuilder().setId(k).build());
             LocationRecord lr =
                 v.getOnly(locationRecordTag, LocationRecord.newBuilder().setId(k).build());
             ALATaxonRecord txr =
-                    v.getOnly(taxonRecordTag, ALATaxonRecord.newBuilder().setId(k).build());
+                v.getOnly(taxonRecordTag, ALATaxonRecord.newBuilder().setId(k).build());
             ALASensitivityRecord sdr =
-                    v.getOnly(sensitivityRecordTag, ALASensitivityRecord.newBuilder().setId(k).build());
+                v.getOnly(sensitivityRecordTag, ALASensitivityRecord.newBuilder().setId(k).build());
 
             // for now, exclude sensitive records from the exports
             if (sdr != null && sdr.getIsSensitive() != null && !sdr.getIsSensitive()) {
 
               // Convert and
-              OccurrenceSearchRecord.Builder builder = OccurrenceSearchRecord.newBuilder().setId(br.getId());
+              OccurrenceSearchRecord.Builder builder =
+                  OccurrenceSearchRecord.newBuilder().setId(br.getId());
 
               // set IDs - core ID will be eventID for event based datasets
               // setting this is required for the joins
@@ -90,9 +87,16 @@ public class ALAOccurrenceToSearchTransform implements Serializable {
               // copy basic fields
               builder.setBasisOfRecord(br.getBasisOfRecord());
               builder.setSex(br.getSex());
-              builder.setLifeStage(br.getLifeStage() != null ? br.getLifeStage().getConcept() : null);
-              builder.setEstablishmentMeans(br.getEstablishmentMeans() != null ? br.getEstablishmentMeans().getConcept() : null);
-              builder.setDegreeOfEstablishment(br.getDegreeOfEstablishment() != null ? br.getDegreeOfEstablishment().getConcept() : null);
+              builder.setLifeStage(
+                  br.getLifeStage() != null ? br.getLifeStage().getConcept() : null);
+              builder.setEstablishmentMeans(
+                  br.getEstablishmentMeans() != null
+                      ? br.getEstablishmentMeans().getConcept()
+                      : null);
+              builder.setDegreeOfEstablishment(
+                  br.getDegreeOfEstablishment() != null
+                      ? br.getDegreeOfEstablishment().getConcept()
+                      : null);
               builder.setPathway(br.getPathway() != null ? br.getPathway().getConcept() : null);
               builder.setIndividualCount(br.getIndividualCount());
               builder.setTypeStatus(br.getTypeStatus());
@@ -151,8 +155,10 @@ public class ALAOccurrenceToSearchTransform implements Serializable {
               builder.setMaximumDepthInMeters(lr.getMaximumDepthInMeters());
               builder.setDepth(lr.getDepth());
               builder.setDepthAccuracy(lr.getDepthAccuracy());
-              builder.setMinimumDistanceAboveSurfaceInMeters(lr.getMinimumDistanceAboveSurfaceInMeters());
-              builder.setMaximumDistanceAboveSurfaceInMeters(lr.getMaximumDistanceAboveSurfaceInMeters());
+              builder.setMinimumDistanceAboveSurfaceInMeters(
+                  lr.getMinimumDistanceAboveSurfaceInMeters());
+              builder.setMaximumDistanceAboveSurfaceInMeters(
+                  lr.getMaximumDistanceAboveSurfaceInMeters());
               builder.setDecimalLatitude(lr.getDecimalLatitude());
               builder.setDecimalLongitude(lr.getDecimalLongitude());
               builder.setCoordinateUncertaintyInMeters(lr.getCoordinateUncertaintyInMeters());
@@ -168,7 +174,6 @@ public class ALAOccurrenceToSearchTransform implements Serializable {
               builder.setEndDayOfYear(tr.getEndDayOfYear());
               builder.setDateIdentified(tr.getDateIdentified());
               builder.setDatePrecision(tr.getDatePrecision());
-
 
               List<String> issues = new ArrayList<String>();
               // concat temporal, taxonomic etc

@@ -18,13 +18,9 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
-import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.pipelines.core.converters.JsonConverter;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
-import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
-import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 
 /**
  * This converter will take AVRO record artefacts related to an event and produce a single AVRO
@@ -81,7 +77,8 @@ public class ALAEventToSearchTransform implements Serializable {
 
             // copy core fields
             builder.setParentEventID(core.getParentEventID());
-            builder.setEventType(core.getEventType() != null ? core.getEventType().getConcept() : null);
+            builder.setEventType(
+                core.getEventType() != null ? core.getEventType().getConcept() : null);
             builder.setSampleSizeValue(core.getSampleSizeValue());
             builder.setSampleSizeUnit(core.getSampleSizeUnit());
             builder.setReferences(core.getReferences());
@@ -100,8 +97,10 @@ public class ALAEventToSearchTransform implements Serializable {
             builder.setMaximumDepthInMeters(lr.getMaximumDepthInMeters());
             builder.setDepth(lr.getDepth());
             builder.setDepthAccuracy(lr.getDepthAccuracy());
-            builder.setMinimumDistanceAboveSurfaceInMeters(lr.getMinimumDistanceAboveSurfaceInMeters());
-            builder.setMaximumDistanceAboveSurfaceInMeters(lr.getMaximumDistanceAboveSurfaceInMeters());
+            builder.setMinimumDistanceAboveSurfaceInMeters(
+                lr.getMinimumDistanceAboveSurfaceInMeters());
+            builder.setMaximumDistanceAboveSurfaceInMeters(
+                lr.getMaximumDistanceAboveSurfaceInMeters());
             builder.setDecimalLatitude(lr.getDecimalLatitude());
             builder.setDecimalLongitude(lr.getDecimalLongitude());
             builder.setCoordinateUncertaintyInMeters(lr.getCoordinateUncertaintyInMeters());
@@ -131,39 +130,43 @@ public class ALAEventToSearchTransform implements Serializable {
     return ParDo.of(fn).withSideInputs(metadataView);
   }
 
-  private void setSearchTerms(ALAMetadataRecord mdr, EventCoreRecord core, TemporalRecord tr, LocationRecord lr, MeasurementOrFactRecord mofr, List<String> taxonIDs, Iterable<String> retrievedTaxonIDs, EventSearchRecord.Builder builder) {
+  private void setSearchTerms(
+      ALAMetadataRecord mdr,
+      EventCoreRecord core,
+      TemporalRecord tr,
+      LocationRecord lr,
+      MeasurementOrFactRecord mofr,
+      List<String> taxonIDs,
+      Iterable<String> retrievedTaxonIDs,
+      EventSearchRecord.Builder builder) {
     // set mof
     builder.setMeasurementOrFactTypes(
-            mofr.getMeasurementOrFactItems().stream()
-                    .map(MeasurementOrFact::getMeasurementType)
-                    .filter(x -> StringUtils.isNotEmpty(x))
-                    .distinct()
-                    .collect(Collectors.toList()));
+        mofr.getMeasurementOrFactItems().stream()
+            .map(MeasurementOrFact::getMeasurementType)
+            .filter(x -> StringUtils.isNotEmpty(x))
+            .distinct()
+            .collect(Collectors.toList()));
     builder
-            .setDatasetKey(mdr.getDataResourceUid())
-            .setTaxonKey(taxonIDs)
-            .setLocationID(consolidate(core.getLocationID(), null))
-            .setYear(tr.getYear())
-            .setMonth(tr.getMonth())
-            .setCountryCode(consolidate(lr.getCountryCode(), null))
-            .setStateProvince(consolidate(lr.getStateProvince(), null));
+        .setDatasetKey(mdr.getDataResourceUid())
+        .setTaxonKey(taxonIDs)
+        .setLocationID(consolidate(core.getLocationID(), null))
+        .setYear(tr.getYear())
+        .setMonth(tr.getMonth())
+        .setCountryCode(consolidate(lr.getCountryCode(), null))
+        .setStateProvince(consolidate(lr.getStateProvince(), null));
 
     List<String> eventIDs =
-            core.getParentsLineage().stream()
-                    .sorted(
-                            Comparator.comparingInt(Parent::getOrder)
-                                    .reversed())
-                    .map(e -> e.getId())
-                    .collect(Collectors.toList());
+        core.getParentsLineage().stream()
+            .sorted(Comparator.comparingInt(Parent::getOrder).reversed())
+            .map(e -> e.getId())
+            .collect(Collectors.toList());
     eventIDs.add(core.getId());
 
     List<String> eventTypes =
-            core.getParentsLineage().stream()
-                    .sorted(
-                            Comparator.comparingInt(Parent::getOrder)
-                                    .reversed())
-                    .map(e -> e.getEventType())
-                    .collect(Collectors.toList());
+        core.getParentsLineage().stream()
+            .sorted(Comparator.comparingInt(Parent::getOrder).reversed())
+            .map(e -> e.getEventType())
+            .collect(Collectors.toList());
 
     if (core.getEventType() != null && core.getEventType().getConcept() != null) {
       eventTypes.add(core.getEventType().getConcept());

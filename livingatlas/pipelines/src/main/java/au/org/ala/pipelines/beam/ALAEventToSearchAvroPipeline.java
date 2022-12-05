@@ -35,10 +35,8 @@ import org.slf4j.MDC;
  * Pipeline that generates an AVRO index that will support a Spark SQL query interface for
  * downloads.
  *
- * This pipelines creates:
- * 1) An Event an AVRO export for querying
- * 2) An Interpreted Occurrence export joining
- * 3) A verbatim Occurrence export
+ * <p>This pipelines creates: 1) An Event an AVRO export for querying 2) An Interpreted Occurrence
+ * export joining 3) A verbatim Occurrence export
  */
 @Slf4j
 public class ALAEventToSearchAvroPipeline {
@@ -161,7 +159,6 @@ public class ALAEventToSearchAvroPipeline {
     result.waitUntilFinish();
     log.info("Save metrics into the file and set files owner");
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
-
 
     log.info("Pipeline has been finished");
   }

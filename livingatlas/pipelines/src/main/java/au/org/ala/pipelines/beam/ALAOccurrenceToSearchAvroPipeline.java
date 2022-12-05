@@ -1,9 +1,9 @@
 package au.org.ala.pipelines.beam;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
+
 import au.org.ala.pipelines.options.IndexingPipelineOptions;
 import au.org.ala.pipelines.transforms.ALAAttributionTransform;
-import au.org.ala.pipelines.transforms.ALAEventToSearchTransform;
-import au.org.ala.pipelines.transforms.ALAMetadataTransform;
 import au.org.ala.pipelines.transforms.ALAOccurrenceToSearchTransform;
 import au.org.ala.pipelines.transforms.ALASensitiveDataRecordTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
@@ -12,13 +12,8 @@ import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.ArchiveUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,52 +21,35 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
-import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
-import org.gbif.pipelines.io.avro.ALAMetadataRecord;
 import org.gbif.pipelines.io.avro.ALASensitivityRecord;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.ALAUUIDRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.EventCoreRecord;
-import org.gbif.pipelines.io.avro.EventSearchRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.OccurrenceSearchRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.slf4j.MDC;
-
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 /**
  * Pipeline that generates an AVRO index that will support a Spark SQL query interface for
  * downloads.
  *
- * This pipelines creates:
- * 1) An Event an AVRO export for querying
- * 2) An Interpreted Occurrence export joining
- * 3) A verbatim Occurrence export
+ * <p>This pipelines creates: 1) An Event an AVRO export for querying 2) An Interpreted Occurrence
+ * export joining 3) A verbatim Occurrence export
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -82,7 +60,7 @@ public class ALAOccurrenceToSearchAvroPipeline {
   public static void main(String[] args) throws IOException {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "index");
     IndexingPipelineOptions options =
-            PipelinesOptionsFactory.create(IndexingPipelineOptions.class, combinedArgs);
+        PipelinesOptionsFactory.create(IndexingPipelineOptions.class, combinedArgs);
     run(options);
   }
 
@@ -91,8 +69,7 @@ public class ALAOccurrenceToSearchAvroPipeline {
   }
 
   public static void run(
-          IndexingPipelineOptions options,
-      Function<IndexingPipelineOptions, Pipeline> pipelinesFn) {
+      IndexingPipelineOptions options, Function<IndexingPipelineOptions, Pipeline> pipelinesFn) {
 
     MDC.put("datasetKey", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
@@ -104,7 +81,7 @@ public class ALAOccurrenceToSearchAvroPipeline {
             PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Occurrence, t, ALL_AVRO);
 
     UnaryOperator<String> identifiersPathFn =
-            t -> ALAFsUtils.buildPathIdentifiersUsingTargetPath(options, t, ALL_AVRO);
+        t -> ALAFsUtils.buildPathIdentifiersUsingTargetPath(options, t, ALL_AVRO);
 
     options.setAppName("Event indexing of " + options.getDatasetId());
     Pipeline p = pipelinesFn.apply(options);
@@ -114,7 +91,8 @@ public class ALAOccurrenceToSearchAvroPipeline {
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     BasicTransform basicTransform = BasicTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
-    ALASensitiveDataRecordTransform sensitiveTransform = ALASensitiveDataRecordTransform.builder().create();
+    ALASensitiveDataRecordTransform sensitiveTransform =
+        ALASensitiveDataRecordTransform.builder().create();
     // Taxonomy transform for loading occurrence taxonomy info
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
     ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
@@ -122,16 +100,16 @@ public class ALAOccurrenceToSearchAvroPipeline {
 
     log.info("Adding step 3: Creating beam pipeline");
     PCollection<KV<String, ALAUUIDRecord>> uuidCollection =
-            p.apply("Read Metadata", alaUuidTransform.read(identifiersPathFn))
-                    .apply("Map Event core to KV", alaUuidTransform.toKv());
+        p.apply("Read Metadata", alaUuidTransform.read(identifiersPathFn))
+            .apply("Map Event core to KV", alaUuidTransform.toKv());
 
     PCollection<KV<String, ALAAttributionRecord>> attributionCollection =
         p.apply("Read Metadata", alaAttributionTransform.read(occurrencesPathFn))
-                .apply("Map Event core to KV", alaAttributionTransform.toKv());
+            .apply("Map Event core to KV", alaAttributionTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
-            p.apply("Read Event core", basicTransform.read(occurrencesPathFn))
-                    .apply("Map Event core to KV", basicTransform.toKv());
+        p.apply("Read Event core", basicTransform.read(occurrencesPathFn))
+            .apply("Map Event core to KV", basicTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
         p.apply("Read Temporal", temporalTransform.read(occurrencesPathFn))
@@ -147,8 +125,8 @@ public class ALAOccurrenceToSearchAvroPipeline {
             .apply("Map taxa to KV", alaTaxonomyTransform.toKv());
 
     PCollection<KV<String, ALASensitivityRecord>> sensitiveCollection =
-            p.apply("Read taxa", sensitiveTransform.read(occurrencesPathFn))
-                    .apply("Map taxa to KV", sensitiveTransform.toKv());
+        p.apply("Read taxa", sensitiveTransform.read(occurrencesPathFn))
+            .apply("Map taxa to KV", sensitiveTransform.toKv());
 
     log.info("Adding step 3: Converting into a json object");
     ParDo.SingleOutput<KV<String, CoGbkResult>, OccurrenceSearchRecord> occSearchAvroFn =
@@ -199,7 +177,7 @@ public class ALAOccurrenceToSearchAvroPipeline {
     log.info("Save metrics into the file and set files owner");
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
-    if (ArchiveUtils.isEventCore(options)){
+    if (ArchiveUtils.isEventCore(options)) {
       ALAEventToSearchAvroPipeline eventPipeline = new ALAEventToSearchAvroPipeline();
       eventPipeline.run(options);
     }
