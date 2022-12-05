@@ -1,1 +1,114 @@
-# which filesystem to use: local or hdfs
+# Deployment specific configuration for locql machine using a locally installed HDFS.
+# This file should be copied over `la-pipelines-local.yaml` when deployed
+# so that it is used by the scripts.
+#
+run:
+  # where to run: local, spark-embedded or spark-cluster
+  platform: local
+  local:
+    # jar: we get the jar from our dev or production environment
+    sparkTmp: /data/spark-tmp
+    dwcaTmp: /data/dwca-tmp
+    dwcaImportDir: hdfs://localhost:9000/dwca-exports
+    sparkMaster: ""
+  spark-embedded:
+    # jar: we get the jar from our dev or production environment
+    sparkTmp: /data/spark-tmp
+    dwcaTmp: /data/dwca-tmp
+    dwcaImportDir: hdfs://localhost:9000/dwca-exports
+    sparkMaster: ""
+  spark-cluster:
+    jar: /Users/mar759/dev/pipelines/livingatlas/pipelines/target/pipelines-2.13.0-SNAPSHOT-shaded.jar
+    dwcaImportDir: hdfs://localhost:9000/dwca-exports
+    sparkTmp: /data/spark-tmp
+    sparkMaster: spark://localhost:7077
+    sparkSubmit: /Users/mar759/dev/spark/bin/spark-submit
+
+collectory:
+  wsUrl: https://collections-test.ala.org.au/ws/
+  timeoutSec: 70
+  httpHeaders:
+    Authorization: << ADD ME >>
+
+imageService:
+  wsUrl: https://images-test.ala.org.au
+  httpHeaders:
+    apiKey: << ADD ME >>
+
+fs:
+  platform: local
+  local:
+    fsPath: /data
+  hdfs:
+    fsPath: hdfs://localhost:9000
+
+general:
+  attempt: 1
+  hdfsSiteConfig: /Users/mar759/dev/hadoop/etc/hadoop/hdfs-site.xml
+  coreSiteConfig: /Users/mar759/dev/hadoop/etc/hadoop/core-site.xml
+  inputPath: hdfs://localhost:9000/pipelines-data
+  targetPath: hdfs://localhost:9000/pipelines-data
+dwca-avro:
+  inputPath: hdfs://localhost:9000/dwca-imports/{datasetId}/{datasetId}.zip
+  tempLocation: /data/spark-tmp/dwca-avro/{datasetId}
+interpret:
+  defaultDateFormat: DMYT,DMY
+  inputPath: hdfs://localhost:9000/pipelines-data/{datasetId}/1/verbatim/*.avro
+dataset-validated-dump:
+  inputPath: hdfs://localhost:9000/pipelines-data
+dataset-count-dump:
+  inputPath: hdfs://localhost:9000/pipelines-data
+dataset-archive-list:
+  inputPath: hdfs://localhost:9000/dwca-exports/
+images:
+  inputPath: hdfs://localhost:9000/pipelines-data
+  targetPath: hdfs://localhost:9000/pipelines-data
+export-latlng:
+  inputPath: hdfs://localhost:9000/pipelines-data
+uuid:
+  inputPath: hdfs://localhost:9000/pipelines-data
+validation-report:
+  inputPath: hdfs://localhost:9000/pipelines-data
+  checkSolr: false
+sample-avro:
+  inputPath: hdfs://localhost:9000/pipelines-data
+index:
+  inputPath: hdfs://localhost:9000/pipelines-data
+  targetPath: hdfs://localhost:9000/pipelines-data
+  allDatasetsInputPath: hdfs://localhost:9000/pipelines-all-datasets
+speciesLists:
+  inputPath:  hdfs://localhost:9000/pipelines-data
+  targetPath:  hdfs://localhost:9000//pipelines-data
+  speciesAggregatesPath:  hdfs://localhost:9000//pipelines-species
+sensitive:
+  inputPath: hdfs://localhost:9000/pipelines-data
+  targetPath: hdfs://localhost:9000/pipelines-data
+outlier:
+  inputPath: hdfs://localhost:9000/pipelines-data
+  targetPath: hdfs://localhost:9000/pipelines-outlier
+sampling:
+  inputPath: hdfs://localhost:9000/pipelines-data
+  allDatasetsInputPath: hdfs://localhost:9000/pipelines-all-datasets
+elastic:
+  appName: Elastic indexing for {datasetId}
+  inputPath: hdfs://localhost:9000/pipelines-data
+  targetPath: hdfs://localhost:9000/pipelines-data
+  runner: SparkRunner
+  esHosts: http://localhost:9200
+  esSchemaPath: /Users/mar759/dev/pipelines-airflow/dags/es-event-core-schema.json
+  esAlias: event
+  esIndexName: 'event_{datasetId}'
+  indexNumberShards: 1
+  indexNumberReplicas: 0
+  esDocumentId: internalId
+export:
+  appName: DwCA export for {datasetId}
+  inputPath: hdfs://localhost:9000/pipelines-data
+  targetPath: hdfs://localhost:9000/pipelines-data
+  localExportPath: /tmp/pipelines-export
+  allDatasetsInputPath: hdfs://localhost:9000/pipelines-all-datasets
+predicate-export:
+  inputPath: hdfs://localhost:9000//pipelines-data
+  localExportPath: /tmp/pipelines-export
+
+

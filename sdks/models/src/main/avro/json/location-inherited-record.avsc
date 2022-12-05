@@ -12,6 +12,7 @@
       {"name": "inheritedFrom", "type": ["null", "string"], "default":null, "doc":"Id of the parent whose fields are inherited"},
       {"name": "countryCode","type":["null","string"],"default":null},
       {"name": "stateProvince","type":["null","string"],"default":null},
+      {"name": "locality","type":["null","string"],"default":null},
       {"name": "decimalLatitude","type":["null","double"],"default":null},
       {"name": "decimalLongitude","type":["null","double"],"default":null}
     ]

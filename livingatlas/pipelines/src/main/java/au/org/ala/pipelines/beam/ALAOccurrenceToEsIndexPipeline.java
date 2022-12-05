@@ -251,7 +251,7 @@ public class ALAOccurrenceToEsIndexPipeline {
       PCollection<KV<String, ALATaxonRecord>> taxonCollection =
           pipeline
               .apply("Read occurrence Taxon", taxonomyTransform.read(occurrencePathFn))
-              .apply("Map occurrence Taxon to KV", taxonomyTransform.toCoreIdKv());
+              .apply("Map occurrence Taxon to KV", taxonomyTransform.toKv());
 
       PCollection<KV<String, MultimediaRecord>> multimediaCollection =
           pipeline

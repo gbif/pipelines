@@ -251,35 +251,10 @@ object PredicateExportDwCAPipeline {
       eventSearchDF.select(col("Search.id"))
     }
 
-    log.info("Load event core")
-    val eventCoreDF = spark.read
-      .format("avro")
-      .load(s"${inputPath}/${datasetId}/${attempt}/event/event/*.avro")
-      .as("Core")
-
-    log.info("Load location")
-    val locationDF = spark.read
-      .format("avro")
-      .load(s"${inputPath}/${datasetId}/${attempt}/event/location/*.avro")
-      .as("Location")
-
-    log.info("Load temporal")
-    val temporalDF = spark.read
-      .format("avro")
-      .load(s"${inputPath}/${datasetId}/${attempt}/event/temporal/*.avro")
-      .as("Temporal")
-
-    log.info("Join")
-    val filterDownloadDF = filterSearchDF
-      .select(col("Search.id"))
-      .join(eventCoreDF, col("Search.id") === col("Core.id"), "inner")
-      .join(locationDF, col("Search.id") === col("Location.id"), "inner")
-      .join(temporalDF, col("Search.id") === col("Temporal.id"), "inner")
-
     // generate interpreted event export
     log.info("Export interpreted event data")
     val (eventExportDF, eventFields) =
-      generateInterpretedExportDF(filterDownloadDF, skippedFields, Array("Core", "Location", "Temporal"))
+      generateInterpretedExportDF(eventSearchDF, skippedFields)
     eventExportDF.write
       .option("header", "true")
       .option("sep", "\t")
@@ -298,7 +273,7 @@ object PredicateExportDwCAPipeline {
     val verbatimCoreFields = exportVerbatimCore(
       spark,
       verbatimDF,
-      filterDownloadDF,
+      eventSearchDF,
       hdfsSiteConf,
       coreSiteConf,
       localExportPath + s"/$datasetId"
@@ -308,7 +283,7 @@ object PredicateExportDwCAPipeline {
     val verbatimExtensionsForMeta = exportVerbatimExtensions(
       spark,
       verbatimDF,
-      filterDownloadDF,
+      eventSearchDF,
       hdfsSiteConf,
       coreSiteConf,
       localExportPath + s"/$datasetId"
@@ -320,7 +295,7 @@ object PredicateExportDwCAPipeline {
       inputPath,
       attempt,
       spark,
-      filterDownloadDF,
+      eventSearchDF,
       verbatimExtensionsForMeta.keySet,
       skippedFields,
       hdfsSiteConf,
@@ -357,13 +332,13 @@ object PredicateExportDwCAPipeline {
 
     val dfWithExtensions = filterDownloadDF.join(
       verbatimDF,
-      col("Core.id") === col("Verbatim.id"),
+      col("Search.id") === col("Verbatim.id"),
       "inner"
     )
 
     val coreFields =
       getCoreFields(dfWithExtensions, spark).filter(!_.endsWith("eventID"))
-    val columns = Array(col("core.id").as("eventID")) ++ coreFields.map { fieldName =>
+    val columns = Array(col("Search.id").as("eventID")) ++ coreFields.map { fieldName =>
       col("coreTerms.`" + fieldName + "`")
         .as(fieldName.substring(fieldName.lastIndexOf("/") + 1))
     }
@@ -397,7 +372,7 @@ object PredicateExportDwCAPipeline {
 
     val dfWithExtensions = filterDownloadDF.join(
       verbatimDF,
-      col("Core.id") === col("Verbatim.id"),
+      col("Search.id") === col("Verbatim.id"),
       "inner"
     )
 
@@ -429,7 +404,7 @@ object PredicateExportDwCAPipeline {
 
       val extensionDF = dfWithExtensions
         .select(
-          col("Core.id").as("id"),
+          col("Search.id").as("id"),
           col(s"""extensions.`${extensionURI}`""").as("the_extension")
         )
         .toDF
@@ -479,60 +454,23 @@ object PredicateExportDwCAPipeline {
     // If an occurrence extension was supplied
     if (extensionList.contains(DwcTerm.Occurrence.qualifiedName())) {
 
-      log.info("Load basic  for occurrences")
-      val occBasicDF = spark.read
-        .format("avro")
-        .load(s"${hdfsPath}/${datasetId}/${attempt}/occurrence/basic/*.avro")
-        .as("OccBasic")
-        .filter("coreId is NOT NULL")
-
-      log.info("Load occurrences")
-      val occTaxonDF = spark.read
-        .format("avro")
-        .load(
-          s"${hdfsPath}/${datasetId}/${attempt}/occurrence/ala_taxonomy/*.avro"
-        )
-        .as("OccTaxon")
-        .filter("coreId is NOT NULL")
-
-      log.info("Load temporal  for occurrences")
-      val occTemporalDF = spark.read
-        .format("avro")
-        .load(s"${hdfsPath}/${datasetId}/${attempt}/occurrence/temporal/*.avro")
-        .as("OccTemporal")
-        .filter("coreId is NOT NULL")
-
-      log.info("Load location for occurrences")
-      val occLocationDF = spark.read
-        .format("avro")
-        .load(s"${hdfsPath}/${datasetId}/${attempt}/occurrence/location/*.avro")
-        .as("OccLocation")
-        .filter("coreId is NOT NULL")
-
       log.info("Create occurrence join DF")
-      val occDF = occBasicDF
-        .join(occTaxonDF, col("OccBasic.id") === col("OccTaxon.id"), "inner")
-        .join(
-          occLocationDF,
-          col("OccBasic.id") === col("OccLocation.id"),
-          "inner"
-        )
-        .join(
-          occTemporalDF,
-          col("OccBasic.id") === col("OccTemporal.id"),
-          "inner"
-        )
+      val occDF = spark.read
+        .format("avro")
+        .load(s"${hdfsPath}/${datasetId}/${attempt}/search/occurrence/*.avro")
+        .as("Occurrence")
+        .filter("coreId is NOT NULL")
 
       val joinOccDF = filterDownloadDF
-        .select(col("Core.id"))
-        .join(occDF, col("Core.id") === col("OccBasic.coreId"), "inner")
+        .select(col("Search.id"))
+        .join(occDF, col("Search.id") === col("Occurrence.coreId"), "inner")
 
       log.info("Generate interpreted occurrence DF for export")
       val (exportDF, fields) =
         generateInterpretedExportDF(
           joinOccDF,
           skippedFields,
-          Array("OccBasic", "OccTaxon", "OccLocation", "OccTemporal")
+          Array("Occurrence")
         )
 
       log.info("Export interpreted occurrence data")
@@ -557,8 +495,7 @@ object PredicateExportDwCAPipeline {
 
   def generateInterpretedExportDF(
       df: DataFrame,
-      skippedFields: Array[String],
-      issuesAliases: Array[String]
+      skippedFields: Array[String]
   ): (DataFrame, Array[String]) = {
 
     val primitiveFields = df.schema.fields.filter(structField => {
@@ -586,15 +523,13 @@ object PredicateExportDwCAPipeline {
       }
     })
 
-    val issues = issuesAliases.map(alias => col(s"$alias.issues").as(s"${alias}_issues"))
-
     val exportFields = (primitiveFields.map { field =>
       field.name
     } ++ stringArrayFields.map { field => field.name })
       .filter(!skippedFields.contains(_))
 
     val fields =
-      Array(col("core.id").as("eventID")) ++ exportFields.map(col(_)) ++ issues
+      Array(col("Search.id").as("eventID")) ++ exportFields.map(col(_))
 
     var occDFCoalesce = df.select(fields: _*).coalesce(1)
 
@@ -605,14 +540,10 @@ object PredicateExportDwCAPipeline {
       )
     }
 
-    issuesAliases.foreach { alias =>
-      occDFCoalesce = occDFCoalesce.withColumn(
-        s"${alias}_issues",
-        concat_ws(";", col(s"${alias}_issues.issueList"))
-      )
-    }
-
-    (occDFCoalesce, Array("Core.id") ++ exportFields ++ issuesAliases.map(alias => s"${alias}_issues").toArray[String])
+    (
+      occDFCoalesce,
+      Array("Search.id") ++ exportFields //++ issuesAliases.map(alias => s"${alias}_issues").toArray[String]
+    )
   }
 
   val META_XML_ENCODING = "UTF-8"
@@ -693,17 +624,15 @@ object PredicateExportDwCAPipeline {
       field
     } else {
       field match {
-        case "id"                 => "http://rs.tdwg.org/dwc/terms/eventID"
-        case "core.id"            => "http://rs.tdwg.org/dwc/terms/eventID"
-        case "Core_issues"        => "http://rs.tdwg.org/dwc/terms/issues"
-        case "Temporal_issues"    => "http://rs.tdwg.org/dwc/terms/temporalIssues"
-        case "Location_issues"    => "http://rs.tdwg.org/dwc/terms/locationIssues"
-        case "OccBasic_issues"    => "http://rs.tdwg.org/dwc/terms/issues"
-        case "OccTemporal_issues" => "http://rs.tdwg.org/dwc/terms/temporalIssues"
-        case "OccTaxon_issues"    => "http://rs.tdwg.org/dwc/terms/taxonomicIssues"
-        case "OccLocation_issues" => "http://rs.tdwg.org/dwc/terms/locationIssues"
-        case "eventDate.gte"      => "http://rs.tdwg.org/dwc/terms/eventDate"
-        case "eventType.concept"  => "http://rs.gbif.org/terms/1.0/eventType"
+        case "id"                => "http://rs.tdwg.org/dwc/terms/eventID"
+        case "Search.id"         => "http://rs.tdwg.org/dwc/terms/eventID"
+        case "core.id"           => "http://rs.tdwg.org/dwc/terms/eventID"
+        case "issues"            => "http://rs.tdwg.org/dwc/terms/issues"
+        case "Occurrence_issues" => "http://rs.tdwg.org/dwc/terms/issues"
+        case "Event_issues"      => "http://rs.tdwg.org/dwc/terms/issues"
+        case "Search_issues"     => "http://rs.tdwg.org/dwc/terms/issues"
+        case "eventDate.gte"     => "http://rs.tdwg.org/dwc/terms/eventDate"
+        case "eventType.concept" => "http://rs.gbif.org/terms/1.0/eventType"
         case "elevationAccuracy" =>
           "http://rs.gbif.org/terms/1.0/elevationAccuracy"
         case "depthAccuracy" => "http://rs.gbif.org/terms/1.0/depthAccuracy"

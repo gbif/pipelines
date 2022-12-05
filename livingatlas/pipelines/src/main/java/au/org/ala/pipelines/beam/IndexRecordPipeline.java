@@ -166,7 +166,7 @@ public class IndexRecordPipeline {
 
     PCollection<KV<String, ALATaxonRecord>> alaTaxonCollection =
         p.apply("Read Taxon", alaTaxonomyTransform.read(pathFn))
-            .apply("Map Taxon to KV", alaTaxonomyTransform.toCoreIdKv());
+            .apply("Map Taxon to KV", alaTaxonomyTransform.toKv());
 
     PCollection<KV<String, ALAAttributionRecord>> alaAttributionCollection =
         p.apply("Read attribution", alaAttributionTransform.read(pathFn))
@@ -273,9 +273,8 @@ public class IndexRecordPipeline {
 
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
-    if (ArchiveUtils.isEventCore(options)) {
-      ALAEventToSearchAvroPipeline.run(options);
-    }
+    // run occurrence AVRO pipeline
+    ALAOccurrenceToSearchAvroPipeline.run(options);
 
     log.info("Pipeline has been finished");
   }

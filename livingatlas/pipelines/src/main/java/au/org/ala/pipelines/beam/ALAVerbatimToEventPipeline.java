@@ -357,15 +357,21 @@ public class ALAVerbatimToEventPipeline {
 
       boolean hasMonthInfo = temporalRecord.getMonth() != null;
       boolean hasYearInfo = temporalRecord.getYear() != null;
+      boolean hasDayInfo = temporalRecord.getDay() != null;
 
       // extract location & temporal information from
-      if (!hasYearInfo && inheritedRecord.getYear() != null) {
+      if (!hasYearInfo) {
         temporalRecord.setYear(inheritedRecord.getYear());
       }
 
-      if (!hasMonthInfo && inheritedRecord.getMonth() != null) {
+      if (!hasMonthInfo) {
         temporalRecord.setMonth(inheritedRecord.getMonth());
       }
+
+      if (!hasMonthInfo && !hasDayInfo) {
+        temporalRecord.setDay(inheritedRecord.getDay());
+      }
+
       out.output(temporalRecord);
     }
   }

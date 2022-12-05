@@ -131,6 +131,7 @@ public class TemporalInheritedFieldsFn
     private String parentId;
     private Integer year;
     private Integer month;
+    private Integer day;
 
     static TemporalInheritedFields from(TemporalRecord temporalRecord) {
       TemporalInheritedFields tif = new TemporalInheritedFields();
@@ -138,11 +139,12 @@ public class TemporalInheritedFieldsFn
       tif.parentId = temporalRecord.getParentId();
       tif.year = temporalRecord.getYear();
       tif.month = temporalRecord.getMonth();
+      tif.day = temporalRecord.getDay();
       return tif;
     }
 
     boolean allFieldsNull() {
-      return year == null && month == null;
+      return year == null && month == null && day == null;
     }
   }
 }
