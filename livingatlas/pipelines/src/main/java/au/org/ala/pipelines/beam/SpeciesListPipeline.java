@@ -128,7 +128,7 @@ public class SpeciesListPipeline {
     // generate a taxonID -> occurrenceID PCollection
     PCollection<KV<String, String>> alaTaxonID =
         p.apply("Read Taxon", alaTaxonomyTransform.read(pathFn))
-            .apply("Map Taxon to KV", alaTaxonomyTransform.toCoreIdKv())
+            .apply("Map Taxon to KV", alaTaxonomyTransform.toKv())
             .apply(Filter.by(record -> record.getValue().getTaxonConceptID() != null))
             .apply(
                 MapElements.via(

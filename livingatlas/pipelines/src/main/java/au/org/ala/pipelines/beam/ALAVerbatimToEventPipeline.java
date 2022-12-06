@@ -22,8 +22,13 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.extensions.joinlibrary.Join;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.transforms.View;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
@@ -38,7 +43,13 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.FileVocabularyFactory;
 import org.gbif.pipelines.io.avro.ALAMetadataRecord;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
+import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
+import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
@@ -138,6 +149,7 @@ public class ALAVerbatimToEventPipeline {
             .stateProvinceKvStoreSupplier(GeocodeKvStoreFactory.createStateProvinceSupplier(config))
             .biomeKvStoreSupplier(GeocodeKvStoreFactory.createBiomeSupplier(config))
             .create();
+
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     ALATemporalTransform temporalTransform =
         ALATemporalTransform.builder().orderings(dateComponentOrdering).create();
@@ -158,17 +170,12 @@ public class ALAVerbatimToEventPipeline {
         MeasurementOrFactTransform.builder().create();
     log.info("Creating beam pipeline");
 
-    PCollectionView<ALAMetadataRecord> metadataView;
     if (useMetadataRecordWriteIO(types)) {
       PCollection<ALAMetadataRecord> metadataRecord =
           p.apply("Create metadata collection", Create.of(options.getDatasetId()))
               .apply("Interpret metadata", metadataTransform.interpret());
 
       metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
-    } else {
-      PCollection<ALAMetadataRecord> metadataRecord =
-          p.apply("Read metadata record", metadataTransform.read(pathFn));
-      metadataView = metadataRecord.apply("Convert to event metadata view", View.asSingleton());
     }
 
     // Read raw records and filter duplicates
@@ -190,16 +197,6 @@ public class ALAVerbatimToEventPipeline {
         .apply("Write event identifiers to avro", identifierTransform.write(pathFn));
 
     uniqueRawRecords
-        .apply("Check event core transform", eventCoreTransform.check(types))
-        .apply("Interpret event core", eventCoreTransform.interpret())
-        .apply("Write event core to avro", eventCoreTransform.write(pathFn));
-
-    uniqueRawRecords
-        .apply("Check event temporal transform", temporalTransform.check(types))
-        .apply("Interpret event temporal", temporalTransform.interpret())
-        .apply("Write event temporal to avro", temporalTransform.write(pathFn));
-
-    uniqueRawRecords
         .apply("Check event multimedia transform", multimediaTransform.check(types))
         .apply("Interpret event multimedia", multimediaTransform.interpret())
         .apply("Write event multimedia to avro", multimediaTransform.write(pathFn));
@@ -215,11 +212,6 @@ public class ALAVerbatimToEventPipeline {
         .apply("Write event image to avro", imageTransform.write(pathFn));
 
     uniqueRawRecords
-        .apply("Check location transform", locationTransform.check(types))
-        .apply("Interpret event location", locationTransform.interpret())
-        .apply("Write event location to avro", locationTransform.write(pathFn));
-
-    uniqueRawRecords
         .apply("Check event measurementOrFact", measurementOrFactTransform.check(types))
         .apply("Interpret event measurementOrFact", measurementOrFactTransform.interpret())
         .apply("Write event measurementOrFact to avro", measurementOrFactTransform.write(pathFn));
@@ -227,6 +219,67 @@ public class ALAVerbatimToEventPipeline {
     uniqueRawRecords
         .apply("Check event verbatim transform", verbatimTransform.check(types))
         .apply("Write event verbatim to avro", verbatimTransform.write(pathFn));
+
+    PCollection<KV<String, EventCoreRecord>> eventCoreRecords =
+        uniqueRawRecords
+            .apply("Check event core transform", eventCoreTransform.check(types))
+            .apply("Interpret event core", eventCoreTransform.interpret())
+            .apply("Interpret event core", eventCoreTransform.toKv());
+
+    PCollection<KV<String, LocationRecord>> locationRecords =
+        uniqueRawRecords
+            .apply("Check location transform", locationTransform.check(types))
+            .apply("Interpret event location", locationTransform.interpret())
+            .apply("Interpret event core", locationTransform.toKv());
+
+    PCollection<KV<String, TemporalRecord>> temporalRecords =
+        uniqueRawRecords
+            .apply("Check event temporal transform", temporalTransform.check(types))
+            .apply("Interpret event temporal", temporalTransform.interpret())
+            .apply("Interpret event core", temporalTransform.toKv());
+
+    org.gbif.pipelines.transforms.core.LocationTransform gbifLocationTransform =
+        org.gbif.pipelines.transforms.core.LocationTransform.builder().create();
+    org.gbif.pipelines.transforms.core.TemporalTransform gbifTemporalTransform =
+        org.gbif.pipelines.transforms.core.TemporalTransform.builder().create();
+
+    InheritedFields inheritedFields =
+        InheritedFields.builder()
+            .inheritedFieldsTransform(InheritedFieldsTransform.builder().build())
+            .locationCollection(locationRecords)
+            .temporalCollection(temporalRecords)
+            .eventCoreCollection(eventCoreRecords)
+            .locationTransform(gbifLocationTransform)
+            .temporalTransform(gbifTemporalTransform)
+            .eventCoreTransform(eventCoreTransform)
+            .build();
+
+    PCollection<KV<String, LocationInheritedRecord>> locationInheritedRecords =
+        inheritedFields.inheritLocationFields();
+
+    PCollection<KV<String, TemporalInheritedRecord>> temporalInheritedRecords =
+        inheritedFields.inheritTemporalFields();
+
+    PCollection<KV<String, EventInheritedRecord>> eventInheritedRecords =
+        inheritedFields.inheritEventFields();
+
+    // INHERITANCE
+    // #####################################################################################
+
+    // apply these inherited values and write AVRO
+    applyEventInheritance(eventCoreRecords, eventInheritedRecords)
+        .apply("Write event verbatim to avro", eventCoreTransform.write(pathFn));
+
+    // apply these inherited values and write AVRO
+    applyLocationInheritance(locationRecords, locationInheritedRecords)
+        .apply("Write event verbatim to avro", gbifLocationTransform.write(pathFn));
+
+    // apply these inherited values and write AVRO
+    applyTemporalInheritance(temporalRecords, temporalInheritedRecords)
+        .apply("Write event verbatim to avro", gbifTemporalTransform.write(pathFn));
+
+    // INHERITANCE
+    // #####################################################################################
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
@@ -240,6 +293,106 @@ public class ALAVerbatimToEventPipeline {
     FsUtils.deleteDirectoryByPrefix(hdfsConfigs, tempPath, ".temp-beam");
 
     log.info("Pipeline has been finished");
+  }
+
+  static class EventInheritFcn
+      extends DoFn<KV<EventCoreRecord, EventInheritedRecord>, EventCoreRecord> {
+    @ProcessElement
+    public void processElement(
+        @Element KV<EventCoreRecord, EventInheritedRecord> recordAndInherited,
+        OutputReceiver<EventCoreRecord> out) {
+      EventCoreRecord eventCoreRecord = recordAndInherited.getKey();
+      EventInheritedRecord inheritedRecord = recordAndInherited.getValue();
+      if (eventCoreRecord.getLocationID() == null) {
+        eventCoreRecord.setLocationID(inheritedRecord.getLocationID());
+      }
+      out.output(eventCoreRecord);
+    }
+  }
+
+  static class LocationInheritFcn
+      extends DoFn<KV<LocationRecord, LocationInheritedRecord>, LocationRecord> {
+    @ProcessElement
+    public void processElement(
+        @Element KV<LocationRecord, LocationInheritedRecord> recordAndInherited,
+        OutputReceiver<LocationRecord> out) {
+
+      LocationRecord locationRecord = recordAndInherited.getKey();
+      LocationInheritedRecord inheritedRecord = recordAndInherited.getValue();
+
+      if (locationRecord.getDecimalLongitude() == null
+          && locationRecord.getDecimalLatitude() == null) {
+        locationRecord.setDecimalLongitude(inheritedRecord.getDecimalLongitude());
+        locationRecord.setDecimalLatitude(inheritedRecord.getDecimalLatitude());
+        locationRecord.setStateProvince(inheritedRecord.getStateProvince());
+        locationRecord.setCountryCode(inheritedRecord.getCountryCode());
+      }
+
+      out.output(locationRecord);
+    }
+  }
+
+  static class TemporalInheritFcn
+      extends DoFn<KV<TemporalRecord, TemporalInheritedRecord>, TemporalRecord> {
+    @ProcessElement
+    public void processElement(
+        @Element KV<TemporalRecord, TemporalInheritedRecord> recordAndInherited,
+        OutputReceiver<TemporalRecord> out) {
+
+      TemporalRecord temporalRecord = recordAndInherited.getKey();
+      TemporalInheritedRecord inheritedRecord = recordAndInherited.getValue();
+
+      boolean hasMonthInfo = temporalRecord.getMonth() != null;
+      boolean hasYearInfo = temporalRecord.getYear() != null;
+      boolean hasDayInfo = temporalRecord.getDay() != null;
+
+      // extract location & temporal information from
+      if (!hasYearInfo) {
+        temporalRecord.setYear(inheritedRecord.getYear());
+      }
+
+      if (!hasMonthInfo) {
+        temporalRecord.setMonth(inheritedRecord.getMonth());
+      }
+
+      if (!hasMonthInfo && !hasDayInfo) {
+        temporalRecord.setDay(inheritedRecord.getDay());
+      }
+
+      out.output(temporalRecord);
+    }
+  }
+
+  private static PCollection<EventCoreRecord> applyEventInheritance(
+      PCollection<KV<String, EventCoreRecord>> records,
+      PCollection<KV<String, EventInheritedRecord>> inheritedRecords) {
+
+    PCollection<KV<EventCoreRecord, EventInheritedRecord>> join =
+        Join.leftOuterJoin(records, inheritedRecords, EventInheritedRecord.newBuilder().build())
+            .apply(Values.create());
+    return join.apply(ParDo.of(new EventInheritFcn()));
+  }
+
+  private static PCollection<LocationRecord> applyLocationInheritance(
+      PCollection<KV<String, LocationRecord>> records,
+      PCollection<KV<String, LocationInheritedRecord>> inheritedRecords) {
+
+    PCollection<KV<LocationRecord, LocationInheritedRecord>> join =
+        Join.leftOuterJoin(
+                records, inheritedRecords, LocationInheritedRecord.newBuilder().setId("").build())
+            .apply(Values.create());
+    return join.apply(ParDo.of(new LocationInheritFcn()));
+  }
+
+  private static PCollection<TemporalRecord> applyTemporalInheritance(
+      PCollection<KV<String, TemporalRecord>> records,
+      PCollection<KV<String, TemporalInheritedRecord>> inheritedRecords) {
+
+    PCollection<KV<TemporalRecord, TemporalInheritedRecord>> join =
+        Join.leftOuterJoin(
+                records, inheritedRecords, TemporalInheritedRecord.newBuilder().setId("").build())
+            .apply(Values.create());
+    return join.apply(ParDo.of(new TemporalInheritFcn()));
   }
 
   /** Remove directories with avro files for expected interpretation, except IDENTIFIER */

@@ -52,7 +52,7 @@ public class OccurrenceExtensionTransform extends DoFn<ExtendedRecord, ExtendedR
       if (occurrenceExts.isEmpty()) {
         // Do nothing, this Event/Taxon record contains no occurrences
         // Fix for https://github.com/gbif/pipelines/issues/471
-        log.warn("Event/Taxon core archive with empty occurrence extensions");
+        log.debug("Event/Taxon core archive with empty occurrence extensions");
       } else {
 
         OccurrenceExtensionConverter.convert(er)

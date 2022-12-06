@@ -564,11 +564,11 @@ function elastic () {
     logStepStart "Elastic" $dr
 
     SH_ARGS=elastic-sh-args.local
-    CLASS=au.org.ala.pipelines.beam.ALAEventToEsIndexPipeline
+    CLASS=au.org.ala.pipelines.beam.ElasticPipeline
     java-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=elastic-sh-args.spark-embedded
-    CLASS=au.org.ala.pipelines.beam.ALAEventToEsIndexPipeline
+    CLASS=au.org.ala.pipelines.beam.ElasticPipeline
     spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
 
     SH_ARGS=elastic-sh-args.spark-cluster

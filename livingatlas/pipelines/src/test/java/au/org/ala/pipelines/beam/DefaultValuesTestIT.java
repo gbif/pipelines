@@ -69,9 +69,9 @@ public class DefaultValuesTestIT {
     AvroCheckPipeline.assertExtendedCountRecords(testOptions1, 5L, notPopulated);
 
     // Run the interpretation pipeline
-    InterpretationPipelineOptions interpretationOptions =
+    ALAInterpretationPipelineOptions interpretationOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            ALAInterpretationPipelineOptions.class,
             new String[] {
               "--datasetId=dr893",
               "--attempt=1",

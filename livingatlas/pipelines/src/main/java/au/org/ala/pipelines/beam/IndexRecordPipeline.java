@@ -6,7 +6,6 @@ import au.org.ala.pipelines.options.IndexingPipelineOptions;
 import au.org.ala.pipelines.transforms.*;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
-import au.org.ala.utils.ArchiveUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationResult;
 import au.org.ala.utils.ValidationUtils;
@@ -166,7 +165,7 @@ public class IndexRecordPipeline {
 
     PCollection<KV<String, ALATaxonRecord>> alaTaxonCollection =
         p.apply("Read Taxon", alaTaxonomyTransform.read(pathFn))
-            .apply("Map Taxon to KV", alaTaxonomyTransform.toCoreIdKv());
+            .apply("Map Taxon to KV", alaTaxonomyTransform.toKv());
 
     PCollection<KV<String, ALAAttributionRecord>> alaAttributionCollection =
         p.apply("Read attribution", alaAttributionTransform.read(pathFn))
@@ -185,7 +184,7 @@ public class IndexRecordPipeline {
     }
 
     PCollection<KV<String, ALASensitivityRecord>> alaSensitiveDataCollection = null;
-    if (options.getIncludeSensitiveData()) {
+    if (options.getIncludeSensitiveDataChecks()) {
       alaSensitiveDataCollection =
           p.apply("Read sensitive data", alaSensitiveDataRecordTransform.read(pathFn))
               .apply("Map sensitive data to KV", alaSensitiveDataRecordTransform.toKv());
@@ -207,7 +206,9 @@ public class IndexRecordPipeline {
             alaUuidTransform.getTag(),
             options.getIncludeImages() ? imageRecordTupleTag : null,
             options.getIncludeSpeciesLists() ? speciesListsRecordTupleTag : null,
-            options.getIncludeSensitiveData() ? alaSensitiveDataRecordTransform.getTag() : null,
+            options.getIncludeSensitiveDataChecks()
+                ? alaSensitiveDataRecordTransform.getTag()
+                : null,
             options.getDatasetId(),
             lastLoadedDate,
             lastProcessedDate);
@@ -243,7 +244,7 @@ public class IndexRecordPipeline {
       kpct = kpct.and(taxonomyTransform.getTag(), taxonCollection);
     }
 
-    if (options.getIncludeSensitiveData()) {
+    if (options.getIncludeSensitiveDataChecks()) {
       kpct = kpct.and(alaSensitiveDataRecordTransform.getTag(), alaSensitiveDataCollection);
     }
 
@@ -271,9 +272,8 @@ public class IndexRecordPipeline {
 
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
-    if (ArchiveUtils.isEventCore(options)) {
-      ALAEventToSearchAvroPipeline.run(options);
-    }
+    // run occurrence AVRO pipeline
+    ALAOccurrenceToSearchAvroPipeline.run(options);
 
     log.info("Pipeline has been finished");
   }

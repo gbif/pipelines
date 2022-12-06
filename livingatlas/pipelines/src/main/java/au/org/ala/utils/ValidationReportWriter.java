@@ -72,6 +72,9 @@ public class ValidationReportWriter {
   @Parameter(names = "--solrCollection", description = "SOLR collection")
   private String solrCollection;
 
+  @Parameter(names = "--timeBufferInMillis", description = "Validation time buffer in millis")
+  private Integer timeBufferInMillis = 30000;
+
   protected static final String[] CSV_HEADERS =
       new String[] {
         "datasetID",
@@ -213,7 +216,8 @@ public class ValidationReportWriter {
           }
 
           ValidationResult validationResult =
-              ValidationUtils.checkReadyForIndexing(fs, inputPath, datasetID, attempt, checkSDS);
+              ValidationUtils.checkReadyForIndexing(
+                  fs, inputPath, datasetID, attempt, checkSDS, timeBufferInMillis);
 
           // write CSV
           reportWriter.write(

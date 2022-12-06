@@ -1,3 +1,4 @@
 occurrenceID,eventID,basisOfRecord,scientificName,phylum,class,order,family,individualCount
 occurrence1,event4,HumanObservation,Latropiscis purpurissatus,Chordata,Actinopterygii,Aulopiformes,Aulopidae,1
 occurrence2,event5,HumanObservation,Latropiscis purpurissatus,Chordata,Actinopterygii,Aulopiformes,Aulopidae,1
+occurrence3,event5,HumanObservation,Callocephalon fimbriatum,Chordata,Aves,PSITTACIFORMES,CACATUIDAE,1

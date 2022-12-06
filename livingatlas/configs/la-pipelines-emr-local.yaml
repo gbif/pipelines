@@ -36,3 +36,4 @@ solr:
 elastic:
   esHosts: ES_HOSTS
   esAlias: ES_ALIAS
+  indexNumberShards: 6

@@ -109,6 +109,7 @@ elastic:
   esSchemaPath: /tmp/es-event-core-schema.json
   esHosts: ES_HOSTS
   esAlias: ES_ALIAS
+  indexNumberShards: 6
 
 export:
   inputPath: hdfs:///pipelines-data
@@ -116,7 +117,7 @@ export:
 
 predicate-export:
   inputPath: hdfs:///pipelines-data
-  targetPath: hdfs:///pipelines-data
+  targetPath: hdfs:///pipelines-export
 
 gbifConfig:
   vocabularyConfig:

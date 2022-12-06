@@ -846,7 +846,11 @@
       <artifactId>elasticsearch</artifactId>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.gbif.hadoop</groupId>
+      <artifactId>hadoop-compress</artifactId>
+      <version>1.2</version>
+    </dependency>
   </dependencies>
 
   <profiles>
