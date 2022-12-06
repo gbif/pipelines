@@ -59,127 +59,117 @@ public class PredicateExportDwCATestIT {
   private String getDwcaFilePath(String jobId) {
     return "/tmp/la-pipelines-test/event-download/" + jobId + "/dr18391.zip";
   }
-  //
-  //  @Test
-  //  public void testExportByYear() throws Exception {
-  //
-  //    String absolutePath = new File("src/test/resources").getAbsolutePath();
-  //    String jobId = runExport("dr18391", absolutePath +
-  // "/event-download/dr18391/query-year.json");
-  //    String dwcaFilePath = getDwcaFilePath(jobId);
-  //
-  //    assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
-  //    assertEquals(
-  //        2, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
-  //    assertEquals(
-  //        2,
-  //        DwcaUtils.countRecordsInExtension(dwcaFilePath,
-  // DwcTerm.MeasurementOrFact.qualifiedName()));
-  //  }
-  //
-  //  @Test
-  //  public void testExportByMonth() throws Exception {
-  //
-  //    String absolutePath = new File("src/test/resources").getAbsolutePath();
-  //    String jobId = runExport("dr18391", absolutePath +
-  // "/event-download/dr18391/query-month.json");
-  //    String dwcaFilePath = getDwcaFilePath(jobId);
-  //
-  //    assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
-  //    assertEquals(
-  //        2, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
-  //    assertEquals(
-  //        2,
-  //        DwcaUtils.countRecordsInExtension(dwcaFilePath,
-  // DwcTerm.MeasurementOrFact.qualifiedName()));
-  //  }
-  //
-  //  @Test
-  //  public void testExportByStateProvince() throws Exception {
-  //
-  //    String absolutePath = new File("src/test/resources").getAbsolutePath();
-  //    String jobId =
-  //        runExport("dr18391", absolutePath + "/event-download/dr18391/query-stateProvince.json");
-  //    String dwcaFilePath = getDwcaFilePath(jobId);
-  //
-  //    assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
-  //    assertEquals(
-  //        2, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
-  //    assertEquals(
-  //        2,
-  //        DwcaUtils.countRecordsInExtension(dwcaFilePath,
-  // DwcTerm.MeasurementOrFact.qualifiedName()));
-  //  }
-  //
-  //  @Test
-  //  public void testExportByEventTypeHierarchy() throws Exception {
-  //
-  //    String absolutePath = new File("src/test/resources").getAbsolutePath();
-  //    String jobId =
-  //        runExport(
-  //            "dr18391", absolutePath + "/event-download/dr18391/query-eventTypeHierarchy.json");
-  //    String dwcaFilePath = getDwcaFilePath(jobId);
-  //
-  //    // FIXME need to set eventTypeHierarchy = [eventType] for root
-  //    assertEquals(10, DwcaUtils.countRecordsInCore(dwcaFilePath));
-  //    assertEquals(
-  //        4, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
-  //    assertEquals(
-  //        4,
-  //        DwcaUtils.countRecordsInExtension(dwcaFilePath,
-  // DwcTerm.MeasurementOrFact.qualifiedName()));
-  //  }
-  //
-  //  @Test
-  //  public void testExportByCompoundQuery() throws Exception {
-  //
-  //    String absolutePath = new File("src/test/resources").getAbsolutePath();
-  //    String jobId =
-  //        runExport("dr18391", absolutePath + "/event-download/dr18391/query-compound.json");
-  //    String dwcaFilePath = getDwcaFilePath(jobId);
-  //
-  //    assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
-  //    assertEquals(
-  //        2, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
-  //    assertEquals(
-  //        2,
-  //        DwcaUtils.countRecordsInExtension(dwcaFilePath,
-  // DwcTerm.MeasurementOrFact.qualifiedName()));
-  //  }
-  //
-  //  @Test
-  //  public void testExportByTaxon() throws Exception {
-  //
-  //    String absolutePath = new File("src/test/resources").getAbsolutePath();
-  //    String jobId = runExport("dr18391", absolutePath +
-  // "/event-download/dr18391/query-taxon.json");
-  //    String dwcaFilePath = getDwcaFilePath(jobId);
-  //
-  //    assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
-  //    assertEquals(
-  //        4, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
-  //    assertEquals(
-  //        4,
-  //        DwcaUtils.countRecordsInExtension(dwcaFilePath,
-  // DwcTerm.MeasurementOrFact.qualifiedName()));
-  //  }
-  //
-  //  @Test
-  //  public void testExportByHigherTaxon() throws Exception {
-  //
-  //    String absolutePath = new File("src/test/resources").getAbsolutePath();
-  //    String jobId =
-  //        runExport("dr18391", absolutePath + "/event-download/dr18391/query-higher-taxon.json");
-  //    String dwcaFilePath = getDwcaFilePath(jobId);
-  //
-  //    assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
-  //    assertEquals(
-  //        4, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
-  //    assertEquals(
-  //        4,
-  //        DwcaUtils.countRecordsInExtension(dwcaFilePath,
-  // DwcTerm.MeasurementOrFact.qualifiedName()));
-  //  }
+
+  @Test
+  public void testExportByYear() throws Exception {
+
+    String absolutePath = new File("src/test/resources").getAbsolutePath();
+    String jobId = runExport("dr18391", absolutePath + "/event-download/dr18391/query-year.json");
+    String dwcaFilePath = getDwcaFilePath(jobId);
+
+    assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
+    assertEquals(
+        2, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
+    assertEquals(
+        2,
+        DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.MeasurementOrFact.qualifiedName()));
+  }
+
+  @Test
+  public void testExportByMonth() throws Exception {
+
+    String absolutePath = new File("src/test/resources").getAbsolutePath();
+    String jobId = runExport("dr18391", absolutePath + "/event-download/dr18391/query-month.json");
+    String dwcaFilePath = getDwcaFilePath(jobId);
+
+    assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
+    assertEquals(
+        2, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
+    assertEquals(
+        2,
+        DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.MeasurementOrFact.qualifiedName()));
+  }
+
+  @Test
+  public void testExportByStateProvince() throws Exception {
+
+    String absolutePath = new File("src/test/resources").getAbsolutePath();
+    String jobId =
+        runExport("dr18391", absolutePath + "/event-download/dr18391/query-stateProvince.json");
+    String dwcaFilePath = getDwcaFilePath(jobId);
+
+    assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
+    assertEquals(
+        2, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
+    assertEquals(
+        2,
+        DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.MeasurementOrFact.qualifiedName()));
+  }
+
+  @Test
+  public void testExportByEventTypeHierarchy() throws Exception {
+
+    String absolutePath = new File("src/test/resources").getAbsolutePath();
+    String jobId =
+        runExport(
+            "dr18391", absolutePath + "/event-download/dr18391/query-eventTypeHierarchy.json");
+    String dwcaFilePath = getDwcaFilePath(jobId);
+
+    // FIXME need to set eventTypeHierarchy = [eventType] for root
+    assertEquals(10, DwcaUtils.countRecordsInCore(dwcaFilePath));
+    assertEquals(
+        4, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
+    assertEquals(
+        4,
+        DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.MeasurementOrFact.qualifiedName()));
+  }
+
+  @Test
+  public void testExportByCompoundQuery() throws Exception {
+
+    String absolutePath = new File("src/test/resources").getAbsolutePath();
+    String jobId =
+        runExport("dr18391", absolutePath + "/event-download/dr18391/query-compound.json");
+    String dwcaFilePath = getDwcaFilePath(jobId);
+
+    assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
+    assertEquals(
+        2, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
+    assertEquals(
+        2,
+        DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.MeasurementOrFact.qualifiedName()));
+  }
+
+  @Test
+  public void testExportByTaxon() throws Exception {
+
+    String absolutePath = new File("src/test/resources").getAbsolutePath();
+    String jobId = runExport("dr18391", absolutePath + "/event-download/dr18391/query-taxon.json");
+    String dwcaFilePath = getDwcaFilePath(jobId);
+
+    assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
+    assertEquals(
+        4, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
+    assertEquals(
+        4,
+        DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.MeasurementOrFact.qualifiedName()));
+  }
+
+  @Test
+  public void testExportByHigherTaxon() throws Exception {
+
+    String absolutePath = new File("src/test/resources").getAbsolutePath();
+    String jobId =
+        runExport("dr18391", absolutePath + "/event-download/dr18391/query-higher-taxon.json");
+    String dwcaFilePath = getDwcaFilePath(jobId);
+
+    assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
+    assertEquals(
+        4, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
+    assertEquals(
+        4,
+        DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.MeasurementOrFact.qualifiedName()));
+  }
 
   public static String runExport(String datasetID) {
     String jobId = UUID.randomUUID().toString();

@@ -235,26 +235,29 @@ object PredicateExportDwCAPipeline {
 
     spark.conf.set("spark.sql.debug.maxToStringFields", 1000)
 
-    log.info("Load search index")
-    val eventSearchDF = spark.read
-      .format("avro")
-      .load(s"${inputPath}/${datasetId}/${attempt}/search/event/*.avro")
-      .as("Search")
-
     // get a list columns
     val exportPath = s"$localExportPath/$datasetId/Event/"
 
-    val filterSearchDF = if (queryFilter != "") {
-      // filter "coreTerms", "extensions"
-      eventSearchDF.filter(queryFilter).select(col("Search.id"))
-    } else {
-      eventSearchDF.select(col("Search.id"))
+    log.info("Load search index")
+    val filterSearchDF = {
+
+      val eventSearchDF = spark.read
+        .format("avro")
+        .load(s"${inputPath}/${datasetId}/${attempt}/search/event/*.avro")
+        .as("Search")
+
+      if (queryFilter != "") {
+        // filter "coreTerms", "extensions"
+        eventSearchDF.filter(queryFilter).toDF()
+      } else {
+        eventSearchDF
+      }
     }
 
     // generate interpreted event export
     log.info("Export interpreted event data")
-    val (eventExportDF, eventFields) =
-      generateInterpretedExportDF(eventSearchDF, skippedFields)
+    val (eventExportDF, eventFields) = generateInterpretedExportDF(filterSearchDF, skippedFields)
+
     eventExportDF.write
       .option("header", "true")
       .option("sep", "\t")
@@ -269,11 +272,16 @@ object PredicateExportDwCAPipeline {
       .load(s"${inputPath}/${datasetId}/${attempt}/verbatim/*.avro")
       .as("Verbatim")
 
+    val verbatimDFJoined = filterSearchDF.join(
+      verbatimDF,
+      col("Search.id") === col("Verbatim.id"),
+      "inner"
+    )
+
     // export the supplied core verbatim
     val verbatimCoreFields = exportVerbatimCore(
       spark,
-      verbatimDF,
-      eventSearchDF,
+      verbatimDFJoined,
       hdfsSiteConf,
       coreSiteConf,
       localExportPath + s"/$datasetId"
@@ -282,8 +290,7 @@ object PredicateExportDwCAPipeline {
     // export the supplied extensions verbatim
     val verbatimExtensionsForMeta = exportVerbatimExtensions(
       spark,
-      verbatimDF,
-      eventSearchDF,
+      verbatimDFJoined,
       hdfsSiteConf,
       coreSiteConf,
       localExportPath + s"/$datasetId"
@@ -295,7 +302,7 @@ object PredicateExportDwCAPipeline {
       inputPath,
       attempt,
       spark,
-      eventSearchDF,
+      filterSearchDF,
       verbatimExtensionsForMeta.keySet,
       skippedFields,
       hdfsSiteConf,
@@ -323,26 +330,19 @@ object PredicateExportDwCAPipeline {
 
   private def exportVerbatimCore(
       spark: SparkSession,
-      verbatimDF: Dataset[Row],
-      filterDownloadDF: DataFrame,
+      verbatimDFJoined: DataFrame,
       hdfsSiteConf: String,
       coreSiteConf: String,
       localExportPath: String
   ) = {
 
-    val dfWithExtensions = filterDownloadDF.join(
-      verbatimDF,
-      col("Search.id") === col("Verbatim.id"),
-      "inner"
-    )
-
     val coreFields =
-      getCoreFields(dfWithExtensions, spark).filter(!_.endsWith("eventID"))
+      getCoreFields(verbatimDFJoined, spark).filter(!_.endsWith("eventID"))
     val columns = Array(col("Search.id").as("eventID")) ++ coreFields.map { fieldName =>
       col("coreTerms.`" + fieldName + "`")
         .as(fieldName.substring(fieldName.lastIndexOf("/") + 1))
     }
-    val coreForExportDF = dfWithExtensions.select(columns: _*)
+    val coreForExportDF = verbatimDFJoined.select(columns: _*)
     coreForExportDF
       .select("*")
       .coalesce(1)
@@ -363,30 +363,29 @@ object PredicateExportDwCAPipeline {
 
   private def exportVerbatimExtensions(
       spark: SparkSession,
-      verbatimDF: Dataset[Row],
-      filterDownloadDF: DataFrame,
+      verbatimDFJoined: DataFrame,
       hdfsSiteConf: String,
       coreSiteConf: String,
       localExportPath: String
   ) = {
 
-    val dfWithExtensions = filterDownloadDF.join(
-      verbatimDF,
-      col("Search.id") === col("Verbatim.id"),
-      "inner"
-    )
+//    val dfWithExtensions = filterDownloadDF.join(
+//      verbatimDF,
+//      col("Search.id") === col("Verbatim.id"),
+//      "inner"
+//    )
 
     val extensionsForMeta =
       scala.collection.mutable.Map[String, Array[String]]()
 
     // get list of extensions for this dataset
-    val extensionList = getExtensionList(dfWithExtensions, spark)
+    val extensionList = getExtensionList(verbatimDFJoined, spark)
 
     // export all supplied extensions verbatim
     extensionList.foreach(extensionURI => {
 
       val extensionFields =
-        getExtensionFields(dfWithExtensions, extensionURI, spark)
+        getExtensionFields(verbatimDFJoined, extensionURI, spark)
 
       val arrayStructureSchema = {
         var builder = new StructType().add("id", StringType)
@@ -402,7 +401,7 @@ object PredicateExportDwCAPipeline {
         builder
       }
 
-      val extensionDF = dfWithExtensions
+      val extensionDF = verbatimDFJoined
         .select(
           col("Search.id").as("id"),
           col(s"""extensions.`${extensionURI}`""").as("the_extension")

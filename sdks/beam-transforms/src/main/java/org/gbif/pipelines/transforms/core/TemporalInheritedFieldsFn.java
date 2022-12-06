@@ -76,7 +76,7 @@ public class TemporalInheritedFieldsFn
 
       TemporalInheritedFields parent = recordsMap.get(parentId);
 
-      if (parent== null) {
+      if (parent == null) {
         return assigned;
       }
 
