@@ -53,7 +53,7 @@ public class ALAOccurrenceToSearchTransform implements Serializable {
             String k = c.element().getKey();
 
             ExtendedRecord er =
-                    v.getOnly(verbatimRecordTag, ExtendedRecord.newBuilder().setId(k).build());
+                v.getOnly(verbatimRecordTag, ExtendedRecord.newBuilder().setId(k).build());
             ALAUUIDRecord uur =
                 v.getOnly(alaUuidRecordTTag, ALAUUIDRecord.newBuilder().setId(k).build());
             ALAAttributionRecord ar =

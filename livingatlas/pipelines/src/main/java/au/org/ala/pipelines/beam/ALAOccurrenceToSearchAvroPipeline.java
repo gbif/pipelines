@@ -103,8 +103,8 @@ public class ALAOccurrenceToSearchAvroPipeline {
 
     log.info("Adding step 3: Creating beam pipeline");
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
-            p.apply("Read Metadata", verbatimTransform.read(occurrencesPathFn))
-                    .apply("Map Event core to KV", verbatimTransform.toKv());
+        p.apply("Read Metadata", verbatimTransform.read(occurrencesPathFn))
+            .apply("Map Event core to KV", verbatimTransform.toKv());
 
     PCollection<KV<String, ALAUUIDRecord>> uuidCollection =
         p.apply("Read Metadata", alaUuidTransform.read(identifiersPathFn))

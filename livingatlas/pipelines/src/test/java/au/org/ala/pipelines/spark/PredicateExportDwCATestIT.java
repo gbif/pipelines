@@ -30,7 +30,7 @@ import org.junit.Test;
 /** End to end integration tests for exports. */
 public class PredicateExportDwCATestIT {
 
- @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
+  @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
 
   @BeforeClass
   public static void setupTestData() throws Exception {
