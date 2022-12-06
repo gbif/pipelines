@@ -103,15 +103,15 @@ public class IdentifiersMigratorTool implements Tool {
 
         lineCounter++;
 
-        String[] split = line.trim().split(splitter);
+        String[] split = line.split(splitter);
 
         if (split.length == 2) {
           Optional<KeyLookupResult> migratedKey =
               HbaseKeyMigrator.builder()
                   .fromDatasetKey(fromDatasetKey)
                   .toDatasetKey(toDatasetKey)
-                  .oldLookupKey(split[0])
-                  .newLookupKey(split[1])
+                  .oldLookupKey(split[0].trim())
+                  .newLookupKey(split[1].trim())
                   .keyService(keygenService)
                   .deleteKeys(deleteKeys)
                   .build()
