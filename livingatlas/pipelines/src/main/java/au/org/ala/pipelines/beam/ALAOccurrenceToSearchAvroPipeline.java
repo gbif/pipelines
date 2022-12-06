@@ -36,12 +36,14 @@ import org.gbif.pipelines.io.avro.ALASensitivityRecord;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.ALAUUIDRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.OccurrenceSearchRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.slf4j.MDC;
 
 /**
@@ -97,8 +99,13 @@ public class ALAOccurrenceToSearchAvroPipeline {
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
     ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
     ALAUUIDTransform alaUuidTransform = ALAUUIDTransform.create();
+    VerbatimTransform verbatimTransform = VerbatimTransform.create();
 
     log.info("Adding step 3: Creating beam pipeline");
+    PCollection<KV<String, ExtendedRecord>> verbatimCollection =
+            p.apply("Read Metadata", verbatimTransform.read(occurrencesPathFn))
+                    .apply("Map Event core to KV", verbatimTransform.toKv());
+
     PCollection<KV<String, ALAUUIDRecord>> uuidCollection =
         p.apply("Read Metadata", alaUuidTransform.read(identifiersPathFn))
             .apply("Map Event core to KV", alaUuidTransform.toKv());
@@ -138,6 +145,7 @@ public class ALAOccurrenceToSearchAvroPipeline {
             .temporalRecordTag(temporalTransform.getTag())
             .alaAttributionTag(alaAttributionTransform.getTag())
             .alaUuidRecordTTag(alaUuidTransform.getTag())
+            .verbatimRecordTag(verbatimTransform.getTag())
             .build()
             .converter();
 
@@ -151,6 +159,7 @@ public class ALAOccurrenceToSearchAvroPipeline {
             .and(temporalTransform.getTag(), temporalCollection)
             .and(alaAttributionTransform.getTag(), attributionCollection)
             .and(alaUuidTransform.getTag(), uuidCollection)
+            .and(verbatimTransform.getTag(), verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", occSearchAvroFn);

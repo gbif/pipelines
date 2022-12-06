@@ -162,6 +162,8 @@
       {"name": "endDayOfYear", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/endDayOfYear"},
       {"name": "dateIdentified", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/dateIdentified"},
       {"name": "datePrecision", "type": ["null", "string"], "default" : null},
+      // verbatim occurrence terms
+      {"name": "verbatim", "doc": "The core record terms", "default": {}, "type": {"type": "map", "values": "string"}},
       // combined issues
       {"name": "issues", "type": {"type" : "array", "items" : "string"}, "default" : []}
     ]

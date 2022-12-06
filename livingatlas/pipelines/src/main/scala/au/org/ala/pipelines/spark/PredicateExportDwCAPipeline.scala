@@ -266,6 +266,19 @@ object PredicateExportDwCAPipeline {
 
     cleanupFileExport("Event", hdfsSiteConf, coreSiteConf, localExportPath + s"/$datasetId")
 
+    // export interpreted occurrence
+    val (occurrenceFields, verbatimOccurrenceFields) = exportOccurrence(
+      datasetId,
+      inputPath,
+      attempt,
+      spark,
+      filterSearchDF,
+      skippedFields,
+      hdfsSiteConf,
+      coreSiteConf,
+      localExportPath + s"/$datasetId"
+    )
+
     // load the verbatim DF
     val verbatimDF = spark.read
       .format("avro")
@@ -296,20 +309,6 @@ object PredicateExportDwCAPipeline {
       localExportPath + s"/$datasetId"
     )
 
-    // export interpreted occurrence
-    val occurrenceFields = exportInterpretedOccurrence(
-      datasetId,
-      inputPath,
-      attempt,
-      spark,
-      filterSearchDF,
-      verbatimExtensionsForMeta.keySet,
-      skippedFields,
-      hdfsSiteConf,
-      coreSiteConf,
-      localExportPath + s"/$datasetId"
-    )
-
     // shutdown spark session
     spark.close()
 
@@ -320,6 +319,7 @@ object PredicateExportDwCAPipeline {
       eventFields,
       occurrenceFields,
       verbatimCoreFields,
+      verbatimOccurrenceFields,
       verbatimExtensionsForMeta,
       registryUrl,
       localExportPath
@@ -369,12 +369,6 @@ object PredicateExportDwCAPipeline {
       localExportPath: String
   ) = {
 
-//    val dfWithExtensions = filterDownloadDF.join(
-//      verbatimDF,
-//      col("Search.id") === col("Verbatim.id"),
-//      "inner"
-//    )
-
     val extensionsForMeta =
       scala.collection.mutable.Map[String, Array[String]]()
 
@@ -384,111 +378,146 @@ object PredicateExportDwCAPipeline {
     // export all supplied extensions verbatim
     extensionList.foreach(extensionURI => {
 
-      val extensionFields =
-        getExtensionFields(verbatimDFJoined, extensionURI, spark)
+      if (!extensionURI.equals(DwcTerm.Occurrence.qualifiedName())) {
 
-      val arrayStructureSchema = {
-        var builder = new StructType().add("id", StringType)
-        extensionFields.foreach { fieldName =>
-          val isURI = fieldName.lastIndexOf("/") > 0
-          val simpleName = if (isURI) {
-            fieldName.substring(fieldName.lastIndexOf("/") + 1)
-          } else {
-            fieldName
+        val extensionFields =
+          getExtensionFields(verbatimDFJoined, extensionURI, spark)
+
+        val arrayStructureSchema = {
+          var builder = new StructType().add("id", StringType)
+          extensionFields.foreach { fieldName =>
+            val isURI = fieldName.lastIndexOf("/") > 0
+            val simpleName = if (isURI) {
+              fieldName.substring(fieldName.lastIndexOf("/") + 1)
+            } else {
+              fieldName
+            }
+            builder = builder.add(simpleName, StringType)
           }
-          builder = builder.add(simpleName, StringType)
+          builder
         }
-        builder
-      }
 
-      val extensionDF = verbatimDFJoined
-        .select(
-          col("Search.id").as("id"),
-          col(s"""extensions.`${extensionURI}`""").as("the_extension")
+        val extensionDF = verbatimDFJoined
+          .select(
+            col("Search.id").as("id"),
+            col(s"""extensions.`${extensionURI}`""").as("the_extension")
+          )
+          .toDF
+        val rowRDD = extensionDF.rdd
+          .map(row => genericRecordToRow(row, extensionFields, arrayStructureSchema))
+          .flatMap(list => list)
+        val extensionForExportDF =
+          spark.sqlContext.createDataFrame(rowRDD, arrayStructureSchema)
+
+        // filter "coreTerms", "extensions"
+        val extensionSimpleName =
+          extensionURI.substring(extensionURI.lastIndexOf("/") + 1)
+
+        extensionForExportDF
+          .select("*")
+          .coalesce(1)
+          .write
+          .option("header", "true")
+          .option("sep", "\t")
+          .mode("overwrite")
+          .csv(s"$localExportPath/Verbatim_$extensionSimpleName")
+
+        cleanupFileExport(
+          "Verbatim_" + extensionSimpleName,
+          hdfsSiteConf,
+          coreSiteConf,
+          localExportPath
         )
-        .toDF
-      val rowRDD = extensionDF.rdd
-        .map(row => genericRecordToRow(row, extensionFields, arrayStructureSchema))
-        .flatMap(list => list)
-      val extensionForExportDF =
-        spark.sqlContext.createDataFrame(rowRDD, arrayStructureSchema)
-
-      // filter "coreTerms", "extensions"
-      val extensionSimpleName =
-        extensionURI.substring(extensionURI.lastIndexOf("/") + 1)
-
-      extensionForExportDF
-        .select("*")
-        .coalesce(1)
-        .write
-        .option("header", "true")
-        .option("sep", "\t")
-        .mode("overwrite")
-        .csv(s"$localExportPath/Verbatim_$extensionSimpleName")
-
-      cleanupFileExport(
-        "Verbatim_" + extensionSimpleName,
-        hdfsSiteConf,
-        coreSiteConf,
-        localExportPath
-      )
-      extensionsForMeta(extensionURI) = extensionFields
+        extensionsForMeta(extensionURI) = extensionFields
+      }
     })
 
     extensionsForMeta.toMap
   }
 
-  private def exportInterpretedOccurrence(
+  private def exportOccurrence(
       datasetId: String,
       hdfsPath: String,
       attempt: Int,
       spark: SparkSession,
       filterDownloadDF: DataFrame,
-      extensionList: Set[String],
       skippedFields: Array[String],
       hdfsSiteConfig: String,
       coreSiteConfig: String,
       localExportPath: String
-  ) = {
+  ): (Array[String], Array[String]) = {
     // If an occurrence extension was supplied
-    if (extensionList.contains(DwcTerm.Occurrence.qualifiedName())) {
+    log.info("Create occurrence join DF")
+    val occDF = spark.read
+      .format("avro")
+      .load(s"${hdfsPath}/${datasetId}/${attempt}/search/occurrence/*.avro")
+      .as("Occurrence")
+      .filter("coreId is NOT NULL")
 
-      log.info("Create occurrence join DF")
-      val occDF = spark.read
-        .format("avro")
-        .load(s"${hdfsPath}/${datasetId}/${attempt}/search/occurrence/*.avro")
-        .as("Occurrence")
-        .filter("coreId is NOT NULL")
+    val joinOccDF = filterDownloadDF
+      .select(col("Search.id"))
+      .join(occDF, col("Search.id") === col("Occurrence.coreId"), "inner")
 
-      val joinOccDF = filterDownloadDF
-        .select(col("Search.id"))
-        .join(occDF, col("Search.id") === col("Occurrence.coreId"), "inner")
-
-      log.info("Generate interpreted occurrence DF for export")
-      val (exportDF, fields) =
-        generateInterpretedExportDF(
-          joinOccDF,
-          skippedFields
-        )
-
-      log.info("Export interpreted occurrence data")
-      exportDF.write
-        .option("header", "true")
-        .option("sep", "\t")
-        .mode("overwrite")
-        .csv(s"$localExportPath/Occurrence")
-
-      cleanupFileExport(
-        "Occurrence",
-        hdfsSiteConfig,
-        coreSiteConfig,
-        localExportPath
+    log.info("Generate interpreted occurrence DF for export")
+    val (exportDF, fields) =
+      generateInterpretedExportDF(
+        joinOccDF,
+        skippedFields
       )
 
-      fields
-    } else {
-      Array[String]()
-    }
+    log.info("Export interpreted occurrence data")
+    exportDF.write
+      .option("header", "true")
+      .option("sep", "\t")
+      .mode("overwrite")
+      .csv(s"$localExportPath/Occurrence")
+
+    cleanupFileExport(
+      "Occurrence",
+      hdfsSiteConfig,
+      coreSiteConfig,
+      localExportPath
+    )
+
+    def sanitise(fieldName: String): String =
+      if (fieldName.lastIndexOf("/") > 0)
+        fieldName.substring(fieldName.lastIndexOf("/") + 1)
+      else
+        fieldName
+
+    // get field names
+    val fieldNameStructureSchema = new StructType()
+      .add("fieldName", StringType)
+    val rowRDD = joinOccDF
+      .select(col("verbatim"))
+      .rdd
+      .map(row => genericRecordFieldToFieldNameRow(row, fieldNameStructureSchema))
+      .flatMap(list => list)
+    val df = spark.sqlContext.createDataFrame(rowRDD, fieldNameStructureSchema)
+    val rows = df.distinct().select(col("fieldName")).head(1000)
+    val verbatimFieldNames = rows.map(_.getString(0))
+    val colsToSelect =
+      Array(col("Search.id")) ++ verbatimFieldNames.map(fieldName =>
+        col("verbatim.`" + fieldName + "`").as(sanitise(fieldName))
+      )
+
+    joinOccDF
+      .select(colsToSelect: _*)
+      .coalesce(1)
+      .write
+      .option("header", "true")
+      .option("sep", "\t")
+      .mode("overwrite")
+      .csv(s"$localExportPath/Verbatim_Occurrence")
+
+    cleanupFileExport(
+      "Verbatim_Occurrence",
+      hdfsSiteConfig,
+      coreSiteConfig,
+      localExportPath
+    )
+
+    (fields, verbatimFieldNames)
   }
 
   def generateInterpretedExportDF(
@@ -540,7 +569,7 @@ object PredicateExportDwCAPipeline {
 
     (
       occDFCoalesce,
-      Array("Search.id") ++ exportFields // ++ issuesAliases.map(alias => s"${alias}_issues").toArray[String]
+      Array("Search.id") ++ exportFields
     )
   }
 
@@ -566,6 +595,7 @@ object PredicateExportDwCAPipeline {
       coreFieldList: Array[String],
       occurrenceFieldList: Array[String],
       verbatimCoreFields: Array[String],
+      verbatimOccurrenceFields: Array[String],
       extensionsForMeta: Map[String, Array[String]],
       registryUrl: String,
       localExportPath: String
@@ -577,6 +607,7 @@ object PredicateExportDwCAPipeline {
       coreFieldList,
       occurrenceFieldList,
       verbatimCoreFields,
+      verbatimOccurrenceFields,
       extensionsForMeta
     )
     save(metaXml, s"$localExportPath/$datasetId/meta.xml")
@@ -765,6 +796,7 @@ object PredicateExportDwCAPipeline {
       coreFields: Seq[String],
       occurrenceFields: Array[String],
       verbatimCoreFields: Array[String],
+      verbatimOccurrenceFields: Array[String],
       extensionsForMeta: Map[String, Array[String]]
   ): Elem = {
     val coreFileName =
@@ -781,8 +813,8 @@ object PredicateExportDwCAPipeline {
     }
       </core>{
       generateInterpretedExtension(
-        "http://ala.org.au/terms/1.0/VerbatimOccurrence",
-        "verbatim_occurrence",
+        DwcTerm.Occurrence.qualifiedName(),
+        "occurrence",
         occurrenceFields
       )
     }{
@@ -790,6 +822,12 @@ object PredicateExportDwCAPipeline {
         "http://ala.org.au/terms/1.0/VerbatimEvent",
         "verbatim_event",
         verbatimCoreFields
+      )
+    }{
+      generateVerbatimExtension(
+        "http://ala.org.au/terms/1.0/VerbatimOccurrence",
+        "verbatim_occurrence",
+        verbatimOccurrenceFields
       )
     }{
       extensionsForMeta.map { case (extensionUri, fields) =>
@@ -887,5 +925,11 @@ object PredicateExportDwCAPipeline {
     val elements = row.get(0).asInstanceOf[Seq[Map[String, String]]]
     val fieldNames = elements.map(record => record.keySet).flatten
     fieldNames.distinct.map(fieldName => new GenericRowWithSchema(Array(fieldName), sqlType))
+  }
+
+  def genericRecordFieldToFieldNameRow(row: Row, sqlType: StructType): Seq[Row] = {
+    val elements = row.get(0).asInstanceOf[Map[String, String]]
+    val fieldNames = elements.keySet
+    fieldNames.map(fieldName => new GenericRowWithSchema(Array(fieldName), sqlType)).toSeq
   }
 }

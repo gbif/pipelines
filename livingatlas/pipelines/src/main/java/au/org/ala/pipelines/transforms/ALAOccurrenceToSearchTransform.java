@@ -17,6 +17,7 @@ import org.gbif.pipelines.io.avro.ALASensitivityRecord;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.ALAUUIDRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.OccurrenceSearchRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -31,6 +32,7 @@ public class ALAOccurrenceToSearchTransform implements Serializable {
 
   private static final long serialVersionUID = 1279313941024805871L;
   // Core
+  @NonNull private final TupleTag<ExtendedRecord> verbatimRecordTag;
   @NonNull private final TupleTag<ALAUUIDRecord> alaUuidRecordTTag;
   @NonNull private final TupleTag<BasicRecord> basicRecordTag;
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
@@ -50,6 +52,8 @@ public class ALAOccurrenceToSearchTransform implements Serializable {
             CoGbkResult v = c.element().getValue();
             String k = c.element().getKey();
 
+            ExtendedRecord er =
+                    v.getOnly(verbatimRecordTag, ExtendedRecord.newBuilder().setId(k).build());
             ALAUUIDRecord uur =
                 v.getOnly(alaUuidRecordTTag, ALAUUIDRecord.newBuilder().setId(k).build());
             ALAAttributionRecord ar =
@@ -183,6 +187,8 @@ public class ALAOccurrenceToSearchTransform implements Serializable {
               issues.addAll(txr.getIssues().getIssueList());
               builder.setIssues(issues);
 
+              // add verbatim occurrence as field for downstream export
+              builder.setVerbatim(er.getCoreTerms());
               c.output(builder.build());
             }
           }
