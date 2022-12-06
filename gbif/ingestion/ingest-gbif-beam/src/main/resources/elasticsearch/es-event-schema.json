@@ -1,4 +1,10 @@
-{
+  {
+    "_source": {
+      "excludes": [
+        "derivedMetadata.taxonomicCoverage",
+        "all"
+      ]
+  },
   "dynamic_templates": [
     {
       "verbatim": {
