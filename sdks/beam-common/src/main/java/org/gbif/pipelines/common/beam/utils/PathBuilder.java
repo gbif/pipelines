@@ -94,6 +94,22 @@ public class PathBuilder {
    */
   public static String buildFilePathViewUsingInputPath(
       BasePipelineOptions options,
+      PipelinesVariables.Pipeline.Interpretation.RecordType recordType,
+      String type) {
+    return buildPath(
+            buildDatasetAttemptPath(options, recordTypeViewPath(recordType), true),
+            type.toLowerCase())
+        .toString();
+  }
+
+  /**
+   * Builds the target base path of a hdfs view.
+   *
+   * @param options options pipeline options
+   * @return path to the directory where the occurrence hdfs view is stored
+   */
+  public static String buildFilePathViewUsingInputPath(
+      BasePipelineOptions options,
       PipelinesVariables.Pipeline.Interpretation.RecordType recordType) {
     return buildDatasetAttemptPath(options, recordTypeViewPath(recordType), true);
   }

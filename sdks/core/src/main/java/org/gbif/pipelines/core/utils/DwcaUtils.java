@@ -57,8 +57,6 @@ public class DwcaUtils {
         RecordType.EXTENDED_MEASUREMENT_OR_FACT_TABLE.name());
     EXTENSION_TYPE_MAP.put(
         Extension.CHRONOMETRIC_AGE.getRowType(), RecordType.CHRONOMETRIC_AGE_TABLE.name());
-    EXTENSION_TYPE_MAP.put(
-        Extension.CHRONOMETRIC_DATE.getRowType(), RecordType.CHRONOMETRIC_DATE_TABLE.name());
     EXTENSION_TYPE_MAP.put(Extension.REFERENCE.getRowType(), RecordType.REFERENCE_TABLE.name());
     EXTENSION_TYPE_MAP.put(Extension.IDENTIFIER.getRowType(), RecordType.IDENTIFIER_TABLE.name());
     EXTENSION_TYPE_MAP.put(Extension.AUDUBON.getRowType(), RecordType.AUDUBON_TABLE.name());

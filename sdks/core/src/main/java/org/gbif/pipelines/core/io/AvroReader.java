@@ -177,16 +177,7 @@ public class AvroReader {
   private static List<Path> parseWildcardPath(FileSystem fs, String path) {
     if (path.contains("*")) {
       Path pp = new Path(path).getParent();
-      RemoteIterator<LocatedFileStatus> files = fs.listFiles(pp, false);
-      List<Path> paths = new ArrayList<>();
-      while (files.hasNext()) {
-        LocatedFileStatus next = files.next();
-        Path np = next.getPath();
-        if (next.isFile() && np.getName().endsWith(AVRO_EXTENSION)) {
-          paths.add(np);
-        }
-      }
-      return paths;
+      return FsUtils.getFilesByExt(fs, pp, AVRO_EXTENSION);
     }
     return Collections.singletonList(new Path(path));
   }

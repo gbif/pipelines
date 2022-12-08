@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
@@ -95,9 +96,8 @@ public class HdfsViewCallbackIT {
     assertEquals(1, PUBLISHER.getMessages().size());
 
     // Check files
-    Predicate<String> prFn =
+    Function<String, Path> prFn =
         str ->
-            Files.exists(
                 Paths.get(
                     config.repositoryTargetPath
                         + "/"
@@ -111,28 +111,29 @@ public class HdfsViewCallbackIT {
                         + DATASET_UUID
                         + "_"
                         + attempt
-                        + ".avro"));
+                        + ".avro");
 
-    assertTrue(prFn.test("amplificationtable"));
-    assertTrue(prFn.test("chronometricagetable"));
-    assertTrue(prFn.test("cloningtable"));
-    assertTrue(prFn.test("extendedmeasurementorfacttable"));
-    assertTrue(prFn.test("gelimagetable"));
-    assertTrue(prFn.test("germplasmaccessiontable"));
-    assertTrue(prFn.test("germplasmmeasurementscoretable"));
-    assertTrue(prFn.test("germplasmmeasurementtraittable"));
-    assertTrue(prFn.test("germplasmmeasurementtrialtable"));
-    assertTrue(prFn.test("identificationtable"));
-    assertTrue(prFn.test("identifiertable"));
-    assertTrue(prFn.test("loantable"));
-    assertTrue(prFn.test("materialsampletable"));
-    assertTrue(prFn.test("measurementorfacttable"));
-    assertTrue(prFn.test("occurrence"));
-    assertTrue(prFn.test("permittable"));
-    assertTrue(prFn.test("preparationtable"));
-    assertTrue(prFn.test("preservationtable"));
-    assertTrue(prFn.test("referencetable"));
-    assertTrue(prFn.test("resourcerelationshiptable"));
+    assertTrue(Files.exists(prFn.apply("occurrence")));
+
+    assertFalse(Files.exists(prFn.apply("amplificationtable")));
+    assertFalse(Files.exists(prFn.apply("chronometricagetable")));
+    assertFalse(Files.exists(prFn.apply("cloningtable")));
+    assertFalse(Files.exists(prFn.apply("extendedmeasurementorfacttable")));
+    assertFalse(Files.exists(prFn.apply("gelimagetable")));
+    assertFalse(Files.exists(prFn.apply("germplasmaccessiontable")));
+    assertFalse(Files.exists(prFn.apply("germplasmmeasurementscoretable")));
+    assertFalse(Files.exists(prFn.apply("germplasmmeasurementtraittable")));
+    assertFalse(Files.exists(prFn.apply("germplasmmeasurementtrialtable")));
+    assertFalse(Files.exists(prFn.apply("identificationtable")));
+    assertFalse(Files.exists(prFn.apply("identifiertable")));
+    assertFalse(Files.exists(prFn.apply("loantable")));
+    assertFalse(Files.exists(prFn.apply("materialsampletable")));
+    assertFalse(Files.exists(prFn.apply("measurementorfacttable")));
+    assertFalse(Files.exists(prFn.apply("permittable")));
+    assertFalse(Files.exists(prFn.apply("preparationtable")));
+    assertFalse(Files.exists(prFn.apply("preservationtable")));
+    assertFalse(Files.exists(prFn.apply("referencetable")));
+    assertFalse(Files.exists(prFn.apply("resourcerelationshiptable")));
 
     // Clean
     CURATOR_SERVER.deletePath(crawlId, LABEL);

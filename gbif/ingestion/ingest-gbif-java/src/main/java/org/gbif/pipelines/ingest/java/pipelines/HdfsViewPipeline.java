@@ -853,7 +853,7 @@ public class HdfsViewPipeline {
         .write();
 
     // Move files
-    Mutex.Action action = () -> HdfsViewAvroUtils.move(options);
+    Mutex.Action action = () -> HdfsViewAvroUtils.cleanAndMove(options);
     if (options.getTestMode()) {
       action.execute();
     } else {
