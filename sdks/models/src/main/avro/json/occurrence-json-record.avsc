@@ -105,6 +105,7 @@
       {"name":"repatriated","type":["null","boolean"],"default":null,"doc":""},
       {"name":"hasGeospatialIssue","type":["null","boolean"],"default":null,"doc":""},
       {"name":"footprintWKT","type":["null","string"],"default":null,"doc":""},
+      {"name":"distanceFromCentroidInMeters","type":["null","double"],"default":null,"doc":""},
       {"name":"year","type":["null","int"],"default":null,"doc":""},
       {"name":"month","type":["null","int"],"default":null,"doc":""},
       {"name":"day","type":["null","int"],"default":null,"doc":""},

@@ -1608,6 +1608,9 @@
     "name" : "iucnredlistcategory",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "distancefromcentroidinmeters",
+    "type" : [ "double", "null" ]
+  }, {
     "name" : "eventtype",
     "type" : [ {
       "type" : "record",

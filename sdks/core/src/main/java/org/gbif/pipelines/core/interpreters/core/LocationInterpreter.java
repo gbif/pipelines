@@ -38,13 +38,7 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
-import org.gbif.pipelines.core.parsers.location.parser.ContinentParser;
-import org.gbif.pipelines.core.parsers.location.parser.CoordinateParseUtils;
-import org.gbif.pipelines.core.parsers.location.parser.FootprintWKTParser;
-import org.gbif.pipelines.core.parsers.location.parser.GadmParser;
-import org.gbif.pipelines.core.parsers.location.parser.LocationParser;
-import org.gbif.pipelines.core.parsers.location.parser.ParsedLocation;
-import org.gbif.pipelines.core.parsers.location.parser.SpatialReferenceSystemParser;
+import org.gbif.pipelines.core.parsers.location.parser.*;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -355,6 +349,17 @@ public class LocationInterpreter {
         addIssue(lr, COORDINATE_UNCERTAINTY_METERS_INVALID);
       }
     }
+  }
+
+  /** {@link GbifTerm#distanceFromCentroidInMeters} interpretation. */
+  public static BiConsumer<ExtendedRecord, LocationRecord> calculateCentroidDistance(
+      KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
+    return (er, lr) -> {
+      if (geocodeKvStore != null && lr.getHasCoordinate()) {
+        CentroidCalculator.calculateCentroidDistance(lr, geocodeKvStore)
+            .ifPresent(lr::setDistanceFromCentroidInMeters);
+      }
+    };
   }
 
   /** {@link DwcTerm#coordinatePrecision} interpretation. */

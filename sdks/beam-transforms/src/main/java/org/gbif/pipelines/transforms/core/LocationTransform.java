@@ -148,6 +148,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
         .via(LocationInterpreter::interpretCoordinatePrecision)
         .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
+        .via(LocationInterpreter.calculateCentroidDistance(geocodeKvStore))
         .via(LocationInterpreter::interpretLocality)
         .via(LocationInterpreter::interpretFootprintWKT)
         .via(LocationInterpreter::setCoreId)

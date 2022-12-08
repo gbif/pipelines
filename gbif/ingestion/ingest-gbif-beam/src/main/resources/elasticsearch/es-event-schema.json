@@ -1039,6 +1039,9 @@
         "decimalLongitude": {
           "type": "double"
         },
+        "distanceFromCentroidInMeters": {
+          "type": "double"
+        },
         "gadm": {
           "type": "object",
           "properties": {

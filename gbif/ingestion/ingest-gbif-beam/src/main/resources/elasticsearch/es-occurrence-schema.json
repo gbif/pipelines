@@ -260,6 +260,7 @@
       "scoordinates": {"type": "geo_shape"},
       "decimalLatitude": {"type": "double"},
       "decimalLongitude": {"type": "double"},
+      "distanceFromCentroidInMeters": {"type": "double"},
 
       "gadm": {
         "type": "object",
