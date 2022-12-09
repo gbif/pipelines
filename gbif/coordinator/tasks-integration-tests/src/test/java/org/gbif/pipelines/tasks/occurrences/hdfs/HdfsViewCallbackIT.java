@@ -14,7 +14,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
@@ -98,20 +97,20 @@ public class HdfsViewCallbackIT {
     // Check files
     Function<String, Path> prFn =
         str ->
-                Paths.get(
-                    config.repositoryTargetPath
-                        + "/"
-                        + PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE
-                            .name()
-                            .toLowerCase()
-                        + "/"
-                        + "/"
-                        + str
-                        + "/"
-                        + DATASET_UUID
-                        + "_"
-                        + attempt
-                        + ".avro");
+            Paths.get(
+                config.repositoryTargetPath
+                    + "/"
+                    + PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE
+                        .name()
+                        .toLowerCase()
+                    + "/"
+                    + "/"
+                    + str
+                    + "/"
+                    + DATASET_UUID
+                    + "_"
+                    + attempt
+                    + ".avro");
 
     assertTrue(Files.exists(prFn.apply("occurrence")));
 

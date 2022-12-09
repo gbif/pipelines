@@ -36,8 +36,6 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
-import org.gbif.pipelines.io.avro.extension.germplasm.GermplasmMeasurementTrialTable;
-import org.gbif.pipelines.io.avro.extension.obis.ExtendedMeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;

@@ -30,6 +30,7 @@
 
     <!-- GBIF -->
     <gbif-common-mybatis.version>1.1</gbif-common-mybatis.version>
+    <gbif-metadata-profile-eml.version>2.0-SNAPSHOT</gbif-metadata-profile-eml.version>
 
     <!-- Checklists validation-->
     <gbif-checklistbank.version>2.101</gbif-checklistbank.version>
@@ -153,6 +154,11 @@
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-persistence</artifactId>
         <version>${registry.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-metadata-profile-eml</artifactId>
+        <version>${gbif-metadata-profile-eml.version}</version>
       </dependency>
 
       <!-- Spring dependencies -->
