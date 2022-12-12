@@ -401,18 +401,17 @@ public final class FsUtils {
 
     Predicate<Path> deleteFn =
         path -> {
-          SpecificDatumReader<T> datumReader = new SpecificDatumReader<>(avroClass);
-          try (AvroFSInput input = new AvroFSInput(fs.open(path), fs.getFileStatus(path).getLen());
-              DataFileReader<T> dataFileReader = new DataFileReader<>(input, datumReader)) {
-            if (!dataFileReader.hasNext()) {
+          try {
+            boolean hasNoRecords;
+            SpecificDatumReader<T> datumReader = new SpecificDatumReader<>(avroClass);
+            try (AvroFSInput input =
+                    new AvroFSInput(fs.open(path), fs.getFileStatus(path).getLen());
+                DataFileReader<T> dataFileReader = new DataFileReader<>(input, datumReader)) {
+              hasNoRecords = !dataFileReader.hasNext();
+            }
+            if (hasNoRecords) {
               log.warn("File is empty - {}", path);
-              Path parent = path.getParent();
-              fs.delete(parent, true);
-
-              Path subParent = parent.getParent();
-              if (!fs.listFiles(subParent, true).hasNext()) {
-                fs.delete(subParent, true);
-              }
+              fs.delete(path, true);
               return true;
             }
             return false;
