@@ -35,7 +35,7 @@
     <commons-configuration.version>1.6</commons-configuration.version>
     <netty.version>3.9.9.Final</netty.version>
     <netty-all.version>4.1.42.Final</netty-all.version>
-    <snakeyaml.version>1.25</snakeyaml.version>
+    <snakeyaml.version>1.32</snakeyaml.version>
     <streamex.version>0.7.2</streamex.version>
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
