@@ -1,6 +1,7 @@
 package org.gbif.pipelines.validator.checklists.cli;
 
 import com.google.common.util.concurrent.AbstractIdleService;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
@@ -46,6 +47,7 @@ public class ChecklistValidatorService extends AbstractIdleService {
                 new RequestParamParameterProcessor(),
                 new RequestHeaderParameterProcessor(),
                 new QueryMapParameterProcessor()))
+        .withExponentialBackoffRetry(Duration.ofSeconds(3L), 2d, 10)
         .build(ValidationWsClient.class);
   }
 

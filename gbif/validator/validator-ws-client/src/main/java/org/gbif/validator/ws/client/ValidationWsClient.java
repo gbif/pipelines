@@ -1,6 +1,7 @@
 package org.gbif.validator.ws.client;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -14,12 +15,13 @@ import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 
@@ -58,8 +60,7 @@ public interface ValidationWsClient extends ValidationService<File> {
   Validation get(@PathVariable("key") UUID key);
 
   /** Updates a validation data. */
-  @RequestMapping(
-      method = RequestMethod.PUT,
+  @PutMapping(
       path = "/{key}",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
   Validation update(@PathVariable("key") UUID key, @RequestBody Validation validation);
@@ -70,29 +71,26 @@ public interface ValidationWsClient extends ValidationService<File> {
   }
 
   /** Cancel running validation. */
-  @RequestMapping(
-      method = RequestMethod.PUT,
+  @PutMapping(
       path = "/{key}/cancel",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
   @Override
   Validation cancel(@PathVariable("key") UUID key);
 
   /** Cancel running validation. */
-  @RequestMapping(method = RequestMethod.DELETE, path = "/{key}")
+  @DeleteMapping(path = "/{key}")
   @Override
   void delete(@PathVariable("key") UUID key);
 
   /** Get EML as a json. */
-  @RequestMapping(
-      method = RequestMethod.GET,
+  @GetMapping(
       path = "/{key}/eml",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
   @Override
   Dataset getDataset(@PathVariable("key") UUID key);
 
   /** Get running validations uuids */
-  @RequestMapping(
-      method = RequestMethod.GET,
+  @GetMapping(
       path = "/running",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
   @Override
@@ -105,6 +103,7 @@ public interface ValidationWsClient extends ValidationService<File> {
         .withCredentials(userName, password)
         .withFormEncoder()
         .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
+        .withExponentialBackoffRetry(Duration.ofSeconds(3L), 2d, 10)
         .build(ValidationWsClient.class);
   }
 }

@@ -1,5 +1,6 @@
 package org.gbif.pipelines.tasks;
 
+import java.time.Duration;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.pipelines.common.configs.StepConfiguration;
@@ -17,6 +18,7 @@ public class ServiceFactory {
         .withUrl(stepConfig.registry.wsUrl)
         .withCredentials(stepConfig.registry.user, stepConfig.registry.password)
         .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
+        .withExponentialBackoffRetry(Duration.ofSeconds(3L), 2d, 10)
         .withFormEncoder()
         .build(PipelinesHistoryClient.class);
   }
@@ -26,6 +28,7 @@ public class ServiceFactory {
         .withUrl(stepConfig.registry.wsUrl)
         .withCredentials(stepConfig.registry.user, stepConfig.registry.password)
         .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
+        .withExponentialBackoffRetry(Duration.ofSeconds(3L), 2d, 10)
         .build(ValidationWsClient.class);
   }
 
@@ -33,6 +36,7 @@ public class ServiceFactory {
     return new ClientBuilder()
         .withUrl(stepConfig.registry.wsUrl)
         .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
+        .withExponentialBackoffRetry(Duration.ofSeconds(3L), 2d, 10)
         .build(DatasetClient.class);
   }
 }
