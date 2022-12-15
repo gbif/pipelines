@@ -2,6 +2,8 @@ package org.gbif.pipelines.tasks.occurrences.identifier;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
+import java.util.Collections;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
@@ -48,6 +50,9 @@ public class IdentifierConfiguration implements BaseConfiguration {
 
   @Parameter(names = "--ignore-checklists")
   public boolean ignoreChecklists = true;
+
+  @Parameter(names = "--skip-installations-list")
+  public Set<String> skipInstallationsList = Collections.emptySet();
 
   @Override
   public String getHdfsSiteConfig() {

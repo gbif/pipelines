@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.utils;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.CRAP_USER;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.USER_GROUP;
@@ -19,17 +20,22 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.file.DataFileReader;
+import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.fs.AvroFSInput;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -40,6 +46,7 @@ import org.apache.hadoop.fs.RemoteIterator;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 
@@ -361,7 +368,7 @@ public final class FsUtils {
       Integer attempt,
       DwcTerm coreTerm,
       String... steps) {
-    HashSet<String> s = new HashSet<>(Arrays.asList(steps));
+    Set<String> s = new HashSet<>(Arrays.asList(steps));
     deleteInterpretIfExist(hdfsConfigs, basePath, datasetId, attempt, coreTerm, s);
   }
 
@@ -376,5 +383,75 @@ public final class FsUtils {
     FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, filePath);
     Path fPath = new Path(filePath);
     return fs.exists(fPath);
+  }
+
+  public static <T> boolean deleteAvroFileIfEmpty(
+      HdfsConfigs hdfsConfigs, String path, Class<T> avroClass) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, path);
+    Path fPath = new Path(path);
+    return deleteAvroFileIfEmpty(fs, fPath, avroClass);
+  }
+
+  @SneakyThrows
+  public static <T> boolean deleteAvroFileIfEmpty(
+      FileSystem fs, Path mainPath, Class<T> avroClass) {
+    if (!fs.exists(mainPath)) {
+      return true;
+    }
+
+    Predicate<Path> deleteFn =
+        path -> {
+          try {
+            boolean hasNoRecords;
+            SpecificDatumReader<T> datumReader = new SpecificDatumReader<>(avroClass);
+            try (AvroFSInput input =
+                    new AvroFSInput(fs.open(path), fs.getFileStatus(path).getLen());
+                DataFileReader<T> dataFileReader = new DataFileReader<>(input, datumReader)) {
+              hasNoRecords = !dataFileReader.hasNext();
+            }
+            if (hasNoRecords) {
+              log.warn("File is empty - {}", path);
+              fs.delete(path, true);
+              return true;
+            }
+            return false;
+          } catch (IOException ex) {
+            throw new PipelinesException(ex);
+          }
+        };
+
+    if (fs.isFile(mainPath)) {
+      return deleteFn.test(mainPath);
+    } else {
+      boolean result = false;
+      for (Path p : getFilesByExt(fs, mainPath, AVRO_EXTENSION)) {
+
+        boolean r = deleteFn.test(p);
+        if (r) {
+          result = r;
+        }
+      }
+      return result;
+    }
+  }
+
+  @SneakyThrows
+  public static List<Path> getFilesByExt(FileSystem fs, Path path, String filterExt) {
+    RemoteIterator<LocatedFileStatus> files = fs.listFiles(path, false);
+    List<Path> paths = new ArrayList<>();
+    while (files.hasNext()) {
+      LocatedFileStatus next = files.next();
+      Path np = next.getPath();
+      if (next.isFile() && np.getName().endsWith(filterExt)) {
+        paths.add(np);
+      }
+    }
+    return paths;
+  }
+
+  public static void createFile(FileSystem fs, Path path, String body) throws IOException {
+    try (FSDataOutputStream stream = fs.create(path, true)) {
+      stream.writeChars(body);
+    }
   }
 }

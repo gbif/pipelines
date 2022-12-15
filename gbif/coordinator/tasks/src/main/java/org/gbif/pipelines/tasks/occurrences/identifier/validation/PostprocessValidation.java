@@ -30,7 +30,7 @@ public class PostprocessValidation {
   private final CloseableHttpClient httpClient;
 
   public IdentifierValidationResult validate() throws IOException {
-    if (useThresholdSkipTagValue() || ignoreChecklists()) {
+    if (useThresholdSkipTagValue() || ignoreChecklists() || skipInstallationKey()) {
       String validatonMessage =
           "Skip valiation because because of machine tag id_threshold_skip=true";
       return IdentifierValidationResult.create(0d, 0d, true, validatonMessage);
@@ -119,6 +119,19 @@ public class PostprocessValidation {
             httpClient, registryConfiguration, datasetKey, "id_threshold_skip")
         .map(Boolean::parseBoolean)
         .orElse(Boolean.FALSE);
+  }
+
+  @SneakyThrows
+  private boolean skipInstallationKey() {
+    RegistryConfiguration registryConfiguration = config.stepConfig.registry;
+    String datasetKey = message.getDatasetUuid().toString();
+    String installationKey =
+        GbifApi.getInstallationKey(httpClient, registryConfiguration, datasetKey);
+    boolean r = config.skipInstallationsList.contains(installationKey);
+    if (r) {
+      log.info("Installation key {} is in the config skip list", datasetKey);
+    }
+    return r;
   }
 
   private boolean ignoreChecklists() {

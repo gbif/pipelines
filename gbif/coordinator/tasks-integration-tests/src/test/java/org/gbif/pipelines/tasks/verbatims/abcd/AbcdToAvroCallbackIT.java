@@ -168,7 +168,7 @@ public class AbcdToAvroCallbackIT {
     // Should
     Path path = Paths.get(config.stepConfig.repositoryPath + datasetKey + "/" + attempt + AVRO);
     assertFalse(path.toFile().exists());
-    assertFalse(path.getParent().toFile().exists());
+    assertTrue(path.getParent().toFile().exists());
     assertTrue(CURATOR_SERVER.checkExists(datasetKey, ABCD_LABEL));
     assertTrue(CURATOR_SERVER.checkExists(datasetKey, Fn.ERROR_MESSAGE.apply(ABCD_LABEL)));
     assertTrue(PUBLISHER.getMessages().isEmpty());

@@ -15,7 +15,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
-import org.gbif.pipelines.core.converters.specific.GbifParentJsonConverter;
+import org.gbif.pipelines.core.converters.ParentJsonConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -25,7 +25,6 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
 import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
@@ -82,7 +81,6 @@ public class ParentJsonTransform implements Serializable {
   @NonNull private final TupleTag<IdentifierRecord> identifierRecordTag;
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
-  @NonNull private final TupleTag<TaxonRecord> taxonRecordTag;
   // Extension
   @NonNull private final TupleTag<MultimediaRecord> multimediaRecordTag;
   @NonNull private final TupleTag<ImageRecord> imageRecordTag;
@@ -120,7 +118,6 @@ public class ParentJsonTransform implements Serializable {
                 v.getOnly(temporalRecordTag, TemporalRecord.newBuilder().setId(k).build());
             LocationRecord lr =
                 v.getOnly(locationRecordTag, LocationRecord.newBuilder().setId(k).build());
-            TaxonRecord txr = v.getOnly(taxonRecordTag, TaxonRecord.newBuilder().setId(k).build());
 
             // Extension
             MultimediaRecord mr =
@@ -159,7 +156,7 @@ public class ParentJsonTransform implements Serializable {
 
             // Convert and
             String json =
-                GbifParentJsonConverter.builder()
+                ParentJsonConverter.builder()
                     .metadata(mdr)
                     .eventCore(ecr)
                     .identifier(ir)
@@ -167,7 +164,6 @@ public class ParentJsonTransform implements Serializable {
                     .location(lr)
                     .multimedia(mmr)
                     .verbatim(er)
-                    .taxon(txr)
                     .derivedMetadata(dmr)
                     .locationInheritedRecord(lir)
                     .measurementOrFactRecord(mofr)

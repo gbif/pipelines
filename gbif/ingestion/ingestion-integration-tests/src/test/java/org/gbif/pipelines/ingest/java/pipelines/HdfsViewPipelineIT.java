@@ -36,8 +36,6 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
-import org.gbif.pipelines.io.avro.extension.germplasm.GermplasmMeasurementTrialTable;
-import org.gbif.pipelines.io.avro.extension.obis.ExtendedMeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
@@ -134,10 +132,9 @@ public class HdfsViewPipelineIT {
 
     assertFile(OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
     assertFile(MeasurementOrFactTable.class, outputFn.apply("measurementorfacttable"));
-    assertFile(
-        ExtendedMeasurementOrFactTable.class, outputFn.apply("extendedmeasurementorfacttable"));
-    assertFile(
-        GermplasmMeasurementTrialTable.class, outputFn.apply("germplasmmeasurementtrialtable"));
+
+    assertFileExistFalse(outputFn.apply("extendedmeasurementorfacttable"));
+    assertFileExistFalse(outputFn.apply("germplasmmeasurementtrialtable"));
     assertFileExistFalse(outputFn.apply("permittable"));
     assertFileExistFalse(outputFn.apply("loantable"));
   }

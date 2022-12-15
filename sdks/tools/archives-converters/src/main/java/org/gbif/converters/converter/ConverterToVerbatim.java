@@ -1,7 +1,5 @@
 package org.gbif.converters.converter;
 
-import static org.gbif.converters.converter.FsUtils.createFile;
-import static org.gbif.converters.converter.FsUtils.deleteAvroFileIfEmpty;
 import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 
 import java.io.BufferedOutputStream;
@@ -16,6 +14,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 @Slf4j
@@ -111,7 +110,7 @@ public abstract class ConverterToVerbatim {
       throw new IllegalStateException("Failed performing conversion on " + inputPath, e);
     } finally {
       if (!skipDeletion) {
-        isConverted = deleteAvroFileIfEmpty(fs, outputPath);
+        isConverted = FsUtils.deleteAvroFileIfEmpty(fs, outputPath, ExtendedRecord.class);
       }
     }
 
@@ -122,7 +121,7 @@ public abstract class ConverterToVerbatim {
       throws IOException {
     if (metaPath != null) {
       String info = Metrics.ARCHIVE_TO_ER_COUNT + ": " + numberOfRecords + "\n";
-      createFile(fs, metaPath, info);
+      FsUtils.createFile(fs, metaPath, info);
     }
   }
 

@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.Builder;
 import lombok.SneakyThrows;
-import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
@@ -34,8 +34,8 @@ import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 
 @Slf4j
-@SuperBuilder
-public abstract class ParentJsonConverter {
+@Builder
+public class ParentJsonConverter {
 
   protected final MetadataRecord metadata;
   protected final IdentifierRecord identifier;
@@ -132,7 +132,6 @@ public abstract class ParentJsonConverter {
     mapLocationRecord(builder);
     mapMultimediaRecord(builder);
     mapExtendedRecord(builder);
-    mapTaxonRecord(builder);
     mapMeasurementOrFactRecord(builder);
 
     return builder;
@@ -232,8 +231,6 @@ public abstract class ParentJsonConverter {
 
     JsonConverter.convertGadm(location.getGadm()).ifPresent(builder::setGadm);
   }
-
-  protected abstract void mapTaxonRecord(EventJsonRecord.Builder builder);
 
   private void mapMultimediaRecord(EventJsonRecord.Builder builder) {
     builder

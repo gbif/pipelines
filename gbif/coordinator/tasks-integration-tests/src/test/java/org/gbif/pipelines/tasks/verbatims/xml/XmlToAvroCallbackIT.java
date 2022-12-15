@@ -156,7 +156,7 @@ public class XmlToAvroCallbackIT {
     // Should
     Path path = Paths.get(config.stepConfig.repositoryPath + STRING_UUID + "/" + attempt + AVRO);
     assertFalse(path.toFile().exists());
-    assertFalse(path.getParent().toFile().exists());
+    assertTrue(path.getParent().toFile().exists());
     assertTrue(CURATOR_SERVER.checkExists(crawlId, XML_LABEL));
     assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.ERROR_MESSAGE.apply(XML_LABEL)));
     assertTrue(PUBLISHER.getMessages().isEmpty());

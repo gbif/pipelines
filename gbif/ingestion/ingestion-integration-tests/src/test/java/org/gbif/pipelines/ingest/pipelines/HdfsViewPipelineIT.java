@@ -35,10 +35,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.extension.ac.AudubonTable;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
-import org.gbif.pipelines.io.avro.extension.germplasm.GermplasmMeasurementTrialTable;
-import org.gbif.pipelines.io.avro.extension.obis.ExtendedMeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
@@ -208,11 +205,10 @@ public class HdfsViewPipelineIT {
 
     assertFile(OccurrenceHdfsRecord.class, outputFn.apply("occurrence"));
     assertFile(MeasurementOrFactTable.class, outputFn.apply("measurementorfacttable"));
-    assertFile(
-        ExtendedMeasurementOrFactTable.class, outputFn.apply("extendedmeasurementorfacttable"));
-    assertFile(
-        GermplasmMeasurementTrialTable.class, outputFn.apply("germplasmmeasurementtrialtable"));
-    assertFile(AudubonTable.class, outputFn.apply("audubontable"));
+
+    assertFileExistFalse(outputFn.apply("germplasmmeasurementtrialtable"));
+    assertFileExistFalse(outputFn.apply("audubontable"));
+    assertFileExistFalse(outputFn.apply("extendedmeasurementorfacttable"));
     assertFileExistFalse(outputFn.apply("permittable"));
     assertFileExistFalse(outputFn.apply("loantable"));
   }
