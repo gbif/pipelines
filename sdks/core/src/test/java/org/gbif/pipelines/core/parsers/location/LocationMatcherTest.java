@@ -2,6 +2,7 @@ package org.gbif.pipelines.core.parsers.location;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
 
+import java.util.Arrays;
 import java.util.Collections;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
@@ -29,6 +30,8 @@ public class LocationMatcherTest {
     store.put(LatLng.create(71.7d, -42.6d), toGeocodeResponse(Country.GREENLAND));
     store.put(LatLng.create(-17.65, -149.46), toGeocodeResponse(Country.FRENCH_POLYNESIA));
     store.put(LatLng.create(27.15, -13.20), toGeocodeResponse(Country.MOROCCO));
+    store.put(
+        LatLng.create(8.6, -82.9, 30_000d), toGeocodeResponse(Country.COSTA_RICA, Country.PANAMA));
     store.put(LatLng.create(-61d, -130d), toGeocodeNonISOResponse("Southern Ocean"));
     GEOCODE_KV_STORE = GeocodeKvStore.create(store);
   }
@@ -39,6 +42,20 @@ public class LocationMatcherTest {
     location.setDistance(0.0d);
     location.setIsoCountryCode2Digit(country.getIso2LetterCode());
     return new GeocodeResponse(Collections.singletonList(location));
+  }
+
+  private static GeocodeResponse toGeocodeResponse(Country country1, Country country2) {
+    Location location1 = new Location();
+    location1.setType("Political");
+    location1.setDistance(0.0d);
+    location1.setIsoCountryCode2Digit(country1.getIso2LetterCode());
+
+    Location location2 = new Location();
+    location2.setType("Political");
+    location2.setDistance(0.2d);
+    location2.setIsoCountryCode2Digit(country2.getIso2LetterCode());
+
+    return new GeocodeResponse(Arrays.asList(location1, location2));
   }
 
   private static GeocodeResponse toGeocodeNonISOResponse(String title) {
@@ -61,6 +78,24 @@ public class LocationMatcherTest {
     // Should
     Assert.assertEquals(canada, result.getResult().getCountry());
     Assert.assertEquals(coordsCanada, result.getResult().getLatLng());
+    Assert.assertTrue(result.isSuccessful());
+    Assert.assertTrue(result.getIssues().isEmpty());
+  }
+
+  @Test
+  public void countryAndCoordsMatchLargeUncertaintyTest() {
+
+    // State
+    Country panama = Country.PANAMA;
+    LatLng coordsPanama = LatLng.create(8.60, -82.9, 30_000d);
+
+    // When
+    ParsedField<ParsedLocation> result =
+        LocationMatcher.create(coordsPanama, panama, GEOCODE_KV_STORE).apply();
+
+    // Should
+    Assert.assertEquals(panama, result.getResult().getCountry());
+    Assert.assertEquals(coordsPanama, result.getResult().getLatLng());
     Assert.assertTrue(result.isSuccessful());
     Assert.assertTrue(result.getIssues().isEmpty());
   }

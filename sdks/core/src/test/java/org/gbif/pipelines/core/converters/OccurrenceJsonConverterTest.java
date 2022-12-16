@@ -232,6 +232,7 @@ public class OccurrenceJsonConverterTest {
                     .setLevel3Gid("XAA.1.3_1")
                     .setLevel3Name("Level 3 Cipality")
                     .build())
+            .setDistanceFromCentroidInMeters(10d)
             .build();
     lr.getIssues().getIssueList().add(OccurrenceIssue.BASIS_OF_RECORD_INVALID.name());
 
@@ -540,6 +541,7 @@ public class OccurrenceJsonConverterTest {
     assertEquals(
         "[{\"type\":\"OTHER\",\"value\":\"someId\"}]", result.path("recordedByIds").toString());
     assertEquals("PRESENT", result.path("occurrenceStatus").asText());
+    assertEquals("10.0", result.path("distanceFromCentroidInMeters").asText());
 
     assertEquals(institutionMatch.getKey(), result.path("institutionKey").asText());
 

@@ -111,7 +111,8 @@ public class EventJsonConverter {
         .setRepatriated(location.getRepatriated())
         .setHasGeospatialIssue(location.getHasGeospatialIssue())
         .setLocality(location.getLocality())
-        .setFootprintWKT(location.getFootprintWKT());
+        .setFootprintWKT(location.getFootprintWKT())
+        .setDistanceFromCentroidInMeters(location.getDistanceFromCentroidInMeters());
 
     // Coordinates
     Double decimalLongitude = location.getDecimalLongitude();

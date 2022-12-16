@@ -19,8 +19,12 @@ public class GadmParser {
     Objects.requireNonNull(lr, "LocationRecord is required");
     Objects.requireNonNull(kvStore, "GeocodeService kvStore is required");
 
-    // Take parsed values
-    LatLng latLng = LatLng.create(lr.getDecimalLatitude(), lr.getDecimalLongitude());
+    // Take parsed values. Uncertainty isn't needed, but included anyway so we hit the cache.
+    LatLng latLng =
+        LatLng.create(
+            lr.getDecimalLatitude(),
+            lr.getDecimalLongitude(),
+            lr.getCoordinateUncertaintyInMeters());
 
     // Use these to retrieve the GADM areas.
     // Check parameters
