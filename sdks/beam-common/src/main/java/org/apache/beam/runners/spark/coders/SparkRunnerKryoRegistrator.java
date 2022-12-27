@@ -1,6 +1,7 @@
 package org.apache.beam.runners.spark.coders;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.twitter.chill.WrappedArraySerializer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.function.Function;
@@ -39,7 +40,6 @@ import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
 import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 import scala.Tuple2;
-import scala.collection.mutable.WrappedArray;
 
 /**
  * Overrides the Beam SparkRunnerKryoRegistrator to register generic Avro classes with the {@link
@@ -98,7 +98,7 @@ public class SparkRunnerKryoRegistrator implements KryoRegistrator {
     kryo.register(PaneInfo.class);
     kryo.register(StateAndTimers.class);
     kryo.register(TupleTag.class);
-    kryo.register(WrappedArray.ofRef.class);
+    kryo.register(WrappedArraySerializer.class, new WrappedArraySerializer());
     kryo.register(Row.class);
 
     try {

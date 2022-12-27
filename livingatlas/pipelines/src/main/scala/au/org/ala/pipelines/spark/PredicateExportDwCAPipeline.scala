@@ -158,14 +158,14 @@ object PredicateExportDwCAPipeline {
       }
     }
 
-    val jobID = if (exportArgs.jobId != null && !exportArgs.jobId.isEmpty) {
+    val jobID = if (exportArgs.jobId != null && exportArgs.jobId.nonEmpty) {
       exportArgs.jobId
     } else {
       UUID.randomUUID.toString
     }
 
     // Process the query filter
-    val queryFilter = if (exportArgs.queryFilePath != null && !exportArgs.queryFilePath.isEmpty) {
+    val queryFilter = if (exportArgs.queryFilePath != null && exportArgs.queryFilePath.nonEmpty) {
       val lines = scala.io.Source.fromFile(exportArgs.queryFilePath).mkString
       val om = new ObjectMapper()
       om.addMixIn(classOf[SearchParameter], classOf[ALAEventSearchParameter])
@@ -960,7 +960,7 @@ object PredicateExportDwCAPipeline {
 
   def genericRecordToFieldNameRow(row: Row, sqlType: StructType): Seq[Row] = {
     val elements = row.get(0).asInstanceOf[Seq[Map[String, String]]]
-    val fieldNames = elements.map(record => record.keySet).flatten
+    val fieldNames = elements.flatMap(record => record.keySet)
     fieldNames.distinct.map(fieldName => new GenericRowWithSchema(Array(fieldName), sqlType))
   }
 }

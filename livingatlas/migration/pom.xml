@@ -14,11 +14,10 @@
   <description>Tools for migration of data from legacy systems to pipelines.</description>
 
   <properties>
-    <!-- ALA are using spark 2.4.5, GBIF current reference 2.4.0 -->
-    <spark.version>2.4.5</spark.version>
     <!-- this library is not in the parent POM, but is in use by gbif/crawler
      which uses version 1.58
      -->
+    <spark.version>3.3.1</spark.version>
     <jcommander.version>1.78</jcommander.version>
     <sonar.skip>true</sonar.skip>
   </properties>
@@ -35,18 +34,18 @@
   <dependencies>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-sql_2.11</artifactId>
+      <artifactId>spark-sql_2.13</artifactId>
       <version>${spark.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.11</artifactId>
+      <artifactId>spark-core_2.13</artifactId>
       <version>${spark.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-avro_2.11</artifactId>
+      <artifactId>spark-avro_2.13</artifactId>
       <version>${spark.version}</version>
       <scope>compile</scope>
     </dependency>

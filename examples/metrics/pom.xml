@@ -47,7 +47,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>
-      <artifactId>beam-runners-spark</artifactId>
+      <artifactId>beam-runners-spark-3</artifactId>
     </dependency>
 
     <!-- Hadoop -->
@@ -71,11 +71,11 @@
     <!-- Spark -->
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.11</artifactId>
+      <artifactId>spark-core_2.13</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-streaming_2.11</artifactId>
+      <artifactId>spark-streaming_2.13</artifactId>
     </dependency>
 
     <!-- Logging -->

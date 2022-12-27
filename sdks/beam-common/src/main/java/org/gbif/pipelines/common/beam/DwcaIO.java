@@ -18,7 +18,6 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.display.DisplayData;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.directory.api.util.Strings;
 import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -93,11 +92,15 @@ public class DwcaIO {
       return input.getPipeline().apply(org.apache.beam.sdk.io.Read.from(source));
     }
 
+    private static boolean isNotEmpty(String str) {
+      return (str != null) && (str.length() > 0);
+    }
+
     @Override
     public void populateDisplayData(DisplayData.Builder builder) {
       super.populateDisplayData(builder);
       // path is null in the case of uncompressed archives
-      if (Strings.isNotEmpty(path)) {
+      if (isNotEmpty(path)) {
         builder.add(DisplayData.item("DwC-A Path", path));
       }
     }

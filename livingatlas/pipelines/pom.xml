@@ -41,9 +41,6 @@
     <layers-store.version>2.0.3</layers-store.version>
     <json-simple.version>1.1.1</json-simple.version>
 
-    <!-- GBIF parent currently using 2.4.0 -->
-    <spark.embedded.version>2.4.5</spark.embedded.version>
-
     <!-- Plugins -->
     <org.jetbrains.annotations>13.0</org.jetbrains.annotations>
     <git-commit-id-plugin.version>2.2.4</git-commit-id-plugin.version>
@@ -57,9 +54,9 @@
     <checker-qual.version>3.9.1</checker-qual.version>
     <snappy-java.version>1.1.8.4</snappy-java.version>
 
-    <spark.version>2.4.5</spark.version>
-    <hadoop.version>2.6.5</hadoop.version>
-    <maven-scala-plugin.version>4.3.1</maven-scala-plugin.version>
+    <spark.version>3.3.1</spark.version>
+    <hadoop.version>3.3.4</hadoop.version>
+    <maven-scala-plugin.version>4.8.0</maven-scala-plugin.version>
   </properties>
 
   <build>
@@ -104,6 +101,7 @@
         </executions>
         <configuration>
           <secondaryCacheDir>/var/tmp/sbt</secondaryCacheDir>
+          <scalaVersion>2.13</scalaVersion>
         </configuration>
       </plugin>
       <!-- Download supporting shapefiles -->
@@ -404,7 +402,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>
-      <artifactId>beam-runners-spark</artifactId>
+      <artifactId>beam-runners-spark-3</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>
@@ -649,7 +647,7 @@
 
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.11</artifactId>
+      <artifactId>spark-core_2.13</artifactId>
       <version>${spark.embedded.version}</version>
       <exclusions>
         <exclusion>
@@ -668,12 +666,12 @@
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-streaming_2.11</artifactId>
+      <artifactId>spark-streaming_2.13</artifactId>
       <version>${spark.embedded.version}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
-      <artifactId>jackson-module-scala_2.11</artifactId>
+      <artifactId>jackson-module-scala_2.13</artifactId>
       <version>${jackson.version}</version>
       <scope>compile</scope>
     </dependency>
@@ -820,24 +818,24 @@
 
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-sql_2.11</artifactId>
+      <artifactId>spark-sql_2.13</artifactId>
       <version>${spark.version}</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-graphx -->
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-graphx_2.11</artifactId>
+      <artifactId>spark-graphx_2.13</artifactId>
       <version>${spark.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.11</artifactId>
+      <artifactId>spark-core_2.13</artifactId>
       <version>${spark.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-avro_2.11</artifactId>
+      <artifactId>spark-avro_2.13</artifactId>
       <version>${spark.version}</version>
       <scope>compile</scope>
     </dependency>

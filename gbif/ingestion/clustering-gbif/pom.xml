@@ -16,8 +16,10 @@
   <description>Batch process to cluster all GBIF records</description>
 
   <properties>
-    <maven-scala-plugin.version>4.3.1</maven-scala-plugin.version>
-    <spark.version>2.3.0</spark.version>
+    <maven-scala-plugin.version>4.8.0</maven-scala-plugin.version>
+    <spark.version>3.3.1</spark.version>
+    <scala.version>2.13.10</scala.version>
+    <scala.minor.version>2.13.10</scala.minor.version>
     <!-- These must be compatible with Spark version (see https://stackoverflow.com/a/50114083) -->
     <janino.version>3.0.8</janino.version>
     <commons-compiler.version>3.0.8</commons-compiler.version>
@@ -61,31 +63,31 @@
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-catalyst_2.11</artifactId>
+      <artifactId>spark-catalyst_2.13</artifactId>
       <version>${spark.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.11</artifactId>
+      <artifactId>spark-core_2.13</artifactId>
       <version>${spark.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-sql_2.11</artifactId>
+      <artifactId>spark-sql_2.13</artifactId>
       <version>${spark.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-yarn_2.11</artifactId>
+      <artifactId>spark-yarn_2.13</artifactId>
       <version>${spark.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-hive_2.11</artifactId>
+      <artifactId>spark-hive_2.13</artifactId>
       <version>${spark.version}</version>
       <scope>provided</scope>
     </dependency>

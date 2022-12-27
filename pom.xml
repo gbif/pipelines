@@ -67,13 +67,6 @@
       <name>Open Source Geospatial Foundation Repository</name>
       <url>https://repo.osgeo.org/repository/release/</url>
     </repository>
-    <repository>
-      <id>cloudera-release</id>
-      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
   </repositories>
 
   <properties>
@@ -105,11 +98,11 @@
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
-    <apache.beam.version>2.33.0</apache.beam.version>
-    <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
-    <hadoop-core.version>2.6.0-mr1-cdh5.16.2</hadoop-core.version>
-    <hbase.version>1.2.0-cdh5.16.2</hbase.version>
-    <curator.version>2.9.0</curator.version>
+    <apache.beam.version>2.43.0</apache.beam.version>
+    <hadoop.version>3.3.4</hadoop.version>
+    <hadoop-core.version>1.2.1</hadoop-core.version>
+    <hbase.version>2.5.2-hadoop3</hbase.version>
+    <curator.version>4.2.0</curator.version>
 
     <geotools.version>20.5</geotools.version>
     <commons-lang3.version>3.10</commons-lang3.version>
@@ -147,7 +140,7 @@
     <commons-beanutils.version>1.9.4</commons-beanutils.version>
     <super-csv.version>2.4.0</super-csv.version>
 
-    <spark.embedded.version>2.4.0</spark.embedded.version>
+    <spark.embedded.version>3.3.1</spark.embedded.version>
     <lz4.version>1.3.0</lz4.version>
     <commons-codec.version>1.11</commons-codec.version>
 
@@ -547,7 +540,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.beam</groupId>
-        <artifactId>beam-runners-spark</artifactId>
+        <artifactId>beam-runners-spark-3</artifactId>
         <version>${apache.beam.version}</version>
       </dependency>
       <dependency>
@@ -858,7 +851,7 @@
       <!-- Mini Pipeline-->
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-core_2.11</artifactId>
+        <artifactId>spark-core_2.13</artifactId>
         <version>${spark.embedded.version}</version>
         <exclusions>
           <exclusion>
@@ -873,12 +866,12 @@
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-streaming_2.11</artifactId>
+        <artifactId>spark-streaming_2.13</artifactId>
         <version>${spark.embedded.version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.module</groupId>
-        <artifactId>jackson-module-scala_2.11</artifactId>
+        <artifactId>jackson-module-scala_2.13</artifactId>
         <version>${jackson.version}</version>
         <scope>compile</scope>
       </dependency>

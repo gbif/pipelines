@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -24,15 +25,15 @@ public class HbaseServer extends ExternalResource {
           .create();
 
   public static final String FRAGMENT_TABLE_NAME = "fragment_table";
-  public static final byte[] FRAGMENT_TABLE = Bytes.toBytes(FRAGMENT_TABLE_NAME);
+  public static final TableName FRAGMENT_TABLE = TableName.valueOf(FRAGMENT_TABLE_NAME);
 
-  private static final byte[] LOOKUP_TABLE = Bytes.toBytes(CFG.getLookupTable());
+  private static final TableName LOOKUP_TABLE = TableName.valueOf(CFG.getLookupTable());
   private static final String CF_NAME = "o";
   private static final byte[] CF = Bytes.toBytes(CF_NAME);
-  private static final byte[] COUNTER_TABLE = Bytes.toBytes(CFG.getCounterTable());
+  private static final TableName COUNTER_TABLE = TableName.valueOf(CFG.getCounterTable());
   private static final String COUNTER_CF_NAME = "o";
   private static final byte[] COUNTER_CF = Bytes.toBytes(COUNTER_CF_NAME);
-  private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(CFG.getOccurrenceTable());
+  private static final TableName OCCURRENCE_TABLE = TableName.valueOf(CFG.getOccurrenceTable());
 
   private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 

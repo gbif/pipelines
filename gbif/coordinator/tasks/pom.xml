@@ -216,7 +216,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>
-      <artifactId>beam-runners-spark</artifactId>
+      <artifactId>beam-runners-spark-3</artifactId>
       <exclusions>
         <exclusion>
           <groupId>org.apache.beam</groupId>
