@@ -61,6 +61,28 @@
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>core</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.gbif.occurrence</groupId>
+          <artifactId>occurrence-hdfs-table</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.gbif.registry</groupId>
+          <artifactId>registry-ws-client</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.gbif.kvs</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.elasticsearch.client</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.geotools</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
@@ -114,8 +136,6 @@
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
     </dependency>
-    <!-- Thanks for using https://jar-download.com -->
-
 
     <dependency>
       <groupId>org.apache.hbase</groupId>

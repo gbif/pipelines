@@ -299,6 +299,14 @@
           <groupId>org.gbif.registry</groupId>
           <artifactId>registry-ws-client</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.gbif.kvs</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.elasticsearch.client</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
