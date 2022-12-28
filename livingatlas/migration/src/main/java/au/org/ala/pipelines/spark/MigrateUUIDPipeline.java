@@ -19,6 +19,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.spark.api.java.function.FilterFunction;
+import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
 import scala.Tuple2;
 import scala.Tuple4;
@@ -100,35 +102,40 @@ public class MigrateUUIDPipeline implements Serializable {
     Dataset<Tuple4<String, String, String, String>> uuidRecords =
         occUuidDataset
             .filter(
-                row ->
-                    StringUtils.isNotEmpty(row.getString(0))
-                        && row.getString(0).contains("|")
-                        && row.getString(0).startsWith("dr"))
+                (FilterFunction<Row>)
+                    row ->
+                        StringUtils.isNotEmpty(row.getString(0))
+                            && row.getString(0).contains("|")
+                            && row.getString(0).startsWith("dr"))
             .map(
-                row -> {
-                  String datasetID = row.getString(0).substring(0, row.getString(0).indexOf("|"));
-                  return Tuple4.apply(
-                      datasetID, // datasetID
-                      "temp_" + datasetID + "_" + row.getString(1),
-                      row.getString(1), // UUID
-                      row.getString(0)); // UniqueKey - constructed from DwC (and non-DwC terms)
-                },
+                (MapFunction<Row, Tuple4<String, String, String, String>>)
+                    row -> {
+                      String datasetID =
+                          row.getString(0).substring(0, row.getString(0).indexOf("|"));
+                      return Tuple4.apply(
+                          datasetID, // datasetID
+                          "temp_" + datasetID + "_" + row.getString(1),
+                          row.getString(1), // UUID
+                          row.getString(0)); // UniqueKey - constructed from DwC (and non-DwC terms)
+                    },
                 Encoders.tuple(
                     Encoders.STRING(), Encoders.STRING(), Encoders.STRING(), Encoders.STRING()));
 
     Dataset<Tuple2<String, Long>> firstLoadedDataset =
         occFirstLoadedDataset
-            .filter(row -> StringUtils.isNotEmpty(row.getString(1)))
+            .filter((FilterFunction<Row>) row -> StringUtils.isNotEmpty(row.getString(1)))
             .map(
-                row -> {
-                  return Tuple2.apply(
-                      row.getString(0), // UUID
-                      row.getString(1) == null
-                              || "firstLoaded".equals(row.getString(1)) // skip header
-                          ? null
-                          : LocalDateTime.parse(row.getString(1), DateTimeFormatter.ISO_DATE_TIME)
-                              .toEpochSecond(ZoneOffset.UTC)); // firstLoaded
-                },
+                (MapFunction<Row, Tuple2<String, Long>>)
+                    row -> {
+                      return Tuple2.apply(
+                          row.getString(0), // UUID
+                          row.getString(1) == null
+                                  || "firstLoaded".equals(row.getString(1)) // skip header
+                              ? null
+                              : LocalDateTime.parse(
+                                      row.getString(1), DateTimeFormatter.ISO_DATE_TIME)
+                                  .toEpochSecond(ZoneOffset.UTC)); // firstLoaded
+                    },
                 Encoders.tuple(Encoders.STRING(), Encoders.LONG()));
 
     Dataset<Row> combined =
