@@ -4,6 +4,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Strings;
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -22,9 +23,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -49,6 +48,27 @@ public class HdfsUtils {
   }
 
   /**
+   * @param filePath
+   * @param fs
+   * @return list of absolute file path present in given path
+   * @throws FileNotFoundException
+   * @throws IOException
+   */
+  public static List<FileStatus> getAllFilesRecursive(Path filePath, FileSystem fs)
+      throws FileNotFoundException, IOException {
+    List<FileStatus> fileList = new ArrayList<>();
+    FileStatus[] fileStatus = fs.listStatus(filePath);
+    for (FileStatus fileStat : fileStatus) {
+      if (fileStat.isDir()) {
+        fileList.addAll(getAllFilesRecursive(fileStat.getPath(), fs));
+      } else {
+        fileList.add(fileStat);
+      }
+    }
+    return fileList;
+  }
+
+  /**
    * Returns number of files in the directory
    *
    * @param hdfsConfigs path to hdfs-site.xml and core-site.xml config file
@@ -58,15 +78,7 @@ public class HdfsUtils {
     URI fileUri = URI.create(directoryPath);
     FileSystem fs = getFileSystem(hdfsConfigs, directoryPath);
 
-    int count = 0;
-    RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(new Path(fileUri), false);
-    while (iterator.hasNext()) {
-      LocatedFileStatus fileStatus = iterator.next();
-      if (fileStatus.isFile()) {
-        count++;
-      }
-    }
-    return count;
+    return getAllFilesRecursive(new Path(fileUri), fs).size();
   }
 
   /**
@@ -94,7 +106,7 @@ public class HdfsUtils {
     if (fs.exists(fsPath)) {
       FileStatus[] statuses = fs.listStatus(fsPath);
       if (statuses != null && statuses.length > 0) {
-        return Arrays.stream(statuses).filter(FileStatus::isDirectory).collect(Collectors.toList());
+        return Arrays.stream(statuses).filter(FileStatus::isDir).collect(Collectors.toList());
       }
     }
     return Collections.emptyList();

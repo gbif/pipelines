@@ -182,12 +182,6 @@
     <dependency>
       <groupId>org.gbif.occurrence</groupId>
       <artifactId>occurrence-hdfs-table</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.gbif.occurrence</groupId>
-          <artifactId>occurrence-persistence</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.occurrence</groupId>

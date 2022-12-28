@@ -427,6 +427,10 @@
             <groupId>com.beust</groupId>
             <artifactId>jcommander</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>org.gbif.occurrence</groupId>
+            <artifactId>occurrence-persistence</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>

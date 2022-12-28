@@ -100,7 +100,6 @@
           </execution>
         </executions>
         <configuration>
-          <recompileMode>incremental</recompileMode>
           <secondaryCacheDir>/var/tmp/sbt</secondaryCacheDir>
         </configuration>
       </plugin>
