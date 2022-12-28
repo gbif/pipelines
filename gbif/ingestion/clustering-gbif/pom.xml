@@ -50,6 +50,7 @@
           </execution>
         </executions>
         <configuration>
+          <recompileMode>incremental</recompileMode>
           <secondaryCacheDir>/var/tmp/sbt</secondaryCacheDir>
         </configuration>
       </plugin>
@@ -109,8 +110,22 @@
     </dependency>
 
     <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>${scala.version}</version>
+    </dependency>
+    <!-- Thanks for using https://jar-download.com -->
+
+
+    <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-server</artifactId>
+      <artifactId>hbase-mapreduce</artifactId>
+      <version>${hbase.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-common</artifactId>
       <version>${hbase.version}</version>
       <exclusions>
         <!-- stops the MRAppMaster in Oozie from even starting (when in Oozie) -->

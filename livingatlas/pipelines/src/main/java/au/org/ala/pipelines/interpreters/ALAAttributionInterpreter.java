@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.directory.api.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.common.PipelinesException;
@@ -132,7 +132,7 @@ public class ALAAttributionInterpreter {
             er.getCoreTerms()
                 .get(DwcTerm.institutionCode.namespace() + DwcTerm.institutionCode.name());
 
-        if (!Strings.isEmpty(collectionCode)) {
+        if (StringUtils.isNotEmpty(collectionCode)) {
           ALACollectionLookup lookup =
               ALACollectionLookup.builder()
                   .collectionCode(collectionCode)

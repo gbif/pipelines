@@ -28,7 +28,7 @@ import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.*;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.ImmutableList;
-import org.apache.directory.api.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.request.schema.SchemaRequest;
 import org.apache.solr.client.solrj.response.schema.SchemaResponse;
@@ -146,7 +146,7 @@ public class IndexRecordToSolrPipeline {
                       // values 0 to numOfPartitions
                       int x = ran.nextInt(numOfPartitions - 1);
                       String latLng =
-                          Strings.isEmpty(input.getValue().getLatLng())
+                          StringUtils.isEmpty(input.getValue().getLatLng())
                               ? input
                                   .getValue()
                                   .getId() // just need a unique ID so there is no join

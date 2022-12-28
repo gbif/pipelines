@@ -20,7 +20,7 @@ import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.directory.api.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -170,8 +170,8 @@ public class ClusteringPipeline {
                             .withOtherCatalogNumbers(otherCatalogNumbers);
 
                     // specimen only hashes
-                    if (Strings.isNotEmpty(speciesKey)
-                        && Strings.isNotEmpty(basisOfRecord)
+                    if (StringUtils.isNotEmpty(speciesKey)
+                        && StringUtils.isNotEmpty(basisOfRecord)
                         && specimenBORs.contains(basisOfRecord)) {
 
                       Stream<String> ids =
@@ -184,7 +184,8 @@ public class ClusteringPipeline {
                       // output hashes for each combination
                       ids.filter(
                               value ->
-                                  !Strings.isEmpty(value) && !omitIds.contains(value.toUpperCase()))
+                                  StringUtils.isNotEmpty(value)
+                                      && !omitIds.contains(value.toUpperCase()))
                           .distinct()
                           .collect(Collectors.toList())
                           .forEach(
@@ -221,14 +222,14 @@ public class ClusteringPipeline {
                     }
 
                     // 2. type status hashkeys
-                    if (Strings.isNotEmpty(taxonKey) && typeStatus != null) {
+                    if (StringUtils.isNotEmpty(taxonKey) && typeStatus != null) {
                       for (String t : typeStatus) {
                         out.output(builder.withHashKey(taxonKey + "|" + t).build());
                       }
                     }
 
                     // 3. taxonKey|year|recordedBy hashkeys
-                    if (Strings.isNotEmpty(taxonKey) && year != null && recordedBy != null) {
+                    if (StringUtils.isNotEmpty(taxonKey) && year != null && recordedBy != null) {
                       for (String r : recordedBy) {
                         out.output(builder.withHashKey(taxonKey + "|" + year + "|" + r).build());
                       }

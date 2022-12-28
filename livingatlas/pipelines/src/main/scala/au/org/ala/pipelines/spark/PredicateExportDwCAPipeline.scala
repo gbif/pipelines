@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory
 import java.nio.channels.Channels
 import java.util
 import scala.xml.{Elem, Node, PrettyPrinter}
+import scala.language.postfixOps
 
 @Parameters(separators = "=")
 class CmdArgs {

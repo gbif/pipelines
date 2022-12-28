@@ -100,8 +100,8 @@
           </execution>
         </executions>
         <configuration>
+          <recompileMode>incremental</recompileMode>
           <secondaryCacheDir>/var/tmp/sbt</secondaryCacheDir>
-          <scalaVersion>2.13</scalaVersion>
         </configuration>
       </plugin>
       <!-- Download supporting shapefiles -->

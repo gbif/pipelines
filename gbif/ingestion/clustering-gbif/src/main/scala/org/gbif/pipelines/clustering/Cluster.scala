@@ -4,7 +4,7 @@ import java.io.File
 import org.apache.hadoop.hbase.client.HTable
 import org.apache.hadoop.hbase.{HBaseConfiguration, KeyValue}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
-import org.apache.hadoop.hbase.mapreduce.{HFileOutputFormat, HFileOutputFormat2}
+import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.mapreduce.Job
 import org.apache.spark.Partitioner
@@ -13,7 +13,7 @@ import org.apache.spark.sql.types.{LongType, StringType, StructField, StructType
 import org.apache.spark.sql.{Row, SparkSession}
 import org.gbif.pipelines.core.parsers.clustering.{OccurrenceRelationships, RelationshipAssertion}
 
-import scala.collection.JavaConversions._
+import scala.jdk.CollectionConverters._
 
 object Cluster {
 
@@ -132,7 +132,7 @@ object Cluster {
           // a special treatment for catalogNumber and otherCatalogNumber overlap
           val features = new RowOccurrenceFeatures(r)
           val hashedIDs = HashUtilities.hashCatalogNumbers(features) // normalised, non-numeric codes
-          hashedIDs.foreach(id => {
+          hashedIDs.forEach(id => {
             records.append(
               Row(
                 r.getAs[Long]("gbifId"),
@@ -351,10 +351,10 @@ object Cluster {
     val job = new Job(conf,"Relationships") // name not actually used since we don't submit MR
     job.setJarByClass(this.getClass)
     val table = new HTable(conf, hbaseTable)
-    HFileOutputFormat2.configureIncrementalLoad(job, table);
+    HFileOutputFormat2.configureIncrementalLoad(job, table, table.getRegionLocator);
     val conf2 = job.getConfiguration // important
 
-    relationshipsSorted.saveAsNewAPIHadoopFile(hfileDir, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat], conf2)
+    relationshipsSorted.saveAsNewAPIHadoopFile(hfileDir, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], conf2)
   }
 
   /**
