@@ -430,6 +430,11 @@
         </exclusions>
       </dependency>
       <dependency>
+        <groupId>org.gbif.occurrence</groupId>
+        <artifactId>occurrence-common</artifactId>
+        <version>${gbif-occurrence.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.gbif</groupId>
         <artifactId>dwca-io</artifactId>
         <version>${dwca-io.version}</version>
