@@ -57,6 +57,7 @@
     <spark.version>3.3.1</spark.version>
     <hadoop.version>3.3.4</hadoop.version>
     <maven-scala-plugin.version>4.8.0</maven-scala-plugin.version>
+    <scala.version>2.13.10</scala.version>
   </properties>
 
   <build>
@@ -482,6 +483,11 @@
           <artifactId>slf4j-log4j12</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>${scala.version}</version>
     </dependency>
 
     <!-- Utils -->
