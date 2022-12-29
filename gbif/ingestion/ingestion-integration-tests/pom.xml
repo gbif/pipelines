@@ -83,6 +83,12 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>ingest-gbif-java</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
