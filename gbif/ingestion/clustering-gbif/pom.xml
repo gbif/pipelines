@@ -205,6 +205,11 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.thoughtworks.paranamer</groupId>
+      <artifactId>paranamer</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <profiles>
