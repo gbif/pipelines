@@ -16,6 +16,11 @@ import org.junit.rules.ExternalResource;
 
 @Slf4j
 public class CuratorServer extends ExternalResource {
+  // Disable ZK Admin Server
+  static {
+    System.setProperty("zookeeper.admin.enableServer", "false");
+    System.setProperty("zookeeper.admin.serverPort", "0");
+  }
 
   private static final Object MUTEX = new Object();
   private static volatile CuratorServer instance;
