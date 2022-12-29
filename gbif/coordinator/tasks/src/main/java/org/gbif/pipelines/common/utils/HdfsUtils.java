@@ -59,7 +59,7 @@ public class HdfsUtils {
     List<FileStatus> fileList = new ArrayList<>();
     FileStatus[] fileStatus = fs.listStatus(filePath);
     for (FileStatus fileStat : fileStatus) {
-      if (fileStat.isDir()) {
+      if (fileStat.isDirectory()) {
         fileList.addAll(getAllFilesRecursive(fileStat.getPath(), fs));
       } else {
         fileList.add(fileStat);
@@ -106,7 +106,7 @@ public class HdfsUtils {
     if (fs.exists(fsPath)) {
       FileStatus[] statuses = fs.listStatus(fsPath);
       if (statuses != null && statuses.length > 0) {
-        return Arrays.stream(statuses).filter(FileStatus::isDir).collect(Collectors.toList());
+        return Arrays.stream(statuses).filter(FileStatus::isDirectory).collect(Collectors.toList());
       }
     }
     return Collections.emptyList();
