@@ -181,8 +181,7 @@ public class PredicateExportDwCATestIT {
           "--jobId=" + jobId,
           "--localExportPath=/tmp/la-pipelines-test/event-download",
           "--inputPath=/tmp/la-pipelines-test/event-download",
-          "--config=" + itUtils.getPropertiesFilePath(),
-          "--conf= spark.driver.bindAddress=127.0.0.1"
+          "--config=" + itUtils.getPropertiesFilePath()
         });
 
     return jobId;
