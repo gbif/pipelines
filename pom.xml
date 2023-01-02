@@ -866,7 +866,7 @@
       <!-- Mini Pipeline-->
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-core_2.13</artifactId>
+        <artifactId>spark-core_2.12</artifactId>
         <version>${spark.embedded.version}</version>
         <exclusions>
           <exclusion>
@@ -881,12 +881,12 @@
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-streaming_2.13</artifactId>
+        <artifactId>spark-streaming_2.12</artifactId>
         <version>${spark.embedded.version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.module</groupId>
-        <artifactId>jackson-module-scala_2.13</artifactId>
+        <artifactId>jackson-module-scala_2.12</artifactId>
         <version>${jackson.version}</version>
         <scope>compile</scope>
       </dependency>

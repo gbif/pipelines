@@ -1,7 +1,7 @@
 package org.gbif.pipelines.clustering
 
 import java.io.File
-import org.apache.hadoop.hbase.client.{ConnectionFactory, HTable}
+import org.apache.hadoop.hbase.client.{ConnectionFactory, Table, Connection}
 import org.apache.hadoop.hbase.{HBaseConfiguration, KeyValue, TableName}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2
@@ -12,7 +12,6 @@ import org.apache.spark.sql.catalyst.encoders.RowEncoder
 import org.apache.spark.sql.types.{LongType, StringType, StructField, StructType}
 import org.apache.spark.sql.{Row, SparkSession}
 import org.gbif.pipelines.core.parsers.clustering.{OccurrenceRelationships, RelationshipAssertion}
-import scala.util.Using
 
 object Cluster {
 
@@ -348,19 +347,23 @@ object Cluster {
     conf.set("hbase.zookeeper.quorum", hbaseZK);
     val tableName = TableName.valueOf(hbaseTable)
 
-    Using.Manager{ use => {
-        val connection = use(ConnectionFactory.createConnection(conf))
-        val table =  use(connection.getTable(tableName))
+    var connection : Connection = null
+    var table : Table = null
+    try {
+      connection = ConnectionFactory.createConnection(conf)
+      table =  connection.getTable(tableName)
 
-        // NOTE: job creates a copy of the conf
-        val job =  Job.getInstance(conf,"Relationships") // name not actually used since we don't submit MR
-        job.setJarByClass(this.getClass)
+      // NOTE: job creates a copy of the conf
+      val job =  Job.getInstance(conf,"Relationships") // name not actually used since we don't submit MR
+      job.setJarByClass(this.getClass)
 
-        HFileOutputFormat2.configureIncrementalLoad(job, table, connection.getRegionLocator(tableName));
-        val conf2 = job.getConfiguration // important
+      HFileOutputFormat2.configureIncrementalLoad(job, table, connection.getRegionLocator(tableName));
+      val conf2 = job.getConfiguration // important
 
-        relationshipsSorted.saveAsNewAPIHadoopFile(hfileDir, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], conf2)
-      }
+      relationshipsSorted.saveAsNewAPIHadoopFile(hfileDir, classOf[ImmutableBytesWritable], classOf[KeyValue], classOf[HFileOutputFormat2], conf2)
+    } finally {
+      table.close()
+      connection.close()
     }
   }
 

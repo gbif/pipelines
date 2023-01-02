@@ -57,7 +57,7 @@
     <spark.version>3.3.1</spark.version>
     <hadoop.version>3.3.4</hadoop.version>
     <maven-scala-plugin.version>4.8.0</maven-scala-plugin.version>
-    <scala.version>2.13.10</scala.version>
+    <scala.version>2.12.17</scala.version>
   </properties>
 
   <build>
@@ -651,7 +651,7 @@
 
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.13</artifactId>
+      <artifactId>spark-core_2.12</artifactId>
       <version>${spark.embedded.version}</version>
       <exclusions>
         <exclusion>
@@ -670,12 +670,12 @@
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-streaming_2.13</artifactId>
+      <artifactId>spark-streaming_2.12</artifactId>
       <version>${spark.embedded.version}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
-      <artifactId>jackson-module-scala_2.13</artifactId>
+      <artifactId>jackson-module-scala_2.12</artifactId>
       <version>${jackson.version}</version>
       <scope>compile</scope>
     </dependency>
@@ -773,7 +773,6 @@
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
-      <scope>test</scope>
     </dependency>
 
     <!-- ALA's layers store -->
@@ -826,24 +825,24 @@
 
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-sql_2.13</artifactId>
+      <artifactId>spark-sql_2.12</artifactId>
       <version>${spark.version}</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-graphx -->
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-graphx_2.13</artifactId>
+      <artifactId>spark-graphx_2.12</artifactId>
       <version>${spark.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.13</artifactId>
+      <artifactId>spark-core_2.12</artifactId>
       <version>${spark.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-avro_2.13</artifactId>
+      <artifactId>spark-avro_2.12</artifactId>
       <version>${spark.version}</version>
       <scope>compile</scope>
     </dependency>
