@@ -147,11 +147,6 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-metadata</artifactId>
-        <version>${registry.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.registry</groupId>
         <artifactId>registry-persistence</artifactId>
         <version>${registry.version}</version>
       </dependency>
