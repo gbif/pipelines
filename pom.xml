@@ -86,10 +86,10 @@
     <gbif-api.version>1.0.0-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.56</gbif-common.version>
     <dwc-api.version>1.43</dwc-api.version>
-    <kvs.version>1.24</kvs.version>
+    <kvs.version>1.25-hbase2-SNAPSHOT</kvs.version>
     <hbase-utils.version>0.13-hbase2-SNAPSHOT</hbase-utils.version>
     <gbif-wrangler.version>0.5-SNAPSHOT</gbif-wrangler.version>
-    <gbif-occurrence.version>0.173.1</gbif-occurrence.version>
+    <gbif-occurrence.version>0.188-hadoop3-SNAPSHOT</gbif-occurrence.version>
     <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
     <registry.version>3.88-SNAPSHOT</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>
