@@ -62,7 +62,7 @@ public class BasicMetadataEvaluator {
   private static Optional<IssueInfo> evaluateContact(Dataset dataset) {
     List<CitationContact> authorList = CitationGenerator.getAuthors(dataset.getContacts());
     // we want at least 1 author and for ALL authors it must be possible to generate an author name
-    if (authorList.size() < 1
+    if (authorList.isEmpty()
         || authorList.size() != CitationGenerator.generateAuthorsName(authorList).size()) {
       return Optional.of(IssueInfo.create(EvaluationType.RESOURCE_CONTACTS_MISSING_OR_INCOMPLETE));
     }
