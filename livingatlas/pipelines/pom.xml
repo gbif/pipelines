@@ -30,6 +30,7 @@
     <!-- ALA libraries -->
     <ala-namematching-service.version>1.0</ala-namematching-service.version>
     <ala-sensitive-data-service.version>1.1</ala-sensitive-data-service.version>
+    <sql-predicates.version>1.0</sql-predicates.version>
 
     <!-- Tools-->
     <commons-configuration.version>1.6</commons-configuration.version>
@@ -831,30 +832,15 @@
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.11</artifactId>
-      <version>${spark.version}</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
       <artifactId>spark-avro_2.11</artifactId>
       <version>${spark.version}</version>
       <scope>compile</scope>
     </dependency>
     <!-- Avro -->
     <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.beust</groupId>
-      <artifactId>jcommander</artifactId>
-      <version>${jcommander.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.gbif.predicates</groupId>
       <artifactId>sql-predicates</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>${sql-predicates.version}</version>
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
