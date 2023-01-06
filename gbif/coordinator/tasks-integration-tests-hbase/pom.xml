@@ -92,6 +92,12 @@
       <version>${guava.hbase.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-auth</artifactId>
+      <scope>test</scope>
+      <version>${hadoop.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>org.gbif.crawler</groupId>
