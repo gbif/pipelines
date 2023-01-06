@@ -137,6 +137,11 @@
       <artifactId>jackson-dataformat-yaml</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-auth</artifactId>
+      <version>${hadoop.version}</version>
+    </dependency>
 
     <!-- GBIF Test Dependencies -->
     <dependency>
