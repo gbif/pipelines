@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.13.0-SNAPSHOT</version>
+  <version>2.13.0-spark3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -83,7 +83,7 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.58</gbif-parsers.version>
     <dwca-io.version>2.14</dwca-io.version>
-    <gbif-api.version>1.0.0-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>1.0.0</gbif-api.version>
     <gbif-common.version>0.56</gbif-common.version>
     <dwc-api.version>1.43</dwc-api.version>
     <kvs.version>1.25-hbase2-SNAPSHOT</kvs.version>
@@ -91,7 +91,7 @@
     <gbif-wrangler.version>0.5-SNAPSHOT</gbif-wrangler.version>
     <gbif-occurrence.version>0.188-hadoop3-SNAPSHOT</gbif-occurrence.version>
     <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
-    <registry.version>3.88-SNAPSHOT</registry.version>
+    <registry.version>3.88</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>
     <gbif-postal-service.version>1.6.0</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
@@ -99,7 +99,7 @@
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
     <apache.beam.version>2.43.0</apache.beam.version>
-    <hadoop.version>3.3.0</hadoop.version>
+    <hadoop.version>3.3.4</hadoop.version>
     <hadoop-core.version>1.2.1</hadoop-core.version>
     <hbase.version>2.4.12</hbase.version>
     <curator.version>4.3.0</curator.version>
