@@ -1,3 +1,3 @@
-package main.java.org.gbif.pipelines;
+package org.gbif.pipelines;
 
 public interface Dummy {}
