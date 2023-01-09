@@ -3,10 +3,12 @@ package org.gbif.pipelines.core.converters;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -86,6 +88,7 @@ public class OccurrenceHdfsRecordConverter {
     mapMultimediaRecord(occurrenceHdfsRecord);
     mapExtendedRecord(occurrenceHdfsRecord);
     mapEventCoreRecord(occurrenceHdfsRecord);
+    mapProjectIds(occurrenceHdfsRecord);
 
     // The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and
     // could only have been
@@ -180,6 +183,22 @@ public class OccurrenceHdfsRecordConverter {
     addIssues(locationRecord.getIssues(), occurrenceHdfsRecord);
   }
 
+  private void mapProjectIds(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    Set<String> projectIds = new HashSet<>();
+
+    if (metadataRecord != null) {
+      projectIds.add(metadataRecord.getProjectId());
+    }
+
+    if (basicRecord != null) {
+      projectIds.addAll(basicRecord.getProjectId());
+    }
+
+    if (!projectIds.isEmpty()) {
+      occurrenceHdfsRecord.setProjectid(new ArrayList<>(projectIds));
+    }
+  }
+
   /** Copies the {@link MetadataRecord} data into the {@link OccurrenceHdfsRecord}. */
   private void mapMetadataRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
     if (metadataRecord == null) {
@@ -194,7 +213,6 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setPublisher(metadataRecord.getPublisherTitle());
     occurrenceHdfsRecord.setPublishingorgkey(metadataRecord.getPublishingOrganizationKey());
     occurrenceHdfsRecord.setLastcrawled(metadataRecord.getLastCrawled());
-    occurrenceHdfsRecord.setProjectid(metadataRecord.getProjectId());
     occurrenceHdfsRecord.setProgrammeacronym(metadataRecord.getProgrammeAcronym());
     occurrenceHdfsRecord.setHostingorganizationkey(metadataRecord.getHostingOrganizationKey());
 

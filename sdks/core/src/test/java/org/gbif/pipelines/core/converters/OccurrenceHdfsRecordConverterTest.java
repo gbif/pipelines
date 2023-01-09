@@ -29,6 +29,7 @@ import org.gbif.api.vocabulary.ThreatStatus;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.occurrence.common.TermUtils;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
@@ -104,6 +105,7 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.samplingProtocol.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.identifiedBy.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.recordedBy.simpleName(), multiValue1 + "|" + multiValue2);
+    coreTerms.put(GbifTerm.projectId.simpleName(), multiValue1 + "|" + multiValue2);
 
     Map<String, List<Map<String, String>>> extensions = new HashMap<>();
     extensions.put(
@@ -125,6 +127,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setId("1")
             .setLicense(License.CC_BY_4_0.name())
             .setHostingOrganizationKey("hostOrgKey")
+            .setProjectId(multiValue1)
             .build();
 
     List<AgentIdentifier> agentIds =
@@ -152,6 +155,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setPreparations(Arrays.asList(multiValue1, multiValue2))
             .setSamplingProtocol(Arrays.asList(multiValue1, multiValue2))
             .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
+            .setProjectId(Arrays.asList(multiValue1, multiValue2))
             .build();
 
     List<RankedName> classification = new ArrayList<>();
@@ -231,6 +235,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(
         Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()),
         hdfsRecord.getTypestatus());
+    Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getProjectid());
 
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());
@@ -383,6 +388,7 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setSampleSizeValue(2d);
     basicRecord.setRelativeOrganismQuantity(2d);
     basicRecord.setLicense(License.UNSPECIFIED.name());
+    basicRecord.setProjectId(Arrays.asList("id1", "id2"));
 
     // When
     OccurrenceHdfsRecord hdfsRecord =
@@ -410,6 +416,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("BlaBla1", hdfsRecord.getPathway().getLineage().get(0));
     Assert.assertEquals("Bla2", hdfsRecord.getDegreeofestablishment().getConcept());
     Assert.assertEquals("BlaBla2", hdfsRecord.getDegreeofestablishment().getLineage().get(0));
+    Assert.assertTrue(hdfsRecord.getProjectid().contains("id1"));
+    Assert.assertTrue(hdfsRecord.getProjectid().contains("id2"));
   }
 
   @Test
