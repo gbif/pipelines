@@ -16,6 +16,7 @@
   <properties>
     <fest.version>2.0M10</fest.version>
     <mockito.version>2.8.9</mockito.version>
+    <hadoop.test.version>2.10.0</hadoop.test.version>
   </properties>
 
   <build>
@@ -85,18 +86,7 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-minicluster</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>${guava.hbase.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-auth</artifactId>
-      <scope>test</scope>
-      <version>${hadoop.version}</version>
+      <version>${hadoop.test.version}</version>
     </dependency>
 
     <dependency>
