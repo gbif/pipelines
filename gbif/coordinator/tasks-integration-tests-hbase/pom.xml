@@ -16,7 +16,7 @@
   <properties>
     <fest.version>2.0M10</fest.version>
     <mockito.version>2.8.9</mockito.version>
-    <hadoop.test.version>2.10.0</hadoop.test.version>
+    <hadoop.version>2.10.0</hadoop.version>
   </properties>
 
   <build>
@@ -86,7 +86,6 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-minicluster</artifactId>
-      <version>${hadoop.test.version}</version>
     </dependency>
 
     <dependency>
