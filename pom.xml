@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.13.0-spark3-SNAPSHOT</version>
+  <version>2.14.0-spark3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -89,7 +89,7 @@
     <kvs.version>1.25-hbase2-SNAPSHOT</kvs.version>
     <hbase-utils.version>0.13-hbase2-SNAPSHOT</hbase-utils.version>
     <gbif-wrangler.version>0.5-SNAPSHOT</gbif-wrangler.version>
-    <gbif-occurrence.version>0.188-hadoop3-SNAPSHOT</gbif-occurrence.version>
+    <gbif-occurrence.version>0.189-hadoop3-SNAPSHOT</gbif-occurrence.version>
     <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
     <registry.version>3.88</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>
