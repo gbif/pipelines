@@ -221,7 +221,12 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
     Optional<Long> fileNumber =
         HdfsUtils.getLongByKey(
-            hdfsConfigs, metaPath, Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
+            hdfsConfigs, metaPath, Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED);
+    if (!fileNumber.isPresent()) {
+      fileNumber =
+          HdfsUtils.getLongByKey(
+              hdfsConfigs, metaPath, Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
+    }
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
