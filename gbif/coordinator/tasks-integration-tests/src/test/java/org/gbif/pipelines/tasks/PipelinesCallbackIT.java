@@ -333,7 +333,7 @@ public class PipelinesCallbackIT {
     String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
     Assert.assertTrue(checkExists(crawlInfoPath));
     Assert.assertTrue(getAsString(crawlInfoPath).isPresent());
-    Assert.assertEquals("RUNNING", getAsString(crawlInfoPath).get());
+    Assert.assertEquals("FINISHED", getAsString(crawlInfoPath).get());
 
     // Postprocess
     deleteMonitoringById(crawlId);
