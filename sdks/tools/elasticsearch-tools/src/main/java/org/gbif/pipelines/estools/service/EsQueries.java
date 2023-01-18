@@ -25,7 +25,6 @@ public class EsQueries {
           + "    }"
           + "  }"
           + "}";
-
   public static final String DELETE_BY_DATASET_QUERY =
-      "{\"query\":{\"match\":{\"datasetKey\":\"%s\"}}}";
+      "{\"query\":{\"bool\":{\"should\":[{\"term\":{\"datasetKey\":\"%s\"}},{\"term\":{\"metadata.datasetKey\":\"%<s\"}}]}}}";
 }

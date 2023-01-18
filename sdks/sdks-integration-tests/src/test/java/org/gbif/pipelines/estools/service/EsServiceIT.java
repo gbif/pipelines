@@ -547,7 +547,7 @@ public class EsServiceIT extends EsApiIntegration {
   }
 
   @Test
-  public void deleteByQueryTest() {
+  public void deleteByQueryTest() throws InterruptedException {
 
     // State
     String idx1 =
@@ -581,8 +581,9 @@ public class EsServiceIT extends EsApiIntegration {
         EsService.createIndex(
             EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder()
-                .indexName("get-delete-by-query-tas-test")
+                .indexName("get-delete-by-query-task-test")
                 .settingsType(SEARCH)
+                .mappings("{\"properties\":{\"datasetKey\":{\"type\":\"keyword\"}}}")
                 .build());
 
     // index some documents
