@@ -491,6 +491,7 @@ public class EsServiceIT extends EsApiIntegration {
             IndexParams.builder()
                 .indexName("find-dataset-indexes-in-alias-test-1")
                 .settingsType(INDEXING)
+                .mappings(TEST_MAPPINGS)
                 .build());
     String idx2 =
         EsService.createIndex(
@@ -498,6 +499,7 @@ public class EsServiceIT extends EsApiIntegration {
             IndexParams.builder()
                 .indexName("find-dataset-indexes-in-alias-test-2")
                 .settingsType(INDEXING)
+                .mappings(TEST_MAPPINGS)
                 .build());
     Set<String> indexes = new HashSet<>();
     indexes.add(idx1);

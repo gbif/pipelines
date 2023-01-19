@@ -39,6 +39,7 @@ public abstract class EsApiIntegration {
 
   // files for testing
   static final Path TEST_MAPPINGS_PATH = Paths.get("mappings/simple-mapping.json");
+  static final String TEST_MAPPINGS = "{\"properties\":{\"datasetKey\":{\"type\":\"keyword\"}}}";
 
   /** Utility method to get the settings of an index. */
   private static JsonNode getSettingsFromIndex(String idxName) {
