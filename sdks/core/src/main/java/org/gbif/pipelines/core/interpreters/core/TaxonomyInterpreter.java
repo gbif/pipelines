@@ -140,7 +140,10 @@ public class TaxonomyInterpreter {
                 er.getId(),
                 e.getName());
           }
+        } catch (InterruptedException e) {
+          log.warn("Parsing backbone name failed with interruption for occurrence {}", er.getId());
         }
+
         // convert taxon record
         TaxonRecordConverter.convert(usageMatch, tr);
       }

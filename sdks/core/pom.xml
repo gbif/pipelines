@@ -19,6 +19,8 @@
   <properties>
     <generated-path>${project.basedir}/src/main/java-generated/</generated-path>
     <package>org.gbif.pipelines.core.converters</package>
+    <!-- Match the version brought in through Tika in the gbif-parsers -->
+    <commons-io.version>2.7</commons-io.version>
   </properties>
 
   <build>
@@ -105,6 +107,11 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-parsers</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>${commons-io.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
