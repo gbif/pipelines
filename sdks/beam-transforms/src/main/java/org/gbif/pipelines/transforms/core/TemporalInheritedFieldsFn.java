@@ -76,6 +76,10 @@ public class TemporalInheritedFieldsFn
 
       TemporalInheritedFields parent = recordsMap.get(parentId);
 
+      if (parent == null) {
+        return assigned;
+      }
+
       if (parent.getYear() != null) {
         builder.setYear(parent.getYear());
         assigned = true;
