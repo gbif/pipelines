@@ -273,6 +273,12 @@
                       <shadedPattern>g20.com.google.common</shadedPattern>
                     </relocation>
 
+                    <!-- Fixes GBIF Name parser cph issue -->
+                    <relocation>
+                      <pattern>it.unimi.dsi</pattern>
+                      <shadedPattern>nameparser.it.unimi.dsi</shadedPattern>
+                    </relocation>
+
                   </relocations>
                 </configuration>
               </execution>
