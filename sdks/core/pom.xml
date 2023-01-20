@@ -19,10 +19,6 @@
   <properties>
     <generated-path>${project.basedir}/src/main/java-generated/</generated-path>
     <package>org.gbif.pipelines.core.converters</package>
-    <!-- Match the version brought in through Tika in the gbif-parsers -->
-    <commons-io.version>2.7</commons-io.version>
-    <!-- Match the version from name-parser -->
-    <fastutil.version>8.5.9</fastutil.version>
   </properties>
 
   <build>

@@ -111,6 +111,11 @@
     <hbase.version>1.2.0-cdh5.16.2</hbase.version>
     <curator.version>2.9.0</curator.version>
 
+    <!-- Match the version brought in through Tika in the gbif-parsers -->
+    <commons-io.version>2.7</commons-io.version>
+    <!-- Match the version from name-parser -->
+    <fastutil.version>8.5.9</fastutil.version>
+
     <geotools.version>20.5</geotools.version>
     <commons-lang3.version>3.10</commons-lang3.version>
     <!-- Be carful when change the guava version, it can break XML parsing and etc at runtime -->

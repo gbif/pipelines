@@ -50,7 +50,6 @@
     <validation-api.version>1.1.0.Final</validation-api.version>
     <yammer-metrics.version>2.2.0</yammer-metrics.version>
     <commons-lang.version>2.6</commons-lang.version>
-    <commons-io.version>2.5</commons-io.version>
     <commons-configuration.version>1.10</commons-configuration.version>
     <xercesImpl.version>2.12.1</xercesImpl.version>
   </properties>
