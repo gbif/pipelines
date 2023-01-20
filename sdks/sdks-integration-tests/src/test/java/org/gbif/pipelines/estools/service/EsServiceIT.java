@@ -491,6 +491,7 @@ public class EsServiceIT extends EsApiIntegration {
             IndexParams.builder()
                 .indexName("find-dataset-indexes-in-alias-test-1")
                 .settingsType(INDEXING)
+                .mappings(TEST_MAPPINGS)
                 .build());
     String idx2 =
         EsService.createIndex(
@@ -498,6 +499,7 @@ public class EsServiceIT extends EsApiIntegration {
             IndexParams.builder()
                 .indexName("find-dataset-indexes-in-alias-test-2")
                 .settingsType(INDEXING)
+                .mappings(TEST_MAPPINGS)
                 .build());
     Set<String> indexes = new HashSet<>();
     indexes.add(idx1);
@@ -547,7 +549,7 @@ public class EsServiceIT extends EsApiIntegration {
   }
 
   @Test
-  public void deleteByQueryTest() {
+  public void deleteByQueryTest() throws InterruptedException {
 
     // State
     String idx1 =
@@ -581,8 +583,9 @@ public class EsServiceIT extends EsApiIntegration {
         EsService.createIndex(
             EsApiIntegration.ES_SERVER.getEsClient(),
             IndexParams.builder()
-                .indexName("get-delete-by-query-tas-test")
+                .indexName("get-delete-by-query-task-test")
                 .settingsType(SEARCH)
+                .mappings("{\"properties\":{\"datasetKey\":{\"type\":\"keyword\"}}}")
                 .build());
 
     // index some documents

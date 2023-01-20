@@ -226,7 +226,7 @@ public class EsIndexIT extends EsApiIntegration {
     String idx1 =
         EsIndex.createIndex(
             EsApiIntegration.ES_SERVER.getEsConfig(),
-            IndexParams.builder().datasetKey(id).attempt(1).build());
+            IndexParams.builder().mappings(TEST_MAPPINGS).datasetKey(id).attempt(1).build());
 
     // index some documents
     String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
@@ -260,7 +260,7 @@ public class EsIndexIT extends EsApiIntegration {
     String idx1 =
         EsIndex.createIndex(
             EsApiIntegration.ES_SERVER.getEsConfig(),
-            IndexParams.builder().datasetKey(id).attempt(1).build());
+            IndexParams.builder().mappings(TEST_MAPPINGS).datasetKey(id).attempt(1).build());
 
     // index some documents
     String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";

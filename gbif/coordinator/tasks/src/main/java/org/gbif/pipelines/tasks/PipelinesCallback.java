@@ -1,7 +1,6 @@
 package org.gbif.pipelines.tasks;
 
 import static org.gbif.common.messaging.api.messages.OccurrenceDeletionReason.NOT_SEEN_IN_LAST_CRAWL;
-import static org.gbif.crawler.constants.CrawlerNodePaths.PROCESS_STATE_OCCURRENCE;
 import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -39,7 +38,6 @@ import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.PipelinesRunnerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
-import org.gbif.crawler.constants.CrawlerNodePaths;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
@@ -155,12 +153,6 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       // track the pipeline step
       trackingInfo = trackPipelineStep();
-
-      String crawlerZkPath =
-          CrawlerNodePaths.getCrawlInfoPath(message.getDatasetUuid(), PROCESS_STATE_OCCURRENCE);
-      if (ZookeeperUtils.checkExists(curator, crawlerZkPath)) {
-        ZookeeperUtils.updateMonitoring(curator, crawlerZkPath, "RUNNING");
-      }
 
       String mqMessageZkPath = Fn.MQ_MESSAGE.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoring(

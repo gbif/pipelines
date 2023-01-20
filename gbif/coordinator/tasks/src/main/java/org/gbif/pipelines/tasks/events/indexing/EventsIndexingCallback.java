@@ -177,7 +177,13 @@ public class EventsIndexingCallback
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
     Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
+        HdfsUtils.getLongByKey(
+            hdfsConfigs, metaPath, Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED);
+    if (!fileNumber.isPresent()) {
+      fileNumber =
+          HdfsUtils.getLongByKey(
+              hdfsConfigs, metaPath, Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
+    }
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
