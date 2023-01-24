@@ -155,12 +155,14 @@ public class EventsIndexingCallback
         getRecordNumber(
             message,
             new EventsInterpretationConfiguration().metaFileName,
-            message.getNumberOfEventRecords());
+            message.getNumberOfEventRecords(),
+            false);
     long occurrenceRecords =
         getRecordNumber(
             message,
             new InterpreterConfiguration().metaFileName,
-            message.getNumberOfOccurrenceRecords());
+            message.getNumberOfOccurrenceRecords(),
+            true);
     return occurrenceRecords + eventRecords;
   }
 
@@ -169,12 +171,19 @@ public class EventsIndexingCallback
    * attempted records count, which is not accurate enough
    */
   private long getRecordNumber(
-      PipelinesEventsInterpretedMessage message, String metaFileName, Long messageNumber)
+      PipelinesEventsInterpretedMessage message,
+      String metaFileName,
+      Long messageNumber,
+      boolean skipIfMissed)
       throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaPath =
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
+
+    if (skipIfMissed && !HdfsUtils.exists(hdfsConfigs, metaPath)) {
+      return 0L;
+    }
 
     Optional<Long> fileNumber =
         HdfsUtils.getLongByKey(
