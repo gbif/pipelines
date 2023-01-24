@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.13.2-SNAPSHOT</version>
+  <version>2.13.2</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -27,7 +27,7 @@
     <connection>scm:git:git@github.com:gbif/pipelines.git</connection>
     <url>https://github.com/gbif/pipelines</url>
     <developerConnection>scm:git:git@github.com:gbif/pipelines.git</developerConnection>
-    <tag>pipelines-parent-2.11.12</tag>
+    <tag>pipelines-parent-2.13.2</tag>
   </scm>
 
   <distributionManagement>
