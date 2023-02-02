@@ -59,6 +59,7 @@ public class ExtensionFilterTransform
 
     er.getExtensions().entrySet().stream()
         .filter(es -> allowExtenstionsSet.contains(es.getKey()))
+        .filter(es -> !es.getValue().isEmpty())
         .forEach(es -> extensions.put(es.getKey(), es.getValue()));
 
     return ExtendedRecord.newBuilder()

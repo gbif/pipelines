@@ -4,7 +4,6 @@ import static org.gbif.crawler.constants.CrawlerNodePaths.PROCESS_STATE_OCCURREN
 import static org.gbif.crawler.constants.PipelinesNodePaths.SIZE;
 import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -15,11 +14,8 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.RetryOneTime;
-import org.apache.curator.test.TestingServer;
 import org.apache.zookeeper.CreateMode;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -27,10 +23,11 @@ import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.crawler.constants.CrawlerNodePaths;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
+import org.gbif.pipelines.tasks.resources.CuratorServer;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -39,32 +36,11 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class PipelinesCallbackIT {
 
+  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
   private static final Long EXECUTION_ID = 1L;
-
-  private static CuratorFramework curator;
-  private static TestingServer server;
-
+  @Mock private DatasetClient datasetClient;
   @Mock private PipelinesHistoryClient historyClient;
-
   @Mock private MessagePublisher mockPublisher;
-
-  @BeforeClass
-  public static void setUp() throws Exception {
-    server = new TestingServer();
-    curator =
-        CuratorFrameworkFactory.builder()
-            .connectString(server.getConnectString())
-            .namespace("crawler")
-            .retryPolicy(new RetryOneTime(1))
-            .build();
-    curator.start();
-  }
-
-  @AfterClass
-  public static void tearDown() throws IOException {
-    curator.close();
-    server.stop();
-  }
 
   @Test(expected = NullPointerException.class)
   public void testEmptyBuilder() {
@@ -88,15 +64,16 @@ public class PipelinesCallbackIT {
                 StepType.VERBATIM_TO_INTERPRETED.name(),
                 StepType.INTERPRETED_TO_INDEX.name(),
                 StepType.HDFS_VIEW.name()));
-    PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
+    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
 
     // When
     PipelinesCallback.builder()
         .message(incomingMessage)
-        .curator(curator)
+        .curator(CURATOR_SERVER.getCurator())
         .stepType(nextStepName)
         .publisher(null)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -108,10 +85,11 @@ public class PipelinesCallbackIT {
     // Run second time to check
     PipelinesCallback.builder()
         .message(incomingMessage)
-        .curator(curator)
+        .curator(CURATOR_SERVER.getCurator())
         .stepType(nextStepName)
         .publisher(null)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -157,15 +135,18 @@ public class PipelinesCallbackIT {
                 StepType.VERBATIM_TO_INTERPRETED.name(),
                 StepType.INTERPRETED_TO_INDEX.name(),
                 StepType.HDFS_VIEW.name()));
-    PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
+    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
+
+    updateMonitoring(crawlId, SIZE, String.valueOf(2));
 
     // When
     PipelinesCallback.builder()
         .message(incomingMessage)
-        .curator(curator)
+        .curator(CURATOR_SERVER.getCurator())
         .stepType(nextStepName)
         .publisher(mockPublisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -198,15 +179,16 @@ public class PipelinesCallbackIT {
     String crawlId = datasetKey.toString();
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
     Set<String> pipelineSteps = Collections.singleton(StepType.DWCA_TO_VERBATIM.name());
-    PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
+    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
 
     // When
     PipelinesCallback.builder()
         .message(incomingMessage)
-        .curator(curator)
+        .curator(CURATOR_SERVER.getCurator())
         .stepType(nextStepName)
         .publisher(mockPublisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -237,15 +219,16 @@ public class PipelinesCallbackIT {
                 StepType.VERBATIM_TO_INTERPRETED.name(),
                 StepType.INTERPRETED_TO_INDEX.name(),
                 StepType.HDFS_VIEW.name()));
-    PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
+    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
 
     // When
     PipelinesCallback.builder()
         .message(incomingMessage)
-        .curator(curator)
+        .curator(CURATOR_SERVER.getCurator())
         .stepType(nextStepName)
         .publisher(mockPublisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestExceptionHandler.create())
         .config(TestConfig.create())
         .build()
@@ -267,7 +250,7 @@ public class PipelinesCallbackIT {
     String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
     Assert.assertTrue(checkExists(crawlInfoPath));
     Assert.assertTrue(getAsString(crawlInfoPath).isPresent());
-    Assert.assertEquals("RUNNING", getAsString(crawlInfoPath).get());
+    Assert.assertEquals("FINISHED", getAsString(crawlInfoPath).get());
 
     // Postprocess
     deleteMonitoringById(crawlId);
@@ -282,8 +265,8 @@ public class PipelinesCallbackIT {
     String crawlId = datasetKey.toString();
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
     Set<String> pipelineSteps = Collections.singleton(StepType.DWCA_TO_VERBATIM.name());
-    PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
-    updateMonitoring(crawlId, SIZE, String.valueOf(4));
+    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
+    updateMonitoring(crawlId, SIZE, String.valueOf(1));
 
     String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
     updateMonitoring(crawlInfoPath, "RUNNING");
@@ -291,10 +274,11 @@ public class PipelinesCallbackIT {
     // When
     PipelinesCallback.builder()
         .message(incomingMessage)
-        .curator(curator)
+        .curator(CURATOR_SERVER.getCurator())
         .stepType(nextStepName)
         .publisher(mockPublisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -326,17 +310,16 @@ public class PipelinesCallbackIT {
                 StepType.VERBATIM_TO_INTERPRETED.name(),
                 StepType.INTERPRETED_TO_INDEX.name(),
                 StepType.HDFS_VIEW.name()));
-    PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
-
-    updateMonitoring(crawlId, SIZE, String.valueOf(2));
+    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
 
     // When
     PipelinesCallback.builder()
         .message(incomingMessage)
-        .curator(curator)
+        .curator(CURATOR_SERVER.getCurator())
         .stepType(nextStepName)
         .publisher(mockPublisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .handler(TestHandler.create())
         .config(TestConfig.create())
         .build()
@@ -350,7 +333,7 @@ public class PipelinesCallbackIT {
     String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
     Assert.assertTrue(checkExists(crawlInfoPath));
     Assert.assertTrue(getAsString(crawlInfoPath).isPresent());
-    Assert.assertEquals("RUNNING", getAsString(crawlInfoPath).get());
+    Assert.assertEquals("FINISHED", getAsString(crawlInfoPath).get());
 
     // Postprocess
     deleteMonitoringById(crawlId);
@@ -361,39 +344,42 @@ public class PipelinesCallbackIT {
     Assert.assertNotNull(PipelinesCallback.getPipelinesVersion());
   }
 
-  private static PipelineBasedMessage createMessage(
-      UUID datasetKey, Integer attempt, Set<String> pipelineSteps) {
-    return new PipelineBasedMessage() {
-      @Override
-      public Integer getAttempt() {
-        return attempt;
-      }
+  @AllArgsConstructor(staticName = "create")
+  private static class TestMessage implements PipelineBasedMessage {
 
-      @Override
-      public Set<String> getPipelineSteps() {
-        return pipelineSteps;
-      }
+    private final UUID datasetKey;
+    private final Integer attempt;
+    private final Set<String> pipelineSteps;
 
-      @Override
-      public Long getExecutionId() {
-        return EXECUTION_ID;
-      }
+    @Override
+    public Integer getAttempt() {
+      return attempt;
+    }
 
-      @Override
-      public void setExecutionId(Long executionId) {
-        // do nothing
-      }
+    @Override
+    public Set<String> getPipelineSteps() {
+      return pipelineSteps;
+    }
 
-      @Override
-      public UUID getDatasetUuid() {
-        return datasetKey;
-      }
+    @Override
+    public Long getExecutionId() {
+      return EXECUTION_ID;
+    }
 
-      @Override
-      public String getRoutingKey() {
-        return "";
-      }
-    };
+    @Override
+    public void setExecutionId(Long executionId) {
+      // do nothing
+    }
+
+    @Override
+    public UUID getDatasetUuid() {
+      return datasetKey;
+    }
+
+    @Override
+    public String getRoutingKey() {
+      return "";
+    }
   }
 
   /**
@@ -402,7 +388,7 @@ public class PipelinesCallbackIT {
    * @param crawlId root node path
    */
   private boolean checkExists(String crawlId) throws Exception {
-    return curator.checkExists().forPath(crawlId) != null;
+    return CURATOR_SERVER.getCurator().checkExists().forPath(crawlId) != null;
   }
 
   /**
@@ -413,7 +399,7 @@ public class PipelinesCallbackIT {
   private void deleteMonitoringById(String crawlId) throws Exception {
     String path = getPipelinesInfoPath(crawlId);
     if (checkExists(path)) {
-      curator.delete().deletingChildrenIfNeeded().forPath(path);
+      CURATOR_SERVER.getCurator().delete().deletingChildrenIfNeeded().forPath(path);
     }
   }
 
@@ -438,9 +424,10 @@ public class PipelinesCallbackIT {
   private void updateMonitoring(String fullPath, String value) throws Exception {
     byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
     if (checkExists(fullPath)) {
-      curator.setData().forPath(fullPath, bytes);
+      CURATOR_SERVER.getCurator().setData().forPath(fullPath, bytes);
     } else {
-      curator
+      CURATOR_SERVER
+          .getCurator()
           .create()
           .creatingParentsIfNeeded()
           .withMode(CreateMode.EPHEMERAL)
@@ -456,8 +443,8 @@ public class PipelinesCallbackIT {
 
   /** Read value from Zookeeper as a {@link String} */
   private Optional<String> getAsString(String infoPath) throws Exception {
-    if (curator.checkExists().forPath(infoPath) != null) {
-      byte[] responseData = curator.getData().forPath(infoPath);
+    if (CURATOR_SERVER.getCurator().checkExists().forPath(infoPath) != null) {
+      byte[] responseData = CURATOR_SERVER.getCurator().getData().forPath(infoPath);
       if (responseData != null) {
         return Optional.of(new String(responseData, StandardCharsets.UTF_8));
       }
@@ -507,7 +494,7 @@ public class PipelinesCallbackIT {
                   StepType.VERBATIM_TO_INTERPRETED.name(),
                   StepType.INTERPRETED_TO_INDEX.name(),
                   StepType.HDFS_VIEW.name()));
-      return createMessage(datasetKey, attempt, pipelineSteps);
+      return TestMessage.create(datasetKey, attempt, pipelineSteps);
     }
 
     @Override
@@ -536,7 +523,7 @@ public class PipelinesCallbackIT {
                   StepType.VERBATIM_TO_INTERPRETED.name(),
                   StepType.INTERPRETED_TO_INDEX.name(),
                   StepType.HDFS_VIEW.name()));
-      return createMessage(datasetKey, attempt, pipelineSteps);
+      return TestMessage.create(datasetKey, attempt, pipelineSteps);
     }
 
     @Override

@@ -1,9 +1,10 @@
 package org.gbif.pipelines.tasks.occurrences.identifier;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -11,6 +12,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.interpretation.RecordCountReader;
@@ -20,12 +22,14 @@ import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
+import org.gbif.pipelines.tasks.occurrences.identifier.validation.IdentifierValidationResult;
 import org.gbif.pipelines.tasks.occurrences.identifier.validation.PostprocessValidation;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesVerbatimMessage} is received. */
 @Slf4j
-@AllArgsConstructor
+@Builder
 public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbatimMessage>
     implements StepHandler<PipelinesVerbatimMessage, PipelinesVerbatimMessage> {
 
@@ -35,12 +39,14 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
+  private final DatasetClient datasetClient;
   private final CloseableHttpClient httpClient;
 
   @Override
   public void handleMessage(PipelinesVerbatimMessage message) {
     PipelinesCallback.<PipelinesVerbatimMessage, PipelinesVerbatimMessage>builder()
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .config(config)
         .curator(curator)
         .stepType(TYPE)
@@ -52,9 +58,17 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
   }
 
   @Override
+  public String getRouting() {
+    return new PipelinesVerbatimMessage()
+            .setPipelineSteps(Collections.singleton(StepType.VERBATIM_TO_IDENTIFIER.name()))
+            .getRoutingKey()
+        + ".*";
+  }
+
+  @Override
   public boolean isMessageCorrect(PipelinesVerbatimMessage message) {
     if (!message.getPipelineSteps().contains(TYPE.name())) {
-      log.error("The message doesn't contain VERBATIM_TO_IDENTIFIER type");
+      log.error("The message doesn't contain {} type", TYPE);
       return false;
     }
     return true;
@@ -89,16 +103,28 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
 
         runDistributed(message, builder);
 
-        PostprocessValidation.builder()
-            .httpClient(httpClient)
-            .message(message)
-            .config(config)
-            .build()
-            .validate();
+        IdentifierValidationResult validationResult =
+            PostprocessValidation.builder()
+                .httpClient(httpClient)
+                .message(message)
+                .config(config)
+                .build()
+                .validate();
+
+        if (validationResult.isResultValid()) {
+          log.info(validationResult.getValidationMessage());
+        } else {
+          historyClient.sendAbsentIndentifiersEmail(
+              message.getDatasetUuid(),
+              message.getAttempt(),
+              validationResult.getValidationMessage());
+          log.error(validationResult.getValidationMessage());
+          throw new PipelinesException(validationResult.getValidationMessage());
+        }
 
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
-        throw new IllegalStateException(
+        throw new PipelinesException(
             "Failed interpretation on " + message.getDatasetUuid().toString(), ex);
       }
     };

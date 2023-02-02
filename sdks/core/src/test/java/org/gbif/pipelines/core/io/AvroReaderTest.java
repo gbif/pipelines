@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.SneakyThrows;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -17,7 +18,7 @@ import org.junit.Test;
 
 public class AvroReaderTest {
 
-  private final HdfsConfigs hdfsConfigs = HdfsConfigs.create(null, null);
+  private final HdfsConfigs hdfsConfigs = HdfsConfigs.nullConfig();
 
   private final Path verbatimPath1 = new Path("target/verbatim1.avro");
   private final Path verbatimPath2 = new Path("target/verbatim2.avro");
@@ -105,6 +106,33 @@ public class AvroReaderTest {
 
     // Should
     assertMap(result, expectedOne, expectedThree);
+
+    // Post
+    Files.deleteIfExists(Paths.get(verbatimPath1.toString()));
+  }
+
+  @Test
+  public void idDuplicateTest() throws IOException {
+
+    // State
+    ExtendedRecord expectedOne = ExtendedRecord.newBuilder().setId("1").build();
+    ExtendedRecord expectedTwo =
+        ExtendedRecord.newBuilder()
+            .setId("1")
+            .setCoreTerms(Collections.singletonMap("1", "2"))
+            .build();
+    ExtendedRecord expectedThree = ExtendedRecord.newBuilder().setId("3").build();
+    writeExtendedRecords(verbatimPath1, expectedOne, expectedTwo, expectedThree);
+    AtomicInteger counter = new AtomicInteger(0);
+
+    // When
+    Map<String, ExtendedRecord> result =
+        AvroReader.readUniqueRecords(
+            hdfsConfigs, ExtendedRecord.class, verbatimPath1.toString(), counter::incrementAndGet);
+
+    // Should
+    assertMap(result, expectedThree);
+    Assert.assertEquals(1, counter.get());
 
     // Post
     Files.deleteIfExists(Paths.get(verbatimPath1.toString()));

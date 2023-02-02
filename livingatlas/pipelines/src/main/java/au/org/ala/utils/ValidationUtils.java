@@ -324,9 +324,15 @@ public class ValidationUtils {
       return -1L;
     }
 
-    // the YAML files created by metrics are UTF-16 encoded
-    Map<String, Object> metrics =
-        yaml.load(new InputStreamReader(fs.open(validationMetrics), StandardCharsets.UTF_16));
+    Map<String, Object> metrics;
+    try {
+      // the YAML files created by metrics should be UTF-16 encoded
+      metrics =
+          yaml.load(new InputStreamReader(fs.open(validationMetrics), StandardCharsets.UTF_16));
+    } catch (ClassCastException e) {
+      // but let's try with default encoding if not
+      metrics = yaml.load(new InputStreamReader(fs.open(validationMetrics)));
+    }
 
     return Long.parseLong(metrics.getOrDefault("archiveToErCountAttempted", "-1").toString());
   }
@@ -438,7 +444,7 @@ public class ValidationUtils {
           FileSystemFactory.getInstance(
                   HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()))
               .getFs(options.getInputPath());
-      verbatimAvroAvailable = ALAFsUtils.exists(fs, options.getInputPath());
+      verbatimAvroAvailable = ALAFsUtils.hasFiles(fs, options.getInputPath());
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }

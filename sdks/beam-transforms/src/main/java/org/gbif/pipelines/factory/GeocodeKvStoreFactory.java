@@ -13,6 +13,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.parsers.location.GeocodeKvStore;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
@@ -24,17 +25,21 @@ public class GeocodeKvStoreFactory {
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private GeocodeKvStoreFactory(PipelinesConfig config) {
-    BufferedImage image = BufferedImageFactory.getInstance(config.getImageCachePath());
+  private GeocodeKvStoreFactory(HdfsConfigs hdfsConfigs, PipelinesConfig config) {
+    BufferedImage image =
+        Optional.ofNullable(config.getImageCachePath())
+            .map(ip -> BufferedImageFactory.getInstance(hdfsConfigs, ip))
+            .orElse(null);
     KeyValueStore<LatLng, GeocodeResponse> kvStore = creatKvStore(config);
     geocodeKvStore = GeocodeKvStore.create(kvStore, image);
   }
 
-  public static KeyValueStore<LatLng, GeocodeResponse> getInstance(PipelinesConfig config) {
+  public static KeyValueStore<LatLng, GeocodeResponse> getInstance(
+      HdfsConfigs hdfsConfigs, PipelinesConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new GeocodeKvStoreFactory(config);
+          instance = new GeocodeKvStoreFactory(hdfsConfigs, config);
         }
       }
     }
@@ -42,13 +47,13 @@ public class GeocodeKvStoreFactory {
   }
 
   public static SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> createSupplier(
-      PipelinesConfig config) {
-    return () -> new GeocodeKvStoreFactory(config).geocodeKvStore;
+      HdfsConfigs hdfsConfigs, PipelinesConfig config) {
+    return () -> new GeocodeKvStoreFactory(hdfsConfigs, config).geocodeKvStore;
   }
 
   public static SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> getInstanceSupplier(
-      PipelinesConfig config) {
-    return () -> GeocodeKvStoreFactory.getInstance(config);
+      HdfsConfigs hdfsConfigs, PipelinesConfig config) {
+    return () -> GeocodeKvStoreFactory.getInstance(hdfsConfigs, config);
   }
 
   private static KeyValueStore<LatLng, GeocodeResponse> creatKvStore(PipelinesConfig config)

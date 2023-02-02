@@ -506,6 +506,10 @@
   <field name="matched_name"           type="string"  multiValued="true" indexed="true" stored="false" />
   <field name="text_recordedBy"        type="textgen" multiValued="true" indexed="true" stored="false" />
   <field name="text_identifiedBy"      type="textgen" multiValued="true" indexed="true" stored="false" />
+  <field name="text_datasetName" type="textgen" multiValued="true" indexed="true" stored="false"/>
+  <field name="text_eventID" type="textgen"  indexed="true" stored="false"/>
+  <field name="text_parentEventID" type="textgen" indexed="true" stored="false"/>
+  <field name="text_fieldNumber" type="textgen" indexed="true" stored="false"/>
 
   <!-- occurrenceDetails needs to be remapped on export -->
   <!-- see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/236 -->
@@ -687,8 +691,11 @@
   <copyField source="dataProviderName" dest="text"/>
   <copyField source="dataResourceName" dest="text"/>
   <copyField source="dataResourceUid" dest="text"/>
-  <copyField source="eventID" dest="text"/>
+  <copyField source="datasetName" dest="text"/>
+  <copyField source="datasetName" dest="text_datasetName"/>
+  <copyField source="eventID" dest="text_eventID"/>
   <copyField source="family" dest="text"/>
+  <copyField source="fieldNumber" dest="text_fieldNumber"/>
   <copyField source="genus" dest="text"/>
   <copyField source="id" dest="text"/>
   <copyField source="institutionCode" dest="text"/>
@@ -698,6 +705,7 @@
   <copyField source="occurrenceID" dest="text"/>
   <copyField source="order" dest="text"/>
   <copyField source="originalNameUsage" dest="text"/>
+  <copyField source="parentEventID" dest="text_parentEventID"/>
   <copyField source="phylum" dest="text"/>
   <copyField source="raw_basisOfRecord" dest="text"/>
   <copyField source="raw_countryConservation" dest="text"/>
@@ -717,6 +725,7 @@
   <copyField source="stateConservation" dest="text"/>
   <copyField source="stateProvince" dest="text"/>
   <copyField source="taxonRemarks" dest="text"/>
+  <copyField source="taxonConceptID" dest="text"/>
   <copyField source="typeStatus" dest="text"/>
   <copyField source="vernacularName" dest="matched_name"/>
   <copyField source="vernacularName" dest="text"/>

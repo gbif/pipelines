@@ -2,19 +2,18 @@ package org.gbif.pipelines.tasks.occurrences.identifier;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import java.io.IOException;
-import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** A service which listens to the {@link PipelinesVerbatimMessage } and perform interpretation */
@@ -44,6 +43,8 @@ public class IdentifierService extends AbstractIdleService {
     PipelinesHistoryClient historyClient =
         ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
 
+    DatasetClient datasetClient = ServiceFactory.createDatasetClient(config.stepConfig);
+
     httpClient =
         HttpClients.custom()
             .setDefaultRequestConfig(
@@ -51,14 +52,16 @@ public class IdentifierService extends AbstractIdleService {
             .build();
 
     IdentifierCallback callback =
-        new IdentifierCallback(config, publisher, curator, historyClient, httpClient);
+        IdentifierCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .httpClient(httpClient)
+            .datasetClient(datasetClient)
+            .build();
 
-    String routingKey =
-        new PipelinesVerbatimMessage()
-                .setPipelineSteps(Collections.singleton(StepType.VERBATIM_TO_IDENTIFIER.name()))
-                .getRoutingKey()
-            + ".*";
-    listener.listen(c.queueName, routingKey, c.poolSize, callback);
+    listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }
 
   @Override

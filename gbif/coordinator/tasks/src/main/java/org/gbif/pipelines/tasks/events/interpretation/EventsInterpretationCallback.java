@@ -1,6 +1,7 @@
 package org.gbif.pipelines.tasks.events.interpretation;
 
 import java.io.IOException;
+import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -21,10 +22,12 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesEventsMessage} is received. */
 @Slf4j
+@Builder
 public class EventsInterpretationCallback extends AbstractMessageCallback<PipelinesEventsMessage>
     implements StepHandler<PipelinesEventsMessage, PipelinesEventsInterpretedMessage> {
 
@@ -35,19 +38,7 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
   private final CuratorFramework curator;
   private final HdfsConfigs hdfsConfigs;
   private final PipelinesHistoryClient historyClient;
-
-  public EventsInterpretationCallback(
-      EventsInterpretationConfiguration config,
-      MessagePublisher publisher,
-      CuratorFramework curator,
-      PipelinesHistoryClient historyClient) {
-    this.config = config;
-    this.publisher = publisher;
-    this.curator = curator;
-    hdfsConfigs =
-        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
-    this.historyClient = historyClient;
-  }
+  private final DatasetClient datasetClient;
 
   @Override
   public void handleMessage(PipelinesEventsMessage message) {
@@ -57,10 +48,17 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
         .stepType(TYPE)
         .publisher(publisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .message(message)
         .handler(this)
         .build()
         .handleMessage();
+  }
+
+  /** Run all the events pipelines in distributed mode */
+  @Override
+  public String getRouting() {
+    return new PipelinesEventsMessage().setRunner("*").getRoutingKey();
   }
 
   @Override
@@ -111,6 +109,7 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
         message.getNumberOfOccurrenceRecords(),
         message.getNumberOfEventRecords(),
         message.getResetPrefix(),
+        message.getOnlyForStep(),
         message.getExecutionId(),
         message.getEndpointType(),
         message.getInterpretTypes(),

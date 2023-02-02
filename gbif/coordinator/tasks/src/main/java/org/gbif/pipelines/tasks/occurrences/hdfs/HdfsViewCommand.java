@@ -3,6 +3,7 @@ package org.gbif.pipelines.tasks.occurrences.hdfs;
 import com.google.common.util.concurrent.Service;
 import org.gbif.cli.Command;
 import org.gbif.cli.service.ServiceCommand;
+import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.kohsuke.MetaInfServices;
 
 /**

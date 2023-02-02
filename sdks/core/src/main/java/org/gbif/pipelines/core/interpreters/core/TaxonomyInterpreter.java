@@ -4,6 +4,8 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_FUZZY;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_HIGHERRANK;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_NONE;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -73,6 +75,11 @@ public class TaxonomyInterpreter {
 
       ModelUtils.checkNullOrEmpty(er);
 
+      // https://github.com/gbif/portal-feedback/issues/4231
+      String scientificName =
+          extractNullAwareOptValue(er, DwcTerm.scientificName)
+              .orElse(extractValue(er, DwcTerm.verbatimIdentification));
+
       SpeciesMatchRequest matchRequest =
           SpeciesMatchRequest.builder()
               .withKingdom(extractValue(er, DwcTerm.kingdom))
@@ -81,7 +88,7 @@ public class TaxonomyInterpreter {
               .withOrder(extractValue(er, DwcTerm.order))
               .withFamily(extractValue(er, DwcTerm.family))
               .withGenus(extractValue(er, DwcTerm.genus))
-              .withScientificName(extractValue(er, DwcTerm.scientificName))
+              .withScientificName(scientificName)
               .withRank(extractValue(er, DwcTerm.taxonRank))
               .withVerbatimRank(extractValue(er, DwcTerm.verbatimTaxonRank))
               .withSpecificEpithet(extractValue(er, DwcTerm.specificEpithet))
@@ -133,13 +140,26 @@ public class TaxonomyInterpreter {
                 er.getId(),
                 e.getName());
           }
+        } catch (InterruptedException e) {
+          log.warn("Parsing backbone name failed with interruption for occurrence {}", er.getId());
         }
+
         // convert taxon record
         TaxonRecordConverter.convert(usageMatch, tr);
       }
 
       tr.setId(er.getId());
     };
+  }
+
+  /** Sets the coreId field. */
+  public static void setCoreId(ExtendedRecord er, TaxonRecord tr) {
+    Optional.ofNullable(er.getCoreId()).ifPresent(tr::setCoreId);
+  }
+
+  /** Sets the parentEventId field. */
+  public static void setParentEventId(ExtendedRecord er, TaxonRecord tr) {
+    extractOptValue(er, DwcTerm.parentEventID).ifPresent(tr::setParentId);
   }
 
   /**

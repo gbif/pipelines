@@ -1,5 +1,6 @@
 package org.gbif.pipelines.tasks.validators.validator;
 
+import java.util.Collections;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,15 @@ public class ArchiveValidatorCallback
         .handler(this)
         .build()
         .handleMessage();
+  }
+
+  @Override
+  public String getRouting() {
+    PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
+    if (config.validatorOnly) {
+      message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_VALIDATE_ARCHIVE.name()));
+    }
+    return message.getRoutingKey();
   }
 
   @Override

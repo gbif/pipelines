@@ -49,29 +49,34 @@ public class ZookeeperUtils {
       if (checkExists(curator, path)) {
         InterProcessMutex mutex = new InterProcessMutex(curator, path);
         mutex.acquire();
-        int counter = getAsInteger(curator, crawlId, SIZE, isValidator).orElse(0) + 1;
-        if (counter >= size) {
+        int counter = getAsInteger(curator, crawlId, SIZE, isValidator).orElse(size) - 1;
+
+        if (counter <= 0) {
 
           log.info("Delete zookeeper node, crawlId - {}", crawlId);
           curator.delete().deletingChildrenIfNeeded().forPath(path);
 
-          String crawlerDatasetZkPath =
-              CrawlerNodePaths.getCrawlInfoPath(UUID.fromString(crawlId), null);
-          if (checkExists(curator, crawlerDatasetZkPath)) {
-            String crawlerZkPath =
-                CrawlerNodePaths.getCrawlInfoPath(
-                    UUID.fromString(crawlId), PROCESS_STATE_OCCURRENCE);
-            log.info("Set crawler {} status to FINISHED", crawlerZkPath);
-            ZookeeperUtils.updateMonitoring(curator, crawlerZkPath, "FINISHED");
-          }
+          markCrawlerAsFinished(curator, crawlId);
 
         } else {
+          log.info("Update zookeeper node counter - {}", counter);
           updateMonitoring(curator, crawlId, SIZE, Integer.toString(counter), isValidator);
         }
         mutex.release();
       }
     } catch (Exception ex) {
       log.error("Exception while updating ZooKeeper", ex);
+    }
+  }
+
+  /** Mark the crawler node as FINISHED to make it recrawlerable */
+  public static void markCrawlerAsFinished(CuratorFramework curator, String crawlId) {
+    String crawlerDatasetZkPath = CrawlerNodePaths.getCrawlInfoPath(UUID.fromString(crawlId), null);
+    if (checkExists(curator, crawlerDatasetZkPath)) {
+      String crawlerZkPath =
+          CrawlerNodePaths.getCrawlInfoPath(UUID.fromString(crawlId), PROCESS_STATE_OCCURRENCE);
+      log.info("Set crawler {} status to FINISHED", crawlerZkPath);
+      ZookeeperUtils.updateMonitoring(curator, crawlerZkPath, "FINISHED");
     }
   }
 

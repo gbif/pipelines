@@ -37,11 +37,11 @@ public interface OccurrenceFeatures {
 
   String getCountryCode();
 
-  String getTypeStatus();
+  List<String> getTypeStatus();
 
   String getOccurrenceID();
 
-  String getRecordedBy();
+  List<String> getRecordedBy();
 
   String getFieldNumber();
 
@@ -49,23 +49,27 @@ public interface OccurrenceFeatures {
 
   String getCatalogNumber();
 
-  String getOtherCatalogNumbers();
+  List<String> getOtherCatalogNumbers();
 
   String getInstitutionCode();
 
   String getCollectionCode();
 
   default List<String> listIdentifiers() {
-    return Stream.of(
+    Stream<String> ids =
+        Stream.of(
             getOccurrenceID(),
             getFieldNumber(),
             getRecordNumber(),
             getCatalogNumber(),
-            getOtherCatalogNumbers(),
             getTripleIdentifier(),
-            getScopedIdentifier())
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+            getScopedIdentifier());
+
+    if (getOtherCatalogNumbers() != null) {
+      ids = Stream.concat(ids, getOtherCatalogNumbers().stream());
+    }
+
+    return ids.filter(Objects::nonNull).collect(Collectors.toList());
   }
 
   /** @return a triplet identifier of standard form ic:cc:cn when all triplets are present */
@@ -86,5 +90,17 @@ public interface OccurrenceFeatures {
     } else {
       return null;
     }
+  }
+
+  /**
+   * Allows implementations to declare that the record originates from a sequence repository.
+   * Default behaviour is false, meaning that consumers may receive false negatives. This hook was
+   * introduced to allow a relaxation of the rules to accommodate the sparse metadata seen in
+   * repositories like NCBI.
+   *
+   * @see <a href="https://github.com/gbif/pipelines/issues/733">Pipelines issue 733</a>
+   */
+  default boolean isFromSequenceRepository() {
+    return false;
   }
 }

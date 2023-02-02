@@ -2,13 +2,13 @@ indexLock:
   zkConnectionString: ToFill
   namespace: test_index_lock
   lockingPath: /indices/
-  lockName: esTest
+  lockName: tasksEsTest
   sleepTimeMs: 100
   maxRetries: 5
 hdfsLock:
   zkConnectionString: ToFill
   namespace: test_hdfs_lock
   lockingPath: /hdfs/
-  lockName: hdfsTest
+  lockName: tasksHdfsTest
   sleepTimeMs: 100
   maxRetries: 5

@@ -21,8 +21,9 @@ import org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -78,13 +79,15 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
   // Core
   @NonNull private final TupleTag<ExtendedRecord> extendedRecordTag;
 
-  @NonNull private final TupleTag<GbifIdRecord> gbifIdRecordTag;
+  @NonNull private final TupleTag<IdentifierRecord> identifierRecordTag;
   @NonNull private final TupleTag<ClusteringRecord> clusteringRecordTag;
   @NonNull private final TupleTag<BasicRecord> basicRecordTag;
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
   @NonNull private final TupleTag<TaxonRecord> taxonRecordTag;
   @NonNull private final TupleTag<GrscicollRecord> grscicollRecordTag;
+  @NonNull private final TupleTag<EventCoreRecord> eventCoreRecordTag;
+
   // Extension
   @NonNull private final TupleTag<MultimediaRecord> multimediaRecordTag;
   @NonNull private final TupleTag<ImageRecord> imageRecordTag;
@@ -107,7 +110,7 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
 
             // Core
             MetadataRecord mdr = c.sideInput(metadataView);
-            GbifIdRecord id = v.getOnly(gbifIdRecordTag);
+            IdentifierRecord id = v.getOnly(identifierRecordTag);
             ClusteringRecord cr =
                 v.getOnly(clusteringRecordTag, ClusteringRecord.newBuilder().setId(k).build());
             ExtendedRecord er =
@@ -127,11 +130,14 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
             AudubonRecord ar =
                 v.getOnly(audubonRecordTag, AudubonRecord.newBuilder().setId(k).build());
 
+            EventCoreRecord eventCoreRecord =
+                v.getOnly(eventCoreRecordTag, EventCoreRecord.newBuilder().setId(k).build());
+
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
             OccurrenceHdfsRecord record =
                 OccurrenceHdfsRecordConverter.builder()
                     .basicRecord(br)
-                    .gbifIdRecord(id)
+                    .identifierRecord(id)
                     .clusteringRecord(cr)
                     .metadataRecord(mdr)
                     .temporalRecord(tr)
@@ -140,6 +146,7 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
                     .grscicollRecord(gr)
                     .multimediaRecord(mmr)
                     .extendedRecord(er)
+                    .eventCoreRecord(eventCoreRecord)
                     .build()
                     .convert();
 

@@ -27,16 +27,25 @@ public class LocationParserTest {
   private static final Double LATITUDE_CANADA = 60.4;
   private static final Double LONGITUDE_CANADA = -131.3;
 
+  // In Zambia, but less than 5km from Zimbabwe.
+  private static final Double LATITUDE_ALMOST_ZIMBABWE = -17.8;
+  private static final Double LONGITUDE_ALMOST_ZIMBABWE = 25.7;
+  private static final Double DISTANCE_ALMOST_ZIMBABWE_TO_ZIMBABWE = 0.0458;
+
   private static final KeyValueStore<LatLng, GeocodeResponse> GEOCODE_KV_STORE;
 
   static {
     KeyValueTestStore testStore = new KeyValueTestStore();
-    testStore.put(new LatLng(60.4d, -131.3d), toGeocodeResponse(Country.CANADA));
-    testStore.put(new LatLng(30.2d, 100.2344349d), toGeocodeResponse(Country.CHINA));
-    testStore.put(new LatLng(30.2d, 100.234435d), toGeocodeResponse(Country.CHINA));
-    testStore.put(new LatLng(71.7d, -42.6d), toGeocodeResponse(Country.GREENLAND));
-    testStore.put(new LatLng(-17.65, -149.46), toGeocodeResponse(Country.FRENCH_POLYNESIA));
-    testStore.put(new LatLng(27.15, -13.20), toGeocodeResponse(Country.MOROCCO));
+    testStore.put(
+        LatLng.create(LATITUDE_CANADA, LONGITUDE_CANADA), toGeocodeResponse(Country.CANADA));
+    testStore.put(LatLng.create(30.2d, 100.2344349d), toGeocodeResponse(Country.CHINA));
+    testStore.put(LatLng.create(30.2d, 100.234435d), toGeocodeResponse(Country.CHINA));
+    testStore.put(LatLng.create(71.7d, -42.6d), toGeocodeResponse(Country.GREENLAND));
+    testStore.put(LatLng.create(-17.65, -149.46), toGeocodeResponse(Country.FRENCH_POLYNESIA));
+    testStore.put(LatLng.create(27.15, -13.20), toGeocodeResponse(Country.MOROCCO));
+    testStore.put(
+        LatLng.create(LATITUDE_ALMOST_ZIMBABWE, LONGITUDE_ALMOST_ZIMBABWE),
+        toGeocodeResponse(Country.ZAMBIA, Country.ZIMBABWE, DISTANCE_ALMOST_ZIMBABWE_TO_ZIMBABWE));
     GEOCODE_KV_STORE = GeocodeKvStore.create(testStore);
   }
 
@@ -46,6 +55,21 @@ public class LocationParserTest {
     location.setDistance(0.0d);
     location.setIsoCountryCode2Digit(country.getIso2LetterCode());
     return new GeocodeResponse(Collections.singletonList(location));
+  }
+
+  private static GeocodeResponse toGeocodeResponse(
+      Country country1, Country country2, Double distance2) {
+    Location location1 = new Location();
+    location1.setType("Political");
+    location1.setDistance(0.0d);
+    location1.setIsoCountryCode2Digit(country1.getIso2LetterCode());
+
+    Location location2 = new Location();
+    location2.setType("Political");
+    location2.setDistance(distance2);
+    location2.setIsoCountryCode2Digit(country2.getIso2LetterCode());
+
+    return new GeocodeResponse(Arrays.asList(location1, location2));
   }
 
   private KeyValueStore<LatLng, GeocodeResponse> getGeocodeKvStore() {
@@ -230,6 +254,31 @@ public class LocationParserTest {
     Assert.assertEquals(Country.CANADA, result.getResult().getCountry());
     Assert.assertEquals(LATITUDE_CANADA, result.getResult().getLatLng().getLatitude(), 0);
     Assert.assertEquals(LONGITUDE_CANADA, result.getResult().getLatLng().getLongitude(), 0);
+    Assert.assertEquals(1, result.getIssues().size());
+    Assert.assertTrue(result.getIssues().contains(GEODETIC_DATUM_ASSUMED_WGS84.name()));
+  }
+
+  @Test
+  public void coordsAndCountryNeedingUncertaintyWhenParsedThenReturnCoordsAndCountryTest() {
+
+    // State
+    ExtendedRecord extendedRecord =
+        ExtendedRecordBuilder.create()
+            .id(TEST_ID)
+            .country(Country.ZIMBABWE.getTitle())
+            .decimalLatitude(String.valueOf(LATITUDE_ALMOST_ZIMBABWE))
+            .decimalLongitude(String.valueOf(LONGITUDE_ALMOST_ZIMBABWE))
+            .build();
+
+    // When
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getGeocodeKvStore());
+
+    // Should
+    Assert.assertTrue(result.isSuccessful());
+    Assert.assertEquals(Country.ZIMBABWE, result.getResult().getCountry());
+    Assert.assertEquals(LATITUDE_ALMOST_ZIMBABWE, result.getResult().getLatLng().getLatitude(), 0);
+    Assert.assertEquals(
+        LONGITUDE_ALMOST_ZIMBABWE, result.getResult().getLatLng().getLongitude(), 0);
     Assert.assertEquals(1, result.getIssues().size());
     Assert.assertTrue(result.getIssues().contains(GEODETIC_DATUM_ASSUMED_WGS84.name()));
   }

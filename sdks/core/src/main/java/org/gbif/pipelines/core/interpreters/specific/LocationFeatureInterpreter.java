@@ -27,7 +27,8 @@ public class LocationFeatureInterpreter {
       if (kvStore != null) {
         try {
           // Call kv store
-          String json = kvStore.get(new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude()));
+          String json =
+              kvStore.get(LatLng.create(lr.getDecimalLatitude(), lr.getDecimalLongitude()));
 
           // Parse json
           if (!Strings.isNullOrEmpty(json)) {

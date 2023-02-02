@@ -3,11 +3,10 @@ package au.org.ala.pipelines.beam;
 import static org.junit.Assert.*;
 
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
-import au.org.ala.util.TestUtils;
+import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.util.Map;
-import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -15,8 +14,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.ALASensitivityRecord;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
@@ -24,18 +22,8 @@ import org.junit.Test;
  * current steps in processing.
  */
 public class SensitiveDataPipelineTestIT {
-  MockWebServer server;
 
-  @Before
-  public void setup() throws Exception {
-    server = TestUtils.createMockCollectory();
-    server.start(TestUtils.getCollectoryPort());
-  }
-
-  @After
-  public void teardown() throws Exception {
-    server.shutdown();
-  }
+  @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
 
   /** Tests for SOLR index creation. */
   @Test
@@ -65,7 +53,7 @@ public class SensitiveDataPipelineTestIT {
     // Check correctly stated sensitivity
     Map<String, ALASensitivityRecord> sds =
         AvroReader.readRecords(
-            HdfsConfigs.create(null, null),
+            HdfsConfigs.nullConfig(),
             ALASensitivityRecord.class,
             ala_sensitive_data.getPath() + "/*.avro");
     ALASensitivityRecord sds1 = sds.get("not-an-uuid-1");
@@ -110,7 +98,7 @@ public class SensitiveDataPipelineTestIT {
               "--metaFileName=" + ValidationUtils.INTERPRETATION_METRICS,
               "--targetPath=/tmp/la-pipelines-test/sensitive-pipeline",
               "--inputPath=/tmp/la-pipelines-test/sensitive-pipeline/dr893/1/verbatim.avro",
-              "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });
     ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
@@ -128,7 +116,7 @@ public class SensitiveDataPipelineTestIT {
               "--metaFileName=" + ValidationUtils.UUID_METRICS,
               "--targetPath=/tmp/la-pipelines-test/sensitive-pipeline",
               "--inputPath=/tmp/la-pipelines-test/sensitive-pipeline",
-              "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });
     ALAUUIDMintingPipeline.run(uuidOptions);
@@ -147,7 +135,7 @@ public class SensitiveDataPipelineTestIT {
               "--metaFileName=" + ValidationUtils.SENSITIVE_METRICS,
               "--targetPath=/tmp/la-pipelines-test/sensitive-pipeline",
               "--inputPath=/tmp/la-pipelines-test/sensitive-pipeline",
-              "--properties=" + TestUtils.getPipelinesConfigFile()
+              "--properties=" + itUtils.getPropertiesFilePath()
             });
     ALAInterpretedToSensitivePipeline.run(sensitiveOptions);
   }

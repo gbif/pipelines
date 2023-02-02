@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
@@ -12,6 +11,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import com.google.common.base.Strings;
 import java.util.Arrays;
@@ -21,7 +21,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,14 +37,8 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
-import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
-import org.gbif.pipelines.core.parsers.location.parser.CoordinateParseUtils;
-import org.gbif.pipelines.core.parsers.location.parser.FootprintWKTParser;
-import org.gbif.pipelines.core.parsers.location.parser.GadmParser;
-import org.gbif.pipelines.core.parsers.location.parser.LocationParser;
-import org.gbif.pipelines.core.parsers.location.parser.ParsedLocation;
-import org.gbif.pipelines.core.parsers.location.parser.SpatialReferenceSystemParser;
+import org.gbif.pipelines.core.parsers.location.parser.*;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -212,17 +205,21 @@ public class LocationInterpreter {
   }
 
   /** {@link DwcTerm#continent} interpretation. */
-  public static void interpretContinent(ExtendedRecord er, LocationRecord lr) {
-    Function<ParseResult<Continent>, LocationRecord> fn =
-        parseResult -> {
-          if (parseResult.isSuccessful()) {
-            lr.setContinent(parseResult.getPayload().name());
+  public static BiConsumer<ExtendedRecord, LocationRecord> interpretContinent(
+      KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
+    return (er, lr) -> {
+      if (geocodeKvStore != null) {
+        ParsedField<Continent> c = ContinentParser.parseContinent(er, lr, geocodeKvStore);
+        if (c.isSuccessful()) {
+          if (c.getResult() == null) {
+            lr.setContinent(null); // Marine occurrence
           } else {
-            addIssue(lr, CONTINENT_INVALID);
+            lr.setContinent(c.getResult().name());
           }
-          return lr;
-        };
-    VocabularyParser.continentParser().map(er, fn);
+          lr.getIssues().getIssueList().addAll(c.getIssues());
+        }
+      }
+    };
   }
 
   /** {@link DwcTerm#waterBody} interpretation. */
@@ -354,6 +351,17 @@ public class LocationInterpreter {
     }
   }
 
+  /** {@link GbifTerm#distanceFromCentroidInMeters} interpretation. */
+  public static BiConsumer<ExtendedRecord, LocationRecord> calculateCentroidDistance(
+      KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
+    return (er, lr) -> {
+      if (geocodeKvStore != null && lr.getHasCoordinate()) {
+        CentroidCalculator.calculateCentroidDistance(lr, geocodeKvStore)
+            .ifPresent(lr::setDistanceFromCentroidInMeters);
+      }
+    };
+  }
+
   /** {@link DwcTerm#coordinatePrecision} interpretation. */
   public static void interpretCoordinatePrecision(ExtendedRecord er, LocationRecord lr) {
 
@@ -378,6 +386,16 @@ public class LocationInterpreter {
     if (!Strings.isNullOrEmpty(value)) {
       lr.setLocality(cleanName(value));
     }
+  }
+
+  /** Sets the coreId field. */
+  public static void setCoreId(ExtendedRecord er, LocationRecord lr) {
+    Optional.ofNullable(er.getCoreId()).ifPresent(lr::setCoreId);
+  }
+
+  /** Sets the parentEventId field. */
+  public static void setParentEventId(ExtendedRecord er, LocationRecord lr) {
+    extractOptValue(er, DwcTerm.parentEventID).ifPresent(lr::setParentId);
   }
 
   private static String cleanName(String x) {

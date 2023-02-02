@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EVENT_CORE_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT_CORE;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT;
 
 import java.time.Instant;
 import java.util.Map;
@@ -26,7 +26,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
- * Beam level transformations for the DWC Event, reads an avro, writs an avro, maps from value to
+ * Beam level transformations for the DWC Event, reads an avro, writes an avro, maps from value to
  * keyValue and transforms form {@link ExtendedRecord} to {@link EventCoreRecord}.
  *
  * @see <a href="https://dwc.tdwg.org/terms/#event"/>
@@ -36,17 +36,14 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
   private final SerializableSupplier<VocabularyService> vocabularyServiceSupplier;
   private VocabularyService vocabularyService;
 
-  @Setter private PCollectionView<Map<String, String>> erWithParentsView;
+  @Setter private PCollectionView<Map<String, Map<String, String>>> erWithParentsView;
 
   @Builder(buildMethodName = "create")
   private EventCoreTransform(
       SerializableSupplier<VocabularyService> vocabularyServiceSupplier,
-      PCollectionView<Map<String, String>> erWithParentsView) {
+      PCollectionView<Map<String, Map<String, String>>> erWithParentsView) {
     super(
-        EventCoreRecord.class,
-        EVENT_CORE,
-        EventCoreTransform.class.getName(),
-        EVENT_CORE_RECORDS_COUNT);
+        EventCoreRecord.class, EVENT, EventCoreTransform.class.getName(), EVENT_CORE_RECORDS_COUNT);
     this.vocabularyServiceSupplier = vocabularyServiceSupplier;
     this.erWithParentsView = erWithParentsView;
   }
@@ -102,7 +99,7 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
   }
 
   public Optional<EventCoreRecord> processElement(
-      ExtendedRecord source, Map<String, String> erWithParents) {
+      ExtendedRecord source, Map<String, Map<String, String>> erWithParents) {
     return Interpretation.from(source)
         .to(
             EventCoreRecord.newBuilder()
@@ -119,10 +116,8 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
         .via((e, r) -> CoreInterpreter.interpretDatasetName(e, r::setDatasetName))
         .via((e, r) -> CoreInterpreter.interpretSamplingProtocol(e, r::setSamplingProtocol))
         .via((e, r) -> CoreInterpreter.interpretParentEventID(e, r::setParentEventID))
-        .via(
-            (e, r) ->
-                CoreInterpreter.interpretParentEventIDHierarchy(
-                    e, erWithParents, r::setParentEventIds))
+        .via((e, r) -> CoreInterpreter.interpretLocationID(e, r::setLocationID))
+        .via(CoreInterpreter.interpretLineages(erWithParents, vocabularyService))
         .getOfNullable();
   }
 }

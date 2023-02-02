@@ -11,12 +11,12 @@ import java.io.IOException;
 import org.junit.Test;
 
 public class StateProvinceVocabTest {
+
   @Test
   public void testStateProvinceWithClasspathResource() throws IOException {
     ALAPipelinesConfig alaConfig = new ALAPipelinesConfig();
     LocationInfoConfig locationInfoConfig = new LocationInfoConfig();
     alaConfig.setLocationInfoConfig(locationInfoConfig);
-    locationInfoConfig.setStateProvinceNamesFile("/stateProvinces.tsv");
 
     assertEquals(
         "Australian Capital Territory",
@@ -43,28 +43,19 @@ public class StateProvinceVocabTest {
 
     Exception stateNameException =
         assertThrows(
-            FileNotFoundException.class,
-            () ->
-                StateProvinceParser.getInstance(
-                        alaConfig.getLocationInfoConfig().getStateProvinceNamesFile())
-                    .parse("ACT")
-                    .getPayload());
+            FileNotFoundException.class, () -> StateProvinceParser.createParser("none_exists.txt"));
     assertTrue(stateNameException.getMessage().contains("none_exists.txt"));
 
     Exception stateCentreException =
         assertThrows(
             FileNotFoundException.class,
-            () ->
-                StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig())
-                    .coordinatesMatchCentre("Test", 0, 0));
+            () -> StateProvinceCentrePoints.loadCentrePoints(alaConfig.getLocationInfoConfig()));
     assertTrue(stateCentreException.getMessage().contains("none_exists.txt"));
 
     Exception countryCentreException =
         assertThrows(
             FileNotFoundException.class,
-            () ->
-                CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig())
-                    .coordinatesMatchCentre("Test", 0, 0));
+            () -> CountryCentrePoints.loadCentrePoints(alaConfig.getLocationInfoConfig()));
     assertTrue(countryCentreException.getMessage().contains("none_exists.txt"));
   }
 }

@@ -19,6 +19,7 @@ public class PipelinesVariables {
     public static final String ALL_AVRO = "*" + AVRO_EXTENSION;
 
     public static final String ARCHIVE_TO_VERBATIM = "archive-to-verbatim";
+    public static final String CAMTRAPDP_TO_DWCA = "camtrapdp-to-dwca";
     public static final String VERBATIM_TO_OCCURRENCE = "verbatim-to-occurrence";
     public static final String VERBATIM_TO_IDENTIFIER = "verbatim-to-identifier";
     public static final String OCCURRENCE_TO_INDEX = "occurrence-to-index";
@@ -39,6 +40,8 @@ public class PipelinesVariables {
     public static class Interpretation {
 
       public static final String FILE_NAME = "interpret-";
+      public static final String CRAP_USER = "crap";
+      public static final String USER_GROUP = "supergroup";
 
       public interface InterpretationType extends Serializable {
 
@@ -53,6 +56,7 @@ public class PipelinesVariables {
         VERBATIM,
         // Core types
         IDENTIFIER,
+        EVENT_IDENTIFIER,
         IDENTIFIER_ABSENT,
         METADATA,
         BASIC,
@@ -61,7 +65,7 @@ public class PipelinesVariables {
         LOCATION,
         TAXONOMY,
         GRSCICOLL,
-        EVENT_CORE,
+        EVENT,
         // Extension types
         IMAGE,
         MULTIMEDIA,
@@ -91,9 +95,12 @@ public class PipelinesVariables {
         GERMPLASM_ACCESSION_TABLE,
         EXTENDED_MEASUREMENT_OR_FACT_TABLE,
         CHRONOMETRIC_AGE_TABLE,
-        CHRONOMETRIC_DATE_TABLE,
         REFERENCE_TABLE,
-        IDENTIFIER_TABLE;
+        IDENTIFIER_TABLE,
+        AUDUBON_TABLE,
+        IMAGE_TABLE,
+        MULTIMEDIA_TABLE,
+        DNA_DERIVED_DATA_TABLE;
 
         @Override
         public String all() {
@@ -128,6 +135,13 @@ public class PipelinesVariables {
           return getAllInterpretation().stream().map(RecordType::name).collect(Collectors.toSet());
         }
 
+        public static Set<String> getAllValidatorInterpretationAsString() {
+          Set<String> set = getAllInterpretationAsString();
+          set.add(IDENTIFIER.name());
+          set.remove(IDENTIFIER_ABSENT.name());
+          return set;
+        }
+
         public static Set<RecordType> getAllTables() {
           return new HashSet<>(
               Arrays.asList(
@@ -149,9 +163,12 @@ public class PipelinesVariables {
                   GERMPLASM_ACCESSION_TABLE,
                   EXTENDED_MEASUREMENT_OR_FACT_TABLE,
                   CHRONOMETRIC_AGE_TABLE,
-                  CHRONOMETRIC_DATE_TABLE,
                   REFERENCE_TABLE,
-                  IDENTIFIER_TABLE));
+                  IDENTIFIER_TABLE,
+                  AUDUBON_TABLE,
+                  IMAGE_TABLE,
+                  MULTIMEDIA_TABLE,
+                  DNA_DERIVED_DATA_TABLE));
         }
       }
     }
@@ -228,6 +245,7 @@ public class PipelinesVariables {
     public static final String ARCHIVE_TO_ER_COUNT = "archiveToErCount";
     public static final String AVRO_TO_HDFS_COUNT = "avroToHdfsCount";
     // GBIF ID
+    public static final String FILTERED_GBIF_IDS_COUNT = "filteredGbifIdsCount";
     public static final String UNIQUE_GBIF_IDS_COUNT = "uniqueGbifIdsCount";
     public static final String DUPLICATE_GBIF_IDS_COUNT = "duplicatedGbifIdsCount";
     public static final String IDENTICAL_GBIF_OBJECTS_COUNT = "identicalGbifObjectsCount";
@@ -289,6 +307,11 @@ public class PipelinesVariables {
         "chronometricAgeTableRecordsCount";
     public static final String REFERENCE_TABLE_RECORDS_COUNT = "referencesTableRecordsCount";
     public static final String IDENTIFIER_TABLE_RECORDS_COUNT = "identifierTableRecordsCount";
+    public static final String AUDUBON_TABLE_RECORDS_COUNT = "audubonTableRecordsCount";
+    public static final String IMAGE_TABLE_RECORDS_COUNT = "imageTableRecordsCount";
+    public static final String MULTIMEDIA_TABLE_RECORDS_COUNT = "multimediaTableRecordsCount";
+    public static final String DNA_DERIVED_DATA_TABLE_RECORDS_COUNT =
+        "dnaDerivedDataTableRecordsCount";
 
     // Fragmenter
     public static final String FRAGMENTER_COUNT = "fragmenterRecordsCount";

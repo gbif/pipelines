@@ -9,7 +9,7 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,24 +26,24 @@ public class GbifIdTupleTransformTest {
   public void tupleTest() {
 
     // State
-    GbifIdRecord inGir = GbifIdRecord.newBuilder().setId("777").setGbifId(1L).build();
+    IdentifierRecord inIr = IdentifierRecord.newBuilder().setId("777").setInternalId("1").build();
 
-    GbifIdRecord inIssueGir = GbifIdRecord.newBuilder().setId("888").build();
-    addIssue(inIssueGir, GBIF_ID_ABSENT);
+    IdentifierRecord inIssueIr = IdentifierRecord.newBuilder().setId("888").build();
+    addIssue(inIssueIr, GBIF_ID_ABSENT);
 
     // When
     GbifIdTupleTransform tupleTransform = GbifIdTupleTransform.create();
 
-    PCollectionTuple girTuple =
-        p.apply("Read GbifIdRecord", Create.of(inGir, inIssueGir))
+    PCollectionTuple irTuple =
+        p.apply("Read IdentifierRecord", Create.of(inIr, inIssueIr))
             .apply("Interpret IDs", tupleTransform);
 
     // Should
-    PCollection<GbifIdRecord> girCollection = girTuple.get(tupleTransform.getTag());
-    PCollection<GbifIdRecord> absentGirCollection = girTuple.get(tupleTransform.getAbsentTag());
+    PCollection<IdentifierRecord> irCollection = irTuple.get(tupleTransform.getTag());
+    PCollection<IdentifierRecord> absentIrCollection = irTuple.get(tupleTransform.getAbsentTag());
 
-    PAssert.that(girCollection).containsInAnyOrder(inGir);
-    PAssert.that(absentGirCollection).containsInAnyOrder(inIssueGir);
+    PAssert.that(irCollection).containsInAnyOrder(inIr);
+    PAssert.that(absentIrCollection).containsInAnyOrder(inIssueIr);
     p.run();
   }
 }

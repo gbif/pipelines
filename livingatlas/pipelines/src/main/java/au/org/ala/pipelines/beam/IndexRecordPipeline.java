@@ -6,6 +6,7 @@ import au.org.ala.pipelines.options.IndexingPipelineOptions;
 import au.org.ala.pipelines.transforms.*;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
+import au.org.ala.utils.ArchiveUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationResult;
 import au.org.ala.utils.ValidationUtils;
@@ -165,7 +166,7 @@ public class IndexRecordPipeline {
 
     PCollection<KV<String, ALATaxonRecord>> alaTaxonCollection =
         p.apply("Read Taxon", alaTaxonomyTransform.read(pathFn))
-            .apply("Map Taxon to KV", alaTaxonomyTransform.toKv());
+            .apply("Map Taxon to KV", alaTaxonomyTransform.toCoreIdKv());
 
     PCollection<KV<String, ALAAttributionRecord>> alaAttributionCollection =
         p.apply("Read attribution", alaAttributionTransform.read(pathFn))
@@ -269,6 +270,10 @@ public class IndexRecordPipeline {
     result.waitUntilFinish();
 
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
+
+    if (ArchiveUtils.isEventCore(options)) {
+      ALAEventToSearchAvroPipeline.run(options);
+    }
 
     log.info("Pipeline has been finished");
   }

@@ -1,8 +1,13 @@
 package org.gbif.pipelines.core.parsers.clustering;
 
+import static org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships.catalogNumberOverlaps;
+import static org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships.concatIfEligible;
+import static org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships.hashOrNull;
 import static org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion.FeatureAssertion.*;
 import static org.junit.Assert.*;
 
+import com.google.common.collect.Lists;
+import java.util.Collections;
 import org.junit.Test;
 
 /** Tests for relationship assertions using simple POJOs as the source. */
@@ -96,7 +101,7 @@ public class OccurrenceRelationshipsTest {
             .decimalLatitude(10d)
             .decimalLongitude(10d)
             .countryCode("DK")
-            .typeStatus("HoloType")
+            .typeStatus(Lists.newArrayList("HoloType"))
             .build();
 
     OccurrenceFeatures o2 =
@@ -107,7 +112,7 @@ public class OccurrenceRelationshipsTest {
             .decimalLatitude(20d) // different
             .decimalLongitude(20d) // different
             .countryCode("NO") // different
-            .typeStatus("HoloType")
+            .typeStatus(Lists.newArrayList("HOLOTYPE", "NonsenseType"))
             .build();
 
     RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
@@ -133,7 +138,7 @@ public class OccurrenceRelationshipsTest {
             .month(8)
             .day(1) // day trap set
             .countryCode("DK")
-            .recordedBy("Donald Hobern")
+            .recordedBy(Lists.newArrayList("Donald Hobern"))
             .build();
 
     OccurrenceFeatures o2 =
@@ -147,7 +152,7 @@ public class OccurrenceRelationshipsTest {
             .month(8)
             .day(2) // day collected
             .countryCode("DK")
-            .recordedBy("Donald Hobern")
+            .recordedBy(Lists.newArrayList("Donald Hobern"))
             .build();
 
     RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
@@ -171,7 +176,7 @@ public class OccurrenceRelationshipsTest {
             .year(2007)
             .month(5)
             .day(26)
-            .recordedBy("D. S. Seigler & J. T. Miller")
+            .recordedBy(Lists.newArrayList("D. S. Seigler", "J. T. Miller"))
             .build();
 
     OccurrenceFeatures o2 =
@@ -184,7 +189,7 @@ public class OccurrenceRelationshipsTest {
             .year(2007)
             .month(5)
             .day(26)
-            .recordedBy("David S. Seigler|J.T. Miller") // we should at some point detect this match
+            .recordedBy(Lists.newArrayList("Robertson"))
             .build();
 
     RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
@@ -256,6 +261,33 @@ public class OccurrenceRelationshipsTest {
   }
 
   @Test
+  public void testArrayValues() {
+    OccurrenceFeatures o1 =
+        OccurrenceFeaturesPojo.builder()
+            .id("1")
+            .datasetKey("1")
+            .speciesKey("1")
+            .eventDate("A")
+            .recordedBy(Lists.newArrayList("John", "tim"))
+            .otherCatalogNumbers(Lists.newArrayList("cat1"))
+            .build();
+
+    OccurrenceFeatures o2 =
+        OccurrenceFeaturesPojo.builder()
+            .id("2")
+            .datasetKey("2")
+            .speciesKey("1")
+            .eventDate("A")
+            .catalogNumber("C-AT-1") // different field and formatting
+            .recordedBy(Lists.newArrayList("TIM"))
+            .build();
+
+    RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
+    assertNotNull(assertion);
+    assertTrue(assertion.justificationContainsAll(SAME_RECORDER_NAME, IDENTIFIERS_OVERLAP));
+  }
+
+  @Test
   public void testNormaliseID() {
     assertEquals("ABC", OccurrenceRelationships.normalizeID(" A-/, B \\C"));
     // These are examples of collectors we could be able to organize in the future
@@ -279,6 +311,31 @@ public class OccurrenceRelationshipsTest {
     assertFalse(runCompareIdentifier("s.n.", "S/N").justificationContains(IDENTIFIERS_OVERLAP));
   }
 
+  /** Test relaxed rules when record originates from a sequence repository */
+  @Test
+  public void testSequenceRepositories() {
+    OccurrenceFeatures o1 =
+        OccurrenceFeaturesPojo.builder().id("1").speciesKey("212").catalogNumber("ABC").build();
+
+    OccurrenceFeatures o2 =
+        OccurrenceFeaturesPojo.builder().id("2").speciesKey("212").catalogNumber("ABC").build();
+
+    OccurrenceFeatures o3 =
+        OccurrenceFeaturesPojo.builder()
+            .id("2")
+            .datasetKey("2")
+            .speciesKey("212")
+            .catalogNumber("ABC")
+            .isFromSequenceRepository(true) // should relax rules
+            .build();
+
+    RelationshipAssertion<OccurrenceFeatures> assertion = OccurrenceRelationships.generate(o1, o2);
+    assertNull(assertion);
+    assertion = OccurrenceRelationships.generate(o1, o3);
+    assertNotNull(assertion);
+    assertTrue(assertion.justificationContainsAll(SAME_ACCEPTED_SPECIES, IDENTIFIERS_OVERLAP));
+  }
+
   /** Generates assertions for the comparison of two identifiers only. */
   private RelationshipAssertion<OccurrenceFeatures> runCompareIdentifier(String id1, String id2) {
     OccurrenceFeatures o1 = OccurrenceFeaturesPojo.builder().catalogNumber(id1).build();
@@ -289,9 +346,48 @@ public class OccurrenceRelationshipsTest {
   }
 
   @Test
+  public void testCatalogNumberOverlaps() {
+    assertTrue(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("A:B:123")));
+    assertTrue(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("A-B-123")));
+    assertTrue(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("A/B/123")));
+    assertTrue(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("AB123")));
+
+    assertFalse(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("A:123")));
+    assertFalse(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("A-123")));
+    assertFalse(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("A/123")));
+
+    assertFalse(catalogNumberOverlaps(null, null, "AB123", Collections.singletonList("AB123")));
+    assertFalse(
+        catalogNumberOverlaps("", "NO DISPONSIBL", "AB123", Collections.singletonList("AB123")));
+    assertFalse(
+        catalogNumberOverlaps("", "NO DISPONSIBL", "123", Collections.singletonList("123")));
+
+    assertFalse(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("A:B:A123")));
+    assertFalse(catalogNumberOverlaps("A", "B", "123", Collections.singletonList("123")));
+
+    // https://www.gbif.org/occurrence/2594353674
+    assertFalse(catalogNumberOverlaps("C", "AT", "2323", Collections.singletonList("Cat. 2323")));
+    assertFalse(catalogNumberOverlaps("C", "AT", "2323", Collections.singletonList("Cat# 2323")));
+    assertFalse(catalogNumberOverlaps("C", "AT", "2323", Collections.singletonList("cat# 2323")));
+    assertTrue(catalogNumberOverlaps("C", "AT", "2323", Collections.singletonList("cat 2323")));
+  }
+
+  @Test
   public void allNull() {
     assertTrue(OccurrenceRelationships.allNull(null, null));
     assertTrue(OccurrenceRelationships.allNull(null));
     assertFalse(OccurrenceRelationships.allNull(null, ""));
+  }
+
+  @Test
+  public void testIsEligible() {
+    assertNull("Should be in deny list", hashOrNull("SN", true));
+    assertNull("Should be in deny list", hashOrNull("s.n.", true));
+  }
+
+  @Test
+  public void testConcatIfEligible() {
+    assertNull("Should be filtered", concatIfEligible(":", "good Id", "SN"));
+    assertEquals("Should be allows", "GOODID:TIM", concatIfEligible(":", "good Id", "tim"));
   }
 }

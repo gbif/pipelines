@@ -1,0 +1,22 @@
+[
+  {
+    "name": "EventSearchRecord",
+    "namespace": "org.gbif.pipelines.io.avro",
+    "type": "record",
+    "doc": "An AVRO export used to support Spark SQL exports",
+    "fields": [
+      {"name": "id", "type": "string", "doc": "Pipelines identifier"},
+      {"name": "datasetKey", "type": "string", "doc": "Pipelines identifier"},
+      {"name": "eventHierarchy", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "eventTypeHierarchy", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "samplingProtocol", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "taxonKey", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "locationID", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "measurementOrFactTypes", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "stateProvince", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "countryCode", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "year", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/year"},
+      {"name": "month", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/month"}
+    ]
+  }
+]

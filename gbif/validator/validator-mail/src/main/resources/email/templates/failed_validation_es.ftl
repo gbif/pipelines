@@ -11,7 +11,7 @@
 
 <p style="padding: 0;margin-bottom: 20px;line-height: 1.65;">
   Por más detalles, por favor consultar <a href="${portalUrl}es/tools/data-validator/${validation.key}" style="color: #509E2F;text-decoration: none;">${portalUrl}es/tools/data-validator/${validation.key}</a> <br>
-  Consulte el estado de los servicios de GBIF en <a href="${portalUrl}es/health" style="color: #509E2F;text-decoration: none;">${portalUrl}system-health</a>, e intente de nuevo en unos minutos.
+  Consulte el estado de los servicios de GBIF en <a href="${portalUrl}es/system-health" style="color: #509E2F;text-decoration: none;">${portalUrl}es/system-health</a>, e intente de nuevo en unos minutos.
 </p>
 
 <p style="padding: 0;margin-bottom: 20px;line-height: 1.65;">

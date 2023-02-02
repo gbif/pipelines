@@ -21,17 +21,17 @@ import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.specific.GbifIdInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
  * Beam level transformations for the DWC Occurrence, reads an avro, writs an avro, maps from value
- * to keyValue and transforms form {@link ExtendedRecord} to {@link GbifIdRecord}.
+ * to keyValue and transforms form {@link ExtendedRecord} to {@link IdentifierRecord}.
  *
  * @see <a href="https://dwc.tdwg.org/terms/#occurrence</a>
  */
-public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
+public class GbifIdTransform extends Transform<ExtendedRecord, IdentifierRecord> {
 
   @Getter private final String absentName;
   @Getter private final Set<String> allNames = new HashSet<>(3);
@@ -39,7 +39,7 @@ public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
   private final boolean isOccurrenceIdValid;
   private final boolean useExtendedRecordId;
   private final boolean generateIdIfAbsent;
-  private final BiConsumer<ExtendedRecord, GbifIdRecord> gbifIdFn;
+  private final BiConsumer<ExtendedRecord, IdentifierRecord> gbifIdFn;
   private final SerializableSupplier<HBaseLockingKey> keygenServiceSupplier;
 
   private HBaseLockingKey keygenService;
@@ -50,9 +50,10 @@ public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
       boolean isOccurrenceIdValid,
       boolean useExtendedRecordId,
       boolean generateIdIfAbsent,
-      BiConsumer<ExtendedRecord, GbifIdRecord> gbifIdFn,
+      BiConsumer<ExtendedRecord, IdentifierRecord> gbifIdFn,
       SerializableSupplier<HBaseLockingKey> keygenServiceSupplier) {
-    super(GbifIdRecord.class, IDENTIFIER, GbifIdTransform.class.getName(), GBIF_ID_RECORDS_COUNT);
+    super(
+        IdentifierRecord.class, IDENTIFIER, GbifIdTransform.class.getName(), GBIF_ID_RECORDS_COUNT);
     this.isTripletValid = isTripletValid;
     this.isOccurrenceIdValid = isOccurrenceIdValid;
     this.useExtendedRecordId = useExtendedRecordId;
@@ -63,20 +64,22 @@ public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
     allNames.addAll(Arrays.asList(this.getBaseName(), this.getBaseInvalidName(), absentName));
   }
 
-  /** Maps {@link GbifIdRecord} to key value, where key is {@link GbifIdRecord#getId} */
-  public MapElements<GbifIdRecord, KV<String, GbifIdRecord>> toKv() {
-    return MapElements.into(new TypeDescriptor<KV<String, GbifIdRecord>>() {})
-        .via((GbifIdRecord gr) -> KV.of(gr.getId(), gr));
+  /** Maps {@link IdentifierRecord} to key value, where key is {@link IdentifierRecord#getId} */
+  public MapElements<IdentifierRecord, KV<String, IdentifierRecord>> toKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, IdentifierRecord>>() {})
+        .via((IdentifierRecord ir) -> KV.of(ir.getId(), ir));
   }
 
-  /** Maps {@link GbifIdRecord} to key value, where key is {@link GbifIdRecord#getGbifId()} */
-  public MapElements<GbifIdRecord, KV<String, GbifIdRecord>> toGbifIdKv() {
-    return MapElements.into(new TypeDescriptor<KV<String, GbifIdRecord>>() {})
+  /**
+   * Maps {@link IdentifierRecord} to key value, where key is {@link
+   * IdentifierRecord#getInternalId()}
+   */
+  public MapElements<IdentifierRecord, KV<String, IdentifierRecord>> toGbifIdKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, IdentifierRecord>>() {})
         .via(
-            (GbifIdRecord gr) -> {
-              String key =
-                  Optional.ofNullable(gr.getGbifId()).map(Object::toString).orElse(GBIF_ID_INVALID);
-              return KV.of(key, gr);
+            (IdentifierRecord ir) -> {
+              String key = Optional.ofNullable(ir.getInternalId()).orElse(GBIF_ID_INVALID);
+              return KV.of(key, ir);
             });
   }
 
@@ -109,20 +112,20 @@ public class GbifIdTransform extends Transform<ExtendedRecord, GbifIdRecord> {
   }
 
   @Override
-  public Optional<GbifIdRecord> convert(ExtendedRecord source) {
+  public Optional<IdentifierRecord> convert(ExtendedRecord source) {
 
-    GbifIdRecord gr =
-        GbifIdRecord.newBuilder()
+    IdentifierRecord ir =
+        IdentifierRecord.newBuilder()
             .setId(source.getId())
-            .setCreated(Instant.now().toEpochMilli())
+            .setFirstLoaded(Instant.now().toEpochMilli())
             .build();
 
     if (useExtendedRecordId && source.getCoreTerms().isEmpty()) {
-      GbifIdInterpreter.interpretCopyGbifId().accept(source, gr);
+      GbifIdInterpreter.interpretCopyGbifId().accept(source, ir);
     }
 
     return Interpretation.from(source)
-        .to(gr)
+        .to(ir)
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(
             GbifIdInterpreter.interpretGbifId(

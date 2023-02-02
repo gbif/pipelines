@@ -30,6 +30,8 @@ fs:
   hdfs:
     fsPath: hdfs://localhost:8020
 
+copy:
+  copyPath: "/data/dwca-export"
 recordedByConfig:
   cacheSizeMb: 64
 alaNameMatch:
@@ -57,6 +59,12 @@ imageService:
 speciesListService:
   wsUrl: https://lists.ala.org.au
   timeoutSec: 70
+samplingService:
+  wsUrl: https://sampling.ala.org.au/sampling-service/
+  timeoutSec: 70
+  batchSize: 25000
+  batchStatusSleepTime: 1000
+  downloadRetries: 5
 geocodeConfig:
   country:
     path: /data/pipelines-shp/political
@@ -80,6 +88,31 @@ geocodeConfig:
     field: FEATURE
 
 gbifConfig:
+  extensionsAllowedForVerbatimSet:
+    - http://rs.tdwg.org/ac/terms/Multimedia
+    - http://data.ggbn.org/schemas/ggbn/terms/Amplification
+    - http://data.ggbn.org/schemas/ggbn/terms/Cloning
+    - http://data.ggbn.org/schemas/ggbn/terms/GelImage
+    - http://data.ggbn.org/schemas/ggbn/terms/Loan
+    - http://data.ggbn.org/schemas/ggbn/terms/MaterialSample
+    - http://data.ggbn.org/schemas/ggbn/terms/Permit
+    - http://data.ggbn.org/schemas/ggbn/terms/Preparation
+    - http://data.ggbn.org/schemas/ggbn/terms/Preservation
+    - http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact
+    - http://rs.tdwg.org/chrono/terms/ChronometricAge
+    - http://purl.org/germplasm/germplasmTerm#GermplasmAccession
+    - http://purl.org/germplasm/germplasmTerm#MeasurementScore
+    - http://purl.org/germplasm/germplasmTerm#MeasurementTrait
+    - http://purl.org/germplasm/germplasmTerm#MeasurementTrial
+    - http://rs.tdwg.org/dwc/terms/Identification
+    - http://rs.tdwg.org/dwc/terms/Occurrence
+    - http://rs.gbif.org/terms/1.0/Identifier
+    - http://rs.gbif.org/terms/1.0/Image
+    - http://rs.tdwg.org/dwc/terms/MeasurementOrFact
+    - http://rs.gbif.org/terms/1.0/Multimedia
+    - http://rs.gbif.org/terms/1.0/Reference
+    - http://rs.tdwg.org/dwc/terms/ResourceRelationship
+    - http://rs.gbif.org/terms/1.0/DNADerivedData
   vocabularyConfig:
     vocabulariesPath: /data/pipelines-vocabularies/
     vocabulariesNames:
@@ -87,6 +120,9 @@ gbifConfig:
       http://rs.tdwg.org/dwc/terms/lifeStage: LifeStage
       http://rs.tdwg.org/dwc/terms/establishmentMeans: EstablishmentMeans
       http://rs.tdwg.org/dwc/terms/pathway: Pathway
+
+alaNameMatchConfig:
+  matchOnTaxonID: true
 
 #locationInfoConfig:
 #    countryNamesFile : /data/pipelines-data/resources/countries.txt
@@ -124,15 +160,11 @@ dwca-avro:
 interpret:
   appName: Interpretation for {datasetId}
   interpretationTypes: ALL
-  inputPath: '{fsPath}/pipelines-data/{datasetId}/1/verbatim.avro'
+  defaultDateFormat: DMYT,DMY
+  inputPath: '{fsPath}/pipelines-data/{datasetId}/1/verbatim/*.avro'
   # Skips GBIF id generation and copies ids from ExtendedRecord ids
   useExtendedRecordId: true
   runner: SparkRunner
-  ## For spark-cluster:
-  #  name: interpret {datasetId}
-  #  appName: Interpretation for {datasetId}
-  ## For spark-embedded:
-  #  appName: Interpretation for {datasetId}
 
 # class: au.org.ala.pipelines.beam.ALAUUIDMintingPipeline
 uuid:
@@ -141,6 +173,7 @@ uuid:
   inputPath: '{fsPath}/pipelines-data'
   numberOfBackupsToKeep: 10
   percentageChangeAllowed: 50
+  throwErrorOnValidationFail: false
 
 images:
   appName: Image syncing for {datasetId}
@@ -163,11 +196,6 @@ speciesLists:
 # Sampling specific configuration
 sampling:
   appName: Sample for {datasetId}
-  # baseUrl: https://spatial.your-l-a.site/ws/
-  baseUrl: https://sampling.ala.org.au/sampling-service/
-  batchSize: 25000
-  batchStatusSleepTime: 1000
-  downloadRetries: 5
   inputPath: '{fsPath}/pipelines-data'
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner
@@ -214,13 +242,41 @@ solr:
   runner: SparkRunner
   zkHost: localhost:9983
 
+# class: au.org.ala.pipelines.beam.IndexRecordToSolrPipeline
+elastic:
+  appName: Elastic indexing for {datasetId}
+  inputPath: '{fsPath}/pipelines-data'
+  targetPath: '{fsPath}/pipelines-data'
+  runner: SparkRunner
+  esHosts: http://localhost:9200
+  esSchemaPath: /tmp/es-parent-schema.json
+  esAlias: event
+  esIndexName: 'event_{datasetId}'
+  indexNumberShards: 1
+  indexNumberReplicas: 0
+  esDocumentId: internalId
+
 export:
   appName: DwCA export for {datasetId}
   inputPath: '{fsPath}/pipelines-data'
   targetPath: '{fsPath}/pipelines-data'
+  localExportPath: /tmp/pipelines-export
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   imageServicePath: "https://images.ala.org.au/image/proxyImageThumbnailLarge?imageId={0}"
   runner: SparkRunner
+  predicateExportEnabled: true
+
+predicate-export:
+  inputPath: '{fsPath}/pipelines-data'
+  localExportPath: /tmp/pipelines-export
+  skipExportFields:
+    - "id"
+    - "parentId"
+    - "created"
+    - "hasGeospatialIssue"
+    - "hasCoordinate"
+    - "repatriated"
+    - "coreId"
 
 # class: au.org.ala.pipelines.beam.IndexRecordToSolrPipeline
 solrSchema:
@@ -262,7 +318,9 @@ validation-report:
   checkSampling: true
   solrCollection: biocache
 
-dwca-avro-sh-args:
+
+
+-dwca-avro-sh-args:
   local:
     jvm: -Xmx2g
   spark-embedded:
@@ -286,32 +344,6 @@ interpret-sh-args:
     executor-cores: 8
     executor-memory: 24G
     driver-memory: 4G
-#    conf: spark.default.parallelism=144
-#    num-executors: 12
-#    executor-cores: 8
-#    executor-memory: 7G
-#    driver-memory: 2G
-
-# 6mins with errors
-#    conf: spark.default.parallelism=144
-#    num-executors: 12
-#    executor-cores: 8
-#    executor-memory: 8G
-#    driver-memory: 1G
-
-# 6mins
-#  conf: spark.default.parallelism=144
-#  num-executors: 16
-#  executor-cores: 8
-#  executor-memory: 7G
-#  driver-memory: 1G
-
-#9 mins
-#    conf: spark.default.parallelism=500
-#    num-executors: 12
-#    executor-cores: 8
-#    executor-memory: 20G
-#    driver-memory: 4G
 
 image-sync-sh-args:
   local:
@@ -326,6 +358,18 @@ image-sync-sh-args:
     driver-memory: 1G
 
 image-load-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=144
+    num-executors: 16
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
+export-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-embedded:
@@ -434,3 +478,16 @@ solr-sh-args:
     executor-cores: 8
     executor-memory: 22G
     driver-memory: 6G
+
+elastic-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=48
+    num-executors: 6
+    executor-cores: 8
+    executor-memory: 22G
+    driver-memory: 6G
+

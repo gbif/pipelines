@@ -10,13 +10,13 @@ import org.apache.hadoop.hbase.client.Connection;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.factory.ConfigFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.tasks.ServiceFactory;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /**
@@ -50,15 +50,24 @@ public class FragmenterService extends AbstractIdleService {
     PipelinesHistoryClient historyClient =
         ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
 
+    DatasetClient datasetClient = ServiceFactory.createDatasetClient(config.stepConfig);
+
     KeygenConfig keygenConfig =
         readConfig(HdfsConfigs.create(c.hdfsSiteConfig, c.coreSiteConfig), config.pipelinesConfig);
 
     FragmenterCallback callback =
-        new FragmenterCallback(
-            config, publisher, curator, historyClient, executor, hbaseConnection, keygenConfig);
+        FragmenterCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .executor(executor)
+            .hbaseConnection(hbaseConnection)
+            .keygenConfig(keygenConfig)
+            .datasetClient(datasetClient)
+            .build();
 
-    String routingKey = new PipelinesInterpretedMessage().getRoutingKey() + ".*";
-    listener.listen(c.queueName, routingKey, c.poolSize, callback);
+    listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }
 
   @Override

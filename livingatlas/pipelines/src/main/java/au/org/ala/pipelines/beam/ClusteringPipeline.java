@@ -113,7 +113,8 @@ public class ClusteringPipeline {
                     String taxonKey = source.getStrings().get(DwcTerm.taxonConceptID.simpleName());
                     String scientificName =
                         source.getStrings().get(DwcTerm.scientificName.simpleName());
-                    String typeStatus = source.getStrings().get(DwcTerm.typeStatus.simpleName());
+                    List<String> typeStatus =
+                        source.getMultiValues().get(DwcTerm.typeStatus.simpleName());
                     String basisOfRecord =
                         source.getStrings().get(DwcTerm.basisOfRecord.simpleName());
                     Double decimalLatitude =
@@ -133,10 +134,11 @@ public class ClusteringPipeline {
                         source.getStrings().get(DwcTerm.recordNumber.simpleName());
                     String catalogNumber =
                         source.getStrings().get(DwcTerm.catalogNumber.simpleName());
-                    String otherCatalogNumbers =
-                        source.getStrings().get(DwcTerm.otherCatalogNumbers.simpleName());
+                    List<String> otherCatalogNumbers =
+                        source.getMultiValues().get(DwcTerm.otherCatalogNumbers.simpleName());
 
-                    String recordedBy = source.getStrings().get(DwcTerm.recordedBy.simpleName());
+                    List<String> recordedBy =
+                        source.getMultiValues().get(DwcTerm.recordedBy.simpleName());
 
                     Long eventDateL = source.getLongs().get(DwcTerm.eventDate.simpleName());
                     String eventDate = "";
@@ -172,14 +174,15 @@ public class ClusteringPipeline {
                         && Strings.isNotEmpty(basisOfRecord)
                         && specimenBORs.contains(basisOfRecord)) {
 
+                      Stream<String> ids =
+                          otherCatalogNumbers == null
+                              ? Stream.of(occurrenceID, fieldNumber, recordNumber, catalogNumber)
+                              : Stream.concat(
+                                  Stream.of(occurrenceID, fieldNumber, recordNumber, catalogNumber),
+                                  otherCatalogNumbers.stream());
+
                       // output hashes for each combination
-                      Stream.of(
-                              occurrenceID,
-                              fieldNumber,
-                              recordNumber,
-                              catalogNumber,
-                              otherCatalogNumbers)
-                          .filter(
+                      ids.filter(
                               value ->
                                   !Strings.isEmpty(value) && !omitIds.contains(value.toUpperCase()))
                           .distinct()
@@ -218,16 +221,17 @@ public class ClusteringPipeline {
                     }
 
                     // 2. type status hashkeys
-                    if (Strings.isNotEmpty(taxonKey) && Strings.isNotEmpty(typeStatus)) {
-                      out.output(builder.withHashKey(taxonKey + "|" + typeStatus).build());
+                    if (Strings.isNotEmpty(taxonKey) && typeStatus != null) {
+                      for (String t : typeStatus) {
+                        out.output(builder.withHashKey(taxonKey + "|" + t).build());
+                      }
                     }
 
                     // 3. taxonKey|year|recordedBy hashkeys
-                    if (Strings.isNotEmpty(taxonKey)
-                        && year != null
-                        && Strings.isNotEmpty(recordedBy)) {
-                      out.output(
-                          builder.withHashKey(taxonKey + "|" + year + "|" + recordedBy).build());
+                    if (Strings.isNotEmpty(taxonKey) && year != null && recordedBy != null) {
+                      for (String r : recordedBy) {
+                        out.output(builder.withHashKey(taxonKey + "|" + year + "|" + r).build());
+                      }
                     }
                   }
                 }));
@@ -489,13 +493,20 @@ public class ClusteringPipeline {
                         input.getMonth() + "",
                         input.getDay() + "",
                         input.getEventDate(),
-                        input.getTypeStatus(),
-                        input.getRecordedBy(),
+                        String.join(
+                            "|",
+                            Optional.ofNullable(input.getTypeStatus()).orElse(new ArrayList())),
+                        String.join(
+                            "|",
+                            Optional.ofNullable(input.getRecordedBy()).orElse(new ArrayList())),
                         input.getFieldNumber(),
                         input.getRecordNumber(),
                         input.getCatalogNumber(),
                         input.getOccurrenceID(),
-                        input.getOtherCatalogNumbers());
+                        String.join(
+                            "|",
+                            Optional.ofNullable(input.getOtherCatalogNumbers())
+                                .orElse(new ArrayList())));
                   }
                 }))
         .apply(

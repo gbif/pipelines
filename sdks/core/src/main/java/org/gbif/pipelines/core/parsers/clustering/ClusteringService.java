@@ -21,7 +21,7 @@ public class ClusteringService implements Serializable {
       scan.setBatch(1);
       scan.addFamily(Bytes.toBytes("o"));
       int salt = Math.abs(gbifId.toString().hashCode()) % config.getRelationshipTableSalt();
-      scan.setRowPrefixFilter(Bytes.toBytes(salt + ":" + gbifId));
+      scan.setRowPrefixFilter(Bytes.toBytes(salt + ":" + gbifId + ":"));
       ResultScanner s = table.getScanner(scan);
       Result row = s.next();
       return row != null;

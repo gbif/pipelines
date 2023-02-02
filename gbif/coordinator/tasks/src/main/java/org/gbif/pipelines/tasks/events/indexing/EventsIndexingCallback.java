@@ -2,6 +2,7 @@ package org.gbif.pipelines.tasks.events.indexing;
 
 import java.io.IOException;
 import java.util.Optional;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.HttpClient;
@@ -24,10 +25,13 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
+import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesEventsMessage} is received. */
 @Slf4j
+@Builder
 public class EventsIndexingCallback
     extends AbstractMessageCallback<PipelinesEventsInterpretedMessage>
     implements StepHandler<PipelinesEventsInterpretedMessage, PipelinesEventsIndexedMessage> {
@@ -40,21 +44,7 @@ public class EventsIndexingCallback
   private final HttpClient httpClient;
   private final HdfsConfigs hdfsConfigs;
   private final PipelinesHistoryClient historyClient;
-
-  public EventsIndexingCallback(
-      EventsIndexingConfiguration config,
-      MessagePublisher publisher,
-      CuratorFramework curator,
-      HttpClient httpClient,
-      PipelinesHistoryClient historyClient) {
-    this.config = config;
-    this.publisher = publisher;
-    this.curator = curator;
-    hdfsConfigs =
-        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
-    this.httpClient = httpClient;
-    this.historyClient = historyClient;
-  }
+  private final DatasetClient datasetClient;
 
   @Override
   public void handleMessage(PipelinesEventsInterpretedMessage message) {
@@ -64,10 +54,17 @@ public class EventsIndexingCallback
         .stepType(TYPE)
         .publisher(publisher)
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .message(message)
         .handler(this)
         .build()
         .handleMessage();
+  }
+
+  /** Run all the events pipelines in distributed mode */
+  @Override
+  public String getRouting() {
+    return new PipelinesEventsInterpretedMessage().setRunner("*").getRoutingKey();
   }
 
   @Override
@@ -135,7 +132,7 @@ public class EventsIndexingCallback
             message.getDatasetUuid().toString(),
             Integer.toString(message.getAttempt()),
             DwcTerm.Event.simpleName().toLowerCase(),
-            RecordType.EVENT_CORE.name().toLowerCase());
+            RecordType.EVENT.name().toLowerCase());
 
     SparkSettings sparkSettings =
         SparkSettings.create(config.sparkConfig, config.stepConfig, filePath, recordsNumber);
@@ -152,24 +149,54 @@ public class EventsIndexingCallback
     }
   }
 
+  /** Sum of event and occurrence records */
+  private long getRecordNumber(PipelinesEventsInterpretedMessage message) throws IOException {
+    long eventRecords =
+        getRecordNumber(
+            message,
+            new EventsInterpretationConfiguration().metaFileName,
+            message.getNumberOfEventRecords(),
+            false);
+    long occurrenceRecords =
+        getRecordNumber(
+            message,
+            new InterpreterConfiguration().metaFileName,
+            message.getNumberOfOccurrenceRecords(),
+            true);
+    return occurrenceRecords + eventRecords;
+  }
+
   /**
-   * Reads number of records from a archive-to-avro metadata file, verbatim-to-interpreted contains
+   * Reads number of records from an archive-to-avro metadata file, verbatim-to-interpreted contains
    * attempted records count, which is not accurate enough
    */
-  private long getRecordNumber(PipelinesEventsInterpretedMessage message) throws IOException {
+  private long getRecordNumber(
+      PipelinesEventsInterpretedMessage message,
+      String metaFileName,
+      Long messageNumber,
+      boolean skipIfMissed)
+      throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
-    String metaFileName = new EventsInterpretationConfiguration().metaFileName;
     String metaPath =
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
-    Long messageNumber = message.getNumberOfEventRecords();
+    if (skipIfMissed && !HdfsUtils.exists(hdfsConfigs, metaPath)) {
+      return 0L;
+    }
+
     Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
+        HdfsUtils.getLongByKey(
+            hdfsConfigs, metaPath, Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED);
+    if (!fileNumber.isPresent()) {
+      fileNumber =
+          HdfsUtils.getLongByKey(
+              hdfsConfigs, metaPath, Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
+    }
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
-          "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
+          "Please check metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
 
     if (messageNumber == null) {

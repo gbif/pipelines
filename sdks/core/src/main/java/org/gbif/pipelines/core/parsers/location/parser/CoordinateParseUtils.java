@@ -195,12 +195,12 @@ public class CoordinateParseUtils {
     // 0,0 is too suspicious
     if (Double.compare(lat, 0) == 0 && Double.compare(lon, 0) == 0) {
       issues.add(ZERO_COORDINATE.name());
-      return ParsedField.success(new LatLng(0.0d, 0.0d), issues);
+      return ParsedField.success(LatLng.create(0.0d, 0.0d), issues);
     }
 
     // if everything falls in range
     if (inRange(lat, lon)) {
-      return ParsedField.success(new LatLng(lat, lon), issues);
+      return ParsedField.success(LatLng.create(lat, lon), issues);
     }
 
     // if lat is out of range, but in range of the lng,
@@ -212,7 +212,7 @@ public class CoordinateParseUtils {
     // capabilities of this method
     if ((Double.compare(lat, 90) > 0 || Double.compare(lat, -90) < 0) && inRange(lon, lat)) {
       issues.add(PRESUMED_SWAPPED_COORDINATE.name());
-      return ParsedField.success(new LatLng(lon, lat), issues);
+      return ParsedField.success(LatLng.create(lon, lat), issues);
     }
 
     // then something is out of range

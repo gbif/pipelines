@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.interpreters.core;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssueSet;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.hasValue;
 
@@ -33,7 +34,7 @@ public class TemporalInterpreter implements Serializable {
   private static final long serialVersionUID = 410232939831224196L;
 
   private static final LocalDate MIN_EPOCH_LOCAL_DATE = LocalDate.ofEpochDay(0);
-  private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
+  private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1500, 1, 1);
 
   private final TemporalRangeParser temporalRangeParser;
   private final TemporalParser temporalParser;
@@ -119,5 +120,15 @@ public class TemporalInterpreter implements Serializable {
 
       addIssueSet(tr, parsed.getIssues());
     }
+  }
+
+  /** Sets the coreId field. */
+  public static void setCoreId(ExtendedRecord er, TemporalRecord tr) {
+    Optional.ofNullable(er.getCoreId()).ifPresent(tr::setCoreId);
+  }
+
+  /** Sets the parentEventId field. */
+  public static void setParentEventId(ExtendedRecord er, TemporalRecord tr) {
+    extractOptValue(er, DwcTerm.parentEventID).ifPresent(tr::setParentId);
   }
 }

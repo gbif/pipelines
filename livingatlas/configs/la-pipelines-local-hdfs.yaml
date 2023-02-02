@@ -44,6 +44,7 @@ dwca-avro:
     inputPath: hdfs://localhost:8020/dwca-exports/{datasetId}/{datasetId}.zip
     tempLocation: /data/spark-tmp/dwca-avro/{datasetId}
 interpret:
+    defaultDateFormat: DMYT,DMY
     inputPath: hdfs://localhost:8020/pipelines-data/{datasetId}/1/verbatim.avro
 dataset-validated-dump:
     inputPath: hdfs://localhost:8020/pipelines-data

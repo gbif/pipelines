@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.utils.HashConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 
 /**
  * Splits collection into two: 1 - normal collection with regular GBIF ids 2 - contains invalid
@@ -33,12 +33,12 @@ import org.gbif.pipelines.io.avro.GbifIdRecord;
 @SuppressWarnings("all")
 public class UniqueGbifIdTransform {
 
-  private final Map<String, GbifIdRecord> idMap = new ConcurrentHashMap<>();
-  private final Map<String, GbifIdRecord> idInvalidMap = new ConcurrentHashMap<>();
+  private final Map<String, IdentifierRecord> idMap = new ConcurrentHashMap<>();
+  private final Map<String, IdentifierRecord> idInvalidMap = new ConcurrentHashMap<>();
   // keyed by the ExtendedRecord ID
-  private final Map<String, GbifIdRecord> erIdMap = new ConcurrentHashMap<>();
+  private final Map<String, IdentifierRecord> erIdMap = new ConcurrentHashMap<>();
 
-  @NonNull private Function<ExtendedRecord, Optional<GbifIdRecord>> idTransformFn;
+  @NonNull private Function<ExtendedRecord, Optional<IdentifierRecord>> idTransformFn;
 
   @NonNull private Map<String, ExtendedRecord> erMap;
 
@@ -85,7 +85,7 @@ public class UniqueGbifIdTransform {
                 id -> {
                   if (skipTransform) {
                     idMap.put(id.getId(), id);
-                  } else if (id.getGbifId() != null) {
+                  } else if (id.getInternalId() != null) {
                     filter(id);
                   } else {
                     incMetrics(INVALID_GBIF_ID_COUNT);
@@ -97,23 +97,24 @@ public class UniqueGbifIdTransform {
   }
 
   /** Filter GBIF id duplicates if it is exist */
-  private void filter(GbifIdRecord id) {
-    GbifIdRecord record = idMap.get(id.getGbifId().toString());
+  private void filter(IdentifierRecord id) {
+    IdentifierRecord record = idMap.get(id.getInternalId());
     if (record != null) {
       int compare =
           HashConverter.getSha1(id.getId()).compareTo(HashConverter.getSha1(record.getId()));
       if (compare < 0) {
         incMetrics(IDENTICAL_GBIF_OBJECTS_COUNT);
-        idMap.put(id.getGbifId().toString(), id);
+        idMap.put(id.getInternalId(), id);
         idInvalidMap.put(record.getId(), record);
       } else {
         incMetrics(DUPLICATE_GBIF_IDS_COUNT);
         idInvalidMap.put(id.getId(), id);
       }
-      log.error("GBIF ID collision, gbifId - {}, occurrenceId - {}", id.getGbifId(), id.getId());
+      log.error(
+          "GBIF ID collision, gbifId - {}, occurrenceId - {}", id.getInternalId(), id.getId());
     } else {
       incMetrics(UNIQUE_GBIF_IDS_COUNT);
-      idMap.put(id.getGbifId().toString(), id);
+      idMap.put(id.getInternalId(), id);
     }
   }
 

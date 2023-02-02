@@ -16,17 +16,17 @@ import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.specific.GbifIdInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
  * Beam level transformations for the DWC Occurrence, reads an avro, writs an avro, maps from value
- * to keyValue and transforms form {@link ExtendedRecord} to {@link GbifIdRecord}.
+ * to keyValue and transforms form {@link ExtendedRecord} to {@link IdentifierRecord}.
  *
  * @see <a href="https://dwc.tdwg.org/terms/#occurrence</a>
  */
-public class GbifIdAbsentTransform extends Transform<GbifIdRecord, GbifIdRecord> {
+public class GbifIdAbsentTransform extends Transform<IdentifierRecord, IdentifierRecord> {
 
   private final boolean isTripletValid;
   private final boolean isOccurrenceIdValid;
@@ -40,7 +40,7 @@ public class GbifIdAbsentTransform extends Transform<GbifIdRecord, GbifIdRecord>
       boolean isOccurrenceIdValid,
       SerializableSupplier<HBaseLockingKey> keygenServiceSupplier) {
     super(
-        GbifIdRecord.class,
+        IdentifierRecord.class,
         IDENTIFIER,
         GbifIdAbsentTransform.class.getName(),
         GBIF_ID_RECORDS_COUNT);
@@ -49,8 +49,8 @@ public class GbifIdAbsentTransform extends Transform<GbifIdRecord, GbifIdRecord>
     this.keygenServiceSupplier = keygenServiceSupplier;
   }
 
-  public PCollection<GbifIdRecord> emptyCollection(Pipeline p) {
-    return Create.empty(TypeDescriptor.of(GbifIdRecord.class)).expand(PBegin.in(p));
+  public PCollection<IdentifierRecord> emptyCollection(Pipeline p) {
+    return Create.empty(TypeDescriptor.of(IdentifierRecord.class)).expand(PBegin.in(p));
   }
 
   public GbifIdAbsentTransform counterFn(SerializableConsumer<String> counterFn) {
@@ -82,10 +82,10 @@ public class GbifIdAbsentTransform extends Transform<GbifIdRecord, GbifIdRecord>
   }
 
   @Override
-  public Optional<GbifIdRecord> convert(GbifIdRecord source) {
+  public Optional<IdentifierRecord> convert(IdentifierRecord source) {
     return Interpretation.from(source)
-        .to(GbifIdRecord.newBuilder(source).build())
-        .when(gid -> gid.getGbifId() == null)
+        .to(IdentifierRecord.newBuilder(source).build())
+        .when(ir -> ir.getInternalId() == null)
         .via(
             GbifIdInterpreter.interpretAbsentGbifId(
                 keygenService, isTripletValid, isOccurrenceIdValid))

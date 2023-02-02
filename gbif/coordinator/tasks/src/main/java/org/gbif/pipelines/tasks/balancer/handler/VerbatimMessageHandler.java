@@ -4,19 +4,24 @@ import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepRunner;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -50,31 +55,62 @@ public class VerbatimMessageHandler {
       m.setAttempt(attempt);
     }
 
-    long recordsNumber = getRecordNumber(config, m);
-    String runner = computeRunner(config, m, recordsNumber).name();
+    // case of sampling event dataset without occurrences. We only run the events pipelines
+    if (config.eventsEnabled
+        && m.getDatasetType() == DatasetType.SAMPLING_EVENT
+        && (m.getValidationResult().getNumberOfRecords() == null
+            || m.getValidationResult().getNumberOfRecords() == 0)
+        && m.getValidationResult().getNumberOfEventRecords() != null
+        && m.getValidationResult().getNumberOfEventRecords() > 0) {
+      Set<String> interpretationTypes = new HashSet<>(m.getInterpretTypes());
+      interpretationTypes.add(RecordType.EVENT.name());
+      interpretationTypes.remove(RecordType.OCCURRENCE.name());
 
-    ValidationResult result = m.getValidationResult();
-    if (result.getNumberOfRecords() == null) {
-      result.setNumberOfRecords(recordsNumber);
+      PipelinesEventsMessage eventsMessage =
+          new PipelinesEventsMessage(
+              m.getDatasetUuid(),
+              m.getAttempt(),
+              m.getPipelineSteps(),
+              m.getValidationResult().getNumberOfEventRecords(),
+              m.getValidationResult().getNumberOfRecords(),
+              StepRunner.DISTRIBUTED.name(),
+              false,
+              m.getResetPrefix(),
+              null,
+              m.getExecutionId(),
+              m.getEndpointType(),
+              m.getValidationResult(),
+              interpretationTypes,
+              DatasetType.SAMPLING_EVENT);
+
+      publisher.send(eventsMessage);
+      log.info("The events message has been sent - {}", eventsMessage);
+    } else {
+      long recordsNumber = getRecordNumber(config, m);
+      String runner = computeRunner(config, m, recordsNumber).name();
+
+      ValidationResult result = m.getValidationResult();
+      if (result.getNumberOfRecords() == null) {
+        result.setNumberOfRecords(recordsNumber);
+      }
+
+      PipelinesVerbatimMessage outputMessage =
+          new PipelinesVerbatimMessage(
+              m.getDatasetUuid(),
+              m.getAttempt(),
+              m.getInterpretTypes(),
+              m.getPipelineSteps(),
+              runner,
+              m.getEndpointType(),
+              m.getExtraPath(),
+              result,
+              m.getResetPrefix(),
+              m.getExecutionId(),
+              m.getDatasetType());
+
+      publisher.send(outputMessage);
+      log.info("The message has been sent - {}", outputMessage);
     }
-
-    PipelinesVerbatimMessage outputMessage =
-        new PipelinesVerbatimMessage(
-            m.getDatasetUuid(),
-            m.getAttempt(),
-            m.getInterpretTypes(),
-            m.getPipelineSteps(),
-            runner,
-            m.getEndpointType(),
-            m.getExtraPath(),
-            result,
-            m.getResetPrefix(),
-            m.getExecutionId(),
-            m.getDatasetType());
-
-    publisher.send(outputMessage);
-
-    log.info("The message has been sent - {}", outputMessage);
   }
 
   /**
@@ -92,10 +128,15 @@ public class VerbatimMessageHandler {
 
     // Strategy 1: Chooses a runner type by number of records in a dataset
     if (recordsNumber > 0) {
-      runner =
-          recordsNumber >= config.switchRecordsNumber
-              ? StepRunner.DISTRIBUTED
-              : StepRunner.STANDALONE;
+
+      int switchRecord = config.switchRecordsNumber;
+      if (isValidator(message.getPipelineSteps())) {
+        log.info(
+            "Use validatorSwitchRecordsNumber settings, becuase message contains validtor pipeline steps");
+        switchRecord = config.validatorSwitchRecordsNumber;
+      }
+
+      runner = recordsNumber >= switchRecord ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
       log.info("Records number - {}, Spark Runner type - {}", recordsNumber, runner);
       return runner;
     }

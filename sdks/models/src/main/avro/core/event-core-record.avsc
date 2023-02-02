@@ -1,21 +1,34 @@
-{
-  "name": "EventCoreRecord",
-  "namespace": "org.gbif.pipelines.io.avro",
-  "type": "record",
-  "doc": "Interpreted values at the event core record level",
-  "fields": [
-    {"name": "id", "type": "string", "doc": "Pipelines identifier"},
-    {"name": "parentEventIds","type": {"type":"array","items":"string"},"default": [],"doc":"http://rs.tdwg.org/dwc/terms/parentEventID hierarchy"},
-    {"name": "parentEventID", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/parentEventID"},
-    {"name": "eventType", "type": ["null", "VocabularyConcept"], "default" : null, "doc": ""},
-    {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
-    {"name": "sampleSizeValue", "type": ["null", "double"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sampleSizeValue"},
-    {"name": "sampleSizeUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sampleSizeUnit"},
-    {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"},
-    {"name": "license", "type":["null","string"], "default":null, "doc": "http://purl.org/dc/terms/license"},
-    {"name": "datasetID", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/datasetID"},
-    {"name": "datasetName", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/datasetName"},
-    {"name": "samplingProtocol", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/samplingProtocol"},
-    {"name": "issues", "type": "IssueRecord", "default":{}}
-  ]
-}
+[
+ {
+    "name" : "Parent",
+    "namespace" : "org.gbif.pipelines.io.avro",
+    "type" : "record",
+    "fields" : [
+      {"name": "id", "type": ["null", "string"], "default" : null, "doc":""},
+      {"name": "eventType", "type": ["null", "string"], "default" : null, "doc": ""},
+      {"name": "order", "type": ["null", "int"], "default" : null, "doc": "Order starting from the event to the top parent"}
+    ]
+  },
+  {
+    "name": "EventCoreRecord",
+    "namespace": "org.gbif.pipelines.io.avro",
+    "type": "record",
+    "doc": "Interpreted values at the event core record level",
+    "fields": [
+      {"name": "id", "type": "string", "doc": "Pipelines identifier"},
+      {"name": "parentEventID", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/parentEventID"},
+      {"name": "eventType", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.gbif.org/terms/1.0/eventType"},
+      {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
+      {"name": "sampleSizeValue", "type": ["null", "double"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sampleSizeValue"},
+      {"name": "sampleSizeUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sampleSizeUnit"},
+      {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"},
+      {"name": "license", "type":["null","string"], "default":null, "doc": "http://purl.org/dc/terms/license"},
+      {"name": "datasetID", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/datasetID"},
+      {"name": "datasetName", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/datasetName"},
+      {"name": "samplingProtocol", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/samplingProtocol"},
+      {"name": "parentsLineage", "type": {"type" : "array", "items" : "Parent"}, "default" : [], "doc":""},
+      {"name": "locationID", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/locationID"},
+      {"name": "issues", "type": "IssueRecord", "default":{}}
+    ]
+  }
+]

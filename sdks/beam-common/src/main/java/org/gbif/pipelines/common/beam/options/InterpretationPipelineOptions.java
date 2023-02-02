@@ -11,6 +11,7 @@ import org.apache.beam.sdk.options.DefaultValueFactory;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.pipelines.common.PipelinesVariables;
 
 /**
  * Pipeline options (configuration) for GBIF based data interpretation pipelines. Optionally can use
@@ -58,12 +59,6 @@ public interface InterpretationPipelineOptions
 
   void setCoreSiteConfig(String path);
 
-  @Description("Type of the endpoint being crawled")
-  @Default.String("DWC_ARCHIVE")
-  String getEndPointType();
-
-  void setEndPointType(String id);
-
   @Description("DWCA validation from crawler, all triplets are unique")
   @Default.Boolean(true)
   boolean isTripletValid();
@@ -102,6 +97,12 @@ public interface InterpretationPipelineOptions
   List<DateComponentOrdering> getDefaultDateFormat();
 
   void setDefaultDateFormat(List<DateComponentOrdering> defaultDateFormat);
+
+  @Description("Core record type to be interpreted")
+  @Default.Enum("OCCURRENCE")
+  PipelinesVariables.Pipeline.Interpretation.RecordType getCoreRecordType();
+
+  void setCoreRecordType(PipelinesVariables.Pipeline.Interpretation.RecordType recordType);
 
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class TempDirectoryFactory implements DefaultValueFactory<String> {

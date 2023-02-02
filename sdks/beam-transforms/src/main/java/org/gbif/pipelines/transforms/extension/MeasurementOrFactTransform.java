@@ -80,7 +80,8 @@ public class MeasurementOrFactTransform extends Transform<ExtendedRecord, Measur
       }
     }
 
-    if (!hasExtension(record, Extension.MEASUREMENT_OR_FACT)) {
+    if (!hasExtension(record, Extension.MEASUREMENT_OR_FACT)
+        && !hasExtension(record, Extension.EXTENDED_MEASUREMENT_OR_FACT)) {
       return Optional.empty();
     }
 

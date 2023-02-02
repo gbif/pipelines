@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.table;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.NonNull;
@@ -13,14 +14,17 @@ import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
-import org.apache.beam.sdk.transforms.SerializableBiFunction;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
+import org.gbif.pipelines.core.functions.SerializableFunction;
+import org.gbif.pipelines.core.pojo.ErIdrMdrContainer;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 
 @SuppressWarnings("ConstantConditions")
@@ -33,12 +37,13 @@ public abstract class TableTransform<T extends SpecificRecordBase>
 
   @NonNull private final Class<T> clazz;
 
-  @NonNull
-  private final SerializableBiFunction<GbifIdRecord, ExtendedRecord, Optional<T>> convertFn;
+  @NonNull private final SerializableFunction<ErIdrMdrContainer, List<T>> convertFn;
 
   @NonNull private TupleTag<ExtendedRecord> extendedRecordTag;
 
-  @NonNull private TupleTag<GbifIdRecord> gbifIdRecordTag;
+  @NonNull private TupleTag<IdentifierRecord> identifierRecordTag;
+
+  @NonNull private PCollectionView<MetadataRecord> metadataView;
 
   @NonNull private String path;
 
@@ -53,7 +58,7 @@ public abstract class TableTransform<T extends SpecificRecordBase>
       InterpretationType recordType,
       String counterNamespace,
       String counterName,
-      SerializableBiFunction<GbifIdRecord, ExtendedRecord, Optional<T>> convertFn) {
+      SerializableFunction<ErIdrMdrContainer, List<T>> convertFn) {
     this.clazz = clazz;
     this.recordType = recordType;
     this.counter = Metrics.counter(counterNamespace, counterName);
@@ -65,8 +70,13 @@ public abstract class TableTransform<T extends SpecificRecordBase>
     return this;
   }
 
-  public TableTransform<T> setGbifIdRecordTag(TupleTag<GbifIdRecord> gbifIdRecordTag) {
-    this.gbifIdRecordTag = gbifIdRecordTag;
+  public TableTransform<T> setIdentifierRecordTag(TupleTag<IdentifierRecord> identifierRecordTag) {
+    this.identifierRecordTag = identifierRecordTag;
+    return this;
+  }
+
+  public TableTransform<T> setMetadataRecord(PCollectionView<MetadataRecord> metadataView) {
+    this.metadataView = metadataView;
     return this;
   }
 
@@ -113,7 +123,7 @@ public abstract class TableTransform<T extends SpecificRecordBase>
   }
 
   public SingleOutput<KV<String, CoGbkResult>, T> convert() {
-    return ParDo.of(this);
+    return ParDo.of(this).withSideInputs(metadataView);
   }
 
   @ProcessElement
@@ -122,11 +132,13 @@ public abstract class TableTransform<T extends SpecificRecordBase>
     String k = c.element().getKey();
 
     ExtendedRecord er = v.getOnly(extendedRecordTag, ExtendedRecord.newBuilder().setId(k).build());
-    GbifIdRecord id = v.getOnly(gbifIdRecordTag, GbifIdRecord.newBuilder().setId(k).build());
+    MetadataRecord mdr = c.sideInput(metadataView);
+    IdentifierRecord id =
+        v.getOnly(identifierRecordTag, IdentifierRecord.newBuilder().setId(k).build());
 
     convertFn
-        .apply(id, er)
-        .ifPresent(
+        .apply(ErIdrMdrContainer.create(er, id, mdr))
+        .forEach(
             r -> {
               c.output(r);
               counter.inc();

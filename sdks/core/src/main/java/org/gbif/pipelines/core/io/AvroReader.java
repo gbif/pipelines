@@ -30,10 +30,22 @@ public class AvroReader {
    *     multiple files
    */
   public static <T extends Record> Map<String, T> readUniqueRecords(
-      HdfsConfigs hdfsConfigs, Class<T> clazz, String path) {
+      HdfsConfigs hdfsConfigs, Class<T> clazz, String path, Runnable metrics) {
     FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, path);
     List<Path> paths = parseWildcardPath(fs, path);
-    return readUniqueRecords(fs, clazz, paths);
+    return readUniqueRecords(fs, clazz, paths, metrics);
+  }
+
+  /**
+   * Read {@link Record#getId()} unique records
+   *
+   * @param clazz instance of {@link Record}
+   * @param path sting path, a wildcard can be used in the file name, like /a/b/c*.avro to read
+   *     multiple files
+   */
+  public static <T extends Record> Map<String, T> readUniqueRecords(
+      HdfsConfigs hdfsConfigs, Class<T> clazz, String path) {
+    return readUniqueRecords(hdfsConfigs, clazz, path, null);
   }
 
   /**
@@ -72,7 +84,7 @@ public class AvroReader {
    */
   @SneakyThrows
   private static <T extends Record> Map<String, T> readUniqueRecords(
-      FileSystem fs, Class<T> clazz, List<Path> paths) {
+      FileSystem fs, Class<T> clazz, List<Path> paths, Runnable metrics) {
 
     Map<String, T> map = new HashMap<>();
     Set<String> duplicateSet = new HashSet<>();
@@ -93,6 +105,9 @@ public class AvroReader {
             map.remove(next.getId());
             duplicateSet.add(next.getId());
             log.warn("occurrenceId = {}, duplicates were found", saved.getId());
+
+            // Increase metrics for duplicates
+            Optional.ofNullable(metrics).ifPresent(Runnable::run);
           }
         }
       }
@@ -162,16 +177,7 @@ public class AvroReader {
   private static List<Path> parseWildcardPath(FileSystem fs, String path) {
     if (path.contains("*")) {
       Path pp = new Path(path).getParent();
-      RemoteIterator<LocatedFileStatus> files = fs.listFiles(pp, false);
-      List<Path> paths = new ArrayList<>();
-      while (files.hasNext()) {
-        LocatedFileStatus next = files.next();
-        Path np = next.getPath();
-        if (next.isFile() && np.getName().endsWith(AVRO_EXTENSION)) {
-          paths.add(np);
-        }
-      }
-      return paths;
+      return FsUtils.getFilesByExt(fs, pp, AVRO_EXTENSION);
     }
     return Collections.singletonList(new Path(path));
   }

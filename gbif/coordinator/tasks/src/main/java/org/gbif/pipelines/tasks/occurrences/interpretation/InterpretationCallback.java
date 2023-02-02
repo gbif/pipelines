@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -38,12 +38,13 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToOccurrencePipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesVerbatimMessage} is received. */
 @Slf4j
-@AllArgsConstructor
+@Builder
 public class InterpretationCallback extends AbstractMessageCallback<PipelinesVerbatimMessage>
     implements StepHandler<PipelinesVerbatimMessage, PipelinesInterpretedMessage> {
 
@@ -52,6 +53,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
   private final ValidationWsClient validationClient;
+  private final DatasetClient datasetClient;
   private final CloseableHttpClient httpClient;
   private final ExecutorService executor;
 
@@ -61,6 +63,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
     PipelinesCallback.<PipelinesVerbatimMessage, PipelinesInterpretedMessage>builder()
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .validationClient(validationClient)
         .config(config)
         .curator(curator)
@@ -71,6 +74,26 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         .handler(this)
         .build()
         .handleMessage();
+  }
+
+  @Override
+  public String getRouting() {
+    PipelinesVerbatimMessage vm = new PipelinesVerbatimMessage();
+
+    String routingKey;
+    if (config.validatorOnly) {
+      vm.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name()));
+      if (config.validatorListenAllMq) {
+        routingKey = vm.getRoutingKey() + ".*";
+      } else {
+        routingKey = vm.setRunner(config.processRunner).getRoutingKey();
+      }
+    } else {
+      routingKey = vm.setRunner(config.processRunner).getRoutingKey();
+    }
+
+    log.info("MQ rounting key is {}", routingKey);
+    return routingKey;
   }
 
   /**

@@ -13,47 +13,49 @@ public class CoordinateParseUtilsTest {
   @Test
   public void testParseLatLng() {
     assertExpected(
-        CoordinateParseUtils.parseLatLng("-46,33", "51,8717"), new LatLng(-46.33, 51.8717));
-    assertExpected(CoordinateParseUtils.parseLatLng("10.3", "99.99"), new LatLng(10.3, 99.99));
-    assertExpected(CoordinateParseUtils.parseLatLng("10", "10"), new LatLng(10d, 10d));
-    assertExpected(CoordinateParseUtils.parseLatLng("90", "180"), new LatLng(90d, 180d));
-    assertExpected(CoordinateParseUtils.parseLatLng("-90", "180"), new LatLng(-90d, 180d));
-    assertExpected(CoordinateParseUtils.parseLatLng("90", "-180"), new LatLng(90d, -180d));
-    assertExpected(CoordinateParseUtils.parseLatLng("-90", "-180"), new LatLng(-90d, -180d));
-    assertExpected(CoordinateParseUtils.parseLatLng("0", "0"), new LatLng(0d, 0d), ZERO_COORDINATE);
+        CoordinateParseUtils.parseLatLng("-46,33", "51,8717"), LatLng.create(-46.33, 51.8717));
+    assertExpected(CoordinateParseUtils.parseLatLng("10.3", "99.99"), LatLng.create(10.3, 99.99));
+    assertExpected(CoordinateParseUtils.parseLatLng("10", "10"), LatLng.create(10d, 10d));
+    assertExpected(CoordinateParseUtils.parseLatLng("90", "180"), LatLng.create(90d, 180d));
+    assertExpected(CoordinateParseUtils.parseLatLng("-90", "180"), LatLng.create(-90d, 180d));
+    assertExpected(CoordinateParseUtils.parseLatLng("90", "-180"), LatLng.create(90d, -180d));
+    assertExpected(CoordinateParseUtils.parseLatLng("-90", "-180"), LatLng.create(-90d, -180d));
+    assertExpected(
+        CoordinateParseUtils.parseLatLng("0", "0"), LatLng.create(0d, 0d), ZERO_COORDINATE);
 
     // rounding
     assertExpected(
         CoordinateParseUtils.parseLatLng("2.123450678", "-8.123450678"),
-        new LatLng(2.123451, -8.123451),
+        LatLng.create(2.123451, -8.123451),
         COORDINATE_ROUNDED);
     assertExpected(
         CoordinateParseUtils.parseLatLng("2.123451", "-8.123450678"),
-        new LatLng(2.123451, -8.123451),
+        LatLng.create(2.123451, -8.123451),
         COORDINATE_ROUNDED);
     assertExpected(
-        CoordinateParseUtils.parseLatLng("2.123451", "-8.123451"), new LatLng(2.123451, -8.123451));
+        CoordinateParseUtils.parseLatLng("2.123451", "-8.123451"),
+        LatLng.create(2.123451, -8.123451));
     assertExpected(
         CoordinateParseUtils.parseLatLng("2.12345100", "-8.1234510"),
-        new LatLng(2.123451, -8.123451));
+        LatLng.create(2.123451, -8.123451));
     assertExpected(
         CoordinateParseUtils.parseLatLng("2.123", "-8.1234506"),
-        new LatLng(2.123, -8.123451),
+        LatLng.create(2.123, -8.123451),
         COORDINATE_ROUNDED);
 
     // degree minutes seconds
     assertExpected(
         CoordinateParseUtils.parseLatLng("02° 49' 52\" N", "131° 47' 03\" E"),
-        new LatLng(2.831111d, 131.784167d));
+        LatLng.create(2.831111d, 131.784167d));
 
     // check swapped coordinates
     assertExpected(
         CoordinateParseUtils.parseLatLng("100", "40"),
-        new LatLng(40d, 100d),
+        LatLng.create(40d, 100d),
         PRESUMED_SWAPPED_COORDINATE);
     assertExpected(
         CoordinateParseUtils.parseLatLng("-100", "90"),
-        new LatLng(90d, -100d),
+        LatLng.create(90d, -100d),
         PRESUMED_SWAPPED_COORDINATE);
 
     // check errors
@@ -148,43 +150,43 @@ public class CoordinateParseUtilsTest {
   public void testParseVerbatimCoordinates() {
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("02° 49' 52\" N 131° 47' 03\" E"),
-        new LatLng(2.831111d, 131.784167d));
+        LatLng.create(2.831111d, 131.784167d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("02° 49' 52\" N, 131° 47' 03\" E"),
-        new LatLng(2.831111d, 131.784167d));
+        LatLng.create(2.831111d, 131.784167d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("02°49'52\"N; 131°47'03\"O"),
-        new LatLng(2.831111d, 131.784167d));
+        LatLng.create(2.831111d, 131.784167d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("17d 33m 5s N/99d 30m 3s W"),
-        new LatLng(17.551389d, -99.500833d));
+        LatLng.create(17.551389d, -99.500833d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("14.93333/-91.9"),
-        new LatLng(14.93333d, -91.9d));
+        LatLng.create(14.93333d, -91.9d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("63d 41m 39s N 170d 28m 44s W"),
-        new LatLng(63.694167d, -170.478889d));
+        LatLng.create(63.694167d, -170.478889d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("37° 28' N, 122° 6' W"),
-        new LatLng(37.466667d, -122.1d));
+        LatLng.create(37.466667d, -122.1d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("2°49'52\"N, 131°47'03\""),
-        new LatLng(2.831111d, 131.784167d));
+        LatLng.create(2.831111d, 131.784167d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("10°07'06\"N 20°48'23\"W"),
-        new LatLng(10.118333, -20.806389));
+        LatLng.create(10.118333, -20.806389));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("10º07'06\"N 20º48'23\"W"),
-        new LatLng(10.118333, -20.806389));
+        LatLng.create(10.118333, -20.806389));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("10°07'N 20°48'W"),
-        new LatLng(10.116667, -20.8));
+        LatLng.create(10.116667, -20.8));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("10°07.55'N 20°48.55'W"),
-        new LatLng(10.125833, -20.809167));
+        LatLng.create(10.125833, -20.809167));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("100º23'05\"N 20º35'25\"W"),
-        new LatLng(-20.590278, 100.384722),
+        LatLng.create(-20.590278, 100.384722),
         PRESUMED_SWAPPED_COORDINATE);
 
     // failed

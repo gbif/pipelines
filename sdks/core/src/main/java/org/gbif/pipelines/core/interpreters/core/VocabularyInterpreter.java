@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -82,11 +82,16 @@ public class VocabularyInterpreter {
   /** {@link DwcTerm#lifeStage} interpretation. */
   private static Optional<VocabularyConcept> interpretVocabulary(
       ExtendedRecord er, Term term, VocabularyService vocabularyService) {
+    return interpretVocabulary(term, extractNullAwareValue(er, term), vocabularyService);
+  }
+
+  static Optional<VocabularyConcept> interpretVocabulary(
+      Term term, String value, VocabularyService vocabularyService) {
 
     if (vocabularyService != null) {
       return vocabularyService
           .get(term)
-          .flatMap(lookup -> extractNullAwareOptValue(er, term).flatMap(lookup::lookup))
+          .flatMap(lookup -> Optional.ofNullable(value).flatMap(lookup::lookup))
           .map(VocabularyInterpreter::getConcept);
     }
     return Optional.empty();

@@ -81,7 +81,7 @@ public class CombinedYamlConfigurationTest {
     Map<String, Object> argsInMap = argsToMap(args);
     assertThat(argsInMap.get("name"), equalTo("interpret dr893"));
     assertThat(argsInMap.get("appName"), equalTo("Interpretation for dr893"));
-    assertThat(argsInMap.get("inputPath"), equalTo("/data/pipelines-data/dr893/1/verbatim.avro"));
+    assertThat(argsInMap.get("inputPath"), equalTo("/data/pipelines-data/dr893/1/verbatim/*.avro"));
     assertThat(argsInMap.get("fsPath"), is(nullValue()));
   }
 
@@ -114,9 +114,9 @@ public class CombinedYamlConfigurationTest {
 
   @Test
   public void dotVars() {
-    assertThat(testConf.get("index").getClass(), equalTo(LinkedHashMap.class));
-    assertThat(testConf.get("index.includeSampling"), equalTo(true));
-    assertThat(testConf.get("index.solrCollection"), equalTo("biocache"));
+    assertThat(testConf.get("solr").getClass(), equalTo(LinkedHashMap.class));
+    assertThat(testConf.get("solr.includeSampling"), equalTo(true));
+    assertThat(testConf.get("solr.solrCollection"), equalTo("biocache"));
   }
 
   @Test

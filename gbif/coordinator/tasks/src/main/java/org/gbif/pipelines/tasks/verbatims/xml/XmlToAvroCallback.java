@@ -1,18 +1,21 @@
 package org.gbif.pipelines.tasks.verbatims.xml;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllInterpretationAsString;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllValidatorInterpretationAsString;
 import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
 import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
 
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
@@ -35,12 +38,13 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Call back which is called when the {@link PipelinesXmlMessage} is received. */
 @Slf4j
-@AllArgsConstructor
+@Builder
 public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessage>
     implements StepHandler<PipelinesXmlMessage, PipelinesVerbatimMessage> {
 
@@ -51,6 +55,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
   private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
   private final ValidationWsClient validationClient;
+  private final DatasetClient datasetClient;
   private final ExecutorService executor;
   private final HttpClient httpClient;
 
@@ -63,6 +68,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
 
     PipelinesCallback.<PipelinesXmlMessage, PipelinesVerbatimMessage>builder()
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .validationClient(validationClient)
         .config(config)
         .curator(curator)
@@ -73,6 +79,15 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         .handler(this)
         .build()
         .handleMessage();
+  }
+
+  @Override
+  public String getRouting() {
+    PipelinesXmlMessage message = new PipelinesXmlMessage();
+    if (config.validatorOnly) {
+      message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_XML_TO_VERBATIM.name()));
+    }
+    return message.getRoutingKey();
   }
 
   public Runnable createRunnable(
@@ -149,10 +164,15 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
                   StepType.FRAGMENTER.name())));
     }
 
+    Set<String> allInterpretationAsString =
+        isValidator(message.getPipelineSteps(), config.validatorOnly)
+            ? getAllValidatorInterpretationAsString()
+            : getAllInterpretationAsString();
+
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
-        getAllInterpretationAsString(),
+        allInterpretationAsString,
         message.getPipelineSteps(),
         null,
         message.getEndpointType(),
@@ -185,7 +205,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     if (expectedRecords == SKIP_RECORDS_CHECK || httpClient == null) {
       return;
     }
-    int currentSize = GbifApi.getIndexSize(httpClient, config.stepConfig.registry, datasetId);
+    long currentSize = GbifApi.getIndexSize(httpClient, config.stepConfig.registry, datasetId);
     String metaFileName = new DwcaToAvroConfiguration().metaFileName;
     String metaPath =
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);

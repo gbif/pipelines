@@ -1,11 +1,9 @@
 package org.gbif.pipelines.tasks.occurrences.indexing;
 
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -14,10 +12,6 @@ import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.RetryOneTime;
-import org.apache.curator.test.TestingServer;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -26,87 +20,62 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
-import org.gbif.pipelines.common.utils.ZookeeperUtils;
-import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
-import org.gbif.pipelines.tasks.utils.EsServer;
-import org.gbif.pipelines.tasks.utils.ZkServer;
+import org.gbif.pipelines.tasks.resources.CuratorServer;
+import org.gbif.pipelines.tasks.resources.EsServer;
+import org.gbif.pipelines.tasks.resources.ZkServer;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class IndexingCallbackIT {
 
+  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
+  @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
+  @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
   private static final String LABEL = StepType.INTERPRETED_TO_INDEX.getLabel();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final long EXECUTION_ID = 1L;
-  private static CuratorFramework curator;
-  private static TestingServer server;
-  private static MessagePublisherStub publisher;
-  private static PipelinesHistoryClient historyClient;
-  private static ValidationWsClient validationClient;
-  private static CloseableHttpClient httpClient;
-
-  @ClassRule public static final EsServer ES_SERVER = new EsServer();
-
-  @ClassRule public static final ZkServer ZK_SERVER = new ZkServer();
-
-  @Before
-  public void cleanIndexes() {
-    EsService.deleteAllIndexes(ES_SERVER.getEsClient());
-  }
-
-  @BeforeClass
-  public static void setUp() throws Exception {
-
-    server = new TestingServer();
-    curator =
-        CuratorFrameworkFactory.builder()
-            .connectString(server.getConnectString())
-            .namespace("crawler")
-            .retryPolicy(new RetryOneTime(1))
-            .build();
-    curator.start();
-
-    publisher = MessagePublisherStub.create();
-
-    historyClient = Mockito.mock(PipelinesHistoryClient.class);
-    validationClient = Mockito.mock(ValidationWsClient.class);
-    httpClient =
-        HttpClients.custom()
-            .setDefaultRequestConfig(
-                RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
-            .build();
-  }
-
-  @AfterClass
-  public static void tearDown() throws IOException {
-    curator.close();
-    server.stop();
-    publisher.close();
-  }
+  private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
+  @Mock private static PipelinesHistoryClient historyClient;
+  @Mock private static ValidationWsClient validationClient;
+  @Mock private static DatasetClient datasetClient;
+  private static final CloseableHttpClient HTTP_CLIENT =
+      HttpClients.custom()
+          .setDefaultRequestConfig(
+              RequestConfig.custom().setConnectTimeout(10_000).setSocketTimeout(10_000).build())
+          .build();
 
   @After
   public void after() {
-    publisher.close();
+    PUBLISHER.close();
   }
 
   @Test
-  public void testNormalCase() throws Exception {
+  public void testNormalCase() {
     // State
     IndexingConfiguration config = createConfig();
 
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(
-            config, publisher, curator, httpClient, historyClient, validationClient, executor);
+        IndexingCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .httpClient(HTTP_CLIENT)
+            .executor(executor)
+            .datasetClient(datasetClient)
+            .build();
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -128,14 +97,14 @@ public class IndexingCallbackIT {
                 + "/"
                 + config.metaFileName);
     assertTrue(path.toFile().exists());
-    assertTrue(checkExists(curator, crawlId, LABEL));
-    assertTrue(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertEquals(1, publisher.getMessages().size());
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, LABEL));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertEquals(1, PUBLISHER.getMessages().size());
 
     // Clean
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, LABEL));
+    CURATOR_SERVER.deletePath(crawlId, LABEL);
   }
 
   @Test
@@ -145,8 +114,16 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(
-            config, publisher, curator, httpClient, historyClient, validationClient, executor);
+        IndexingCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .httpClient(HTTP_CLIENT)
+            .executor(executor)
+            .datasetClient(datasetClient)
+            .build();
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -170,15 +147,15 @@ public class IndexingCallbackIT {
                 + config.metaFileName);
 
     assertTrue(path.toFile().exists());
-    assertFalse(checkExists(curator, crawlId, LABEL));
-    assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertEquals(1, publisher.getMessages().size());
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, LABEL));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertEquals(1, PUBLISHER.getMessages().size());
   }
 
   @Test
-  public void testFailedCase() throws Exception {
+  public void testFailedCase() {
     // State
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 59; // Wrong attempt
@@ -187,8 +164,15 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(
-            config, publisher, curator, httpClient, historyClient, validationClient, executor);
+        IndexingCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .executor(executor)
+            .datasetClient(datasetClient)
+            .build();
 
     String crawlId = DATASET_UUID;
 
@@ -199,14 +183,14 @@ public class IndexingCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertTrue(checkExists(curator, crawlId, LABEL));
-    assertTrue(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertTrue(publisher.getMessages().isEmpty());
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, LABEL));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertTrue(PUBLISHER.getMessages().isEmpty());
 
     // Clean
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, LABEL));
+    CURATOR_SERVER.deletePath(crawlId, LABEL);
   }
 
   @Test
@@ -221,8 +205,15 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(
-            config, publisher, curator, httpClient, historyClient, validationClient, executor);
+        IndexingCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .executor(executor)
+            .datasetClient(datasetClient)
+            .build();
 
     PipelinesInterpretedMessage message = createMessage(uuid, attempt);
     message.setPipelineSteps(Collections.singleton(StepType.INTERPRETED_TO_INDEX.name()));
@@ -231,12 +222,12 @@ public class IndexingCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertFalse(checkExists(curator, DATASET_UUID, LABEL));
-    assertTrue(publisher.getMessages().isEmpty());
+    assertFalse(CURATOR_SERVER.checkExists(DATASET_UUID, LABEL));
+    assertTrue(PUBLISHER.getMessages().isEmpty());
   }
 
   @Test
-  public void testFailedDistrebutedCase() throws Exception {
+  public void testFailedDistrebutedCase() {
     // State
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
@@ -247,8 +238,15 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(
-            config, publisher, curator, httpClient, historyClient, validationClient, executor);
+        IndexingCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .executor(executor)
+            .datasetClient(datasetClient)
+            .build();
 
     String crawlId = DATASET_UUID;
 
@@ -260,14 +258,14 @@ public class IndexingCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertTrue(checkExists(curator, crawlId, LABEL));
-    assertTrue(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertTrue(publisher.getMessages().isEmpty());
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, LABEL));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertTrue(PUBLISHER.getMessages().isEmpty());
 
     // Clean
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, LABEL));
+    CURATOR_SERVER.deletePath(crawlId, LABEL);
   }
 
   @Test
@@ -280,8 +278,15 @@ public class IndexingCallbackIT {
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     IndexingCallback callback =
-        new IndexingCallback(
-            config, publisher, curator, httpClient, historyClient, validationClient, executor);
+        IndexingCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .curator(CURATOR_SERVER.getCurator())
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .executor(executor)
+            .datasetClient(datasetClient)
+            .build();
 
     PipelinesInterpretedMessage message = createMessage(uuid, attempt);
     message.setOnlyForStep(StepType.HDFS_VIEW.name()); // Wrong type
@@ -290,8 +295,8 @@ public class IndexingCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertFalse(checkExists(curator, DATASET_UUID, LABEL));
-    assertTrue(publisher.getMessages().isEmpty());
+    assertFalse(CURATOR_SERVER.checkExists(DATASET_UUID, LABEL));
+    assertTrue(PUBLISHER.getMessages().isEmpty());
   }
 
   private PipelinesInterpretedMessage createMessage(UUID uuid, int attempt) {
@@ -332,15 +337,11 @@ public class IndexingCallbackIT {
     config.stepConfig.coreSiteConfig = "";
     config.stepConfig.hdfsSiteConfig = "";
     config.pipelinesConfig = this.getClass().getClassLoader().getResource("lock.yaml").getPath();
-    config.stepConfig.zooKeeper.namespace = curator.getNamespace();
+    config.stepConfig.zooKeeper.namespace = CURATOR_SERVER.getCurator().getNamespace();
     config.stepConfig.zooKeeper.connectionString = ZK_SERVER.getZkServer().getConnectString();
 
     config.stepConfig.repositoryPath =
         this.getClass().getClassLoader().getResource("data7/ingest").getPath();
     return config;
-  }
-
-  private boolean checkExists(CuratorFramework curator, String id, String path) {
-    return ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(id, path));
   }
 }

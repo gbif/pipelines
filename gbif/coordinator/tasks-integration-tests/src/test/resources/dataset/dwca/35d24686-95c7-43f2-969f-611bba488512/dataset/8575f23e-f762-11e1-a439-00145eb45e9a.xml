@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.1/eml.xsd"
+        packageId="8575f23e-f762-11e1-a439-00145eb45e9a"  system="http://gbif.org" scope="system"
+  xml:lang="en">
+
+<dataset>
+      <alternateIdentifier>doi:10.15468/igasai</alternateIdentifier>
+        <alternateIdentifier>1099</alternateIdentifier>
+    <title>PonTaurus collection</title>
+    <associatedParty>
+    <address>
+    </address>
+<electronicMailAddress>mdoering@gbif.org</electronicMailAddress>    <role>TECHNICAL_POINT_OF_CONTACT</role>
+    </associatedParty>
+    <language>en</language>
+    <abstract>
+        <para>Plant specimens gathered in the Toroslar mountain range of southern Turkey and the Pontic mountain range in north eastern torkey in 1999. The collection mainly covers grass vegetation plots of the subalpine level. It was collected together with many more observation records for vegetational studies applying phytosociological analysis. The resulting thesis was released in the public domain and is available at &lt;a href=&quot;http://www.archive.org/details/VegetationskundlicheUntersuchungenInDerHochgebirgsregionDerBolkar&quot;&gt;http://www.archive.org/details/VegetationskundlicheUntersuchungenInDerHochgebirgsregionDerBolkar&lt;/a&gt;.  Specimens have been deposited at the Berlin Botanical Garden Herbarium (B) with duplicates send to the Istanbul herbarium and the private collection of Gerald Parolly who supervised this work.</para>
+    </abstract>
+      <intellectualRights>
+        <para>This work is licensed under a <ulink url="http://creativecommons.org/licenses/by/4.0/legalcode"><citetitle>Creative Commons Attribution (CC-BY) 4.0 License</citetitle></ulink>.</para>
+      </intellectualRights>
+      <contact>
+    <address>
+    </address>
+<electronicMailAddress>mdoering@gbif.org</electronicMailAddress>      </contact>
+
+</dataset>
+
+<additionalMetadata>
+    <metadata>
+      <gbif>
+        <dateStamp>2017-10-09T13:31:37Z</dateStamp>
+      <citation>Botanic Garden and Botanical Museum Berlin-Dahlem. PonTaurus collection. Occurrence Dataset https://doi.org/10.15468/igasai accessed via GBIF.org on 2017-10-09.</citation>
+        </gbif>
+    </metadata>
+</additionalMetadata>
+
+</eml:eml>

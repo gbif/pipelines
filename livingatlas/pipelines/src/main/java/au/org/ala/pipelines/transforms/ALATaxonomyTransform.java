@@ -2,6 +2,7 @@ package au.org.ala.pipelines.transforms;
 
 import static au.org.ala.pipelines.common.ALARecordTypes.ALA_TAXONOMY;
 
+import au.org.ala.kvs.ALANameMatchConfig;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.names.ws.api.NameSearch;
 import au.org.ala.names.ws.api.NameUsageMatch;
@@ -20,17 +21,16 @@ import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.transforms.Transform;
 
 /**
  * ALA taxonomy transform for adding ALA taxonomy to interpreted occurrence data.
  *
  * <p>Beam level transformations for the DWC Taxon, reads an avro, writes an avro, maps from value
- * to keyValue and transforms form {@link ExtendedRecord} to {@link TaxonRecord}.
+ * to keyValue and transforms form {@link ExtendedRecord} to {@link ALATaxonRecord}.
  *
- * <p>ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as
- * a source and {@link TaxonomyInterpreter} as interpretation steps
+ * <p>ParDo runs sequence of interpretations for {@link ALATaxonRecord} using {@link ExtendedRecord}
+ * as a source and {@link TaxonomyInterpreter} as interpretation steps
  *
  * @see <a href="https://dwc.tdwg.org/terms/#taxon</a>
  */
@@ -46,6 +46,7 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
   private KeyValueStore<String, ALACollectoryMetadata> dataResourceStore;
   private final SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
       dataResourceStoreSupplier;
+  private final ALANameMatchConfig alaNameMatchConfig;
 
   @Builder(buildMethodName = "create")
   private ALATaxonomyTransform(
@@ -55,8 +56,8 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
       KeyValueStore<String, Boolean> kingdomCheckStore,
       SerializableSupplier<KeyValueStore<String, Boolean>> kingdomCheckStoreSupplier,
       KeyValueStore<String, ALACollectoryMetadata> dataResourceStore,
-      SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
-          dataResourceStoreSupplier) {
+      SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>> dataResourceStoreSupplier,
+      ALANameMatchConfig alaNameMatchConfig) {
     super(
         ALATaxonRecord.class,
         ALA_TAXONOMY,
@@ -69,10 +70,11 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
     this.kingdomCheckStoreSupplier = kingdomCheckStoreSupplier;
     this.dataResourceStore = dataResourceStore;
     this.dataResourceStoreSupplier = dataResourceStoreSupplier;
+    this.alaNameMatchConfig = alaNameMatchConfig;
   }
 
-  /** Maps {@link ALATaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
-  public MapElements<ALATaxonRecord, KV<String, ALATaxonRecord>> toKv() {
+  /** Maps {@link ALATaxonRecord} to key value, where key is {@link ALATaxonRecord#getId} */
+  public MapElements<ALATaxonRecord, KV<String, ALATaxonRecord>> toCoreIdKv() {
     return MapElements.into(new TypeDescriptor<KV<String, ALATaxonRecord>>() {})
         .via((ALATaxonRecord tr) -> KV.of(tr.getId(), tr));
   }
@@ -107,35 +109,7 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
 
   /** Beam @Teardown closes initialized resources */
   @Teardown
-  public void tearDown() {
-    // This section if uncommented cause CacheClosedExceptions
-    // to be thrown by the ALADefaultValuesTransform due to its use
-    // of the dataResourceStore
-
-    //    if (Objects.nonNull(this.dataResourceStore)) {
-    //      try {
-    //        log.info("Close NameUsageMatchKvStore");
-    //        this.dataResourceStore.close();
-    //      } catch (IOException ex) {
-    //        log.error("Error closing KV Store", ex);
-    //      }
-    //    }
-    //    if (Objects.nonNull(this.kingdomMatchStore)) {
-    //      try {
-    //        log.info("Close NameCheckKvStore");
-    //        this.kingdomCheckStore.close();
-    //      } catch (IOException ex) {
-    //        log.error("Error closing KV Store", ex);
-    //      }
-    //    if (Objects.nonNull(this.nameMatchStore)) {
-    //      try {
-    //        log.info("Close NameUsageMatchKvStore");
-    //        this.nameMatchStore.close();
-    //      } catch (IOException ex) {
-    //        log.error("Error closing KV Store", ex);
-    //      }
-    //    }
-  }
+  public void tearDown() {}
 
   @Override
   public Optional<ALATaxonRecord> convert(ExtendedRecord source) {
@@ -144,12 +118,15 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
     BiConsumer<ExtendedRecord, ALATaxonRecord> sourceCheck =
         ALATaxonomyInterpreter.alaSourceQualityChecks(dataResource, kingdomCheckStore);
     BiConsumer<ExtendedRecord, ALATaxonRecord> interpret =
-        ALATaxonomyInterpreter.alaTaxonomyInterpreter(dataResource, nameMatchStore);
+        ALATaxonomyInterpreter.alaTaxonomyInterpreter(
+            dataResource, nameMatchStore, alaNameMatchConfig.getMatchOnTaxonID());
     BiConsumer<ExtendedRecord, ALATaxonRecord> resultCheck =
         ALATaxonomyInterpreter.alaResultQualityChecks(dataResource);
     Interpretation.from(source)
         .to(tr)
         .when(er -> !er.getCoreTerms().isEmpty())
+        .via(ALATaxonomyInterpreter::setCoreId)
+        .via(ALATaxonomyInterpreter::setParentEventId)
         .via(sourceCheck.andThen(interpret).andThen(resultCheck));
 
     // the id is null when there is an error in the interpretation. In these

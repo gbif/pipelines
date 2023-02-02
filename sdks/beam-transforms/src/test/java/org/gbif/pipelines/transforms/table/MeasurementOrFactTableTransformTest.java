@@ -8,14 +8,17 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
@@ -36,21 +39,27 @@ public class MeasurementOrFactTableTransformTest {
 
     // State
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
-    GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(777L).build();
+    IdentifierRecord id = IdentifierRecord.newBuilder().setId("777").setInternalId("777").build();
+    MetadataRecord mdr = MetadataRecord.newBuilder().setId("777").setDatasetKey("777").build();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
+
+    PCollectionView<MetadataRecord> metadataView =
+        p.apply("Create test metadata", Create.of(mdr))
+            .apply("Convert into view", View.asSingleton());
 
     MeasurementOrFactTableTransform transform =
         MeasurementOrFactTableTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
-            .gbifIdRecordTag(gbifIdTransform.getTag())
+            .identifierRecordTag(gbifIdTransform.getTag())
+            .metadataView(metadataView)
             .build();
 
     // When
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Create er", Create.of(er)).apply("KV er", verbatimTransform.toKv());
 
-    PCollection<KV<String, GbifIdRecord>> basicCollection =
+    PCollection<KV<String, IdentifierRecord>> basicCollection =
         p.apply("Create id", Create.of(id)).apply("KV id", gbifIdTransform.toKv());
 
     PCollection<MeasurementOrFactTable> result =
@@ -86,21 +95,29 @@ public class MeasurementOrFactTableTransformTest {
     ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").setExtensions(ext).build();
-    GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(777L).build();
+    IdentifierRecord id = IdentifierRecord.newBuilder().setId("777").setInternalId("777").build();
+    MetadataRecord mdr =
+        MetadataRecord.newBuilder().setId("777").setDatasetKey("dataset_key").build();
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
+
+    PCollectionView<MetadataRecord> metadataView =
+        p.apply("Create test metadata", Create.of(mdr))
+            .apply("Convert into view", View.asSingleton());
+
     MeasurementOrFactTableTransform transform =
         MeasurementOrFactTableTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
-            .gbifIdRecordTag(gbifIdTransform.getTag())
+            .identifierRecordTag(gbifIdTransform.getTag())
+            .metadataView(metadataView)
             .build();
 
     // When
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Create er", Create.of(er)).apply("KV er", verbatimTransform.toKv());
 
-    PCollection<KV<String, GbifIdRecord>> basicCollection =
+    PCollection<KV<String, IdentifierRecord>> basicCollection =
         p.apply("Create id", Create.of(id)).apply("KV id", gbifIdTransform.toKv());
 
     PCollection<MeasurementOrFactTable> result =
@@ -115,7 +132,8 @@ public class MeasurementOrFactTableTransformTest {
     // Should
     MeasurementOrFactTable expected =
         MeasurementOrFactTable.newBuilder()
-            .setGbifid(777L)
+            .setGbifid("777")
+            .setDatasetkey("dataset_key")
             .setVMeasurementid("Id1")
             .setVMeasurementtype("Type1")
             .setVMeasurementvalue("1.5")

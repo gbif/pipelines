@@ -7,7 +7,7 @@
     "doc":"A container for an extended DwC record (core plus extension data for a single record)",
     "fields":[
       {"name":"core","doc":"The core record terms","default":{},"type":{"type":"map","values":"string"}},
-      {"name": "parentCoreId", "type":  [ "null", "string" ],  "default" : null, "doc":"Core id if this record is produced from an extension"},
+      {"name": "coreId", "type":  [ "null", "string" ],  "default" : null, "doc":"Core id if this record is produced from an extension"},
       {"name":"extensions","doc":"The extensions records","default":{},"type":{
         "type":"map","values":{
           "type":"array","doc":"The extension records","default":[],"items":{
@@ -121,6 +121,7 @@
     "type":"record",
     "fields":[
       {"name":"key","type":["null","int"],"default":null,"doc":""},
+      {"name":"guid","type":["null","string"],"default":null,"doc":""},
       {"name":"name","type":["null","string"],"default":null,"doc":""},
       {"name":"rank","type":["null","string"],"default":null}
     ]
@@ -185,26 +186,43 @@
       {"name":"classificationPath","type":["null","string"],"default":null,"doc":""},
       {"name":"diagnostics","type":["null","Diagnostic"],"default":null,"doc":""},
       {"name":"kingdom","type":["null","string"],"default":null,"doc":""},
-      {"name":"kingdomKey","type":["null","int"],"default":null,"doc":""},
+      {"name":"kingdomKey","type":["null","string"],"default":null,"doc":""},
       {"name":"phylum","type":["null","string"],"default":null,"doc":""},
-      {"name":"phylumKey","type":["null","int"],"default":null,"doc":""},
+      {"name":"phylumKey","type":["null","string"],"default":null,"doc":""},
       {"name":"class","type":["null","string"],"default":null,"doc":""},
-      {"name":"classKey","type":["null","int"],"default":null,"doc":""},
+      {"name":"classKey","type":["null","string"],"default":null,"doc":""},
       {"name":"order","type":["null","string"],"default":null,"doc":""},
-      {"name":"orderKey","type":["null","int"],"default":null,"doc":""},
+      {"name":"orderKey","type":["null","string"],"default":null,"doc":""},
       {"name":"family","type":["null","string"],"default":null,"doc":""},
-      {"name":"familyKey","type":["null","int"],"default":null,"doc":""},
+      {"name":"familyKey","type":["null","string"],"default":null,"doc":""},
       {"name":"genus","type":["null","string"],"default":null,"doc":""},
-      {"name":"genusKey","type":["null","int"],"default":null,"doc":""},
+      {"name":"genusKey","type":["null","string"],"default":null,"doc":""},
       {"name":"species","type":["null","string"],"default":null,"doc":""},
-      {"name":"speciesKey","type":["null","int"],"default":null,"doc":""},
+      {"name":"speciesKey","type":["null","string"],"default":null,"doc":""},
       {"name":"synonym","type":["null","boolean"],"default":null,"doc":""},
       {"name":"taxonID","type":["null","string"],"default":null,"doc":""},
-      {"name":"taxonKey","type":{"type":"array","items":"int"},"default":[]},
+      {"name":"taxonKey","type":{"type":"array","items":"string"},"default":[]},
       {"name":"usage","type":["null","RankedName"],"default":null,"doc":""},
       {"name":"usageParsedName","type":["null","ParsedName"],"default":null,"doc":""},
       {"name":"verbatimScientificName","type":["null","string"],"default":null,"doc":""},
       {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""}
+    ]
+  },
+  {
+    "name":"MeasurementOrFactJsonRecord",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"Represents the occurrence json object for elasticsearch document",
+    "fields":[
+      {"name": "measurementID", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementID"},
+      {"name": "measurementType", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementType"},
+      {"name": "measurementValue", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementValue"},
+      {"name": "measurementUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementUnit"},
+      {"name": "measurementAccuracy", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementAccuracy"},
+      {"name": "measurementDeterminedBy", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementDeterminedBy"},
+      {"name": "measurementDeterminedDate", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementDeterminedDate"},
+      {"name": "measurementMethod", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementMethod"},
+      {"name": "measurementRemarks", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementRemarks"}
     ]
   }
 ]

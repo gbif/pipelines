@@ -14,6 +14,7 @@ import java.util.Map;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.MediaType;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.TypeStatus;
@@ -27,10 +28,9 @@ import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GadmFeatures;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MachineTag;
-import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
@@ -116,7 +116,7 @@ public class OccurrenceJsonConverterTest {
                     Collections.singletonList(Collections.singletonMap("k", "v"))))
             .build();
 
-    GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(111L).build();
+    IdentifierRecord id = IdentifierRecord.newBuilder().setId("777").setInternalId("111").build();
 
     ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").setIsClustered(true).build();
 
@@ -172,7 +172,7 @@ public class OccurrenceJsonConverterTest {
             .setOtherCatalogNumbers(Arrays.asList(multivalue1, multivalue2))
             .setRecordedBy(Arrays.asList(multivalue1, multivalue2))
             .setIdentifiedBy(Arrays.asList(multivalue1, multivalue2))
-            .setPreparations(Arrays.asList(multivalue1, multivalue2))
+            .setPreparations(Arrays.asList(multivalue1, "\u001E" + multivalue2))
             .setSamplingProtocol(Arrays.asList(multivalue1, multivalue2))
             .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
             .build();
@@ -232,6 +232,7 @@ public class OccurrenceJsonConverterTest {
                     .setLevel3Gid("XAA.1.3_1")
                     .setLevel3Name("Level 3 Cipality")
                     .build())
+            .setDistanceFromCentroidInMeters(10d)
             .build();
     lr.getIssues().getIssueList().add(OccurrenceIssue.BASIS_OF_RECORD_INVALID.name());
 
@@ -396,7 +397,7 @@ public class OccurrenceJsonConverterTest {
     String json =
         OccurrenceJsonConverter.builder()
             .basic(br)
-            .gbifId(id)
+            .identifier(id)
             .clustering(cr)
             .metadata(mr)
             .verbatim(er)
@@ -406,7 +407,7 @@ public class OccurrenceJsonConverterTest {
             .grscicoll(gr)
             .multimedia(mmr)
             .build()
-            .toJson();
+            .toJsonWithNulls();
 
     JsonNode result = MAPPER.readTree(json);
 
@@ -462,7 +463,7 @@ public class OccurrenceJsonConverterTest {
         "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
         result.path(Indexing.PREPARATIONS).toString());
     assertEquals(
-        "\"" + expectedMultivalue1 + "|" + multivalue2 + "\"",
+        "\"" + expectedMultivalue1 + "|," + multivalue2 + "\"",
         result.path(Indexing.PREPARATIONS_JOINED).toString());
     assertEquals(
         "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",
@@ -499,29 +500,34 @@ public class OccurrenceJsonConverterTest {
             + "\"http://rs.tdwg.org/dwc/terms/catalogNumber\":\"catalogNumber\",\"http://rs.tdwg.org/dwc/terms/footprintWKT\":"
             + "\"footprintWKTfootprintWKTfootprintWKT\",\"http://rs.tdwg.org/dwc/terms/institutionCode\":\"institutionCode\","
             + "\"http://rs.tdwg.org/dwc/terms/recordedBy\":\"mv;à1|mv2\",\"http://rs.tdwg.org/dwc/terms/scientificName\":"
-            + "\"scientificName\"},\"parentCoreId\":null,\"extensions\":{\"http://rs.tdwg.org/ac/terms/Multimedia\":[{\"k\":\"v\"}]}}";
+            + "\"scientificName\"},\"coreId\":null,\"extensions\":{\"http://rs.tdwg.org/ac/terms/Multimedia\":[{\"k\":\"v\"}]}}";
     assertEquals(expectedVerbatim, result.path("verbatim").toString());
 
     String expectedGbifClassification =
-        "{\"acceptedUsage\":{\"key\":11,\"name\":\"accepted usage\",\"rank\":\"SPECIES\"},\"classification\":"
-            + "[{\"key\":1,\"name\":\"KINGDOM\",\"rank\":\"KINGDOM\"},{\"key\":2,\"name\":\"PHYLUM\",\"rank\":\"PHYLUM\"},"
-            + "{\"key\":3,\"name\":\"CLASS\",\"rank\":\"CLASS\"},{\"key\":4,\"name\":\"ORDER\",\"rank\":\"ORDER\"},"
-            + "{\"key\":5,\"name\":\"FAMILY\",\"rank\":\"FAMILY\"},{\"key\":6,\"name\":\"GENUS\",\"rank\":\"GENUS\"},"
-            + "{\"key\":7,\"name\":\"SPECIES\",\"rank\":\"SPECIES\"}],\"classificationPath\":\"_1_2_3_4_5_6\",\"diagnostics\":"
-            + "{\"matchType\":\"EXACT\",\"note\":\"note\",\"status\":\"ACCEPTED\"},\"kingdom\":\"KINGDOM\","
-            + "\"kingdomKey\":1,\"phylum\":\"PHYLUM\",\"phylumKey\":2,\"class\":\"CLASS\",\"classKey\":3,\"order\":"
-            + "\"ORDER\",\"orderKey\":4,\"family\":\"FAMILY\",\"familyKey\":5,\"genus\":\"GENUS\",\"genusKey\":6,"
-            + "\"species\":\"SPECIES\",\"speciesKey\":7,\"synonym\":true,\"taxonID\":\"taxonID\",\"taxonKey\":[1,2,3,4,5,6,7,10,11],"
-            + "\"usage\":{\"key\":10,\"name\":\"synonym\",\"rank\":\"SPECIES\"},\"usageParsedName\":{\"abbreviated\":false,"
-            + "\"autonym\":false,\"basionymAuthorship\":{\"authors\":[\"setBasionymAuthorship\"],\"exAuthors\""
-            + ":[\"setBasionymAuthorship\"],\"empty\":true,\"year\":\"2000\"},\"binomial\":false,\"candidatus\":"
-            + "false,\"code\":\"BACTERIAL\",\"combinationAuthorship\":{\"authors\":[\"setCombinationAuthorship\"],"
+        "{\"acceptedUsage\":{\"key\":11,\"guid\":null,\"name\":\"accepted usage\",\"rank\":\"SPECIES\"},"
+            + "\"classification\":[{\"key\":1,\"guid\":null,\"name\":\"KINGDOM\",\"rank\":\"KINGDOM\"},{\"key\":2,"
+            + "\"guid\":null,\"name\":\"PHYLUM\",\"rank\":\"PHYLUM\"},{\"key\":3,\"guid\":null,\"name\":\"CLASS\","
+            + "\"rank\":\"CLASS\"},{\"key\":4,\"guid\":null,\"name\":\"ORDER\",\"rank\":\"ORDER\"},{\"key\":5,"
+            + "\"guid\":null,\"name\":\"FAMILY\",\"rank\":\"FAMILY\"},{\"key\":6,\"guid\":null,\"name\":\"GENUS\","
+            + "\"rank\":\"GENUS\"},{\"key\":7,\"guid\":null,\"name\":\"SPECIES\",\"rank\":\"SPECIES\"}],"
+            + "\"classificationPath\":\"_1_2_3_4_5_6\",\"diagnostics\":{\"matchType\":\"EXACT\",\"note\":\"note\","
+            + "\"status\":\"ACCEPTED\"},\"kingdom\":\"KINGDOM\",\"kingdomKey\":\"1\",\"phylum\":\"PHYLUM\","
+            + "\"phylumKey\":\"2\",\"classKey\":\"3\",\"order\":\"ORDER\",\"orderKey\":\"4\",\"family\":\"FAMILY\","
+            + "\"familyKey\":\"5\",\"genus\":\"GENUS\",\"genusKey\":\"6\",\"species\":\"SPECIES\","
+            + "\"speciesKey\":\"7\",\"synonym\":true,\"taxonID\":\"taxonID\","
+            + "\"taxonKey\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\",\"10\",\"11\"],\"usage\":{\"key\":10,"
+            + "\"guid\":null,\"name\":\"synonym\",\"rank\":\"SPECIES\"},\"usageParsedName\":{\"abbreviated\":false,"
+            + "\"autonym\":false,\"basionymAuthorship\":{\"authors\":[\"setBasionymAuthorship\"],\"exAuthors\":["
+            + "\"setBasionymAuthorship\"],\"empty\":true,\"year\":\"2000\"},\"binomial\":false,\"candidatus\":false,"
+            + "\"code\":\"BACTERIAL\",\"combinationAuthorship\":{\"authors\":[\"setCombinationAuthorship\"],"
             + "\"exAuthors\":[\"setCombinationAuthorship\"],\"empty\":false,\"year\":\"2020\"},\"doubtful\":false,"
             + "\"genericName\":\"setGenus\",\"genus\":\"setGenus\",\"incomplete\":false,\"indetermined\":false,"
             + "\"infraspecificEpithet\":\"infraspecificEpithet\",\"notho\":\"GENERIC\",\"rank\":\"ABERRATION\","
             + "\"specificEpithet\":\"specificEpithet\",\"state\":\"COMPLETE\",\"terminalEpithet\":\"terminalEpithet\","
-            + "\"trinomial\":false,\"type\":\"HYBRID_FORMULA\",\"uninomial\":\"setUninomial\"},\"verbatimScientificName\":"
-            + "\"scientificName\",\"iucnRedListCategoryCode\":\"setIucnRedListCategoryCode\"}";
+            + "\"trinomial\":false,\"type\":\"HYBRID_FORMULA\",\"uninomial\":\"setUninomial\"},"
+            + "\"verbatimScientificName\":\"scientificName\",\"iucnRedListCategoryCode\":\"setIucnRedListCategoryCode\","
+            + "\"class\":\"CLASS\"}";
+
     assertEquals(expectedGbifClassification, result.path("gbifClassification").toString());
 
     assertEquals("111", result.path("gbifId").asText());
@@ -535,6 +541,7 @@ public class OccurrenceJsonConverterTest {
     assertEquals(
         "[{\"type\":\"OTHER\",\"value\":\"someId\"}]", result.path("recordedByIds").toString());
     assertEquals("PRESENT", result.path("occurrenceStatus").asText());
+    assertEquals("10.0", result.path("distanceFromCentroidInMeters").asText());
 
     assertEquals(institutionMatch.getKey(), result.path("institutionKey").asText());
 
@@ -565,7 +572,7 @@ public class OccurrenceJsonConverterTest {
     MetadataRecord mr = MetadataRecord.newBuilder().setLicense("setLicense").setId("777").build();
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
     ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").build();
-    GbifIdRecord id = GbifIdRecord.newBuilder().setId("777").setGbifId(1L).build();
+    IdentifierRecord id = IdentifierRecord.newBuilder().setId("777").setInternalId("1").build();
     BasicRecord br = BasicRecord.newBuilder().setId("777").build();
     TemporalRecord tmr = TemporalRecord.newBuilder().setId("777").build();
     LocationRecord lr = LocationRecord.newBuilder().setId("777").build();
@@ -577,7 +584,7 @@ public class OccurrenceJsonConverterTest {
     String json =
         OccurrenceJsonConverter.builder()
             .basic(br)
-            .gbifId(id)
+            .identifier(id)
             .clustering(cr)
             .metadata(mr)
             .verbatim(er)
@@ -587,7 +594,7 @@ public class OccurrenceJsonConverterTest {
             .grscicoll(gr)
             .multimedia(mmr)
             .build()
-            .toJson();
+            .toJsonWithNulls();
 
     JsonNode result = MAPPER.readTree(json);
 

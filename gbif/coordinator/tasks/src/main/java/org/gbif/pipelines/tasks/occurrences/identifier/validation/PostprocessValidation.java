@@ -3,12 +3,13 @@ package org.gbif.pipelines.tasks.occurrences.identifier.validation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.function.ToDoubleFunction;
+import java.util.function.ToLongFunction;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.hbase.exceptions.IllegalArgumentIOException;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.GbifApi;
 import org.gbif.pipelines.common.PipelinesException;
@@ -28,13 +29,17 @@ public class PostprocessValidation {
   private final IdentifierConfiguration config;
   private final CloseableHttpClient httpClient;
 
-  public void validate() throws IOException {
-    if (!getThresholdSkipTagValue()) {
-      validateThreshold();
+  public IdentifierValidationResult validate() throws IOException {
+    if (useThresholdSkipTagValue() || ignoreChecklists() || skipInstallationKey()) {
+      String validatonMessage =
+          "Skip valiation because because of machine tag id_threshold_skip=true";
+      return IdentifierValidationResult.create(0d, 0d, true, validatonMessage);
+    } else {
+      return validateThreshold();
     }
   }
 
-  private void validateThreshold() throws IOException {
+  private IdentifierValidationResult validateThreshold() throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = config.metaFileName;
@@ -44,46 +49,54 @@ public class PostprocessValidation {
 
     Double threshold = getThresholdTagValue().orElse(config.idThresholdPercent);
 
-    ToDoubleFunction<String> getMetricFn =
+    ToLongFunction<String> getMetricFn =
         m -> {
           try {
             HdfsConfigs hdfsConfigs =
                 HdfsConfigs.create(
                     config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
-            return HdfsUtils.getDoubleByKey(hdfsConfigs, metaPath, m + Metrics.ATTEMPTED)
-                .orElse(0d);
+            return HdfsUtils.getLongByKey(hdfsConfigs, metaPath, m + Metrics.ATTEMPTED).orElse(0L);
           } catch (IOException ex) {
             throw new PipelinesException(ex);
           }
         };
 
-    double totalCount = getMetricFn.applyAsDouble(Metrics.GBIF_ID_RECORDS_COUNT);
-    double absentIdCount = getMetricFn.applyAsDouble(Metrics.ABSENT_GBIF_ID_COUNT);
+    long totalCount = getMetricFn.applyAsLong(Metrics.GBIF_ID_RECORDS_COUNT);
+    long absentIdCount = getMetricFn.applyAsLong(Metrics.ABSENT_GBIF_ID_COUNT);
+    long existingCount = getMetricFn.applyAsLong(Metrics.UNIQUE_GBIF_IDS_COUNT);
 
     if (totalCount == 0d) {
       log.error("Interpreted totalCount {}, invalid absentIdCount {}", totalCount, absentIdCount);
       throw new IllegalArgumentIOException("No records with valid GBIF ID!");
     }
 
-    double absentPercent = absentIdCount * 100 / totalCount;
-    boolean hasApiRecords = hasApiRecords();
-    if (absentPercent > 0d && hasApiRecords) {
-      if (absentPercent > threshold) {
-        log.error(
-            "GBIF IDs hit maximum allowed threshold: allowed - {}, duplicates - {}",
-            threshold,
-            absentPercent);
-        throw new PipelinesException("GBIF IDs hit maximum allowed threshold");
+    double absentPercent = (double) absentIdCount * 100 / totalCount;
+    long apiRecords = getApiRecords();
+
+    boolean isValid = true;
+    String validationMessage = "No identifiers issues";
+    if (absentPercent > 0d && apiRecords > 0) {
+      if (absentPercent > threshold && existingCount != apiRecords) {
+        validationMessage =
+            String.format(
+                "GBIF IDs hit maximum allowed - %.0f%%, duplicates - %.0f%%, total records count %d, absent records count %d",
+                threshold, absentPercent, totalCount, absentIdCount);
+        isValid = false;
       } else {
-        log.warn(
-            "GBIF IDs current rate: allowed - {}%, duplicates - {}%", threshold, absentPercent);
+        validationMessage =
+            String.format(
+                "GBIF IDs current rate: allowed - %.0f%%, duplicates - %.0f%%, total records count %d, absent records count %d",
+                threshold, absentPercent, totalCount, absentIdCount);
       }
     } else if (absentPercent == 100d) {
-      log.info("Skip IDs validation, dataset has no API records and all IDs are new");
+      validationMessage = "Skip IDs validation, dataset has no API records and all IDs are new";
     } else if (absentPercent > 0d) {
-      log.error("Dataset has no API records, but some IDs aren't new, {}", absentPercent);
-      throw new PipelinesException("Dataset has no API records, but some IDs aren't new");
+      validationMessage =
+          String.format(
+              "Dataset has no API records, but some IDs aren't new - %.0f%%", absentPercent);
+      isValid = false;
     }
+    return IdentifierValidationResult.create(totalCount, absentIdCount, isValid, validationMessage);
   }
 
   @SneakyThrows
@@ -96,7 +109,10 @@ public class PostprocessValidation {
   }
 
   @SneakyThrows
-  private boolean getThresholdSkipTagValue() {
+  private boolean useThresholdSkipTagValue() {
+    if (config.idThresholdSkip) {
+      return true;
+    }
     RegistryConfiguration registryConfiguration = config.stepConfig.registry;
     String datasetKey = message.getDatasetUuid().toString();
     return GbifApi.getMachineTagValue(
@@ -106,9 +122,26 @@ public class PostprocessValidation {
   }
 
   @SneakyThrows
-  private boolean hasApiRecords() {
+  private boolean skipInstallationKey() {
     RegistryConfiguration registryConfiguration = config.stepConfig.registry;
     String datasetKey = message.getDatasetUuid().toString();
-    return GbifApi.getIndexSize(httpClient, registryConfiguration, datasetKey) > 0;
+    String installationKey =
+        GbifApi.getInstallationKey(httpClient, registryConfiguration, datasetKey);
+    boolean r = config.skipInstallationsList.contains(installationKey);
+    if (r) {
+      log.info("Installation key {} is in the config skip list", datasetKey);
+    }
+    return r;
+  }
+
+  private boolean ignoreChecklists() {
+    return config.ignoreChecklists && message.getDatasetType() == DatasetType.CHECKLIST;
+  }
+
+  @SneakyThrows
+  private long getApiRecords() {
+    RegistryConfiguration registryConfiguration = config.stepConfig.registry;
+    String datasetKey = message.getDatasetUuid().toString();
+    return GbifApi.getIndexSize(httpClient, registryConfiguration, datasetKey);
   }
 }

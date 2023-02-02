@@ -41,6 +41,9 @@ public class MetricsCollectorConfiguration implements BaseConfiguration {
   @Parameter(names = "--validator-checklist-timeout-min")
   public long checklistTimeoutMin = 60;
 
+  @Parameter(names = "--interpretation-meta-file-name")
+  public String interpretationMetaFileName = Pipeline.VERBATIM_TO_OCCURRENCE + ".yml";
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;

@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.interpreters.metadata;
 
-import com.google.common.base.Strings;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,9 +12,9 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.api.util.comparators.EndpointPriorityComparator;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.common.parsers.LicenseParser;
@@ -55,16 +54,25 @@ public class MetadataInterpreter {
         mdr.setInstallationKey(dataset.getInstallationKey());
         mdr.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
 
+        List<Endpoint> endpoints = prioritySortEndpoints(dataset.getEndpoints());
+        if (!endpoints.isEmpty()) {
+          mdr.setProtocol(endpoints.get(0).getType().name());
+        }
+
         List<Network> networkList = client.getNetworkFromDataset(datasetId);
         if (networkList != null && !networkList.isEmpty()) {
           mdr.setNetworkKeys(
-              networkList.stream().map(Network::getKey).collect(Collectors.toList()));
+              networkList.stream()
+                  .map(Network::getKey)
+                  .filter(Objects::nonNull)
+                  .collect(Collectors.toList()));
         }
 
         Organization organization = client.getOrganization(dataset.getPublishingOrganizationKey());
         mdr.setEndorsingNodeKey(organization.getEndorsingNodeKey());
         mdr.setPublisherTitle(organization.getTitle());
         mdr.setDatasetPublishingCountry(organization.getCountry());
+
         getLastCrawledDate(dataset.getMachineTags())
             .ifPresent(d -> mdr.setLastCrawled(d.getTime()));
         if (Objects.nonNull(dataset.getProject())) {
@@ -78,24 +86,6 @@ public class MetadataInterpreter {
         mdr.setHostingOrganizationKey(installation.getOrganizationKey());
 
         copyMachineTags(dataset.getMachineTags(), mdr);
-      }
-    };
-  }
-
-  /** Sets attempt number as crawlId */
-  public static Consumer<MetadataRecord> interpretCrawlId(Integer attempt) {
-    return mdr -> Optional.ofNullable(attempt).ifPresent(mdr::setCrawlId);
-  }
-
-  /**
-   * Gets information about dataset source endpoint type (DWC_ARCHIVE, BIOCASE_XML_ARCHIVE, TAPIR ..
-   * etc)
-   */
-  public static Consumer<MetadataRecord> interpretEndpointType(String endpointType) {
-    return mdr -> {
-      if (!Strings.isNullOrEmpty(endpointType)) {
-        VocabularyUtils.lookup(endpointType, EndpointType.class)
-            .ifPresent(x -> mdr.setProtocol(x.name()));
       }
     };
   }
@@ -116,6 +106,20 @@ public class MetadataInterpreter {
     License license = LicenseParser.getInstance().parseUriThenTitle(uri, null);
     // UNSPECIFIED must be mapped to null
     return License.UNSPECIFIED == license ? null : license;
+  }
+
+  // Copied from CrawlerCoordinatorServiceImpl
+  private static List<Endpoint> prioritySortEndpoints(List<Endpoint> endpoints) {
+    // Filter out all Endpoints that we can't crawl
+    return endpoints.stream()
+        .filter(endpoint -> EndpointPriorityComparator.PRIORITIES.contains(endpoint.getType()))
+        .sorted(new EndpointPriorityComparator())
+        .collect(Collectors.toList());
+  }
+
+  /** Sets attempt number as crawlId */
+  public static Consumer<MetadataRecord> interpretCrawlId(Integer attempt) {
+    return mdr -> Optional.ofNullable(attempt).ifPresent(mdr::setCrawlId);
   }
 
   /** Gets the latest crawl attempt time, if exists. */

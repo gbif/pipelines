@@ -2,7 +2,7 @@
 | | |
 | ---- | ----|
 | [![Build Status](https://api.travis-ci.org/gbif/pipelines.svg?branch=ala-dev)](http://travis-ci.org/gbif/pipelines) | Travis build for ala-dev branch |
-| [![Build Status](https://builds.gbif.org/job/pipelines-la-dev/badge/icon?style=flat-square)](https://builds.gbif.org/job/pipelines/)| GBIF Jenkins build for ala- dev branch |
+| [![Build Status](https://builds.gbif.org/job/pipelines/badge/icon?subject=DEV%20-%20Build%20Status&style=flat-square)](https://builds.gbif.org/job/pipelines/)| GBIF Jenkins build for dev branch |
 | [![Coverage](https://sonar.gbif.org/api/project_badges/measure?project=org.gbif.pipelines%3Apipelines-parent&metric=coverage)](https://sonar.gbif.org/dashboard?id=org.gbif.pipelines%3Apipelines-parent) |  Sonar  |
 
 This module is to add functionality required by the Living Atlases to facilitate the replacement to [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store) for data ingress. 
@@ -59,6 +59,9 @@ These steps will load a dataset into a SOLR index.
 'nano ~/.mavenrc' add 'export JAVA_HOME=[JDK1.8 PATH]'
 * [Docker Desktop](https://www.docker.com/products/docker-desktop)
 * [lombok plugin for intelliJ](https://projectlombok.org/setup/intellij) needs to be installed for slf4 annotation  
+* Install `docopts` using the [prebuilt binary option](https://github.com/docopt/docopts#pre-built-binaries)
+* Install `yq` via Brew (`brew install yq`)
+* Optionally install the `avro-tools` package via Brew (`brew install avro-tools`)
 
 ### Setting up la-pipelines
   
@@ -70,10 +73,17 @@ These steps will load a dataset into a SOLR index.
 ### Running la-pipelines
 
 1. Start required docker containers using
-```
-docker-compose -f pipelines/src/main/docker/ala-name-service.yml up -d
-docker-compose -f pipelines/src/main/docker/solr8.yml up -d
-```
+    ```bash
+    docker-compose -f pipelines/src/main/docker/ala-name-service.yml up -d
+    docker-compose -f pipelines/src/main/docker/solr8.yml up -d
+    docker-compose -f pipelines/src/main/docker/ala-sensitive-data-service.yml 
+    ```
+    Note `ala-sensitive-data-service.yml` can be ommited if you don't need to run the SDS pipeline but you'll need to add
+    ```yaml
+    index:
+      includeSensitiveData: false
+    ```
+    to the file `configs/la-pipelines-local.yaml`.
 1. `cd scripts`
 1. To convert DwCA to AVRO, run `./la-pipelines dwca-avro dr893`
 1. To interpret, run `./la-pipelines interpret dr893 --embedded`
@@ -83,8 +93,10 @@ docker-compose -f pipelines/src/main/docker/solr8.yml up -d
 1. To setup SOLR:
     1. Run `cd ../solr/scripts` and  then run ' `./update-solr-config.sh`
     1. Run `cd ../../scripts`
-1. To index, run `./la-pipelines index dr893 --embedded`
-1. Run `./la-pipelines -h` for help and more steps:
+1. To create index avro files, run `./la-pipelines index dr893 --embedded`
+2. To generate the SOLR index, run `./la-pipelines solr dr893 --embedded`
+3. Check the SOLR index has records in the index by visiting http://localhost:8983/solr/#/biocache/query and clicking the "Execute query" button. It should show a non-zero number for `numFound` in the JSON response.
+4. Run `./la-pipelines -h` for help and more steps:
 ```
 LA-Pipelines data ingress utility.
 

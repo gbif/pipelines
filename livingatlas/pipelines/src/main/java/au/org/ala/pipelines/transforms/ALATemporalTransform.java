@@ -1,5 +1,7 @@
 package au.org.ala.pipelines.transforms;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECORDS_COUNT;
+
 import au.org.ala.pipelines.interpreters.ALATemporalInterpreter;
 import java.util.List;
 import java.util.Optional;
@@ -14,11 +16,21 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.Transform;
 
+/**
+ * ALA version of the Beam level transformations for the DWC Event, reads an avro, writes an avro,
+ * maps from value to keyValue and transforms form {@link ExtendedRecord} to {@link TemporalRecord}.
+ *
+ * <p>ParDo runs sequence of interpretations for {@link TemporalRecord} using {@link ExtendedRecord}
+ * as a source and {@link ALATemporalInterpreter} as interpretation steps
+ *
+ * @see <a href="https://dwc.tdwg.org/terms/#event">https://dwc.tdwg.org/terms/#event</a>
+ */
 public class ALATemporalTransform extends Transform<ExtendedRecord, TemporalRecord> {
 
   private final SerializableFunction<String, String> preprocessDateFn;
   private final List<DateComponentOrdering> orderings;
   private TemporalInterpreter temporalInterpreter;
+  private ALATemporalInterpreter alaTemporalInterpreter;
 
   @Builder(buildMethodName = "create")
   private ALATemporalTransform(
@@ -28,7 +40,7 @@ public class ALATemporalTransform extends Transform<ExtendedRecord, TemporalReco
         TemporalRecord.class,
         RecordType.TEMPORAL,
         ALATemporalTransform.class.getName(),
-        "alaTemporalCount");
+        TEMPORAL_RECORDS_COUNT);
     this.orderings = orderings;
     this.preprocessDateFn = preprocessDateFn;
   }
@@ -39,6 +51,13 @@ public class ALATemporalTransform extends Transform<ExtendedRecord, TemporalReco
     if (temporalInterpreter == null) {
       temporalInterpreter =
           TemporalInterpreter.builder()
+              .orderings(orderings)
+              .preprocessDateFn(preprocessDateFn)
+              .create();
+    }
+    if (alaTemporalInterpreter == null) {
+      alaTemporalInterpreter =
+          ALATemporalInterpreter.builder()
               .orderings(orderings)
               .preprocessDateFn(preprocessDateFn)
               .create();
@@ -59,10 +78,12 @@ public class ALATemporalTransform extends Transform<ExtendedRecord, TemporalReco
         .via(temporalInterpreter::interpretTemporal)
         .via(temporalInterpreter::interpretModified)
         .via(temporalInterpreter::interpretDateIdentified)
-        .via(ALATemporalInterpreter::checkRecordDateQuality)
-        .via(ALATemporalInterpreter::checkDateIdentified)
-        .via(ALATemporalInterpreter::checkGeoreferencedDate)
+        .via(alaTemporalInterpreter::checkRecordDateQuality)
+        .via(alaTemporalInterpreter::checkDateIdentified)
+        .via(alaTemporalInterpreter::checkGeoreferencedDate)
         .via(ALATemporalInterpreter::checkDatePrecision)
+        .via(TemporalInterpreter::setCoreId)
+        .via(TemporalInterpreter::setParentEventId)
         .getOfNullable();
   }
 }

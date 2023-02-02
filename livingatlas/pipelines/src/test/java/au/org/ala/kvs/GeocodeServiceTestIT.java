@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.location.GeocodeKvStore;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.factory.BufferedImageFactory;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
@@ -304,7 +305,8 @@ public class GeocodeServiceTestIT {
   public void testBitMap() {
 
     BufferedImage image =
-        BufferedImageFactory.loadImageFile("/tmp/pipelines-shp/cw_state_poly.png");
+        BufferedImageFactory.loadImageFile(
+            HdfsConfigs.nullConfig(), "/tmp/pipelines-shp/cw_state_poly.png");
     // Create a KV store (From SHP file or others)
     KeyValueStore<LatLng, GeocodeResponse> stateProvinceStore =
         StateProvinceKeyValueStore.create(TestUtils.getConfig().getGeocodeConfig());

@@ -49,7 +49,7 @@ public class OccurrenceExtensionConverter {
       ExtendedRecord extendedRecord = ExtendedRecord.newBuilder().setId(id).build();
       extendedRecord.getCoreTerms().putAll(coreMap);
       extendedRecord.getCoreTerms().putAll(extCoreMap);
-      extendedRecord.setParentCoreId(coreId);
+      extendedRecord.setCoreId(coreId);
       Optional.ofNullable(occIdExtMap.get(id)).ifPresent(extendedRecord::setExtensions);
       return Optional.of(extendedRecord);
     }

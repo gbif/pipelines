@@ -37,9 +37,9 @@ public class AlaLocationInterpreterTest {
   private StateProvinceParser stateProvinceParser;
 
   @Before
-  public void set() {
+  public void before() {
     ALAPipelinesConfig alaConfig = new ALAPipelinesConfig();
-    alaConfig.setLocationInfoConfig(new LocationInfoConfig(null, null, null));
+    alaConfig.setLocationInfoConfig(new LocationInfoConfig());
     try {
       countryCentrePoints = CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
       stateProvinceCentrePoints =
@@ -61,7 +61,7 @@ public class AlaLocationInterpreterTest {
     Location terrestrial = new Location();
     terrestrial.setName("Terrestrial");
     kvStore.put(
-        new LatLng(-31.25d, 146.921099d),
+        LatLng.create(-31.25d, 146.921099d),
         new GeocodeResponse(Collections.singletonList(terrestrial)));
 
     Map<String, String> coreMap = new HashMap<>();
@@ -102,7 +102,7 @@ public class AlaLocationInterpreterTest {
     // Have to run
     LocationInterpreter.interpretDepth(er, lr);
 
-    LocationInterpreter.interpretContinent(er, lr);
+    LocationInterpreter.interpretContinent(new KeyValueTestStoreStub<>()).accept(er, lr);
     LocationInterpreter.interpretWaterBody(er, lr);
     LocationInterpreter.interpretMinimumElevationInMeters(er, lr);
     LocationInterpreter.interpretMaximumElevationInMeters(er, lr);
@@ -173,7 +173,7 @@ public class AlaLocationInterpreterTest {
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        new LatLng(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
+        LatLng.create(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -206,7 +206,7 @@ public class AlaLocationInterpreterTest {
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        new LatLng(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
+        LatLng.create(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -236,7 +236,7 @@ public class AlaLocationInterpreterTest {
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        new LatLng(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
+        LatLng.create(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -271,7 +271,7 @@ public class AlaLocationInterpreterTest {
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        new LatLng(-37.47d, 144.785153d), new GeocodeResponse(Collections.singletonList(state)));
+        LatLng.create(-37.47d, 144.785153d), new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -309,7 +309,7 @@ public class AlaLocationInterpreterTest {
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        new LatLng(-31.2532183d, 146.921099d),
+        LatLng.create(-31.2532183d, 146.921099d),
         new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
@@ -332,7 +332,7 @@ public class AlaLocationInterpreterTest {
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        new LatLng(-31.2532183d, 146.921099d),
+        LatLng.create(-31.2532183d, 146.921099d),
         new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
@@ -358,7 +358,7 @@ public class AlaLocationInterpreterTest {
   @Test
   public void assertCountryCentre() {
     KeyValueTestStoreStub<LatLng, GeocodeResponse> store = new KeyValueTestStoreStub<>();
-    store.put(new LatLng(-29.532804, 145.491477), createCountryResponse(Country.AUSTRALIA));
+    store.put(LatLng.create(-29.532804, 145.491477), createCountryResponse(Country.AUSTRALIA));
 
     MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();

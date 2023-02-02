@@ -3,6 +3,7 @@ package org.gbif.pipelines.validator.checklists.ws;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -48,6 +49,7 @@ public class IdLookupClient implements IdLookup {
             .withObjectMapper(
                 JacksonJsonObjectMapperProvider.getDefaultObjectMapper()
                     .addMixIn(LookupUsage.class, LookupUsageMixin.class))
+            .withExponentialBackoffRetry(Duration.ofSeconds(3L), 2d, 10)
             .build(IdLookupWsClient.class);
   }
 

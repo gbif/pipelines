@@ -1,0 +1,665 @@
+{
+  "metadata" : {
+    "createdDate" : "2022-07-26T10:00:40.893",
+    "version" : null
+  },
+  "vocabulary" : {
+    "key" : 9,
+    "name" : "EventType",
+    "label" : {
+      "en" : "Event Type"
+    },
+    "definition" : {
+      "en" : "An early draft of a vocabulary for DwC:eventType, developed to support the pilot work on the ALA and GBIF. See https://github.com/gbif/vocabulary/issues/107"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:14.59892",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:14.59892",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "namespace" : null
+  },
+  "concepts" : [ {
+    "key" : 256,
+    "name" : "Assay",
+    "label" : { },
+    "definition" : {
+      "en" : "An evaluation of the state of a specimen based on a series of tests and measurements"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-07-19T01:47:26.221698",
+    "createdBy" : "charvolant",
+    "modified" : "2022-07-19T01:48:52.282254",
+    "modifiedBy" : "charvolant",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 255,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 255,
+    "name" : "ConditionReport",
+    "label" : { },
+    "definition" : {
+      "en" : "A report on the condition of a specimen in a collection"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-07-19T01:41:50.704903",
+    "createdBy" : "charvolant",
+    "modified" : "2022-07-19T01:42:31.118022",
+    "modifiedBy" : "charvolant",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 254,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 254,
+    "name" : "Report",
+    "label" : { },
+    "definition" : {
+      "en" : "A report on a specimen held in a collection"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-07-19T01:40:16.319522",
+    "createdBy" : "charvolant",
+    "modified" : "2022-07-19T01:40:55.731397",
+    "modifiedBy" : "charvolant",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 171,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 253,
+    "name" : "Registration",
+    "label" : { },
+    "definition" : {
+      "en" : "The registration of a specimen in a collection"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-07-19T01:37:47.260032",
+    "createdBy" : "charvolant",
+    "modified" : "2022-07-19T01:38:24.96776",
+    "modifiedBy" : "charvolant",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 171,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 252,
+    "name" : "Expedition",
+    "label" : { },
+    "definition" : {
+      "en" : "A specimen collecting expedition"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-07-19T01:30:13.879646",
+    "createdBy" : "charvolant",
+    "modified" : "2022-07-19T01:31:07.337265",
+    "modifiedBy" : "charvolant",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 251,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 251,
+    "name" : "Project",
+    "label" : { },
+    "definition" : {
+      "en" : "A large-scale activity, potentially encompassing multiple days and multiple locations"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-07-19T01:27:46.290351",
+    "createdBy" : "charvolant",
+    "modified" : "2022-07-19T01:29:40.027281",
+    "modifiedBy" : "charvolant",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 154,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 250,
+    "name" : "Collect",
+    "label" : { },
+    "definition" : {
+      "en" : "An occurrence created by the collection of a specimen or group of specimen organisms"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-07-14T13:16:29.218685",
+    "createdBy" : "djtfmartin",
+    "modified" : "2022-07-19T01:36:33.81045",
+    "modifiedBy" : "charvolant",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 157,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 172,
+    "name" : "Identification",
+    "label" : {
+      "en" : "Identification",
+      "es-ES" : "Identificación"
+    },
+    "definition" : {
+      "en" : "The identification of a taxon recorded in an occurrence"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:16.482525",
+    "createdBy" : "trobertson",
+    "modified" : "2022-05-04T12:51:32.188672",
+    "modifiedBy" : "mhoefft",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 171,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 171,
+    "name" : "Assertion",
+    "label" : {
+      "en" : "Assertion"
+    },
+    "definition" : {
+      "en" : "An assertion of some sort of fact about a sample or an occurrence"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:16.390487",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:16.390487",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 166,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 170,
+    "name" : "Chronolocation",
+    "label" : {
+      "en" : "Chronolocation"
+    },
+    "definition" : {
+      "en" : "An observation that gives the time of an event"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:16.302287",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:16.302287",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 168,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 169,
+    "name" : "Geolocation",
+    "label" : {
+      "en" : "Geolocation"
+    },
+    "definition" : {
+      "en" : "An observation that gives the location of an event"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:16.220072",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:16.220072",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 168,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 168,
+    "name" : "MeasurementObservation",
+    "label" : {
+      "en" : "Measurement Observation"
+    },
+    "definition" : {
+      "en" : "Making some sort of measurement of a sample, an occurrence or some associated activity"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:16.132029",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:16.132029",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 166,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 167,
+    "name" : "OccurenceObservation",
+    "label" : {
+      "en" : "Occurrence Observation"
+    },
+    "definition" : {
+      "en" : "Observing the occurrence of a taxon by examining a sample"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:16.015332",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:16.015332",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 166,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 166,
+    "name" : "Observation",
+    "label" : {
+      "en" : "Observation"
+    },
+    "definition" : {
+      "en" : "The act of making a statement about some property of a sample"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:15.937614",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:15.937614",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 154,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 165,
+    "name" : "Video",
+    "label" : {
+      "en" : "Video Recording"
+    },
+    "definition" : {
+      "en" : "A sample in the form of a video recording"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:15.858597",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:15.858597",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 162,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 164,
+    "name" : "Audio",
+    "label" : {
+      "en" : "Audio Recording"
+    },
+    "definition" : {
+      "en" : "A sample in the form of an audio recording"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:15.763787",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:15.763787",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 162,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 163,
+    "name" : "Photograph",
+    "label" : {
+      "en" : "Photograph"
+    },
+    "definition" : {
+      "en" : "A sample in the form of a photograph"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:15.610053",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:15.610053",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 162,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 162,
+    "name" : "MediaSample",
+    "label" : {
+      "en" : "Media Sample"
+    },
+    "definition" : {
+      "en" : "A sample taken onto some sort of recording media"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:15.477406",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:15.477406",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 157,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 161,
+    "name" : "TissueSample",
+    "label" : {
+      "en" : "Tissue Sample"
+    },
+    "definition" : {
+      "en" : "A sample taken by collecting tissue from an organism"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:15.398573",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:15.398573",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 160,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 160,
+    "name" : "MaterialSample",
+    "label" : {
+      "en" : "Material Sample"
+    },
+    "definition" : {
+      "en" : "A sample taken of some sort of material"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:15.321882",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:15.321882",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 157,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 159,
+    "name" : "Find",
+    "label" : {
+      "en" : "Find"
+    },
+    "definition" : {
+      "en" : "Collecting information via a human observer recording information gathered by a MkI eyeball"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:15.235563",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:15.235563",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 157,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 158,
+    "name" : "Subsample",
+    "label" : {
+      "en" : "Subsample"
+    },
+    "definition" : {
+      "en" : "A subsample taken from a larger subsample"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:15.121621",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:15.121621",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 157,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 157,
+    "name" : "Sample",
+    "label" : {
+      "en" : "Sample"
+    },
+    "definition" : {
+      "en" : "The act of collecting information over a particular spatial and temporal scope"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:15.018643",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:15.018643",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 154,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 156,
+    "name" : "SiteVisit",
+    "label" : {
+      "en" : "Site Visit"
+    },
+    "definition" : {
+      "en" : "A specific visit to a site defined in a survey, for data gathering"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:14.930783",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:14.930783",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 154,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 155,
+    "name" : "Survey",
+    "label" : {
+      "en" : "Survey"
+    },
+    "definition" : {
+      "en" : "A survey conducted over a defined spatial and temporal scope with a specified protocol"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:14.835605",
+    "createdBy" : "trobertson",
+    "modified" : "2022-07-19T01:28:21.961518",
+    "modifiedBy" : "charvolant",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : 251,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 154,
+    "name" : "Event",
+    "label" : {
+      "en" : "Event"
+    },
+    "definition" : {
+      "en" : "a generic unclassified event"
+    },
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2022-04-12T07:46:14.723048",
+    "createdBy" : "trobertson",
+    "modified" : "2022-04-12T07:46:14.723048",
+    "modifiedBy" : "trobertson",
+    "deleted" : null,
+    "vocabularyKey" : 9,
+    "parentKey" : null,
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "sameAsUris" : [ ],
+    "tags" : [ ]
+  } ]
+}

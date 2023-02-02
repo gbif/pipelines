@@ -4,7 +4,6 @@ import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -12,7 +11,6 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepRunner;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
@@ -73,18 +71,16 @@ public class InterpretedMessageHandler {
     publisher.send(outputMessage);
     log.info("The message has been sent - {}", outputMessage);
 
-    if (m.getDatasetType() == DatasetType.SAMPLING_EVENT) {
+    if (config.eventsEnabled && m.getDatasetType() == DatasetType.SAMPLING_EVENT) {
       Set<String> interpretationTypes = new HashSet<>(m.getInterpretTypes());
-      interpretationTypes.add(RecordType.EVENT_CORE.name());
+      interpretationTypes.add(RecordType.EVENT.name());
+      interpretationTypes.remove(RecordType.OCCURRENCE.name());
 
       PipelinesEventsMessage eventsMessage =
           new PipelinesEventsMessage(
               m.getDatasetUuid(),
               m.getAttempt(),
-              new HashSet<>(
-                  Arrays.asList(
-                      StepType.EVENTS_VERBATIM_TO_INTERPRETED.name(),
-                      StepType.EVENTS_INTERPRETED_TO_INDEX.name())),
+              m.getPipelineSteps(),
               m.getNumberOfEventRecords(),
               recordsNumber,
               StepRunner.DISTRIBUTED.name(),
@@ -117,10 +113,13 @@ public class InterpretedMessageHandler {
 
     // Strategy 1: Chooses a runner type by number of records in a dataset
     if (recordsNumber > 0) {
-      runner =
-          recordsNumber >= config.switchRecordsNumber
-              ? StepRunner.DISTRIBUTED
-              : StepRunner.STANDALONE;
+
+      int switchRecord = config.switchRecordsNumber;
+      if (isValidator(message.getPipelineSteps())) {
+        switchRecord = config.validatorSwitchRecordsNumber;
+      }
+
+      runner = recordsNumber >= switchRecord ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
       log.info("Records number - {}, Spark Runner type - {}", recordsNumber, runner);
       return runner;
     }
@@ -147,7 +146,7 @@ public class InterpretedMessageHandler {
   }
 
   /**
-   * Reads number of records from a archive-to-avro metadata file, verbatim-to-interpreted contains
+   * Reads number of records from an archive-to-avro metadata file, verbatim-to-interpreted contains
    * attempted records count, which is not accurate enough
    */
   private static long getRecordNumber(
@@ -180,14 +179,14 @@ public class InterpretedMessageHandler {
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
-          "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
+          "Please check metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
 
     if (messageNumber == null) {
       return fileNumber.get();
     }
 
-    if (!fileNumber.isPresent() || messageNumber > fileNumber.get()) {
+    if (!fileNumber.isPresent() || messageNumber < fileNumber.get()) {
       return messageNumber;
     }
 

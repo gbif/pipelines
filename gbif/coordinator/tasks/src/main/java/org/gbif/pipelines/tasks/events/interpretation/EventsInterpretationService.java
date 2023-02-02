@@ -3,13 +3,14 @@ package org.gbif.pipelines.tasks.events.interpretation;
 import com.google.common.util.concurrent.AbstractIdleService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
-import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.ServiceFactory;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /**
@@ -40,14 +41,21 @@ public class EventsInterpretationService extends AbstractIdleService {
     PipelinesHistoryClient historyClient =
         ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
 
+    DatasetClient datasetClient = ServiceFactory.createDatasetClient(config.stepConfig);
+
     EventsInterpretationCallback callback =
-        new EventsInterpretationCallback(config, publisher, curator, historyClient);
+        EventsInterpretationCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .datasetClient(datasetClient)
+            .hdfsConfigs(
+                HdfsConfigs.create(
+                    config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig))
+            .build();
 
-    PipelinesEventsMessage em = new PipelinesEventsMessage();
-    // we run all the events pipelines in distributed mode
-    String routingKey = em.setRunner(StepRunner.DISTRIBUTED.name()).getRoutingKey();
-
-    listener.listen(c.queueName, routingKey, c.poolSize, callback);
+    listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }
 
   @Override

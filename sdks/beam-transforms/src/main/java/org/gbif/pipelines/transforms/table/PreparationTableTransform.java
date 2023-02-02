@@ -5,10 +5,12 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 import java.util.Set;
 import lombok.Builder;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.PreparationTableConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.extension.ggbn.PreparationTable;
 
 public class PreparationTableTransform extends TableTransform<PreparationTable> {
@@ -16,7 +18,8 @@ public class PreparationTableTransform extends TableTransform<PreparationTable> 
   @Builder
   public PreparationTableTransform(
       TupleTag<ExtendedRecord> extendedRecordTag,
-      TupleTag<GbifIdRecord> gbifIdRecordTag,
+      TupleTag<IdentifierRecord> identifierRecordTag,
+      PCollectionView<MetadataRecord> metadataView,
       String path,
       Integer numShards,
       Set<String> types) {
@@ -27,7 +30,8 @@ public class PreparationTableTransform extends TableTransform<PreparationTable> 
         PREPARATION_TABLE_RECORDS_COUNT,
         PreparationTableConverter::convert);
     this.setExtendedRecordTag(extendedRecordTag)
-        .setGbifIdRecordTag(gbifIdRecordTag)
+        .setIdentifierRecordTag(identifierRecordTag)
+        .setMetadataRecord(metadataView)
         .setPath(path)
         .setNumShards(numShards)
         .setTypes(types);

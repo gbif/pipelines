@@ -1,14 +1,15 @@
 package org.gbif.pipelines.factory;
 
 import java.awt.image.BufferedImage;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import javax.imageio.ImageIO;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
+import org.gbif.pipelines.core.utils.FsUtils;
 
 @Slf4j
 public class BufferedImageFactory {
@@ -20,8 +21,8 @@ public class BufferedImageFactory {
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private BufferedImageFactory(String imageCachePath) {
-    this.image = loadImageFile(imageCachePath);
+  private BufferedImageFactory(HdfsConfigs configs, String imageCachePath) {
+    this.image = loadImageFile(configs, imageCachePath);
   }
 
   // Warning: Cannot load multiple images in a same class
@@ -29,11 +30,11 @@ public class BufferedImageFactory {
   // If BufferedImageFactory.getInstance() has loaded 'bitmap.png', then it won't load another png.
   // If you need to load multiple images in a same parent class, you need to use static method
   // loadImageFile
-  public static BufferedImage getInstance(String imageCachePath) {
+  public static BufferedImage getInstance(HdfsConfigs configs, String imageCachePath) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new BufferedImageFactory(imageCachePath);
+          instance = new BufferedImageFactory(configs, imageCachePath);
         }
       }
     }
@@ -41,8 +42,9 @@ public class BufferedImageFactory {
   }
 
   @SneakyThrows
-  public static BufferedImage loadImageFile(String filePath) {
-    Path path = Paths.get(filePath);
+  public static BufferedImage loadImageFile(HdfsConfigs configs, String filePath) {
+    Path path = new Path(filePath);
+    log.info("Loading image for the image cache from {}", path);
     if (!path.isAbsolute()) {
       try (InputStream is =
           Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath)) {
@@ -52,7 +54,8 @@ public class BufferedImageFactory {
         return ImageIO.read(is);
       }
     } else {
-      try (InputStream is = new FileInputStream(filePath)) {
+      FileSystem fs = FsUtils.getFileSystem(configs, filePath);
+      try (InputStream is = fs.open(path)) {
         return ImageIO.read(is);
       } catch (Exception e) {
         log.error(e.getMessage(), e);

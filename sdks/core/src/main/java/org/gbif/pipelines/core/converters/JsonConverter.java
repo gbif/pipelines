@@ -56,7 +56,7 @@ import org.gbif.pipelines.io.avro.json.VerbatimRecord;
 import org.gbif.pipelines.io.avro.json.VocabularyConcept;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-class JsonConverter {
+public class JsonConverter {
 
   private static final Set<String> EXCLUDE_ALL =
       Collections.singleton(DwcTerm.footprintWKT.qualifiedName());
@@ -67,6 +67,8 @@ class JsonConverter {
               Extension.MULTIMEDIA.getRowType(),
               Extension.AUDUBON.getRowType(),
               Extension.IMAGE.getRowType()));
+
+  private static final String OCCURRENCE_EXT = "http://rs.tdwg.org/dwc/terms/Occurrence";
 
   private static final Map<Character, Character> CHAR_MAP = new HashMap<>(2);
 
@@ -89,6 +91,7 @@ class JsonConverter {
   /** Gets the maximum/latest created date of all the records. */
   public static Optional<String> getMaxCreationDate(SpecificRecordBase... recordBases) {
     return Arrays.stream(recordBases)
+        .filter(Objects::nonNull)
         .filter(r -> Objects.nonNull(r.getSchema().getField(Indexing.CREATED)))
         .map(r -> r.get(Indexing.CREATED))
         .filter(Objects::nonNull)
@@ -101,7 +104,12 @@ class JsonConverter {
     return Optional.ofNullable(epoch).map(DATE_FN::apply).map(LocalDateTime::toString);
   }
 
-  protected static List<String> convertFieldAll(ExtendedRecord extendedRecord) {
+  public static List<String> convertFieldAll(ExtendedRecord extendedRecord) {
+    return convertFieldAll(extendedRecord, true);
+  }
+
+  public static List<String> convertFieldAll(
+      ExtendedRecord extendedRecord, boolean includeExtensions) {
     Set<String> result = new HashSet<>();
 
     extendedRecord.getCoreTerms().entrySet().stream()
@@ -110,14 +118,16 @@ class JsonConverter {
         .map(Entry::getValue)
         .forEach(result::add);
 
-    extendedRecord.getExtensions().entrySet().stream()
-        .filter(kv -> INCLUDE_EXT_ALL.contains(kv.getKey()))
-        .map(Entry::getValue)
-        .filter(Objects::nonNull)
-        .flatMap(Collection::stream)
-        .flatMap(map -> map.values().stream())
-        .filter(Objects::nonNull)
-        .forEach(result::add);
+    if (includeExtensions) {
+      extendedRecord.getExtensions().entrySet().stream()
+          .filter(kv -> INCLUDE_EXT_ALL.contains(kv.getKey()))
+          .map(Entry::getValue)
+          .filter(Objects::nonNull)
+          .flatMap(Collection::stream)
+          .flatMap(map -> map.values().stream())
+          .filter(Objects::nonNull)
+          .forEach(result::add);
+    }
 
     return result.stream()
         .flatMap(v -> Stream.of(v.split(ModelUtils.DEFAULT_SEPARATOR)))
@@ -126,7 +136,7 @@ class JsonConverter {
         .collect(Collectors.toList());
   }
 
-  protected static List<String> convertExtensions(ExtendedRecord extendedRecord) {
+  public static List<String> convertExtensions(ExtendedRecord extendedRecord) {
     return extendedRecord.getExtensions().entrySet().stream()
         .filter(e -> e.getValue() != null && !e.getValue().isEmpty())
         .map(Entry::getKey)
@@ -134,32 +144,54 @@ class JsonConverter {
         .collect(Collectors.toList());
   }
 
-  protected static VerbatimRecord convertVerbatimRecord(ExtendedRecord extendedRecord) {
+  public static VerbatimRecord convertVerbatimRecord(ExtendedRecord extendedRecord) {
+    return convertVerbatimRecord(extendedRecord, Collections.emptyList());
+  }
+
+  protected static VerbatimRecord convertVerbatimRecord(
+      ExtendedRecord extendedRecord, List<String> excludeExtensions) {
     return VerbatimRecord.newBuilder()
         .setCore(extendedRecord.getCoreTerms())
-        .setParentCoreId(extendedRecord.getParentCoreId())
-        .setExtensions(extendedRecord.getExtensions())
+        .setCoreId(extendedRecord.getCoreId())
+        .setExtensions(filterExtensions(extendedRecord.getExtensions(), excludeExtensions))
         .build();
   }
 
-  protected static Optional<String> convertToMultivalue(List<String> list) {
-    return list != null && !list.isEmpty() ? Optional.of(String.join("|", list)) : Optional.empty();
+  public static VerbatimRecord convertVerbatimEventRecord(ExtendedRecord extendedRecord) {
+    return convertVerbatimRecord(extendedRecord, Collections.singletonList(OCCURRENCE_EXT));
   }
 
-  protected static Optional<String> convertLicense(String license) {
+  private static Map<String, List<Map<String, String>>> filterExtensions(
+      Map<String, List<Map<String, String>>> exts, List<String> excludedExtensions) {
+    return exts.entrySet().stream()
+        .filter(e -> !excludedExtensions.contains(e.getKey()))
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+  }
+
+  public static Optional<String> convertToMultivalue(List<String> list) {
+    return list != null && !list.isEmpty()
+        ? Optional.of(getEscapedText(String.join("|", list)))
+        : Optional.empty();
+  }
+
+  public static List<String> getEscapedList(List<String> list) {
+    return list.stream().map(JsonConverter::getEscapedText).collect(Collectors.toList());
+  }
+
+  public static Optional<String> convertLicense(String license) {
     return Optional.ofNullable(license)
         .filter(l -> !l.equals(License.UNSPECIFIED.name()))
         .filter(l -> !l.equals(License.UNSUPPORTED.name()));
   }
 
-  protected static List<AgentIdentifier> convertAgentList(
+  public static List<AgentIdentifier> convertAgentList(
       List<org.gbif.pipelines.io.avro.AgentIdentifier> list) {
     return list.stream()
         .map(x -> AgentIdentifier.newBuilder().setType(x.getType()).setValue(x.getValue()).build())
         .collect(Collectors.toList());
   }
 
-  protected static Optional<VocabularyConcept> convertVocabularyConcept(
+  public static Optional<VocabularyConcept> convertVocabularyConcept(
       org.gbif.pipelines.io.avro.VocabularyConcept concepts) {
     if (concepts == null) {
       return Optional.empty();
@@ -415,31 +447,45 @@ class JsonConverter {
         switch (rank) {
           case KINGDOM:
             classificationBuilder.setKingdom(rankedName.getName());
-            classificationBuilder.setKingdomKey(rankedName.getKey());
+            Optional.ofNullable(rankedName.getKey())
+                .map(String::valueOf)
+                .ifPresent(classificationBuilder::setKingdomKey);
             break;
           case PHYLUM:
             classificationBuilder.setPhylum(rankedName.getName());
-            classificationBuilder.setPhylumKey(rankedName.getKey());
+            Optional.ofNullable(rankedName.getKey())
+                .map(String::valueOf)
+                .ifPresent(classificationBuilder::setPhylumKey);
             break;
           case CLASS:
             classificationBuilder.setClass$(rankedName.getName());
-            classificationBuilder.setClassKey(rankedName.getKey());
+            Optional.ofNullable(rankedName.getKey())
+                .map(String::valueOf)
+                .ifPresent(classificationBuilder::setClassKey);
             break;
           case ORDER:
             classificationBuilder.setOrder(rankedName.getName());
-            classificationBuilder.setOrderKey(rankedName.getKey());
+            Optional.ofNullable(rankedName.getKey())
+                .map(String::valueOf)
+                .ifPresent(classificationBuilder::setOrderKey);
             break;
           case FAMILY:
             classificationBuilder.setFamily(rankedName.getName());
-            classificationBuilder.setFamilyKey(rankedName.getKey());
+            Optional.ofNullable(rankedName.getKey())
+                .map(String::valueOf)
+                .ifPresent(classificationBuilder::setFamilyKey);
             break;
           case GENUS:
             classificationBuilder.setGenus(rankedName.getName());
-            classificationBuilder.setGenusKey(rankedName.getKey());
+            Optional.ofNullable(rankedName.getKey())
+                .map(String::valueOf)
+                .ifPresent(classificationBuilder::setGenusKey);
             break;
           case SPECIES:
             classificationBuilder.setSpecies(rankedName.getName());
-            classificationBuilder.setSpeciesKey(rankedName.getKey());
+            Optional.ofNullable(rankedName.getKey())
+                .map(String::valueOf)
+                .ifPresent(classificationBuilder::setSpeciesKey);
             break;
           default:
             // NOP
@@ -473,7 +519,7 @@ class JsonConverter {
     return Optional.of("_" + pathJoiner);
   }
 
-  public static List<Integer> convertTaxonKey(TaxonRecord taxonRecord) {
+  public static List<String> convertTaxonKey(TaxonRecord taxonRecord) {
     if (taxonRecord.getClassification() == null || taxonRecord.getClassification().isEmpty()) {
       return Collections.emptyList();
     }
@@ -486,6 +532,7 @@ class JsonConverter {
     taxonRecord.getClassification().stream()
         .map(org.gbif.pipelines.io.avro.RankedName::getKey)
         .forEach(taxonKey::add);
-    return new ArrayList<>(taxonKey);
+
+    return taxonKey.stream().map(String::valueOf).collect(Collectors.toList());
   }
 }

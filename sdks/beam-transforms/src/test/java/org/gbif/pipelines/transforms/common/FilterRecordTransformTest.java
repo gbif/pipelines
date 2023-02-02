@@ -10,7 +10,7 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.Rule;
@@ -35,7 +35,8 @@ public class FilterRecordTransformTest {
             .setId(id)
             .setCoreTerms(Collections.singletonMap("map", "value"))
             .build();
-    GbifIdRecord gir = GbifIdRecord.newBuilder().setId(id).setGbifId(1L).setCreated(1L).build();
+    IdentifierRecord ir =
+        IdentifierRecord.newBuilder().setId(id).setInternalId("1").setFirstLoaded(1L).build();
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
@@ -45,9 +46,9 @@ public class FilterRecordTransformTest {
         p.apply("Read ExtendedRecord", Create.of(er))
             .apply("KV ExtendedRecord", verbatimTransform.toKv());
 
-    PCollection<KV<String, GbifIdRecord>> girKv =
-        p.apply("Read GbifIdRecord", Create.of(gir))
-            .apply("KV GbifIdRecord", gbifIdTransform.toKv());
+    PCollection<KV<String, IdentifierRecord>> irKv =
+        p.apply("Read IdentifierRecord", Create.of(ir))
+            .apply("KV IdentifierRecord", gbifIdTransform.toKv());
 
     FilterRecordsTransform filterRecordsTransform =
         FilterRecordsTransform.create(verbatimTransform.getTag(), gbifIdTransform.getTag());
@@ -56,7 +57,7 @@ public class FilterRecordTransformTest {
         KeyedPCollectionTuple
             // Core
             .of(verbatimTransform.getTag(), erKv)
-            .and(gbifIdTransform.getTag(), girKv)
+            .and(gbifIdTransform.getTag(), irKv)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Filter verbatim", filterRecordsTransform.filter());
@@ -76,7 +77,7 @@ public class FilterRecordTransformTest {
             .setId(id)
             .setCoreTerms(Collections.singletonMap("map", "value"))
             .build();
-    GbifIdRecord gir = GbifIdRecord.newBuilder().setId(id).setCreated(1L).build();
+    IdentifierRecord ir = IdentifierRecord.newBuilder().setId(id).setFirstLoaded(1L).build();
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
@@ -86,9 +87,9 @@ public class FilterRecordTransformTest {
         p.apply("Read ExtendedRecord", Create.of(er))
             .apply("KV ExtendedRecord", verbatimTransform.toKv());
 
-    PCollection<KV<String, GbifIdRecord>> girKv =
-        p.apply("Read GbifIdRecord", Create.of(gir))
-            .apply("KV GbifIdRecord", gbifIdTransform.toKv());
+    PCollection<KV<String, IdentifierRecord>> irKv =
+        p.apply("Read IdentifierRecord", Create.of(ir))
+            .apply("KV IdentifierRecord", gbifIdTransform.toKv());
 
     FilterRecordsTransform filterRecordsTransform =
         FilterRecordsTransform.create(verbatimTransform.getTag(), gbifIdTransform.getTag());
@@ -97,7 +98,7 @@ public class FilterRecordTransformTest {
         KeyedPCollectionTuple
             // Core
             .of(verbatimTransform.getTag(), erKv)
-            .and(gbifIdTransform.getTag(), girKv)
+            .and(gbifIdTransform.getTag(), irKv)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Filter verbatim", filterRecordsTransform.filter());

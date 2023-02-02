@@ -68,7 +68,7 @@ public class OccurrenceExtensionConverterTest {
     Assert.assertEquals(
         2, erResult.getExtensions().get(ResourceRelationship.qualifiedName()).get(0).size());
 
-    // parentCoreId has the id reported in the Core
-    Assert.assertEquals(idCore, erResult.getParentCoreId());
+    // coreId has the id reported in the Core
+    Assert.assertEquals(idCore, erResult.getCoreId());
   }
 }

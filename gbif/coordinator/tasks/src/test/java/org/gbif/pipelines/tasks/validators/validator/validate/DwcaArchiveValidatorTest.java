@@ -3,6 +3,7 @@ package org.gbif.pipelines.tasks.validators.validator.validate;
 import static org.gbif.pipelines.tasks.validators.validator.validate.DwcaArchiveValidator.EML_XML;
 import static org.junit.Assert.assertEquals;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.util.UUID;
 import org.gbif.api.vocabulary.DatasetType;
@@ -78,7 +79,12 @@ public class DwcaArchiveValidatorTest {
             .build()
             .createOutgoingMessage();
 
+    PipelinesDwcaMessage dValue =
+        new ObjectMapper().readValue(result.toString(), PipelinesDwcaMessage.class);
+    dValue.setPipelineSteps(null);
+
     // Should
+    assertEquals(result.toString(), dValue.toString());
     assertEquals(key, result.getDatasetUuid());
     assertEquals(Integer.valueOf(1), result.getAttempt());
     assertEquals(new URI(config.stepConfig.registry.wsUrl), result.getSource());

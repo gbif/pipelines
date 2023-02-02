@@ -27,7 +27,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.mail.validator.ValidatorEmailService;
-import org.gbif.registry.metadata.parse.DatasetParser;
+import org.gbif.metadata.eml.parse.DatasetEmlParser;
 import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
@@ -280,7 +280,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     try {
       Path path = pathToArchive.getParent().resolve("eml.xml");
       String eml = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-      return DatasetParser.build(eml.getBytes(StandardCharsets.UTF_8));
+      return DatasetEmlParser.build(eml.getBytes(StandardCharsets.UTF_8));
     } catch (Exception ex) {
       log.error("Can't parse eml file and convert to Dataset. {}", ex.getMessage());
       return null;

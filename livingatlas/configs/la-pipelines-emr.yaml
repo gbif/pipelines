@@ -5,21 +5,22 @@ run:
   local:
     # jar: we get the jar from our dev or production environment
     sparkTmp: /data/spark-tmp
-    sparkMaster: ""
+    sparkMaster: "DONT_SET"
     dwcaTmp: /data/dwca-tmp
     dwcaImportDir: /data/dwca-imports
   spark-embedded:
     dwcaTmp: /data/dwca-tmp
     dwcaImportDir: /data/dwca-imports
     sparkTmp: /data/spark-tmp
-    sparkMaster: ""
+    sparkMaster: "DONT_SET"
   spark-cluster:
     dwcaTmp: /data/dwca-tmp
     dwcaImportDir: /data/dwca-imports
     jar: /usr/share/la-pipelines/la-pipelines.jar
     sparkSubmit: /usr/bin/spark-submit
     sparkTmp: /data/spark-tmp
-    sparkMaster: spark://localhost:7077
+    # dont specify spark master for EMR
+    sparkMaster: "DONT_SET"
 
 general:
   attempt: 1
@@ -33,6 +34,13 @@ fs:
   hdfs:
     fsPath: hdfs:///
 
+dataset-validated-dump:
+  inputPath: hdfs:///pipelines-data
+dataset-count-dump:
+  inputPath: hdfs:///pipelines-data
+dataset-archive-list:
+  inputPath: hdfs:///dwca-exports/
+
 dwca-avro:
   inputPath: /data/biocache-load/{datasetId}
   tempLocation: /data/biocache-load/{datasetId}
@@ -40,12 +48,14 @@ dwca-avro:
 
 interpret:
   appName: Interpretation for {datasetId}
-  inputPath: hdfs:///pipelines-data/{datasetId}/1/verbatim.avro
+  inputPath: hdfs:///pipelines-data/{datasetId}/1/verbatim/*.avro
   targetPath: hdfs:///pipelines-data/
+  defaultDateFormat: DMYT,DMY
 
 uuid:
   inputPath: hdfs:///pipelines-data
   targetPath: hdfs:///pipelines-data
+  throwErrorOnValidationFail: false
 
 sensitive:
   inputPath: hdfs:///pipelines-data
@@ -73,6 +83,8 @@ solr:
   jackKnifePath: hdfs:///pipelines-jackknife
   clusteringPath: hdfs:///pipelines-clustering
   outlierPath: hdfs:///pipelines-outlier
+  zkHost: ZK_URL
+  solrCollection: SOLR_COLLECTION
 
 jackKnife:
   jackKnifePath: hdfs:///pipelines-jackknife
@@ -86,12 +98,25 @@ sampling:
   inputPath: hdfs:///pipelines-data
   allDatasetsInputPath: hdfs:///pipelines-all-datasets
 
-# Calculate distance to the expert distribution layers
-# class:au.org.ala.pipelines.beam.DistributionOutlierPipeline
 outlier:
-  baseUrl: https://spatial-test.ala.org.au/ws/
+  baseUrl: SAMPLING_URL
   targetPath: hdfs:///pipelines-outlier
   allDatasetsInputPath: hdfs:////pipelines-all-datasets
+
+elastic:
+  inputPath: hdfs:///pipelines-data
+  targetPath: hdfs:///pipelines-data
+  esSchemaPath: /tmp/es-event-core-schema.json
+  esHosts: ES_HOSTS
+  esAlias: ES_ALIAS
+
+export:
+  inputPath: hdfs:///pipelines-data
+  targetPath: hdfs:///pipelines-data
+
+predicate-export:
+  inputPath: hdfs:///pipelines-data
+  targetPath: hdfs:///pipelines-data
 
 gbifConfig:
   vocabularyConfig:
@@ -101,27 +126,30 @@ gbifConfig:
       http://rs.tdwg.org/dwc/terms/lifeStage: LifeStage
       http://rs.tdwg.org/dwc/terms/establishmentMeans: EstablishmentMeans
       http://rs.tdwg.org/dwc/terms/pathway: Pathway
-
-# class: DumpArchiveList
-dataset-archive-list:
-  inputPath: 's3://ala-emr-test/dwca-imports'
-  targetPath: /tmp/dataset-archive-list.csv
+      http://rs.gbif.org/terms/1.0/eventType: EventType
+      http://rs.tdwg.org/dwc/terms/occurrenceStatus: OccurrenceStatus
 
 collectory:
-  wsUrl: https://collections-test.ala.org.au/ws/
-  timeoutSec: 70
-  retryConfig:
-    maxAttempts: 10
-    initialIntervalMillis: 10000
+  wsUrl: REGISTRY_URL
   httpHeaders:
-    Authorization: add-a-api-key-here
+    Authorization: ALA_API_KEY
 
 alaNameMatch:
-  wsUrl: http://localhost:9179
-  timeoutSec: 70
-  retryConfig:
-    maxAttempts: 5
-    initialIntervalMillis: 5000
+  wsUrl: NAME_MATCHING_URL
+
+sds:
+  wsUrl: SDS_URL
+
+imageService:
+  wsUrl: IMAGES_URL
+  httpHeaders:
+    apiKey: ALA_API_KEY
+
+speciesListService:
+  wsUrl: LISTS_URL
+
+samplingService:
+  wsUrl: SAMPLING_URL
 
 
 ### la-pipelines cli additional arguments, like JVM or spark command line arguments
@@ -135,7 +163,7 @@ interpret-sh-args:
     num-executors: 8
     executor-cores: 8
     executor-memory: 18G
-    driver-memory: 2G
+    driver-memory: 6G
 
 image-sync-sh-args:
   local:
@@ -237,6 +265,30 @@ jackknife-sh-args:
     driver-memory: 2G
 
 clustering-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=48
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 18G
+    driver-memory: 2G
+
+export-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=48
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 18G
+    driver-memory: 2G
+
+elastic-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC
   spark-embedded:

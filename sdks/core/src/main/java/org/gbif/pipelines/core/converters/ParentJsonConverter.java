@@ -3,75 +3,108 @@ package org.gbif.pipelines.core.converters;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.Builder;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.factory.SerDeFactory;
 import org.gbif.pipelines.core.utils.HashConverter;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFact;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
+import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
 import org.gbif.pipelines.io.avro.json.EventJsonRecord;
 import org.gbif.pipelines.io.avro.json.JoinRecord;
+import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 import org.gbif.pipelines.io.avro.json.MetadataJsonRecord;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
+import org.gbif.pipelines.io.avro.json.Parent;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
+import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 
 @Slf4j
 @Builder
 public class ParentJsonConverter {
 
-  private final MetadataRecord metadata;
-  private final IdentifierRecord identifier;
-  private final EventCoreRecord eventCore;
-  private final TemporalRecord temporal;
-  private final LocationRecord location;
-  private final TaxonRecord taxon;
-  private final GrscicollRecord grscicoll;
-  private final MultimediaRecord multimedia;
-  private final ExtendedRecord verbatim;
-  private OccurrenceJsonRecord occurrenceJsonRecord;
+  protected final MetadataRecord metadata;
+  protected final IdentifierRecord identifier;
+  protected final EventCoreRecord eventCore;
+  protected final TemporalRecord temporal;
+  protected final LocationRecord location;
+  protected final GrscicollRecord grscicoll;
+  protected final MultimediaRecord multimedia;
+  protected final ExtendedRecord verbatim;
+  protected final DerivedMetadataRecord derivedMetadata;
+  protected final LocationInheritedRecord locationInheritedRecord;
+  protected final TemporalInheritedRecord temporalInheritedRecord;
+  protected final EventInheritedRecord eventInheritedRecord;
+  protected OccurrenceJsonRecord occurrenceJsonRecord;
+  protected MeasurementOrFactRecord measurementOrFactRecord;
 
   public ParentJsonRecord convertToParent() {
     return (occurrenceJsonRecord != null) ? convertToParentOccurrence() : convertToParentEvent();
   }
 
+  @SneakyThrows
   public String toJson() {
-    return convertToParent().toString();
+    return SerDeFactory.avroEventsMapperNonNulls().writeValueAsString(convertToParent());
   }
 
   /** Converts to parent record based on an event record. */
   private ParentJsonRecord convertToParentEvent() {
-    return convertToParentRecord()
-        .setType("event")
-        .setJoinRecordBuilder(JoinRecord.newBuilder().setName("event"))
-        .setEventBuilder(convertToEvent())
-        .build();
+    ParentJsonRecord.Builder builder =
+        convertToParentRecord()
+            .setId(verbatim.getId())
+            .setInternalId(identifier.getInternalId())
+            .setUniqueKey(identifier.getUniqueKey())
+            .setType("event")
+            .setEventBuilder(convertToEvent())
+            .setAll(JsonConverter.convertFieldAll(verbatim, false))
+            .setVerbatim(JsonConverter.convertVerbatimEventRecord(verbatim))
+            .setJoinRecordBuilder(JoinRecord.newBuilder().setName("event"));
+
+    mapCreated(builder);
+    mapDerivedMetadata(builder);
+    mapLocationInheritedFields(builder);
+    mapTemporalInheritedFields(builder);
+    mapEventInheritedFields(builder);
+
+    JsonConverter.convertToDate(identifier.getFirstLoaded()).ifPresent(builder::setFirstLoaded);
+
+    return builder.build();
   }
 
   /** Converts to a parent record based on an occurrence record. */
   private ParentJsonRecord convertToParentOccurrence() {
-    return ParentJsonRecord.newBuilder()
+    return convertToParentRecord()
         .setType("occurrence")
         .setId(occurrenceJsonRecord.getId())
         .setInternalId(
             HashConverter.getSha1(
-                occurrenceJsonRecord.getDatasetKey(),
-                occurrenceJsonRecord.getVerbatim().getParentCoreId(),
+                metadata.getDatasetKey(),
+                occurrenceJsonRecord.getVerbatim().getCoreId(),
                 occurrenceJsonRecord.getOccurrenceId()))
         .setJoinRecordBuilder(
             JoinRecord.newBuilder()
                 .setName("occurrence")
                 .setParent(
                     HashConverter.getSha1(
-                        occurrenceJsonRecord.getDatasetKey(),
-                        occurrenceJsonRecord.getVerbatim().getParentCoreId())))
+                        metadata.getDatasetKey(), occurrenceJsonRecord.getVerbatim().getCoreId())))
         .setOccurrence(occurrenceJsonRecord)
+        .setAll(occurrenceJsonRecord.getAll())
+        .setVerbatim(occurrenceJsonRecord.getVerbatim())
+        .setCreated(occurrenceJsonRecord.getCreated())
         .build();
   }
 
@@ -79,15 +112,9 @@ public class ParentJsonConverter {
   private ParentJsonRecord.Builder convertToParentRecord() {
     ParentJsonRecord.Builder builder =
         ParentJsonRecord.newBuilder()
-            .setId(verbatim.getId())
             .setCrawlId(metadata.getCrawlId())
-            .setInternalId(identifier.getInternalId())
-            .setUniqueKey(identifier.getUniqueKey())
             .setMetadataBuilder(mapMetadataJsonRecord());
 
-    mapCreated(builder);
-
-    JsonConverter.convertToDate(identifier.getFirstLoaded()).ifPresent(builder::setFirstLoaded);
     JsonConverter.convertToDate(metadata.getLastCrawled()).ifPresent(builder::setLastCrawled);
 
     return builder;
@@ -105,7 +132,7 @@ public class ParentJsonConverter {
     mapLocationRecord(builder);
     mapMultimediaRecord(builder);
     mapExtendedRecord(builder);
-    mapTaxonRecord(builder);
+    mapMeasurementOrFactRecord(builder);
 
     return builder;
   }
@@ -136,8 +163,9 @@ public class ParentJsonConverter {
         .setDatasetID(eventCore.getDatasetID())
         .setDatasetName(eventCore.getDatasetName())
         .setSamplingProtocol(eventCore.getSamplingProtocol())
-        .setParentEventIds(eventCore.getParentEventIds())
-        .setParentEventId(eventCore.getParentEventID());
+        .setParentsLineage(convertParents(eventCore.getParentsLineage()))
+        .setParentEventID(eventCore.getParentEventID())
+        .setLocationID(eventCore.getLocationID());
 
     // Vocabulary
     JsonConverter.convertVocabularyConcept(eventCore.getEventType())
@@ -204,10 +232,6 @@ public class ParentJsonConverter {
     JsonConverter.convertGadm(location.getGadm()).ifPresent(builder::setGadm);
   }
 
-  private void mapTaxonRecord(EventJsonRecord.Builder builder) {
-    builder.setGbifClassification(JsonConverter.convertClassification(verbatim, taxon));
-  }
-
   private void mapMultimediaRecord(EventJsonRecord.Builder builder) {
     builder
         .setMultimediaItems(JsonConverter.convertMultimediaList(multimedia))
@@ -215,11 +239,22 @@ public class ParentJsonConverter {
         .setMediaLicenses(JsonConverter.convertMultimediaLicense(multimedia));
   }
 
+  private void mapMeasurementOrFactRecord(EventJsonRecord.Builder builder) {
+    builder.setMeasurementOrFactMethods(
+        measurementOrFactRecord.getMeasurementOrFactItems().stream()
+            .map(MeasurementOrFact::getMeasurementMethod)
+            .collect(Collectors.toList()));
+    builder.setMeasurementOrFactTypes(
+        measurementOrFactRecord.getMeasurementOrFactItems().stream()
+            .map(MeasurementOrFact::getMeasurementType)
+            .collect(Collectors.toList()));
+  }
+
   private void mapExtendedRecord(EventJsonRecord.Builder builder) {
     builder.setExtensions(JsonConverter.convertExtensions(verbatim));
 
     // Set raw as indexed
-    extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventId);
+    extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventID);
     extractOptValue(verbatim, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
     extractOptValue(verbatim, DwcTerm.verbatimDepth).ifPresent(builder::setVerbatimDepth);
     extractOptValue(verbatim, DwcTerm.verbatimElevation).ifPresent(builder::setVerbatimElevation);
@@ -235,5 +270,37 @@ public class ParentJsonConverter {
   private void mapCreated(ParentJsonRecord.Builder builder) {
     JsonConverter.getMaxCreationDate(metadata, eventCore, temporal, location, multimedia)
         .ifPresent(builder::setCreated);
+  }
+
+  private void mapDerivedMetadata(ParentJsonRecord.Builder builder) {
+    builder.setDerivedMetadata(derivedMetadata);
+  }
+
+  private void mapLocationInheritedFields(ParentJsonRecord.Builder builder) {
+    if (locationInheritedRecord.getId() != null) {
+      builder.setLocationInherited(locationInheritedRecord);
+    }
+  }
+
+  private void mapTemporalInheritedFields(ParentJsonRecord.Builder builder) {
+    if (temporalInheritedRecord.getId() != null) {
+      builder.setTemporalInherited(temporalInheritedRecord);
+    }
+  }
+
+  private void mapEventInheritedFields(ParentJsonRecord.Builder builder) {
+    if (eventInheritedRecord.getId() != null) {
+      builder.setEventInherited(eventInheritedRecord);
+    }
+  }
+
+  protected static List<Parent> convertParents(List<org.gbif.pipelines.io.avro.Parent> parents) {
+    if (parents == null) {
+      return Collections.emptyList();
+    }
+
+    return parents.stream()
+        .map(p -> Parent.newBuilder().setId(p.getId()).setEventType(p.getEventType()).build())
+        .collect(Collectors.toList());
   }
 }

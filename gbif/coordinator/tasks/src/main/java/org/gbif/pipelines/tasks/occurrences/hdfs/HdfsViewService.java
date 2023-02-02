@@ -8,9 +8,11 @@ import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.pipelines.common.hdfs.CommonHdfsViewCallback;
+import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /**
@@ -32,7 +34,7 @@ public class HdfsViewService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-occurrence-hdfs-view service with parameters : {}", config);
+    log.info("Started pipelines-hdfs-view service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
@@ -46,12 +48,19 @@ public class HdfsViewService extends AbstractIdleService {
     PipelinesHistoryClient historyClient =
         ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
 
-    HdfsViewCallback callback =
-        new HdfsViewCallback(config, publisher, curator, historyClient, executor);
+    DatasetClient datasetClient = ServiceFactory.createDatasetClient(config.stepConfig);
 
-    String routingKey =
-        new PipelinesInterpretedMessage().setRunner(config.processRunner).getRoutingKey();
-    listener.listen(c.queueName, routingKey, c.poolSize, callback);
+    HdfsViewCallback callback =
+        HdfsViewCallback.builder()
+            .config(config)
+            .publisher(publisher)
+            .curator(curator)
+            .historyClient(historyClient)
+            .datasetClient(datasetClient)
+            .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
+            .build();
+
+    listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }
 
   @Override
@@ -60,6 +69,6 @@ public class HdfsViewService extends AbstractIdleService {
     publisher.close();
     curator.close();
     executor.shutdown();
-    log.info("Stopping pipelines-occurrence-hdfs-view service");
+    log.info("Stopping pipelines-hdfs-view service");
   }
 }

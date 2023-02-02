@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+#
+# Generates bitmaps from shapefiles to minimize spatial web service calls in la-pipelines
+# See: https://github.com/gbif/pipelines/issues/250
+#
+
+CMD=$(basename $0)
+
+FIND_DOCOPTS=$(which docopts)
+
+if [[ -z $FIND_DOCOPTS ]]
+then
+    echo "ERROR: Please install docopts https://github.com/docopt/docopts and copy it in your PATH"
+    exit 1
+fi
+
+set -e
+
+colgrn='\033[0;32m' # Green
+colrst='\033[0m'    # Text Reset
+
+function log.info () { echo -e "${colgrn}$@${colrst}" ;}
+
+eval "$(docopts -V - -h - : "$@" <<EOF
+
+LA-Pipelines bitmap generation utility.
+
+The $CMD generates bitmaps from shapefiles to minimize spatial web service calls in la-pipelines
+
+Usage:
+  $CMD <layers_dir> <layer_name> <field_name> [--expose] [--nostop] [--memory=<mem>]
+
+Options:
+  -h --help            Show this help.
+----
+$CMD
+License Apache-2.0
+EOF
+)"
+
+CNT_NAME=la-pipelines-bitmap
+LAYERS_DIR=$layers_dir
+LAYER_NAME=$layer_name
+FIELD_NAME=$field_name
+TABLE_NAME=$LAYER_NAME
+P=postgres
+DB=$P
+timer=3
+
+function stop() {
+  set +e
+  docker stop $CNT_NAME >/dev/null 2>&1
+  docker rm $CNT_NAME >/dev/null 2>&1
+  set -e
+}
+
+function check_pg() {
+  until docker exec -i $CNT_NAME runuser -l $P -c 'pg_isready' 2>/dev/null; do
+    log.info "Postgres is unavailable - sleeping for $timer seconds"
+    sleep $timer
+  done
+  log.info "Postgres available"
+}
+
+stop
+
+log.info ">>> Running postgres with postgis via docker"
+
+if ($expose); then
+  PORTS="-p 5432:5432"
+else
+  PORTS=""
+fi
+
+if [[ -n $memory ]]; then
+  JAVA_OPTS="-Xmx$memory"
+else
+  JAVA_OPTS=""
+fi
+
+docker run \
+  --interactive --tty -d \
+  --volume "$LAYERS_DIR":/data/pipelines-shp \
+  --name $CNT_NAME \
+  $PORTS \
+  -e POSTGRES_PASSWORD=$P \
+  -e POSTGRES_DB=$DB \
+  livingatlases/la-pipelines-bitmap:latest
+
+log.info ">>> Convert shape file into sql"
+
+docker exec -i $CNT_NAME shp2pgsql -d -i -I -s 4326 -W ISO-8859-1 /data/pipelines-shp/$LAYER_NAME.shp $LAYER_NAME > /tmp/$LAYER_NAME.sql
+
+check_pg
+
+until docker exec -i $CNT_NAME psql -U $P -d $DB -c 'SELECT PostGIS_version();' >/dev/null 2>&1; do
+  log.info "Postgis is unavailable - sleeping for $timer seconds"
+  sleep $timer
+done
+
+log.info "Postgis available"
+
+sleep 10
+
+check_pg
+
+log.info ">>> Load resulting sql layer in postgres"
+
+# Removing DropGeometry as always fails
+sed '/DropGeometry/d' /tmp/$LAYER_NAME.sql > /tmp/$LAYER_NAME.tmp
+mv /tmp/$LAYER_NAME.tmp /tmp/$LAYER_NAME.sql
+
+docker exec -i -u postgres $CNT_NAME psql -U $P -d $DB < /tmp/$LAYER_NAME.sql > /dev/null
+
+log.info ">>> Removing $TABLE_NAME.png bitmap if exists"
+
+rm -f /data/pipelines-shp/$TABLE_NAME.png
+
+log.info ">>> Generating bitmap from sql table $TABLE_NAME"
+
+docker exec -i $CNT_NAME /usr/lib/jvm/jdk8u332-b09-jre/bin/java $JAVA_OPTS -Durl=jdbc:postgresql://127.0.0.1 -Ddb=$DB -Duser=$P -Dpassword=$P -jar /usr/local/lib/la-pipelines-bitmap.jar $TABLE_NAME $FIELD_NAME /data/pipelines-shp/
+
+log.info ">>> Bitmap generated in $LAYERS_DIR/$TABLE_NAME.png"
+
+if ($nostop); then
+  log.info ">>> Not stopping the postgres container"
+else
+  stop
+fi

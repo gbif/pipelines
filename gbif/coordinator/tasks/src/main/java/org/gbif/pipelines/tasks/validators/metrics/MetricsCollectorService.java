@@ -1,15 +1,12 @@
 package org.gbif.pipelines.tasks.validators.metrics;
 
 import com.google.common.util.concurrent.AbstractIdleService;
-import java.util.Collections;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
 import org.gbif.pipelines.validator.factory.ElasticsearchClientFactory;
@@ -47,18 +44,11 @@ public class MetricsCollectorService extends AbstractIdleService {
     ValidationWsClient validationClient =
         ServiceFactory.createValidationWsClient(config.stepConfig);
 
-    PipelinesIndexedMessage message = new PipelinesIndexedMessage();
-    if (config.validatorOnly) {
-      message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_COLLECT_METRICS.name()));
-    }
-    String routingKey = message.getRoutingKey() + ".*";
-
-    listener.listen(
-        c.queueName,
-        routingKey,
-        c.poolSize,
+    MetricsCollectorCallback callback =
         new MetricsCollectorCallback(
-            this.config, publisher, curator, historyClient, validationClient));
+            this.config, publisher, curator, historyClient, validationClient);
+
+    listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }
 
   @SneakyThrows

@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.beam;
 
+import au.org.ala.kvs.ALANameMatchConfig;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
@@ -17,14 +18,13 @@ import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.ALATemporalTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
 import au.org.ala.pipelines.util.VersionInfo;
+import au.org.ala.utils.ArchiveUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -51,6 +51,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.slf4j.MDC;
@@ -104,8 +105,8 @@ public class ALAVerbatimToInterpretedPipeline {
   public static void main(String[] args) throws IOException {
     VersionInfo.print();
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "interpret");
-    InterpretationPipelineOptions options =
-        PipelinesOptionsFactory.createInterpretation(combinedArgs);
+    ALAInterpretationPipelineOptions options =
+        PipelinesOptionsFactory.create(ALAInterpretationPipelineOptions.class, combinedArgs);
     options.setMetaFileName(ValidationUtils.INTERPRETATION_METRICS);
     run(options);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
@@ -145,7 +146,7 @@ public class ALAVerbatimToInterpretedPipeline {
     List<DateComponentOrdering> dateComponentOrdering =
         options.getDefaultDateFormat() == null
             ? config.getGbifConfig().getDefaultDateFormat()
-            : options.getDefaultDateFormat();
+            : Arrays.asList(DateComponentOrdering.DMY_FORMATS);
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
@@ -195,6 +196,10 @@ public class ALAVerbatimToInterpretedPipeline {
     MultimediaTransform multimediaTransform =
         MultimediaTransform.builder().orderings(dateComponentOrdering).create();
 
+    // Extension
+    MeasurementOrFactTransform measurementOrFactTransform =
+        MeasurementOrFactTransform.builder().create();
+
     // Create and write metadata
     PCollection<ALAMetadataRecord> metadataRecord =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
@@ -219,6 +224,10 @@ public class ALAVerbatimToInterpretedPipeline {
             .kingdomCheckStoreSupplier(
                 ALANameCheckKVStoreFactory.getInstanceSupplier("kingdom", config))
             .dataResourceStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
+            .alaNameMatchConfig(
+                config.getAlaNameMatchConfig() != null
+                    ? config.getAlaNameMatchConfig()
+                    : new ALANameMatchConfig())
             .create();
 
     // ALA specific - Location
@@ -283,6 +292,11 @@ public class ALAVerbatimToInterpretedPipeline {
         .apply("Interpret location", locationTransform.interpret())
         .apply("Write location to avro", locationTransform.write(pathFn));
 
+    uniqueRecords
+        .apply("Check location transform condition", measurementOrFactTransform.check(types))
+        .apply("Interpret location", measurementOrFactTransform.interpret())
+        .apply("Write location to avro", measurementOrFactTransform.write(pathFn));
+
     log.info("Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
@@ -293,6 +307,12 @@ public class ALAVerbatimToInterpretedPipeline {
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
     FsUtils.deleteDirectoryByPrefix(hdfsConfigs, tempPath, ".temp-beam");
 
+    if (options instanceof ALAInterpretationPipelineOptions
+        && ((ALAInterpretationPipelineOptions) options).isEventsEnabled()
+        && ArchiveUtils.isEventCore(options)) {
+      log.info("Running events pipeline");
+      ALAVerbatimToEventPipeline.run(options);
+    }
     log.info("Pipeline has been finished");
   }
 }

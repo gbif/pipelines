@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.function.BiPredicate;
 import lombok.Builder;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.MediaType;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.MediaParser;
@@ -27,7 +28,6 @@ import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.Audubon;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.MediaType;
 
 /**
  * Interpreter for the Audubon extension, Interprets form {@link ExtendedRecord} to {@link
@@ -232,6 +232,8 @@ public class AudubonInterpreter {
       a.setType(MediaType.Sound.name());
     } else if (prFn.test("image", MediaType.StillImage)) {
       a.setType(MediaType.StillImage.name());
+    } else if (prFn.test("application/json+ld", MediaType.InteractiveResource)) {
+      a.setType(MediaType.InteractiveResource.name());
     }
   }
 

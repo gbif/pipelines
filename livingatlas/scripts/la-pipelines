@@ -32,7 +32,7 @@ then
         echo "$OUT"
     }
 else
-    if [[ $YQ_VERSION =~ ^4 ]]
+    if [[ $YQ_VERSION =~ ^[a-zA-Z]*4\.[0-9]+\.[0-9]+ ]]
 then
     function YQ_VERIFY() {
         cat "$1" | yq e 'true' - > /dev/null
@@ -79,6 +79,7 @@ Pipeline ingress steps:
 dwca-avro --> interpret --> validate --> uuid --> sds --> image-load ... │
                  --> image-sync --> index --> sample --> jackknife --> solr
 
+-  'copy' downloads Dwc-A from collectory and copy it to local fs and optionally to hdfs (and an exclude list for 'all')
 -  'dwca-avro' reads a Dwc-A and converts it to an verbatim.avro file;
 -  'interpret' reads verbatim.avro, interprets it and writes the interpreted data and the issues to Avro files;
 -  'validate' validates the identifiers for a dataset, checking for duplicate and empty keys;
@@ -91,39 +92,44 @@ dwca-avro --> interpret --> validate --> uuid --> sds --> image-load ... │
 -  'sample' use the sampling service to retrieve values for points for the layers in the spatial service;
 -  'jackknife' adds an aggregated jackknife AVRO for all datasets. Requires samping-avro. After running a full 'index' is required.
 -  'solr' reads index records in AVRO and submits them to SOLR;
--  'solr-schema' sync schema
+-  'solr-schema' retrieve a list of indexable fields from the AVRO with types and counts;
+-  'elastic' reads index records in AVRO and submits them to ElasticSearch;
 -  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv';
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv';
 -  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv';
 -  'clustering' clustering of occurrences;
 -  'prune-datasets' remove any datasets no longer registered in the collectory;
--  'dwca-export' export a dwca archive;
+-  'dwca-export' export a dwca archive with a fixed set of columns;
+-  'predicate-export' export a dwca archive of data matching a JSON query stored in a text file;
 -  'migrate' used for migration;
 
 All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
 
 Usage:
-  $CMD [options] dwca-avro     (<dr>...|all)
-  $CMD [options] interpret     (<dr>...|all)         $WHEREL
-  $CMD [options] validate      (<dr>...|all)         $WHERE
-  $CMD [options] uuid          (<dr>...|all)         $WHERE
-  $CMD [options] sds           (<dr>...|all)         $WHEREL
-  $CMD [options] image-load    (<dr>...|all)         $WHERE
-  $CMD [options] image-sync    (<dr>...|all)         $WHERE
-  $CMD [options] index         (<dr>...|all)         $WHEREL
-  $CMD [options] sample        (<dr>...|all)         $WHERE
-  $CMD [options] clustering    (all)                 $WHERE
-  $CMD [options] jackknife     (all)                 $WHERE
-  $CMD [options] outlier       (<dr>...|all)         $WHERE
-  $CMD [options] solr          (<dr>...|all)         $WHERE
-  $CMD [options] solr-schema   (<dr>...|all)         $WHERE
+  $CMD [options] copy                (<dr>...|all)    [--hdfs] [--exclude=<exc>]
+  $CMD [options] dwca-avro           (<dr>...|all)
+  $CMD [options] interpret           (<dr>...|all)    $WHEREL
+  $CMD [options] validate            (<dr>...|all)    $WHERE
+  $CMD [options] uuid                (<dr>...|all)    $WHERE
+  $CMD [options] sds                 (<dr>...|all)    $WHEREL
+  $CMD [options] image-load          (<dr>...|all)    $WHERE
+  $CMD [options] image-sync          (<dr>...|all)    $WHERE
+  $CMD [options] index               (<dr>...|all)    $WHEREL
+  $CMD [options] sample              (<dr>...|all)    $WHERE
+  $CMD [options] clustering          (all)            $WHERE
+  $CMD [options] jackknife           (all)            $WHERE
+  $CMD [options] outlier             (<dr>...|all)    $WHERE
+  $CMD [options] solr                (<dr>...|all)    $WHERE
+  $CMD [options] elastic             (<dr>...|all)    $WHERE
+  $CMD [options] solr-schema         (<dr>...|all)    $WHERE
   $CMD [options] archive-list
   $CMD [options] dataset-list
   $CMD [options] prune-datasets
   $CMD [options] validation-report
-  $CMD [options] do-all        (<dr>...|all)         $WHEREL
-  $CMD [options] dwca-export   (<dr>...|all)         $WHERE
-  $CMD [options] migrate       (<dr>...|all)         $WHERE
+  $CMD [options] do-all              (<dr>...|all)    $WHEREL
+  $CMD [options] dwca-export         (<dr>...|all)    $WHERE
+  $CMD [options] predicate-export    (<dr>)           [--queryFile=<queryFile>] [--jobId=<jobId>] $WHERE
+  $CMD [options] migrate             (<dr>...|all)    $WHERE
   $CMD -h | --help
   $CMD -v | --version
 
@@ -137,7 +143,6 @@ Options:
   -v --version         Show version.
 ----
 $CMD $VER
-License Apache-2.0
 License Apache-2.0
 EOF
 )"
@@ -302,6 +307,13 @@ FS_PATH_ARG="--fsPath=$FS_PATH"
 
 ARGS="$ARGS $FS_PATH_ARG"
 
+COLLECTORY_WS_URL=$(getConf collectory.wsUrl);
+COLLECTORY_WS_API_KEY=$(getConf collectory.httpHeaders.Authorization);
+COPY_DEST=$(getConf copy.copyPath)
+
+# Split exclude list of drs
+IFS=',' read -ra excludes <<< "$exclude"
+
 # Uncomment this to debug log4j
 # if ( $debug) ; then EXTRA_JVM_CLI_ARGS="-Dlog4j.debug"; fi
 
@@ -350,6 +362,85 @@ function validation-report() {
        --config=$config $ARGS
 }
 
+function copy () {
+  local dr=$1
+
+  if [[ " ${excludes[*]} " =~ " ${dr} " ]]; then
+    log.info "Skipping copy of $dr"
+  else
+    logStepStart "Copy" $dr
+    SECONDS=0
+
+    DR_URL=${COLLECTORY_WS_URL}dataResource/$dr\?api_key\=$COLLECTORY_WS_API_KEY
+    DR_CONN_URL=`curl -s -o - ${DR_URL} | yq -P e '.connectionParameters.url' -`
+    DR_DEST="$COPY_DEST/$dr"
+    if [[ ! -d "$DR_DEST" ]] ; then $_D mkdir -p $DR_DEST; fi
+    log.debug "Trying to copy $dr using ${DR_URL//[0-9]/X} and connection url $DR_CONN_URL into $DR_DEST/$dr.zip"
+    if [[ "$DR_URL" == http* ]]; then
+      # Try to resume previous download (continue if fails)
+      set +e
+      $_D curl -sL -o "$DR_DEST/$dr.zip" -f "$DR_CONN_URL"
+      set -e
+    # else, other types like sftp
+    else
+      log.warn "Skipping the download and copy of $dr. We tried ${DR_URL//[0-9]/X}"
+    fi
+    if [[ $(file -b --mime-type "$DR_DEST/$dr.zip") != 'application/zip'* ]]
+    then
+        log.warn "Downloaded archive of $dr is not a zip. Cleaning it"
+        $_D rm "$DR_DEST/$dr.zip" || true
+        $_D rmdir "$DR_DEST" || true
+    fi
+    logStepEnd "Copy" $dr local $SECONDS
+  fi
+}
+
+function clean-dwca-in-hdfs () {
+  local dr=$1
+
+  logStepStart "Clean dwca in dfs" $dr
+  SECONDS=0
+
+  $_D /data/hadoop/bin/hdfs dfs -mkdir -p /dwca-exports
+  if [[ "$dr" == 'all' && $dry_run == 'false' ]]; then
+    for f in `/data/hadoop/bin/hdfs dfs -ls -C /dwca-exports`
+    do
+      d=`echo $f | sed -e "s/\\/dwca-exports\\///"`
+      if [[ " ${excludes[*]} " =~ " ${d} " ]]; then
+        log.info "Skipping clean of $f"
+      else
+        log.info "Remove $f from dfs"
+        /data/hadoop/bin/hdfs dfs -rm -r -f $f
+      fi
+    done
+  else
+    $_D /data/hadoop/bin/hdfs dfs -rm -r -f /dwca-exports/$dr
+  fi
+  logStepEnd "Clean dwca in dfs" $dr local $SECONDS
+}
+
+function copy-to-hdfs () {
+  local dr=$1
+
+  logStepStart "Copy dwca to dfs" $dr
+  if [[ "$dr" == 'all' ]]; then
+    for dr in `ls /data/dwca-export`
+    do
+      f="$COPY_DEST/$dr"
+      if [[ " ${excludes[*]} " =~ " ${dr} " ]]; then
+        log.info "Skipping copy dwca $f to dfs"
+      else
+        log.info "Copy $f to dfs"
+        $_D /data/hadoop/bin/hdfs dfs -copyFromLocal -f $f /dwca-exports/
+      fi
+    done
+  else
+    f="$COPY_DEST/$dr"
+    $_D /data/hadoop/bin/hdfs dfs -copyFromLocal -f $f /dwca-exports/
+  fi
+  logStepEnd "Copy dwca to dfs" $dr local $SECONDS
+}
+
 function dwca-avro () {
     dr=$1
     CLASS=au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline
@@ -366,7 +457,6 @@ function dwca-avro () {
           -Djava.io.tmpdir=$DWCA_TMP \
           -cp $LOCAL_PIPELINES_JAR $CLASS \
           --datasetId=$dr \
-          --deleteLockFileOnExit=true \
           --config=$config $ARGS \
           --experiments=use_deprecated_read
       logStepEnd "DWCA-AVRO conversion" $dr local $SECONDS
@@ -384,7 +474,6 @@ function dwca-avro () {
               -cp $LOCAL_PIPELINES_JAR $CLASS \
               --datasetId=$dr \
               --inputPath=$inputPath \
-              --deleteLockFileOnExit=false \
               --config=$config $ARGS
 
       done < /tmp/dataset-archive-list.csv
@@ -427,6 +516,9 @@ function spark-cluster-pipeline() {
     # Remove empty confs
     if [[ $CONF = "--conf" ]] ; then CONF=""; fi
 
+    MASTER="--master $SPARK_MASTER"
+    if [[ $SPARK_MASTER = "DONT_SET" ]] ; then MASTER=""; fi
+
     if [[ $ltype = "spark-cluster" ]] ; then
         $_D $SPARK_SUBMIT_PATH \
             --name "$NAME" \
@@ -436,6 +528,7 @@ function spark-cluster-pipeline() {
             $(toArg $SH_ARGS executor-memory) \
             $(toArg $SH_ARGS driver-memory) \
             --class $CLASS \
+            $MASTER \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS \
@@ -462,6 +555,26 @@ function interpret () {
     spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "interpret $dr"
 
     logStepEnd "Interpretation" $dr $ltype $SECONDS
+}
+
+function elastic () {
+    local dr="$1" ltype="$2"
+
+    SECONDS=0
+    logStepStart "Elastic" $dr
+
+    SH_ARGS=elastic-sh-args.local
+    CLASS=au.org.ala.pipelines.beam.ALAEventToEsIndexPipeline
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=elastic-sh-args.spark-embedded
+    CLASS=au.org.ala.pipelines.beam.ALAEventToEsIndexPipeline
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=elastic-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "elastic $dr"
+
+    logStepEnd "Elastic" $dr $ltype $SECONDS
 }
 
 function validate () {
@@ -522,74 +635,39 @@ function migrate () {
 }
 
 function image-load () {
-    dr=$1
-    ltype=$2
+    local dr="$1" ltype="$2"
     CLASS=au.org.ala.pipelines.beam.ImageServiceDiffLoadPipeline
 
     logStepStart "Image-load" $dr
     SECONDS=0
 
-    PRE=image-load-sh-args.spark-embedded
-    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
-        $_D java $EXTRA_JVM_CLI_ARGS \
-            $(getConf $PRE.jvm)  \
-            -cp $PIPELINES_JAR $CLASS \
-            --datasetId=$dr \
-            --config=$config $ARGS
-    fi
+    SH_ARGS=image-load-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    PRE=image-load-sh-args.spark-cluster
-    if [[ $ltype = "spark-cluster" ]] ; then
-        $_D $SPARK_SUBMIT_PATH \
-            --name "image-load $dr" \
-            $(toArg $PRE conf) \
-            $(toArg $PRE num-executors) \
-            $(toArg $PRE executor-cores) \
-            $(toArg $PRE executor-memory) \
-            $(toArg $PRE driver-memory) \
-            --class $CLASS \
-            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
-            $PIPELINES_JAR \
-            --datasetId=$dr \
-            --config=$config $ARGS
-            # TODO set here an optional colorized log4j properties
-    fi
+    SH_ARGS=image-load-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=image-load-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "image-load $dr"
 
     logStepEnd "Image-load" $dr $ltype $SECONDS
 }
 
 function image-sync () {
-    dr=$1
-    ltype=$2
+    local dr="$1" ltype="$2"
     CLASS=au.org.ala.pipelines.beam.ImageServiceSyncPipeline
 
     logStepStart "Image-sync" $dr
     SECONDS=0
 
-    PRE=image-sync-sh-args.spark-embedded
-    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
-        $_D java $EXTRA_JVM_CLI_ARGS \
-            $(getConf $PRE.jvm)  \
-            -cp $PIPELINES_JAR $CLASS \
-            --datasetId=$dr \
-            --config=$config $ARGS
-    fi
+    SH_ARGS=image-sync-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    PRE=image-sync-sh-args.spark-cluster
-    if [[ $ltype = "spark-cluster" ]] ; then
-        $_D $SPARK_SUBMIT_PATH \
-            --name "Image-sync $dr" \
-            $(toArg $PRE num-executors) \
-            $(toArg $PRE executor-cores) \
-            $(toArg $PRE executor-memory) \
-            $(toArg $PRE driver-memory) \
-            --class $CLASS \
-            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
-            $PIPELINES_JAR \
-            --datasetId=$dr \
-            --config=$config $ARGS
-            # TODO set here an optional colorized log4j properties
-    fi
+    SH_ARGS=image-sync-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=image-sync-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "image-sync $dr"
 
     logStepEnd "Image-sync" $dr $ltype $SECONDS
 }
@@ -768,39 +846,43 @@ function index () {
 }
 
 function dwca_export () {
-    dr=$1
-    ltype=$2
-    CLASS=au.org.ala.pipelines.beam.IndexRecordToDwcaPipeline
+    local dr="$1" ltype="$2"
+    CLASS=au.org.ala.pipelines.beam.DwcaExportPipeline
 
     logStepStart "Dwca-export" $dr
     SECONDS=0
 
-    PRE=image-sync-sh-args.spark-embedded
-    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
-        $_D java $EXTRA_JVM_CLI_ARGS \
-            $(getConf $PRE.jvm)  \
-            -cp $PIPELINES_JAR $CLASS \
-            --datasetId=$dr \
-            --config=$config $ARGS
-    fi
+    SH_ARGS=export-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
 
-    PRE=image-sync-sh-args.spark-cluster
-    if [[ $ltype = "spark-cluster" ]] ; then
-        $_D $SPARK_SUBMIT_PATH \
-            --name "Dwca-export $dr" \
-            $(toArg $PRE num-executors) \
-            $(toArg $PRE executor-cores) \
-            $(toArg $PRE executor-memory) \
-            $(toArg $PRE driver-memory) \
-            --class $CLASS \
-            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
-            $PIPELINES_JAR \
-            --datasetId=$dr \
-            --config=$config $ARGS
-            # TODO set here an optional colorized log4j properties
-    fi
+    SH_ARGS=export-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=export-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Dwca-export $dr"
 
     logStepEnd "Dwca-export" $dr $ltype $SECONDS
+}
+
+function predicate_export () {
+    local dr="$1" ltype="$2"
+    CLASS=au.org.ala.pipelines.spark.PredicateExportDwCAPipeline
+
+    logStepStart "Predicate-export" $dr
+    SECONDS=0
+
+    ARGS="--queryFile=$queryFile --jobId=$jobId"
+
+    SH_ARGS=export-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=export-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=export-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "Predicate-export $dr"
+
+    logStepEnd "Predicate-export" $dr $ltype $SECONDS
 }
 
 if ($archive_list) ; then
@@ -867,12 +949,20 @@ if ($interpret || $do_all); then
     do_step interpret
 fi
 
+if ($elastic || $do_all); then
+    do_step elastic
+fi
+
 if ($validate || $do_all); then
     do_step validate
 fi
 
 if ($dwca_export); then
     do_step dwca_export
+fi
+
+if ($predicate_export); then
+    do_step predicate_export
 fi
 
 if ($uuid || $do_all); then
@@ -938,7 +1028,7 @@ if ($clustering || $do_all); then
   if [[ $2 = "all" ]] ; then
     do_step clustering
   else
-    echo "WARN: 'clustering' not run when 'dr' != 'all'"
+    log.warn "'clustering' not run when 'dr' != 'all'"
   fi
 fi
 
@@ -946,7 +1036,7 @@ if ($jackknife || $do_all); then
   if [[ $2 = "all" ]] ; then
     do_step jackknife
   else
-    echo "WARN: 'jackknife' not run when 'dr' != 'all'"
+    log.warn "'clustering' not run when 'dr' != 'all'"
   fi
 fi
 
@@ -964,6 +1054,26 @@ fi
 
 if ($migrate); then
     do_step migrate
+fi
+
+if ($copy); then
+  if [[ $2 = "all" ]] ; then
+    for d in $(curl -s -o - ${COLLECTORY_WS_URL}dataResource | yq -P e '.[].uid' -); do
+      copy $d
+    done
+    if ($hdfs); then
+      clean-dwca-in-hdfs "all"
+      copy-to-hdfs "all"
+    fi
+  else
+    for d in "${drs[@]}"; do
+      copy $d ""
+      if ($hdfs); then
+        clean-dwca-in-hdfs $d
+        copy-to-hdfs $d
+      fi
+    done
+  fi
 fi
 
 # All ended correctly, so untrap EXIT catch

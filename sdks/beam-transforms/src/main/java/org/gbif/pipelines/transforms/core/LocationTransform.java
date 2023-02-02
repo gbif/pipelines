@@ -44,7 +44,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   private PCollectionView<MetadataRecord> metadataView;
 
   @Builder(buildMethodName = "create")
-  private LocationTransform(
+  protected LocationTransform(
       SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier,
       PCollectionView<MetadataRecord> metadataView) {
     super(
@@ -55,8 +55,17 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
 
   /** Maps {@link LocationRecord} to key value, where key is {@link LocationRecord#getId} */
   public MapElements<LocationRecord, KV<String, LocationRecord>> toKv() {
+    return asKv(false);
+  }
+
+  /** Maps {@link LocationRecord} to key value, where key is {@link LocationRecord#getCoreId} */
+  public MapElements<LocationRecord, KV<String, LocationRecord>> toCoreIdKv() {
+    return asKv(true);
+  }
+
+  private MapElements<LocationRecord, KV<String, LocationRecord>> asKv(boolean useCoreId) {
     return MapElements.into(new TypeDescriptor<KV<String, LocationRecord>>() {})
-        .via((LocationRecord lr) -> KV.of(lr.getId(), lr));
+        .via((LocationRecord lr) -> KV.of(useCoreId ? lr.getCoreId() : lr.getId(), lr));
   }
 
   public LocationTransform counterFn(SerializableConsumer<String> counterFn) {
@@ -125,8 +134,8 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
                     .build())
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(LocationInterpreter.interpretCountryAndCoordinates(geocodeKvStore, mdr))
+        .via(LocationInterpreter.interpretContinent(geocodeKvStore))
         .via(LocationInterpreter.interpretGadm(geocodeKvStore))
-        .via(LocationInterpreter::interpretContinent)
         .via(LocationInterpreter::interpretWaterBody)
         .via(LocationInterpreter::interpretStateProvince)
         .via(LocationInterpreter::interpretMinimumElevationInMeters)
@@ -139,8 +148,11 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
         .via(LocationInterpreter::interpretCoordinatePrecision)
         .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
+        .via(LocationInterpreter.calculateCentroidDistance(geocodeKvStore))
         .via(LocationInterpreter::interpretLocality)
         .via(LocationInterpreter::interpretFootprintWKT)
+        .via(LocationInterpreter::setCoreId)
+        .via(LocationInterpreter::setParentEventId)
         .via(r -> this.incCounter())
         .getOfNullable();
   }

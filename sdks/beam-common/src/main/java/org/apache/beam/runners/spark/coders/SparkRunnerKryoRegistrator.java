@@ -13,6 +13,7 @@ import org.apache.beam.runners.spark.translation.ValueAndCoderLazySerializable;
 import org.apache.beam.runners.spark.util.ByteArray;
 import org.apache.beam.sdk.transforms.windowing.PaneInfo;
 import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.Row;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.HashBasedTable;
 import org.apache.spark.serializer.GenericAvroSerializer;
@@ -20,6 +21,8 @@ import org.apache.spark.serializer.KryoRegistrator;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
+import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
@@ -31,6 +34,10 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
+import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
+import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
+import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 import scala.Tuple2;
 import scala.collection.mutable.WrappedArray;
 
@@ -59,6 +66,10 @@ public class SparkRunnerKryoRegistrator implements KryoRegistrator {
     AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(ExtendedRecord.SCHEMA$));
     AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(IssueRecord.SCHEMA$));
     AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(OccurrenceHdfsRecord.SCHEMA$));
+    AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(EventCoreRecord.SCHEMA$));
+    AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(EventInheritedRecord.SCHEMA$));
+    AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(TemporalInheritedRecord.SCHEMA$));
+    AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(LocationInheritedRecord.SCHEMA$));
 
     // extensions
     AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(AmplificationRecord.SCHEMA$));
@@ -67,6 +78,8 @@ public class SparkRunnerKryoRegistrator implements KryoRegistrator {
     AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(MeasurementOrFact.SCHEMA$));
     AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(MultimediaRecord.SCHEMA$));
     AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(LocationFeatureRecord.SCHEMA$));
+    AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(DerivedMetadataRecord.SCHEMA$));
+    AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(EventDate.SCHEMA$));
   }
 
   /** Copied from BEAM, except last line */
@@ -86,6 +99,7 @@ public class SparkRunnerKryoRegistrator implements KryoRegistrator {
     kryo.register(StateAndTimers.class);
     kryo.register(TupleTag.class);
     kryo.register(WrappedArray.ofRef.class);
+    kryo.register(Row.class);
 
     try {
       kryo.register(

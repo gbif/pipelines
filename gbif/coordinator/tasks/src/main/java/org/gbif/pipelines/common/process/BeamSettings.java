@@ -11,19 +11,20 @@ import java.util.function.Consumer;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
-import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
+import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
 import org.gbif.pipelines.common.configs.ElasticsearchConfiguration;
 import org.gbif.pipelines.common.configs.IndexConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.common.indexing.IndexSettings;
 import org.gbif.pipelines.tasks.events.indexing.EventsIndexingConfiguration;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
-import org.gbif.pipelines.tasks.occurrences.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.tasks.occurrences.identifier.IdentifierConfiguration;
 import org.gbif.pipelines.tasks.occurrences.indexing.IndexingConfiguration;
 import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
@@ -41,7 +42,6 @@ public class BeamSettings {
           .command(command)
           .datasetUuid(message.getDatasetUuid())
           .attempt(message.getAttempt())
-          .endpointType(message.getEndpointType())
           .interpretTypes(message.getInterpretTypes())
           .stepConfig(config.stepConfig)
           .avroConfig(config.avroConfig)
@@ -114,7 +114,6 @@ public class BeamSettings {
           .command(command)
           .datasetUuid(message.getDatasetUuid())
           .attempt(message.getAttempt())
-          .endpointType(message.getEndpointType())
           .interpretTypes(message.getInterpretTypes())
           .stepConfig(config.stepConfig)
           .avroConfig(config.avroConfig)
@@ -139,7 +138,7 @@ public class BeamSettings {
   }
 
   public static Consumer<StringJoiner> occurrenceHdfsView(
-      HdfsViewConfiguration config, PipelinesInterpretedMessage message, int numberOfShards) {
+      HdfsViewConfiguration config, PipelinesInterpretationMessage message, int numberOfShards) {
     return command -> {
       // Common properties
       command
@@ -160,6 +159,10 @@ public class BeamSettings {
       if (config.useBeamDeprecatedRead) {
         command.add("--experiments=use_deprecated_read");
       }
+
+      if (config.recordType == RecordType.EVENT) {
+        command.add("--coreRecordType=EVENT");
+      }
     };
   }
 
@@ -170,7 +173,6 @@ public class BeamSettings {
           .command(command)
           .datasetUuid(message.getDatasetUuid())
           .attempt(message.getAttempt())
-          .endpointType(message.getEndpointType())
           .interpretTypes(message.getInterpretTypes())
           .stepConfig(config.stepConfig)
           .avroConfig(config.avroConfig)
@@ -221,7 +223,6 @@ public class BeamSettings {
     private final StringJoiner command;
     private final UUID datasetUuid;
     private final Integer attempt;
-    private final EndpointType endpointType;
     private final Set<String> interpretTypes;
     private final StepConfiguration stepConfig;
     private final AvroWriteConfiguration avroConfig;
@@ -245,8 +246,7 @@ public class BeamSettings {
           .add("--avroSyncInterval=" + avroConfig.syncInterval)
           .add("--hdfsSiteConfig=" + Objects.requireNonNull(stepConfig.hdfsSiteConfig))
           .add("--coreSiteConfig=" + Objects.requireNonNull(stepConfig.coreSiteConfig))
-          .add("--properties=" + Objects.requireNonNull(pipelinesConfigPath))
-          .add("--endPointType=" + Objects.requireNonNull(endpointType));
+          .add("--properties=" + Objects.requireNonNull(pipelinesConfigPath));
 
       if (useBeamDeprecatedRead) {
         command.add("--experiments=use_deprecated_read");

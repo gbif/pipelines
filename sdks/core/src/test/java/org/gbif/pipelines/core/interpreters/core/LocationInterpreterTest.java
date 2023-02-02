@@ -46,13 +46,15 @@ public class LocationInterpreterTest {
 
   static {
     KeyValueTestStore store = new KeyValueTestStore();
-    store.put(new LatLng(15.958333d, -85.908333d), toGeocodeResponse(Country.HONDURAS));
-    store.put(new LatLng(35.891353d, -99.721925d), toGeocodeResponse(Country.UNITED_STATES));
-    store.put(new LatLng(34.69545d, -94.65836d), toGeocodeResponse(Country.UNITED_STATES));
-    store.put(new LatLng(-2.752778d, -58.653057d), toGeocodeResponse(Country.BRAZIL));
-    store.put(new LatLng(-6.623889d, -45.869164d), toGeocodeResponse(Country.BRAZIL));
-    store.put(new LatLng(-17.05d, -66d), toGeocodeResponse(Country.BOLIVIA));
-    store.put(new LatLng(-8.023319, 110.279078), toGeocodeResponse(Country.INDONESIA));
+    store.put(LatLng.create(15.958333d, -85.908333d), toGeocodeResponse(Country.HONDURAS));
+    store.put(LatLng.create(35.891353d, -99.721925d), toGeocodeResponse(Country.UNITED_STATES));
+    store.put(LatLng.create(34.69545d, -94.65836d), toGeocodeResponse(Country.UNITED_STATES));
+    store.put(LatLng.create(-2.752778d, -58.653057d), toGeocodeResponse(Country.BRAZIL));
+    store.put(LatLng.create(-6.623889d, -45.869164d), toGeocodeResponse(Country.BRAZIL));
+    store.put(LatLng.create(-17.05d, -66d), toGeocodeResponse(Country.BOLIVIA));
+    store.put(LatLng.create(-8.023319, 110.279078), toGeocodeResponse(Country.INDONESIA));
+    store.put(LatLng.create(-8.023319, 110.279078), toGeocodeResponse(Country.INDONESIA));
+    store.put(LatLng.create(41.89, 12.45), toGeocodeCentroidResponse(Country.VATICAN, 1110.7));
     KEY_VALUE_STORE = GeocodeKvStore.create(store);
   }
 
@@ -60,6 +62,14 @@ public class LocationInterpreterTest {
     Location location = new Location();
     location.setType("Political");
     location.setDistance(0.0d);
+    location.setIsoCountryCode2Digit(country.getIso2LetterCode());
+    return new GeocodeResponse(Collections.singletonList(location));
+  }
+
+  private static GeocodeResponse toGeocodeCentroidResponse(Country country, Double distanceMeters) {
+    Location location = new Location();
+    location.setType("Centroids");
+    location.setDistanceMeters(distanceMeters);
     location.setIsoCountryCode2Digit(country.getIso2LetterCode());
     return new GeocodeResponse(Collections.singletonList(location));
   }
@@ -443,5 +453,25 @@ public class LocationInterpreterTest {
     Assert.assertTrue(
         result.getIssues().getIssueList().stream()
             .anyMatch(issue -> issue.equals(FOOTPRINT_WKT_MISMATCH.name())));
+  }
+
+  @Test
+  public void centroidTest() {
+
+    // State
+    ExtendedRecord source = ExtendedRecord.newBuilder().setId("1").build();
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.decimalLatitude.qualifiedName(), "41.89");
+    coreMap.put(DwcTerm.decimalLongitude.qualifiedName(), "12.45");
+    coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "WGS84");
+    coreMap.put(DwcTerm.countryCode.qualifiedName(), "VA");
+    source.setCoreTerms(coreMap);
+
+    // When
+    LocationRecord result = interpret(source);
+    LocationInterpreter.calculateCentroidDistance(KEY_VALUE_STORE).accept(source, result);
+
+    // Should
+    assertEquals(1110.7, result.getDistanceFromCentroidInMeters(), 0);
   }
 }

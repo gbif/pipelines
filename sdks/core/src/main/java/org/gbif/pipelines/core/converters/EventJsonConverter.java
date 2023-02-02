@@ -3,6 +3,8 @@ package org.gbif.pipelines.core.converters;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
@@ -37,9 +39,6 @@ public class EventJsonConverter {
 
     mapCreated(builder);
     mapIssues(builder);
-
-    mapMetadataRecord(builder);
-    mapIdentifierRecord(builder);
     mapEventCoreRecord(builder);
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
@@ -51,32 +50,6 @@ public class EventJsonConverter {
 
   public String toJson() {
     return convert().toString();
-  }
-
-  private void mapMetadataRecord(EventJsonRecord.Builder builder) {
-    builder
-        .setCrawlId(metadata.getCrawlId())
-        .setDatasetKey(metadata.getDatasetKey())
-        .setDatasetTitle(metadata.getDatasetTitle())
-        .setDatasetPublishingCountry(metadata.getDatasetPublishingCountry())
-        .setEndorsingNodeKey(metadata.getEndorsingNodeKey())
-        .setInstallationKey(metadata.getInstallationKey())
-        .setHostingOrganizationKey(metadata.getHostingOrganizationKey())
-        .setNetworkKeys(metadata.getNetworkKeys())
-        .setProgrammeAcronym(metadata.getProgrammeAcronym())
-        .setProjectId(metadata.getProjectId())
-        .setProtocol(metadata.getProtocol())
-        .setPublisherTitle(metadata.getPublisherTitle())
-        .setPublishingOrganizationKey(metadata.getPublishingOrganizationKey());
-
-    JsonConverter.convertToDate(metadata.getLastCrawled()).ifPresent(builder::setLastCrawled);
-  }
-
-  private void mapIdentifierRecord(EventJsonRecord.Builder builder) {
-    builder.setInternalId(identifier.getInternalId());
-    builder.setUniqueKey(identifier.getUniqueKey());
-
-    JsonConverter.convertToDate(identifier.getFirstLoaded()).ifPresent(builder::setFirstLoaded);
   }
 
   private void mapEventCoreRecord(EventJsonRecord.Builder builder) {
@@ -95,7 +68,8 @@ public class EventJsonConverter {
         .ifPresent(builder::setEventType);
 
     // License
-    JsonConverter.convertLicense(eventCore.getLicense()).ifPresent(builder::setLicense);
+    builder.setLicense(
+        JsonConverter.convertLicense(eventCore.getLicense()).orElse(metadata.getLicense()));
 
     // Multivalue fields
     JsonConverter.convertToMultivalue(eventCore.getSamplingProtocol())
@@ -137,7 +111,8 @@ public class EventJsonConverter {
         .setRepatriated(location.getRepatriated())
         .setHasGeospatialIssue(location.getHasGeospatialIssue())
         .setLocality(location.getLocality())
-        .setFootprintWKT(location.getFootprintWKT());
+        .setFootprintWKT(location.getFootprintWKT())
+        .setDistanceFromCentroidInMeters(location.getDistanceFromCentroidInMeters());
 
     // Coordinates
     Double decimalLongitude = location.getDecimalLongitude();
@@ -164,18 +139,23 @@ public class EventJsonConverter {
 
   private void mapExtendedRecord(EventJsonRecord.Builder builder) {
 
-    builder
-        .setId(verbatim.getId())
-        .setAll(JsonConverter.convertFieldAll(verbatim))
-        .setExtensions(JsonConverter.convertExtensions(verbatim))
-        .setVerbatim(JsonConverter.convertVerbatimRecord(verbatim));
+    builder.setId(verbatim.getId()).setExtensions(JsonConverter.convertExtensions(verbatim));
 
     // Set raw as indexed
-    extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventId);
-    extractOptValue(verbatim, DwcTerm.parentEventID).ifPresent(builder::setParentEventId);
+    extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventID);
+    extractOptValue(verbatim, DwcTerm.parentEventID).ifPresent(builder::setParentEventID);
     extractOptValue(verbatim, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
     extractOptValue(verbatim, DwcTerm.verbatimDepth).ifPresent(builder::setVerbatimDepth);
     extractOptValue(verbatim, DwcTerm.verbatimElevation).ifPresent(builder::setVerbatimElevation);
+
+    // set occurrence count
+    Integer occurrenceCount =
+        Optional.of(verbatim.getExtensions())
+            .map(exts -> exts.get(DwcTerm.Occurrence.qualifiedName()))
+            .map(List::size)
+            .orElse(0);
+
+    builder.setOccurrenceCount(occurrenceCount);
   }
 
   private void mapIssues(EventJsonRecord.Builder builder) {

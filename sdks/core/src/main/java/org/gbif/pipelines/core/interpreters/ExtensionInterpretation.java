@@ -30,7 +30,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
  *   2) Add a supplier of a target model {@link ExtensionInterpretation#to(Supplier)}
  *   3) Map the Term to a field in a target model, the order is important, in general, it is a sequence of calls:
  *    {@link TargetHandler#map(Term, BiConsumer)}
- *    {@link TargetHandler#map(String, BiConsumer)}
+ *    {@link TargetHandler#map(String, BiConsumer...)}
  *    {@link TargetHandler#map(Term, BiFunction)}
  *    {@link TargetHandler#map(String, BiFunction)}
  *    {@link TargetHandler#mapOne(Term, BiFunction)}
@@ -127,11 +127,14 @@ public class ExtensionInterpretation {
      * @param consumer, where {@link T} is a target object and {@link String} value by key from
      *     source map
      */
-    public TargetHandler<T> map(String key, BiConsumer<T, String> consumer) {
+    @SafeVarargs
+    public final TargetHandler<T> map(String key, BiConsumer<T, String>... consumer) {
       mapperMap.put(
           key,
           (t, v) -> {
-            consumer.accept(t, v);
+            for (BiConsumer<T, String> c : consumer) {
+              c.accept(t, v);
+            }
             return null;
           });
       return this;

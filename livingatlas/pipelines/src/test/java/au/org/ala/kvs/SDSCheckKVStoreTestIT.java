@@ -6,19 +6,22 @@ import static org.junit.Assert.assertTrue;
 
 import au.org.ala.kvs.cache.SDSCheckKVStoreFactory;
 import au.org.ala.sds.api.SpeciesCheck;
-import au.org.ala.util.TestUtils;
+import au.org.ala.util.IntegrationTestUtils;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public class SDSCheckKVStoreTestIT {
   private KeyValueStore<SpeciesCheck, Boolean> kvs;
 
+  @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
+
   @Before
-  public void setUp() throws Exception {
-    this.kvs = SDSCheckKVStoreFactory.create(TestUtils.getConfig());
+  public void setup() throws Exception {
+    this.kvs = SDSCheckKVStoreFactory.create(itUtils.getConfig());
   }
 
   @After

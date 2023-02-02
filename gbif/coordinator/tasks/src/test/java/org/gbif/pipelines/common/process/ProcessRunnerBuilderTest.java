@@ -18,10 +18,10 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.pipelines.common.MainSparkSettings;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
+import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.common.indexing.IndexSettings;
 import org.gbif.pipelines.tasks.events.indexing.EventsIndexingConfiguration;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
-import org.gbif.pipelines.tasks.occurrences.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.tasks.occurrences.identifier.IdentifierConfiguration;
 import org.gbif.pipelines.tasks.occurrences.indexing.IndexingConfiguration;
 import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
@@ -92,6 +92,7 @@ public class ProcessRunnerBuilderTest {
             100L,
             100L,
             null,
+            StepRunner.STANDALONE.name(),
             null,
             EndpointType.DWC_ARCHIVE,
             null,
@@ -130,7 +131,7 @@ public class ProcessRunnerBuilderTest {
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL "
             + "--runner=SparkRunner --targetPath=tmp --metaFileName=verbatim-to-event.yml --inputPath=verbatim.avro "
             + "--avroCompressionType=SNAPPY --avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml "
-            + "--properties=/path/ws.config --endPointType=DWC_ARCHIVE --experiments=use_deprecated_read --dwcCore=Event";
+            + "--properties=/path/ws.config --experiments=use_deprecated_read --dwcCore=Event";
 
     EventsInterpretationConfiguration config = new EventsInterpretationConfiguration();
     config.distributedConfig.jarPath = "java.jar";
@@ -346,7 +347,7 @@ public class ProcessRunnerBuilderTest {
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL "
             + "--runner=SparkRunner --targetPath=tmp --metaFileName=verbatim-to-identifier.yml --inputPath=verbatim.avro "
             + "--avroCompressionType=SNAPPY --avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml "
-            + "--properties=/path/ws.config --endPointType=DWC_ARCHIVE --experiments=use_deprecated_read --tripletValid=true "
+            + "--properties=/path/ws.config --experiments=use_deprecated_read --tripletValid=true "
             + "--occurrenceIdValid=true --useExtendedRecordId=true";
 
     IdentifierConfiguration config = new IdentifierConfiguration();
@@ -414,7 +415,7 @@ public class ProcessRunnerBuilderTest {
             + "--deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar "
             + "--datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL --runner=SparkRunner "
             + "--targetPath=tmp --metaFileName=verbatim-to-identifier.yml --inputPath=verbatim.avro --avroCompressionType=SNAPPY "
-            + "--avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml --properties=/path/ws.config --endPointType=DWC_ARCHIVE "
+            + "--avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml --properties=/path/ws.config "
             + "--experiments=use_deprecated_read";
 
     IdentifierConfiguration config = new IdentifierConfiguration();
@@ -642,7 +643,7 @@ public class ProcessRunnerBuilderTest {
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL "
             + "--runner=SparkRunner --targetPath=tmp --metaFileName=verbatim-to-occurrence.yml --inputPath=verbatim.avro "
             + "--avroCompressionType=SNAPPY --avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml "
-            + "--properties=/path/ws.config --endPointType=DWC_ARCHIVE --experiments=use_deprecated_read "
+            + "--properties=/path/ws.config --experiments=use_deprecated_read "
             + "--tripletValid=true --occurrenceIdValid=true --useExtendedRecordId=true";
 
     InterpreterConfiguration config = new InterpreterConfiguration();
@@ -711,7 +712,7 @@ public class ProcessRunnerBuilderTest {
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL "
             + "--runner=SparkRunner --targetPath=tmp --metaFileName=verbatim-to-occurrence.yml --inputPath=verbatim.avro "
             + "--avroCompressionType=SNAPPY --avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml "
-            + "--properties=/path/ws.config --endPointType=DWC_ARCHIVE --experiments=use_deprecated_read "
+            + "--properties=/path/ws.config --experiments=use_deprecated_read "
             + "--useMetadataWsCalls=false --tripletValid=true --occurrenceIdValid=true --useExtendedRecordId=true";
 
     InterpreterConfiguration config = new InterpreterConfiguration();
@@ -783,7 +784,7 @@ public class ProcessRunnerBuilderTest {
             + "--deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar "
             + "--datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL --runner=SparkRunner "
             + "--targetPath=tmp --metaFileName=verbatim-to-occurrence.yml --inputPath=verbatim.avro --avroCompressionType=SNAPPY "
-            + "--avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml --properties=/path/ws.config --endPointType=DWC_ARCHIVE "
+            + "--avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml --properties=/path/ws.config "
             + "--experiments=use_deprecated_read";
 
     InterpreterConfiguration config = new InterpreterConfiguration();

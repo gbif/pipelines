@@ -46,7 +46,7 @@ public class Wgs84Projection {
 
     if (Strings.isNullOrEmpty(datum)) {
       issues.add(GEODETIC_DATUM_ASSUMED_WGS84.name());
-      return ParsedField.success(new LatLng(lat, lon), issues);
+      return ParsedField.success(LatLng.create(lat, lon), issues);
     }
 
     try {
@@ -70,18 +70,20 @@ public class Wgs84Projection {
 
         transform.transform(srcPt, 0, dstPt, 0, 1);
 
-        double lat2 = dstPt[1];
-        double lon2 = dstPt[0];
+        // retain 7 digits to allow reversing the trasform,
+        // see https://github.com/gbif/pipelines/issues/517 for discussion
+        double lat2 = roundTo7decimals(dstPt[1]);
+        double lon2 = roundTo7decimals(dstPt[0]);
         // verify the datum shift is reasonable
         if (Math.abs(lat - lat2) > SUSPICIOUS_SHIFT || Math.abs(lon - lon2) > SUSPICIOUS_SHIFT) {
           issues.add(COORDINATE_REPROJECTION_SUSPICIOUS.name());
-          return ParsedField.fail(new LatLng(lat, lon), issues);
+          return ParsedField.fail(LatLng.create(lat, lon), issues);
         }
         // flag the record if coords actually changed
         if (lat != lat2 || lon != lon2) {
           issues.add(COORDINATE_REPROJECTED.name());
         }
-        return ParsedField.success(new LatLng(lat2, lon2), issues);
+        return ParsedField.success(LatLng.create(lat2, lon2), issues);
       }
     } catch (Exception ex) {
       log.warn(
@@ -94,6 +96,12 @@ public class Wgs84Projection {
       issues.add(COORDINATE_REPROJECTION_FAILED.name());
     }
 
-    return ParsedField.fail(new LatLng(lat, lon), issues);
+    return ParsedField.fail(LatLng.create(lat, lon), issues);
+  }
+
+  // Round to 7 decimals (~1m precision) since no way we're getting anything legitimately more
+  // precise
+  private static Double roundTo7decimals(Double x) {
+    return x == null ? null : Math.round(x * Math.pow(10, 7)) / Math.pow(10, 7);
   }
 }

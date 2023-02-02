@@ -104,7 +104,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_disposition\"", // DwcTerm.disposition
       "\"raw_er_dynamicProperties\"", // DwcTerm.dynamicProperties
       "\"1111111\"", // DwcTerm.endDayOfYear
-      "\"{concept: br_establishmentMeans, lineage: [br_establishmentMeans]}\"", // DwcTerm.establishmentMeans
+      "\"br_establishmentMeans\"", // DwcTerm.establishmentMeans
       "\"raw_er_eventRemarks\"", // DwcTerm.eventRemarks
       "\"raw_er_eventTime\"", // DwcTerm.eventTime
       "\"raw_er_fieldNotes\"", // DwcTerm.fieldNotes
@@ -184,7 +184,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_taxonID\"", // DwcTerm.taxonID
       "\"raw_er_taxonomicStatus\"", // DwcTerm.taxonomicStatus
       "\"raw_er_taxonRemarks\"", // DwcTerm.taxonRemarks
-      "\"br_recordedBy_1|br_recordedBy_2\"", // DwcTerm.recordedBy
+      "\"br_typeStatus\"", // DwcTerm.typeStatus
       "\"raw_er_verbatimCoordinates\"", // DwcTerm.verbatimCoordinates
       "\"raw_er_verbatimCoordinateSystem\"", // DwcTerm.verbatimCoordinateSystem
       "\"raw_er_verbatimDepth\"", // DwcTerm.verbatimDepth
@@ -783,14 +783,6 @@ public class CoreTsvConverterTest {
             .setVernacularName("atxr_VernacularName")
             .setSpeciesGroup(Collections.singletonList("atxr_SpeciesGroup"))
             .setSpeciesSubgroup(Collections.singletonList("atxr_SpeciesSubgroup"))
-            .setDiagnostics(
-                Diagnostic.newBuilder()
-                    .setConfidence(5555)
-                    .setStatus(Status.ACCEPTED)
-                    .setNote("atxr_Diagnostic_Note")
-                    .setMatchType(MatchType.EXACT)
-                    .setLineage(Collections.singletonList("atxr_Diagnostic_Lineage"))
-                    .build())
             .build();
 
     ALAAttributionRecord aar =
@@ -1208,6 +1200,9 @@ public class CoreTsvConverterTest {
 
     // When
     String result = CoreCsvConverter.convert(source);
+
+    System.out.println("### EXPECTED " + String.join("\t", expected));
+    System.out.println("##### RESULT " + result);
 
     // Should
     Assert.assertEquals(String.join("\t", expected), result);

@@ -15,7 +15,7 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Installation implements Serializable {
 
-  private static final long serialVersionUID = -2149391644429238002L;
+  private static final long serialVersionUID = -2149391644429238003L;
 
   private String key;
   private String organizationKey;

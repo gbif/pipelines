@@ -1,9 +1,13 @@
 package org.gbif.pipelines.tasks.validators.metrics.collector;
 
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
+import static org.gbif.validator.api.DwcFileType.CORE;
+import static org.gbif.validator.api.EvaluationType.OCCURRENCE_NOT_UNIQUELY_IDENTIFIED;
 
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.Builder;
 import lombok.SneakyThrows;
@@ -14,6 +18,10 @@ import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.pipelines.common.utils.HdfsUtils;
+import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.tasks.validators.metrics.MetricsCollectorConfiguration;
 import org.gbif.pipelines.validator.DwcaFileTermCounter;
@@ -23,6 +31,7 @@ import org.gbif.pipelines.validator.rules.IndexableRules;
 import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
+import org.gbif.validator.api.Metrics.IssueInfo;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -99,6 +108,8 @@ public class DwcaMetricsCollector implements MetricsCollector {
     Validation validation = validationClient.get(message.getDatasetUuid());
     Validations.mergeWithValidation(validation, metrics);
 
+    updateIssuesFromMetaInfos(validation);
+
     // Set isIndexable
     validation
         .getMetrics()
@@ -106,5 +117,36 @@ public class DwcaMetricsCollector implements MetricsCollector {
 
     log.info("Update validation key {}", message.getDatasetUuid());
     validationClient.update(validation);
+  }
+
+  @SneakyThrows
+  private void updateIssuesFromMetaInfos(Validation validation) {
+    StepConfiguration stepConfig = config.stepConfig;
+    String datasetId = message.getDatasetUuid().toString();
+    String attempt = message.getAttempt().toString();
+    String metaFileName = config.interpretationMetaFileName;
+
+    String metaPath = String.join("/", stepConfig.repositoryPath, datasetId, attempt, metaFileName);
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
+    Optional<Long> fileNumber =
+        HdfsUtils.getLongByKey(
+            hdfsConfigs,
+            metaPath,
+            PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT + PipelinesVariables.Metrics.ATTEMPTED);
+
+    if (fileNumber.isPresent() && fileNumber.get() > 0L) {
+      for (FileInfo file : validation.getMetrics().getFileInfos()) {
+        if (file.getFileType().equals(CORE)) {
+          if (file.getIssues() == null || file.getIssues().isEmpty()) {
+            file.setIssues(
+                Collections.singletonList(IssueInfo.create(OCCURRENCE_NOT_UNIQUELY_IDENTIFIED)));
+          } else if (file.getIssues().stream()
+              .noneMatch(x -> x.getIssue().equals(OCCURRENCE_NOT_UNIQUELY_IDENTIFIED.name()))) {
+            file.getIssues().add(IssueInfo.create(OCCURRENCE_NOT_UNIQUELY_IDENTIFIED));
+          }
+        }
+      }
+    }
   }
 }

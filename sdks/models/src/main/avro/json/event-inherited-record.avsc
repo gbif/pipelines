@@ -1,0 +1,17 @@
+/**
+ * Represents the inherited EventCore fields from parent events.
+ */
+[
+  {
+    "name": "EventInheritedRecord",
+    "namespace": "org.gbif.pipelines.io.avro.json",
+    "type": "record",
+    "doc": "EventCore inherited fields from parent event.",
+    "fields": [
+      {"name": "id", "type": ["null", "string"], "default":null, "doc":"Pipelines identifier"},
+      {"name": "inheritedFrom", "type": ["null", "string"], "default":null, "doc":"Id of the parent whose fields are inherited"},
+      {"name": "locationID", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/locationID"},
+      {"name": "eventType", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/eventType"}
+    ]
+  }
+]

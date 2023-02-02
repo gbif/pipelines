@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.G
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import org.apache.beam.sdk.testing.NeedsRunner;
@@ -16,7 +17,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GbifIdRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.junit.Rule;
@@ -31,13 +32,13 @@ public class GbifIdTransformTest {
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
-  private static class CleanDateCreate extends DoFn<GbifIdRecord, GbifIdRecord> {
+  private static class CleanDateCreate extends DoFn<IdentifierRecord, IdentifierRecord> {
 
     @ProcessElement
     public void processElement(ProcessContext context) {
-      GbifIdRecord gir = GbifIdRecord.newBuilder(context.element()).build();
-      gir.setCreated(null);
-      context.output(gir);
+      IdentifierRecord ir = IdentifierRecord.newBuilder(context.element()).build();
+      ir.setFirstLoaded(null);
+      context.output(ir);
     }
   }
 
@@ -57,13 +58,13 @@ public class GbifIdTransformTest {
     }
 
     @Override
-    public KeyLookupResult findKey(Set<String> uniqueStrings, String scope) {
-      return generateKey(uniqueStrings, scope);
+    public Optional<KeyLookupResult> findKey(Set<String> uniqueStrings, String scope) {
+      return Optional.of(generateKey(uniqueStrings, scope));
     }
 
     @Override
-    public KeyLookupResult findKey(Set<String> uniqueStrings) {
-      return generateKey(uniqueStrings, scope);
+    public Optional<KeyLookupResult> findKey(Set<String> uniqueStrings) {
+      return Optional.of(generateKey(uniqueStrings, scope));
     }
 
     @Override
@@ -82,17 +83,17 @@ public class GbifIdTransformTest {
             .build();
 
     // Expected
-    GbifIdRecord gir = GbifIdRecord.newBuilder().setId(id).setGbifId(Long.valueOf(id)).build();
+    IdentifierRecord ir = IdentifierRecord.newBuilder().setId(id).setInternalId(id).build();
 
     // When
     GbifIdTransform gbifIdTransform = GbifIdTransform.builder().useExtendedRecordId(true).create();
-    PCollection<GbifIdRecord> girCollection =
+    PCollection<IdentifierRecord> irCollection =
         p.apply("Read ExtendedRecord", Create.of(er))
             .apply("Interpret IDs", gbifIdTransform.interpret())
             .apply("Clean date", ParDo.of(new CleanDateCreate()));
 
     // Should
-    PAssert.that(girCollection).containsInAnyOrder(gir);
+    PAssert.that(irCollection).containsInAnyOrder(ir);
     p.run();
   }
 
@@ -108,8 +109,8 @@ public class GbifIdTransformTest {
             .build();
 
     // Expected
-    GbifIdRecord gir = GbifIdRecord.newBuilder().setId(id).build();
-    addIssue(gir, GBIF_ID_ABSENT);
+    IdentifierRecord ir = IdentifierRecord.newBuilder().setId(id).build();
+    addIssue(ir, GBIF_ID_ABSENT);
 
     // When
     GbifIdTransform gbifIdTransform =
@@ -118,13 +119,13 @@ public class GbifIdTransformTest {
             .keygenServiceSupplier(() -> HBaseLockingKeyServiceStub.create(id))
             .create();
 
-    PCollection<GbifIdRecord> girCollection =
+    PCollection<IdentifierRecord> irCollection =
         p.apply("Read ExtendedRecord", Create.of(er))
             .apply("Interpret IDs", gbifIdTransform.interpret())
             .apply("Clean date", ParDo.of(new CleanDateCreate()));
 
     // Should
-    PAssert.that(girCollection).containsInAnyOrder(gir);
+    PAssert.that(irCollection).containsInAnyOrder(ir);
     p.run();
   }
 
@@ -140,8 +141,8 @@ public class GbifIdTransformTest {
             .build();
 
     // Expected
-    GbifIdRecord gir = GbifIdRecord.newBuilder().setId(id).build();
-    addIssue(gir, GBIF_ID_INVALID);
+    IdentifierRecord ir = IdentifierRecord.newBuilder().setId(id).build();
+    addIssue(ir, GBIF_ID_INVALID);
 
     // When
     GbifIdTransform gbifIdTransform =
@@ -150,13 +151,13 @@ public class GbifIdTransformTest {
             .keygenServiceSupplier(() -> HBaseLockingKeyServiceStub.create(id))
             .create();
 
-    PCollection<GbifIdRecord> girCollection =
+    PCollection<IdentifierRecord> irCollection =
         p.apply("Read ExtendedRecord", Create.of(er))
             .apply("Interpret IDs", gbifIdTransform.interpret())
             .apply("Clean date", ParDo.of(new CleanDateCreate()));
 
     // Should
-    PAssert.that(girCollection).containsInAnyOrder(gir);
+    PAssert.that(irCollection).containsInAnyOrder(ir);
     p.run();
   }
 
@@ -172,12 +173,8 @@ public class GbifIdTransformTest {
             .build();
 
     // Expected
-    GbifIdRecord gir =
-        GbifIdRecord.newBuilder()
-            .setId(id)
-            .setGbifId(Long.valueOf(id))
-            .setOccurrenceId("value")
-            .build();
+    IdentifierRecord ir =
+        IdentifierRecord.newBuilder().setId(id).setInternalId(id).setUniqueKey("value").build();
 
     // When
     GbifIdTransform gbifIdTransform =
@@ -187,13 +184,13 @@ public class GbifIdTransformTest {
             .keygenServiceSupplier(() -> HBaseLockingKeyServiceStub.create(id))
             .create();
 
-    PCollection<GbifIdRecord> girCollection =
+    PCollection<IdentifierRecord> irCollection =
         p.apply("Read ExtendedRecord", Create.of(er))
             .apply("Interpret IDs", gbifIdTransform.interpret())
             .apply("Clean date", ParDo.of(new CleanDateCreate()));
 
     // Should
-    PAssert.that(girCollection).containsInAnyOrder(gir);
+    PAssert.that(irCollection).containsInAnyOrder(ir);
     p.run();
   }
 }

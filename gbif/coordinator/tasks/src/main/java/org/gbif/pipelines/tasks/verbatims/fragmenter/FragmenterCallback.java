@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.fs.FileSystem;
@@ -19,10 +19,10 @@ import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesFragmenterMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.converters.converter.FsUtils;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.fragmenter.FragmentPersister;
 import org.gbif.pipelines.fragmenter.strategy.DwcaStrategy;
 import org.gbif.pipelines.fragmenter.strategy.Strategy;
@@ -30,11 +30,12 @@ import org.gbif.pipelines.fragmenter.strategy.XmlStrategy;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 /** Callback which is called when the {@link PipelinesInterpretedMessage} is received. */
 @Slf4j
-@AllArgsConstructor
+@Builder
 public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
     implements StepHandler<PipelinesInterpretedMessage, PipelinesFragmenterMessage> {
 
@@ -44,6 +45,7 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
+  private final DatasetClient datasetClient;
   private final ExecutorService executor;
   private final Connection hbaseConnection;
   private final KeygenConfig keygenConfig;
@@ -52,6 +54,7 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
   public void handleMessage(PipelinesInterpretedMessage message) {
     PipelinesCallback.<PipelinesInterpretedMessage, PipelinesFragmenterMessage>builder()
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .config(config)
         .curator(curator)
         .stepType(TYPE)
@@ -60,6 +63,11 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
         .handler(this)
         .build()
         .handleMessage();
+  }
+
+  @Override
+  public String getRouting() {
+    return new PipelinesInterpretedMessage().getRoutingKey() + ".*";
   }
 
   @Override
@@ -86,6 +94,8 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
       }
 
       boolean useSync = message.getNumberOfRecords() < config.asyncThreshold;
+
+      log.info("Running fragmenter in asych mode: {} ...", useSync);
 
       long result =
           FragmentPersister.builder()

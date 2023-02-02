@@ -5,6 +5,7 @@ import static au.org.ala.pipelines.transforms.IndexValues.*;
 import static org.apache.avro.Schema.Type.UNION;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
+import au.org.ala.pipelines.common.SolrFieldSchema;
 import au.org.ala.pipelines.interpreters.SensitiveDataInterpreter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
@@ -12,6 +13,8 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.*;
+import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.NonNull;
@@ -30,11 +33,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
+import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.common.PipelinesException;
+import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -52,6 +57,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   public static final int YYYY_DD_MM_FORMAT_LENGTH = 10;
   public static final int YYYY_MM_DDTHH_mm_ss_Z_LENGTH = 22;
   public static final String RAW_PREFIX = "raw_";
+  public static final String MULTIPLE_VALUES_DELIM = "\\|";
+  public static final String YYYY_DD_MM_FORMAT = "yyyy-MM-dd";
+  public static final String YYYY_MM_DDTHH_mm_ss_Z_FORMAT = "yyyy-MM-dd'T'HH:mmXXX";
 
   // Core
   @NonNull private TupleTag<ExtendedRecord> erTag;
@@ -164,6 +172,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     skipKeys.add("identifiedByIds"); // multi value field
     skipKeys.add("recordedByIds"); // multi value field
     skipKeys.add("machineTags"); // TODO review content
+    skipKeys.add(
+        "establishmentMeans"); // GBIF treats it as a JSON, but ALA needs a String which is defined
+    // in the latest DWC
 
     // multi valued fields
     skipKeys.add("identifiedByIds");
@@ -231,9 +242,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     addToIndexRecord(br, indexRecord, skipKeys);
 
     if (br != null) {
+      addEstablishmentValueSafely(
+          indexRecord, DwcTerm.establishmentMeans.simpleName(), br.getEstablishmentMeans());
       addTermWithAgentsSafely(
           indexRecord, DwcTerm.recordedByID.simpleName(), br.getRecordedByIds());
-      addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getRecordedBy());
+      addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
       addMultiValueTermSafely(indexRecord, DwcTerm.recordedBy.simpleName(), br.getRecordedBy());
       addMultiValueTermSafely(indexRecord, DwcTerm.identifiedBy.simpleName(), br.getIdentifiedBy());
       addMultiValueTermSafely(indexRecord, DwcTerm.preparations.simpleName(), br.getPreparations());
@@ -246,37 +259,18 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
 
     // add event date
-    try {
-      if (tr.getEventDate() != null
-          && tr.getEventDate().getGte() != null
-          && (tr.getEventDate().getGte().length() == YYYY_DD_MM_FORMAT_LENGTH
-              || tr.getEventDate().getGte().length() == YYYY_MM_DDTHH_mm_ss_Z_LENGTH)) {
-        // Event dates come through interpretation 2 format
-        // 1) yyyy-MM-dd
-        // 2) yyyy-MM-ddTHH:mm:ssXXX e.g. 2019-09-13T13:35+10:00
-        Date date = null;
-        if (tr.getEventDate().getGte().length() == YYYY_MM_DDTHH_mm_ss_Z_LENGTH) {
-          SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmXXX");
-          date = sdf.parse(tr.getEventDate().getGte());
-        } else {
-          SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-          date = sdf.parse(tr.getEventDate().getGte());
-        }
+    if (tr.getEventDate() != null) {
 
-        indexRecord.getDates().put(DwcTerm.eventDate.simpleName(), date.getTime());
-
-        // eventDateEnd
-        if (tr.getEventDate().getLte() != null) {
-          indexRecord
-              .getDates()
-              .put(
-                  EVENT_DATE_END,
-                  new SimpleDateFormat("yyyy-MM-dd").parse(tr.getEventDate().getLte()).getTime());
-        }
+      Long date = parseInterpretedDate(tr.getEventDate().getGte());
+      if (date != null) {
+        indexRecord.getDates().put(DwcTerm.eventDate.simpleName(), date);
       }
-    } catch (ParseException e) {
-      log.error(
-          "Un-parsable date produced by downstream interpretation " + tr.getEventDate().getGte());
+
+      // eventDateEnd
+      Long endDate = parseInterpretedDate(tr.getEventDate().getLte());
+      if (endDate != null) {
+        indexRecord.getDates().put(EVENT_DATE_END, endDate);
+      }
     }
 
     if (tr.getDatePrecision() != null) {
@@ -292,7 +286,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       String occurrenceYear = tr.getYear() + "-01-01";
       try {
         long occurrenceYearTime =
-            new SimpleDateFormat("yyyy-MM-dd").parse(occurrenceYear).getTime();
+            new SimpleDateFormat(YYYY_DD_MM_FORMAT).parse(occurrenceYear).getTime();
         indexRecord.getDates().put(OCCURRENCE_YEAR, occurrenceYearTime);
       } catch (ParseException ex) {
         // NOP
@@ -601,6 +595,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             // we carry on indexing
             ObjectMapper om = new ObjectMapper();
             Map dynamicProperties = om.readValue(entry.getValue(), Map.class);
+
+            // ensure the dynamic properties are maps of string, string to avoid serialisation
+            // issues
+            dynamicProperties.replaceAll((s, c) -> c != null ? c.toString() : "");
+
             indexRecord.setDynamicProperties(dynamicProperties);
           } catch (Exception e) {
             // NOP
@@ -635,6 +634,45 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     return indexRecord.build();
   }
 
+  /**
+   * Event dates come through interpretation 3 formats 1) yyyy-MM-dd 2) yyyy-MM-ddTHH:mm:ssXXX e.g.
+   * 2019-09-13T13:35+10:00 3) yyyy-MM-dd'T'HH:mm:ss.SSSZ e.g. 2022-06-15T00:02:11.396Z
+   *
+   * @param dateString
+   * @return
+   * @throws ParseException
+   */
+  private static Long parseInterpretedDate(String dateString) {
+
+    if (dateString == null) {
+      return null;
+    }
+
+    try {
+      TemporalParser temporalParser = TemporalParser.create();
+      OccurrenceParseResult<TemporalAccessor> r = temporalParser.parseRecordedDate(dateString);
+
+      // FIXME  - im sure there is a better way to do this
+      if (r.getPayload() instanceof LocalDateTime) {
+        LocalDateTime ldt = ((LocalDateTime) r.getPayload());
+        return ldt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+      } else if (r.getPayload() instanceof LocalDate) {
+        LocalDate ldt = ((LocalDate) r.getPayload());
+        ZoneId zoneId = ZoneId.systemDefault();
+        return ldt.atStartOfDay(zoneId).toEpochSecond() * 1000;
+      } else if (r.getPayload() instanceof OffsetDateTime) {
+        OffsetDateTime ldt = ((OffsetDateTime) r.getPayload());
+        return ldt.toInstant().toEpochMilli();
+      } else if (r.getPayload() instanceof ZonedDateTime) {
+        ZonedDateTime ldt = ((ZonedDateTime) r.getPayload());
+        return ldt.toInstant().toEpochMilli();
+      }
+    } catch (Exception e) {
+      log.error("Un-parsable date produced by downstream interpretation " + dateString);
+    }
+    return null;
+  }
+
   private static void addTermWithAgentsSafely(
       IndexRecord.Builder indexRecord, String field, List<AgentIdentifier> agents) {
     if (agents != null && !agents.isEmpty()) {
@@ -651,6 +689,13 @@ public class IndexRecordTransform implements Serializable, IndexFields {
           indexRecord.getMultiValues().getOrDefault(indexField, new ArrayList<>());
       multiValuedField.addAll(values);
       indexRecord.getMultiValues().put(indexField, multiValuedField);
+    }
+  }
+
+  private static void addEstablishmentValueSafely(
+      IndexRecord.Builder indexRecord, String field, VocabularyConcept establishmentMeans) {
+    if (establishmentMeans != null) {
+      indexRecord.getStrings().put(field, establishmentMeans.getConcept());
     }
   }
 
@@ -891,14 +936,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                 }
               }
             } else {
-              if (!ur.getId().startsWith(REMOVED_PREFIX_MARKER)) {
-                if (ur != null) {
-                  log.error("UUID missing for record ID " + ur.getId());
-                  throw new PipelinesException("UUID missing for record ID " + ur.getId());
-                } else {
-                  log.error("UUID missing and ER empty");
-                  throw new PipelinesException("UUID missing and ER empty");
-                }
+              if (ur != null && !ur.getId().startsWith(REMOVED_PREFIX_MARKER)) {
+                log.error("UUID missing and ER empty");
+                throw new PipelinesException("UUID missing and ER empty");
               }
             }
           }
@@ -1030,21 +1070,71 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   }
 
   public static SolrInputDocument convertIndexRecordToSolrDoc(
-      IndexRecord indexRecord, List<String> schemaFields, List<String> dynamicFieldPrefixes) {
+      IndexRecord indexRecord,
+      Map<String, SolrFieldSchema> schemaFields,
+      List<String> dynamicFieldPrefixes) {
 
     SolrInputDocument doc = new SolrInputDocument();
     doc.setField(ID, indexRecord.getId());
 
     // keep track of added dynamic properties
     for (Map.Entry<String, String> s : indexRecord.getStrings().entrySet()) {
-      if (schemaFields.contains(s.getKey()) || startsWithPrefix(dynamicFieldPrefixes, s.getKey())) {
+      if (schemaFields.containsKey(s.getKey())
+          || startsWithPrefix(dynamicFieldPrefixes, s.getKey())) {
         addStringSafely(doc, s.getKey(), s.getValue());
       } else {
         // clean up field name before adding
         String key = s.getKey().replaceAll("[^A-Za-z0-9]", "_");
         if (StringUtils.isNotEmpty(key)
             && doc.getFieldValue(DYNAMIC_PROPERTIES_PREFIX + key) == null) {
-          addStringSafely(doc, DYNAMIC_PROPERTIES_PREFIX + key, s.getValue());
+          SolrFieldSchema fieldSchema = schemaFields.get(DYNAMIC_PROPERTIES_PREFIX + key);
+          if ((fieldSchema != null) && (fieldSchema.type != null)) {
+            if (fieldSchema.multiple) {
+              doc.addField(
+                  DYNAMIC_PROPERTIES_PREFIX + key, s.getValue().split(MULTIPLE_VALUES_DELIM));
+            } else {
+              switch (fieldSchema.type) {
+                case BOOLEAN:
+                  doc.addField(DYNAMIC_PROPERTIES_PREFIX + key, Boolean.valueOf(s.getValue()));
+                  break;
+                case DATE:
+                  try {
+                    Date date = null;
+                    if ((s.getValue() != null)
+                        && (s.getValue().length() == YYYY_MM_DDTHH_mm_ss_Z_LENGTH)) {
+                      SimpleDateFormat sdf = new SimpleDateFormat(YYYY_MM_DDTHH_mm_ss_Z_FORMAT);
+                      date = sdf.parse(s.getValue());
+                    }
+                    if ((s.getValue() != null)
+                        && (s.getValue().length() == YYYY_DD_MM_FORMAT_LENGTH)) {
+                      SimpleDateFormat sdf = new SimpleDateFormat(YYYY_DD_MM_FORMAT);
+                      date = sdf.parse(s.getValue());
+                    }
+                    doc.addField(DYNAMIC_PROPERTIES_PREFIX + key, date);
+                  } catch (ParseException e) {
+                    log.error("Cannot parse date " + s.getValue());
+                  }
+                  break;
+                case DOUBLE:
+                  doc.addField(DYNAMIC_PROPERTIES_PREFIX + key, Double.valueOf(s.getValue()));
+                  break;
+                case FLOAT:
+                  doc.addField(DYNAMIC_PROPERTIES_PREFIX + key, Float.valueOf(s.getValue()));
+                  break;
+                case INT:
+                  doc.addField(DYNAMIC_PROPERTIES_PREFIX + key, Integer.valueOf(s.getValue()));
+                  break;
+                case LONG:
+                  doc.addField(DYNAMIC_PROPERTIES_PREFIX + key, Long.valueOf(s.getValue()));
+                  break;
+                case STRING:
+                  addStringSafely(doc, DYNAMIC_PROPERTIES_PREFIX + key, s.getValue());
+                  break;
+              }
+            }
+          } else {
+            addStringSafely(doc, DYNAMIC_PROPERTIES_PREFIX + key, s.getValue());
+          }
         }
       }
     }
@@ -1099,6 +1189,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   }
 
   private static boolean isNotBlank(String s) {
-    return s != null && s.trim().isEmpty();
+    return s != null && !s.trim().isEmpty();
   }
 }

@@ -157,8 +157,8 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
             .when(er -> !er.getCoreTerms().isEmpty())
             .via(LocationInterpreter.interpretCountryAndCoordinates(countryKvStore, null))
             .via(ALALocationInterpreter.interpretStateProvince(stateProvinceKvStore))
+            .via(LocationInterpreter.interpretContinent(countryKvStore))
             .via(ALALocationInterpreter.interpretBiome(biomeKvStore))
-            .via(LocationInterpreter::interpretContinent)
             .via(LocationInterpreter::interpretWaterBody)
             .via(LocationInterpreter::interpretMinimumElevationInMeters)
             .via(LocationInterpreter::interpretMaximumElevationInMeters)
@@ -177,6 +177,9 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
                     countryCentrePoints, stateProvinceCentrePoints, stateProvinceParser))
             .via(ALALocationInterpreter.validateStateProvince(stateProvinceParser))
             .via(LocationInterpreter::interpretLocality)
+            .via(LocationInterpreter::interpretFootprintWKT)
+            .via(LocationInterpreter::setCoreId)
+            .via(LocationInterpreter::setParentEventId)
             .get();
 
     result.ifPresent(r -> this.incCounter());

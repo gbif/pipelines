@@ -5,10 +5,11 @@ import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.HttpClient;
@@ -31,12 +32,13 @@ import org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipe
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesInterpretedMessage} is received. */
 @Slf4j
-@AllArgsConstructor
+@Builder
 public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
     implements StepHandler<PipelinesInterpretedMessage, PipelinesIndexedMessage> {
 
@@ -48,6 +50,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   private final HttpClient httpClient;
   private final PipelinesHistoryClient historyClient;
   private final ValidationWsClient validationClient;
+  private final DatasetClient datasetClient;
   private final ExecutorService executor;
 
   @Override
@@ -55,6 +58,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
     PipelinesCallback.<PipelinesInterpretedMessage, PipelinesIndexedMessage>builder()
         .historyClient(historyClient)
+        .datasetClient(datasetClient)
         .validationClient(validationClient)
         .config(config)
         .curator(curator)
@@ -65,6 +69,26 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         .handler(this)
         .build()
         .handleMessage();
+  }
+
+  @Override
+  public String getRouting() {
+    PipelinesInterpretedMessage pm = new PipelinesInterpretedMessage();
+
+    String routingKey;
+    if (config.validatorOnly) {
+      pm.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_INTERPRETED_TO_INDEX.name()));
+      if (config.validatorListenAllMq) {
+        routingKey = pm.getRoutingKey() + ".*";
+      } else {
+        routingKey = pm.setRunner(config.processRunner).getRoutingKey();
+      }
+    } else {
+      routingKey = pm.setRunner(config.processRunner).getRoutingKey();
+    }
+
+    log.info("MQ rounting key is {}", routingKey);
+    return routingKey;
   }
 
   /**
@@ -182,7 +206,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   /**
-   * Reads number of records from a archive-to-avro metadata file, verbatim-to-interpreted contains
+   * Reads number of records from an archive-to-avro metadata file, verbatim-to-interpreted contains
    * attempted records count, which is not accurate enough
    */
   private long getRecordNumber(PipelinesInterpretedMessage message) throws IOException {
@@ -197,7 +221,12 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
     Optional<Long> fileNumber =
         HdfsUtils.getLongByKey(
-            hdfsConfigs, metaPath, Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
+            hdfsConfigs, metaPath, Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED);
+    if (!fileNumber.isPresent()) {
+      fileNumber =
+          HdfsUtils.getLongByKey(
+              hdfsConfigs, metaPath, Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
+    }
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(

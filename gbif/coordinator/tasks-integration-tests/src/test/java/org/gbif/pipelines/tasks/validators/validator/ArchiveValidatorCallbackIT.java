@@ -2,29 +2,23 @@ package org.gbif.pipelines.tasks.validators.validator;
 
 import static org.gbif.api.model.pipelines.StepType.VALIDATOR_VALIDATE_ARCHIVE;
 import static org.gbif.api.model.pipelines.StepType.VALIDATOR_VERBATIM_TO_INTERPRETED;
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.RetryOneTime;
-import org.apache.curator.test.TestingServer;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
-import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.ValidationWsClientStub;
+import org.gbif.pipelines.tasks.resources.CuratorServer;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
@@ -33,55 +27,32 @@ import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.IssueInfo;
 import org.gbif.validator.api.Validation;
 import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class ArchiveValidatorCallbackIT {
 
+  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
   private static final String LABEL = VALIDATOR_VALIDATE_ARCHIVE.getLabel();
   private static final String DATASET_OCCURRENCR_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final String DATASET_SAMPLING_UUID = "9997fa4e-54c1-43ea-9856-afa90204c162";
   private static final String DATASET_CLB_UUID = "2247944e-3776-40a9-b9c4-abecf7eea177";
   private static final String INPUT_DATASET_FOLDER = "/dataset/dwca";
   private static final long EXECUTION_ID = 1L;
-  private static CuratorFramework curator;
-  private static TestingServer server;
-  private static MessagePublisherStub publisher;
-  private static PipelinesHistoryClient historyClient;
-
-  @BeforeClass
-  public static void setUp() throws Exception {
-
-    server = new TestingServer();
-    curator =
-        CuratorFrameworkFactory.builder()
-            .connectString(server.getConnectString())
-            .namespace("crawler")
-            .retryPolicy(new RetryOneTime(1))
-            .build();
-    curator.start();
-
-    publisher = MessagePublisherStub.create();
-
-    historyClient = Mockito.mock(PipelinesHistoryClient.class);
-  }
-
-  @AfterClass
-  public static void tearDown() throws IOException {
-    curator.close();
-    server.stop();
-    publisher.close();
-  }
+  private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
+  @Mock private PipelinesHistoryClient historyClient;
 
   @After
   public void after() {
-    publisher.close();
+    PUBLISHER.close();
   }
 
   @Test
-  public void testOccurrenceCase() throws Exception {
+  public void testOccurrenceCase() {
     // State
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
@@ -92,8 +63,8 @@ public class ArchiveValidatorCallbackIT {
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
             config,
-            publisher,
-            curator,
+            PUBLISHER,
+            CURATOR_SERVER.getCurator(),
             historyClient,
             validationClient,
             new SchemaValidatorFactory());
@@ -117,11 +88,11 @@ public class ArchiveValidatorCallbackIT {
 
     // Should
     // ZK
-    assertTrue(checkExists(curator, crawlId, LABEL));
-    assertTrue(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertEquals(1, publisher.getMessages().size());
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, LABEL));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertEquals(1, PUBLISHER.getMessages().size());
 
     // Result
     Validation validation = validationClient.getValidation();
@@ -160,11 +131,11 @@ public class ArchiveValidatorCallbackIT {
     assertEquals(DwcFileType.CORE, core.getFileType());
 
     // Clean
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, LABEL));
+    CURATOR_SERVER.deletePath(crawlId, LABEL);
   }
 
   @Test
-  public void testSamplingEventCase() throws Exception {
+  public void testSamplingEventCase() {
     // State
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
@@ -175,8 +146,8 @@ public class ArchiveValidatorCallbackIT {
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
             config,
-            publisher,
-            curator,
+            PUBLISHER,
+            CURATOR_SERVER.getCurator(),
             historyClient,
             validationClient,
             new SchemaValidatorFactory());
@@ -199,13 +170,12 @@ public class ArchiveValidatorCallbackIT {
     callback.handleMessage(message);
 
     // Should
-
     // ZK
-    assertTrue(checkExists(curator, crawlId, LABEL));
-    assertTrue(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertEquals(1, publisher.getMessages().size());
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, LABEL));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertEquals(1, PUBLISHER.getMessages().size());
 
     // Result
     Validation validation = validationClient.getValidation();
@@ -238,11 +208,11 @@ public class ArchiveValidatorCallbackIT {
     assertEquals(DwcFileType.EXTENSION, core.getFileType());
 
     // Clean
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, LABEL));
+    CURATOR_SERVER.deletePath(crawlId, LABEL);
   }
 
   @Test
-  public void testClbCase() throws Exception {
+  public void testClbCase() {
     // State
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
@@ -253,8 +223,8 @@ public class ArchiveValidatorCallbackIT {
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
             config,
-            publisher,
-            curator,
+            PUBLISHER,
+            CURATOR_SERVER.getCurator(),
             historyClient,
             validationClient,
             new SchemaValidatorFactory());
@@ -279,11 +249,11 @@ public class ArchiveValidatorCallbackIT {
     // Should
 
     // ZK
-    assertTrue(checkExists(curator, crawlId, LABEL));
-    assertTrue(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertEquals(1, publisher.getMessages().size());
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, LABEL));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertEquals(1, PUBLISHER.getMessages().size());
 
     // Result
     Validation validation = validationClient.getValidation();
@@ -316,7 +286,7 @@ public class ArchiveValidatorCallbackIT {
     assertEquals(DwcFileType.EXTENSION, core.getFileType());
 
     // Clean
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, LABEL));
+    CURATOR_SERVER.deletePath(crawlId, LABEL);
   }
 
   @Test
@@ -331,8 +301,8 @@ public class ArchiveValidatorCallbackIT {
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
             config,
-            publisher,
-            curator,
+            PUBLISHER,
+            CURATOR_SERVER.getCurator(),
             historyClient,
             validationClient,
             new SchemaValidatorFactory());
@@ -353,15 +323,15 @@ public class ArchiveValidatorCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertFalse(checkExists(curator, crawlId, LABEL));
-    assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertEquals(1, publisher.getMessages().size());
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, LABEL));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertEquals(1, PUBLISHER.getMessages().size());
   }
 
   @Test
-  public void testFailedCase() throws Exception {
+  public void testFailedCase() {
     // State
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
@@ -372,8 +342,8 @@ public class ArchiveValidatorCallbackIT {
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
             config,
-            publisher,
-            curator,
+            PUBLISHER,
+            CURATOR_SERVER.getCurator(),
             historyClient,
             validationClient,
             new SchemaValidatorFactory());
@@ -394,14 +364,14 @@ public class ArchiveValidatorCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertTrue(checkExists(curator, crawlId, LABEL));
-    assertTrue(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertTrue(publisher.getMessages().isEmpty());
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, LABEL));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertTrue(PUBLISHER.getMessages().isEmpty());
 
     // Clean
-    curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, LABEL));
+    CURATOR_SERVER.deletePath(crawlId, LABEL);
   }
 
   @Test
@@ -417,8 +387,8 @@ public class ArchiveValidatorCallbackIT {
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
             config,
-            publisher,
-            curator,
+            PUBLISHER,
+            CURATOR_SERVER.getCurator(),
             historyClient,
             validationClient,
             new SchemaValidatorFactory());
@@ -439,11 +409,11 @@ public class ArchiveValidatorCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertFalse(checkExists(curator, crawlId, LABEL));
-    assertFalse(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertTrue(publisher.getMessages().isEmpty());
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, LABEL));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertTrue(PUBLISHER.getMessages().isEmpty());
   }
 
   @Test
@@ -459,8 +429,8 @@ public class ArchiveValidatorCallbackIT {
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
             config,
-            publisher,
-            curator,
+            PUBLISHER,
+            CURATOR_SERVER.getCurator(),
             historyClient,
             validationClient,
             new SchemaValidatorFactory());
@@ -491,14 +461,10 @@ public class ArchiveValidatorCallbackIT {
     assertTrue(occurrenceFile.isPresent());
     assertFalse(occurrenceFile.get().getIssues().isEmpty());
 
-    assertFalse(checkExists(curator, crawlId, LABEL));
-    assertFalse(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertTrue(publisher.getMessages().isEmpty());
-  }
-
-  private boolean checkExists(CuratorFramework curator, String id, String path) {
-    return ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(id, path));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, LABEL));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
+    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
+    assertTrue(PUBLISHER.getMessages().isEmpty());
   }
 }
