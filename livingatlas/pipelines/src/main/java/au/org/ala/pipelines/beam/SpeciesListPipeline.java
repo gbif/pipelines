@@ -149,6 +149,7 @@ public class SpeciesListPipeline {
 
     final boolean includeConservationStatus = options.getIncludeConservationStatus();
     final boolean includeInvasiveStatus = options.getIncludeInvasiveStatus();
+    final boolean includePresentInCountry = options.getIncludePresentInCountry();
 
     // join collections
     return result.apply(
@@ -167,7 +168,10 @@ public class SpeciesListPipeline {
                 if (speciesLists != null) {
                   TaxonProfile.Builder builder =
                       SpeciesListUtils.createTaxonProfileBuilder(
-                          speciesLists, includeConservationStatus, includeInvasiveStatus);
+                          speciesLists,
+                          includeConservationStatus,
+                          includeInvasiveStatus,
+                          includePresentInCountry);
                   // output a link to each occurrence record we've matched by taxonID
                   for (String occurrenceID : occurrenceIDs) {
                     builder.setId(occurrenceID);

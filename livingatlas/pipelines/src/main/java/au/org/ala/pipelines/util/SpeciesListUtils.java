@@ -18,13 +18,15 @@ public class SpeciesListUtils {
   public static TaxonProfile.Builder createTaxonProfileBuilder(
       Iterable<SpeciesListRecord> speciesLists,
       boolean includeConservationStatus,
-      boolean includeInvasiveStatus) {
+      boolean includeInvasiveStatus,
+      boolean includePresentInCountry) {
 
     Iterator<SpeciesListRecord> iter = speciesLists.iterator();
 
     List<String> speciesListIDs = new ArrayList<>();
     List<ConservationStatus> conservationStatusList = new ArrayList<>();
     List<InvasiveStatus> invasiveStatusList = new ArrayList<>();
+    String presentInCountryValue = null;
 
     while (iter.hasNext()) {
 
@@ -48,6 +50,8 @@ public class SpeciesListUtils {
                 .setSpeciesListID(speciesListRecord.getSpeciesListID())
                 .setRegion(speciesListRecord.getRegion())
                 .build());
+      } else if (includePresentInCountry && speciesListRecord.getPresentInCountry() != null) {
+        presentInCountryValue = speciesListRecord.getPresentInCountry();
       }
     }
 
@@ -56,6 +60,7 @@ public class SpeciesListUtils {
     builder.setSpeciesListID(speciesListIDs);
     builder.setConservationStatuses(conservationStatusList);
     builder.setInvasiveStatuses(invasiveStatusList);
+    builder.setPresentInCountry(presentInCountryValue);
     return builder;
   }
 }

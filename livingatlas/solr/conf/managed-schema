@@ -191,6 +191,9 @@
   <field name="stateConservation"     type="string"  docValues="true" multiValued="false"  indexed="true" />
   <field name="countryConservation"   type="string"  docValues="true" multiValued="false"  indexed="true" />
 
+  <!-- ARGA fields -->
+  <field name="presentInCountry"      type="string"  docValues="true" multiValued="false"  indexed="true" />
+
   <!-- Additional invasive fields -->
   <field name="stateInvasive"         type="string"  docValues="true" multiValued="false"  indexed="true" />
   <field name="countryInvasive"       type="string"  docValues="true" multiValued="false"  indexed="true" />

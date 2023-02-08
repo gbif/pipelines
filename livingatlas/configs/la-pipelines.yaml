@@ -192,6 +192,7 @@ speciesLists:
   maxDownloadAgeInMinutes: 1440
   includeConservationStatus: true
   includeInvasiveStatus: true
+  includePresentInCountry: false
 
 # Sampling specific configuration
 sampling:

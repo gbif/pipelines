@@ -10,6 +10,7 @@
     {"name": "isInvasive", "type": "boolean"},
     {"name": "region", "type": ["null", "string"], "default": null },
     {"name": "status", "type": ["null", "string"]},
-    {"name": "sourceStatus", "type": ["null", "string"]}
+    {"name": "sourceStatus", "type": ["null", "string"]},
+    {"name": "presentInCountry", "type": ["null", "string"]}
   ]
 }

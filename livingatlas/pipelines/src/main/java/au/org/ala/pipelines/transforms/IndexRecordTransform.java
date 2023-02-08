@@ -805,6 +805,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         }
       }
     }
+
+    // index presentInCountry
+    if (tpr.getPresentInCountry() != null) {
+      indexRecord.getStrings().put(PRESENT_IN_COUNTRY, tpr.getPresentInCountry());
+    }
   }
 
   private static MultimediaIndexRecord convertToMultimediaRecord(String uuid, Image image) {
