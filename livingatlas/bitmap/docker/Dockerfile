@@ -13,4 +13,4 @@ RUN tar xfz /tmp/jdk8.tgz --directory /usr/lib/jvm/
 
 VOLUME ["/data/pipelines-shp"]
 
-COPY target/bitmap-2.12.2-SNAPSHOT-jar-with-dependencies.jar /usr/local/lib/la-pipelines-bitmap.jar
+COPY target/bitmap-2.14.0-SNAPSHOT-jar-with-dependencies.jar /usr/local/lib/la-pipelines-bitmap.jar

@@ -2,7 +2,6 @@ package org.gbif.pipelines.tasks.verbatims.dwca;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -22,7 +21,6 @@ public class DwcaToAvroService extends AbstractIdleService {
   private final DwcaToAvroConfiguration config;
   private MessageListener listener;
   private MessagePublisher publisher;
-  private CuratorFramework curator;
 
   public DwcaToAvroService(DwcaToAvroConfiguration config) {
     this.config = config;
@@ -35,7 +33,6 @@ public class DwcaToAvroService extends AbstractIdleService {
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
-    curator = c.zooKeeper.getCuratorFramework();
 
     PipelinesHistoryClient historyClient =
         ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
@@ -49,7 +46,6 @@ public class DwcaToAvroService extends AbstractIdleService {
         DwcaToAvroCallback.builder()
             .config(config)
             .publisher(publisher)
-            .curator(curator)
             .historyClient(historyClient)
             .validationClient(validationClient)
             .datasetClient(datasetClient)
@@ -62,7 +58,6 @@ public class DwcaToAvroService extends AbstractIdleService {
   protected void shutDown() {
     publisher.close();
     listener.close();
-    curator.close();
     log.info("Stopping pipelines-verbatim-to-avro-from-dwca service");
   }
 }

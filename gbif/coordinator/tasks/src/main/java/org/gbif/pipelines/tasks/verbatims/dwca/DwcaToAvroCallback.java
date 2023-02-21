@@ -7,18 +7,18 @@ import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
-import org.apache.curator.framework.CuratorFramework;
 import org.gbif.api.model.crawler.GenericValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
+import org.gbif.api.model.pipelines.PipelinesWorkflow;
+import org.gbif.api.model.pipelines.PipelinesWorkflow.Graph;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -48,7 +48,6 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
   private final DwcaToAvroConfiguration config;
   private final MessagePublisher publisher;
-  private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
   private final DatasetClient datasetClient;
   private final ValidationWsClient validationClient;
@@ -64,7 +63,6 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         .datasetClient(datasetClient)
         .validationClient(validationClient)
         .config(config)
-        .curator(curator)
         .stepType(type)
         .isValidator(isValidator)
         .publisher(publisher)
@@ -113,10 +111,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     boolean isValidGenericReport =
         message.getValidationReport().getGenericReport() != null
             && message.getValidationReport().getGenericReport().getCheckedRecords() > 0;
-    if (config.addEventSteps) {
-      return isValidOccurrenceReport || isValidGenericReport;
-    }
-    return isValidOccurrenceReport;
+    return isValidOccurrenceReport || isValidGenericReport;
   }
 
   /** Main message processing logic, converts a DwCA archive to an avro file. */
@@ -160,17 +155,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     Objects.requireNonNull(message.getEndpointType(), "endpointType can't be NULL!");
 
     Set<String> interpretedTypes = config.interpretTypes;
-    Consumer<HashSet<String>> occurrenceFn =
-        hs -> {
-          hs.add(StepType.DWCA_TO_VERBATIM.name());
-          hs.add(StepType.VERBATIM_TO_IDENTIFIER.name());
-          hs.add(StepType.VERBATIM_TO_INTERPRETED.name());
-          hs.add(StepType.INTERPRETED_TO_INDEX.name());
-          hs.add(StepType.HDFS_VIEW.name());
-          hs.add(StepType.FRAGMENTER.name());
-        };
 
-    HashSet<String> steps = new HashSet<>();
     try {
       boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
 
@@ -182,19 +167,27 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
       if (message.getPipelineSteps().isEmpty()) {
 
-        Term coreType = archive.getCore().getRowType();
-        boolean hasOccExt =
-            archive.getExtensions().stream().anyMatch(x -> x.getRowType() == DwcTerm.Occurrence);
+        Graph<StepType> workflow;
+        if (isValidator) {
+          workflow = PipelinesWorkflow.getValidatorWorkflow();
+        } else {
+          Term coreType = archive.getCore().getRowType();
+          boolean hasOccExt =
+              archive.getExtensions().stream().anyMatch(x -> x.getRowType() == DwcTerm.Occurrence);
 
-        if (coreType == DwcTerm.Occurrence || hasOccExt) {
-          occurrenceFn.accept(steps);
+          boolean hasOccurrences = coreType == DwcTerm.Occurrence || hasOccExt;
+          boolean hasEvents = coreType == DwcTerm.Event;
+
+          workflow = PipelinesWorkflow.getWorkflow(hasOccurrences, hasEvents);
         }
-        if (coreType == DwcTerm.Event && config.addEventSteps) {
-          steps.add(StepType.DWCA_TO_VERBATIM.name());
-          steps.add(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
-          steps.add(StepType.EVENTS_INTERPRETED_TO_INDEX.name());
-          steps.add(StepType.EVENTS_HDFS_VIEW.name());
-        }
+
+        StepType type =
+            isValidator ? StepType.VALIDATOR_DWCA_TO_VERBATIM : StepType.DWCA_TO_VERBATIM;
+
+        Set<String> steps =
+            workflow.getAllNodesFor(Collections.singleton(type)).stream()
+                .map(StepType::name)
+                .collect(Collectors.toSet());
 
         message.setPipelineSteps(steps);
       }
@@ -207,7 +200,10 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
       interpretedTypes.addAll(allInterpretationAsString);
       interpretedTypes.remove(null);
     } catch (IllegalStateException | UnsupportedArchiveException ex) {
-      occurrenceFn.accept(steps);
+      Set<String> steps =
+          PipelinesWorkflow.getOccurrenceWorkflow().getAllNodes().stream()
+              .map(StepType::name)
+              .collect(Collectors.toSet());
       message.setPipelineSteps(steps);
       log.warn(ex.getMessage(), ex);
     }

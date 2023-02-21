@@ -2,7 +2,6 @@ package org.gbif.pipelines.tasks.validators.cleaner;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
@@ -19,7 +18,6 @@ public class CleanerService extends AbstractIdleService {
 
   private final CleanerConfiguration config;
   private MessageListener listener;
-  private CuratorFramework curator;
 
   public CleanerService(CleanerConfiguration config) {
     this.config = config;
@@ -33,15 +31,13 @@ public class CleanerService extends AbstractIdleService {
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     ValidationWsClient validationClient =
         ServiceFactory.createValidationWsClient(config.stepConfig);
-    curator = c.zooKeeper.getCuratorFramework();
 
-    CleanerCallback callback = new CleanerCallback(config, validationClient, curator);
+    CleanerCallback callback = new CleanerCallback(config, validationClient);
     listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }
 
   @Override
   protected void shutDown() throws Exception {
     log.info("Stopping pipelines-validator-cleaner service");
-    curator.close();
   }
 }

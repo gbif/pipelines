@@ -7,6 +7,8 @@ import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.pipelines.PipelinesWorkflow;
+import org.gbif.api.model.pipelines.PipelinesWorkflow.Graph;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.ValidationStep;
@@ -27,9 +29,10 @@ public class Validations {
       return;
     }
 
+    Graph<StepType> validatorWorkflow = PipelinesWorkflow.getValidatorWorkflow();
     // Mark all previous steps as FINISHED
     for (ValidationStep step : validation.getMetrics().getStepTypes()) {
-      if (stepType.getExecutionOrder() > step.getExecutionOrder()) {
+      if (validatorWorkflow.getLevel(stepType) > step.getExecutionOrder()) {
         step.setStatus(Status.FINISHED);
       }
     }
@@ -71,7 +74,7 @@ public class Validations {
           ValidationStep.builder()
               .stepType(stepType.name())
               .status(newStatus)
-              .executionOrder(stepType.getExecutionOrder())
+              .executionOrder(validatorWorkflow.getLevel(stepType))
               .build();
       metrics.getStepTypes().add(step);
     }

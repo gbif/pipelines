@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -28,7 +27,6 @@ public class IndexingService extends AbstractIdleService {
   private final IndexingConfiguration config;
   private MessageListener listener;
   private MessagePublisher publisher;
-  private CuratorFramework curator;
   private CloseableHttpClient httpClient;
   private ExecutorService executor;
 
@@ -43,7 +41,6 @@ public class IndexingService extends AbstractIdleService {
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
-    curator = c.zooKeeper.getCuratorFramework();
     executor =
         config.standaloneNumberThreads == null
             ? null
@@ -66,7 +63,6 @@ public class IndexingService extends AbstractIdleService {
         IndexingCallback.builder()
             .config(config)
             .publisher(publisher)
-            .curator(curator)
             .historyClient(historyClient)
             .httpClient(httpClient)
             .validationClient(validationClient)
@@ -81,7 +77,6 @@ public class IndexingService extends AbstractIdleService {
   protected void shutDown() {
     listener.close();
     publisher.close();
-    curator.close();
     executor.shutdown();
     try {
       httpClient.close();

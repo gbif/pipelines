@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.Set;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -37,7 +36,6 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
 
   private final IdentifierConfiguration config;
   private final MessagePublisher publisher;
-  private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
   private final DatasetClient datasetClient;
   private final CloseableHttpClient httpClient;
@@ -48,7 +46,6 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
         .historyClient(historyClient)
         .datasetClient(datasetClient)
         .config(config)
-        .curator(curator)
         .stepType(TYPE)
         .publisher(publisher)
         .message(message)

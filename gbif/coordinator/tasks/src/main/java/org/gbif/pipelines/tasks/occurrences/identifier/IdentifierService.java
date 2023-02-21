@@ -3,7 +3,6 @@ package org.gbif.pipelines.tasks.occurrences.identifier;
 import com.google.common.util.concurrent.AbstractIdleService;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -23,7 +22,6 @@ public class IdentifierService extends AbstractIdleService {
   private final IdentifierConfiguration config;
   private MessageListener listener;
   private MessagePublisher publisher;
-  private CuratorFramework curator;
   private CloseableHttpClient httpClient;
 
   public IdentifierService(IdentifierConfiguration config) {
@@ -38,7 +36,6 @@ public class IdentifierService extends AbstractIdleService {
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
-    curator = c.zooKeeper.getCuratorFramework();
 
     PipelinesHistoryClient historyClient =
         ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
@@ -55,7 +52,6 @@ public class IdentifierService extends AbstractIdleService {
         IdentifierCallback.builder()
             .config(config)
             .publisher(publisher)
-            .curator(curator)
             .historyClient(historyClient)
             .httpClient(httpClient)
             .datasetClient(datasetClient)
@@ -68,7 +64,6 @@ public class IdentifierService extends AbstractIdleService {
   protected void shutDown() {
     listener.close();
     publisher.close();
-    curator.close();
     try {
       httpClient.close();
     } catch (IOException e) {
