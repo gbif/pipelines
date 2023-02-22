@@ -69,7 +69,7 @@
 
     <!-- Commons -->
     <commons-io.version>2.2</commons-io.version>
-    <commons-fileupload.version>1.4</commons-fileupload.version>
+    <commons-fileupload.version>1.5</commons-fileupload.version>
 
     <!-- Validation -->
     <jsr305.version>3.0.1</jsr305.version>
