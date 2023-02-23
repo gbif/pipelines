@@ -1,18 +1,12 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.common.parsers.date.DateComponentOrdering.DMY;
-import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
-import static org.gbif.common.parsers.date.DateComponentOrdering.MDY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
-import org.apache.commons.lang3.StringUtils;
+
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DcTerm;
@@ -20,7 +14,15 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
+
+import static org.gbif.common.parsers.date.DateComponentOrdering.DMY;
+import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
+import static org.gbif.common.parsers.date.DateComponentOrdering.MDY;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class TemporalInterpreterTest {
 
@@ -224,7 +226,12 @@ public class TemporalInterpreterTest {
         OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY.name(),
         tr.getIssues().getIssueList().iterator().next());
 
+    tr.getIssues().getIssueList().clear();
     er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1599-01-11");
+    interpreter.interpretDateIdentified(er, tr);
+    assertEquals(0, tr.getIssues().getIssueList().size());
+
+    er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1499-01-11");
     interpreter.interpretDateIdentified(er, tr);
     assertEquals(1, tr.getIssues().getIssueList().size());
     assertEquals(
