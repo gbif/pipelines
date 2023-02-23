@@ -4,7 +4,6 @@ import java.util.Collections;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -26,7 +25,6 @@ public class ArchiveValidatorCallback
 
   private final ArchiveValidatorConfiguration config;
   private final MessagePublisher publisher;
-  private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
   private final ValidationWsClient validationClient;
   private final SchemaValidatorFactory schemaValidatorFactory;
@@ -37,7 +35,6 @@ public class ArchiveValidatorCallback
         .historyClient(historyClient)
         .validationClient(validationClient)
         .config(config)
-        .curator(curator)
         .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
         .isValidator(config.validatorOnly)
         .publisher(publisher)

@@ -76,7 +76,6 @@ public class VerbatimMessageHandler {
               StepRunner.DISTRIBUTED.name(),
               false,
               m.getResetPrefix(),
-              null,
               m.getExecutionId(),
               m.getEndpointType(),
               m.getValidationResult(),

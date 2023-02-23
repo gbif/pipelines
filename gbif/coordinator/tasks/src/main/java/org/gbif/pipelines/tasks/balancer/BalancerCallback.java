@@ -9,11 +9,11 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
-import org.gbif.common.messaging.api.messages.PipelinesEventsHdfsViewBuiltMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsHdfsViewMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesFragmenterMessage;
-import org.gbif.common.messaging.api.messages.PipelinesHdfsViewBuiltMessage;
+import org.gbif.common.messaging.api.messages.PipelinesHdfsViewMessage;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
@@ -23,9 +23,9 @@ import org.gbif.pipelines.tasks.balancer.handler.EventsInterpretedMessageHandler
 import org.gbif.pipelines.tasks.balancer.handler.InterpretedMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.PipelinesAbcdMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.PipelinesDwcaMessageHandler;
-import org.gbif.pipelines.tasks.balancer.handler.PipelinesEventsHdfsViewBuiltMessageHandler;
+import org.gbif.pipelines.tasks.balancer.handler.PipelinesEventsHdfsViewMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.PipelinesFragmenterMessageHandler;
-import org.gbif.pipelines.tasks.balancer.handler.PipelinesHdfsViewBuiltMessageHandler;
+import org.gbif.pipelines.tasks.balancer.handler.PipelinesHdfsViewMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.PipelinesIndexedMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.PipelinesXmlMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.VerbatimMessageHandler;
@@ -60,8 +60,8 @@ public class BalancerCallback extends AbstractMessageCallback<PipelinesBalancerM
         InterpretedMessageHandler.handle(config, publisher, message);
       } else if (PipelinesIndexedMessage.class.getSimpleName().equals(className)) {
         PipelinesIndexedMessageHandler.handle(publisher, message);
-      } else if (PipelinesHdfsViewBuiltMessage.class.getSimpleName().equals(className)) {
-        PipelinesHdfsViewBuiltMessageHandler.handle(publisher, message);
+      } else if (PipelinesHdfsViewMessage.class.getSimpleName().equals(className)) {
+        PipelinesHdfsViewMessageHandler.handle(publisher, message);
       } else if (PipelinesDwcaMessage.class.getSimpleName().equals(className)) {
         PipelinesDwcaMessageHandler.handle(publisher, message);
       } else if (PipelinesXmlMessage.class.getSimpleName().equals(className)) {
@@ -74,8 +74,8 @@ public class BalancerCallback extends AbstractMessageCallback<PipelinesBalancerM
         EventsInterpretedMessageHandler.handle(publisher, message);
       } else if (PipelinesEventsIndexedMessage.class.getSimpleName().equals(className)) {
         EventsIndexedMessageHandler.handle(publisher, message);
-      } else if (PipelinesEventsHdfsViewBuiltMessage.class.getSimpleName().equals(className)) {
-        PipelinesEventsHdfsViewBuiltMessageHandler.handle(publisher, message);
+      } else if (PipelinesEventsHdfsViewMessage.class.getSimpleName().equals(className)) {
+        PipelinesEventsHdfsViewMessageHandler.handle(publisher, message);
       } else {
         log.error("Handler for {} wasn't found!", className);
       }

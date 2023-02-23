@@ -2,10 +2,9 @@ package org.gbif.pipelines.tasks.occurrences.hdfs;
 
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesHdfsViewBuiltMessage;
+import org.gbif.common.messaging.api.messages.PipelinesHdfsViewMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.hdfs.CommonHdfsViewCallback;
@@ -19,22 +18,20 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 @Slf4j
 @Builder
 public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
-    implements StepHandler<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage> {
+    implements StepHandler<PipelinesInterpretedMessage, PipelinesHdfsViewMessage> {
 
   protected final HdfsViewConfiguration config;
   private final MessagePublisher publisher;
-  private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
   private final DatasetClient datasetClient;
   private final CommonHdfsViewCallback commonHdfsViewCallback;
 
   @Override
   public void handleMessage(PipelinesInterpretedMessage message) {
-    PipelinesCallback.<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage>builder()
+    PipelinesCallback.<PipelinesInterpretedMessage, PipelinesHdfsViewMessage>builder()
         .historyClient(historyClient)
         .datasetClient(datasetClient)
         .config(config)
-        .curator(curator)
         .stepType(config.stepType)
         .publisher(publisher)
         .message(message)
@@ -55,9 +52,9 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   @Override
-  public PipelinesHdfsViewBuiltMessage createOutgoingMessage(PipelinesInterpretedMessage message) {
-    return new PipelinesHdfsViewBuiltMessage(
-        message.getDatasetUuid(), message.getAttempt(), message.getPipelineSteps());
+  public PipelinesHdfsViewMessage createOutgoingMessage(PipelinesInterpretedMessage message) {
+    return new PipelinesHdfsViewMessage(
+        message.getDatasetUuid(), message.getAttempt(), message.getPipelineSteps(), null, null);
   }
 
   /**

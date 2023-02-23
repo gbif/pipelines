@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.HttpClient;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -40,7 +39,6 @@ public class EventsIndexingCallback
 
   private final EventsIndexingConfiguration config;
   private final MessagePublisher publisher;
-  private final CuratorFramework curator;
   private final HttpClient httpClient;
   private final HdfsConfigs hdfsConfigs;
   private final PipelinesHistoryClient historyClient;
@@ -50,7 +48,6 @@ public class EventsIndexingCallback
   public void handleMessage(PipelinesEventsInterpretedMessage message) {
     PipelinesCallback.<PipelinesEventsInterpretedMessage, PipelinesEventsIndexedMessage>builder()
         .config(config)
-        .curator(curator)
         .stepType(TYPE)
         .publisher(publisher)
         .historyClient(historyClient)
@@ -114,6 +111,8 @@ public class EventsIndexingCallback
         message.getDatasetUuid(),
         message.getAttempt(),
         message.getPipelineSteps(),
+        message.getNumberOfOccurrenceRecords(),
+        message.getNumberOfEventRecords(),
         message.getResetPrefix(),
         message.getExecutionId(),
         message.getRunner());
@@ -155,12 +154,14 @@ public class EventsIndexingCallback
         getRecordNumber(
             message,
             new EventsInterpretationConfiguration().metaFileName,
-            message.getNumberOfEventRecords());
+            message.getNumberOfEventRecords(),
+            false);
     long occurrenceRecords =
         getRecordNumber(
             message,
             new InterpreterConfiguration().metaFileName,
-            message.getNumberOfOccurrenceRecords());
+            message.getNumberOfOccurrenceRecords(),
+            true);
     return occurrenceRecords + eventRecords;
   }
 
@@ -169,15 +170,28 @@ public class EventsIndexingCallback
    * attempted records count, which is not accurate enough
    */
   private long getRecordNumber(
-      PipelinesEventsInterpretedMessage message, String metaFileName, Long messageNumber)
+      PipelinesEventsInterpretedMessage message,
+      String metaFileName,
+      Long messageNumber,
+      boolean skipIfMissed)
       throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaPath =
         String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
+    if (skipIfMissed && !HdfsUtils.exists(hdfsConfigs, metaPath)) {
+      return 0L;
+    }
+
     Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
+        HdfsUtils.getLongByKey(
+            hdfsConfigs, metaPath, Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED);
+    if (!fileNumber.isPresent()) {
+      fileNumber =
+          HdfsUtils.getLongByKey(
+              hdfsConfigs, metaPath, Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
+    }
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(

@@ -77,6 +77,10 @@ public class LocationInheritedFieldsFn
 
       LocationInheritedFields parent = recordsMap.get(parentId);
 
+      if (parent == null) {
+        return assigned;
+      }
+
       if (parent.getCountryCode() != null) {
         builder.setCountryCode(parent.getCountryCode());
         assigned = true;

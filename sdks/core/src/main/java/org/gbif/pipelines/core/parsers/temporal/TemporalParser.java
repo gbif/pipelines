@@ -25,7 +25,7 @@ public class TemporalParser implements Serializable {
 
   private static final long serialVersionUID = -8845127337324812802L;
 
-  private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
+  private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1500, 1, 1);
 
   private final org.gbif.common.parsers.date.TemporalParser temporalParser;
 

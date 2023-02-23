@@ -3,7 +3,6 @@ package org.gbif.pipelines.tasks.validators.metrics;
 import com.google.common.util.concurrent.AbstractIdleService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -23,7 +22,6 @@ public class MetricsCollectorService extends AbstractIdleService {
   private final MetricsCollectorConfiguration config;
   private MessageListener listener;
   private MessagePublisher publisher;
-  private CuratorFramework curator;
 
   public MetricsCollectorService(MetricsCollectorConfiguration config) {
     this.config = config;
@@ -36,7 +34,6 @@ public class MetricsCollectorService extends AbstractIdleService {
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
-    curator = c.zooKeeper.getCuratorFramework();
 
     PipelinesHistoryClient historyClient =
         ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
@@ -45,8 +42,7 @@ public class MetricsCollectorService extends AbstractIdleService {
         ServiceFactory.createValidationWsClient(config.stepConfig);
 
     MetricsCollectorCallback callback =
-        new MetricsCollectorCallback(
-            this.config, publisher, curator, historyClient, validationClient);
+        new MetricsCollectorCallback(this.config, publisher, historyClient, validationClient);
 
     listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }
@@ -56,7 +52,6 @@ public class MetricsCollectorService extends AbstractIdleService {
   protected void shutDown() {
     publisher.close();
     listener.close();
-    curator.close();
     ElasticsearchClientFactory.getInstance().close();
     log.info("Stopping pipelines-validator-metrics-collector service");
   }

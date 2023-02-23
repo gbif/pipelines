@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.hbase.client.Connection;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
@@ -29,7 +28,6 @@ public class FragmenterService extends AbstractIdleService {
   private final FragmenterConfiguration config;
   private MessageListener listener;
   private MessagePublisher publisher;
-  private CuratorFramework curator;
   private ExecutorService executor;
   private Connection hbaseConnection;
 
@@ -44,7 +42,6 @@ public class FragmenterService extends AbstractIdleService {
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
-    curator = c.zooKeeper.getCuratorFramework();
     executor = Executors.newFixedThreadPool(config.numberThreads);
 
     PipelinesHistoryClient historyClient =
@@ -59,7 +56,6 @@ public class FragmenterService extends AbstractIdleService {
         FragmenterCallback.builder()
             .config(config)
             .publisher(publisher)
-            .curator(curator)
             .historyClient(historyClient)
             .executor(executor)
             .hbaseConnection(hbaseConnection)
@@ -75,7 +71,6 @@ public class FragmenterService extends AbstractIdleService {
     try {
       listener.close();
       publisher.close();
-      curator.close();
       hbaseConnection.close();
       executor.shutdown();
       log.info("Stopping pipelines-verbatim-fragmenter service");

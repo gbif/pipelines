@@ -1,12 +1,14 @@
 package org.gbif.pipelines.core.factory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.avro.AvroModule;
 import java.util.List;
 import lombok.experimental.UtilityClass;
+import org.gbif.pipelines.io.avro.json.Coordinates;
 import org.gbif.pipelines.io.avro.json.GbifClassification;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.io.avro.json.VerbatimRecord;
@@ -22,6 +24,7 @@ public class SerDeFactory {
   private static final ObjectMapper AVRO_MAPPER_NON_NULLS =
       new ObjectMapper()
           .addMixIn(GbifClassification.class, GbifClassificationMixin.class)
+          .addMixIn(Coordinates.class, CoordinatesMixin.class)
           .registerModule(new AvroModule())
           .setSerializationInclusion(Include.NON_EMPTY);
 
@@ -29,6 +32,7 @@ public class SerDeFactory {
       new ObjectMapper()
           .addMixIn(GbifClassification.class, GbifClassificationMixin.class)
           .addMixIn(OccurrenceJsonRecord.class, OccurrenceJsonRecordEventMixin.class)
+          .addMixIn(Coordinates.class, CoordinatesMixin.class)
           .registerModule(new AvroModule())
           .setSerializationInclusion(Include.NON_EMPTY);
 
@@ -105,5 +109,14 @@ public class SerDeFactory {
 
     @JsonIgnore
     VerbatimRecord getVerbatim();
+  }
+
+  public interface CoordinatesMixin {
+
+    @JsonInclude(Include.NON_NULL)
+    Double getLat();
+
+    @JsonInclude(Include.NON_NULL)
+    Double getLon();
   }
 }

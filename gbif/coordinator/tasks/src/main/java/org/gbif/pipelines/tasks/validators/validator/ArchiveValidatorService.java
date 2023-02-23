@@ -2,7 +2,6 @@ package org.gbif.pipelines.tasks.validators.validator;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -22,7 +21,6 @@ public class ArchiveValidatorService extends AbstractIdleService {
   private final ArchiveValidatorConfiguration config;
   private MessageListener listener;
   private MessagePublisher publisher;
-  private CuratorFramework curator;
 
   public ArchiveValidatorService(ArchiveValidatorConfiguration config) {
     this.config = config;
@@ -35,7 +33,6 @@ public class ArchiveValidatorService extends AbstractIdleService {
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
-    curator = c.zooKeeper.getCuratorFramework();
 
     PipelinesHistoryClient historyClient =
         ServiceFactory.createPipelinesHistoryClient(config.stepConfig);
@@ -47,12 +44,7 @@ public class ArchiveValidatorService extends AbstractIdleService {
 
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
-            this.config,
-            publisher,
-            curator,
-            historyClient,
-            validationClient,
-            schemaValidatorFactory);
+            this.config, publisher, historyClient, validationClient, schemaValidatorFactory);
 
     listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
   }
@@ -61,7 +53,6 @@ public class ArchiveValidatorService extends AbstractIdleService {
   protected void shutDown() {
     publisher.close();
     listener.close();
-    curator.close();
     log.info("Stopping pipelines-pipelines-validator-archive-validator service");
   }
 }

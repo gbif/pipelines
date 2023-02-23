@@ -1,10 +1,9 @@
 package org.gbif.pipelines.tasks.verbatims.fragmenter;
 
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
+import static org.gbif.api.model.pipelines.PipelineStep.Status.COMPLETED;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
 import static org.gbif.pipelines.fragmenter.common.TableAssert.assertTable;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -12,30 +11,27 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.RetryOneTime;
 import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.fs.FileSystem;
+import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
-import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.utils.HdfsUtils;
-import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
 import org.gbif.registry.ws.client.DatasetClient;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -49,14 +45,12 @@ public class FragmenterCallbackIT {
   private static final String DWCA_DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final String DWCA_INPUT_DATASET_DIR = "/dataset/dwca";
   private static final String REPO_PATH = "/dataset/";
-  private static final String FRAGMENTER_LABEL = StepType.FRAGMENTER.getLabel();
   private static final ValidationResult VALIDATION_RESULT =
-      new ValidationResult(true, true, false, 0L, null);
-  private static CuratorFramework curator;
+      new ValidationResult(true, true, false, 100L, null);
+
   private static TestingServer server;
   private static MessagePublisherStub publisher;
   private static ExecutorService executor;
-  @Mock private PipelinesHistoryClient historyClient;
   @Mock private static DatasetClient datasetClient;
 
   @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
@@ -65,13 +59,6 @@ public class FragmenterCallbackIT {
   public static void setUp() throws Exception {
 
     server = new TestingServer();
-    curator =
-        CuratorFrameworkFactory.builder()
-            .connectString(server.getConnectString())
-            .namespace("crawler")
-            .retryPolicy(new RetryOneTime(1))
-            .build();
-    curator.start();
 
     publisher = MessagePublisherStub.create();
     executor = Executors.newSingleThreadExecutor();
@@ -79,7 +66,6 @@ public class FragmenterCallbackIT {
 
   @AfterClass
   public static void tearDown() throws IOException {
-    curator.close();
     server.stop();
     publisher.close();
     executor.shutdown();
@@ -92,8 +78,9 @@ public class FragmenterCallbackIT {
   }
 
   @Test
-  public void testDwca() throws Exception {
+  public void dwcaTest() throws Exception {
     // State
+    PipelinesHistoryClientTestStub historyClient = PipelinesHistoryClientTestStub.create();
     FragmenterConfiguration config = new FragmenterConfiguration();
     config.hbaseFragmentsTable = HbaseServer.FRAGMENT_TABLE_NAME;
     config.dwcaArchiveRepository = getClass().getResource(DWCA_INPUT_DATASET_DIR).getFile();
@@ -103,7 +90,6 @@ public class FragmenterCallbackIT {
 
     UUID uuid = UUID.fromString(DWCA_DATASET_UUID);
     int attempt = 2;
-    String crawlId = DWCA_DATASET_UUID;
     int expSize = 1534;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
@@ -118,7 +104,6 @@ public class FragmenterCallbackIT {
             true,
             null,
             null,
-            null,
             endpointType,
             VALIDATION_RESULT,
             Collections.singleton(OCCURRENCE.name()),
@@ -128,7 +113,6 @@ public class FragmenterCallbackIT {
         FragmenterCallback.builder()
             .config(config)
             .publisher(publisher)
-            .curator(curator)
             .historyClient(historyClient)
             .executor(executor)
             .hbaseConnection(HBASE_SERVER.getConnection())
@@ -140,24 +124,25 @@ public class FragmenterCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertTrue(checkExists(curator, crawlId, FRAGMENTER_LABEL));
-    assertTrue(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(FRAGMENTER_LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(FRAGMENTER_LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(FRAGMENTER_LABEL)));
     assertEquals(1, publisher.getMessages().size());
     assertTable(HBASE_SERVER.getConnection(), expSize, DWCA_DATASET_UUID, attempt, endpointType);
     assertMetaFile(config, uuid, attempt, expSize);
 
-    // Clean
-    curator
-        .delete()
-        .deletingChildrenIfNeeded()
-        .forPath(getPipelinesInfoPath(crawlId, FRAGMENTER_LABEL));
+    Map<StepType, PipelineStep> result = historyClient.getStepMap();
+    Assert.assertEquals(1, result.size());
+
+    Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
+    Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
+
+    PipelineStep fragmenterResult = result.get(StepType.FRAGMENTER);
+    Assert.assertNotNull(fragmenterResult);
+    Assert.assertEquals(COMPLETED, fragmenterResult.getState());
   }
 
   @Test
-  public void testAbcd() throws Exception {
+  public void abcdTest() throws Exception {
     // State
+    PipelinesHistoryClientTestStub historyClient = PipelinesHistoryClientTestStub.create();
     FragmenterConfiguration config = new FragmenterConfiguration();
     config.hbaseFragmentsTable = HbaseServer.FRAGMENT_TABLE_NAME;
     config.xmlArchiveRepository = getClass().getResource(REPO_PATH).getFile();
@@ -168,7 +153,6 @@ public class FragmenterCallbackIT {
 
     UUID uuid = UUID.fromString("830c56c4-57bf-4858-9795-c1f8c7ff9b1e");
     int attempt = 61;
-    String crawlId = uuid.toString();
     int expSize = 20;
     EndpointType endpointType = EndpointType.BIOCASE_XML_ARCHIVE;
 
@@ -183,7 +167,6 @@ public class FragmenterCallbackIT {
             true,
             null,
             null,
-            null,
             endpointType,
             VALIDATION_RESULT,
             Collections.singleton(OCCURRENCE.name()),
@@ -193,7 +176,6 @@ public class FragmenterCallbackIT {
         FragmenterCallback.builder()
             .config(config)
             .publisher(publisher)
-            .curator(curator)
             .historyClient(historyClient)
             .executor(executor)
             .hbaseConnection(HBASE_SERVER.getConnection())
@@ -205,24 +187,25 @@ public class FragmenterCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertTrue(checkExists(curator, crawlId, FRAGMENTER_LABEL));
-    assertTrue(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(FRAGMENTER_LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(FRAGMENTER_LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(FRAGMENTER_LABEL)));
     assertEquals(1, publisher.getMessages().size());
     assertTable(HBASE_SERVER.getConnection(), expSize, uuid.toString(), attempt, endpointType);
     assertMetaFile(config, uuid, attempt, expSize);
 
-    // Clean
-    curator
-        .delete()
-        .deletingChildrenIfNeeded()
-        .forPath(getPipelinesInfoPath(crawlId, FRAGMENTER_LABEL));
+    Map<StepType, PipelineStep> result = historyClient.getStepMap();
+    Assert.assertEquals(1, result.size());
+
+    Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
+    Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
+
+    PipelineStep fragmenterResult = result.get(StepType.FRAGMENTER);
+    Assert.assertNotNull(fragmenterResult);
+    Assert.assertEquals(COMPLETED, fragmenterResult.getState());
   }
 
   @Test
-  public void testXml() throws Exception {
+  public void xmlTest() throws Exception {
     // State
+    PipelinesHistoryClientTestStub historyClient = PipelinesHistoryClientTestStub.create();
     FragmenterConfiguration config = new FragmenterConfiguration();
     config.hbaseFragmentsTable = HbaseServer.FRAGMENT_TABLE_NAME;
     config.xmlArchiveRepository = getClass().getResource(REPO_PATH).getFile();
@@ -233,7 +216,6 @@ public class FragmenterCallbackIT {
 
     UUID uuid = UUID.fromString("7ef15372-1387-11e2-bb2e-00145eb45e9a");
     int attempt = 61;
-    String crawlId = uuid.toString();
     int expSize = 20;
     EndpointType endpointType = EndpointType.BIOCASE;
 
@@ -248,7 +230,6 @@ public class FragmenterCallbackIT {
             true,
             null,
             null,
-            null,
             endpointType,
             VALIDATION_RESULT,
             Collections.singleton(OCCURRENCE.name()),
@@ -258,7 +239,6 @@ public class FragmenterCallbackIT {
         FragmenterCallback.builder()
             .config(config)
             .publisher(publisher)
-            .curator(curator)
             .historyClient(historyClient)
             .executor(executor)
             .hbaseConnection(HBASE_SERVER.getConnection())
@@ -270,24 +250,25 @@ public class FragmenterCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertTrue(checkExists(curator, crawlId, FRAGMENTER_LABEL));
-    assertTrue(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(FRAGMENTER_LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(FRAGMENTER_LABEL)));
-    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(FRAGMENTER_LABEL)));
     assertEquals(1, publisher.getMessages().size());
     assertTable(HBASE_SERVER.getConnection(), expSize, uuid.toString(), attempt, endpointType);
     assertMetaFile(config, uuid, attempt, expSize);
 
-    // Clean
-    curator
-        .delete()
-        .deletingChildrenIfNeeded()
-        .forPath(getPipelinesInfoPath(crawlId, FRAGMENTER_LABEL));
+    Map<StepType, PipelineStep> result = historyClient.getStepMap();
+    Assert.assertEquals(1, result.size());
+
+    Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
+    Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
+
+    PipelineStep fragmenterResult = result.get(StepType.FRAGMENTER);
+    Assert.assertNotNull(fragmenterResult);
+    Assert.assertEquals(COMPLETED, fragmenterResult.getState());
   }
 
   @Test
-  public void testWrongMessage() {
+  public void wrongMessageTest() {
     // State
+    PipelinesHistoryClientTestStub historyClient = PipelinesHistoryClientTestStub.create();
     FragmenterConfiguration config = new FragmenterConfiguration();
     config.hbaseFragmentsTable = HbaseServer.FRAGMENT_TABLE_NAME;
     config.dwcaArchiveRepository = getClass().getResource(DWCA_INPUT_DATASET_DIR).getFile();
@@ -296,7 +277,6 @@ public class FragmenterCallbackIT {
 
     UUID uuid = UUID.fromString(DWCA_DATASET_UUID);
     int attempt = 2;
-    String crawlId = DWCA_DATASET_UUID;
     int expSize = 1534;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
@@ -310,7 +290,6 @@ public class FragmenterCallbackIT {
             StepRunner.STANDALONE.name(),
             true,
             null,
-            StepType.FRAGMENTER.name(),
             null,
             endpointType,
             VALIDATION_RESULT,
@@ -321,7 +300,6 @@ public class FragmenterCallbackIT {
         FragmenterCallback.builder()
             .config(config)
             .publisher(publisher)
-            .curator(curator)
             .historyClient(historyClient)
             .executor(executor)
             .hbaseConnection(HBASE_SERVER.getConnection())
@@ -333,70 +311,13 @@ public class FragmenterCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertFalse(checkExists(curator, crawlId, FRAGMENTER_LABEL));
-    assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(FRAGMENTER_LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(FRAGMENTER_LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(FRAGMENTER_LABEL)));
     assertEquals(0, publisher.getMessages().size());
-  }
 
-  @Test
-  public void testOnlyForStep() {
-    // State
-    FragmenterConfiguration config = new FragmenterConfiguration();
-    config.hbaseFragmentsTable = HbaseServer.FRAGMENT_TABLE_NAME;
-    config.dwcaArchiveRepository = getClass().getResource(DWCA_INPUT_DATASET_DIR).getFile();
-    config.stepConfig.repositoryPath = getClass().getResource(REPO_PATH).getFile();
-    config.generateIdIfAbsent = true;
+    Map<StepType, PipelineStep> result = historyClient.getStepMap();
+    Assert.assertEquals(0, result.size());
 
-    UUID uuid = UUID.fromString(DWCA_DATASET_UUID);
-    int attempt = 2;
-    String crawlId = DWCA_DATASET_UUID;
-    int expSize = 1534;
-    EndpointType endpointType = EndpointType.DWC_ARCHIVE;
-
-    PipelinesInterpretedMessage message =
-        new PipelinesInterpretedMessage(
-            uuid,
-            attempt,
-            Collections.singleton(StepType.HDFS_VIEW.name()),
-            (long) expSize,
-            null,
-            StepRunner.STANDALONE.name(),
-            true,
-            null,
-            StepType.HDFS_VIEW.name(),
-            null,
-            endpointType,
-            VALIDATION_RESULT,
-            Collections.singleton(OCCURRENCE.name()),
-            null);
-
-    FragmenterCallback callback =
-        FragmenterCallback.builder()
-            .config(config)
-            .publisher(publisher)
-            .curator(curator)
-            .historyClient(historyClient)
-            .executor(executor)
-            .hbaseConnection(HBASE_SERVER.getConnection())
-            .keygenConfig(HbaseServer.CFG)
-            .datasetClient(datasetClient)
-            .build();
-
-    // When
-    callback.handleMessage(message);
-
-    // Should
-    assertFalse(checkExists(curator, crawlId, FRAGMENTER_LABEL));
-    assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(FRAGMENTER_LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(FRAGMENTER_LABEL)));
-    assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(FRAGMENTER_LABEL)));
-    assertEquals(0, publisher.getMessages().size());
-  }
-
-  private boolean checkExists(CuratorFramework curator, String id, String path) {
-    return ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(id, path));
+    Assert.assertEquals(0, historyClient.getPipelineExecutionMap().size());
+    Assert.assertEquals(0, historyClient.getPipelineProcessMap().size());
   }
 
   private void assertMetaFile(
