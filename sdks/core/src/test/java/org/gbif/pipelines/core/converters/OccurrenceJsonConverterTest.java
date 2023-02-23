@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,6 +20,7 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
@@ -77,6 +79,7 @@ public class OccurrenceJsonConverterTest {
     erMap.put(DwcTerm.scientificName.qualifiedName(), "scientificName");
     erMap.put(DwcTerm.taxonID.qualifiedName(), "taxonID");
     erMap.put(DwcTerm.scientificName.qualifiedName(), "scientificName");
+    erMap.put(GbifTerm.projectId.qualifiedName(), multivalue1 + "|" + multivalue2);
 
     MetadataRecord mr =
         MetadataRecord.newBuilder()
@@ -90,7 +93,7 @@ public class OccurrenceJsonConverterTest {
             .setDatasetTitle("setDatasetTitle")
             .setEndorsingNodeKey("setEndorsingNodeKey")
             .setProgrammeAcronym("setProgrammeAcronym")
-            .setProjectId("setProjectId")
+            .setProjectId(multivalue2)
             .setProtocol("setProtocol")
             .setPublisherTitle("setPublisherTitle")
             .setPublishingOrganizationKey("setPublishingOrganizationKey")
@@ -175,6 +178,7 @@ public class OccurrenceJsonConverterTest {
             .setPreparations(Arrays.asList(multivalue1, "\u001E" + multivalue2))
             .setSamplingProtocol(Arrays.asList(multivalue1, multivalue2))
             .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
+            .setProjectId(Arrays.asList(multivalue1, multivalue2))
             .build();
 
     TemporalRecord tmr =
@@ -474,6 +478,19 @@ public class OccurrenceJsonConverterTest {
     assertEquals(
         "[\"" + TypeStatus.TYPE.name() + "\",\"" + TypeStatus.TYPE_SPECIES.name() + "\"]",
         result.path(Indexing.TYPE_STATUS).toString());
+
+    ArrayNode projectIdArray = (ArrayNode) result.path(Indexing.PROJECT_ID);
+    assertEquals(2, projectIdArray.size());
+    projectIdArray
+        .elements()
+        .forEachRemaining(
+            n -> assertTrue(n.asText().equals(multivalue1) || n.asText().equals(multivalue2)));
+    List<String> projectIdJoined =
+        Arrays.asList(result.path(Indexing.PROJECT_ID_JOINED).asText().split("\\|"));
+    assertEquals(2, projectIdJoined.size());
+    assertTrue(projectIdJoined.contains(multivalue1));
+    assertTrue(projectIdJoined.contains(multivalue2));
+
     assertEquals(
         "http://rs.tdwg.org/ac/terms/Multimedia", result.path(Indexing.EXTENSIONS).get(0).asText());
 
@@ -493,8 +510,9 @@ public class OccurrenceJsonConverterTest {
     String expectedVerbatim =
         "{\"core\":{\"http://rs.tdwg.org/dwc/terms/eventID\":\"eventId\",\"http://rs.tdwg.org/dwc/terms/organismID\":"
             + "\"organismID\",\"http://rs.tdwg.org/dwc/terms/collectionCode\":\"collectionCode\","
-            + "\"http://rs.tdwg.org/dwc/terms/taxonID\":\"taxonID\",\"http://rs.tdwg.org/dwc/terms/recordNumber\":"
-            + "\"recordNumber\",\"http://rs.tdwg.org/dwc/terms/parentEventID\":\"parentEventId\","
+            + "\"http://rs.tdwg.org/dwc/terms/taxonID\":\"taxonID\",\"http://rs.gbif.org/terms/1.0/projectId\":\"mv;à1|mv2\","
+            + "\"http://rs.tdwg.org/dwc/terms/recordNumber\":\"recordNumber\","
+            + "\"http://rs.tdwg.org/dwc/terms/parentEventID\":\"parentEventId\","
             + "\"http://rs.tdwg.org/dwc/terms/occurrenceID\":\"occurrenceID\",\"http://rs.tdwg.org/dwc/terms/locality\":"
             + "\"something:{something}\",\"http://purl.org/dc/terms/remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\","
             + "\"http://rs.tdwg.org/dwc/terms/catalogNumber\":\"catalogNumber\",\"http://rs.tdwg.org/dwc/terms/footprintWKT\":"

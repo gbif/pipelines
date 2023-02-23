@@ -305,6 +305,11 @@ public class BasicInterpreter {
     extractOptListValue(er, DwcTerm.preparations).ifPresent(br::setPreparations);
   }
 
+  /** {@link org.gbif.dwc.terms.GbifTerm#projectId} interpretation. */
+  public static void interpretProjectId(ExtendedRecord er, BasicRecord br) {
+    extractOptListValue(er, GbifTerm.projectId).ifPresent(br::setProjectId);
+  }
+
   /** Sets the coreId field. */
   public static void setCoreId(ExtendedRecord er, BasicRecord br) {
     Optional.ofNullable(er.getCoreId()).ifPresent(br::setCoreId);
