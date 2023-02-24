@@ -121,17 +121,17 @@ Maven profiles:
 - livingatlas-artifacts (creates main shaded Livingatlas artifacts)
 - extra-artifacts (creates shaded artifact for non-ingestion tools and projects)
 
-Building the project without tests and shaded artifacts, suitable for everyday local development
+Building the project without tests and shaded artifacts, suitable for everyday local development (~3 mins on a laptop)
 ```shell
 mvn spotless:apply clean package -P skip-coverage -T 1C -DskipTests -nsu
 ```
 
-Building the project with unit tests and main IT tests, assemble main GBIF artifacts, suitable for CI development builds
+Building the project with unit tests and main IT tests, assemble main GBIF artifacts, suitable for CI development builds (~15 mins on a laptop)
 ```shell
 mvn clean install verify -U -T 3 -P skip-coverage,skip-release-it,gbif-artifacts
 ```
 
-Building the project with all tests, coverage, assemble all artifacts, suitable for project releases
+Building the project with all tests, coverage, assemble all artifacts, suitable for project releases 
 ```shell
 mvn clean install verify -U -P coverage,gbif-artifacts,livingatlas-artifacts,extra-artifacts
 ```

@@ -14,6 +14,10 @@ import org.gbif.rest.client.geocode.Location;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CentroidCalculator {
 
+  // The maximum distance to set, beyond this the value will be left null.
+  // https://github.com/gbif/portal-feedback/issues/4232#issuecomment-1306884884
+  public static final double MAXIMUM_DISTANCE_FROM_CENTROID_METRES = 5000;
+
   public static Optional<Double> calculateCentroidDistance(
       LocationRecord lr, KeyValueStore<LatLng, GeocodeResponse> kvStore) {
     Objects.requireNonNull(lr, "LocationRecord is required");
@@ -42,7 +46,11 @@ public class CentroidCalculator {
       if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
         Optional<Double> centroidDistance =
             geocodeResponse.getLocations().stream()
-                .filter(l -> "Centroids".equals(l.getType()))
+                .filter(
+                    l ->
+                        "Centroids".equals(l.getType())
+                            && l.getDistanceMeters() != null
+                            && l.getDistanceMeters() <= MAXIMUM_DISTANCE_FROM_CENTROID_METRES)
                 .sorted(Comparator.comparingDouble(Location::getDistanceMeters))
                 .findFirst()
                 .map(Location::getDistanceMeters);

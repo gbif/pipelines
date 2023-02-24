@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.pipelines.PipelinesWorkflow;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.ValidationStep;
@@ -25,7 +26,7 @@ public class StepsMapper {
             .map(
                 st ->
                     Metrics.ValidationStep.builder()
-                        .executionOrder(st.getExecutionOrder())
+                        .executionOrder(PipelinesWorkflow.getValidatorWorkflow().getLevel(st))
                         .stepType(st.name())
                         .build())
             .collect(Collectors.toList());
@@ -34,7 +35,9 @@ public class StepsMapper {
         Metrics.ValidationStep.builder()
             .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE.name())
             .status(Validation.Status.FINISHED)
-            .executionOrder(StepType.VALIDATOR_UPLOAD_ARCHIVE.getExecutionOrder())
+            .executionOrder(
+                PipelinesWorkflow.getValidatorWorkflow()
+                    .getLevel(StepType.VALIDATOR_UPLOAD_ARCHIVE))
             .build());
 
     return collect;

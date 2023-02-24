@@ -4,7 +4,6 @@ import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -12,13 +11,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
-import org.apache.zookeeper.CreateMode;
 import org.gbif.common.messaging.api.messages.PipelinesCleanerMessage;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.tasks.ValidationWsClientStub;
-import org.gbif.pipelines.tasks.resources.CuratorServer;
 import org.gbif.pipelines.tasks.resources.EsServer;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.Before;
@@ -28,7 +25,6 @@ import org.junit.Test;
 public class CleanerCallbackIT {
 
   @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
-  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
 
   @Before
   public void cleanIndexes() {
@@ -36,7 +32,7 @@ public class CleanerCallbackIT {
   }
 
   @Test
-  public void cleanerDeleteEsRecordsTest() throws Exception {
+  public void cleanerDeleteEsRecordsTest() {
 
     // State
     String datasetUuid = "8a4934ac-7d7f-41d4-892c-f6b71bb777a3";
@@ -68,8 +64,7 @@ public class CleanerCallbackIT {
     EsService.refreshIndex(ES_SERVER.getEsClient(), config.esAliases[0]);
 
     // When
-    new CleanerCallback(config, validationClient, CURATOR_SERVER.getCurator())
-        .handleMessage(message);
+    new CleanerCallback(config, validationClient).handleMessage(message);
 
     // Update deleted data available
     EsService.refreshIndex(ES_SERVER.getEsClient(), config.esAliases[0]);
@@ -79,11 +74,10 @@ public class CleanerCallbackIT {
     assertFalse(Files.exists(Paths.get(String.join("/", config.hdfsRootPath, datasetUuid))));
     assertEquals(0L, EsService.countIndexDocuments(ES_SERVER.getEsClient(), config.esAliases[0]));
     assertNotNull(validationClient.get(UUID.fromString(datasetUuid)).getDeleted());
-    assertNull(CURATOR_SERVER.getCurator().checkExists().forPath("/validator/" + datasetUuid));
   }
 
   @Test
-  public void cleanerDeleteEsIndexTest() throws Exception {
+  public void cleanerDeleteEsIndexTest() {
 
     // State
     String datasetUuid = "8a4934ac-7d7f-41d4-892c-f6b71bb777a3";
@@ -130,24 +124,14 @@ public class CleanerCallbackIT {
         Collections.singleton(indexName),
         Collections.singleton(indexToSwap));
 
-    // Add ZK path
-    CURATOR_SERVER
-        .getCurator()
-        .create()
-        .creatingParentsIfNeeded()
-        .withMode(CreateMode.EPHEMERAL)
-        .forPath("/validator/" + datasetUuid, "test".getBytes());
-
     // When
-    new CleanerCallback(config, validationClient, CURATOR_SERVER.getCurator())
-        .handleMessage(message);
+    new CleanerCallback(config, validationClient).handleMessage(message);
 
     // Should
     assertFalse(Files.exists(Paths.get(String.join("/", config.fsRootPath, datasetUuid))));
     assertFalse(Files.exists(Paths.get(String.join("/", config.hdfsRootPath, datasetUuid))));
     assertFalse(EsService.existsIndex(ES_SERVER.getEsClient(), indexName));
     assertNotNull(validationClient.get(UUID.fromString(datasetUuid)).getDeleted());
-    assertNull(CURATOR_SERVER.getCurator().checkExists().forPath("/validator/" + datasetUuid));
   }
 
   private PipelinesCleanerMessage createMessage(String datasetUuid) {

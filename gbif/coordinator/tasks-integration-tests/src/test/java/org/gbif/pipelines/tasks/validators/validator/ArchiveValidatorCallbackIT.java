@@ -13,12 +13,10 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
-import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.ValidationWsClientStub;
-import org.gbif.pipelines.tasks.resources.CuratorServer;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
@@ -27,7 +25,6 @@ import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.IssueInfo;
 import org.gbif.validator.api.Validation;
 import org.junit.After;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -35,9 +32,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ArchiveValidatorCallbackIT {
-
-  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
-  private static final String LABEL = VALIDATOR_VALIDATE_ARCHIVE.getLabel();
   private static final String DATASET_OCCURRENCR_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final String DATASET_SAMPLING_UUID = "9997fa4e-54c1-43ea-9856-afa90204c162";
   private static final String DATASET_CLB_UUID = "2247944e-3776-40a9-b9c4-abecf7eea177";
@@ -52,26 +46,21 @@ public class ArchiveValidatorCallbackIT {
   }
 
   @Test
-  public void testOccurrenceCase() {
+  public void occurrenceCaseTest() {
     // State
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.validatorOnly = true;
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            historyClient,
-            validationClient,
-            new SchemaValidatorFactory());
+            config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_OCCURRENCR_UUID);
     int attempt = 2;
-    String crawlId = DATASET_OCCURRENCR_UUID;
 
     PipelinesArchiveValidatorMessage message =
         new PipelinesArchiveValidatorMessage(
@@ -87,11 +76,6 @@ public class ArchiveValidatorCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    // ZK
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, LABEL));
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
     assertEquals(1, PUBLISHER.getMessages().size());
 
     // Result
@@ -129,32 +113,24 @@ public class ArchiveValidatorCallbackIT {
     assertEquals(0, core.getTerms().size());
     assertEquals(0, core.getIssues().size());
     assertEquals(DwcFileType.CORE, core.getFileType());
-
-    // Clean
-    CURATOR_SERVER.deletePath(crawlId, LABEL);
   }
 
   @Test
-  public void testSamplingEventCase() {
+  public void samplingEventCaseTest() {
     // State
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.validatorOnly = true;
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            historyClient,
-            validationClient,
-            new SchemaValidatorFactory());
+            config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_SAMPLING_UUID);
     int attempt = 3;
-    String crawlId = DATASET_SAMPLING_UUID;
 
     PipelinesArchiveValidatorMessage message =
         new PipelinesArchiveValidatorMessage(
@@ -170,11 +146,6 @@ public class ArchiveValidatorCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    // ZK
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, LABEL));
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
     assertEquals(1, PUBLISHER.getMessages().size());
 
     // Result
@@ -206,32 +177,24 @@ public class ArchiveValidatorCallbackIT {
     assertEquals(0, core.getTerms().size());
     assertEquals(0, core.getIssues().size());
     assertEquals(DwcFileType.EXTENSION, core.getFileType());
-
-    // Clean
-    CURATOR_SERVER.deletePath(crawlId, LABEL);
   }
 
   @Test
-  public void testClbCase() {
+  public void clbCaseTest() {
     // State
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.validatorOnly = true;
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            historyClient,
-            validationClient,
-            new SchemaValidatorFactory());
+            config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_CLB_UUID);
     int attempt = 3;
-    String crawlId = DATASET_CLB_UUID;
 
     PipelinesArchiveValidatorMessage message =
         new PipelinesArchiveValidatorMessage(
@@ -248,11 +211,6 @@ public class ArchiveValidatorCallbackIT {
 
     // Should
 
-    // ZK
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, LABEL));
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
     assertEquals(1, PUBLISHER.getMessages().size());
 
     // Result
@@ -284,32 +242,24 @@ public class ArchiveValidatorCallbackIT {
     assertEquals(0, core.getTerms().size());
     assertEquals(0, core.getIssues().size());
     assertEquals(DwcFileType.EXTENSION, core.getFileType());
-
-    // Clean
-    CURATOR_SERVER.deletePath(crawlId, LABEL);
   }
 
   @Test
-  public void testOccurrenceSingleStepCase() {
+  public void occurrenceSingleStepCaseTest() {
     // State
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.validatorOnly = true;
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            historyClient,
-            validationClient,
-            new SchemaValidatorFactory());
+            config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_OCCURRENCR_UUID);
     int attempt = 2;
-    String crawlId = DATASET_OCCURRENCR_UUID;
 
     PipelinesArchiveValidatorMessage message =
         new PipelinesArchiveValidatorMessage(
@@ -323,34 +273,25 @@ public class ArchiveValidatorCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertFalse(CURATOR_SERVER.checkExists(crawlId, LABEL));
-    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
-    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
     assertEquals(1, PUBLISHER.getMessages().size());
   }
 
   @Test
-  public void testFailedCase() {
+  public void failedCaseTest() {
     // State
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.validatorOnly = true;
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            historyClient,
-            validationClient,
-            new SchemaValidatorFactory());
+            config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.randomUUID(); // Use wrong datasetKey
     int attempt = 2;
-    String crawlId = uuid.toString();
 
     PipelinesArchiveValidatorMessage message =
         new PipelinesArchiveValidatorMessage(
@@ -364,18 +305,11 @@ public class ArchiveValidatorCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, LABEL));
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
     assertTrue(PUBLISHER.getMessages().isEmpty());
-
-    // Clean
-    CURATOR_SERVER.deletePath(crawlId, LABEL);
   }
 
   @Test
-  public void testFailedValidatorCase() {
+  public void failedValidatorCaseTest() {
     // State
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
@@ -386,16 +320,10 @@ public class ArchiveValidatorCallbackIT {
 
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            historyClient,
-            validationClient,
-            new SchemaValidatorFactory());
+            config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.randomUUID(); // Use wrong datasetKey
     int attempt = 2;
-    String crawlId = uuid.toString();
 
     PipelinesArchiveValidatorMessage message =
         new PipelinesArchiveValidatorMessage(
@@ -409,15 +337,11 @@ public class ArchiveValidatorCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertFalse(CURATOR_SERVER.checkExists(crawlId, LABEL));
-    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
-    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
     assertTrue(PUBLISHER.getMessages().isEmpty());
   }
 
   @Test
-  public void testFailedMissedFilesCase() {
+  public void failedMissedFilesCaseTest() {
     // State
     ArchiveValidatorConfiguration config = new ArchiveValidatorConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
@@ -428,16 +352,10 @@ public class ArchiveValidatorCallbackIT {
 
     ArchiveValidatorCallback callback =
         new ArchiveValidatorCallback(
-            config,
-            PUBLISHER,
-            CURATOR_SERVER.getCurator(),
-            historyClient,
-            validationClient,
-            new SchemaValidatorFactory());
+            config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString("b578802e-f1ca-4e5b-acf8-4d45306e6b48");
     int attempt = 1;
-    String crawlId = uuid.toString();
 
     PipelinesArchiveValidatorMessage message =
         new PipelinesArchiveValidatorMessage(
@@ -461,10 +379,6 @@ public class ArchiveValidatorCallbackIT {
     assertTrue(occurrenceFile.isPresent());
     assertFalse(occurrenceFile.get().getIssues().isEmpty());
 
-    assertFalse(CURATOR_SERVER.checkExists(crawlId, LABEL));
-    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
-    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertFalse(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
     assertTrue(PUBLISHER.getMessages().isEmpty());
   }
 }

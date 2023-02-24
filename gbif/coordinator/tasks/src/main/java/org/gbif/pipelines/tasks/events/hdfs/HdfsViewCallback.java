@@ -2,10 +2,9 @@ package org.gbif.pipelines.tasks.events.hdfs;
 
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesEventsHdfsViewBuiltMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsHdfsViewMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
 import org.gbif.pipelines.common.hdfs.CommonHdfsViewCallback;
@@ -19,23 +18,20 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 @Slf4j
 @Builder
 public class HdfsViewCallback extends AbstractMessageCallback<PipelinesEventsInterpretedMessage>
-    implements StepHandler<PipelinesEventsInterpretedMessage, PipelinesEventsHdfsViewBuiltMessage> {
+    implements StepHandler<PipelinesEventsInterpretedMessage, PipelinesEventsHdfsViewMessage> {
 
   private final HdfsViewConfiguration config;
   private final MessagePublisher publisher;
-  private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
   private final DatasetClient datasetClient;
   private final CommonHdfsViewCallback commonHdfsViewCallback;
 
   @Override
   public void handleMessage(PipelinesEventsInterpretedMessage message) {
-    PipelinesCallback
-        .<PipelinesEventsInterpretedMessage, PipelinesEventsHdfsViewBuiltMessage>builder()
+    PipelinesCallback.<PipelinesEventsInterpretedMessage, PipelinesEventsHdfsViewMessage>builder()
         .historyClient(historyClient)
         .datasetClient(datasetClient)
         .config(config)
-        .curator(curator)
         .stepType(config.stepType)
         .publisher(publisher)
         .message(message)
@@ -56,10 +52,16 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesEventsInt
   }
 
   @Override
-  public PipelinesEventsHdfsViewBuiltMessage createOutgoingMessage(
+  public PipelinesEventsHdfsViewMessage createOutgoingMessage(
       PipelinesEventsInterpretedMessage message) {
-    return new PipelinesEventsHdfsViewBuiltMessage(
-        message.getDatasetUuid(), message.getAttempt(), message.getPipelineSteps());
+    return new PipelinesEventsHdfsViewMessage(
+        message.getDatasetUuid(),
+        message.getAttempt(),
+        message.getPipelineSteps(),
+        message.getNumberOfOccurrenceRecords(),
+        message.getNumberOfEventRecords(),
+        null,
+        null);
   }
 
   /**

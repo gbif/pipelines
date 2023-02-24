@@ -74,7 +74,7 @@ object Cluster {
       val occurrences = sql(SQL_OCCURRENCE)
 
       val schema = StructType(
-        StructField("gbifId", LongType, nullable = false) ::
+        StructField("gbifId", StringType, nullable = false) ::
           StructField("datasetKey", StringType, nullable = false) ::
           StructField("hash", StringType, nullable = false) :: Nil
       )
@@ -118,7 +118,7 @@ object Cluster {
                 if (!speciesKey.isEmpty) {
                   records.append(
                     Row(
-                      r.getAs[Long]("gbifId"),
+                      r.getAs[String]("gbifId"),
                       r.getAs[String]("datasetKey"),
                       speciesKey + "|" + OccurrenceRelationships.normalizeID(id)
                     ))
@@ -133,7 +133,7 @@ object Cluster {
           hashedIDs.forEach(id => {
             records.append(
               Row(
-                r.getAs[Long]("gbifId"),
+                r.getAs[String]("gbifId"),
                 r.getAs[String]("datasetKey"),
                 id // only the ID overlap is suffice here
               ))
@@ -160,7 +160,7 @@ object Cluster {
         if (!lat.isEmpty && !lng.isEmpty && !year.isEmpty && !month.isEmpty && !day.isEmpty && !speciesKey.isEmpty) {
           records.append(
             Row(
-              r.getAs[Long]("gbifId"),
+              r.getAs[String]("gbifId"),
               r.getAs[String]("datasetKey"),
               r.getAs[Integer]("speciesKey") + "|" + Math.round(lat.get*1000) + "|" + Math.round(lng.get*1000) + "|" + year.get + "|" + month.get + "|" + day.get
             ))
@@ -170,7 +170,7 @@ object Cluster {
           typeStatus.get.foreach(t => {
             records.append(
               Row(
-                r.getAs[Long]("gbifId"),
+                r.getAs[String]("gbifId"),
                 r.getAs[String]("datasetKey"),
                 taxonKey.get + "|" + t
               ))
@@ -182,7 +182,7 @@ object Cluster {
           recordedBy.get.foreach(name => {
             records.append(
               Row(
-                r.getAs[Long]("gbifId"),
+                r.getAs[String]("gbifId"),
                 r.getAs[String]("datasetKey"),
                 taxonKey.get + "|" + year.get + "|" + name
               ))
@@ -279,8 +279,8 @@ object Cluster {
         case Some(r) => {
           // store both ways
           records.append(Row(
-            String.valueOf(r.getOcc1.getLong("gbifId")),
-            String.valueOf(r.getOcc2.getLong("gbifId")),
+            r.getOcc1.get("gbifId"),
+            r.getOcc2.get("gbifId"),
             r.getJustificationAsDelimited,
             r.getOcc1.get("datasetKey"),
             r.getOcc2.get("datasetKey"),
@@ -288,8 +288,8 @@ object Cluster {
             r.getOcc2.asJson()))
 
           records.append(Row(
-            String.valueOf(r.getOcc2.getLong("gbifId")),
-            String.valueOf(r.getOcc1.getLong("gbifId")),
+            r.getOcc2.get("gbifId"),
+            r.getOcc1.get("gbifId"),
             r.getJustificationAsDelimited,
             r.getOcc2.get("datasetKey"),
             r.getOcc1.get("datasetKey"),

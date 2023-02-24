@@ -246,7 +246,7 @@ public class AlaTemporalInterpreterTest {
   @Test
   public void testInvalidAssertions() {
     Map<String, String> map = new HashMap<>();
-    map.put(DwcTerm.eventDate.qualifiedName(), "2/2/1599");
+    map.put(DwcTerm.eventDate.qualifiedName(), "2/2/1499");
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();

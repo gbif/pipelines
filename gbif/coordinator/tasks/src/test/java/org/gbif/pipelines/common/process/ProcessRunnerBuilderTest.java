@@ -92,12 +92,11 @@ public class ProcessRunnerBuilderTest {
             100L,
             100L,
             null,
-            StepRunner.STANDALONE.name(),
             null,
             EndpointType.DWC_ARCHIVE,
             null,
             false,
-            null);
+            StepRunner.STANDALONE.name());
 
     // Expected
     ProcessBuilder builder =
@@ -170,7 +169,6 @@ public class ProcessRunnerBuilderTest {
             false,
             null,
             null,
-            null,
             EndpointType.DWC_ARCHIVE,
             new ValidationResult(true, true, true, null, null),
             types,
@@ -237,7 +235,6 @@ public class ProcessRunnerBuilderTest {
             null,
             null,
             false,
-            null,
             null,
             null,
             EndpointType.DWC_ARCHIVE,
@@ -311,7 +308,6 @@ public class ProcessRunnerBuilderTest {
             null,
             null,
             false,
-            null,
             null,
             null,
             EndpointType.DWC_ARCHIVE,
@@ -524,7 +520,6 @@ public class ProcessRunnerBuilderTest {
             false,
             null,
             null,
-            null,
             EndpointType.DWC_ARCHIVE,
             vr,
             Collections.singleton(OCCURRENCE.name()),
@@ -603,7 +598,6 @@ public class ProcessRunnerBuilderTest {
             null,
             null,
             false,
-            null,
             null,
             null,
             EndpointType.DWC_ARCHIVE,

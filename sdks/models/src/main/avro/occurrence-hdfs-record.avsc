@@ -257,7 +257,7 @@
   }, {
     "name" : "v_preparations",
     "type" : [ "string", "null" ]
-  }, {
+   }, {
     "name" : "v_disposition",
     "type" : [ "string", "null" ]
   }, {
@@ -711,9 +711,12 @@
     "name" : "installationkey",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "projectid",
-    "type" : [ "string", "null" ]
-  }, {
+     "name" : "projectid",
+     "type" : [ {
+        "type" : "array",
+        "items" : [ "string", "null" ]
+      }, "null" ]
+   }, {
     "name" : "programmeacronym",
     "type" : [ "string", "null" ]
   }, {

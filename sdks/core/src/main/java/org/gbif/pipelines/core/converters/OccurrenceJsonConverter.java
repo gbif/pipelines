@@ -2,8 +2,12 @@ package org.gbif.pipelines.core.converters;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +47,7 @@ public class OccurrenceJsonConverter {
 
     mapCreated(builder);
     mapIssues(builder);
+    mapProjectIds(builder);
 
     mapMetadataRecord(builder);
     mapIdentifierRecord(builder);
@@ -63,6 +68,24 @@ public class OccurrenceJsonConverter {
     return SerDeFactory.avroMapperWithNulls().writeValueAsString(convert());
   }
 
+  private void mapProjectIds(OccurrenceJsonRecord.Builder builder) {
+    Set<String> projectIdsSet = new HashSet<>();
+
+    if (metadata.getProjectId() != null) {
+      projectIdsSet.add(metadata.getProjectId());
+    }
+
+    if (basic.getProjectId() != null && !basic.getProjectId().isEmpty()) {
+      projectIdsSet.addAll(basic.getProjectId());
+    }
+
+    if (!projectIdsSet.isEmpty()) {
+      List<String> projectIds = new ArrayList<>(projectIdsSet);
+      builder.setProjectId(projectIds);
+      JsonConverter.convertToMultivalue(projectIds).ifPresent(builder::setProjectIdJoined);
+    }
+  }
+
   private void mapMetadataRecord(OccurrenceJsonRecord.Builder builder) {
     builder
         .setCrawlId(metadata.getCrawlId())
@@ -75,7 +98,6 @@ public class OccurrenceJsonConverter {
         .setNetworkKeys(metadata.getNetworkKeys())
         .setLicense(metadata.getLicense())
         .setProgrammeAcronym(metadata.getProgrammeAcronym())
-        .setProjectId(metadata.getProjectId())
         .setProtocol(metadata.getProtocol())
         .setPublisherTitle(metadata.getPublisherTitle())
         .setPublishingOrganizationKey(metadata.getPublishingOrganizationKey());

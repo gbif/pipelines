@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.AbstractIdleService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.HttpClients;
@@ -30,7 +29,6 @@ public class AbcdToAvroService extends AbstractIdleService {
   private final XmlToAvroConfiguration config;
   private MessageListener listener;
   private MessagePublisher publisher;
-  private CuratorFramework curator;
   private ExecutorService executor;
 
   public AbcdToAvroService(XmlToAvroConfiguration config) {
@@ -47,7 +45,6 @@ public class AbcdToAvroService extends AbstractIdleService {
     // routing key specified in
     // CrawlFinishedMessage
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
-    curator = c.zooKeeper.getCuratorFramework();
     executor = Executors.newFixedThreadPool(config.xmlReaderParallelism);
 
     PipelinesHistoryClient historyClient =
@@ -66,7 +63,6 @@ public class AbcdToAvroService extends AbstractIdleService {
 
     AbcdToAvroCallback callback =
         AbcdToAvroCallback.builder()
-            .curator(curator)
             .config(config)
             .publisher(publisher)
             .historyClient(historyClient)
@@ -76,7 +72,6 @@ public class AbcdToAvroService extends AbstractIdleService {
                 XmlToAvroCallback.builder()
                     .config(config)
                     .publisher(publisher)
-                    .curator(curator)
                     .historyClient(historyClient)
                     .validationClient(validationClient)
                     .executor(executor)
@@ -92,7 +87,6 @@ public class AbcdToAvroService extends AbstractIdleService {
   protected void shutDown() {
     publisher.close();
     listener.close();
-    curator.close();
     executor.shutdown();
     log.info("Stopping pipelines-verbatim-to-avro-from-abcd service");
   }

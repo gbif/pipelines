@@ -2,7 +2,6 @@ package org.gbif.pipelines.tasks.events.indexing;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -23,7 +22,6 @@ public class EventsIndexingService extends AbstractIdleService {
   private final EventsIndexingConfiguration config;
   private MessageListener listener;
   private MessagePublisher publisher;
-  private CuratorFramework curator;
 
   public EventsIndexingService(EventsIndexingConfiguration config) {
     this.config = config;
@@ -36,7 +34,6 @@ public class EventsIndexingService extends AbstractIdleService {
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
-    curator = c.zooKeeper.getCuratorFramework();
 
     CloseableHttpClient httpClient =
         HttpClients.custom()
@@ -53,7 +50,6 @@ public class EventsIndexingService extends AbstractIdleService {
         EventsIndexingCallback.builder()
             .config(config)
             .publisher(publisher)
-            .curator(curator)
             .httpClient(httpClient)
             .historyClient(historyClient)
             .datasetClient(datasetClient)
@@ -69,7 +65,6 @@ public class EventsIndexingService extends AbstractIdleService {
   protected void shutDown() {
     listener.close();
     publisher.close();
-    curator.close();
     log.info("Stopping pipelines-event-indexing service");
   }
 }
