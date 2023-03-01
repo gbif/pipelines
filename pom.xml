@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.14.0-SNAPSHOT</version>
+  <version>2.15.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -90,17 +90,17 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.60</gbif-parsers.version>
     <dwca-io.version>2.14</dwca-io.version>
-    <gbif-api.version>1.0.0</gbif-api.version>
+    <gbif-api.version>1.1.0</gbif-api.version>
     <gbif-common.version>0.56</gbif-common.version>
-    <dwc-api.version>1.43</dwc-api.version>
+    <dwc-api.version>1.45</dwc-api.version>
     <kvs.version>1.25</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-occurrence.version>0.173.1</gbif-occurrence.version>
     <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
-    <registry.version>3.88</registry.version>
+    <registry.version>3.93</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>
-    <gbif-postal-service.version>1.6.0</gbif-postal-service.version>
+    <gbif-postal-service.version>1.7.0</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
 
     <!-- Common libraries -->

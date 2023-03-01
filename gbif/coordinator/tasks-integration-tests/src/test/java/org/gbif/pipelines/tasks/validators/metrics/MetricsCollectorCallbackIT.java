@@ -1,6 +1,5 @@
 package org.gbif.pipelines.tasks.validators.metrics;
 
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -13,21 +12,19 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
+import org.gbif.api.model.pipelines.PipelinesWorkflow;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
-import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.ValidationWsClientStub;
-import org.gbif.pipelines.tasks.resources.CuratorServer;
 import org.gbif.pipelines.tasks.resources.EsServer;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.DwcFileType;
@@ -49,13 +46,14 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class MetricsCollectorCallbackIT {
 
   @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
-
-  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
-  private static final String LABEL = StepType.VALIDATOR_COLLECT_METRICS.getLabel();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final long EXECUTION_ID = 1L;
   private static final Path MAPPINGS_PATH = Paths.get("mappings/verbatim-mapping.json");
   private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
+
+  private static final PipelinesWorkflow.Graph<StepType> WF =
+      PipelinesWorkflow.getValidatorWorkflow();
+
   @Mock private PipelinesHistoryClient historyClient;
 
   @After
@@ -64,18 +62,16 @@ public class MetricsCollectorCallbackIT {
   }
 
   @Test
-  public void testNormalCase() throws Exception {
+  public void successInterpretationTest() {
     // State
     MetricsCollectorConfiguration config = createConfig("test-normal-case");
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     MetricsCollectorCallback callback =
-        new MetricsCollectorCallback(
-            config, PUBLISHER, CURATOR_SERVER.getCurator(), historyClient, validationClient);
+        new MetricsCollectorCallback(config, PUBLISHER, historyClient, validationClient);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
-    String crawlId = DATASET_UUID;
 
     PipelinesIndexedMessage message = createMessage(uuid, attempt);
 
@@ -111,8 +107,7 @@ public class MetricsCollectorCallbackIT {
                         Arrays.asList(
                             ValidationStep.builder()
                                 .stepType(StepType.VALIDATOR_DWCA_TO_VERBATIM.name())
-                                .executionOrder(
-                                    StepType.VALIDATOR_DWCA_TO_VERBATIM.getExecutionOrder())
+                                .executionOrder(WF.getLevel(StepType.VALIDATOR_DWCA_TO_VERBATIM))
                                 .build(),
                             ValidationStep.builder()
                                 .stepType(StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name())
@@ -120,8 +115,7 @@ public class MetricsCollectorCallbackIT {
                                 .build(),
                             ValidationStep.builder()
                                 .stepType(StepType.VALIDATOR_COLLECT_METRICS.name())
-                                .executionOrder(
-                                    StepType.VALIDATOR_COLLECT_METRICS.getExecutionOrder())
+                                .executionOrder(WF.getLevel(StepType.VALIDATOR_COLLECT_METRICS))
                                 .build()))
                     .fileInfos(
                         Collections.singletonList(
@@ -139,11 +133,6 @@ public class MetricsCollectorCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertTrue(checkExists(crawlId, LABEL));
-    assertTrue(checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertTrue(checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertTrue(checkExists(crawlId, Fn.END_DATE.apply(LABEL)));
-    assertTrue(checkExists(crawlId, Fn.SUCCESSFUL.apply(LABEL)));
     assertEquals(0, PUBLISHER.getMessages().size());
 
     Validation validation = validationClient.getValidation();
@@ -188,28 +177,19 @@ public class MetricsCollectorCallbackIT {
 
     assertEquals("multimedia.txt", ext.getFileName());
     assertEquals(DwcFileType.EXTENSION, ext.getFileType());
-
-    // Clean
-    CURATOR_SERVER
-        .getCurator()
-        .delete()
-        .deletingChildrenIfNeeded()
-        .forPath(getPipelinesInfoPath(crawlId, LABEL, true));
   }
 
   @Test
-  public void testNormalSingleStepCase() {
+  public void successSingleInterpretationTest() {
     // State
     MetricsCollectorConfiguration config = createConfig("test-normal-single-step-case");
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     MetricsCollectorCallback callback =
-        new MetricsCollectorCallback(
-            config, PUBLISHER, CURATOR_SERVER.getCurator(), historyClient, validationClient);
+        new MetricsCollectorCallback(config, PUBLISHER, historyClient, validationClient);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
-    String crawlId = DATASET_UUID;
 
     PipelinesIndexedMessage message = createMessage(uuid, attempt);
     message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_COLLECT_METRICS.name()));
@@ -241,11 +221,6 @@ public class MetricsCollectorCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertFalse(checkExists(crawlId, LABEL));
-    assertFalse(checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertFalse(checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertFalse(checkExists(crawlId, Fn.END_DATE.apply(LABEL)));
-    assertFalse(checkExists(crawlId, Fn.SUCCESSFUL.apply(LABEL)));
     assertEquals(0, PUBLISHER.getMessages().size());
 
     Validation validation = validationClient.getValidation();
@@ -256,18 +231,16 @@ public class MetricsCollectorCallbackIT {
   }
 
   @Test
-  public void testFailedCase() {
+  public void failedCaseTest() {
     // State
     MetricsCollectorConfiguration config = createConfig("test-failed-case");
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     MetricsCollectorCallback callback =
-        new MetricsCollectorCallback(
-            config, PUBLISHER, CURATOR_SERVER.getCurator(), historyClient, validationClient);
+        new MetricsCollectorCallback(config, PUBLISHER, historyClient, validationClient);
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
-    String crawlId = DATASET_UUID;
 
     PipelinesIndexedMessage message = createMessage(uuid, attempt);
     message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_COLLECT_METRICS.name()));
@@ -276,22 +249,17 @@ public class MetricsCollectorCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertFalse(checkExists(crawlId, LABEL));
-    assertFalse(checkExists(crawlId, Fn.ERROR_MESSAGE.apply(LABEL)));
-    assertFalse(checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertFalse(checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
     assertTrue(PUBLISHER.getMessages().isEmpty());
   }
 
   @Test
-  public void testEventNormalCase() throws Exception {
+  public void successEventInterpretationTest() {
     // State
     MetricsCollectorConfiguration config = createConfig("test-event-normal-case");
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     MetricsCollectorCallback callback =
-        new MetricsCollectorCallback(
-            config, PUBLISHER, CURATOR_SERVER.getCurator(), historyClient, validationClient);
+        new MetricsCollectorCallback(config, PUBLISHER, historyClient, validationClient);
 
     String datasetUuid = "9997fa4e-54c1-43ea-9856-afa90204c162";
     UUID uuid = UUID.fromString(datasetUuid);
@@ -331,8 +299,7 @@ public class MetricsCollectorCallbackIT {
                         Arrays.asList(
                             ValidationStep.builder()
                                 .stepType(StepType.VALIDATOR_DWCA_TO_VERBATIM.name())
-                                .executionOrder(
-                                    StepType.VALIDATOR_DWCA_TO_VERBATIM.getExecutionOrder())
+                                .executionOrder(WF.getLevel(StepType.VALIDATOR_DWCA_TO_VERBATIM))
                                 .build(),
                             ValidationStep.builder()
                                 .stepType(StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name())
@@ -340,8 +307,7 @@ public class MetricsCollectorCallbackIT {
                                 .build(),
                             ValidationStep.builder()
                                 .stepType(StepType.VALIDATOR_COLLECT_METRICS.name())
-                                .executionOrder(
-                                    StepType.VALIDATOR_COLLECT_METRICS.getExecutionOrder())
+                                .executionOrder(WF.getLevel(StepType.VALIDATOR_COLLECT_METRICS))
                                 .build()))
                     .fileInfos(
                         Collections.singletonList(
@@ -359,11 +325,6 @@ public class MetricsCollectorCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertTrue(checkExists(datasetUuid, LABEL));
-    assertTrue(checkExists(datasetUuid, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertTrue(checkExists(datasetUuid, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertTrue(checkExists(datasetUuid, Fn.END_DATE.apply(LABEL)));
-    assertTrue(checkExists(datasetUuid, Fn.SUCCESSFUL.apply(LABEL)));
     assertEquals(0, PUBLISHER.getMessages().size());
 
     Validation validation = validationClient.getValidation();
@@ -378,13 +339,6 @@ public class MetricsCollectorCallbackIT {
     FileInfo core = coreOpt.get();
     assertEquals("event.txt", core.getFileName());
     assertEquals(Long.valueOf(30L), core.getCount());
-
-    // Clean
-    CURATOR_SERVER
-        .getCurator()
-        .delete()
-        .deletingChildrenIfNeeded()
-        .forPath(getPipelinesInfoPath(datasetUuid, LABEL, true));
   }
 
   private PipelinesIndexedMessage createMessage(UUID uuid, int attempt) {
@@ -419,10 +373,5 @@ public class MetricsCollectorCallbackIT {
     config.stepConfig.hdfsSiteConfig = "";
     config.indexName = idxName;
     return config;
-  }
-
-  private boolean checkExists(String id, String path) {
-    return ZookeeperUtils.checkExists(
-        CURATOR_SERVER.getCurator(), getPipelinesInfoPath(id, path, true));
   }
 }

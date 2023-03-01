@@ -1,6 +1,7 @@
 package org.gbif.pipelines.tasks.occurrences.hdfs;
 
-import static org.junit.Assert.assertEquals;
+import static org.gbif.api.model.pipelines.PipelineStep.Status.COMPLETED;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -10,24 +11,25 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
-import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.pipelines.common.hdfs.CommonHdfsViewCallback;
 import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
-import org.gbif.pipelines.tasks.resources.CuratorServer;
+import org.gbif.pipelines.tasks.PipelinesHistoryClientTestStub;
 import org.gbif.pipelines.tasks.resources.ZkServer;
 import org.gbif.registry.ws.client.DatasetClient;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,12 +40,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class HdfsViewCallbackIT {
 
   @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
-  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
-  private static final String LABEL = StepType.HDFS_VIEW.getLabel();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
-  private static final long EXECUTION_ID = 1L;
   private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
-  @Mock private static PipelinesHistoryClient historyClient;
   @Mock private static DatasetClient datasetClient;
 
   @After
@@ -52,17 +50,16 @@ public class HdfsViewCallbackIT {
   }
 
   @Test
-  public void testNormalCase() {
+  public void successFullInterpretationTest() {
     // State
+    PipelinesHistoryClientTestStub historyClient = PipelinesHistoryClientTestStub.create();
     HdfsViewConfiguration config = createConfig();
-
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
     HdfsViewCallback callback =
         HdfsViewCallback.builder()
             .config(config)
             .publisher(PUBLISHER)
-            .curator(CURATOR_SERVER.getCurator())
             .historyClient(historyClient)
             .datasetClient(datasetClient)
             .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
@@ -70,7 +67,6 @@ public class HdfsViewCallbackIT {
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
-    String crawlId = DATASET_UUID;
 
     PipelinesInterpretedMessage message = createMessage(uuid, attempt);
 
@@ -78,21 +74,19 @@ public class HdfsViewCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    Path path =
-        Paths.get(
-            config.stepConfig.repositoryPath
-                + "/"
-                + uuid
-                + "/"
-                + attempt
-                + "/"
-                + config.metaFileName);
+    String repositoryPath = config.stepConfig.repositoryPath;
+    Path path = Paths.get(repositoryPath + "/" + uuid + "/" + attempt + "/" + config.metaFileName);
     assertTrue(path.toFile().exists());
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, LABEL));
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(LABEL)));
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_CLASS_NAME.apply(LABEL)));
-    assertTrue(CURATOR_SERVER.checkExists(crawlId, Fn.MQ_MESSAGE.apply(LABEL)));
-    assertEquals(1, PUBLISHER.getMessages().size());
+
+    Map<StepType, PipelineStep> result = historyClient.getStepMap();
+    Assert.assertEquals(1, result.size());
+
+    Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
+    Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
+
+    PipelineStep hdfsViewResult = result.get(StepType.HDFS_VIEW);
+    Assert.assertNotNull(hdfsViewResult);
+    Assert.assertEquals(COMPLETED, hdfsViewResult.getState());
 
     // Check files
     Function<String, Path> prFn =
@@ -100,11 +94,8 @@ public class HdfsViewCallbackIT {
             Paths.get(
                 config.repositoryTargetPath
                     + "/"
-                    + PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE
-                        .name()
-                        .toLowerCase()
-                    + "/"
-                    + "/"
+                    + OCCURRENCE.name().toLowerCase()
+                    + "//"
                     + str
                     + "/"
                     + DATASET_UUID
@@ -133,14 +124,12 @@ public class HdfsViewCallbackIT {
     assertFalse(Files.exists(prFn.apply("preservationtable")));
     assertFalse(Files.exists(prFn.apply("referencetable")));
     assertFalse(Files.exists(prFn.apply("resourcerelationshiptable")));
-
-    // Clean
-    CURATOR_SERVER.deletePath(crawlId, LABEL);
   }
 
   @Test
-  public void testWrongRunnerCase() {
+  public void wrongRunnerCaseTest() {
     // State
+    PipelinesHistoryClientTestStub historyClient = PipelinesHistoryClientTestStub.create();
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 60;
 
@@ -153,7 +142,6 @@ public class HdfsViewCallbackIT {
         HdfsViewCallback.builder()
             .config(config)
             .publisher(PUBLISHER)
-            .curator(CURATOR_SERVER.getCurator())
             .historyClient(historyClient)
             .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
             .build();
@@ -165,37 +153,13 @@ public class HdfsViewCallbackIT {
     callback.handleMessage(message);
 
     // Should
-    assertFalse(CURATOR_SERVER.checkExists(DATASET_UUID, LABEL));
     assertTrue(PUBLISHER.getMessages().isEmpty());
-  }
 
-  @Test
-  public void testWrongMessageSettingsCase() {
-    // State
-    UUID uuid = UUID.fromString(DATASET_UUID);
-    int attempt = 60;
+    Map<StepType, PipelineStep> result = historyClient.getStepMap();
+    Assert.assertEquals(0, result.size());
 
-    HdfsViewConfiguration config = createConfig();
-    ExecutorService executor = Executors.newSingleThreadExecutor();
-
-    HdfsViewCallback callback =
-        HdfsViewCallback.builder()
-            .config(config)
-            .publisher(PUBLISHER)
-            .curator(CURATOR_SERVER.getCurator())
-            .historyClient(historyClient)
-            .datasetClient(datasetClient)
-            .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
-            .build();
-
-    PipelinesInterpretedMessage message = createMessage(uuid, attempt);
-    message.setOnlyForStep(StepType.HDFS_VIEW.name()); // Wrong type
-
-    // When
-    callback.handleMessage(message);
-
-    // Should
-    assertFalse(CURATOR_SERVER.checkExists(DATASET_UUID, LABEL));
+    Assert.assertEquals(0, historyClient.getPipelineExecutionMap().size());
+    Assert.assertEquals(0, historyClient.getPipelineProcessMap().size());
   }
 
   private PipelinesInterpretedMessage createMessage(UUID uuid, int attempt) {
@@ -203,13 +167,13 @@ public class HdfsViewCallbackIT {
     message.setDatasetUuid(uuid);
     message.setAttempt(attempt);
     message.setEndpointType(EndpointType.DWC_ARCHIVE);
-    message.setExecutionId(EXECUTION_ID);
     message.setNumberOfRecords(1L);
     message.setRunner(StepRunner.STANDALONE.name());
     message.setInterpretTypes(Collections.singleton("ALL"));
     message.setPipelineSteps(
         new HashSet<>(
             Arrays.asList(StepType.INTERPRETED_TO_INDEX.name(), StepType.HDFS_VIEW.name())));
+    message.setValidationResult(new ValidationResult(true, true, false, 1_000L, 0L));
     return message;
   }
 
@@ -224,13 +188,11 @@ public class HdfsViewCallbackIT {
     config.stepConfig.hdfsSiteConfig = "";
     config.stepConfig.repositoryPath =
         this.getClass().getClassLoader().getResource("data7/ingest").getPath();
-    config.stepConfig.zooKeeper.namespace = CURATOR_SERVER.getCurator().getNamespace();
-    config.stepConfig.zooKeeper.connectionString = ZK_SERVER.getZkServer().getConnectString();
 
     config.pipelinesConfig = this.getClass().getClassLoader().getResource("lock.yaml").getPath();
     config.repositoryTargetPath =
         this.getClass().getClassLoader().getResource("data7/ingest").getPath();
-    config.recordType = PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
+    config.recordType = OCCURRENCE;
     return config;
   }
 }

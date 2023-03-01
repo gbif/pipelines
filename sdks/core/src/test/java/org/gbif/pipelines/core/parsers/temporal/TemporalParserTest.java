@@ -26,7 +26,7 @@ public class TemporalParserTest {
     assertTrue(TemporalParser.isValidDate(LocalDateTime.now().plus(23, ChronoUnit.HOURS)));
 
     // Dates out of bounds
-    assertFalse(TemporalParser.isValidDate(YearMonth.of(1599, 12)));
+    assertFalse(TemporalParser.isValidDate(YearMonth.of(1499, 12)));
 
     // we tolerate a offset of 1 day
     assertFalse(TemporalParser.isValidDate(LocalDate.now().plusDays(2)));
@@ -81,7 +81,7 @@ public class TemporalParserTest {
   @Test
   public void testOldYear() {
     OccurrenceParseResult<TemporalAccessor> result =
-        TemporalParser.create().parseRecordedDate("1599", "3", "22", null);
+        TemporalParser.create().parseRecordedDate("1499", "3", "22", null);
     assertNullPayload(result, OccurrenceIssue.RECORDED_DATE_UNLIKELY);
   }
 

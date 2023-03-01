@@ -10,6 +10,7 @@ import lombok.Data;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.coders.CoderException;
+import org.apache.beam.sdk.coders.KvCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.coders.StructuredCoder;
 import org.gbif.pipelines.core.pojo.Edge;
@@ -44,8 +45,8 @@ public class EdgeCoder<T extends SpecificRecordBase & Record> extends Structured
   public Edge<T> decode(InputStream inStream) throws IOException {
     String fromId = fromIdCoder.decode(inStream);
     String toId = toIdCoder.decode(inStream);
-    T record = recordCoder.decode(inStream);
-    return Edge.of(fromId, toId, record);
+    T r = recordCoder.decode(inStream);
+    return Edge.of(fromId, toId, r);
   }
 
   @Override
@@ -58,5 +59,13 @@ public class EdgeCoder<T extends SpecificRecordBase & Record> extends Structured
     verifyDeterministic(this, "FromId coder must be deterministic", getFromIdCoder());
     verifyDeterministic(this, "ToId coder must be deterministic", getToIdCoder());
     verifyDeterministic(this, "Record coder must be deterministic", getRecordCoder());
+  }
+
+  public KvCoder<String, T> getKvRecordCoder() {
+    return KvCoder.of(StringUtf8Coder.of(), recordCoder);
+  }
+
+  public KvCoder<String, Edge<T>> getKvEdgeCoder() {
+    return KvCoder.of(StringUtf8Coder.of(), this);
   }
 }

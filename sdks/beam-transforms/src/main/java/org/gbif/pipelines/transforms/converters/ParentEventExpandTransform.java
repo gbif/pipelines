@@ -4,8 +4,6 @@ import java.io.Serializable;
 import lombok.Data;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.coders.AvroCoder;
-import org.apache.beam.sdk.coders.KvCoder;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -117,11 +115,11 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
           public void processElement(ProcessContext c) {
             CoGbkResult v = c.element().getValue();
             EventCoreRecord eventCoreRecord = v.getOnly(eventCoreRecordTupleTag);
-            T record = v.getOnly(recordTupleTag, null);
-            if (eventCoreRecord.getParentsLineage() != null && record != null) {
+            T r = v.getOnly(recordTupleTag, null);
+            if (eventCoreRecord.getParentsLineage() != null && r != null) {
               eventCoreRecord
                   .getParentsLineage()
-                  .forEach(parent -> c.output(Edge.of(parent.getId(), record.getId(), record)));
+                  .forEach(p -> c.output(Edge.of(p.getId(), r.getId(), r)));
             }
           }
         });
@@ -136,9 +134,9 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
             Iterable<Edge<T>> edges = v.getAll(edgeTupleTag);
             edges.forEach(
                 edge -> {
-                  T record = v.getOnly(recordTupleTag, null);
-                  if (record != null) {
-                    c.output(Edge.of(edge.getFromId(), edge.getToId(), record));
+                  T r = v.getOnly(recordTupleTag, null);
+                  if (r != null) {
+                    c.output(Edge.of(edge.getFromId(), edge.getToId(), r));
                   }
                 });
           }
@@ -153,19 +151,13 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
           public void processElement(ProcessContext c) {
             CoGbkResult v = c.element().getValue();
             EventCoreRecord eventCoreRecord = v.getOnly(eventCoreRecordTupleTag);
-            T record = v.getOnly(recordTupleTag, null);
-            if (record != null) {
-              c.output(
-                  KV.of(eventCoreRecord.getId(), Edge.of(record.getId(), record.getId(), record)));
+            T r = v.getOnly(recordTupleTag, null);
+            if (r != null) {
+              c.output(KV.of(eventCoreRecord.getId(), Edge.of(r.getId(), r.getId(), r)));
               if (eventCoreRecord.getParentsLineage() != null) {
                 eventCoreRecord
                     .getParentsLineage()
-                    .forEach(
-                        parent ->
-                            c.output(
-                                KV.of(
-                                    parent.getId(),
-                                    Edge.of(record.getId(), parent.getId(), record))));
+                    .forEach(p -> c.output(KV.of(p.getId(), Edge.of(r.getId(), p.getId(), r))));
               }
             }
           }
@@ -188,7 +180,7 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
         .apply("Collects " + recordName + " records in graph edges", converter())
         .setCoder(edgeCoder)
         .apply("Converts the edge to parentId -> " + recordName + " record", asKv())
-        .setCoder(KvCoder.of(StringUtf8Coder.of(), edgeCoder.getRecordCoder()));
+        .setCoder(edgeCoder.getKvRecordCoder());
   }
 
   public PCollection<KV<String, T>> toSubEventsRecordsFromLeaf(
@@ -203,7 +195,7 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
             .apply(
                 "Collects " + recordName + " records in graph edges from parent",
                 parentToChildEdgeConverter())
-            .setCoder(KvCoder.of(StringUtf8Coder.of(), edgeCoder));
+            .setCoder(edgeCoder.getKvEdgeCoder());
 
     return KeyedPCollectionTuple.of(edgeTupleTag, edges)
         .and(recordTupleTag, recordPCollection)
@@ -211,6 +203,6 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
         .apply("Collects parents " + recordName + " records in graph edges", edgeConverter())
         .setCoder(edgeCoder)
         .apply("Converts the edge to parentId -> " + recordName + " (child) record", asKv())
-        .setCoder(KvCoder.of(StringUtf8Coder.of(), edgeCoder.getRecordCoder()));
+        .setCoder(edgeCoder.getKvRecordCoder());
   }
 }

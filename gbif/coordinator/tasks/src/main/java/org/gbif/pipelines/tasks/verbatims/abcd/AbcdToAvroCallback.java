@@ -18,7 +18,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.HiddenFileFilter;
-import org.apache.curator.framework.CuratorFramework;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -43,7 +42,6 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMessage>
     implements StepHandler<PipelinesAbcdMessage, PipelinesVerbatimMessage> {
 
-  private final CuratorFramework curator;
   private final XmlToAvroConfiguration config;
   private final MessagePublisher publisher;
   private final PipelinesHistoryClient historyClient;
@@ -58,7 +56,6 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
         .validationClient(validationClient)
         .datasetClient(datasetClient)
         .config(config)
-        .curator(curator)
         .stepType(StepType.ABCD_TO_VERBATIM)
         .publisher(publisher)
         .message(message)

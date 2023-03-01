@@ -1,9 +1,6 @@
 package au.org.ala.pipelines.beam;
 
 import lombok.Builder;
-import org.apache.beam.sdk.coders.AvroCoder;
-import org.apache.beam.sdk.coders.KvCoder;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.Values;
@@ -12,7 +9,7 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
-import org.gbif.pipelines.common.beam.coders.EdgeCoder;
+import org.gbif.pipelines.common.beam.coders.AvroKvCoder;
 import org.gbif.pipelines.core.pojo.Edge;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -79,9 +76,7 @@ final class InheritedFields {
             // Collection of KV<ParentId,Edge.of(ParentId,EventCoreRecord.id, EventCoreRecord)
             .apply(
                 "Group by child and parent", inheritedFieldsTransform.childToParentEdgeConverter())
-            .setCoder(
-                KvCoder.of(
-                    StringUtf8Coder.of(), EdgeCoder.of(AvroCoder.of(EventCoreRecord.class))));
+            .setCoder(AvroKvCoder.ofEdge(EventCoreRecord.class));
 
     return KeyedPCollectionTuple.of(eventCoreTransform.getTag(), eventCoreCollection)
         .and(eventCoreTransform.getEdgeTag(), parentEdgeEvents)
@@ -92,6 +87,6 @@ final class InheritedFields {
             "Extract the parents only",
             inheritedFieldsTransform.childToParentConverter(eventCoreTransform))
         .apply("Extract parent features", Combine.perKey(new EventInheritedFieldsFn()))
-        .setCoder(KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(EventInheritedRecord.class)));
+        .setCoder(AvroKvCoder.of(EventInheritedRecord.class));
   }
 }

@@ -11,7 +11,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.HttpClient;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
@@ -46,7 +45,6 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
 
   private final IndexingConfiguration config;
   private final MessagePublisher publisher;
-  private final CuratorFramework curator;
   private final HttpClient httpClient;
   private final PipelinesHistoryClient historyClient;
   private final ValidationWsClient validationClient;
@@ -61,7 +59,6 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         .datasetClient(datasetClient)
         .validationClient(validationClient)
         .config(config)
-        .curator(curator)
         .stepType(getType(message))
         .isValidator(isValidator)
         .publisher(publisher)
@@ -106,9 +103,8 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
       return true;
     }
     StepType type = getType(message);
-    if (message.getOnlyForStep() != null
-        && !message.getOnlyForStep().equalsIgnoreCase(type.name())) {
-      log.info("Skipping, because expected step is {}", message.getOnlyForStep());
+    if (!message.getPipelineSteps().contains(type.name())) {
+      log.info("Skipping, because expected step is {}", type);
       return false;
     }
     boolean isCorrectProcess = config.processRunner.equals(message.getRunner());

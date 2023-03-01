@@ -7,15 +7,16 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
-import org.gbif.common.messaging.api.messages.PipelinesHdfsViewBuiltMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsHdfsViewMessage;
+import org.gbif.common.messaging.api.messages.PipelinesHdfsViewMessage;
 
 /**
- * Populates and sends the {@link PipelinesHdfsViewBuiltMessage} message, the main method is {@link
- * PipelinesHdfsViewBuiltMessageHandler#handle}
+ * Populates and sends the {@link PipelinesEventsHdfsViewMessage} message, the main method is {@link
+ * PipelinesEventsHdfsViewMessageHandler#handle}
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class PipelinesHdfsViewBuiltMessageHandler {
+public class PipelinesEventsHdfsViewMessageHandler {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -23,13 +24,13 @@ public class PipelinesHdfsViewBuiltMessageHandler {
   public static void handle(MessagePublisher publisher, PipelinesBalancerMessage message)
       throws IOException {
 
-    log.info("Process PipelinesIndexedMessage - {}", message);
+    log.info("Process PipelinesEventsHdfsViewMessage - {}", message);
 
-    PipelinesHdfsViewBuiltMessage m =
-        MAPPER.readValue(message.getPayload(), PipelinesHdfsViewBuiltMessage.class);
+    PipelinesEventsHdfsViewMessage m =
+        MAPPER.readValue(message.getPayload(), PipelinesEventsHdfsViewMessage.class);
 
-    PipelinesHdfsViewBuiltMessage outputMessage =
-        new PipelinesHdfsViewBuiltMessage(
+    PipelinesHdfsViewMessage outputMessage =
+        new PipelinesHdfsViewMessage(
             m.getDatasetUuid(),
             m.getAttempt(),
             m.getPipelineSteps(),

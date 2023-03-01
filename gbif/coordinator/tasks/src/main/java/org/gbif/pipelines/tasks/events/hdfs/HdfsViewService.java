@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.AbstractIdleService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -23,7 +22,6 @@ public class HdfsViewService extends AbstractIdleService {
   private final HdfsViewConfiguration config;
   private MessageListener listener;
   private MessagePublisher publisher;
-  private CuratorFramework curator;
   private ExecutorService executor;
 
   public HdfsViewService(HdfsViewConfiguration config) {
@@ -38,7 +36,6 @@ public class HdfsViewService extends AbstractIdleService {
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
-    curator = c.zooKeeper.getCuratorFramework();
     executor =
         config.standaloneNumberThreads == null
             ? null
@@ -53,7 +50,6 @@ public class HdfsViewService extends AbstractIdleService {
         HdfsViewCallback.builder()
             .config(config)
             .publisher(publisher)
-            .curator(curator)
             .historyClient(historyClient)
             .datasetClient(datasetClient)
             .commonHdfsViewCallback(CommonHdfsViewCallback.create(config, executor))
@@ -66,7 +62,6 @@ public class HdfsViewService extends AbstractIdleService {
   protected void shutDown() {
     listener.close();
     publisher.close();
-    curator.close();
     executor.shutdown();
     log.info("Stopping pipelines-" + config.recordType.name().toLowerCase() + "-hdfs-view service");
   }

@@ -5,9 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.beam.sdk.coders.AvroCoder;
-import org.apache.beam.sdk.coders.KvCoder;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -26,6 +23,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MediaType;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.common.beam.coders.AvroKvCoder;
 import org.gbif.pipelines.core.converters.ParentJsonConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
@@ -325,19 +323,17 @@ public class ParentJsonTransformTest {
     PCollection<KV<String, LocationInheritedRecord>> locationInheritedCollection =
         p.apply("Read LocationInheritedRecord", Create.of(lir))
             .apply("Map LocationInheritedRecord to KV", WithKeys.of(LocationInheritedRecord::getId))
-            .setCoder(
-                KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(LocationInheritedRecord.class)));
+            .setCoder(AvroKvCoder.of(LocationInheritedRecord.class));
 
     PCollection<KV<String, TemporalInheritedRecord>> temporalInheritedCollection =
         p.apply("Read TemporalInheritedRecord", Create.of(tir))
             .apply("Map TemporalInheritedRecord to KV", WithKeys.of(TemporalInheritedRecord::getId))
-            .setCoder(
-                KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(TemporalInheritedRecord.class)));
+            .setCoder(AvroKvCoder.of(TemporalInheritedRecord.class));
 
     PCollection<KV<String, EventInheritedRecord>> eventInheritedCollection =
         p.apply("Read EventInheritedRecord", Create.of(eir))
             .apply("Map EventInheritedRecord to KV", WithKeys.of(EventInheritedRecord::getId))
-            .setCoder(KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(EventInheritedRecord.class)));
+            .setCoder(AvroKvCoder.of(EventInheritedRecord.class));
 
     PCollection<KV<String, MeasurementOrFactRecord>> measurementOrFactCollection =
         p.apply("Read MeasurementOrFactRecord", Create.of(mofr))

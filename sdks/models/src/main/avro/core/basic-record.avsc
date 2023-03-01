@@ -46,6 +46,7 @@
       {"name": "otherCatalogNumbers", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/otherCatalogNumbers"},
       {"name": "preparations", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/preparations"},
       {"name": "samplingProtocol", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/samplingProtocol"},
+      {"name": "projectId", "type": {"type" : "array", "items" : "string"}, "default" : []},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

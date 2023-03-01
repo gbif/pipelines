@@ -125,7 +125,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
             .via(BasicInterpreter::interpretRecordedBy)
             .via(BasicInterpreter::interpretIdentifiedBy)
             .via(BasicInterpreter::interpretPreparations)
-            .via((e, r) -> CoreInterpreter.interpretSamplingProtocol(e, r::setSamplingProtocol));
+            .via((e, r) -> CoreInterpreter.interpretSamplingProtocol(e, r::setSamplingProtocol))
+            .via(BasicInterpreter::interpretProjectId);
 
     if (useDynamicPropertiesInterpretation) {
       handler

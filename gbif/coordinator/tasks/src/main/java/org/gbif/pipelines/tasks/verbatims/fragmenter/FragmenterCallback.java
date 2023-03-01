@@ -6,11 +6,11 @@ import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hbase.client.Connection;
 import org.gbif.api.model.pipelines.StepType;
@@ -43,7 +43,6 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
 
   private final FragmenterConfiguration config;
   private final MessagePublisher publisher;
-  private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
   private final DatasetClient datasetClient;
   private final ExecutorService executor;
@@ -56,7 +55,6 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
         .historyClient(historyClient)
         .datasetClient(datasetClient)
         .config(config)
-        .curator(curator)
         .stepType(TYPE)
         .publisher(publisher)
         .message(message)
@@ -131,10 +129,11 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
 
   @Override
   public boolean isMessageCorrect(PipelinesInterpretedMessage message) {
-    boolean isCorrect =
-        message.getOnlyForStep() == null || message.getOnlyForStep().equalsIgnoreCase(TYPE.name());
+    Set<String> steps = message.getPipelineSteps();
+
+    boolean isCorrect = steps.contains(TYPE.name());
     if (!isCorrect) {
-      log.info("Skipping, because expected step is {}", message.getOnlyForStep());
+      log.info("Skipping, because expected step is {}", TYPE);
     }
     return isCorrect;
   }

@@ -1,33 +1,27 @@
 package org.gbif.pipelines.tasks;
 
-import static org.gbif.crawler.constants.CrawlerNodePaths.PROCESS_STATE_OCCURRENCE;
-import static org.gbif.crawler.constants.PipelinesNodePaths.SIZE;
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
+import static org.gbif.api.model.pipelines.PipelineStep.Status.COMPLETED;
+import static org.gbif.api.model.pipelines.PipelineStep.Status.FAILED;
+import static org.gbif.api.model.pipelines.PipelineStep.Status.QUEUED;
+import static org.gbif.api.model.pipelines.PipelineStep.Status.SUBMITTED;
 
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import org.apache.zookeeper.CreateMode;
+import org.gbif.api.model.pipelines.PipelineExecution;
+import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
-import org.gbif.crawler.constants.CrawlerNodePaths;
-import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
-import org.gbif.pipelines.tasks.resources.CuratorServer;
 import org.gbif.registry.ws.client.DatasetClient;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.junit.Assert;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -35,308 +29,346 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PipelinesCallbackIT {
-
-  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
-  private static final Long EXECUTION_ID = 1L;
   @Mock private DatasetClient datasetClient;
-  @Mock private PipelinesHistoryClient historyClient;
   @Mock private MessagePublisher mockPublisher;
 
+  @Test
+  public void newFullIngestionCompletedTest() {
+
+    // State
+    PipelinesHistoryClientTestStub historyClient = PipelinesHistoryClientTestStub.create();
+
+    UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
+    int attempt = 1;
+    Long executionId = null; // New interpretation
+    StepType stepType = StepType.DWCA_TO_VERBATIM;
+
+    Set<String> pipelineSteps =
+        new HashSet<>(
+            Arrays.asList(
+                StepType.DWCA_TO_VERBATIM.name(),
+                StepType.VERBATIM_TO_IDENTIFIER.name(),
+                StepType.VERBATIM_TO_INTERPRETED.name(),
+                StepType.INTERPRETED_TO_INDEX.name(),
+                StepType.HDFS_VIEW.name(),
+                StepType.FRAGMENTER.name()));
+
+    PipelineBasedMessage incomingMessage =
+        TestMessage.create(
+            datasetKey, attempt, pipelineSteps, executionId, DatasetType.OCCURRENCE, true, false);
+
+    // When
+    PipelinesCallback.builder()
+        .message(incomingMessage)
+        .stepType(stepType)
+        .publisher(mockPublisher)
+        .historyClient(historyClient)
+        .datasetClient(datasetClient)
+        .handler(TestHandler.create(executionId, DatasetType.OCCURRENCE, true, false))
+        .config(TestConfig.create())
+        .build()
+        .handleMessage();
+
+    // Should
+    Map<StepType, PipelineStep> result = historyClient.getStepMap();
+    Assert.assertEquals(6, result.size());
+
+    Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
+    Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
+
+    PipelineStep dwcaResult = result.get(StepType.DWCA_TO_VERBATIM);
+    Assert.assertNotNull(dwcaResult);
+    Assert.assertEquals(COMPLETED, dwcaResult.getState());
+
+    PipelineStep identifierResult = result.get(StepType.VERBATIM_TO_IDENTIFIER);
+    Assert.assertNotNull(identifierResult);
+    Assert.assertEquals(QUEUED, identifierResult.getState());
+
+    PipelineStep interpretedResult = result.get(StepType.VERBATIM_TO_INTERPRETED);
+    Assert.assertNotNull(interpretedResult);
+    Assert.assertEquals(SUBMITTED, interpretedResult.getState());
+
+    PipelineStep indexingResult = result.get(StepType.INTERPRETED_TO_INDEX);
+    Assert.assertNotNull(indexingResult);
+    Assert.assertEquals(SUBMITTED, indexingResult.getState());
+
+    PipelineStep fragmenterResult = result.get(StepType.FRAGMENTER);
+    Assert.assertNotNull(fragmenterResult);
+    Assert.assertEquals(SUBMITTED, fragmenterResult.getState());
+
+    PipelineStep hdfsViewResult = result.get(StepType.HDFS_VIEW);
+    Assert.assertNotNull(hdfsViewResult);
+    Assert.assertEquals(SUBMITTED, hdfsViewResult.getState());
+  }
+
+  @Test
+  public void newHalfIngestionCompletedTest() {
+
+    // State
+    PipelinesHistoryClientTestStub historyClient = PipelinesHistoryClientTestStub.create();
+
+    UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
+    int attempt = 1;
+    Long executionId = null; // New interpretation
+    StepType stepType = StepType.VERBATIM_TO_INTERPRETED;
+
+    Set<String> pipelineSteps =
+        new HashSet<>(
+            Arrays.asList(
+                StepType.VERBATIM_TO_INTERPRETED.name(),
+                StepType.INTERPRETED_TO_INDEX.name(),
+                StepType.HDFS_VIEW.name(),
+                StepType.FRAGMENTER.name()));
+
+    PipelineBasedMessage incomingMessage =
+        TestMessage.create(
+            datasetKey, attempt, pipelineSteps, executionId, DatasetType.OCCURRENCE, true, false);
+
+    // When
+    PipelinesCallback.builder()
+        .message(incomingMessage)
+        .stepType(stepType)
+        .publisher(mockPublisher)
+        .historyClient(historyClient)
+        .datasetClient(datasetClient)
+        .handler(TestHandler.create(executionId, DatasetType.OCCURRENCE, true, false))
+        .config(TestConfig.create())
+        .build()
+        .handleMessage();
+
+    // Should
+    Map<StepType, PipelineStep> result = historyClient.getStepMap();
+    Assert.assertEquals(4, result.size());
+
+    Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
+    Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
+
+    PipelineStep interpretedResult = result.get(StepType.VERBATIM_TO_INTERPRETED);
+    Assert.assertNotNull(interpretedResult);
+    Assert.assertEquals(COMPLETED, interpretedResult.getState());
+
+    PipelineStep indexingResult = result.get(StepType.INTERPRETED_TO_INDEX);
+    Assert.assertNotNull(indexingResult);
+    Assert.assertEquals(QUEUED, indexingResult.getState());
+
+    PipelineStep fragmenterResult = result.get(StepType.FRAGMENTER);
+    Assert.assertNotNull(fragmenterResult);
+    Assert.assertEquals(QUEUED, fragmenterResult.getState());
+
+    PipelineStep hdfsViewResult = result.get(StepType.HDFS_VIEW);
+    Assert.assertNotNull(hdfsViewResult);
+    Assert.assertEquals(QUEUED, hdfsViewResult.getState());
+  }
+
+  @Test
+  public void newSingleStepIngestionCompletedTest() {
+
+    // State
+    PipelinesHistoryClientTestStub historyClient = PipelinesHistoryClientTestStub.create();
+
+    UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
+    int attempt = 1;
+    Long executionId = null; // New interpretation
+    StepType stepType = StepType.INTERPRETED_TO_INDEX;
+
+    Set<String> pipelineSteps = Collections.singleton(StepType.INTERPRETED_TO_INDEX.name());
+
+    PipelineBasedMessage incomingMessage =
+        TestMessage.create(
+            datasetKey, attempt, pipelineSteps, executionId, DatasetType.OCCURRENCE, true, false);
+
+    // When
+    PipelinesCallback.builder()
+        .message(incomingMessage)
+        .stepType(stepType)
+        .publisher(mockPublisher)
+        .historyClient(historyClient)
+        .datasetClient(datasetClient)
+        .handler(TestHandler.create(executionId, DatasetType.OCCURRENCE, true, false))
+        .config(TestConfig.create())
+        .build()
+        .handleMessage();
+
+    // Should
+    Map<StepType, PipelineStep> result = historyClient.getStepMap();
+    Assert.assertEquals(1, result.size());
+
+    Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
+    Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
+
+    PipelineStep indexingResult = result.get(StepType.INTERPRETED_TO_INDEX);
+    Assert.assertNotNull(indexingResult);
+    Assert.assertNotNull(indexingResult.getStarted());
+    Assert.assertNotNull(indexingResult.getFinished());
+    Assert.assertEquals(COMPLETED, indexingResult.getState());
+  }
+
+  @Test
+  public void newFullIngestionFailedTest() {
+
+    // State
+    PipelinesHistoryClientTestStub historyClient = PipelinesHistoryClientTestStub.create();
+
+    UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
+    int attempt = 1;
+    Long executionId = null; // New interpretation
+    StepType stepType = StepType.DWCA_TO_VERBATIM;
+
+    Set<String> pipelineSteps =
+        new HashSet<>(
+            Arrays.asList(
+                StepType.DWCA_TO_VERBATIM.name(),
+                StepType.VERBATIM_TO_IDENTIFIER.name(),
+                StepType.VERBATIM_TO_INTERPRETED.name(),
+                StepType.INTERPRETED_TO_INDEX.name(),
+                StepType.HDFS_VIEW.name(),
+                StepType.FRAGMENTER.name()));
+
+    PipelineBasedMessage incomingMessage =
+        TestMessage.create(
+            datasetKey, attempt, pipelineSteps, executionId, DatasetType.OCCURRENCE, true, false);
+
+    // When
+    PipelinesCallback.builder()
+        .message(incomingMessage)
+        .stepType(stepType)
+        .publisher(mockPublisher)
+        .historyClient(historyClient)
+        .datasetClient(datasetClient)
+        .handler(new TestExceptionHandler(executionId, DatasetType.OCCURRENCE, true, false))
+        .config(TestConfig.create())
+        .build()
+        .handleMessage();
+
+    // Should
+    Map<StepType, PipelineStep> result = historyClient.getStepMap();
+    Assert.assertEquals(6, result.size());
+
+    Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
+    Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
+
+    PipelineStep dwcaResult = result.get(StepType.DWCA_TO_VERBATIM);
+    Assert.assertNotNull(dwcaResult);
+    Assert.assertEquals(FAILED, dwcaResult.getState());
+
+    PipelineStep identifierResult = result.get(StepType.VERBATIM_TO_IDENTIFIER);
+    Assert.assertNotNull(identifierResult);
+    Assert.assertEquals(SUBMITTED, identifierResult.getState());
+
+    PipelineStep interpretedResult = result.get(StepType.VERBATIM_TO_INTERPRETED);
+    Assert.assertNotNull(interpretedResult);
+    Assert.assertEquals(SUBMITTED, interpretedResult.getState());
+
+    PipelineStep indexingResult = result.get(StepType.INTERPRETED_TO_INDEX);
+    Assert.assertNotNull(indexingResult);
+    Assert.assertEquals(SUBMITTED, indexingResult.getState());
+
+    PipelineStep fragmenterResult = result.get(StepType.FRAGMENTER);
+    Assert.assertNotNull(fragmenterResult);
+    Assert.assertEquals(SUBMITTED, fragmenterResult.getState());
+
+    PipelineStep hdfsViewResult = result.get(StepType.HDFS_VIEW);
+    Assert.assertNotNull(hdfsViewResult);
+    Assert.assertEquals(SUBMITTED, hdfsViewResult.getState());
+  }
+
+  @Test
+  public void twoStepsIngestionCompletedTest() {
+
+    // State
+    PipelinesHistoryClientTestStub historyClient = PipelinesHistoryClientTestStub.create();
+
+    UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
+    int attempt = 1;
+    Long executionId = null; // New interpretation
+
+    Set<String> pipelineSteps =
+        new HashSet<>(
+            Arrays.asList(
+                StepType.DWCA_TO_VERBATIM.name(),
+                StepType.VERBATIM_TO_IDENTIFIER.name(),
+                StepType.VERBATIM_TO_INTERPRETED.name(),
+                StepType.INTERPRETED_TO_INDEX.name(),
+                StepType.HDFS_VIEW.name(),
+                StepType.FRAGMENTER.name()));
+
+    PipelineBasedMessage incomingMessage =
+        TestMessage.create(
+            datasetKey, attempt, pipelineSteps, executionId, DatasetType.OCCURRENCE, true, false);
+
+    // When
+    PipelinesCallback.builder()
+        .message(incomingMessage)
+        .stepType(StepType.DWCA_TO_VERBATIM)
+        .publisher(mockPublisher)
+        .historyClient(historyClient)
+        .datasetClient(datasetClient)
+        .handler(TestHandler.create(executionId, DatasetType.OCCURRENCE, true, false))
+        .config(TestConfig.create())
+        .build()
+        .handleMessage();
+
+    long newExecutionId =
+        historyClient.getPipelineExecutionMap().values().stream()
+            .map(PipelineExecution::getKey)
+            .findAny()
+            .orElseThrow(() -> new PipelinesException("Can't fint execution"));
+
+    incomingMessage.setExecutionId(newExecutionId);
+
+    PipelinesCallback.builder()
+        .message(incomingMessage)
+        .stepType(StepType.VERBATIM_TO_IDENTIFIER)
+        .publisher(mockPublisher)
+        .historyClient(historyClient)
+        .datasetClient(datasetClient)
+        .handler(TestHandler.create(newExecutionId, DatasetType.OCCURRENCE, true, false))
+        .config(TestConfig.create())
+        .build()
+        .handleMessage();
+
+    // Should
+    Map<StepType, PipelineStep> result = historyClient.getStepMap();
+    Assert.assertEquals(6, result.size());
+
+    Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
+    Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
+
+    PipelineStep dwcaResult = result.get(StepType.DWCA_TO_VERBATIM);
+    Assert.assertNotNull(dwcaResult);
+    Assert.assertNotNull(dwcaResult.getFinished());
+    Assert.assertEquals(COMPLETED, dwcaResult.getState());
+
+    PipelineStep identifierResult = result.get(StepType.VERBATIM_TO_IDENTIFIER);
+    Assert.assertNotNull(identifierResult);
+    Assert.assertNotNull(identifierResult.getFinished());
+    Assert.assertEquals(COMPLETED, identifierResult.getState());
+
+    PipelineStep interpretedResult = result.get(StepType.VERBATIM_TO_INTERPRETED);
+    Assert.assertNotNull(interpretedResult);
+    Assert.assertNull(interpretedResult.getFinished());
+    Assert.assertEquals(QUEUED, interpretedResult.getState());
+
+    PipelineStep indexingResult = result.get(StepType.INTERPRETED_TO_INDEX);
+    Assert.assertNotNull(indexingResult);
+    Assert.assertNull(indexingResult.getFinished());
+    Assert.assertEquals(SUBMITTED, indexingResult.getState());
+
+    PipelineStep fragmenterResult = result.get(StepType.FRAGMENTER);
+    Assert.assertNotNull(fragmenterResult);
+    Assert.assertNull(fragmenterResult.getFinished());
+    Assert.assertEquals(SUBMITTED, fragmenterResult.getState());
+
+    PipelineStep hdfsViewResult = result.get(StepType.HDFS_VIEW);
+    Assert.assertNotNull(hdfsViewResult);
+    Assert.assertNull(hdfsViewResult.getFinished());
+    Assert.assertEquals(SUBMITTED, hdfsViewResult.getState());
+  }
+
   @Test(expected = NullPointerException.class)
-  public void testEmptyBuilder() {
+  public void emptyBuilderTest() {
     // When
     PipelinesCallback.builder().build().handleMessage();
-  }
-
-  @Test
-  public void testNullMessagePublisher() throws Exception {
-
-    // State
-    UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
-    int attempt = 1;
-    String crawlId = datasetKey.toString();
-    String rootPath = StepType.DWCA_TO_VERBATIM.getLabel();
-    StepType nextStepName = StepType.DWCA_TO_VERBATIM;
-    Set<String> pipelineSteps =
-        new HashSet<>(
-            Arrays.asList(
-                StepType.DWCA_TO_VERBATIM.name(),
-                StepType.VERBATIM_TO_INTERPRETED.name(),
-                StepType.INTERPRETED_TO_INDEX.name(),
-                StepType.HDFS_VIEW.name()));
-    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
-
-    // When
-    PipelinesCallback.builder()
-        .message(incomingMessage)
-        .curator(CURATOR_SERVER.getCurator())
-        .stepType(nextStepName)
-        .publisher(null)
-        .historyClient(historyClient)
-        .datasetClient(datasetClient)
-        .handler(TestHandler.create())
-        .config(TestConfig.create())
-        .build()
-        .handleMessage();
-
-    Optional<LocalDateTime> startDate = getAsDate(crawlId, Fn.START_DATE.apply(rootPath));
-    Optional<LocalDateTime> endDate = getAsDate(crawlId, Fn.END_DATE.apply(rootPath));
-
-    // Run second time to check
-    PipelinesCallback.builder()
-        .message(incomingMessage)
-        .curator(CURATOR_SERVER.getCurator())
-        .stepType(nextStepName)
-        .publisher(null)
-        .historyClient(historyClient)
-        .datasetClient(datasetClient)
-        .handler(TestHandler.create())
-        .config(TestConfig.create())
-        .build()
-        .handleMessage();
-
-    Optional<LocalDateTime> startDateTwo = getAsDate(crawlId, Fn.START_DATE.apply(rootPath));
-    Optional<LocalDateTime> endDateTwo = getAsDate(crawlId, Fn.END_DATE.apply(rootPath));
-
-    // Should
-    Assert.assertTrue(startDate.isPresent());
-    Assert.assertTrue(endDate.isPresent());
-
-    Assert.assertTrue(startDateTwo.isPresent());
-    Assert.assertTrue(endDateTwo.isPresent());
-
-    Assert.assertEquals(startDate.get(), startDateTwo.get());
-    Assert.assertEquals(endDate.get(), endDateTwo.get());
-
-    Assert.assertTrue(getAsBoolean(crawlId, Fn.ERROR_AVAILABILITY.apply(rootPath)).isPresent());
-    Assert.assertTrue(getAsString(crawlId, Fn.ERROR_MESSAGE.apply(rootPath)).isPresent());
-
-    Assert.assertTrue(
-        getAsBoolean(crawlId, Fn.SUCCESSFUL_AVAILABILITY.apply(rootPath)).isPresent());
-    Assert.assertFalse(getAsString(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(rootPath)).isPresent());
-
-    // Postprocess
-    deleteMonitoringById(crawlId);
-  }
-
-  @Test
-  public void testBaseHandlerBehavior() throws Exception {
-
-    // State
-    UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
-    int attempt = 1;
-    String crawlId = datasetKey.toString();
-    String rootPath = StepType.DWCA_TO_VERBATIM.getLabel();
-    StepType nextStepName = StepType.DWCA_TO_VERBATIM;
-    Set<String> pipelineSteps =
-        new HashSet<>(
-            Arrays.asList(
-                StepType.DWCA_TO_VERBATIM.name(),
-                StepType.VERBATIM_TO_INTERPRETED.name(),
-                StepType.INTERPRETED_TO_INDEX.name(),
-                StepType.HDFS_VIEW.name()));
-    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
-
-    updateMonitoring(crawlId, SIZE, String.valueOf(2));
-
-    // When
-    PipelinesCallback.builder()
-        .message(incomingMessage)
-        .curator(CURATOR_SERVER.getCurator())
-        .stepType(nextStepName)
-        .publisher(mockPublisher)
-        .historyClient(historyClient)
-        .datasetClient(datasetClient)
-        .handler(TestHandler.create())
-        .config(TestConfig.create())
-        .build()
-        .handleMessage();
-
-    // Should
-    Assert.assertTrue(getAsDate(crawlId, Fn.START_DATE.apply(rootPath)).isPresent());
-    Assert.assertTrue(getAsDate(crawlId, Fn.END_DATE.apply(rootPath)).isPresent());
-
-    Assert.assertFalse(getAsBoolean(crawlId, Fn.ERROR_AVAILABILITY.apply(rootPath)).isPresent());
-    Assert.assertFalse(getAsString(crawlId, Fn.ERROR_MESSAGE.apply(rootPath)).isPresent());
-
-    Assert.assertTrue(
-        getAsBoolean(crawlId, Fn.SUCCESSFUL_AVAILABILITY.apply(rootPath)).isPresent());
-    Assert.assertTrue(getAsString(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(rootPath)).isPresent());
-
-    Assert.assertTrue(getAsString(crawlId, SIZE).isPresent());
-    Assert.assertEquals("1", getAsString(crawlId, SIZE).get());
-
-    // Postprocess
-    deleteMonitoringById(crawlId);
-  }
-
-  @Test
-  public void testOneStepHandler() throws Exception {
-
-    // State
-    UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
-    int attempt = 1;
-    String crawlId = datasetKey.toString();
-    StepType nextStepName = StepType.DWCA_TO_VERBATIM;
-    Set<String> pipelineSteps = Collections.singleton(StepType.DWCA_TO_VERBATIM.name());
-    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
-
-    // When
-    PipelinesCallback.builder()
-        .message(incomingMessage)
-        .curator(CURATOR_SERVER.getCurator())
-        .stepType(nextStepName)
-        .publisher(mockPublisher)
-        .historyClient(historyClient)
-        .datasetClient(datasetClient)
-        .handler(TestHandler.create())
-        .config(TestConfig.create())
-        .build()
-        .handleMessage();
-
-    // Should
-    Assert.assertFalse(checkExists(getPipelinesInfoPath(crawlId)));
-
-    String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
-    Assert.assertFalse(checkExists(crawlInfoPath));
-
-    // Postprocess
-    deleteMonitoringById(crawlId);
-  }
-
-  @Test
-  public void testRunnerException() throws Exception {
-
-    UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
-    int attempt = 1;
-    String crawlId = datasetKey.toString();
-    String rootPath = StepType.DWCA_TO_VERBATIM.getLabel();
-    StepType nextStepName = StepType.DWCA_TO_VERBATIM;
-    Set<String> pipelineSteps =
-        new HashSet<>(
-            Arrays.asList(
-                StepType.DWCA_TO_VERBATIM.name(),
-                StepType.VERBATIM_TO_INTERPRETED.name(),
-                StepType.INTERPRETED_TO_INDEX.name(),
-                StepType.HDFS_VIEW.name()));
-    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
-
-    // When
-    PipelinesCallback.builder()
-        .message(incomingMessage)
-        .curator(CURATOR_SERVER.getCurator())
-        .stepType(nextStepName)
-        .publisher(mockPublisher)
-        .historyClient(historyClient)
-        .datasetClient(datasetClient)
-        .handler(TestExceptionHandler.create())
-        .config(TestConfig.create())
-        .build()
-        .handleMessage();
-
-    // Should
-    Assert.assertTrue(getAsDate(crawlId, Fn.START_DATE.apply(rootPath)).isPresent());
-    Assert.assertFalse(getAsDate(crawlId, Fn.END_DATE.apply(rootPath)).isPresent());
-
-    Assert.assertTrue(getAsBoolean(crawlId, Fn.ERROR_AVAILABILITY.apply(rootPath)).isPresent());
-    Assert.assertTrue(getAsString(crawlId, Fn.ERROR_MESSAGE.apply(rootPath)).isPresent());
-
-    Assert.assertFalse(
-        getAsBoolean(crawlId, Fn.SUCCESSFUL_AVAILABILITY.apply(rootPath)).isPresent());
-    Assert.assertFalse(getAsString(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(rootPath)).isPresent());
-
-    Assert.assertFalse(getAsString(crawlId, SIZE).isPresent());
-
-    String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
-    Assert.assertTrue(checkExists(crawlInfoPath));
-    Assert.assertTrue(getAsString(crawlInfoPath).isPresent());
-    Assert.assertEquals("FINISHED", getAsString(crawlInfoPath).get());
-
-    // Postprocess
-    deleteMonitoringById(crawlId);
-  }
-
-  @Test
-  public void testLastPipelineStep() throws Exception {
-
-    // State
-    UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
-    int attempt = 1;
-    String crawlId = datasetKey.toString();
-    StepType nextStepName = StepType.DWCA_TO_VERBATIM;
-    Set<String> pipelineSteps = Collections.singleton(StepType.DWCA_TO_VERBATIM.name());
-    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
-    updateMonitoring(crawlId, SIZE, String.valueOf(1));
-
-    String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
-    updateMonitoring(crawlInfoPath, "RUNNING");
-
-    // When
-    PipelinesCallback.builder()
-        .message(incomingMessage)
-        .curator(CURATOR_SERVER.getCurator())
-        .stepType(nextStepName)
-        .publisher(mockPublisher)
-        .historyClient(historyClient)
-        .datasetClient(datasetClient)
-        .handler(TestHandler.create())
-        .config(TestConfig.create())
-        .build()
-        .handleMessage();
-
-    // Should
-    Assert.assertFalse(checkExists(getPipelinesInfoPath(crawlId)));
-
-    Assert.assertTrue(checkExists(crawlInfoPath));
-    Assert.assertTrue(getAsString(crawlInfoPath).isPresent());
-    Assert.assertEquals("FINISHED", getAsString(crawlInfoPath).get());
-
-    // Postprocess
-    deleteMonitoringById(crawlId);
-  }
-
-  @Test
-  public void testMonitoringStepCounter() throws Exception {
-
-    // State
-    UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
-    int attempt = 1;
-    String crawlId = datasetKey.toString();
-    StepType nextStepName = StepType.DWCA_TO_VERBATIM;
-    Set<String> pipelineSteps =
-        new HashSet<>(
-            Arrays.asList(
-                StepType.DWCA_TO_VERBATIM.name(),
-                StepType.VERBATIM_TO_INTERPRETED.name(),
-                StepType.INTERPRETED_TO_INDEX.name(),
-                StepType.HDFS_VIEW.name()));
-    PipelineBasedMessage incomingMessage = TestMessage.create(datasetKey, attempt, pipelineSteps);
-
-    // When
-    PipelinesCallback.builder()
-        .message(incomingMessage)
-        .curator(CURATOR_SERVER.getCurator())
-        .stepType(nextStepName)
-        .publisher(mockPublisher)
-        .historyClient(historyClient)
-        .datasetClient(datasetClient)
-        .handler(TestHandler.create())
-        .config(TestConfig.create())
-        .build()
-        .handleMessage();
-
-    // Should
-    Assert.assertTrue(checkExists(getPipelinesInfoPath(crawlId)));
-    Assert.assertTrue(getAsString(crawlId, SIZE).isPresent());
-    Assert.assertEquals("3", getAsString(crawlId, SIZE).get());
-
-    String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
-    Assert.assertTrue(checkExists(crawlInfoPath));
-    Assert.assertTrue(getAsString(crawlInfoPath).isPresent());
-    Assert.assertEquals("FINISHED", getAsString(crawlInfoPath).get());
-
-    // Postprocess
-    deleteMonitoringById(crawlId);
   }
 
   @Test
@@ -350,6 +382,10 @@ public class PipelinesCallbackIT {
     private final UUID datasetKey;
     private final Integer attempt;
     private final Set<String> pipelineSteps;
+    private Long executionId;
+    DatasetType datasetType;
+    boolean containsOccurrences;
+    boolean containsEvents;
 
     @Override
     public Integer getAttempt() {
@@ -363,12 +399,17 @@ public class PipelinesCallbackIT {
 
     @Override
     public Long getExecutionId() {
-      return EXECUTION_ID;
+      return executionId;
     }
 
     @Override
     public void setExecutionId(Long executionId) {
-      // do nothing
+      this.executionId = executionId;
+    }
+
+    @Override
+    public DatasetInfo getDatasetInfo() {
+      return new DatasetInfo(datasetType, containsOccurrences, containsEvents);
     }
 
     @Override
@@ -382,99 +423,15 @@ public class PipelinesCallbackIT {
     }
   }
 
-  /**
-   * Check exists a Zookeeper monitoring root node by crawlId
-   *
-   * @param crawlId root node path
-   */
-  private boolean checkExists(String crawlId) throws Exception {
-    return CURATOR_SERVER.getCurator().checkExists().forPath(crawlId) != null;
-  }
+  private static class TestExceptionHandler extends TestHandler {
 
-  /**
-   * Removes a Zookeeper monitoring root node by crawlId
-   *
-   * @param crawlId root node path
-   */
-  private void deleteMonitoringById(String crawlId) throws Exception {
-    String path = getPipelinesInfoPath(crawlId);
-    if (checkExists(path)) {
-      CURATOR_SERVER.getCurator().delete().deletingChildrenIfNeeded().forPath(path);
+    private TestExceptionHandler(
+        Long executionId,
+        DatasetType datasetType,
+        boolean containsOccurrences,
+        boolean containsEvents) {
+      super(executionId, datasetType, containsOccurrences, containsEvents);
     }
-  }
-
-  /**
-   * Creates or updates a String value for a Zookeeper monitoring node
-   *
-   * @param crawlId root node path
-   * @param path child node path
-   * @param value some String value
-   */
-  private void updateMonitoring(String crawlId, String path, String value) throws Exception {
-    String fullPath = getPipelinesInfoPath(crawlId, path);
-    updateMonitoring(fullPath, value);
-  }
-
-  /**
-   * Creates or updates a String value for a Zookeeper monitoring node
-   *
-   * @param fullPath node path
-   * @param value some String value
-   */
-  private void updateMonitoring(String fullPath, String value) throws Exception {
-    byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
-    if (checkExists(fullPath)) {
-      CURATOR_SERVER.getCurator().setData().forPath(fullPath, bytes);
-    } else {
-      CURATOR_SERVER
-          .getCurator()
-          .create()
-          .creatingParentsIfNeeded()
-          .withMode(CreateMode.EPHEMERAL)
-          .forPath(fullPath, bytes);
-    }
-  }
-
-  /** Read value from Zookeeper as a {@link String} */
-  private Optional<String> getAsString(String crawlId, String path) throws Exception {
-    String infoPath = getPipelinesInfoPath(crawlId, path);
-    return getAsString(infoPath);
-  }
-
-  /** Read value from Zookeeper as a {@link String} */
-  private Optional<String> getAsString(String infoPath) throws Exception {
-    if (CURATOR_SERVER.getCurator().checkExists().forPath(infoPath) != null) {
-      byte[] responseData = CURATOR_SERVER.getCurator().getData().forPath(infoPath);
-      if (responseData != null) {
-        return Optional.of(new String(responseData, StandardCharsets.UTF_8));
-      }
-    }
-    return Optional.empty();
-  }
-
-  /** Read value from Zookeeper as a {@link LocalDateTime} */
-  private Optional<LocalDateTime> getAsDate(String crawlId, String path) throws Exception {
-    Optional<String> data = getAsString(crawlId, path);
-    try {
-      return data.map(x -> LocalDateTime.parse(x, DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-    } catch (DateTimeParseException ex) {
-      return Optional.empty();
-    }
-  }
-
-  /** Read value from Zookeeper as a {@link Boolean} */
-  private Optional<Boolean> getAsBoolean(String crawlId, String path) throws Exception {
-    Optional<String> data = getAsString(crawlId, path);
-    try {
-      return data.map(Boolean::parseBoolean);
-    } catch (DateTimeParseException ex) {
-      return Optional.empty();
-    }
-  }
-
-  @NoArgsConstructor(staticName = "create")
-  private static class TestExceptionHandler
-      implements StepHandler<PipelineBasedMessage, PipelineBasedMessage> {
 
     @Override
     public Runnable createRunnable(PipelineBasedMessage message) {
@@ -482,30 +439,16 @@ public class PipelinesCallbackIT {
         throw new IllegalStateException("Oops!");
       };
     }
-
-    @Override
-    public PipelineBasedMessage createOutgoingMessage(PipelineBasedMessage message) {
-      UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
-      int attempt = 1;
-      Set<String> pipelineSteps =
-          new HashSet<>(
-              Arrays.asList(
-                  StepType.DWCA_TO_VERBATIM.name(),
-                  StepType.VERBATIM_TO_INTERPRETED.name(),
-                  StepType.INTERPRETED_TO_INDEX.name(),
-                  StepType.HDFS_VIEW.name()));
-      return TestMessage.create(datasetKey, attempt, pipelineSteps);
-    }
-
-    @Override
-    public boolean isMessageCorrect(PipelineBasedMessage message) {
-      return true;
-    }
   }
 
-  @NoArgsConstructor(staticName = "create")
+  @AllArgsConstructor(staticName = "create")
   private static class TestHandler
       implements StepHandler<PipelineBasedMessage, PipelineBasedMessage> {
+
+    private Long executionId;
+    private DatasetType datasetType;
+    private boolean containsOccurrences;
+    private boolean containsEvents;
 
     @Override
     public Runnable createRunnable(PipelineBasedMessage message) {
@@ -514,16 +457,17 @@ public class PipelinesCallbackIT {
 
     @Override
     public PipelineBasedMessage createOutgoingMessage(PipelineBasedMessage message) {
-      UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
-      int attempt = 1;
-      Set<String> pipelineSteps =
-          new HashSet<>(
-              Arrays.asList(
-                  StepType.DWCA_TO_VERBATIM.name(),
-                  StepType.VERBATIM_TO_INTERPRETED.name(),
-                  StepType.INTERPRETED_TO_INDEX.name(),
-                  StepType.HDFS_VIEW.name()));
-      return TestMessage.create(datasetKey, attempt, pipelineSteps);
+      UUID datasetKey = message.getDatasetUuid();
+      int attempt = message.getAttempt();
+      Set<String> pipelineSteps = message.getPipelineSteps();
+      return TestMessage.create(
+          datasetKey,
+          attempt,
+          pipelineSteps,
+          executionId,
+          datasetType,
+          containsOccurrences,
+          containsEvents);
     }
 
     @Override
@@ -532,7 +476,7 @@ public class PipelinesCallbackIT {
     }
   }
 
-  @NoArgsConstructor(staticName = "create")
+  @AllArgsConstructor(staticName = "create")
   private static class TestConfig implements BaseConfiguration {
 
     @Override

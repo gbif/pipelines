@@ -12,6 +12,7 @@ import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -372,6 +373,28 @@ public class BasicInterpreterTest {
     Assert.assertEquals(1, br.getTypeStatus().size());
     Assert.assertEquals(tp1, br.getTypeStatus().get(0));
     assertIssueSize(br, 1);
+  }
+
+  @Test
+  public void interpretProjectIdTest() {
+    final String id1 = "projectId1";
+    final String id2 = "projectId2";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(GbifTerm.projectId.qualifiedName(), id1 + " | " + id2 + " | ");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretProjectId(er, br);
+
+    // Should
+    Assert.assertEquals(2, br.getProjectId().size());
+    Assert.assertTrue(br.getProjectId().contains(id1));
+    Assert.assertTrue(br.getProjectId().contains(id2));
+    assertIssueSize(br, 0);
   }
 
   private void assertIssueSize(BasicRecord br, int expectedSize) {
