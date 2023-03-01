@@ -819,18 +819,19 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         Map<String, String> traitMap = new HashMap<>();
         traitMap.put(trait.getKey(), trait.getValue());
         TraitType traitType = TraitType.valueOfLabel(trait.getKey());
-        // keep a copy in dynamic fields until schema has been updated
-        indexRecord.setDynamicProperties(traitMap);
+        // Dirty data has duplicate entries so use a Set first, to remove them
+        Set<String> traitValuesSet = new HashSet<>(Arrays.asList(trait.getValue().split("\\|")));
+        List<String> traitValuesList = new ArrayList<>(traitValuesSet);
         // Also add specific traits to dedicated fields
         switch (Objects.requireNonNull(traitType)) {
           case FIRE_RESPONSE:
-            addIfNotEmpty(indexRecord, AUS_TRAITS_FIRE_RESPONSE, trait.getValue());
+            addIfNotEmpty(indexRecord, AUS_TRAITS_FIRE_RESPONSE, traitValuesList);
             break;
           case POST_FIRE_RECRUITMENT:
-            addIfNotEmpty(indexRecord, AUS_TRAITS_POST_FIRE_RECRUITMENT, trait.getValue());
+            addIfNotEmpty(indexRecord, AUS_TRAITS_POST_FIRE_RECRUITMENT, traitValuesList);
             break;
-            //  default:
-            //  indexRecord.setDynamicProperties(traitMap);
+          default:
+            indexRecord.setDynamicProperties(traitMap);
         }
       }
     }
