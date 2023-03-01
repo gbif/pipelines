@@ -3,7 +3,6 @@ package org.gbif.pipelines.tasks.validators.metrics;
 import java.util.Collections;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -25,7 +24,6 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
 
   private final MetricsCollectorConfiguration config;
   private final MessagePublisher publisher;
-  private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
   private final ValidationWsClient validationClient;
 
@@ -35,7 +33,6 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
         .historyClient(historyClient)
         .validationClient(validationClient)
         .config(config)
-        .curator(curator)
         .stepType(TYPE)
         .isValidator(config.validatorOnly)
         .publisher(publisher)

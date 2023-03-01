@@ -56,7 +56,7 @@ nohup sudo -u hdfs spark2-submit --class org.gbif.pipelines.clustering.Cluster \
   --conf spark.sql.shuffle.partitions=1000 \
   --executor-memory 64G \
   --driver-memory 4G \
-  clustering-gbif-2.12.0-SNAPSHOT.jar \
+  clustering-gbif-2.14.0-SNAPSHOT.jar \
   --hive-db prod_h \
   --hive-table-hashed occurrence_clustering_hashed \
   --hive-table-candidates occurrence_clustering_candidates  \

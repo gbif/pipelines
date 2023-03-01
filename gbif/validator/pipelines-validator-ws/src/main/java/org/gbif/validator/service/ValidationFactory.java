@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 import lombok.experimental.UtilityClass;
+import org.gbif.api.model.pipelines.PipelinesWorkflow;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.ValidationStep;
@@ -40,7 +41,9 @@ public class ValidationFactory {
                         ValidationStep.builder()
                             .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE.name())
                             .status(Status.RUNNING)
-                            .executionOrder(StepType.VALIDATOR_UPLOAD_ARCHIVE.getExecutionOrder())
+                            .executionOrder(
+                                PipelinesWorkflow.getValidatorWorkflow()
+                                    .getLevel(StepType.VALIDATOR_UPLOAD_ARCHIVE))
                             .build()))
                 .build())
         .build();

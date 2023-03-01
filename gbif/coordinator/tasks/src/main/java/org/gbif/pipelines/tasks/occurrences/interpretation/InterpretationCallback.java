@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
@@ -50,7 +49,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
   private final InterpreterConfiguration config;
   private final MessagePublisher publisher;
-  private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
   private final ValidationWsClient validationClient;
   private final DatasetClient datasetClient;
@@ -66,7 +64,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         .datasetClient(datasetClient)
         .validationClient(validationClient)
         .config(config)
-        .curator(curator)
         .stepType(getType(message))
         .isValidator(isValidator)
         .publisher(publisher)
@@ -192,7 +189,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         null, // Set in balancer cli
         repeatAttempt,
         message.getResetPrefix(),
-        null,
         message.getExecutionId(),
         message.getEndpointType(),
         message.getValidationResult(),

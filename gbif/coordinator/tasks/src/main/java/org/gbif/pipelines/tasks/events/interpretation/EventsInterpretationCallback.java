@@ -4,7 +4,6 @@ import java.io.IOException;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -35,7 +34,6 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
 
   private final EventsInterpretationConfiguration config;
   private final MessagePublisher publisher;
-  private final CuratorFramework curator;
   private final HdfsConfigs hdfsConfigs;
   private final PipelinesHistoryClient historyClient;
   private final DatasetClient datasetClient;
@@ -44,7 +42,6 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
   public void handleMessage(PipelinesEventsMessage message) {
     PipelinesCallback.<PipelinesEventsMessage, PipelinesEventsInterpretedMessage>builder()
         .config(config)
-        .curator(curator)
         .stepType(TYPE)
         .publisher(publisher)
         .historyClient(historyClient)
@@ -109,7 +106,6 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
         message.getNumberOfOccurrenceRecords(),
         message.getNumberOfEventRecords(),
         message.getResetPrefix(),
-        message.getOnlyForStep(),
         message.getExecutionId(),
         message.getEndpointType(),
         message.getInterpretTypes(),

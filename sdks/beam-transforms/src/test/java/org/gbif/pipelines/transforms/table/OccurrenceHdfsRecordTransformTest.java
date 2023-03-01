@@ -82,7 +82,11 @@ public class OccurrenceHdfsRecordTransformTest {
             .setAssociatedKey("setTriplet")
             .build();
     MetadataRecord mr =
-        MetadataRecord.newBuilder().setId("777").setDatasetTitle("setDatasetTitle").build();
+        MetadataRecord.newBuilder()
+            .setId("777")
+            .setDatasetTitle("setDatasetTitle")
+            .setProjectId("setProjectId")
+            .build();
     BasicRecord br =
         BasicRecord.newBuilder()
             .setId("777")
@@ -223,6 +227,7 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setSamplingprotocol(Collections.emptyList());
     expected.setCollectionkey("setCollectionMatchKey");
     expected.setDatasettitle("setDatasetTitle");
+    expected.setProjectid(Collections.singletonList("setProjectId"));
     expected.setDay(25);
 
     PAssert.that(result).containsInAnyOrder(expected);

@@ -19,7 +19,6 @@ import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.HttpClient;
 import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.model.pipelines.StepType;
@@ -52,7 +51,6 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
 
   private final XmlToAvroConfiguration config;
   private final MessagePublisher publisher;
-  private final CuratorFramework curator;
   private final PipelinesHistoryClient historyClient;
   private final ValidationWsClient validationClient;
   private final DatasetClient datasetClient;
@@ -71,7 +69,6 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         .datasetClient(datasetClient)
         .validationClient(validationClient)
         .config(config)
-        .curator(curator)
         .stepType(type)
         .isValidator(isValidator)
         .publisher(publisher)

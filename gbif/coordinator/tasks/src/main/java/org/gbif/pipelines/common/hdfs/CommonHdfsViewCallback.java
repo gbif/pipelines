@@ -75,11 +75,6 @@ public class CommonHdfsViewCallback {
     if (Strings.isNullOrEmpty(message.getRunner())) {
       throw new IllegalArgumentException("Runner can't be null or empty " + message);
     }
-    if (message.getOnlyForStep() != null
-        && !message.getOnlyForStep().equalsIgnoreCase(config.stepType.name())) {
-      log.info("Skipping, because expected step is {}", message.getOnlyForStep());
-      return false;
-    }
     boolean isCorrectProcess = config.processRunner.equals(message.getRunner());
     if (!isCorrectProcess) {
       log.info("Skipping, because expected step is incorrect");

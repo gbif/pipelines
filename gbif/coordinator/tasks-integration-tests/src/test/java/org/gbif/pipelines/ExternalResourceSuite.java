@@ -7,7 +7,6 @@ import org.gbif.pipelines.tasks.occurrences.hdfs.HdfsViewCallbackIT;
 import org.gbif.pipelines.tasks.occurrences.identifier.IdentifierCallbackIT;
 import org.gbif.pipelines.tasks.occurrences.indexing.IndexingCallbackIT;
 import org.gbif.pipelines.tasks.occurrences.interpretation.InterpretationCallbackIT;
-import org.gbif.pipelines.tasks.resources.CuratorServer;
 import org.gbif.pipelines.tasks.resources.EsServer;
 import org.gbif.pipelines.tasks.resources.ZkServer;
 import org.gbif.pipelines.tasks.validators.cleaner.CleanerCallbackIT;
@@ -39,6 +38,5 @@ import org.junit.runners.Suite.SuiteClasses;
 })
 public class ExternalResourceSuite {
   @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
-  @ClassRule public static final CuratorServer CURATOR_SERVER = CuratorServer.getInstance();
   @ClassRule public static final ZkServer ZK_SERVER_SERVER = ZkServer.getInstance();
 }

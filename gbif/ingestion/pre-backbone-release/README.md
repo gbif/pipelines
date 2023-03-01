@@ -88,7 +88,7 @@ Execute the pipeline using e.g. (not --skipKeys=false can be added to omit taxa 
 spark2-submit \
   --class org.gbif.pipelines.backbone.impact.BackbonePreRelease \
   --master yarn --executor-memory 4G --executor-cores 2 --num-executors 100 \
-  pre-backbone-release-2.2.4-SNAPSHOT-shaded.jar \
+  pre-backbone-release-2.14.0-SNAPSHOT-shaded.jar \
   --datebase=tim \
   --table=classifications \
   --targetDir=hdfs:///tmp/backbone-pre-release-impact/report \

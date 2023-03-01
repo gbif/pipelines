@@ -1,7 +1,6 @@
 package org.gbif.pipelines.tasks;
 
 import static org.gbif.common.messaging.api.messages.OccurrenceDeletionReason.NOT_SEEN_IN_LAST_CRAWL;
-import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.github.resilience4j.retry.IntervalFunction;
@@ -9,40 +8,46 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
+import org.gbif.api.model.pipelines.PipelinesWorkflow;
+import org.gbif.api.model.pipelines.PipelinesWorkflow.Graph;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
-import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.DeleteDatasetOccurrencesMessage;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
+import org.gbif.common.messaging.api.messages.PipelineBasedMessage.DatasetInfo;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.PipelinesRunnerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
-import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
-import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -71,10 +76,29 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
               .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(3)))
               .build());
 
+  private static final Retry RUNNING_EXECUTION_CALL =
+      Retry.of(
+          "runningExecutionCall",
+          RetryConfig.custom()
+              .maxAttempts(3)
+              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(3)))
+              .retryOnResult(Objects::isNull)
+              .build());
+
+  private static final Set<PipelineStep.Status> PROCESSED_STATE_SET =
+      new HashSet<>(
+          Arrays.asList(
+              PipelineStep.Status.RUNNING,
+              PipelineStep.Status.FAILED,
+              PipelineStep.Status.COMPLETED,
+              PipelineStep.Status.ABORTED));
+
+  private static final Set<PipelineStep.Status> FINISHED_STATE_SET =
+      new HashSet<>(Arrays.asList(PipelineStep.Status.COMPLETED, PipelineStep.Status.ABORTED));
+
   private static Properties properties;
   private final MessagePublisher publisher;
   @NonNull private final StepType stepType;
-  @NonNull private final CuratorFramework curator;
   @NonNull private final PipelinesHistoryClient historyClient;
   private final DatasetClient datasetClient;
   @NonNull private final BaseConfiguration config;
@@ -110,67 +134,25 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   public void handleMessage() {
 
     String datasetKey = message.getDatasetUuid().toString();
-    Optional<TrackingInfo> trackingInfo = Optional.empty();
+    Optional<TrackingInfo> info = Optional.empty();
 
     try (MDCCloseable mdc = MDC.putCloseable("datasetKey", datasetKey);
         MDCCloseable mdc1 = MDC.putCloseable("attempt", message.getAttempt().toString());
         MDCCloseable mdc2 = MDC.putCloseable("step", stepType.name())) {
 
-      O outgoingMessage = handler.createOutgoingMessage(message);
-
-      if (!handler.isMessageCorrect(message) || isValidatorAborted()) {
-        deleteValidatorZkPath(datasetKey);
+      if (!handler.isMessageCorrect(message) || isProcessingStopped() || isValidatorAborted()) {
         log.info(
             "Skip the message, please check that message is correct/runner/validation info/etc, exit from handler");
         return;
       }
 
-      log.info("Message handler began - {}", message);
-      Runnable runnable = handler.createRunnable(message);
-
-      // Message callback handler, updates zookeeper info, runs process logic and sends next MQ
-      // message
-      // Short variables
-      Set<String> steps = message.getPipelineSteps();
-
-      // Check the step
-      if (!steps.contains(stepType.name())) {
-        log.info("Type is not specified in the pipelineSteps array");
-        return;
-      }
-
-      // Check start date If CLI was restarted it will be empty
-      String startDateZkPath = Fn.START_DATE.apply(stepType.getLabel());
-      String fullPath = getPipelinesInfoPath(datasetKey, startDateZkPath, isValidator);
-
-      log.info("Message has been received {}", message);
-      if (ZookeeperUtils.getAsString(curator, fullPath).isPresent()) {
-        log.error(
-            "Dataset is in the queue, please check the pipeline-ingestion monitoring tool - {}",
-            datasetKey);
-        return;
-      }
+      O outgoingMessage = handler.createOutgoingMessage(message);
 
       // track the pipeline step
-      trackingInfo = trackPipelineStep();
+      info = trackPipelineStep();
 
-      String mqMessageZkPath = Fn.MQ_MESSAGE.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(
-          curator, datasetKey, mqMessageZkPath, message.toString(), isValidator);
-
-      String mqClassNameZkPath = Fn.MQ_CLASS_NAME.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(
-          curator,
-          datasetKey,
-          mqClassNameZkPath,
-          message.getClass().getCanonicalName(),
-          isValidator);
-
-      ZookeeperUtils.updateMonitoringDate(curator, datasetKey, startDateZkPath, isValidator);
-
-      String runnerZkPath = Fn.RUNNER.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, datasetKey, runnerZkPath, getRunner(), isValidator);
-      updateValidatorInfoStatus(Status.RUNNING);
+      log.info("Message handler began - {}", message);
+      Runnable runnable = handler.createRunnable(message);
 
       log.info("Handler has been started, datasetKey - {}", datasetKey);
       checkIfDatasetIsDeleted();
@@ -178,40 +160,27 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       checkIfDatasetIsDeleted();
       log.info("Handler has been finished, datasetKey - {}", datasetKey);
 
-      String endDatePath = Fn.END_DATE.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoringDate(curator, datasetKey, endDatePath, isValidator);
-
       // update tracking status
-      trackingInfo.ifPresent(info -> updateTrackingStatus(info, PipelineStep.Status.COMPLETED));
-
-      String successfulPath = Fn.SUCCESSFUL_AVAILABILITY.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(
-          curator, datasetKey, successfulPath, Boolean.TRUE.toString(), isValidator);
+      info.ifPresent(i -> updateTrackingStatus(i, PipelineStep.Status.COMPLETED));
 
       // Send a wrapped outgoing message to Balancer queue
       if (outgoingMessage != null) {
 
         // set the executionId
-        trackingInfo.ifPresent(info -> outgoingMessage.setExecutionId(info.executionId));
+        info.ifPresent(i -> outgoingMessage.setExecutionId(i.executionId));
 
         String nextMessageClassName = outgoingMessage.getClass().getSimpleName();
         String messagePayload = outgoingMessage.toString();
         publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
 
-        String info =
+        String logInfo =
             "Next message has been sent - "
                 + outgoingMessage.getClass().getSimpleName()
                 + ":"
                 + outgoingMessage;
-        log.info(info);
-
-        String successfulMessagePath = Fn.SUCCESSFUL_MESSAGE.apply(stepType.getLabel());
-        ZookeeperUtils.updateMonitoring(
-            curator, datasetKey, successfulMessagePath, info, isValidator);
+        log.info(logInfo);
+        info.ifPresent(this::updateQueuedStatus);
       }
-
-      // Change zookeeper counter for passed steps
-      ZookeeperUtils.checkMonitoringById(curator, steps.size(), datasetKey, isValidator);
 
       updateValidatorInfoStatus(Status.FINISHED);
 
@@ -219,22 +188,16 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       String error = "Error for datasetKey - " + datasetKey + " : " + ex.getMessage();
       log.error(error, ex);
 
-      String errorPath = Fn.ERROR_AVAILABILITY.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(
-          curator, datasetKey, errorPath, Boolean.TRUE.toString(), isValidator);
-
-      String errorMessagePath = Fn.ERROR_MESSAGE.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, datasetKey, errorMessagePath, error, isValidator);
-
       // update tracking status
-      trackingInfo.ifPresent(info -> updateTrackingStatus(info, PipelineStep.Status.FAILED));
+      info.ifPresent(i -> updateTrackingStatus(i, PipelineStep.Status.FAILED));
 
       // update validator info
       updateValidatorInfoStatus(Status.FAILED);
-      deleteValidatorZkPath(datasetKey);
-
-      // Mark crawler as finished
-      ZookeeperUtils.markCrawlerAsFinished(curator, datasetKey);
+    } finally {
+      if (message.getExecutionId() != null) {
+        log.info("Mark execution as FINISHED if all steps are FINISHED");
+        historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
+      }
     }
 
     log.info("Message handler ended - {}", message);
@@ -258,12 +221,36 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     return false;
   }
 
-  @SneakyThrows
-  private void deleteValidatorZkPath(String datasetKey) {
+  private boolean isProcessingStopped() {
     if (isValidator) {
-      String path = getPipelinesInfoPath(datasetKey, isValidator);
-      curator.delete().deletingChildrenIfNeeded().forPath(path);
+      return false;
     }
+
+    Long currentKey = message.getExecutionId();
+
+    Supplier<Long> s = () -> historyClient.getRunningExecutionKey(message.getDatasetUuid());
+    Long runningKey;
+    if (currentKey == null) {
+      runningKey = s.get();
+    } else {
+      // if current key is not null, running key must not be null unless execution was aborted,
+      // check multiple times
+      runningKey = RUNNING_EXECUTION_CALL.executeSupplier(s);
+    }
+    if (currentKey == null && runningKey == null) {
+      log.info("Continue execution. New execution and no other running executions");
+      return false;
+    }
+    if (currentKey == null) {
+      log.warn("Can't run new execution if some other execution is running");
+      return true;
+    }
+    if (runningKey == null) {
+      log.warn("Stop execution. Execution is aborted");
+      return true;
+    }
+    // Stop the process if execution keys are different
+    return !currentKey.equals(runningKey);
   }
 
   private void updateValidatorInfoStatus(Status status) {
@@ -289,32 +276,98 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       Long executionId = message.getExecutionId();
       if (executionId == null) {
         // create execution
+        DatasetInfo datasetInfo = message.getDatasetInfo();
+        boolean containsOccurrences = datasetInfo.isContainsOccurrences();
+        boolean containsEvents = false;
+        if (datasetInfo.getDatasetType() == DatasetType.SAMPLING_EVENT) {
+          containsEvents = datasetInfo.isContainsEvents();
+        }
+
+        Set<StepType> stepTypes =
+            PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents)
+                .getAllNodesFor(Collections.singleton(stepType));
+
         PipelineExecution execution =
-            new PipelineExecution().setStepsToRun(Collections.singletonList(stepType));
+            new PipelineExecution().setStepsToRun(stepTypes).setCreated(LocalDateTime.now());
 
         executionId = historyClient.addPipelineExecution(processKey, execution);
         message.setExecutionId(executionId);
       }
 
+      List<PipelineStep> stepsByExecutionKey =
+          historyClient.getPipelineStepsByExecutionKey(executionId);
+
       // add step to the process
       PipelineStep step =
-          new PipelineStep()
-              .setMessage(OBJECT_MAPPER.writeValueAsString(message))
-              .setType(stepType)
-              .setState(PipelineStep.Status.RUNNING)
-              .setRunner(StepRunner.valueOf(getRunner()))
-              .setPipelinesVersion(getPipelinesVersion());
+          stepsByExecutionKey.stream()
+              .filter(ps -> ps.getType() == stepType)
+              .findAny()
+              .orElseThrow(
+                  () ->
+                      new PipelinesException(
+                          "History service doesn't contain stepType: " + stepType));
 
-      long stepKey = historyClient.addPipelineStep(processKey, executionId, step);
+      if (PROCESSED_STATE_SET.contains(step.getState())) {
+        log.error(
+            "Dataset is in the queue, please check the pipeline-ingestion monitoring tool - {}",
+            datasetUuid);
+        throw new PipelinesException(
+            "Dataset is in the queue, please check the pipeline-ingestion monitoring tool");
+      }
 
-      return Optional.of(
-          new TrackingInfo(
-              processKey, executionId, stepKey, datasetUuid.toString(), attempt.toString()));
+      step.setMessage(OBJECT_MAPPER.writeValueAsString(message))
+          .setState(PipelineStep.Status.RUNNING)
+          .setRunner(StepRunner.valueOf(getRunner()))
+          .setStarted(LocalDateTime.now())
+          .setPipelinesVersion(getPipelinesVersion());
+
+      long stepKey = historyClient.updatePipelineStep(step);
+
+      Map<StepType, PipelineStep> pipelineStepMap =
+          stepsByExecutionKey.stream()
+              .collect(Collectors.toMap(PipelineStep::getType, Function.identity()));
+
+      TrackingInfo trackingInfo =
+          TrackingInfo.builder()
+              .processKey(processKey)
+              .executionId(executionId)
+              .pipelineStepMap(pipelineStepMap)
+              .stepKey(stepKey)
+              .datasetId(datasetUuid.toString())
+              .attempt(attempt.toString())
+              .build();
+
+      return Optional.of(trackingInfo);
+
     } catch (Exception ex) {
       // we don't want to break the crawling if the tracking fails
       log.error("Couldn't track pipeline step for message {}", message, ex);
       return Optional.empty();
     }
+  }
+
+  private void updateQueuedStatus(TrackingInfo info) {
+    List<Graph<StepType>.Edge> nodeEdges;
+    if (isValidator) {
+      nodeEdges = PipelinesWorkflow.getValidatorWorkflow().getNodeEdges(stepType);
+    } else {
+      DatasetInfo datasetInfo = message.getDatasetInfo();
+      boolean containsOccurrences = datasetInfo.isContainsOccurrences();
+      boolean containsEvents = false;
+      if (datasetInfo.getDatasetType() == DatasetType.SAMPLING_EVENT) {
+        containsEvents = datasetInfo.isContainsEvents();
+      }
+      Graph<StepType> workflow = PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents);
+      nodeEdges = workflow.getNodeEdges(stepType);
+    }
+    nodeEdges.forEach(
+        e -> {
+          PipelineStep step = info.pipelineStepMap.get(e.getNode());
+          if (step != null) {
+            step.setState(PipelineStep.Status.QUEUED);
+            historyClient.updatePipelineStep(step);
+          }
+        });
   }
 
   private void updateTrackingStatus(TrackingInfo ti, PipelineStep.Status status) {
@@ -324,12 +377,26 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(config.getHdfsSiteConfig(), config.getCoreSiteConfig());
     List<MetricInfo> metricInfos = HdfsUtils.readMetricsFromMetaFile(hdfsConfigs, path);
-    PipelineStepParameters psp = new PipelineStepParameters(status, metricInfos);
+
+    PipelineStep pipelineStep = historyClient.getPipelineStep(ti.stepKey);
+    pipelineStep.setState(status);
+    pipelineStep.setMetrics(new HashSet<>(metricInfos));
+
+    if (metricInfos.size() == 1) {
+      Optional.ofNullable(metricInfos.get(0).getValue())
+          .filter(v -> !v.isEmpty())
+          .map(Long::parseLong)
+          .ifPresent(pipelineStep::setNumberRecords);
+    } else if (metricInfos.size() > 1) {
+      pipelineStep.setNumberRecords(-1L);
+    }
+
+    if (FINISHED_STATE_SET.contains(status)) {
+      pipelineStep.setFinished(LocalDateTime.now());
+    }
+
     try {
-      Runnable r =
-          () ->
-              historyClient.updatePipelineStepStatusAndMetrics(
-                  ti.processKey, ti.executionId, ti.stepKey, psp);
+      Runnable r = () -> historyClient.updatePipelineStep(pipelineStep);
       Retry.decorateRunnable(RETRY, r).run();
     } catch (Exception ex) {
       // we don't want to break the crawling if the tracking fails
@@ -370,13 +437,13 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     }
   }
 
-  @AllArgsConstructor
+  @Builder
   private static class TrackingInfo {
-
     long processKey;
     long executionId;
     long stepKey;
     String datasetId;
     String attempt;
+    Map<StepType, PipelineStep> pipelineStepMap;
   }
 }
