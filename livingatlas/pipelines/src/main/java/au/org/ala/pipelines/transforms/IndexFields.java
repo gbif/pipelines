@@ -74,4 +74,12 @@ public interface IndexFields {
   String GGBN_TERMS_LOAN = "http://data.ggbn.org/schemas/ggbn/terms/Loan";
   String LOAN_DESTINATION_TERM = "http://data.ggbn.org/schemas/ggbn/terms/loanDestination";
   String LOAN_IDENTIFIER_TERM = "http://data.ggbn.org/schemas/ggbn/terms/loanIdentifier";
+  String AUS_TRAITS_FIRE_RESPONSE = "fire_response";
+  //  String AUS_TRAITS_FIRE_RESPONSE =
+  //
+  // "https://traitecoevo.github.io/austraits.build/articles/trait_definitions.html#fire_response";
+  String AUS_TRAITS_POST_FIRE_RECRUITMENT = "post_fire_recruitment";
+  //  String AUS_TRAITS_POST_FIRE_RECRUITMENT =
+  //
+  // "https://traitecoevo.github.io/austraits.build/articles/trait_definitions.html#post_fire_recruitment";
 }

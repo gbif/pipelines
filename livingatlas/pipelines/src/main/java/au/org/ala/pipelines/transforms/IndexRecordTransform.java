@@ -7,6 +7,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_
 
 import au.org.ala.pipelines.common.SolrFieldSchema;
 import au.org.ala.pipelines.interpreters.SensitiveDataInterpreter;
+import au.org.ala.specieslists.TraitType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import java.io.Serializable;
@@ -809,6 +810,29 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     // index presentInCountry
     if (tpr.getPresentInCountry() != null) {
       indexRecord.getStrings().put(PRESENT_IN_COUNTRY, tpr.getPresentInCountry());
+    }
+
+    // traits from lists
+    Map<String, String> traits = tpr.getTraits();
+    for (Map.Entry<String, String> trait : traits.entrySet()) {
+      if (trait.getKey() != null) {
+        Map<String, String> traitMap = new HashMap<>();
+        traitMap.put(trait.getKey(), trait.getValue());
+        TraitType traitType = TraitType.valueOfLabel(trait.getKey());
+        // keep a copy in dynamic fields until schema has been updated
+        indexRecord.setDynamicProperties(traitMap);
+        // Also add specific traits to dedicated fields
+        switch (Objects.requireNonNull(traitType)) {
+          case FIRE_RESPONSE:
+            addIfNotEmpty(indexRecord, AUS_TRAITS_FIRE_RESPONSE, trait.getValue());
+            break;
+          case POST_FIRE_RECRUITMENT:
+            addIfNotEmpty(indexRecord, AUS_TRAITS_POST_FIRE_RECRUITMENT, trait.getValue());
+            break;
+            //  default:
+            //  indexRecord.setDynamicProperties(traitMap);
+        }
+      }
     }
   }
 

@@ -38,4 +38,9 @@ public interface SpeciesLevelPipelineOptions extends InterpretationPipelineOptio
   Boolean getIncludePresentInCountry();
 
   void setIncludePresentInCountry(Boolean includePresentInCountry);
+
+  @Default.Boolean(false)
+  Boolean getIncludeTraits();
+
+  void setIncludeTraits(Boolean includeTraits);
 }

@@ -31,7 +31,8 @@
         {"name": "speciesListID", "type": {"type" : "array", "items" : "string"}, "default" : []},
         {"name": "conservationStatuses", "type": {"type" : "array", "items" : "ConservationStatus"}, "default" : []},
         {"name": "invasiveStatuses", "type": {"type" : "array", "items" : "InvasiveStatus"}, "default" : []},
-        {"name": "presentInCountry", "type": ["null", "string"], "default" : null}
+        {"name": "presentInCountry", "type": ["null", "string"], "default" : null},
+        {"name": "traits", "type": {"type": "map", "values": "string"}, "default" : {}}
       ]
     }
 ]

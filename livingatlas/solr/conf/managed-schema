@@ -193,6 +193,8 @@
 
   <!-- ARGA fields -->
   <field name="presentInCountry"      type="string"  docValues="true" multiValued="false"  indexed="true" />
+  <field name="fire_response"         type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="post_fire_recruitment" type="string"  docValues="true" multiValued="true"  indexed="true" />
 
   <!-- Additional invasive fields -->
   <field name="stateInvasive"         type="string"  docValues="true" multiValued="false"  indexed="true" />

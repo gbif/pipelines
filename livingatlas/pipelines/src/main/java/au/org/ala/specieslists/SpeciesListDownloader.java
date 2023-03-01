@@ -133,6 +133,8 @@ public class SpeciesListDownloader {
           int statusIdx = columnHeaders.indexOf("status");
           int sourceStatusIdx = columnHeaders.indexOf("sourceStatus");
           int countIdx = columnHeaders.indexOf("count");
+          int traitNameIdx = columnHeaders.indexOf("traitName");
+          int traitValueIdx = columnHeaders.indexOf("traitValue");
 
           String region = null;
 
@@ -166,6 +168,8 @@ public class SpeciesListDownloader {
                 String status = statusIdx > 0 ? currentLine[statusIdx] : null;
                 String sourceStatus = sourceStatusIdx > 0 ? currentLine[sourceStatusIdx] : null;
                 String count = countIdx > 0 ? currentLine[countIdx] : null;
+                String traitName = traitNameIdx > 0 ? currentLine[traitNameIdx] : null;
+                String traitValue = traitValueIdx > 0 ? currentLine[traitValueIdx] : null;
                 // ARGA addition to set `presentInCountry` when list is neither invasive nor
                 // threatened, has region set and contains a `count` column (note: count not used)
                 String presentInCountry =
@@ -179,10 +183,13 @@ public class SpeciesListDownloader {
                         .setSpeciesListID(list.getDataResourceUid())
                         .setStatus(status)
                         .setRegion(region)
+                        .setListType(list.getListType())
                         .setIsInvasive(list.isInvasive())
                         .setIsThreatened(list.isThreatened())
                         .setSourceStatus(sourceStatus)
                         .setPresentInCountry(presentInCountry)
+                        .setTraitName(traitName)
+                        .setTraitValue(traitValue)
                         .build();
                 dataFileWriter.append(speciesListRecord);
                 taxaRead++;
