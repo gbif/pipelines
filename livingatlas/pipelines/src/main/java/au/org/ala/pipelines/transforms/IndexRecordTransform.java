@@ -7,7 +7,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_
 
 import au.org.ala.pipelines.common.SolrFieldSchema;
 import au.org.ala.pipelines.interpreters.SensitiveDataInterpreter;
-import au.org.ala.specieslists.TraitType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import java.io.Serializable;
@@ -816,22 +815,36 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     Map<String, String> traits = tpr.getTraits();
     for (Map.Entry<String, String> trait : traits.entrySet()) {
       if (trait.getKey() != null) {
+        // save to a <Map> for dynamic-properties fallback
         Map<String, String> traitMap = new HashMap<>();
         traitMap.put(trait.getKey(), trait.getValue());
-        TraitType traitType = TraitType.valueOfLabel(trait.getKey());
+        // check if traitName is declared as a value in @au.org.ala.pipelines.transforms.IndexFields
+        java.lang.reflect.Field[] fields = IndexFields.class.getDeclaredFields();
+        boolean isTraitInDecalredFields = false;
+        // Check each <IndexFields> field value to see if it matches the current trait name
+        for (java.lang.reflect.Field f : fields) {
+          String strValue = null;
+          try {
+            strValue = (String) f.get(null);
+          } catch (IllegalAccessException e) {
+            log.error(
+                "addSpeciesListInfo() - error getting value for <IndexFields> field: "
+                    + f.getName());
+            // Don't throw an exception - failover to next speciesList
+          }
+          if (strValue.equals(trait.getKey())) {
+            isTraitInDecalredFields = true;
+            break;
+          }
+        }
         // Dirty data has duplicate entries so use a Set first, to remove them
         Set<String> traitValuesSet = new HashSet<>(Arrays.asList(trait.getValue().split("\\|")));
         List<String> traitValuesList = new ArrayList<>(traitValuesSet);
-        // Also add specific traits to dedicated fields
-        switch (Objects.requireNonNull(traitType)) {
-          case FIRE_RESPONSE:
-            addIfNotEmpty(indexRecord, AUS_TRAITS_FIRE_RESPONSE, traitValuesList);
-            break;
-          case POST_FIRE_RECRUITMENT:
-            addIfNotEmpty(indexRecord, AUS_TRAITS_POST_FIRE_RECRUITMENT, traitValuesList);
-            break;
-          default:
-            indexRecord.setDynamicProperties(traitMap);
+        // add to indexedRecord either as multivalues or dynamicProperties
+        if (isTraitInDecalredFields) {
+          addIfNotEmpty(indexRecord, trait.getKey(), traitValuesList);
+        } else {
+          indexRecord.setDynamicProperties(traitMap);
         }
       }
     }
