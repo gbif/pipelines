@@ -811,7 +811,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       indexRecord.getStrings().put(PRESENT_IN_COUNTRY, tpr.getPresentInCountry());
     }
 
-    // traits from lists
+    // taxon-level traits from speciesLists
     Map<String, String> traits = tpr.getTraits();
     for (Map.Entry<String, String> trait : traits.entrySet()) {
       if (trait.getKey() != null) {
@@ -820,28 +820,30 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         traitMap.put(trait.getKey(), trait.getValue());
         // check if traitName is declared as a value in @au.org.ala.pipelines.transforms.IndexFields
         java.lang.reflect.Field[] fields = IndexFields.class.getDeclaredFields();
-        boolean isTraitInDecalredFields = false;
+        boolean isTraitInDeclaredFields = false;
         // Check each <IndexFields> field value to see if it matches the current trait name
         for (java.lang.reflect.Field f : fields) {
           String strValue = null;
           try {
             strValue = (String) f.get(null);
           } catch (IllegalAccessException e) {
-            log.error(
-                "addSpeciesListInfo() - error getting value for <IndexFields> field: "
-                    + f.getName());
-            // Don't throw an exception - failover to next speciesList
+            // Don't throw an exception - log.warn and failover to next speciesList
+            log.warn(
+                "addSpeciesListInfo() - failed to get value for <IndexFields> field: "
+                    + f.getName()
+                    + ", with exception: "
+                    + e.getMessage());
           }
           if (strValue.equals(trait.getKey())) {
-            isTraitInDecalredFields = true;
+            isTraitInDeclaredFields = true;
             break;
           }
         }
-        // Dirty data has duplicate entries so use a Set first, to remove them
+        // Dirty data has duplicate entries process via a Set first
         Set<String> traitValuesSet = new HashSet<>(Arrays.asList(trait.getValue().split("\\|")));
         List<String> traitValuesList = new ArrayList<>(traitValuesSet);
-        // add to indexedRecord either as multivalues or dynamicProperties
-        if (isTraitInDecalredFields) {
+        // Add to indexedRecord either as multivalues or dynamicProperties
+        if (isTraitInDeclaredFields) {
           addIfNotEmpty(indexRecord, trait.getKey(), traitValuesList);
         } else {
           indexRecord.setDynamicProperties(traitMap);
