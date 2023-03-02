@@ -8,6 +8,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.io.fs.EmptyMatchTreatment;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -96,10 +97,32 @@ public abstract class Transform<R, T extends SpecificRecordBase & Record> extend
   /**
    * Reads avro files from path, which contains {@link T}
    *
+   * @param path path to source files
+   */
+  public AvroIO.Read<T> read(String path, boolean acceptEmpty) {
+    if (acceptEmpty)
+      return AvroIO.read(clazz).from(path).withEmptyMatchTreatment(EmptyMatchTreatment.ALLOW);
+    return AvroIO.read(clazz).from(path);
+  }
+
+  /**
+   * Reads avro files from path, which contains {@link T}
+   *
    * @param pathFn function can return an output path, where in param is fixed - {@link
    *     Transform#baseName}
    */
   public AvroIO.Read<T> read(UnaryOperator<String> pathFn) {
+    return read(pathFn.apply(baseName));
+  }
+
+  /**
+   * Reads avro files from path, which contains {@link T}
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link
+   *     Transform#baseName}
+   */
+  public AvroIO.Read<T> read(UnaryOperator<String> pathFn, boolean acceptEmpty) {
+    if (acceptEmpty) return read(pathFn.apply(baseName), acceptEmpty);
     return read(pathFn.apply(baseName));
   }
 

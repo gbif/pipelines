@@ -10,6 +10,7 @@ import au.org.ala.kvs.client.SDSConservationServiceFactory;
 import au.org.ala.pipelines.transforms.ALASensitiveDataRecordTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.util.VersionInfo;
+import au.org.ala.utils.ArchiveUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.io.IOException;
@@ -21,6 +22,9 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.extensions.joinlibrary.Join;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
@@ -33,6 +37,7 @@ import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -79,6 +84,10 @@ public class ALAInterpretedToSensitivePipeline {
     UnaryOperator<String> inputPathFn =
         t ->
             PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Occurrence, t, ALL_AVRO);
+
+    UnaryOperator<String> eventPathFn =
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Event, t, ALL_AVRO);
+
     UnaryOperator<String> outputPathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Occurrence, t, id);
 
@@ -89,6 +98,7 @@ public class ALAInterpretedToSensitivePipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
+    EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
 
     // ALA specific
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
@@ -121,7 +131,16 @@ public class ALAInterpretedToSensitivePipeline {
 
     PCollection<KV<String, ALATaxonRecord>> inputAlaTaxonCollection =
         p.apply("Read Taxon", alaTaxonomyTransform.read(inputPathFn))
-            .apply("Map Taxon to KV", alaTaxonomyTransform.toCoreIdKv());
+            .apply("Map Taxon to KV", alaTaxonomyTransform.toKv());
+
+    if (ArchiveUtils.isEventCore(options)) {
+
+      inputLocationCollection =
+          applyLocationInheritance(eventPathFn, inputPathFn, p, locationTransform);
+
+      inputTemporalCollection =
+          applyTemporalInheritance(eventPathFn, inputPathFn, p, temporalTransform);
+    }
 
     KeyedPCollectionTuple<String> inputTuples =
         KeyedPCollectionTuple
@@ -145,6 +164,102 @@ public class ALAInterpretedToSensitivePipeline {
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
+  }
+
+  private static PCollection<KV<String, LocationRecord>> applyLocationInheritance(
+      UnaryOperator<String> eventPathFn,
+      UnaryOperator<String> occPathFn,
+      Pipeline p,
+      LocationTransform transform) {
+    // occurrence output keyed by eventID
+    PCollection<KV<String, LocationRecord>> eventLocationCollection =
+        p.apply("Read Events", transform.read(eventPathFn))
+            .apply("Map Taxon to KV", transform.toKv());
+
+    // event output keyed by eventID
+    PCollection<KV<String, LocationRecord>> occLocationCollection =
+        p.apply("Read Events", transform.read(occPathFn))
+            .apply("Map Taxon to KV", transform.toCoreIdKv());
+
+    // joined
+    PCollection<KV<String, KV<LocationRecord, LocationRecord>>> joined =
+        Join.leftOuterJoin(
+            occLocationCollection,
+            eventLocationCollection,
+            LocationRecord.newBuilder().setId("").build());
+
+    return joined.apply(ParDo.of(new LocationMergeFcn()));
+  }
+
+  private static PCollection<KV<String, TemporalRecord>> applyTemporalInheritance(
+      UnaryOperator<String> eventPathFn,
+      UnaryOperator<String> occPathFn,
+      Pipeline p,
+      TemporalTransform transform) {
+    // event output keyed by eventID
+    PCollection<KV<String, TemporalRecord>> occCollection =
+        p.apply("Read Events", transform.read(occPathFn))
+            .apply("Map Taxon to KV", transform.toCoreIdKv());
+
+    // occurrence output keyed by eventID
+    PCollection<KV<String, TemporalRecord>> eventCollection =
+        p.apply("Read Events", transform.read(eventPathFn))
+            .apply("Map Taxon to KV", transform.toKv());
+
+    // joined
+    PCollection<KV<String, KV<TemporalRecord, TemporalRecord>>> joined =
+        Join.leftOuterJoin(
+            occCollection, eventCollection, TemporalRecord.newBuilder().setId("").build());
+
+    return joined.apply(ParDo.of(new TemporalMergeFcn()));
+  }
+
+  static class LocationMergeFcn
+      extends DoFn<KV<String, KV<LocationRecord, LocationRecord>>, KV<String, LocationRecord>> {
+    @ProcessElement
+    public void processElement(
+        @Element KV<String, KV<LocationRecord, LocationRecord>> occAndEvent,
+        OutputReceiver<KV<String, LocationRecord>> out) {
+
+      LocationRecord occLocationRecord = occAndEvent.getValue().getKey();
+      LocationRecord eventLocationRecord = occAndEvent.getValue().getValue();
+
+      if (occLocationRecord.getDecimalLongitude() == null
+          && occLocationRecord.getDecimalLatitude() == null) {
+        occLocationRecord.setDecimalLongitude(eventLocationRecord.getDecimalLongitude());
+        occLocationRecord.setDecimalLatitude(eventLocationRecord.getDecimalLatitude());
+        occLocationRecord.setStateProvince(eventLocationRecord.getStateProvince());
+        occLocationRecord.setCountryCode(eventLocationRecord.getCountryCode());
+      }
+
+      out.output(KV.of(occLocationRecord.getId(), occLocationRecord));
+    }
+  }
+
+  static class TemporalMergeFcn
+      extends DoFn<KV<String, KV<TemporalRecord, TemporalRecord>>, KV<String, TemporalRecord>> {
+    @ProcessElement
+    public void processElement(
+        @Element KV<String, KV<TemporalRecord, TemporalRecord>> occAndEvent,
+        OutputReceiver<KV<String, TemporalRecord>> out) {
+
+      TemporalRecord occTemporalRecord = occAndEvent.getValue().getKey();
+      TemporalRecord eventTemporalRecord = occAndEvent.getValue().getValue();
+
+      boolean hasMonthInfo = occTemporalRecord.getMonth() != null;
+      boolean hasYearInfo = eventTemporalRecord.getYear() != null;
+
+      // extract location & temporal information from
+      if (!hasYearInfo && eventTemporalRecord.getYear() != null) {
+        occTemporalRecord.setYear(eventTemporalRecord.getYear());
+      }
+
+      if (!hasMonthInfo && eventTemporalRecord.getMonth() != null) {
+        occTemporalRecord.setMonth(eventTemporalRecord.getMonth());
+      }
+
+      out.output(KV.of(occTemporalRecord.getId(), occTemporalRecord));
+    }
   }
 
   public static void deletePreviousSDS(InterpretationPipelineOptions options) {

@@ -175,7 +175,16 @@ elastic:
 
 predicate-export:
   inputPath: '{fsPath}/pipelines-data'
-  skipExportFields:
+  targetPath: '/tmp/pipelines-export-prepare'
+  skipEventExportFields:
+    - "id"
+    - "parentId"
+    - "created"
+    - "hasGeospatialIssue"
+    - "hasCoordinate"
+    - "repatriated"
+    - "coreId"
+  skipOccurrenceExportFields:
     - "id"
     - "parentId"
     - "created"

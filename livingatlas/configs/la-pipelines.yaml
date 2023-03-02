@@ -222,7 +222,8 @@ index:
   targetPath: '{fsPath}/pipelines-data'
   includeImages: true
   includeSpeciesLists: true
-  includeSensitiveData: true
+  # set this to false to avoid SDS requirement
+  includeSensitiveDataChecks: true
   runner: SparkRunner
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
 
@@ -254,6 +255,7 @@ elastic:
   esIndexName: 'event_{datasetId}'
   indexNumberShards: 1
   indexNumberReplicas: 0
+  metaFileName: elastic.yml
   esDocumentId: internalId
 
 export:
@@ -268,8 +270,17 @@ export:
 
 predicate-export:
   inputPath: '{fsPath}/pipelines-data'
+  targetPath: '{fsPath}/pipelines-export'
   localExportPath: /tmp/pipelines-export
-  skipExportFields:
+  skipEventExportFields:
+    - "id"
+    - "parentId"
+    - "created"
+    - "hasGeospatialIssue"
+    - "hasCoordinate"
+    - "repatriated"
+    - "coreId"
+  skipOccurrenceExportFields:
     - "id"
     - "parentId"
     - "created"

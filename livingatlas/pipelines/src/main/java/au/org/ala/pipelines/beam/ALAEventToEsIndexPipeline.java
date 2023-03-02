@@ -1,7 +1,10 @@
 package au.org.ala.pipelines.beam;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
+import static org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory.create;
+import static org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory.registerHdfs;
 
+import au.org.ala.pipelines.options.ALAEsIndexingPipelineOptions;
 import au.org.ala.pipelines.transforms.ALADerivedMetadataTransform;
 import au.org.ala.pipelines.transforms.ALAMetadataTransform;
 import au.org.ala.pipelines.util.ElasticsearchTools;
@@ -34,7 +37,6 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
-import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
@@ -97,16 +99,17 @@ public class ALAEventToEsIndexPipeline {
 
   public static void main(String[] args) throws IOException {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "elastic");
-    EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(combinedArgs);
+    ALAEsIndexingPipelineOptions options = create(ALAEsIndexingPipelineOptions.class, combinedArgs);
+    registerHdfs(options);
     run(options);
   }
 
-  public static void run(EsIndexingPipelineOptions options) {
+  public static void run(ALAEsIndexingPipelineOptions options) {
     run(options, Pipeline::create);
   }
 
   public static void run(
-      EsIndexingPipelineOptions options,
+      ALAEsIndexingPipelineOptions options,
       Function<EsIndexingPipelineOptions, Pipeline> pipelinesFn) {
 
     MDC.put("datasetKey", options.getDatasetId());
@@ -282,6 +285,7 @@ public class ALAEventToEsIndexPipeline {
                 .pipeline(p)
                 .identifiersPathFn(identifiersPathFn)
                 .occurrencePathFn(occurrencesPathFn)
+                .sensitiveDataCheck(options.getIncludeSensitiveDataChecks())
                 .eventsPathFn(eventsPathFn)
                 .asParentChildRecord(true)
                 .build()

@@ -1,6 +1,6 @@
 eventID,eventType,parentEventID,eventDate,eventTime,habitat,samplingProtocol,sampleSizeValue,sampleSizeUnit,samplingEffort,fieldNotes,eventRemarks,locationID,country,stateProvince,locality,minimumDepthInMeters,maximumDepthInMeters,verbatimDepth,decimalLatitude,decimalLongitude,footprintWKT
 event1,Survey,,,,habitat1,samplingProtocol1,,,,,,,Australia,New South Wales,,,,,,,
-event2,SiteVisit,event1,1/1/2001,,,,,,,,,BMP7,Australia,New South Wales,"Potato Point Spud , Batemans",,,,-27.9,143.1,
+event2,SiteVisit,event1,1/1/2001,,,,,,,,,BMP7,Australia,New South Wales,"Potato Point Spud , Batemans",,,,-36.0999996,150.1333328,
 event3,Sample,event2,1/1/2001,,,,,,,,,,,,,,,,,,
 event4,Occurrence,event3,1/1/2001,,,,,,,,,,,,,,,,,,
 event5,Occurrence,event3,1/1/2001,,,,,,,,,,,,,,,,,,

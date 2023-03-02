@@ -1,0 +1,4 @@
+occurrenceID,eventID,basisOfRecord,scientificName,phylum,class,order,family,individualCount
+occurrence1,URN:CornellLabOfOrnithology:EBIRD:OBS1533634088:event,HumanObservation,Latropiscis purpurissatus,Chordata,Actinopterygii,Aulopiformes,Aulopidae,1
+occurrence2,URN:CornellLabOfOrnithology:EBIRD:OBS1533634088:event,HumanObservation,Latropiscis purpurissatus,Chordata,Actinopterygii,Aulopiformes,Aulopidae,1
+occurrence3,URN:CornellLabOfOrnithology:EBIRD:OBS1533634088:event,HumanObservation,Callocephalon fimbriatum,Chordata,Aves,PSITTACIFORMES,CACATUIDAE,1
