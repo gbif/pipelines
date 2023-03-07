@@ -25,6 +25,7 @@ import org.gbif.dwc.Archive;
 import org.gbif.dwc.UnsupportedArchiveException;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
+import org.gbif.dwca.validation.EmlNames;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
@@ -43,8 +44,6 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 @Slf4j
 @Builder
 public class DwcaArchiveValidator implements ArchiveValidator {
-
-  protected static final String EML_XML = "eml.xml";
 
   private final ArchiveValidatorConfiguration config;
   private final ValidationWsClient validationClient;
@@ -99,14 +98,26 @@ public class DwcaArchiveValidator implements ArchiveValidator {
   @SneakyThrows
   private FileInfo validateEmlFile() {
     log.info("Running EML schema validation for {}", message.getDatasetUuid());
-    Path inputPath =
-        buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()).resolve(EML_XML);
 
-    FileInfoBuilder fileInfoBuilder =
-        FileInfo.builder().fileType(DwcFileType.METADATA).fileName(EML_XML);
+    Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
+
+    Optional<Path> emlPath = EmlNames.getEmlPath(inputPath);
+
+    FileInfoBuilder fileInfoBuilder = FileInfo.builder().fileType(DwcFileType.METADATA);
+
+    if (!emlPath.isPresent()) {
+      return fileInfoBuilder
+          .issues(
+              Collections.singletonList(
+                  IssueInfo.create(
+                      EvaluationType.EML_NOT_FOUND,
+                      Level.FATAL.name(),
+                      "metadata file was not found")))
+          .build();
+    }
 
     try {
-      String xmlDoc = new String(Files.readAllBytes(inputPath), StandardCharsets.UTF_8);
+      String xmlDoc = new String(Files.readAllBytes(emlPath.get()), StandardCharsets.UTF_8);
 
       List<IssueInfo> issueInfos = new ArrayList<>();
       // Validate XML file
@@ -114,20 +125,14 @@ public class DwcaArchiveValidator implements ArchiveValidator {
       // Check licence, authors and etc
       issueInfos.addAll(BasicMetadataEvaluator.evaluate(xmlDoc));
 
-      return fileInfoBuilder.issues(issueInfos).build();
+      return fileInfoBuilder
+          .issues(issueInfos)
+          .fileName(emlPath.get().getFileName().toString())
+          .build();
 
     } catch (Exception ex) {
-      if (!Files.exists(inputPath)) {
-        return fileInfoBuilder
-            .issues(
-                Collections.singletonList(
-                    IssueInfo.create(
-                        EvaluationType.EML_NOT_FOUND,
-                        Level.FATAL.name(),
-                        "meta.xml file was not found")))
-            .build();
-      }
       return fileInfoBuilder
+          .fileName(emlPath.get().toString())
           .issues(
               Collections.singletonList(
                   IssueInfo.create(
