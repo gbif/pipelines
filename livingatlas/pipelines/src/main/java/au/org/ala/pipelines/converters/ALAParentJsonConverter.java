@@ -33,10 +33,8 @@ public class ALAParentJsonConverter {
   protected final LocationRecord location;
   protected final MultimediaRecord multimedia;
   protected final ExtendedRecord verbatim;
+  protected final ALAUUIDRecord uuid;
   protected final DerivedMetadataRecord derivedMetadata;
-  protected final LocationInheritedRecord locationInheritedRecord;
-  protected final TemporalInheritedRecord temporalInheritedRecord;
-  protected final EventInheritedRecord eventInheritedRecord;
   protected OccurrenceJsonRecord occurrenceJsonRecord;
   protected MeasurementOrFactRecord measurementOrFactRecord;
 
@@ -51,11 +49,15 @@ public class ALAParentJsonConverter {
 
   /** Converts to parent record based on an event record. */
   private ParentJsonRecord convertToParentEvent() {
+
+    String internalId = uuid != null ? uuid.getUuid() : identifier.getInternalId();
+    String uniqueKey = uuid != null ? uuid.getUuid() : identifier.getInternalId();
+
     ParentJsonRecord.Builder builder =
         convertToParentRecord()
             .setId(verbatim.getId())
-            .setInternalId(identifier.getInternalId())
-            .setUniqueKey(identifier.getUniqueKey())
+            .setInternalId(internalId)
+            .setUniqueKey(uniqueKey)
             .setType("event")
             .setEventBuilder(convertToEvent())
             .setAll(JsonConverter.convertFieldAll(verbatim, false))
@@ -64,11 +66,10 @@ public class ALAParentJsonConverter {
 
     mapCreated(builder);
     mapDerivedMetadata(builder);
-    mapLocationInheritedFields(builder);
-    mapTemporalInheritedFields(builder);
-    mapEventInheritedFields(builder);
 
-    JsonConverter.convertToDate(identifier.getFirstLoaded()).ifPresent(builder::setFirstLoaded);
+    if (identifier != null) {
+      JsonConverter.convertToDate(identifier.getFirstLoaded()).ifPresent(builder::setFirstLoaded);
+    }
 
     return builder.build();
   }
@@ -190,53 +191,6 @@ public class ALAParentJsonConverter {
   }
 
   private void mapInherited(EventJsonRecord.Builder builder) {
-
-    boolean hasCoordsInfo = builder.getDecimalLatitude() != null;
-    boolean hasCountryInfo = builder.getCountryCode() != null;
-    boolean hasStateInfo = builder.getStateProvince() != null;
-    boolean hasYearInfo = builder.getYear() != null;
-    boolean hasMonthInfo = builder.getMonth() != null;
-    boolean hasLocationID = builder.getLocationID() != null;
-
-    // extract location & temporal information from
-    if (!hasYearInfo && temporalInheritedRecord.getYear() != null) {
-      builder.setYear(temporalInheritedRecord.getYear());
-    }
-
-    if (!hasMonthInfo && temporalInheritedRecord.getMonth() != null) {
-      builder.setMonth(temporalInheritedRecord.getMonth());
-    }
-
-    if (!hasCountryInfo && locationInheritedRecord.getCountryCode() != null) {
-      builder.setCountryCode(locationInheritedRecord.getCountryCode());
-    }
-
-    if (!hasStateInfo && locationInheritedRecord.getStateProvince() != null) {
-      builder.setStateProvince(locationInheritedRecord.getStateProvince());
-    }
-
-    if (!hasCoordsInfo
-        && locationInheritedRecord.getDecimalLatitude() != null
-        && locationInheritedRecord.getDecimalLongitude() != null) {
-      builder
-          .setHasCoordinate(true)
-          .setDecimalLatitude(locationInheritedRecord.getDecimalLatitude())
-          .setDecimalLongitude(locationInheritedRecord.getDecimalLongitude())
-          // geo_point
-          .setCoordinates(
-              JsonConverter.convertCoordinates(
-                  locationInheritedRecord.getDecimalLongitude(),
-                  locationInheritedRecord.getDecimalLatitude()))
-          // geo_shape
-          .setScoordinates(
-              JsonConverter.convertScoordinates(
-                  locationInheritedRecord.getDecimalLongitude(),
-                  locationInheritedRecord.getDecimalLatitude()));
-    }
-
-    if (!hasLocationID && eventInheritedRecord.getLocationID() != null) {
-      builder.setLocationID(eventInheritedRecord.getLocationID());
-    }
 
     if (eventCore.getParentsLineage() != null && !eventCore.getParentsLineage().isEmpty()) {
 
@@ -375,40 +329,48 @@ public class ALAParentJsonConverter {
   protected void mapTaxonRecord(EventJsonRecord.Builder builder) {}
 
   private void mapMultimediaRecord(EventJsonRecord.Builder builder) {
-    builder
-        .setMultimediaItems(JsonConverter.convertMultimediaList(multimedia))
-        .setMediaTypes(JsonConverter.convertMultimediaType(multimedia))
-        .setMediaLicenses(JsonConverter.convertMultimediaLicense(multimedia));
+    if (multimedia != null) {
+      builder
+          .setMultimediaItems(JsonConverter.convertMultimediaList(multimedia))
+          .setMediaTypes(JsonConverter.convertMultimediaType(multimedia))
+          .setMediaLicenses(JsonConverter.convertMultimediaLicense(multimedia));
+    }
   }
 
   private void mapMeasurementOrFactRecord(EventJsonRecord.Builder builder) {
-    builder.setMeasurementOrFactMethods(
-        measurementOrFactRecord.getMeasurementOrFactItems().stream()
-            .map(MeasurementOrFact::getMeasurementMethod)
-            .filter(x -> StringUtils.isNotEmpty(x))
-            .distinct()
-            .collect(Collectors.toList()));
-    builder.setMeasurementOrFactTypes(
-        measurementOrFactRecord.getMeasurementOrFactItems().stream()
-            .map(MeasurementOrFact::getMeasurementType)
-            .filter(x -> StringUtils.isNotEmpty(x))
-            .distinct()
-            .collect(Collectors.toList()));
+    if (measurementOrFactRecord != null) {
+      builder.setMeasurementOrFactMethods(
+          measurementOrFactRecord.getMeasurementOrFactItems().stream()
+              .map(MeasurementOrFact::getMeasurementMethod)
+              .filter(x -> StringUtils.isNotEmpty(x))
+              .distinct()
+              .collect(Collectors.toList()));
+      builder.setMeasurementOrFactTypes(
+          measurementOrFactRecord.getMeasurementOrFactItems().stream()
+              .map(MeasurementOrFact::getMeasurementType)
+              .filter(x -> StringUtils.isNotEmpty(x))
+              .distinct()
+              .collect(Collectors.toList()));
 
-    List<MeasurementOrFactJsonRecord> mofs =
-        measurementOrFactRecord.getMeasurementOrFactItems().stream()
-            .map(
-                mor -> {
-                  return MeasurementOrFactJsonRecord.newBuilder()
-                      .setMeasurementID(mor.getMeasurementID())
-                      .setMeasurementMethod(mor.getMeasurementMethod())
-                      .setMeasurementType(mor.getMeasurementType())
-                      .setMeasurementValue(mor.getMeasurementValue())
-                      .setMeasurementUnit(mor.getMeasurementUnit())
-                      .build();
-                })
-            .collect(Collectors.toList());
-    builder.setMeasurementOrFacts(mofs);
+      List<MeasurementOrFactJsonRecord> mofs =
+          measurementOrFactRecord.getMeasurementOrFactItems().stream()
+              .map(
+                  mor -> {
+                    return MeasurementOrFactJsonRecord.newBuilder()
+                        .setMeasurementID(mor.getMeasurementID())
+                        .setMeasurementMethod(mor.getMeasurementMethod())
+                        .setMeasurementType(mor.getMeasurementType())
+                        .setMeasurementValue(mor.getMeasurementValue())
+                        .setMeasurementUnit(mor.getMeasurementUnit())
+                        .setMeasurementAccuracy(mor.getMeasurementAccuracy())
+                        .setMeasurementDeterminedBy(mor.getMeasurementDeterminedBy())
+                        .setMeasurementDeterminedDate(mor.getMeasurementDeterminedDate())
+                        .setMeasurementRemarks(mor.getMeasurementRemarks())
+                        .build();
+                  })
+              .collect(Collectors.toList());
+      builder.setMeasurementOrFacts(mofs);
+    }
   }
 
   private void mapExtendedRecord(EventJsonRecord.Builder builder) {
@@ -444,24 +406,6 @@ public class ALAParentJsonConverter {
 
   private void mapDerivedMetadata(ParentJsonRecord.Builder builder) {
     builder.setDerivedMetadata(derivedMetadata);
-  }
-
-  private void mapLocationInheritedFields(ParentJsonRecord.Builder builder) {
-    if (locationInheritedRecord.getId() != null) {
-      builder.setLocationInherited(locationInheritedRecord);
-    }
-  }
-
-  private void mapTemporalInheritedFields(ParentJsonRecord.Builder builder) {
-    if (temporalInheritedRecord.getId() != null) {
-      builder.setTemporalInherited(temporalInheritedRecord);
-    }
-  }
-
-  private void mapEventInheritedFields(ParentJsonRecord.Builder builder) {
-    if (eventInheritedRecord.getId() != null) {
-      builder.setEventInherited(eventInheritedRecord);
-    }
   }
 
   protected static List<Parent> convertParents(List<org.gbif.pipelines.io.avro.Parent> parents) {

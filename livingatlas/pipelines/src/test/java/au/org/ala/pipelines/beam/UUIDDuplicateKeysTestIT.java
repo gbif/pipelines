@@ -8,7 +8,6 @@ import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
-import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -42,9 +41,9 @@ public class UUIDDuplicateKeysTestIT {
             });
     DwcaToVerbatimPipeline.run(dwcaOptions);
 
-    InterpretationPipelineOptions interpretationOptions =
+    ALAInterpretationPipelineOptions interpretationOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            ALAInterpretationPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",

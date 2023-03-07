@@ -19,10 +19,8 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.commons.lang3.StringUtils;
+import org.gbif.pipelines.core.converters.JsonConverter;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
-import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
-import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 
 /**
  * This converter will take AVRO record artefacts related to an event and produce a single AVRO
@@ -33,7 +31,6 @@ import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 public class ALAEventToSearchTransform implements Serializable {
 
   private static final long serialVersionUID = 1279313941024805871L;
-
   // Core
   @NonNull private final TupleTag<EventCoreRecord> eventCoreRecordTag;
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
@@ -41,10 +38,6 @@ public class ALAEventToSearchTransform implements Serializable {
   // Extension
   @NonNull private final PCollectionView<ALAMetadataRecord> metadataView;
   @NonNull private final TupleTag<MeasurementOrFactRecord> measurementOrFactRecordTag;
-  @NonNull private final TupleTag<LocationInheritedRecord> locationInheritedRecordTag;
-  @NonNull private final TupleTag<TemporalInheritedRecord> temporalInheritedRecordTag;
-  @NonNull private final TupleTag<EventInheritedRecord> eventInheritedRecordTag;
-
   private final TupleTag<Iterable<String>> taxonIDsTag;
 
   public SingleOutput<KV<String, CoGbkResult>, EventSearchRecord> converter() {
@@ -79,82 +72,115 @@ public class ALAEventToSearchTransform implements Serializable {
 
             // Convert and
             EventSearchRecord.Builder builder = EventSearchRecord.newBuilder().setId(core.getId());
-            // Inherited
-            EventInheritedRecord eir =
-                v.getOnly(
-                    eventInheritedRecordTag, EventInheritedRecord.newBuilder().setId(k).build());
-            LocationInheritedRecord lir =
-                v.getOnly(
-                    locationInheritedRecordTag,
-                    LocationInheritedRecord.newBuilder().setId(k).build());
-            TemporalInheritedRecord tir =
-                v.getOnly(
-                    temporalInheritedRecordTag,
-                    TemporalInheritedRecord.newBuilder().setId(k).build());
 
-            // set mof
-            builder.setMeasurementOrFactTypes(
-                mofr.getMeasurementOrFactItems().stream()
-                    .map(MeasurementOrFact::getMeasurementType)
-                    .filter(x -> StringUtils.isNotEmpty(x))
-                    .distinct()
-                    .collect(Collectors.toList()));
-            builder
-                .setDatasetKey(mdr.getDataResourceUid())
-                .setTaxonKey(taxonIDs)
-                .setLocationID(consolidate(core.getLocationID(), eir.getLocationID()))
-                .setYear(tr.getYear())
-                .setMonth(tr.getMonth())
-                .setCountryCode(consolidate(lr.getCountryCode(), lir.getCountryCode()))
-                .setStateProvince(consolidate(lr.getStateProvince(), lir.getStateProvince()));
+            setSearchTerms(mdr, core, tr, lr, mofr, taxonIDs, retrievedTaxonIDs, builder);
 
-            List<String> eventIDs =
-                core.getParentsLineage().stream()
-                    .sorted(
-                        Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder)
-                            .reversed())
-                    .map(e -> e.getId())
-                    .collect(Collectors.toList());
-            eventIDs.add(core.getId());
+            // copy core fields
+            builder.setParentEventID(core.getParentEventID());
+            builder.setEventType(
+                core.getEventType() != null ? core.getEventType().getConcept() : null);
+            builder.setSampleSizeValue(core.getSampleSizeValue());
+            builder.setSampleSizeUnit(core.getSampleSizeUnit());
+            builder.setReferences(core.getReferences());
+            builder.setLicense(core.getLicense());
+            builder.setDatasetID(core.getDatasetID());
+            builder.setDatasetName(core.getDatasetName());
+            // copy location fields
+            builder.setContinent(lr.getContinent());
+            builder.setWaterBody(lr.getWaterBody());
+            builder.setCountry(lr.getCountry());
+            builder.setMinimumElevationInMeters(lr.getMinimumElevationInMeters());
+            builder.setMaximumElevationInMeters(lr.getMinimumElevationInMeters());
+            builder.setElevation(lr.getElevation());
+            builder.setElevationAccuracy(lr.getElevationAccuracy());
+            builder.setMinimumDepthInMeters(lr.getMinimumDepthInMeters());
+            builder.setMaximumDepthInMeters(lr.getMaximumDepthInMeters());
+            builder.setDepth(lr.getDepth());
+            builder.setDepthAccuracy(lr.getDepthAccuracy());
+            builder.setMinimumDistanceAboveSurfaceInMeters(
+                lr.getMinimumDistanceAboveSurfaceInMeters());
+            builder.setMaximumDistanceAboveSurfaceInMeters(
+                lr.getMaximumDistanceAboveSurfaceInMeters());
+            builder.setDecimalLatitude(lr.getDecimalLatitude());
+            builder.setDecimalLongitude(lr.getDecimalLongitude());
+            builder.setCoordinateUncertaintyInMeters(lr.getCoordinateUncertaintyInMeters());
+            builder.setCoordinatePrecision(lr.getCoordinatePrecision());
+            builder.setLocality(lr.getLocality());
+            builder.setGeoreferencedDate(lr.getGeoreferencedDate());
+            builder.setFootprintWKT(lr.getFootprintWKT());
+            builder.setBiome(lr.getBiome());
+            // copy temporal fields
+            builder.setDay(tr.getDay());
+            builder.setEventDate(JsonConverter.convertEventDateSingle(tr).orElse(null));
+            builder.setStartDayOfYear(tr.getStartDayOfYear());
+            builder.setEndDayOfYear(tr.getEndDayOfYear());
+            builder.setDateIdentified(tr.getDateIdentified());
+            builder.setDatePrecision(tr.getDatePrecision());
 
-            List<String> eventTypes =
-                core.getParentsLineage().stream()
-                    .sorted(
-                        Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder)
-                            .reversed())
-                    .map(e -> e.getEventType())
-                    .collect(Collectors.toList());
-
-            if (core.getEventType() != null && core.getEventType().getConcept() != null) {
-              eventTypes.add(core.getEventType().getConcept());
-            }
-
-            builder.setEventTypeHierarchy(eventTypes).setEventHierarchy(eventIDs);
-
-            boolean hasYearInfo = builder.getYear() != null;
-            boolean hasMonthInfo = builder.getMonth() != null;
-
-            // extract location & temporal information from
-            if (!hasYearInfo && tir.getYear() != null) {
-              builder.setYear(tir.getYear());
-            }
-
-            if (!hasMonthInfo && tir.getMonth() != null) {
-              builder.setMonth(tir.getMonth());
-            }
-
-            // associate taxonIDs from occurrences with events to support
-            // taxon search
-            if (retrievedTaxonIDs != null) {
-              List<String> retrievedTaxonIDsToAdd = new ArrayList<>();
-              retrievedTaxonIDs.forEach(retrievedTaxonIDsToAdd::add);
-              builder.setTaxonKey(retrievedTaxonIDsToAdd);
-            }
+            List<String> issues = new ArrayList<String>();
+            // concat temporal, taxonomic etc
+            issues.addAll(core.getIssues().getIssueList());
+            issues.addAll(tr.getIssues().getIssueList());
+            issues.addAll(lr.getIssues().getIssueList());
+            builder.setIssues(issues);
 
             c.output(builder.build());
           }
         };
     return ParDo.of(fn).withSideInputs(metadataView);
+  }
+
+  private void setSearchTerms(
+      ALAMetadataRecord mdr,
+      EventCoreRecord core,
+      TemporalRecord tr,
+      LocationRecord lr,
+      MeasurementOrFactRecord mofr,
+      List<String> taxonIDs,
+      Iterable<String> retrievedTaxonIDs,
+      EventSearchRecord.Builder builder) {
+    // set mof
+    builder.setMeasurementOrFactTypes(
+        mofr.getMeasurementOrFactItems().stream()
+            .map(MeasurementOrFact::getMeasurementType)
+            .filter(x -> StringUtils.isNotEmpty(x))
+            .distinct()
+            .collect(Collectors.toList()));
+    builder
+        .setDatasetKey(mdr.getDataResourceUid())
+        .setTaxonKey(taxonIDs)
+        .setLocationID(consolidate(core.getLocationID(), null))
+        .setYear(tr.getYear())
+        .setMonth(tr.getMonth())
+        .setCountryCode(consolidate(lr.getCountryCode(), null))
+        .setStateProvince(consolidate(lr.getStateProvince(), null));
+
+    List<String> eventIDs =
+        core.getParentsLineage().stream()
+            .sorted(Comparator.comparingInt(Parent::getOrder).reversed())
+            .map(e -> e.getId())
+            .collect(Collectors.toList());
+    eventIDs.add(core.getId());
+
+    List<String> eventTypes =
+        core.getParentsLineage().stream()
+            .sorted(Comparator.comparingInt(Parent::getOrder).reversed())
+            .map(e -> e.getEventType())
+            .collect(Collectors.toList());
+
+    if (core.getEventType() != null && core.getEventType().getConcept() != null) {
+      eventTypes.add(core.getEventType().getConcept());
+    }
+
+    builder.setEventTypeHierarchy(eventTypes).setEventHierarchy(eventIDs);
+
+    // associate taxonIDs from occurrences with events to support
+    // taxon search
+    if (retrievedTaxonIDs != null) {
+      List<String> retrievedTaxonIDsToAdd = new ArrayList<>();
+      retrievedTaxonIDs.forEach(retrievedTaxonIDsToAdd::add);
+      builder.setTaxonKey(retrievedTaxonIDsToAdd);
+    }
   }
 
   public List<String> consolidate(String value, String denormedValue) {

@@ -28,7 +28,10 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 @Slf4j
 public class TestUtils {
 
-  public static final String NAME_SERVICE_IMG = "charvolant/ala-namematching-service:v20200214-6";
+  // public static final String NAME_SERVICE_IMG =
+  // "charvolant/ala-namematching-service:v20200214-6";
+  public static final String NAME_SERVICE_IMG =
+      "djtfmartin/ala-namematching-service:v1.8-v20210811-3";
   public static final String SENSTIVE_SERVICE_IMG =
       "charvolant/ala-sensitive-data-service:v20200214-3";
   public static final String SOLR_IMG = "djtfmartin/biocache-pipelines-solr8:v3";

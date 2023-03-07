@@ -31,10 +31,12 @@ public class ALAOccurrenceJsonConverter {
   private final EventCoreRecord eventCore;
 
   private final EventInheritedRecord eventInheritedRecord;
-  private final LocationInheritedRecord locationInheritedRecord;
-  private final TemporalInheritedRecord temporalInheritedRecord;
+  private final LocationRecord locationInheritedRecord;
+  private final TemporalRecord temporalInheritedRecord;
 
   private final MeasurementOrFactRecord measurementOrFact;
+
+  private final ALASensitivityRecord sensitivityRecord;
 
   public OccurrenceJsonRecord convert() {
 
@@ -122,8 +124,8 @@ public class ALAOccurrenceJsonConverter {
                   locationInheritedRecord.getDecimalLatitude()));
     }
 
-    if (!hasLocationID && eventInheritedRecord.getLocationID() != null) {
-      builder.setLocationID(eventInheritedRecord.getLocationID());
+    if (!hasLocationID && eventCore != null && eventCore.getLocationID() != null) {
+      builder.setLocationID(eventCore.getLocationID());
     }
 
     if (eventCore != null
@@ -175,7 +177,7 @@ public class ALAOccurrenceJsonConverter {
 
       // add the single type to hierarchy for consistency
       List<String> eventTypeHierarchy = new ArrayList<>();
-      eventTypeHierarchy.add("Occurrence");
+      eventTypeHierarchy.add(builder.getBasisOfRecord());
       builder.setEventTypeHierarchy(eventTypeHierarchy);
     }
   }

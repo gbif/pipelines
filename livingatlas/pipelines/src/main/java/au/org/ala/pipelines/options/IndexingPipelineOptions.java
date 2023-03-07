@@ -31,8 +31,14 @@ public interface IndexingPipelineOptions
   void setIncludeGbifTaxonomy(Boolean includeGbifTaxonomy);
 
   @Description("Include sensitive data checks")
-  @Default.Boolean(false)
-  Boolean getIncludeSensitiveData();
+  @Default.Boolean(true)
+  Boolean getIncludeSensitiveDataChecks();
 
-  void setIncludeSensitiveData(Boolean includeSensitiveData);
+  void setIncludeSensitiveDataChecks(Boolean includeSensitiveDataChecks);
+
+  @Description("Include sensitive data checks")
+  @Default.Integer(30000)
+  Integer getTimeBufferInMillis();
+
+  void setTimeBufferInMillis(Integer timeBufferInMillis);
 }

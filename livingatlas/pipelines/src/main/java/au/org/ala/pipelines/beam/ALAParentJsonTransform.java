@@ -119,9 +119,6 @@ public class ALAParentJsonTransform implements Serializable {
                     .verbatim(er)
                     .derivedMetadata(dmr)
                     .measurementOrFactRecord(mofr)
-                    .locationInheritedRecord(lir)
-                    .temporalInheritedRecord(tir)
-                    .eventInheritedRecord(eir)
                     .build()
                     .toJson();
 
