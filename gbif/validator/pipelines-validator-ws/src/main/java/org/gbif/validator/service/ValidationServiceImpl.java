@@ -26,7 +26,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
-import org.gbif.dwca.validation.EmlNames;
+import org.gbif.dwca.validation.MetadataPath;
 import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.metadata.eml.parse.DatasetEmlParser;
 import org.gbif.validator.api.FileFormat;
@@ -279,7 +279,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   private Dataset readEml(Path pathToArchive) {
     try {
-      Optional<Path> existedPath = EmlNames.getEmlPath(pathToArchive);
+      Optional<Path> existedPath = MetadataPath.parsePath(pathToArchive);
 
       if (!existedPath.isPresent()) {
         log.error("Can't find metadata eml file");

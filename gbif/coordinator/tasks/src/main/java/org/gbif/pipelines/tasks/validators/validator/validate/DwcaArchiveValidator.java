@@ -25,7 +25,7 @@ import org.gbif.dwc.Archive;
 import org.gbif.dwc.UnsupportedArchiveException;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
-import org.gbif.dwca.validation.EmlNames;
+import org.gbif.dwca.validation.MetadataPath;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
@@ -101,7 +101,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
 
     Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
 
-    Optional<Path> emlPath = EmlNames.getEmlPath(inputPath);
+    Optional<Path> emlPath = MetadataPath.parsePath(inputPath);
 
     FileInfoBuilder fileInfoBuilder = FileInfo.builder().fileType(DwcFileType.METADATA);
 

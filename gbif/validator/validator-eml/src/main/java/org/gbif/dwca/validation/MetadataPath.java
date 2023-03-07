@@ -13,12 +13,14 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class EmlNames {
+public class MetadataPath {
   private static final Pattern PATTERN = Pattern.compile("(metadata=\")(\\w+.xml)(\")");
 
-  public static Optional<Path> getEmlPath(Path directory) throws IOException {
+  /** Scans root directory for xml files and parses and gets value from metadata tag */
+  public static Optional<Path> parsePath(Path rootDirectory) throws IOException {
     try (Stream<Path> stream =
-        Files.find(directory, 1, (path, basicFileAttributes) -> path.toString().endsWith(".xml"))) {
+        Files.find(
+            rootDirectory, 1, (path, basicFileAttributes) -> path.toString().endsWith(".xml"))) {
 
       List<Path> xmlPaths = stream.collect(Collectors.toList());
       for (Path path : xmlPaths) {
@@ -32,7 +34,7 @@ public class EmlNames {
                       Matcher matcher = PATTERN.matcher(str);
                       return matcher.find() ? matcher.group(2) : "";
                     })
-                .map(directory::resolve);
+                .map(rootDirectory::resolve);
 
         if (first.isPresent()) {
           return first;

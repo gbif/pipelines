@@ -1,4 +1,4 @@
-<archive xmlns="http://rs.tdwg.org/dwc/text/" metadata="metadata.xml">
+<archive xmlns="http://rs.tdwg.org/dwc/text/" metadata="eml.xml">
   <core encoding="UTF-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="1" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
     <files>
       <location>occurrence.txt</location>
