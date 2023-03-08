@@ -170,10 +170,11 @@ public class SpeciesListDownloader {
                 String count = countIdx > 0 ? currentLine[countIdx] : null;
                 String traitName = traitNameIdx > 0 ? currentLine[traitNameIdx] : null;
                 String traitValue = traitValueIdx > 0 ? currentLine[traitValueIdx] : null;
-                // ARGA addition to set `presentInCountry` when list is neither invasive nor
-                // threatened, has region set and contains a `count` column (note: count not used)
+                // ARGA addition to set `presentInCountry` to the value specified in the list's
+                // `region` attribute, when list has type "OTHER", has region set and
+                // contains a `count` column (note: count not currently used)
                 String presentInCountry =
-                    (!list.isThreatened() && !list.isInvasive() && region != null && count != null)
+                    (list.getListType().equals("OTHER") && region != null && count != null)
                         ? region
                         : null;
 
