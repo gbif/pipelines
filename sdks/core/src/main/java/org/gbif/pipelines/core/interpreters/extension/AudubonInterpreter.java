@@ -142,7 +142,7 @@ public class AudubonInterpreter {
           .map(DcTerm.type, AudubonInterpreter::parseAndSetTypeUri)
           .map(DcElement.type, AudubonInterpreter::parseAndSetType)
           .postMap(AudubonInterpreter::parseAndSetRightsAndRightsUri)
-          .postMap(AudubonInterpreter::parseAndSetTypeFromAccessUri);
+          .postMap(AudubonInterpreter::parseAndSetMissingTypeOrFormat);
 
   private final TemporalParser temporalParser;
   private final SerializableFunction<String, String> preprocessDateFn;
@@ -201,17 +201,6 @@ public class AudubonInterpreter {
   /** Parser for "http://purl.org/dc/terms/format" term value */
   private static void parseAndSetFormat(Audubon a, String v) {
     String mimeType = MEDIA_PARSER.parseMimeType(v);
-    if (Strings.isNullOrEmpty(mimeType) && !Strings.isNullOrEmpty(a.getIdentifier())) {
-      try {
-        mimeType = MEDIA_PARSER.parseMimeType(URI.create(a.getIdentifier()));
-      } catch (IllegalArgumentException ex) {
-        mimeType = null;
-      }
-    }
-    if ("text/html".equalsIgnoreCase(mimeType) && a.getIdentifier() != null) {
-      a.setIdentifier(null);
-      mimeType = null;
-    }
 
     a.setFormat(mimeType);
   }
@@ -253,11 +242,18 @@ public class AudubonInterpreter {
     }
   }
 
-  /** Parses type in case if type is null, but maybe accessUri contains type, like - *.jpg */
-  private static void parseAndSetTypeFromAccessUri(Audubon a) {
-    if (a.getType() == null && (a.getAccessUri() != null || a.getIdentifier() != null)) {
-      String value = a.getAccessUri() != null ? a.getAccessUri() : a.getIdentifier();
-      parseAndSetFormat(a, value);
+  /**
+   * Attempts deriving the format from the accessURI (e.g. ending with .jpg)
+   * and the type from the format, if either is null.
+   */
+  private static void parseAndSetMissingTypeOrFormat(Audubon a) {
+    if (a.getFormat() == null && !Strings.isNullOrEmpty(a.getAccessUri())) {
+      try {
+        parseAndSetFormat(a, MEDIA_PARSER.parseMimeType(URI.create(a.getAccessUri())));
+      } catch (IllegalArgumentException ex) {}
+    }
+
+    if (a.getType() == null && a.getFormat() != null) {
       parseAndSetType(a, a.getFormat());
     }
   }
