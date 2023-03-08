@@ -10,13 +10,13 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.15.0-spark3-SNAPSHOT</version>
+  <version>2.15.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
-    <module>livingatlas</module>
+    <!--<module>livingatlas</module>-->
     <module>gbif</module>
-    <module>sdks</module>
+    <!--<module>sdks</module>-->
   </modules>
 
   <name>Pipelines :: Parent</name>
@@ -47,25 +47,33 @@
 
   <repositories>
     <repository>
-      <id>gbif-all</id>
-      <url>https://repository.gbif.org/content/groups/gbif</url>
+      <id>gbif-central</id>
+      <url>https://repository.gbif.org/repository/central/</url>
+    </repository>
+    <repository>
+      <id>gbif-release</id>
+      <url>https://repository.gbif.org/repository/releases/</url>
+    </repository>
+    <repository>
+      <id>gbif-snapshot</id>
+      <url>https://repository.gbif.org/repository/snapshots/</url>
     </repository>
     <repository>
       <id>gbif-thirdparty</id>
-      <url>https://repository.gbif.org/content/repositories/thirdparty/</url>
-    </repository>
-    <repository>
-      <id>ALA</id>
-      <url>https://nexus.ala.org.au/content/repositories/releases</url>
-    </repository>
-    <repository>
-      <id>ALA-snapshots</id>
-      <url>https://nexus.ala.org.au/content/repositories/snapshots</url>
+      <url>https://repository.gbif.org/repository/thirdparty/</url>
     </repository>
     <repository>
       <id>osgeo</id>
       <name>Open Source Geospatial Foundation Repository</name>
       <url>https://repo.osgeo.org/repository/release/</url>
+    </repository>
+    <repository>
+      <id>ala-release</id>
+      <url>https://repository.gbif.org/repository/ala-release/</url>
+    </repository>
+    <repository>
+      <id>typesafe-release</id>
+      <url>https://repository.gbif.org/repository/typesafe/</url>
     </repository>
   </repositories>
 
@@ -85,11 +93,11 @@
     <dwca-io.version>2.14</dwca-io.version>
     <gbif-api.version>1.1.0</gbif-api.version>
     <gbif-common.version>0.56</gbif-common.version>
-    <dwc-api.version>1.45-SNAPSHOT</dwc-api.version>
-    <kvs.version>1.25-hbase2-SNAPSHOT</kvs.version>
-    <hbase-utils.version>0.13-hbase2-SNAPSHOT</hbase-utils.version>
+    <dwc-api.version>1.46-SNAPSHOT</dwc-api.version>
+    <kvs.version>1.26-SNAPSHOT</kvs.version>
+    <hbase-utils.version>0.14-SNAPSHOT</hbase-utils.version>
     <gbif-wrangler.version>0.5-SNAPSHOT</gbif-wrangler.version>
-    <gbif-occurrence.version>0.189-hadoop3-SNAPSHOT</gbif-occurrence.version>
+    <gbif-occurrence.version>0.192.7-SNAPSHOT</gbif-occurrence.version>
     <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
     <registry.version>3.93</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>
@@ -97,11 +105,10 @@
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
 
     <!-- Common libraries -->
-    <avro.version>1.8.2</avro.version>
-    <apache.beam.version>2.43.0</apache.beam.version>
-    <hadoop.version>3.3.4</hadoop.version>
-    <hadoop-core.version>1.2.1</hadoop-core.version>
-    <hbase.version>2.4.12</hbase.version>
+    <avro.version>1.11.1</avro.version>
+    <apache.beam.version>2.33.0</apache.beam.version>
+    <hadoop.version>3.2.4</hadoop.version>
+    <hbase.version>2.5.3-hadoop3</hbase.version>
     <curator.version>4.3.0</curator.version>
 
     <!-- Match the version brought in through Tika in the gbif-parsers -->
@@ -112,9 +119,9 @@
     <geotools.version>20.5</geotools.version>
     <commons-lang3.version>3.10</commons-lang3.version>
     <!-- Be carful when change the guava version, it can break XML parsing and etc at runtime -->
-    <guava.version>20.0</guava.version>
+    <guava.version>27.0.1-jre</guava.version>
     <!-- Guava version required by HBase libraries -->
-    <guava.hbase.version>12.0.1</guava.hbase.version>
+    <guava.hbase.version>27.0.1-jre</guava.hbase.version>
 
     <!-- Fault tolerance -->
     <resilience4j.version>1.1.0</resilience4j.version>
