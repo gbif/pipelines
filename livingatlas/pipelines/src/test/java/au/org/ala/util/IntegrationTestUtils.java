@@ -69,7 +69,11 @@ public class IntegrationTestUtils extends ExternalResource {
           new FixedHostPortGenericContainer(SOLR_IMG)
               .withFixedExposedPort(zkPort, zkPort)
               .withFixedExposedPort(solrPort, solrPort)
-              .withCommand("-c -p " + solrPort);
+              .withEnv("SOLR_PORT", solrPort + "")
+              .withEnv("ZOO_PORT", zkPort + "")
+              .withEnv("ZOO_HOST", "localhost")
+              .withEnv("SOLR_HOST", "localhost")
+              .withEnv("SOLR_MODE", "solrcloud");
       solrService.start();
 
       nameService =

@@ -159,7 +159,7 @@ solr:
   metaFileName: solr-metrics.yml
   solrCollection: biocache
   includeSampling: true
-  zkHost: localhost:SOLR_PORT
+  zkHost: 127.0.0.1:ZK_PORT
   numOfPartitions: 10
 
 elastic:
