@@ -36,6 +36,8 @@ import org.gbif.pipelines.io.avro.*;
  *   <li>Links to species lists for records
  *   <li>stateProvince and country associated conservation status for the record
  *   <li>stateProvince and country associated invasive status for the record
+ *   <li>optional `presentInCountry` flag for the record
+ *   <li>optional species `trait` values for the record
  * </ul>
  *
  * This pipeline is left for debug purposes only. Species lists are joined to the records in the
@@ -149,6 +151,8 @@ public class SpeciesListPipeline {
 
     final boolean includeConservationStatus = options.getIncludeConservationStatus();
     final boolean includeInvasiveStatus = options.getIncludeInvasiveStatus();
+    final boolean includePresentInCountry = options.getIncludePresentInCountry();
+    final boolean includeTraits = options.getIncludeTraits();
 
     // join collections
     return result.apply(
@@ -167,7 +171,11 @@ public class SpeciesListPipeline {
                 if (speciesLists != null) {
                   TaxonProfile.Builder builder =
                       SpeciesListUtils.createTaxonProfileBuilder(
-                          speciesLists, includeConservationStatus, includeInvasiveStatus);
+                          speciesLists,
+                          includeConservationStatus,
+                          includeInvasiveStatus,
+                          includePresentInCountry,
+                          includeTraits);
                   // output a link to each occurrence record we've matched by taxonID
                   for (String occurrenceID : occurrenceIDs) {
                     builder.setId(occurrenceID);

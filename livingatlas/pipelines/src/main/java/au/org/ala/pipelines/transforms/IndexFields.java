@@ -51,6 +51,7 @@ public interface IndexFields {
   String POINT_0_02 = "point-0.02";
   String POINT_0_1 = "point-0.1";
   String POINT_1 = "point-1";
+  String PRESENT_IN_COUNTRY = "presentInCountry";
   String PROVENANCE = "provenance";
   String TAXON_RANK = "taxonRank";
   String RAW_STATE_CONSERVATION = "raw_stateConservation";
@@ -73,4 +74,13 @@ public interface IndexFields {
   String GGBN_TERMS_LOAN = "http://data.ggbn.org/schemas/ggbn/terms/Loan";
   String LOAN_DESTINATION_TERM = "http://data.ggbn.org/schemas/ggbn/terms/loanDestination";
   String LOAN_IDENTIFIER_TERM = "http://data.ggbn.org/schemas/ggbn/terms/loanIdentifier";
+  String AUS_TRAITS_FIRE_RESPONSE = "fire_response";
+  //  String AUS_TRAITS_FIRE_RESPONSE =
+  // "https://traitecoevo.github.io/austraits.build/articles/trait_definitions.html#fire_response";
+  String AUS_TRAITS_POST_FIRE_RECRUITMENT = "post_fire_recruitment";
+  //  String AUS_TRAITS_POST_FIRE_RECRUITMENT =
+  // "https://traitecoevo.github.io/austraits.build/articles/trait_definitions.html#post_fire_recruitment";
+  String AUS_TRAITS_PHOTOSYNTHETIC_PATHWAY = "photosynthetic_pathway";
+  //  String AUS_TRAITS_PHOTOSYNTHETIC_PATHWAY =
+  // "https://traitecoevo.github.io/austraits.build/articles/trait_definitions.html#photosynthetic_pathway";
 }

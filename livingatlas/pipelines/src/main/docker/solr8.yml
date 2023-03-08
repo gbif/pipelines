@@ -15,3 +15,5 @@ services:
       - "start"
       - "-cloud"
       - "-f"
+    restart: on-failure
+    platform: linux/amd64

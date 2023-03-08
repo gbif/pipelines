@@ -137,7 +137,9 @@ public class SpeciesListPipeline {
                           alaTaxonRecord,
                           speciesListMap,
                           options.getIncludeConservationStatus(),
-                          options.getIncludeInvasiveStatus()))
+                          options.getIncludeInvasiveStatus(),
+                          options.getIncludePresentInCountry(),
+                          options.getIncludeTraits()))
               .collect(Collectors.toList());
 
       return profiles.stream()
@@ -152,7 +154,9 @@ public class SpeciesListPipeline {
       ALATaxonRecord alaTaxonRecord,
       Map<String, List<SpeciesListRecord>> speciesListMap,
       boolean includeConservationStatus,
-      boolean includeInvasiveStatus) {
+      boolean includeInvasiveStatus,
+      boolean includePresentInCountry,
+      boolean includeTraits) {
 
     Iterable<SpeciesListRecord> speciesLists =
         speciesListMap.get(alaTaxonRecord.getTaxonConceptID());
@@ -160,7 +164,11 @@ public class SpeciesListPipeline {
     if (speciesLists != null) {
       TaxonProfile.Builder builder =
           SpeciesListUtils.createTaxonProfileBuilder(
-              speciesLists, includeConservationStatus, includeInvasiveStatus);
+              speciesLists,
+              includeConservationStatus,
+              includeInvasiveStatus,
+              includePresentInCountry,
+              includeTraits);
       builder.setId(alaTaxonRecord.getId());
       return builder.build();
     } else {
