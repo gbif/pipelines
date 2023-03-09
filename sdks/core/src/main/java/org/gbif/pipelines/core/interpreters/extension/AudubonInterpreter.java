@@ -243,14 +243,15 @@ public class AudubonInterpreter {
   }
 
   /**
-   * Attempts deriving the format from the accessURI (e.g. ending with .jpg)
-   * and the type from the format, if either is null.
+   * Attempts deriving the format from the accessURI (e.g. ending with .jpg) and the type from the
+   * format, if either is null.
    */
   private static void parseAndSetMissingTypeOrFormat(Audubon a) {
     if (a.getFormat() == null && !Strings.isNullOrEmpty(a.getAccessUri())) {
       try {
         parseAndSetFormat(a, MEDIA_PARSER.parseMimeType(URI.create(a.getAccessUri())));
-      } catch (IllegalArgumentException ex) {}
+      } catch (IllegalArgumentException ex) {
+      }
     }
 
     if (a.getType() == null && a.getFormat() != null) {
