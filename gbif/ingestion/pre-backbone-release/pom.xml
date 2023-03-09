@@ -96,7 +96,6 @@
       <artifactId>beam-sdks-java-io-hadoop-format</artifactId>
       <version>${apache.beam.version}</version>
     </dependency>
-
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>

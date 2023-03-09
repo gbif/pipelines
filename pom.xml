@@ -90,7 +90,7 @@
 
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.60</gbif-parsers.version>
-    <dwca-io.version>2.14</dwca-io.version>
+    <dwca-io.version>2.17-SNAPSHOT</dwca-io.version>
     <gbif-api.version>1.1.0</gbif-api.version>
     <gbif-common.version>0.56</gbif-common.version>
     <dwc-api.version>1.46-SNAPSHOT</dwc-api.version>
@@ -106,7 +106,7 @@
 
     <!-- Common libraries -->
     <avro.version>1.11.1</avro.version>
-    <apache.beam.version>2.33.0</apache.beam.version>
+    <apache.beam.version>2.43.0</apache.beam.version>
     <hadoop.version>3.2.4</hadoop.version>
     <hbase.version>2.5.3-hadoop3</hbase.version>
     <curator.version>4.3.0</curator.version>
