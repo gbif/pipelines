@@ -4,5 +4,5 @@ RUN apk update && \
     apk add bash && \
     rm -rf /var/cache/apk/*
 RUN mkdir /jobs
-COPY ../target/ingest-gbif-beam-2.14.0-spark3-SNAPSHOT.jar /jobs/gbif-ingest.jar
+COPY ./target/ingest-gbif-beam-2.15.0-SNAPSHOT.jar /jobs/gbif-ingest.jar
 
