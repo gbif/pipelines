@@ -18,7 +18,6 @@
   <properties>
     <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
     <xerces.version>2.11.0</xerces.version>
-    <hadoop.test.version>2.10.0</hadoop.test.version>
   </properties>
 
   <build>
@@ -77,12 +76,6 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>hbase-utils</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-common</artifactId>
-        </exclusion>
-      </exclusions>
       <version>${hbase-utils.version}</version>
     </dependency>
     <dependency>
@@ -125,29 +118,30 @@
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-testing-util</artifactId>
+      <version>${hbase.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-minicluster</artifactId>
-      <version>${hadoop.test.version}</version>
+      <version>${hadoop.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-auth</artifactId>
       <scope>test</scope>
-      <version>${hadoop.test.version}</version>
+      <version>${hadoop.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
       <scope>test</scope>
-      <version>${hadoop.test.version}</version>
+      <version>${hadoop.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs</artifactId>
       <scope>test</scope>
-      <version>${hadoop.test.version}</version>
+      <version>${hadoop.version}</version>
     </dependency>
     <dependency>
       <groupId>xerces</groupId>
