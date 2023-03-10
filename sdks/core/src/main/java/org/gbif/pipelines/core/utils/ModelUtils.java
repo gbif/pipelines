@@ -1,13 +1,7 @@
 package org.gbif.pipelines.core.utils;
 
-import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.common.parsers.date.DateParsers;
-import org.gbif.common.parsers.date.TemporalParser;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.Issues;
+import static org.gbif.dwc.terms.DwcTerm.GROUP_IDENTIFICATION;
+import static org.gbif.dwc.terms.DwcTerm.GROUP_TAXON;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
@@ -19,12 +13,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-
-import static org.gbif.dwc.terms.DwcTerm.GROUP_IDENTIFICATION;
-import static org.gbif.dwc.terms.DwcTerm.GROUP_TAXON;
+import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.common.parsers.date.DateParsers;
+import org.gbif.common.parsers.date.TemporalParser;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.Issues;
 
 /** Helps to work with org.gbif.pipelines.io.avro models */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

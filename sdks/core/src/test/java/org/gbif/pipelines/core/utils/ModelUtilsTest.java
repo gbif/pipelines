@@ -1,15 +1,13 @@
 package org.gbif.pipelines.core.utils;
 
-import org.gbif.api.vocabulary.Extension;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import org.gbif.api.vocabulary.Extension;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Assert;
 import org.junit.Test;
 
