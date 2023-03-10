@@ -30,6 +30,7 @@ import org.gbif.nameparser.NameParserGbifV1;
 import org.gbif.nameparser.api.NameParser;
 import org.gbif.nameparser.api.UnparsableNameException;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonRecordConverter;
+import org.gbif.pipelines.core.utils.IdentificationUtils;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -75,7 +76,7 @@ public class TaxonomyInterpreter {
 
       ModelUtils.checkNullOrEmpty(er);
 
-      Map<String, String> termsSource = ModelUtils.getIdentificationFieldTermsSource(er);
+      Map<String, String> termsSource = IdentificationUtils.getIdentificationFieldTermsSource(er);
 
       // https://github.com/gbif/portal-feedback/issues/4231
       String scientificName =

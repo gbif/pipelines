@@ -9,7 +9,11 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
-import java.util.*;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -208,35 +212,5 @@ public class TemporalParser implements Serializable {
     }
 
     return likelyRange.contains(LocalDate.of(year, month, day));
-  }
-
-  public static Optional<Long> getTime(TemporalAccessor temporalAccessor) {
-    if (temporalAccessor == null) {
-      return Optional.empty();
-    }
-
-    int year;
-    if (temporalAccessor.isSupported(ChronoField.YEAR)) {
-      year = temporalAccessor.get(ChronoField.YEAR);
-    } else {
-      return Optional.empty();
-    }
-
-    int month = 1;
-    if (temporalAccessor.isSupported(ChronoField.MONTH_OF_YEAR)) {
-      month = temporalAccessor.get(ChronoField.MONTH_OF_YEAR);
-    }
-
-    int day = 1;
-    if (temporalAccessor.isSupported(ChronoField.DAY_OF_MONTH)) {
-      day = temporalAccessor.get(ChronoField.DAY_OF_MONTH);
-    }
-
-    long time = LocalDate.of(year, month, day).toEpochDay();
-    if (temporalAccessor.isSupported(ChronoField.NANO_OF_DAY)) {
-      time += temporalAccessor.getLong(ChronoField.NANO_OF_DAY);
-    }
-
-    return Optional.of(time);
   }
 }

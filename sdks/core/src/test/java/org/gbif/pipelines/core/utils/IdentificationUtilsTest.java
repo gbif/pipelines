@@ -11,7 +11,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ModelUtilsTest {
+public class IdentificationUtilsTest {
 
   @Test
   public void getIdentificationFieldTermsSourceOnlyOneExtensionTest() {
@@ -23,7 +23,7 @@ public class ModelUtilsTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setExtensions(ext).build();
 
     // When
-    Map<String, String> source = ModelUtils.getIdentificationFieldTermsSource(er);
+    Map<String, String> source = IdentificationUtils.getIdentificationFieldTermsSource(er);
 
     // Then
     Assert.assertEquals(1, source.size());
@@ -41,7 +41,7 @@ public class ModelUtilsTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setExtensions(ext).build();
 
     // When
-    Map<String, String> source = ModelUtils.getIdentificationFieldTermsSource(er);
+    Map<String, String> source = IdentificationUtils.getIdentificationFieldTermsSource(er);
 
     // Then
     Assert.assertTrue(source.isEmpty());
@@ -85,7 +85,7 @@ public class ModelUtilsTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setExtensions(ext).build();
 
     // When
-    Map<String, String> source = ModelUtils.getIdentificationFieldTermsSource(er);
+    Map<String, String> source = IdentificationUtils.getIdentificationFieldTermsSource(er);
 
     // Then
     Assert.assertEquals(2, source.size());
@@ -111,7 +111,7 @@ public class ModelUtilsTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setExtensions(ext).build();
 
     // When
-    Map<String, String> source = ModelUtils.getIdentificationFieldTermsSource(er);
+    Map<String, String> source = IdentificationUtils.getIdentificationFieldTermsSource(er);
 
     // Then
     Assert.assertTrue(source.isEmpty());
@@ -130,7 +130,7 @@ public class ModelUtilsTest {
         ExtendedRecord.newBuilder().setId("1").setCoreTerms(coreMap).setExtensions(ext).build();
 
     // When
-    Map<String, String> source = ModelUtils.getIdentificationFieldTermsSource(er);
+    Map<String, String> source = IdentificationUtils.getIdentificationFieldTermsSource(er);
 
     // Then
     Assert.assertEquals(1, source.size());
