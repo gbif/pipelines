@@ -1,18 +1,30 @@
 package org.gbif.pipelines.core.utils;
 
+import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.common.parsers.date.DateParsers;
+import org.gbif.common.parsers.date.TemporalParser;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.Issues;
+
+import java.time.temporal.TemporalAccessor;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.Issues;
+
+import static org.gbif.dwc.terms.DwcTerm.GROUP_IDENTIFICATION;
+import static org.gbif.dwc.terms.DwcTerm.GROUP_TAXON;
 
 /** Helps to work with org.gbif.pipelines.io.avro models */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -20,8 +32,23 @@ public class ModelUtils {
 
   public static final String DEFAULT_SEPARATOR = "\\|";
 
+  private static final Set<Term> IDENTIFICATION_FIELDS =
+      Arrays.stream(DwcTerm.values())
+          .filter(
+              t ->
+                  (t.getGroup().equals(GROUP_IDENTIFICATION) || t.getGroup().equals(GROUP_TAXON))
+                      && !t.isClass())
+          .collect(Collectors.toSet());
+
+  private static final TemporalParser TEMPORAL_PARSER = DateParsers.defaultTemporalParser();
+
   public static String extractValue(ExtendedRecord er, Term term) {
-    return er.getCoreTerms().get(term.qualifiedName());
+    String value = er.getCoreTerms().get(term.qualifiedName());
+    return value != null ? value : extractFromIdentificationExtension(er, term);
+  }
+
+  public static String extractValue(Map<String, String> termsSource, Term term) {
+    return termsSource.get(term.qualifiedName());
   }
 
   /**
@@ -30,13 +57,30 @@ public class ModelUtils {
    */
   public static String extractNullAwareValue(ExtendedRecord er, Term term) {
     String value = extractValue(er, term);
-    return value != null && ("null".equalsIgnoreCase(value.trim()) || value.isEmpty())
-        ? null
-        : value;
+    if (hasValue(value)) {
+      return value;
+    } else {
+      String valueFromIdentificationExtension = extractFromIdentificationExtension(er, term);
+      return hasValue(valueFromIdentificationExtension) ? valueFromIdentificationExtension : null;
+    }
+  }
+
+  public static String extractNullAwareValue(Map<String, String> termsSource, Term term) {
+    String value = extractValue(termsSource, term);
+    return hasValue(value) ? value : null;
+  }
+
+  private static boolean hasValue(String value) {
+    return value != null && !value.isEmpty() && !"null".equalsIgnoreCase(value.trim());
   }
 
   public static Optional<String> extractNullAwareOptValue(ExtendedRecord er, Term term) {
     return Optional.ofNullable(extractNullAwareValue(er, term));
+  }
+
+  public static Optional<String> extractNullAwareOptValue(
+      Map<String, String> termsSource, Term term) {
+    return Optional.ofNullable(extractNullAwareValue(termsSource, term));
   }
 
   public static Optional<String> extractOptValue(ExtendedRecord er, Term term) {
@@ -105,5 +149,71 @@ public class ModelUtils {
 
   public static void addIssueSet(Issues model, Set<OccurrenceIssue> issues) {
     issues.forEach(x -> addIssue(model, x));
+  }
+
+  public static Map<String, String> getIdentificationFieldTermsSource(ExtendedRecord er) {
+    return areAllIdentificationFieldsNull(er)
+        ? getLatestIdentificationExtension(er).orElse(new HashMap<>())
+        : er.getCoreTerms();
+  }
+
+  private static String extractFromIdentificationExtension(ExtendedRecord er, Term term) {
+    if (IDENTIFICATION_FIELDS.contains(term)
+        && ModelUtils.hasExtension(er, Extension.IDENTIFICATION)
+        && areAllIdentificationFieldsNull(er)) {
+      return getLatestIdentificationExtension(er)
+          .map(ext -> ext.get(term.qualifiedName()))
+          .orElse(null);
+    }
+    return null;
+  }
+
+  private static Optional<Map<String, String>> getLatestIdentificationExtension(ExtendedRecord er) {
+    if (!ModelUtils.hasExtension(er, Extension.IDENTIFICATION)) {
+      return Optional.empty();
+    }
+
+    List<Map<String, String>> identificationExtension =
+        er.getExtensions().get(DwcTerm.Identification.qualifiedName());
+    if (identificationExtension.size() > 1
+        && identificationExtension.stream()
+            .allMatch(v -> hasValue(v.get(DwcTerm.dateIdentified.qualifiedName())))) {
+      // if there are multiple extensions we choose the most recent one but only if we can
+      // determine it. Therefore, if there are extensions without date we discard them all
+      Map<String, String> latestIdentification = null;
+      Long latestTime = null;
+      for (Map<String, String> ext : identificationExtension) {
+        String rawDateIdentified = ext.get(DwcTerm.dateIdentified.qualifiedName());
+        TemporalAccessor result = TEMPORAL_PARSER.parse(rawDateIdentified).getPayload();
+
+        Optional<Long> time =
+            org.gbif.pipelines.core.parsers.temporal.TemporalParser.getTime(result);
+        if (!time.isPresent()) {
+          // since we can't determine the time of this extension we can't determine which extension
+          // is the most recent
+          return Optional.empty();
+        }
+
+        if (latestIdentification == null || time.get() > latestTime) {
+          latestIdentification = ext;
+          latestTime = time.get();
+        }
+      }
+
+      return Optional.ofNullable(latestIdentification);
+    } else if (identificationExtension.size() == 1) {
+      return Optional.of(identificationExtension.get(0));
+    }
+
+    return Optional.empty();
+  }
+
+  /**
+   * This method is needed because we follow an all-or-nothing approach, so we take values from the
+   * identification extension only if all the identification fields in the core are null.
+   */
+  private static boolean areAllIdentificationFieldsNull(ExtendedRecord er) {
+    return IDENTIFICATION_FIELDS.stream()
+        .noneMatch(f -> hasValue(er.getCoreTerms().get(f.qualifiedName())));
   }
 }
