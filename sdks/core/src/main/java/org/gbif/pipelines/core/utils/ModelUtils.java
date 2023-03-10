@@ -1,6 +1,9 @@
 package org.gbif.pipelines.core.utils;
 
+import static org.gbif.pipelines.core.utils.IdentificationUtils.extractFromIdentificationExtension;
+
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -21,7 +24,12 @@ public class ModelUtils {
   public static final String DEFAULT_SEPARATOR = "\\|";
 
   public static String extractValue(ExtendedRecord er, Term term) {
-    return er.getCoreTerms().get(term.qualifiedName());
+    String value = er.getCoreTerms().get(term.qualifiedName());
+    return value != null ? value : extractFromIdentificationExtension(er, term);
+  }
+
+  public static String extractValue(Map<String, String> termsSource, Term term) {
+    return termsSource.get(term.qualifiedName());
   }
 
   /**
@@ -30,13 +38,30 @@ public class ModelUtils {
    */
   public static String extractNullAwareValue(ExtendedRecord er, Term term) {
     String value = extractValue(er, term);
-    return value != null && ("null".equalsIgnoreCase(value.trim()) || value.isEmpty())
-        ? null
-        : value;
+    if (hasValue(value)) {
+      return value;
+    } else {
+      String valueFromIdentificationExtension = extractFromIdentificationExtension(er, term);
+      return hasValue(valueFromIdentificationExtension) ? valueFromIdentificationExtension : null;
+    }
+  }
+
+  public static String extractNullAwareValue(Map<String, String> termsSource, Term term) {
+    String value = extractValue(termsSource, term);
+    return hasValue(value) ? value : null;
+  }
+
+  public static boolean hasValue(String value) {
+    return value != null && !value.isEmpty() && !"null".equalsIgnoreCase(value.trim());
   }
 
   public static Optional<String> extractNullAwareOptValue(ExtendedRecord er, Term term) {
     return Optional.ofNullable(extractNullAwareValue(er, term));
+  }
+
+  public static Optional<String> extractNullAwareOptValue(
+      Map<String, String> termsSource, Term term) {
+    return Optional.ofNullable(extractNullAwareValue(termsSource, term));
   }
 
   public static Optional<String> extractOptValue(ExtendedRecord er, Term term) {
