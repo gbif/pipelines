@@ -117,30 +117,11 @@ Tests follow the GBIF/failsafe/surefire convention.
 All integration tests have a suffix of "IT". 
 All junit tests are ran with `mvn package` and integration tests are ran with `mvn verify`.
 
-`mvn verify` will start the docker containers in the `pre-integration-test` phase, 
-and shut them down in the `post-integration-test` 
-phase.
-
-
-To start the required containers for local development purposes, 
-install [Docker Desktop](https://www.docker.com/products/docker-desktop) and run the following:
-
-```
-docker-compose -f pipelines/src/main/docker/ala-nameservice.yml up -d
-docker-compose -f pipelines/src/main/docker/solr8.yml up -d
-```
-
-To shutdown, run the following:
-```
-docker-compose -f pipelines/src/main/docker/ala-nameservice.yml kill
-docker-compose -f pipelines/src/main/docker/solr8.yml kill
-```
-
-Note: The docker containers that are ran as part of the maven build run on different 
-ports to those specified in the docker compose files `pipelines/src/main/docker`. 
-This was a deliberate choice allow developers to run integration tests in IDEs while developing pipelines,
-and then run maven builds on the same machine without port clashes.
-
+The integration tests will automatically start docker containers for the following:
+* SOLR
+* Elastic
+* Name matching service
+* SDS
 
 ## Code style and tools
 

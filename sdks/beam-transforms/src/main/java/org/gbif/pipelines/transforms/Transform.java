@@ -100,8 +100,9 @@ public abstract class Transform<R, T extends SpecificRecordBase & Record> extend
    * @param path path to source files
    */
   public AvroIO.Read<T> read(String path, boolean acceptEmpty) {
-    if (acceptEmpty)
+    if (acceptEmpty) {
       return AvroIO.read(clazz).from(path).withEmptyMatchTreatment(EmptyMatchTreatment.ALLOW);
+    }
     return AvroIO.read(clazz).from(path);
   }
 
@@ -122,7 +123,9 @@ public abstract class Transform<R, T extends SpecificRecordBase & Record> extend
    *     Transform#baseName}
    */
   public AvroIO.Read<T> read(UnaryOperator<String> pathFn, boolean acceptEmpty) {
-    if (acceptEmpty) return read(pathFn.apply(baseName), acceptEmpty);
+    if (acceptEmpty) {
+      return read(pathFn.apply(baseName), acceptEmpty);
+    }
     return read(pathFn.apply(baseName));
   }
 

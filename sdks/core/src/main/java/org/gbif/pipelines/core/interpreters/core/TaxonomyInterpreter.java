@@ -30,6 +30,7 @@ import org.gbif.nameparser.NameParserGbifV1;
 import org.gbif.nameparser.api.NameParser;
 import org.gbif.nameparser.api.UnparsableNameException;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonRecordConverter;
+import org.gbif.pipelines.core.utils.IdentificationUtils;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -75,26 +76,29 @@ public class TaxonomyInterpreter {
 
       ModelUtils.checkNullOrEmpty(er);
 
+      Map<String, String> termsSource = IdentificationUtils.getIdentificationFieldTermsSource(er);
+
       // https://github.com/gbif/portal-feedback/issues/4231
       String scientificName =
-          extractNullAwareOptValue(er, DwcTerm.scientificName)
-              .orElse(extractValue(er, DwcTerm.verbatimIdentification));
+          extractNullAwareOptValue(termsSource, DwcTerm.scientificName)
+              .orElse(extractValue(termsSource, DwcTerm.verbatimIdentification));
 
       SpeciesMatchRequest matchRequest =
           SpeciesMatchRequest.builder()
-              .withKingdom(extractValue(er, DwcTerm.kingdom))
-              .withPhylum(extractValue(er, DwcTerm.phylum))
-              .withClazz(extractValue(er, DwcTerm.class_))
-              .withOrder(extractValue(er, DwcTerm.order))
-              .withFamily(extractValue(er, DwcTerm.family))
-              .withGenus(extractValue(er, DwcTerm.genus))
+              .withKingdom(extractValue(termsSource, DwcTerm.kingdom))
+              .withPhylum(extractValue(termsSource, DwcTerm.phylum))
+              .withClazz(extractValue(termsSource, DwcTerm.class_))
+              .withOrder(extractValue(termsSource, DwcTerm.order))
+              .withFamily(extractValue(termsSource, DwcTerm.family))
+              .withGenus(extractValue(termsSource, DwcTerm.genus))
               .withScientificName(scientificName)
-              .withRank(extractValue(er, DwcTerm.taxonRank))
-              .withVerbatimRank(extractValue(er, DwcTerm.verbatimTaxonRank))
-              .withSpecificEpithet(extractValue(er, DwcTerm.specificEpithet))
-              .withInfraspecificEpithet(extractValue(er, DwcTerm.infraspecificEpithet))
-              .withScientificNameAuthorship(extractValue(er, DwcTerm.scientificNameAuthorship))
-              .withGenericName(extractValue(er, DwcTerm.genericName))
+              .withRank(extractValue(termsSource, DwcTerm.taxonRank))
+              .withVerbatimRank(extractValue(termsSource, DwcTerm.verbatimTaxonRank))
+              .withSpecificEpithet(extractValue(termsSource, DwcTerm.specificEpithet))
+              .withInfraspecificEpithet(extractValue(termsSource, DwcTerm.infraspecificEpithet))
+              .withScientificNameAuthorship(
+                  extractValue(termsSource, DwcTerm.scientificNameAuthorship))
+              .withGenericName(extractValue(termsSource, DwcTerm.genericName))
               .build();
 
       NameUsageMatch usageMatch = null;

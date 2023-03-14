@@ -406,9 +406,7 @@ public class AudubonInterpreterTest {
     audubon1.put(
         "http://purl.org/dc/elements/1.1/rights",
         "https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode");
-    audubon1.put(
-        "http://purl.org/dc/terms/identifier",
-        "aoeu-aoeu-aoeu-aoeu");
+    audubon1.put("http://purl.org/dc/terms/identifier", "aoeu-aoeu-aoeu-aoeu");
     audubon1.put(
         "http://rs.tdwg.org/ac/terms/accessURI",
         "https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg");
@@ -430,8 +428,7 @@ public class AudubonInterpreterTest {
                         .setRightsUri("http://creativecommons.org/licenses/by-nc-sa/4.0/")
                         .setAccessUri(
                             "https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg")
-                        .setIdentifier(
-                            "aoeu-aoeu-aoeu-aoeu")
+                        .setIdentifier("aoeu-aoeu-aoeu-aoeu")
                         .setFormat("image/jpeg")
                         .setType("StillImage")
                         .setMetadataDate("2019-07-12 06:30:57.0")
