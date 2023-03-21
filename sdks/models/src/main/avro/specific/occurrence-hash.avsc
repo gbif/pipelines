@@ -5,11 +5,11 @@
        "type":"record",
        "doc":"RelationshipAssertion",
        "fields":[
-         {"name": "repId", "type": "string"},
-         {"name": "dupId", "type": "string"},
-         {"name": "repDataset", "type": "string"},
-         {"name": "dupDataset", "type": "string"},
-         {"name": "justification", "type": "string"}
+         {"name": "repId", "type": "string", "default" : ""},
+         {"name": "dupId", "type": "string", "default" : ""},
+         {"name": "repDataset", "type": "string", "default" : ""},
+         {"name": "dupDataset", "type": "string", "default" : ""},
+         {"name": "justification", "type": "string", "default" : ""}
        ]
      },
      {
@@ -18,7 +18,7 @@
        "type":"record",
        "doc":"RelationshipAssertion",
        "fields":[
-         {"name": "id", "type": "string"},
+         {"name": "id", "type": "string", "default" : ""},
          {"name": "relationships", "type": {"type" : "array", "items" : "Relationship"}, "default" : []}
        ]
      }

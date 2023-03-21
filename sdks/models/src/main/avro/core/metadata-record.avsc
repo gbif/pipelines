@@ -19,7 +19,7 @@
     "type":"record",
     "doc":"Additional information",
     "fields":[
-      {"name": "id","type":"string", "doc":"Pipelines identifier"},
+      {"name": "id","type":"string", "default": "", "doc":"Pipelines identifier"},
       {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
       {"name": "lastCrawled", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was last crawled"},
       {"name": "datasetKey","type":["null","string"],"default":null},
@@ -37,7 +37,7 @@
       {"name": "hostingOrganizationKey","type":["null","string"],"default":null},
       {"name": "networkKeys", "type" : {"type" : "array", "items" : "string"}, "default": []},
       {"name": "machineTags", "type" : {"type" : "array", "items" : "MachineTag"}, "default": []},
-      {"name": "issues", "type": "IssueRecord", "default":{}}
+      {"name": "issues", "type": "IssueRecord"}
     ]
   }
 ]

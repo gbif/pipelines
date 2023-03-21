@@ -7,8 +7,8 @@
   "type": "record",
   "doc": "jackKnife model details",
   "fields": [
-    {"name": "taxonId", "type": "string", "doc":"Species identifier"},
-    {"name": "feature", "type": "string", "doc":"Location feature name"},
+    {"name": "taxonId", "type": "string", "default" : "", "doc":"Species identifier"},
+    {"name": "feature", "type": "string", "default" : "", "doc":"Location feature name"},
     {"name": "min", "type": "double", "doc":"Minimum value that is not an outlier"},
     {"name": "max", "type": "double", "doc":"Maximum value that is not an outlier"},
     {"name": "count", "type": "int", "doc":"Number of values used in creating the model"}

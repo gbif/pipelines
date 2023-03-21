@@ -14,6 +14,6 @@
       {"name" : "generalisationInMetres", "type" : ["null", "string"], "default" : null, "doc" : "Coordinate generalisation radius"},
       {"name" : "original", "type" : { "type": "map", "values": [ "null", "string" ] }, "default": { }, "doc" : "The original values that have been altered" },
       {"name" : "altered", "type" : { "type": "map", "values": [ "null", "string" ] }, "default": { }, "doc" : "Values that have been altered to meet sensitivity requirements" },
-      {"name": "issues", "type": "IssueRecord", "default":{}}
+      {"name": "issues", "type": "IssueRecord"}
   ]
 }

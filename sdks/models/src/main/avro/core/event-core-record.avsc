@@ -15,7 +15,7 @@
     "type": "record",
     "doc": "Interpreted values at the event core record level",
     "fields": [
-      {"name": "id", "type": "string", "doc": "Pipelines identifier"},
+      {"name": "id", "type": "string", "default" : "", "doc": "Pipelines identifier"},
       {"name": "parentEventID", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/parentEventID"},
       {"name": "eventType", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.gbif.org/terms/1.0/eventType"},
       {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
@@ -28,7 +28,7 @@
       {"name": "samplingProtocol", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/samplingProtocol"},
       {"name": "parentsLineage", "type": {"type" : "array", "items" : "Parent"}, "default" : [], "doc":""},
       {"name": "locationID", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/locationID"},
-      {"name": "issues", "type": "IssueRecord", "default":{}}
+      {"name": "issues", "type": "IssueRecord"}
     ]
   }
 ]

@@ -13,7 +13,8 @@
      "CONVARIETY", "INFRASUBSPECIFIC_NAME", "PROLES", "RACE", "NATIO", "ABERRATION", "MORPH", "VARIETY", "SUBVARIETY",
      "FORM", "SUBFORM", "PATHOVAR", "BIOVAR", "CHEMOVAR", "MORPHOVAR", "PHAGOVAR", "SEROVAR", "CHEMOFORM", "FORMA_SPECIALIS",
      "CULTIVAR", "STRAIN", "OTHER", "UNRANKED"
-    ]
+    ],
+    "default": "UNRANKED"
   },
   {
     "name" : "Status",
@@ -22,7 +23,8 @@
     "symbols" : [
       "ACCEPTED", "DOUBTFUL", "SYNONYM", "HETEROTYPIC_SYNONYM", "HOMOTYPIC_SYNONYM", "PROPARTE_SYNONYM", "MISAPPLIED",
       "INTERMEDIATE_RANK_SYNONYM", "DETERMINATION_SYNONYM"
-    ]
+    ],
+    "default": "MISAPPLIED"
   },
   {
     "name" : "MatchType",
@@ -30,7 +32,8 @@
     "type" : "enum",
     "symbols" : [
       "EXACT", "FUZZY", "HIGHERRANK", "NONE"
-    ]
+    ],
+    "default": "NONE"
   },
   {
     "name" : "Nomenclature",
@@ -72,7 +75,7 @@
       },
       {"name" : "binomial", "type" : ["null", "boolean"], "default" : null},
       {"name" : "candidatus", "type" : ["null", "boolean"], "default" : null},
-      {"name" : "code", "type" : [ "null", {"type" : "enum", "name" : "NomCode","doc" : "", "symbols" : [ "BACTERIAL", "BOTANICAL", "CULTIVARS", "VIRUS", "ZOOLOGICAL" ]} ], "default" : null},
+      {"name" : "code", "type" : [ "null", {"type" : "enum","default" : "ZOOLOGICAL", "name" : "NomCode","doc" : "", "symbols" : [ "BACTERIAL", "BOTANICAL", "CULTIVARS", "VIRUS", "ZOOLOGICAL" ]} ], "default" : null},
       {"name" : "extinct", "type" : ["null", "boolean"], "default" : null},
       {"name" : "publishedIn", "type" : [ "null", "string" ], "default" : null},
       {"name" : "combinationAuthorship", "type" : [ "null", "Authorship" ], "default" : null},
@@ -88,15 +91,15 @@
       {"name" : "infragenericEpithet", "type" : [ "null", "string" ], "default" : null},
       {"name" : "infraspecificEpithet", "type" : [ "null", "string" ], "default" : null},
       {"name" : "nomenclaturalNote", "type" : [ "null", "string" ], "default" : null},
-      {"name" : "notho", "type" : [ "null", {"type" : "enum", "name" : "NamePart", "doc" : "", "symbols" : [ "GENERIC", "INFRAGENERIC", "SPECIFIC", "INFRASPECIFIC" ]} ], "default" : null},
-      {"name" : "epithetQualifier", "type" : {"type" : "map", "values" : [ "null", "string" ], "default": null}, "default": null},
-      {"name" : "rank", "type" : ["null", {"type" : "enum", "name" : "NameRank", "doc" : "", "symbols" : [ "DOMAIN", "REALM", "SUBREALM", "SUPERKINGDOM", "KINGDOM", "SUBKINGDOM", "INFRAKINGDOM", "SUPERPHYLUM", "PHYLUM", "SUBPHYLUM", "INFRAPHYLUM", "SUPERCLASS", "CLASS", "SUBCLASS", "INFRACLASS", "SUBTERCLASS", "PARVCLASS", "SUPERDIVISION", "DIVISION", "SUBDIVISION", "INFRADIVISION", "SUPERLEGION", "LEGION", "SUBLEGION", "INFRALEGION", "SUPERCOHORT", "COHORT", "SUBCOHORT", "INFRACOHORT", "GIGAORDER", "MAGNORDER", "GRANDORDER", "MIRORDER", "SUPERORDER", "ORDER", "NANORDER", "HYPOORDER", "MINORDER", "SUBORDER", "INFRAORDER", "PARVORDER", "MEGAFAMILY", "GRANDFAMILY", "SUPERFAMILY", "EPIFAMILY", "FAMILY", "SUBFAMILY", "INFRAFAMILY", "SUPERTRIBE", "TRIBE", "SUBTRIBE", "INFRATRIBE", "SUPRAGENERIC_NAME", "GENUS", "SUBGENUS", "INFRAGENUS", "SUPERSECTION", "SECTION", "SUBSECTION", "SUPERSERIES", "SERIES", "SUBSERIES", "INFRAGENERIC_NAME", "SPECIES_AGGREGATE", "SPECIES", "INFRASPECIFIC_NAME", "GREX", "SUBSPECIES", "CULTIVAR_GROUP", "CONVARIETY", "INFRASUBSPECIFIC_NAME", "PROLES", "NATIO", "ABERRATION", "MORPH", "VARIETY", "SUBVARIETY", "FORM", "SUBFORM", "PATHOVAR", "BIOVAR", "CHEMOVAR", "MORPHOVAR", "PHAGOVAR", "SEROVAR", "CHEMOFORM", "FORMA_SPECIALIS", "CULTIVAR", "STRAIN", "OTHER", "UNRANKED" ]} ], "default" : null},
+      {"name" : "notho", "type" : [ "null", {"type" : "enum", "name" : "NamePart", "default" : "GENERIC", "doc" : "", "symbols" : [ "GENERIC", "INFRAGENERIC", "SPECIFIC", "INFRASPECIFIC" ]} ], "default" : null},
+      {"name" : "epithetQualifier", "type" : {"type" : "map", "values" : [ "null", "string" ], "default": null}, "default": {}},
+      {"name" : "rank", "type" : ["null", {"type" : "enum", "name" : "NameRank", "doc" : "", "default" : "UNRANKED", "symbols" : [ "DOMAIN", "REALM", "SUBREALM", "SUPERKINGDOM", "KINGDOM", "SUBKINGDOM", "INFRAKINGDOM", "SUPERPHYLUM", "PHYLUM", "SUBPHYLUM", "INFRAPHYLUM", "SUPERCLASS", "CLASS", "SUBCLASS", "INFRACLASS", "SUBTERCLASS", "PARVCLASS", "SUPERDIVISION", "DIVISION", "SUBDIVISION", "INFRADIVISION", "SUPERLEGION", "LEGION", "SUBLEGION", "INFRALEGION", "SUPERCOHORT", "COHORT", "SUBCOHORT", "INFRACOHORT", "GIGAORDER", "MAGNORDER", "GRANDORDER", "MIRORDER", "SUPERORDER", "ORDER", "NANORDER", "HYPOORDER", "MINORDER", "SUBORDER", "INFRAORDER", "PARVORDER", "MEGAFAMILY", "GRANDFAMILY", "SUPERFAMILY", "EPIFAMILY", "FAMILY", "SUBFAMILY", "INFRAFAMILY", "SUPERTRIBE", "TRIBE", "SUBTRIBE", "INFRATRIBE", "SUPRAGENERIC_NAME", "GENUS", "SUBGENUS", "INFRAGENUS", "SUPERSECTION", "SECTION", "SUBSECTION", "SUPERSERIES", "SERIES", "SUBSERIES", "INFRAGENERIC_NAME", "SPECIES_AGGREGATE", "SPECIES", "INFRASPECIFIC_NAME", "GREX", "SUBSPECIES", "CULTIVAR_GROUP", "CONVARIETY", "INFRASUBSPECIFIC_NAME", "PROLES", "NATIO", "ABERRATION", "MORPH", "VARIETY", "SUBVARIETY", "FORM", "SUBFORM", "PATHOVAR", "BIOVAR", "CHEMOVAR", "MORPHOVAR", "PHAGOVAR", "SEROVAR", "CHEMOFORM", "FORMA_SPECIALIS", "CULTIVAR", "STRAIN", "OTHER", "UNRANKED" ]} ], "default" : null},
       {"name" : "sanctioningAuthor", "type" : [ "null", "string" ], "default" : null},
       {"name" : "specificEpithet", "type" : [ "null", "string" ], "default" : null},
-      {"name" : "state", "type" : [ "null", {"type" : "enum", "name" : "State", "doc" : "", "symbols" : [ "COMPLETE", "PARTIAL", "NONE" ]} ], "default" : null},
+      {"name" : "state", "type" : [ "null", {"type" : "enum", "name" : "State", "default" : "NONE", "doc" : "", "symbols" : [ "COMPLETE", "PARTIAL", "NONE" ]} ], "default" : null},
       {"name" : "terminalEpithet", "type" : [ "null", "string" ], "default" : null},
       {"name" : "trinomial", "type" : ["null", "boolean"], "default" : null},
-      {"name" : "type","type" : [ "null", { "type" : "enum", "name" : "NameType", "doc" : "", "symbols" : [ "SCIENTIFIC", "VIRUS", "HYBRID_FORMULA", "INFORMAL", "OTU", "PLACEHOLDER", "NO_NAME" ]} ], "default" : null},
+      {"name" : "type","type" : [ "null", { "type" : "enum", "name" : "NameType", "default" : "NO_NAME", "doc" : "", "symbols" : [ "SCIENTIFIC", "VIRUS", "HYBRID_FORMULA", "INFORMAL", "OTU", "PLACEHOLDER", "NO_NAME" ]} ], "default" : null},
       {"name" : "uninomial", "type" : [ "null", "string" ], "default" : null},
       {"name" : "unparsed", "type" : [ "null", "string" ], "default" : null},
       {"name" : "warnings", "type" : [ "null", {"type" : "array","items" : "string"} ], "default" : null}
@@ -133,7 +136,7 @@
         ]
       },
       {"name" : "usageParsedName", "type" : ["null", "ParsedName"], "default" : null},
-      {"name" : "issues", "type": "IssueRecord", "default":{}},
+      {"name" : "issues", "type": "IssueRecord"},
       {"name" : "iucnRedListCategoryCode", "type" : ["null", "string"], "default" : null, "doc":"The IUCN Red List Category or conservation status"}
     ]
   }

@@ -18,8 +18,8 @@
       // Full-text search field
       {"name":"all","type":{"type":"array","items":"string"},"default":[]},
       // Internal
-      {"name":"type","type":"string","default":null,"doc":""},
-      {"name":"id","type":"string","default":null,"doc":""},
+      {"name":"type","type": "string","default":"","doc":""},
+      {"name":"id","type":"string","default":"","doc":""},
       {"name":"internalId","type":["null","string"],"default":null,"doc":""},
       {"name":"uniqueKey","type":["null","string"],"default":null,"doc":""},
       {"name":"firstLoaded","type":["null","string"],"default":null,"doc":""},

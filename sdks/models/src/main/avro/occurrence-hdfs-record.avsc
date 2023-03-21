@@ -7,682 +7,908 @@
     "type" : "string"
   }, {
     "name" : "v_abstract",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_accessrights",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_accrualmethod",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_accrualperiodicity",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_accrualpolicy",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_alternative",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_audience",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_available",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_bibliographiccitation",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_conformsto",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_contributor",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_coverage",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_created",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_creator",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_date",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_dateaccepted",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_datecopyrighted",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_datesubmitted",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_description",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_educationlevel",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_extent",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_format",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_hasformat",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_haspart",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_hasversion",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_identifier",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_instructionalmethod",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_isformatof",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_ispartof",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_isreferencedby",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_isreplacedby",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_isrequiredby",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_isversionof",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_issued",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_language",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_license",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_mediator",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_medium",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_modified",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_provenance",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_publisher",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_references",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_relation",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_replaces",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_requires",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_rights",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_rightsholder",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_source",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_spatial",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_subject",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_tableofcontents",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_temporal",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_title",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_type",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_valid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_institutionid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_collectionid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_datasetid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_institutioncode",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_collectioncode",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_datasetname",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_ownerinstitutioncode",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_basisofrecord",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_informationwithheld",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_datageneralizations",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_dynamicproperties",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_occurrenceid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_catalognumber",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_recordnumber",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_recordedby",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_recordedbyid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_individualcount",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_organismquantity",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_organismquantitytype",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_sex",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_lifestage",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_reproductivecondition",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_behavior",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_establishmentmeans",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_degreeofestablishment",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_pathway",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_georeferenceverificationstatus",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_occurrencestatus",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_preparations",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
    }, {
     "name" : "v_disposition",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_associatedmedia",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_associatedoccurrences",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_associatedreferences",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_associatedsequences",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_associatedtaxa",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_othercatalognumbers",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_occurrenceremarks",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_organismid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_organismname",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_organismscope",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_associatedorganisms",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_previousidentifications",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_organismremarks",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_materialsampleid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_eventid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_parenteventid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_fieldnumber",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_eventdate",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_eventtime",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_startdayofyear",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_enddayofyear",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_year",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_month",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_day",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_verbatimeventdate",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_habitat",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_samplingprotocol",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_samplesizevalue",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_samplesizeunit",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_samplingeffort",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_fieldnotes",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_eventremarks",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_locationid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_highergeographyid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_highergeography",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_continent",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_waterbody",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_islandgroup",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_island",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_country",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_countrycode",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_stateprovince",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_county",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_municipality",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_locality",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_verbatimlocality",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_minimumelevationinmeters",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_maximumelevationinmeters",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_verbatimelevation",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_verticaldatum",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_minimumdepthinmeters",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_maximumdepthinmeters",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_verbatimdepth",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_minimumdistanceabovesurfaceinmeters",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_maximumdistanceabovesurfaceinmeters",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_locationaccordingto",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_locationremarks",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_decimallatitude",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_decimallongitude",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_geodeticdatum",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_coordinateuncertaintyinmeters",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_coordinateprecision",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_pointradiusspatialfit",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_verbatimcoordinates",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_verbatimlatitude",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_verbatimlongitude",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_verbatimcoordinatesystem",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_verbatimsrs",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_footprintwkt",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_footprintsrs",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_footprintspatialfit",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_georeferencedby",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_georeferenceddate",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_georeferenceprotocol",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_georeferencesources",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_georeferenceremarks",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_geologicalcontextid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_earliesteonorlowesteonothem",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_latesteonorhighesteonothem",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_earliesteraorlowesterathem",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_latesteraorhighesterathem",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_earliestperiodorlowestsystem",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_latestperiodorhighestsystem",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_earliestepochorlowestseries",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_latestepochorhighestseries",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_earliestageorloweststage",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_latestageorhigheststage",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_lowestbiostratigraphiczone",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_highestbiostratigraphiczone",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_lithostratigraphicterms",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_group",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_formation",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_member",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_bed",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_identificationid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_verbatimidentification",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_identificationqualifier",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_typestatus",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_identifiedby",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_identifiedbyid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_dateidentified",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_identificationreferences",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_identificationverificationstatus",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_identificationremarks",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_taxonid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_scientificnameid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_acceptednameusageid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_parentnameusageid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_originalnameusageid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_nameaccordingtoid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_namepublishedinid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_taxonconceptid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_scientificname",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_acceptednameusage",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_parentnameusage",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_originalnameusage",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_nameaccordingto",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_namepublishedin",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_namepublishedinyear",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_higherclassification",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_kingdom",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_phylum",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_class",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_order",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_family",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_subfamily",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_genus",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_genericname",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_subgenus",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_infragenericepithet",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_specificepithet",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_infraspecificepithet",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_cultivarepithet",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_taxonrank",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_verbatimtaxonrank",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_scientificnameauthorship",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_vernacularname",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_nomenclaturalcode",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_taxonomicstatus",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_nomenclaturalstatus",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "v_taxonremarks",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "identifiercount",
     "type" : [ "int", "null" ]
@@ -694,13 +920,16 @@
     "type" : [ "long", "null" ]
   }, {
     "name" : "xmlschema",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "publishingorgkey",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "unitqualifier",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "networkkey",
     "type" : [ {
@@ -709,7 +938,8 @@
     }, "null" ]
   }, {
     "name" : "installationkey",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
      "name" : "projectid",
      "type" : [ {
@@ -718,16 +948,20 @@
       }, "null" ]
    }, {
     "name" : "programmeacronym",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "collectionkey",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "institutionkey",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "hostingorganizationkey",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "isincluster",
     "type" : [ "boolean", "null" ]
@@ -739,7 +973,8 @@
     }, "null" ]
   }, {
     "name" : "datasettitle",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "parenteventgbifid",
     "type" : [ {
@@ -759,175 +994,231 @@
     }, "null" ]
   }, {
     "name" : "abstract",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "accessrights",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "accrualmethod",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "accrualperiodicity",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "accrualpolicy",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "alternative",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "audience",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "available",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "bibliographiccitation",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "conformsto",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "contributor",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "coverage",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "created",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "creator",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "date_",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "dateaccepted",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "datecopyrighted",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "datesubmitted",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "description",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "educationlevel",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "extent",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "format_",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "hasformat",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "haspart",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "hasversion",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "identifier",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "instructionalmethod",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "isformatof",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "ispartof",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "isreferencedby",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "isreplacedby",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "isrequiredby",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "isversionof",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "issued",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "language",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "license",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "mediator",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "medium",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "modified",
     "type" : [ "long", "null" ]
   }, {
     "name" : "provenance",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "publisher",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "references",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "relation",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "replaces",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "requires",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "rights",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "rightsholder",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "source",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "spatial",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "subject",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "tableofcontents",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "temporal",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "title",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "type",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "valid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "institutionid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "collectionid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "datasetid",
     "type" : [ {
@@ -936,10 +1227,12 @@
     }, "null" ]
   }, {
     "name" : "institutioncode",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "collectioncode",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "datasetname",
     "type" : [ {
@@ -948,28 +1241,36 @@
     }, "null" ]
   }, {
     "name" : "ownerinstitutioncode",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "basisofrecord",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "informationwithheld",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "datageneralizations",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "dynamicproperties",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "occurrenceid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "catalognumber",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "recordnumber",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "recordedby",
     "type" : [ {
@@ -990,10 +1291,12 @@
     "type" : [ "double", "null" ]
   }, {
     "name" : "organismquantitytype",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "sex",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "lifestage",
     "type" : [ {
@@ -1012,10 +1315,12 @@
     }, "null" ]
   }, {
     "name" : "reproductivecondition",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "behavior",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "establishmentmeans",
     "type" : [ {
@@ -1066,10 +1371,12 @@
     }, "null" ]
   }, {
     "name" : "georeferenceverificationstatus",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "occurrencestatus",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "preparations",
     "type" : [ {
@@ -1078,19 +1385,24 @@
      }, "null" ]
   }, {
     "name" : "disposition",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "associatedoccurrences",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "associatedreferences",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "associatedsequences",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "associatedtaxa",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "othercatalognumbers",
      "type" : [ {
@@ -1099,49 +1411,63 @@
      }, "null" ]
   }, {
     "name" : "occurrenceremarks",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "organismid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "organismname",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "organismscope",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "associatedorganisms",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "previousidentifications",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "organismremarks",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "materialsampleid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "eventid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "parenteventid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "fieldnumber",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "eventdate",
     "type" : [ "long", "null" ]
   }, {
     "name" : "eventtime",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "startdayofyear",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "enddayofyear",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "year",
     "type" : [ "int", "null" ]
@@ -1153,10 +1479,12 @@
     "type" : [ "int", "null" ]
   }, {
     "name" : "verbatimeventdate",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "habitat",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "samplingprotocol",
     "type" : [ {
@@ -1168,76 +1496,100 @@
     "type" : [ "double", "null" ]
   }, {
     "name" : "samplesizeunit",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "samplingeffort",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "fieldnotes",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "eventremarks",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "locationid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "highergeographyid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "highergeography",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "continent",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "waterbody",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "islandgroup",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "island",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "countrycode",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "stateprovince",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "county",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "municipality",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "locality",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "verbatimlocality",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "verbatimelevation",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "verticaldatum",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "verbatimdepth",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "minimumdistanceabovesurfaceinmeters",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "maximumdistanceabovesurfaceinmeters",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "locationaccordingto",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "locationremarks",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "decimallatitude",
     "type" : [ "double", "null" ]
@@ -1252,100 +1604,132 @@
     "type" : [ "double", "null" ]
   }, {
     "name" : "pointradiusspatialfit",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "verbatimcoordinatesystem",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "verbatimsrs",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "footprintwkt",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "footprintsrs",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "footprintspatialfit",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "georeferencedby",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "georeferenceddate",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "georeferenceprotocol",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "georeferencesources",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "georeferenceremarks",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "geologicalcontextid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "earliesteonorlowesteonothem",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "latesteonorhighesteonothem",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "earliesteraorlowesterathem",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "latesteraorhighesterathem",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "earliestperiodorlowestsystem",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "latestperiodorhighestsystem",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "earliestepochorlowestseries",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "latestepochorhighestseries",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "earliestageorloweststage",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "latestageorhigheststage",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "lowestbiostratigraphiczone",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "highestbiostratigraphiczone",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "lithostratigraphicterms",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "group_",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "formation",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "member",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "bed",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "identificationid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "verbatimidentification",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "identificationqualifier",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "typestatus",
     "type" : [ {
@@ -1369,127 +1753,168 @@
     "type" : [ "long", "null" ]
   }, {
     "name" : "identificationreferences",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "identificationverificationstatus",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "identificationremarks",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "taxonid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "scientificnameid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "acceptednameusageid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "parentnameusageid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "originalnameusageid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "nameaccordingtoid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "namepublishedinid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "taxonconceptid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "scientificname",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "acceptednameusage",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "parentnameusage",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "originalnameusage",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "nameaccordingto",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "namepublishedin",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "namepublishedinyear",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "higherclassification",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "kingdom",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "phylum",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "class",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "order_",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "family",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "subfamily",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "genus",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "genericname",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "subgenus",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "infragenericepithet",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "specificepithet",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "infraspecificepithet",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "cultivarepithet",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "taxonrank",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "verbatimtaxonrank",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "vernacularname",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "nomenclaturalcode",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "taxonomicstatus",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "nomenclaturalstatus",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "taxonremarks",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "datasetkey",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "publishingcountry",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "lastinterpreted",
     "type" : [ "long", "null" ]
@@ -1507,10 +1932,12 @@
     "type" : [ "double", "null" ]
   }, {
     "name" : "distanceabovesurface",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "distanceabovesurfaceaccuracy",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "issue",
     "type" : [ {
@@ -1561,16 +1988,20 @@
     "type" : [ "int", "null" ]
   }, {
     "name" : "species",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "acceptedscientificname",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "typifiedname",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "protocol",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "lastparsed",
     "type" : [ "long", "null" ]
@@ -1585,31 +2016,40 @@
     "type" : [ "double", "null" ]
   }, {
     "name" : "level0gid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "level0name",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "level1gid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "level1name",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "level2gid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "level2name",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "level3gid",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "level3name",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "iucnredlistcategory",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   }, {
     "name" : "distancefromcentroidinmeters",
     "type" : [ "double", "null" ]
@@ -1631,6 +2071,7 @@
     }, "null" ]
   }, {
     "name" : "ext_multimedia",
-    "type" : [ "string", "null" ]
+    "type" : [ "string", "null" ],
+    "default" : ""
   } ]
 }
