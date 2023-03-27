@@ -35,9 +35,9 @@ public interface SpeciesLevelPipelineOptions extends InterpretationPipelineOptio
   void setIncludeInvasiveStatus(Boolean includeInvasiveStatus);
 
   @Default.Boolean(false)
-  Boolean getIncludePresentInCountry();
+  Boolean getIncludeTaxonPresentInCountry();
 
-  void setIncludePresentInCountry(Boolean includePresentInCountry);
+  void setIncludeTaxonPresentInCountry(Boolean includeTaxonPresentInCountry);
 
   @Default.Boolean(false)
   Boolean getIncludeTraits();

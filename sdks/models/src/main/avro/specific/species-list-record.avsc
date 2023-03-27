@@ -12,7 +12,7 @@
     {"name": "region", "type": ["null", "string"], "default": null },
     {"name": "status", "type": ["null", "string"]},
     {"name": "sourceStatus", "type": ["null", "string"]},
-    {"name": "presentInCountry", "type": ["null", "string"], "default": null},
+    {"name": "taxonPresentInCountry", "type": ["null", "string"], "default": null},
     {"name": "traitName", "type": ["null", "string"], "default": null},
     {"name": "traitValue", "type": ["null", "string"], "default": null}
   ]

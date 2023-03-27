@@ -26,7 +26,7 @@ public class SpeciesList {
   boolean isAuthoritative;
   boolean isInvasive;
   boolean isThreatened;
-  String presentInCountry;
+  String taxonPresentInCountry;
 
   @JsonPOJOBuilder(withPrefix = "")
   @JsonIgnoreProperties(ignoreUnknown = true)

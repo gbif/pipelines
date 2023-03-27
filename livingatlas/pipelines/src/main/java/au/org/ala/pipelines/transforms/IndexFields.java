@@ -51,7 +51,7 @@ public interface IndexFields {
   String POINT_0_02 = "point-0.02";
   String POINT_0_1 = "point-0.1";
   String POINT_1 = "point-1";
-  String PRESENT_IN_COUNTRY = "presentInCountry";
+  String TAXON_PRESENT_IN_COUNTRY = "taxonPresentInCountry";
   String PROVENANCE = "provenance";
   String TAXON_RANK = "taxonRank";
   String RAW_STATE_CONSERVATION = "raw_stateConservation";

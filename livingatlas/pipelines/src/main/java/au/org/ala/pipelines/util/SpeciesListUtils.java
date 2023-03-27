@@ -19,7 +19,7 @@ public class SpeciesListUtils {
       Iterable<SpeciesListRecord> speciesLists,
       boolean includeConservationStatus,
       boolean includeInvasiveStatus,
-      boolean includePresentInCountry,
+      boolean includeTaxonPresentInCountry,
       boolean includeTraits) {
 
     Iterator<SpeciesListRecord> iter = speciesLists.iterator();
@@ -27,7 +27,7 @@ public class SpeciesListUtils {
     List<String> speciesListIDs = new ArrayList<>();
     List<ConservationStatus> conservationStatusList = new ArrayList<>();
     List<InvasiveStatus> invasiveStatusList = new ArrayList<>();
-    String presentInCountryValue = null;
+    String taxonPresentInCountryValue = null;
     Map<String, String> traitsMap = new HashMap<>();
 
     while (iter.hasNext()) {
@@ -52,8 +52,9 @@ public class SpeciesListUtils {
                 .setSpeciesListID(speciesListRecord.getSpeciesListID())
                 .setRegion(speciesListRecord.getRegion())
                 .build());
-      } else if (includePresentInCountry && speciesListRecord.getPresentInCountry() != null) {
-        presentInCountryValue = speciesListRecord.getPresentInCountry();
+      } else if (includeTaxonPresentInCountry
+          && speciesListRecord.getTaxonPresentInCountry() != null) {
+        taxonPresentInCountryValue = speciesListRecord.getTaxonPresentInCountry();
       } else if (includeTraits
           && speciesListRecord.getListType().equals(LIST_COMMON_TRAIT)
           && speciesListRecord.getTraitName() != null) {
@@ -66,7 +67,7 @@ public class SpeciesListUtils {
     builder.setSpeciesListID(speciesListIDs);
     builder.setConservationStatuses(conservationStatusList);
     builder.setInvasiveStatuses(invasiveStatusList);
-    builder.setPresentInCountry(presentInCountryValue);
+    builder.setTaxonPresentInCountry(taxonPresentInCountryValue);
     builder.setTraits(traitsMap);
     return builder;
   }

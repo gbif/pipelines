@@ -138,7 +138,7 @@ public class SpeciesListPipeline {
                           speciesListMap,
                           options.getIncludeConservationStatus(),
                           options.getIncludeInvasiveStatus(),
-                          options.getIncludePresentInCountry(),
+                          options.getIncludeTaxonPresentInCountry(),
                           options.getIncludeTraits()))
               .collect(Collectors.toList());
 
@@ -155,7 +155,7 @@ public class SpeciesListPipeline {
       Map<String, List<SpeciesListRecord>> speciesListMap,
       boolean includeConservationStatus,
       boolean includeInvasiveStatus,
-      boolean includePresentInCountry,
+      boolean includeTaxonPresentInCountry,
       boolean includeTraits) {
 
     Iterable<SpeciesListRecord> speciesLists =
@@ -167,7 +167,7 @@ public class SpeciesListPipeline {
               speciesLists,
               includeConservationStatus,
               includeInvasiveStatus,
-              includePresentInCountry,
+              includeTaxonPresentInCountry,
               includeTraits);
       builder.setId(alaTaxonRecord.getId());
       return builder.build();

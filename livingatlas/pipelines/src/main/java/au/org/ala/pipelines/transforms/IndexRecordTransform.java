@@ -806,9 +806,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       }
     }
 
-    // index presentInCountry
-    if (tpr.getPresentInCountry() != null) {
-      indexRecord.getStrings().put(PRESENT_IN_COUNTRY, tpr.getPresentInCountry());
+    // index taxonPresentInCountry
+    if (tpr.getTaxonPresentInCountry() != null) {
+      indexRecord.getStrings().put(TAXON_PRESENT_IN_COUNTRY, tpr.getTaxonPresentInCountry());
     }
 
     // taxon-level traits from speciesLists
