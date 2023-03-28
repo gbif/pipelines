@@ -51,9 +51,7 @@ public interface IndexFields {
   String POINT_0_02 = "point-0.02";
   String POINT_0_1 = "point-0.1";
   String POINT_1 = "point-1";
-  String TAXON_PRESENT_IN_COUNTRY = "taxonPresentInCountry";
   String PROVENANCE = "provenance";
-  String TAXON_RANK = "taxonRank";
   String RAW_STATE_CONSERVATION = "raw_stateConservation";
   String RECORDED_BY_ID = "recordedByID";
   String SENSITIVE = "sensitive";
@@ -68,6 +66,8 @@ public interface IndexFields {
   String SUBSPECIES = "subspecies";
   String SUBSPECIES_ID = "subspeciesID";
   String TAXONOMIC_ISSUES = "taxonomicIssues";
+  String TAXON_PRESENT_IN_COUNTRY = "taxonPresentInCountry";
+  String TAXON_RANK = "taxonRank";
   String VIDEO_IDS = "videoIDs";
 
   String DYNAMIC_PROPERTIES_PREFIX = "dynamicProperties_";
