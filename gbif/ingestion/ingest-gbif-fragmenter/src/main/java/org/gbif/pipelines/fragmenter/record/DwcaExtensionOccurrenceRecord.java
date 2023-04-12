@@ -1,5 +1,8 @@
 package org.gbif.pipelines.fragmenter.record;
 
+import static com.fasterxml.jackson.databind.MapperFeature.SORT_PROPERTIES_ALPHABETICALLY;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Map;
@@ -9,8 +12,6 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
@@ -25,7 +26,8 @@ public class DwcaExtensionOccurrenceRecord implements OccurrenceRecord {
 
   static {
     // to ensure that identical records are serialized identically
-    MAPPER.configure(SerializationConfig.Feature.SORT_PROPERTIES_ALPHABETICALLY, true);
+
+    MAPPER.configure(SORT_PROPERTIES_ALPHABETICALLY, true);
   }
 
   @NonNull private final Record core;
