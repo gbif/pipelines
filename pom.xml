@@ -14,7 +14,7 @@
   <packaging>pom</packaging>
 
   <modules>
-    <!--<module>livingatlas</module>-->
+    <module>livingatlas</module>
     <module>gbif</module>
     <module>sdks</module>
   </modules>
@@ -105,7 +105,7 @@
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
 
     <!-- Common libraries -->
-    <avro.version>1.8.2</avro.version>
+    <avro.version>1.11.1</avro.version>
     <apache.beam.version>2.43.0</apache.beam.version>
     <hadoop.version>3.2.4</hadoop.version>
     <hbase.version>2.5.3-hadoop3</hbase.version>
