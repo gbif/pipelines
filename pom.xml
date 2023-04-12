@@ -90,14 +90,14 @@
 
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.60</gbif-parsers.version>
-    <dwca-io.version>2.17-SNAPSHOT</dwca-io.version>
+    <dwca-io.version>2.17-H3-SNAPSHOT</dwca-io.version>
     <gbif-api.version>1.3.0-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.56</gbif-common.version>
-    <dwc-api.version>1.46-SNAPSHOT</dwc-api.version>
-    <kvs.version>1.26-SNAPSHOT</kvs.version>
-    <hbase-utils.version>0.14-SNAPSHOT</hbase-utils.version>
+    <dwc-api.version>1.46-H3-SNAPSHOT</dwc-api.version>
+    <kvs.version>1.26-H3-SNAPSHOT</kvs.version>
+    <hbase-utils.version>0.14-H3-SNAPSHOT</hbase-utils.version>
     <gbif-wrangler.version>0.5-SNAPSHOT</gbif-wrangler.version>
-    <gbif-occurrence.version>0.192.7-SNAPSHOT</gbif-occurrence.version>
+    <gbif-occurrence.version>0.192.7-H3-SNAPSHOT</gbif-occurrence.version>
     <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
     <registry.version>3.93</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>
