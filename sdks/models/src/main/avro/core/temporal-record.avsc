@@ -18,7 +18,7 @@
     "type": "record",
     "doc": "A container for temporal fields of DarwinCore that have been interpreted.",
     "fields": [
-      {"name": "id", "type": "string", "default" : "", "doc":"Pipelines identifier"},
+      {"name": "id", "type": "string", "doc":"Pipelines identifier"},
       {"name": "coreId","type":["null","string"],"default":null, "doc":"Id of the core record when this record belongs to an extension"},
       {"name": "parentId","type":["null","string"],"default":null, "doc":"Id of the parent record if applies"},
       {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
@@ -31,7 +31,7 @@
       {"name": "modified", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null, "doc": "http://purl.org/dc/terms/modified"},
       {"name": "dateIdentified", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/dateIdentified"},
       {"name": "datePrecision", "type": ["null", "string"], "default" : null},
-      {"name": "issues", "type": "IssueRecord"}
+      {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }
 ]

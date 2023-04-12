@@ -7,7 +7,7 @@
   "type": "record",
   "doc": "jackKnife outlier mapping",
   "fields": [
-    {"name": "id", "type": "string", "default" : "", "doc":"Pipelines identifier"},
+    {"name": "id", "type": "string", "doc":"Pipelines identifier"},
     {"name": "items", "doc": "JackKnife outlier layers", "default": [], "type": {"type": "array", "items": "string"}}
   ]
 }

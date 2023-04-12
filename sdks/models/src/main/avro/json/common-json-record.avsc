@@ -41,7 +41,7 @@
       {"name":"level1Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level1Name"},
       {"name":"level2Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level2Name"},
       {"name":"level3Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level3Name"},
-      {"name":"gids","type":{"type":"array","items":"string"},"default":[],"doc":""}
+      {"name":"gids","type":{"type":"array","items":"string"},"default":null,"doc":""}
     ]
   },
   {
@@ -110,7 +110,7 @@
       {"name":"publishingCountry","type":["null","string"],"default":null,"doc":""},
       {"name":"datasetPublishingCountry","type":["null","string"],"default":null,"doc":""},
       {"name":"publishingOrganizationKey","type":["null","string"],"default":null,"doc":""},
-      {"name":"networkKeys","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"networkKeys","type":{"type":"array","items":"string"},"default":null,"doc":""},
       {"name":"projectId","type":["null","string"],"default":null,"doc":""},
       {"name":"programmeAcronym","type":["null","string"],"default":null,"doc":""}
     ]

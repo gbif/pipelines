@@ -31,10 +31,10 @@
     "type": "record",
     "doc": "A container for interpreted multimedia fields.",
     "fields": [
-      {"name": "id", "type": "string", "default" : "", "doc":"Pipelines identifier"},
+      {"name": "id", "type": "string", "doc":"Pipelines identifier"},
       {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
       {"name": "multimediaItems", "type": {"type" : "array", "items" : "Multimedia"}, "default" : []},
-      {"name": "issues", "type": "IssueRecord"}
+      {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }
 ]

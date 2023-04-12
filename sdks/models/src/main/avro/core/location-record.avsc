@@ -24,7 +24,7 @@
       "type":"record",
       "doc":"A spatial region or named place.",
       "fields":[
-        {"name": "id","type": "string", "default" : "", "doc":"Pipelines identifier"},
+        {"name": "id","type":"string", "doc":"Pipelines identifier"},
         {"name": "coreId","type":["null","string"],"default":null, "doc":"Id of the core record when this record belongs to an extension"},
         {"name": "parentId","type":["null","string"],"default":null, "doc":"Id of the parent record if applies"},
         {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
@@ -57,7 +57,7 @@
         {"name": "footprintWKT","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/footprintWKT"},
         {"name": "biome","type":["null","string"],"default":null },
         {"name": "distanceFromCentroidInMeters","type":["null","double"],"default":null, "doc":"http://rs.gbif.org/terms/1.0/distanceFromCentroidInMeters"},
-        {"name": "issues", "type": "IssueRecord"}
+        {"name": "issues", "type": "IssueRecord", "default":{}}
       ]
     }
 ]

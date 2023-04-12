@@ -5,8 +5,8 @@
     "type": "record",
     "doc": "An AVRO export used to support Spark SQL exports",
     "fields": [
-      {"name": "id", "type": "string", "default" : "", "doc": "Pipelines identifier"},
-      {"name": "datasetKey", "type": "string", "default" : "", "doc": "Pipelines identifier"},
+      {"name": "id", "type": "string", "doc": "Pipelines identifier"},
+      {"name": "datasetKey", "type": "string", "doc": "Pipelines identifier"},
       {"name": "eventHierarchy", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
       {"name": "eventTypeHierarchy", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
       {"name": "samplingProtocol", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},

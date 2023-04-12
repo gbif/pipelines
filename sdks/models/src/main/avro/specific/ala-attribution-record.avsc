@@ -65,7 +65,7 @@
       {"name": "hasDefaultValues", "type": "boolean", "default" : false },
       {"name": "hubMembership", "type": {"type": "array", "items": "EntityReference"}, "default" : [] },
       {"name": "contentTypes", "type": {"type": "array", "items": "string"}, "default" : [] },
-      {"name": "issues", "type": "IssueRecord"}
+      {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }
 ]

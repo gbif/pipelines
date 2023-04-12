@@ -5,8 +5,7 @@
     "type" : "enum",
     "symbols" : [
       "exactMatch", "canonicalMatch", "phraseMatch", "fuzzyMatch", "vernacularMatch", "higherMatch", "taxonIdMatch", "noMatch"
-    ],
-    "default": "noMatch"
+    ]
   },
   {
     "name" : "ALAMatchIssueType",
@@ -16,8 +15,7 @@
       "affinitySpecies", "associatedNameExcluded", "conferSpecies", "excludedSpecies", "genericError",
       "hintMismatch", "homonym", "indeterminateSpecies", "matchedToMisappliedName", "misappliedName",
       "noIssue", "noMatch", "parentChildSynonym", "questionSpecies", "speciesPlural"
-    ],
-    "default": "noMatch"
+    ]
   },
   {
     "name":"ALATaxonRecord",
@@ -25,7 +23,7 @@
     "type":"record",
     "doc":"An ALA Name Match",
     "fields":[
-      {"name": "id","type":"string", "default": ""},
+      {"name": "id","type":"string"},
       {"name": "parentId","type":["null","string"],"default":null, "doc":"Parent record identifier"},
       {"name": "coreId","type":["null","string"],"default":null, "doc":"Id of the core record when this record belongs to an extension"},
       {"name": "scientificName", "type": ["null", "string"], "default" : null },
@@ -54,7 +52,7 @@
       {"name": "vernacularName", "type": ["null", "string"], "default" : null },
       {"name": "speciesGroup", "type": {"type": "array", "items": "string"}, "default" : [] },
       {"name": "speciesSubgroup", "type": {"type": "array", "items": "string"}, "default" : [] },
-      {"name": "issues", "type": "IssueRecord"}
+      {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }
 ]

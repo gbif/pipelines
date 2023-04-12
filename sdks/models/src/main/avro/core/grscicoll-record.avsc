@@ -20,7 +20,7 @@
       {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
       {"name" : "institutionMatch", "type" : ["null", "Match"], "default" : null},
       {"name" : "collectionMatch", "type" : ["null", "Match"], "default" : null},
-      {"name": "issues", "type": "org.gbif.pipelines.io.avro.IssueRecord"}
+      {"name": "issues", "type": "org.gbif.pipelines.io.avro.IssueRecord", "default":{}}
     ]
   }
 ]
