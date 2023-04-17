@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -16,6 +17,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.interpretation.RecordCountReader;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
+import org.gbif.pipelines.common.process.AirflowRunnerBuilder;
 import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
@@ -95,10 +97,22 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
                   TYPE.name() + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
               .beamConfigFn(BeamSettings.occurrenceIdentifier(config, message, path));
 
+      AirflowRunnerBuilder airRunnerBuilder =
+          AirflowRunnerBuilder.builder()
+              .airflowConfiguration(config.airflowConfig)
+              .dagId("spark-executor")
+              .dagRunId(TYPE.name() + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+              .beamConfigFn(BeamSettings.occurrenceIdentifier(config, message, path))
+              .build();
+
       log.info("Start the process. Message - {}", message);
       try {
-
-        runDistributed(message, builder);
+        if (config.airflowConfig.useAirflow) {
+          log.info("Starting airflow execution");
+          runInAirflow(airRunnerBuilder);
+        } else {
+          runDistributed(message, builder);
+        }
 
         IdentifierValidationResult validationResult =
             PostprocessValidation.builder()
@@ -162,6 +176,18 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
       throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
     } else {
       log.info("Process has been finished with exit value - {}", exitValue);
+    }
+  }
+
+  private void runInAirflow(AirflowRunnerBuilder builder) {
+    CloseableHttpResponse response = builder.buildAirflowRunner().createRun();
+    int status = response.getStatusLine().getStatusCode();
+    if (status == 201) {
+      log.info("Started airflow execution");
+    } else {
+      log.error("Failed creating airflow execution");
+      throw new IllegalStateException(
+          "Airflow execution wasn't created correctly failed with exit code - " + status);
     }
   }
 }

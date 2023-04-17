@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
@@ -30,6 +31,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.interpretation.RecordCountReader;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
+import org.gbif.pipelines.common.process.AirflowRunnerBuilder;
 import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.utils.HdfsUtils;
@@ -146,10 +148,25 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
       Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
+      AirflowRunnerBuilder airRunnerBuilder =
+          AirflowRunnerBuilder.builder()
+              .airflowConfiguration(config.airflowConfig)
+              .dagId("spark-executor")
+              .dagRunId(
+                  getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+              .beamConfigFn(
+                  BeamSettings.occurrenceInterpretation(config, message, path, defaultDateFormat))
+              .build();
+
       log.info("Start the process. Message - {}", message);
       try {
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          runDistributed(message, builder);
+          if (config.airflowConfig.useAirflow) {
+            log.info("Starting airflow execution");
+            runInAirflow(airRunnerBuilder);
+          } else {
+            runDistributed(message, builder);
+          }
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
           runLocal(builder);
         }
@@ -267,5 +284,17 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     return isValidator
         ? StepType.VALIDATOR_VERBATIM_TO_INTERPRETED
         : StepType.VERBATIM_TO_INTERPRETED;
+  }
+
+  private void runInAirflow(AirflowRunnerBuilder builder) {
+    CloseableHttpResponse response = builder.buildAirflowRunner().createRun();
+    int status = response.getStatusLine().getStatusCode();
+    if (status == 201) {
+      log.info("Started airflow execution");
+    } else {
+      log.error("Failed creating airflow execution");
+      throw new IllegalStateException(
+          "Airflow execution wasn't created correctly failed with exit code - " + status);
+    }
   }
 }

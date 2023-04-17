@@ -22,6 +22,9 @@ public class InterpreterConfiguration implements BaseConfiguration {
   @ParametersDelegate @Valid @NotNull
   public AvroWriteConfiguration avroConfig = new AvroWriteConfiguration();
 
+  @ParametersDelegate @Valid @NotNull
+  public AirflowConfiguration airflowConfig = new AirflowConfiguration();
+
   @Parameter(names = "--meta-file-name")
   public String metaFileName = Pipeline.VERBATIM_TO_OCCURRENCE + ".yml";
 

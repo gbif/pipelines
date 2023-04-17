@@ -8,11 +8,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
-import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
-import org.gbif.pipelines.common.configs.BaseConfiguration;
-import org.gbif.pipelines.common.configs.DistributedConfiguration;
-import org.gbif.pipelines.common.configs.SparkConfiguration;
-import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.pipelines.common.configs.*;
 
 /** Configuration required to start Interpretation Pipeline on provided dataset */
 @ToString
@@ -27,6 +23,9 @@ public class IdentifierConfiguration implements BaseConfiguration {
 
   @ParametersDelegate @Valid @NotNull
   public AvroWriteConfiguration avroConfig = new AvroWriteConfiguration();
+
+  @ParametersDelegate @Valid @NotNull
+  public AirflowConfiguration airflowConfig = new AirflowConfiguration();
 
   @Parameter(names = "--meta-file-name")
   public String metaFileName = Pipeline.VERBATIM_TO_IDENTIFIER + ".yml";
