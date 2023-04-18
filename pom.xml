@@ -14,7 +14,6 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>livingatlas</module>
     <module>gbif</module>
     <module>sdks</module>
   </modules>
@@ -618,6 +617,12 @@
         <artifactId>hadoop-hdfs</artifactId>
         <version>${hadoop.version}</version>
         <scope>provided</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>com.squareup.okhttp</groupId>
+            <artifactId>okhttp</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <!-- HBase -->
