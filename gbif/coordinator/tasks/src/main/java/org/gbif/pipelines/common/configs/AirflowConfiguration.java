@@ -1,13 +1,20 @@
 package org.gbif.pipelines.common.configs;
 
 import com.beust.jcommander.Parameter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 @ToString
+@Getter
+@Setter
 public class AirflowConfiguration {
+
+  public static final String SPARK_DAG_NAME = "gbif_spark_execution_dag";
 
   @Parameter(names = "--airflow-number-of-workers")
   public int numberOfWorkers;
@@ -27,9 +34,6 @@ public class AirflowConfiguration {
   @Parameter(names = "--airflow-cluster")
   public String airflowCluster;
 
-  @Parameter(names = "--airflow-dag")
-  public String airflowDag;
-
   @Parameter(names = "--use-airflow")
   public boolean useAirflow;
 
@@ -39,6 +43,10 @@ public class AirflowConfiguration {
   @Parameter(names = "--airflow-pass")
   public String airflowPass;
 
+  @Parameter(names = "--airflow-address")
+  public String airflowAddress;
+
+  @JsonIgnore
   public String getBasicAuthString() {
     String stringToEncode = airflowUser + ":" + airflowPass;
     return Arrays.toString(

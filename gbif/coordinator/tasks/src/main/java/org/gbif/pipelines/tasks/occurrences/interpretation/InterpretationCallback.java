@@ -29,6 +29,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.GbifApi;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.configs.AirflowConfiguration;
 import org.gbif.pipelines.common.interpretation.RecordCountReader;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.process.AirflowRunnerBuilder;
@@ -151,7 +152,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
       AirflowRunnerBuilder airRunnerBuilder =
           AirflowRunnerBuilder.builder()
               .airflowConfiguration(config.airflowConfig)
-              .dagId("spark-executor")
+              .dagId(AirflowConfiguration.SPARK_DAG_NAME)
+              .main("org.gbif.pipelines.ingest.pipelines.VerbatimToIdentifierPipeline")
               .dagRunId(
                   getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
               .beamConfigFn(

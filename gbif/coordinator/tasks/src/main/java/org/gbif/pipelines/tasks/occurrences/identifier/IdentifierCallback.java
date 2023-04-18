@@ -15,6 +15,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.configs.AirflowConfiguration;
 import org.gbif.pipelines.common.interpretation.RecordCountReader;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.process.AirflowRunnerBuilder;
@@ -100,7 +101,8 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
       AirflowRunnerBuilder airRunnerBuilder =
           AirflowRunnerBuilder.builder()
               .airflowConfiguration(config.airflowConfig)
-              .dagId("spark-executor")
+              .dagId(AirflowConfiguration.SPARK_DAG_NAME)
+              .main("org.gbif.pipelines.ingest.pipelines.VerbatimToOccurrencePipeline")
               .dagRunId(TYPE.name() + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
               .beamConfigFn(BeamSettings.occurrenceIdentifier(config, message, path))
               .build();

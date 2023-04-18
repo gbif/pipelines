@@ -20,6 +20,7 @@ import org.gbif.pipelines.common.configs.AirflowConfiguration;
 public class AirflowRunnerBuilder {
   private static final String DELIMITER = " ";
   private String dagId;
+  private String main;
   private String dagRunId;
   @NonNull private AirflowConfiguration airflowConfiguration;
 
@@ -34,6 +35,7 @@ public class AirflowRunnerBuilder {
   public AirflowRunner buildAirflowRunner() {
     AirflowRunner runner = new AirflowRunner();
     runner.setDagId(dagId);
+    runner.setBaseurl(airflowConfiguration.airflowAddress);
     runner.setBody(buildBody());
 
     ArrayList<NameValuePair> headers = new ArrayList<>();
@@ -49,6 +51,7 @@ public class AirflowRunnerBuilder {
 
   private AirflowBody buildBody() {
     AirflowBody body = new AirflowBody(airflowConfiguration);
+    body.setMain(main);
     body.setArgs(Arrays.asList(buildOptions()));
     return body;
   }

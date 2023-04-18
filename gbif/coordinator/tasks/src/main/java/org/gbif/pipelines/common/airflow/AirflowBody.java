@@ -11,28 +11,22 @@ import org.gbif.pipelines.common.configs.AirflowConfiguration;
 @Setter
 public class AirflowBody {
   private String main;
-  private String version;
-  private String jar;
-  private String image;
   private List<String> args;
   private String driverCores;
-  private String driverMem;
-  private int workerCount;
-  private String workerCores;
-  private String workerMem;
-  private String cluster;
+  private String driverMemory;
+  private int executorInstances;
+  private String executorCores;
+  private String executorMemory;
+  private String clusterName;
 
   public AirflowBody(AirflowConfiguration conf) {
-    Optional.ofNullable(conf.airflowCluster).ifPresent(x -> cluster = x);
+    Optional.ofNullable(conf.airflowCluster).ifPresent(x -> clusterName = x);
     Optional.ofNullable(conf.maxCoresDriver).ifPresent(x -> driverCores = x);
-    Optional.ofNullable(conf.maxMemoryDriver).ifPresent(x -> driverMem = x);
-    Optional.ofNullable(conf.maxCoresWorkers).ifPresent(x -> workerCores = x);
-    Optional.ofNullable(conf.maxMemoryWorkers).ifPresent(x -> workerMem = x);
-    Optional.of(conf.numberOfWorkers).ifPresent(x -> workerCount = x);
-    main = "some-string";
-    version = "some-version";
-    jar = "some-jar";
-    image = "some-image";
+    Optional.ofNullable(conf.maxMemoryDriver).ifPresent(x -> driverMemory = x);
+    Optional.ofNullable(conf.maxCoresWorkers).ifPresent(x -> executorCores = x);
+    Optional.ofNullable(conf.maxMemoryWorkers).ifPresent(x -> executorMemory = x);
+    Optional.of(conf.numberOfWorkers).ifPresent(x -> executorInstances = x);
+    main = "";
     args = new ArrayList<>();
   }
 }
