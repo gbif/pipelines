@@ -89,7 +89,7 @@ public class AirflowBodyTest {
             types,
             DatasetType.SAMPLING_EVENT);
 
-    AirflowRunnerBuilder airRunnerBuilder =
+    AirflowRunner airRunner =
         AirflowRunnerBuilder.builder()
             .airflowConfiguration(conf)
             .dagId(AirflowConfiguration.SPARK_DAG_NAME)
@@ -101,9 +101,10 @@ public class AirflowBodyTest {
                     + "_"
                     + message.getAttempt())
             .beamConfigFn(BeamSettings.eventInterpretation(config, message, "verbatim.avro"))
-            .build();
+            .build()
+            .buildAirflowRunner();
 
-    AirflowBody body = airRunnerBuilder.buildAirflowRunner().getBody();
+    AirflowBody body = airRunner.getBody();
 
     ObjectMapper mapper = new ObjectMapper();
     String result = "";

@@ -3,7 +3,6 @@ package org.gbif.pipelines.common.configs;
 import com.beust.jcommander.Parameter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Base64;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,7 +48,6 @@ public class AirflowConfiguration {
   @JsonIgnore
   public String getBasicAuthString() {
     String stringToEncode = airflowUser + ":" + airflowPass;
-    return Arrays.toString(
-        Base64.getEncoder().encode(stringToEncode.getBytes(StandardCharsets.UTF_8)));
+    return Base64.getEncoder().encodeToString(stringToEncode.getBytes(StandardCharsets.UTF_8));
   }
 }
