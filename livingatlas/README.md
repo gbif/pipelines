@@ -92,7 +92,7 @@ These steps will load a dataset into a SOLR index.
     Note `ala-sensitive-data-service.yml` can be ommited if you don't need to run the SDS pipeline but you'll need to add
     ```yaml
     index:
-      includeSensitiveData: false
+      includeSensitiveDataChecks: false
     ```
     to the file `configs/la-pipelines-local.yaml`.
 1. `cd scripts`
