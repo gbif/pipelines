@@ -73,6 +73,13 @@ These steps will load a dataset into a SOLR index.
     3. curl https://archives.ala.org.au/archives/gbif/dr893/dr893.zip -o /data/biocache-load/dr893/dr893.zip
 4. Create the following directory `/data/pipelines-data`
 5. Build with maven `mvn clean package`
+6. Download vocabularies
+    1. mkdir /data/pipelines-vocabularies
+    2. cd /data/pipelines-vocabularies
+    3. curl -sS https://api.gbif.org/v1/vocabularies/DegreeOfEstablishment/releases/LATEST/export > DegreeOfEstablishment.json
+    4. curl -sS https://api.gbif.org/v1/vocabularies/LifeStage/releases/LATEST/export > LifeStage.json
+    5. curl -sS https://api.gbif.org/v1/vocabularies/EstablishmentMeans/releases/LATEST/export > EstablishmentMeans.json
+    6. curl -sS https://api.gbif.org/v1/vocabularies/Pathway/releases/LATEST/export > Pathway.json
 
 ### Running la-pipelines
 
