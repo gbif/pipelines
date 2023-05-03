@@ -1165,8 +1165,24 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
   public static void addStringSafely(SolrInputDocument doc, String key, String value) {
     // current limitation on SOLR string field size
-    if (value.getBytes().length < 32765) {
+    if (value != null && value.getBytes().length < 32765) {
       doc.addField(key, value);
+    }
+  }
+
+  public static void addIntegerSafely(SolrInputDocument doc, String key, String value) {
+    try {
+      doc.addField(key, Integer.parseInt(value));
+    } catch (NumberFormatException e) {
+      //
+    }
+  }
+
+  public static void addDoubleSafely(SolrInputDocument doc, String key, String value) {
+    try {
+      doc.addField(key, Double.parseDouble(value));
+    } catch (NumberFormatException e) {
+      //
     }
   }
 
@@ -1284,6 +1300,41 @@ public class IndexRecordTransform implements Serializable, IndexFields {
           }
         }
       }
+    }
+
+    // annotations
+    if (indexRecord.getAnnotations() != null && !indexRecord.getAnnotations().isEmpty()) {
+      // add the annotations
+      List<SolrInputDocument> annotations = new ArrayList<>();
+      indexRecord
+          .getAnnotations()
+          .forEach(
+              annotation -> {
+                SolrInputDocument childDoc = new SolrInputDocument();
+                childDoc.setField(ID, indexRecord.getId() + "-" + annotation.getDoi());
+                addStringSafely(childDoc, DcTerm.identifier.simpleName(), annotation.getDoi());
+                addStringSafely(
+                    childDoc, DwcTerm.scientificName.simpleName(), annotation.getScientificName());
+                addDoubleSafely(
+                    childDoc,
+                    DwcTerm.decimalLongitude.simpleName(),
+                    annotation.getDecimalLongitude());
+                addDoubleSafely(
+                    childDoc,
+                    DwcTerm.decimalLatitude.simpleName(),
+                    annotation.getDecimalLatitude());
+                addIntegerSafely(childDoc, DwcTerm.year.simpleName(), annotation.getYear());
+                addIntegerSafely(childDoc, DwcTerm.month.simpleName(), annotation.getMonth());
+                addStringSafely(
+                    childDoc, DwcTerm.eventDate.simpleName(), annotation.getEventDate());
+                addStringSafely(
+                    childDoc,
+                    DwcTerm.occurrenceRemarks.simpleName(),
+                    annotation.getOccurrenceRemarks());
+
+                annotations.add(childDoc);
+              });
+      doc.setField("annotations", annotations);
     }
 
     return doc;

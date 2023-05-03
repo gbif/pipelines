@@ -1,0 +1,31 @@
+[
+  {
+    "name": "RecordAnnotation",
+    "namespace": "org.gbif.pipelines.io.avro",
+    "type": "record",
+    "doc": "An AVRO export used to support Spark SQL exports",
+    "fields": [
+      {"name": "id", "type": "string", "doc": "Pipelines identifier"},
+      {"name": "datasetKey", "type": ["null", "string"], "doc": "Pipelines identifier"},
+      {"name": "doi", "type": ["null", "string"], "doc": "Pipelines identifier"},
+      {"name": "scientificName", "type": ["null", "string"], "default" : null },
+      {"name": "decimalLatitude","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/decimalLatitude"},
+      {"name": "decimalLongitude","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/decimalLongitude"},
+      {"name": "day", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/day"},
+      {"name": "month", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/month"},
+      {"name": "year", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/year"},
+      {"name": "eventDate", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/eventDate"},
+      {"name": "occurrenceRemarks", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/occurrenceRemarks"}
+    ]
+  },
+  {
+    "name": "RecordAnnotations",
+    "namespace": "org.gbif.pipelines.io.avro",
+    "type": "record",
+    "doc": "A collection of a",
+    "fields": [
+      {"name": "id", "type": "string", "doc": "Pipelines identifier"},
+      {"name": "annotations", "type": {"type" : "array", "items" : "org.gbif.pipelines.io.avro.RecordAnnotation"}, "doc": "Set of annotations associated with this record"}
+    ]
+  }
+]
