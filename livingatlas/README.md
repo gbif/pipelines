@@ -76,12 +76,12 @@ These steps will load a dataset into a SOLR index.
     ```bash
     docker-compose -f pipelines/src/main/docker/ala-name-service.yml up -d
     docker-compose -f pipelines/src/main/docker/solr8.yml up -d
-    docker-compose -f pipelines/src/main/docker/ala-sensitive-data-service.yml 
+    docker-compose -f pipelines/src/main/docker/ala-sensitive-data-service.yml up -d
     ```
     Note `ala-sensitive-data-service.yml` can be ommited if you don't need to run the SDS pipeline but you'll need to add
     ```yaml
     index:
-      includeSensitiveData: false
+      includeSensitiveDataChecks: false
     ```
     to the file `configs/la-pipelines-local.yaml`.
 1. `cd scripts`
