@@ -25,7 +25,7 @@ public class ModelUtils {
 
   public static String extractValue(ExtendedRecord er, Term term) {
     String value = er.getCoreTerms().get(term.qualifiedName());
-    return value != null ? value : extractFromIdentificationExtension(er, term);
+    return value != null ? value.trim() : extractFromIdentificationExtension(er, term);
   }
 
   public static String extractValue(Map<String, String> termsSource, Term term) {

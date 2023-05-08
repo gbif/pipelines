@@ -51,7 +51,7 @@ public class TemporalRecordTransformTest {
     record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
     record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "2");
     record.getCoreTerms().put(DwcTerm.day.qualifiedName(), "2");
-    record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "1999-02-02");
+    record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), " 1999-02-02 ");
     record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1999-02-02T12:26");
     record.getCoreTerms().put(DcTerm.modified.qualifiedName(), "1999-02-02T12:26");
     final List<ExtendedRecord> input = Collections.singletonList(record);
