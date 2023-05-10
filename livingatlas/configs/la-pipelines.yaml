@@ -113,6 +113,7 @@ gbifConfig:
     - http://rs.gbif.org/terms/1.0/Reference
     - http://rs.tdwg.org/dwc/terms/ResourceRelationship
     - http://rs.gbif.org/terms/1.0/DNADerivedData
+    - http://ala.org.au/terms/seedbank/0.1/SeedbankRecord
   vocabularyConfig:
     vocabulariesPath: /data/pipelines-vocabularies/
     vocabulariesNames:

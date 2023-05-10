@@ -7,6 +7,7 @@ import static org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory.reg
 import au.org.ala.pipelines.options.ALAEsIndexingPipelineOptions;
 import au.org.ala.pipelines.transforms.ALADerivedMetadataTransform;
 import au.org.ala.pipelines.transforms.ALAMetadataTransform;
+import au.org.ala.pipelines.transforms.SeedbankTransform;
 import au.org.ala.pipelines.util.ElasticsearchTools;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -152,9 +153,13 @@ public class ALAEventToEsIndexPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
+
     LocationTransform parentLocationTransform = LocationTransform.builder().create();
+
+    // extensions
     MeasurementOrFactTransform measurementOrFactTransform =
         MeasurementOrFactTransform.builder().create();
+    SeedbankTransform seedbankTransform = SeedbankTransform.builder().create();
 
     // Extension
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
@@ -185,6 +190,10 @@ public class ALAEventToEsIndexPipeline {
     PCollection<KV<String, LocationRecord>> locationCollection =
         p.apply("Read Event Location", locationTransform.read(eventsPathFn))
             .apply("Map Location to KV", locationTransform.toKv());
+
+    PCollection<KV<String, SeedbankRecord>> seedbankCollection =
+        p.apply("Read Event Location", seedbankTransform.read(eventsPathFn))
+            .apply("Map Location to KV", seedbankTransform.toKv());
 
     InheritedFields inheritedFields =
         InheritedFields.builder()
@@ -252,6 +261,7 @@ public class ALAEventToEsIndexPipeline {
             .audubonRecordTag(audubonTransform.getTag())
             .derivedMetadataRecordTag(DerivedMetadataTransform.tag())
             .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
+            .seedbankRecordTag(seedbankTransform.getTag())
             .locationInheritedRecordTag(InheritedFieldsTransform.LIR_TAG)
             .temporalInheritedRecordTag(InheritedFieldsTransform.TIR_TAG)
             .eventInheritedRecordTag(InheritedFieldsTransform.EIR_TAG)
@@ -272,6 +282,7 @@ public class ALAEventToEsIndexPipeline {
             .and(audubonTransform.getTag(), audubonCollection)
             .and(DerivedMetadataTransform.tag(), derivedMetadataRecordCollection)
             .and(measurementOrFactTransform.getTag(), measurementOrFactCollection)
+            .and(seedbankTransform.getTag(), seedbankCollection)
             .and(InheritedFieldsTransform.LIR_TAG, locationInheritedRecords)
             .and(InheritedFieldsTransform.TIR_TAG, temporalInheritedRecords)
             .and(InheritedFieldsTransform.EIR_TAG, eventInheritedRecords)

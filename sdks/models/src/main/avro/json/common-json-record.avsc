@@ -224,5 +224,45 @@
       {"name": "measurementMethod", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementMethod"},
       {"name": "measurementRemarks", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementRemarks"}
     ]
+  },
+  {
+    "name":"SeedbankRecord",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "fields":[
+      {"name": "id", "type": ["null", "string"], "default": null},
+      {"name": "accessionNumber", "type": ["null", "string"], "default": null},
+      {"name": "adjustedGerminationPercentage", "type": ["null", "double"], "default": null},
+      {"name": "cultivated", "type": ["null", "string"], "default": null},
+      {"name": "darkHours", "type": ["null", "double"], "default": null},
+      {"name": "dateCollected", "type": ["null", "long"], "default": null},
+      {"name": "dateInStorage", "type": ["null", "long"], "default": null},
+      {"name": "dayTemperatureInCelsius", "type": ["null", "double"], "default": null},
+      {"name": "formInStorage", "type": ["null", "string"], "default": null},
+      {"name": "germinationRateInDays", "type": ["null", "double"], "default": null},
+      {"name": "lightHours", "type": ["null", "double"], "default": null},
+      {"name": "mediaSubstrate", "type": ["null", "string"], "default": null},
+      {"name": "nightTemperatureInCelsius", "type": ["null", "double"], "default": null},
+      {"name": "numberEmpty", "type": ["null", "double"], "default": null},
+      {"name": "numberFull", "type": ["null", "double"], "default": null},
+      {"name": "numberGerminated", "type": ["null", "double"], "default": null},
+      {"name": "numberPlantsSampled", "type": ["null", "double"], "default": null},
+      {"name": "numberTested", "type": ["null", "double"], "default": null},
+      {"name": "plantForm", "type": ["null", "string"], "default": null},
+      {"name": "pretreatment", "type": ["null", "string"], "default": null},
+      {"name": "primaryCollector", "type": ["null", "string"], "default": null},
+      {"name": "primaryStorageSeedBank", "type": ["null", "string"], "default": null},
+      {"name": "purityDebrisPercentage", "type": ["null", "double"], "default": null},
+      {"name": "purityPercentage", "type": ["null", "double"], "default": null},
+      {"name": "relativeHumidityPercentage", "type": ["null", "double"], "default": null},
+      {"name": "sampleSize", "type": ["null", "double"], "default": null},
+      {"name": "sampleWeightInGrams", "type": ["null", "double"], "default": null},
+      {"name": "seedPerGram", "type": ["null", "double"], "default": null},
+      {"name": "storageTemperatureInCelsius", "type": ["null", "double"], "default": null},
+      {"name": "testDateStarted", "type": ["null", "long"], "default": null},
+      {"name": "testLengthInDays", "type": ["null", "double"], "default": null},
+      {"name": "thousandSeedWeight", "type": ["null", "double"], "default": null},
+      {"name": "viabilityPercentage", "type": ["null", "double"], "default": null}
+    ]
   }
 ]

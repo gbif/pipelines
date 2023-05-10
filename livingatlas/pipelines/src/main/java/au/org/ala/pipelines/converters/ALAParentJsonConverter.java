@@ -37,6 +37,7 @@ public class ALAParentJsonConverter {
   protected final DerivedMetadataRecord derivedMetadata;
   protected OccurrenceJsonRecord occurrenceJsonRecord;
   protected MeasurementOrFactRecord measurementOrFactRecord;
+  protected SeedbankRecord seedbankRecord;
 
   public ParentJsonRecord convertToParent() {
     return (occurrenceJsonRecord != null) ? convertToParentOccurrence() : convertToParentEvent();
@@ -125,6 +126,7 @@ public class ALAParentJsonConverter {
     mapTaxonRecord(builder);
     mapMeasurementOrFactRecord(builder);
     mapInherited(builder);
+    mapSeedbank(builder);
 
     // synthesize a locationID if one isnt provided
     if (builder.getLocationID() == null
@@ -370,6 +372,12 @@ public class ALAParentJsonConverter {
                   })
               .collect(Collectors.toList());
       builder.setMeasurementOrFacts(mofs);
+    }
+  }
+
+  private void mapSeedbank(EventJsonRecord.Builder builder) {
+    if (seedbankRecord != null) {
+      builder.setSeedbankRecord(seedbankRecord);
     }
   }
 

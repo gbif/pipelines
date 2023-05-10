@@ -92,7 +92,9 @@
       {"name":"eventHierarchyJoined","type":["null","string"],"default":null,"doc":""},
       {"name":"eventTypeHierarchyJoined","type":["null","string"],"default":null,"doc":""},
       {"name":"eventHierarchyLevels","type":["null","int"],"default":null,"doc":""},
-      {"name":"measurementOrFacts","type":{"type":"array","items":"org.gbif.pipelines.io.avro.json.MeasurementOrFactJsonRecord"},"default":[],"doc":""}
+      {"name":"measurementOrFacts","type":{"type":"array","items":"org.gbif.pipelines.io.avro.json.MeasurementOrFactJsonRecord"},"default":[],"doc":""},
+      // Extensions
+      {"name":"seedbankRecord","type":["null","org.gbif.pipelines.io.avro.SeedbankRecord"],"default":null,"doc":"org.gbif.pipelines.io.avro.SeedbankRecord"}
     ]
   }
 ]
