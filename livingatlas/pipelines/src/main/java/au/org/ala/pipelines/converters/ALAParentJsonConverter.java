@@ -194,6 +194,11 @@ public class ALAParentJsonConverter {
 
   private void mapInherited(EventJsonRecord.Builder builder) {
 
+    if (eventCore.getEventType() != null
+        && eventCore.getEventType().getConcept().equalsIgnoreCase("Survey")) {
+      builder.setSurveyID(builder.getEventID());
+    }
+
     if (eventCore.getParentsLineage() != null && !eventCore.getParentsLineage().isEmpty()) {
 
       List<String> eventIDs =
@@ -210,6 +215,16 @@ public class ALAParentJsonConverter {
                   Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
               .map(e -> e.getEventType())
               .collect(Collectors.toList());
+
+      if (builder.getSurveyID() == null) {
+        List<org.gbif.pipelines.io.avro.Parent> surveys =
+            eventCore.getParentsLineage().stream()
+                .filter(e -> e.getEventType().equalsIgnoreCase("Survey"))
+                .collect(Collectors.toList());
+        if (!surveys.isEmpty()) {
+          builder.setSurveyID(surveys.get(0).getId());
+        }
+      }
 
       if (eventCore.getEventType() != null) {
         eventTypes.add(eventCore.getEventType().getConcept());

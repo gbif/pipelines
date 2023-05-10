@@ -86,7 +86,8 @@
       {"name":"verbatim","type":["null","VerbatimRecord"],"default":null,"doc":""},
       // Aggregations
       {"name":"occurrenceCount","type":["null","int"],"default":null,"doc":""},
-      // Denormalised event info
+      // De-normalised event info
+      {"name":"surveyID","type":["null","string"],"default":null,"doc":""},
       {"name":"eventHierarchy","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"eventTypeHierarchy","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"eventHierarchyJoined","type":["null","string"],"default":null,"doc":""},

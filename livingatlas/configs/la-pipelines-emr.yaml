@@ -114,6 +114,7 @@ elastic:
 export:
   inputPath: hdfs:///pipelines-data
   targetPath: hdfs:///pipelines-data
+  allDatasetsInputPath: hdfs:///pipelines-all-datasets
 
 predicate-export:
   inputPath: hdfs:///pipelines-data

@@ -165,7 +165,7 @@ public class ALAVerbatimToInterpretedPipeline {
       log.warn("Verbatim AVRO not available for {}", options.getDatasetId());
       return;
     }
-
+    String postfix = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
     Set<String> types = Collections.singleton(ALL.name());
@@ -251,12 +251,24 @@ public class ALAVerbatimToInterpretedPipeline {
         MeasurementOrFactTransform.builder().create();
 
     Optional<ALAMetadataRecord> result = metadataTransform.processElement(options.getDatasetId());
-    ALAMetadataRecord mdr;
-    if (result.isPresent()) {
-      mdr = result.get();
-    } else {
+    if (!result.isPresent()) {
       throw new PipelinesException(
-          "Unable to retrieve metadata from collectory for datasetId:" + datasetId);
+          "Unable to retrieve metadata from collectory for datasetId: " + options.getDatasetId());
+    }
+    ALAMetadataRecord mdr = result.get();
+    SyncDataFileWriter metadataWriter =
+        createWriter(
+            options,
+            ALAMetadataRecord.getClassSchema(),
+            metadataTransform,
+            DwcTerm.Occurrence,
+            postfix);
+    metadataWriter.append(mdr);
+    try {
+      metadataWriter.close();
+    } catch (IOException e) {
+      throw new PipelinesException(
+          "Unable to write metadata AVRO for datasetId: " + options.getDatasetId(), e);
     }
 
     // ALA specific - Attribution
@@ -393,14 +405,22 @@ public class ALAVerbatimToInterpretedPipeline {
     }
   }
 
-  /** Create an AVRO file writer */
   @SneakyThrows
   private static <T> SyncDataFileWriter<T> createWriter(
       InterpretationPipelineOptions options, Schema schema, Transform transform, String id) {
+    return createWriter(options, schema, transform, CORE_TERM, id);
+  }
+
+  /** Create an AVRO file writer */
+  @SneakyThrows
+  private static <T> SyncDataFileWriter<T> createWriter(
+      InterpretationPipelineOptions options,
+      Schema schema,
+      Transform transform,
+      DwcTerm term,
+      String id) {
     UnaryOperator<String> pathFn =
-        t ->
-            PathBuilder.buildPathInterpretUsingTargetPath(
-                options, CORE_TERM, t, id + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, term, t, id + AVRO_EXTENSION);
     Path path = new Path(pathFn.apply(transform.getBaseName()));
     FileSystem fs =
         FileSystemFactory.getInstance(HdfsConfigs.create(options.getHdfsSiteConfig(), null))
