@@ -168,6 +168,10 @@ public class ALAVerbatimToEventPipeline {
     IdentifierTransform identifierTransform = transformsFactory.createIdentifierTransform();
     MeasurementOrFactTransform measurementOrFactTransform =
         MeasurementOrFactTransform.builder().create();
+
+    SeedbankTransform seedbankTransform =
+        SeedbankTransform.builder().orderings(dateComponentOrdering).create();
+
     log.info("Creating beam pipeline");
 
     if (useMetadataRecordWriteIO(types)) {
@@ -217,6 +221,11 @@ public class ALAVerbatimToEventPipeline {
         .apply("Write event measurementOrFact to avro", measurementOrFactTransform.write(pathFn));
 
     uniqueRawRecords
+        .apply("Check event temporal transform", seedbankTransform.check(types))
+        .apply("Interpret event temporal", seedbankTransform.interpret())
+        .apply("Interpret event core", seedbankTransform.write(pathFn));
+
+    uniqueRawRecords
         .apply("Check event verbatim transform", verbatimTransform.check(types))
         .apply("Write event verbatim to avro", verbatimTransform.write(pathFn));
 
@@ -240,6 +249,7 @@ public class ALAVerbatimToEventPipeline {
 
     org.gbif.pipelines.transforms.core.LocationTransform gbifLocationTransform =
         org.gbif.pipelines.transforms.core.LocationTransform.builder().create();
+
     org.gbif.pipelines.transforms.core.TemporalTransform gbifTemporalTransform =
         org.gbif.pipelines.transforms.core.TemporalTransform.builder().create();
 

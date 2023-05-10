@@ -43,6 +43,8 @@ public class ALAParentJsonTransform implements Serializable {
   @NonNull private final PCollectionView<ALAMetadataRecord> metadataView;
   @NonNull private final TupleTag<DerivedMetadataRecord> derivedMetadataRecordTag;
   @NonNull private final TupleTag<MeasurementOrFactRecord> measurementOrFactRecordTag;
+  @NonNull private final TupleTag<SeedbankRecord> seedbankRecordTag;
+
   private final TupleTag<String[]> samplingProtocolsTag;
 
   @NonNull private final TupleTag<LocationInheritedRecord> locationInheritedRecordTag;
@@ -102,6 +104,9 @@ public class ALAParentJsonTransform implements Serializable {
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, imr, ar);
 
+            SeedbankRecord sr =
+                v.getOnly(seedbankRecordTag, SeedbankRecord.newBuilder().setId(k).build());
+
             // Derived metadata
             DerivedMetadataRecord dmr =
                 v.getOnly(
@@ -119,6 +124,7 @@ public class ALAParentJsonTransform implements Serializable {
                     .verbatim(er)
                     .derivedMetadata(dmr)
                     .measurementOrFactRecord(mofr)
+                    .seedbankRecord(sr)
                     .build()
                     .toJson();
 
