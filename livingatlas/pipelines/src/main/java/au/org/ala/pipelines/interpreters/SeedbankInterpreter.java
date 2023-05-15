@@ -37,15 +37,16 @@ public class SeedbankInterpreter {
           .map(SeedbankTerm.numberFull, SeedbankInterpreter::setNumberFull)
           .map(SeedbankTerm.numberGerminated, SeedbankInterpreter::setNumberGerminated)
           .map(SeedbankTerm.numberPlantsSampled, SeedbankInterpreter::setNumberPlantsSampled)
-          .map(SeedbankTerm.purityDebrisPercentage, SeedbankInterpreter::setPurityDebris)
-          .map(SeedbankTerm.sampleSize, SeedbankInterpreter::setSampleSize)
-          .map(SeedbankTerm.sampleWeightInGrams, SeedbankInterpreter::setSampleWeight)
+          .map(SeedbankTerm.sampleSize, SeedbankInterpreter::setQuantityCount)
+          .map(SeedbankTerm.sampleWeightInGrams, SeedbankInterpreter::setQuantityInGrams)
           .map(SeedbankTerm.testLengthInDays, SeedbankInterpreter::setTestLengthInDays)
           .map(SeedbankTerm.thousandSeedWeight, SeedbankInterpreter::setThousandSeedWeight)
           .map(SeedbankTerm.seedPerGram, SeedbankInterpreter::setSeedPerGram)
           .map(SeedbankTerm.purityPercentage, SeedbankInterpreter::setPurityPercentage)
           .map(SeedbankTerm.viabilityPercentage, SeedbankInterpreter::setViabilityPercentage)
-          .map(SeedbankTerm.relativeHumidityPercentage, SeedbankInterpreter::setRelativeHumidity)
+          .map(
+              SeedbankTerm.relativeHumidityPercentage,
+              SeedbankInterpreter::setStorageRelativeHumidityPercentage)
           .map(SeedbankTerm.storageTemperatureInCelsius, SeedbankInterpreter::setStorageTemp)
           .map(SeedbankTerm.germinationRateInDays, SeedbankInterpreter::setGerminateRate)
           .map(SeedbankTerm.numberEmpty, SeedbankInterpreter::setNumberEmpty)
@@ -68,17 +69,17 @@ public class SeedbankInterpreter {
     ExtensionInterpretation.Result<SeedbankRecord> result = HANDLER.convert(er);
   }
 
-  public static void setSampleWeight(SeedbankRecord sr, String value) {
+  public static void setQuantityInGrams(SeedbankRecord sr, String value) {
     try {
-      sr.setSampleWeightInGrams(Double.parseDouble(value));
+      sr.setQuantityInGrams(Double.parseDouble(value));
     } catch (Exception e) {
       // do nothing
     }
   }
 
-  public static void setSampleSize(SeedbankRecord sr, String value) {
+  public static void setQuantityCount(SeedbankRecord sr, String value) {
     try {
-      sr.setSampleSize(Double.parseDouble(value));
+      sr.setQuantityCount(Double.parseDouble(value));
     } catch (Exception e) {
       // do nothing
     }
@@ -148,14 +149,6 @@ public class SeedbankInterpreter {
     }
   }
 
-  public static void setPurityDebris(SeedbankRecord sr, String value) {
-    try {
-      sr.setPurityDebrisPercentage(validOrNullPercentage(Double.parseDouble(value)));
-    } catch (Exception e) {
-      // do nothing
-    }
-  }
-
   public static void setTestLengthInDays(SeedbankRecord sr, String value) {
     try {
       sr.setTestLengthInDays(Double.parseDouble(value));
@@ -196,9 +189,9 @@ public class SeedbankInterpreter {
     }
   }
 
-  public static void setRelativeHumidity(SeedbankRecord sr, String value) {
+  public static void setStorageRelativeHumidityPercentage(SeedbankRecord sr, String value) {
     try {
-      sr.setRelativeHumidityPercentage(validOrNullPercentage(Double.parseDouble(value)));
+      sr.setStorageRelativeHumidityPercentage(validOrNullPercentage(Double.parseDouble(value)));
     } catch (Exception e) {
       // do nothing
     }
