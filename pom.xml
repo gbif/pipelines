@@ -27,7 +27,7 @@
     <connection>scm:git:git@github.com:gbif/pipelines.git</connection>
     <url>https://github.com/gbif/pipelines</url>
     <developerConnection>scm:git:git@github.com:gbif/pipelines.git</developerConnection>
-    <tag>pipelines-parent-2.11.12</tag>
+    <tag>pipelines-parent-2.14.1</tag>
   </scm>
 
   <distributionManagement>
@@ -747,12 +747,6 @@
         <groupId>org.elasticsearch.client</groupId>
         <artifactId>elasticsearch-rest-high-level-client</artifactId>
         <version>${elasticsearch.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.elasticsearch</groupId>
-            <artifactId>jna</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.elasticsearch</groupId>

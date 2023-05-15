@@ -19,7 +19,7 @@
     <connection>scm:git:git@github.com:gbif/pipelines.git</connection>
     <url>https://github.com/gbif/pipelines</url>
     <developerConnection>scm:git:git@github.com:gbif/pipelines.git</developerConnection>
-    <tag>pipelines-parent-2.11.12</tag>
+    <tag>pipelines-parent-2.14.1</tag>
   </scm>
 
   <properties>
@@ -40,6 +40,7 @@
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
     <json-simple.version>1.1.1</json-simple.version>
+    <hadoop-compress.version>1.2</hadoop-compress.version>
 
     <!-- GBIF parent currently using 2.4.0 -->
     <spark.embedded.version>2.4.5</spark.embedded.version>
@@ -849,7 +850,7 @@
     <dependency>
       <groupId>org.gbif.hadoop</groupId>
       <artifactId>hadoop-compress</artifactId>
-      <version>1.2</version>
+      <version>${hadoop-compress.version}</version>
     </dependency>
   </dependencies>
 

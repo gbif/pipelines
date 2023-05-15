@@ -14,6 +14,9 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MetadataPath {
+
+  private static final String DEFUALT_NAME = "eml.xml";
+  private static final String DEFUALT_NAME_UPPER = "EML.xml";
   private static final Pattern PATTERN = Pattern.compile("(metadata=\")(\\w+.xml)(\")");
 
   /** Scans root directory for xml files and parses and gets value from metadata tag */
@@ -40,6 +43,17 @@ public class MetadataPath {
           return first;
         }
       }
+
+      Path defualtNamePath = rootDirectory.resolve(DEFUALT_NAME);
+      if (Files.exists(defualtNamePath)) {
+        return Optional.of(defualtNamePath);
+      }
+
+      Path defualtUpperNamePath = rootDirectory.resolve(DEFUALT_NAME_UPPER);
+      if (Files.exists(defualtUpperNamePath)) {
+        return Optional.of(defualtUpperNamePath);
+      }
+
       return Optional.empty();
     }
   }
