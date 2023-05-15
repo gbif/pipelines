@@ -20,14 +20,14 @@ public class SeedbankInterpreterTest {
 
   @Test
   public void testSetSampleWeight() {
-    SeedbankInterpreter.setSampleWeight(sr, "10.0");
-    assertEquals(10.0, sr.getSampleWeightInGrams());
+    SeedbankInterpreter.setQuantityInGrams(sr, "10.0");
+    assertEquals(10.0, sr.getQuantityInGrams());
   }
 
   @Test
   public void testSetSampleSize() {
-    SeedbankInterpreter.setSampleSize(sr, "100.0");
-    assertEquals(100.0, sr.getSampleSize());
+    SeedbankInterpreter.setQuantityCount(sr, "100.0");
+    assertEquals(100.0, sr.getQuantityCount());
   }
 
   @Test
@@ -62,8 +62,8 @@ public class SeedbankInterpreterTest {
 
   @Test
   public void testSetSampleSizeBadInput() {
-    SeedbankInterpreter.setSampleSize(sr, "invalid_input");
-    assertNull(sr.getSampleSize());
+    SeedbankInterpreter.setQuantityCount(sr, "invalid_input");
+    assertNull(sr.getQuantityCount());
   }
 
   @Test
