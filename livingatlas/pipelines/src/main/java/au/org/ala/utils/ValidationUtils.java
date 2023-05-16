@@ -81,12 +81,18 @@ public class ValidationUtils {
         options.getInputPath(),
         options.getDatasetId(),
         options.getAttempt(),
-        options.getIncludeSensitiveData());
+        options.getIncludeSensitiveDataChecks(),
+        options.getTimeBufferInMillis());
   }
 
   /** Checks a dataset can be indexed. */
   public static ValidationResult checkReadyForIndexing(
-      FileSystem fs, String filePath, String datasetId, Integer attempt, boolean sdsRequired) {
+      FileSystem fs,
+      String filePath,
+      String datasetId,
+      Integer attempt,
+      boolean sdsRequired,
+      Integer timeBufferInMillis) {
 
     ValidationResult isValid = checkValidationFile(fs, filePath, datasetId, attempt);
 
@@ -104,11 +110,11 @@ public class ValidationUtils {
     // check UUID date
     long uuidTime = metricsModificationTime(fs, filePath, datasetId, attempt, UUID_METRICS);
 
-    if (interpretationTime < verbatimTime) {
+    if (interpretationTime < (verbatimTime + timeBufferInMillis)) {
       log.warn(
           "The imported verbatim is newer than the interpretation. Interpretation should be re-ran.");
     }
-    if (verbatimTime > uuidTime) {
+    if (verbatimTime > (uuidTime + timeBufferInMillis)) {
       log.warn(
           "The imported verbatim AVRO is newer than the uuid. Unable to index until UUID minting re-ran");
       return ValidationResult.builder().valid(false).message(UUID_REQUIRED).build();
@@ -121,7 +127,7 @@ public class ValidationUtils {
       }
 
       long sdsTime = metricsModificationTime(fs, filePath, datasetId, attempt, SENSITIVE_METRICS);
-      if (interpretationTime > sdsTime) {
+      if (interpretationTime > (sdsTime + timeBufferInMillis)) {
         log.warn(
             "The imported interpretation is newer than the SDS. Unable to index until SDS re-ran");
         return ValidationResult.builder().valid(false).message(SDS_REQUIRED).build();
@@ -177,6 +183,10 @@ public class ValidationUtils {
       // the YAML files created by metrics are UTF-16 encoded
       Map<String, Object> yamlObject =
           yaml.load(new InputStreamReader(fs.open(metrics), StandardCharsets.UTF_8));
+
+      if (yamlObject == null || yamlObject.isEmpty()) {
+        return ValidationResult.builder().valid(false).message(NOT_VALIDATED).build();
+      }
 
       // check metadata available
       boolean metadataAvailable =

@@ -243,6 +243,7 @@ public class PipelinesVariables {
 
     public static final String AVRO_TO_JSON_COUNT = "avroToJsonCount";
 
+    public static final String OCC_AVRO_TO_JSON_COUNT = "occAvroToJsonCount";
     public static final String EVENTS_AVRO_TO_JSON_COUNT = "eventsAvroToJsonCount";
     public static final String ARCHIVE_TO_ER_COUNT = "archiveToErCount";
     public static final String AVRO_TO_HDFS_COUNT = "avroToHdfsCount";
@@ -279,6 +280,7 @@ public class PipelinesVariables {
     public static final String AUDUBON_RECORDS_COUNT = "audubonRecordsCount";
     public static final String MEASUREMENT_OR_FACT_RECORDS_COUNT = "measurementOrFactRecordsCount";
     public static final String AMPLIFICATION_RECORDS_COUNT = "amplificationRecordsCount";
+    public static final String SEEDBANK_RECORDS_COUNT = "seedbankRecordsCount";
     // HDFS Tables
     public static final String MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT =
         "measurementOrFactTableRecordsCount";

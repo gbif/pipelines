@@ -1,6 +1,5 @@
 package org.gbif.pipelines.tasks.validators.validator.validate;
 
-import static org.gbif.pipelines.tasks.validators.validator.validate.DwcaArchiveValidator.EML_XML;
 import static org.junit.Assert.assertEquals;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,7 +50,7 @@ public class DwcaArchiveValidatorTest {
 
     FileInfo metadata = metrics.getFileInfos().get(0);
     assertEquals(DwcFileType.METADATA, metadata.getFileType());
-    assertEquals(EML_XML, metadata.getFileName());
+    assertEquals("eml.xml", metadata.getFileName());
 
     FileInfo occurrence = metrics.getFileInfos().get(1);
     assertEquals(DwcFileType.CORE, occurrence.getFileType());

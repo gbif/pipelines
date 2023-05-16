@@ -73,7 +73,9 @@ public class SchemaValidatorFactory {
     try {
       return newValidatorFromDocument(xmlDocument).validate(xmlDocument);
     } catch (Exception ex) {
-      return Collections.singletonList(IssueInfo.create(EvaluationType.EML_NOT_FOUND));
+      return Collections.singletonList(
+          IssueInfo.create(
+              EvaluationType.EML_GBIF_SCHEMA, "EML document", ex.getLocalizedMessage()));
     }
   }
 

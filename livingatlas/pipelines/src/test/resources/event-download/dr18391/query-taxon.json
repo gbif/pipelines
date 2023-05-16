@@ -4,7 +4,7 @@
     "type": "in",
     "key": "taxonKey",
     "values": [
-      "urn:lsid:biodiversity.org.au:afd.taxon:15bfb3f9-fa29-467f-b043-359449be35b5"
+      "https://biodiversity.org.au/afd/taxa/15bfb3f9-fa29-467f-b043-359449be35b5"
     ]
   }]
 }

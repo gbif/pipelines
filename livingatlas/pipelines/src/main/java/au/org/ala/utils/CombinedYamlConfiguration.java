@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import lombok.SneakyThrows;
-import one.util.streamex.EntryStream;
 import org.gbif.pipelines.common.PipelinesException;
 import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.Yaml;
@@ -107,18 +106,20 @@ public class CombinedYamlConfiguration {
    * @return the merged hash map
    */
   private Map<String, Object> combineMap(Map<String, Object> map1, Map<String, Object> map2) {
-    Map<String, Object> map3 =
-        EntryStream.of(map1)
-            .append(EntryStream.of(map2))
-            .toMap(
-                (v1, v2) -> {
-                  if (v1 instanceof Map && v2 instanceof Map) {
-                    return combineMap((Map<String, Object>) v1, (Map<String, Object>) v2);
-                  } else {
-                    return v2;
-                  }
-                });
-    return new LinkedHashMap<>(map3);
+    Map<String, Object> map3 = new LinkedHashMap<>(map1);
+    for (Map.Entry<String, Object> entry : map2.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+      Object existingValue = map3.get(key);
+      if (existingValue instanceof Map && value instanceof Map) {
+        Map<String, Object> combinedMap =
+            combineMap((Map<String, Object>) existingValue, (Map<String, Object>) value);
+        map3.put(key, combinedMap);
+      } else {
+        map3.put(key, value);
+      }
+    }
+    return map3;
   }
 
   /**

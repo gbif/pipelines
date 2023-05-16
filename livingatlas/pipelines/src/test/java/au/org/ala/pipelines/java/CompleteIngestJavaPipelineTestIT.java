@@ -163,7 +163,7 @@ public class CompleteIngestJavaPipelineTestIT {
               "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline-java/all-datasets",
               "--properties=" + itUtils.getPropertiesFilePath(),
               "--includeImages=false",
-              "--includeSensitiveData=true"
+              "--includeSensitiveDataChecks=true"
             });
     IndexRecordPipeline.run(solrOptions);
 

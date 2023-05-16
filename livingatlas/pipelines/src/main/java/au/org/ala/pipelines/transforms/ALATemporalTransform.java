@@ -6,6 +6,9 @@ import au.org.ala.pipelines.interpreters.ALATemporalInterpreter;
 import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
@@ -62,6 +65,11 @@ public class ALATemporalTransform extends Transform<ExtendedRecord, TemporalReco
               .preprocessDateFn(preprocessDateFn)
               .create();
     }
+  }
+
+  public MapElements<TemporalRecord, KV<String, TemporalRecord>> toKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, TemporalRecord>>() {})
+        .via((TemporalRecord lr) -> KV.of(lr.getId(), lr));
   }
 
   public ALATemporalTransform counterFn(SerializableConsumer<String> counterFn) {

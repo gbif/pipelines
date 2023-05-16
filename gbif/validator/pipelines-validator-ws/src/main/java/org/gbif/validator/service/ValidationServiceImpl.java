@@ -26,6 +26,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
+import org.gbif.dwca.validation.MetadataPath;
 import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.metadata.eml.parse.DatasetEmlParser;
 import org.gbif.validator.api.FileFormat;
@@ -211,7 +212,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     fileStoreManager.deleteIfExist(key.toString());
   }
 
-  /** Paged result of validations of a an user. */
+  /** Paged result of validations of a user. */
   @Override
   public PagingResponse<Validation> list(ValidationSearchRequest validationSearchRequest) {
     GbifUserPrincipal principal = getPrincipal();
@@ -278,9 +279,16 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   private Dataset readEml(Path pathToArchive) {
     try {
-      Path path = pathToArchive.getParent().resolve("eml.xml");
-      String eml = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+      Optional<Path> existedPath = MetadataPath.parsePath(pathToArchive);
+
+      if (!existedPath.isPresent()) {
+        log.error("Can't find metadata eml file");
+        return null;
+      }
+
+      String eml = new String(Files.readAllBytes(existedPath.get()), StandardCharsets.UTF_8);
       return DatasetEmlParser.build(eml.getBytes(StandardCharsets.UTF_8));
+
     } catch (Exception ex) {
       log.error("Can't parse eml file and convert to Dataset. {}", ex.getMessage());
       return null;

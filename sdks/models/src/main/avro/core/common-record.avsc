@@ -3,6 +3,15 @@
  */
 [
   {
+    "name":"AgentIdentifier",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "fields":[
+      {"name": "type", "type": ["null", "string"] },
+      {"name": "value", "type": ["null", "string"] }
+    ]
+  },
+  {
     "name":"VocabularyConcept",
     "namespace":"org.gbif.pipelines.io.avro",
     "type":"record",

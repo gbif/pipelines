@@ -30,7 +30,7 @@
 
     <!-- GBIF -->
     <gbif-common-mybatis.version>1.1</gbif-common-mybatis.version>
-    <gbif-metadata-profile-eml.version>2.1</gbif-metadata-profile-eml.version>
+    <gbif-metadata-profile-eml.version>2.2-SNAPSHOT</gbif-metadata-profile-eml.version>
 
     <!-- Checklists validation-->
     <gbif-checklistbank.version>2.101</gbif-checklistbank.version>

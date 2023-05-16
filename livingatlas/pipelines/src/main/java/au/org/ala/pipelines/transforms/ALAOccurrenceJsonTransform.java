@@ -17,9 +17,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
-import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
-import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 
 /**
  * Beam level transformation for the ES output json. The transformation consumes objects, which
@@ -80,7 +77,12 @@ public class ALAOccurrenceJsonTransform implements Serializable {
 
   private static final long serialVersionUID = 1279313931024806171L;
 
+  public static final TupleTag<LocationRecord> LIR_TAG = new TupleTag<LocationRecord>() {};
+
+  public static final TupleTag<TemporalRecord> TIR_TAG = new TupleTag<TemporalRecord>() {};
+
   // Core
+  @NonNull private final TupleTag<ALAAttributionRecord> alaAttributionRecordTupleTag;
   @NonNull private final TupleTag<ALAUUIDRecord> uuidRecordTag;
   @NonNull private final TupleTag<ExtendedRecord> extendedRecordTag;
   @NonNull private final TupleTag<BasicRecord> basicRecordTag;
@@ -92,9 +94,9 @@ public class ALAOccurrenceJsonTransform implements Serializable {
   @NonNull private final PCollectionView<ALAMetadataRecord> metadataView;
   @NonNull private final TupleTag<MeasurementOrFactRecord> measurementOrFactRecordTupleTag;
 
-  @NonNull private final TupleTag<LocationInheritedRecord> locationInheritedRecordTag;
-  @NonNull private final TupleTag<TemporalInheritedRecord> temporalInheritedRecordTag;
-  @NonNull private final TupleTag<EventInheritedRecord> eventInheritedRecordTag;
+  @NonNull private final TupleTag<LocationRecord> locationInheritedRecordTag;
+  @NonNull private final TupleTag<TemporalRecord> temporalInheritedRecordTag;
+  @NonNull private final TupleTag<ALASensitivityRecord> sensitivityRecordTag;
 
   // Determines if the output record is a parent-child record
   @Builder.Default private final boolean asParentChildRecord = false;
@@ -112,8 +114,12 @@ public class ALAOccurrenceJsonTransform implements Serializable {
             CoGbkResult v = c.element().getValue();
             String k = c.element().getKey();
 
-            // Core
             ALAMetadataRecord mdr = c.sideInput(metadataView);
+            // Core
+            ALAAttributionRecord aar =
+                v.getOnly(
+                    alaAttributionRecordTupleTag,
+                    ALAAttributionRecord.newBuilder().setId(k).build());
             ALAUUIDRecord uuidr =
                 v.getOnly(uuidRecordTag, ALAUUIDRecord.newBuilder().setId(k).build());
 
@@ -130,53 +136,68 @@ public class ALAOccurrenceJsonTransform implements Serializable {
                 v.getOnly(
                     measurementOrFactRecordTupleTag,
                     MeasurementOrFactRecord.newBuilder().setId(k).build());
-            EventCoreRecord ecr =
-                v.getOnly(eventCoreRecordTag, EventCoreRecord.newBuilder().setId(k).build());
 
             // Inherited
-            EventInheritedRecord eir =
-                v.getOnly(
-                    eventInheritedRecordTag, EventInheritedRecord.newBuilder().setId(k).build());
-            LocationInheritedRecord lir =
-                v.getOnly(
-                    locationInheritedRecordTag,
-                    LocationInheritedRecord.newBuilder().setId(k).build());
-            TemporalInheritedRecord tir =
-                v.getOnly(
-                    temporalInheritedRecordTag,
-                    TemporalInheritedRecord.newBuilder().setId(k).build());
+            EventCoreRecord ecr =
+                v.getOnly(eventCoreRecordTag, EventCoreRecord.newBuilder().setId(k).build());
+            LocationRecord lir =
+                v.getOnly(locationInheritedRecordTag, LocationRecord.newBuilder().setId(k).build());
+            TemporalRecord tir =
+                v.getOnly(temporalInheritedRecordTag, TemporalRecord.newBuilder().setId(k).build());
 
-            ALAOccurrenceJsonConverter occurrenceJsonConverter =
-                ALAOccurrenceJsonConverter.builder()
-                    .uuid(uuidr)
-                    .metadata(mdr)
-                    .basic(br)
-                    .temporal(tr)
-                    .location(lr)
-                    .taxon(txr)
-                    .verbatim(er)
-                    .measurementOrFact(mfr)
-                    .eventCore(ecr)
-                    .eventInheritedRecord(eir)
-                    .locationInheritedRecord(lir)
-                    .temporalInheritedRecord(tir)
-                    .build();
-            if (asParentChildRecord) {
-              c.output(
-                  ALAParentJsonConverter.builder()
-                      .occurrenceJsonRecord(occurrenceJsonConverter.convert())
+            ALASensitivityRecord sr =
+                v.getOnly(sensitivityRecordTag, ALASensitivityRecord.newBuilder().setId(k).build());
+
+            String json = null;
+
+            // if a record is deemed sensitive and is associated with an event
+            // block indexing
+            if (!isSensitive(ecr, sr)) {
+
+              ALAOccurrenceJsonConverter occurrenceJsonConverter =
+                  ALAOccurrenceJsonConverter.builder()
+                      .uuid(uuidr)
                       .metadata(mdr)
+                      .basic(br)
+                      .temporal(tr)
+                      .location(lr)
+                      .taxon(txr)
                       .verbatim(er)
-                      .build()
-                      .toJson());
-            } else {
-              c.output(occurrenceJsonConverter.toJson());
-            }
+                      .measurementOrFact(mfr)
+                      .eventCore(ecr)
+                      .locationInheritedRecord(lir)
+                      .temporalInheritedRecord(tir)
+                      .sensitivityRecord(sr)
+                      .build();
+              if (asParentChildRecord) {
+                json =
+                    ALAParentJsonConverter.builder()
+                        .occurrenceJsonRecord(occurrenceJsonConverter.convert())
+                        .metadata(mdr)
+                        .uuid(uuidr)
+                        .eventCore(ecr)
+                        .temporal(tr)
+                        .location(lr)
+                        .verbatim(er)
+                        .build()
+                        .toJson();
+              } else {
+                json = occurrenceJsonConverter.toJson();
+              }
 
-            counter.inc();
+              if (json != null) {
+                c.output(json);
+                counter.inc();
+              }
+            }
           }
         };
 
     return ParDo.of(fn).withSideInputs(metadataView);
+  }
+
+  private boolean isSensitive(EventCoreRecord ecr, ALASensitivityRecord sr) {
+    return sr != null
+        && (sr.getIsSensitive() != null && sr.getIsSensitive() && ecr.getId() != null);
   }
 }

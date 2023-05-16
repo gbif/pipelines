@@ -4,14 +4,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import au.org.ala.pipelines.options.DwcaToVerbatimPipelineOptions;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.util.ElasticUtils;
 import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import org.apache.commons.io.FileUtils;
-import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
-import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -46,15 +45,58 @@ public class CompleteEventPipelineTestIT {
     long occurrencesCount = ElasticUtils.getRecordCount(INDEX_NAME, "type", "occurrence");
     assertEquals(2, occurrencesCount);
 
+    // check inheritance of locationID for events and occurrences
+    long eventLocationCount = ElasticUtils.getRecordCount(INDEX_NAME, "event.locationID", "BMP7");
+    assertEquals(4, eventLocationCount);
+    long occLocationCount =
+        ElasticUtils.getRecordCount(INDEX_NAME, "occurrence.locationID", "BMP7");
+    assertEquals(2, occLocationCount);
+
+    // check decimalLatitude inheritance
+    long eventLatCount = ElasticUtils.getRecordCount(INDEX_NAME, "event.decimalLatitude", "-36.1");
+    assertEquals(4, eventLatCount);
+    long occLatCount =
+        ElasticUtils.getRecordCount(INDEX_NAME, "occurrence.decimalLatitude", "-36.1");
+    assertEquals(2, occLatCount);
+
+    // check temporal inheritance
+    long eventTempCount = ElasticUtils.getRecordCount(INDEX_NAME, "event.year", "2001");
+    assertEquals(4, eventTempCount);
+    long occTempCount = ElasticUtils.getRecordCount(INDEX_NAME, "occurrence.year", "2001");
+    assertEquals(2, occTempCount);
+
+    // check stateProvince inheritance
+    long eventStateCount = ElasticUtils.getRecordCount(INDEX_NAME, "event.locationID", "BMP7");
+    assertEquals(4, eventStateCount);
+    long occStateCount = ElasticUtils.getRecordCount(INDEX_NAME, "occurrence.locationID", "BMP7");
+    assertEquals(2, occStateCount);
+
+    // check eventTypeHierarchy inheritance
+    long eventSurveyCount =
+        ElasticUtils.getRecordCount(INDEX_NAME, "event.eventTypeHierarchy", "Survey");
+    assertEquals(5, eventSurveyCount);
+    long occSurveyCount =
+        ElasticUtils.getRecordCount(INDEX_NAME, "occurrence.eventTypeHierarchy", "Survey");
+    assertEquals(2, occSurveyCount);
+
+    // check eventHierarchy inheritance
+    long eventSurveyIDCount =
+        ElasticUtils.getRecordCount(INDEX_NAME, "event.eventHierarchy", "event1");
+    assertEquals(5, eventSurveyIDCount);
+    long occSurveyIDCount =
+        ElasticUtils.getRecordCount(INDEX_NAME, "occurrence.eventHierarchy", "event1");
+    assertEquals(2, occSurveyIDCount);
+
+    // check total documents indexed
     long allCount = ElasticUtils.getRecordCount(INDEX_NAME);
     assertEquals(7, allCount);
   }
 
   public void loadTestDataset(String datasetID, String inputPath) throws Exception {
 
-    DwcaPipelineOptions dwcaOptions =
+    DwcaToVerbatimPipelineOptions dwcaOptions =
         PipelinesOptionsFactory.create(
-            DwcaPipelineOptions.class,
+            DwcaToVerbatimPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
@@ -63,22 +105,22 @@ public class CompleteEventPipelineTestIT {
               "--targetPath=/tmp/la-pipelines-test/complete-event-pipeline",
               "--inputPath=" + inputPath
             });
-    DwcaToVerbatimPipeline.run(dwcaOptions);
+    ALADwcaToVerbatimPipeline.run(dwcaOptions);
 
     // check validation - should be false as UUIDs not generated
     assertFalse(ValidationUtils.checkValidationFile(dwcaOptions).getValid());
 
-    InterpretationPipelineOptions interpretationOptions =
+    ALAInterpretationPipelineOptions interpretationOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            ALAInterpretationPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
-              "--runner=DirectRunner",
+              "--runner=SparkRunner",
               "--interpretationTypes=ALL",
               "--metaFileName=" + ValidationUtils.INTERPRETATION_METRICS,
               "--targetPath=/tmp/la-pipelines-test/complete-event-pipeline",
-              "--inputPath=/tmp/la-pipelines-test/complete-event-pipeline/dr18391/1/verbatim.avro",
+              "--inputPath=/tmp/la-pipelines-test/complete-event-pipeline/dr18391/1/verbatim/*.avro",
               "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });
@@ -105,13 +147,13 @@ public class CompleteEventPipelineTestIT {
     // check validation - should be true as UUIDs are validated and generated
     assertTrue(ValidationUtils.checkValidationFile(uuidOptions).getValid());
 
-    InterpretationPipelineOptions sensitivityOptions =
+    ALAInterpretationPipelineOptions sensitivityOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            ALAInterpretationPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
-              "--runner=DirectRunner",
+              "--runner=SparkRunner",
               "--metaFileName=" + ValidationUtils.SENSITIVE_METRICS,
               "--targetPath=/tmp/la-pipelines-test/complete-event-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-event-pipeline",
@@ -119,21 +161,6 @@ public class CompleteEventPipelineTestIT {
               "--useExtendedRecordId=true"
             });
     ALAInterpretedToSensitivePipeline.run(sensitivityOptions);
-
-    // run verbatim to event pipeline
-    InterpretationPipelineOptions verbatimEventOptions =
-        PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
-            new String[] {
-              "--datasetId=" + datasetID,
-              "--attempt=1",
-              "--runner=DirectRunner",
-              "--interpretationTypes=ALL",
-              "--targetPath=/tmp/la-pipelines-test/complete-event-pipeline",
-              "--inputPath=/tmp/la-pipelines-test/complete-event-pipeline/dr18391/1/verbatim.avro",
-              "--properties=" + itUtils.getPropertiesFilePath()
-            });
-    ALAVerbatimToEventPipeline.run(verbatimEventOptions);
 
     String esSchemaPath =
         new File("src/test/resources/complete-event-pipeline/es-event-core-schema.json")

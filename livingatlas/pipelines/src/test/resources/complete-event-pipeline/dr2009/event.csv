@@ -1,0 +1,5 @@
+eventID,eventType,parentEventID,eventDate,eventTime,habitat,samplingProtocol,sampleSizeValue,sampleSizeUnit,samplingEffort,fieldNotes,eventRemarks,locationID,country,stateProvince,locality,minimumDepthInMeters,maximumDepthInMeters,verbatimDepth,decimalLatitude,decimalLongitude,footprintWKT
+SV0,Survey,,,,habitat1,samplingProtocol1,,,,,,,Australia,New South Wales,,,,,,,
+SV0/G8952501,Subsurvey,SV0,,,habitat1,samplingProtocol1,,,,,,,Australia,New South Wales,,,,,,,
+S120101356,SiteVisit,SV0/G8952501,1/1/2001,,,,,,,,,BMP7,Australia,New South Wales,"Potato Point Spud , Batemans",,,,-36.0999996,150.1333328,
+URN:CornellLabOfOrnithology:EBIRD:OBS1533634088:event,Find,S120101356,1/1/2001,,,,,,,,,,,,,,,,,,

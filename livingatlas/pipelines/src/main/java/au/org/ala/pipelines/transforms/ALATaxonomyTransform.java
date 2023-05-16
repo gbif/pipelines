@@ -74,7 +74,7 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
   }
 
   /** Maps {@link ALATaxonRecord} to key value, where key is {@link ALATaxonRecord#getId} */
-  public MapElements<ALATaxonRecord, KV<String, ALATaxonRecord>> toCoreIdKv() {
+  public MapElements<ALATaxonRecord, KV<String, ALATaxonRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, ALATaxonRecord>>() {})
         .via((ALATaxonRecord tr) -> KV.of(tr.getId(), tr));
   }

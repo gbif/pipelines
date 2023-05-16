@@ -3,15 +3,6 @@
  */
 [
   {
-    "name":"AgentIdentifier",
-    "namespace":"org.gbif.pipelines.io.avro",
-    "type":"record",
-    "fields":[
-      {"name": "type", "type": ["null", "string"] },
-      {"name": "value", "type": ["null", "string"] }
-    ]
-  },
-  {
     "name": "BasicRecord",
     "namespace": "org.gbif.pipelines.io.avro",
     "type": "record",
@@ -36,9 +27,9 @@
       {"name": "relativeOrganismQuantity", "type": ["null", "double"], "default" : null},
       {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"},
       {"name": "license", "type":["null","string"], "default":null, "doc": "http://purl.org/dc/terms/license"},
-      {"name": "identifiedByIds", "type": {"type" : "array", "items" : "AgentIdentifier"}, "default" : []},
+      {"name": "identifiedByIds", "type": {"type" : "array", "items" : "org.gbif.pipelines.io.avro.AgentIdentifier"}, "default" : []},
       {"name": "identifiedBy", "type": {"type" : "array", "items" : "string"}, "default" : []},
-      {"name": "recordedByIds", "type": {"type" : "array", "items" : "AgentIdentifier"}, "default" : []},
+      {"name": "recordedByIds", "type": {"type" : "array", "items" : "org.gbif.pipelines.io.avro.AgentIdentifier"}, "default" : []},
       {"name": "recordedBy", "type": {"type" : "array", "items" : "string"}, "default" : []},
       {"name": "occurrenceStatus", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/occurrenceStatus"},
       {"name": "datasetID", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/datasetID"},
