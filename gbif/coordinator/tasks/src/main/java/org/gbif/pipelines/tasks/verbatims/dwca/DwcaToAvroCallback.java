@@ -20,7 +20,6 @@ import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.model.pipelines.PipelinesWorkflow;
 import org.gbif.api.model.pipelines.PipelinesWorkflow.Graph;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
@@ -223,12 +222,6 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
             numberOfRecords,
             numberOfEventRecords);
 
-    // this is a deliberate hack(see issue https://github.com/gbif/pipelines/issues/885)
-    DatasetType datasetType = message.getDatasetType();
-    if (message.getDatasetType() == DatasetType.MATERIAL_ENTITY) {
-      datasetType = DatasetType.OCCURRENCE;
-    }
-
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
@@ -240,7 +233,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         validationResult,
         null,
         null,
-        datasetType);
+        message.getDatasetType());
   }
 
   /**
