@@ -67,8 +67,19 @@ These steps will load a dataset into a SOLR index.
   
 1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
 1. Download a test darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip)
-1. Create the following directory `/data/pipelines-data`
-1. Build with maven `mvn clean package`
+2. Copy it to /data/biocache-load/dr893
+    1. mkdir /data/biocache-load
+    2. mkdir /data/biocache-load/dr893
+    3. curl https://archives.ala.org.au/archives/gbif/dr893/dr893.zip -o /data/biocache-load/dr893/dr893.zip
+4. Create the following directory `/data/pipelines-data`
+5. Build with maven `mvn clean package`
+6. Download vocabularies
+    1. mkdir /data/pipelines-vocabularies
+    2. cd /data/pipelines-vocabularies
+    3. curl -sS https://api.gbif.org/v1/vocabularies/DegreeOfEstablishment/releases/LATEST/export > DegreeOfEstablishment.json
+    4. curl -sS https://api.gbif.org/v1/vocabularies/LifeStage/releases/LATEST/export > LifeStage.json
+    5. curl -sS https://api.gbif.org/v1/vocabularies/EstablishmentMeans/releases/LATEST/export > EstablishmentMeans.json
+    6. curl -sS https://api.gbif.org/v1/vocabularies/Pathway/releases/LATEST/export > Pathway.json
 
 ### Running la-pipelines
 

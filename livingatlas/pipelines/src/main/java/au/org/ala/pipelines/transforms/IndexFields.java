@@ -52,7 +52,6 @@ public interface IndexFields {
   String POINT_0_1 = "point-0.1";
   String POINT_1 = "point-1";
   String PROVENANCE = "provenance";
-  String TAXON_RANK = "taxonRank";
   String RAW_STATE_CONSERVATION = "raw_stateConservation";
   String RECORDED_BY_ID = "recordedByID";
   String SENSITIVE = "sensitive";
@@ -67,10 +66,15 @@ public interface IndexFields {
   String SUBSPECIES = "subspecies";
   String SUBSPECIES_ID = "subspeciesID";
   String TAXONOMIC_ISSUES = "taxonomicIssues";
+  String TAXON_PRESENT_IN_COUNTRY = "taxonPresentInCountry";
+  String TAXON_RANK = "taxonRank";
   String VIDEO_IDS = "videoIDs";
 
   String DYNAMIC_PROPERTIES_PREFIX = "dynamicProperties_";
   String GGBN_TERMS_LOAN = "http://data.ggbn.org/schemas/ggbn/terms/Loan";
   String LOAN_DESTINATION_TERM = "http://data.ggbn.org/schemas/ggbn/terms/loanDestination";
   String LOAN_IDENTIFIER_TERM = "http://data.ggbn.org/schemas/ggbn/terms/loanIdentifier";
+  String AUS_TRAITS_FIRE_RESPONSE = "fire_response";
+  String AUS_TRAITS_POST_FIRE_RECRUITMENT = "post_fire_recruitment";
+  String AUS_TRAITS_PHOTOSYNTHETIC_PATHWAY = "photosynthetic_pathway";
 }
