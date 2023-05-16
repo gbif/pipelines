@@ -176,7 +176,10 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
           boolean hasOccExt =
               archive.getExtensions().stream().anyMatch(x -> x.getRowType() == DwcTerm.Occurrence);
 
-          boolean hasOccurrences = coreType == DwcTerm.Occurrence || hasOccExt;
+          // the materialEntity core type is a deliberate hack(see issue
+          // https://github.com/gbif/pipelines/issues/885)
+          boolean hasOccurrences =
+              coreType == DwcTerm.Occurrence || coreType == DwcTerm.MaterialEntity || hasOccExt;
           boolean hasEvents = coreType == DwcTerm.Event;
 
           workflow = PipelinesWorkflow.getWorkflow(hasOccurrences, hasEvents);
