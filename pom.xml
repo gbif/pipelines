@@ -14,6 +14,7 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>livingatlas</module>
     <module>gbif</module>
     <module>sdks</module>
   </modules>

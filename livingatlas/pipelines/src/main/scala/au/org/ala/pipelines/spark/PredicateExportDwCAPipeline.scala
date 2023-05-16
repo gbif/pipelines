@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory
 import java.nio.channels.Channels
 import java.util
 import scala.xml.{Elem, Node, PrettyPrinter}
-import scala.language.postfixOps
 
 /** Pipeline uses Spark SQL to produce a DwCA Archive.
   */
@@ -108,8 +107,6 @@ object PredicateExportDwCAPipeline {
     }
   }
 
-    // Process the query filter
-    val queryFilter = if (exportArgs.queryFilePath != null && exportArgs.queryFilePath.nonEmpty) {
   private def createExportPath(exportArgs: CmdArgs) = {
     if (exportArgs.jobId != null && !exportArgs.jobId.isEmpty) {
       exportArgs.localExportPath + "/" + exportArgs.jobId
@@ -822,7 +819,7 @@ object PredicateExportDwCAPipeline {
 
   def genericRecordToFieldNameRow(row: Row, sqlType: StructType): Seq[Row] = {
     val elements = row.get(0).asInstanceOf[Seq[Map[String, String]]]
-    val fieldNames = elements.flatMap(record => record.keySet)
+    val fieldNames = elements.map(record => record.keySet).flatten
     fieldNames.distinct.map(fieldName => new GenericRowWithSchema(Array(fieldName), sqlType))
   }
 
