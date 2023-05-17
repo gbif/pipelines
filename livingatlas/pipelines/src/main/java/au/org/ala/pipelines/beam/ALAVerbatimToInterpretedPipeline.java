@@ -39,7 +39,6 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
-import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -113,7 +112,7 @@ public class ALAVerbatimToInterpretedPipeline {
     System.exit(0);
   }
 
-  public static void run(InterpretationPipelineOptions options) {
+  public static void run(ALAInterpretationPipelineOptions options) {
 
     log.info("Pipeline has been started - {}", LocalDateTime.now());
     boolean verbatimAvroAvailable = ValidationUtils.isVerbatimAvroAvailable(options);
@@ -307,9 +306,7 @@ public class ALAVerbatimToInterpretedPipeline {
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
     FsUtils.deleteDirectoryByPrefix(hdfsConfigs, tempPath, ".temp-beam");
 
-    if (options instanceof ALAInterpretationPipelineOptions
-        && ((ALAInterpretationPipelineOptions) options).isEventsEnabled()
-        && ArchiveUtils.isEventCore(options)) {
+    if (options.isEventsEnabled() && ArchiveUtils.isEventCore(options)) {
       log.info("Running events pipeline");
       ALAVerbatimToEventPipeline.run(options);
     }

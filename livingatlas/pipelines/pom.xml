@@ -5,7 +5,7 @@
   <parent>
     <groupId>au.org.ala</groupId>
     <artifactId>livingatlas</artifactId>
-    <version>2.14.4-SNAPSHOT</version>
+    <version>2.15.1-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -40,6 +40,7 @@
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
     <json-simple.version>1.1.1</json-simple.version>
+    <hadoop-compress.version>1.2</hadoop-compress.version>
 
     <!-- GBIF parent currently using 2.4.0 -->
     <spark.embedded.version>2.4.5</spark.embedded.version>
@@ -846,7 +847,11 @@
       <artifactId>elasticsearch</artifactId>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.gbif.hadoop</groupId>
+      <artifactId>hadoop-compress</artifactId>
+      <version>${hadoop-compress.version}</version>
+    </dependency>
   </dependencies>
 
   <profiles>

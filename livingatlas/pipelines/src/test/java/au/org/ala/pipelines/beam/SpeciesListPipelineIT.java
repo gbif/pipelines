@@ -4,13 +4,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import au.org.ala.pipelines.options.DwcaToVerbatimPipelineOptions;
 import au.org.ala.pipelines.options.SpeciesLevelPipelineOptions;
 import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.util.Map;
-import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
-import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -48,9 +47,9 @@ public class SpeciesListPipelineIT {
 
   public void loadTestDataset(String datasetID, String inputPath) throws Exception {
 
-    DwcaPipelineOptions dwcaOptions =
+    DwcaToVerbatimPipelineOptions dwcaOptions =
         PipelinesOptionsFactory.create(
-            DwcaPipelineOptions.class,
+            DwcaToVerbatimPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
@@ -59,14 +58,14 @@ public class SpeciesListPipelineIT {
               "--targetPath=/tmp/la-pipelines-test/species-lists",
               "--inputPath=" + inputPath
             });
-    DwcaToVerbatimPipeline.run(dwcaOptions);
+    ALADwcaToVerbatimPipeline.run(dwcaOptions);
 
     // check validation - should be false as UUIDs not generated
     assertFalse(ValidationUtils.checkValidationFile(dwcaOptions).getValid());
 
-    InterpretationPipelineOptions interpretationOptions =
+    ALAInterpretationPipelineOptions interpretationOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            ALAInterpretationPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",
@@ -74,7 +73,7 @@ public class SpeciesListPipelineIT {
               "--interpretationTypes=ALL",
               "--metaFileName=" + ValidationUtils.INTERPRETATION_METRICS,
               "--targetPath=/tmp/la-pipelines-test/species-lists",
-              "--inputPath=/tmp/la-pipelines-test/species-lists/dr893/1/verbatim.avro",
+              "--inputPath=/tmp/la-pipelines-test/species-lists/dr893/1/verbatim/*.avro",
               "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });

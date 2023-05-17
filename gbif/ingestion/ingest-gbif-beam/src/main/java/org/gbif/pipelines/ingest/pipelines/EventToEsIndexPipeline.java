@@ -12,8 +12,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.coders.AvroCoder;
-import org.apache.beam.sdk.coders.KvCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.transforms.Combine;
@@ -34,7 +32,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
-import org.gbif.pipelines.common.beam.coders.EdgeCoder;
+import org.gbif.pipelines.common.beam.coders.AvroKvCoder;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -554,9 +552,7 @@ public class EventToEsIndexPipeline {
               .apply(
                   "Group by child and parent",
                   inheritedFieldsTransform.childToParentEdgeConverter())
-              .setCoder(
-                  KvCoder.of(
-                      StringUtf8Coder.of(), EdgeCoder.of(AvroCoder.of(EventCoreRecord.class))));
+              .setCoder(AvroKvCoder.ofEdge(EventCoreRecord.class));
 
       return KeyedPCollectionTuple.of(eventCoreTransform.getTag(), eventCoreCollection)
           .and(eventCoreTransform.getEdgeTag(), parentEdgeEvents)
@@ -567,7 +563,7 @@ public class EventToEsIndexPipeline {
               "Extract the parents only",
               inheritedFieldsTransform.childToParentConverter(eventCoreTransform))
           .apply("Extract parent features", Combine.perKey(new EventInheritedFieldsFn()))
-          .setCoder(KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(EventInheritedRecord.class)));
+          .setCoder(AvroKvCoder.of(EventInheritedRecord.class));
     }
   }
 }

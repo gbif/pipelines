@@ -108,15 +108,18 @@ elastic:
   targetPath: hdfs:///pipelines-data
   esSchemaPath: /tmp/es-event-core-schema.json
   esHosts: ES_HOSTS
+  esIndexName: 'ES_ALIAS_{datasetId}'
   esAlias: ES_ALIAS
+  indexNumberShards: 6
 
 export:
   inputPath: hdfs:///pipelines-data
   targetPath: hdfs:///pipelines-data
+  allDatasetsInputPath: hdfs:///pipelines-all-datasets
 
 predicate-export:
   inputPath: hdfs:///pipelines-data
-  targetPath: hdfs:///pipelines-data
+  targetPath: hdfs:///pipelines-export
 
 gbifConfig:
   vocabularyConfig:

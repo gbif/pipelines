@@ -11,8 +11,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
@@ -29,9 +27,6 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
-import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
-import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.slf4j.MDC;
@@ -39,9 +34,11 @@ import org.slf4j.MDC;
 /**
  * Pipeline that generates an AVRO index that will support a Spark SQL query interface for
  * downloads.
+ *
+ * <p>This pipelines creates: 1) An Event an AVRO export for querying 2) An Interpreted Occurrence
+ * export joining 3) A verbatim Occurrence export
  */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAEventToSearchAvroPipeline {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
@@ -110,32 +107,12 @@ public class ALAEventToSearchAvroPipeline {
         p.apply("Read Measurement or fact", measurementOrFactTransform.read(eventPathFn))
             .apply("Map Measurement or fact to KV", measurementOrFactTransform.toKv());
 
-    InheritedFields inheritedFields =
-        InheritedFields.builder()
-            .inheritedFieldsTransform(InheritedFieldsTransform.builder().build())
-            .locationCollection(locationCollection)
-            .locationTransform(locationTransform)
-            .temporalCollection(temporalCollection)
-            .temporalTransform(temporalTransform)
-            .eventCoreCollection(eventCoreCollection)
-            .eventCoreTransform(eventCoreTransform)
-            .build();
-
-    PCollection<KV<String, LocationInheritedRecord>> locationInheritedRecords =
-        inheritedFields.inheritLocationFields();
-
-    PCollection<KV<String, TemporalInheritedRecord>> temporalInheritedRecords =
-        inheritedFields.inheritTemporalFields();
-
-    PCollection<KV<String, EventInheritedRecord>> eventInheritedRecords =
-        inheritedFields.inheritEventFields();
-
     // load the taxonomy from the occurrence records
     PCollection<KV<String, ALATaxonRecord>> taxonCollection =
         p.apply("Read taxa", alaTaxonomyTransform.read(occurrencesPathFn))
-            .apply("Map taxa to KV", alaTaxonomyTransform.toCoreIdKv());
+            .apply("Map taxa to KV", alaTaxonomyTransform.toKv());
 
-    PCollection<KV<String, Iterable<String>>> taxonIDCollection = keyByCoreID(taxonCollection, p);
+    PCollection<KV<String, Iterable<String>>> taxonIDCollection = keyByCoreID(taxonCollection);
 
     log.info("Adding step 3: Converting into a json object");
     ParDo.SingleOutput<KV<String, CoGbkResult>, EventSearchRecord> eventSearchAvroFn =
@@ -145,9 +122,6 @@ public class ALAEventToSearchAvroPipeline {
             .locationRecordTag(locationTransform.getTag())
             .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
             .taxonIDsTag(TAXON_IDS_TAG)
-            .locationInheritedRecordTag(InheritedFieldsTransform.LIR_TAG)
-            .temporalInheritedRecordTag(InheritedFieldsTransform.TIR_TAG)
-            .eventInheritedRecordTag(InheritedFieldsTransform.EIR_TAG)
             .metadataView(metadataView)
             .build()
             .converter();
@@ -160,10 +134,6 @@ public class ALAEventToSearchAvroPipeline {
             .and(locationTransform.getTag(), locationCollection)
             .and(measurementOrFactTransform.getTag(), measurementOrFactCollection)
             .and(TAXON_IDS_TAG, taxonIDCollection)
-            // Inherited
-            .and(InheritedFieldsTransform.LIR_TAG, locationInheritedRecords)
-            .and(InheritedFieldsTransform.TIR_TAG, temporalInheritedRecords)
-            .and(InheritedFieldsTransform.EIR_TAG, eventInheritedRecords)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", eventSearchAvroFn);
@@ -175,7 +145,7 @@ public class ALAEventToSearchAvroPipeline {
             options.getDatasetId(),
             options.getAttempt().toString(),
             "search",
-            "event",
+            DwcTerm.Event.simpleName().toLowerCase(),
             "search");
 
     eventSearchCollection.apply(
@@ -194,7 +164,7 @@ public class ALAEventToSearchAvroPipeline {
   }
 
   private static PCollection<KV<String, Iterable<String>>> keyByCoreID(
-      PCollection<KV<String, ALATaxonRecord>> taxonCollection, Pipeline p) {
+      PCollection<KV<String, ALATaxonRecord>> taxonCollection) {
     return taxonCollection
         .apply(
             ParDo.of(
@@ -213,6 +183,7 @@ public class ALAEventToSearchAvroPipeline {
                     taxonID.add(taxon.getFamilyID());
                     taxonID.add(taxon.getGenusID());
                     taxonID.add(taxon.getSpeciesID());
+                    taxonID.add(taxon.getTaxonConceptID());
                     taxonID.stream().filter(x -> x != null);
                     out.output(
                         KV.of(

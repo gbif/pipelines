@@ -86,13 +86,16 @@
       {"name":"verbatim","type":["null","VerbatimRecord"],"default":null,"doc":""},
       // Aggregations
       {"name":"occurrenceCount","type":["null","int"],"default":null,"doc":""},
-      // Denormalised event info
+      // De-normalised event info
+      {"name":"surveyID","type":["null","string"],"default":null,"doc":""},
       {"name":"eventHierarchy","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"eventTypeHierarchy","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"eventHierarchyJoined","type":["null","string"],"default":null,"doc":""},
       {"name":"eventTypeHierarchyJoined","type":["null","string"],"default":null,"doc":""},
       {"name":"eventHierarchyLevels","type":["null","int"],"default":null,"doc":""},
-      {"name":"measurementOrFacts","type":{"type":"array","items":"org.gbif.pipelines.io.avro.json.MeasurementOrFactJsonRecord"},"default":[],"doc":""}
+      {"name":"measurementOrFacts","type":{"type":"array","items":"org.gbif.pipelines.io.avro.json.MeasurementOrFactJsonRecord"},"default":[],"doc":""},
+      // Extensions
+      {"name":"seedbankRecord","type":["null","org.gbif.pipelines.io.avro.SeedbankRecord"],"default":null,"doc":"org.gbif.pipelines.io.avro.SeedbankRecord"}
     ]
   }
 ]

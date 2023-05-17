@@ -1,13 +1,16 @@
 package au.org.ala.pipelines.transforms;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
 
 import au.org.ala.kvs.client.ALACollectoryMetadata;
-import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.interpreters.ALAAttributionInterpreter;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -30,7 +33,7 @@ public class ALAMetadataTransform extends Transform<String, ALAMetadataRecord> {
       String datasetId) {
     super(
         ALAMetadataRecord.class,
-        ALARecordTypes.ALA_ATTRIBUTION,
+        METADATA,
         ALAMetadataRecord.class.getName(),
         METADATA_RECORDS_COUNT);
     this.dataResourceKvStoreSupplier = dataResourceKvStoreSupplier;
@@ -40,6 +43,11 @@ public class ALAMetadataTransform extends Transform<String, ALAMetadataRecord> {
   public ALAMetadataTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
+  }
+
+  public MapElements<ALAMetadataRecord, KV<String, ALAMetadataRecord>> toKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, ALAMetadataRecord>>() {})
+        .via((ALAMetadataRecord tr) -> KV.of(tr.getId(), tr));
   }
 
   /** Beam @Setup initializes resources */

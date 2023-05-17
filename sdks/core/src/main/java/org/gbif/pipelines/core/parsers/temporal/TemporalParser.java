@@ -9,7 +9,11 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
-import java.util.*;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -25,7 +29,7 @@ public class TemporalParser implements Serializable {
 
   private static final long serialVersionUID = -8845127337324812802L;
 
-  private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
+  private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1500, 1, 1);
 
   private final org.gbif.common.parsers.date.TemporalParser temporalParser;
 

@@ -711,9 +711,12 @@
     "name" : "installationkey",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "projectid",
-    "type" : [ "string", "null" ]
-  }, {
+     "name" : "projectid",
+     "type" : [ {
+        "type" : "array",
+        "items" : [ "string", "null" ]
+      }, "null" ]
+   }, {
     "name" : "programmeacronym",
     "type" : [ "string", "null" ]
   }, {

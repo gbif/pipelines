@@ -224,7 +224,12 @@ public class TemporalInterpreterTest {
         OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY.name(),
         tr.getIssues().getIssueList().iterator().next());
 
+    tr.getIssues().getIssueList().clear();
     er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1599-01-11");
+    interpreter.interpretDateIdentified(er, tr);
+    assertEquals(0, tr.getIssues().getIssueList().size());
+
+    er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1499-01-11");
     interpreter.interpretDateIdentified(er, tr);
     assertEquals(1, tr.getIssues().getIssueList().size());
     assertEquals(
