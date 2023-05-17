@@ -204,6 +204,10 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>stackable-spark</artifactId>
+    </dependency>
 
     <!-- Beam -->
     <dependency>

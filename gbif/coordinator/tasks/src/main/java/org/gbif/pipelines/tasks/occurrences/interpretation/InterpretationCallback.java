@@ -10,7 +10,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import lombok.Builder;
@@ -29,12 +31,11 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.GbifApi;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.configs.AirflowConfiguration;
 import org.gbif.pipelines.common.interpretation.RecordCountReader;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.process.AirflowRunnerBuilder;
 import org.gbif.pipelines.common.process.BeamSettings;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
+import org.gbif.pipelines.common.process.StackableSparkRunner;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToOccurrencePipeline;
@@ -92,7 +93,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
       routingKey = vm.setRunner(config.processRunner).getRoutingKey();
     }
 
-    log.info("MQ rounting key is {}", routingKey);
+    log.info("MQ routing key is {}", routingKey);
     return routingKey;
   }
 
@@ -138,39 +139,21 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         defaultDateFormat = getDefaultDateFormat(datasetId);
       }
 
-      ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder =
-          ProcessRunnerBuilder.builder()
+      StackableSparkRunner.StackableSparkRunnerBuilder builder =
+          StackableSparkRunner.builder()
               .distributedConfig(config.distributedConfig)
               .sparkConfig(config.sparkConfig)
               .sparkAppName(
-                  getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-              .beamConfigFn(
-                  BeamSettings.occurrenceInterpretation(config, message, path, defaultDateFormat));
+                  getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt());
 
       Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
-
-      AirflowRunnerBuilder airRunnerBuilder =
-          AirflowRunnerBuilder.builder()
-              .airflowConfiguration(config.airflowConfig)
-              .dagId(AirflowConfiguration.SPARK_DAG_NAME)
-              .main("org.gbif.pipelines.ingest.pipelines.VerbatimToIdentifierPipeline")
-              .dagRunId(
-                  getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-              .beamConfigFn(
-                  BeamSettings.occurrenceInterpretation(config, message, path, defaultDateFormat))
-              .build();
 
       log.info("Start the process. Message - {}", message);
       try {
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          if (config.airflowConfig.useAirflow) {
-            log.info("Starting airflow execution");
-            runInAirflow(airRunnerBuilder);
-          } else {
-            runDistributed(message, builder);
-          }
+          runDistributed(message, builder);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
-          runLocal(builder);
+          runLocal(BeamSettings.occurrenceInterpretation(config, message, path, defaultDateFormat));
         }
 
         log.info("Deleting old attempts directories");
@@ -215,12 +198,12 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         message.getDatasetType());
   }
 
-  private void runLocal(ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder) {
-    VerbatimToOccurrencePipeline.run(builder.build().buildOptions(), executor);
+  private void runLocal(Consumer<StringJoiner> consumer) {
+    VerbatimToOccurrencePipeline.run(BeamSettings.buildOptions(consumer), executor);
   }
 
   private void runDistributed(
-      PipelinesVerbatimMessage message, ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder)
+      PipelinesVerbatimMessage message, StackableSparkRunner.StackableSparkRunnerBuilder builder)
       throws IOException, InterruptedException {
 
     long recordsNumber = RecordCountReader.get(config.stepConfig, message);
@@ -229,7 +212,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     builder.sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().get().start().waitFor();
+    int exitValue = builder.build().start().waitFor();
 
     if (exitValue != 0) {
       throw new IllegalStateException("Process has been finished with exit value - " + exitValue);

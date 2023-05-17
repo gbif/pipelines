@@ -304,4 +304,10 @@ public class BeamSettings {
       }
     }
   }
+
+  public static String[] buildOptions(Consumer<StringJoiner> beamConfigFn) {
+    StringJoiner joiner = new StringJoiner(" ");
+    beamConfigFn.accept(joiner);
+    return joiner.toString().split(" ");
+  }
 }
