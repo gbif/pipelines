@@ -1,6 +1,7 @@
 package org.gbif.pipelines.common.process;
 
 import java.util.*;
+import java.util.function.Consumer;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -20,7 +21,7 @@ public final class StackableSparkRunner {
 
   @NonNull private final String kubeConfigFile;
 
-  @NonNull private final String configMapFile;
+  @Builder.Default private Consumer<StringJoiner> beamConfigFn = j -> {};
 
   @NonNull private final String sparkCrdConfigFile;
 
@@ -41,25 +42,25 @@ public final class StackableSparkRunner {
   @Builder
   public StackableSparkRunner(
       @NonNull String kubeConfigFile,
-      @NonNull String configMapFile,
+      @NonNull String configMapName,
+      @NonNull String appConfigFileName,
       @NonNull String sparkCrdConfigFile,
       @NonNull SparkConfiguration sparkConfig,
       @NonNull DistributedConfiguration distributedConfig,
       @NonNull String sparkAppName,
-      @NonNull MainSparkSettings sparkSettings) {
+      @NonNull MainSparkSettings sparkSettings,
+      @NonNull Consumer<StringJoiner> beamConfigFn) {
     this.kubeConfigFile = kubeConfigFile;
-    this.configMapFile = configMapFile;
     this.sparkCrdConfigFile = sparkCrdConfigFile;
     this.sparkConfig = sparkConfig;
     this.distributedConfig = distributedConfig;
     this.sparkAppName = sparkAppName;
     this.sparkSettings = sparkSettings;
-    this.k8StackableSparkController =
-        K8StackableSparkController.builder()
-            .configMap(ConfigUtils.loadConfigMap(configMapFile))
-            .kubeConfig(ConfigUtils.loadKubeConfig(kubeConfigFile))
-            .sparkCrd(loadSparkCrd())
-            .build();
+    this.beamConfigFn = beamConfigFn;
+    this.k8StackableSparkController = K8StackableSparkController.builder()
+                                        .kubeConfig(ConfigUtils.loadKubeConfig(kubeConfigFile))
+                                        .sparkCrd(loadSparkCrd())
+                                        .build();
   }
 
   private SparkCrd.Spec.Resources mergeDriverResources(SparkCrd.Spec.Resources resources) {
@@ -116,6 +117,12 @@ public final class StackableSparkRunner {
     return newSparkConf;
   }
 
+  public List<String> buildArgs() {
+    StringJoiner joiner = new StringJoiner(DELIMITER);
+    beamConfigFn.accept(joiner);
+    return Arrays.asList(joiner.toString().split(DELIMITER));
+  }
+
   private SparkCrd loadSparkCrd() {
     SparkCrd sparkCrd = ConfigUtils.loadSparkCdr(sparkCrdConfigFile);
     return sparkCrd
@@ -127,6 +134,7 @@ public final class StackableSparkRunner {
                 .toBuilder()
                 .mainClass(distributedConfig.mainClass)
                 .mainApplicationFile(distributedConfig.jarPath)
+                .args(buildArgs())
                 .driver(mergeDriverSettings(sparkCrd.getSpec().getDriver()))
                 .sparkConf(mergeSparkConfSettings(sparkCrd.getSpec().getSparkConf()))
                 .executor(mergeExecutorSettings(sparkCrd.getSpec().getExecutor()))

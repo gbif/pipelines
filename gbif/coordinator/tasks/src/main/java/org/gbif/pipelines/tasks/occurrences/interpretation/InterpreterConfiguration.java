@@ -25,6 +25,9 @@ public class InterpreterConfiguration implements BaseConfiguration {
   @ParametersDelegate @Valid @NotNull
   public AirflowConfiguration airflowConfig = new AirflowConfiguration();
 
+  @ParametersDelegate @Valid @NotNull
+  public StackableConfiguration stackableConfiguration = new StackableConfiguration();
+
   @Parameter(names = "--meta-file-name")
   public String metaFileName = Pipeline.VERBATIM_TO_OCCURRENCE + ".yml";
 

@@ -15,9 +15,7 @@ package org.gbif.stackable;
 
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
-import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
-import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.KubeConfig;
 import java.util.AbstractMap;
@@ -59,9 +57,8 @@ public class K8StackableSparkController {
 
   @SneakyThrows
   public static K8StackableSparkController fromConfigFiles(
-      String kubeConfigFile, String configMapFile, String sparkApplicationConfigFile) {
+      String kubeConfigFile, String sparkApplicationConfigFile) {
     return K8StackableSparkController.builder()
-        .configMap(ConfigUtils.loadConfigMap(configMapFile))
         .kubeConfig(ConfigUtils.loadKubeConfig(kubeConfigFile))
         .sparkCrd(ConfigUtils.loadSparkCdr(sparkApplicationConfigFile))
         .build();
@@ -69,27 +66,10 @@ public class K8StackableSparkController {
 
   @SneakyThrows
   @Builder
-  public K8StackableSparkController(
-      SparkCrd sparkCrd, KubeConfig kubeConfig, V1ConfigMap configMap) {
-    getOrCreateConfigMap(configMap);
+  public K8StackableSparkController(SparkCrd sparkCrd, KubeConfig kubeConfig) {
     this.sparkCrd = sparkCrd;
     this.kubeConfig = kubeConfig;
     Configuration.setDefaultApiClient(ClientBuilder.kubeconfig(kubeConfig).build());
-  }
-
-  @SneakyThrows
-  private V1ConfigMap getOrCreateConfigMap(V1ConfigMap configMap) {
-    CoreV1Api api = new CoreV1Api();
-    try {
-      return api.readNamespacedConfigMap(
-          configMap.getMetadata().getName(), kubeConfig.getNamespace(), "true");
-    } catch (ApiException apiException) {
-      if (apiException.getCode() == NOT_FOUND) {
-        return api.createNamespacedConfigMap(
-            kubeConfig.getNamespace(), configMap, "true", null, null, null);
-      }
-      throw apiException;
-    }
   }
 
   private void deleteIfExists(String applicationId) throws ApiException {
