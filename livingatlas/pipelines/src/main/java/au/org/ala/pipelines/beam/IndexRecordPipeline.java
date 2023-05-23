@@ -16,9 +16,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.extensions.joinlibrary.Join;
 import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.io.fs.EmptyMatchTreatment;
+import org.apache.beam.sdk.transforms.Filter;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
@@ -58,6 +62,12 @@ public class IndexRecordPipeline {
   private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+
+  public static final TupleTag<EventCoreRecord> EVENT_CORE_TAG = new TupleTag<>();
+
+  public static final TupleTag<LocationRecord> EVENT_LOCATION_TAG = new TupleTag<>();
+
+  public static final TupleTag<TemporalRecord> EVENT_TEMPORAL_TAG = new TupleTag<>();
 
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
@@ -107,6 +117,9 @@ public class IndexRecordPipeline {
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
+    UnaryOperator<String> eventsPathFn =
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Event, t, ALL_AVRO);
+
     UnaryOperator<String> identifiersPathFn =
         t -> ALAFsUtils.buildPathIdentifiersUsingTargetPath(options, t, ALL_AVRO);
 
@@ -121,6 +134,9 @@ public class IndexRecordPipeline {
 
     // Extension
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
+
+    // Event core
+    EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
 
     // ALA specific
     ALAUUIDTransform alaUuidTransform = ALAUUIDTransform.create();
@@ -171,6 +187,31 @@ public class IndexRecordPipeline {
         p.apply("Read attribution", alaAttributionTransform.read(pathFn))
             .apply("Map attribution to KV", alaAttributionTransform.toKv());
 
+    // events stuff
+    PCollection<KV<String, EventCoreRecord>> eventCoreCollection =
+        p.apply("Read occurrence Temporal", eventCoreTransform.read(eventsPathFn, true))
+            .apply("Map occurrence Temporal to KV", eventCoreTransform.toKv());
+
+    PCollection<KV<String, TemporalRecord>> eventTemporalCollection =
+        p.apply("Read occurrence Temporal", temporalTransform.read(eventsPathFn, true))
+            .apply("Map occurrence Temporal to KV", temporalTransform.toKv());
+
+    PCollection<KV<String, LocationRecord>> eventLocationCollection =
+        p.apply("Read occurrence Location", locationTransform.read(eventsPathFn, true))
+            .apply("Map occurrence Location to KV", locationTransform.toKv());
+
+    PCollection<KV<String, String>> occMapping = getEventIDToOccurrenceID(verbatimCollection);
+
+    // need to key event info on occurrenceID
+    PCollection<KV<String, EventCoreRecord>> eventCoreRecords =
+        Join.innerJoin(occMapping, eventCoreCollection).apply(Values.create());
+
+    PCollection<KV<String, LocationRecord>> eventLocationRecords =
+        Join.innerJoin(occMapping, eventLocationCollection).apply(Values.create());
+
+    PCollection<KV<String, TemporalRecord>> eventTemporalRecords =
+        Join.innerJoin(occMapping, eventTemporalCollection).apply(Values.create());
+
     // load images
     PCollection<KV<String, ImageRecord>> alaImageRecords = null;
     if (options.getIncludeImages()) {
@@ -209,6 +250,9 @@ public class IndexRecordPipeline {
             options.getIncludeSensitiveDataChecks()
                 ? alaSensitiveDataRecordTransform.getTag()
                 : null,
+            EVENT_CORE_TAG,
+            EVENT_LOCATION_TAG,
+            EVENT_TEMPORAL_TAG,
             options.getDatasetId(),
             lastLoadedDate,
             lastProcessedDate);
@@ -230,7 +274,10 @@ public class IndexRecordPipeline {
             // ALA Specific
             .and(alaUuidTransform.getTag(), alaUUidCollection)
             .and(alaTaxonomyTransform.getTag(), alaTaxonCollection)
-            .and(alaAttributionTransform.getTag(), alaAttributionCollection);
+            .and(alaAttributionTransform.getTag(), alaAttributionCollection)
+            .and(EVENT_CORE_TAG, eventCoreRecords)
+            .and(EVENT_LOCATION_TAG, eventLocationRecords)
+            .and(EVENT_TEMPORAL_TAG, eventTemporalRecords);
 
     if (options.getIncludeSpeciesLists()) {
       kpct = kpct.and(speciesListsRecordTupleTag, alaTaxonProfileRecords);
@@ -292,10 +339,33 @@ public class IndexRecordPipeline {
                             options.getDatasetId().trim(),
                             options.getAttempt().toString(),
                             "images",
-                            "*.avro")))
+                            "*.avro"))
+                    .withEmptyMatchTreatment(EmptyMatchTreatment.ALLOW))
             .apply(
                 MapElements.into(new TypeDescriptor<KV<String, ImageRecord>>() {})
                     .via((ImageRecord tr) -> KV.of(tr.getId(), tr)));
     return alaImageServiceRecords;
+  }
+
+  /** Load eventID -> occurrenceID map */
+  public static PCollection<KV<String, String>> getEventIDToOccurrenceID(
+      PCollection<KV<String, ExtendedRecord>> verbatimCollection) {
+
+    // eventID -> occurrenceCore.id map
+    PCollection<KV<String, String>> eventIDToOccurrenceID =
+        verbatimCollection
+            .apply(
+                Filter.by(
+                    tr ->
+                        tr.getValue().getCoreTerms().get(DwcTerm.eventID.qualifiedName()) != null))
+            .apply(
+                MapElements.into(new TypeDescriptor<KV<String, String>>() {})
+                    .via(
+                        kv ->
+                            KV.of(
+                                kv.getValue().getCoreTerms().get(DwcTerm.eventID.qualifiedName()),
+                                kv.getKey())));
+
+    return eventIDToOccurrenceID;
   }
 }

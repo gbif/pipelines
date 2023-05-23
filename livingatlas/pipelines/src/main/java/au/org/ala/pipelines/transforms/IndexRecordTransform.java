@@ -82,6 +82,12 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
   @NonNull private TupleTag<ALASensitivityRecord> srTag;
 
+  @NonNull private TupleTag<EventCoreRecord> eventCoreTag;
+
+  @NonNull private TupleTag<LocationRecord> eventLocationTag;
+
+  @NonNull private TupleTag<TemporalRecord> eventTemporalTag;
+
   String datasetID;
 
   Long lastLoadDate;
@@ -107,6 +113,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       TupleTag<ImageRecord> isTag,
       TupleTag<TaxonProfile> tpTag,
       TupleTag<ALASensitivityRecord> srTag,
+      TupleTag<EventCoreRecord> eventCoreTag,
+      TupleTag<LocationRecord> eventLocationTag,
+      TupleTag<TemporalRecord> eventTemporalTag,
       String datasetID,
       Long lastLoadDate,
       Long lastLoadProcessed) {
@@ -123,6 +132,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     t.isTag = isTag;
     t.tpTag = tpTag;
     t.srTag = srTag;
+    t.eventCoreTag = eventCoreTag;
+    t.eventLocationTag = eventLocationTag;
+    t.eventTemporalTag = eventTemporalTag;
     t.datasetID = datasetID;
     t.lastLoadDate = lastLoadDate;
     t.lastLoadProcessed = lastLoadProcessed;
@@ -148,6 +160,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       TaxonProfile tpr,
       ALASensitivityRecord sr,
       MultimediaRecord mr,
+      EventCoreRecord ecr,
+      LocationRecord elr,
+      TemporalRecord etr,
       Long lastLoadDate,
       Long lastProcessedDate) {
 
@@ -171,12 +186,10 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     skipKeys.add("issues");
     skipKeys.add("identifiedByIds"); // multi value field
     skipKeys.add("recordedByIds"); // multi value field
-    skipKeys.add("machineTags"); // TODO review content
+    skipKeys.add("machineTags");
+    skipKeys.add("parentsLineage");
     skipKeys.add(
         "establishmentMeans"); // GBIF treats it as a JSON, but ALA needs a String which is defined
-    // in the latest DWC
-
-    // multi valued fields
     skipKeys.add("identifiedByIds");
     skipKeys.add("recordedByIds");
     skipKeys.add(DwcTerm.typeStatus.simpleName());
@@ -241,57 +254,10 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     addToIndexRecord(tr, indexRecord, skipKeys);
     addToIndexRecord(br, indexRecord, skipKeys);
 
-    if (br != null) {
-      addEstablishmentValueSafely(
-          indexRecord, DwcTerm.establishmentMeans.simpleName(), br.getEstablishmentMeans());
-      addTermWithAgentsSafely(
-          indexRecord, DwcTerm.recordedByID.simpleName(), br.getRecordedByIds());
-      addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
-      addMultiValueTermSafely(indexRecord, DwcTerm.recordedBy.simpleName(), br.getRecordedBy());
-      addMultiValueTermSafely(indexRecord, DwcTerm.identifiedBy.simpleName(), br.getIdentifiedBy());
-      addMultiValueTermSafely(indexRecord, DwcTerm.preparations.simpleName(), br.getPreparations());
-      addMultiValueTermSafely(indexRecord, DwcTerm.datasetID.simpleName(), br.getDatasetID());
-      addMultiValueTermSafely(indexRecord, DwcTerm.datasetName.simpleName(), br.getDatasetName());
-      addMultiValueTermSafely(
-          indexRecord, DwcTerm.samplingProtocol.simpleName(), br.getSamplingProtocol());
-      addMultiValueTermSafely(
-          indexRecord, DwcTerm.otherCatalogNumbers.simpleName(), br.getOtherCatalogNumbers());
-    }
+    applyBasicRecord(br, indexRecord);
 
     // add event date
-    if (tr.getEventDate() != null) {
-
-      Long date = parseInterpretedDate(tr.getEventDate().getGte());
-      if (date != null) {
-        indexRecord.getDates().put(DwcTerm.eventDate.simpleName(), date);
-      }
-
-      // eventDateEnd
-      Long endDate = parseInterpretedDate(tr.getEventDate().getLte());
-      if (endDate != null) {
-        indexRecord.getDates().put(EVENT_DATE_END, endDate);
-      }
-    }
-
-    if (tr.getDatePrecision() != null) {
-      indexRecord.getStrings().put(DATE_PRECISION, tr.getDatePrecision());
-    }
-
-    if (tr.getYear() != null && tr.getYear() > 0) {
-      indexRecord.getInts().put(DECADE, ((tr.getYear() / 10) * 10));
-
-      // Added for backwards compatibility
-      // see
-      // https://github.com/AtlasOfLivingAustralia/biocache-store/blob/develop/src/main/scala/au/org/ala/biocache/index/IndexDAO.scala#L1077
-      String occurrenceYear = tr.getYear() + "-01-01";
-      try {
-        long occurrenceYearTime =
-            new SimpleDateFormat(YYYY_DD_MM_FORMAT).parse(occurrenceYear).getTime();
-        indexRecord.getDates().put(OCCURRENCE_YEAR, occurrenceYearTime);
-      } catch (ParseException ex) {
-        // NOP
-      }
-    }
+    applyTemporalRecord(tr, indexRecord);
 
     // GBIF taxonomy - add if available
     if (txr != null) {
@@ -300,10 +266,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
     if (isSensitive) {
       indexRecord.getStrings().put(SENSITIVE, sr.getSensitive());
-    }
-
-    // Sensitive (Original) data
-    if (isSensitive) {
       if (sr.getDataGeneralizations() != null)
         indexRecord
             .getStrings()
@@ -326,90 +288,10 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       }
     }
 
-    if (lr.getHasCoordinate() != null
-        && lr.getHasCoordinate()
-        && lr.getDecimalLatitude() != null
-        && lr.getDecimalLongitude() != null) {
-      addGeo(indexRecord, lr.getDecimalLatitude(), lr.getDecimalLongitude());
-    }
+    addGeo(indexRecord, lr);
 
     // ALA taxonomy & species groups - backwards compatible for EYA
-    if (atxr.getTaxonConceptID() != null) {
-      List<Schema.Field> fields = atxr.getSchema().getFields();
-      for (Schema.Field field : fields) {
-        Object value = atxr.get(field.name());
-        if (value != null
-            && !field.name().equals(SPECIES_GROUP)
-            && !field.name().equals(SPECIES_SUBGROUP)
-            && !field.name().equals(TAXON_RANK)
-            && !skipKeys.contains(field.name())) {
-
-          if (field.name().equalsIgnoreCase(CLASSS)) {
-            indexRecord.getStrings().put(DwcTerm.class_.simpleName(), value.toString());
-          } else if (field.name().equalsIgnoreCase(ISSUES)) {
-            assertions.add((String) value);
-          } else {
-            if (value instanceof Integer) {
-              indexRecord.getInts().put(field.name(), (Integer) value);
-            } else {
-              indexRecord.getStrings().put(field.name(), value.toString());
-            }
-          }
-        }
-
-        if (atxr.getClasss() != null) {
-          indexRecord.getStrings().put(DwcTerm.class_.simpleName(), atxr.getClasss());
-        }
-
-        if (atxr.getTaxonRank() != null) {
-          indexRecord
-              .getStrings()
-              .put(DwcTerm.taxonRank.simpleName(), atxr.getTaxonRank().toLowerCase());
-          if (atxr.getTaxonRankID() != null && atxr.getTaxonRankID() == SUBSPECIES_RANK_ID) {
-            indexRecord.getStrings().put(SUBSPECIES, atxr.getScientificName());
-            indexRecord.getStrings().put(SUBSPECIES_ID, atxr.getTaxonConceptID());
-          }
-        }
-      }
-      // legacy fields referenced in biocache-service code
-      indexRecord.setTaxonID(atxr.getTaxonConceptID());
-      indexRecord
-          .getMultiValues()
-          .put(
-              SPECIES_GROUP,
-              atxr.getSpeciesGroup().stream().distinct().collect(Collectors.toList()));
-      indexRecord
-          .getMultiValues()
-          .put(
-              SPECIES_SUBGROUP,
-              atxr.getSpeciesSubgroup().stream().distinct().collect(Collectors.toList()));
-
-      // required for EYA
-      indexRecord
-          .getStrings()
-          .put(
-              NAMES_AND_LSID,
-              String.join(
-                  "|",
-                  atxr.getScientificName(),
-                  atxr.getTaxonConceptID(),
-                  StringUtils.trimToEmpty(atxr.getVernacularName()),
-                  atxr.getKingdom(),
-                  atxr.getFamily())); // is set to IGNORE in headerAttributes
-
-      indexRecord
-          .getStrings()
-          .put(
-              COMMON_NAME_AND_LSID,
-              String.join(
-                  "|",
-                  StringUtils.trimToEmpty(atxr.getVernacularName()),
-                  atxr.getScientificName(),
-                  atxr.getTaxonConceptID(),
-                  StringUtils.trimToEmpty(atxr.getVernacularName()),
-                  atxr.getKingdom(),
-                  atxr.getFamily())); // is set to IGNORE in headerAttribute
-    }
+    applyTaxonomy(atxr, skipKeys, indexRecord, assertions);
 
     // see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/99
     boolean spatiallyValid = lr.getHasGeospatialIssue() == null || !lr.getHasGeospatialIssue();
@@ -421,127 +303,13 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
 
     // Add legacy collectory fields
-    if (aar != null) {
-      // if the licence is null in the basic record (which is the record-level licence)
-      // or licence is License.UNSPECIFIED in the basic record (licence provided at the record-level
-      // is null)
-      // then use the licence supplied by the collectory
-      // see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/271
-      if (indexRecord.getStrings().get(DcTerm.license.simpleName()) == null
-          || indexRecord
-              .getStrings()
-              .get(DcTerm.license.simpleName())
-              .equals(License.UNSPECIFIED.name())) {
-        addIfNotEmpty(indexRecord, DcTerm.license.simpleName(), aar.getLicenseType());
-      }
-
-      addIfNotEmpty(indexRecord, DATA_RESOURCE_UID, aar.getDataResourceUid());
-      addIfNotEmpty(indexRecord, DATA_RESOURCE_NAME, aar.getDataResourceName());
-      addIfNotEmpty(indexRecord, DATA_PROVIDER_UID, aar.getDataProviderUid());
-      addIfNotEmpty(indexRecord, DATA_PROVIDER_NAME, aar.getDataProviderName());
-      addIfNotEmpty(indexRecord, INSTITUTION_UID, aar.getInstitutionUid());
-      addIfNotEmpty(indexRecord, COLLECTION_UID, aar.getCollectionUid());
-      addIfNotEmpty(indexRecord, INSTITUTION_NAME, aar.getInstitutionName());
-      addIfNotEmpty(indexRecord, COLLECTION_NAME, aar.getCollectionName());
-      addIfNotEmpty(indexRecord, PROVENANCE, aar.getProvenance());
-      addIfNotEmpty(indexRecord, CONTENT_TYPES, aar.getContentTypes());
-      indexRecord
-          .getBooleans()
-          .put(
-              DEFAULT_VALUES_USED,
-              aar.getHasDefaultValues() != null ? aar.getHasDefaultValues() : false);
-
-      // add hub IDs
-      if (aar.getHubMembership() != null && !aar.getHubMembership().isEmpty()) {
-        indexRecord
-            .getMultiValues()
-            .put(
-                DATA_HUB_UID,
-                aar.getHubMembership().stream()
-                    .map(EntityReference::getUid)
-                    .collect(Collectors.toList()));
-      }
-    }
+    applyAttribution(aar, indexRecord);
 
     // add image identifiers
-    if (isr != null && isr.getImageItems() != null && !isr.getImageItems().isEmpty()) {
+    applyMultimedia(ur, isr, indexRecord);
 
-      Set<String> multimedia = new HashSet<>();
-      Set<String> licenses = new HashSet<>();
-      List<String> images = new ArrayList<>();
-      List<String> videos = new ArrayList<>();
-      List<String> sounds = new ArrayList<>();
-      isr.getImageItems()
-          .forEach(
-              image -> {
-                if (StringUtils.isNotEmpty(image.getLicense())) {
-                  licenses.add(image.getLicense());
-                }
-
-                if (image.getFormat() != null) {
-                  if (image.getFormat().startsWith("image")) {
-                    multimedia.add(IMAGE);
-                    images.add(image.getIdentifier());
-                  }
-                  if (image.getFormat().startsWith("audio")) {
-                    multimedia.add(SOUND);
-                    sounds.add(image.getIdentifier());
-                  }
-                  if (image.getFormat().startsWith("video")) {
-                    multimedia.add(VIDEO);
-                    videos.add(image.getIdentifier());
-                  }
-                }
-              });
-
-      if (!images.isEmpty()) {
-        indexRecord.getStrings().put(IMAGE_ID, isr.getImageItems().get(0).getIdentifier());
-        indexRecord
-            .getMultiValues()
-            .put(
-                IMAGE_IDS,
-                isr.getImageItems().stream()
-                    .map(Image::getIdentifier)
-                    .collect(Collectors.toList()));
-      }
-      if (!sounds.isEmpty()) {
-        indexRecord
-            .getMultiValues()
-            .put(
-                SOUND_IDS,
-                isr.getImageItems().stream()
-                    .map(Image::getIdentifier)
-                    .collect(Collectors.toList()));
-      }
-      if (!videos.isEmpty()) {
-        indexRecord
-            .getMultiValues()
-            .put(
-                VIDEO_IDS,
-                isr.getImageItems().stream()
-                    .map(Image::getIdentifier)
-                    .collect(Collectors.toList()));
-      }
-
-      List<MultimediaIndexRecord> mir =
-          isr.getImageItems().stream()
-              .map(imageItem -> convertToMultimediaRecord(ur.getUuid(), imageItem))
-              .collect(Collectors.toList());
-      indexRecord.setMultimedia(mir);
-
-      if (!multimedia.isEmpty()) {
-        List<String> distinctList = new ArrayList<>(multimedia);
-        indexRecord.getMultiValues().put(MULTIMEDIA, distinctList);
-      }
-
-      if (!licenses.isEmpty()) {
-        indexRecord.getMultiValues().put(MULTIMEDIA_LICENSE, new ArrayList<>(licenses));
-      }
-    }
-
-    if (tpr != null && tpr.getSpeciesListID() != null && !tpr.getSpeciesListID().isEmpty()) {
-      addSpeciesListInfo(lr, tpr, indexRecord);
-    }
+    // add species lists
+    addSpeciesListInfo(lr, tpr, indexRecord);
 
     List<String> temporalIssues = tr.getIssues().getIssueList();
     List<String> taxonomicIssues = atxr.getIssues().getIssueList();
@@ -631,7 +399,297 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       addTermSafely(indexRecord, loan, LOAN_DESTINATION_TERM);
       addTermSafely(indexRecord, loan, LOAN_IDENTIFIER_TERM);
     }
+
+    // apply inherited fields as required
+    applyEventCore(indexRecord, ecr, skipKeys);
+    applyEventLocation(indexRecord, elr, skipKeys);
+    applyEventTemporal(indexRecord, etr, skipKeys);
     return indexRecord.build();
+  }
+
+  private static void applyMultimedia(
+      ALAUUIDRecord ur, ImageRecord isr, IndexRecord.Builder indexRecord) {
+    if (isr != null && isr.getImageItems() != null && !isr.getImageItems().isEmpty()) {
+
+      Set<String> multimedia = new HashSet<>();
+      Set<String> licenses = new HashSet<>();
+      List<String> images = new ArrayList<>();
+      List<String> videos = new ArrayList<>();
+      List<String> sounds = new ArrayList<>();
+      isr.getImageItems()
+          .forEach(
+              image -> {
+                if (StringUtils.isNotEmpty(image.getLicense())) {
+                  licenses.add(image.getLicense());
+                }
+
+                if (image.getFormat() != null) {
+                  if (image.getFormat().startsWith("image")) {
+                    multimedia.add(IMAGE);
+                    images.add(image.getIdentifier());
+                  }
+                  if (image.getFormat().startsWith("audio")) {
+                    multimedia.add(SOUND);
+                    sounds.add(image.getIdentifier());
+                  }
+                  if (image.getFormat().startsWith("video")) {
+                    multimedia.add(VIDEO);
+                    videos.add(image.getIdentifier());
+                  }
+                }
+              });
+
+      if (!images.isEmpty()) {
+        indexRecord.getStrings().put(IMAGE_ID, isr.getImageItems().get(0).getIdentifier());
+        indexRecord
+            .getMultiValues()
+            .put(
+                IMAGE_IDS,
+                isr.getImageItems().stream()
+                    .map(Image::getIdentifier)
+                    .collect(Collectors.toList()));
+      }
+      if (!sounds.isEmpty()) {
+        indexRecord
+            .getMultiValues()
+            .put(
+                SOUND_IDS,
+                isr.getImageItems().stream()
+                    .map(Image::getIdentifier)
+                    .collect(Collectors.toList()));
+      }
+      if (!videos.isEmpty()) {
+        indexRecord
+            .getMultiValues()
+            .put(
+                VIDEO_IDS,
+                isr.getImageItems().stream()
+                    .map(Image::getIdentifier)
+                    .collect(Collectors.toList()));
+      }
+
+      List<MultimediaIndexRecord> mir =
+          isr.getImageItems().stream()
+              .map(imageItem -> convertToMultimediaRecord(ur.getUuid(), imageItem))
+              .collect(Collectors.toList());
+      indexRecord.setMultimedia(mir);
+
+      if (!multimedia.isEmpty()) {
+        List<String> distinctList = new ArrayList<>(multimedia);
+        indexRecord.getMultiValues().put(MULTIMEDIA, distinctList);
+      }
+
+      if (!licenses.isEmpty()) {
+        indexRecord.getMultiValues().put(MULTIMEDIA_LICENSE, new ArrayList<>(licenses));
+      }
+    }
+  }
+
+  private static void applyAttribution(ALAAttributionRecord aar, IndexRecord.Builder indexRecord) {
+    if (aar != null) {
+      // if the licence is null in the basic record (which is the record-level licence)
+      // or licence is License.UNSPECIFIED in the basic record (licence provided at the record-level
+      // is null)
+      // then use the licence supplied by the collectory
+      // see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/271
+      if (indexRecord.getStrings().get(DcTerm.license.simpleName()) == null
+          || indexRecord
+              .getStrings()
+              .get(DcTerm.license.simpleName())
+              .equals(License.UNSPECIFIED.name())) {
+        addIfNotEmpty(indexRecord, DcTerm.license.simpleName(), aar.getLicenseType());
+      }
+
+      addIfNotEmpty(indexRecord, DATA_RESOURCE_UID, aar.getDataResourceUid());
+      addIfNotEmpty(indexRecord, DATA_RESOURCE_NAME, aar.getDataResourceName());
+      addIfNotEmpty(indexRecord, DATA_PROVIDER_UID, aar.getDataProviderUid());
+      addIfNotEmpty(indexRecord, DATA_PROVIDER_NAME, aar.getDataProviderName());
+      addIfNotEmpty(indexRecord, INSTITUTION_UID, aar.getInstitutionUid());
+      addIfNotEmpty(indexRecord, COLLECTION_UID, aar.getCollectionUid());
+      addIfNotEmpty(indexRecord, INSTITUTION_NAME, aar.getInstitutionName());
+      addIfNotEmpty(indexRecord, COLLECTION_NAME, aar.getCollectionName());
+      addIfNotEmpty(indexRecord, PROVENANCE, aar.getProvenance());
+      addIfNotEmpty(indexRecord, CONTENT_TYPES, aar.getContentTypes());
+      indexRecord
+          .getBooleans()
+          .put(
+              DEFAULT_VALUES_USED,
+              aar.getHasDefaultValues() != null ? aar.getHasDefaultValues() : false);
+
+      // add hub IDs
+      if (aar.getHubMembership() != null && !aar.getHubMembership().isEmpty()) {
+        indexRecord
+            .getMultiValues()
+            .put(
+                DATA_HUB_UID,
+                aar.getHubMembership().stream()
+                    .map(EntityReference::getUid)
+                    .collect(Collectors.toList()));
+      }
+    }
+  }
+
+  private static void applyTaxonomy(
+      ALATaxonRecord atxr,
+      Set<String> skipKeys,
+      IndexRecord.Builder indexRecord,
+      List<String> assertions) {
+    if (atxr.getTaxonConceptID() != null) {
+      List<Field> fields = atxr.getSchema().getFields();
+      for (Field field : fields) {
+        Object value = atxr.get(field.name());
+        if (value != null
+            && !field.name().equals(SPECIES_GROUP)
+            && !field.name().equals(SPECIES_SUBGROUP)
+            && !field.name().equals(TAXON_RANK)
+            && !skipKeys.contains(field.name())) {
+
+          if (field.name().equalsIgnoreCase(CLASSS)) {
+            indexRecord.getStrings().put(DwcTerm.class_.simpleName(), value.toString());
+          } else if (field.name().equalsIgnoreCase(ISSUES)) {
+            assertions.add((String) value);
+          } else {
+            if (value instanceof Integer) {
+              indexRecord.getInts().put(field.name(), (Integer) value);
+            } else {
+              indexRecord.getStrings().put(field.name(), value.toString());
+            }
+          }
+        }
+
+        if (atxr.getClasss() != null) {
+          indexRecord.getStrings().put(DwcTerm.class_.simpleName(), atxr.getClasss());
+        }
+
+        if (atxr.getTaxonRank() != null) {
+          indexRecord
+              .getStrings()
+              .put(DwcTerm.taxonRank.simpleName(), atxr.getTaxonRank().toLowerCase());
+          if (atxr.getTaxonRankID() != null && atxr.getTaxonRankID() == SUBSPECIES_RANK_ID) {
+            indexRecord.getStrings().put(SUBSPECIES, atxr.getScientificName());
+            indexRecord.getStrings().put(SUBSPECIES_ID, atxr.getTaxonConceptID());
+          }
+        }
+      }
+      // legacy fields referenced in biocache-service code
+      indexRecord.setTaxonID(atxr.getTaxonConceptID());
+      indexRecord
+          .getMultiValues()
+          .put(
+              SPECIES_GROUP,
+              atxr.getSpeciesGroup().stream().distinct().collect(Collectors.toList()));
+      indexRecord
+          .getMultiValues()
+          .put(
+              SPECIES_SUBGROUP,
+              atxr.getSpeciesSubgroup().stream().distinct().collect(Collectors.toList()));
+
+      // required for EYA
+      indexRecord
+          .getStrings()
+          .put(
+              NAMES_AND_LSID,
+              String.join(
+                  "|",
+                  atxr.getScientificName(),
+                  atxr.getTaxonConceptID(),
+                  StringUtils.trimToEmpty(atxr.getVernacularName()),
+                  atxr.getKingdom(),
+                  atxr.getFamily())); // is set to IGNORE in headerAttributes
+
+      indexRecord
+          .getStrings()
+          .put(
+              COMMON_NAME_AND_LSID,
+              String.join(
+                  "|",
+                  StringUtils.trimToEmpty(atxr.getVernacularName()),
+                  atxr.getScientificName(),
+                  atxr.getTaxonConceptID(),
+                  StringUtils.trimToEmpty(atxr.getVernacularName()),
+                  atxr.getKingdom(),
+                  atxr.getFamily())); // is set to IGNORE in headerAttribute
+    }
+  }
+
+  private static void applyBasicRecord(BasicRecord br, IndexRecord.Builder indexRecord) {
+    if (br != null) {
+      addEstablishmentValueSafely(
+          indexRecord, DwcTerm.establishmentMeans.simpleName(), br.getEstablishmentMeans());
+      addTermWithAgentsSafely(
+          indexRecord, DwcTerm.recordedByID.simpleName(), br.getRecordedByIds());
+      addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
+      addMultiValueTermSafely(indexRecord, DwcTerm.recordedBy.simpleName(), br.getRecordedBy());
+      addMultiValueTermSafely(indexRecord, DwcTerm.identifiedBy.simpleName(), br.getIdentifiedBy());
+      addMultiValueTermSafely(indexRecord, DwcTerm.preparations.simpleName(), br.getPreparations());
+      addMultiValueTermSafely(indexRecord, DwcTerm.datasetID.simpleName(), br.getDatasetID());
+      addMultiValueTermSafely(indexRecord, DwcTerm.datasetName.simpleName(), br.getDatasetName());
+      addMultiValueTermSafely(
+          indexRecord, DwcTerm.samplingProtocol.simpleName(), br.getSamplingProtocol());
+      addMultiValueTermSafely(
+          indexRecord, DwcTerm.otherCatalogNumbers.simpleName(), br.getOtherCatalogNumbers());
+    }
+  }
+
+  private static void applyTemporalRecord(TemporalRecord tr, IndexRecord.Builder indexRecord) {
+    if (tr.getEventDate() != null) {
+
+      Long date = parseInterpretedDate(tr.getEventDate().getGte());
+      if (date != null) {
+        indexRecord.getDates().put(DwcTerm.eventDate.simpleName(), date);
+      }
+
+      // eventDateEnd
+      Long endDate = parseInterpretedDate(tr.getEventDate().getLte());
+      if (endDate != null) {
+        indexRecord.getDates().put(EVENT_DATE_END, endDate);
+      }
+    }
+
+    if (tr.getDatePrecision() != null) {
+      indexRecord.getStrings().put(DATE_PRECISION, tr.getDatePrecision());
+    }
+
+    if (tr.getYear() != null && tr.getYear() > 0) {
+      indexRecord.getInts().put(DECADE, ((tr.getYear() / 10) * 10));
+
+      // Added for backwards compatibility
+      // see
+      // https://github.com/AtlasOfLivingAustralia/biocache-store/blob/develop/src/main/scala/au/org/ala/biocache/index/IndexDAO.scala#L1077
+      String occurrenceYear = tr.getYear() + "-01-01";
+      try {
+        long occurrenceYearTime =
+            new SimpleDateFormat(YYYY_DD_MM_FORMAT).parse(occurrenceYear).getTime();
+        indexRecord.getDates().put(OCCURRENCE_YEAR, occurrenceYearTime);
+      } catch (ParseException ex) {
+        // NOP
+      }
+    }
+  }
+
+  private static void applyEventTemporal(
+      IndexRecord.Builder indexRecord, TemporalRecord ecr, Set<String> skipKeys) {
+    if (ecr != null) {
+      boolean hasTemporalInfo = indexRecord.getDates().get(DwcTerm.eventDate.simpleName()) != null;
+      addToIndexRecord(ecr, indexRecord, skipKeys, false);
+      if (!hasTemporalInfo) {
+        applyTemporalRecord(ecr, indexRecord);
+      }
+    }
+  }
+
+  private static void applyEventLocation(
+      IndexRecord.Builder indexRecord, LocationRecord ecr, Set<String> skipKeys) {
+    if (ecr != null) {
+      addToIndexRecord(ecr, indexRecord, skipKeys, false);
+    }
+  }
+
+  private static void applyEventCore(
+      IndexRecord.Builder indexRecord, EventCoreRecord ecr, Set<String> skipKeys) {
+    if (ecr != null) {
+      addToIndexRecord(ecr, indexRecord, skipKeys, false);
+    }
   }
 
   /**
@@ -764,6 +822,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
   private static void addSpeciesListInfo(
       LocationRecord lr, TaxonProfile tpr, IndexRecord.Builder indexRecord) {
+
+    if (tpr == null || tpr.getSpeciesListID() == null || tpr.getSpeciesListID().isEmpty()) {
+      return;
+    }
+
     indexRecord.getMultiValues().put(SPECIES_LIST_UID, tpr.getSpeciesListID());
 
     // CONSERVATION STATUS
@@ -901,6 +964,10 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                 mr = v.getOnly(mrTag, null);
               }
 
+              EventCoreRecord ecr = v.getOnly(eventCoreTag, null);
+              LocationRecord elr = v.getOnly(eventLocationTag, null);
+              TemporalRecord etr = v.getOnly(eventTemporalTag, null);
+
               if (aar != null && aar.getDataResourceUid() != null) {
                 IndexRecord doc =
                     createIndexRecord(
@@ -916,9 +983,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                         tpr,
                         sr,
                         mr,
+                        ecr,
+                        elr,
+                        etr,
                         lastLoadDate,
                         lastLoadProcessed);
-
                 c.output(doc);
                 counter.inc();
               } else {
@@ -959,13 +1028,24 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
   }
 
-  static void addGeo(IndexRecord.Builder doc, Double lat, Double lon) {
+  static void addGeo(IndexRecord.Builder doc, LocationRecord lr) {
+
+    if (lr.getHasCoordinate() == null
+        || lr.getHasCoordinate()
+        || lr.getDecimalLatitude() == null
+        || lr.getDecimalLongitude() == null) return;
+
+    Double lat = lr.getDecimalLatitude();
+    Double lon = lr.getDecimalLongitude();
+
     String latlon = "";
     // ensure that the lat longs are in the required range before
     if (lat <= 90 && lat >= -90d && lon <= 180 && lon >= -180d) {
       // https://lucene.apache.org/solr/guide/7_0/spatial-search.html#indexing-points
       latlon = lat + "," + lon; // required format for indexing geodetic points in SOLR
       doc.setLatLng(latlon);
+    } else {
+      return;
     }
 
     doc.getStrings().put(DwcTerm.geodeticDatum.simpleName(), PIPELINES_GEODETIC_DATUM);
@@ -1010,6 +1090,14 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
   static void addToIndexRecord(
       SpecificRecordBase record, IndexRecord.Builder builder, Set<String> skipKeys) {
+    addToIndexRecord(record, builder, skipKeys, true);
+  }
+
+  static void addToIndexRecord(
+      SpecificRecordBase record,
+      IndexRecord.Builder builder,
+      Set<String> skipKeys,
+      boolean overwrite) {
 
     record.getSchema().getFields().stream()
         .filter(n -> !skipKeys.contains(n.name()))
@@ -1030,23 +1118,36 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                               t -> {
                                 switch (t) {
                                   case BOOLEAN:
-                                    builder.getBooleans().put(f.name(), (Boolean) r);
+                                    if (overwrite || builder.getBooleans().get(f.name()) == null) {
+                                      builder.getBooleans().put(f.name(), (Boolean) r);
+                                    }
                                     break;
                                   case FLOAT:
                                   case DOUBLE:
-                                    builder.getDoubles().put(f.name(), (Double) r);
+                                    if (overwrite || builder.getDoubles().get(f.name()) == null) {
+                                      builder.getDoubles().put(f.name(), (Double) r);
+                                    }
                                     break;
                                   case INT:
-                                    builder.getInts().put(f.name(), (Integer) r);
+                                    if (overwrite || builder.getInts().get(f.name()) == null) {
+                                      builder.getInts().put(f.name(), (Integer) r);
+                                    }
                                     break;
                                   case LONG:
-                                    builder.getLongs().put(f.name(), (Long) r);
+                                    if (overwrite || builder.getLongs().get(f.name()) == null) {
+                                      builder.getLongs().put(f.name(), (Long) r);
+                                    }
                                     break;
                                   case ARRAY:
-                                    builder.getMultiValues().put(f.name(), (List) r);
+                                    if (overwrite
+                                        || builder.getMultiValues().get(f.name()) == null) {
+                                      builder.getMultiValues().put(f.name(), (List) r);
+                                    }
                                     break;
                                   default:
-                                    builder.getStrings().put(f.name(), r.toString());
+                                    if (overwrite || builder.getStrings().get(f.name()) == null) {
+                                      builder.getStrings().put(f.name(), r.toString());
+                                    }
                                     break;
                                 }
                               });
