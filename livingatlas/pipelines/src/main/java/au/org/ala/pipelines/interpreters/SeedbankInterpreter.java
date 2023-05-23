@@ -37,15 +37,15 @@ public class SeedbankInterpreter {
           .map(SeedbankTerm.numberFull, SeedbankInterpreter::setNumberFull)
           .map(SeedbankTerm.numberGerminated, SeedbankInterpreter::setNumberGerminated)
           .map(SeedbankTerm.numberPlantsSampled, SeedbankInterpreter::setNumberPlantsSampled)
-          .map(SeedbankTerm.sampleSize, SeedbankInterpreter::setQuantityCount)
-          .map(SeedbankTerm.sampleWeightInGrams, SeedbankInterpreter::setQuantityInGrams)
+          .map(SeedbankTerm.quantityCount, SeedbankInterpreter::setQuantityCount)
+          .map(SeedbankTerm.quantityInGrams, SeedbankInterpreter::setQuantityInGrams)
           .map(SeedbankTerm.testLengthInDays, SeedbankInterpreter::setTestLengthInDays)
           .map(SeedbankTerm.thousandSeedWeight, SeedbankInterpreter::setThousandSeedWeight)
           .map(SeedbankTerm.seedPerGram, SeedbankInterpreter::setSeedPerGram)
           .map(SeedbankTerm.purityPercentage, SeedbankInterpreter::setPurityPercentage)
           .map(SeedbankTerm.viabilityPercentage, SeedbankInterpreter::setViabilityPercentage)
           .map(
-              SeedbankTerm.relativeHumidityPercentage,
+              SeedbankTerm.storageRelativeHumidityPercentage,
               SeedbankInterpreter::setStorageRelativeHumidityPercentage)
           .map(SeedbankTerm.storageTemperatureInCelsius, SeedbankInterpreter::setStorageTemp)
           .map(SeedbankTerm.germinationRateInDays, SeedbankInterpreter::setGerminateRate)
