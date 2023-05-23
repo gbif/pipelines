@@ -1031,7 +1031,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   static void addGeo(IndexRecord.Builder doc, LocationRecord lr) {
 
     if (lr.getHasCoordinate() == null
-        || lr.getHasCoordinate()
+        || !lr.getHasCoordinate()
         || lr.getDecimalLatitude() == null
         || lr.getDecimalLongitude() == null) return;
 
@@ -1047,8 +1047,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     } else {
       return;
     }
-
     doc.getStrings().put(DwcTerm.geodeticDatum.simpleName(), PIPELINES_GEODETIC_DATUM);
+
     doc.getStrings().put(LAT_LONG, latlon); // is set to IGNORE in headerAttributes
     doc.getStrings()
         .put(POINT_1, getLatLongString(lat, lon, "#")); // is set to IGNORE in headerAttributes
