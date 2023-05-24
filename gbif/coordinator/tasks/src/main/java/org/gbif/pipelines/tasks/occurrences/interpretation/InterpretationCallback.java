@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
@@ -33,7 +32,6 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.interpretation.RecordCountReader;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
-import org.gbif.pipelines.common.process.AirflowRunnerBuilder;
 import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.StackableSparkRunner;
 import org.gbif.pipelines.common.utils.HdfsUtils;
@@ -273,17 +271,5 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     return isValidator
         ? StepType.VALIDATOR_VERBATIM_TO_INTERPRETED
         : StepType.VERBATIM_TO_INTERPRETED;
-  }
-
-  private void runInAirflow(AirflowRunnerBuilder builder) {
-    CloseableHttpResponse response = builder.buildAirflowRunner().createRun();
-    int status = response.getStatusLine().getStatusCode();
-    if (status == 201) {
-      log.info("Started airflow execution");
-    } else {
-      log.error("Failed creating airflow execution");
-      throw new IllegalStateException(
-          "Airflow execution wasn't created correctly failed with exit code - " + status);
-    }
   }
 }

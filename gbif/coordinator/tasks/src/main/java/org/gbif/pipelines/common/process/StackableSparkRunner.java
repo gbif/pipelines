@@ -42,8 +42,6 @@ public final class StackableSparkRunner {
   @Builder
   public StackableSparkRunner(
       @NonNull String kubeConfigFile,
-      @NonNull String configMapName,
-      @NonNull String appConfigFileName,
       @NonNull String sparkCrdConfigFile,
       @NonNull SparkConfiguration sparkConfig,
       @NonNull DistributedConfiguration distributedConfig,
@@ -57,10 +55,11 @@ public final class StackableSparkRunner {
     this.sparkAppName = sparkAppName;
     this.sparkSettings = sparkSettings;
     this.beamConfigFn = beamConfigFn;
-    this.k8StackableSparkController = K8StackableSparkController.builder()
-                                        .kubeConfig(ConfigUtils.loadKubeConfig(kubeConfigFile))
-                                        .sparkCrd(loadSparkCrd())
-                                        .build();
+    this.k8StackableSparkController =
+        K8StackableSparkController.builder()
+            .kubeConfig(ConfigUtils.loadKubeConfig(kubeConfigFile))
+            .sparkCrd(loadSparkCrd())
+            .build();
   }
 
   private SparkCrd.Spec.Resources mergeDriverResources(SparkCrd.Spec.Resources resources) {

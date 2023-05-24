@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.Set;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -15,13 +14,10 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.configs.AirflowConfiguration;
 import org.gbif.pipelines.common.interpretation.RecordCountReader;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
-import org.gbif.pipelines.common.process.AirflowRunnerBuilder;
 import org.gbif.pipelines.common.process.BeamSettings;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
+import org.gbif.pipelines.common.process.StackableSparkRunner;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.occurrences.identifier.validation.IdentifierValidationResult;
@@ -90,32 +86,19 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
               ? message.getExtraPath()
               : String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
 
-      ProcessRunnerBuilderBuilder builder =
-          ProcessRunnerBuilder.builder()
-              .distributedConfig(config.distributedConfig)
+      StackableSparkRunner.StackableSparkRunnerBuilder stackableSparkRunnerBuilder =
+          StackableSparkRunner.builder()
+              .beamConfigFn(BeamSettings.occurrenceIdentifier(config, message, path))
+              .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
+              .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
               .sparkConfig(config.sparkConfig)
               .sparkAppName(
                   TYPE.name() + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-              .beamConfigFn(BeamSettings.occurrenceIdentifier(config, message, path));
-
-      AirflowRunnerBuilder airRunnerBuilder =
-          AirflowRunnerBuilder.builder()
-              .airflowConfiguration(config.airflowConfig)
-              .dagId(AirflowConfiguration.SPARK_DAG_NAME)
-              .main("org.gbif.pipelines.ingest.pipelines.VerbatimToOccurrencePipeline")
-              .dagRunId(TYPE.name() + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-              .beamConfigFn(BeamSettings.occurrenceIdentifier(config, message, path))
-              .build();
+              .distributedConfig(config.distributedConfig);
 
       log.info("Start the process. Message - {}", message);
       try {
-        if (config.airflowConfig.useAirflow) {
-          log.info("Starting airflow execution");
-          runInAirflow(airRunnerBuilder);
-        } else {
-          runDistributed(message, builder);
-        }
-
+        runDistributed(message, stackableSparkRunnerBuilder);
         IdentifierValidationResult validationResult =
             PostprocessValidation.builder()
                 .httpClient(httpClient)
@@ -163,8 +146,9 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
         message.getDatasetType());
   }
 
-  private void runDistributed(PipelinesVerbatimMessage message, ProcessRunnerBuilderBuilder builder)
-      throws IOException, InterruptedException {
+  private void runDistributed(
+      PipelinesVerbatimMessage message, StackableSparkRunner.StackableSparkRunnerBuilder builder)
+      throws IOException {
 
     long recordsNumber = RecordCountReader.get(config.stepConfig, message);
     SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
@@ -172,24 +156,12 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
     builder.sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().get().start().waitFor();
+    int exitValue = builder.build().start().waitFor();
 
     if (exitValue != 0) {
       throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
     } else {
       log.info("Process has been finished with exit value - {}", exitValue);
-    }
-  }
-
-  private void runInAirflow(AirflowRunnerBuilder builder) {
-    CloseableHttpResponse response = builder.buildAirflowRunner().createRun();
-    int status = response.getStatusLine().getStatusCode();
-    if (status == 201) {
-      log.info("Started airflow execution");
-    } else {
-      log.error("Failed creating airflow execution");
-      throw new IllegalStateException(
-          "Airflow execution wasn't created correctly failed with exit code - " + status);
     }
   }
 }
