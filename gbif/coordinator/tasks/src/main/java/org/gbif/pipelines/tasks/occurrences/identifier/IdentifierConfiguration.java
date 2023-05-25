@@ -25,9 +25,6 @@ public class IdentifierConfiguration implements BaseConfiguration {
   public AvroWriteConfiguration avroConfig = new AvroWriteConfiguration();
 
   @ParametersDelegate @Valid @NotNull
-  public AirflowConfiguration airflowConfig = new AirflowConfiguration();
-
-  @ParametersDelegate @Valid @NotNull
   public StackableConfiguration stackableConfiguration = new StackableConfiguration();
 
   @Parameter(names = "--meta-file-name")

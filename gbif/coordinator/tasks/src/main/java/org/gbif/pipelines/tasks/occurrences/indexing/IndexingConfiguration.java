@@ -25,6 +25,9 @@ public class IndexingConfiguration implements BaseConfiguration {
   @ParametersDelegate @Valid
   public DistributedConfiguration distributedConfig = new DistributedConfiguration();
 
+  @ParametersDelegate @Valid @NotNull
+  public StackableConfiguration stackableConfiguration = new StackableConfiguration();
+
   @Parameter(names = "--meta-file-name")
   public String metaFileName = Pipeline.OCCURRENCE_TO_INDEX + ".yml";
 
