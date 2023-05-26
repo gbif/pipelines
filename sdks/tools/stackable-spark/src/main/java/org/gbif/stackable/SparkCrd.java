@@ -13,7 +13,7 @@ import lombok.extern.jackson.Jacksonized;
 @Data
 @Builder(toBuilder = true)
 @Jacksonized
-public class SparkCrd {
+public class SparkCrd implements ToBuilder {
 
   private static final ObjectMapper MAPPER = new ObjectMapper(new YAMLFactory());
 
@@ -43,7 +43,7 @@ public class SparkCrd {
   @Data
   @Builder(toBuilder = true)
   @Jacksonized
-  public static class Metadata {
+  public static class Metadata implements ToBuilder {
 
     /** Application name */
     private final String name;
@@ -55,7 +55,7 @@ public class SparkCrd {
   @Data
   @Builder(toBuilder = true)
   @Jacksonized
-  public static class Spec {
+  public static class Spec implements ToBuilder {
     /** Application version */
     private final String version;
 
@@ -126,7 +126,7 @@ public class SparkCrd {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
-    public static class Deps {
+    public static class Deps implements ToBuilder {
 
       /** A list of python packages that will be installed via pip. */
       private final List<String> requirements;
@@ -144,7 +144,7 @@ public class SparkCrd {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
-    public static class ConfigMap {
+    public static class ConfigMap implements ToBuilder {
 
       private final String name;
 
@@ -153,7 +153,7 @@ public class SparkCrd {
       @Data
       @Builder(toBuilder = true)
       @Jacksonized
-      public static class Item {
+      public static class Item implements ToBuilder {
 
         private final String key;
 
@@ -164,7 +164,7 @@ public class SparkCrd {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
-    public static class Volume {
+    public static class Volume implements ToBuilder {
 
       /** The volume name. */
       private final String name;
@@ -177,7 +177,7 @@ public class SparkCrd {
       @Data
       @Builder(toBuilder = true)
       @Jacksonized
-      public static class PersistentVolumeClaim {
+      public static class PersistentVolumeClaim implements ToBuilder {
 
         /** The persistent volume claim name backing the volume. */
         private final String claimName;
@@ -187,7 +187,7 @@ public class SparkCrd {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
-    public static class Job {
+    public static class Job implements ToBuilder {
 
       /** Resources specification for the initiating Job. */
       private final Resources resources;
@@ -197,7 +197,7 @@ public class SparkCrd {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
-    public static final class VolumeMount {
+    public static final class VolumeMount implements ToBuilder {
 
       /** Name of mount. */
       private final String name;
@@ -212,7 +212,7 @@ public class SparkCrd {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
-    public static class Resources {
+    public static class Resources implements ToBuilder {
 
       private final Cpu cpu;
 
@@ -221,7 +221,7 @@ public class SparkCrd {
       @Data
       @Builder(toBuilder = true)
       @Jacksonized
-      public static class Cpu {
+      public static class Cpu implements ToBuilder {
 
         private final String min;
 
@@ -231,7 +231,7 @@ public class SparkCrd {
       @Data
       @Builder(toBuilder = true)
       @Jacksonized
-      public static class Memory {
+      public static class Memory implements ToBuilder {
         private final String limit;
       }
     }
@@ -239,7 +239,7 @@ public class SparkCrd {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
-    public static final class Driver {
+    public static final class Driver implements ToBuilder {
 
       /** Resources specification for the component Pod. */
       private final Resources resources;
@@ -264,7 +264,7 @@ public class SparkCrd {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
-    public static final class Executor {
+    public static final class Executor implements ToBuilder {
 
       /** Number of executor instances launched for this job. */
       private final int instances;
@@ -292,7 +292,7 @@ public class SparkCrd {
     @Data
     @Builder(toBuilder = true)
     @Jacksonized
-    public static class LogFileDirectory {
+    public static class LogFileDirectory implements ToBuilder {
 
       /**
        * S3 bucket definition where applications should publish events for the Spark History server.

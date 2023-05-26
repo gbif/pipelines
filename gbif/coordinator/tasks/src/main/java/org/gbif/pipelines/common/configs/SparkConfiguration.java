@@ -33,6 +33,9 @@ public class SparkConfiguration {
   @Parameter(names = "--spark-executor-numbers-max")
   public int executorNumbersMax;
 
+  @Parameter(names = "--spark-driver-cores")
+  public int driverCores;
+
   @Parameter(names = "--spark-driver-memory")
   public String driverMemory;
 }

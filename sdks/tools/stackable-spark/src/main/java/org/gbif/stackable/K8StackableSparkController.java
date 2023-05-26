@@ -99,7 +99,7 @@ public class K8StackableSparkController {
   @SneakyThrows
   public AbstractMap<String, Object> submitSparkApplication(String applicationId) {
     CustomObjectsApi customObjectsApi = new CustomObjectsApi();
-    SparkCrd sparkPodConfig = cloneAndRename(sparkCrd, getApplicationName(applicationId));
+    SparkCrd sparkPodConfig = cloneAndRename(sparkCrd, applicationId);
     deleteIfExists(applicationId);
     return (AbstractMap<String, Object>)
         customObjectsApi.createNamespacedCustomObject(
@@ -133,13 +133,20 @@ public class K8StackableSparkController {
   private AbstractMap<String, Object> getSparkApplication(String applicationId)
       throws ApiException {
     CustomObjectsApi customObjectsApi = new CustomObjectsApi();
+    Object status =
+        customObjectsApi.getNamespacedCustomObjectStatus(
+            STACKABLE_SPARK_GROUP,
+            STACKABLE_SPARK_VERSION,
+            kubeConfig.getNamespace(),
+            STACKABLE_SPARK_PLURAL,
+            applicationId);
     return (AbstractMap<String, Object>)
         customObjectsApi.getNamespacedCustomObject(
             STACKABLE_SPARK_GROUP,
             STACKABLE_SPARK_VERSION,
             kubeConfig.getNamespace(),
             STACKABLE_SPARK_PLURAL,
-            getApplicationName(applicationId));
+            applicationId);
   }
 
   @SneakyThrows
@@ -156,16 +163,12 @@ public class K8StackableSparkController {
             STACKABLE_SPARK_VERSION,
             kubeConfig.getNamespace(),
             STACKABLE_SPARK_PLURAL,
-            getApplicationName(applicationId),
+            applicationId,
             null,
             null,
             null,
             null,
             null);
-  }
-
-  private String getApplicationName(String applicationID) {
-    return sparkCrd.getMetadata().getName() + applicationID;
   }
 
   private static SparkCrd cloneAndRename(SparkCrd v1Pod, String name) {

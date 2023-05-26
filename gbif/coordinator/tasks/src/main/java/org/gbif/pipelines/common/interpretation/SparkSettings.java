@@ -59,12 +59,12 @@ public class SparkSettings implements MainSparkSettings {
   private String computeExecutorMemory(SparkConfiguration sparkConfig, int sparkExecutorNumbers) {
 
     if (sparkExecutorNumbers < sparkConfig.executorMemoryGbMin) {
-      return sparkConfig.executorMemoryGbMin + "G";
+      return String.valueOf(sparkConfig.executorMemoryGbMin);
     }
     if (sparkExecutorNumbers > sparkConfig.executorMemoryGbMax) {
-      return sparkConfig.executorMemoryGbMax + "G";
+      return String.valueOf(sparkConfig.executorMemoryGbMax);
     }
-    return sparkExecutorNumbers + "G";
+    return String.valueOf(sparkExecutorNumbers);
   }
 
   /**
