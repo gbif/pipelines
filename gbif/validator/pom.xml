@@ -39,7 +39,7 @@
     <lucene-analyzers.version>5.4.1</lucene-analyzers.version>
 
     <!-- Spring -->
-    <spring-boot.version>2.3.7.RELEASE</spring-boot.version>
+    <spring-boot.version>2.5.15</spring-boot.version>
     <spring-boot-admin.version>2.2.4</spring-boot-admin.version>
     <spring-cloud-openfeign.version>2.2.6.RELEASE</spring-cloud-openfeign.version>
     <spring-cloud-zookeeper.version>2.2.4.RELEASE</spring-cloud-zookeeper.version>
