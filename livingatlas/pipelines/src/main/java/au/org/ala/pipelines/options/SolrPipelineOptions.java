@@ -77,6 +77,12 @@ public interface SolrPipelineOptions extends IndexingPipelineOptions {
 
   void setOutlierPath(String outlierPath);
 
+  @Description("Path to outlier avro files")
+  @Default.String("/data/pipelines-annotations")
+  String getAnnotationsPath();
+
+  void setAnnotationsPath(String annotationsPath);
+
   @Description("Number of partitions to use")
   @Default.Integer(1)
   Integer getNumOfPartitions();

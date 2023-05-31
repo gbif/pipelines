@@ -1,45 +1,46 @@
 [
-{
-  "name":"MultimediaIndexRecord",
-  "namespace":"org.gbif.pipelines.io.avro",
-  "type":"record",
-  "fields":[
-    {"name": "id", "doc": "The UUID for the record", "type" : "string"},
-    {"name": "identifier", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/identifier"},
-    {"name": "title", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/title"},
-    {"name": "description", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/description"},
-    {"name": "format", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/format"},
-    {"name": "created", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/created"},
-    {"name": "creator", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/creator"},
-    {"name": "contributor", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/contributor"},
-    {"name": "publisher", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/publisher"},
-    {"name": "audience", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/audience"},
-    {"name": "license", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/license"},
-    {"name": "rights", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/rights"},
-    {"name": "rightsHolder", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/rightsHolder"},
-    {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"}
-  ]
-},
-{
-  "name":"IndexRecord",
-  "namespace":"org.gbif.pipelines.io.avro",
-  "type":"record",
-  "doc":"Index Record",
-  "fields":[
-    {"name": "id", "doc": "The UUID for the record", "type" : "string"},
-    {"name": "latLng", "doc": "The latLng string", "default" : null, "type" : ["null", "string"]},
-    {"name": "taxonID", "doc": "The taxonID for the record", "default" : null, "type" : ["null", "string"]},
-    {"name": "strings", "doc": "String values", "default": {}, "type": {"type": "map", "values": "string"}},
-    {"name": "doubles", "doc": "Double values", "default": {}, "type": {"type": "map", "values": "double"}},
-    {"name": "ints", "doc": "Integer values", "default": {}, "type": {"type": "map", "values": "int"}},
-    {"name": "longs", "doc": "Long values", "default": {}, "type": {"type": "map", "values": "long"}},
-    {"name": "booleans", "doc": "Boolean values", "default": {}, "type": {"type": "map", "values": "boolean"}},
-    {"name": "dates", "doc": "Date values", "default": {}, "type": {"type": "map", "values": "long"}},
-    {"name": "multiValues", "doc": "Multi-value fields", "default": {}, "type":
-        {"type": "map", "values":{ "type": "array", "items":"string" }}
-    },
-    {"name": "dynamicProperties", "doc": "String values", "default": {}, "type": {"type": "map", "values": "string"}},
-    {"name": "multimedia", "type": {"type" : "array", "items" : "MultimediaIndexRecord"}, "default" : []}
-   ]
-}
+  {
+    "name":"MultimediaIndexRecord",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "fields":[
+      {"name": "id", "doc": "The UUID for the record", "type" : "string"},
+      {"name": "identifier", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/identifier"},
+      {"name": "title", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/title"},
+      {"name": "description", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/description"},
+      {"name": "format", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/format"},
+      {"name": "created", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/created"},
+      {"name": "creator", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/creator"},
+      {"name": "contributor", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/contributor"},
+      {"name": "publisher", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/publisher"},
+      {"name": "audience", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/audience"},
+      {"name": "license", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/license"},
+      {"name": "rights", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/rights"},
+      {"name": "rightsHolder", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/rightsHolder"},
+      {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"}
+    ]
+  },
+  {
+    "name":"IndexRecord",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "doc":"Index Record",
+    "fields":[
+      {"name": "id", "doc": "The UUID for the record", "type" : "string"},
+      {"name": "latLng", "doc": "The latLng string", "default" : null, "type" : ["null", "string"]},
+      {"name": "taxonID", "doc": "The taxonID for the record", "default" : null, "type" : ["null", "string"]},
+      {"name": "strings", "doc": "String values", "default": {}, "type": {"type": "map", "values": "string"}},
+      {"name": "doubles", "doc": "Double values", "default": {}, "type": {"type": "map", "values": "double"}},
+      {"name": "ints", "doc": "Integer values", "default": {}, "type": {"type": "map", "values": "int"}},
+      {"name": "longs", "doc": "Long values", "default": {}, "type": {"type": "map", "values": "long"}},
+      {"name": "booleans", "doc": "Boolean values", "default": {}, "type": {"type": "map", "values": "boolean"}},
+      {"name": "dates", "doc": "Date values", "default": {}, "type": {"type": "map", "values": "long"}},
+      {"name": "multiValues", "doc": "Multi-value fields", "default": {}, "type":
+          {"type": "map", "values":{ "type": "array", "items":"string" }}
+      },
+      {"name": "dynamicProperties", "doc": "String values", "default": {}, "type": {"type": "map", "values": "string"}},
+      {"name": "multimedia", "type": {"type" : "array", "items" : "MultimediaIndexRecord"}, "default" : []},
+      {"name": "annotations", "type": {"type" : "array", "items" : "RecordAnnotation"}, "default" : []}
+    ]
+  }
 ]

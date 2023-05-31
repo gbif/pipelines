@@ -28,7 +28,6 @@ public interface IndexFields {
   String GENERALISATION_TO_APPLY_IN_METRES = "generalisationToApplyInMetres";
   String GEOSPATIAL_ISSUES = "geospatialIssues";
   String ID = "id";
-  String IDENTIFIED_BY_ID = "identifiedByID";
   String IMAGE_ID = "imageID";
   String IMAGE_IDS = "imageIDs";
   String INSTITUTION_NAME = "institutionName";
@@ -54,7 +53,6 @@ public interface IndexFields {
   String PROVENANCE = "provenance";
   String TAXON_RANK = "taxonRank";
   String RAW_STATE_CONSERVATION = "raw_stateConservation";
-  String RECORDED_BY_ID = "recordedByID";
   String SENSITIVE = "sensitive";
   String SENSITIVE_PREFIX = "sensitive_";
   String SOUND_IDS = "soundIDs";
@@ -73,4 +71,7 @@ public interface IndexFields {
   String GGBN_TERMS_LOAN = "http://data.ggbn.org/schemas/ggbn/terms/Loan";
   String LOAN_DESTINATION_TERM = "http://data.ggbn.org/schemas/ggbn/terms/loanDestination";
   String LOAN_IDENTIFIER_TERM = "http://data.ggbn.org/schemas/ggbn/terms/loanIdentifier";
+
+  String ANNOTATIONS_DOI = "annotationsDoi";
+  String ANNOTATIONS_UID = "annotationsUid";
 }

@@ -46,6 +46,11 @@ dwca-avro:
   tempLocation: /data/biocache-load/{datasetId}
   targetPath: hdfs:///pipelines-data
 
+annotation:
+  inputPath: hdfs:///pipelines-annotations
+  targetPath: hdfs:///pipelines-annotations
+  tempLocation: /data/tmp/{datasetId}
+
 interpret:
   appName: Interpretation for {datasetId}
   inputPath: hdfs:///pipelines-data/{datasetId}/1/verbatim/*.avro
@@ -80,6 +85,7 @@ solr:
   inputPath: hdfs:///pipelines-data
   targetPath: hdfs:///pipelines-data
   allDatasetsInputPath: hdfs:///pipelines-all-datasets
+  annotationsPath: hdfs:///pipelines-annotations
   jackKnifePath: hdfs:///pipelines-jackknife
   clusteringPath: hdfs:///pipelines-clustering
   outlierPath: hdfs:///pipelines-outlier
@@ -181,6 +187,18 @@ image-sync-sh-args:
     driver-memory: 2G
 
 image-load-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=48
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 18G
+    driver-memory: 2G
+
+annotations-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-embedded:

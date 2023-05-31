@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.io.fs.EmptyMatchTreatment;
 import org.apache.beam.sdk.io.solr.SolrIO;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
@@ -29,6 +30,7 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.*;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.ImmutableList;
 import org.apache.directory.api.util.Strings;
+import org.apache.hadoop.fs.Path;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.request.schema.SchemaRequest;
 import org.apache.solr.client.solrj.response.schema.SchemaResponse;
@@ -73,6 +75,9 @@ public class IndexRecordToSolrPipeline {
   static final DistributionOutlierRecord nullOutlier =
       DistributionOutlierRecord.newBuilder().setId(EMPTY).build();
 
+  static final RecordAnnotations nullAnnotations =
+      RecordAnnotations.newBuilder().setId(EMPTY).setAnnotations(new ArrayList<>()).build();
+
   public static void main(String[] args) throws Exception {
     VersionInfo.print();
     MDC.put("step", "INDEX_RECORD_TO_SOLR");
@@ -104,12 +109,15 @@ public class IndexRecordToSolrPipeline {
     PCollection<KV<String, Relationships>> clusters = loadClusteringRecords(options, pipeline);
     PCollection<KV<String, DistributionOutlierRecord>> outliers =
         loadOutlierRecords(options, pipeline);
+    PCollection<KV<String, RecordAnnotations>> annotations =
+        loadAnnotationRecords(options, pipeline);
 
     // Co group IndexRecords with coordinates with Sample data
     final TupleTag<IndexRecord> indexRecordTag = new TupleTag<>();
     final TupleTag<JackKnifeOutlierRecord> jackknifeTag = new TupleTag<>();
     final TupleTag<Relationships> clusterTag = new TupleTag<>();
     final TupleTag<DistributionOutlierRecord> outliersTag = new TupleTag<>();
+    final TupleTag<RecordAnnotations> annotationsTag = new TupleTag<>();
 
     // Join collections by LatLng string
     PCollection<KV<String, CoGbkResult>> results =
@@ -117,12 +125,15 @@ public class IndexRecordToSolrPipeline {
             .and(jackknifeTag, jackKnife)
             .and(clusterTag, clusters)
             .and(outliersTag, outliers)
+            .and(annotationsTag, annotations)
             .apply(CoGroupByKey.create());
 
     // run the CoGroupByKey
     indexRecordsCollection =
         results.apply(
-            ParDo.of(joinProcessing(indexRecordTag, jackknifeTag, clusterTag, outliersTag)));
+            ParDo.of(
+                joinProcessing(
+                    indexRecordTag, jackknifeTag, clusterTag, outliersTag, annotationsTag)));
 
     PCollection<IndexRecord> readyToIndex = null;
 
@@ -174,10 +185,6 @@ public class IndexRecordToSolrPipeline {
     pipeline.run(options).waitUntilFinish();
 
     log.info("Solr indexing pipeline complete");
-  }
-
-  public static boolean hasCoordinates(IndexRecord indexRecord) {
-    return indexRecord.getLatLng() != null;
   }
 
   @NotNull
@@ -277,6 +284,25 @@ public class IndexRecordToSolrPipeline {
     indexRecord
         .getDoubles()
         .put(DISTANCE_FROM_EXPERT_DISTRIBUTION, outlierRecord.getDistanceOutOfEDL());
+  }
+
+  private static void addRecordAnnotationInfo(
+      IndexRecord indexRecord, RecordAnnotations annotationsRecord) {
+    indexRecord.setAnnotations(annotationsRecord.getAnnotations());
+    indexRecord
+        .getMultiValues()
+        .put(
+            ANNOTATIONS_DOI,
+            annotationsRecord.getAnnotations().stream()
+                .map(a -> a.getDoi())
+                .collect(Collectors.toList()));
+    indexRecord
+        .getMultiValues()
+        .put(
+            ANNOTATIONS_UID,
+            annotationsRecord.getAnnotations().stream()
+                .map(a -> a.getDatasetKey())
+                .collect(Collectors.toList()));
   }
 
   private static void addJackKnifeInfo(IndexRecord indexRecord, JackKnifeOutlierRecord jkor) {
@@ -479,7 +505,8 @@ public class IndexRecordToSolrPipeline {
       TupleTag<IndexRecord> indexRecordTag,
       TupleTag<JackKnifeOutlierRecord> jackKnifeTag,
       TupleTag<Relationships> clusteringTag,
-      TupleTag<DistributionOutlierRecord> outlierTag) {
+      TupleTag<DistributionOutlierRecord> outlierTag,
+      TupleTag<RecordAnnotations> annotationsTag) {
 
     return new DoFn<KV<String, CoGbkResult>, KV<String, IndexRecord>>() {
 
@@ -494,6 +521,8 @@ public class IndexRecordToSolrPipeline {
           JackKnifeOutlierRecord jackKnife = e.getValue().getOnly(jackKnifeTag, nullJkor);
           Relationships clustering = e.getValue().getOnly(clusteringTag, nullClustering);
           DistributionOutlierRecord outlierRecord = e.getValue().getOnly(outlierTag, nullOutlier);
+          RecordAnnotations annotationsRecord =
+              e.getValue().getOnly(annotationsTag, nullAnnotations);
 
           if (jackKnife != null) {
             addJackKnifeInfo(indexRecord, jackKnife);
@@ -505,6 +534,10 @@ public class IndexRecordToSolrPipeline {
 
           if (outlierRecord != null) {
             addOutlierInfo(indexRecord, outlierRecord);
+          }
+
+          if (annotationsRecord != null) {
+            addRecordAnnotationInfo(indexRecord, annotationsRecord);
           }
 
           c.output(KV.of(indexRecord.getId(), indexRecord));
@@ -564,7 +597,10 @@ public class IndexRecordToSolrPipeline {
     String jackknifePath =
         PathBuilder.buildPath(options.getJackKnifePath(), "outliers", ALL_AVRO).toString();
     log.info("Loading jackknife from {}", jackknifePath);
-    return p.apply(AvroIO.read(JackKnifeOutlierRecord.class).from(jackknifePath))
+    return p.apply(
+            AvroIO.read(JackKnifeOutlierRecord.class)
+                .from(jackknifePath)
+                .withEmptyMatchTreatment(EmptyMatchTreatment.ALLOW))
         .apply(
             MapElements.via(
                 new SimpleFunction<JackKnifeOutlierRecord, KV<String, JackKnifeOutlierRecord>>() {
@@ -588,7 +624,10 @@ public class IndexRecordToSolrPipeline {
             .toString();
     log.info("Loading clustering from {}", path);
 
-    return p.apply(AvroIO.read(Relationships.class).from(path))
+    return p.apply(
+            AvroIO.read(Relationships.class)
+                .from(path)
+                .withEmptyMatchTreatment(EmptyMatchTreatment.ALLOW))
         .apply(
             MapElements.via(
                 new SimpleFunction<Relationships, KV<String, Relationships>>() {
@@ -615,7 +654,10 @@ public class IndexRecordToSolrPipeline {
         PathBuilder.buildPath(options.getOutlierPath(), dataResourceFolder, ALL_AVRO).toString();
     log.info("Loading outlier from {}", path);
 
-    return p.apply(AvroIO.read(DistributionOutlierRecord.class).from(path))
+    return p.apply(
+            AvroIO.read(DistributionOutlierRecord.class)
+                .from(path)
+                .withEmptyMatchTreatment(EmptyMatchTreatment.ALLOW))
         .apply(
             MapElements.via(
                 new SimpleFunction<
@@ -626,5 +668,56 @@ public class IndexRecordToSolrPipeline {
                     return KV.of(input.getId(), input);
                   }
                 }));
+  }
+
+  private static PCollection<KV<String, RecordAnnotations>> loadAnnotationRecords(
+      SolrPipelineOptions options, Pipeline p) {
+
+    String path =
+        String.join(
+            Path.SEPARATOR,
+            options.getAnnotationsPath(),
+            "*",
+            options.getAttempt().toString(),
+            ALL_AVRO);
+
+    log.info("Loading annotations from {}", path);
+
+    PCollection<KV<String, RecordAnnotation>> annotationsNonGrouped =
+        p.apply(
+                AvroIO.read(RecordAnnotation.class)
+                    .from(path)
+                    .withEmptyMatchTreatment(EmptyMatchTreatment.ALLOW))
+            .apply(
+                MapElements.via(
+                    new SimpleFunction<RecordAnnotation, KV<String, RecordAnnotation>>() {
+                      @Override
+                      public KV<String, RecordAnnotation> apply(RecordAnnotation input) {
+                        return KV.of(input.getId(), input);
+                      }
+                    }));
+
+    // group by ID
+    PCollection<KV<String, Iterable<RecordAnnotation>>> grouped =
+        annotationsNonGrouped.apply(GroupByKey.create());
+
+    // convert to RecordAnnotation
+    return grouped.apply(
+        MapElements.via(
+            new SimpleFunction<
+                KV<String, Iterable<RecordAnnotation>>, KV<String, RecordAnnotations>>() {
+              @Override
+              public KV<String, RecordAnnotations> apply(
+                  KV<String, Iterable<RecordAnnotation>> input) {
+                List<RecordAnnotation> annotationList = new ArrayList<>();
+                input.getValue().forEach(annotationList::add);
+                RecordAnnotations annotations =
+                    RecordAnnotations.newBuilder()
+                        .setAnnotations(annotationList)
+                        .setId(input.getKey())
+                        .build();
+                return KV.of(annotations.getId(), annotations);
+              }
+            }));
   }
 }

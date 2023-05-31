@@ -27,6 +27,8 @@ public class ALACollectoryMetadata {
   EntityReference provider;
   String acronym;
   String uid;
+  String doi;
+  String resourceType;
   String licenseType;
   String licenseVersion;
   String provenance;
