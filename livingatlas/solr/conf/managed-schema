@@ -140,9 +140,13 @@
   </fieldType>
 
   <field name="id" type="string" docValues="true" multiValued="false" indexed="true"/>
+  <field name="_root_" type="string" docValues="true" indexed="true"/>
+  <field name="_nest_parent_" type="string" indexed="true" stored="true"/>
+  <fieldType name="_nest_path_" class="solr.NestPathField" />
+  <field name="_nest_path_" type="_nest_path_" />`
 
   <!-- required for solr optimistic concurrency update -->
-  <field name="_version_" type="long" docValues="true" indexed="false" stored="false"/>
+  <field name="_version_"     type="long"   docValues="true" indexed="false"  stored="false"/>
 
   <!-- required for WMS -->
   <field name="point-0.0001"  type="string" docValues="true" indexed="true" />
@@ -271,6 +275,7 @@
   <field name="identificationQualifier" type="string" docValues="true" indexed="true"/>
   <field name="identificationReferences" type="string" docValues="true" indexed="true"/>
   <field name="identificationRemarks" type="string" docValues="true" indexed="true"/>
+  <field name="identifier" type="string" docValues="true" indexed="true"/>
   <field name="identificationVerificationStatus" type="string" docValues="true" indexed="true"/>
   <field name="identifiedBy" type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="inCollection" type="string" docValues="true" indexed="true"/>
@@ -400,6 +405,10 @@
   <field name="vernacularName"  type="string" docValues="true" indexed="true"/>
   <field name="waterBody"  type="string" docValues="true" indexed="true"/>
   <field name="year"  type="int" docValues="true" indexed="true"/>
+
+  <!-- Bulk annotations -->
+  <field name="annotationsDoi"          type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="annotationsUid"          type="string"  docValues="true" multiValued="true"  indexed="true" />
 
   <!-- Clustering (Duplicate detection) -->
   <field name="isInCluster"              type="boolean" docValues="true" indexed="true"/>
@@ -691,6 +700,8 @@
   <copyField source="dataProviderName" dest="text"/>
   <copyField source="dataResourceName" dest="text"/>
   <copyField source="dataResourceUid" dest="text"/>
+  <copyField source="annotationsDoi" dest="text"/>
+  <copyField source="annotationsUid" dest="text"/>
   <copyField source="datasetName" dest="text"/>
   <copyField source="datasetName" dest="text_datasetName"/>
   <copyField source="eventID" dest="text_eventID"/>

@@ -101,6 +101,7 @@ dwca-avro --> interpret --> validate --> uuid --> sds --> image-load ... │
 -  'prune-datasets' remove any datasets no longer registered in the collectory;
 -  'dwca-export' export a dwca archive with a fixed set of columns;
 -  'predicate-export' export a dwca archive of data matching a JSON query stored in a text file;
+-  'bulk-annotations' bulk annotations import;
 -  'migrate' used for migration;
 
 All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
@@ -108,6 +109,7 @@ All the steps generate an output. If only the final output is desired, the inter
 Usage:
   $CMD [options] copy                (<dr>...|all)    [--hdfs] [--exclude=<exc>]
   $CMD [options] dwca-avro           (<dr>...|all)
+  $CMD [options] bulk-annotations    (<dr>...|all)    $WHERE
   $CMD [options] interpret           (<dr>...|all)    $WHEREL
   $CMD [options] validate            (<dr>...|all)    $WHERE
   $CMD [options] uuid                (<dr>...|all)    $WHERE
@@ -634,6 +636,25 @@ function migrate () {
     logStepEnd "migrate" $dr $ltype $SECONDS
 }
 
+function bulk-annotations () {
+    local dr="$1" ltype="$2"
+    CLASS=au.org.ala.pipelines.beam.AnnotationPipeline
+
+    logStepStart "Bulk-annotations" $dr
+    SECONDS=0
+
+    SH_ARGS=annotations-sh-args.local
+    java-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=annotations-sh-args.spark-embedded
+    spark-embed-pipeline $ltype $SH_ARGS $CLASS $dr
+
+    SH_ARGS=annotations-sh-args.spark-cluster
+    spark-cluster-pipeline $ltype $SH_ARGS $CLASS $dr "bulk-annotations $dr"
+
+    logStepEnd "Bulk-annotations" $dr $ltype $SECONDS
+}
+
 function image-load () {
     local dr="$1" ltype="$2"
     CLASS=au.org.ala.pipelines.beam.ImageServiceDiffLoadPipeline
@@ -911,7 +932,7 @@ if ($do_all || $dwca_avro) ; then
     fi
 fi
 
-if [[ $dr = "all" ]] ; then
+if [[ $dr = "all" && $1 != "sample" && $1 != "outlier" && $1 != "solr" ]] ; then
     dataset-list
 fi # This should create /tmp/dataset-counts.csv
 
@@ -968,6 +989,7 @@ fi
 if ($uuid || $do_all); then
     do_step uuid
 fi
+
 if ($sds || $do_all); then
     do_step sds
 fi
@@ -1042,6 +1064,10 @@ fi
 
 if ($outlier || $do_all); then
   do_step_simple outlier
+fi
+
+if ($bulk_annotations || $do_all); then
+    do_step_simple bulk-annotations
 fi
 
 if ($solr || $do_all); then

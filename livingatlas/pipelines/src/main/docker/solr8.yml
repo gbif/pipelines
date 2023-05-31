@@ -2,13 +2,15 @@ version: "2.4"
 services:
   solr:
     container_name: "solr8"
-    image: "djtfmartin/biocache-pipelines-solr8:v3"
+    image: "atlasoflivingaustralia/solr8-jts"
     ports:
       - "9983:9983"
       - "8983:8983"
     environment:
       SOLR_PORT: "8983"
       SOLR_HOST: "localhost"
+      ZOO_PORT: "9983"
+      ZOO_HOST: "localhost"
     entrypoint:
       - "docker-entrypoint.sh"
       - "solr"
