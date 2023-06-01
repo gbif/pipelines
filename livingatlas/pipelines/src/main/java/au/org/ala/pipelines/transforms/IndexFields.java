@@ -74,4 +74,8 @@ public interface IndexFields {
 
   String ANNOTATIONS_DOI = "annotationsDoi";
   String ANNOTATIONS_UID = "annotationsUid";
+
+  String SURVEY_ID = "surveyID";
+  String EVENT_HIERARCHY = "eventHierarchy";
+  String EVENT_TYPE_HIERARCHY = "eventTypeHierarchy";
 }

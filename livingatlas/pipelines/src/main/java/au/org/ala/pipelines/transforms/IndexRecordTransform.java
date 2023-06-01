@@ -61,6 +61,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
   public static final String YYYY_DD_MM_FORMAT = "yyyy-MM-dd";
   public static final String YYYY_MM_DDTHH_mm_ss_Z_FORMAT = "yyyy-MM-dd'T'HH:mmXXX";
 
+  public static final String SURVEY_VOC_TERM = "Survey";
+
   // Core
   @NonNull private TupleTag<ExtendedRecord> erTag;
   @NonNull private TupleTag<BasicRecord> brTag;
@@ -682,13 +684,60 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       IndexRecord.Builder indexRecord, LocationRecord ecr, Set<String> skipKeys) {
     if (ecr != null) {
       addToIndexRecord(ecr, indexRecord, skipKeys, false);
+      if (StringUtils.isEmpty(indexRecord.getLatLng())) {
+        addGeo(indexRecord, ecr);
+      }
     }
   }
 
   private static void applyEventCore(
-      IndexRecord.Builder indexRecord, EventCoreRecord ecr, Set<String> skipKeys) {
-    if (ecr != null) {
-      addToIndexRecord(ecr, indexRecord, skipKeys, false);
+      IndexRecord.Builder indexRecord, EventCoreRecord eventCore, Set<String> skipKeys) {
+
+    if (eventCore != null) {
+
+      addToIndexRecord(eventCore, indexRecord, skipKeys, false);
+
+      // add event hierarchy
+      if (eventCore.getParentsLineage() != null && !eventCore.getParentsLineage().isEmpty()) {
+
+        final List<String> eventIDs =
+            eventCore.getParentsLineage().stream()
+                .sorted(
+                    Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
+                .map(e -> e.getId())
+                .collect(Collectors.toList());
+        eventIDs.add(eventCore.getId());
+
+        final List<String> eventTypes =
+            eventCore.getParentsLineage().stream()
+                .sorted(
+                    Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
+                .filter(e -> e.getEventType() != null)
+                .map(e -> e.getEventType())
+                .collect(Collectors.toList());
+
+        // set surveyID
+        List<org.gbif.pipelines.io.avro.Parent> surveys =
+            eventCore.getParentsLineage().stream()
+                .filter(
+                    e ->
+                        e.getEventType() != null
+                            && e.getEventType().equalsIgnoreCase(SURVEY_VOC_TERM))
+                .collect(Collectors.toList());
+
+        if (!surveys.isEmpty()) {
+          indexRecord.getStrings().put(SURVEY_ID, surveys.get(0).getId());
+        }
+
+        if (eventCore.getEventType() != null) {
+          eventTypes.add(eventCore.getEventType().getConcept());
+        }
+
+        // add the eventID / eventy
+        if (!eventIDs.isEmpty()) indexRecord.getMultiValues().put(EVENT_HIERARCHY, eventIDs);
+        if (!eventTypes.isEmpty())
+          indexRecord.getMultiValues().put(EVENT_TYPE_HIERARCHY, eventTypes);
+      }
     }
   }
 
@@ -1030,10 +1079,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
   static void addGeo(IndexRecord.Builder doc, LocationRecord lr) {
 
-    if (lr.getHasCoordinate() == null
-        || !lr.getHasCoordinate()
-        || lr.getDecimalLatitude() == null
-        || lr.getDecimalLongitude() == null) return;
+    if (lr.getDecimalLatitude() == null || lr.getDecimalLongitude() == null) return;
 
     Double lat = lr.getDecimalLatitude();
     Double lon = lr.getDecimalLongitude();
