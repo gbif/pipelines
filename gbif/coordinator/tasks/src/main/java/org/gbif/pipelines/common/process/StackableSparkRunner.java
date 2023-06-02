@@ -55,7 +55,7 @@ public final class StackableSparkRunner {
     this.sparkCrdConfigFile = sparkCrdConfigFile;
     this.sparkConfig = sparkConfig;
     this.distributedConfig = distributedConfig;
-    this.sparkAppName = sparkAppName;
+    this.sparkAppName = normalize(sparkAppName);
     this.sparkSettings = sparkSettings;
     this.beamConfigFn = beamConfigFn;
     this.k8StackableSparkController =
@@ -63,6 +63,17 @@ public final class StackableSparkRunner {
             .kubeConfig(ConfigUtils.loadKubeConfig(kubeConfigFile))
             .sparkCrd(loadSparkCrd())
             .build();
+  }
+
+  /**
+   * A lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.'.
+   * Must start and end with an alphanumeric character and its max lentgh is 64 characters.
+   *
+   * @param sparkAppName
+   * @return
+   */
+  private static String normalize(String sparkAppName) {
+    return sparkAppName.toLowerCase().replace("_to_", "-").replace("_", "-");
   }
 
   private <B> B cloneOrCreate(ToBuilder<B> buildable, Supplier<B> supplier) {

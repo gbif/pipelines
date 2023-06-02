@@ -55,7 +55,6 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs</artifactId>
       <scope>compile</scope>
-      <version>3.2.4</version>
       <exclusions>
         <exclusion>
           <groupId>io.netty</groupId>
@@ -75,7 +74,6 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
       <scope>compile</scope>
-      <version>3.2.4</version>
     </dependency>
 
     <!-- Logging -->
