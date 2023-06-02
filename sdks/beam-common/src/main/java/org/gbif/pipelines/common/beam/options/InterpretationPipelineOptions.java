@@ -59,6 +59,16 @@ public interface InterpretationPipelineOptions
 
   void setCoreSiteConfig(String path);
 
+  @Description("Path to hdfs-site-config.xml")
+  String getHdfsSiteK8Config();
+
+  void setHdfsSiteK8Config(String path);
+
+  @Description("Path to core-site-config.xml")
+  String getCoreSiteK8Config();
+
+  void setCoreSiteK8Config(String path);
+
   @Description("DWCA validation from crawler, all triplets are unique")
   @Default.Boolean(true)
   boolean isTripletValid();

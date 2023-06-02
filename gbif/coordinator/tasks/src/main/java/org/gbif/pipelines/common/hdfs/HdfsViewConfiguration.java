@@ -7,10 +7,7 @@ import javax.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
-import org.gbif.pipelines.common.configs.BaseConfiguration;
-import org.gbif.pipelines.common.configs.DistributedConfiguration;
-import org.gbif.pipelines.common.configs.SparkConfiguration;
-import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.pipelines.common.configs.*;
 
 /** Configuration required to start Hdfs View processing */
 @ToString
@@ -22,6 +19,9 @@ public class HdfsViewConfiguration implements BaseConfiguration {
 
   @ParametersDelegate @Valid
   public DistributedConfiguration distributedConfig = new DistributedConfiguration();
+
+  @ParametersDelegate @Valid @NotNull
+  public StackableConfiguration stackableConfiguration = new StackableConfiguration();
 
   @Parameter(names = "--repository-target-path")
   @NotNull

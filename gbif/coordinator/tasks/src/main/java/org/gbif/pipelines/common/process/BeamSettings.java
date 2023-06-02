@@ -148,6 +148,8 @@ public class BeamSettings {
           .add("--metaFileName=" + Objects.requireNonNull(config.metaFileName))
           .add("--inputPath=" + Objects.requireNonNull(config.stepConfig.repositoryPath))
           .add("--targetPath=" + Objects.requireNonNull(config.repositoryTargetPath))
+          .add("--hdfsSiteK8Config=" + Objects.requireNonNull(config.stepConfig.hdfsSiteK8Config))
+          .add("--coreSiteK8Config=" + Objects.requireNonNull(config.stepConfig.coreSiteK8Config))
           .add("--hdfsSiteConfig=" + Objects.requireNonNull(config.stepConfig.hdfsSiteConfig))
           .add("--coreSiteConfig=" + Objects.requireNonNull(config.stepConfig.coreSiteConfig))
           .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig))
