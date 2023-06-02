@@ -79,7 +79,7 @@ public class BeamSettings {
     };
   }
 
-  public static Consumer<StringJoiner> occurreceIndexing(
+  public static Consumer<StringJoiner> occurrenceIndexing(
       IndexingConfiguration config,
       PipelinesInterpretedMessage message,
       IndexSettings indexSettings) {
@@ -280,8 +280,8 @@ public class BeamSettings {
           .add("--inputPath=" + Objects.requireNonNull(stepConfig.repositoryPath))
           .add("--targetPath=" + Objects.requireNonNull(stepConfig.repositoryPath))
           .add("--metaFileName=" + Objects.requireNonNull(metaFileName))
-          .add("--hdfsSiteConfig=" + Objects.requireNonNull(stepConfig.hdfsSiteConfig))
-          .add("--coreSiteConfig=" + Objects.requireNonNull(stepConfig.coreSiteConfig))
+          .add("--hdfsSiteConfig=" + Objects.requireNonNull(stepConfig.hdfsSiteK8Config))
+          .add("--coreSiteConfig=" + Objects.requireNonNull(stepConfig.coreSiteK8Config))
           .add("--esHosts=" + Objects.requireNonNull(esHosts))
           .add("--properties=" + Objects.requireNonNull(pipelinesConfigPath))
           .add("--esIndexName=" + Objects.requireNonNull(esIndexName));

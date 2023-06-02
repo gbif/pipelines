@@ -535,7 +535,7 @@ public class ProcessRunnerBuilderTest {
             .sparkSettings(TestSparkSettings.create(1, "1G", 1))
             .sparkAppName("VALIDATOR_INTERPRETED_TO_INDEX_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(
-                BeamSettings.occurreceIndexing(
+                BeamSettings.occurrenceIndexing(
                     config, message, IndexSettings.create(indexName, null)))
             .build()
             .get();
@@ -615,7 +615,7 @@ public class ProcessRunnerBuilderTest {
             .sparkSettings(TestSparkSettings.create(1, "1G", 1))
             .sparkAppName("VALIDATOR_INTERPRETED_TO_INDEX_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(
-                BeamSettings.occurreceIndexing(
+                BeamSettings.occurrenceIndexing(
                     config, message, IndexSettings.create(indexName, null)))
             .build()
             .get();

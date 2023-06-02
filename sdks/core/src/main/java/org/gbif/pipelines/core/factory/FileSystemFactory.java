@@ -104,8 +104,6 @@ public class FileSystemFactory {
    */
   @SneakyThrows
   private static Configuration getHdfsConfiguration(HdfsConfigs hdfsConfigs) {
-    Configuration config = new Configuration();
-
     // check if the hdfs-site.xml is provided
     if (!Strings.isNullOrEmpty(hdfsConfigs.getHdfsSiteConfig())
         && !Strings.isNullOrEmpty(hdfsConfigs.getCoreSiteConfig())) {
@@ -115,10 +113,11 @@ public class FileSystemFactory {
           && hdfsSiteFile.isFile()
           && coreSiteFile.exists()
           && coreSiteFile.isFile()) {
-        config = new Configuration(false);
+        Configuration config = new Configuration(false);
         log.info("Using XML config found at {} and {}", hdfsSiteFile, coreSiteFile);
         config.addResource(hdfsSiteFile.toURI().toURL());
         config.addResource(coreSiteFile.toURI().toURL());
+        return config;
       } else {
         log.warn(
             "XML config does not exist - {} or {}",
@@ -128,7 +127,7 @@ public class FileSystemFactory {
     } else {
       log.info("XML config not provided");
     }
-    return config;
+    return new Configuration();
   }
 
   private static String getHdfsPrefix(HdfsConfigs hdfsConfigs) {

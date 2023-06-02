@@ -143,7 +143,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
                   .sparkConfig(config.sparkConfig)
                   .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
                   .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
-                  .beamConfigFn(BeamSettings.occurreceIndexing(config, message, indexSettings))
+                  .beamConfigFn(BeamSettings.occurrenceIndexing(config, message, indexSettings))
                   .sparkAppName(
                       getType(message)
                           + "_"
@@ -162,7 +162,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
                           + message.getDatasetUuid()
                           + "_"
                           + message.getAttempt())
-                  .beamConfigFn(BeamSettings.occurreceIndexing(config, message, indexSettings));
+                  .beamConfigFn(BeamSettings.occurrenceIndexing(config, message, indexSettings));
           runLocal(builder);
         }
       } catch (Exception ex) {
