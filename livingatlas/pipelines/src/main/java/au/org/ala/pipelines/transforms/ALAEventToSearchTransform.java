@@ -166,6 +166,7 @@ public class ALAEventToSearchTransform implements Serializable {
     List<String> eventTypes =
         core.getParentsLineage().stream()
             .sorted(Comparator.comparingInt(Parent::getOrder).reversed())
+            .filter(e -> e.getEventType() != null)
             .map(e -> e.getEventType())
             .collect(Collectors.toList());
 

@@ -428,6 +428,12 @@
   <field name="recordedByID"    type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="typifiedName"    type="string" docValues="true" indexed="true" />
 
+  <!-- event hierarchy fields -->
+  <field name="eventType" type="string" docValues="true" indexed="true" />
+  <field name="eventTypeHierarchy" type="string" docValues="true" indexed="true" multiValued="true" />
+  <field name="eventHierarchy" type="string" docValues="true" indexed="true" multiValued="true" />
+  <field name="surveyID" type="string" docValues="true" indexed="true" />
+
   <!-- TODO recent additions to be validated... -->
   <field name="decade"  type="int" docValues="true" indexed="true" />
   <field name="photographer"  type="string" docValues="true" indexed="true" />
