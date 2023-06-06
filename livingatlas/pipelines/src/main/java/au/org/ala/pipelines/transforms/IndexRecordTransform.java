@@ -1358,6 +1358,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
               annotation -> {
                 SolrInputDocument childDoc = new SolrInputDocument();
                 childDoc.setField(ID, indexRecord.getId() + "-" + annotation.getDoi());
+                addStringSafely(
+                    childDoc, IndexFields.DATA_RESOURCE_UID, annotation.getDatasetKey());
                 addStringSafely(childDoc, DcTerm.identifier.simpleName(), annotation.getDoi());
                 addStringSafely(
                     childDoc, DwcTerm.scientificName.simpleName(), annotation.getScientificName());

@@ -213,13 +213,15 @@ public class ALAParentJsonConverter {
           eventCore.getParentsLineage().stream()
               .sorted(
                   Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
+              .filter(e -> e.getEventType() != null)
               .map(e -> e.getEventType())
               .collect(Collectors.toList());
 
       if (builder.getSurveyID() == null) {
         List<org.gbif.pipelines.io.avro.Parent> surveys =
             eventCore.getParentsLineage().stream()
-                .filter(e -> e.getEventType().equalsIgnoreCase("Survey"))
+                .filter(
+                    e -> e.getEventType() != null && e.getEventType().equalsIgnoreCase("Survey"))
                 .collect(Collectors.toList());
         if (!surveys.isEmpty()) {
           builder.setSurveyID(surveys.get(0).getId());
