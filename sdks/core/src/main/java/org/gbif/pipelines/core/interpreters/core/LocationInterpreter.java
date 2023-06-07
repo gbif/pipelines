@@ -57,7 +57,9 @@ public class LocationInterpreter {
 
   // List of Geospatial Issues
   private static final Set<String> SPATIAL_ISSUES =
-      OccurrenceIssue.GEOSPATIAL_RULES.stream().map(Object::toString).collect(Collectors.toSet());
+      OccurrenceIssue.GEOSPATIAL_RULES.stream()
+          .map(OccurrenceIssue::name)
+          .collect(Collectors.toSet());
 
   private static final CountryParser COUNTRY_PARSER = CountryParser.getInstance();
 
