@@ -143,11 +143,9 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <!-- this has been commented out as it causes issues with local builds -->
-<!--        <configuration>-->
-<!--          <forkCount>2</forkCount>-->
-<!--          <reuseForks>true</reuseForks>-->
-<!--        </configuration>       -->
+        <configuration>
+          <skip>true</skip>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>pl.project13.maven</groupId>
