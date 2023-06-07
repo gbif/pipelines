@@ -89,7 +89,7 @@ public class VerbatimMessageHandler {
       String runner = computeRunner(config, m, recordsNumber).name();
 
       ValidationResult result = m.getValidationResult();
-      if (result.getNumberOfRecords() == null) {
+      if (result.getNumberOfRecords() == null || isValidator(m.getPipelineSteps())) {
         result.setNumberOfRecords(recordsNumber);
       }
 
@@ -161,7 +161,7 @@ public class VerbatimMessageHandler {
     throw new IllegalStateException("Runner computation is failed " + datasetId);
   }
 
-  /** Reads number of records from a archive-to-avro metadata file */
+  /** Reads number of records from an archive-to-avro metadata file */
   private static long getRecordNumber(
       BalancerConfiguration config, PipelinesVerbatimMessage message) throws IOException {
 
@@ -192,15 +192,7 @@ public class VerbatimMessageHandler {
           "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
 
-    if (messageNumber == null) {
-      return fileNumber.get();
-    }
-
-    if (!fileNumber.isPresent() || messageNumber > fileNumber.get()) {
-      return messageNumber;
-    }
-
-    return fileNumber.get();
+    return fileNumber.orElse(messageNumber);
   }
 
   /** Finds the latest attempt number in HDFS */
