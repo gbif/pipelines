@@ -1,32 +1,28 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_SRS_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_WKT_MISMATCH;
-import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import com.google.common.base.Strings;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
@@ -61,16 +57,11 @@ public class LocationInterpreter {
 
   // List of Geospatial Issues
   private static final Set<String> SPATIAL_ISSUES =
-      new HashSet<>(
-          Arrays.asList(
-              ZERO_COORDINATE.name(),
-              COORDINATE_INVALID.name(),
-              COORDINATE_OUT_OF_RANGE.name(),
-              COUNTRY_COORDINATE_MISMATCH.name()));
+      OccurrenceIssue.GEOSPATIAL_RULES.stream().map(Object::toString).collect(Collectors.toSet());
 
   private static final CountryParser COUNTRY_PARSER = CountryParser.getInstance();
 
-  /** Determines if the record contains geo-spatial issues. */
+  /** Determines if the record contains geospatial issues. */
   static boolean hasGeospatialIssues(LocationRecord lr) {
     return Optional.ofNullable(lr.getIssues())
         .map(il -> il.getIssueList().stream().anyMatch(SPATIAL_ISSUES::contains))
