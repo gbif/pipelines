@@ -20,6 +20,7 @@ import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
+import org.gbif.pipelines.common.process.StackableSparkRunner;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.HdfsViewPipeline;
@@ -55,7 +56,17 @@ public class CommonHdfsViewCallback {
 
         log.info("Start the process. Message - {}", message);
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          runDistributed(message, builder);
+          StackableSparkRunner.StackableSparkRunnerBuilder stackableBuilder =
+              StackableSparkRunner.builder()
+                  .distributedConfig(config.distributedConfig)
+                  .sparkConfig(config.sparkConfig)
+                  .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
+                  .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
+                  .beamConfigFn(BeamSettings.occurrenceHdfsView(config, message, fileShards))
+                  .sparkAppName(
+                      config.stepType + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+                  .deleteOnFinish(true);
+          runDistributed(message, stackableBuilder);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
           runLocal(builder);
         }
@@ -87,8 +98,9 @@ public class CommonHdfsViewCallback {
   }
 
   private void runDistributed(
-      PipelinesInterpretationMessage message, ProcessRunnerBuilderBuilder builder)
-      throws IOException, InterruptedException {
+      PipelinesInterpretationMessage message,
+      StackableSparkRunner.StackableSparkRunnerBuilder builder)
+      throws IOException {
 
     long recordsNumber = getRecordNumber(message);
     log.info("Calculate job's settings based on {} records", recordsNumber);
@@ -97,7 +109,7 @@ public class CommonHdfsViewCallback {
     builder.sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().get().start().waitFor();
+    int exitValue = builder.build().start().waitFor();
 
     if (exitValue != 0) {
       throw new IllegalStateException("Process has been finished with exit value - " + exitValue);

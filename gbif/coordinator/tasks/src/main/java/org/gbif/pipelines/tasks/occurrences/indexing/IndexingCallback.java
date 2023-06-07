@@ -85,7 +85,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
       routingKey = pm.setRunner(config.processRunner).getRoutingKey();
     }
 
-    log.info("MQ rounting key is {}", routingKey);
+    log.info("MQ routing key is {}", routingKey);
     return routingKey;
   }
 
@@ -137,33 +137,9 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
 
         log.info("Start the process. Message - {}", message);
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          StackableSparkRunner.StackableSparkRunnerBuilder builder =
-              StackableSparkRunner.builder()
-                  .distributedConfig(config.distributedConfig)
-                  .sparkConfig(config.sparkConfig)
-                  .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
-                  .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
-                  .beamConfigFn(BeamSettings.occurrenceIndexing(config, message, indexSettings))
-                  .sparkAppName(
-                      getType(message)
-                          + "_"
-                          + message.getDatasetUuid()
-                          + "_"
-                          + message.getAttempt());
-          runDistributed(message, builder, recordsNumber);
+          runDistributed(message, indexSettings, recordsNumber);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
-          ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder =
-              ProcessRunnerBuilder.builder()
-                  .distributedConfig(config.distributedConfig)
-                  .sparkConfig(config.sparkConfig)
-                  .sparkAppName(
-                      getType(message)
-                          + "_"
-                          + message.getDatasetUuid()
-                          + "_"
-                          + message.getAttempt())
-                  .beamConfigFn(BeamSettings.occurrenceIndexing(config, message, indexSettings));
-          runLocal(builder);
+          runLocal(message, indexSettings);
         }
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
@@ -184,15 +160,20 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         message.getEndpointType());
   }
 
-  private void runLocal(ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder) {
+  private void runLocal(PipelinesInterpretedMessage message, IndexSettings indexSettings) {
+    ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder =
+        ProcessRunnerBuilder.builder()
+            .distributedConfig(config.distributedConfig)
+            .sparkConfig(config.sparkConfig)
+            .sparkAppName(
+                getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+            .beamConfigFn(BeamSettings.occurrenceIndexing(config, message, indexSettings));
     InterpretedToEsIndexExtendedPipeline.run(builder.build().buildOptions(), executor);
   }
 
   private void runDistributed(
-      PipelinesInterpretedMessage message,
-      StackableSparkRunner.StackableSparkRunnerBuilder builder,
-      long recordsNumber)
-      throws IOException, InterruptedException {
+      PipelinesInterpretedMessage message, IndexSettings indexSettings, long recordsNumber)
+      throws IOException {
 
     String filePath =
         String.join(
@@ -206,7 +187,17 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     SparkSettings sparkSettings =
         SparkSettings.create(config.sparkConfig, config.stepConfig, filePath, recordsNumber);
 
-    builder.sparkSettings(sparkSettings);
+    StackableSparkRunner.StackableSparkRunnerBuilder builder =
+        StackableSparkRunner.builder()
+            .distributedConfig(config.distributedConfig)
+            .sparkConfig(config.sparkConfig)
+            .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
+            .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
+            .beamConfigFn(BeamSettings.occurrenceIndexing(config, message, indexSettings))
+            .sparkAppName(
+                getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+            .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
+            .sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
     int exitValue = builder.build().start().waitFor();

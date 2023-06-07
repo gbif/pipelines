@@ -9,4 +9,7 @@ public class StackableConfiguration {
 
   @Parameter(names = "-stackable-spark-crd-file")
   public String sparkCrdConfigFile;
+
+  @Parameter(names = "-delete-pods-on-finish")
+  public boolean deletePodsOnFinish;
 }

@@ -77,28 +77,9 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
   @Override
   public Runnable createRunnable(PipelinesVerbatimMessage message) {
     return () -> {
-      String datasetId = message.getDatasetUuid().toString();
-      String attempt = Integer.toString(message.getAttempt());
-
-      String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
-      String path =
-          message.getExtraPath() != null
-              ? message.getExtraPath()
-              : String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
-
-      StackableSparkRunner.StackableSparkRunnerBuilder stackableSparkRunnerBuilder =
-          StackableSparkRunner.builder()
-              .beamConfigFn(BeamSettings.occurrenceIdentifier(config, message, path))
-              .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
-              .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
-              .sparkConfig(config.sparkConfig)
-              .sparkAppName(
-                  TYPE.name() + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-              .distributedConfig(config.distributedConfig);
-
       log.info("Start the process. Message - {}", message);
       try {
-        runDistributed(message, stackableSparkRunnerBuilder);
+        runDistributed(message);
         IdentifierValidationResult validationResult =
             PostprocessValidation.builder()
                 .httpClient(httpClient)
@@ -146,14 +127,28 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
         message.getDatasetType());
   }
 
-  private void runDistributed(
-      PipelinesVerbatimMessage message, StackableSparkRunner.StackableSparkRunnerBuilder builder)
-      throws IOException {
+  private void runDistributed(PipelinesVerbatimMessage message) throws IOException {
+    String datasetId = message.getDatasetUuid().toString();
+    String attempt = Integer.toString(message.getAttempt());
+
+    String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
+    String path =
+        message.getExtraPath() != null
+            ? message.getExtraPath()
+            : String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
 
     long recordsNumber = RecordCountReader.get(config.stepConfig, message);
     SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
-
-    builder.sparkSettings(sparkSettings);
+    StackableSparkRunner.StackableSparkRunnerBuilder builder =
+        StackableSparkRunner.builder()
+            .beamConfigFn(BeamSettings.occurrenceIdentifier(config, message, path))
+            .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
+            .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
+            .sparkConfig(config.sparkConfig)
+            .sparkAppName(TYPE.name() + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+            .distributedConfig(config.distributedConfig)
+            .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
+            .sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
     int exitValue = builder.build().start().waitFor();

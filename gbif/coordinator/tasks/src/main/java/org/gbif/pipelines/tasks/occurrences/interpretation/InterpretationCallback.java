@@ -137,23 +137,12 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         defaultDateFormat = getDefaultDateFormat(datasetId);
       }
 
-      StackableSparkRunner.StackableSparkRunnerBuilder builder =
-          StackableSparkRunner.builder()
-              .distributedConfig(config.distributedConfig)
-              .sparkConfig(config.sparkConfig)
-              .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
-              .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
-              .beamConfigFn(
-                  BeamSettings.occurrenceInterpretation(config, message, path, defaultDateFormat))
-              .sparkAppName(
-                  getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt());
-
       Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
       log.info("Start the process. Message - {}", message);
       try {
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          runDistributed(message, builder);
+          runDistributed(message, path, defaultDateFormat);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
           runLocal(BeamSettings.occurrenceInterpretation(config, message, path, defaultDateFormat));
         }
@@ -205,13 +194,21 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   }
 
   private void runDistributed(
-      PipelinesVerbatimMessage message, StackableSparkRunner.StackableSparkRunnerBuilder builder)
-      throws IOException, InterruptedException {
-
+      PipelinesVerbatimMessage message, String path, String defaultDateFormat) throws IOException {
     long recordsNumber = RecordCountReader.get(config.stepConfig, message);
     SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
-
-    builder.sparkSettings(sparkSettings);
+    StackableSparkRunner.StackableSparkRunnerBuilder builder =
+        StackableSparkRunner.builder()
+            .distributedConfig(config.distributedConfig)
+            .sparkConfig(config.sparkConfig)
+            .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
+            .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
+            .beamConfigFn(
+                BeamSettings.occurrenceInterpretation(config, message, path, defaultDateFormat))
+            .sparkAppName(
+                getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+            .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
+            .sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
     int exitValue = builder.build().start().waitFor();

@@ -220,6 +220,7 @@ public final class StackableSparkRunner {
   }
 
   public StackableSparkRunner start() {
+    log.info("Submitting Spark Application {}", sparkAppName);
     sparkApplicationData = k8StackableSparkController.submitSparkApplication(sparkAppName);
     return this;
   }
@@ -232,6 +233,8 @@ public final class StackableSparkRunner {
 
     K8StackableSparkController.Phase phase =
         k8StackableSparkController.getApplicationPhase(sparkAppName);
+
+    log.info("Spark Application {}, finished with status {}", sparkAppName, phase);
 
     if (deleteOnFinish) {
       k8StackableSparkController.stopSparkApplication(sparkAppName);

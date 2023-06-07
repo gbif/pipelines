@@ -84,12 +84,12 @@ public class SparkSettings implements MainSparkSettings {
                     * 1.6);
 
     if (size < sparkConfig.executorMemoryGbMin) {
-      return sparkConfig.executorMemoryGbMin + "G";
+      return Integer.toString(sparkConfig.executorMemoryGbMin);
     }
     if (size > sparkConfig.executorMemoryGbMax) {
-      return sparkConfig.executorMemoryGbMax + "G";
+      return Integer.toString(sparkConfig.executorMemoryGbMax);
     }
-    return size + "G";
+    return Integer.toString(size);
   }
 
   /**
