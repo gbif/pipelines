@@ -169,7 +169,7 @@ public class HdfsViewAvroUtils {
       RecordType extensionRecordType,
       Class<T> avroClass) {
     HdfsConfigs hdfsConfigs =
-        HdfsConfigs.create(options.getHdfsSiteK8Config(), options.getCoreSiteK8Config());
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
 
     String extType = extensionRecordType.name().toLowerCase();
     String path = PathBuilder.buildFilePathViewUsingInputPath(options, recordType, extType);
@@ -180,7 +180,7 @@ public class HdfsViewAvroUtils {
       InterpretationPipelineOptions options, RecordType recordType, String from, String to) {
     String targetPath = options.getTargetPath();
     HdfsConfigs hdfsConfigs =
-        HdfsConfigs.create(options.getHdfsSiteK8Config(), options.getCoreSiteK8Config());
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
 
     String deletePath =
         PathBuilder.buildPath(

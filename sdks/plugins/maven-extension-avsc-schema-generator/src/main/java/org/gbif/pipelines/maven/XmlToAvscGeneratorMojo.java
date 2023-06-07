@@ -179,11 +179,10 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
       optionalString.add(Schema.create(Schema.Type.NULL));
       optionalString.add(Schema.create(type));
       schema = Schema.createUnion(optionalString);
-      return new Schema.Field(name, schema, doc, JsonProperties.NULL_VALUE);
     } else {
       schema = Schema.create(type);
-      return new Schema.Field(name, schema, doc);
     }
+    return new Schema.Field(name, schema, doc, JsonProperties.NULL_VALUE);
   }
 
   private static class EmptyVocabulariesManager implements VocabulariesManager {

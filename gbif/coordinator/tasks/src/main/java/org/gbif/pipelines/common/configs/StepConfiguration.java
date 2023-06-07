@@ -33,14 +33,6 @@ public class StepConfiguration {
   @NotNull
   public String coreSiteConfig;
 
-  @Parameter(names = "--hdfs-site-k8-config")
-  @NotNull
-  public String hdfsSiteK8Config;
-
-  @Parameter(names = "--core-site--k8config")
-  @NotNull
-  public String coreSiteK8Config;
-
   @Parameter(names = "--repository-path")
   @NotNull
   public String repositoryPath;
