@@ -42,6 +42,8 @@ public final class StackableSparkRunner {
 
   private AbstractMap<String, Object> sparkApplicationData;
 
+  private boolean deleteOnFinish;
+
   @Builder
   public StackableSparkRunner(
       @NonNull String kubeConfigFile,
@@ -50,7 +52,8 @@ public final class StackableSparkRunner {
       @NonNull DistributedConfiguration distributedConfig,
       @NonNull @Size(min = 10, max = 63) String sparkAppName,
       @NonNull MainSparkSettings sparkSettings,
-      @NonNull Consumer<StringJoiner> beamConfigFn) {
+      @NonNull Consumer<StringJoiner> beamConfigFn,
+      @NonNull boolean deleteOnFinish) {
     this.kubeConfigFile = kubeConfigFile;
     this.sparkCrdConfigFile = sparkCrdConfigFile;
     this.sparkConfig = sparkConfig;
@@ -63,6 +66,7 @@ public final class StackableSparkRunner {
             .kubeConfig(ConfigUtils.loadKubeConfig(kubeConfigFile))
             .sparkCrd(loadSparkCrd())
             .build();
+    this.deleteOnFinish = deleteOnFinish;
   }
 
   /**
@@ -228,6 +232,10 @@ public final class StackableSparkRunner {
 
     K8StackableSparkController.Phase phase =
         k8StackableSparkController.getApplicationPhase(sparkAppName);
+
+    if (deleteOnFinish) {
+      k8StackableSparkController.stopSparkApplication(sparkAppName);
+    }
 
     if (K8StackableSparkController.Phase.FAILED == phase) {
       return -1;
