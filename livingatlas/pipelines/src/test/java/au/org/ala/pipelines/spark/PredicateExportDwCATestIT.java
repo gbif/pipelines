@@ -49,7 +49,7 @@ public class PredicateExportDwCATestIT {
 
     assertEquals(10, DwcaUtils.countRecordsInCore(dwcaFilePath));
     assertEquals(
-        4, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
+        5, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
     assertEquals(
         4,
         DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.MeasurementOrFact.qualifiedName()));
@@ -64,7 +64,11 @@ public class PredicateExportDwCATestIT {
   public void testExportByYear() throws Exception {
 
     String absolutePath = new File("src/test/resources").getAbsolutePath();
-    String jobId = runExport("dr18391", absolutePath + "/event-download/dr18391/query-year.json");
+    String jobId =
+        runExport(
+            "dr18391",
+            absolutePath + "/event-download/dr18391/query-year.json",
+            "testExportByYear");
     String dwcaFilePath = getDwcaFilePath(jobId);
 
     assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
@@ -79,12 +83,16 @@ public class PredicateExportDwCATestIT {
   public void testExportByMonth() throws Exception {
 
     String absolutePath = new File("src/test/resources").getAbsolutePath();
-    String jobId = runExport("dr18391", absolutePath + "/event-download/dr18391/query-month.json");
+    String jobId =
+        runExport(
+            "dr18391",
+            absolutePath + "/event-download/dr18391/query-month.json",
+            "testExportByMonth");
     String dwcaFilePath = getDwcaFilePath(jobId);
 
     assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
     assertEquals(
-        2, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
+        3, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
     assertEquals(
         2,
         DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.MeasurementOrFact.qualifiedName()));
@@ -95,12 +103,15 @@ public class PredicateExportDwCATestIT {
 
     String absolutePath = new File("src/test/resources").getAbsolutePath();
     String jobId =
-        runExport("dr18391", absolutePath + "/event-download/dr18391/query-stateProvince.json");
+        runExport(
+            "dr18391",
+            absolutePath + "/event-download/dr18391/query-stateProvince.json",
+            "testExportByStateProvince");
     String dwcaFilePath = getDwcaFilePath(jobId);
 
     assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
     assertEquals(
-        2, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
+        3, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
     assertEquals(
         2,
         DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.MeasurementOrFact.qualifiedName()));
@@ -112,13 +123,14 @@ public class PredicateExportDwCATestIT {
     String absolutePath = new File("src/test/resources").getAbsolutePath();
     String jobId =
         runExport(
-            "dr18391", absolutePath + "/event-download/dr18391/query-eventTypeHierarchy.json");
+            "dr18391",
+            absolutePath + "/event-download/dr18391/query-eventTypeHierarchy.json",
+            "testExportByEventTypeHierarchy");
     String dwcaFilePath = getDwcaFilePath(jobId);
 
-    // FIXME need to set eventTypeHierarchy = [eventType] for root
     assertEquals(10, DwcaUtils.countRecordsInCore(dwcaFilePath));
     assertEquals(
-        4, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
+        5, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
     assertEquals(
         4,
         DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.MeasurementOrFact.qualifiedName()));
@@ -129,7 +141,10 @@ public class PredicateExportDwCATestIT {
 
     String absolutePath = new File("src/test/resources").getAbsolutePath();
     String jobId =
-        runExport("dr18391", absolutePath + "/event-download/dr18391/query-compound.json");
+        runExport(
+            "dr18391",
+            absolutePath + "/event-download/dr18391/query-compound.json",
+            "testExportByCompoundQuery");
     String dwcaFilePath = getDwcaFilePath(jobId);
 
     assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
@@ -144,12 +159,16 @@ public class PredicateExportDwCATestIT {
   public void testExportByTaxon() throws Exception {
 
     String absolutePath = new File("src/test/resources").getAbsolutePath();
-    String jobId = runExport("dr18391", absolutePath + "/event-download/dr18391/query-taxon.json");
+    String jobId =
+        runExport(
+            "dr18391",
+            absolutePath + "/event-download/dr18391/query-taxon.json",
+            "testExportByTaxon");
     String dwcaFilePath = getDwcaFilePath(jobId);
 
     assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
     assertEquals(
-        4, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
+        5, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
     assertEquals(
         4,
         DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.MeasurementOrFact.qualifiedName()));
@@ -160,12 +179,15 @@ public class PredicateExportDwCATestIT {
 
     String absolutePath = new File("src/test/resources").getAbsolutePath();
     String jobId =
-        runExport("dr18391", absolutePath + "/event-download/dr18391/query-higher-taxon.json");
+        runExport(
+            "dr18391",
+            absolutePath + "/event-download/dr18391/query-higher-taxon.json",
+            "testExportByHigherTaxon");
     String dwcaFilePath = getDwcaFilePath(jobId);
 
     assertEquals(4, DwcaUtils.countRecordsInCore(dwcaFilePath));
     assertEquals(
-        4, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
+        5, DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.Occurrence.qualifiedName()));
     assertEquals(
         4,
         DwcaUtils.countRecordsInExtension(dwcaFilePath, DwcTerm.MeasurementOrFact.qualifiedName()));
@@ -188,8 +210,7 @@ public class PredicateExportDwCATestIT {
     return jobId;
   }
 
-  public static String runExport(String datasetID, String queryFilePath) {
-    String jobId = UUID.randomUUID().toString();
+  public static String runExport(String datasetID, String queryFilePath, String jobId) {
     // run download
     System.setProperty("spark.master", "local[*]");
     PredicateExportDwCAPipeline.main(

@@ -33,7 +33,7 @@ public class TestUtils {
   public static final String NAME_SERVICE_IMG =
       "atlasoflivingaustralia/ala-namematching-service:v20210811-3";
   public static final String SENSTIVE_SERVICE_IMG =
-      "charvolant/ala-sensitive-data-service:v20200214-3";
+      "charvolant/ala-sensitive-data-service:1.1.1-20210811-3";
   public static final String SOLR_IMG = "atlasoflivingaustralia/solr8-jts";
 
   public static final int NAME_SERVICE_INTERNAL_PORT = 9179;
