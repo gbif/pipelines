@@ -1,6 +1,5 @@
 package org.gbif.pipelines.tasks.events.interpretation;
 
-import java.io.IOException;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +14,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
+import org.gbif.pipelines.common.process.StackableSparkRunner;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
@@ -72,22 +70,8 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
   public Runnable createRunnable(PipelinesEventsMessage message) {
     return () -> {
       try {
-        String datasetId = message.getDatasetUuid().toString();
-        String attempt = Integer.toString(message.getAttempt());
-
-        String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
-        String path =
-            String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
-
-        ProcessRunnerBuilderBuilder builder =
-            ProcessRunnerBuilder.builder()
-                .distributedConfig(config.distributedConfig)
-                .sparkConfig(config.sparkConfig)
-                .sparkAppName(TYPE + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-                .beamConfigFn(BeamSettings.eventInterpretation(config, message, path));
-
         log.info("Start the process. Message - {}", message);
-        runDistributed(builder, message);
+        runDistributed(message);
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
         throw new IllegalStateException(
@@ -113,15 +97,30 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
         message.getRunner());
   }
 
-  private void runDistributed(ProcessRunnerBuilderBuilder builder, PipelinesEventsMessage message)
-      throws IOException, InterruptedException {
+  private void runDistributed(PipelinesEventsMessage message) {
+
+    String datasetId = message.getDatasetUuid().toString();
+    String attempt = Integer.toString(message.getAttempt());
+
+    String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
+    String path = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
 
     SparkSettings sparkSettings =
         SparkSettings.create(config.sparkConfig, message.getNumberOfEventRecords());
-    builder.sparkSettings(sparkSettings);
+
+    StackableSparkRunner.StackableSparkRunnerBuilder builder =
+        StackableSparkRunner.builder()
+            .distributedConfig(config.distributedConfig)
+            .sparkConfig(config.sparkConfig)
+            .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
+            .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
+            .beamConfigFn(BeamSettings.eventInterpretation(config, message, path))
+            .sparkAppName(TYPE + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+            .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
+            .sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().get().start().waitFor();
+    int exitValue = builder.build().start().waitFor();
 
     if (exitValue != 0) {
       throw new IllegalStateException("Process has been finished with exit value - " + exitValue);

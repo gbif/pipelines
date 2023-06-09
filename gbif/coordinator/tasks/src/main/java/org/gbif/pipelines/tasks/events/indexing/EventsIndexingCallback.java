@@ -17,8 +17,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Reco
 import org.gbif.pipelines.common.indexing.IndexSettings;
 import org.gbif.pipelines.common.indexing.SparkSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
+import org.gbif.pipelines.common.process.StackableSparkRunner;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
@@ -78,24 +77,8 @@ public class EventsIndexingCallback
     return () -> {
       try {
         long recordsNumber = getRecordNumber(message);
-
-        IndexSettings indexSettings =
-            IndexSettings.create(
-                config.indexConfig,
-                httpClient,
-                message.getDatasetUuid().toString(),
-                message.getAttempt(),
-                recordsNumber);
-
-        ProcessRunnerBuilderBuilder builder =
-            ProcessRunnerBuilder.builder()
-                .distributedConfig(config.distributedConfig)
-                .sparkConfig(config.sparkConfig)
-                .sparkAppName(TYPE + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-                .beamConfigFn(BeamSettings.eventIndexing(config, message, indexSettings));
-
         log.info("Start the process. Message - {}", message);
-        runDistributed(message, builder, recordsNumber);
+        runDistributed(message, recordsNumber);
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
         throw new IllegalStateException(
@@ -118,11 +101,8 @@ public class EventsIndexingCallback
         message.getRunner());
   }
 
-  private void runDistributed(
-      PipelinesEventsInterpretedMessage message,
-      ProcessRunnerBuilderBuilder builder,
-      long recordsNumber)
-      throws IOException, InterruptedException {
+  private void runDistributed(PipelinesEventsInterpretedMessage message, long recordsNumber)
+      throws IOException {
 
     String filePath =
         String.join(
@@ -133,13 +113,30 @@ public class EventsIndexingCallback
             DwcTerm.Event.simpleName().toLowerCase(),
             RecordType.EVENT.name().toLowerCase());
 
+    IndexSettings indexSettings =
+        IndexSettings.create(
+            config.indexConfig,
+            httpClient,
+            message.getDatasetUuid().toString(),
+            message.getAttempt(),
+            recordsNumber);
+
     SparkSettings sparkSettings =
         SparkSettings.create(config.sparkConfig, config.stepConfig, filePath, recordsNumber);
 
-    builder.sparkSettings(sparkSettings);
+    StackableSparkRunner.StackableSparkRunnerBuilder builder =
+        StackableSparkRunner.builder()
+            .distributedConfig(config.distributedConfig)
+            .sparkConfig(config.sparkConfig)
+            .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
+            .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
+            .beamConfigFn(BeamSettings.eventIndexing(config, message, indexSettings))
+            .sparkAppName(TYPE + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+            .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
+            .sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().get().start().waitFor();
+    int exitValue = builder.build().start().waitFor();
 
     if (exitValue != 0) {
       throw new IllegalStateException("Process has been finished with exit value - " + exitValue);

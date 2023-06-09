@@ -196,7 +196,9 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   private void runDistributed(
       PipelinesVerbatimMessage message, String path, String defaultDateFormat) throws IOException {
     long recordsNumber = RecordCountReader.get(config.stepConfig, message);
+
     SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
+
     StackableSparkRunner.StackableSparkRunnerBuilder builder =
         StackableSparkRunner.builder()
             .distributedConfig(config.distributedConfig)
