@@ -30,6 +30,9 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
 
   private static final StepType TYPE = StepType.EVENTS_VERBATIM_TO_INTERPRETED;
 
+  //Required because K8 supports up to 64 characters in names
+  private static final String SPARK_NAME_PREFIX = "event-verb-interpreted";
+
   private final EventsInterpretationConfiguration config;
   private final MessagePublisher publisher;
   private final HdfsConfigs hdfsConfigs;
@@ -115,7 +118,7 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
             .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
             .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
             .beamConfigFn(BeamSettings.eventInterpretation(config, message, path))
-            .sparkAppName(TYPE + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+            .sparkAppName(SPARK_NAME_PREFIX + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
             .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
             .sparkSettings(sparkSettings);
 

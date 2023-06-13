@@ -36,6 +36,9 @@ public class EventsIndexingCallback
 
   private static final StepType TYPE = StepType.EVENTS_INTERPRETED_TO_INDEX;
 
+  //Required because K8 supports up to 64 characters in names
+  private static final String SPARK_NAME_PREFIX = "event-interpreted-idx";
+
   private final EventsIndexingConfiguration config;
   private final MessagePublisher publisher;
   private final HttpClient httpClient;
@@ -131,7 +134,7 @@ public class EventsIndexingCallback
             .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
             .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
             .beamConfigFn(BeamSettings.eventIndexing(config, message, indexSettings))
-            .sparkAppName(TYPE + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+            .sparkAppName(SPARK_NAME_PREFIX + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
             .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
             .sparkSettings(sparkSettings);
 
