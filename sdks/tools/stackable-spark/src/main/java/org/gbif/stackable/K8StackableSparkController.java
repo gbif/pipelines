@@ -13,6 +13,8 @@
  */
 package org.gbif.stackable;
 
+import static org.gbif.stackable.SparkAppUtils.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
@@ -42,6 +44,7 @@ public class K8StackableSparkController {
    * is created.
    */
   public enum Phase {
+    EMPTY, // No phase detected
     INITIATING,
     PENDING,
     RUNNING,
@@ -49,12 +52,6 @@ public class K8StackableSparkController {
     FAILED,
     UNKNOWN;
   }
-
-  private static final String STACKABLE_SPARK_GROUP = "spark.stackable.tech";
-
-  private static final String STACKABLE_SPARK_VERSION = "v1alpha1";
-
-  private static final String STACKABLE_SPARK_PLURAL = "sparkapplications";
 
   private final KubeConfig kubeConfig;
 
@@ -101,19 +98,12 @@ public class K8StackableSparkController {
                   kubeConfig.getNamespace(),
                   STACKABLE_SPARK_PLURAL,
                   applicationId);
-      if (status.containsKey("status")) {
-        return Phase.valueOf(
-            ((AbstractMap<String, Object>) status.get("status"))
-                .get("phase")
-                .toString()
-                .toUpperCase());
-      }
+      return getPhase(status, Phase.INITIATING);
     } catch (ApiException apiException) {
       log.error(
           "Error getting Spark application status {}", errorToString(apiException), apiException);
       throw new RuntimeException(apiException);
     }
-    return Phase.INITIATING;
   }
 
   @SneakyThrows

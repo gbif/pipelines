@@ -227,6 +227,7 @@ public final class StackableSparkRunner {
 
   @SneakyThrows
   public int waitFor() {
+
     while (!hasFinished()) {
       Thread.currentThread().sleep(sleepTimeInMills);
     }
