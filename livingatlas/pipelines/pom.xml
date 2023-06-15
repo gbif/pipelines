@@ -56,7 +56,7 @@
     <!-- avoids this issue https://stackoverflow.com/questions/56854548/mockwebserver-java-lang-nosuchmethoderror -->
     <mockwebserver.version>4.2.2</mockwebserver.version>
     <checker-qual.version>3.9.1</checker-qual.version>
-    <snappy-java.version>1.1.8.4</snappy-java.version>
+    <snappy-java.version>1.1.10.1</snappy-java.version>
 
     <spark.version>2.4.5</spark.version>
     <hadoop.version>2.6.5</hadoop.version>
