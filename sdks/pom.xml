@@ -26,7 +26,6 @@
     <module>sdks-integration-tests</module>
     <module>tools</module>
     <module>variables</module>
-      <module>tools/stackable-spark</module>
   </modules>
 
 </project>
