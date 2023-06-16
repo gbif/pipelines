@@ -178,20 +178,13 @@
   <field name="speciesListUid"     type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="imageID"            type="string"  docValues="true" multiValued="false" indexed="true" />
   <field name="imageIDs"           type="string"  docValues="true" multiValued="true"  indexed="true" />
-  <field name="imageIDsCount"      type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="soundIDs"           type="string"  docValues="true" multiValued="true"  indexed="true" />
-  <field name="soundIDsCount"      type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="videoIDs"           type="string"  docValues="true" multiValued="true"  indexed="true" />
-  <field name="videoIDsCount"      type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="multimedia"         type="string"  docValues="true" multiValued="true"  indexed="true" />
-  <field name="multimediaCount"    type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="multimediaLicense"  type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="assertions"         type="string"  docValues="true" multiValued="true"  indexed="true" />
-  <field name="assertionsCount"    type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="geospatialIssues"   type="string"  docValues="true" multiValued="true"  indexed="true" />
-  <field name="geospatialIssuesCount"     type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="taxonomicIssues"    type="string"  docValues="true" multiValued="true"  indexed="true" />
-  <field name="taxonomicIssuesCount"     type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="defaultValuesUsed"  type="boolean" docValues="true" indexed="true" />
   <field name="occurrenceYear"     type="date" docValues="true" multiValued="true"  indexed="true" />
   <!-- to be removed -->
@@ -307,7 +300,6 @@
   <field name="license" type="string" docValues="true" indexed="true"/>
   <field name="lifeStage" type="string" docValues="true" indexed="true"/>
   <field name="lifeStageLineage" type="string" docValues="true" indexed="true" multiValued="true"/>
-  <field name="lifeStageLineageCount" type="int" docValues="true" indexed="true" multiValued="true"/>
   <field name="lithostratigraphicTerms" type="string" docValues="true" indexed="true"/>
   <field name="locality" type="string" docValues="true" indexed="true"/>
   <field name="locationAccordingTo" type="string" docValues="true" indexed="true"/>
@@ -354,7 +346,6 @@
   <field name="originalNameUsage"  type="string" docValues="true" indexed="true"/>
   <field name="originalNameUsageID"  type="string" docValues="true" indexed="true"/>
   <field name="otherCatalogNumbers"  type="string" docValues="true" indexed="true" multiValued="true"/>
-  <field name="otherCatalogNumbersCount"  type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="outlierLayer" type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="outlierLayerCount" type="int" docValues="true" indexed="true" />
   <field name="ownerInstitutionCode"  type="string" docValues="true" indexed="true"/>
@@ -401,7 +392,6 @@
   <field name="toTaxon"  type="string" docValues="true" indexed="true"/>
   <field name="type"  type="string" docValues="true" indexed="true"/>
   <field name="typeStatus"  type="string" docValues="true" indexed="true" multiValued="true" />
-  <field name="typeStatusCount"   type="int"  docValues="true" indexed="true" multiValued="true" />
   <field name="verbatimCoordinateSystem"  type="string" docValues="true" indexed="true"/>
   <field name="verbatimCoordinates"  type="string" docValues="true" indexed="true" />
   <field name="verbatimDepth"  type="string" docValues="true" indexed="true"/>
@@ -423,9 +413,7 @@
   <!-- Clustering (Duplicate detection) -->
   <field name="isInCluster"              type="boolean" docValues="true" indexed="true"/>
   <field name="isRepresentativeOf"       type="string"  docValues="true" indexed="true" multiValued="true"/>
-  <field name="isRepresentativeOfCount"   type="int"  docValues="true" indexed="true" multiValued="true" />
   <field name="isDuplicateOf"            type="string"  docValues="true" indexed="true" multiValued="true"/>
-  <field name="isDuplicateOfCount"   type="int"  docValues="true" indexed="true" multiValued="true" />
   <field name="duplicateStatus"          type="string"  docValues="true" indexed="true" />
   <field name="duplicateType"            type="string"  docValues="true" indexed="true" multiValued="true"/>
   <field name="duplicateJustification"   type="string"  docValues="true" indexed="true" multiValued="true"/>
@@ -544,7 +532,6 @@
   <field name="userId" type="string" docValues="true" indexed="true" />
 
   <field name="contentTypes" type="string" multiValued="true" docValues="true" indexed="true" />
-  <field name="contentTypesCount"   type="int"  docValues="true" indexed="true" multiValued="true" />
 
   <field name="machineTags"  type="string" docValues="true" indexed="true" multiValued="true" />
 
