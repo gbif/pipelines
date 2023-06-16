@@ -53,6 +53,7 @@ public class SeedbankInterpreter {
           .map(SeedbankTerm.numberTested, SeedbankInterpreter::setNumberTested)
           .map(SeedbankTerm.dateInStorage, this::interpretDateInStorage)
           .map(SeedbankTerm.dateCollected, this::interpretDateCollected)
+          .map(SeedbankTerm.numberNotViable, SeedbankInterpreter::setNumberNotViable)
           .map(SeedbankTerm.testDateStarted, this::interpretTestDateStarted);
 
   @Builder(buildMethodName = "create")
@@ -224,6 +225,14 @@ public class SeedbankInterpreter {
   public static void setNumberTested(SeedbankRecord sr, String value) {
     try {
       sr.setNumberTested(Double.parseDouble(value));
+    } catch (Exception e) {
+      // do nothing
+    }
+  }
+
+  public static void setNumberNotViable(SeedbankRecord sr, String value) {
+    try {
+      sr.setNumberNotViable(Long.parseLong(value));
     } catch (Exception e) {
       // do nothing
     }

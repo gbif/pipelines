@@ -21,6 +21,7 @@ public enum SeedbankTerm implements Term {
   numberFull,
   numberGerminated,
   numberPlantsSampled,
+  numberNotViable,
   numberTested,
   plantForm,
   pretreatment,
