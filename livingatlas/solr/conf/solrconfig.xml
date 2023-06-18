@@ -1044,7 +1044,7 @@
       <str name="dest">geospatialIssuesCount</str>
     </processor>
     <processor class="solr.CountFieldValuesUpdateProcessorFactory">
-      <str name="fieldName">geospatialIssues</str>
+      <str name="fieldName">geospatialIssuesCount</str>
     </processor>
     <processor class="solr.CloneFieldUpdateProcessorFactory">
       <str name="source">taxonomicIssues</str>
