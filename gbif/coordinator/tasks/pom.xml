@@ -208,7 +208,7 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.gbif.pipelines</groupId>
+      <groupId>org.gbif.stackable</groupId>
       <artifactId>stackable-spark</artifactId>
     </dependency>
 

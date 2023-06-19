@@ -335,11 +335,6 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
-        <artifactId>stackable-spark</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.pipelines</groupId>
         <artifactId>elasticsearch-tools</artifactId>
         <version>${project.version}</version>
       </dependency>
