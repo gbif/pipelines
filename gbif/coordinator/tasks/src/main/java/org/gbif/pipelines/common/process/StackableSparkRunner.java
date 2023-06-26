@@ -219,6 +219,7 @@ public final class StackableSparkRunner {
         .build();
   }
 
+  @SneakyThrows
   public StackableSparkRunner start() {
     log.info("Submitting Spark Application {}", sparkAppName);
     sparkApplicationData = k8StackableSparkController.submitSparkApplication(sparkAppName);
@@ -247,6 +248,7 @@ public final class StackableSparkRunner {
     return 0;
   }
 
+  @SneakyThrows
   private boolean hasFinished() {
     K8StackableSparkController.Phase phase =
         k8StackableSparkController.getApplicationPhase(sparkAppName);
