@@ -161,6 +161,11 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
     throw new UnsupportedOperationException("The method is not implemented!");
   }
 
+  @Override
+  public void notifyAbsentIdentifiers(UUID uuid, int i, long l, String s) {
+    throw new UnsupportedOperationException("The method is not implemented!");
+  }
+
   public Map<StepType, PipelineStep> getStepMap() {
     return pipelineStepMap.values().stream()
         .collect(Collectors.toMap(PipelineStep::getType, Function.identity()));
