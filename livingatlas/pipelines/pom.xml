@@ -19,7 +19,7 @@
     <connection>scm:git:git@github.com:gbif/pipelines.git</connection>
     <url>https://github.com/gbif/pipelines</url>
     <developerConnection>scm:git:git@github.com:gbif/pipelines.git</developerConnection>
-    <tag>pipelines-parent-2.14.1</tag>
+    <tag>pipelines-parent-2.14.5</tag>
   </scm>
 
   <properties>
@@ -144,11 +144,9 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <!-- this has been commented out as it causes issues with local builds -->
-<!--        <configuration>-->
-<!--          <forkCount>2</forkCount>-->
-<!--          <reuseForks>true</reuseForks>-->
-<!--        </configuration>       -->
+        <configuration>
+          <skip>true</skip>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>pl.project13.maven</groupId>
