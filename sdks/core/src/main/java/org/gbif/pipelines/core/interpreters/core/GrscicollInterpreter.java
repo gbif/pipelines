@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.api.model.collections.lookup.Match.Reason.*;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.checkNullOrEmpty;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
@@ -97,6 +98,12 @@ public class GrscicollInterpreter {
 
       if (institutionMatchResponse.getMatchType() == MatchType.FUZZY) {
         flagRecord.accept(OccurrenceIssue.INSTITUTION_MATCH_FUZZY);
+      }
+
+      // https://github.com/gbif/registry/issues/496 we accept matches that have different owner,
+      // but we flag them
+      if (institutionMatchResponse.getReasons().contains(DIFFERENT_OWNER)) {
+        flagRecord.accept(OccurrenceIssue.DIFFERENT_OWNER_INSTITUTION);
       }
 
       // collection match
