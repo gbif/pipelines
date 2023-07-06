@@ -173,6 +173,12 @@ public class BackbonePreRelease {
             proposed = GBIFClassification.buildFromNameUsageMatch(usageMatch);
           }
 
+          // copy pipelines to put unknown content into incertae sedis kingdom
+          if (proposed.getKingdom() == null) {
+            proposed.setKingdom("incertae sedis");
+            proposed.setKingdomKey(0);
+          }
+
           // emit classifications that differ, optionally considering the keys
           if (skipKeys && !existing.classificationEquals(proposed)) {
             c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
