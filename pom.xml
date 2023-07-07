@@ -27,7 +27,7 @@
     <connection>scm:git:git@github.com:gbif/pipelines.git</connection>
     <url>https://github.com/gbif/pipelines</url>
     <developerConnection>scm:git:git@github.com:gbif/pipelines.git</developerConnection>
-    <tag>pipelines-parent-2.14.1</tag>
+    <tag>pipelines-parent-2.14.5</tag>
   </scm>
 
   <distributionManagement>
@@ -93,12 +93,12 @@
     <gbif-api.version>1.6.0</gbif-api.version>
     <gbif-common.version>0.56</gbif-common.version>
     <dwc-api.version>1.46</dwc-api.version>
-    <kvs.version>1.27-SNAPSHOT</kvs.version>
+    <kvs.version>1.26</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-occurrence.version>0.173.1</gbif-occurrence.version>
     <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
-    <registry.version>3.94.9</registry.version>
+    <registry.version>3.94.7</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>
     <gbif-postal-service.version>1.7.0</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
