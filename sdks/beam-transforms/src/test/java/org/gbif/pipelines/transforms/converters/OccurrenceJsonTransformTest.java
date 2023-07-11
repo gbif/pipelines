@@ -150,7 +150,7 @@ public class OccurrenceJsonTransformTest {
         BasicRecord.newBuilder()
             .setId("777")
             .setBasisOfRecord("setBasisOfRecord")
-            .setOrganismQuantity(2d)
+            .setOrganismQuantity("2")
             .setOrganismQuantityType("OrganismQuantityType")
             .setSampleSizeUnit("SampleSizeUnit")
             .setSampleSizeValue(2d)

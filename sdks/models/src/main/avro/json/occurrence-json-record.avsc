@@ -75,7 +75,7 @@
       {"name":"otherCatalogNumbers","type":{"type":"array","items":"string"},"default":null,"doc":""},
       {"name":"otherCatalogNumbersJoined","type":["null","string"],"default":null,"doc":""},
       {"name":"occurrenceStatus","type":["null","string"],"default":null,"doc":""},
-      {"name":"organismQuantity","type":["null","double"],"default":null,"doc":""},
+      {"name":"organismQuantity","type":["null","string"],"default":null,"doc":""},
       {"name":"organismQuantityType","type":["null","string"],"default":null,"doc":""},
       {"name":"sampleSizeUnit","type":["null","string"],"default":null,"doc":""},
       {"name":"sampleSizeValue","type":["null","double"],"default":null,"doc":""},

@@ -154,7 +154,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_nomenclaturalCode\"", // DwcTerm.nomenclaturalCode
       "\"raw_er_nomenclaturalStatus\"", // DwcTerm.nomenclaturalStatus
       "\"raw_er_organismID\"", // DwcTerm.organismID
-      "\"2222.0\"", // DwcTerm.organismQuantity
+      "\"2222\"", // DwcTerm.organismQuantity
       "\"br_organismQuantityType\"", // DwcTerm.organismQuantityType
       "\"raw_er_originalNameUsage\"", // DwcTerm.originalNameUsage
       "\"raw_er_originalNameUsageID\"", // DwcTerm.originalNameUsageID
@@ -648,7 +648,7 @@ public class CoreTsvConverterTest {
             .setTypifiedName("br_typifiedName")
             .setSampleSizeValue(222d)
             .setSampleSizeUnit("br_sampleSizeUnit")
-            .setOrganismQuantity(2222d)
+            .setOrganismQuantity("2222")
             .setOrganismQuantityType("br_organismQuantityType")
             .setRelativeOrganismQuantity(22222d)
             .setReferences("br_References")

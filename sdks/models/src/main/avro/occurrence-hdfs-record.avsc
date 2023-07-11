@@ -987,7 +987,7 @@
     "type" : [ "int", "null" ]
   }, {
     "name" : "organismquantity",
-    "type" : [ "double", "null" ]
+    "type" : [ "string", "null" ]
   }, {
     "name" : "organismquantitytype",
     "type" : [ "string", "null" ]

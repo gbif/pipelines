@@ -145,8 +145,6 @@ public class BasicInterpreter {
   public static void interpretOrganismQuantity(ExtendedRecord er, BasicRecord br) {
     extractOptValue(er, DwcTerm.organismQuantity)
         .map(String::trim)
-        .map(NumberParser::parseDouble)
-        .filter(x -> !x.isInfinite() && !x.isNaN())
         .ifPresent(br::setOrganismQuantity);
   }
 
@@ -165,9 +163,12 @@ public class BasicInterpreter {
     if (!Strings.isNullOrEmpty(br.getOrganismQuantityType())
         && !Strings.isNullOrEmpty(br.getSampleSizeUnit())
         && br.getOrganismQuantityType().equalsIgnoreCase(br.getSampleSizeUnit())) {
-      Double organismQuantity = br.getOrganismQuantity();
+      Double organismQuantity = NumberParser.parseDouble(br.getOrganismQuantity());
       Double sampleSizeValue = br.getSampleSizeValue();
-      if (organismQuantity != null && sampleSizeValue != null) {
+      if (organismQuantity != null
+          && sampleSizeValue != null
+          && !organismQuantity.isInfinite()
+          && !organismQuantity.isNaN()) {
         double result = organismQuantity / sampleSizeValue;
         if (!Double.isNaN(result) && !Double.isInfinite(result)) {
           br.setRelativeOrganismQuantity(organismQuantity / sampleSizeValue);

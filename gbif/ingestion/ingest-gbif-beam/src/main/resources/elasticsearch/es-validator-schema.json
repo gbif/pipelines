@@ -245,7 +245,7 @@
 
       "occurrenceStatus": {"type": "keyword", "copy_to": "all"},
 
-      "organismQuantity": {"type": "double"},
+      "organismQuantity": {"type": "string"},
       "organismQuantityType": {"type": "keyword", "copy_to": "all"},
       "sampleSizeUnit": {"type": "keyword", "copy_to": "all"},
       "sampleSizeValue": {"type": "double"},

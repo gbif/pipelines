@@ -127,7 +127,7 @@ public class OccurrenceJsonConverterTest {
         BasicRecord.newBuilder()
             .setId("777")
             .setBasisOfRecord("setBasisOfRecord")
-            .setOrganismQuantity(2d)
+            .setOrganismQuantity("2")
             .setOrganismQuantityType("OrganismQuantityType")
             .setSampleSizeUnit("SampleSizeUnit")
             .setSampleSizeValue(2d)
@@ -551,7 +551,7 @@ public class OccurrenceJsonConverterTest {
     assertEquals("111", result.path("gbifId").asText());
     assertEquals("2.0", result.path("sampleSizeValue").asText());
     assertEquals("SampleSizeUnit", result.path("sampleSizeUnit").asText());
-    assertEquals("2.0", result.path("organismQuantity").asText());
+    assertEquals("2", result.path("organismQuantity").asText());
     assertEquals("OrganismQuantityType", result.path("organismQuantityType").asText());
     assertEquals("0.001", result.path("relativeOrganismQuantity").asText());
     assertEquals(

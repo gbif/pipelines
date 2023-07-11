@@ -94,7 +94,7 @@ public class BasicInterpreterTest {
     BasicInterpreter.interpretOrganismQuantity(er, br);
 
     // Should
-    Assert.assertNull(br.getOrganismQuantity());
+    Assert.assertNotNull(br.getOrganismQuantity());
   }
 
   @Test

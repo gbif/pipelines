@@ -138,7 +138,7 @@ public class CoreCsvConverter {
           .addKeyTermFn(DwcTerm.nomenclaturalCode, getString(DwcTerm.nomenclaturalCode))
           .addKeyTermFn(DwcTerm.nomenclaturalStatus, getString(DwcTerm.nomenclaturalStatus))
           .addKeyTermFn(DwcTerm.organismID, getString(DwcTerm.organismID))
-          .addKeyTermFn(DwcTerm.organismQuantity, getDouble(DwcTerm.organismQuantity))
+          .addKeyTermFn(DwcTerm.organismQuantity, getString(DwcTerm.organismQuantity))
           .addKeyTermFn(DwcTerm.organismQuantityType, getString(DwcTerm.organismQuantityType))
           .addKeyTermFn(DwcTerm.originalNameUsage, getString(DwcTerm.originalNameUsage))
           .addKeyTermFn(DwcTerm.originalNameUsageID, getString(DwcTerm.originalNameUsageID))

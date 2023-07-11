@@ -933,7 +933,7 @@
           "copy_to": "all"
         },
         "organismQuantity": {
-          "type": "double"
+          "type": "string"
         },
         "organismQuantityType": {
           "type": "keyword",

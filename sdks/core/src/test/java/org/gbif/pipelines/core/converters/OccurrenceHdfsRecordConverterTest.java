@@ -382,7 +382,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setLineage(Collections.singletonList("BlaBla2"))
             .build());
     basicRecord.setCreated(now);
-    basicRecord.setOrganismQuantity(2d);
+    basicRecord.setOrganismQuantity("2");
     basicRecord.setOrganismQuantityType("type");
     basicRecord.setSampleSizeUnit("unit");
     basicRecord.setSampleSizeValue(2d);
@@ -402,7 +402,7 @@ public class OccurrenceHdfsRecordConverterTest {
         Arrays.asList(TypeStatus.ALLOTYPE.name(), TypeStatus.TYPE.name()),
         hdfsRecord.getTypestatus());
     Assert.assertEquals("noName", hdfsRecord.getTypifiedname());
-    Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getOrganismquantity());
+    Assert.assertEquals("2", hdfsRecord.getOrganismquantity());
     Assert.assertEquals("type", hdfsRecord.getOrganismquantitytype());
     Assert.assertEquals("unit", hdfsRecord.getSamplesizeunit());
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getSamplesizevalue());

@@ -165,7 +165,7 @@ public class MultimediaCsvConverterTest {
             .setTypifiedName("br_typifiedName")
             .setSampleSizeValue(222d)
             .setSampleSizeUnit("br_sampleSizeUnit")
-            .setOrganismQuantity(2222d)
+            .setOrganismQuantity("2222")
             .setOrganismQuantityType("br_organismQuantityType")
             .setRelativeOrganismQuantity(22222d)
             .setReferences("br_References")
