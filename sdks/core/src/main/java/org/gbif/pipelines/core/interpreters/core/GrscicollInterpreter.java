@@ -102,7 +102,8 @@ public class GrscicollInterpreter {
 
       // https://github.com/gbif/registry/issues/496 we accept matches that have different owner,
       // but we flag them
-      if (institutionMatchResponse.getReasons().contains(DIFFERENT_OWNER)) {
+      if (institutionMatchResponse.getReasons() != null
+          && institutionMatchResponse.getReasons().contains(DIFFERENT_OWNER)) {
         flagRecord.accept(OccurrenceIssue.DIFFERENT_OWNER_INSTITUTION);
       }
 

@@ -63,6 +63,15 @@ public class AlaTemporalInterpreterTest {
   }
 
   @Test
+  public void testDatePrecisionDayRange4() {
+    TemporalRecord tr = create("2000-01-01/2000-02-01");
+    ALATemporalInterpreter.checkDatePrecision(null, tr);
+    assertEquals("2000-01-01", tr.getEventDate().getGte());
+    assertEquals("2000-02-01", tr.getEventDate().getLte());
+    assertEquals(ALATemporalInterpreter.DAY_RANGE_PRECISION, tr.getDatePrecision());
+  }
+
+  @Test
   public void testDatePrecisionMonth() {
     TemporalRecord tr = create("2000-01/2000-01");
     ALATemporalInterpreter.checkDatePrecision(null, tr);
@@ -78,6 +87,20 @@ public class AlaTemporalInterpreterTest {
     assertEquals("2000-01", tr.getEventDate().getGte());
     assertNull(tr.getEventDate().getLte());
     assertEquals(ALATemporalInterpreter.MONTH_PRECISION, tr.getDatePrecision());
+  }
+
+  @Test
+  public void testDatePrecisionDayRange3() {
+    TemporalRecord tr = create("2020-12-18T06:00:00/2020-12-18T07:45:00");
+    ALATemporalInterpreter.checkDatePrecision(null, tr);
+    assertEquals(ALATemporalInterpreter.DAY_RANGE_PRECISION, tr.getDatePrecision());
+  }
+
+  @Test
+  public void testDatePrecisionDay() {
+    TemporalRecord tr = create("2020-12-18T06:00:00");
+    ALATemporalInterpreter.checkDatePrecision(null, tr);
+    assertEquals(ALATemporalInterpreter.DAY_PRECISION, tr.getDatePrecision());
   }
 
   @Test
