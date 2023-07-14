@@ -92,13 +92,13 @@ public class TaxonomyInterpreter {
               .withFamily(extractValue(termsSource, DwcTerm.family))
               .withGenus(extractValue(termsSource, DwcTerm.genus))
               .withScientificName(scientificName)
-              .withRank(extractValue(termsSource, DwcTerm.taxonRank))
-              .withVerbatimRank(extractValue(termsSource, DwcTerm.verbatimTaxonRank))
+              .withGenericName(extractValue(termsSource, DwcTerm.genericName))
               .withSpecificEpithet(extractValue(termsSource, DwcTerm.specificEpithet))
               .withInfraspecificEpithet(extractValue(termsSource, DwcTerm.infraspecificEpithet))
               .withScientificNameAuthorship(
                   extractValue(termsSource, DwcTerm.scientificNameAuthorship))
-              .withGenericName(extractValue(termsSource, DwcTerm.genericName))
+              .withRank(extractValue(termsSource, DwcTerm.taxonRank))
+              .withVerbatimRank(extractValue(termsSource, DwcTerm.verbatimTaxonRank))
               .build();
 
       NameUsageMatch usageMatch = null;

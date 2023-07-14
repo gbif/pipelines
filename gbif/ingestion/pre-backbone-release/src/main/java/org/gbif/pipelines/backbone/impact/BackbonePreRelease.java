@@ -21,9 +21,7 @@ import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchemaUtils;
 import org.apache.thrift.TException;
-import org.gbif.api.vocabulary.Rank;
 import org.gbif.kvs.species.SpeciesMatchRequest;
-import org.gbif.kvs.species.TaxonParsers;
 import org.gbif.rest.client.configuration.ChecklistbankClientsConfiguration;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
@@ -140,12 +138,13 @@ public class BackbonePreRelease {
                 .withFamily(source.getString("v_family", schema))
                 .withGenus(source.getString("v_genus", schema))
                 .withScientificName(source.getString("v_scientificName", schema))
-                .withRank(source.getString("v_taxonRank", schema))
-                .withVerbatimRank(source.getString("v_verbatimTaxonRank", schema))
+                .withGenericName(source.getString("v_genericName", schema))
                 .withSpecificEpithet(source.getString("v_specificEpithet", schema))
                 .withInfraspecificEpithet(source.getString("v_infraSpecificEpithet", schema))
                 .withScientificNameAuthorship(
                     source.getString("v_scientificNameAuthorship", schema))
+                .withRank(source.getString("v_taxonRank", schema))
+                .withVerbatimRank(source.getString("v_verbatimTaxonRank", schema))
                 .build();
 
         try {
@@ -158,10 +157,12 @@ public class BackbonePreRelease {
                   matchRequest.getOrder(),
                   matchRequest.getFamily(),
                   matchRequest.getGenus(),
-                  Optional.ofNullable(TaxonParsers.interpretRank(matchRequest))
-                      .map(Rank::name)
-                      .orElse(null),
-                  TaxonParsers.interpretScientificName(matchRequest),
+                  matchRequest.getScientificName(),
+                  matchRequest.getGenericName(),
+                  matchRequest.getSpecificEpithet(),
+                  matchRequest.getInfraspecificEpithet(),
+                  matchRequest.getScientificNameAuthorship(),
+                  matchRequest.getRank(),
                   false,
                   false);
 
@@ -171,6 +172,12 @@ public class BackbonePreRelease {
             proposed = GBIFClassification.newIncertaeSedis();
           } else {
             proposed = GBIFClassification.buildFromNameUsageMatch(usageMatch);
+          }
+
+          // copy pipelines to put unknown content into incertae sedis kingdom
+          if (proposed.getKingdom() == null) {
+            proposed.setKingdom("incertae sedis");
+            proposed.setKingdomKey(0);
           }
 
           // emit classifications that differ, optionally considering the keys
@@ -236,7 +243,7 @@ public class BackbonePreRelease {
           verbatim.getSpecificEpithet(),
           verbatim.getInfraspecificEpithet(),
           verbatim.getRank(),
-          verbatim.getVerbatimTaxonRank(),
+          verbatim.getRank(), // avoid breaking the API (verbatimTaxonRank)
           verbatim.getScientificName(),
           verbatim.getGenericName(),
           verbatim.getScientificNameAuthorship(),
