@@ -1003,6 +1003,96 @@
        -->
   </requestHandler>
 
+  <updateRequestProcessorChain name="multivalue-counts" default="true">
+    <processor class="solr.CloneFieldUpdateProcessorFactory">
+      <str name="source">imageIDs</str>
+      <str name="dest">imageIDsCount</str>
+    </processor>
+    <processor class="solr.CountFieldValuesUpdateProcessorFactory">
+      <str name="fieldName">imageIDsCount</str>
+    </processor>
+    <processor class="solr.CloneFieldUpdateProcessorFactory">
+      <str name="source">soundIDs</str>
+      <str name="dest">soundIDsCount</str>
+    </processor>
+    <processor class="solr.CountFieldValuesUpdateProcessorFactory">
+      <str name="fieldName">soundIDsCount</str>
+    </processor>
+    <processor class="solr.CloneFieldUpdateProcessorFactory">
+      <str name="source">videoIDs</str>
+      <str name="dest">videoIDsCount</str>
+    </processor>
+    <processor class="solr.CountFieldValuesUpdateProcessorFactory">
+      <str name="fieldName">videoIDsCount</str>
+    </processor>
+    <processor class="solr.CloneFieldUpdateProcessorFactory">
+      <str name="source">multimedia</str>
+      <str name="dest">multimediaCount</str>
+    </processor>
+    <processor class="solr.CountFieldValuesUpdateProcessorFactory">
+      <str name="fieldName">multimediaCount</str>
+    </processor>
+    <processor class="solr.CloneFieldUpdateProcessorFactory">
+      <str name="source">assertions</str>
+      <str name="dest">assertionsCount</str>
+    </processor>
+    <processor class="solr.CountFieldValuesUpdateProcessorFactory">
+      <str name="fieldName">assertionsCount</str>
+    </processor>
+    <processor class="solr.CloneFieldUpdateProcessorFactory">
+      <str name="source">geospatialIssues</str>
+      <str name="dest">geospatialIssuesCount</str>
+    </processor>
+    <processor class="solr.CountFieldValuesUpdateProcessorFactory">
+      <str name="fieldName">geospatialIssuesCount</str>
+    </processor>
+    <processor class="solr.CloneFieldUpdateProcessorFactory">
+      <str name="source">taxonomicIssues</str>
+      <str name="dest">taxonomicIssuesCount</str>
+    </processor>
+    <processor class="solr.CountFieldValuesUpdateProcessorFactory">
+      <str name="fieldName">taxonomicIssuesCount</str>
+    </processor>
+    <processor class="solr.CloneFieldUpdateProcessorFactory">
+      <str name="source">otherCatalogNumbers</str>
+      <str name="dest">otherCatalogNumbersCount</str>
+    </processor>
+    <processor class="solr.CountFieldValuesUpdateProcessorFactory">
+      <str name="fieldName">otherCatalogNumbersCount</str>
+    </processor>
+    <processor class="solr.CloneFieldUpdateProcessorFactory">
+      <str name="source">typeStatus</str>
+      <str name="dest">typeStatusCount</str>
+    </processor>
+    <processor class="solr.CountFieldValuesUpdateProcessorFactory">
+      <str name="fieldName">typeStatusCount</str>
+    </processor>
+    <processor class="solr.CloneFieldUpdateProcessorFactory">
+      <str name="source">isRepresentativeOf</str>
+      <str name="dest">isRepresentativeOfCount</str>
+    </processor>
+    <processor class="solr.CountFieldValuesUpdateProcessorFactory">
+      <str name="fieldName">isRepresentativeOfCount</str>
+    </processor>
+    <processor class="solr.CloneFieldUpdateProcessorFactory">
+      <str name="source">isDuplicateOf</str>
+      <str name="dest">isDuplicateOfCount</str>
+    </processor>
+    <processor class="solr.CountFieldValuesUpdateProcessorFactory">
+      <str name="fieldName">isDuplicateOfCount</str>
+    </processor>
+    <processor class="solr.CloneFieldUpdateProcessorFactory">
+      <str name="source">contentTypes</str>
+      <str name="dest">contentTypesCount</str>
+    </processor>
+    <processor class="solr.CountFieldValuesUpdateProcessorFactory">
+      <str name="fieldName">contentTypesCount</str>
+    </processor>
+    <processor class="solr.LogUpdateProcessorFactory" />
+    <processor class="solr.DistributedUpdateProcessorFactory" />
+    <processor class="solr.RunUpdateProcessorFactory" />
+  </updateRequestProcessorChain>
+
   <!-- for back compat with clients using /update/json and /update/csv -->
   <!--     <requestHandler name="/update/json" class="solr.JsonUpdateRequestHandler">
           <lst name="defaults">
