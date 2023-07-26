@@ -26,6 +26,7 @@ import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.balancer.BalancerConfiguration;
+import org.gbif.pipelines.tasks.occurrences.identifier.IdentifierConfiguration;
 import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 
 /**
@@ -85,7 +86,18 @@ public class VerbatimMessageHandler {
       publisher.send(eventsMessage);
       log.info("The events message has been sent - {}", eventsMessage);
     } else {
-      long recordsNumber = getRecordNumber(config, m);
+
+      long erCount =
+          getRecordNumber(
+              config, m, new DwcaToAvroConfiguration().metaFileName, Metrics.ARCHIVE_TO_ER_COUNT);
+      long uniqueIdsCount =
+          getRecordNumber(
+              config,
+              m,
+              new IdentifierConfiguration().metaFileName,
+              Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
+      long recordsNumber = Math.max(uniqueIdsCount, erCount);
+
       String runner = computeRunner(config, m, recordsNumber).name();
 
       ValidationResult result = m.getValidationResult();
@@ -161,13 +173,16 @@ public class VerbatimMessageHandler {
     throw new IllegalStateException("Runner computation is failed " + datasetId);
   }
 
-  /** Reads number of records from an archive-to-avro metadata file */
+  /** Reads number of records from a metadata file */
   private static long getRecordNumber(
-      BalancerConfiguration config, PipelinesVerbatimMessage message) throws IOException {
+      BalancerConfiguration config,
+      PipelinesVerbatimMessage message,
+      String metaFileName,
+      String metricName)
+      throws IOException {
 
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
-    String metaFileName = new DwcaToAvroConfiguration().metaFileName;
     StepConfiguration stepConfig = config.stepConfig;
     String repositoryPath =
         isValidator(message.getPipelineSteps())
@@ -184,8 +199,7 @@ public class VerbatimMessageHandler {
 
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
-    Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
+    Optional<Long> fileNumber = HdfsUtils.getLongByKey(hdfsConfigs, metaPath, metricName);
 
     if (messageNumber == null && !fileNumber.isPresent()) {
       throw new IllegalArgumentException(
