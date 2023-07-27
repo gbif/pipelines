@@ -54,6 +54,10 @@ public class IdentifierConfiguration implements BaseConfiguration {
   @Parameter(names = "--skip-installations-list")
   public Set<String> skipInstallationsList = Collections.emptySet();
 
+  // Since we have GitHub issue creation for failed dataset we can skip manual stage finishing
+  @Parameter(names = "--clean-and-mark-as-aborted")
+  public boolean cleanAndMarkAsAborted = false;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;
