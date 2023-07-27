@@ -89,6 +89,34 @@ public class BalancerCallbackIT {
     Assert.assertEquals(StepRunner.DISTRIBUTED.name(), message.getRunner());
   }
 
+  @Test
+  public void verbatimMessageHandlerNullRecordsTest() {
+    // State
+    BalancerConfiguration config = createConfig();
+    config.switchRecordsNumber = 100;
+
+    BalancerCallback callback = new BalancerCallback(config, PUBLISHER);
+
+    UUID uuid = UUID.fromString(DATASET_UUID);
+    int attempt = 60;
+    // Resource file verbatim-to-identifier.yml contains 10 records
+    Long records = null;
+
+    PipelinesVerbatimMessage mainMessage = createPipelinesVerbatimMessage(uuid, attempt, records);
+    PipelinesBalancerMessage wrappedMessage = createPipelinesBalancerMessage(mainMessage);
+
+    // When
+    callback.handleMessage(wrappedMessage);
+
+    // Should
+    List<Message> messages = PUBLISHER.getMessages();
+
+    Assert.assertEquals(1, messages.size());
+
+    PipelinesVerbatimMessage message = (PipelinesVerbatimMessage) messages.get(0);
+    Assert.assertEquals(StepRunner.STANDALONE.name(), message.getRunner());
+  }
+
   private PipelinesBalancerMessage createPipelinesBalancerMessage(
       PipelineBasedMessage outgoingMessage) {
     String nextMessageClassName = outgoingMessage.getClass().getSimpleName();
@@ -97,7 +125,7 @@ public class BalancerCallbackIT {
   }
 
   private PipelinesVerbatimMessage createPipelinesVerbatimMessage(
-      UUID uuid, int attempt, long records) {
+      UUID uuid, int attempt, Long records) {
 
     ValidationResult validationResult = new ValidationResult(true, true, false, records, null);
 

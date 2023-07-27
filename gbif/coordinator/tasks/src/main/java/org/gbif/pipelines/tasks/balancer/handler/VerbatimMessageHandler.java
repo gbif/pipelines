@@ -87,16 +87,27 @@ public class VerbatimMessageHandler {
       log.info("The events message has been sent - {}", eventsMessage);
     } else {
 
-      long erCount =
+      Optional<Long> erCount =
           getRecordNumber(
               config, m, new DwcaToAvroConfiguration().metaFileName, Metrics.ARCHIVE_TO_ER_COUNT);
-      long uniqueIdsCount =
+      Optional<Long> uniqueIdsCount =
           getRecordNumber(
               config,
               m,
               new IdentifierConfiguration().metaFileName,
               Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
-      long recordsNumber = Math.max(uniqueIdsCount, erCount);
+
+      long recordsNumber;
+      if (erCount.isPresent() && uniqueIdsCount.isPresent()) {
+        recordsNumber = Math.max(uniqueIdsCount.get(), erCount.get());
+      } else if (uniqueIdsCount.isPresent()) {
+        recordsNumber = uniqueIdsCount.get();
+      } else if (erCount.isPresent()) {
+        recordsNumber = erCount.get();
+      } else {
+        throw new IllegalArgumentException(
+            "Can't find information about amount of records in MQ of meta files");
+      }
 
       String runner = computeRunner(config, m, recordsNumber).name();
 
@@ -174,7 +185,7 @@ public class VerbatimMessageHandler {
   }
 
   /** Reads number of records from a metadata file */
-  private static long getRecordNumber(
+  private static Optional<Long> getRecordNumber(
       BalancerConfiguration config,
       PipelinesVerbatimMessage message,
       String metaFileName,
@@ -202,11 +213,10 @@ public class VerbatimMessageHandler {
     Optional<Long> fileNumber = HdfsUtils.getLongByKey(hdfsConfigs, metaPath, metricName);
 
     if (messageNumber == null && !fileNumber.isPresent()) {
-      throw new IllegalArgumentException(
-          "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
+      return Optional.empty();
     }
 
-    return fileNumber.orElse(messageNumber);
+    return Optional.of(fileNumber.orElse(messageNumber));
   }
 
   /** Finds the latest attempt number in HDFS */
