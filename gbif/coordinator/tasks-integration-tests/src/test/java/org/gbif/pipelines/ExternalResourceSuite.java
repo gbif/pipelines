@@ -35,8 +35,7 @@ import org.junit.runners.Suite.SuiteClasses;
   AbcdToAvroCallbackIT.class,
   DwcaToAvroCallbackIT.class,
   XmlToAvroCallbackIT.class,
-  PipelinesCallbackIT.class,
-  BalancerCallbackIT.class
+  PipelinesCallbackIT.class
 })
 public class ExternalResourceSuite {
   @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
