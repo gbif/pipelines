@@ -1,7 +1,6 @@
 package org.gbif.pipelines;
 
 import org.gbif.pipelines.tasks.PipelinesCallbackIT;
-import org.gbif.pipelines.tasks.balancer.BalancerCallbackIT;
 import org.gbif.pipelines.tasks.events.indexing.EventsIndexingCallbackIT;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationCallbackIT;
 import org.gbif.pipelines.tasks.occurrences.hdfs.HdfsViewCallbackIT;
