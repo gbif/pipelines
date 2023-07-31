@@ -117,6 +117,9 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
               message.getExecutionId(),
               validationResult.getValidationMessage());
           log.error(validationResult.getValidationMessage());
+          if (config.cleanAndMarkAsAborted) {
+            historyClient.markPipelineStatusAsAborted(message.getExecutionId());
+          }
           throw new PipelinesException(validationResult.getValidationMessage());
         }
 
