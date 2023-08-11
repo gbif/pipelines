@@ -97,7 +97,7 @@
     <kvs.version>1.26-H3-SNAPSHOT</kvs.version>
     <hbase-utils.version>0.14-H3-SNAPSHOT</hbase-utils.version>
     <gbif-wrangler.version>0.5-SNAPSHOT</gbif-wrangler.version>
-    <gbif-occurrence.version>0.192.7-H3-SNAPSHOT</gbif-occurrence.version>
+    <gbif-occurrence.version>0.193.0-H3-SNAPSHOT</gbif-occurrence.version>
     <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
     <registry.version>3.93</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>
