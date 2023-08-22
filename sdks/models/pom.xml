@@ -63,6 +63,7 @@
               <testOutputDirectory>../demo/src/main/java/test/java-generated/</testOutputDirectory>
               <imports>
                 <import>${project.basedir}/src/main/avro/issue-record.avsc</import>
+                <import>${project.basedir}/src/main/avro/experimental/dataset-annotation-record.avsc</import>
                 <import>${project.basedir}/src/main/avro/json/common-json-record.avsc</import>
                 <import>${project.basedir}/src/main/avro/json/derived-metadata-record.avsc</import>
                 <import>${project.basedir}/src/main/avro/json/event-json-record.avsc</import>
