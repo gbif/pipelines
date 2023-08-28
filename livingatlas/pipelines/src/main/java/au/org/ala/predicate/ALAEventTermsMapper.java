@@ -32,7 +32,7 @@ public class ALAEventTermsMapper implements SQLTermsMapper<ALAEventSearchParamet
           .put(ALAEventSearchParameter.STATE_PROVINCE, DwcTerm.stateProvince)
           .put(ALAEventSearchParameter.TAXON_KEY, GbifTerm.taxonKey)
           .put(ALAEventSearchParameter.YEAR, DwcTerm.year)
-          .put(ALAEventSearchParameter.EVENT_TYPE, GbifTerm.eventType)
+          .put(ALAEventSearchParameter.EVENT_TYPE, DwcTerm.eventType)
           .put(ALAEventSearchParameter.EVENT_TYPE_HIERARCHY, ALASearchTerm.eventTypeHierarchy)
           .build();
   private static final Map<SearchParameter, Term> ARRAY_STRING_TERMS =
@@ -47,7 +47,7 @@ public class ALAEventTermsMapper implements SQLTermsMapper<ALAEventSearchParamet
           .put(ALAEventSearchParameter.taxonKey, GbifTerm.taxonKey)
           .build();
 
-  private static final Map<SearchParameter, Term> DENORMED_TERMS = Collections.EMPTY_MAP;
+  private static final Map<SearchParameter, Term> DENORMED_TERMS = Collections.emptyMap();
 
   @Override
   public Term term(ALAEventSearchParameter searchParameter) {

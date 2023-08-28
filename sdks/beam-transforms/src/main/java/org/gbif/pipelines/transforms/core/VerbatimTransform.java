@@ -15,7 +15,6 @@ import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableFunction;
@@ -68,8 +67,8 @@ public class VerbatimTransform extends Transform<ExtendedRecord, ExtendedRecord>
           Map<String, String> values = new HashMap<>();
           extractOptValue(er, DwcTerm.parentEventID)
               .ifPresent(v -> values.put(DwcTerm.parentEventID.name(), v));
-          extractOptValue(er, GbifTerm.eventType)
-              .ifPresent(v -> values.put(GbifTerm.eventType.name(), v));
+          extractOptValue(er, DwcTerm.eventType)
+              .ifPresent(v -> values.put(DwcTerm.eventType.name(), v));
           return values;
         };
 

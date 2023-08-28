@@ -512,11 +512,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       addIfNotEmpty(indexRecord, COLLECTION_NAME, aar.getCollectionName());
       addIfNotEmpty(indexRecord, PROVENANCE, aar.getProvenance());
       addIfNotEmpty(indexRecord, CONTENT_TYPES, aar.getContentTypes());
-      indexRecord
-          .getBooleans()
-          .put(
-              DEFAULT_VALUES_USED,
-              aar.getHasDefaultValues() != null ? aar.getHasDefaultValues() : false);
+      indexRecord.getBooleans().put(DEFAULT_VALUES_USED, aar.getHasDefaultValues());
 
       // add hub IDs
       if (aar.getHubMembership() != null && !aar.getHubMembership().isEmpty()) {
