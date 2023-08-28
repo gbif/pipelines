@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.15.0-H3-SNAPSHOT</version>
+  <version>2.17.0-H3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -27,7 +27,7 @@
     <connection>scm:git:git@github.com:gbif/pipelines.git</connection>
     <url>https://github.com/gbif/pipelines</url>
     <developerConnection>scm:git:git@github.com:gbif/pipelines.git</developerConnection>
-    <tag>pipelines-parent-2.14.1</tag>
+    <tag>pipelines-parent-2.16.0</tag>
   </scm>
 
   <distributionManagement>
@@ -91,15 +91,15 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.62</gbif-parsers.version>
     <dwca-io.version>2.17-H3-SNAPSHOT</dwca-io.version>
-    <gbif-api.version>1.5.0</gbif-api.version>
+    <gbif-api.version>1.11.0</gbif-api.version>
     <gbif-common.version>0.56</gbif-common.version>
-    <dwc-api.version>1.46-H3-SNAPSHOT</dwc-api.version>
+    <dwc-api.version>1.48-H3-SNAPSHOT</dwc-api.version>
     <kvs.version>1.26-H3-SNAPSHOT</kvs.version>
     <hbase-utils.version>0.14-H3-SNAPSHOT</hbase-utils.version>
     <gbif-wrangler.version>0.5-SNAPSHOT</gbif-wrangler.version>
-    <gbif-occurrence.version>0.193.0-H3-SNAPSHOT</gbif-occurrence.version>
+    <gbif-occurrence.version>0.194.0-H3-SNAPSHOT</gbif-occurrence.version>
     <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
-    <registry.version>3.93</registry.version>
+    <registry.version>3.94.9</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>
     <gbif-postal-service.version>1.7.0</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>

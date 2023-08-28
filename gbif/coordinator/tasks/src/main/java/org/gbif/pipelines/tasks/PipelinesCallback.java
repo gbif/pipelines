@@ -196,7 +196,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     } finally {
       if (message.getExecutionId() != null) {
         log.info("Mark execution as FINISHED if all steps are FINISHED");
-        historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
+        Runnable r = () -> historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
+        Retry.decorateRunnable(RETRY, r).run();
       }
     }
 
@@ -205,7 +206,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
   private boolean isValidatorAborted() {
     if (isValidator) {
-      Validation validation = validationClient.get(message.getDatasetUuid());
+      Validation validation =
+          Retry.decorateFunction(RETRY, validationClient::get).apply(message.getDatasetUuid());
       if (validation != null) {
         Status status = validation.getStatus();
         return status == Status.ABORTED
@@ -270,8 +272,12 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       // does an upsert).
       UUID datasetUuid = message.getDatasetUuid();
       Integer attempt = message.getAttempt();
-      long processKey =
-          historyClient.createPipelineProcess(new PipelineProcessParameters(datasetUuid, attempt));
+
+      Supplier<Long> pkSupplier =
+          () ->
+              historyClient.createPipelineProcess(
+                  new PipelineProcessParameters(datasetUuid, attempt));
+      long processKey = Retry.decorateSupplier(RETRY, pkSupplier).get();
 
       Long executionId = message.getExecutionId();
       if (executionId == null) {
@@ -290,12 +296,16 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         PipelineExecution execution =
             new PipelineExecution().setStepsToRun(stepTypes).setCreated(LocalDateTime.now());
 
-        executionId = historyClient.addPipelineExecution(processKey, execution);
+        Supplier<Long> executionIdSupplier =
+            () -> historyClient.addPipelineExecution(processKey, execution);
+        executionId = Retry.decorateSupplier(RETRY, executionIdSupplier).get();
+
         message.setExecutionId(executionId);
       }
 
       List<PipelineStep> stepsByExecutionKey =
-          historyClient.getPipelineStepsByExecutionKey(executionId);
+          Retry.decorateFunction(RETRY, historyClient::getPipelineStepsByExecutionKey)
+              .apply(executionId);
 
       // add step to the process
       PipelineStep step =
@@ -321,7 +331,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
           .setStarted(LocalDateTime.now())
           .setPipelinesVersion(getPipelinesVersion());
 
-      long stepKey = historyClient.updatePipelineStep(step);
+      long stepKey = Retry.decorateFunction(RETRY, historyClient::updatePipelineStep).apply(step);
 
       Map<StepType, PipelineStep> pipelineStepMap =
           stepsByExecutionKey.stream()
@@ -365,7 +375,9 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
           PipelineStep step = info.pipelineStepMap.get(e.getNode());
           if (step != null) {
             step.setState(PipelineStep.Status.QUEUED);
-            historyClient.updatePipelineStep(step);
+            // Call Registry to update
+            Runnable r = () -> historyClient.updatePipelineStep(step);
+            Retry.decorateRunnable(RETRY, r).run();
           }
         });
   }
@@ -378,7 +390,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         HdfsConfigs.create(config.getHdfsSiteConfig(), config.getCoreSiteConfig());
     List<MetricInfo> metricInfos = HdfsUtils.readMetricsFromMetaFile(hdfsConfigs, path);
 
-    PipelineStep pipelineStep = historyClient.getPipelineStep(ti.stepKey);
+    PipelineStep pipelineStep =
+        Retry.decorateFunction(RETRY, historyClient::getPipelineStep).apply(ti.stepKey);
     pipelineStep.setState(status);
     pipelineStep.setMetrics(new HashSet<>(metricInfos));
 
@@ -427,7 +440,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
   private void checkIfDatasetIsDeleted() throws IOException {
     if (datasetClient != null) {
-      Dataset dataset = datasetClient.get(message.getDatasetUuid());
+      Dataset dataset =
+          Retry.decorateFunction(RETRY, datasetClient::get).apply(message.getDatasetUuid());
       if (dataset != null && dataset.getDeleted() != null) {
         publisher.send(
             new DeleteDatasetOccurrencesMessage(message.getDatasetUuid(), NOT_SEEN_IN_LAST_CRAWL));

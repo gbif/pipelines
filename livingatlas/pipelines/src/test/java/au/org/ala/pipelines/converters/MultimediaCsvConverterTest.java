@@ -370,7 +370,23 @@ public class MultimediaCsvConverterTest {
 
     IndexRecord source =
         IndexRecordTransform.createIndexRecord(
-            br, tr, lr, txr, atxr, er, aar, aur, ir, tp, asr, mr, lastLoadDate, lastProcessedDate);
+            br,
+            tr,
+            lr,
+            txr,
+            atxr,
+            er,
+            aar,
+            aur,
+            ir,
+            tp,
+            asr,
+            mr,
+            null,
+            null,
+            null,
+            lastLoadDate,
+            lastProcessedDate);
 
     // When
     List<String> result = MultimediaCsvConverter.convert(source, "http://image/{0}");

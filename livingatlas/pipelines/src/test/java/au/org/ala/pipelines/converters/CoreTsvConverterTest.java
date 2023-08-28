@@ -67,7 +67,7 @@ public class CoreTsvConverterTest {
       "\"atxr_VernacularName\"", // DwcTerm.vernacularName
       "\"3.33333333333E11\"", // DwcTerm.decimalLatitude
       "\"3.333333333333E12\"", // DwcTerm.decimalLongitude
-      "\"EPSG:4326\"", // DwcTerm.geodeticDatum
+      "\"\"", // DwcTerm.geodeticDatum
       "\"3.3333333333333E13\"", // DwcTerm.coordinateUncertaintyInMeters
       "\"333.0\"", // DwcTerm.maximumElevationInMeters
       "\"33.0\"", // DwcTerm.minimumElevationInMeters
@@ -871,7 +871,23 @@ public class CoreTsvConverterTest {
 
     IndexRecord source =
         IndexRecordTransform.createIndexRecord(
-            br, tr, lr, txr, atxr, er, aar, aur, ir, tp, asr, mr, lastLoadDate, lastProcessedDate);
+            br,
+            tr,
+            lr,
+            txr,
+            atxr,
+            er,
+            aar,
+            aur,
+            ir,
+            tp,
+            asr,
+            mr,
+            null,
+            null,
+            null,
+            lastLoadDate,
+            lastProcessedDate);
 
     // When
     String result = CoreCsvConverter.convert(source);
@@ -1196,7 +1212,23 @@ public class CoreTsvConverterTest {
 
     IndexRecord source =
         IndexRecordTransform.createIndexRecord(
-            br, tr, lr, txr, atxr, er, aar, aur, ir, tp, asr, mr, lastLoadDate, lastProcessedDate);
+            br,
+            tr,
+            lr,
+            txr,
+            atxr,
+            er,
+            aar,
+            aur,
+            ir,
+            tp,
+            asr,
+            mr,
+            null,
+            null,
+            null,
+            lastLoadDate,
+            lastProcessedDate);
 
     // When
     String result = CoreCsvConverter.convert(source);

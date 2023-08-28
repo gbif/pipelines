@@ -261,7 +261,8 @@
       {"name": "testDateStarted", "type": ["null", "long"], "default": null},
       {"name": "testLengthInDays", "type": ["null", "double"], "default": null},
       {"name": "thousandSeedWeight", "type": ["null", "double"], "default": null},
-      {"name": "viabilityPercentage", "type": ["null", "double"], "default": null}
+      {"name": "viabilityPercentage", "type": ["null", "double"], "default": null},
+      {"name": "numberNotViable", "type": ["null", "long"], "default": null}
     ]
   }
 ]

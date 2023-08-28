@@ -16,6 +16,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
@@ -25,6 +26,7 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.balancer.BalancerConfiguration;
 import org.gbif.pipelines.tasks.occurrences.identifier.IdentifierConfiguration;
+import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
 
 /**
  * Populates and sends the {@link PipelinesInterpretedMessage} message, the main method is {@link
@@ -51,6 +53,10 @@ public class InterpretedMessageHandler {
 
     String runner = computeRunner(config, m, recordsNumber).name();
 
+    // Update validation result
+    ValidationResult validationResult = m.getValidationResult();
+    validationResult.setNumberOfRecords(recordsNumber);
+
     PipelinesInterpretedMessage outputMessage =
         new PipelinesInterpretedMessage(
             m.getDatasetUuid(),
@@ -63,14 +69,16 @@ public class InterpretedMessageHandler {
             m.getResetPrefix(),
             m.getExecutionId(),
             m.getEndpointType(),
-            m.getValidationResult(),
+            validationResult,
             m.getInterpretTypes(),
             DatasetType.OCCURRENCE);
 
     publisher.send(outputMessage);
     log.info("The message has been sent - {}", outputMessage);
 
-    if (config.eventsEnabled && m.getDatasetType() == DatasetType.SAMPLING_EVENT) {
+    if (config.eventsEnabled
+        && m.getDatasetType() == DatasetType.SAMPLING_EVENT
+        && !isValidator(m.getPipelineSteps())) {
       Set<String> interpretationTypes = new HashSet<>(m.getInterpretTypes());
       interpretationTypes.add(RecordType.EVENT.name());
       interpretationTypes.remove(RecordType.OCCURRENCE.name());
@@ -87,7 +95,7 @@ public class InterpretedMessageHandler {
               m.getResetPrefix(),
               m.getExecutionId(),
               m.getEndpointType(),
-              m.getValidationResult(),
+              validationResult,
               interpretationTypes,
               DatasetType.SAMPLING_EVENT);
 
@@ -152,12 +160,18 @@ public class InterpretedMessageHandler {
 
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
-    String metaFileName = new IdentifierConfiguration().metaFileName;
     StepConfiguration stepConfig = config.stepConfig;
-    String repositoryPath =
-        isValidator(message.getPipelineSteps())
-            ? config.validatorRepositoryPath
-            : stepConfig.repositoryPath;
+
+    String metaFileName;
+    String repositoryPath;
+    if (isValidator(message.getPipelineSteps())) {
+      repositoryPath = config.validatorRepositoryPath;
+      metaFileName = new InterpreterConfiguration().metaFileName;
+    } else {
+      repositoryPath = stepConfig.repositoryPath;
+      metaFileName = new IdentifierConfiguration().metaFileName;
+    }
+
     String metaPath = String.join("/", repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
@@ -180,14 +194,6 @@ public class InterpretedMessageHandler {
           "Please check metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
 
-    if (messageNumber == null) {
-      return fileNumber.get();
-    }
-
-    if (!fileNumber.isPresent() || messageNumber < fileNumber.get()) {
-      return messageNumber;
-    }
-
-    return fileNumber.get();
+    return fileNumber.orElse(messageNumber);
   }
 }

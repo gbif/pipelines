@@ -11,6 +11,7 @@ import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.IndexRecordTransform;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.ALAFsUtils;
+import au.org.ala.utils.ArchiveUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationResult;
 import au.org.ala.utils.ValidationUtils;
@@ -18,9 +19,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -34,6 +37,7 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
+import org.apache.avro.specific.SpecificRecord;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
@@ -119,6 +123,17 @@ public class IndexRecordPipeline {
     // get filesystem
     FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, options.getInputPath());
 
+    String outputPath =
+        options.getAllDatasetsInputPath()
+            + "/index-record/"
+            + options.getDatasetId()
+            + "/"
+            + options.getDatasetId()
+            + ".avro";
+    // clean previous runs
+    ALAFsUtils.deleteIfExist(fs, outputPath);
+    OutputStream output = fs.create(new Path(outputPath));
+
     final long lastLoadedDate =
         ValidationUtils.metricsModificationTime(
             fs,
@@ -136,6 +151,8 @@ public class IndexRecordPipeline {
 
     UnaryOperator<String> pathFn =
         t -> PathBuilder.buildPathInterpretUsingTargetPath(options, CORE_TERM, t, ALL_AVRO);
+    UnaryOperator<String> eventsPathFn =
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Event, t, ALL_AVRO);
     UnaryOperator<String> identifiersPathFn =
         t -> ALAFsUtils.buildPathIdentifiersUsingTargetPath(options, t, ALL_AVRO);
     UnaryOperator<String> imageServicePathFn =
@@ -147,6 +164,8 @@ public class IndexRecordPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+
+    EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
 
     // Extension
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
@@ -279,6 +298,36 @@ public class IndexRecordPipeline {
               () -> SpeciesListPipeline.generateTaxonProfileCollection(options), executor);
     }
 
+    // event data
+    final boolean isEventCore = ArchiveUtils.isEventCore(options);
+
+    CompletableFuture<Map<String, EventCoreRecord>> eventCoreMapFeature =
+        CompletableFuture.supplyAsync(
+            () ->
+                AvroReader.readRecords(
+                    hdfsConfigs,
+                    EventCoreRecord.class,
+                    eventsPathFn.apply(eventCoreTransform.getBaseName())),
+            executor);
+
+    CompletableFuture<Map<String, LocationRecord>> eventLocationMapFeature =
+        CompletableFuture.supplyAsync(
+            () ->
+                AvroReader.readRecords(
+                    hdfsConfigs,
+                    LocationRecord.class,
+                    eventsPathFn.apply(locationTransform.getBaseName())),
+            executor);
+
+    CompletableFuture<Map<String, TemporalRecord>> eventTemporalMapFeature =
+        CompletableFuture.supplyAsync(
+            () ->
+                AvroReader.readRecords(
+                    hdfsConfigs,
+                    TemporalRecord.class,
+                    eventsPathFn.apply(temporalTransform.getBaseName())),
+            executor);
+
     Map<String, BasicRecord> basicMap = basicMapFeature.get();
     Map<String, ExtendedRecord> verbatimMap = verbatimMapFeature.get();
     Map<String, TemporalRecord> temporalMap = temporalMapFeature.get();
@@ -297,6 +346,34 @@ public class IndexRecordPipeline {
 
     Map<String, TaxonProfile> taxonProfileMap =
         options.getIncludeSpeciesLists() ? taxonProfileMapFeature.get() : Collections.emptyMap();
+
+    // key on occurrenceID
+    Map<String, String> occMapping = getOccurrenceIDToEventID(verbatimMap);
+
+    Map<String, EventCoreRecord> eventCoreMap = new HashMap<>();
+    Map<String, LocationRecord> eventLocationMap = new HashMap<>();
+    Map<String, TemporalRecord> eventTemporalMap = new HashMap<>();
+
+    if (isEventCore) {
+      occMapping.entrySet().stream()
+          .forEach(
+              e -> {
+                String occurrenceID = e.getKey();
+                String eventID = e.getValue();
+                try {
+                  EventCoreRecord ecr = eventCoreMapFeature.get().get(eventID);
+                  LocationRecord elr = eventLocationMapFeature.get().get(eventID);
+                  TemporalRecord etr = eventTemporalMapFeature.get().get(eventID);
+                  eventCoreMap.put(occurrenceID, ecr);
+                  eventLocationMap.put(occurrenceID, elr);
+                  eventTemporalMap.put(occurrenceID, etr);
+                } catch (InterruptedException ex) {
+                  throw new RuntimeException(ex);
+                } catch (ExecutionException ex) {
+                  throw new RuntimeException(ex);
+                }
+              });
+    }
 
     log.info("Joining avro files...");
     // Join all records, convert into string json and IndexRequest for ES
@@ -326,6 +403,10 @@ public class IndexRecordPipeline {
           TaxonProfile tpr =
               taxonProfileMap.getOrDefault(k, TaxonProfile.newBuilder().setId(k).build());
 
+          EventCoreRecord ecr = eventCoreMap.getOrDefault(k, null);
+          LocationRecord elr = eventLocationMap.getOrDefault(k, null);
+          TemporalRecord etr = eventTemporalMap.getOrDefault(k, null);
+
           return IndexRecordTransform.createIndexRecord(
               br,
               tr,
@@ -339,22 +420,15 @@ public class IndexRecordPipeline {
               tpr,
               sr,
               mr,
+              ecr,
+              elr,
+              etr,
               lastLoadedDate,
               lastProcessedDate);
         };
 
     List<IndexRecord> indexRecords =
         basicMap.values().stream().map(indexRequestFn).collect(Collectors.toList());
-
-    OutputStream output =
-        fs.create(
-            new Path(
-                options.getAllDatasetsInputPath()
-                    + "/index-record/"
-                    + options.getDatasetId()
-                    + "/"
-                    + options.getDatasetId()
-                    + ".avro"));
 
     DatumWriter<IndexRecord> datumWriter = new GenericDatumWriter<>(IndexRecord.getClassSchema());
     try (DataFileWriter<IndexRecord> dataFileWriter = new DataFileWriter<>(datumWriter)) {
@@ -367,9 +441,29 @@ public class IndexRecordPipeline {
     }
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
-    log.info("Pipeline has been finished - {}", LocalDateTime.now());
+    log.info("IndexRecordPipeline has been finished - {}", LocalDateTime.now());
 
     // run occurrence AVRO pipeline
     ALAOccurrenceToSearchAvroPipeline.run(options);
+  }
+
+  private static Map<String, ? extends SpecificRecord> mapToOcc(
+      Map<String, ? extends SpecificRecord> recordMap, Map<String, String> occMapping) {
+    return recordMap.entrySet().stream()
+        .filter(e -> occMapping.get(e.getKey()) != null)
+        .collect(Collectors.toMap(e -> occMapping.get(e.getKey()), e -> e.getValue()));
+  }
+
+  /** Load eventID -> occurrenceID map */
+  public static Map<String, String> getOccurrenceIDToEventID(
+      Map<String, ExtendedRecord> verbatimCollection) {
+
+    // eventID -> occurrenceCore.id map
+    return verbatimCollection.entrySet().stream()
+        .filter(tr -> tr.getValue().getCoreTerms().get(DwcTerm.eventID.qualifiedName()) != null)
+        .collect(
+            Collectors.toMap(
+                tr -> tr.getKey(),
+                tr -> tr.getValue().getCoreTerms().get(DwcTerm.eventID.qualifiedName())));
   }
 }

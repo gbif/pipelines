@@ -210,6 +210,12 @@ outlier:
   allDatasetsInputPath: '{fsPath}/pipelines-all-datasets'
   runner: SparkRunner
 
+annotation:
+  runner: SparkRunner
+  inputPath: /data/pipelines-annotations
+  targetPath: /data/pipelines-annotations
+  tempLocation: /tmp/
+
 # class: au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
 sensitive:
   appName: Sensitive Data Processing for {datasetId}
@@ -237,6 +243,7 @@ solr:
   jackKnifePath: "{fsPath}/pipelines-jackknife"
   clusteringPath: "{fsPath}/pipelines-clustering"
   outlierPath: '{fsPath}/pipelines-outlier'
+  annotationsPath: '{fsPath}/pipelines-annotations'
   solrCollection: biocache
   includeSampling: false
   includeJackKnife: false
@@ -370,6 +377,18 @@ image-sync-sh-args:
     driver-memory: 1G
 
 image-load-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=144
+    num-executors: 16
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
+annotations-sh-args:
   local:
     jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-embedded:

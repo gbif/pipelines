@@ -91,11 +91,15 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
         if (validationResult.isResultValid()) {
           log.info(validationResult.getValidationMessage());
         } else {
-          historyClient.sendAbsentIndentifiersEmail(
+          historyClient.notifyAbsentIdentifiers(
               message.getDatasetUuid(),
               message.getAttempt(),
+              message.getExecutionId(),
               validationResult.getValidationMessage());
           log.error(validationResult.getValidationMessage());
+          if (config.cleanAndMarkAsAborted) {
+            historyClient.markPipelineStatusAsAborted(message.getExecutionId());
+          }
           throw new PipelinesException(validationResult.getValidationMessage());
         }
 

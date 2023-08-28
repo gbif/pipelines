@@ -37,15 +37,15 @@ public class SeedbankInterpreter {
           .map(SeedbankTerm.numberFull, SeedbankInterpreter::setNumberFull)
           .map(SeedbankTerm.numberGerminated, SeedbankInterpreter::setNumberGerminated)
           .map(SeedbankTerm.numberPlantsSampled, SeedbankInterpreter::setNumberPlantsSampled)
-          .map(SeedbankTerm.sampleSize, SeedbankInterpreter::setQuantityCount)
-          .map(SeedbankTerm.sampleWeightInGrams, SeedbankInterpreter::setQuantityInGrams)
+          .map(SeedbankTerm.quantityCount, SeedbankInterpreter::setQuantityCount)
+          .map(SeedbankTerm.quantityInGrams, SeedbankInterpreter::setQuantityInGrams)
           .map(SeedbankTerm.testLengthInDays, SeedbankInterpreter::setTestLengthInDays)
           .map(SeedbankTerm.thousandSeedWeight, SeedbankInterpreter::setThousandSeedWeight)
           .map(SeedbankTerm.seedPerGram, SeedbankInterpreter::setSeedPerGram)
           .map(SeedbankTerm.purityPercentage, SeedbankInterpreter::setPurityPercentage)
           .map(SeedbankTerm.viabilityPercentage, SeedbankInterpreter::setViabilityPercentage)
           .map(
-              SeedbankTerm.relativeHumidityPercentage,
+              SeedbankTerm.storageRelativeHumidityPercentage,
               SeedbankInterpreter::setStorageRelativeHumidityPercentage)
           .map(SeedbankTerm.storageTemperatureInCelsius, SeedbankInterpreter::setStorageTemp)
           .map(SeedbankTerm.germinationRateInDays, SeedbankInterpreter::setGerminateRate)
@@ -53,6 +53,7 @@ public class SeedbankInterpreter {
           .map(SeedbankTerm.numberTested, SeedbankInterpreter::setNumberTested)
           .map(SeedbankTerm.dateInStorage, this::interpretDateInStorage)
           .map(SeedbankTerm.dateCollected, this::interpretDateCollected)
+          .map(SeedbankTerm.numberNotViable, SeedbankInterpreter::setNumberNotViable)
           .map(SeedbankTerm.testDateStarted, this::interpretTestDateStarted);
 
   @Builder(buildMethodName = "create")
@@ -224,6 +225,14 @@ public class SeedbankInterpreter {
   public static void setNumberTested(SeedbankRecord sr, String value) {
     try {
       sr.setNumberTested(Double.parseDouble(value));
+    } catch (Exception e) {
+      // do nothing
+    }
+  }
+
+  public static void setNumberNotViable(SeedbankRecord sr, String value) {
+    try {
+      sr.setNumberNotViable(Long.parseLong(value));
     } catch (Exception e) {
       // do nothing
     }

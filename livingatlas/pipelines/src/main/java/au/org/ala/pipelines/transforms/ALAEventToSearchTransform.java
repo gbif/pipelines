@@ -81,6 +81,7 @@ public class ALAEventToSearchTransform implements Serializable {
                 core.getEventType() != null ? core.getEventType().getConcept() : null);
             builder.setSampleSizeValue(core.getSampleSizeValue());
             builder.setSampleSizeUnit(core.getSampleSizeUnit());
+            builder.setSamplingProtocol(core.getSamplingProtocol());
             builder.setReferences(core.getReferences());
             builder.setLicense(core.getLicense());
             builder.setDatasetID(core.getDatasetID());
@@ -165,6 +166,7 @@ public class ALAEventToSearchTransform implements Serializable {
     List<String> eventTypes =
         core.getParentsLineage().stream()
             .sorted(Comparator.comparingInt(Parent::getOrder).reversed())
+            .filter(e -> e.getEventType() != null)
             .map(e -> e.getEventType())
             .collect(Collectors.toList());
 

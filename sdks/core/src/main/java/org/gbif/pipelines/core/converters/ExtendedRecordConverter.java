@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.DwcTerm;
@@ -48,6 +49,17 @@ public class ExtendedRecordConverter {
                         entry.getValue().stream()
                             .map(ExtendedRecordConverter::convertToMap)
                             .collect(Collectors.toList()))));
+
+    // this is a deliberate hack(see issue https://github.com/gbif/pipelines/issues/885)
+    if (DwcTerm.MaterialEntity.qualifiedName().equals(builder.getCoreRowType())) {
+      builder.setCoreRowType(DwcTerm.Occurrence.qualifiedName());
+      builder
+          .getCoreTerms()
+          .put(DwcTerm.basisOfRecord.qualifiedName(), BasisOfRecord.MATERIAL_SAMPLE.name());
+      Optional.ofNullable(builder.getCoreTerms().get(DwcTerm.materialEntityID.qualifiedName()))
+          .ifPresent(t -> builder.getCoreTerms().put(DwcTerm.occurrenceID.qualifiedName(), t));
+    }
+
     builder.setId(getId(core, builder));
     return builder.build();
   }

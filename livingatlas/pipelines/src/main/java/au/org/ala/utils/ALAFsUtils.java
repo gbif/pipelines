@@ -293,7 +293,7 @@ public class ALAFsUtils {
         .collect(
             Collectors.toMap(
                 entry -> entry.getKey().getName().replaceAll(".zip", ""),
-                entry -> entry.getKey().getParent() + "/" + entry.getKey().getName(),
+                entry -> entry.getKey().toString(),
                 (e1, e2) -> e1,
                 LinkedHashMap::new));
   }

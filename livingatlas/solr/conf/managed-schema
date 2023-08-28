@@ -140,9 +140,13 @@
   </fieldType>
 
   <field name="id" type="string" docValues="true" multiValued="false" indexed="true"/>
+  <field name="_root_" type="string" docValues="true" indexed="true"/>
+  <field name="_nest_parent_" type="string" indexed="true" stored="true"/>
+  <fieldType name="_nest_path_" class="solr.NestPathField" />
+  <field name="_nest_path_" type="_nest_path_" />`
 
   <!-- required for solr optimistic concurrency update -->
-  <field name="_version_" type="long" docValues="true" indexed="false" stored="false"/>
+  <field name="_version_"     type="long"   docValues="true" indexed="false"  stored="false"/>
 
   <!-- required for WMS -->
   <field name="point-0.0001"  type="string" docValues="true" indexed="true" />
@@ -174,13 +178,20 @@
   <field name="speciesListUid"     type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="imageID"            type="string"  docValues="true" multiValued="false" indexed="true" />
   <field name="imageIDs"           type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="imageIDsCount"      type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="soundIDs"           type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="soundIDsCount"      type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="videoIDs"           type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="videoIDsCount"      type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="multimedia"         type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="multimediaCount"    type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="multimediaLicense"  type="string"  docValues="true" multiValued="true"  indexed="true" />
   <field name="assertions"         type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="assertionsCount"    type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="geospatialIssues"   type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="geospatialIssuesCount"     type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="taxonomicIssues"    type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="taxonomicIssuesCount"     type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="defaultValuesUsed"  type="boolean" docValues="true" indexed="true" />
   <field name="occurrenceYear"     type="date" docValues="true" multiValued="true"  indexed="true" />
   <!-- to be removed -->
@@ -271,6 +282,7 @@
   <field name="identificationQualifier" type="string" docValues="true" indexed="true"/>
   <field name="identificationReferences" type="string" docValues="true" indexed="true"/>
   <field name="identificationRemarks" type="string" docValues="true" indexed="true"/>
+  <field name="identifier" type="string" docValues="true" indexed="true"/>
   <field name="identificationVerificationStatus" type="string" docValues="true" indexed="true"/>
   <field name="identifiedBy" type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="inCollection" type="string" docValues="true" indexed="true"/>
@@ -295,6 +307,7 @@
   <field name="license" type="string" docValues="true" indexed="true"/>
   <field name="lifeStage" type="string" docValues="true" indexed="true"/>
   <field name="lifeStageLineage" type="string" docValues="true" indexed="true" multiValued="true"/>
+  <field name="lifeStageLineageCount" type="int" docValues="true" indexed="true" multiValued="true"/>
   <field name="lithostratigraphicTerms" type="string" docValues="true" indexed="true"/>
   <field name="locality" type="string" docValues="true" indexed="true"/>
   <field name="locationAccordingTo" type="string" docValues="true" indexed="true"/>
@@ -341,6 +354,7 @@
   <field name="originalNameUsage"  type="string" docValues="true" indexed="true"/>
   <field name="originalNameUsageID"  type="string" docValues="true" indexed="true"/>
   <field name="otherCatalogNumbers"  type="string" docValues="true" indexed="true" multiValued="true"/>
+  <field name="otherCatalogNumbersCount"  type="int"  docValues="true" multiValued="false"  indexed="true" />
   <field name="outlierLayer" type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="outlierLayerCount" type="int" docValues="true" indexed="true" />
   <field name="ownerInstitutionCode"  type="string" docValues="true" indexed="true"/>
@@ -387,6 +401,7 @@
   <field name="toTaxon"  type="string" docValues="true" indexed="true"/>
   <field name="type"  type="string" docValues="true" indexed="true"/>
   <field name="typeStatus"  type="string" docValues="true" indexed="true" multiValued="true" />
+  <field name="typeStatusCount"   type="int"  docValues="true" indexed="true" multiValued="true" />
   <field name="verbatimCoordinateSystem"  type="string" docValues="true" indexed="true"/>
   <field name="verbatimCoordinates"  type="string" docValues="true" indexed="true" />
   <field name="verbatimDepth"  type="string" docValues="true" indexed="true"/>
@@ -401,10 +416,16 @@
   <field name="waterBody"  type="string" docValues="true" indexed="true"/>
   <field name="year"  type="int" docValues="true" indexed="true"/>
 
+  <!-- Bulk annotations -->
+  <field name="annotationsDoi"          type="string"  docValues="true" multiValued="true"  indexed="true" />
+  <field name="annotationsUid"          type="string"  docValues="true" multiValued="true"  indexed="true" />
+
   <!-- Clustering (Duplicate detection) -->
   <field name="isInCluster"              type="boolean" docValues="true" indexed="true"/>
   <field name="isRepresentativeOf"       type="string"  docValues="true" indexed="true" multiValued="true"/>
+  <field name="isRepresentativeOfCount"   type="int"  docValues="true" indexed="true" multiValued="true" />
   <field name="isDuplicateOf"            type="string"  docValues="true" indexed="true" multiValued="true"/>
+  <field name="isDuplicateOfCount"   type="int"  docValues="true" indexed="true" multiValued="true" />
   <field name="duplicateStatus"          type="string"  docValues="true" indexed="true" />
   <field name="duplicateType"            type="string"  docValues="true" indexed="true" multiValued="true"/>
   <field name="duplicateJustification"   type="string"  docValues="true" indexed="true" multiValued="true"/>
@@ -418,6 +439,12 @@
   <field name="identifiedByID"  type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="recordedByID"    type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="typifiedName"    type="string" docValues="true" indexed="true" />
+
+  <!-- event hierarchy fields -->
+  <field name="eventType" type="string" docValues="true" indexed="true" />
+  <field name="eventTypeHierarchy" type="string" docValues="true" indexed="true" multiValued="true" />
+  <field name="eventHierarchy" type="string" docValues="true" indexed="true" multiValued="true" />
+  <field name="surveyID" type="string" docValues="true" indexed="true" />
 
   <!-- TODO recent additions to be validated... -->
   <field name="decade"  type="int" docValues="true" indexed="true" />
@@ -517,6 +544,7 @@
   <field name="userId" type="string" docValues="true" indexed="true" />
 
   <field name="contentTypes" type="string" multiValued="true" docValues="true" indexed="true" />
+  <field name="contentTypesCount"   type="int"  docValues="true" indexed="true" multiValued="true" />
 
   <field name="machineTags"  type="string" docValues="true" indexed="true" multiValued="true" />
 
@@ -691,6 +719,8 @@
   <copyField source="dataProviderName" dest="text"/>
   <copyField source="dataResourceName" dest="text"/>
   <copyField source="dataResourceUid" dest="text"/>
+  <copyField source="annotationsDoi" dest="text"/>
+  <copyField source="annotationsUid" dest="text"/>
   <copyField source="datasetName" dest="text"/>
   <copyField source="datasetName" dest="text_datasetName"/>
   <copyField source="eventID" dest="text_eventID"/>

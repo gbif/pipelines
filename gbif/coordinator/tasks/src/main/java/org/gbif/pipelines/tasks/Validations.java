@@ -1,6 +1,10 @@
 package org.gbif.pipelines.tasks;
 
+import io.github.resilience4j.retry.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,10 +24,18 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Validations {
 
+  private static final Retry RETRY =
+      Retry.of(
+          "validatorCall",
+          RetryConfig.custom()
+              .maxAttempts(3)
+              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(3)))
+              .build());
+
   public static void updateStatus(
       ValidationWsClient validationClient, UUID key, StepType stepType, Status status) {
 
-    Validation validation = validationClient.get(key);
+    Validation validation = Retry.decorateFunction(RETRY, validationClient::get).apply(key);
     if (validation == null) {
       log.warn("Can't find validation data key {}, please check that record exists", key);
       return;
@@ -82,6 +94,6 @@ public class Validations {
     validation.setMetrics(metrics);
 
     log.info("Validaton {} main state to {} and step state to {}", stepType, mainStatus, newStatus);
-    validationClient.update(key, validation);
+    Retry.decorateRunnable(RETRY, () -> validationClient.update(key, validation)).run();
   }
 }

@@ -7,7 +7,9 @@ import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapperBuilder;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.io.Writer;
@@ -16,6 +18,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
@@ -57,17 +60,20 @@ public class DwcaMetaXml {
   @SneakyThrows
   public void write() {
     Template temp = new Template("meta", new StringReader(META), createConfig());
+    try (Writer out = getWriter()) {
+      temp.process(TemplatePojo.create(coreTerms, multimediaTerms), out);
+    }
+  }
 
-    Writer out;
+  private Writer getWriter() throws IOException {
     if (hdfsSiteConfig == null || hdfsSiteConfig.isEmpty()) {
-      out = new OutputStreamWriter(new FileOutputStream(pathToWrite));
+      FileUtils.forceMkdir(new File(pathToWrite).getParentFile());
+      return new OutputStreamWriter(new FileOutputStream(pathToWrite));
     } else {
       FileSystem fs =
           FsUtils.getFileSystem(HdfsConfigs.create(hdfsSiteConfig, coreSiteConfig), pathToWrite);
-      out = new OutputStreamWriter(ALAFsUtils.openOutputStream(fs, pathToWrite));
+      return new OutputStreamWriter(ALAFsUtils.openOutputStream(fs, pathToWrite));
     }
-
-    temp.process(TemplatePojo.create(coreTerms, multimediaTerms), out);
   }
 
   /** Create Freemarker config */

@@ -53,7 +53,7 @@ public class ValidationUtils {
   public static final String JACKKNIFE_METRICS = "jackknife-metrics.yml";
   public static final String CLUSTERING_METRICS = "clustering-metrics.yml";
   public static final String SAMPLING_METRICS = "sampling-metrics.yml";
-
+  public static final String ANNOTATION_METRICS = "annotation-metrics.yml";
   public static final String DUPLICATE_KEY_COUNT = "duplicateKeyCount";
   public static final String EMPTY_KEY_RECORDS = "emptyKeyRecords";
   public static final String DUPLICATE_RECORD_KEY_COUNT = "duplicateRecordKeyCount";
