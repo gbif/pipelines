@@ -90,15 +90,6 @@ public class OccurrenceHdfsRecordConverter {
     mapEventCoreRecord(occurrenceHdfsRecord);
     mapProjectIds(occurrenceHdfsRecord);
 
-    // The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and
-    // could only have been
-    // used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier for
-    // a long time in
-    // our public API v1, so we continue to do this.
-    if (extendedRecord != null && identifierRecord != null) {
-      setIdentifier(identifierRecord, extendedRecord, occurrenceHdfsRecord);
-    }
-
     return occurrenceHdfsRecord;
   }
 
@@ -494,35 +485,6 @@ public class OccurrenceHdfsRecordConverter {
 
     setCreatedIfGreater(occurrenceHdfsRecord, basicRecord.getCreated());
     addIssues(basicRecord.getIssues(), occurrenceHdfsRecord);
-  }
-
-  /**
-   * The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and could
-   * only have been used for "un-starring" a DWCA star record. However, we've exposed it as
-   * DcTerm.identifier for a long time in our public API v1, so we continue to do this.the id (the
-   * <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and could only have
-   * been used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier
-   * for a long time in our public API v1, so we continue to do this.
-   */
-  private static void setIdentifier(
-      IdentifierRecord ir, ExtendedRecord er, OccurrenceHdfsRecord occurrenceHdfsRecord) {
-
-    String institutionCode = er.getCoreTerms().get(DwcTerm.institutionCode.qualifiedName());
-    String collectionCode = er.getCoreTerms().get(DwcTerm.collectionCode.qualifiedName());
-    String catalogNumber = er.getCoreTerms().get(DwcTerm.catalogNumber.qualifiedName());
-
-    // id format following the convention of DwC (http://rs.tdwg.org/dwc/terms/#occurrenceID)
-    String triplet =
-        String.join(":", "urn:catalog", institutionCode, collectionCode, catalogNumber);
-    String gbifId = Optional.ofNullable(ir.getInternalId()).map(Object::toString).orElse("");
-
-    String occId = er.getCoreTerms().get(DwcTerm.occurrenceID.qualifiedName());
-
-    if (!ir.getId().equals(gbifId)
-        && (!Strings.isNullOrEmpty(occId) || !ir.getId().equals(triplet))) {
-      occurrenceHdfsRecord.setIdentifier(ir.getId());
-      occurrenceHdfsRecord.setVIdentifier(ir.getId());
-    }
   }
 
   /**
