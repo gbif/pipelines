@@ -205,7 +205,7 @@
   <select id="getRunningValidations" resultType="java.util.UUID" parameterType="java.util.Date">
     SELECT key
     FROM validation
-    WHERE status IN ('QUEUED', 'DOWNLOADING' , 'SUBMITTED', 'RUNNING');
+    WHERE status IN ('QUEUED', 'DOWNLOADING' , 'SUBMITTED', 'RUNNING')
     AND modified &lt; #{date,jdbcType=TIMESTAMP}
   </select>
 
