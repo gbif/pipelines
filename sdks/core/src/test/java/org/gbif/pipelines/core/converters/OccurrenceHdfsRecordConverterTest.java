@@ -198,8 +198,6 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("I1", hdfsRecord.getVInstitutioncode());
     Assert.assertEquals("CN1", hdfsRecord.getCatalognumber());
     Assert.assertEquals("CN1", hdfsRecord.getVCatalognumber());
-    Assert.assertEquals("1", hdfsRecord.getIdentifier());
-    Assert.assertEquals("1", hdfsRecord.getVIdentifier());
     Assert.assertEquals("quantity", hdfsRecord.getVOrganismquantity());
     Assert.assertEquals("type", hdfsRecord.getVOrganismquantitytype());
     Assert.assertEquals("unit", hdfsRecord.getVSamplesizeunit());
@@ -236,14 +234,10 @@ public class OccurrenceHdfsRecordConverterTest {
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());
     Assert.assertEquals("classs", hdfsRecord.getVClass());
-    Assert.assertEquals("format", hdfsRecord.getFormat());
-    Assert.assertEquals("format", hdfsRecord.getVFormat());
     Assert.assertEquals("ORDER", hdfsRecord.getOrder());
     Assert.assertEquals("order", hdfsRecord.getVOrder());
     Assert.assertEquals("group", hdfsRecord.getGroup());
     Assert.assertEquals("group", hdfsRecord.getVGroup());
-    Assert.assertEquals("26/06/2019", hdfsRecord.getDate());
-    Assert.assertEquals("26/06/2019", hdfsRecord.getVDate());
 
     // Test temporal fields
     Assert.assertNotNull(hdfsRecord.getDateidentified());
