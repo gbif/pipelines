@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.metircs.request;
+package org.gbif.pipelines.validator.metrics.request;
 
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.gbif.pipelines.validator.metircs.RawToInderpreted;
+import org.gbif.pipelines.validator.metrics.RawToInterpreted;
 
 /**
  * Similir to _count API call
@@ -39,7 +39,7 @@ public class TermCountRequestBuilder {
       return Optional.empty();
     }
 
-    return RawToInderpreted.getInterpretedField(term)
+    return RawToInterpreted.getInterpretedField(term)
         .map(
             field ->
                 QueryBuilders.boolQuery()
