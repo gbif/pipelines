@@ -1,7 +1,7 @@
 package org.gbif.pipelines.core.interpreters.core;
 
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
-import org.gbif.kvs.species.SpeciesMatchRequest;
+import org.gbif.kvs.species.Identification;
 import org.gbif.rest.client.species.NameUsageMatch;
 import org.gbif.rest.client.species.NameUsageMatch.Diagnostics;
 import org.junit.Assert;
@@ -13,8 +13,8 @@ public class TaxonomyInterpreterTest {
   public void checkFuzzyPositiveTest() {
 
     // State
-    SpeciesMatchRequest matchRequest =
-        SpeciesMatchRequest.builder()
+    Identification identification =
+        Identification.builder()
             .withKingdom("")
             .withPhylum("")
             .withClazz("")
@@ -29,7 +29,7 @@ public class TaxonomyInterpreterTest {
     usageMatch.setDiagnostics(diagnostics);
 
     // When
-    boolean result = TaxonomyInterpreter.checkFuzzy(usageMatch, matchRequest);
+    boolean result = TaxonomyInterpreter.checkFuzzy(usageMatch, identification);
 
     // Should
     Assert.assertTrue(result);
@@ -39,8 +39,8 @@ public class TaxonomyInterpreterTest {
   public void checkFuzzyNegativeTest() {
 
     // State
-    SpeciesMatchRequest matchRequest =
-        SpeciesMatchRequest.builder()
+    Identification identification =
+        Identification.builder()
             .withKingdom("")
             .withPhylum("")
             .withClazz("")
@@ -55,7 +55,7 @@ public class TaxonomyInterpreterTest {
     usageMatch.setDiagnostics(diagnostics);
 
     // When
-    boolean result = TaxonomyInterpreter.checkFuzzy(usageMatch, matchRequest);
+    boolean result = TaxonomyInterpreter.checkFuzzy(usageMatch, identification);
 
     // Should
     Assert.assertFalse(result);
@@ -65,8 +65,8 @@ public class TaxonomyInterpreterTest {
   public void checkFuzzyHighrankTest() {
 
     // State
-    SpeciesMatchRequest matchRequest =
-        SpeciesMatchRequest.builder()
+    Identification identification =
+        Identification.builder()
             .withKingdom("")
             .withPhylum("")
             .withClazz("")
@@ -81,7 +81,7 @@ public class TaxonomyInterpreterTest {
     usageMatch.setDiagnostics(diagnostics);
 
     // When
-    boolean result = TaxonomyInterpreter.checkFuzzy(usageMatch, matchRequest);
+    boolean result = TaxonomyInterpreter.checkFuzzy(usageMatch, identification);
 
     // Should
     Assert.assertFalse(result);
