@@ -10,7 +10,7 @@ import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
-import org.gbif.kvs.species.SpeciesMatchRequest;
+import org.gbif.kvs.species.Identification;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -162,7 +162,7 @@ public class TransformsFactory {
   }
 
   public TaxonomyTransform createTaxonomyTransform() {
-    SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>>
+    SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>>
         nameUsageMatchServiceSupplier = null;
     if (!options.getTestMode()) {
       nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createSupplier(config);
