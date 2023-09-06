@@ -85,7 +85,7 @@ public class GrscicollTransformTest {
   }
 
   @Test
-  public void whenNonSpecimenRecordThenRecordsNotFlag() {
+  public void whenNonSpecimenRecordThenRecordsNotLinked() {
     // State
     final String[] verbatim = {
       BasisOfRecord.OBSERVATION.name(), "1", INSTITUTION_CODE, "", "", COLLECTION_CODE, ""
@@ -95,16 +95,7 @@ public class GrscicollTransformTest {
     PCollection<GrscicollRecord> recordCollection = transformRecords(verbatim);
 
     // Should
-    PAssert.that(recordCollection)
-        .satisfies(
-            r -> {
-              GrscicollRecord rec = r.iterator().next();
-              assertNotNull(rec.getId());
-              assertTrue(rec.getIssues().getIssueList().isEmpty());
-              assertNotNull(rec.getInstitutionMatch().getKey());
-              assertNotNull(rec.getCollectionMatch().getKey());
-              return null;
-            });
+    PAssert.that(recordCollection).empty();
 
     // run pipeline with the options required
     p.run();
