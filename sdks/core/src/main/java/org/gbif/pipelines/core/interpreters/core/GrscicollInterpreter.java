@@ -1,5 +1,17 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.api.model.collections.lookup.Match.Reason.DIFFERENT_OWNER;
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.checkNullOrEmpty;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.model.collections.lookup.Match.Status;
 import org.gbif.api.vocabulary.BasisOfRecord;
@@ -16,21 +28,6 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.Match;
 
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.api.model.collections.lookup.Match.Reason.DIFFERENT_OWNER;
-import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
-import static org.gbif.pipelines.core.utils.ModelUtils.checkNullOrEmpty;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
-
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class GrscicollInterpreter {
@@ -45,7 +42,9 @@ public class GrscicollInterpreter {
       checkNullOrEmpty(er);
 
       if (!isSpecimenRecord(er)) {
-        log.debug("Skipped GrSciColl Lookup for record {} because it's not an specimen record", er.getId());
+        log.debug(
+            "Skipped GrSciColl Lookup for record {} because it's not an specimen record",
+            er.getId());
         return;
       }
 
