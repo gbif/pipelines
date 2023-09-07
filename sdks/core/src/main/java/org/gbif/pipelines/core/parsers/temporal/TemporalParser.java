@@ -72,7 +72,6 @@ public class TemporalParser implements Serializable {
   public OccurrenceParseResult<TemporalAccessor> parseRecordedDate(
       String year, String month, String day, String dateString, String dayOfYear) {
 
-
     boolean ymdProvided =
         StringUtils.isNotBlank(year)
             || StringUtils.isNotBlank(month)
