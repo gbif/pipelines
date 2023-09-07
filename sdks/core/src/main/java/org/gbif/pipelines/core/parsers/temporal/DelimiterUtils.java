@@ -47,9 +47,10 @@ public class DelimiterUtils {
     boolean canSplit =
         rawPeriod.lastIndexOf(CHAR_PERIOD) == rawPeriod.indexOf(CHAR_PERIOD)
             && rawPeriod.length() > 7;
-    String[] splitted = canSplit ? RGX_PERIOD.split(rawPeriod) : new String[] {rawPeriod, ""};
+    String[] splitted =
+        canSplit ? RGX_PERIOD.split(rawPeriod) : new String[] {rawPeriod, rawPeriod};
     // Returns an array of the same length each time
-    return splitted.length < 2 ? new String[] {splitted[0], ""} : splitted;
+    return splitted.length < 2 ? new String[] {splitted[0], splitted[0]} : splitted;
   }
 
   /** Handle day/month ranges Examples: 1991-1/3 : 1991-1, 1991-3 1991-1-2/5 : 1991-1-1, 1991-1-5 */

@@ -56,6 +56,7 @@ public class ALATemporalTransform extends Transform<ExtendedRecord, TemporalReco
           TemporalInterpreter.builder()
               .orderings(orderings)
               .preprocessDateFn(preprocessDateFn)
+              .explicitRangeEnd(false)
               .create();
     }
     if (alaTemporalInterpreter == null) {

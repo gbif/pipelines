@@ -59,7 +59,7 @@ public class TemporalRecordTransformTest {
     // Expected
     final List<TemporalRecord> dataExpected =
         createTemporalRecordList(
-            1999, 2, 2, LocalDate.of(1999, 2, 2), LocalDateTime.of(1999, 2, 2, 12, 26));
+            1999, 2, 2, 33, 33, LocalDate.of(1999, 2, 2), LocalDateTime.of(1999, 2, 2, 12, 26));
 
     // When
     PCollection<TemporalRecord> dataStream =
@@ -85,7 +85,8 @@ public class TemporalRecordTransformTest {
 
     // Expected
     final List<TemporalRecord> dataExpected =
-        createTemporalRecordList(1999, 2, null, YearMonth.of(1999, 2), YearMonth.of(1999, 2));
+        createTemporalRecordList(
+            1999, 2, null, null, null, YearMonth.of(1999, 2), YearMonth.of(1999, 2));
 
     // When
     PCollection<TemporalRecord> dataStream =
@@ -129,10 +130,16 @@ public class TemporalRecordTransformTest {
     TemporalRecord expected =
         TemporalRecord.newBuilder()
             .setId("0")
-            .setEventDate(EventDate.newBuilder().setGte("1999-02-01T12:26Z").build())
             .setYear(1999)
             .setMonth(2)
             .setDay(1)
+            .setStartDayOfYear(32)
+            .setEndDayOfYear(32)
+            .setEventDate(
+                EventDate.newBuilder()
+                    .setGte("1999-02-01T12:26")
+                    .setLte("1999-02-01T12:26")
+                    .build())
             .setDateIdentified("1999-04-01")
             .setModified("1999-03-01T12:26")
             .setCreated(0L)
@@ -154,14 +161,26 @@ public class TemporalRecordTransformTest {
   }
 
   private List<TemporalRecord> createTemporalRecordList(
-      Integer year, Integer month, Integer day, Temporal eventDate, Temporal other) {
+      Integer year,
+      Integer month,
+      Integer day,
+      Integer sDoY,
+      Integer eDoY,
+      Temporal eventDate,
+      Temporal other) {
     return Collections.singletonList(
         TemporalRecord.newBuilder()
             .setId("0")
             .setYear(year)
             .setMonth(month)
             .setDay(day)
-            .setEventDate(EventDate.newBuilder().setGte(eventDate.toString()).build())
+            .setStartDayOfYear(sDoY)
+            .setEndDayOfYear(eDoY)
+            .setEventDate(
+                EventDate.newBuilder()
+                    .setGte(eventDate.toString())
+                    .setLte(eventDate.toString())
+                    .build())
             .setDateIdentified(other.toString())
             .setModified(other.toString())
             .setCreated(0L)

@@ -7,7 +7,6 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Optional;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.junit.Test;
 
@@ -21,8 +20,8 @@ public class TemporalRangeParserTest {
             .create();
 
     EventRange range = trp.parse("1930/1929");
-    assertEquals("1930", range.getFrom().get().toString());
-    assertFalse(range.getTo().isPresent());
+    assertEquals("1929", range.getFrom().get().toString());
+    assertEquals("1930", range.getTo().get().toString());
 
     range = trp.parse("1930/1931");
     assertEquals("1930", range.getFrom().get().toString());
@@ -30,11 +29,11 @@ public class TemporalRangeParserTest {
 
     range = trp.parse("1930/1930");
     assertEquals("1930", range.getFrom().get().toString());
-    assertFalse(range.getTo().isPresent());
+    assertEquals("1930", range.getTo().get().toString());
 
     range = trp.parse("1930-01");
     assertEquals("1930-01", range.getFrom().get().toString());
-    assertFalse(range.getTo().isPresent());
+    assertEquals("1930-01", range.getTo().get().toString());
 
     // Does not support
     range = trp.parse("01/1930");
@@ -47,7 +46,7 @@ public class TemporalRangeParserTest {
 
     range = trp.parse("02/01/1930");
     assertEquals("1930-01-02", range.getFrom().get().toString());
-    assertFalse(range.getTo().isPresent());
+    assertEquals("1930-01-02", range.getTo().get().toString());
 
     range = trp.parse("1930-01-02/02-01");
     assertEquals("1930-01-02", range.getFrom().get().toString());
@@ -59,7 +58,7 @@ public class TemporalRangeParserTest {
 
     range = trp.parse("1930-01-02/1930-01-02");
     assertEquals("1930-01-02", range.getFrom().get().toString());
-    assertEquals(Optional.empty(), range.getTo());
+    assertEquals("1930-01-02", range.getTo().get().toString());
   }
 
   @Test
@@ -75,7 +74,7 @@ public class TemporalRangeParserTest {
     range = trp.parse("1999-01-02");
     assertFalse(range.hasIssues());
     assertEquals("1999-01-02", range.getFrom().get().toString());
-    assertFalse(range.getTo().isPresent());
+    assertEquals("1999-01-02", range.getTo().get().toString());
 
     // Use a DMY_FORMATS parser
     trp =
@@ -86,12 +85,12 @@ public class TemporalRangeParserTest {
     range = trp.parse("01/02/1999");
     assertFalse(range.hasIssues());
     assertEquals("1999-02-01", range.getFrom().get().toString());
-    assertFalse(range.getTo().isPresent());
+    assertEquals("1999-02-01", range.getTo().get().toString());
 
     range = trp.parse("1999-01-02");
     assertFalse(range.hasIssues());
     assertEquals("1999-01-02", range.getFrom().get().toString());
-    assertFalse(range.getTo().isPresent());
+    assertEquals("1999-01-02", range.getTo().get().toString());
   }
 
   // https://github.com/gbif/parsers/issues/6
@@ -101,11 +100,11 @@ public class TemporalRangeParserTest {
 
     EventRange range = trp.parse("1999", "1", "2", "01/02/1999");
     assertEquals("1999-01-02", range.getFrom().get().toString());
-    assertFalse(range.getTo().isPresent());
+    assertEquals("1999-01-02", range.getTo().get().toString());
 
     range = trp.parse("1999", "1", null, "01/02/1999");
-    assertEquals("1999-01-02", range.getFrom().get().toString());
-    assertFalse(range.getTo().isPresent());
+    assertEquals("1999-01", range.getFrom().get().toString());
+    assertEquals("1999-01", range.getTo().get().toString());
   }
 
   @Test

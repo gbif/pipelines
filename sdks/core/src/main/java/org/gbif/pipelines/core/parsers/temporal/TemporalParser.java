@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.parsers.temporal;
 
-import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.DEFINITE;
 import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.PROBABLE;
 
 import com.google.common.base.Strings;
@@ -50,69 +49,98 @@ public class TemporalParser implements Serializable {
     return create(Collections.emptyList());
   }
 
+  public OccurrenceParseResult<TemporalAccessor> parseRecordedDate(
+      String year, String month, String day, String dateString) {
+    return parseRecordedDate(year, month, day, dateString, null);
+  }
+
   /**
-   * Given possibly both of year, month, day and a dateString, produces a single date. When year,
-   * month and day are all populated and parseable they are given priority, but if any field is
-   * missing or illegal and dateString is parseable dateString is preferred. Partially valid dates
-   * are not supported and null will be returned instead. The only exception is the year alone which
-   * will be used as the last resort if nothing else works. Years are verified to be before or next
-   * year and after 1600. x
+   * Three dates are provided:
+   *
+   * <ul>
+   *   <li>year, month and day
+   *   <li>dateString
+   *   <li>year and dayOfYear
+   * </ul>
+   *
+   * <p>Produces a single date at the best resolution possible, ignoring missing values.
+   *
+   * <p>Years are verified to be before this year and after 1500.
    *
    * @return interpretation result, never null
    */
   public OccurrenceParseResult<TemporalAccessor> parseRecordedDate(
-      String year, String month, String day, String dateString) {
+      String year, String month, String day, String dateString, String dayOfYear) {
 
-    boolean atomizedDateProvided =
+
+    boolean ymdProvided =
         StringUtils.isNotBlank(year)
             || StringUtils.isNotBlank(month)
             || StringUtils.isNotBlank(day);
     boolean dateStringProvided = StringUtils.isNotBlank(dateString);
+    boolean yDoyProvided = StringUtils.isNotBlank(year) && StringUtils.isNotBlank(dayOfYear);
 
-    if (!atomizedDateProvided && !dateStringProvided) {
+    if (!ymdProvided && !dateStringProvided && !yDoyProvided) {
       return OccurrenceParseResult.fail();
     }
 
     Set<OccurrenceIssue> issues = EnumSet.noneOf(OccurrenceIssue.class);
 
-    // First, attempt year, month, day parsing
-    // If the parse result is SUCCESS it means that a whole date could be extracted (with year,
-    // month and day). If it is a failure but the normalizer returned a meaningful result (e.g. it
-    // could extract just
-    // a year) we're going to return a result with all the fields set that we could parse.
     TemporalAccessor parsedTemporalAccessor;
     ParseResult.CONFIDENCE confidence;
 
+    // Parse all three possible dates
     ParseResult<TemporalAccessor> parsedYMDResult =
-        atomizedDateProvided ? temporalParser.parse(year, month, day) : ParseResult.fail();
+        ymdProvided ? temporalParser.parse(year, month, day) : ParseResult.fail();
     ParseResult<TemporalAccessor> parsedDateResult =
         dateStringProvided ? temporalParser.parse(dateString) : ParseResult.fail();
+    ParseResult<TemporalAccessor> parsedYearDoyResult =
+        yDoyProvided ? temporalParser.parse(year, dayOfYear) : ParseResult.fail();
     TemporalAccessor parsedYmdTa = parsedYMDResult.getPayload();
     TemporalAccessor parsedDateTa = parsedDateResult.getPayload();
+    TemporalAccessor parsedYearDoyTa = parsedYearDoyResult.getPayload();
 
-    // If both inputs exist handle the case when they don't match
-    if (atomizedDateProvided
+    int ymdResolution = -1, dateStringResolution = -1;
+    if (ymdProvided && parsedYMDResult.isSuccessful()) {
+      ymdResolution = TemporalAccessorUtils.resolution(parsedYmdTa);
+    }
+    if (dateStringProvided && parsedDateResult.isSuccessful()) {
+      dateStringResolution = TemporalAccessorUtils.resolution(parsedDateTa);
+    }
+
+    // Add issues if we failed to parse any dates that were present
+    if (ymdProvided && !parsedYMDResult.isSuccessful()) {
+      issues.add(OccurrenceIssue.RECORDED_DATE_INVALID);
+    }
+    if (dateStringProvided && !parsedDateResult.isSuccessful()) {
+      issues.add(OccurrenceIssue.RECORDED_DATE_INVALID);
+    }
+    if (yDoyProvided && !parsedYearDoyResult.isSuccessful()) {
+      issues.add(OccurrenceIssue.RECORDED_DATE_INVALID);
+    }
+
+    // If a dateString is provided with something else, handle the case where it doesn't match.
+    boolean ambiguityResolved = false;
+    if (ymdProvided
         && dateStringProvided
-        && !TemporalAccessorUtils.sameOrContained(parsedYmdTa, parsedDateTa)) {
+        && !TemporalAccessorUtils.sameOrContained(parsedYmdTa, parsedDateTa)
+        && parsedDateResult.getAlternativePayloads() != null) {
 
       // eventDate could be ambiguous (5/4/2014), but disambiguated by year-month-day.
-      boolean ambiguityResolved = false;
-      if (parsedDateResult.getAlternativePayloads() != null) {
-        for (TemporalAccessor possibleTa : parsedDateResult.getAlternativePayloads()) {
-          if (TemporalAccessorUtils.sameOrContained(parsedYmdTa, possibleTa)) {
-            parsedDateTa = possibleTa;
-            ambiguityResolved = true;
-            log.debug(
-                "Ambiguous date {} matches year-month-day date {}-{}-{} for {}",
-                dateString,
-                year,
-                month,
-                day,
-                parsedDateTa);
-          }
-        }
+      Optional<TemporalAccessor> resolved =
+          TemporalAccessorUtils.resolveAmbiguousDates(
+              parsedYmdTa, parsedDateResult.getAlternativePayloads());
+      if (resolved.isPresent()) {
+        parsedDateTa = resolved.get();
+        ambiguityResolved = true;
+        log.debug(
+            "Ambiguous date {} matches year-month-day date {}-{}-{} for {}",
+            dateString,
+            year,
+            month,
+            day,
+            parsedDateTa);
       }
-
       // still a conflict
       if (!ambiguityResolved) {
         if (parsedYmdTa == null || parsedDateTa == null) {
@@ -121,23 +149,74 @@ public class TemporalParser implements Serializable {
           issues.add(OccurrenceIssue.RECORDED_DATE_MISMATCH);
         }
       }
+    } else if (ymdProvided
+        && yDoyProvided
+        && !TemporalAccessorUtils.sameOrContained(parsedYearDoyTa, parsedDateTa)
+        && parsedDateResult.getAlternativePayloads() != null) {
 
-      // choose the one with better resolution
-      Optional<TemporalAccessor> bestResolution =
-          TemporalAccessorUtils.bestResolution(parsedYmdTa, parsedDateTa);
-      if (bestResolution.isPresent()) {
-        parsedTemporalAccessor = bestResolution.get();
-        // if one of the two results is null we can not set the confidence to DEFINITE
-        confidence = (parsedYmdTa == null || parsedDateTa == null) ? PROBABLE : DEFINITE;
-      } else {
-        return OccurrenceParseResult.fail(issues);
+      // eventDate could be ambiguous (5/4/2014), but disambiguated by year-month-day.
+      Optional<TemporalAccessor> resolved =
+          TemporalAccessorUtils.resolveAmbiguousDates(
+              parsedYearDoyTa, parsedDateResult.getAlternativePayloads());
+      if (resolved.isPresent()) {
+        parsedDateTa = resolved.get();
+        ambiguityResolved = true;
+        log.debug(
+            "Ambiguous date {} matches year-dayOfYear date {}-{} for {}",
+            dateString,
+            year,
+            dayOfYear,
+            parsedDateTa);
       }
-    } else {
-      // they match, or we only have one anyway, choose the one with better resolution.
-      parsedTemporalAccessor =
-          TemporalAccessorUtils.bestResolution(parsedYmdTa, parsedDateTa).orElse(null);
+      // still a conflict
+      if (!ambiguityResolved) {
+        if (parsedYmdTa == null || parsedYearDoyTa == null) {
+          issues.add(OccurrenceIssue.RECORDED_DATE_INVALID);
+        } else {
+          issues.add(OccurrenceIssue.RECORDED_DATE_MISMATCH);
+        }
+      }
+    }
+
+    // Add an issue if there is any conflict between the dates
+    if (TemporalAccessorUtils.sameOrContainedOrNull(parsedYmdTa, parsedDateTa)
+        && TemporalAccessorUtils.sameOrContainedOrNull(parsedYmdTa, parsedYearDoyTa)
+        && TemporalAccessorUtils.sameOrContainedOrNull(parsedDateTa, parsedYearDoyTa)) {
       confidence =
-          parsedDateTa != null ? parsedDateResult.getConfidence() : parsedYMDResult.getConfidence();
+          parsedDateTa != null
+              ? parsedDateResult.getConfidence()
+              : (parsedYmdTa != null
+                  ? parsedYMDResult.getConfidence()
+                  : parsedYearDoyResult.getConfidence());
+    } else {
+      issues.add(OccurrenceIssue.RECORDED_DATE_MISMATCH);
+      confidence = PROBABLE;
+    }
+
+    // Add an issue if the resolution af ymd / date / yDoy is different
+    if (ymdResolution > 0 && dateStringResolution > 0) {
+      if (ymdResolution != dateStringResolution) {
+        issues.add(OccurrenceIssue.RECORDED_DATE_MISMATCH);
+      }
+    }
+
+    // Best we can get from the three parts.
+    // Note 2000-01-01 and 2000-01 and 2000 will return 2000-01-01.
+    Optional<TemporalAccessor> nonConflictingTa =
+        TemporalAccessorUtils.nonConflictingDateParts(parsedYmdTa, parsedDateTa, parsedYearDoyTa);
+
+    if (nonConflictingTa.isPresent()) {
+      parsedTemporalAccessor = nonConflictingTa.get();
+      // if one of the parses failed we can not set the confidence to DEFINITE
+      confidence =
+          ((ymdProvided && parsedYmdTa == null)
+                  || (dateStringProvided && parsedDateTa == null)
+                  || (yDoyProvided && parsedYearDoyTa == null))
+              ? PROBABLE
+              : confidence;
+    } else {
+      issues.add(OccurrenceIssue.RECORDED_DATE_INVALID);
+      return OccurrenceParseResult.fail(issues);
     }
 
     if (!isValidDate(parsedTemporalAccessor)) {
@@ -155,7 +234,7 @@ public class TemporalParser implements Serializable {
   }
 
   public OccurrenceParseResult<TemporalAccessor> parseRecordedDate(String dateString) {
-    return parseRecordedDate(null, null, null, dateString);
+    return parseRecordedDate(null, null, null, dateString, null);
   }
 
   /** @return TemporalAccessor that represents a LocalDate or LocalDateTime */

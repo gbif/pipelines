@@ -28,7 +28,7 @@ public class TemporalParserTest {
     // Dates out of bounds
     assertFalse(TemporalParser.isValidDate(YearMonth.of(1499, 12)));
 
-    // we tolerate a offset of 1 day
+    // we tolerate an offset of 1 day
     assertFalse(TemporalParser.isValidDate(LocalDate.now().plusDays(2)));
   }
 
@@ -37,45 +37,47 @@ public class TemporalParserTest {
     TemporalParser temporalParser = TemporalParser.create();
     OccurrenceParseResult<TemporalAccessor> result;
 
-    result = temporalParser.parseRecordedDate("2005", "1", "", "2005-01-01");
-    assertEquals(LocalDate.of(2005, 1, 1), result.getPayload());
+    result = temporalParser.parseRecordedDate("2005", "1", "1", "2005-01-01");
+    assertResult(2005, 1, 1, result);
     assertEquals(0, result.getIssues().size());
 
     // ensure that eventDate with more precision will not record an issue and the one with most
-    // precision
-    // will be returned
+    // precision will be returned
     result = temporalParser.parseRecordedDate("1996", "1", "26", "1996-01-26T01:00Z");
     assertEquals(
         ZonedDateTime.of(LocalDateTime.of(1996, 1, 26, 1, 0), ZoneId.of("Z")), result.getPayload());
     assertEquals(0, result.getIssues().size());
 
-    // if dates contradict, do not return a date and flag it
+    // if dates contradict, return the parts that agree
     result = temporalParser.parseRecordedDate("2005", "1", "2", "2005-01-05");
-    assertNull(result.getPayload());
+    assertResult(2005, 1, result);
     assertEquals(1, result.getIssues().size());
     assertEquals(OccurrenceIssue.RECORDED_DATE_MISMATCH, result.getIssues().iterator().next());
   }
 
   @Test
   public void testGoodDate() {
-    ParseResult<TemporalAccessor> result =
+    OccurrenceParseResult<TemporalAccessor> result =
         TemporalParser.create().parseRecordedDate("1984", "3", "22", null);
     assertResult(1984, 3, 22, result);
+    assertEquals(0, result.getIssues().size());
   }
 
   @Test
   public void testGoodOldDate() {
-    ParseResult<TemporalAccessor> result =
-        TemporalParser.create().parseRecordedDate("1957", "3", "22", null);
-    assertResult(1957, 3, 22, result);
+    OccurrenceParseResult<TemporalAccessor> result =
+        TemporalParser.create().parseRecordedDate("1757", "3", "22", null);
+    assertResult(1757, 3, 22, result);
+    assertEquals(0, result.getIssues().size());
   }
 
   /** 0 month now fails. */
   @Test
   public void testZeroMonth() {
-    ParseResult<TemporalAccessor> result =
+    OccurrenceParseResult<TemporalAccessor> result =
         TemporalParser.create().parseRecordedDate("1984", "0", "22", null);
     assertFalse(result.isSuccessful());
+    assertNullPayload(result, OccurrenceIssue.RECORDED_DATE_INVALID);
   }
 
   @Test
@@ -101,16 +103,18 @@ public class TemporalParserTest {
 
   @Test
   public void testStringGood() {
-    ParseResult<TemporalAccessor> result =
+    OccurrenceParseResult<TemporalAccessor> result =
         TemporalParser.create().parseRecordedDate(null, null, null, "1984-03-22");
     assertResult(1984, 3, 22, result);
+    assertEquals(0, result.getIssues().size());
   }
 
   @Test
   public void testStringTimestamp() {
-    ParseResult<TemporalAccessor> result =
+    OccurrenceParseResult<TemporalAccessor> result =
         TemporalParser.create().parseRecordedDate(null, null, null, "1984-03-22T00:00");
     assertResult(LocalDateTime.of(1984, 3, 22, 0, 0), result);
+    assertEquals(0, result.getIssues().size());
   }
 
   @Test
@@ -121,10 +125,12 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testStringWins() {
-    ParseResult<TemporalAccessor> result =
+  public void testStringMismatch() {
+    OccurrenceParseResult<TemporalAccessor> result =
         TemporalParser.create().parseRecordedDate("1984", "3", null, "1984-03-22");
-    assertResult(1984, 3, 22, result);
+    assertResult(1984, 3, result);
+    assertEquals(1, result.getIssues().size());
+    assertEquals(OccurrenceIssue.RECORDED_DATE_MISMATCH, result.getIssues().iterator().next());
   }
 
   @Test
@@ -137,7 +143,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testStringLoses() {
+  public void testStringRubbish() {
     OccurrenceParseResult<TemporalAccessor> result =
         TemporalParser.create().parseRecordedDate("1984", "3", null, "22-17-1984");
     assertResult(1984, 3, result);
@@ -147,15 +153,18 @@ public class TemporalParserTest {
   // these two tests demonstrate the problem from POR-2120
   @Test
   public void testOnlyYear() {
-    ParseResult<TemporalAccessor> result =
+    OccurrenceParseResult<TemporalAccessor> result =
         TemporalParser.create().parseRecordedDate("1984", null, null, null);
     assertResult(1984, result);
+    assertEquals(0, result.getIssues().size());
 
     result = TemporalParser.create().parseRecordedDate(null, null, null, "1984");
     assertResult(1984, result);
+    assertEquals(0, result.getIssues().size());
 
     result = TemporalParser.create().parseRecordedDate("1984", null, null, "1984");
     assertResult(1984, result);
+    assertEquals(0, result.getIssues().size());
   }
 
   @Test
@@ -177,7 +186,7 @@ public class TemporalParserTest {
 
     result = TemporalParser.create().parseRecordedDate(null, null, null, "0-0-1984");
     assertEquals(ParseResult.STATUS.FAIL, result.getStatus());
-    assertNull(result.getPayload());
+    assertNullPayload(result, OccurrenceIssue.RECORDED_DATE_INVALID);
   }
 
   @Test
@@ -185,16 +194,19 @@ public class TemporalParserTest {
     OccurrenceParseResult<TemporalAccessor> result =
         TemporalParser.create().parseRecordedDate("1984", "4", null, null);
     assertResult(1984, 4, result);
+    assertTrue(result.getIssues().isEmpty());
 
     result = TemporalParser.create().parseRecordedDate("1984", "3", null, "1984-03");
     assertResult(1984, 3, result);
+    assertTrue(result.getIssues().isEmpty());
 
     result = TemporalParser.create().parseRecordedDate(null, null, null, "1984-02");
     assertResult(1984, 2, result);
+    assertTrue(result.getIssues().isEmpty());
 
     result = TemporalParser.create().parseRecordedDate("2000", "3", null, "2000-03");
     assertResult(2000, 3, result);
-    assertEquals(0, result.getIssues().size());
+    assertTrue(result.getIssues().isEmpty());
   }
 
   /** https://github.com/gbif/parsers/issues/8 */
@@ -203,20 +215,24 @@ public class TemporalParserTest {
     OccurrenceParseResult<TemporalAccessor> result;
 
     result = TemporalParser.create().parseRecordedDate("1984", "3", "18", "1984-03");
-    assertResult(1984, 3, 18, result);
-    assertEquals(0, result.getIssues().size());
+    assertResult(1984, 3, result);
+    assertEquals(1, result.getIssues().size());
+    assertEquals(OccurrenceIssue.RECORDED_DATE_MISMATCH, result.getIssues().iterator().next());
 
     result = TemporalParser.create().parseRecordedDate("1984", "3", null, "1984-03-18");
-    assertResult(1984, 3, 18, result);
-    assertEquals(0, result.getIssues().size());
+    assertResult(1984, 3, result);
+    assertEquals(1, result.getIssues().size());
+    assertEquals(OccurrenceIssue.RECORDED_DATE_MISMATCH, result.getIssues().iterator().next());
 
     result = TemporalParser.create().parseRecordedDate("1984", null, null, "1984-03-18");
-    assertResult(1984, 3, 18, result);
-    assertEquals(0, result.getIssues().size());
+    assertResult(1984, result);
+    assertEquals(1, result.getIssues().size());
+    assertEquals(OccurrenceIssue.RECORDED_DATE_MISMATCH, result.getIssues().iterator().next());
 
     result = TemporalParser.create().parseRecordedDate("1984", "3", null, "1984");
-    assertResult(1984, 3, result);
-    assertEquals(0, result.getIssues().size());
+    assertResult(1984, result);
+    assertEquals(1, result.getIssues().size());
+    assertEquals(OccurrenceIssue.RECORDED_DATE_MISMATCH, result.getIssues().iterator().next());
 
     result = TemporalParser.create().parseRecordedDate("1984", "05", "02", "1984-05-02T19:34");
     assertResult(LocalDateTime.of(1984, 5, 2, 19, 34, 0), result);
@@ -230,25 +246,25 @@ public class TemporalParserTest {
 
     result = TemporalParser.create().parseRecordedDate("2014", "2", "5", "5/2/2014");
     assertResult(2014, 2, 5, result);
-    assertEquals(0, result.getIssues().size());
+    assertEquals(ParseResult.CONFIDENCE.POSSIBLE, result.getConfidence());
+    assertEquals(1, result.getIssues().size());
+    assertEquals(OccurrenceIssue.RECORDED_DATE_INVALID, result.getIssues().iterator().next());
   }
 
   /** Only month now fails */
   @Test
   public void testOnlyMonth() {
-    ParseResult<TemporalAccessor> result =
+    OccurrenceParseResult<TemporalAccessor> result =
         TemporalParser.create().parseRecordedDate(null, "3", null, null);
-    // assertResult(null, 3, null, null, result);
-    assertFalse(result.isSuccessful());
+    assertNullPayload(result, OccurrenceIssue.RECORDED_DATE_INVALID);
   }
 
   /** Only day now fails */
   @Test
   public void testOnlyDay() {
-    ParseResult<TemporalAccessor> result =
+    OccurrenceParseResult<TemporalAccessor> result =
         TemporalParser.create().parseRecordedDate(null, null, "23", null);
-    // assertResult(null, null, 23, null, result);
-    assertFalse(result.isSuccessful());
+    assertNullPayload(result, OccurrenceIssue.RECORDED_DATE_INVALID);
   }
 
   @Test
@@ -289,7 +305,7 @@ public class TemporalParserTest {
     TemporalParser temporalParser = TemporalParser.create();
 
     // Makes sure the static content is loaded
-    ParseResult<TemporalAccessor> result =
+    OccurrenceParseResult<TemporalAccessor> result =
         temporalParser.parseRecordedDate(
             null, null, null, DateFormatUtils.ISO_DATETIME_FORMAT.format(Calendar.getInstance()));
     assertEquals(ParseResult.CONFIDENCE.DEFINITE, result.getConfidence());
