@@ -19,13 +19,14 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.date.AtomizedLocalDate;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.common.parsers.date.EventRange;
+import org.gbif.common.parsers.date.MultiinputTemporalParser;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
+import org.gbif.common.parsers.date.TemporalRangeParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.functions.SerializableFunction;
-import org.gbif.pipelines.core.parsers.temporal.EventRange;
-import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
-import org.gbif.pipelines.core.parsers.temporal.TemporalRangeParser;
+import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -42,7 +43,7 @@ public class TemporalInterpreter implements Serializable {
   private static final LocalDate EARLIEST_DATE_IDENTIFIED = LocalDate.of(1753, 1, 1);
 
   private final TemporalRangeParser temporalRangeParser;
-  private final TemporalParser temporalParser;
+  private final MultiinputTemporalParser temporalParser;
   private final SerializableFunction<String, String> preprocessDateFn;
   private final boolean explicitRangeEnd;
 
@@ -52,7 +53,7 @@ public class TemporalInterpreter implements Serializable {
       SerializableFunction<String, String> preprocessDateFn,
       Boolean explicitRangeEnd) {
     this.preprocessDateFn = preprocessDateFn;
-    this.temporalParser = TemporalParser.create(orderings);
+    this.temporalParser = MultiinputTemporalParser.create(orderings);
     this.temporalRangeParser =
         TemporalRangeParser.builder().temporalParser(temporalParser).create();
     this.explicitRangeEnd = explicitRangeEnd == null ? true : false;
@@ -75,6 +76,7 @@ public class TemporalInterpreter implements Serializable {
 
     Optional<TemporalAccessor> fromTa = eventRange.getFrom();
     Optional<TemporalAccessor> toTa = eventRange.getTo();
+
     Optional<AtomizedLocalDate> fromYmd =
         eventRange.getFrom().map(AtomizedLocalDate::fromTemporalAccessor);
     Optional<AtomizedLocalDate> toYmd =
@@ -102,13 +104,13 @@ public class TemporalInterpreter implements Serializable {
     eventRange
         .getFrom()
         .map(ta -> TemporalAccessorUtils.stripOffsetOrZone(ta, true))
-        .map(TemporalAccessor::toString)
+        .map(StringToDateFunctions.getTemporalToStringFn())
         .ifPresent(ed::setGte);
     if (explicitRangeEnd || (fromTa != null && !fromTa.equals(toTa))) {
       eventRange
           .getTo()
           .map(ta -> TemporalAccessorUtils.stripOffsetOrZone(ta, true))
-          .map(TemporalAccessor::toString)
+          .map(StringToDateFunctions.getTemporalToStringFn())
           .ifPresent(ed::setLte);
     }
     tr.setEventDate(ed);

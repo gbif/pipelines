@@ -256,6 +256,45 @@ public class TemporalInterpreterTest {
     assertEquals(RECORDED_DATE_MISMATCH.name(), tr.getIssues().getIssueList().get(0));
   }
 
+  @Test
+  public void testValidAndInvalidDates() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.year.qualifiedName(), "2022");
+    map.put(DwcTerm.month.qualifiedName(), "2");
+    map.put(DwcTerm.day.qualifiedName(), "4");
+    map.put(DwcTerm.eventDate.qualifiedName(), "20222-02-04T11:56:00");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    TemporalInterpreter interpreter = TemporalInterpreter.builder().create();
+    interpreter.interpretTemporal(er, tr);
+
+    assertEquals("2022-02-04", tr.getEventDate().getGte());
+    assertEquals("2022-02-04", tr.getEventDate().getLte());
+    assertEquals(2022, tr.getYear().intValue());
+    assertEquals(2, tr.getMonth().intValue());
+    assertEquals(4, tr.getDay().intValue());
+    assertEquals(35, tr.getStartDayOfYear().intValue());
+    assertEquals(35, tr.getEndDayOfYear().intValue());
+    assertEquals(1, tr.getIssues().getIssueList().size());
+    assertEquals(RECORDED_DATE_INVALID.name(), tr.getIssues().getIssueList().get(0));
+
+    // Other way around
+    er.getCoreTerms().put(DwcTerm.year.qualifiedName(), "20222");
+    er.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "2022-02-04T11:56:00");
+    interpreter.interpretTemporal(er, tr);
+
+    assertEquals("2022-02-04T11:56:00", tr.getEventDate().getGte());
+    assertEquals("2022-02-04T11:56:00", tr.getEventDate().getLte());
+    assertEquals(2022, tr.getYear().intValue());
+    assertEquals(2, tr.getMonth().intValue());
+    assertEquals(4, tr.getDay().intValue());
+    assertEquals(35, tr.getStartDayOfYear().intValue());
+    assertEquals(35, tr.getEndDayOfYear().intValue());
+    assertEquals(1, tr.getIssues().getIssueList().size());
+    assertEquals(RECORDED_DATE_INVALID.name(), tr.getIssues().getIssueList().get(0));
+  }
+
   /** The bits of date we have are consistent, but not all the parts are present. */
   @Test
   public void testIncompleteDates() {
@@ -309,8 +348,8 @@ public class TemporalInterpreterTest {
 
     assertEquals("2014-01-11", tr.getModified());
     assertEquals("2012-01-11", tr.getDateIdentified());
-    assertEquals("1999-11-11T12:22", tr.getEventDate().getGte());
-    assertEquals("1999-11-11T12:22", tr.getEventDate().getLte());
+    assertEquals("1999-11-11T12:22:00", tr.getEventDate().getGte());
+    assertEquals("1999-11-11T12:22:00", tr.getEventDate().getLte());
     assertEquals(1999, tr.getYear().intValue());
     assertEquals(11, tr.getMonth().intValue());
     assertEquals(11, tr.getDay().intValue());
@@ -702,8 +741,8 @@ public class TemporalInterpreterTest {
     assertEquals(19, tr.getDay().intValue());
     assertEquals(262, tr.getStartDayOfYear().intValue());
     assertEquals(262, tr.getEndDayOfYear().intValue());
-    assertEquals("2018-09-19T08:50", tr.getEventDate().getGte());
-    assertEquals("2018-09-19T08:50", tr.getEventDate().getLte());
+    assertEquals("2018-09-19T08:50:00", tr.getEventDate().getGte());
+    assertEquals("2018-09-19T08:50:00", tr.getEventDate().getLte());
     assertEquals(0, tr.getIssues().getIssueList().size());
   }
 
@@ -794,8 +833,8 @@ public class TemporalInterpreterTest {
     assertEquals(14, tr.getDay().intValue());
     assertEquals(73, tr.getStartDayOfYear().intValue());
     assertEquals(73, tr.getEndDayOfYear().intValue());
-    assertEquals("2001-03-14T00:00", tr.getEventDate().getGte());
-    assertEquals("2001-03-14T00:00", tr.getEventDate().getLte());
+    assertEquals("2001-03-14T00:00:00", tr.getEventDate().getGte());
+    assertEquals("2001-03-14T00:00:00", tr.getEventDate().getLte());
     assertEquals(0, tr.getIssues().getIssueList().size());
   }
 

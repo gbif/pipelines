@@ -42,6 +42,20 @@ public class StringToDateFunctions {
     };
   }
 
+  public static Function<TemporalAccessor, String> getTemporalToStringFn() {
+    return temporalAccessor -> {
+      if (temporalAccessor instanceof ZonedDateTime) {
+        return ((ZonedDateTime) temporalAccessor).format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
+      } else if (temporalAccessor instanceof LocalDateTime) {
+        return ((LocalDateTime) temporalAccessor).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+      } else if (temporalAccessor instanceof LocalDate) {
+        return ((LocalDate) temporalAccessor).format(DateTimeFormatter.ISO_LOCAL_DATE);
+      } else {
+        return temporalAccessor.toString();
+      }
+    };
+  }
+
   public static Function<String, TemporalAccessor> getStringToTemporalAccessor() {
     return dateAsString -> {
       if (Strings.isNullOrEmpty(dateAsString)) {
