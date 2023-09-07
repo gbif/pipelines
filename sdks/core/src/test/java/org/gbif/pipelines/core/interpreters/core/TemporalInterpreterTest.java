@@ -718,8 +718,8 @@ public class TemporalInterpreterTest {
     assertEquals(10, tr.getDay().intValue());
     assertEquals(69, tr.getStartDayOfYear().intValue());
     assertEquals(69, tr.getEndDayOfYear().intValue());
-    assertEquals("2002-03-10T00:00", tr.getEventDate().getGte());
-    assertEquals("2002-03-10T00:00", tr.getEventDate().getLte());
+    assertEquals("2002-03-10T00:00:00", tr.getEventDate().getGte());
+    assertEquals("2002-03-10T00:00:00", tr.getEventDate().getLte());
     assertEquals(0, tr.getIssues().getIssueList().size());
   }
 
@@ -810,8 +810,8 @@ public class TemporalInterpreterTest {
     assertEquals(14, tr.getDay().intValue());
     assertEquals(73, tr.getStartDayOfYear().intValue());
     assertEquals(73, tr.getEndDayOfYear().intValue());
-    assertEquals("2001-03-14T00:00", tr.getEventDate().getGte());
-    assertEquals("2001-03-14T00:00", tr.getEventDate().getLte());
+    assertEquals("2001-03-14T00:00:00", tr.getEventDate().getGte());
+    assertEquals("2001-03-14T00:00:00", tr.getEventDate().getLte());
     assertEquals(0, tr.getIssues().getIssueList().size());
   }
 
