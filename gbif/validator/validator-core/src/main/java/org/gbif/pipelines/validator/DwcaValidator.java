@@ -252,7 +252,9 @@ public class DwcaValidator {
         checkedRecords != maxRecords);
   }
 
-  /** @return should we continue or not */
+  /**
+   * @return should we continue or not
+   */
   private boolean checkOccurrenceRecord(Record rec, String triplet) {
     checkedRecords++;
 

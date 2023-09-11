@@ -16,7 +16,9 @@ import org.gbif.pipelines.core.config.model.RetryConfig;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RetryFactory {
 
-  /** @return a new {@link Retry} instance using the supplied configuration. */
+  /**
+   * @return a new {@link Retry} instance using the supplied configuration.
+   */
   public static Retry create(@Nullable RetryConfig retryConfig, String name) {
     RetryConfig config = Objects.isNull(retryConfig) ? new RetryConfig() : retryConfig;
     IntervalFunction intervalFn =

@@ -44,7 +44,9 @@ public class ContentService {
     return new RestHighLevelClient(builder);
   }
 
-  /** @param hosts Elasticsearch hosts */
+  /**
+   * @param hosts Elasticsearch hosts
+   */
   public ContentService(String... hosts) {
     restHighLevelClient = buildClient(hosts);
   }

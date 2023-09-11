@@ -158,7 +158,9 @@ public class TemporalParser implements Serializable {
     return parseRecordedDate(null, null, null, dateString);
   }
 
-  /** @return TemporalAccessor that represents a LocalDate or LocalDateTime */
+  /**
+   * @return TemporalAccessor that represents a LocalDate or LocalDateTime
+   */
   public OccurrenceParseResult<TemporalAccessor> parseLocalDate(
       String dateString, Range<LocalDate> likelyRange, OccurrenceIssue unlikelyIssue) {
     if (!Strings.isNullOrEmpty(dateString)) {

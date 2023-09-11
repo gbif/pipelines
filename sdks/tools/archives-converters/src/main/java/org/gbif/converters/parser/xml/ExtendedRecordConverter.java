@@ -32,7 +32,9 @@ public class ExtendedRecordConverter {
     return new ExtendedRecordConverter(parallelism);
   }
 
-  /** @param inputPath path to directory with response files or a tar.xz archive */
+  /**
+   * @param inputPath path to directory with response files or a tar.xz archive
+   */
   public long toAvro(String inputPath, SyncDataFileWriter<ExtendedRecord> writer) {
     if (Strings.isNullOrEmpty(inputPath)) {
       throw new ParsingException("Input or output stream must not be empty or null!");

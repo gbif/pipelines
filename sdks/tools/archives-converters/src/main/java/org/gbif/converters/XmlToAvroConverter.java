@@ -17,13 +17,17 @@ public class XmlToAvroConverter extends ConverterToVerbatim {
 
   private ExecutorService executor = Executors.newWorkStealingPool();
 
-  /** @param executor to use provided ExecutorService */
+  /**
+   * @param executor to use provided ExecutorService
+   */
   public XmlToAvroConverter executor(ExecutorService executor) {
     this.executor = executor;
     return this;
   }
 
-  /** @param xmlReaderParallelism number of threads for reader */
+  /**
+   * @param xmlReaderParallelism number of threads for reader
+   */
   public XmlToAvroConverter xmlReaderParallelism(int xmlReaderParallelism) {
     this.executor = Executors.newFixedThreadPool(xmlReaderParallelism);
     return this;

@@ -202,13 +202,10 @@ public final class StackableSparkRunner {
 
   private SparkCrd loadSparkCrd() {
     SparkCrd sparkCrd = ConfigUtils.loadSparkCdr(sparkCrdConfigFile);
-    return sparkCrd
-        .toBuilder()
+    return sparkCrd.toBuilder()
         .metadata(sparkCrd.getMetadata().builder().name(sparkAppName).build())
         .spec(
-            sparkCrd
-                .getSpec()
-                .toBuilder()
+            sparkCrd.getSpec().toBuilder()
                 .mainClass(distributedConfig.mainClass)
                 .mainApplicationFile(distributedConfig.jarPath)
                 .args(buildArgs())

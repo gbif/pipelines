@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>53</version>
+    <version>58-SNAPSHOT</version>
   </parent>
 
   <groupId>org.gbif.pipelines</groupId>
@@ -14,7 +14,6 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>livingatlas</module>
     <module>gbif</module>
     <module>sdks</module>
   </modules>
@@ -79,7 +78,6 @@
 
   <properties>
     <!-- Common variables -->
-    <jdkLevel>1.8</jdkLevel>
     <encoding>UTF-8</encoding>
     <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
@@ -178,18 +176,7 @@
     <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
 
     <!-- Plugins -->
-    <build-helper-maven.version>3.3.0</build-helper-maven.version>
-    <maven-shade-plugin.version>3.3.0</maven-shade-plugin.version>
-    <maven-clean-plugin.version>3.2.0</maven-clean-plugin.version>
-    <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
-    <maven-plugin-plugin.version>3.6.4</maven-plugin-plugin.version>
-    <maven-javadoc-plugin.version>3.4.0</maven-javadoc-plugin.version>
-    <spotless-maven-plugin.version>2.22.8</spotless-maven-plugin.version>
     <io.fabric8.version>0.33.0</io.fabric8.version>
-
-    <!-- Checkstyle -->
-    <plexus-compiler-javac-errorprone.version>2.8.3</plexus-compiler-javac-errorprone.version>
-    <error_prone_core.version>2.3.2</error_prone_core.version>
 
     <!-- Sonar -->
     <sonar.projectName>GBIF Pipelines</sonar.projectName>
@@ -224,42 +211,12 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>${maven-javadoc-plugin.version}</version>
           <configuration>
             <doclint>none</doclint>
             <includeDependencySources>false</includeDependencySources>
             <dependencySourceIncludes>
               <dependencySourceInclude>org.gbif:*</dependencySourceInclude>
             </dependencySourceIncludes>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>build-helper-maven-plugin</artifactId>
-          <version>${build-helper-maven.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-shade-plugin</artifactId>
-          <version>${maven-shade-plugin.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>${maven-clean-plugin.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-plugin-plugin</artifactId>
-          <version>${maven-plugin-plugin.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <configuration>
-            <compilerArgs>
-              <arg>-XepDisableAllChecks</arg>
-            </compilerArgs>
           </configuration>
         </plugin>
         <plugin>
@@ -273,7 +230,7 @@
           <configuration combine.self="override">
             <java>
               <googleJavaFormat>
-                <version>1.7</version>
+                <version>1.17.0</version>
                 <style>GOOGLE</style>
               </googleJavaFormat>
             </java>

@@ -4,7 +4,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_EX
 
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;

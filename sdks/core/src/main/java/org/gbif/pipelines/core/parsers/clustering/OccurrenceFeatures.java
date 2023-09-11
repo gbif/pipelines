@@ -72,7 +72,9 @@ public interface OccurrenceFeatures {
     return ids.filter(Objects::nonNull).collect(Collectors.toList());
   }
 
-  /** @return a triplet identifier of standard form ic:cc:cn when all triplets are present */
+  /**
+   * @return a triplet identifier of standard form ic:cc:cn when all triplets are present
+   */
   default String getTripleIdentifier() {
     String[] codes = {getInstitutionCode(), getCollectionCode(), getCatalogNumber()};
     if (Arrays.stream(codes).noneMatch(Objects::isNull)) {
@@ -82,7 +84,9 @@ public interface OccurrenceFeatures {
     }
   }
 
-  /** @return an identifier of form ic:cn when both are present */
+  /**
+   * @return an identifier of form ic:cn when both are present
+   */
   default String getScopedIdentifier() {
     String[] codes = {getInstitutionCode(), getCatalogNumber()};
     if (!Arrays.stream(codes).anyMatch(Objects::isNull)) {

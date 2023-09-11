@@ -191,7 +191,9 @@ public abstract class Transform<R, T extends SpecificRecordBase & Record> extend
     counterFn.accept(counterName);
   }
 
-  /** @return TupleTag required for grouping */
+  /**
+   * @return TupleTag required for grouping
+   */
   public TupleTag<T> getTag() {
     return tag;
   }

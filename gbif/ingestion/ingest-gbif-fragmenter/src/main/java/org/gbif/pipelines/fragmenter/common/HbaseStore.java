@@ -80,9 +80,7 @@ public class HbaseStore {
           }
         };
 
-    return fragmentsMap
-        .entrySet()
-        .parallelStream()
+    return fragmentsMap.entrySet().parallelStream()
         .filter(es -> prFn.test(es.getKey(), es.getValue()))
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> y));
   }

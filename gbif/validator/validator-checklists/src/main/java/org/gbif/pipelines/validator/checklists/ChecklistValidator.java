@@ -64,7 +64,9 @@ public class ChecklistValidator implements Closeable {
 
   private final IdLookup idLookup;
 
-  /** @param configuration Neo4j configuration. */
+  /**
+   * @param configuration Neo4j configuration.
+   */
   public ChecklistValidator(Configuration configuration) {
     // use our own neo repository
     this.configuration = configuration;

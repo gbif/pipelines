@@ -78,17 +78,23 @@ public class ExtensionInterpretation {
 
   private final String extension;
 
-  /** @param extension Filter source map by given {@link String} value */
+  /**
+   * @param extension Filter source map by given {@link String} value
+   */
   public static ExtensionInterpretation extension(String extension) {
     return new ExtensionInterpretation(extension);
   }
 
-  /** @param extension Filter source map by given {@link Extension} value */
+  /**
+   * @param extension Filter source map by given {@link Extension} value
+   */
   public static ExtensionInterpretation extension(Extension extension) {
     return new ExtensionInterpretation(extension.getRowType());
   }
 
-  /** @param supplier of a target object, as example - Image::new */
+  /**
+   * @param supplier of a target object, as example - Image::new
+   */
   public <T> TargetHandler<T> to(Supplier<T> supplier) {
     return new TargetHandler<>(supplier);
   }
@@ -104,7 +110,9 @@ public class ExtensionInterpretation {
 
     private final Set<Function<T, Optional<String>>> validatorSet = new LinkedHashSet<>();
 
-    /** @param supplier of a target object, as example - Image::new */
+    /**
+     * @param supplier of a target object, as example - Image::new
+     */
     private TargetHandler(Supplier<T> supplier) {
       this.supplier = supplier;
     }
@@ -336,22 +344,30 @@ public class ExtensionInterpretation {
     private final List<T> items;
     private final Set<String> issues;
 
-    /** @return Multi values result */
+    /**
+     * @return Multi values result
+     */
     public List<T> getList() {
       return items;
     }
 
-    /** @return Single value result */
+    /**
+     * @return Single value result
+     */
     public Optional<T> get() {
       return items.isEmpty() ? Optional.empty() : Optional.of(items.get(0));
     }
 
-    /** @return Issues as set of values */
+    /**
+     * @return Issues as set of values
+     */
     public Set<String> getIssues() {
       return issues;
     }
 
-    /** @return Issues as list of values */
+    /**
+     * @return Issues as list of values
+     */
     public List<String> getIssuesAsList() {
       return new ArrayList<>(issues);
     }
