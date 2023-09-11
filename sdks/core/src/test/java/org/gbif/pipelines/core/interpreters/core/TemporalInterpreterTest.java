@@ -240,18 +240,18 @@ public class TemporalInterpreterTest {
     assertEquals(1, tr.getIssues().getIssueList().size());
     assertEquals(RECORDED_DATE_MISMATCH.name(), tr.getIssues().getIssueList().get(0));
 
-    // And the other way round isn't valid either
+    // But the start/endDayOfYear fields are regularly a mess, so allow a consistent eventDate + ymd to overrule
     er.getCoreTerms().put(DwcTerm.day.qualifiedName(), "20");
     er.getCoreTerms().put(DwcTerm.startDayOfYear.qualifiedName(), "4");
     er.getCoreTerms().put(DwcTerm.endDayOfYear.qualifiedName(), "4");
     interpreter.interpretTemporal(er, tr);
-    assertEquals("1879-01", tr.getEventDate().getGte());
-    assertEquals("1879-01", tr.getEventDate().getLte());
+    assertEquals("1879-01-20", tr.getEventDate().getGte());
+    assertEquals("1879-01-20", tr.getEventDate().getLte());
     assertEquals(1879, tr.getYear().intValue());
     assertEquals(1, tr.getMonth().intValue());
-    assertNull(tr.getDay());
-    assertNull(tr.getStartDayOfYear());
-    assertNull(tr.getEndDayOfYear());
+    assertEquals(20, tr.getDay().intValue());
+    assertEquals(20, tr.getStartDayOfYear().intValue());
+    assertEquals(20, tr.getEndDayOfYear().intValue());
     assertEquals(1, tr.getIssues().getIssueList().size());
     assertEquals(RECORDED_DATE_MISMATCH.name(), tr.getIssues().getIssueList().get(0));
   }
