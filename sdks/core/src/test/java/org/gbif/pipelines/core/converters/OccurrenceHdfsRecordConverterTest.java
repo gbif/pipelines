@@ -264,10 +264,10 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Integer.valueOf(0), hdfsRecord.getIndividualcount());
     Assert.assertEquals("2000/2010", hdfsRecord.getEventdate());
     Assert.assertEquals(
-        LocalDate.of(2000, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
+        LocalDate.of(2000, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC).getEpochSecond(),
         hdfsRecord.getEventdategte().longValue());
     Assert.assertEquals(
-        LocalDateTime.of(2010, 12, 31, 23, 59, 999).toInstant(ZoneOffset.UTC).toEpochMilli(),
+        LocalDateTime.of(2010, 12, 31, 23, 59, 59).toInstant(ZoneOffset.UTC).getEpochSecond(),
         hdfsRecord.getEventdatelte().longValue());
     Assert.assertEquals(
         metadataRecord.getHostingOrganizationKey(), hdfsRecord.getHostingorganizationkey());
@@ -530,7 +530,7 @@ public class OccurrenceHdfsRecordConverterTest {
     String rawEventDate = "2019-01";
 
     Long eventDate =
-        LocalDate.of(2019, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli();
+        LocalDate.of(2019, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC).getEpochSecond();
 
     TemporalRecord temporalRecord =
         TemporalRecord.newBuilder()
@@ -539,7 +539,8 @@ public class OccurrenceHdfsRecordConverterTest {
             .setYear(2019)
             .setMonth(1)
             .setStartDayOfYear(1)
-            .setEventDate(EventDate.newBuilder().setLte(rawEventDate).build())
+            .setEndDayOfYear(1)
+            .setEventDate(EventDate.newBuilder().setGte(rawEventDate).setLte(rawEventDate).build())
             .setDateIdentified(rawEventDate)
             .setModified(rawEventDate)
             .build();
@@ -551,7 +552,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getMonth());
     Assert.assertEquals(Integer.valueOf(2019), hdfsRecord.getYear());
     Assert.assertEquals("1", hdfsRecord.getStartdayofyear());
-    Assert.assertEquals(eventDate, hdfsRecord.getEventdate());
+    Assert.assertEquals("1", hdfsRecord.getEnddayofyear());
+    Assert.assertEquals("2019-01", hdfsRecord.getEventdate());
     Assert.assertEquals(eventDate, hdfsRecord.getDateidentified());
     Assert.assertEquals(eventDate, hdfsRecord.getModified());
   }
