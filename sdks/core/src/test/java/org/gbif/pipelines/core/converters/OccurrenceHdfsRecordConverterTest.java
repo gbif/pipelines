@@ -1,18 +1,15 @@
 package org.gbif.pipelines.core.converters;
 
-import static org.junit.Assert.assertEquals;
-
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.UUID;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.AgentIdentifierType;
@@ -32,7 +29,6 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.occurrence.common.TermUtils;
-import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
@@ -266,9 +262,13 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getIdentifiedbyid());
     Assert.assertEquals(OccurrenceStatus.ABSENT.name(), hdfsRecord.getOccurrencestatus());
     Assert.assertEquals(Integer.valueOf(0), hdfsRecord.getIndividualcount());
+    Assert.assertEquals("2000/2010", hdfsRecord.getEventdate());
     Assert.assertEquals(
         LocalDate.of(2000, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli(),
-        hdfsRecord.getEventdate().longValue());
+        hdfsRecord.getEventdategte().longValue());
+    Assert.assertEquals(
+        LocalDateTime.of(2010, 12, 31, 23, 59, 999).toInstant(ZoneOffset.UTC).toEpochMilli(),
+        hdfsRecord.getEventdatelte().longValue());
     Assert.assertEquals(
         metadataRecord.getHostingOrganizationKey(), hdfsRecord.getHostingorganizationkey());
 
@@ -673,98 +673,6 @@ public class OccurrenceHdfsRecordConverterTest {
 
     // Should
     Assert.assertArrayEquals(issues, hdfsRecord.getIssue().toArray(new String[issues.length]));
-  }
-
-  @Test
-  public void dateParserTest() {
-    Date date = StringToDateFunctions.getStringToDateFn().apply("2019");
-    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-    cal.setTime(date);
-    assertEquals(2019, cal.get(Calendar.YEAR));
-    assertEquals(0, cal.get(Calendar.MONTH));
-    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
-
-    date = StringToDateFunctions.getStringToDateFn().apply("2019-04");
-    cal.setTime(date);
-    assertEquals(2019, cal.get(Calendar.YEAR));
-    assertEquals(3, cal.get(Calendar.MONTH));
-    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
-
-    date = StringToDateFunctions.getStringToDateFn().apply("2019-04-02");
-    cal.setTime(date);
-    assertEquals(2019, cal.get(Calendar.YEAR));
-    assertEquals(3, cal.get(Calendar.MONTH));
-    assertEquals(2, cal.get(Calendar.DAY_OF_MONTH));
-
-    date = StringToDateFunctions.getStringToDateFn().apply("2019-04-15T17:17:48.191 +02:00");
-    cal.setTime(date);
-    assertEquals(2019, cal.get(Calendar.YEAR));
-    assertEquals(3, cal.get(Calendar.MONTH));
-    assertEquals(15, cal.get(Calendar.DAY_OF_MONTH));
-
-    date = StringToDateFunctions.getStringToDateFn().apply("2019-04-15T17:17:48.191");
-    cal.setTime(date);
-    assertEquals(2019, cal.get(Calendar.YEAR));
-    assertEquals(3, cal.get(Calendar.MONTH));
-    assertEquals(15, cal.get(Calendar.DAY_OF_MONTH));
-
-    date = StringToDateFunctions.getStringToDateFn().apply("2019-04-15T17:17:48.023+02:00");
-    cal.setTime(date);
-    assertEquals(2019, cal.get(Calendar.YEAR));
-    assertEquals(3, cal.get(Calendar.MONTH));
-    assertEquals(15, cal.get(Calendar.DAY_OF_MONTH));
-
-    date = StringToDateFunctions.getStringToDateFn().apply("2019-11-12T13:24:56.963591");
-    cal.setTime(date);
-    assertEquals(2019, cal.get(Calendar.YEAR));
-    assertEquals(10, cal.get(Calendar.MONTH));
-    assertEquals(12, cal.get(Calendar.DAY_OF_MONTH));
-  }
-
-  @Test
-  public void dateWithYearZeroTest() {
-    Date date = StringToDateFunctions.getStringToDateFn().apply("0000");
-    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-    cal.setTime(date);
-    assertEquals(1, cal.get(Calendar.YEAR));
-    assertEquals(0, cal.get(Calendar.MONTH));
-    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
-
-    date = StringToDateFunctions.getStringToDateFn().apply("0000-01");
-    cal.setTime(date);
-    assertEquals(1, cal.get(Calendar.YEAR));
-    assertEquals(0, cal.get(Calendar.MONTH));
-    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
-
-    date = StringToDateFunctions.getStringToDateFn().apply("0000-01-01");
-    cal.setTime(date);
-    assertEquals(1, cal.get(Calendar.YEAR));
-    assertEquals(0, cal.get(Calendar.MONTH));
-    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
-
-    date = StringToDateFunctions.getStringToDateFn().apply("0000-01-01T00:00:01.100");
-    cal.setTime(date);
-    assertEquals(1, cal.get(Calendar.YEAR));
-    assertEquals(0, cal.get(Calendar.MONTH));
-    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
-
-    date = StringToDateFunctions.getStringToDateFn().apply("0000-01-01T17:17:48.191 +02:00");
-    cal.setTime(date);
-    assertEquals(1, cal.get(Calendar.YEAR));
-    assertEquals(0, cal.get(Calendar.MONTH));
-    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
-
-    date = StringToDateFunctions.getStringToDateFn().apply("0000-01-01T13:24:56.963591");
-    cal.setTime(date);
-    assertEquals(1, cal.get(Calendar.YEAR));
-    assertEquals(0, cal.get(Calendar.MONTH));
-    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
-
-    date = StringToDateFunctions.getStringToDateFn().apply("0000-01-01T17:17:48.023+02:00");
-    cal.setTime(date);
-    assertEquals(1, cal.get(Calendar.YEAR));
-    assertEquals(0, cal.get(Calendar.MONTH));
-    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
   }
 
   @Test

@@ -2,6 +2,8 @@ package org.gbif.pipelines.core.converters;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -230,11 +232,11 @@ public class OccurrenceHdfsRecordConverter {
       return;
     }
     Optional.ofNullable(temporalRecord.getDateIdentified())
-        .map(StringToDateFunctions.getStringToDateFn())
-        .ifPresent(date -> occurrenceHdfsRecord.setDateidentified(date.getTime()));
+        .map(StringToDateFunctions.getStringToEarliestEpochSeconds(false))
+        .ifPresent(date -> occurrenceHdfsRecord.setDateidentified(date));
     Optional.ofNullable(temporalRecord.getModified())
-        .map(StringToDateFunctions.getStringToDateFn())
-        .ifPresent(date -> occurrenceHdfsRecord.setModified(date.getTime()));
+        .map(StringToDateFunctions.getStringToEarliestEpochSeconds(false))
+        .ifPresent(date -> occurrenceHdfsRecord.setModified(date));
     occurrenceHdfsRecord.setDay(temporalRecord.getDay());
     occurrenceHdfsRecord.setMonth(temporalRecord.getMonth());
     occurrenceHdfsRecord.setYear(temporalRecord.getYear());
@@ -251,15 +253,35 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setEnddayofyear(null);
     }
 
-    if (temporalRecord.getEventDate() != null && temporalRecord.getEventDate().getGte() != null) {
-      Optional.ofNullable(temporalRecord.getEventDate().getGte())
-          .map(StringToDateFunctions.getStringToDateFn(true))
-          .ifPresent(eventDate -> occurrenceHdfsRecord.setEventdate(eventDate.getTime()));
+    if (temporalRecord.getEventDate() != null
+        && temporalRecord.getEventDate().getGte() != null
+        && temporalRecord.getEventDate().getLte() != null) {
+      Optional.ofNullable(temporalRecord.getEventDate())
+          .ifPresent(
+              eventDate -> {
+                occurrenceHdfsRecord.setEventdate(
+                    TemporalConverter.getEventDateToStringFn().apply(eventDate));
+                occurrenceHdfsRecord.setEventdategte(
+                    StringToDateFunctions.getStringToEarliestEpochSeconds(true)
+                        .apply(eventDate.getGte()));
+                occurrenceHdfsRecord.setEventdatelte(
+                    StringToDateFunctions.getStringToLatestEpochSeconds(true)
+                        .apply(eventDate.getLte()));
+              });
     } else {
       TemporalConverter.from(
               temporalRecord.getYear(), temporalRecord.getMonth(), temporalRecord.getDay())
-          .map(StringToDateFunctions.getTemporalToDateFn())
-          .ifPresent(eventDate -> occurrenceHdfsRecord.setEventdate(eventDate.getTime()));
+          .ifPresent(
+              eventDate -> {
+                occurrenceHdfsRecord.setEventdate(eventDate.toString());
+                long instant =
+                    ((LocalDate) eventDate)
+                        .atStartOfDay(ZoneOffset.UTC)
+                        .toInstant()
+                        .getEpochSecond();
+                occurrenceHdfsRecord.setEventdategte(instant);
+                occurrenceHdfsRecord.setEventdatelte(instant);
+              });
     }
 
     setCreatedIfGreater(occurrenceHdfsRecord, temporalRecord.getCreated());

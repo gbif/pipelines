@@ -5,9 +5,11 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.TemporalAccessor;
 import java.util.Optional;
+import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.pipelines.io.avro.EventDate;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -28,5 +30,12 @@ public class TemporalConverter {
       log.warn(ex.getLocalizedMessage());
     }
     return Optional.empty();
+  }
+
+  public static Function<EventDate, String> getEventDateToStringFn() {
+    return eventDate ->
+        eventDate.getGte().equals(eventDate.getLte())
+            ? eventDate.getGte()
+            : eventDate.getGte() + "/" + eventDate.getLte();
   }
 }
