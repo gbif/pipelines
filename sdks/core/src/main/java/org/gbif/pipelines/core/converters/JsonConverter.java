@@ -405,8 +405,14 @@ public class JsonConverter {
   }
 
   public static Optional<String> convertGenericName(TaxonRecord taxonRecord) {
-    return Optional.ofNullable(taxonRecord.getUsageParsedName())
-        .map(upn -> upn.getGenus() != null ? upn.getGenus() : upn.getUninomial());
+    // only set generic name for genus or more specific
+    if (Objects.nonNull(taxonRecord.getUsage())
+        && Rank.GENUS.compareTo(taxonRecord.getUsage().getRank()) <= 0) {
+      return Optional.ofNullable(taxonRecord.getUsageParsedName())
+          .map(upn -> upn.getGenus() != null ? upn.getGenus() : upn.getUninomial());
+    } else {
+      return Optional.empty();
+    }
   }
 
   public static GbifClassification convertClassification(
