@@ -25,27 +25,7 @@ import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.core.utils.TemporalConverter;
-import org.gbif.pipelines.io.avro.AgentIdentifier;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.DegreeOfEstablishment;
-import org.gbif.pipelines.io.avro.Diagnostic;
-import org.gbif.pipelines.io.avro.EstablishmentMeans;
-import org.gbif.pipelines.io.avro.EventCoreRecord;
-import org.gbif.pipelines.io.avro.EventType;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.IssueRecord;
-import org.gbif.pipelines.io.avro.LifeStage;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.ParentEventGbifId;
-import org.gbif.pipelines.io.avro.Pathway;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 
 /** Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}. */
@@ -341,15 +321,25 @@ public class OccurrenceHdfsRecordConverter {
           .ifPresent(r -> occurrenceHdfsRecord.setTaxonrank(r.name()));
     }
 
-    if (Objects.nonNull(taxonRecord.getUsageParsedName())) {
-      occurrenceHdfsRecord.setGenericname(
-          Objects.nonNull(taxonRecord.getUsageParsedName().getGenus())
-              ? taxonRecord.getUsageParsedName().getGenus()
-              : taxonRecord.getUsageParsedName().getUninomial());
-      occurrenceHdfsRecord.setSpecificepithet(
-          taxonRecord.getUsageParsedName().getSpecificEpithet());
-      occurrenceHdfsRecord.setInfraspecificepithet(
-          taxonRecord.getUsageParsedName().getInfraspecificEpithet());
+    if (Objects.nonNull(taxonRecord.getUsageParsedName())
+        && Objects.nonNull(taxonRecord.getUsage())) {
+      Rank rank = taxonRecord.getUsage().getRank();
+      if (Rank.GENUS.compareTo(rank) <= 0) {
+        occurrenceHdfsRecord.setGenericname(
+            Objects.nonNull(taxonRecord.getUsageParsedName().getGenus())
+                ? taxonRecord.getUsageParsedName().getGenus()
+                : taxonRecord.getUsageParsedName().getUninomial());
+      }
+
+      if (Rank.SPECIES.compareTo(rank) <= 0) {
+        occurrenceHdfsRecord.setSpecificepithet(
+            taxonRecord.getUsageParsedName().getSpecificEpithet());
+      }
+
+      if (Rank.INFRASPECIFIC_NAME.compareTo(rank) <= 0) {
+        occurrenceHdfsRecord.setInfraspecificepithet(
+            taxonRecord.getUsageParsedName().getInfraspecificEpithet());
+      }
     }
 
     Optional.ofNullable(taxonRecord.getDiagnostics())
