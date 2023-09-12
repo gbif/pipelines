@@ -914,12 +914,6 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "eventdate",
-    "type" : [ "string", "null" ]
-  }, {
-    "name" : "eventdategte",
-    "type" : [ "long", "null" ]
-  }, {
-    "name" : "eventdatelte",
     "type" : [ "long", "null" ]
   }, {
     "name" : "eventtime",
