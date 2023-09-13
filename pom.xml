@@ -99,7 +99,7 @@
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-occurrence.version>0.173.1</gbif-occurrence.version>
-    <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
+    <vocabulary-lookup.version>1.0.1-SNAPSHOT</vocabulary-lookup.version>
     <registry.version>3.94.9</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>
     <gbif-postal-service.version>1.7.0</gbif-postal-service.version>
