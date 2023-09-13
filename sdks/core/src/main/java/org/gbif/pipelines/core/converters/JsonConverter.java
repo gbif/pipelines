@@ -281,6 +281,14 @@ public class JsonConverter {
         .map(LocalDateTime::toString);
   }
 
+  public static Optional<String> convertEventDateInterval(TemporalRecord temporalRecord) {
+    if (temporalRecord.getEventDate() != null
+        && temporalRecord.getEventDate().getInterval() != null) {
+      return Optional.of(temporalRecord.getEventDate().getInterval());
+    }
+    return Optional.empty();
+  }
+
   public static String convertScoordinates(Double lon, Double lat) {
     return "POINT (" + lon + " " + lat + ")";
   }

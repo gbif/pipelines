@@ -2,10 +2,6 @@ package org.gbif.pipelines.transforms.core;
 
 import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -58,8 +54,24 @@ public class TemporalRecordTransformTest {
 
     // Expected
     final List<TemporalRecord> dataExpected =
-        createTemporalRecordList(
-            1999, 2, 2, 33, 33, LocalDate.of(1999, 2, 2), LocalDateTime.of(1999, 2, 2, 12, 26));
+        Collections.singletonList(
+            TemporalRecord.newBuilder()
+                .setId("0")
+                .setYear(1999)
+                .setMonth(2)
+                .setDay(2)
+                .setStartDayOfYear(33)
+                .setEndDayOfYear(33)
+                .setEventDate(
+                    EventDate.newBuilder()
+                        .setInterval("1999-02-02")
+                        .setGte("1999-02-02T00:00:00")
+                        .setLte("1999-02-02T23:59:59.999")
+                        .build())
+                .setDateIdentified("1999-02-02T12:26")
+                .setModified("1999-02-02T12:26")
+                .setCreated(0L)
+                .build());
 
     // When
     PCollection<TemporalRecord> dataStream =
@@ -85,8 +97,21 @@ public class TemporalRecordTransformTest {
 
     // Expected
     final List<TemporalRecord> dataExpected =
-        createTemporalRecordList(
-            1999, 2, null, null, null, YearMonth.of(1999, 2), YearMonth.of(1999, 2));
+        Collections.singletonList(
+            TemporalRecord.newBuilder()
+                .setId("0")
+                .setYear(1999)
+                .setMonth(2)
+                .setEventDate(
+                    EventDate.newBuilder()
+                        .setInterval("1999-02")
+                        .setGte("1999-02-01T00:00:00")
+                        .setLte("1999-02-28T23:59:59.999")
+                        .build())
+                .setDateIdentified("1999-02")
+                .setModified("1999-02")
+                .setCreated(0L)
+                .build());
 
     // When
     PCollection<TemporalRecord> dataStream =
@@ -137,6 +162,7 @@ public class TemporalRecordTransformTest {
             .setEndDayOfYear(32)
             .setEventDate(
                 EventDate.newBuilder()
+                    .setInterval("1999-02-01T12:26")
                     .setGte("1999-02-01T12:26:00")
                     .setLte("1999-02-01T12:26:00")
                     .build())
@@ -158,32 +184,5 @@ public class TemporalRecordTransformTest {
     // Should
     PAssert.that(dataStream).containsInAnyOrder(Collections.singletonList(expected));
     p.run();
-  }
-
-  private List<TemporalRecord> createTemporalRecordList(
-      Integer year,
-      Integer month,
-      Integer day,
-      Integer sDoY,
-      Integer eDoY,
-      Temporal eventDate,
-      Temporal other) {
-    return Collections.singletonList(
-        TemporalRecord.newBuilder()
-            .setId("0")
-            .setYear(year)
-            .setMonth(month)
-            .setDay(day)
-            .setStartDayOfYear(sDoY)
-            .setEndDayOfYear(eDoY)
-            .setEventDate(
-                EventDate.newBuilder()
-                    .setGte(eventDate.toString())
-                    .setLte(eventDate.toString())
-                    .build())
-            .setDateIdentified(other.toString())
-            .setModified(other.toString())
-            .setCreated(0L)
-            .build());
   }
 }
