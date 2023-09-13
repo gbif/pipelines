@@ -100,21 +100,39 @@ public class TemporalInterpreter implements Serializable {
     toTa.filter(t -> t.isSupported(ChronoField.DAY_OF_YEAR))
         .ifPresent(t -> tr.setEndDayOfYear(t.get(ChronoField.DAY_OF_YEAR)));
 
-    EventDate ed = new EventDate();
+    StringBuilder eventDateInterval = new StringBuilder();
     eventRange
         .getFrom()
-        .map(ta -> TemporalAccessorUtils.stripOffsetOrZone(ta, true))
+        .ifPresent(f -> eventDateInterval.append(TemporalAccessorUtils.stripOffsetOrZone(f, true)));
+
+    EventDate ed = new EventDate();
+
+    eventRange
+        .getFrom()
+        .map(ta -> TemporalAccessorUtils.toEarliestLocalDateTime(ta, true))
         .map(StringToDateFunctions.getTemporalToStringFn())
         .ifPresent(ed::setGte);
     if (explicitRangeEnd || (fromTa != null && !fromTa.equals(toTa))) {
       eventRange
           .getTo()
-          .map(ta -> TemporalAccessorUtils.stripOffsetOrZone(ta, true))
+          .map(ta -> TemporalAccessorUtils.toLatestLocalDateTime(ta, true))
           .map(StringToDateFunctions.getTemporalToStringFn())
           .ifPresent(ed::setLte);
     }
-    tr.setEventDate(ed);
+    if (fromTa != null && !fromTa.equals(toTa)) {
+      eventRange
+          .getTo()
+          .ifPresent(
+              t -> {
+                eventDateInterval.append('/');
+                eventDateInterval.append(TemporalAccessorUtils.stripOffsetOrZone(t, true));
+              });
+    }
+    if (eventDateInterval.length() > 0) {
+      ed.setInterval(eventDateInterval.toString());
+    }
 
+    tr.setEventDate(ed);
     addIssueSet(tr, eventRange.getIssues());
   }
 
