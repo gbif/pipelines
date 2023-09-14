@@ -67,10 +67,13 @@ public class ALATemporalInterpreter implements Serializable {
     if (tr.getDay() != null && tr.getDay() == 1) {
       addIssue(tr, ALAOccurrenceIssue.FIRST_OF_MONTH.name());
     }
-    if (tr.getMonth() != null && tr.getMonth() == 1) {
+    if (tr.getMonth() != null && tr.getMonth() == 1 && (tr.getDay() == null || tr.getDay() == 1)) {
       addIssue(tr, ALAOccurrenceIssue.FIRST_OF_YEAR.name());
     }
-    if (tr.getYear() != null && tr.getYear() % 100 == 0) {
+    if (tr.getYear() != null
+        && tr.getYear() % 100 == 0
+        && (tr.getDay() == null || tr.getDay() == 1)
+        && (tr.getMonth() == null || tr.getMonth() == 1)) {
       addIssue(tr, ALAOccurrenceIssue.FIRST_OF_CENTURY.name());
     }
   }
