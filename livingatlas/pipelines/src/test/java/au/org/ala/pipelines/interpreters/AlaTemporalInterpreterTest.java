@@ -314,6 +314,7 @@ public class AlaTemporalInterpreterTest {
     TemporalInterpreter temporalInterpreter =
         TemporalInterpreter.builder()
             .orderings(Arrays.asList(DateComponentOrdering.DMY_FORMATS))
+            .explicitRangeEnd(false)
             .create();
     temporalInterpreter.interpretTemporal(er, tr);
     temporalInterpreter.interpretDateIdentified(er, tr);

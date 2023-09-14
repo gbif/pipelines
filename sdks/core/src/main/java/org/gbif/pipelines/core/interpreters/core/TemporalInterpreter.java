@@ -15,11 +15,11 @@ import java.util.Objects;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.util.IsoDateInterval;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.date.AtomizedLocalDate;
 import org.gbif.common.parsers.date.DateComponentOrdering;
-import org.gbif.common.parsers.date.EventRange;
 import org.gbif.common.parsers.date.MultiinputTemporalParser;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.common.parsers.date.TemporalRangeParser;
@@ -45,6 +45,11 @@ public class TemporalInterpreter implements Serializable {
   private final TemporalRangeParser temporalRangeParser;
   private final MultiinputTemporalParser temporalParser;
   private final SerializableFunction<String, String> preprocessDateFn;
+
+  // This defaults to true, in which case both gte and lte are set, and (usually necessary) they are
+  // set to the earliest and latest points in the range, to millisecond precision (as supported by
+  // ElasticSearch). For ALA it is set to false, maintaining existing behaviour, although it is
+  // probably not actually used.
   private final boolean explicitRangeEnd;
 
   @Builder(buildMethodName = "create")
@@ -70,18 +75,20 @@ public class TemporalInterpreter implements Serializable {
     String normalizedEventDate =
         Optional.ofNullable(preprocessDateFn).map(x -> x.apply(eventDate)).orElse(eventDate);
 
-    EventRange eventRange =
+    // Interpret as a range, taking into account all DWC event date parameters
+    OccurrenceParseResult<IsoDateInterval> parseResult =
         temporalRangeParser.parse(
             year, month, day, normalizedEventDate, startDayOfYear, endDayOfYear);
 
-    Optional<TemporalAccessor> fromTa = eventRange.getFrom();
-    Optional<TemporalAccessor> toTa = eventRange.getTo();
+    Optional<TemporalAccessor> fromTa =
+        Optional.ofNullable(parseResult.getPayload()).map(IsoDateInterval::getFrom);
+    Optional<TemporalAccessor> toTa =
+        Optional.ofNullable(parseResult.getPayload()).map(IsoDateInterval::getTo);
 
-    Optional<AtomizedLocalDate> fromYmd =
-        eventRange.getFrom().map(AtomizedLocalDate::fromTemporalAccessor);
-    Optional<AtomizedLocalDate> toYmd =
-        eventRange.getTo().map(AtomizedLocalDate::fromTemporalAccessor);
+    Optional<AtomizedLocalDate> fromYmd = fromTa.map(AtomizedLocalDate::fromTemporalAccessor);
+    Optional<AtomizedLocalDate> toYmd = toTa.map(AtomizedLocalDate::fromTemporalAccessor);
 
+    // Set dwc:year, dwc:month and dwc:day if these fields are equal for both ends of the range
     if (fromYmd.isPresent() && toYmd.isPresent()) {
       if (Objects.equals(fromYmd.get().getYear(), toYmd.get().getYear())) {
         tr.setYear(fromYmd.get().getYear());
@@ -94,46 +101,46 @@ public class TemporalInterpreter implements Serializable {
       }
     }
 
+    // Set dwc:startDayOfYear and dwc:endDayOfYear if possible
     fromTa
         .filter(t -> t.isSupported(ChronoField.DAY_OF_YEAR))
         .ifPresent(t -> tr.setStartDayOfYear(t.get(ChronoField.DAY_OF_YEAR)));
     toTa.filter(t -> t.isSupported(ChronoField.DAY_OF_YEAR))
         .ifPresent(t -> tr.setEndDayOfYear(t.get(ChronoField.DAY_OF_YEAR)));
 
-    StringBuilder eventDateInterval = new StringBuilder();
-    eventRange
-        .getFrom()
-        .ifPresent(f -> eventDateInterval.append(TemporalAccessorUtils.stripOffsetOrZone(f, true)));
-
     EventDate ed = new EventDate();
 
-    eventRange
-        .getFrom()
-        .map(ta -> TemporalAccessorUtils.toEarliestLocalDateTime(ta, true))
-        .map(StringToDateFunctions.getTemporalToStringFn())
-        .ifPresent(ed::setGte);
-    if (explicitRangeEnd || (fromTa != null && !fromTa.equals(toTa))) {
-      eventRange
-          .getTo()
-          .map(ta -> TemporalAccessorUtils.toLatestLocalDateTime(ta, true))
+    if (explicitRangeEnd) {
+      fromTa
+          .map(ta -> TemporalAccessorUtils.toEarliestLocalDateTime(ta, true))
           .map(StringToDateFunctions.getTemporalToStringFn())
-          .ifPresent(ed::setLte);
+          .ifPresent(ed::setGte);
+    } else {
+      fromTa
+          .map(ta -> TemporalAccessorUtils.stripOffsetOrZone(ta, true))
+          .map(StringToDateFunctions.getTemporalToStringFn())
+          .ifPresent(ed::setGte);
     }
-    if (fromTa != null && !fromTa.equals(toTa)) {
-      eventRange
-          .getTo()
-          .ifPresent(
-              t -> {
-                eventDateInterval.append('/');
-                eventDateInterval.append(TemporalAccessorUtils.stripOffsetOrZone(t, true));
-              });
+
+    if (explicitRangeEnd || (fromTa != null && !fromTa.equals(toTa))) {
+      if (explicitRangeEnd) {
+        toTa.map(ta -> TemporalAccessorUtils.toLatestLocalDateTime(ta, true))
+            .map(StringToDateFunctions.getTemporalToStringFn())
+            .ifPresent(ed::setLte);
+      } else {
+        toTa.map(ta -> TemporalAccessorUtils.stripOffsetOrZone(ta, true))
+            .map(StringToDateFunctions.getTemporalToStringFn())
+            .ifPresent(ed::setLte);
+      }
     }
-    if (eventDateInterval.length() > 0) {
-      ed.setInterval(eventDateInterval.toString());
+
+    // Formatted range like 2003-04/2003-06.
+    if (parseResult.isSuccessful()) {
+      ed.setInterval(parseResult.getPayload().toString(true));
     }
 
     tr.setEventDate(ed);
-    addIssueSet(tr, eventRange.getIssues());
+    addIssueSet(tr, parseResult.getIssues());
   }
 
   public void interpretModified(ExtendedRecord er, TemporalRecord tr) {
