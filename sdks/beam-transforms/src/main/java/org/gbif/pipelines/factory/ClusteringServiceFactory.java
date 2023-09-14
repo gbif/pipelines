@@ -44,7 +44,7 @@ public class ClusteringServiceFactory {
       }
 
       String zk = getZk(config);
-      Connection c = HbaseConnectionFactory.getInstance(zk).getConnection();
+      Connection c = HbaseConnectionFactory.getInstance(zk, getHBaseZnode(config)).getConnection();
       return getInstance(c, config.getClusteringRelationshipConfig());
     };
   }
@@ -60,7 +60,7 @@ public class ClusteringServiceFactory {
 
       Connection c;
       try {
-        c = HbaseConnection.create(zk);
+        c = HbaseConnection.create(zk, getHBaseZnode(config));
       } catch (IOException ex) {
         throw new PipelinesException(ex);
       }
@@ -74,5 +74,12 @@ public class ClusteringServiceFactory {
         .map(KeygenConfig::getZkConnectionString)
         .filter(x -> !x.isEmpty())
         .orElse(config.getZkConnectionString());
+  }
+
+  private static String getHBaseZnode(PipelinesConfig config) {
+    return Optional.ofNullable(config.getKeygen())
+        .map(KeygenConfig::getHbaseZnode)
+        .filter(x -> !x.isEmpty())
+        .orElse("/hbase");
   }
 }

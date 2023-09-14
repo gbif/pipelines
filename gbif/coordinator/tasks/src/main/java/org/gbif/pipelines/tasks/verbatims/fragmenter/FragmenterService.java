@@ -88,6 +88,7 @@ public class FragmenterService extends AbstractIdleService {
 
     return KeygenConfig.builder()
         .zkConnectionString(zk)
+        .hbaseZnode(c.getKeygen().getHbaseZnode())
         .occurrenceTable(c.getKeygen().getOccurrenceTable())
         .lookupTable(c.getKeygen().getLookupTable())
         .counterTable(c.getKeygen().getCounterTable())

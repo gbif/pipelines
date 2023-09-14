@@ -34,6 +34,7 @@ public class LocationFeatureKvStoreFactory {
                             .getNumOfKeyBuckets()) // Buckets for salted key generations == to # of
                     // region servers
                     .withHBaseZk(kvConfig.getZkConnectionString()) // HBase Zookeeper ensemble
+                    .withHBaseZnode(kvConfig.getHbaseZnode())
                     .build())
             .withCacheCapacity(15_000L)
             .build();

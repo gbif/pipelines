@@ -14,4 +14,5 @@ public class KeygenConfig implements Serializable {
   private String counterTable;
   private String lookupTable;
   private String zkConnectionString;
+  private String hbaseZnode;
 }

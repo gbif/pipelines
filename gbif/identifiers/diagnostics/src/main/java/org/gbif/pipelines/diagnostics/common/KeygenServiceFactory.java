@@ -13,6 +13,7 @@ public class KeygenServiceFactory {
   private final String counterTable;
   private final String occurrenceTable;
   private final String datasetKey;
+  @Builder.Default private final String hbaseZnode = "/hbase";
   private Connection connection;
 
   public HBaseLockingKeyService create() {
@@ -25,7 +26,7 @@ public class KeygenServiceFactory {
             .create();
 
     if (connection == null) {
-      connection = HbaseConnectionFactory.getInstance(zkConnection).getConnection();
+      connection = HbaseConnectionFactory.getInstance(zkConnection, hbaseZnode).getConnection();
     }
 
     return new HBaseLockingKeyService(cfg, connection, datasetKey);

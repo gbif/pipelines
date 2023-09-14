@@ -178,8 +178,6 @@ public final class StackableSparkRunner {
 
     Optional.ofNullable(distributedConfig.metricsPropertiesPath)
         .ifPresent(x -> newSparkConf.put("spark.metrics.conf", x));
-    Optional.ofNullable(distributedConfig.extraClassPath)
-        .ifPresent(x -> newSparkConf.put("spark.driver.extraClassPath", x));
     Optional.ofNullable(distributedConfig.driverJavaOptions)
         .ifPresent(x -> newSparkConf.put("driver-java-options", x));
 
@@ -190,6 +188,7 @@ public final class StackableSparkRunner {
     newSparkConf.put("spark.default.parallelism", String.valueOf(sparkSettings.getParallelism()));
     newSparkConf.put("spark.executor.memoryOverhead", String.valueOf(sparkConfig.memoryOverhead));
     newSparkConf.put("spark.dynamicAllocation.enabled", "false");
+    newSparkConf.put("spark.driver.userClassPathFirst", "true");
 
     return newSparkConf;
   }

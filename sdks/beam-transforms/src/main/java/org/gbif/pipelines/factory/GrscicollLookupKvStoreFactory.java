@@ -76,6 +76,7 @@ public class GrscicollLookupKvStoreFactory {
                     .withColumnFamily("v") // Column in which qualifiers are stored
                     .withNumOfKeyBuckets(config.getGrscicollLookup().getNumOfKeyBuckets())
                     .withHBaseZk(zk)
+                    .withHBaseZnode(config.getGrscicollLookup().getHbaseZnode())
                     .build())
             .withCacheCapacity(15_000L)
             .withCacheExpiryTimeInSeconds(config.getGrscicollLookup().getCacheExpiryTimeInSeconds())

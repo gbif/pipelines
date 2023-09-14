@@ -55,6 +55,7 @@ public class VerbatimToIdentifierPipeline {
 
     PipelinesConfig config =
         FsUtils.readConfigFile(hdfsConfigs, options.getProperties(), PipelinesConfig.class);
+    log.info("KeyGenConfig {}", config.getKeygen().toString());
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());

@@ -15,6 +15,8 @@ public class KvConfig implements Serializable {
   /** List of Zookeeper servers to connect to */
   private String zkConnectionString;
 
+  private String hbaseZnode;
+
   private long wsTimeoutSec = 60L;
 
   private long wsCacheSizeMb = 64L;

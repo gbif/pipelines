@@ -103,4 +103,8 @@ public class HbaseServer extends ExternalResource {
   public String getZKString() {
     return TEST_UTIL.getConfiguration().get("hbase.zookeeper.quorum");
   }
+
+  public String getZNodeParent() {
+    return TEST_UTIL.getConfiguration().get("zookeeper.znode.parent");
+  }
 }

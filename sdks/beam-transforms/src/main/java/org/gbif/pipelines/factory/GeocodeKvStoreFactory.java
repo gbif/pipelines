@@ -89,6 +89,7 @@ public class GeocodeKvStoreFactory {
                     .withColumnFamily("v") // Column in which qualifiers are stored
                     .withNumOfKeyBuckets(config.getGeocode().getNumOfKeyBuckets())
                     .withHBaseZk(zk)
+                    .withHBaseZnode(config.getGeocode().getHbaseZnode())
                     .build())
             .withCacheCapacity(15_000L)
             .withCacheExpiryTimeInSeconds(config.getGeocode().getCacheExpiryTimeInSeconds())

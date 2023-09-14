@@ -82,6 +82,7 @@ public class NameUsageMatchStoreFactory {
                     .withColumnFamily("v") // Column in which qualifiers are stored
                     .withNumOfKeyBuckets(config.getNameUsageMatch().getNumOfKeyBuckets())
                     .withHBaseZk(zk)
+                    .withHBaseZnode(config.getNameUsageMatch().getHbaseZnode())
                     .build())
             .withCacheCapacity(15_000L)
             .withCacheExpiryTimeInSeconds(config.getNameUsageMatch().getCacheExpiryTimeInSeconds())
