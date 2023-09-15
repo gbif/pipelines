@@ -35,7 +35,7 @@ vocabularyConfig:
     http://rs.tdwg.org/dwc/terms/lifeStage: LifeStage
     http://rs.tdwg.org/dwc/terms/establishmentMeans: EstablishmentMeans
     http://rs.tdwg.org/dwc/terms/pathway: Pathway
-    http://rs.gbif.org/terms/1.0/eventType: EventType
+    http://rs.tdwg.org/dwc/terms/eventType: EventType
 indexLock:
   namespace: test_index_lock
   lockingPath: /indices/
