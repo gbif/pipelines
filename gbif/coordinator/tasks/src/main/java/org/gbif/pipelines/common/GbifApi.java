@@ -4,10 +4,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.resilience4j.retry.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import java.io.IOException;
 import java.io.Serializable;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,6 +27,14 @@ import org.gbif.pipelines.tasks.MachineTag;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class GbifApi {
+
+  private static final Retry RETRY =
+      Retry.of(
+          "apiCall",
+          RetryConfig.custom()
+              .maxAttempts(7)
+              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
+              .build());
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -74,7 +88,17 @@ public class GbifApi {
 
   @SneakyThrows
   private static HttpResponse executeGet(HttpClient httpClient, String url) {
-    HttpResponse response = httpClient.execute(new HttpGet(url));
+
+    Supplier<HttpResponse> s =
+        () -> {
+          try {
+            return httpClient.execute(new HttpGet(url));
+          } catch (IOException ex) {
+            throw new PipelinesException(ex);
+          }
+        };
+
+    HttpResponse response = Retry.decorateSupplier(RETRY, s).get();
     if (response.getStatusLine().getStatusCode() != 200) {
       throw new PipelinesException(
           "GBIF API exception " + response.getStatusLine().getReasonPhrase());
