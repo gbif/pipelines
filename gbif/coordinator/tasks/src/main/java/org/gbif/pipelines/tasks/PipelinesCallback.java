@@ -72,16 +72,16 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       Retry.of(
           "registryCall",
           RetryConfig.custom()
-              .maxAttempts(3)
-              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(3)))
+              .maxAttempts(7)
+              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
               .build());
 
   private static final Retry RUNNING_EXECUTION_CALL =
       Retry.of(
           "runningExecutionCall",
           RetryConfig.custom()
-              .maxAttempts(3)
-              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(3)))
+              .maxAttempts(7)
+              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
               .retryOnResult(Objects::isNull)
               .build());
 
