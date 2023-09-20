@@ -1,8 +1,8 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.CLUSTERING;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.ALL;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.CLUSTERING;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.TAXONOMY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

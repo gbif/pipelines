@@ -19,12 +19,12 @@ import org.gbif.common.parsers.UrlParser;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.common.parsers.date.MultiinputTemporalParser;
 import org.gbif.dwc.terms.*;
 import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
-import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.Audubon;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -144,14 +144,14 @@ public class AudubonInterpreter {
           .postMap(AudubonInterpreter::parseAndSetRightsAndRightsUri)
           .postMap(AudubonInterpreter::parseAndSetMissingTypeOrFormat);
 
-  private final TemporalParser temporalParser;
+  private final MultiinputTemporalParser temporalParser;
   private final SerializableFunction<String, String> preprocessDateFn;
 
   @Builder(buildMethodName = "create")
   private AudubonInterpreter(
       List<DateComponentOrdering> orderings,
       SerializableFunction<String, String> preprocessDateFn) {
-    this.temporalParser = TemporalParser.create(orderings);
+    this.temporalParser = MultiinputTemporalParser.create(orderings);
     this.preprocessDateFn = preprocessDateFn;
   }
 

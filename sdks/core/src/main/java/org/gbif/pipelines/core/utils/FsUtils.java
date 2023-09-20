@@ -1,9 +1,9 @@
 package org.gbif.pipelines.core.utils;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.ALL;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.CRAP_USER;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.USER_GROUP;
 
 import com.fasterxml.jackson.databind.DeserializationContext;

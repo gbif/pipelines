@@ -5,6 +5,7 @@ import com.beust.jcommander.ParametersDelegate;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
+import org.gbif.api.model.pipelines.InterpretationType;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.configs.*;
@@ -55,8 +56,7 @@ public class HdfsViewConfiguration implements BaseConfiguration {
   public StepType stepType = StepType.HDFS_VIEW;
 
   @Parameter(names = "--record-type")
-  public Pipeline.Interpretation.RecordType recordType =
-      Pipeline.Interpretation.RecordType.OCCURRENCE;
+  public InterpretationType.RecordType recordType = InterpretationType.RecordType.OCCURRENCE;
 
   @Override
   public String getHdfsSiteConfig() {

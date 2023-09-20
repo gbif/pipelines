@@ -1,12 +1,13 @@
 package org.gbif.pipelines.common.process;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.OCCURRENCE;
 import static org.junit.Assert.*;
 
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
+import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
@@ -17,7 +18,6 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.pipelines.common.MainSparkSettings;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.common.indexing.IndexSettings;
 import org.gbif.pipelines.tasks.events.indexing.EventsIndexingConfiguration;

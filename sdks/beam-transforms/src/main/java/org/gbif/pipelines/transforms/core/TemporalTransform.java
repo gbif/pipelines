@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.TEMPORAL;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
 
 import java.time.Instant;
 import java.util.List;

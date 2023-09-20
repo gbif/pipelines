@@ -1,7 +1,7 @@
 package org.gbif.pipelines.ingest.java.transforms;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.OCCURRENCE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,8 +14,7 @@ import java.util.function.Function;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
-import org.gbif.pipelines.common.PipelinesVariables;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
+import org.gbif.api.model.pipelines.InterpretationType;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
@@ -65,10 +64,7 @@ public class TableRecordWriterTest {
         st -> {
           String id = options.getDatasetId() + '_' + options.getAttempt() + AVRO_EXTENSION;
           return PathBuilder.buildFilePathViewUsingInputPath(
-              options,
-              PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE,
-              st.name().toLowerCase(),
-              id);
+              options, InterpretationType.RecordType.OCCURRENCE, st.name().toLowerCase(), id);
         };
 
     // When
@@ -143,10 +139,7 @@ public class TableRecordWriterTest {
         st -> {
           String id = options.getDatasetId() + '_' + options.getAttempt() + AVRO_EXTENSION;
           return PathBuilder.buildFilePathViewUsingInputPath(
-              options,
-              PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE,
-              st.name().toLowerCase(),
-              id);
+              options, InterpretationType.RecordType.OCCURRENCE, st.name().toLowerCase(), id);
         };
 
     // When

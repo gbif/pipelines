@@ -2,8 +2,8 @@ package org.gbif.pipelines.validator;
 
 import static org.gbif.dwc.terms.DwcTerm.Event;
 import static org.gbif.dwc.terms.DwcTerm.Occurrence;
-import static org.gbif.pipelines.validator.metircs.request.OccurrenceIssuesRequestBuilder.HITS_AGGREGATION;
-import static org.gbif.pipelines.validator.metircs.request.OccurrenceIssuesRequestBuilder.ISSUES_AGGREGATION;
+import static org.gbif.pipelines.validator.metrics.request.OccurrenceIssuesRequestBuilder.HITS_AGGREGATION;
+import static org.gbif.pipelines.validator.metrics.request.OccurrenceIssuesRequestBuilder.ISSUES_AGGREGATION;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,11 +30,11 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.validator.factory.ElasticsearchClientFactory;
-import org.gbif.pipelines.validator.metircs.request.ExtensionTermCountRequestBuilder;
-import org.gbif.pipelines.validator.metircs.request.ExtensionTermCountRequestBuilder.ExtTermCountRequest;
-import org.gbif.pipelines.validator.metircs.request.OccurrenceIssuesRequestBuilder;
-import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder;
-import org.gbif.pipelines.validator.metircs.request.TermCountRequestBuilder.TermCountRequest;
+import org.gbif.pipelines.validator.metrics.request.ExtensionTermCountRequestBuilder;
+import org.gbif.pipelines.validator.metrics.request.ExtensionTermCountRequestBuilder.ExtTermCountRequest;
+import org.gbif.pipelines.validator.metrics.request.OccurrenceIssuesRequestBuilder;
+import org.gbif.pipelines.validator.metrics.request.TermCountRequestBuilder;
+import org.gbif.pipelines.validator.metrics.request.TermCountRequestBuilder.TermCountRequest;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;

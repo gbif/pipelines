@@ -28,8 +28,8 @@ public class Validations {
       Retry.of(
           "validatorCall",
           RetryConfig.custom()
-              .maxAttempts(3)
-              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(3)))
+              .maxAttempts(7)
+              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
               .build());
 
   public static void updateStatus(

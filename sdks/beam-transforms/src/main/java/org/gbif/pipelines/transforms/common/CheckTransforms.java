@@ -8,7 +8,7 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
+import org.gbif.api.model.pipelines.InterpretationType;
 
 /**
  * Set of different predicate functions. Each function checks predicate and returns {@link

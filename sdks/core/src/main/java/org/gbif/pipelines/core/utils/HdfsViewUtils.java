@@ -1,9 +1,9 @@
 package org.gbif.pipelines.core.utils;
 
 import lombok.experimental.UtilityClass;
+import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 
 @UtilityClass
 public class HdfsViewUtils {

@@ -5,13 +5,13 @@ import static junit.framework.TestCase.assertEquals;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
+import org.gbif.api.model.pipelines.InterpretationType;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
-import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.configs.AirflowConfiguration;
 import org.gbif.pipelines.common.process.AirflowRunnerBuilder;
 import org.gbif.pipelines.common.process.BeamSettings;
@@ -70,8 +70,7 @@ public class AirflowBodyTest {
 
     UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
     int attempt = 1;
-    Set<String> types =
-        Collections.singleton(PipelinesVariables.Pipeline.Interpretation.RecordType.ALL.name());
+    Set<String> types = Collections.singleton(InterpretationType.RecordType.ALL.name());
     Set<String> steps = Collections.singleton(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
     PipelinesEventsMessage message =
         new PipelinesEventsMessage(

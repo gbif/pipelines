@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.BASIC;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
 
 import java.time.Instant;
 import java.util.Optional;

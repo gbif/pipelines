@@ -619,7 +619,7 @@ object PredicateExportDwCAPipeline {
         case "Event_issues"      => "http://rs.tdwg.org/dwc/terms/issues"
         case "Search_issues"     => "http://rs.tdwg.org/dwc/terms/issues"
         case "eventDate.gte"     => "http://rs.tdwg.org/dwc/terms/eventDate"
-        case "eventType.concept" => "http://rs.gbif.org/terms/1.0/eventType"
+        case "eventType.concept" => "http://rs.tdwg.org/dwc/terms/eventType"
         case "elevationAccuracy" =>
           "http://rs.gbif.org/terms/1.0/elevationAccuracy"
         case "depthAccuracy" => "http://rs.gbif.org/terms/1.0/depthAccuracy"

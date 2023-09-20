@@ -1,7 +1,7 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER_ABSENT;
 import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroWriter.createAvroWriter;
 
 import java.time.LocalDateTime;
@@ -24,7 +24,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -141,7 +140,7 @@ public class VerbatimToOccurrencePipeline {
 
     // Remove directories with avro files for expected interpretation, except IDENTIFIER
     Set<String> deleteTypes = new HashSet<>(types);
-    deleteTypes.remove(IDENTIFIER_ABSENT.name());
+    deleteTypes.remove(RecordType.IDENTIFIER_ABSENT.name());
     FsUtils.deleteInterpretIfExist(
         hdfsConfigs, targetPath, datasetId, attempt, CORE_TERM, deleteTypes);
 

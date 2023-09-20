@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.VERBATIM;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.VERBATIM_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.util.HashMap;

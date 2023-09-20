@@ -9,7 +9,7 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
+import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;

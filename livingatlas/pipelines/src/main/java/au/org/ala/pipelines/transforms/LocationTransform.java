@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.transforms;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.LOCATION;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.pipelines.interpreters.ALALocationInterpreter;

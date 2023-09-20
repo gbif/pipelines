@@ -11,10 +11,10 @@ import lombok.Builder;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.common.parsers.date.MultiinputTemporalParser;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.functions.SerializableFunction;
-import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
@@ -33,7 +33,7 @@ public class ALATemporalInterpreter implements Serializable {
   public static final String YEAR_PRECISION = "YEAR";
   protected static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
 
-  private final TemporalParser temporalParser;
+  private final MultiinputTemporalParser temporalParser;
   private final SerializableFunction<String, String> preprocessDateFn;
 
   @Builder(buildMethodName = "create")
@@ -41,7 +41,7 @@ public class ALATemporalInterpreter implements Serializable {
       List<DateComponentOrdering> orderings,
       SerializableFunction<String, String> preprocessDateFn) {
     this.preprocessDateFn = preprocessDateFn;
-    this.temporalParser = TemporalParser.create(orderings);
+    this.temporalParser = MultiinputTemporalParser.create(orderings);
   }
 
   /**

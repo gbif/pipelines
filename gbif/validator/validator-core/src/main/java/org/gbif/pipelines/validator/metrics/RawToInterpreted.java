@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.metircs;
+package org.gbif.pipelines.validator.metrics;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +9,7 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class RawToInderpreted {
+public class RawToInterpreted {
 
   private static final Map<String, String> MAP = new HashMap<>();
 

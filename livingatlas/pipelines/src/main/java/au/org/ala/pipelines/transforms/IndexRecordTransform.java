@@ -34,12 +34,12 @@ import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
+import org.gbif.common.parsers.date.MultiinputTemporalParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.common.PipelinesException;
-import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -752,7 +752,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
 
     try {
-      TemporalParser temporalParser = TemporalParser.create();
+      MultiinputTemporalParser temporalParser = MultiinputTemporalParser.create();
       OccurrenceParseResult<TemporalAccessor> r = temporalParser.parseRecordedDate(dateString);
 
       // FIXME  - im sure there is a better way to do this

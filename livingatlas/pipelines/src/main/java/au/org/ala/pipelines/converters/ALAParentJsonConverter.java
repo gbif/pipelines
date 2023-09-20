@@ -230,7 +230,8 @@ public class ALAParentJsonConverter {
       if (eventCore.getEventType() != null) {
         eventTypes.add(eventCore.getEventType().getConcept());
       } else {
-        String rawEventType = verbatim.getCoreTerms().get(DwcTerm.eventType.qualifiedName());
+        String rawEventType =
+            (String) verbatim.getCoreTerms().get(DwcTerm.eventType.qualifiedName());
         if (rawEventType != null) {
           eventTypes.add(rawEventType);
         }

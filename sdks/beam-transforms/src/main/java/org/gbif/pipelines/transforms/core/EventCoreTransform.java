@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.EVENT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EVENT_CORE_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT;
 
 import java.time.Instant;
 import java.util.Map;

@@ -14,7 +14,7 @@ import lombok.SneakyThrows;
 import org.apache.avro.Schema;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
+import org.gbif.api.model.pipelines.InterpretationType;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;

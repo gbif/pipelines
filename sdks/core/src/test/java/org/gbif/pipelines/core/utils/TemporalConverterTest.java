@@ -9,9 +9,11 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.TemporalAccessor;
 import java.util.Optional;
+import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
+import org.gbif.pipelines.io.avro.EventDate;
 import org.junit.Test;
 
-public class TemporalUtilsTest {
+public class TemporalConverterTest {
 
   @Test
   public void nullTest() {
@@ -143,5 +145,70 @@ public class TemporalUtilsTest {
 
     // Should
     assertFalse(temporal.isPresent());
+  }
+
+  @Test
+  public void dateParserTest() {
+    TemporalAccessor date = StringToDateFunctions.getStringToTemporalAccessor().apply("2019");
+    assertEquals("2019", date.toString());
+
+    date = StringToDateFunctions.getStringToTemporalAccessor().apply("2019-04");
+    assertEquals("2019-04", date.toString());
+
+    date = StringToDateFunctions.getStringToTemporalAccessor().apply("2019-04-02");
+    assertEquals("2019-04-02", date.toString());
+
+    date =
+        StringToDateFunctions.getStringToTemporalAccessor().apply("2019-04-15T17:17:48.191 +02:00");
+    assertEquals("2019-04-15T17:17:48.191+02:00", date.toString());
+
+    date = StringToDateFunctions.getStringToTemporalAccessor().apply("2019-04-15T17:17:48.191");
+    assertEquals("2019-04-15T17:17:48.191", date.toString());
+
+    date =
+        StringToDateFunctions.getStringToTemporalAccessor().apply("2019-04-15T17:17:48.023+02:00");
+    assertEquals("2019-04-15T17:17:48.023+02:00", date.toString());
+
+    date = StringToDateFunctions.getStringToTemporalAccessor().apply("2019-11-12T13:24:56.963591");
+    assertEquals("2019-11-12T13:24:56.963591", date.toString());
+  }
+
+  @Test
+  public void dateWithYearZeroTest() {
+    TemporalAccessor date = StringToDateFunctions.getStringToTemporalAccessor().apply("0000");
+    assertEquals("1970", date.toString());
+
+    date = StringToDateFunctions.getStringToTemporalAccessor().apply("0000-01");
+    assertEquals("1970-01", date.toString());
+
+    date = StringToDateFunctions.getStringToTemporalAccessor().apply("0000-01-01");
+    assertEquals("1970-01-01", date.toString());
+
+    date = StringToDateFunctions.getStringToTemporalAccessor().apply("0000-01-01T00:00:01.100");
+    assertEquals("1970-01-01T00:00:01.100", date.toString());
+
+    date =
+        StringToDateFunctions.getStringToTemporalAccessor().apply("0000-01-01T17:17:48.191 +02:00");
+    assertEquals("1970-01-01T17:17:48.191+02:00", date.toString());
+
+    date = StringToDateFunctions.getStringToTemporalAccessor().apply("0000-01-01T13:24:56.963591");
+    assertEquals("1970-01-01T13:24:56.963591", date.toString());
+
+    date =
+        StringToDateFunctions.getStringToTemporalAccessor().apply("0000-01-01T17:17:48.023+02:00");
+    assertEquals("1970-01-01T17:17:48.023+02:00", date.toString());
+  }
+
+  @Test
+  public void before1582Test() {
+    // Note dates before this date need special handling if java.util.Date is used.
+    EventDate ed =
+        EventDate.newBuilder().setGte("1400-01-01T00:00:00").setLte("2023-09-11T14:21:00").build();
+
+    assertEquals(
+        "1400-01-01T00:00:00/2023-09-11T14:21:00",
+        TemporalConverter.getEventDateToStringFn().apply(ed));
+
+    assertEquals("1400", StringToDateFunctions.getTemporalToStringFn().apply(Year.of(1400)));
   }
 }

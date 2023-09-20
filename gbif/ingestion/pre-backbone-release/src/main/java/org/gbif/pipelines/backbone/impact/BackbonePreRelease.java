@@ -21,7 +21,7 @@ import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchemaUtils;
 import org.apache.thrift.TException;
-import org.gbif.kvs.species.SpeciesMatchRequest;
+import org.gbif.kvs.species.Identification;
 import org.gbif.rest.client.configuration.ChecklistbankClientsConfiguration;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
@@ -103,7 +103,7 @@ public class BackbonePreRelease {
       service =
           new ChecklistbankServiceSyncClient(
               ChecklistbankClientsConfiguration.builder()
-                  .nameUSageClientConfiguration(
+                  .nameUsageClientConfiguration(
                       ClientConfiguration.builder()
                           .withBaseApiUrl(baseAPIUrl)
                           .withFileCacheMaxSizeMb(1L)
@@ -129,8 +129,8 @@ public class BackbonePreRelease {
 
         // We use the request to ensure we apply the same "clean" operations as the production
         // pipelines, even though we short circuit the cache and use the lookup service directly.
-        SpeciesMatchRequest matchRequest =
-            SpeciesMatchRequest.builder()
+        Identification matchRequest =
+            Identification.builder()
                 .withKingdom(source.getString("v_kingdom", schema))
                 .withPhylum(source.getString("v_phylum", schema))
                 .withClazz(source.getString("v_class", schema))
@@ -145,12 +145,16 @@ public class BackbonePreRelease {
                     source.getString("v_scientificNameAuthorship", schema))
                 .withRank(source.getString("v_taxonRank", schema))
                 .withVerbatimRank(source.getString("v_verbatimTaxonRank", schema))
+                .withScientificNameID(source.getString("v_scientificNameID", schema))
+                .withTaxonID(source.getString("v_taxonID", schema))
+                .withTaxonConceptID(source.getString("v_taxonConceptID", schema))
                 .build();
 
         try {
           // short circuit the cache, but replicate same logic of the NameUsageMatchKVStoreFactory
           NameUsageMatch usageMatch =
               service.match(
+                  null, // rely only on names
                   matchRequest.getKingdom(),
                   matchRequest.getPhylum(),
                   matchRequest.getClazz(),
@@ -226,7 +230,7 @@ public class BackbonePreRelease {
     /** Formats the data for the output line in the CSV. */
     private static String toTabDelimited(
         long count,
-        SpeciesMatchRequest verbatim,
+        Identification verbatim,
         GBIFClassification current,
         GBIFClassification proposed,
         boolean skipKeys) {

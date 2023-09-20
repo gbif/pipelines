@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.specific;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.LOCATION_FEATURE;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_FEATURE_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION_FEATURE;
 
 import java.io.IOException;
 import java.time.Instant;

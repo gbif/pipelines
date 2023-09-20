@@ -12,9 +12,9 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.gbif.api.model.pipelines.InterpretationType;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -62,16 +62,15 @@ public class HdfsViewPipelineIT {
 
   @Test
   public void pipelineOccurrenceAllTest() throws Exception {
-    hdfsPipelineTest("data0", PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE);
+    hdfsPipelineTest("data0", InterpretationType.RecordType.OCCURRENCE);
   }
 
   @Test
   public void pipelineEventAllTest() throws Exception {
-    hdfsPipelineTest("data1", PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT);
+    hdfsPipelineTest("data1", InterpretationType.RecordType.EVENT);
   }
 
-  public void hdfsPipelineTest(
-      String rootTestFolder, PipelinesVariables.Pipeline.Interpretation.RecordType recordType)
+  public void hdfsPipelineTest(String rootTestFolder, InterpretationType.RecordType recordType)
       throws Exception {
 
     // State
@@ -141,18 +140,16 @@ public class HdfsViewPipelineIT {
 
   @Test
   public void pipelineOccurrenceTest() throws Exception {
-    singleHdfsPipelineTest(
-        "data2", PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE);
+    singleHdfsPipelineTest("data2", InterpretationType.RecordType.OCCURRENCE);
   }
 
   @Test
   public void pipelineEventTest() throws Exception {
-    singleHdfsPipelineTest("data3", PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT);
+    singleHdfsPipelineTest("data3", InterpretationType.RecordType.EVENT);
   }
 
   public void singleHdfsPipelineTest(
-      String rootTestFolder, PipelinesVariables.Pipeline.Interpretation.RecordType recordType)
-      throws Exception {
+      String rootTestFolder, InterpretationType.RecordType recordType) throws Exception {
 
     // State
     String outputFile = getClass().getResource("/").getFile();
@@ -216,9 +213,7 @@ public class HdfsViewPipelineIT {
 
   @SneakyThrows
   private void prepareTestData(
-      String[] argsWriter,
-      String postfix,
-      PipelinesVariables.Pipeline.Interpretation.RecordType recordType) {
+      String[] argsWriter, String postfix, InterpretationType.RecordType recordType) {
 
     InterpretationPipelineOptions optionsWriter =
         PipelinesOptionsFactory.createInterpretation(argsWriter);
@@ -316,7 +311,7 @@ public class HdfsViewPipelineIT {
       writer.append(audubonRecord);
     }
 
-    if (PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT == recordType) {
+    if (InterpretationType.RecordType.EVENT == recordType) {
       try (SyncDataFileWriter<EventCoreRecord> writer =
           InterpretedAvroWriter.createAvroWriter(
               optionsWriter, EventCoreTransform.builder().create(), coreTerm, postfix)) {

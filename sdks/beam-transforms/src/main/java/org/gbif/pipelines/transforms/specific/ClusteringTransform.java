@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.specific;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.CLUSTERING;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CLUSTERING_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.CLUSTERING;
 
 import java.time.Instant;
 import java.util.Optional;
