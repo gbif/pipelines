@@ -10,8 +10,8 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.DefaultValueFactory;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
+import org.gbif.api.model.pipelines.InterpretationType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
-import org.gbif.pipelines.common.PipelinesVariables;
 
 /**
  * Pipeline options (configuration) for GBIF based data interpretation pipelines. Optionally can use
@@ -100,9 +100,9 @@ public interface InterpretationPipelineOptions
 
   @Description("Core record type to be interpreted")
   @Default.Enum("OCCURRENCE")
-  PipelinesVariables.Pipeline.Interpretation.RecordType getCoreRecordType();
+  InterpretationType.RecordType getCoreRecordType();
 
-  void setCoreRecordType(PipelinesVariables.Pipeline.Interpretation.RecordType recordType);
+  void setCoreRecordType(InterpretationType.RecordType recordType);
 
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class TempDirectoryFactory implements DefaultValueFactory<String> {

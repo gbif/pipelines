@@ -1,13 +1,14 @@
 package org.gbif.pipelines.common.beam.utils;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.EVENT;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.OCCURRENCE;
 
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.Path;
+import org.gbif.api.model.pipelines.InterpretationType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
@@ -76,7 +77,7 @@ public class PathBuilder {
    */
   public static String buildFilePathViewUsingInputPath(
       BasePipelineOptions options,
-      PipelinesVariables.Pipeline.Interpretation.RecordType recordType,
+      InterpretationType.RecordType recordType,
       String type,
       String uniqueId) {
     return buildPath(
@@ -93,9 +94,7 @@ public class PathBuilder {
    * @return path to the directory where the occurrence hdfs view is stored
    */
   public static String buildFilePathViewUsingInputPath(
-      BasePipelineOptions options,
-      PipelinesVariables.Pipeline.Interpretation.RecordType recordType,
-      String type) {
+      BasePipelineOptions options, InterpretationType.RecordType recordType, String type) {
     return buildPath(
             buildDatasetAttemptPath(options, recordTypeViewPath(recordType), true),
             type.toLowerCase())
@@ -109,14 +108,12 @@ public class PathBuilder {
    * @return path to the directory where the occurrence hdfs view is stored
    */
   public static String buildFilePathViewUsingInputPath(
-      BasePipelineOptions options,
-      PipelinesVariables.Pipeline.Interpretation.RecordType recordType) {
+      BasePipelineOptions options, InterpretationType.RecordType recordType) {
     return buildDatasetAttemptPath(options, recordTypeViewPath(recordType), true);
   }
 
   /** HDFS View of a RecordType. */
-  public static String recordTypeViewPath(
-      PipelinesVariables.Pipeline.Interpretation.RecordType recordType) {
+  public static String recordTypeViewPath(InterpretationType.RecordType recordType) {
     return recordType.name().toLowerCase()
         + (recordType == OCCURRENCE || recordType == EVENT ? "_table" : "");
   }

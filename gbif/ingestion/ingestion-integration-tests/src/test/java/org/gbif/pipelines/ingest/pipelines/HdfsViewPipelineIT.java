@@ -13,9 +13,9 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.TestPipeline;
+import org.gbif.api.model.pipelines.InterpretationType;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -215,16 +215,15 @@ public class HdfsViewPipelineIT {
 
   @Test
   public void pipelineOccurrenceTest() throws Exception {
-    pipelineHDFSTest(PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE);
+    pipelineHDFSTest(InterpretationType.RecordType.OCCURRENCE);
   }
 
   @Test
   public void pipelineEventTest() throws Exception {
-    pipelineHDFSTest(PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT);
+    pipelineHDFSTest(InterpretationType.RecordType.EVENT);
   }
 
-  public void pipelineHDFSTest(PipelinesVariables.Pipeline.Interpretation.RecordType recordType)
-      throws Exception {
+  public void pipelineHDFSTest(InterpretationType.RecordType recordType) throws Exception {
 
     DwcTerm coreTerm = HdfsViewUtils.getCoreTerm(recordType);
 

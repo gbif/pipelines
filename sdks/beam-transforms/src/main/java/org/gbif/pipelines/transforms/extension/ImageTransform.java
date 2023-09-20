@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.extension;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.IMAGE;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IMAGE_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
 import static org.gbif.pipelines.core.utils.ModelUtils.hasExtension;
 
 import java.time.Instant;

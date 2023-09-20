@@ -1,7 +1,7 @@
 package org.gbif.pipelines.tasks.verbatims.abcd;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllInterpretationAsString;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.getAllValidatorInterpretationAsString;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.getAllInterpretationAsString;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.getAllValidatorInterpretationAsString;
 import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 
 import java.io.File;
