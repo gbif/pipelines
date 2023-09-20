@@ -163,6 +163,43 @@ public class TemporalRecordTransformTest {
   }
 
   @Test
+  public void transformationNanosecondsTest() {
+    // State
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
+    record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "1999-04-28T18:13:34.987654321");
+    final List<ExtendedRecord> input = Collections.singletonList(record);
+
+    // Expected
+    final List<TemporalRecord> dataExpected =
+        Collections.singletonList(
+            TemporalRecord.newBuilder()
+                .setId("0")
+                .setYear(1999)
+                .setMonth(4)
+                .setDay(28)
+                .setEventDate(
+                    EventDate.newBuilder()
+                        .setInterval("1999-04-28T18:13:34.987654321")
+                        .setGte("1999-04-28T18:13:34.987") // Truncated down to milliseconds
+                        .setLte("1999-04-28T18:13:34.987") // as this is the most ES supports
+                        .build())
+                .setStartDayOfYear(118)
+                .setEndDayOfYear(118)
+                .setCreated(0L)
+                .build());
+
+    // When
+    PCollection<TemporalRecord> dataStream =
+        p.apply(Create.of(input))
+            .apply(TemporalTransform.builder().create().interpret())
+            .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
+
+    // Should
+    PAssert.that(dataStream).containsInAnyOrder(dataExpected);
+    p.run();
+  }
+
+  @Test
   public void emptyErTest() {
 
     // State

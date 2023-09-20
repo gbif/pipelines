@@ -1,8 +1,16 @@
 package org.gbif.pipelines.core.parsers.temporal;
 
+import static java.time.temporal.ChronoField.HOUR_OF_DAY;
+import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
+import static java.time.temporal.ChronoField.NANO_OF_SECOND;
+import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
+
 import com.google.common.base.Strings;
 import java.time.*;
+import java.time.chrono.IsoChronology;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.ResolverStyle;
 import java.time.temporal.TemporalAccessor;
 import java.util.function.Function;
 import lombok.AccessLevel;
@@ -20,12 +28,47 @@ public class StringToDateFunctions {
       DateTimeFormatter.ofPattern(
           "[yyyy[-MM[-dd['T'HH:mm[:ss[.SSSSSSSSS][.SSSSSSSS][.SSSSSSS][.SSSSSS][.SSSSS][.SSSS][.SSS][.SS][.S]]]]][ ][XXXXX][XXXX][XXX][XX][X]]");
 
+  // DateTimeFormatter.ISO_LOCAL_TIME but limited to milliseconds
+  public static final DateTimeFormatter ISO_LOCAL_TIME_MILLISECONDS =
+      new DateTimeFormatterBuilder()
+          .appendValue(HOUR_OF_DAY, 2)
+          .appendLiteral(':')
+          .appendValue(MINUTE_OF_HOUR, 2)
+          .optionalStart()
+          .appendLiteral(':')
+          .appendValue(SECOND_OF_MINUTE, 2)
+          .optionalStart()
+          .appendFraction(NANO_OF_SECOND, 0, 3, true)
+          .toFormatter()
+          .withResolverStyle(ResolverStyle.STRICT);
+
+  // DateTimeFormatter.ISO_LOCAL_DATE_TIME but limited to milliseconds
+  public static final DateTimeFormatter ISO_LOCAL_DATE_TIME_MILLISECONDS =
+      new DateTimeFormatterBuilder()
+          .parseCaseInsensitive()
+          .append(DateTimeFormatter.ISO_LOCAL_DATE)
+          .appendLiteral('T')
+          .append(ISO_LOCAL_TIME_MILLISECONDS)
+          .toFormatter()
+          .withResolverStyle(ResolverStyle.STRICT)
+          .withChronology(IsoChronology.INSTANCE);
+
+  // DateTimeFormatter.ISO_OFFSET_DATE_TIME but limited to milliseconds
+  public static final DateTimeFormatter ISO_OFFSET_DATE_TIME_MILLISECONDS =
+      new DateTimeFormatterBuilder()
+          .parseCaseInsensitive()
+          .append(ISO_LOCAL_DATE_TIME_MILLISECONDS)
+          .appendOffsetId()
+          .toFormatter()
+          .withResolverStyle(ResolverStyle.STRICT)
+          .withChronology(IsoChronology.INSTANCE);
+
   public static Function<TemporalAccessor, String> getTemporalToStringFn() {
     return temporalAccessor -> {
       if (temporalAccessor instanceof ZonedDateTime) {
-        return ((ZonedDateTime) temporalAccessor).format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
+        return ((ZonedDateTime) temporalAccessor).format(ISO_OFFSET_DATE_TIME_MILLISECONDS);
       } else if (temporalAccessor instanceof LocalDateTime) {
-        return ((LocalDateTime) temporalAccessor).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        return ((LocalDateTime) temporalAccessor).format(ISO_LOCAL_DATE_TIME_MILLISECONDS);
       } else if (temporalAccessor instanceof LocalDate) {
         return ((LocalDate) temporalAccessor).format(DateTimeFormatter.ISO_LOCAL_DATE);
       } else {
