@@ -198,6 +198,30 @@ public class TemporalInterpreterTest {
   }
 
   @Test
+  public void testYearDaysOnly() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.year.qualifiedName(), "1879");
+    map.put(DwcTerm.startDayOfYear.qualifiedName(), "60 ");
+    map.put(DwcTerm.endDayOfYear.qualifiedName(), " 90");
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    TemporalInterpreter interpreter = TemporalInterpreter.builder().create();
+    interpreter.interpretTemporal(er, tr);
+
+    assertEquals("1879-03-01/1879-03-31", tr.getEventDate().getInterval());
+    assertEquals("1879-03-01T00:00:00", tr.getEventDate().getGte());
+    assertEquals("1879-03-31T23:59:59.999", tr.getEventDate().getLte());
+    assertEquals(1879, tr.getYear().intValue());
+    assertEquals(3, tr.getMonth().intValue());
+    assertNull(tr.getDay());
+    assertEquals(60, tr.getStartDayOfYear().intValue());
+    assertEquals(90, tr.getEndDayOfYear().intValue());
+    assertEquals(0, tr.getIssues().getIssueList().size());
+  }
+
+  @Test
   public void testMismatchedDates() {
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.year.qualifiedName(), "1879");

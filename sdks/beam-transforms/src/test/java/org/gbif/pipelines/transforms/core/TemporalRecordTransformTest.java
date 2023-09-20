@@ -125,6 +125,44 @@ public class TemporalRecordTransformTest {
   }
 
   @Test
+  public void transformationYearDayTest() {
+    // State
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
+    record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
+    record.getCoreTerms().put(DwcTerm.startDayOfYear.qualifiedName(), "60");
+    record.getCoreTerms().put(DwcTerm.endDayOfYear.qualifiedName(), "90");
+    final List<ExtendedRecord> input = Collections.singletonList(record);
+
+    // Expected
+    final List<TemporalRecord> dataExpected =
+        Collections.singletonList(
+            TemporalRecord.newBuilder()
+                .setId("0")
+                .setYear(1999)
+                .setMonth(3)
+                .setEventDate(
+                    EventDate.newBuilder()
+                        .setInterval("1999-03-01/1999-03-31")
+                        .setGte("1999-03-01T00:00:00")
+                        .setLte("1999-03-31T23:59:59.999")
+                        .build())
+                .setStartDayOfYear(60)
+                .setEndDayOfYear(90)
+                .setCreated(0L)
+                .build());
+
+    // When
+    PCollection<TemporalRecord> dataStream =
+        p.apply(Create.of(input))
+            .apply(TemporalTransform.builder().create().interpret())
+            .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
+
+    // Should
+    PAssert.that(dataStream).containsInAnyOrder(dataExpected);
+    p.run();
+  }
+
+  @Test
   public void emptyErTest() {
 
     // State
