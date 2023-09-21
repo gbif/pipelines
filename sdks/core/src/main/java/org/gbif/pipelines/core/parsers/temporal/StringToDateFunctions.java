@@ -28,7 +28,8 @@ public class StringToDateFunctions {
       DateTimeFormatter.ofPattern(
           "[yyyy[-MM[-dd['T'HH:mm[:ss[.SSSSSSSSS][.SSSSSSSS][.SSSSSSS][.SSSSSS][.SSSSS][.SSSS][.SSS][.SS][.S]]]]][ ][XXXXX][XXXX][XXX][XX][X]]");
 
-  // DateTimeFormatter.ISO_LOCAL_TIME but limited to milliseconds
+  // DateTimeFormatter.ISO_LOCAL_TIME but limited to milliseconds and with those milliseconds
+  // printed
   public static final DateTimeFormatter ISO_LOCAL_TIME_MILLISECONDS =
       new DateTimeFormatterBuilder()
           .appendValue(HOUR_OF_DAY, 2)
@@ -38,7 +39,7 @@ public class StringToDateFunctions {
           .appendLiteral(':')
           .appendValue(SECOND_OF_MINUTE, 2)
           .optionalStart()
-          .appendFraction(NANO_OF_SECOND, 0, 3, true)
+          .appendFraction(NANO_OF_SECOND, 3, 3, true)
           .toFormatter()
           .withResolverStyle(ResolverStyle.STRICT);
 

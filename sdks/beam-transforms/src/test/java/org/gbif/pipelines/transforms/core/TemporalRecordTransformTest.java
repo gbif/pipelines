@@ -65,7 +65,7 @@ public class TemporalRecordTransformTest {
                 .setEventDate(
                     EventDate.newBuilder()
                         .setInterval("1999-02-02")
-                        .setGte("1999-02-02T00:00:00")
+                        .setGte("1999-02-02T00:00:00.000")
                         .setLte("1999-02-02T23:59:59.999")
                         .build())
                 .setDateIdentified("1999-02-02T12:26")
@@ -105,7 +105,7 @@ public class TemporalRecordTransformTest {
                 .setEventDate(
                     EventDate.newBuilder()
                         .setInterval("1999-02")
-                        .setGte("1999-02-01T00:00:00")
+                        .setGte("1999-02-01T00:00:00.000")
                         .setLte("1999-02-28T23:59:59.999")
                         .build())
                 .setDateIdentified("1999-02")
@@ -143,7 +143,7 @@ public class TemporalRecordTransformTest {
                 .setEventDate(
                     EventDate.newBuilder()
                         .setInterval("1999-03-01/1999-03-31")
-                        .setGte("1999-03-01T00:00:00")
+                        .setGte("1999-03-01T00:00:00.000")
                         .setLte("1999-03-31T23:59:59.999")
                         .build())
                 .setStartDayOfYear(60)
@@ -238,8 +238,8 @@ public class TemporalRecordTransformTest {
             .setEventDate(
                 EventDate.newBuilder()
                     .setInterval("1999-02-01T12:26")
-                    .setGte("1999-02-01T12:26:00")
-                    .setLte("1999-02-01T12:26:00")
+                    .setGte("1999-02-01T12:26:00.000")
+                    .setLte("1999-02-01T12:26:00.000")
                     .build())
             .setDateIdentified("1999-04-01")
             .setModified("1999-03-01T12:26")
