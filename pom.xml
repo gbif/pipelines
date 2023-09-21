@@ -106,7 +106,7 @@
     <!-- Common libraries -->
     <avro.version>1.11.1</avro.version>
     <apache.beam.version>2.49.0</apache.beam.version>
-    <hadoop.version>3.3.2</hadoop.version>
+    <hadoop.version>3.3.4</hadoop.version>
     <hbase.version>2.5.3-hadoop3</hbase.version>
     <curator.version>4.3.0</curator.version>
 
@@ -630,6 +630,16 @@
           </exclusion>
         </exclusions>
       </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-auth</artifactId>
+        <version>${hadoop.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-hdfs-client</artifactId>
+        <version>${hadoop.version}</version>
+      </dependency>
 
       <!-- HBase -->
       <dependency>
@@ -673,6 +683,16 @@
             <artifactId>log4j</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-hadoop-compat</artifactId>
+        <version>${hbase.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-hadoop2-compat</artifactId>
+        <version>${hbase.version}</version>
       </dependency>
 
       <!-- Utils -->
