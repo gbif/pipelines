@@ -99,6 +99,7 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-ws-client</artifactId>
+      <version>${registry.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>

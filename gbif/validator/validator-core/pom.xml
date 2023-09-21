@@ -163,10 +163,6 @@
       <artifactId>testcontainers</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-metadata-profile-eml</artifactId>
-    </dependency>
 
   </dependencies>
 
