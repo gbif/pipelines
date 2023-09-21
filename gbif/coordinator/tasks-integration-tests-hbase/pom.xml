@@ -89,6 +89,32 @@
       <artifactId>hadoop-minicluster</artifactId>
       <version>${hadoop.version}</version>
     </dependency>
+
+    <!-- GBIF -->
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-ws-client</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.gbif.common</groupId>
+          <artifactId>gbif-cli</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>datacite-rest-client</artifactId>
+          <groupId>org.gbif.datacite</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
     <dependency>
       <groupId>org.gbif.crawler</groupId>
       <artifactId>crawler-coordinator</artifactId>
@@ -113,12 +139,6 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-
   </dependencies>
 
   <profiles>

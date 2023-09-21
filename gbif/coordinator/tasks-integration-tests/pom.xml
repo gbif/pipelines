@@ -84,25 +84,6 @@
       <version>${fest.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>tasks-coordinator-cli</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-gbif-fragmenter</artifactId>
-      <classifier>tests</classifier>
-      <type>test-jar</type>
-      <version>${project.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>log4j-over-slf4j</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-testing-util</artifactId>
       <version>${hbase.version}</version>
@@ -155,6 +136,44 @@
       <groupId>org.gbif</groupId>
       <artifactId>gbif-api</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-ws-client</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.gbif.common</groupId>
+          <artifactId>gbif-cli</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>datacite-rest-client</artifactId>
+          <groupId>org.gbif.datacite</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>tasks-coordinator-cli</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>ingest-gbif-fragmenter</artifactId>
+      <classifier>tests</classifier>
+      <type>test-jar</type>
+      <version>${project.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>log4j-over-slf4j</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
