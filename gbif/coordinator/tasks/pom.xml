@@ -191,7 +191,6 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-ws-client</artifactId>
-      <version>${registry.version}</version>
       <exclusions>
         <exclusion>
           <artifactId>commons-logging</artifactId>

@@ -17,9 +17,7 @@
 
   <properties>
     <maven-scala-plugin.version>4.8.0</maven-scala-plugin.version>
-    <spark.version>3.3.1</spark.version>
     <scala.version>2.12.17</scala.version>
-    <scala.minor.version>2.12.17</scala.minor.version>
     <!-- These must be compatible with Spark version (see https://stackoverflow.com/a/50114083) -->
     <janino.version>3.0.8</janino.version>
     <commons-compiler.version>3.0.8</commons-compiler.version>
@@ -180,7 +178,6 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
-      <version>3.2.4</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>

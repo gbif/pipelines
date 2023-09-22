@@ -141,16 +141,6 @@
         <version>${gbif-common-mybatis.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-ws-client</artifactId>
-        <version>${registry.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-persistence</artifactId>
-        <version>${registry.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.gbif</groupId>
         <artifactId>gbif-metadata-profile-eml</artifactId>
         <version>${gbif-metadata-profile-eml.version}</version>

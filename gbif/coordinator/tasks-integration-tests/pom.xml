@@ -47,6 +47,7 @@
   <properties>
     <fest.version>2.0M10</fest.version>
     <mockito.version>5.5.0</mockito.version>
+    <hadoop.version>3.2.4</hadoop.version>
   </properties>
 
   <dependencies>
@@ -74,29 +75,26 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <scope>test</scope>
       <version>${mockito.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.easytesting</groupId>
       <artifactId>fest-assert-core</artifactId>
-      <scope>test</scope>
       <version>${fest.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-testing-util</artifactId>
-      <version>${hbase.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-minicluster</artifactId>
-      <version>3.2.4</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>${guava.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -128,7 +126,6 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-auth</artifactId>
-      <version>${hadoop.version}</version>
     </dependency>
 
     <!-- GBIF Test Dependencies -->
@@ -140,7 +137,6 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-ws-client</artifactId>
-      <version>${registry.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -209,7 +205,6 @@
     <dependency>
       <groupId>org.gbif.crawler</groupId>
       <artifactId>crawler-coordinator</artifactId>
-      <version>${gbif-crawler.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
