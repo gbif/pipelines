@@ -60,6 +60,8 @@ public class VerbatimToIdentifierPipeline {
   public static void run(InterpretationPipelineOptions options, ExecutorService executor) {
 
     log.info("Pipeline has been started - {}", LocalDateTime.now());
+
+    options.setGenerateIds(false);
     TransformsFactory transformsFactory = TransformsFactory.create(options);
 
     String datasetId = options.getDatasetId();
