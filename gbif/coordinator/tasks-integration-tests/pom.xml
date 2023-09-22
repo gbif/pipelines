@@ -158,6 +158,10 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>org.gbif.stackable</groupId>
+      <artifactId>stackable-spark</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>tasks-coordinator-cli</artifactId>
       <scope>test</scope>
