@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.java.metrics;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.ABSENT_GBIF_ID_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AMPLIFICATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUDUBON_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
@@ -11,6 +12,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_GBI
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.FILTER_ER_BASED_ON_GBIF_ID;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GBIF_ID_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GEL_IMAGE_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GRSCICOLL_RECORDS_COUNT;
@@ -105,6 +107,8 @@ public class IngestMetricsBuilder {
         .addMetric(UniqueGbifIdTransform.class, DUPLICATE_GBIF_IDS_COUNT)
         .addMetric(UniqueGbifIdTransform.class, IDENTICAL_GBIF_OBJECTS_COUNT)
         .addMetric(UniqueGbifIdTransform.class, INVALID_GBIF_ID_COUNT)
+        .addMetric(UniqueGbifIdTransform.class, GBIF_ID_RECORDS_COUNT)
+        .addMetric(UniqueGbifIdTransform.class, ABSENT_GBIF_ID_COUNT)
         .addMetric(UniqueIdTransform.class, UNIQUE_IDS_COUNT)
         .addMetric(UniqueIdTransform.class, DUPLICATE_IDS_COUNT)
         .addMetric(UniqueIdTransform.class, IDENTICAL_OBJECTS_COUNT)

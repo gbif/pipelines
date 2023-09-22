@@ -192,12 +192,14 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     builder.sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().get().start().waitFor();
+    ProcessRunnerBuilder prb = builder.build();
+    int exitValue = prb.get().start().waitFor();
 
     if (exitValue != 0) {
-      throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
+      throw new IllegalStateException(
+          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
     } else {
-      log.info("Process has been finished with exit value - {}", exitValue);
+      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
     }
   }
 

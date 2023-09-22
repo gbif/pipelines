@@ -1,9 +1,12 @@
 package org.gbif.pipelines.transforms.java;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.ABSENT_GBIF_ID_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_GBIF_IDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GBIF_ID_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTICAL_GBIF_OBJECTS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.INVALID_GBIF_ID_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_ABSENT;
 
 import java.util.Map;
 import java.util.Optional;
@@ -35,6 +38,7 @@ public class UniqueGbifIdTransform {
 
   private final Map<String, IdentifierRecord> idMap = new ConcurrentHashMap<>();
   private final Map<String, IdentifierRecord> idInvalidMap = new ConcurrentHashMap<>();
+  private final Map<String, IdentifierRecord> idAbsentMap = new ConcurrentHashMap<>();
   // keyed by the ExtendedRecord ID
   private final Map<String, IdentifierRecord> erIdMap = new ConcurrentHashMap<>();
 
@@ -87,6 +91,10 @@ public class UniqueGbifIdTransform {
                     idMap.put(id.getId(), id);
                   } else if (id.getInternalId() != null) {
                     filter(id);
+                  } else if (id.getIssues().getIssueList().contains(GBIF_ID_ABSENT)) {
+                    incMetrics(ABSENT_GBIF_ID_COUNT);
+                    idAbsentMap.put(id.getId(), id);
+                    log.error("GBIF ID is null, occurrenceId - {}", id.getId());
                   } else {
                     incMetrics(INVALID_GBIF_ID_COUNT);
                     idInvalidMap.put(id.getId(), id);
@@ -113,6 +121,7 @@ public class UniqueGbifIdTransform {
       log.error(
           "GBIF ID collision, gbifId - {}, occurrenceId - {}", id.getInternalId(), id.getId());
     } else {
+      incMetrics(GBIF_ID_RECORDS_COUNT);
       incMetrics(UNIQUE_GBIF_IDS_COUNT);
       idMap.put(id.getInternalId(), id);
     }

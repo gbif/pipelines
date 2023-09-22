@@ -4,9 +4,12 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Predicate;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -19,6 +22,7 @@ import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
+import org.gbif.pipelines.ingest.java.pipelines.VerbatimToIdentifierPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.occurrences.identifier.validation.IdentifierValidationResult;
@@ -39,6 +43,7 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
   private final PipelinesHistoryClient historyClient;
   private final DatasetClient datasetClient;
   private final CloseableHttpClient httpClient;
+  private final ExecutorService executor;
 
   @Override
   public void handleMessage(PipelinesVerbatimMessage message) {
@@ -57,9 +62,9 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
   @Override
   public String getRouting() {
     return new PipelinesVerbatimMessage()
-            .setPipelineSteps(Collections.singleton(StepType.VERBATIM_TO_IDENTIFIER.name()))
-            .getRoutingKey()
-        + ".*";
+        .setPipelineSteps(Collections.singleton(StepType.VERBATIM_TO_IDENTIFIER.name()))
+        .setRunner(config.processRunner)
+        .getRoutingKey();
   }
 
   @Override
@@ -98,7 +103,14 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
       log.info("Start the process. Message - {}", message);
       try {
 
-        runDistributed(message, builder);
+        Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
+
+        log.info("Start the process. Message - {}", message);
+        if (runnerPr.test(StepRunner.DISTRIBUTED)) {
+          runDistributed(message, builder);
+        } else if (runnerPr.test(StepRunner.STANDALONE)) {
+          runLocal(builder);
+        }
 
         IdentifierValidationResult validationResult =
             PostprocessValidation.builder()
@@ -160,12 +172,18 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
     builder.sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().get().start().waitFor();
+    ProcessRunnerBuilder prb = builder.build();
+    int exitValue = prb.get().start().waitFor();
 
     if (exitValue != 0) {
-      throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
+      throw new IllegalStateException(
+          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
     } else {
-      log.info("Process has been finished with exit value - {}", exitValue);
+      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
     }
+  }
+
+  private void runLocal(ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder) {
+    VerbatimToIdentifierPipeline.run(builder.build().buildOptions(), executor);
   }
 }
