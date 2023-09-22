@@ -1,6 +1,6 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.IDENTIFIER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
