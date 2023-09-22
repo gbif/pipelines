@@ -18,12 +18,8 @@
   <properties>
     <maven-scala-plugin.version>4.8.0</maven-scala-plugin.version>
     <scala.version>2.12.17</scala.version>
-    <!-- These must be compatible with Spark version (see https://stackoverflow.com/a/50114083) -->
-    <janino.version>3.0.8</janino.version>
-    <commons-compiler.version>3.0.8</commons-compiler.version>
     <sonar.skip>true</sonar.skip>
   </properties>
-
   <build>
     <plugins>
       <plugin>
@@ -189,18 +185,6 @@
           <artifactId>okhttp</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-
-    <!-- These needed for embedded Spark tests https://stackoverflow.com/a/50114083 -->
-    <dependency>
-      <groupId>org.codehaus.janino</groupId>
-      <artifactId>commons-compiler</artifactId>
-      <version>${commons-compiler.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.janino</groupId>
-      <artifactId>janino</artifactId>
-      <version>${janino.version}</version>
     </dependency>
 
     <dependency>
