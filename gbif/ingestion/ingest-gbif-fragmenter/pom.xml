@@ -18,6 +18,7 @@
   <properties>
     <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
     <xerces.version>2.11.0</xerces.version>
+    <hadoop.version>3.2.4</hadoop.version>
   </properties>
 
   <build>
