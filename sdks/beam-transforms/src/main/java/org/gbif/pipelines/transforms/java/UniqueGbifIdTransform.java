@@ -121,7 +121,6 @@ public class UniqueGbifIdTransform {
       log.error(
           "GBIF ID collision, gbifId - {}, occurrenceId - {}", id.getInternalId(), id.getId());
     } else {
-      incMetrics(GBIF_ID_RECORDS_COUNT);
       incMetrics(UNIQUE_GBIF_IDS_COUNT);
       idMap.put(id.getInternalId(), id);
     }
