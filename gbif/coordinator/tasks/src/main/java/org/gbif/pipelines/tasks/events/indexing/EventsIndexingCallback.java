@@ -143,9 +143,10 @@ public class EventsIndexingCallback
     int exitValue = builder.build().start().waitFor();
 
     if (exitValue != 0) {
-      throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
+      throw new IllegalStateException(
+          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
     } else {
-      log.info("Process has been finished with exit value - {}", exitValue);
+      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
     }
   }
 

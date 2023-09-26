@@ -58,7 +58,7 @@
           "type": "geo_shape"
         },
         "temporalCoverage": {
-          "type": "date_range", "format": "yyyy-MM-dd'T'HH:mm:ss.SSSXXX||yyyy-MM-dd'T'HH:mm:ssXXX||yyyy-MM-dd'T'HH:mmXXX||yyyy-MM-dd'T'HH:mm:ss.SSS||yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm||yyyy-MM-dd||yyyy-MM||yyyy"
+          "type": "date_range", "format": "yyyy-MM-dd'T'HH:mm:ss.SSSXXX||yyyy-MM-dd'T'HH:mm:ssXXX||yyyy-MM-dd'T'HH:mmXXX||yyyy-MM-dd'T'HH:mm:ss.SSS||yyyy-MM-dd'T'HH:mm:ss.SS||yyyy-MM-dd'T'HH:mm:ss.S||yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm||yyyy-MM-dd||yyyy-MM||yyyy"
         },
         "taxonomicCoverage": {
           "type": "object",

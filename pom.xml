@@ -96,7 +96,7 @@
     <hbase-utils.version>0.14-H3-SNAPSHOT</hbase-utils.version>
     <gbif-wrangler.version>0.5-SNAPSHOT</gbif-wrangler.version>
     <gbif-occurrence.version>0.194.0-H3-SNAPSHOT</gbif-occurrence.version>
-    <vocabulary-lookup.version>0.47</vocabulary-lookup.version>
+    <vocabulary-lookup.version>1.0.1-SNAPSHOT</vocabulary-lookup.version>
     <registry.version>3.95.4-SNAPSHOT</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>
     <gbif-postal-service.version>1.7.0</gbif-postal-service.version>

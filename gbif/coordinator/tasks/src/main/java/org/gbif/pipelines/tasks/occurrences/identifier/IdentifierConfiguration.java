@@ -57,6 +57,10 @@ public class IdentifierConfiguration implements BaseConfiguration {
   @Parameter(names = "--clean-and-mark-as-aborted")
   public boolean cleanAndMarkAsAborted = false;
 
+  @Parameter(names = "--process-runner")
+  @NotNull
+  public String processRunner;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;

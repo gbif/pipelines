@@ -65,7 +65,7 @@ public class TemporalRecordTransformTest {
                 .setEventDate(
                     EventDate.newBuilder()
                         .setInterval("1999-02-02")
-                        .setGte("1999-02-02T00:00:00")
+                        .setGte("1999-02-02T00:00:00.000")
                         .setLte("1999-02-02T23:59:59.999")
                         .build())
                 .setDateIdentified("1999-02-02T12:26")
@@ -105,7 +105,7 @@ public class TemporalRecordTransformTest {
                 .setEventDate(
                     EventDate.newBuilder()
                         .setInterval("1999-02")
-                        .setGte("1999-02-01T00:00:00")
+                        .setGte("1999-02-01T00:00:00.000")
                         .setLte("1999-02-28T23:59:59.999")
                         .build())
                 .setDateIdentified("1999-02")
@@ -143,11 +143,48 @@ public class TemporalRecordTransformTest {
                 .setEventDate(
                     EventDate.newBuilder()
                         .setInterval("1999-03-01/1999-03-31")
-                        .setGte("1999-03-01T00:00:00")
+                        .setGte("1999-03-01T00:00:00.000")
                         .setLte("1999-03-31T23:59:59.999")
                         .build())
                 .setStartDayOfYear(60)
                 .setEndDayOfYear(90)
+                .setCreated(0L)
+                .build());
+
+    // When
+    PCollection<TemporalRecord> dataStream =
+        p.apply(Create.of(input))
+            .apply(TemporalTransform.builder().create().interpret())
+            .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
+
+    // Should
+    PAssert.that(dataStream).containsInAnyOrder(dataExpected);
+    p.run();
+  }
+
+  @Test
+  public void transformationNanosecondsTest() {
+    // State
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
+    record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "1999-04-28T18:13:34.987654321");
+    final List<ExtendedRecord> input = Collections.singletonList(record);
+
+    // Expected
+    final List<TemporalRecord> dataExpected =
+        Collections.singletonList(
+            TemporalRecord.newBuilder()
+                .setId("0")
+                .setYear(1999)
+                .setMonth(4)
+                .setDay(28)
+                .setEventDate(
+                    EventDate.newBuilder()
+                        .setInterval("1999-04-28T18:13:34.987654321")
+                        .setGte("1999-04-28T18:13:34.987") // Truncated down to milliseconds
+                        .setLte("1999-04-28T18:13:34.987") // as this is the most ES supports
+                        .build())
+                .setStartDayOfYear(118)
+                .setEndDayOfYear(118)
                 .setCreated(0L)
                 .build());
 
@@ -201,8 +238,8 @@ public class TemporalRecordTransformTest {
             .setEventDate(
                 EventDate.newBuilder()
                     .setInterval("1999-02-01T12:26")
-                    .setGte("1999-02-01T12:26:00")
-                    .setLte("1999-02-01T12:26:00")
+                    .setGte("1999-02-01T12:26:00.000")
+                    .setLte("1999-02-01T12:26:00.000")
                     .build())
             .setDateIdentified("1999-04-01")
             .setModified("1999-03-01T12:26")
