@@ -111,6 +111,8 @@
     <hbase.version>2.5.3-hadoop3</hbase.version>
     <curator.version>4.3.0</curator.version>
 
+    <hadoop.it.version>3.2.4</hadoop.it.version>
+
     <!-- Match the version brought in through Tika in the gbif-parsers -->
     <commons-io.version>2.11.0</commons-io.version>
     <!-- Match the version from name-parser -->
@@ -1061,7 +1063,7 @@
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-minicluster</artifactId>
-        <version>${hadoop.version}</version>
+        <version>${hadoop.it.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
