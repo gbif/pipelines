@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +20,6 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.common.process.StackableSparkRunner;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -43,32 +43,16 @@ public class CommonHdfsViewCallback {
         message.setInterpretTypes(swapInterpretTypes(message.getInterpretTypes()));
 
         int fileShards = computeNumberOfShards(message);
-
-        ProcessRunnerBuilderBuilder builder =
-            ProcessRunnerBuilder.builder()
-                .distributedConfig(config.distributedConfig)
-                .sparkConfig(config.sparkConfig)
-                .sparkAppName(
-                    config.stepType + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-                .beamConfigFn(BeamSettings.occurrenceHdfsView(config, message, fileShards));
+        Consumer<StringJoiner> beamSettings =
+            BeamSettings.occurrenceHdfsView(config, message, fileShards);
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
         log.info("Start the process. Message - {}", message);
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          StackableSparkRunner.StackableSparkRunnerBuilder stackableBuilder =
-              StackableSparkRunner.builder()
-                  .distributedConfig(config.distributedConfig)
-                  .sparkConfig(config.sparkConfig)
-                  .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
-                  .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
-                  .beamConfigFn(BeamSettings.occurrenceHdfsView(config, message, fileShards))
-                  .sparkAppName(
-                      config.stepType + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-                  .deleteOnFinish(true);
-          runDistributed(message, stackableBuilder);
+          runDistributed(message, beamSettings);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
-          runLocal(builder);
+          runLocal(beamSettings);
         }
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
@@ -93,14 +77,25 @@ public class CommonHdfsViewCallback {
     return isCorrectProcess;
   }
 
-  private void runLocal(ProcessRunnerBuilderBuilder builder) {
-    HdfsViewPipeline.run(builder.build().buildOptions(), executor);
+  private void runLocal(Consumer<StringJoiner> beamSettings) {
+    String[] pipelineOptions = BeamSettings.buildOptions(beamSettings);
+    HdfsViewPipeline.run(pipelineOptions, executor);
   }
 
   private void runDistributed(
-      PipelinesInterpretationMessage message,
-      StackableSparkRunner.StackableSparkRunnerBuilder builder)
+      PipelinesInterpretationMessage message, Consumer<StringJoiner> beamSettings)
       throws IOException {
+
+    StackableSparkRunner.StackableSparkRunnerBuilder builder =
+        StackableSparkRunner.builder()
+            .distributedConfig(config.distributedConfig)
+            .sparkConfig(config.sparkConfig)
+            .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
+            .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
+            .beamConfigFn(beamSettings)
+            .sparkAppName(
+                config.stepType + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+            .deleteOnFinish(true);
 
     long recordsNumber = getRecordNumber(message);
     log.info("Calculate job's settings based on {} records", recordsNumber);
@@ -109,13 +104,14 @@ public class CommonHdfsViewCallback {
     builder.sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().get().start().waitFor();
+    StackableSparkRunner ssr = builder.build();
+    int exitValue = ssr.start().waitFor();
 
     if (exitValue != 0) {
       throw new IllegalStateException(
-          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
+          "Process failed in distributed Job. Check yarn logs " + ssr.getSparkAppName());
     } else {
-      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
+      log.info("Process has been finished, Spark job name - {}", ssr.getSparkAppName());
     }
   }
 

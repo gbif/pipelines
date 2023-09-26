@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,7 @@ import org.gbif.pipelines.common.interpretation.RecordCountReader;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.StackableSparkRunner;
+import org.gbif.pipelines.ingest.java.pipelines.VerbatimToIdentifierPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.occurrences.identifier.validation.IdentifierValidationResult;
@@ -86,11 +89,14 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
+        Consumer<StringJoiner> beamSettings =
+            BeamSettings.occurrenceIdentifier(config, message, getFilePath(message));
+
         log.info("Start the process. Message - {}", message);
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          runDistributed(message);
+          runDistributed(message, beamSettings);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
-          runLocal(builder);
+          runLocal(beamSettings);
         }
 
         IdentifierValidationResult validationResult =
@@ -144,21 +150,13 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
         message.getDatasetType());
   }
 
-  private void runDistributed(PipelinesVerbatimMessage message) throws IOException {
-    String datasetId = message.getDatasetUuid().toString();
-    String attempt = Integer.toString(message.getAttempt());
-
-    String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
-    String path =
-        message.getExtraPath() != null
-            ? message.getExtraPath()
-            : String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
-
+  private void runDistributed(PipelinesVerbatimMessage message, Consumer<StringJoiner> beamSettings)
+      throws IOException {
     long recordsNumber = RecordCountReader.get(config.stepConfig, message);
     SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
     StackableSparkRunner.StackableSparkRunnerBuilder builder =
         StackableSparkRunner.builder()
-            .beamConfigFn(BeamSettings.occurrenceIdentifier(config, message, path))
+            .beamConfigFn(beamSettings)
             .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
             .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
             .sparkConfig(config.sparkConfig)
@@ -168,17 +166,29 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
             .sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().start().waitFor();
+    StackableSparkRunner ssr = builder.build();
+    int exitValue = ssr.start().waitFor();
 
     if (exitValue != 0) {
       throw new IllegalStateException(
-          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
+          "Process failed in distributed Job. Check k8s logs " + ssr.getSparkAppName());
     } else {
-      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
+      log.info("Process has been finished, Spark job name - {}", ssr.getSparkAppName());
     }
   }
 
-  private void runLocal(ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder) {
-    VerbatimToIdentifierPipeline.run(builder.build().buildOptions(), executor);
+  private void runLocal(Consumer<StringJoiner> beamSettings) {
+    String[] pipelineOptions = BeamSettings.buildOptions(beamSettings);
+    VerbatimToIdentifierPipeline.run(pipelineOptions, executor);
+  }
+
+  private String getFilePath(PipelinesVerbatimMessage message) {
+    String datasetId = message.getDatasetUuid().toString();
+    String attempt = Integer.toString(message.getAttempt());
+
+    String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
+    return message.getExtraPath() != null
+        ? message.getExtraPath()
+        : String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
   }
 }

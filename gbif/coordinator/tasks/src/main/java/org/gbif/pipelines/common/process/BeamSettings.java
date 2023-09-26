@@ -31,6 +31,7 @@ import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfigurat
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BeamSettings {
+  private static final String DELIMITER = " ";
 
   public static Consumer<StringJoiner> occurrenceInterpretation(
       InterpreterConfiguration config,
@@ -306,8 +307,8 @@ public class BeamSettings {
   }
 
   public static String[] buildOptions(Consumer<StringJoiner> beamConfigFn) {
-    StringJoiner joiner = new StringJoiner(" ");
+    StringJoiner joiner = new StringJoiner(DELIMITER);
     beamConfigFn.accept(joiner);
-    return joiner.toString().split(" ");
+    return joiner.toString().split(DELIMITER);
   }
 }

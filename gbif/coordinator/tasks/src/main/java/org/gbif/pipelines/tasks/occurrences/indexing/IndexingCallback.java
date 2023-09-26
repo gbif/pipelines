@@ -7,7 +7,9 @@ import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +26,6 @@ import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.indexing.IndexSettings;
 import org.gbif.pipelines.common.indexing.SparkSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.process.StackableSparkRunner;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -123,8 +124,8 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   public Runnable createRunnable(PipelinesInterpretedMessage message) {
     return () -> {
       try {
-        long recordsNumber = getRecordNumber(message);
 
+        long recordsNumber = getRecordNumber(message);
         IndexSettings indexSettings =
             IndexSettings.create(
                 config.indexConfig,
@@ -132,14 +133,16 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
                 message.getDatasetUuid().toString(),
                 message.getAttempt(),
                 recordsNumber);
+        Consumer<StringJoiner> beamSettings =
+            BeamSettings.occurrenceIndexing(config, message, indexSettings);
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
         log.info("Start the process. Message - {}", message);
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          runDistributed(message, indexSettings, recordsNumber);
+          runDistributed(message, beamSettings, recordsNumber);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
-          runLocal(message, indexSettings);
+          runLocal(beamSettings);
         }
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
@@ -160,19 +163,13 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         message.getEndpointType());
   }
 
-  private void runLocal(PipelinesInterpretedMessage message, IndexSettings indexSettings) {
-    ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder =
-        ProcessRunnerBuilder.builder()
-            .distributedConfig(config.distributedConfig)
-            .sparkConfig(config.sparkConfig)
-            .sparkAppName(
-                getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-            .beamConfigFn(BeamSettings.occurrenceIndexing(config, message, indexSettings));
-    InterpretedToEsIndexExtendedPipeline.run(builder.build().buildOptions(), executor);
+  private void runLocal(Consumer<StringJoiner> beamSettings) {
+    String[] pipelineOptions = BeamSettings.buildOptions(beamSettings);
+    InterpretedToEsIndexExtendedPipeline.run(pipelineOptions, executor);
   }
 
   private void runDistributed(
-      PipelinesInterpretedMessage message, IndexSettings indexSettings, long recordsNumber)
+      PipelinesInterpretedMessage message, Consumer<StringJoiner> beamSettings, long recordsNumber)
       throws IOException {
 
     String filePath =
@@ -193,20 +190,21 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
             .sparkConfig(config.sparkConfig)
             .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
             .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
-            .beamConfigFn(BeamSettings.occurrenceIndexing(config, message, indexSettings))
+            .beamConfigFn(beamSettings)
             .sparkAppName(
                 getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
             .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
             .sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().start().waitFor();
+    StackableSparkRunner ssr = builder.build();
+    int exitValue = ssr.start().waitFor();
 
     if (exitValue != 0) {
       throw new IllegalStateException(
-          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
+          "Process failed in distributed Job. Check k8s logs " + ssr.getSparkAppName());
     } else {
-      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
+      log.info("Process has been finished, Spark job name - {}", ssr.getSparkAppName());
     }
   }
 

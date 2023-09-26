@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.validation.constraints.Size;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,7 @@ public final class StackableSparkRunner {
 
   @NonNull private final DistributedConfiguration distributedConfig;
 
-  @NonNull private final String sparkAppName;
+  @Getter @NonNull private final String sparkAppName;
 
   @NonNull private final MainSparkSettings sparkSettings;
 

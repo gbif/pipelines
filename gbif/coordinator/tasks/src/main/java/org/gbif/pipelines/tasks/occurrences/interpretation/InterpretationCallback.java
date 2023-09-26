@@ -137,14 +137,18 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         defaultDateFormat = getDefaultDateFormat(datasetId);
       }
 
+      Consumer<StringJoiner> beamSettings =
+          BeamSettings.occurrenceInterpretation(config, message, path, defaultDateFormat);
+
       Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
       log.info("Start the process. Message - {}", message);
       try {
+
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          runDistributed(message, path, defaultDateFormat);
+          runDistributed(message, beamSettings);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
-          runLocal(BeamSettings.occurrenceInterpretation(config, message, path, defaultDateFormat));
+          runLocal(beamSettings);
         }
 
         log.info("Deleting old attempts directories");
@@ -189,12 +193,13 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         message.getDatasetType());
   }
 
-  private void runLocal(Consumer<StringJoiner> consumer) {
-    VerbatimToOccurrencePipeline.run(BeamSettings.buildOptions(consumer), executor);
+  private void runLocal(Consumer<StringJoiner> beamSettings) {
+    String[] pipelineOptions = BeamSettings.buildOptions(beamSettings);
+    VerbatimToOccurrencePipeline.run(pipelineOptions, executor);
   }
 
-  private void runDistributed(
-      PipelinesVerbatimMessage message, String path, String defaultDateFormat) throws IOException {
+  private void runDistributed(PipelinesVerbatimMessage message, Consumer<StringJoiner> beamSettings)
+      throws IOException {
     long recordsNumber = RecordCountReader.get(config.stepConfig, message);
 
     SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
@@ -205,21 +210,21 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
             .sparkConfig(config.sparkConfig)
             .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
             .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
-            .beamConfigFn(
-                BeamSettings.occurrenceInterpretation(config, message, path, defaultDateFormat))
+            .beamConfigFn(beamSettings)
             .sparkAppName(
                 getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
             .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
             .sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().start().waitFor();
+    StackableSparkRunner ssr = builder.build();
+    int exitValue = ssr.start().waitFor();
 
     if (exitValue != 0) {
       throw new IllegalStateException(
-          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
+          "Process failed in distributed Job. Check yarn logs " + ssr.getSparkAppName());
     } else {
-      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
+      log.info("Process has been finished, Spark job name - {}", ssr.getSparkAppName());
     }
   }
 

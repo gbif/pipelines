@@ -140,13 +140,14 @@ public class EventsIndexingCallback
             .sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().start().waitFor();
+    StackableSparkRunner ssr = builder.build();
+    int exitValue = ssr.start().waitFor();
 
     if (exitValue != 0) {
       throw new IllegalStateException(
-          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
+          "Process failed in distributed Job. Check k8s logs " + ssr.getSparkAppName());
     } else {
-      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
+      log.info("Process has been finished, Spark job name - {}", ssr.getSparkAppName());
     }
   }
 
