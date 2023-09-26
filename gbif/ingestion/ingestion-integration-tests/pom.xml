@@ -92,7 +92,6 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-wrangler</artifactId>
-      <version>${gbif-wrangler.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>

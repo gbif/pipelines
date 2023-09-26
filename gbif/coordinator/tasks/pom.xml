@@ -52,6 +52,7 @@
     <commons-lang.version>2.6</commons-lang.version>
     <commons-configuration.version>1.10</commons-configuration.version>
     <xercesImpl.version>2.12.1</xercesImpl.version>
+    <woodstox-core.version>5.3.0</woodstox-core.version>
   </properties>
 
   <dependencies>
@@ -335,7 +336,7 @@
     <dependency>
       <groupId>com.fasterxml.woodstox</groupId>
       <artifactId>woodstox-core</artifactId>
-      <version>5.3.0</version>
+      <version>${woodstox-core.version}</version>
       <scope>runtime</scope>
     </dependency>
 

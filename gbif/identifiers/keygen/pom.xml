@@ -17,11 +17,6 @@
     changes) was copied from occurrence/occurrence-persistence project
   </description>
 
-  <properties>
-    <!-- Guava version required by HBase libraries -->
-    <guava.hbase.version>27.0.1-jre</guava.hbase.version>
-  </properties>
-
   <dependencies>
 
     <!-- Tools -->
@@ -59,7 +54,6 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>${guava.hbase.version}</version>
     </dependency>
 
     <!-- Logging -->

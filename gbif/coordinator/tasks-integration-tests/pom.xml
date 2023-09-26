@@ -47,7 +47,6 @@
   <properties>
     <fest.version>2.0M10</fest.version>
     <mockito.version>5.5.0</mockito.version>
-    <hadoop.version>3.2.4</hadoop.version>
   </properties>
 
   <dependencies>

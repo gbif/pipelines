@@ -44,7 +44,6 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>${guava.hbase.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.zookeeper</groupId>
@@ -66,17 +65,14 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>hbase-utils</artifactId>
-      <version>${hbase-utils.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-client</artifactId>
-      <version>${hbase.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-common</artifactId>
-      <version>${hbase.version}</version>
     </dependency>
 
     <!-- Hadoop -->
@@ -84,13 +80,11 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs</artifactId>
       <scope>compile</scope>
-      <version>3.2.4</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
       <scope>compile</scope>
-      <version>3.2.4</version>
     </dependency>
 
     <!-- Logging -->

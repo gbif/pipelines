@@ -16,9 +16,7 @@
   <description>Uploads fragments (raw records) from archives into Hbase table.</description>
 
   <properties>
-    <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
     <xerces.version>2.11.0</xerces.version>
-    <hadoop.version>3.2.4</hadoop.version>
   </properties>
 
   <build>
@@ -82,19 +80,16 @@
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-client</artifactId>
-      <version>${hbase.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-common</artifactId>
-      <version>${hbase.version}</version>
     </dependency>
 
     <!-- Common -->
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>${guava.hbase.version}</version>
     </dependency>
 
     <!-- Logging -->
@@ -119,30 +114,25 @@
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-testing-util</artifactId>
-      <version>${hbase.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-minicluster</artifactId>
-      <version>${hadoop.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-auth</artifactId>
       <scope>test</scope>
-      <version>${hadoop.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
       <scope>test</scope>
-      <version>${hadoop.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs</artifactId>
       <scope>test</scope>
-      <version>${hadoop.version}</version>
     </dependency>
     <dependency>
       <groupId>xerces</groupId>

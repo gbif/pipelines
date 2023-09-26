@@ -120,8 +120,6 @@
     <commons-lang3.version>3.10</commons-lang3.version>
     <!-- Be carful when change the guava version, it can break XML parsing and etc at runtime -->
     <guava.version>27.0.1-jre</guava.version>
-    <!-- Guava version required by HBase libraries -->
-    <guava.hbase.version>27.0.1-jre</guava.hbase.version>
 
     <!-- Fault tolerance -->
     <resilience4j.version>1.1.0</resilience4j.version>
@@ -183,6 +181,7 @@
 
     <!-- Plugins -->
     <io.fabric8.version>0.33.0</io.fabric8.version>
+    <googleJavaFormat.version>1.17.0</googleJavaFormat.version>
 
     <!-- Sonar -->
     <sonar.projectName>GBIF Pipelines</sonar.projectName>
@@ -236,7 +235,7 @@
           <configuration combine.self="override">
             <java>
               <googleJavaFormat>
-                <version>1.17.0</version>
+                <version>${googleJavaFormat.version}</version>
                 <style>GOOGLE</style>
               </googleJavaFormat>
             </java>

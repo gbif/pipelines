@@ -16,7 +16,6 @@
   <description>Base Apache Beam pipelines for ingestion biodiversity data</description>
 
   <properties>
-    <scala.library.version>2.12.17</scala.library.version>
     <metrics-core.version>4.2.7</metrics-core.version>
     <jaxws-api.version>2.3.1</jaxws-api.version>
   </properties>
