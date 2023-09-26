@@ -16,7 +16,6 @@
 
   <properties>
     <curator.version>4.3.0</curator.version>
-    <hadoop.version>${hadoop.it.version}</hadoop.version>
   </properties>
 
   <build>
