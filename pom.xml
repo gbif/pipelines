@@ -78,6 +78,7 @@
 
   <properties>
     <!-- Common variables -->
+    <jdkLevel>11</jdkLevel>
     <encoding>UTF-8</encoding>
     <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
