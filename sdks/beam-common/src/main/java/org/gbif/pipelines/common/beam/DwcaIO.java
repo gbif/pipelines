@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.ARCHIVE_TO_ER
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -19,6 +20,9 @@ import org.apache.beam.sdk.transforms.display.DisplayData;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.directory.api.util.Strings;
+import org.gbif.dwc.record.Record;
+import org.gbif.dwc.record.StarRecord;
+import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
 import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -138,7 +142,7 @@ public class DwcaIO {
     private final Counter dwcaCount = Metrics.counter("DwcaIO", ARCHIVE_TO_ER_COUNT);
 
     private final DwcaSource source;
-    private DwcaReader reader;
+    private DwcaReader<ExtendedRecord> reader;
 
     private BoundedDwCAReader(DwcaSource source) {
       this.source = source;
@@ -146,10 +150,22 @@ public class DwcaIO {
 
     @Override
     public boolean start() throws IOException {
+
+      Function<Object, ExtendedRecord> convertFn =
+          r -> ExtendedRecordConverter.from((Record) r, Collections.emptyMap());
+
+      Function<Object, ExtendedRecord> convertExtFn =
+          r -> {
+            StarRecord starRecord = (StarRecord) r;
+            return ExtendedRecordConverter.from(starRecord.core(), starRecord.extensions());
+          };
+
       reader =
           source.read.unCompressed
-              ? DwcaReader.fromLocation(source.read.workingPath)
-              : DwcaReader.fromCompressed(source.read.path, source.read.workingPath);
+              ? DwcaReader.fromLocation(source.read.workingPath, convertFn, convertExtFn)
+              : DwcaReader.fromCompressed(
+                  source.read.path, source.read.workingPath, convertFn, convertExtFn);
+
       return reader.advance();
     }
 

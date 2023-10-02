@@ -63,6 +63,11 @@
       <artifactId>beam-sdks-java-io-elasticsearch</artifactId>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-sdks-java-io-hbase</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
     <!-- Utils -->
     <dependency>

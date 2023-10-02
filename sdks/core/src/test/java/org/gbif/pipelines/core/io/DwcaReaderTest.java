@@ -3,6 +3,7 @@ package org.gbif.pipelines.core.io;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
+import org.gbif.pipelines.core.io.DwcaReaderFactory.ExtendedRecordReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Test;
 
@@ -14,9 +15,9 @@ public class DwcaReaderTest {
     String fileName = getClass().getResource("/dwca/plants_dwca_ext").getFile();
 
     // When
-    try (DwcaReader dwCAReader = DwcaReader.fromLocation(fileName)) {
-      dwCAReader.advance();
-      ExtendedRecord current = dwCAReader.getCurrent();
+    try (DwcaReader<ExtendedRecord> dwcaReader = ExtendedRecordReader.fromLocation(fileName)) {
+      dwcaReader.advance();
+      ExtendedRecord current = dwcaReader.getCurrent();
       // Should
       assertNotNull(current);
       assertNotNull(current.getId());
@@ -29,9 +30,9 @@ public class DwcaReaderTest {
     String fileName = getClass().getResource("/dwca/plants_dwca").getFile();
 
     // When
-    try (DwcaReader dwCAReader = DwcaReader.fromLocation(fileName)) {
-      dwCAReader.advance();
-      ExtendedRecord current = dwCAReader.getCurrent();
+    try (DwcaReader<ExtendedRecord> dwcaReader = ExtendedRecordReader.fromLocation(fileName)) {
+      dwcaReader.advance();
+      ExtendedRecord current = dwcaReader.getCurrent();
       // Should
       assertNotNull(current);
       assertNotNull(current.getId());
@@ -44,10 +45,10 @@ public class DwcaReaderTest {
     String fileName = getClass().getResource("/dwca/plants_dwca_null").getFile();
 
     // When
-    try (DwcaReader dwCAReader = DwcaReader.fromLocation(fileName)) {
-      dwCAReader.advance();
+    try (DwcaReader<ExtendedRecord> dwcaReader = ExtendedRecordReader.fromLocation(fileName)) {
+      dwcaReader.advance();
       // Should
-      dwCAReader.getCurrent();
+      dwcaReader.getCurrent();
     }
   }
 }

@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -63,27 +62,26 @@ public class HbaseStore {
   }
 
   @SneakyThrows
+  public static boolean isNewRawRecord(Table table, String key, RawRecord raw) {
+    try {
+      Get get = createHashValueGet(key);
+      byte[] value = table.get(get).value();
+      if (value != null) {
+        return !raw.getHashValue().equals(new String(value, UTF_8));
+      }
+      return true;
+    } catch (IOException ex) {
+      throw new PipelinesException(ex);
+    }
+  }
+
+  @SneakyThrows
   public static Map<String, RawRecord> filterRecordsByHash(
       Table table, Map<String, RawRecord> fragmentsMap) {
-
-    BiPredicate<String, RawRecord> prFn =
-        (key, raw) -> {
-          try {
-            Get get = createHashValueGet(key);
-            byte[] value = table.get(get).value();
-            if (value != null) {
-              return !raw.getHashValue().equals(new String(value, UTF_8));
-            }
-            return true;
-          } catch (IOException ex) {
-            throw new PipelinesException(ex);
-          }
-        };
-
     return fragmentsMap
         .entrySet()
         .parallelStream()
-        .filter(es -> prFn.test(es.getKey(), es.getValue()))
+        .filter(es -> isNewRawRecord(table, es.getKey(), es.getValue()))
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> y));
   }
 
