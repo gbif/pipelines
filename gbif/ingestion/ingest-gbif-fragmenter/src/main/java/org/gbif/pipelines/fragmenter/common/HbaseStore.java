@@ -41,30 +41,29 @@ public class HbaseStore {
       String datasetKey,
       Integer attempt,
       EndpointType endpointType,
-      Map<String, RawRecord> fragmentsMap) {
+      List<RawRecord> fragmentsList) {
 
-    Map<String, Long> dateMap = getCreatedDateMap(table, fragmentsMap);
+    Map<String, Long> dateMap = getCreatedDateMap(table, fragmentsList);
 
     List<Put> putList =
-        fragmentsMap.entrySet().stream()
+        fragmentsList.stream()
             .map(
-                es ->
+                rawRecord ->
                     createFragmentPut(
                         datasetKey,
                         attempt,
                         endpointType.name(),
-                        es.getKey(),
-                        es.getValue(),
-                        dateMap.get(es.getKey())))
+                        rawRecord,
+                        dateMap.get(rawRecord.getKey())))
             .collect(Collectors.toList());
 
     table.put(putList);
   }
 
   @SneakyThrows
-  public static boolean isNewRawRecord(Table table, String key, RawRecord raw) {
+  public static boolean isNewRawRecord(Table table, RawRecord raw) {
     try {
-      Get get = createHashValueGet(key);
+      Get get = createHashValueGet(raw.getKey());
       byte[] value = table.get(get).value();
       if (value != null) {
         return !raw.getHashValue().equals(new String(value, UTF_8));
@@ -76,25 +75,23 @@ public class HbaseStore {
   }
 
   @SneakyThrows
-  public static Map<String, RawRecord> filterRecordsByHash(
-      Table table, Map<String, RawRecord> fragmentsMap) {
+  public static List<RawRecord> filterRecordsByHash(Table table, List<RawRecord> fragmentsMap) {
     return fragmentsMap
-        .entrySet()
         .parallelStream()
-        .filter(es -> isNewRawRecord(table, es.getKey(), es.getValue()))
-        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> y));
+        .filter(rr -> isNewRawRecord(table, rr))
+        .collect(Collectors.toList());
   }
 
-  private static Map<String, Long> getCreatedDateMap(
-      Table table, Map<String, RawRecord> fragmentsMap) throws IOException {
+  private static Map<String, Long> getCreatedDateMap(Table table, List<RawRecord> fragmentsList)
+      throws IOException {
 
     Map<String, Long> createdDateMap = new HashMap<>();
 
-    for (String key : fragmentsMap.keySet()) {
-      Get get = createCreatedDateGet(key);
+    for (RawRecord rr : fragmentsList) {
+      Get get = createCreatedDateGet(rr.getKey());
       byte[] value = table.get(get).value();
       if (value != null) {
-        createdDateMap.put(key, Bytes.toLong(value));
+        createdDateMap.put(rr.getKey(), Bytes.toLong(value));
       }
     }
 
@@ -102,16 +99,11 @@ public class HbaseStore {
   }
 
   private static Put createFragmentPut(
-      String datasetKey,
-      Integer attempt,
-      String protocol,
-      String key,
-      RawRecord rawRecord,
-      Long created) {
+      String datasetKey, Integer attempt, String protocol, RawRecord rawRecord, Long created) {
     long timestampUpdated = Instant.now().toEpochMilli();
     long timestampCreated = Optional.ofNullable(created).orElse(timestampUpdated);
 
-    Put put = new Put(Bytes.toBytes(key));
+    Put put = new Put(Bytes.toBytes(rawRecord.getKey()));
 
     put.addColumn(FF_BYTES, DQ_BYTES, Bytes.toBytes(datasetKey));
     put.addColumn(FF_BYTES, AQ_BYTES, Bytes.toBytes(attempt));

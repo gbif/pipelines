@@ -25,6 +25,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.common.beam.DwcaExtendedRecordIO;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
@@ -98,8 +99,8 @@ public class AnnotationPipeline {
       for (String filePath : files.values()) {
         if (filePath.endsWith(".zip")) {
           String localPath = convertToLocal(options, filePath);
-          DwcaIO.Read reader =
-              DwcaIO.Read.fromCompressed(
+          DwcaIO.Read<ExtendedRecord> reader =
+              DwcaExtendedRecordIO.fromCompressed(
                   localPath,
                   options.getTempLocation() + "/annotations-" + System.currentTimeMillis());
           PCollection<ExtendedRecord> pc = p.apply("Read from Darwin Core Archive", reader);
@@ -112,8 +113,8 @@ public class AnnotationPipeline {
 
       String filePath = files.values().iterator().next();
       String localPath = convertToLocal(options, filePath);
-      DwcaIO.Read reader1 =
-          DwcaIO.Read.fromCompressed(
+      DwcaIO.Read<ExtendedRecord> reader1 =
+          DwcaExtendedRecordIO.fromCompressed(
               localPath, options.getTempLocation() + "/annotations-" + System.currentTimeMillis());
       annotations = p.apply("Read from Darwin Core Archive", reader1);
     } else {

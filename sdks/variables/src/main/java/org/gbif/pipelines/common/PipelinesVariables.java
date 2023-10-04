@@ -319,6 +319,7 @@ public class PipelinesVariables {
 
     // Fragmenter
     public static final String FRAGMENTER_COUNT = "fragmenterRecordsCount";
+    public static final String FRAGMENTER_FILTER_COUNT = "fragmenterFilterRecordsCount";
     // Specific
     public static final String IDENTIFIER_RECORDS_COUNT = "identifierRecordsCount";
     public static final String LOCATION_FEATURE_RECORDS_COUNT = "locationFeatureRecordsCount";

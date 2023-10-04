@@ -18,8 +18,7 @@ import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FragmenterServiceFactory {
 
-  public static SerializableSupplier<Table> getInstanceSupplier(
-      PipelinesConfig config) {
+  public static SerializableSupplier<Table> getInstanceSupplier(PipelinesConfig config) {
     return () -> {
       String zk = getZk(config);
 
@@ -29,8 +28,7 @@ public class FragmenterServiceFactory {
     };
   }
 
-  public static SerializableSupplier<Table> createSupplier(
-      PipelinesConfig config) {
+  public static SerializableSupplier<Table> createSupplier(PipelinesConfig config) {
     return () -> {
       String zk = getZk(config);
 

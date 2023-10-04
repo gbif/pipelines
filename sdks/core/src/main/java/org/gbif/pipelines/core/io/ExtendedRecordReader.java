@@ -12,6 +12,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ExtendedRecordReader {
+
   private static final Function<Object, ExtendedRecord> CONVERT_FN =
       r -> ExtendedRecordConverter.from((Record) r, Collections.emptyMap());
 
