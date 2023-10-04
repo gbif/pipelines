@@ -5,7 +5,7 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import org.gbif.pipelines.core.io.DwcaReader;
-import org.gbif.pipelines.core.io.DwcaReaderFactory.ExtendedRecordReader;
+import org.gbif.pipelines.core.io.ExtendedRecordReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /** Test utilities for reading darwin core archives for testing the outputs of tests. */

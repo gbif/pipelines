@@ -5,7 +5,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.ARCHIVE_TO_ER
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -20,16 +19,14 @@ import org.apache.beam.sdk.transforms.display.DisplayData;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.directory.api.util.Strings;
-import org.gbif.dwc.record.Record;
-import org.gbif.dwc.record.StarRecord;
-import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
 import org.gbif.pipelines.core.io.DwcaReader;
+import org.gbif.pipelines.core.io.ExtendedRecordReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /**
  * IO operations for DwC-A formats.
  *
- * <p>Provides the ability to read a DwC-A as a bounded source, but in a non splittable manner. This
+ * <p>Provides the ability to read a DwC-A as a bounded source, but in a non-splittable manner. This
  * means that a single threaded approach to reading is enforced.
  *
  * <p>This is intended only for demonstration usage, and not for production.
@@ -151,20 +148,10 @@ public class DwcaIO {
     @Override
     public boolean start() throws IOException {
 
-      Function<Object, ExtendedRecord> convertFn =
-          r -> ExtendedRecordConverter.from((Record) r, Collections.emptyMap());
-
-      Function<Object, ExtendedRecord> convertExtFn =
-          r -> {
-            StarRecord starRecord = (StarRecord) r;
-            return ExtendedRecordConverter.from(starRecord.core(), starRecord.extensions());
-          };
-
       reader =
           source.read.unCompressed
-              ? DwcaReader.fromLocation(source.read.workingPath, convertFn, convertExtFn)
-              : DwcaReader.fromCompressed(
-                  source.read.path, source.read.workingPath, convertFn, convertExtFn);
+              ? ExtendedRecordReader.fromLocation(source.read.workingPath)
+              : ExtendedRecordReader.fromCompressed(source.read.path, source.read.workingPath);
 
       return reader.advance();
     }

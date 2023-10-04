@@ -13,6 +13,11 @@ import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.fragmenter.record.DwcaOccurrenceRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.transforms.Transform;
+
 import org.slf4j.MDC;
 
 @Slf4j
@@ -62,5 +67,9 @@ public class FragmenterPipeline {
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
+  }
+
+  public static class RecordFilter extends Transform<DwcaOccurrenceRecord, DwcaOccurrenceRecord> {
+
   }
 }

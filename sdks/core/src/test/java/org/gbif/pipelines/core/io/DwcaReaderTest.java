@@ -3,7 +3,6 @@ package org.gbif.pipelines.core.io;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
-import org.gbif.pipelines.core.io.DwcaReaderFactory.ExtendedRecordReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Test;
 

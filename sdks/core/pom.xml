@@ -92,6 +92,10 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>models</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>keygen</artifactId>
+    </dependency>
 
     <!-- GBIF -->
     <dependency>
@@ -123,10 +127,6 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>keygen</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.kvs</groupId>
