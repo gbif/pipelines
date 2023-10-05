@@ -3,6 +3,7 @@ package org.gbif.pipelines.fragmenter.common;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.gbif.pipelines.core.utils.HashConverter;
 
 @Getter
@@ -10,16 +11,18 @@ import org.gbif.pipelines.core.utils.HashConverter;
 public class RawRecord {
 
   private String key;
-  private String record;
+  private String recordBody;
   private String hashValue;
 
-  private RawRecord(String key, String record) {
+  @Setter private Long createdDate;
+
+  private RawRecord(String key, String recordBody) {
     this.key = key;
-    this.record = record;
-    this.hashValue = HashConverter.getSha1(record);
+    this.recordBody = recordBody;
+    this.hashValue = HashConverter.getSha1(recordBody);
   }
 
-  public static RawRecord create(String key, String record) {
-    return new RawRecord(key, record);
+  public static RawRecord create(String key, String recordBody) {
+    return new RawRecord(key, recordBody);
   }
 }

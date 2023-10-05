@@ -4,9 +4,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -43,18 +41,11 @@ public class HbaseStore {
       EndpointType endpointType,
       List<RawRecord> fragmentsList) {
 
-    Map<String, Long> dateMap = getCreatedDateMap(table, fragmentsList);
-
     List<Put> putList =
         fragmentsList.stream()
+            .map(rr -> populateCreatedDate(table, rr))
             .map(
-                rawRecord ->
-                    createFragmentPut(
-                        datasetKey,
-                        attempt,
-                        endpointType.name(),
-                        rawRecord,
-                        dateMap.get(rawRecord.getKey())))
+                rawRecord -> createFragmentPut(datasetKey, attempt, endpointType.name(), rawRecord))
             .collect(Collectors.toList());
 
     table.put(putList);
@@ -82,26 +73,25 @@ public class HbaseStore {
         .collect(Collectors.toList());
   }
 
-  private static Map<String, Long> getCreatedDateMap(Table table, List<RawRecord> fragmentsList)
-      throws IOException {
+  @SneakyThrows
+  public static RawRecord populateCreatedDate(Table table, RawRecord rawRecord) {
 
-    Map<String, Long> createdDateMap = new HashMap<>();
+    Get get = createCreatedDateGet(rawRecord.getKey());
 
-    for (RawRecord rr : fragmentsList) {
-      Get get = createCreatedDateGet(rr.getKey());
-      byte[] value = table.get(get).value();
-      if (value != null) {
-        createdDateMap.put(rr.getKey(), Bytes.toLong(value));
-      }
+    byte[] value = table.get(get).value();
+    if (value != null) {
+      long createdDate = Bytes.toLong(value);
+      rawRecord.setCreatedDate(createdDate);
     }
 
-    return createdDateMap;
+    return rawRecord;
   }
 
-  private static Put createFragmentPut(
-      String datasetKey, Integer attempt, String protocol, RawRecord rawRecord, Long created) {
+  public static Put createFragmentPut(
+      String datasetKey, Integer attempt, String protocol, RawRecord rawRecord) {
     long timestampUpdated = Instant.now().toEpochMilli();
-    long timestampCreated = Optional.ofNullable(created).orElse(timestampUpdated);
+    Long timestampCreated =
+        Optional.ofNullable(rawRecord.getCreatedDate()).orElse(timestampUpdated);
 
     Put put = new Put(Bytes.toBytes(rawRecord.getKey()));
 
@@ -109,9 +99,9 @@ public class HbaseStore {
     put.addColumn(FF_BYTES, AQ_BYTES, Bytes.toBytes(attempt));
     put.addColumn(FF_BYTES, PQ_BYTES, Bytes.toBytes(protocol));
 
-    put.addColumn(FF_BYTES, DCQ_BYTES, Bytes.toBytes(timestampCreated));
     put.addColumn(FF_BYTES, DUQ_BYTES, Bytes.toBytes(timestampUpdated));
-    put.addColumn(FF_BYTES, RQ_BYTES, Bytes.toBytes(rawRecord.getRecord()));
+    put.addColumn(FF_BYTES, DCQ_BYTES, Bytes.toBytes(timestampCreated));
+    put.addColumn(FF_BYTES, RQ_BYTES, Bytes.toBytes(rawRecord.getRecordBody()));
     put.addColumn(FF_BYTES, HVQ_BYTES, Bytes.toBytes(rawRecord.getHashValue()));
     return put;
   }

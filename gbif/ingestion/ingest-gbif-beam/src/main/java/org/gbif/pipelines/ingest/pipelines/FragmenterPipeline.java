@@ -1,5 +1,7 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.FRAGMENTER_COUNT;
+
 import java.util.function.Function;
 import java.util.function.Predicate;
 import lombok.AccessLevel;
@@ -9,14 +11,24 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.io.hbase.HBaseIO;
+import org.apache.beam.sdk.io.hbase.HBaseIO.Write;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Mutation;
+import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Table;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.pipelines.common.beam.DwcaIO.Read;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
 import org.gbif.pipelines.fragmenter.common.RawRecord;
@@ -46,14 +58,17 @@ public class FragmenterPipeline {
       InterpretationPipelineOptions options,
       Function<InterpretationPipelineOptions, Pipeline> pipelinesFn) {
 
-    String datasetId = options.getDatasetId();
+    log.info("Adding step 0: Running Beam pipeline");
+    String datasetKey = options.getDatasetId();
     String attempt = options.getAttempt().toString();
 
-    MDC.put("datasetKey", datasetId);
+    MDC.put("datasetKey", datasetKey);
     MDC.put("attempt", attempt);
     MDC.put("step", StepType.FRAGMENTER.name());
 
+    log.info("Adding step 1: Creating transforms functions");
     TransformsFactory transformsFactory = TransformsFactory.create(options);
+    PipelinesConfig config = transformsFactory.getConfig();
 
     Read<DwcaOccurrenceRecord> dwcaOccurrenceRecordReader =
         Read.create(
@@ -72,14 +87,30 @@ public class FragmenterPipeline {
             .tableSupplier(transformsFactory.createFragmenterTableSupplier())
             .create();
 
-    log.info("Adding step 2: Pipeline steps");
+    MutationConverterFn mutationConverterFn =
+        MutationConverterFn.builder()
+            .datasetKey(datasetKey)
+            .attempt(Integer.valueOf(attempt))
+            .protocol(EndpointType.DWC_ARCHIVE.name())
+            .create();
+
+    Configuration hbaseConfig = HBaseConfiguration.create();
+    hbaseConfig.set("hbase.zookeeper.quorum", config.getZkConnectionString());
+    hbaseConfig.set("zookeeper.session.timeout", "360000");
+
+    Write hbaseWrite =
+        HBaseIO.write().withConfiguration(hbaseConfig).withTableId(config.getFragmentsTable());
+
+    log.info("Adding step 2: Creating pipeline steps");
     Pipeline p = pipelinesFn.apply(options);
 
     p.apply("Read from Darwin Core Archive", dwcaOccurrenceRecordReader)
         .apply("Convert to RawRecord", ParDo.of(rawRecordFn))
-        .apply("Filter RawRecord", ParDo.of(rawRecordFilterFn));
+        .apply("Filter RawRecord", ParDo.of(rawRecordFilterFn))
+        .apply("Convert to Mutation", ParDo.of(mutationConverterFn))
+        .apply("Push data into HBase", hbaseWrite);
 
-    log.info("Running the pipeline");
+    log.info("Adding step 3: Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
@@ -159,8 +190,28 @@ public class FragmenterPipeline {
     public void processElement(@Element RawRecord rr, OutputReceiver<RawRecord> out) {
       boolean isNewRawRecord = HbaseStore.isNewRawRecord(table, rr);
       if (isNewRawRecord) {
+        HbaseStore.populateCreatedDate(table, rr);
         out.output(rr);
       }
+    }
+  }
+
+  @Builder(buildMethodName = "create")
+  public static class MutationConverterFn extends DoFn<RawRecord, Mutation> {
+
+    private final Counter counter = Metrics.counter(MutationConverterFn.class, FRAGMENTER_COUNT);
+
+    String datasetKey;
+    Integer attempt;
+    String protocol;
+
+    @ProcessElement
+    public void processElement(@Element RawRecord rr, OutputReceiver<Mutation> out) {
+      Put fragmentPut = HbaseStore.createFragmentPut(datasetKey, attempt, protocol, rr);
+
+      out.output(fragmentPut);
+
+      counter.inc();
     }
   }
 }
