@@ -1,0 +1,241 @@
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1"
+         xmlns:dc="http://purl.org/dc/terms/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.1/eml.xsd"
+         packageId="322f41ce-1e12-494a-98ea-af94241b09ed/v1.1" system="http://gbif.org" scope="system"
+         xml:lang="eng">
+
+<dataset>
+  <alternateIdentifier>322f41ce-1e12-494a-98ea-af94241b09ed</alternateIdentifier>
+  <alternateIdentifier>http://ipt.vliz.be/eurobis/resource?r=kongsfjorden</alternateIdentifier>
+  <title xml:lang="eng">Kongsfjorden/Spitsbergen - soft bottom fauna</title>
+      <creator>
+    <organizationName>Alfred Wegener Institute for Polar- and Marine Research (AWI)</organizationName>
+    <address>
+        <country>DE</country>
+    </address>
+      </creator>
+      <creator>
+    <individualName>
+        <givenName>Marko</givenName>
+      <surName>Herrmann</surName>
+    </individualName>
+    <organizationName>Alfred Wegener Institute for Polar- and Marine Research (AWI)</organizationName>
+    <address>
+        <country>DE</country>
+    </address>
+    <electronicMailAddress>marko.herrmann@gmx.de</electronicMailAddress>
+      </creator>
+      <creator>
+    <individualName>
+        <givenName>Jürgen</givenName>
+      <surName>Laudien</surName>
+    </individualName>
+    <organizationName>Alfred Wegener Institute for Polar- and Marine Research (AWI)</organizationName>
+    <address>
+        <country>DE</country>
+    </address>
+    <electronicMailAddress>Juergen.Laudien@awi.de</electronicMailAddress>
+      </creator>
+      <metadataProvider>
+    <individualName>
+      <surName>EurOBIS Data Management Team</surName>
+    </individualName>
+    <organizationName>Flanders Marine Institute (VLIZ)</organizationName>
+    <address>
+        <country>BE</country>
+    </address>
+    <electronicMailAddress>info@eurobis.org</electronicMailAddress>
+    <onlineUrl>http://www.eurobis.org</onlineUrl>
+      </metadataProvider>
+  <pubDate>
+      2019-12-23
+  </pubDate>
+  <language>eng</language>
+  <abstract>
+    <para>The data was collected in the framework of a dive operated shallow water (5-30m) research of the benthic soft bottom community in Arctic Kongsfjord/Spitsbergen</para>
+  </abstract>
+      <keywordSet>
+            <keyword>Occurrence</keyword>
+        <keywordThesaurus>GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type.xml</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Observation</keyword>
+        <keywordThesaurus>GBIF Dataset Subtype Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_subtype.xml</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Data</keyword>
+            <keyword>Macrobenthos</keyword>
+            <keyword>Marine Genomics</keyword>
+            <keyword>Zoobenthos</keyword>
+        <keywordThesaurus>ASFA</keywordThesaurus>
+      </keywordSet>
+  <additionalInfo>
+    <para>marine, harvested by iOBIS</para>
+  </additionalInfo>
+  <intellectualRights>
+    <para>This work is licensed under a <ulink url="http://creativecommons.org/licenses/by-nc/4.0/legalcode"><citetitle>Creative Commons Attribution Non Commercial (CC-BY-NC) 4.0 License</citetitle></ulink>.</para>
+  </intellectualRights>
+  <coverage>
+      <geographicCoverage>
+          <geographicDescription>PNE, Norway, Spitsbergen - http://marineregions.org/mrgid/5335</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-180</westBoundingCoordinate>
+          <eastBoundingCoordinate>180</eastBoundingCoordinate>
+          <northBoundingCoordinate>90</northBoundingCoordinate>
+          <southBoundingCoordinate>-90</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+          <temporalCoverage>
+              <rangeOfDates>
+                  <beginDate>
+                    <calendarDate>2003-06-01</calendarDate>
+                  </beginDate>
+                <endDate>
+                  <calendarDate>2003-08-01</calendarDate>
+                </endDate>
+              </rangeOfDates>
+          </temporalCoverage>
+  </coverage>
+  <maintenance>
+    <description>
+      <para></para>
+    </description>
+    <maintenanceUpdateFrequency>unkown</maintenanceUpdateFrequency>
+  </maintenance>
+
+      <contact>
+    <individualName>
+        <givenName>Marko</givenName>
+      <surName>Herrmann</surName>
+    </individualName>
+    <organizationName>Alfred Wegener Institute for Polar- and Marine Research (AWI)</organizationName>
+    <address>
+        <country>DE</country>
+    </address>
+    <electronicMailAddress>marko.herrmann@gmx.de</electronicMailAddress>
+      </contact>
+</dataset>
+  <additionalMetadata>
+    <metadata>
+      <gbif>
+          <dateStamp>2019-12-23T01:04:46.000+01:00</dateStamp>
+          <hierarchyLevel>dataset</hierarchyLevel>
+            <citation identifier="https://doi.org/10.14284/263">Herrmann, M., J. Laudien, 2004: Soft bottom community structure and diversity in Arctic Kongsfjorden. Alfred-Wegener-Institute for Polar and Marine Research, Bremerhaven, Germany https://doi.org/10.14284/263</citation>
+            <physical>
+              <objectName>Online dataset</objectName>
+              <characterEncoding>UTF-8</characterEncoding>
+              <dataFormat>
+                <externallyDefinedFormat>
+                  <formatName>HTML</formatName>
+                </externallyDefinedFormat>
+              </dataFormat>
+              <distribution>
+                <online>
+                  <url function="download">http://www.emodnet-biology.eu/portal/index.php?dasid=614</url>
+                </online>
+              </distribution>
+            </physical>
+            <physical>
+              <objectName>Online dataset</objectName>
+              <characterEncoding>UTF-8</characterEncoding>
+              <dataFormat>
+                <externallyDefinedFormat>
+                  <formatName>HTML</formatName>
+                </externallyDefinedFormat>
+              </dataFormat>
+              <distribution>
+                <online>
+                  <url function="download">http://www.emodnet-biology.eu/toolbox/en/toolbox/occurrence/dataset/614</url>
+                </online>
+              </distribution>
+            </physical>
+            <physical>
+              <objectName>GBIF dataset</objectName>
+              <characterEncoding>UTF-8</characterEncoding>
+              <dataFormat>
+                <externallyDefinedFormat>
+                  <formatName>HTML</formatName>
+                </externallyDefinedFormat>
+              </dataFormat>
+              <distribution>
+                <online>
+                  <url function="download">https://www.gbif.org/dataset/322f41ce-1e12-494a-98ea-af94241b09ed</url>
+                </online>
+              </distribution>
+            </physical>
+            <physical>
+              <objectName>Archived file</objectName>
+              <characterEncoding>UTF-8</characterEncoding>
+              <dataFormat>
+                <externallyDefinedFormat>
+                  <formatName>HTML</formatName>
+                </externallyDefinedFormat>
+              </dataFormat>
+              <distribution>
+                <online>
+                  <url function="download">http://mda.vliz.be/mda/directlink.php?fid=VLIZ_00000097_1236855424</url>
+                </online>
+              </distribution>
+            </physical>
+            <physical>
+              <objectName>Archived file</objectName>
+              <characterEncoding>UTF-8</characterEncoding>
+              <dataFormat>
+                <externallyDefinedFormat>
+                  <formatName>HTML</formatName>
+                </externallyDefinedFormat>
+              </dataFormat>
+              <distribution>
+                <online>
+                  <url function="download">http://mda.vliz.be/mda/directlink.php?fid=VLIZ_00000097_1237214260</url>
+                </online>
+              </distribution>
+            </physical>
+            <physical>
+              <objectName>Online dataset</objectName>
+              <characterEncoding>UTF-8</characterEncoding>
+              <dataFormat>
+                <externallyDefinedFormat>
+                  <formatName>HTML</formatName>
+                </externallyDefinedFormat>
+              </dataFormat>
+              <distribution>
+                <online>
+                  <url function="download">https://obis.org/dataset/0c3aa272-b571-4d3a-b3c1-895988b1dcb7</url>
+                </online>
+              </distribution>
+            </physical>
+            <physical>
+              <objectName>Online dataset</objectName>
+              <characterEncoding>UTF-8</characterEncoding>
+              <dataFormat>
+                <externallyDefinedFormat>
+                  <formatName>HTML</formatName>
+                </externallyDefinedFormat>
+              </dataFormat>
+              <distribution>
+                <online>
+                  <url function="download">http://www.macrozoobenthos.de</url>
+                </online>
+              </distribution>
+            </physical>
+            <physical>
+              <objectName>Metadata</objectName>
+              <characterEncoding>UTF-8</characterEncoding>
+              <dataFormat>
+                <externallyDefinedFormat>
+                  <formatName>HTML</formatName>
+                </externallyDefinedFormat>
+              </dataFormat>
+              <distribution>
+                <online>
+                  <url function="download">http://www.eurobis.org/imis?module=dataset&amp;dasid=614</url>
+                </online>
+              </distribution>
+            </physical>
+          <dc:replaces>322f41ce-1e12-494a-98ea-af94241b09ed/v1.1.xml</dc:replaces>
+      </gbif>
+    </metadata>
+  </additionalMetadata>
+</eml:eml>

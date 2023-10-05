@@ -2,15 +2,16 @@ package org.gbif.pipelines.core.io;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.function.Function;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.DwcFiles;
+import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.utils.file.ClosableIterator;
 
 /**
@@ -18,16 +19,18 @@ import org.gbif.utils.file.ClosableIterator;
  * Avro.
  */
 @Slf4j
-public class DwcaReader<T> implements Closeable {
+public class DwcaReader<T> implements Closeable, Serializable {
 
-  private final Function<Object, T> convertFn;
+  private final SerializableFunction<Object, T> convertFn;
   private final ClosableIterator<?> iterator;
   @Getter private long recordsReturned;
   private T current;
 
   /** Creates a DwcaReader of an expanded archive. */
   public static <T> DwcaReader<T> fromLocation(
-      String path, Function<Object, T> convertFn, Function<Object, T> convertWithExtFn)
+      String path,
+      SerializableFunction<Object, T> convertFn,
+      SerializableFunction<Object, T> convertWithExtFn)
       throws IOException {
     Archive archive = DwcFiles.fromLocation(Paths.get(path));
     return new DwcaReader<>(archive, convertFn, convertWithExtFn);
@@ -39,8 +42,8 @@ public class DwcaReader<T> implements Closeable {
   public static <T> DwcaReader<T> fromCompressed(
       String source,
       String workingDir,
-      Function<Object, T> convertFn,
-      Function<Object, T> convertWithExtFn)
+      SerializableFunction<Object, T> convertFn,
+      SerializableFunction<Object, T> convertWithExtFn)
       throws IOException {
     Archive archive = DwcFiles.fromCompressed(Paths.get(source), Paths.get(workingDir));
     return new DwcaReader<>(archive, convertFn, convertWithExtFn);
@@ -48,7 +51,9 @@ public class DwcaReader<T> implements Closeable {
 
   /** Creates and DwcaReader using a StarRecord iterator. */
   private DwcaReader(
-      Archive archive, Function<Object, T> convertFn, Function<Object, T> convertWithExtFn) {
+      Archive archive,
+      SerializableFunction<Object, T> convertFn,
+      SerializableFunction<Object, T> convertWithExtFn) {
 
     archive.getCore().getHeader().stream()
         .flatMap(Collection::stream)

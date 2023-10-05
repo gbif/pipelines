@@ -3,6 +3,7 @@ package org.gbif.pipelines.common.beam;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.ARCHIVE_TO_ER_COUNT;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import lombok.AccessLevel;
@@ -35,7 +36,7 @@ import org.gbif.pipelines.core.io.DwcaReader;
  * }</pre>
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class DwcaIO {
+public class DwcaIO implements Serializable {
 
   public static class Read<T> extends PTransform<PBegin, PCollection<T>> {
 
