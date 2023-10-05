@@ -55,6 +55,6 @@ public class OccurrenceRecordConverter {
       return Optional.empty();
     }
 
-    return Optional.of(RawRecord.create(Keygen.getSaltedKey(key.get()), or.toStringRecord()));
+    return Optional.of(RawRecord.create(Keygen.getSaltedKey(key.get()), or.getStringRecord()));
   }
 }

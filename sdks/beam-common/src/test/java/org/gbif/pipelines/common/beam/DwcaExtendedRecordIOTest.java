@@ -5,8 +5,7 @@ import static org.junit.Assert.*;
 import com.google.common.io.Files;
 import java.io.File;
 import org.apache.beam.sdk.transforms.resourcehints.ResourceHints;
-import org.gbif.pipelines.common.beam.DwcaIO.Read;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.common.beam.DwcaExtendedRecordIO.Read;
 import org.junit.Test;
 
 public class DwcaExtendedRecordIOTest {
@@ -15,7 +14,7 @@ public class DwcaExtendedRecordIOTest {
   public void fromLocationTest() {
     String inpPath = getClass().getResource("/dwca/plants_dwca").getFile();
 
-    Read<ExtendedRecord> read = DwcaExtendedRecordIO.fromLocation(inpPath);
+    Read read = DwcaExtendedRecordIO.Read.fromLocation(inpPath);
 
     ResourceHints hints = read.getResourceHints();
     assertNotNull(read);
@@ -27,7 +26,7 @@ public class DwcaExtendedRecordIOTest {
     String inpPath = getClass().getResource("/dwca/plants.zip").getFile();
     File tempDir = Files.createTempDir();
 
-    Read<ExtendedRecord> read = DwcaExtendedRecordIO.fromCompressed(inpPath, tempDir.getPath());
+    Read read = DwcaExtendedRecordIO.Read.fromCompressed(inpPath, tempDir.getPath());
 
     ResourceHints hints = read.getResourceHints();
     assertNotNull(read);

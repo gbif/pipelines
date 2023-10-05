@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.FRAGMENTER_COUNT;
 
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import lombok.AccessLevel;
@@ -24,7 +25,6 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Table;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.pipelines.common.beam.DwcaIO.Read;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -33,11 +33,12 @@ import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
 import org.gbif.pipelines.fragmenter.common.RawRecord;
 import org.gbif.pipelines.fragmenter.record.DwcaOccurrenceRecord;
-import org.gbif.pipelines.fragmenter.record.DwcaOccurrenceRecordReader;
 import org.gbif.pipelines.fragmenter.record.OccurrenceRecordConverter;
+import org.gbif.pipelines.ingest.pipelines.fragmenter.DwcaOccurrenceRecordIO;
+import org.gbif.pipelines.ingest.pipelines.fragmenter.DwcaOccurrenceRecordIO.Read;
+import org.gbif.pipelines.ingest.pipelines.fragmenter.RawRecordCoder;
 import org.gbif.pipelines.ingest.pipelines.interpretation.TransformsFactory;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
-import org.gbif.pipelines.keygen.OccurrenceRecord;
 import org.slf4j.MDC;
 
 @Slf4j
@@ -50,13 +51,14 @@ public class FragmenterPipeline {
   }
 
   public static void run(InterpretationPipelineOptions options) {
-    run(options, Pipeline::create);
+    run(options, Pipeline::create, null);
   }
 
   @SneakyThrows
   public static void run(
       InterpretationPipelineOptions options,
-      Function<InterpretationPipelineOptions, Pipeline> pipelinesFn) {
+      Function<InterpretationPipelineOptions, Pipeline> pipelinesFn,
+      Configuration hbaseConf) {
 
     log.info("Adding step 0: Running Beam pipeline");
     String datasetKey = options.getDatasetId();
@@ -70,10 +72,8 @@ public class FragmenterPipeline {
     TransformsFactory transformsFactory = TransformsFactory.create(options);
     PipelinesConfig config = transformsFactory.getConfig();
 
-    Read<DwcaOccurrenceRecord> dwcaOccurrenceRecordReader =
-        Read.create(
-            DwcaOccurrenceRecord.class,
-            DwcaOccurrenceRecordReader.fromLocation(options.getInputPath()));
+    Read dwcaOccurrenceRecordReader =
+        DwcaOccurrenceRecordIO.Read.fromLocation(options.getInputPath());
 
     RawRecordFn rawRecordFn =
         RawRecordFn.builder()
@@ -94,18 +94,20 @@ public class FragmenterPipeline {
             .protocol(EndpointType.DWC_ARCHIVE.name())
             .create();
 
-    Configuration hbaseConfig = HBaseConfiguration.create();
-    hbaseConfig.set("hbase.zookeeper.quorum", config.getZkConnectionString());
-    hbaseConfig.set("zookeeper.session.timeout", "360000");
-
+    // For it tests
+    Configuration hbaseConfiguration =
+        Optional.ofNullable(hbaseConf).orElse(getHBaseConfig(config));
     Write hbaseWrite =
-        HBaseIO.write().withConfiguration(hbaseConfig).withTableId(config.getFragmentsTable());
+        HBaseIO.write()
+            .withConfiguration(hbaseConfiguration)
+            .withTableId(config.getFragmentsTable());
 
     log.info("Adding step 2: Creating pipeline steps");
     Pipeline p = pipelinesFn.apply(options);
 
     p.apply("Read from Darwin Core Archive", dwcaOccurrenceRecordReader)
         .apply("Convert to RawRecord", ParDo.of(rawRecordFn))
+        .setCoder(RawRecordCoder.of())
         .apply("Filter RawRecord", ParDo.of(rawRecordFilterFn))
         .apply("Convert to Mutation", ParDo.of(mutationConverterFn))
         .apply("Push data into HBase", hbaseWrite);
@@ -118,7 +120,14 @@ public class FragmenterPipeline {
     log.info("Pipeline has been finished");
   }
 
-  public static class RawRecordFn extends DoFn<OccurrenceRecord, RawRecord> {
+  private static Configuration getHBaseConfig(PipelinesConfig config) {
+    Configuration hbaseConfig = HBaseConfiguration.create();
+    hbaseConfig.set("hbase.zookeeper.quorum", config.getZkConnectionString());
+    hbaseConfig.set("zookeeper.session.timeout", "360000");
+    return hbaseConfig;
+  }
+
+  private static class RawRecordFn extends DoFn<DwcaOccurrenceRecord, RawRecord> {
     private final boolean useTriplet;
     private final boolean useOccurrenceId;
     private final SerializableSupplier<HBaseLockingKey> keygenServiceSupplier;
@@ -160,7 +169,7 @@ public class FragmenterPipeline {
     }
   }
 
-  public static class RawRecordFilterFn extends DoFn<RawRecord, RawRecord> {
+  private static class RawRecordFilterFn extends DoFn<RawRecord, RawRecord> {
 
     private final SerializableSupplier<Table> tableSupplier;
     private Table table;
@@ -197,7 +206,7 @@ public class FragmenterPipeline {
   }
 
   @Builder(buildMethodName = "create")
-  public static class MutationConverterFn extends DoFn<RawRecord, Mutation> {
+  private static class MutationConverterFn extends DoFn<RawRecord, Mutation> {
 
     private final Counter counter = Metrics.counter(MutationConverterFn.class, FRAGMENTER_COUNT);
 

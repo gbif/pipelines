@@ -10,7 +10,6 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.resources.HbaseServer;
 import org.gbif.pipelines.ingest.resources.TableAssert;
-import org.gbif.pipelines.ingest.resources.ZkServer;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -24,8 +23,6 @@ import org.junit.runners.JUnit4;
 public class FragmenterPipelineIT {
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
-
-  @ClassRule public static final ZkServer ZK_SERVER = ZkServer.getInstance();
 
   @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
@@ -58,7 +55,7 @@ public class FragmenterPipelineIT {
     };
 
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
-    FragmenterPipeline.run(options, opt -> p);
+    FragmenterPipeline.run(options, opt -> p, HBASE_SERVER.getConfiguration());
 
     // Should
     TableAssert.assertTable(

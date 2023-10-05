@@ -1,15 +1,13 @@
-package org.gbif.pipelines.common.beam;
+package org.gbif.pipelines.ingest.pipelines.fragmenter;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.ARCHIVE_TO_ER_COUNT;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.io.BoundedSource;
 import org.apache.beam.sdk.metrics.Counter;
@@ -18,7 +16,8 @@ import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
-import org.gbif.pipelines.core.io.DwcaReader;
+import org.gbif.pipelines.fragmenter.record.DwcaOccurrenceRecord;
+import org.gbif.pipelines.fragmenter.record.DwcaOccurrenceRecordReader;
 
 /**
  * IO operations for DwC-A formats.
@@ -31,49 +30,56 @@ import org.gbif.pipelines.core.io.DwcaReader;
  * <p>To use this:
  *
  * <pre>{@code
- * p.apply("read", DwcaIO.Read.fromCompressed("/tmp/my-dwca.zip", "/tmp/working")
+ * p.apply("read", DwcaIO.Read.fromLocation("/dwca/working")
  *     ...;
  * }</pre>
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class DwcaIO implements Serializable {
+public class DwcaOccurrenceRecordIO {
 
-  public static class Read<T> extends PTransform<PBegin, PCollection<T>> {
+  public static class Read extends PTransform<PBegin, PCollection<DwcaOccurrenceRecord>> {
 
-    private final Class<T> serializableClass;
-    private final DwcaReader<T> reader;
+    private final String workingPath;
 
-    private Read(Class<T> serializableClass, DwcaReader<T> reader) {
-      this.serializableClass = serializableClass;
-      this.reader = reader;
+    /**
+     * Reads an expanded/uncompressed DwCA content
+     *
+     * @param working path to an expanded/uncompressed DwCA content
+     */
+    public static Read fromLocation(String working) {
+      return new Read(working);
     }
 
-    public static <T> Read<T> create(Class<T> serializableClass, DwcaReader<T> reader) {
-      return new Read<>(serializableClass, reader);
+    /**
+     * Reads a DwCA archive and stores uncompressed DwCA content to a working directory
+     *
+     * @param workingPath path to a directory for storing uncompressed DwCA content
+     */
+    private Read(String workingPath) {
+      this.workingPath = workingPath;
     }
 
     @Override
-    public PCollection<T> expand(PBegin input) {
-      DwcaSource<T> source = new DwcaSource<>(serializableClass, reader);
+    public PCollection<DwcaOccurrenceRecord> expand(PBegin input) {
+      DwcaSource source = new DwcaSource(this);
       return input.getPipeline().apply(org.apache.beam.sdk.io.Read.from(source));
     }
   }
 
   /** A non-splittable bounded source. */
   @AllArgsConstructor(access = AccessLevel.PACKAGE)
-  private static class DwcaSource<T> extends BoundedSource<T> {
+  private static class DwcaSource extends BoundedSource<DwcaOccurrenceRecord> {
 
-    private final Class<T> clazz;
-    private final DwcaReader<T> reader;
+    private final Read read;
 
     @Override
-    public Coder<T> getOutputCoder() {
-      return AvroCoder.of(clazz);
+    public Coder<DwcaOccurrenceRecord> getOutputCoder() {
+      return DwcaOccurrenceRecordCoder.of();
     }
 
     /** Will always return a single entry list of just ourselves. This is not splittable. */
     @Override
-    public List<? extends BoundedSource<T>> split(
+    public List<? extends BoundedSource<DwcaOccurrenceRecord>> split(
         long desiredBundleSizeBytes, PipelineOptions options) {
       return Collections.singletonList(this);
     }
@@ -84,26 +90,26 @@ public class DwcaIO implements Serializable {
     }
 
     @Override
-    public BoundedReader<T> createReader(PipelineOptions options) {
-      return new BoundedDwCAReader<>(this, reader);
+    public BoundedReader<DwcaOccurrenceRecord> createReader(PipelineOptions options) {
+      return new BoundedDwCAReader(this);
     }
   }
 
   /** A wrapper around the standard DwC-IO provided NormalizedDwcArchive. */
-  private static class BoundedDwCAReader<T> extends BoundedSource.BoundedReader<T> {
+  private static class BoundedDwCAReader extends BoundedSource.BoundedReader<DwcaOccurrenceRecord> {
 
     private final Counter dwcaCount = Metrics.counter("DwcaIO", ARCHIVE_TO_ER_COUNT);
 
-    private final DwcaSource<T> source;
-    private final DwcaReader<T> reader;
+    private final DwcaSource source;
+    private DwcaOccurrenceRecordReader reader;
 
-    private BoundedDwCAReader(DwcaSource<T> source, DwcaReader<T> reader) {
+    private BoundedDwCAReader(DwcaSource source) {
       this.source = source;
-      this.reader = reader;
     }
 
     @Override
-    public boolean start() {
+    public boolean start() throws IOException {
+      reader = DwcaOccurrenceRecordReader.fromLocation(source.read.workingPath);
       return reader.advance();
     }
 
@@ -114,7 +120,7 @@ public class DwcaIO implements Serializable {
     }
 
     @Override
-    public T getCurrent() {
+    public DwcaOccurrenceRecord getCurrent() {
       return reader.getCurrent();
     }
 
@@ -124,7 +130,7 @@ public class DwcaIO implements Serializable {
     }
 
     @Override
-    public BoundedSource<T> getCurrentSource() {
+    public BoundedSource<DwcaOccurrenceRecord> getCurrentSource() {
       return source;
     }
   }

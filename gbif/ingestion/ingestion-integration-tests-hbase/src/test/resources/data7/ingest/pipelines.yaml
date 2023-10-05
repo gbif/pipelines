@@ -1,4 +1,3 @@
-zkConnectionString: ToFill
 gbifApi:
   wsUrl:
 keygen:

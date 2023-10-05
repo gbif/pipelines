@@ -14,7 +14,7 @@ public class DwcaReaderTest {
     String fileName = getClass().getResource("/dwca/plants_dwca_ext").getFile();
 
     // When
-    try (DwcaReader<ExtendedRecord> dwcaReader = ExtendedRecordReader.fromLocation(fileName)) {
+    try (DwcaExtendedRecordReader dwcaReader = DwcaExtendedRecordReader.fromLocation(fileName)) {
       dwcaReader.advance();
       ExtendedRecord current = dwcaReader.getCurrent();
       // Should
@@ -29,7 +29,7 @@ public class DwcaReaderTest {
     String fileName = getClass().getResource("/dwca/plants_dwca").getFile();
 
     // When
-    try (DwcaReader<ExtendedRecord> dwcaReader = ExtendedRecordReader.fromLocation(fileName)) {
+    try (DwcaExtendedRecordReader dwcaReader = DwcaExtendedRecordReader.fromLocation(fileName)) {
       dwcaReader.advance();
       ExtendedRecord current = dwcaReader.getCurrent();
       // Should
@@ -44,7 +44,7 @@ public class DwcaReaderTest {
     String fileName = getClass().getResource("/dwca/plants_dwca_null").getFile();
 
     // When
-    try (DwcaReader<ExtendedRecord> dwcaReader = ExtendedRecordReader.fromLocation(fileName)) {
+    try (DwcaExtendedRecordReader dwcaReader = DwcaExtendedRecordReader.fromLocation(fileName)) {
       dwcaReader.advance();
       // Should
       dwcaReader.getCurrent();

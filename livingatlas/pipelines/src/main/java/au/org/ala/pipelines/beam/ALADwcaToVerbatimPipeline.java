@@ -22,14 +22,12 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.beam.DwcaExtendedRecordIO;
-import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.slf4j.MDC;
 
@@ -105,10 +103,10 @@ public class ALADwcaToVerbatimPipeline {
     boolean isDir = Paths.get(inputPath).toFile().isDirectory();
 
     log.info("Input path is isDir {}", isDir);
-    DwcaIO.Read<ExtendedRecord> reader =
+    DwcaExtendedRecordIO.Read reader =
         isDir
-            ? DwcaExtendedRecordIO.fromLocation(inputPath)
-            : DwcaExtendedRecordIO.fromCompressed(inputPath, tmpPath);
+            ? DwcaExtendedRecordIO.Read.fromLocation(inputPath)
+            : DwcaExtendedRecordIO.Read.fromCompressed(inputPath, tmpPath);
 
     log.info("Adding step 2: Pipeline steps");
     Pipeline p = Pipeline.create(options);

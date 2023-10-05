@@ -4,6 +4,7 @@ import java.io.IOException;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
@@ -37,6 +38,7 @@ public class HbaseServer extends ExternalResource {
 
   private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 
+  @Getter private Configuration configuration = null;
   private Connection connection = null;
 
   public void truncateTable() throws IOException {
@@ -64,7 +66,8 @@ public class HbaseServer extends ExternalResource {
     TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
     TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
 
-    connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
+    configuration = TEST_UTIL.getConfiguration();
+    connection = ConnectionFactory.createConnection(configuration);
   }
 
   @SneakyThrows

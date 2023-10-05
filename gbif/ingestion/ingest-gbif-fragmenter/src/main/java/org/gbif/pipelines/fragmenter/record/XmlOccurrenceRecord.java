@@ -36,7 +36,7 @@ public class XmlOccurrenceRecord implements OccurrenceRecord {
   }
 
   @Override
-  public String toStringRecord() {
+  public String getStringRecord() {
     return xmlOccurrence.getXml();
   }
 

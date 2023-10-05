@@ -2,16 +2,20 @@ package org.gbif.pipelines.core.io;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.function.Function;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.DwcFiles;
-import org.gbif.pipelines.core.functions.SerializableFunction;
+import org.gbif.dwc.record.Record;
+import org.gbif.dwc.record.StarRecord;
+import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.utils.file.ClosableIterator;
 
 /**
@@ -19,41 +23,30 @@ import org.gbif.utils.file.ClosableIterator;
  * Avro.
  */
 @Slf4j
-public class DwcaReader<T> implements Closeable, Serializable {
+public class DwcaExtendedRecordReader implements Closeable {
 
-  private final SerializableFunction<Object, T> convertFn;
+  private final Function<Object, ExtendedRecord> convertFn;
   private final ClosableIterator<?> iterator;
-  @Getter private long recordsReturned;
-  private T current;
 
-  /** Creates a DwcaReader of an expanded archive. */
-  public static <T> DwcaReader<T> fromLocation(
-      String path,
-      SerializableFunction<Object, T> convertFn,
-      SerializableFunction<Object, T> convertWithExtFn)
-      throws IOException {
-    Archive archive = DwcFiles.fromLocation(Paths.get(path));
-    return new DwcaReader<>(archive, convertFn, convertWithExtFn);
+  @Getter private long recordsReturned;
+  private ExtendedRecord current;
+
+  /** Creates a DwcaReader of a expanded archive. */
+  public static DwcaExtendedRecordReader fromLocation(String path) throws IOException {
+    return new DwcaExtendedRecordReader(DwcFiles.fromLocation(Paths.get(path)));
   }
 
   /**
    * Creates a DwcaReader for a compressed archive that it will be expanded in a working directory.
    */
-  public static <T> DwcaReader<T> fromCompressed(
-      String source,
-      String workingDir,
-      SerializableFunction<Object, T> convertFn,
-      SerializableFunction<Object, T> convertWithExtFn)
+  public static DwcaExtendedRecordReader fromCompressed(String source, String workingDir)
       throws IOException {
-    Archive archive = DwcFiles.fromCompressed(Paths.get(source), Paths.get(workingDir));
-    return new DwcaReader<>(archive, convertFn, convertWithExtFn);
+    return new DwcaExtendedRecordReader(
+        DwcFiles.fromCompressed(Paths.get(source), Paths.get(workingDir)));
   }
 
   /** Creates and DwcaReader using a StarRecord iterator. */
-  private DwcaReader(
-      Archive archive,
-      SerializableFunction<Object, T> convertFn,
-      SerializableFunction<Object, T> convertWithExtFn) {
+  private DwcaExtendedRecordReader(Archive archive) {
 
     archive.getCore().getHeader().stream()
         .flatMap(Collection::stream)
@@ -62,10 +55,15 @@ public class DwcaReader<T> implements Closeable, Serializable {
 
     if (archive.getExtensions().isEmpty()) {
       this.iterator = archive.getCore().iterator();
-      this.convertFn = convertFn;
+      this.convertFn =
+          dwcar -> ExtendedRecordConverter.from((Record) dwcar, Collections.emptyMap());
     } else {
       this.iterator = archive.iterator();
-      this.convertFn = convertWithExtFn;
+      this.convertFn =
+          dwcar -> {
+            StarRecord starRecord = (StarRecord) dwcar;
+            return ExtendedRecordConverter.from(starRecord.core(), starRecord.extensions());
+          };
     }
   }
 
@@ -90,7 +88,7 @@ public class DwcaReader<T> implements Closeable, Serializable {
   }
 
   /** Gets the current extended record. */
-  public T getCurrent() {
+  public ExtendedRecord getCurrent() {
     if (current == null) {
       throw new NoSuchElementException(
           "No current record found (Hint: did you init() the reader?)");

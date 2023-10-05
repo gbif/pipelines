@@ -50,7 +50,7 @@ public class DwcaExtensionOccurrenceRecord implements OccurrenceRecord {
   }
 
   @Override
-  public String toStringRecord() {
+  public String getStringRecord() {
     // we need alphabetically sorted maps to guarantee that identical records have identical JSON
     Map<String, Object> data = new TreeMap<>();
 
