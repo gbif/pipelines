@@ -1,6 +1,15 @@
 package org.gbif.pipelines.ingest.resources;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +18,7 @@ import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.junit.rules.ExternalResource;
@@ -16,6 +26,8 @@ import org.junit.rules.ExternalResource;
 @Slf4j
 @Getter
 public class HbaseServer extends ExternalResource {
+
+  public static final String PROPERTIES_PATH = "data7/ingest/pipelines.yaml";
 
   public static final KeygenConfig CFG =
       KeygenConfig.builder()
@@ -47,7 +59,8 @@ public class HbaseServer extends ExternalResource {
   }
 
   @Override
-  protected void before() throws Exception {
+  protected void before() throws Throwable {
+
     log.info("Create hbase mini-cluster");
     TEST_UTIL.getConfiguration().setInt("hbase.master.port", HBaseTestingUtility.randomFreePort());
     TEST_UTIL
@@ -68,6 +81,8 @@ public class HbaseServer extends ExternalResource {
 
     configuration = TEST_UTIL.getConfiguration();
     connection = ConnectionFactory.createConnection(configuration);
+
+    updateZkProperties();
   }
 
   @SneakyThrows
@@ -77,6 +92,30 @@ public class HbaseServer extends ExternalResource {
     TEST_UTIL.shutdownMiniCluster();
     if (connection != null) {
       connection.close();
+    }
+  }
+
+  private void updateZkProperties() throws IOException, URISyntaxException {
+    // create props
+    PipelinesConfig config;
+    ObjectMapper mapper =
+        new ObjectMapper(new YAMLFactory().disable(Feature.WRITE_DOC_START_MARKER));
+    mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+    mapper.findAndRegisterModules();
+
+    File resource =
+        Paths.get(
+                Thread.currentThread().getContextClassLoader().getResource(PROPERTIES_PATH).toURI())
+            .toFile();
+    try (InputStream in =
+        Thread.currentThread().getContextClassLoader().getResourceAsStream(PROPERTIES_PATH)) {
+      config = mapper.readValue(in, PipelinesConfig.class);
+      config.setZkConnectionString(TEST_UTIL.getZooKeeperWatcher().getQuorum());
+    }
+
+    // write properties to the file
+    try (FileOutputStream out = new FileOutputStream(resource)) {
+      mapper.writeValue(out, config);
     }
   }
 }

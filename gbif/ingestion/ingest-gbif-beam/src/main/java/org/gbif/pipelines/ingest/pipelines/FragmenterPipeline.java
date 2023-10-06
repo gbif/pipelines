@@ -2,7 +2,6 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.FRAGMENTER_COUNT;
 
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import lombok.AccessLevel;
@@ -51,14 +50,13 @@ public class FragmenterPipeline {
   }
 
   public static void run(InterpretationPipelineOptions options) {
-    run(options, Pipeline::create, null);
+    run(options, Pipeline::create);
   }
 
   @SneakyThrows
   public static void run(
       InterpretationPipelineOptions options,
-      Function<InterpretationPipelineOptions, Pipeline> pipelinesFn,
-      Configuration hbaseConf) {
+      Function<InterpretationPipelineOptions, Pipeline> pipelinesFn) {
 
     log.info("Adding step 0: Running Beam pipeline");
     String datasetKey = options.getDatasetId();
@@ -79,6 +77,7 @@ public class FragmenterPipeline {
         RawRecordFn.builder()
             .useTriplet(options.isTripletValid())
             .useOccurrenceId(options.isOccurrenceIdValid())
+            .generateIdIfAbsent(options.getGenerateIds())
             .keygenServiceSupplier(transformsFactory.createHBaseLockingKeySupplier())
             .create();
 
@@ -94,12 +93,9 @@ public class FragmenterPipeline {
             .protocol(EndpointType.DWC_ARCHIVE.name())
             .create();
 
-    // For it tests
-    Configuration hbaseConfiguration =
-        Optional.ofNullable(hbaseConf).orElse(getHBaseConfig(config));
     Write hbaseWrite =
         HBaseIO.write()
-            .withConfiguration(hbaseConfiguration)
+            .withConfiguration(getHBaseConfig(config))
             .withTableId(config.getFragmentsTable());
 
     log.info("Adding step 2: Creating pipeline steps");
@@ -130,6 +126,7 @@ public class FragmenterPipeline {
   private static class RawRecordFn extends DoFn<DwcaOccurrenceRecord, RawRecord> {
     private final boolean useTriplet;
     private final boolean useOccurrenceId;
+    private final boolean generateIdIfAbsent;
     private final SerializableSupplier<HBaseLockingKey> keygenServiceSupplier;
     private HBaseLockingKey keygenService;
 
@@ -137,9 +134,11 @@ public class FragmenterPipeline {
     private RawRecordFn(
         boolean useTriplet,
         boolean useOccurrenceId,
+        boolean generateIdIfAbsent,
         SerializableSupplier<HBaseLockingKey> keygenServiceSupplier) {
       this.useTriplet = useTriplet;
       this.useOccurrenceId = useOccurrenceId;
+      this.generateIdIfAbsent = generateIdIfAbsent; // for IT tests
       this.keygenServiceSupplier = keygenServiceSupplier;
     }
 
@@ -164,7 +163,7 @@ public class FragmenterPipeline {
     public void processElement(@Element DwcaOccurrenceRecord dor, OutputReceiver<RawRecord> out) {
       Predicate<String> emptyValidator = s -> true;
       OccurrenceRecordConverter.convert(
-              keygenService, emptyValidator, useTriplet, useOccurrenceId, false, dor)
+              keygenService, emptyValidator, useTriplet, useOccurrenceId, generateIdIfAbsent, dor)
           .ifPresent(out::output);
     }
   }

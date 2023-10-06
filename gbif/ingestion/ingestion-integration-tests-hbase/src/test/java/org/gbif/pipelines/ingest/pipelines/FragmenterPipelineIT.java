@@ -48,14 +48,15 @@ public class FragmenterPipelineIT {
       "--datasetId=" + datasetKey,
       "--attempt=" + attempt,
       "--runner=SparkRunner",
-      "--metaFileName=verbatim-to-occurrence.yml",
+      "--metaFileName=fragmenter.yml",
       "--inputPath=" + regularDwca,
+      "--targetPath=" + properties,
       "--properties=" + properties + "/pipelines.yaml",
       "--testMode=true"
     };
 
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
-    FragmenterPipeline.run(options, opt -> p, HBASE_SERVER.getConfiguration());
+    FragmenterPipeline.run(options, opt -> p);
 
     // Should
     TableAssert.assertTable(
