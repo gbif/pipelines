@@ -62,4 +62,49 @@ public class FragmenterPipelineIT {
     TableAssert.assertTable(
         HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
+
+  @Test
+  public void repeatPipelineTest() throws Exception {
+
+    // State
+    int expSize = 210;
+    String datasetKey = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    int attempt = 231;
+    int attempt2 = 232;
+    EndpointType endpointType = EndpointType.DWC_ARCHIVE;
+
+    // When
+    String[] args = {
+        "--datasetId=" + datasetKey,
+        "--attempt=" + attempt,
+        "--runner=SparkRunner",
+        "--metaFileName=fragmenter.yml",
+        "--inputPath=" + regularDwca,
+        "--targetPath=" + properties,
+        "--properties=" + properties + "/pipelines.yaml",
+        "--testMode=true"
+    };
+
+    InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+    FragmenterPipeline.run(options, opt -> p);
+
+    // When
+    String[] args2 = {
+        "--datasetId=" + datasetKey,
+        "--attempt=" + attempt2,
+        "--runner=SparkRunner",
+        "--metaFileName=fragmenter.yml",
+        "--inputPath=" + regularDwca,
+        "--targetPath=" + properties,
+        "--properties=" + properties + "/pipelines.yaml",
+        "--testMode=true"
+    };
+
+    InterpretationPipelineOptions options2 = PipelinesOptionsFactory.createInterpretation(args2);
+    FragmenterPipeline.run(options2, opt -> p);
+
+    // Should
+    TableAssert.assertTable(
+        HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
+  }
 }
