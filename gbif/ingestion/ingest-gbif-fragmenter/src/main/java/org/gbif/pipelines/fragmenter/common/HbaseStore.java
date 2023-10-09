@@ -80,8 +80,10 @@ public class HbaseStore {
 
     byte[] value = table.get(get).value();
     if (value != null) {
-      long createdDate = Bytes.toLong(value);
-      rawRecord.setCreatedDate(createdDate);
+      // To avoid Beam mutation issue
+      RawRecord r = RawRecord.create(rawRecord.getKey(), rawRecord.getRecordBody());
+      r.setCreatedDate(Bytes.toLong(value));
+      return r;
     }
 
     return rawRecord;
