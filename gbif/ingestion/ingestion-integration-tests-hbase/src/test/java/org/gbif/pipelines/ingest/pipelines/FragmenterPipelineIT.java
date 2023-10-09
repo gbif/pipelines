@@ -137,13 +137,13 @@ public class FragmenterPipelineIT {
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     String[] args = {
-        "--datasetId=" + DATASET_KEY,
-        "--attempt=" + attempt,
-        "--runner=SparkRunner",
-        "--metaFileName=fragmenter.yml",
-        "--targetPath=" + outputFile,
-        "--properties=" + properties + "/pipelines.yaml",
-        "--testMode=true"
+      "--datasetId=" + DATASET_KEY,
+      "--attempt=" + attempt,
+      "--runner=SparkRunner",
+      "--metaFileName=fragmenter.yml",
+      "--targetPath=" + outputFile,
+      "--properties=" + properties + "/pipelines.yaml",
+      "--testMode=true"
     };
 
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
@@ -154,13 +154,13 @@ public class FragmenterPipelineIT {
 
     // State
     String[] args2 = {
-        "--datasetId=" + DATASET_KEY,
-        "--attempt=" + attempt2,
-        "--runner=SparkRunner",
-        "--metaFileName=fragmenter.yml",
-        "--targetPath=" + outputFile,
-        "--properties=" + properties + "/pipelines.yaml",
-        "--testMode=true"
+      "--datasetId=" + DATASET_KEY,
+      "--attempt=" + attempt2,
+      "--runner=SparkRunner",
+      "--metaFileName=fragmenter.yml",
+      "--targetPath=" + outputFile,
+      "--properties=" + properties + "/pipelines.yaml",
+      "--testMode=true"
     };
 
     InterpretationPipelineOptions options2 = PipelinesOptionsFactory.createInterpretation(args2);
