@@ -21,6 +21,7 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.ingest.pipelines.fragmenter.DwcaOccurrenceRecordCoder;
 import org.gbif.pipelines.ingest.pipelines.fragmenter.DwcaOccurrenceRecordConverterFn;
 import org.gbif.pipelines.ingest.pipelines.fragmenter.MutationConverterFn;
@@ -115,6 +116,9 @@ public class FragmenterPipeline {
     result.waitUntilFinish();
 
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
+    String metadataPath =
+        PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
+    FsUtils.setOwnerToCrap(transformsFactory.getHdfsConfigs(), metadataPath);
     log.info("Pipeline has been finished");
   }
 
