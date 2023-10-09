@@ -8,6 +8,8 @@ import javax.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
+import org.gbif.pipelines.common.configs.DistributedConfiguration;
+import org.gbif.pipelines.common.configs.SparkConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 
 /** Configuration required to start raw fragments processing */
@@ -15,6 +17,11 @@ import org.gbif.pipelines.common.configs.StepConfiguration;
 public class FragmenterConfiguration implements BaseConfiguration {
 
   @ParametersDelegate @Valid @NotNull public StepConfiguration stepConfig = new StepConfiguration();
+
+  @ParametersDelegate @Valid public SparkConfiguration sparkConfig = new SparkConfiguration();
+
+  @ParametersDelegate @Valid
+  public DistributedConfiguration distributedConfig = new DistributedConfiguration();
 
   @Parameter(names = "--number-threads")
   @Valid
@@ -62,6 +69,13 @@ public class FragmenterConfiguration implements BaseConfiguration {
 
   @Parameter(names = "--generate-id-if-absent")
   public boolean generateIdIfAbsent = false;
+
+  @Parameter(names = "--process-runner")
+  @NotNull
+  public String processRunner;
+
+  @Parameter(names = "--use-beam-deprecated-read")
+  public boolean useBeamDeprecatedRead = true;
 
   @Override
   public String getHdfsSiteConfig() {
