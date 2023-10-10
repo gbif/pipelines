@@ -143,7 +143,7 @@
 
     <retrofit.version>2.9.0</retrofit.version>
     <okhttp.version>4.9.1</okhttp.version>
-    <okio.version>2.10.0</okio.version>
+    <okio.version>3.4.0</okio.version>
     <okio-kotlin.version>1.4.32</okio-kotlin.version>
 
     <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
