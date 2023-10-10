@@ -7,6 +7,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
+import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.configs.DistributedConfiguration;
 import org.gbif.pipelines.common.configs.SparkConfiguration;
@@ -22,6 +23,9 @@ public class FragmenterConfiguration implements BaseConfiguration {
 
   @ParametersDelegate @Valid
   public DistributedConfiguration distributedConfig = new DistributedConfiguration();
+
+  @ParametersDelegate @Valid @NotNull
+  public AvroWriteConfiguration avroConfig = new AvroWriteConfiguration();
 
   @Parameter(names = "--number-threads")
   @Valid

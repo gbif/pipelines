@@ -231,6 +231,7 @@ public class BeamSettings {
           .metaFileName(config.metaFileName)
           .inputPath(config.stepConfig.repositoryPath)
           .useBeamDeprecatedRead(config.useBeamDeprecatedRead)
+          .avroConfig(config.avroConfig)
           .build()
           .addToStringBuilder();
 
