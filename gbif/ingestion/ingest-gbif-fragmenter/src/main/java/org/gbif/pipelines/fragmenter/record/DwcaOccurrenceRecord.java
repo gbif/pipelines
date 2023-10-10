@@ -82,7 +82,10 @@ public class DwcaOccurrenceRecord implements OccurrenceRecord {
 
     // Put in all core terms
     for (Term term : sr.core().terms()) {
-      data.put(term.simpleName(), sr.core().value(term));
+      String value = sr.core().value(term);
+      if (value != null && !value.isEmpty()) {
+        data.put(term.simpleName(), value);
+      }
     }
 
     if (!sr.extensions().isEmpty()) {
@@ -100,7 +103,10 @@ public class DwcaOccurrenceRecord implements OccurrenceRecord {
           Map<String, String> edata = new TreeMap<>();
           records.add(edata);
           for (Term term : erec.terms()) {
-            edata.put(term.simpleName(), erec.value(term));
+            String value = erec.value(term);
+            if (value != null && !value.isEmpty()) {
+              edata.put(term.simpleName(), value);
+            }
           }
         }
       }
