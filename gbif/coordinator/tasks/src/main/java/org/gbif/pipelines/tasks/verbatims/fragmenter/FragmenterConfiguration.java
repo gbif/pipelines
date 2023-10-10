@@ -70,12 +70,13 @@ public class FragmenterConfiguration implements BaseConfiguration {
   @Parameter(names = "--generate-id-if-absent")
   public boolean generateIdIfAbsent = false;
 
-  @Parameter(names = "--process-runner")
-  @NotNull
-  public String processRunner;
-
   @Parameter(names = "--use-beam-deprecated-read")
   public boolean useBeamDeprecatedRead = true;
+
+  @Parameter(names = "--switch-records-number")
+  @NotNull
+  @Min(1)
+  public int switchRecordsNumber;
 
   @Override
   public String getHdfsSiteConfig() {

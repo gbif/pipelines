@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Predicate;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
@@ -78,12 +77,14 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
   public Runnable createRunnable(PipelinesInterpretedMessage message) {
     return () -> {
       try {
-        Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
+
+        long recordsNumber = RecordCountReader.get(config.stepConfig, message);
 
         log.info("Start the process. Message - {}", message);
-        if (runnerPr.test(StepRunner.DISTRIBUTED)
-            && message.getEndpointType().equals(EndpointType.DWC_ARCHIVE)) {
-          runDistributed(message);
+        if (StepRunner.DISTRIBUTED.name().equalsIgnoreCase(message.getRunner())
+            && message.getEndpointType().equals(EndpointType.DWC_ARCHIVE)
+            && config.switchRecordsNumber <= recordsNumber) {
+          runDistributed(message, recordsNumber);
         } else {
           runLocal(message);
         }
@@ -95,7 +96,7 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
     };
   }
 
-  private void runDistributed(PipelinesInterpretedMessage message)
+  private void runDistributed(PipelinesInterpretedMessage message, long recordsNumber)
       throws IOException, InterruptedException {
 
     ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder =
@@ -106,7 +107,6 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
                 StepType.FRAGMENTER + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
             .beamConfigFn(BeamSettings.verbatimFragmenter(config, message));
 
-    long recordsNumber = RecordCountReader.get(config.stepConfig, message);
     SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
 
     builder.sparkSettings(sparkSettings);
