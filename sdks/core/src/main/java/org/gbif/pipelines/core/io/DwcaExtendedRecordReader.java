@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.DwcFiles;
@@ -22,27 +23,30 @@ import org.gbif.utils.file.ClosableIterator;
  * Avro.
  */
 @Slf4j
-public class DwcaReader implements Closeable {
+public class DwcaExtendedRecordReader implements Closeable {
 
   private final Function<Object, ExtendedRecord> convertFn;
   private final ClosableIterator<?> iterator;
-  private long recordsReturned;
+
+  @Getter private long recordsReturned;
   private ExtendedRecord current;
 
   /** Creates a DwcaReader of a expanded archive. */
-  public static DwcaReader fromLocation(String path) throws IOException {
-    return new DwcaReader(DwcFiles.fromLocation(Paths.get(path)));
+  public static DwcaExtendedRecordReader fromLocation(String path) throws IOException {
+    return new DwcaExtendedRecordReader(DwcFiles.fromLocation(Paths.get(path)));
   }
 
   /**
    * Creates a DwcaReader for a compressed archive that it will be expanded in a working directory.
    */
-  public static DwcaReader fromCompressed(String source, String workingDir) throws IOException {
-    return new DwcaReader(DwcFiles.fromCompressed(Paths.get(source), Paths.get(workingDir)));
+  public static DwcaExtendedRecordReader fromCompressed(String source, String workingDir)
+      throws IOException {
+    return new DwcaExtendedRecordReader(
+        DwcFiles.fromCompressed(Paths.get(source), Paths.get(workingDir)));
   }
 
   /** Creates and DwcaReader using a StarRecord iterator. */
-  private DwcaReader(Archive archive) {
+  private DwcaExtendedRecordReader(Archive archive) {
 
     archive.getCore().getHeader().stream()
         .flatMap(Collection::stream)
@@ -52,12 +56,12 @@ public class DwcaReader implements Closeable {
     if (archive.getExtensions().isEmpty()) {
       this.iterator = archive.getCore().iterator();
       this.convertFn =
-          record -> ExtendedRecordConverter.from((Record) record, Collections.emptyMap());
+          dwcar -> ExtendedRecordConverter.from((Record) dwcar, Collections.emptyMap());
     } else {
       this.iterator = archive.iterator();
       this.convertFn =
-          record -> {
-            StarRecord starRecord = (StarRecord) record;
+          dwcar -> {
+            StarRecord starRecord = (StarRecord) dwcar;
             return ExtendedRecordConverter.from(starRecord.core(), starRecord.extensions());
           };
     }
@@ -90,10 +94,6 @@ public class DwcaReader implements Closeable {
           "No current record found (Hint: did you init() the reader?)");
     }
     return current;
-  }
-
-  public long getRecordsReturned() {
-    return recordsReturned;
   }
 
   @Override

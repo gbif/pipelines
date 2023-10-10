@@ -17,14 +17,14 @@ public class StarRecordCopy implements StarRecord {
   private final Record core;
   private final Map<Term, List<Record>> extensions;
 
-  private StarRecordCopy(StarRecord record) {
-    this.core = record.core();
-    this.extensions = new HashMap<>(record.size());
-    record.extensions().forEach((key, value) -> extensions.put(key, new ArrayList<>(value)));
+  private StarRecordCopy(StarRecord starRecord) {
+    this.core = starRecord.core();
+    this.extensions = new HashMap<>(starRecord.size());
+    starRecord.extensions().forEach((key, value) -> extensions.put(key, new ArrayList<>(value)));
   }
 
-  public static StarRecord create(StarRecord record) {
-    return new StarRecordCopy(record);
+  public static StarRecord create(StarRecord starRecord) {
+    return new StarRecordCopy(starRecord);
   }
 
   @Override

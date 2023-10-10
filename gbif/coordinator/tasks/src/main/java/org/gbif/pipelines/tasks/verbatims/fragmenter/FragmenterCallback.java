@@ -13,6 +13,7 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hbase.client.Connection;
+import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -20,6 +21,10 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesFragmenterMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.common.hdfs.RecordCountReader;
+import org.gbif.pipelines.common.interpretation.SparkSettings;
+import org.gbif.pipelines.common.process.BeamSettings;
+import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
@@ -71,54 +76,101 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
   @Override
   public Runnable createRunnable(PipelinesInterpretedMessage message) {
     return () -> {
-      UUID datasetId = message.getDatasetUuid();
-      Integer attempt = message.getAttempt();
+      try {
 
-      Strategy strategy;
-      Path pathToArchive;
+        long recordsNumber = RecordCountReader.get(config.stepConfig, message);
 
-      if (message.getEndpointType().equals(EndpointType.DWC_ARCHIVE)) {
-        strategy = DwcaStrategy.create();
-        pathToArchive = buildDwcaInputPath(config.dwcaArchiveRepository, datasetId);
-      } else {
-        String subdir =
-            getXmlSubdir(
-                message.getEndpointType(),
-                config.xmlArchiveRepositoryXml,
-                config.xmlArchiveRepositoryAbcd);
-        strategy = XmlStrategy.create();
-        pathToArchive =
-            buildXmlInputPath(config.xmlArchiveRepository, subdir, datasetId, attempt.toString());
+        log.info("Start the process. Message - {}", message);
+        if (StepRunner.DISTRIBUTED.name().equalsIgnoreCase(message.getRunner())
+            && message.getEndpointType().equals(EndpointType.DWC_ARCHIVE)
+            && config.switchRecordsNumber <= recordsNumber) {
+          runDistributed(message, recordsNumber);
+        } else {
+          runLocal(message);
+        }
+      } catch (Exception ex) {
+        log.error(ex.getMessage(), ex);
+        throw new IllegalStateException(
+            "Failed interpretation on " + message.getDatasetUuid().toString(), ex);
       }
-
-      boolean useSync = message.getNumberOfRecords() < config.asyncThreshold;
-
-      log.info("Running fragmenter in asych mode: {} ...", useSync);
-
-      long result =
-          FragmentPersister.builder()
-              .strategy(strategy)
-              .endpointType(message.getEndpointType())
-              .datasetKey(datasetId.toString())
-              .attempt(attempt)
-              .tableName(config.hbaseFragmentsTable)
-              .hbaseConnection(hbaseConnection)
-              .executor(executor)
-              .useOccurrenceId(message.getValidationResult().isOccurrenceIdValid())
-              .useTriplet(message.getValidationResult().isTripletValid())
-              .pathToArchive(pathToArchive)
-              .keygenConfig(keygenConfig)
-              .useSyncMode(useSync)
-              .backPressure(config.backPressure)
-              .batchSize(config.batchSize)
-              .generateIdIfAbsent(config.generateIdIfAbsent)
-              .build()
-              .persist();
-
-      createMetafile(datasetId.toString(), attempt.toString(), result);
-
-      log.info("Result - {} records", result);
     };
+  }
+
+  private void runDistributed(PipelinesInterpretedMessage message, long recordsNumber)
+      throws IOException, InterruptedException {
+
+    ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder =
+        ProcessRunnerBuilder.builder()
+            .distributedConfig(config.distributedConfig)
+            .sparkConfig(config.sparkConfig)
+            .sparkAppName(
+                StepType.FRAGMENTER + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+            .beamConfigFn(BeamSettings.verbatimFragmenter(config, message));
+
+    SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
+
+    builder.sparkSettings(sparkSettings);
+
+    // Assembles a terminal java process and runs it
+    ProcessRunnerBuilder prb = builder.build();
+    int exitValue = prb.get().start().waitFor();
+
+    if (exitValue != 0) {
+      throw new IllegalStateException(
+          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
+    } else {
+      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
+    }
+  }
+
+  private void runLocal(PipelinesInterpretedMessage message) {
+    UUID datasetId = message.getDatasetUuid();
+    Integer attempt = message.getAttempt();
+
+    Strategy strategy;
+    Path pathToArchive;
+
+    if (message.getEndpointType().equals(EndpointType.DWC_ARCHIVE)) {
+      strategy = DwcaStrategy.create();
+      pathToArchive = buildDwcaInputPath(config.dwcaArchiveRepository, datasetId);
+    } else {
+      String subdir =
+          getXmlSubdir(
+              message.getEndpointType(),
+              config.xmlArchiveRepositoryXml,
+              config.xmlArchiveRepositoryAbcd);
+      strategy = XmlStrategy.create();
+      pathToArchive =
+          buildXmlInputPath(config.xmlArchiveRepository, subdir, datasetId, attempt.toString());
+    }
+
+    boolean useSync = message.getNumberOfRecords() < config.asyncThreshold;
+
+    log.info("Running fragmenter in asych mode: {} ...", useSync);
+
+    long result =
+        FragmentPersister.builder()
+            .strategy(strategy)
+            .endpointType(message.getEndpointType())
+            .datasetKey(datasetId.toString())
+            .attempt(attempt)
+            .tableName(config.hbaseFragmentsTable)
+            .hbaseConnection(hbaseConnection)
+            .executor(executor)
+            .useOccurrenceId(message.getValidationResult().isOccurrenceIdValid())
+            .useTriplet(message.getValidationResult().isTripletValid())
+            .pathToArchive(pathToArchive)
+            .keygenConfig(keygenConfig)
+            .useSyncMode(useSync)
+            .backPressure(config.backPressure)
+            .batchSize(config.batchSize)
+            .generateIdIfAbsent(config.generateIdIfAbsent)
+            .build()
+            .persist();
+
+    createMetafile(datasetId.toString(), attempt.toString(), result);
+
+    log.info("Result - {} records", result);
   }
 
   @Override

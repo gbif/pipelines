@@ -7,7 +7,10 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
+import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
+import org.gbif.pipelines.common.configs.DistributedConfiguration;
+import org.gbif.pipelines.common.configs.SparkConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 
 /** Configuration required to start raw fragments processing */
@@ -15,6 +18,14 @@ import org.gbif.pipelines.common.configs.StepConfiguration;
 public class FragmenterConfiguration implements BaseConfiguration {
 
   @ParametersDelegate @Valid @NotNull public StepConfiguration stepConfig = new StepConfiguration();
+
+  @ParametersDelegate @Valid public SparkConfiguration sparkConfig = new SparkConfiguration();
+
+  @ParametersDelegate @Valid
+  public DistributedConfiguration distributedConfig = new DistributedConfiguration();
+
+  @ParametersDelegate @Valid @NotNull
+  public AvroWriteConfiguration avroConfig = new AvroWriteConfiguration();
 
   @Parameter(names = "--number-threads")
   @Valid
@@ -62,6 +73,14 @@ public class FragmenterConfiguration implements BaseConfiguration {
 
   @Parameter(names = "--generate-id-if-absent")
   public boolean generateIdIfAbsent = false;
+
+  @Parameter(names = "--use-beam-deprecated-read")
+  public boolean useBeamDeprecatedRead = true;
+
+  @Parameter(names = "--switch-records-number")
+  @NotNull
+  @Min(1)
+  public int switchRecordsNumber;
 
   @Override
   public String getHdfsSiteConfig() {

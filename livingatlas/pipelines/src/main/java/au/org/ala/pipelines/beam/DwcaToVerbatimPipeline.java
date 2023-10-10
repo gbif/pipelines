@@ -8,7 +8,7 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.beam.DwcaIO;
+import org.gbif.pipelines.common.beam.DwcaExtendedRecordIO;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -66,10 +66,10 @@ public class DwcaToVerbatimPipeline {
 
     boolean isDir = Paths.get(inputPath).toFile().isDirectory();
 
-    DwcaIO.Read reader =
+    DwcaExtendedRecordIO.Read reader =
         isDir
-            ? DwcaIO.Read.fromLocation(inputPath)
-            : DwcaIO.Read.fromCompressed(inputPath, tmpPath);
+            ? DwcaExtendedRecordIO.Read.fromLocation(inputPath)
+            : DwcaExtendedRecordIO.Read.fromCompressed(inputPath, tmpPath);
 
     log.info("Adding step 2: Pipeline steps");
     Pipeline p = Pipeline.create(options);

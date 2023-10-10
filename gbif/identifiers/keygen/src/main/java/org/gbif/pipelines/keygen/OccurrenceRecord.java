@@ -4,7 +4,7 @@ import java.util.Optional;
 
 public interface OccurrenceRecord {
 
-  String toStringRecord();
+  String getStringRecord();
 
   Optional<String> getOccurrenceId();
 

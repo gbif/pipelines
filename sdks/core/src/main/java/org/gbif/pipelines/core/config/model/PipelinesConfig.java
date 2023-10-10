@@ -56,4 +56,6 @@ public class PipelinesConfig implements Serializable {
       Arrays.asList(DateComponentOrdering.ISO_FORMATS);
 
   private Set<String> extensionsAllowedForVerbatimSet;
+
+  private String fragmentsTable;
 }
