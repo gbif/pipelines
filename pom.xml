@@ -506,8 +506,8 @@
         <version>${gbif-wrangler.version}</version>
         <exclusions>
           <exclusion>
-            <groupId>org.apache.zookeeper</groupId>
-            <artifactId>zookeeper</artifactId>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-framework</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
