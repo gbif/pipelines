@@ -67,8 +67,7 @@ public class HbaseStore {
 
   @SneakyThrows
   public static List<RawRecord> filterRecordsByHash(Table table, List<RawRecord> fragmentsMap) {
-    return fragmentsMap
-        .parallelStream()
+    return fragmentsMap.parallelStream()
         .filter(rr -> isNewRawRecord(table, rr))
         .collect(Collectors.toList());
   }

@@ -7,8 +7,10 @@ import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
@@ -24,7 +26,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.hdfs.RecordCountReader;
 import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
+import org.gbif.pipelines.common.process.StackableSparkRunner;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
@@ -96,30 +98,32 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
     };
   }
 
-  private void runDistributed(PipelinesInterpretedMessage message, long recordsNumber)
-      throws IOException, InterruptedException {
-
-    ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder =
-        ProcessRunnerBuilder.builder()
-            .distributedConfig(config.distributedConfig)
-            .sparkConfig(config.sparkConfig)
-            .sparkAppName(
-                StepType.FRAGMENTER + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-            .beamConfigFn(BeamSettings.verbatimFragmenter(config, message));
+  private void runDistributed(PipelinesInterpretedMessage message, long recordsNumber) {
+    Consumer<StringJoiner> beamSettings = BeamSettings.verbatimFragmenter(config, message);
 
     SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
 
-    builder.sparkSettings(sparkSettings);
+    StackableSparkRunner.StackableSparkRunnerBuilder builder =
+        StackableSparkRunner.builder()
+            .distributedConfig(config.distributedConfig)
+            .sparkConfig(config.sparkConfig)
+            .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
+            .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
+            .beamConfigFn(beamSettings)
+            .sparkAppName(
+                StepType.FRAGMENTER + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
+            .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
+            .sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
-    ProcessRunnerBuilder prb = builder.build();
-    int exitValue = prb.get().start().waitFor();
+    StackableSparkRunner ssr = builder.build();
+    int exitValue = ssr.start().waitFor();
 
     if (exitValue != 0) {
       throw new IllegalStateException(
-          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
+          "Process failed in distributed Job. Check k8s logs " + ssr.getSparkAppName());
     } else {
-      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
+      log.info("Process has been finished, Spark job name - {}", ssr.getSparkAppName());
     }
   }
 

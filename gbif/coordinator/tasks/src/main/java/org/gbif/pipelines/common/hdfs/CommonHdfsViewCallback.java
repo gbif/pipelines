@@ -104,7 +104,7 @@ public class CommonHdfsViewCallback {
 
     if (exitValue != 0) {
       throw new IllegalStateException(
-          "Process failed in distributed Job. Check yarn logs " + ssr.getSparkAppName());
+          "Process failed in distributed Job. Check k8s logs " + ssr.getSparkAppName());
     } else {
       log.info("Process has been finished, Spark job name - {}", ssr.getSparkAppName());
     }

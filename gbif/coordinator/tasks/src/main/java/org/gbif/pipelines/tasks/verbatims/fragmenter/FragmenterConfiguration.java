@@ -11,6 +11,7 @@ import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.configs.DistributedConfiguration;
 import org.gbif.pipelines.common.configs.SparkConfiguration;
+import org.gbif.pipelines.common.configs.StackableConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 
 /** Configuration required to start raw fragments processing */
@@ -26,6 +27,9 @@ public class FragmenterConfiguration implements BaseConfiguration {
 
   @ParametersDelegate @Valid @NotNull
   public AvroWriteConfiguration avroConfig = new AvroWriteConfiguration();
+
+  @ParametersDelegate @Valid @NotNull
+  public StackableConfiguration stackableConfiguration = new StackableConfiguration();
 
   @Parameter(names = "--number-threads")
   @Valid

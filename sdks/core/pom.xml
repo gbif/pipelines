@@ -100,18 +100,19 @@
       <artifactId>models</artifactId>
     </dependency>
     <dependency>
-    <groupId>org.gbif.pipelines</groupId>
-    <artifactId>keygen</artifactId>
-    <exclusions>
-      <exclusion>
-        <groupId>org.slf4j</groupId>
-        <artifactId>log4j-over-slf4j</artifactId>
-      </exclusion>
-      <exclusion>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-auth</artifactId>
-      </exclusion>
-    </exclusions>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>keygen</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>log4j-over-slf4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-auth</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
 
     <!-- GBIF -->
     <dependency>
