@@ -1,23 +1,32 @@
 package org.gbif.pipelines.fragmenter.common;
 
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.gbif.pipelines.core.utils.HashConverter;
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RawRecord {
 
-  private String record;
-  private String hashValue;
+  private final String key;
+  private final String recordBody;
+  private final String hashValue;
 
-  private RawRecord(String record) {
-    this.record = record;
-    this.hashValue = HashConverter.getSha1(record);
+  @Setter private Long createdDate;
+
+  public RawRecord(String key, String recordBody, String hashValue, Long createdDate) {
+    this.key = key;
+    this.recordBody = recordBody;
+    this.hashValue = hashValue;
+    this.createdDate = createdDate;
   }
 
-  public static RawRecord create(String record) {
-    return new RawRecord(record);
+  private RawRecord(String key, String recordBody) {
+    this.key = key;
+    this.recordBody = recordBody;
+    this.hashValue = HashConverter.getSha1(recordBody);
+  }
+
+  public static RawRecord create(String key, String recordBody) {
+    return new RawRecord(key, recordBody);
   }
 }

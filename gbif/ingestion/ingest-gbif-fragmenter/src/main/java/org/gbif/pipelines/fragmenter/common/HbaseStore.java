@@ -4,11 +4,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -42,84 +39,71 @@ public class HbaseStore {
       String datasetKey,
       Integer attempt,
       EndpointType endpointType,
-      Map<String, RawRecord> fragmentsMap) {
-
-    Map<String, Long> dateMap = getCreatedDateMap(table, fragmentsMap);
+      List<RawRecord> fragmentsList) {
 
     List<Put> putList =
-        fragmentsMap.entrySet().stream()
+        fragmentsList.stream()
+            .map(rr -> populateCreatedDate(table, rr))
             .map(
-                es ->
-                    createFragmentPut(
-                        datasetKey,
-                        attempt,
-                        endpointType.name(),
-                        es.getKey(),
-                        es.getValue(),
-                        dateMap.get(es.getKey())))
+                rawRecord -> createFragmentPut(datasetKey, attempt, endpointType.name(), rawRecord))
             .collect(Collectors.toList());
 
     table.put(putList);
   }
 
   @SneakyThrows
-  public static Map<String, RawRecord> filterRecordsByHash(
-      Table table, Map<String, RawRecord> fragmentsMap) {
-
-    BiPredicate<String, RawRecord> prFn =
-        (key, raw) -> {
-          try {
-            Get get = createHashValueGet(key);
-            byte[] value = table.get(get).value();
-            if (value != null) {
-              return !raw.getHashValue().equals(new String(value, UTF_8));
-            }
-            return true;
-          } catch (IOException ex) {
-            throw new PipelinesException(ex);
-          }
-        };
-
-    return fragmentsMap.entrySet().parallelStream()
-        .filter(es -> prFn.test(es.getKey(), es.getValue()))
-        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> y));
-  }
-
-  private static Map<String, Long> getCreatedDateMap(
-      Table table, Map<String, RawRecord> fragmentsMap) throws IOException {
-
-    Map<String, Long> createdDateMap = new HashMap<>();
-
-    for (String key : fragmentsMap.keySet()) {
-      Get get = createCreatedDateGet(key);
+  public static boolean isNewRawRecord(Table table, RawRecord raw) {
+    try {
+      Get get = createHashValueGet(raw.getKey());
       byte[] value = table.get(get).value();
       if (value != null) {
-        createdDateMap.put(key, Bytes.toLong(value));
+        return !raw.getHashValue().equals(new String(value, UTF_8));
       }
+      return true;
+    } catch (IOException ex) {
+      throw new PipelinesException(ex);
     }
-
-    return createdDateMap;
   }
 
-  private static Put createFragmentPut(
-      String datasetKey,
-      Integer attempt,
-      String protocol,
-      String key,
-      RawRecord rawRecord,
-      Long created) {
-    long timestampUpdated = Instant.now().toEpochMilli();
-    long timestampCreated = Optional.ofNullable(created).orElse(timestampUpdated);
+  @SneakyThrows
+  public static List<RawRecord> filterRecordsByHash(Table table, List<RawRecord> fragmentsMap) {
+    return fragmentsMap
+        .parallelStream()
+        .filter(rr -> isNewRawRecord(table, rr))
+        .collect(Collectors.toList());
+  }
 
-    Put put = new Put(Bytes.toBytes(key));
+  @SneakyThrows
+  public static RawRecord populateCreatedDate(Table table, RawRecord rawRecord) {
+
+    Get get = createCreatedDateGet(rawRecord.getKey());
+
+    byte[] value = table.get(get).value();
+    if (value != null) {
+      // To avoid Beam mutation issue
+      RawRecord r = RawRecord.create(rawRecord.getKey(), rawRecord.getRecordBody());
+      r.setCreatedDate(Bytes.toLong(value));
+      return r;
+    }
+
+    return rawRecord;
+  }
+
+  public static Put createFragmentPut(
+      String datasetKey, Integer attempt, String protocol, RawRecord rawRecord) {
+    long timestampUpdated = Instant.now().toEpochMilli();
+    Long timestampCreated =
+        Optional.ofNullable(rawRecord.getCreatedDate()).orElse(timestampUpdated);
+
+    Put put = new Put(Bytes.toBytes(rawRecord.getKey()));
 
     put.addColumn(FF_BYTES, DQ_BYTES, Bytes.toBytes(datasetKey));
     put.addColumn(FF_BYTES, AQ_BYTES, Bytes.toBytes(attempt));
     put.addColumn(FF_BYTES, PQ_BYTES, Bytes.toBytes(protocol));
 
-    put.addColumn(FF_BYTES, DCQ_BYTES, Bytes.toBytes(timestampCreated));
     put.addColumn(FF_BYTES, DUQ_BYTES, Bytes.toBytes(timestampUpdated));
-    put.addColumn(FF_BYTES, RQ_BYTES, Bytes.toBytes(rawRecord.getRecord()));
+    put.addColumn(FF_BYTES, DCQ_BYTES, Bytes.toBytes(timestampCreated));
+    put.addColumn(FF_BYTES, RQ_BYTES, Bytes.toBytes(rawRecord.getRecordBody()));
     put.addColumn(FF_BYTES, HVQ_BYTES, Bytes.toBytes(rawRecord.getHashValue()));
     return put;
   }

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -122,22 +121,27 @@ public class FragmentPersister {
     rows.add(new ArrayList<>(batchSize));
 
     log.info("Uploadind fragments from {}", pathToArchive);
-    try (Table table = connection.getTable(TableName.valueOf(tableName));
+    try (Table fragmenterTable = connection.getTable(TableName.valueOf(tableName));
         UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
 
-      // Main function receives batch and puts it into HBase table
+      // Main function receives batch and puts it into HBase fragmenterTable
       Consumer<List<OccurrenceRecord>> hbaseBulkFn =
           l -> {
-            Map<String, RawRecord> map =
+            List<RawRecord> list =
                 OccurrenceRecordConverter.convert(
-                    keygenService, validator, useTriplet, useOccurrenceId, generateIdIfAbsent, l);
+                    keygenService,
+                    validator::isUnique,
+                    useTriplet,
+                    useOccurrenceId,
+                    generateIdIfAbsent,
+                    l);
 
-            map = HbaseStore.filterRecordsByHash(table, map);
+            list = HbaseStore.filterRecordsByHash(fragmenterTable, list);
 
-            if (!map.isEmpty()) {
-              HbaseStore.putRecords(table, datasetKey, attempt, endpointType, map);
+            if (!list.isEmpty()) {
+              HbaseStore.putRecords(fragmenterTable, datasetKey, attempt, endpointType, list);
 
-              int recordsReturned = occurrenceCounter.addAndGet(map.size());
+              int recordsReturned = occurrenceCounter.addAndGet(list.size());
               if (recordsReturned % 10_000 == 0) {
                 log.info("{}_{}: Pushed [{}] records", datasetKey, attempt, recordsReturned);
               }

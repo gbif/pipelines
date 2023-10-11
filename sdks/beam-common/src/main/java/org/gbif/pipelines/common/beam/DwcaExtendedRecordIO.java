@@ -18,14 +18,14 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.display.DisplayData;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.commons.lang3.StringUtils;
-import org.gbif.pipelines.core.io.DwcaReader;
+import org.apache.directory.api.util.Strings;
+import org.gbif.pipelines.core.io.DwcaExtendedRecordReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /**
  * IO operations for DwC-A formats.
  *
- * <p>Provides the ability to read a DwC-A as a bounded source, but in a non splittable manner. This
+ * <p>Provides the ability to read a DwC-A as a bounded source, but in a non-splittable manner. This
  * means that a single threaded approach to reading is enforced.
  *
  * <p>This is intended only for demonstration usage, and not for production.
@@ -38,7 +38,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
  * }</pre>
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class DwcaIO {
+public class DwcaExtendedRecordIO {
 
   public static class Read extends PTransform<PBegin, PCollection<ExtendedRecord>> {
 
@@ -138,7 +138,7 @@ public class DwcaIO {
     private final Counter dwcaCount = Metrics.counter("DwcaIO", ARCHIVE_TO_ER_COUNT);
 
     private final DwcaSource source;
-    private DwcaReader reader;
+    private DwcaExtendedRecordReader reader;
 
     private BoundedDwCAReader(DwcaSource source) {
       this.source = source;
@@ -148,8 +148,8 @@ public class DwcaIO {
     public boolean start() throws IOException {
       reader =
           source.read.unCompressed
-              ? DwcaReader.fromLocation(source.read.workingPath)
-              : DwcaReader.fromCompressed(source.read.path, source.read.workingPath);
+              ? DwcaExtendedRecordReader.fromLocation(source.read.workingPath)
+              : DwcaExtendedRecordReader.fromCompressed(source.read.path, source.read.workingPath);
       return reader.advance();
     }
 

@@ -87,6 +87,7 @@ public class FragmenterCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource(REPO_PATH).getFile();
     config.asyncThreshold = 1_000;
     config.generateIdIfAbsent = true;
+    config.switchRecordsNumber = 1_000_000;
 
     UUID uuid = UUID.fromString(DWCA_DATASET_UUID);
     int attempt = 2;

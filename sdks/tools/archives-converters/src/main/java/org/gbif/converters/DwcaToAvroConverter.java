@@ -13,7 +13,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.converter.ConverterToVerbatim;
 import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
-import org.gbif.pipelines.core.io.DwcaReader;
+import org.gbif.pipelines.core.io.DwcaExtendedRecordReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.utils.file.spreadsheet.CsvSpreadsheetConsumer;
@@ -58,7 +58,7 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
             .orElse(inputPath)
             .toString();
 
-    DwcaReader reader;
+    DwcaExtendedRecordReader reader;
     if (inputPath.toString().endsWith(".zip") || inputPath.toString().endsWith(".dwca")) {
       String tmp;
       if (Files.isDirectory(inputPath)) {
@@ -66,18 +66,18 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
       } else {
         tmp = inputPath.getParent().resolve("tmp").toString();
       }
-      reader = DwcaReader.fromCompressed(realPath, tmp);
+      reader = DwcaExtendedRecordReader.fromCompressed(realPath, tmp);
     } else {
-      reader = DwcaReader.fromLocation(realPath);
+      reader = DwcaExtendedRecordReader.fromLocation(realPath);
     }
 
     log.info("Exporting the DwC Archive to Avro started {}", realPath);
 
     // Read all records
     while (reader.advance()) {
-      ExtendedRecord record = reader.getCurrent();
-      if (!record.getId().equals(ExtendedRecordConverter.getRecordIdError())) {
-        dataFileWriter.append(record);
+      ExtendedRecord er = reader.getCurrent();
+      if (!er.getId().equals(ExtendedRecordConverter.getRecordIdError())) {
+        dataFileWriter.append(er);
       }
     }
     reader.close();
