@@ -25,6 +25,7 @@ public class HbaseServer extends ExternalResource {
           .create();
 
   public static final String FRAGMENT_TABLE_NAME = "fragment_table";
+  private static final byte[] FF_BYTES = Bytes.toBytes("fragment");
   public static final TableName FRAGMENT_TABLE = TableName.valueOf(FRAGMENT_TABLE_NAME);
 
   private static final TableName LOOKUP_TABLE = TableName.valueOf(CFG.getLookupTable());
@@ -38,6 +39,7 @@ public class HbaseServer extends ExternalResource {
   private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 
   private Connection connection = null;
+  private String zkQuorum = null;
 
   public void truncateTable() throws IOException {
     log.info("Trancate the table");
@@ -48,12 +50,13 @@ public class HbaseServer extends ExternalResource {
   protected void before() throws Exception {
     log.info("Create hbase mini-cluster");
     TEST_UTIL.startMiniCluster(1);
-    TEST_UTIL.createTable(FRAGMENT_TABLE, HbaseStore.getFragmentFamily());
+    TEST_UTIL.createTable(FRAGMENT_TABLE, FF_BYTES);
     TEST_UTIL.createTable(LOOKUP_TABLE, CF);
     TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
     TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
 
     connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
+    zkQuorum = TEST_UTIL.getZooKeeperWatcher().getQuorum();
   }
 
   @SneakyThrows

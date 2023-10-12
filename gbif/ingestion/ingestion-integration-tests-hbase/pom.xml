@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -21,24 +20,6 @@
         <artifactId>maven-failsafe-plugin</artifactId>
       </plugin>
     </plugins>
-    <!-- Copy pom.xml value to test resources maven.properties -->
-    <resources>
-      <resource>
-        <directory>src/test/resources</directory>
-        <targetPath>../test-classes/</targetPath>
-        <filtering>true</filtering>
-        <includes>
-          <include>*.properties</include>
-        </includes>
-      </resource>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>*.properties</include>
-        </includes>
-      </resource>
-    </resources>
   </build>
 
   <dependencies>
@@ -82,19 +63,15 @@
       <artifactId>ingest-gbif-java</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-wrangler</artifactId>
-      <version>${gbif-wrangler.version}</version>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>ingest-gbif-fragmenter</artifactId>
+      <classifier>tests</classifier>
+      <type>test-jar</type>
+      <version>${project.version}</version>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
+
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
@@ -109,14 +86,6 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.curator</groupId>
@@ -145,22 +114,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.12</artifactId>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.xerial.snappy</groupId>
-          <artifactId>snappy-java</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-streaming_2.12</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-testing-util</artifactId>
     </dependency>
@@ -170,5 +123,22 @@
     </dependency>
 
   </dependencies>
+
+  <profiles>
+    <profile>
+      <id>skip-release-it</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>

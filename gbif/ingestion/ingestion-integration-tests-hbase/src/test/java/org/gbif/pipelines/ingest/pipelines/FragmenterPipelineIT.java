@@ -1,6 +1,13 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,12 +24,14 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
+import org.gbif.pipelines.fragmenter.common.HbaseServer;
+import org.gbif.pipelines.fragmenter.common.TableAssert;
 import org.gbif.pipelines.ingest.java.transforms.InterpretedAvroWriter;
-import org.gbif.pipelines.ingest.resources.HbaseServer;
-import org.gbif.pipelines.ingest.resources.TableAssert;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -35,17 +44,23 @@ import org.junit.runners.JUnit4;
 @Category(NeedsRunner.class)
 public class FragmenterPipelineIT {
 
-  @Rule public final transient TestPipeline p = TestPipeline.create();
-
-  @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
-
   private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;
   private static final String ID = "777";
+  public static final String PROPERTIES_PATH = "data7/ingest/pipelines.yaml";
+
+  @Rule public final transient TestPipeline p = TestPipeline.create();
+  @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
+
   private final Path outputFile = Paths.get(getClass().getResource("/").getFile()).resolve("dwca");
   private final Path properties = Paths.get(getClass().getResource("/data7/ingest").getFile());
 
   @Before
-  public void before() throws IOException {
+  public void before() {
+    updateZkProperties();
+  }
+
+  @After
+  public void after() throws IOException {
     HBASE_SERVER.truncateTable();
   }
 
@@ -220,5 +235,30 @@ public class FragmenterPipelineIT {
     Path to = Paths.get(outputFileString, datasetId, attempt, "verbatim.avro");
     Files.deleteIfExists(to);
     Files.move(from, to);
+  }
+
+  @SneakyThrows
+  private void updateZkProperties() {
+    // create props
+    PipelinesConfig config;
+    ObjectMapper mapper =
+        new ObjectMapper(new YAMLFactory().disable(Feature.WRITE_DOC_START_MARKER));
+    mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+    mapper.findAndRegisterModules();
+
+    File resource =
+        Paths.get(
+                Thread.currentThread().getContextClassLoader().getResource(PROPERTIES_PATH).toURI())
+            .toFile();
+    try (InputStream in =
+        Thread.currentThread().getContextClassLoader().getResourceAsStream(PROPERTIES_PATH)) {
+      config = mapper.readValue(in, PipelinesConfig.class);
+      config.setZkConnectionString(HBASE_SERVER.getZkQuorum());
+    }
+
+    // write properties to the file
+    try (FileOutputStream out = new FileOutputStream(resource)) {
+      mapper.writeValue(out, config);
+    }
   }
 }
