@@ -35,4 +35,22 @@ public class SparkConfiguration {
 
   @Parameter(names = "--spark-driver-memory")
   public String driverMemory;
+
+  @Parameter(names = "--max-record-limit")
+  public long maxRecordsLimit;
+
+  @Parameter(names = "--power-fn-coefficient")
+  public double powerFnCoefficient;
+
+  @Parameter(names = "--power-fn-exponent")
+  public double powerFnExponent;
+
+  @Parameter(names = "--power-fn-executor-coefficient")
+  public double powerFnExecutorCoefficient;
+
+  @Parameter(names = "--power-fn-parallelism-coefficient")
+  public double powerFnParallelismCoef;
+
+  @Parameter(names = "--power-fn-memory-coefficient")
+  public double powerFnMemoryCoef;
 }

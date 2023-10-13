@@ -13,8 +13,8 @@ public class SparkSettings implements MainSparkSettings {
 
   private SparkSettings(SparkConfiguration sparkConfig, long fileRecordsNumber) {
     this.executorNumbers = computeExecutorNumbers(sparkConfig, fileRecordsNumber);
-    this.parallelism = computeParallelism(sparkConfig, executorNumbers);
-    this.executorMemory = computeExecutorMemory(sparkConfig, executorNumbers);
+    this.parallelism = computeParallelism(sparkConfig, fileRecordsNumber);
+    this.executorMemory = computeExecutorMemory(sparkConfig, fileRecordsNumber);
   }
 
   public static SparkSettings create(SparkConfiguration sparkConfig, long fileRecordsNumber) {
@@ -40,8 +40,8 @@ public class SparkSettings implements MainSparkSettings {
    * Compute the number of thread for spark.default.parallelism, top limit is
    * config.sparkParallelismMax Remember YARN will create the same number of files
    */
-  private int computeParallelism(SparkConfiguration sparkConfig, int executorNumbers) {
-    int count = executorNumbers * sparkConfig.executorCores * 2;
+  private int computeParallelism(SparkConfiguration sparkConfig, long recordsNumber) {
+    int count = computePowerFn(sparkConfig, recordsNumber, sparkConfig.powerFnParallelismCoef);
 
     if (count < sparkConfig.parallelismMin) {
       return sparkConfig.parallelismMin;
@@ -56,8 +56,9 @@ public class SparkSettings implements MainSparkSettings {
    * Computes the memory for executor in Gb, where min is config.sparkExecutorMemoryGbMin and max is
    * config.sparkExecutorMemoryGbMax
    */
-  private String computeExecutorMemory(SparkConfiguration sparkConfig, int sparkExecutorNumbers) {
-
+  private String computeExecutorMemory(SparkConfiguration sparkConfig, long recordsNumber) {
+    int sparkExecutorNumbers =
+        computePowerFn(sparkConfig, recordsNumber, sparkConfig.powerFnMemoryCoef);
     if (sparkExecutorNumbers < sparkConfig.executorMemoryGbMin) {
       return sparkConfig.executorMemoryGbMin + "G";
     }
@@ -72,11 +73,10 @@ public class SparkSettings implements MainSparkSettings {
    * is config.sparkConfig.executorNumbersMax
    */
   private int computeExecutorNumbers(SparkConfiguration sparkConfig, long recordsNumber) {
+
     int sparkExecutorNumbers =
-        (int)
-            Math.ceil(
-                (double) recordsNumber
-                    / (sparkConfig.executorCores * sparkConfig.recordsPerThread));
+        computePowerFn(sparkConfig, recordsNumber, sparkConfig.powerFnExecutorCoefficient);
+
     if (sparkExecutorNumbers < sparkConfig.executorNumbersMin) {
       return sparkConfig.executorNumbersMin;
     }
@@ -84,5 +84,15 @@ public class SparkSettings implements MainSparkSettings {
       return sparkConfig.executorNumbersMax;
     }
     return sparkExecutorNumbers;
+  }
+
+  /** Power function with base powerFnCoefficient and specific predifined spark coefficient */
+  private int computePowerFn(
+      SparkConfiguration sparkConfig, long recordsNumber, double coefficient) {
+    double result =
+        sparkConfig.powerFnCoefficient
+            * Math.pow(recordsNumber, sparkConfig.powerFnExponent)
+            * coefficient;
+    return (int) Math.ceil(result);
   }
 }
