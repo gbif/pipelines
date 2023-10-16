@@ -109,7 +109,7 @@
     <apache.beam.version>2.49.0</apache.beam.version>
     <hadoop.version>3.2.4</hadoop.version>
     <hbase.version>2.5.3-hadoop3</hbase.version>
-    <curator.version>4.3.0</curator.version>
+    <curator.version>5.5.0</curator.version>
 
     <!-- Match the version brought in through Tika in the gbif-parsers -->
     <commons-io.version>2.11.0</commons-io.version>
@@ -170,7 +170,7 @@
     <hamcrest-java.version>2.0.0.0</hamcrest-java.version>
     <log4j-over-slf4j.version>1.7.25</log4j-over-slf4j.version>
     <log4j-1.2-api.version>2.8.1</log4j-1.2-api.version>
-    <zookeeper-version>3.5.8</zookeeper-version>
+    <zookeeper-version>3.8.1</zookeeper-version>
     <testcontainers.elasticsearch.version>1.17.5</testcontainers.elasticsearch.version>
 
     <!-- Maven plugin -->

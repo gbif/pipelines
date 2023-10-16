@@ -14,10 +14,6 @@
 
   <name>Pipelines :: GBIF :: Identifiers :: Integration Tests</name>
 
-  <properties>
-    <curator.version>4.3.0</curator.version>
-  </properties>
-
   <build>
     <plugins>
       <plugin>
@@ -150,13 +146,11 @@
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-framework</artifactId>
-      <version>${curator.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-test</artifactId>
-      <version>${curator.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
