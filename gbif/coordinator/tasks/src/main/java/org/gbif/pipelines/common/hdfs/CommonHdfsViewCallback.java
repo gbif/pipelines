@@ -9,6 +9,7 @@ import java.util.function.Predicate;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepRunner;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
@@ -66,15 +67,21 @@ public class CommonHdfsViewCallback {
    * Only correct messages can be handled, by now is only messages with the same runner as runner in
    * service config {@link HdfsViewConfiguration#processRunner}
    */
-  public boolean isMessageCorrect(PipelinesInterpretationMessage message) {
+  public boolean isMessageCorrect(PipelinesInterpretationMessage message, StepType type) {
     if (Strings.isNullOrEmpty(message.getRunner())) {
       throw new IllegalArgumentException("Runner can't be null or empty " + message);
     }
-    boolean isCorrectProcess = config.processRunner.equals(message.getRunner());
-    if (!isCorrectProcess) {
-      log.info("Skipping, because expected step is incorrect");
+
+    if (!config.processRunner.equals(message.getRunner())) {
+      log.warn("Skipping, because runner is incorrect");
+      return false;
     }
-    return isCorrectProcess;
+
+    if (!message.getPipelineSteps().contains(type.name())) {
+      log.warn("The message doesn't contain {} type", type);
+      return false;
+    }
+    return true;
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {
