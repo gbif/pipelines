@@ -151,7 +151,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
 
         log.info("Start the process. Message - {}", message);
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          runDistributed(builder, recordsNumber);
+          runDistributed(message, builder, recordsNumber);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
           runLocal(builder);
         }
@@ -179,10 +179,15 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   private void runDistributed(
-      ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder, long recordsNumber)
+      PipelinesInterpretedMessage message,
+      ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder,
+      long recordsNumber)
       throws IOException, InterruptedException {
 
-    SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
+    boolean useMemoryExtraCoef =
+        config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
+    SparkSettings sparkSettings =
+        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
     builder.sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it

@@ -121,7 +121,10 @@ public class CommonHdfsViewCallback {
             .get();
 
     log.info("Calculate job's settings based on {} records", recordsNumber);
-    SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
+    boolean useMemoryExtraCoef =
+        config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
+    SparkSettings sparkSettings =
+        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
     builder.sparkSettings(sparkSettings);
 

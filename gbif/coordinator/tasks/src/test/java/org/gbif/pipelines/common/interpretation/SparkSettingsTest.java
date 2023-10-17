@@ -29,6 +29,7 @@ public class SparkSettingsTest {
     CONFIG.powerFnMemoryCoef = 2d;
     CONFIG.powerFnExecutorCoefficient = 1d;
     CONFIG.powerFnParallelismCoef = 10d;
+    CONFIG.memoryExtraCoef = 1.5d;
   }
 
   @Test
@@ -38,7 +39,7 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 100;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber);
+    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);
@@ -54,7 +55,7 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 1_000_000;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber);
+    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);
@@ -70,7 +71,7 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 10_000_000;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber);
+    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);
@@ -80,13 +81,29 @@ public class SparkSettingsTest {
   }
 
   @Test
+  public void m10RecordsExtraMemorySettingsTest() {
+
+    // State
+    long fileRecordsNumber = 10_000_000;
+
+    // When
+    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, true);
+
+    // Should
+    assertNotNull(sparkSettings);
+    assertEquals(34, sparkSettings.getParallelism());
+    assertEquals(4, sparkSettings.getExecutorNumbers());
+    assertEquals("11G", sparkSettings.getExecutorMemory());
+  }
+
+  @Test
   public void m30RecordsSettingsTest() {
 
     // State
     long fileRecordsNumber = 30_000_000;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber);
+    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);
@@ -102,7 +119,7 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 100_000_000;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber);
+    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);
@@ -118,7 +135,7 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 1_277_000_000;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber);
+    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);
@@ -134,7 +151,7 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 1_500_000_000;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber);
+    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);

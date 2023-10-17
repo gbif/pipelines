@@ -116,8 +116,11 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
   private void runDistributed(ProcessRunnerBuilderBuilder builder, PipelinesEventsMessage message)
       throws IOException, InterruptedException {
 
+    boolean useMemoryExtraCoef =
+        config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
     SparkSettings sparkSettings =
-        SparkSettings.create(config.sparkConfig, message.getNumberOfEventRecords());
+        SparkSettings.create(
+            config.sparkConfig, message.getNumberOfEventRecords(), useMemoryExtraCoef);
     builder.sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it

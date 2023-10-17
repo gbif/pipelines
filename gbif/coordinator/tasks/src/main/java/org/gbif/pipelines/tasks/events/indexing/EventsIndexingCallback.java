@@ -92,7 +92,7 @@ public class EventsIndexingCallback
                 .beamConfigFn(BeamSettings.eventIndexing(config, message, indexSettings));
 
         log.info("Start the process. Message - {}", message);
-        runDistributed(builder, recordsNumber);
+        runDistributed(message, builder, recordsNumber);
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
         throw new IllegalStateException(
@@ -115,10 +115,16 @@ public class EventsIndexingCallback
         message.getRunner());
   }
 
-  private void runDistributed(ProcessRunnerBuilderBuilder builder, long recordsNumber)
+  private void runDistributed(
+      PipelinesEventsInterpretedMessage message,
+      ProcessRunnerBuilderBuilder builder,
+      long recordsNumber)
       throws IOException, InterruptedException {
 
-    SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
+    boolean useMemoryExtraCoef =
+        config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
+    SparkSettings sparkSettings =
+        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
     builder.sparkSettings(sparkSettings);
 

@@ -11,15 +11,19 @@ public class SparkSettings {
   private final int parallelism;
   private final String executorMemory;
   private final int executorNumbers;
+  private final double memoryExtraCoef;
 
-  private SparkSettings(SparkConfiguration sparkConfig, long fileRecordsNumber) {
+  private SparkSettings(
+      SparkConfiguration sparkConfig, long fileRecordsNumber, boolean useMemoryExtraCoef) {
+    this.memoryExtraCoef = useMemoryExtraCoef ? sparkConfig.memoryExtraCoef : 1d;
     this.executorNumbers = computeExecutorNumbers(sparkConfig, fileRecordsNumber);
     this.parallelism = computeParallelism(sparkConfig, fileRecordsNumber);
     this.executorMemory = computeExecutorMemory(sparkConfig, fileRecordsNumber);
   }
 
-  public static SparkSettings create(SparkConfiguration sparkConfig, long fileRecordsNumber) {
-    return new SparkSettings(sparkConfig, fileRecordsNumber);
+  public static SparkSettings create(
+      SparkConfiguration sparkConfig, long fileRecordsNumber, boolean memoryExtraCoef) {
+    return new SparkSettings(sparkConfig, fileRecordsNumber, memoryExtraCoef);
   }
 
   /**
@@ -43,15 +47,17 @@ public class SparkSettings {
    * config.sparkExecutorMemoryGbMax
    */
   private String computeExecutorMemory(SparkConfiguration sparkConfig, long recordsNumber) {
-    int sparkExecutorNumbers =
-        computePowerFn(sparkConfig, recordsNumber, sparkConfig.powerFnMemoryCoef);
-    if (sparkExecutorNumbers < sparkConfig.executorMemoryGbMin) {
+    int memoryInGb = computePowerFn(sparkConfig, recordsNumber, sparkConfig.powerFnMemoryCoef);
+
+    memoryInGb = (int) Math.ceil(memoryInGb * memoryExtraCoef);
+
+    if (memoryInGb < sparkConfig.executorMemoryGbMin) {
       return sparkConfig.executorMemoryGbMin + "G";
     }
-    if (sparkExecutorNumbers > sparkConfig.executorMemoryGbMax) {
+    if (memoryInGb > sparkConfig.executorMemoryGbMax) {
       return sparkConfig.executorMemoryGbMax + "G";
     }
-    return sparkExecutorNumbers + "G";
+    return memoryInGb + "G";
   }
 
   /**
@@ -72,7 +78,21 @@ public class SparkSettings {
     return sparkExecutorNumbers;
   }
 
-  /** Power function with base powerFnCoefficient and specific predifined spark coefficient */
+  /**
+   * Power function with base powerFnCoefficient and specific predifined spark coefficient result =
+   * powerFnCoefficient * recordsNumber ^ powerFnExponent * coefficient;
+   *
+   * <p>where:
+   *
+   * <p>powerFnCoefficient - base power function coefficient, should be unique for a cluster
+   *
+   * <p>recordsNumber - dataset size
+   *
+   * <p>powerFnExponent - base exponent, should be unique for a cluster
+   *
+   * <p>coefficient - extra coefficient, extra coefficient to control executors, memory and
+   * parallelism
+   */
   private int computePowerFn(
       SparkConfiguration sparkConfig, long recordsNumber, double coefficient) {
     double result =
