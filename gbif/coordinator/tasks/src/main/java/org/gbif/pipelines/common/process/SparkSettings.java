@@ -1,11 +1,12 @@
-package org.gbif.pipelines.common.interpretation;
+package org.gbif.pipelines.common.process;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.pipelines.common.MainSparkSettings;
 import org.gbif.pipelines.common.configs.SparkConfiguration;
 
+@Getter
 @Slf4j
-public class SparkSettings implements MainSparkSettings {
+public class SparkSettings {
 
   private final int parallelism;
   private final String executorMemory;
@@ -19,21 +20,6 @@ public class SparkSettings implements MainSparkSettings {
 
   public static SparkSettings create(SparkConfiguration sparkConfig, long fileRecordsNumber) {
     return new SparkSettings(sparkConfig, fileRecordsNumber);
-  }
-
-  @Override
-  public int getParallelism() {
-    return parallelism;
-  }
-
-  @Override
-  public String getExecutorMemory() {
-    return executorMemory;
-  }
-
-  @Override
-  public int getExecutorNumbers() {
-    return executorNumbers;
   }
 
   /**

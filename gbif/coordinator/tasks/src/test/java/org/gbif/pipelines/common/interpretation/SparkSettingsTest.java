@@ -3,6 +3,7 @@ package org.gbif.pipelines.common.interpretation;
 import static org.junit.Assert.*;
 
 import org.gbif.pipelines.common.configs.SparkConfiguration;
+import org.gbif.pipelines.common.process.SparkSettings;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

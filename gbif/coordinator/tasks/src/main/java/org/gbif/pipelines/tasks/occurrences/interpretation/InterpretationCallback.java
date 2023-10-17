@@ -26,17 +26,19 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.GbifApi;
+import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.interpretation.RecordCountReader;
-import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
+import org.gbif.pipelines.common.process.RecordCountReader;
+import org.gbif.pipelines.common.process.SparkSettings;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToOccurrencePipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
+import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -204,7 +206,23 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
       PipelinesVerbatimMessage message, ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder)
       throws IOException, InterruptedException {
 
-    long recordsNumber = RecordCountReader.get(config.stepConfig, message);
+    Long messageNumber =
+        message.getValidationResult() != null
+                && message.getValidationResult().getNumberOfRecords() != null
+            ? message.getValidationResult().getNumberOfRecords()
+            : null;
+
+    long recordsNumber =
+        RecordCountReader.builder()
+            .stepConfig(config.stepConfig)
+            .datasetKey(message.getDatasetUuid().toString())
+            .attempt(message.getAttempt().toString())
+            .messageNumber(messageNumber)
+            .metaFileName(new DwcaToAvroConfiguration().metaFileName)
+            .metricName(Metrics.ARCHIVE_TO_ER_COUNT)
+            .build()
+            .get();
+
     SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
 
     builder.sparkSettings(sparkSettings);
