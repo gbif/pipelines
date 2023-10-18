@@ -107,7 +107,7 @@ public class SparkSettingsTest {
 
     // Should
     assertNotNull(sparkSettings);
-    assertEquals(67, sparkSettings.getParallelism());
+    assertEquals(68, sparkSettings.getParallelism());
     assertEquals(7, sparkSettings.getExecutorNumbers());
     assertEquals("14G", sparkSettings.getExecutorMemory());
   }
@@ -123,7 +123,7 @@ public class SparkSettingsTest {
 
     // Should
     assertNotNull(sparkSettings);
-    assertEquals(141, sparkSettings.getParallelism());
+    assertEquals(142, sparkSettings.getParallelism());
     assertEquals(15, sparkSettings.getExecutorNumbers());
     assertEquals("29G", sparkSettings.getExecutorMemory());
   }
@@ -139,7 +139,7 @@ public class SparkSettingsTest {
 
     // Should
     assertNotNull(sparkSettings);
-    assertEquals(693, sparkSettings.getParallelism());
+    assertEquals(694, sparkSettings.getParallelism());
     assertEquals(CONFIG.executorNumbersMax, sparkSettings.getExecutorNumbers());
     assertEquals(CONFIG.executorMemoryGbMax + "G", sparkSettings.getExecutorMemory());
   }

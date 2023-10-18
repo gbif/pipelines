@@ -28,10 +28,15 @@ public class SparkSettings {
 
   /**
    * Compute the number of thread for spark.default.parallelism, top limit is
-   * config.sparkParallelismMax Remember YARN will create the same number of files
+   * config.sparkParallelismMax
+   *
+   * <p>YARN will create the same number of files
+   *
+   * @return even value
    */
   private int computeParallelism(SparkConfiguration sparkConfig, long recordsNumber) {
     int count = computePowerFn(sparkConfig, recordsNumber, sparkConfig.powerFnParallelismCoef);
+    count = count % 2 == 0 ? count : count + 1;
 
     if (count < sparkConfig.parallelismMin) {
       return sparkConfig.parallelismMin;
