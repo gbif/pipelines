@@ -8,17 +8,24 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.model.pipelines.StepRunner;
+import org.gbif.api.model.pipelines.StepType;
+import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
+import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.interpretation.SparkSettings;
+import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
+import org.gbif.pipelines.common.process.RecordCountReader;
+import org.gbif.pipelines.common.process.SparkSettings;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.HdfsViewPipeline;
+import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
+import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
 
 /** Callback which is called when an instance {@link PipelinesInterpretationMessage} is received. */
 @Slf4j
@@ -66,15 +73,21 @@ public class CommonHdfsViewCallback {
    * Only correct messages can be handled, by now is only messages with the same runner as runner in
    * service config {@link HdfsViewConfiguration#processRunner}
    */
-  public boolean isMessageCorrect(PipelinesInterpretationMessage message) {
+  public boolean isMessageCorrect(PipelinesInterpretationMessage message, StepType type) {
     if (Strings.isNullOrEmpty(message.getRunner())) {
       throw new IllegalArgumentException("Runner can't be null or empty " + message);
     }
-    boolean isCorrectProcess = config.processRunner.equals(message.getRunner());
-    if (!isCorrectProcess) {
-      log.info("Skipping, because expected step is incorrect");
+
+    if (!config.processRunner.equals(message.getRunner())) {
+      log.warn("Skipping, because runner is incorrect");
+      return false;
     }
-    return isCorrectProcess;
+
+    if (!message.getPipelineSteps().contains(type.name())) {
+      log.warn("The message doesn't contain {} type", type);
+      return false;
+    }
+    return true;
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {
@@ -85,9 +98,33 @@ public class CommonHdfsViewCallback {
       PipelinesInterpretationMessage message, ProcessRunnerBuilderBuilder builder)
       throws IOException, InterruptedException {
 
-    long recordsNumber = RecordCountReader.get(config.stepConfig, message);
+    Long messageNumber = null;
+    String metaFileName = null;
+    if (message instanceof PipelinesInterpretedMessage) {
+      messageNumber = ((PipelinesInterpretedMessage) message).getNumberOfRecords();
+      metaFileName = new InterpreterConfiguration().metaFileName;
+    } else if (message instanceof PipelinesEventsInterpretedMessage) {
+      messageNumber = ((PipelinesEventsInterpretedMessage) message).getNumberOfEventRecords();
+      metaFileName = new EventsInterpretationConfiguration().metaFileName;
+    }
+
+    long recordsNumber =
+        RecordCountReader.builder()
+            .stepConfig(config.stepConfig)
+            .datasetKey(message.getDatasetUuid().toString())
+            .attempt(message.getAttempt().toString())
+            .messageNumber(messageNumber)
+            .metaFileName(metaFileName)
+            .metricName(Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED)
+            .alternativeMetricName(Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED)
+            .build()
+            .get();
+
     log.info("Calculate job's settings based on {} records", recordsNumber);
-    SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
+    boolean useMemoryExtraCoef =
+        config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
+    SparkSettings sparkSettings =
+        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
     builder.sparkSettings(sparkSettings);
 

@@ -6,7 +6,6 @@ import static org.junit.Assert.*;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
 import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
@@ -50,7 +49,7 @@ public class ProcessRunnerBuilderTest {
             + "--conf \"spark.driver.extraClassPath=logstash-gelf.jar\" "
             + "--driver-java-options \"-Dlog4j.configuration=file:log4j.properties\" --queue pipelines "
             + "--name=EVENTS_INTERPRETED_TO_INDEX_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 "
-            + "--conf spark.default.parallelism=1 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
+            + "--conf spark.default.parallelism=2 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
             + "--conf spark.yarn.am.waitTime=360s --class org.gbif.Test --master yarn "
             + "--deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar "
             + "--datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --runner=SparkRunner --inputPath=tmp --targetPath=tmp "
@@ -69,6 +68,14 @@ public class ProcessRunnerBuilderTest {
     config.sparkConfig.executorNumbersMax = 2;
     config.sparkConfig.memoryOverhead = 1;
     config.sparkConfig.driverMemory = "4G";
+    config.sparkConfig.parallelismMin = 1;
+    config.sparkConfig.parallelismMax = 4;
+    // Power function setting
+    config.sparkConfig.powerFnCoefficient = 0.000138d;
+    config.sparkConfig.powerFnExponent = 0.626d;
+    config.sparkConfig.powerFnMemoryCoef = 2d;
+    config.sparkConfig.powerFnExecutorCoefficient = 1d;
+    config.sparkConfig.powerFnParallelismCoef = 10d;
     config.distributedConfig.metricsPropertiesPath = "metrics.properties";
     config.distributedConfig.extraClassPath = "logstash-gelf.jar";
     config.distributedConfig.driverJavaOptions = "-Dlog4j.configuration=file:log4j.properties";
@@ -103,7 +110,7 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
+            .sparkSettings(SparkSettings.create(config.sparkConfig, 1L, false))
             .sparkAppName("EVENTS_INTERPRETED_TO_INDEX_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(
                 BeamSettings.eventIndexing(config, message, IndexSettings.create("events", 1)))
@@ -124,7 +131,7 @@ public class ProcessRunnerBuilderTest {
             + "--conf spark.metrics.conf=metrics.properties --conf \"spark.driver.extraClassPath=logstash-gelf.jar\" "
             + "--driver-java-options \"-Dlog4j.configuration=file:log4j.properties\" --queue pipelines "
             + "--name=EVENTS_VERBATIM_TO_INTERPRETED_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 "
-            + "--conf spark.default.parallelism=1 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
+            + "--conf spark.default.parallelism=2 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
             + "--conf spark.yarn.am.waitTime=360s "
             + "--class org.gbif.Test --master yarn --deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 "
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL "
@@ -141,6 +148,14 @@ public class ProcessRunnerBuilderTest {
     config.sparkConfig.executorNumbersMin = 1;
     config.sparkConfig.executorNumbersMax = 2;
     config.sparkConfig.memoryOverhead = 1;
+    config.sparkConfig.parallelismMin = 1;
+    config.sparkConfig.parallelismMax = 4;
+    // Power function setting
+    config.sparkConfig.powerFnCoefficient = 0.000138d;
+    config.sparkConfig.powerFnExponent = 0.626d;
+    config.sparkConfig.powerFnMemoryCoef = 2d;
+    config.sparkConfig.powerFnExecutorCoefficient = 1d;
+    config.sparkConfig.powerFnParallelismCoef = 10d;
     config.avroConfig.compressionType = "SNAPPY";
     config.avroConfig.syncInterval = 1;
     config.pipelinesConfig = "/path/ws.config";
@@ -179,7 +194,7 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
+            .sparkSettings(SparkSettings.create(config.sparkConfig, 1L, false))
             .sparkAppName("EVENTS_VERBATIM_TO_INTERPRETED_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(BeamSettings.eventInterpretation(config, message, "verbatim.avro"))
             .build()
@@ -195,7 +210,7 @@ public class ProcessRunnerBuilderTest {
   public void testHdfsViewSparkRunnerCommand() {
     // When
     String expected =
-        "spark2-submit --name=HDFS_VIEW_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 --conf spark.default.parallelism=1 --conf spark.executor.memoryOverhead=1 "
+        "spark2-submit --name=HDFS_VIEW_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 --conf spark.default.parallelism=2 --conf spark.executor.memoryOverhead=1 "
             + "--conf spark.dynamicAllocation.enabled=false --conf spark.yarn.am.waitTime=360s "
             + "--class org.gbif.Test --master yarn --deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 "
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --runner=SparkRunner "
@@ -213,6 +228,14 @@ public class ProcessRunnerBuilderTest {
     config.sparkConfig.executorNumbersMax = 2;
     config.sparkConfig.memoryOverhead = 1;
     config.sparkConfig.driverMemory = "4G";
+    config.sparkConfig.parallelismMin = 1;
+    config.sparkConfig.parallelismMax = 4;
+    // Power function setting
+    config.sparkConfig.powerFnCoefficient = 0.000138d;
+    config.sparkConfig.powerFnExponent = 0.626d;
+    config.sparkConfig.powerFnMemoryCoef = 2d;
+    config.sparkConfig.powerFnExecutorCoefficient = 1d;
+    config.sparkConfig.powerFnParallelismCoef = 10d;
     config.distributedConfig.deployMode = "cluster";
     config.processRunner = StepRunner.DISTRIBUTED.name();
     config.pipelinesConfig = "/path/ws.config";
@@ -247,7 +270,7 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
+            .sparkSettings(SparkSettings.create(config.sparkConfig, 1L, false))
             .sparkAppName("HDFS_VIEW_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(BeamSettings.occurrenceHdfsView(config, message, 10))
             .build()
@@ -265,7 +288,7 @@ public class ProcessRunnerBuilderTest {
     String expected =
         "sudo -u user spark2-submit --conf spark.metrics.conf=metrics.properties --conf \"spark.driver.extraClassPath=logstash-gelf.jar\" "
             + "--driver-java-options \"-Dlog4j.configuration=file:log4j.properties\" --queue pipelines --name=HDFS_VIEW_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 "
-            + "--conf spark.default.parallelism=1 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false --conf spark.yarn.am.waitTime=360s "
+            + "--conf spark.default.parallelism=2 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false --conf spark.yarn.am.waitTime=360s "
             + "--class org.gbif.Test --master yarn --deploy-mode cluster "
             + "--executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d "
             + "--attempt=1 --runner=SparkRunner --metaFileName=occurrence-to-hdfs.yml --inputPath=tmp --targetPath=target --hdfsSiteConfig=hdfs.xml "
@@ -282,6 +305,14 @@ public class ProcessRunnerBuilderTest {
     config.sparkConfig.executorNumbersMax = 2;
     config.sparkConfig.memoryOverhead = 1;
     config.sparkConfig.driverMemory = "4G";
+    config.sparkConfig.parallelismMin = 1;
+    config.sparkConfig.parallelismMax = 4;
+    // Power function setting
+    config.sparkConfig.powerFnCoefficient = 0.000138d;
+    config.sparkConfig.powerFnExponent = 0.626d;
+    config.sparkConfig.powerFnMemoryCoef = 2d;
+    config.sparkConfig.powerFnExecutorCoefficient = 1d;
+    config.sparkConfig.powerFnParallelismCoef = 10d;
     config.distributedConfig.metricsPropertiesPath = "metrics.properties";
     config.distributedConfig.extraClassPath = "logstash-gelf.jar";
     config.distributedConfig.driverJavaOptions = "-Dlog4j.configuration=file:log4j.properties";
@@ -320,7 +351,7 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
+            .sparkSettings(SparkSettings.create(config.sparkConfig, 1L, false))
             .sparkAppName("HDFS_VIEW_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(BeamSettings.occurrenceHdfsView(config, message, 10))
             .build()
@@ -337,7 +368,7 @@ public class ProcessRunnerBuilderTest {
     // When
     String expected =
         "spark2-submit --name=VERBATIM_TO_IDENTIFIER_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 "
-            + "--conf spark.default.parallelism=1 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
+            + "--conf spark.default.parallelism=2 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
             + "--conf spark.yarn.am.waitTime=360s "
             + "--class org.gbif.Test --master yarn --deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 "
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL "
@@ -355,6 +386,14 @@ public class ProcessRunnerBuilderTest {
     config.sparkConfig.executorNumbersMin = 1;
     config.sparkConfig.executorNumbersMax = 2;
     config.sparkConfig.memoryOverhead = 1;
+    config.sparkConfig.parallelismMin = 1;
+    config.sparkConfig.parallelismMax = 4;
+    // Power function setting
+    config.sparkConfig.powerFnCoefficient = 0.000138d;
+    config.sparkConfig.powerFnExponent = 0.626d;
+    config.sparkConfig.powerFnMemoryCoef = 2d;
+    config.sparkConfig.powerFnExecutorCoefficient = 1d;
+    config.sparkConfig.powerFnParallelismCoef = 10d;
     config.avroConfig.compressionType = "SNAPPY";
     config.avroConfig.syncInterval = 1;
     config.pipelinesConfig = "/path/ws.config";
@@ -387,7 +426,7 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
+            .sparkSettings(SparkSettings.create(config.sparkConfig, 1L, false))
             .sparkAppName("VERBATIM_TO_IDENTIFIER_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(BeamSettings.occurrenceIdentifier(config, message, "verbatim.avro"))
             .build()
@@ -405,7 +444,7 @@ public class ProcessRunnerBuilderTest {
     String expected =
         "sudo -u user spark2-submit --conf spark.metrics.conf=metrics.properties --conf \"spark.driver.extraClassPath=logstash-gelf.jar\" "
             + "--driver-java-options \"-Dlog4j.configuration=file:log4j.properties\" --queue pipelines --name=VERBATIM_TO_IDENTIFIER_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 "
-            + "--conf spark.default.parallelism=1 "
+            + "--conf spark.default.parallelism=20 "
             + "--conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false --conf spark.yarn.am.waitTime=360s "
             + "--class org.gbif.Test --master yarn "
             + "--deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar "
@@ -423,6 +462,14 @@ public class ProcessRunnerBuilderTest {
     config.sparkConfig.executorNumbersMin = 1;
     config.sparkConfig.executorNumbersMax = 2;
     config.sparkConfig.memoryOverhead = 1;
+    config.sparkConfig.parallelismMin = 20;
+    config.sparkConfig.parallelismMax = 40;
+    // Power function setting
+    config.sparkConfig.powerFnCoefficient = 0.000138d;
+    config.sparkConfig.powerFnExponent = 0.626d;
+    config.sparkConfig.powerFnMemoryCoef = 2d;
+    config.sparkConfig.powerFnExecutorCoefficient = 1d;
+    config.sparkConfig.powerFnParallelismCoef = 10d;
     config.avroConfig.compressionType = "SNAPPY";
     config.avroConfig.syncInterval = 1;
     config.pipelinesConfig = "/path/ws.config";
@@ -460,7 +507,7 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
+            .sparkSettings(SparkSettings.create(config.sparkConfig, 1L, false))
             .sparkAppName("VERBATIM_TO_IDENTIFIER_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(BeamSettings.occurrenceIdentifier(config, message, "verbatim.avro"))
             .build()
@@ -477,7 +524,7 @@ public class ProcessRunnerBuilderTest {
     // When
     String expected =
         "spark2-submit --name=VALIDATOR_INTERPRETED_TO_INDEX_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 "
-            + "--conf spark.default.parallelism=1 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
+            + "--conf spark.default.parallelism=2 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
             + "--conf spark.yarn.am.waitTime=360s --class org.gbif.Test --master yarn --deploy-mode cluster "
             + "--executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar "
             + "--datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --runner=SparkRunner --inputPath=tmp "
@@ -495,6 +542,14 @@ public class ProcessRunnerBuilderTest {
     config.sparkConfig.executorNumbersMax = 2;
     config.sparkConfig.memoryOverhead = 1;
     config.sparkConfig.driverMemory = "4G";
+    config.sparkConfig.parallelismMin = 2;
+    config.sparkConfig.parallelismMax = 4;
+    // Power function setting
+    config.sparkConfig.powerFnCoefficient = 0.000138d;
+    config.sparkConfig.powerFnExponent = 0.626d;
+    config.sparkConfig.powerFnMemoryCoef = 2d;
+    config.sparkConfig.powerFnExecutorCoefficient = 1d;
+    config.sparkConfig.powerFnParallelismCoef = 10d;
     config.distributedConfig.deployMode = "cluster";
     config.processRunner = StepRunner.DISTRIBUTED.name();
     config.esConfig.hosts = new String[] {"http://host.com:9300"};
@@ -532,7 +587,7 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
+            .sparkSettings(SparkSettings.create(config.sparkConfig, 1L, false))
             .sparkAppName("VALIDATOR_INTERPRETED_TO_INDEX_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(
                 BeamSettings.occurreceIndexing(
@@ -553,7 +608,7 @@ public class ProcessRunnerBuilderTest {
         "spark2-submit --conf spark.metrics.conf=metrics.properties "
             + "--conf \"spark.driver.extraClassPath=logstash-gelf.jar\" "
             + "--driver-java-options \"-Dlog4j.configuration=file:log4j.properties\" --queue pipelines "
-            + "--name=VALIDATOR_INTERPRETED_TO_INDEX_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 --conf spark.default.parallelism=1 "
+            + "--name=VALIDATOR_INTERPRETED_TO_INDEX_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 --conf spark.default.parallelism=2 "
             + "--conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
             + "--conf spark.yarn.am.waitTime=360s --class org.gbif.Test --master yarn "
             + "--deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar "
@@ -572,6 +627,14 @@ public class ProcessRunnerBuilderTest {
     config.sparkConfig.executorNumbersMax = 2;
     config.sparkConfig.memoryOverhead = 1;
     config.sparkConfig.driverMemory = "4G";
+    config.sparkConfig.parallelismMin = 1;
+    config.sparkConfig.parallelismMax = 4;
+    // Power function setting
+    config.sparkConfig.powerFnCoefficient = 0.000138d;
+    config.sparkConfig.powerFnExponent = 0.626d;
+    config.sparkConfig.powerFnMemoryCoef = 2d;
+    config.sparkConfig.powerFnExecutorCoefficient = 1d;
+    config.sparkConfig.powerFnParallelismCoef = 10d;
     config.distributedConfig.metricsPropertiesPath = "metrics.properties";
     config.distributedConfig.extraClassPath = "logstash-gelf.jar";
     config.distributedConfig.driverJavaOptions = "-Dlog4j.configuration=file:log4j.properties";
@@ -612,7 +675,7 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
+            .sparkSettings(SparkSettings.create(config.sparkConfig, 1L, false))
             .sparkAppName("VALIDATOR_INTERPRETED_TO_INDEX_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(
                 BeamSettings.occurreceIndexing(
@@ -631,7 +694,7 @@ public class ProcessRunnerBuilderTest {
     // When
     String expected =
         "spark2-submit --name=VERBATIM_TO_INTERPRETED_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 "
-            + "--conf spark.default.parallelism=1 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
+            + "--conf spark.default.parallelism=2 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
             + "--conf spark.yarn.am.waitTime=360s "
             + "--class org.gbif.Test --master yarn --deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 "
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL "
@@ -649,6 +712,14 @@ public class ProcessRunnerBuilderTest {
     config.sparkConfig.executorNumbersMin = 1;
     config.sparkConfig.executorNumbersMax = 2;
     config.sparkConfig.memoryOverhead = 1;
+    config.sparkConfig.parallelismMin = 1;
+    config.sparkConfig.parallelismMax = 4;
+    // Power function setting
+    config.sparkConfig.powerFnCoefficient = 0.000138d;
+    config.sparkConfig.powerFnExponent = 0.626d;
+    config.sparkConfig.powerFnMemoryCoef = 2d;
+    config.sparkConfig.powerFnExecutorCoefficient = 1d;
+    config.sparkConfig.powerFnParallelismCoef = 10d;
     config.avroConfig.compressionType = "SNAPPY";
     config.avroConfig.syncInterval = 1;
     config.pipelinesConfig = "/path/ws.config";
@@ -682,7 +753,7 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
+            .sparkSettings(SparkSettings.create(config.sparkConfig, 1L, false))
             .sparkAppName("VERBATIM_TO_INTERPRETED_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(
                 BeamSettings.occurrenceInterpretation(config, message, "verbatim.avro", null))
@@ -700,7 +771,7 @@ public class ProcessRunnerBuilderTest {
     // When
     String expected =
         "spark2-submit --name=VALIDATOR_VERBATIM_TO_INTERPRETED_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1 "
-            + "--conf spark.default.parallelism=1 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
+            + "--conf spark.default.parallelism=2 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
             + "--conf spark.yarn.am.waitTime=360s "
             + "--class org.gbif.Test --master yarn --deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 "
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL "
@@ -718,6 +789,14 @@ public class ProcessRunnerBuilderTest {
     config.sparkConfig.executorNumbersMin = 1;
     config.sparkConfig.executorNumbersMax = 2;
     config.sparkConfig.memoryOverhead = 1;
+    config.sparkConfig.parallelismMin = 1;
+    config.sparkConfig.parallelismMax = 4;
+    // Power function setting
+    config.sparkConfig.powerFnCoefficient = 0.000138d;
+    config.sparkConfig.powerFnExponent = 0.626d;
+    config.sparkConfig.powerFnMemoryCoef = 2d;
+    config.sparkConfig.powerFnExecutorCoefficient = 1d;
+    config.sparkConfig.powerFnParallelismCoef = 10d;
     config.avroConfig.compressionType = "SNAPPY";
     config.avroConfig.syncInterval = 1;
     config.pipelinesConfig = "/path/ws.config";
@@ -752,7 +831,7 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
+            .sparkSettings(SparkSettings.create(config.sparkConfig, 1L, false))
             .sparkAppName(
                 "VALIDATOR_VERBATIM_TO_INTERPRETED_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(
@@ -790,6 +869,14 @@ public class ProcessRunnerBuilderTest {
     config.sparkConfig.executorNumbersMin = 1;
     config.sparkConfig.executorNumbersMax = 2;
     config.sparkConfig.memoryOverhead = 1;
+    config.sparkConfig.parallelismMin = 1;
+    config.sparkConfig.parallelismMax = 1;
+    // Power function setting
+    config.sparkConfig.powerFnCoefficient = 0.000138d;
+    config.sparkConfig.powerFnExponent = 0.626d;
+    config.sparkConfig.powerFnMemoryCoef = 2d;
+    config.sparkConfig.powerFnExecutorCoefficient = 1d;
+    config.sparkConfig.powerFnParallelismCoef = 10d;
     config.avroConfig.compressionType = "SNAPPY";
     config.avroConfig.syncInterval = 1;
     config.pipelinesConfig = "/path/ws.config";
@@ -828,7 +915,7 @@ public class ProcessRunnerBuilderTest {
         ProcessRunnerBuilder.builder()
             .distributedConfig(config.distributedConfig)
             .sparkConfig(config.sparkConfig)
-            .sparkSettings(TestSparkSettings.create(1, "1G", 1))
+            .sparkSettings(SparkSettings.create(config.sparkConfig, 1L, false))
             .sparkAppName("VERBATIM_TO_INTERPRETED_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
             .beamConfigFn(
                 BeamSettings.occurrenceInterpretation(config, message, "verbatim.avro", null))
@@ -839,28 +926,5 @@ public class ProcessRunnerBuilderTest {
 
     // Should
     assertEquals(expected, result);
-  }
-
-  @AllArgsConstructor(staticName = "create")
-  private static class TestSparkSettings implements MainSparkSettings {
-
-    private final int parallelism;
-    private final String executorMemory;
-    private final int executorNumbers;
-
-    @Override
-    public int getParallelism() {
-      return parallelism;
-    }
-
-    @Override
-    public String getExecutorMemory() {
-      return executorMemory;
-    }
-
-    @Override
-    public int getExecutorNumbers() {
-      return executorNumbers;
-    }
   }
 }

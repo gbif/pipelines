@@ -2,6 +2,7 @@ package org.gbif.pipelines.tasks.occurrences.hdfs;
 
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesHdfsViewMessage;
@@ -63,6 +64,6 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
    */
   @Override
   public boolean isMessageCorrect(PipelinesInterpretedMessage message) {
-    return commonHdfsViewCallback.isMessageCorrect(message);
+    return commonHdfsViewCallback.isMessageCorrect(message, StepType.HDFS_VIEW);
   }
 }

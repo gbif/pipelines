@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.pipelines.common.MainSparkSettings;
 import org.gbif.pipelines.common.configs.DistributedConfiguration;
 import org.gbif.pipelines.common.configs.SparkConfiguration;
 
@@ -24,7 +23,7 @@ public final class ProcessRunnerBuilder {
   @NonNull private DistributedConfiguration distributedConfig;
   @Builder.Default private Consumer<StringJoiner> beamConfigFn = j -> {};
   @Getter private String sparkAppName;
-  private MainSparkSettings sparkSettings;
+  private SparkSettings sparkSettings;
 
   public ProcessBuilder get() {
     return buildSpark();

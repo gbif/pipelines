@@ -13,10 +13,10 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
+import org.gbif.pipelines.common.process.SparkSettings;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
@@ -116,8 +116,11 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
   private void runDistributed(ProcessRunnerBuilderBuilder builder, PipelinesEventsMessage message)
       throws IOException, InterruptedException {
 
+    boolean useMemoryExtraCoef =
+        config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
     SparkSettings sparkSettings =
-        SparkSettings.create(config.sparkConfig, message.getNumberOfEventRecords());
+        SparkSettings.create(
+            config.sparkConfig, message.getNumberOfEventRecords(), useMemoryExtraCoef);
     builder.sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it

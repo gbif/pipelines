@@ -15,18 +15,20 @@ import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.PipelinesException;
+import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.interpretation.RecordCountReader;
-import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
+import org.gbif.pipelines.common.process.RecordCountReader;
+import org.gbif.pipelines.common.process.SparkSettings;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToIdentifierPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.occurrences.identifier.validation.IdentifierValidationResult;
 import org.gbif.pipelines.tasks.occurrences.identifier.validation.PostprocessValidation;
+import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
@@ -166,8 +168,27 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
   private void runDistributed(PipelinesVerbatimMessage message, ProcessRunnerBuilderBuilder builder)
       throws IOException, InterruptedException {
 
-    long recordsNumber = RecordCountReader.get(config.stepConfig, message);
-    SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
+    Long messageNumber =
+        message.getValidationResult() != null
+                && message.getValidationResult().getNumberOfRecords() != null
+            ? message.getValidationResult().getNumberOfRecords()
+            : null;
+
+    long recordsNumber =
+        RecordCountReader.builder()
+            .stepConfig(config.stepConfig)
+            .datasetKey(message.getDatasetUuid().toString())
+            .attempt(message.getAttempt().toString())
+            .messageNumber(messageNumber)
+            .metaFileName(new DwcaToAvroConfiguration().metaFileName)
+            .metricName(Metrics.ARCHIVE_TO_ER_COUNT)
+            .build()
+            .get();
+
+    boolean useMemoryExtraCoef =
+        config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
+    SparkSettings sparkSettings =
+        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
     builder.sparkSettings(sparkSettings);
 
