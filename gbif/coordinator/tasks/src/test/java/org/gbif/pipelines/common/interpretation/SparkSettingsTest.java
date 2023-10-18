@@ -26,10 +26,10 @@ public class SparkSettingsTest {
     // Power function setting
     CONFIG.powerFnCoefficient = 0.000138d;
     CONFIG.powerFnExponent = 0.626d;
-    CONFIG.powerFnMemoryCoef = 2d;
+    CONFIG.powerFnMemoryCoef = 2.8d;
     CONFIG.powerFnExecutorCoefficient = 1d;
     CONFIG.powerFnParallelismCoef = 10d;
-    CONFIG.memoryExtraCoef = 1.5d;
+    CONFIG.memoryExtraCoef = 1.3d;
   }
 
   @Test
@@ -77,7 +77,7 @@ public class SparkSettingsTest {
     assertNotNull(sparkSettings);
     assertEquals(34, sparkSettings.getParallelism());
     assertEquals(4, sparkSettings.getExecutorNumbers());
-    assertEquals("8G", sparkSettings.getExecutorMemory());
+    assertEquals("10G", sparkSettings.getExecutorMemory());
   }
 
   @Test
@@ -93,7 +93,7 @@ public class SparkSettingsTest {
     assertNotNull(sparkSettings);
     assertEquals(34, sparkSettings.getParallelism());
     assertEquals(4, sparkSettings.getExecutorNumbers());
-    assertEquals("11G", sparkSettings.getExecutorMemory());
+    assertEquals("13G", sparkSettings.getExecutorMemory());
   }
 
   @Test
@@ -109,7 +109,7 @@ public class SparkSettingsTest {
     assertNotNull(sparkSettings);
     assertEquals(68, sparkSettings.getParallelism());
     assertEquals(7, sparkSettings.getExecutorNumbers());
-    assertEquals("14G", sparkSettings.getExecutorMemory());
+    assertEquals("19G", sparkSettings.getExecutorMemory());
   }
 
   @Test
@@ -125,8 +125,41 @@ public class SparkSettingsTest {
     assertNotNull(sparkSettings);
     assertEquals(142, sparkSettings.getParallelism());
     assertEquals(15, sparkSettings.getExecutorNumbers());
-    assertEquals("29G", sparkSettings.getExecutorMemory());
+    assertEquals("40G", sparkSettings.getExecutorMemory());
   }
+
+  @Test
+  public void m300RecordsSettingsTest() {
+
+    // State
+    long fileRecordsNumber = 300_000_000;
+
+    // When
+    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
+
+    // Should
+    assertNotNull(sparkSettings);
+    assertEquals(280, sparkSettings.getParallelism());
+    assertEquals(28, sparkSettings.getExecutorNumbers());
+    assertEquals("70G", sparkSettings.getExecutorMemory());
+  }
+
+  @Test
+  public void m500RecordsSettingsTest() {
+
+    // State
+    long fileRecordsNumber = 500_000_000;
+
+    // When
+    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
+
+    // Should
+    assertNotNull(sparkSettings);
+    assertEquals(386, sparkSettings.getParallelism());
+    assertEquals(39, sparkSettings.getExecutorNumbers());
+    assertEquals("70G", sparkSettings.getExecutorMemory());
+  }
+
 
   @Test
   public void b12RecordsSettingsTest() {
