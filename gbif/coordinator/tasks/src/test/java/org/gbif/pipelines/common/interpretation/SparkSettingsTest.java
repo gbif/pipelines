@@ -160,7 +160,6 @@ public class SparkSettingsTest {
     assertEquals("70G", sparkSettings.getExecutorMemory());
   }
 
-
   @Test
   public void b12RecordsSettingsTest() {
 
