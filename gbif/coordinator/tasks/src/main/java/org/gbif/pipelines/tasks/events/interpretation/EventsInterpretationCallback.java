@@ -12,8 +12,8 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
+import org.gbif.pipelines.common.process.SparkSettings;
 import org.gbif.pipelines.common.process.StackableSparkRunner;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -108,8 +108,11 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
     String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
     String path = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
 
+    boolean useMemoryExtraCoef =
+        config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
     SparkSettings sparkSettings =
-        SparkSettings.create(config.sparkConfig, message.getNumberOfEventRecords());
+        SparkSettings.create(
+            config.sparkConfig, message.getNumberOfEventRecords(), useMemoryExtraCoef);
 
     StackableSparkRunner.StackableSparkRunnerBuilder builder =
         StackableSparkRunner.builder()

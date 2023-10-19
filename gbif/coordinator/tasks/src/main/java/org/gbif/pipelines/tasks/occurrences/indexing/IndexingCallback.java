@@ -4,9 +4,7 @@ import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
-import java.io.IOException;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
@@ -14,21 +12,18 @@ import java.util.function.Predicate;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.HttpClient;
-import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.indexing.IndexSettings;
-import org.gbif.pipelines.common.indexing.SparkSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
+import org.gbif.pipelines.common.process.RecordCountReader;
+import org.gbif.pipelines.common.process.SparkSettings;
 import org.gbif.pipelines.common.process.StackableSparkRunner;
-import org.gbif.pipelines.common.utils.HdfsUtils;
-import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
@@ -125,7 +120,18 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     return () -> {
       try {
 
-        long recordsNumber = getRecordNumber(message);
+        long recordsNumber =
+            RecordCountReader.builder()
+                .stepConfig(config.stepConfig)
+                .datasetKey(message.getDatasetUuid().toString())
+                .attempt(message.getAttempt().toString())
+                .messageNumber(message.getNumberOfRecords())
+                .metaFileName(new InterpreterConfiguration().metaFileName)
+                .metricName(Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED)
+                .alternativeMetricName(Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED)
+                .build()
+                .get();
+
         IndexSettings indexSettings =
             IndexSettings.create(
                 config.indexConfig,
@@ -169,20 +175,14 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   private void runDistributed(
-      PipelinesInterpretedMessage message, Consumer<StringJoiner> beamSettings, long recordsNumber)
-      throws IOException {
+      PipelinesInterpretedMessage message,
+      Consumer<StringJoiner> beamSettings,
+      long recordsNumber) {
 
-    String filePath =
-        String.join(
-            "/",
-            config.stepConfig.repositoryPath,
-            message.getDatasetUuid().toString(),
-            Integer.toString(message.getAttempt()),
-            DwcTerm.Occurrence.simpleName().toLowerCase(),
-            RecordType.BASIC.name().toLowerCase());
-
+    boolean useMemoryExtraCoef =
+        config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
     SparkSettings sparkSettings =
-        SparkSettings.create(config.sparkConfig, config.stepConfig, filePath, recordsNumber);
+        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
     StackableSparkRunner.StackableSparkRunnerBuilder builder =
         StackableSparkRunner.builder()
@@ -206,44 +206,6 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     } else {
       log.info("Process has been finished, Spark job name - {}", ssr.getSparkAppName());
     }
-  }
-
-  /**
-   * Reads number of records from an archive-to-avro metadata file, verbatim-to-interpreted contains
-   * attempted records count, which is not accurate enough
-   */
-  private long getRecordNumber(PipelinesInterpretedMessage message) throws IOException {
-    String datasetId = message.getDatasetUuid().toString();
-    String attempt = Integer.toString(message.getAttempt());
-    String metaFileName = new InterpreterConfiguration().metaFileName;
-    String metaPath =
-        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
-
-    Long messageNumber = message.getNumberOfRecords();
-    HdfsConfigs hdfsConfigs =
-        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
-    Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(
-            hdfsConfigs, metaPath, Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED);
-    if (!fileNumber.isPresent()) {
-      fileNumber =
-          HdfsUtils.getLongByKey(
-              hdfsConfigs, metaPath, Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
-    }
-
-    if (messageNumber == null && !fileNumber.isPresent()) {
-      throw new IllegalArgumentException(
-          "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
-    }
-
-    if (messageNumber == null) {
-      return fileNumber.get();
-    }
-
-    if (!fileNumber.isPresent() || messageNumber > fileNumber.get()) {
-      return messageNumber;
-    }
-    return fileNumber.get();
   }
 
   private StepType getType(PipelinesInterpretedMessage message) {

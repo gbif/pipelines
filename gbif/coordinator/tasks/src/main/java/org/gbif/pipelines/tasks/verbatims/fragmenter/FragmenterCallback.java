@@ -23,9 +23,9 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesFragmenterMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
-import org.gbif.pipelines.common.hdfs.RecordCountReader;
-import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
+import org.gbif.pipelines.common.process.RecordCountReader;
+import org.gbif.pipelines.common.process.SparkSettings;
 import org.gbif.pipelines.common.process.StackableSparkRunner;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -37,6 +37,7 @@ import org.gbif.pipelines.fragmenter.strategy.XmlStrategy;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
+import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
@@ -80,7 +81,17 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
     return () -> {
       try {
 
-        long recordsNumber = RecordCountReader.get(config.stepConfig, message);
+        long recordsNumber =
+            RecordCountReader.builder()
+                .stepConfig(config.stepConfig)
+                .datasetKey(message.getDatasetUuid().toString())
+                .attempt(message.getAttempt().toString())
+                .messageNumber(message.getNumberOfRecords())
+                .metaFileName(new InterpreterConfiguration().metaFileName)
+                .metricName(Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED)
+                .alternativeMetricName(Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED)
+                .build()
+                .get();
 
         log.info("Start the process. Message - {}", message);
         if (StepRunner.DISTRIBUTED.name().equalsIgnoreCase(message.getRunner())
@@ -101,7 +112,10 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
   private void runDistributed(PipelinesInterpretedMessage message, long recordsNumber) {
     Consumer<StringJoiner> beamSettings = BeamSettings.verbatimFragmenter(config, message);
 
-    SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
+    boolean useMemoryExtraCoef =
+        config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
+    SparkSettings sparkSettings =
+        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
     StackableSparkRunner.StackableSparkRunnerBuilder builder =
         StackableSparkRunner.builder()

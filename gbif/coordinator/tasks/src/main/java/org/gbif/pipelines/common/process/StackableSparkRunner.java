@@ -9,7 +9,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.pipelines.common.MainSparkSettings;
 import org.gbif.pipelines.common.configs.DistributedConfiguration;
 import org.gbif.pipelines.common.configs.SparkConfiguration;
 import org.gbif.stackable.ConfigUtils;
@@ -35,7 +34,7 @@ public final class StackableSparkRunner {
 
   @Getter @NonNull private final String sparkAppName;
 
-  @NonNull private final MainSparkSettings sparkSettings;
+  @NonNull private final SparkSettings sparkSettings;
 
   private final K8StackableSparkController k8StackableSparkController;
 
@@ -52,7 +51,7 @@ public final class StackableSparkRunner {
       @NonNull SparkConfiguration sparkConfig,
       @NonNull DistributedConfiguration distributedConfig,
       @NonNull @Size(min = 10, max = 63) String sparkAppName,
-      @NonNull MainSparkSettings sparkSettings,
+      @NonNull SparkSettings sparkSettings,
       @NonNull Consumer<StringJoiner> beamConfigFn,
       @NonNull boolean deleteOnFinish) {
     this.kubeConfigFile = kubeConfigFile;
