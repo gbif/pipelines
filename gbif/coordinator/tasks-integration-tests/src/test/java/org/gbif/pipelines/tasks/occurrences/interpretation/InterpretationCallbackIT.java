@@ -126,7 +126,7 @@ public class InterpretationCallbackIT {
     config.sparkConfig.executorCores = 5;
     config.sparkConfig.executorNumbersMin = 6;
     config.sparkConfig.executorNumbersMax = 10;
-    config.sparkConfig.driverMemory = "1G";
+    config.sparkConfig.driverMemory = 1;
 
     config.distributedConfig.deployMode = "cluster";
     config.distributedConfig.mainClass =

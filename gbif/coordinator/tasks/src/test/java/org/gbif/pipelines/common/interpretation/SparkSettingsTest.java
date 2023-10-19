@@ -22,7 +22,7 @@ public class SparkSettingsTest {
     CONFIG.executorCores = 5;
     CONFIG.executorNumbersMin = 2;
     CONFIG.executorNumbersMax = 70;
-    CONFIG.driverMemory = "1Gb";
+    CONFIG.driverMemory = 1;
     // Power function setting
     CONFIG.powerFnCoefficient = 0.000138d;
     CONFIG.powerFnExponent = 0.626d;

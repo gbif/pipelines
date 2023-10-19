@@ -24,7 +24,7 @@ public class AirflowBodyTest {
     AirflowConfiguration conf = createConf();
 
     AirflowBody testBody = new AirflowBody(conf);
-    List<String> args = new ArrayList<String>();
+    List<String> args = new ArrayList<>();
     args.add("--datasetId=647490ab-72e9-4dd6-ac83-8f771494df36");
     args.add("--attempt=273");
     testBody.setArgs(args);
@@ -58,7 +58,7 @@ public class AirflowBodyTest {
     config.avroConfig.compressionType = "SNAPPY";
     config.avroConfig.syncInterval = 1;
     config.pipelinesConfig = "/path/ws.config";
-    config.sparkConfig.driverMemory = "4G";
+    config.sparkConfig.driverMemory = 4;
     config.distributedConfig.metricsPropertiesPath = "metrics.properties";
     config.distributedConfig.extraClassPath = "logstash-gelf.jar";
     config.distributedConfig.driverJavaOptions = "-Dlog4j.configuration=file:log4j.properties";

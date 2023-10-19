@@ -39,7 +39,7 @@ public class SparkConfiguration {
   public int driverCores;
 
   @Parameter(names = "--spark-driver-memory")
-  public String driverMemory;
+  public int driverMemory;
 
   @Parameter(names = "--max-record-limit")
   public long maxRecordsLimit;
