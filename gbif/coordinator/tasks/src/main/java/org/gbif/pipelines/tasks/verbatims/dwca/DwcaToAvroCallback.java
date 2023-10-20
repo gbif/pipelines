@@ -116,7 +116,8 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
     boolean isValidGenericReport =
         message.getValidationReport().getGenericReport() != null
-            && message.getValidationReport().getGenericReport().getCheckedRecords() > 0;
+            && message.getValidationReport().getGenericReport().getCheckedRecords() > 0
+            && message.getDatasetType() != DatasetType.CHECKLIST;
     return isValidOccurrenceReport || isValidGenericReport;
   }
 
