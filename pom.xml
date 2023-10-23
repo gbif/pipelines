@@ -106,7 +106,7 @@
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
 
     <!-- Common libraries -->
-    <avro.version>1.8.2</avro.version>
+    <avro.version>1.11.1.7.1.9.0-387</avro.version>
     <apache.beam.version>2.33.0</apache.beam.version>
     <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.16.2</hadoop-core.version>
