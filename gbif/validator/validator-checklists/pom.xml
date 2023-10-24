@@ -32,7 +32,7 @@
   </build>
 
   <properties>
-    <amqp-client.version>3.1.4</amqp-client.version>
+    <amqp-client.version>5.18.0</amqp-client.version>
 
     <!-- Match Checklistbank versions -->
     <gbif-cli.version>0.13</gbif-cli.version>
