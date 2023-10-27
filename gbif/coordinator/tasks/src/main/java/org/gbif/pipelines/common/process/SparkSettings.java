@@ -9,7 +9,7 @@ import org.gbif.pipelines.common.configs.SparkConfiguration;
 public class SparkSettings {
 
   private final int parallelism;
-  private final String executorMemory;
+  private final int executorMemory;
   private final int executorNumbers;
   private final double memoryExtraCoef;
 
@@ -51,18 +51,18 @@ public class SparkSettings {
    * Computes the memory for executor in Gb, where min is config.sparkExecutorMemoryGbMin and max is
    * config.sparkExecutorMemoryGbMax
    */
-  private String computeExecutorMemory(SparkConfiguration sparkConfig, long recordsNumber) {
+  private int computeExecutorMemory(SparkConfiguration sparkConfig, long recordsNumber) {
     int memoryInGb = computePowerFn(sparkConfig, recordsNumber, sparkConfig.powerFnMemoryCoef);
 
     memoryInGb = (int) Math.ceil(memoryInGb * memoryExtraCoef);
 
     if (memoryInGb < sparkConfig.executorMemoryGbMin) {
-      return sparkConfig.executorMemoryGbMin + "G";
+      return sparkConfig.executorMemoryGbMin;
     }
     if (memoryInGb > sparkConfig.executorMemoryGbMax) {
-      return sparkConfig.executorMemoryGbMax + "G";
+      return sparkConfig.executorMemoryGbMax;
     }
-    return memoryInGb + "G";
+    return memoryInGb;
   }
 
   /**
