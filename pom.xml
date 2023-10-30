@@ -135,7 +135,7 @@
     <logstash-gelf.version>1.11.2</logstash-gelf.version>
 
     <!-- ES version matches Beam version -->
-    <elasticsearch.version>7.9.2</elasticsearch.version>
+    <elasticsearch.version>7.17.13</elasticsearch.version>
     <pipelines.lucene.version>8.6.2</pipelines.lucene.version>
     <apache.httpcomponents.version>4.4.12</apache.httpcomponents.version>
 
