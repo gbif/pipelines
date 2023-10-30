@@ -34,7 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Validation resource services, it allows validating files (synchronous) and url (asynchronously).
- * Additional it provides services to list and retrieve validations statuses.
+ * Aditional it provides services to list and retrieve validations statuses.
  */
 @Slf4j
 @RestController
@@ -55,7 +55,7 @@ public class ValidationResource {
     return validationService.validateFile(file, validationRequest);
   }
 
-  /** Asynchronously downloads a file from an URL and starts the validation process. */
+  /** Asynchronously downloads a file from a URL and starts the validation process. */
   @PostMapping(
       path = "/url",
       consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
