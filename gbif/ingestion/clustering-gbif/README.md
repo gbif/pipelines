@@ -43,6 +43,7 @@ create 'occurrence_relationships_experimental',
 Remove hive tables from the target database:
 ```
 drop table occurrence_clustering_hashed;
+drop table occurrence_clustering_hashed_all;
 drop table occurrence_clustering_candidates;
 drop table occurrence_relationships;
 ```
