@@ -16,14 +16,14 @@ import org.mockserver.junit.jupiter.MockServerExtension;
 
 /** {@link DownloadFileManager} tests. */
 @ExtendWith(MockServerExtension.class)
-public class DownloadFileManagerTest extends DownloadFileBaseTest {
+class DownloadFileManagerTest extends DownloadFileBaseTest {
 
   public DownloadFileManagerTest(ClientAndServer clientAndServer) {
     super(clientAndServer);
   }
 
   @Test
-  public void isAvailableTest() {
+  void isAvailableTest() {
     // Existing url
     assertTrue(DownloadFileManager.isAvailable(testPath("/Archive.zip")));
 
@@ -33,7 +33,7 @@ public class DownloadFileManagerTest extends DownloadFileBaseTest {
 
   /** Synchronous download test. */
   @Test
-  public void downloadTest() {
+  void downloadTest() {
     Path targetFilePath = tempDir.resolve("Archive.zip");
 
     DownloadFileManager downloadFileManager = ctx.getBean(DownloadFileManager.class);
@@ -45,7 +45,7 @@ public class DownloadFileManagerTest extends DownloadFileBaseTest {
   /** Asynchronous download test. */
   @Test
   @SneakyThrows
-  public void downloadAsyncTest() {
+  void downloadAsyncTest() {
     Path targetFilePath = tempDir.resolve("Archive.zip");
 
     DownloadFileManager downloadFileManager = ctx.getBean(DownloadFileManager.class);
