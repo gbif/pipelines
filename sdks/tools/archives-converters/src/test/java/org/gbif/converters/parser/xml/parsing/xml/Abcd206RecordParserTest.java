@@ -20,7 +20,8 @@ public class Abcd206RecordParserTest extends ParserTestCase {
     assertEquals("BGBM", ror.getInstitutionCode());
     assertEquals("AlgaTerra", ror.getCollectionCode());
     assertEquals("HumanObservation", ror.getBasisOfRecord());
-    assertEquals("DE", ror.getCountry());
+    assertEquals("DE", ror.getCountryCode());
+    assertEquals("Germany", ror.getCountry());
     assertEquals("Kusber, W.-H.", ror.getCollectorName());
     assertEquals("Nikolassee, Berlin", ror.getLocality());
     assertEquals("5834", ror.getCatalogueNumber());
