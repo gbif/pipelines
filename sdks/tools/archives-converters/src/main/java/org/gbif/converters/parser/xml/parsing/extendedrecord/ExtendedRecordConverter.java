@@ -72,6 +72,11 @@ public class ExtendedRecordConverter {
     setter.accept(DwcTerm.dateIdentified, rawRecord.getDateIdentified());
     setter.accept(GbifTerm.elevationAccuracy, rawRecord.getAltitudePrecision());
     setter.accept(GbifTerm.depthAccuracy, rawRecord.getDepthPrecision());
+    setter.accept(DwcTerm.recordNumber, rawRecord.getCollectorsFieldNumber());
+
+    if (rawRecord.getLinkRecords() != null && !rawRecord.getLinkRecords().isEmpty()) {
+      setter.accept(DcTerm.references, rawRecord.getLinkRecords().get(0).getUrl());
+    }
 
     if (rawRecord.getIdentifierRecords() != null) {
       rawRecord.getIdentifierRecords().stream()
