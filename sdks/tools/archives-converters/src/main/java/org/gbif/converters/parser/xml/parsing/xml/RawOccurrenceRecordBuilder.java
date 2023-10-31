@@ -72,6 +72,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   private String depthPrecision;
   private String continentOrOcean;
   private String country;
+  private String countryCode;
   private String stateOrProvince;
   private String county;
   private String collectorName;
@@ -179,6 +180,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     bareBones.setCollectorsFieldNumber(collectorsFieldNumber);
     bareBones.setContinentOrOcean(continentOrOcean);
     bareBones.setCountry(country);
+    bareBones.setCountryCode(countryCode);
     bareBones.setCounty(county);
     bareBones.setDataProviderId(dataProviderId);
     bareBones.setDataResourceId(dataResourceId);
@@ -561,6 +563,14 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
 
   public void setCountry(String country) {
     this.country = country;
+  }
+
+  public String getCountryCode() {
+    return countryCode;
+  }
+
+  public void setCountryCode(String countryCode) {
+    this.countryCode = countryCode;
   }
 
   public String getStateOrProvince() {

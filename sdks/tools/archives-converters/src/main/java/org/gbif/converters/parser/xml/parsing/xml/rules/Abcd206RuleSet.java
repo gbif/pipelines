@@ -49,7 +49,10 @@ public class Abcd206RuleSet extends AbstractRuleSet {
     addNonNullMethod(digester, "collectorsFieldNumber", "setCollectorsFieldNumber", 1);
     addNonNullParam(digester, "collectorsFieldNumber", 0);
 
-    addNonNullPrioritizedProperty(digester, "country", PrioritizedPropertyNameEnum.COUNTRY, 3);
+    addNonNullMethod(digester, "countryCode", "setCountryCode", 1);
+    addNonNullParam(digester, "countryCode", 0);
+
+    addNonNullPrioritizedProperty(digester, "country", PrioritizedPropertyNameEnum.COUNTRY, 2);
     addNonNullPrioritizedProperty(
         digester, "collectorName", PrioritizedPropertyNameEnum.COLLECTOR_NAME, 3);
     addNonNullPrioritizedProperty(digester, "latitude", PrioritizedPropertyNameEnum.LATITUDE, 2);

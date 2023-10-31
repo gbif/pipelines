@@ -58,6 +58,7 @@ public class ExtendedRecordConverter {
     setter.accept(DwcTerm.maximumDepthInMeters, rawRecord.getMaxDepth());
     setter.accept(DwcTerm.continent, rawRecord.getContinentOrOcean());
     setter.accept(DwcTerm.country, rawRecord.getCountry());
+    setter.accept(DwcTerm.countryCode, rawRecord.getCountryCode());
     setter.accept(DwcTerm.stateProvince, rawRecord.getStateOrProvince());
     setter.accept(DwcTerm.county, rawRecord.getCounty());
     setter.accept(DwcTerm.recordedBy, rawRecord.getCollectorName());

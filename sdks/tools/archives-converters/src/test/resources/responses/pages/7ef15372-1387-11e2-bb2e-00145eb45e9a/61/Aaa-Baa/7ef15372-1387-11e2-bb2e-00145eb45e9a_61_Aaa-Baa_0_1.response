@@ -116,6 +116,7 @@
               <abcd:LocalityText>near Ajil Deka, Gotys, SE-side of Akropolis</abcd:LocalityText>
               <abcd:Country>
                 <abcd:Name>Greece</abcd:Name>
+                <abcd:ISO3166Code>GR</abcd:ISO3166Code>
               </abcd:Country>
             </abcd:Gathering>
             <abcd:RecordURI>http://sesam.senckenberg.de/page/index.asp?objekt_id=704138&amp;sprache_kurz=en</abcd:RecordURI>
@@ -177,6 +178,7 @@
               <abcd:LocalityText>W of Camaris</abcd:LocalityText>
               <abcd:Country>
                 <abcd:Name>Greece</abcd:Name>
+                <abcd:ISO3166Code>GR</abcd:ISO3166Code>
               </abcd:Country>
             </abcd:Gathering>
             <abcd:RecordURI>http://sesam.senckenberg.de/page/index.asp?objekt_id=704139&amp;sprache_kurz=en</abcd:RecordURI>
@@ -238,6 +240,7 @@
               <abcd:LocalityText>near Ragusa, Lokrum Island</abcd:LocalityText>
               <abcd:Country>
                 <abcd:Name>Croatia</abcd:Name>
+                <abcd:ISO3166Code>HR</abcd:ISO3166Code>
               </abcd:Country>
             </abcd:Gathering>
             <abcd:RecordURI>http://sesam.senckenberg.de/page/index.asp?objekt_id=704159&amp;sprache_kurz=en</abcd:RecordURI>

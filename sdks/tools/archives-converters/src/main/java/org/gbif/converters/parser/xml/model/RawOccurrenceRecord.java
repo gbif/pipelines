@@ -68,6 +68,7 @@ public class RawOccurrenceRecord implements Serializable {
   private String depthPrecision;
   private String continentOrOcean;
   private String country;
+  private String countryCode;
   private String stateOrProvince;
   private String county;
   private String collectorName;
@@ -99,10 +100,8 @@ public class RawOccurrenceRecord implements Serializable {
     this.klass = dwcr.value(DwcTerm.class_);
     this.collectionCode = dwcr.value(DwcTerm.collectionCode);
     this.continentOrOcean = dwcr.value(DwcTerm.continent);
-    this.country =
-        dwcr.value(DwcTerm.country) == null || dwcr.value(DwcTerm.country).isEmpty()
-            ? dwcr.value(DwcTerm.countryCode)
-            : dwcr.value(DwcTerm.country);
+    this.country = dwcr.value(DwcTerm.country);
+    this.countryCode = dwcr.value(DwcTerm.countryCode);
     this.county = dwcr.value(DwcTerm.county);
     this.dateIdentified = dwcr.value(DwcTerm.dateIdentified);
     this.latitude =
