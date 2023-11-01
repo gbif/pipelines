@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.util.List;
+import org.gbif.converters.parser.xml.model.Collector;
 import org.gbif.converters.parser.xml.model.ImageRecord;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.model.TypificationRecord;
@@ -22,7 +23,8 @@ public class Abcd206RecordParserTest extends ParserTestCase {
     assertEquals("HumanObservation", ror.getBasisOfRecord());
     assertEquals("DE", ror.getCountryCode());
     assertEquals("Germany", ror.getCountry());
-    assertEquals("Kusber, W.-H.", ror.getCollectorName());
+    assertEquals(
+        "Kusber, W.-H.", ror.getCollectors().stream().map(Collector::getName).findFirst().get());
     assertEquals("Nikolassee, Berlin", ror.getLocality());
     assertEquals("5834", ror.getCatalogueNumber());
     assertEquals("52.423798", ror.getLatitude());

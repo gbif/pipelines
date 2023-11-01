@@ -18,9 +18,11 @@ package org.gbif.converters.parser.xml.parsing.xml.rules;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
+import java.util.function.Consumer;
 import org.apache.commons.digester.Digester;
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
+import org.gbif.converters.parser.xml.model.Collector;
 import org.gbif.converters.parser.xml.model.Identification;
 import org.gbif.converters.parser.xml.model.ImageRecord;
 
@@ -62,9 +64,9 @@ public class Abcd12RuleSet extends AbstractRuleSet {
     addNonNullMethod(digester, "longitude", "setLongitude", 1);
     addNonNullParam(digester, "longitude", 0);
 
-    addNonNullPrioritizedProperty(digester, "country", PrioritizedPropertyNameEnum.COUNTRY, 4);
+    addNonNullPrioritizedProperty(digester, "country", PrioritizedPropertyNameEnum.COUNTRY, 2);
     addNonNullPrioritizedProperty(
-        digester, "collectorName", PrioritizedPropertyNameEnum.COLLECTOR_NAME, 3);
+        digester, "countryCode", PrioritizedPropertyNameEnum.COUNTRY_CODE, 2);
     addNonNullPrioritizedProperty(
         digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 3);
 
@@ -120,5 +122,22 @@ public class Abcd12RuleSet extends AbstractRuleSet {
     }
 
     // NOTE: no links in abcd 1.2
+    // possible many collectors
+    Consumer<String> collectorFn =
+        prop -> {
+          String ptrn = mappingProps.getProperty(prop);
+          if (ptrn != null) {
+            ptrn = ptrn.trim();
+            digester.addObjectCreate(ptrn, Collector.class);
+            digester.addSetNext(ptrn, "addCollectorName");
+
+            addNonNullMethod(digester, prop, "setName", 1);
+            addNonNullParam(digester, prop, 0);
+          }
+        };
+
+    collectorFn.accept("collectorNameFullName");
+    collectorFn.accept("collectorNameGatheringAgentsText");
+    collectorFn.accept("collectorNameAgentText");
   }
 }

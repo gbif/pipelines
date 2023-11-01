@@ -2,6 +2,7 @@ package org.gbif.converters.parser.xml.parsing.xml;
 
 import static org.junit.Assert.assertEquals;
 
+import org.gbif.converters.parser.xml.model.Collector;
 import org.gbif.converters.parser.xml.model.IdentifierRecord;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.junit.Test;
@@ -22,7 +23,8 @@ public class Dwc2009RecordParserTest extends ParserTestCase {
 
     // common to dwc
     assertEquals("Acantholimon armenum var. armenum", ror.getScientificName());
-    assertEquals("Markus Döring", ror.getCollectorName());
+    assertEquals(
+        "Markus Döring", ror.getCollectors().stream().map(Collector::getName).findFirst().get());
     assertEquals("Markus Döring", ror.getIdentifierName());
     assertEquals("Plantae", ror.getKingdom());
     assertEquals("Magnoliophyta", ror.getPhylum());

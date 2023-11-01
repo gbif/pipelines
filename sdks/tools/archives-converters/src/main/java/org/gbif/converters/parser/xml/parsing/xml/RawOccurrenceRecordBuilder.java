@@ -17,11 +17,13 @@ package org.gbif.converters.parser.xml.parsing.xml;
 
 import com.google.common.base.Strings;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
+import org.gbif.converters.parser.xml.model.Collector;
 import org.gbif.converters.parser.xml.model.Identification;
 import org.gbif.converters.parser.xml.model.IdentifierRecord;
 import org.gbif.converters.parser.xml.model.ImageRecord;
@@ -75,7 +77,6 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   private String countryCode;
   private String stateOrProvince;
   private String county;
-  private String collectorName;
   private String collectorsFieldNumber;
   private String locality;
   private String basisOfRecord;
@@ -97,6 +98,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   private String dayIdentified;
   private String dateIdentified;
 
+  private Set<Collector> collectors = new HashSet<>();
   private List<IdentifierRecord> identifierRecords = new ArrayList<>();
   private List<TypificationRecord> typificationRecords = new ArrayList<>();
   private List<Identification> identifications = new ArrayList<>();
@@ -176,7 +178,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     bareBones.setBasisOfRecord(basisOfRecord);
     bareBones.setCatalogueNumber(catalogueNumber);
     bareBones.setCollectionCode(collectionCode);
-    bareBones.setCollectorName(collectorName);
+    bareBones.setCollectors(collectors);
     bareBones.setCollectorsFieldNumber(collectorsFieldNumber);
     bareBones.setContinentOrOcean(continentOrOcean);
     bareBones.setCountry(country);
@@ -223,6 +225,12 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     bareBones.setUnitQualifier(unitQualifier);
 
     return bareBones;
+  }
+
+  public void addCollectorName(Collector collector) {
+    if (collector != null && !collector.isEmpty()) {
+      this.collectors.add(collector);
+    }
   }
 
   public void addIdentification(Identification ident) {
@@ -282,14 +290,14 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
         case CATALOGUE_NUMBER:
           this.catalogueNumber = result;
           break;
-        case COLLECTOR_NAME:
-          this.collectorName = result;
-          break;
         case CONTINENT_OR_OCEAN:
           this.continentOrOcean = result;
           break;
         case COUNTRY:
           this.country = result;
+          break;
+        case COUNTRY_CODE:
+          this.countryCode = result;
           break;
         case DATE_COLLECTED:
           this.occurrenceDate = result;
@@ -589,12 +597,12 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     this.county = county;
   }
 
-  public String getCollectorName() {
-    return collectorName;
+  public Set<Collector> getCollectors() {
+    return collectors;
   }
 
-  public void setCollectorName(String collectorName) {
-    this.collectorName = collectorName;
+  public void setCollectors(Set<Collector> collectors) {
+    this.collectors = collectors;
   }
 
   public String getLocality() {
@@ -655,7 +663,9 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
         if (!Strings.isNullOrEmpty(day)) result = result + "-" + day;
       }
     }
-    if (result != null) this.dateIdentified = result;
+    if (result != null) {
+      this.dateIdentified = result;
+    }
   }
 
   public void setDateIdentified(String dateIdentified) {

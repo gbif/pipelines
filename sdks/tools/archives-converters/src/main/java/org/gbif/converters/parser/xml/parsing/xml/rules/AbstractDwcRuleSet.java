@@ -1,6 +1,7 @@
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
 import org.apache.commons.digester.Digester;
+import org.gbif.converters.parser.xml.model.Collector;
 
 public abstract class AbstractDwcRuleSet extends AbstractRuleSet {
 
@@ -50,10 +51,17 @@ public abstract class AbstractDwcRuleSet extends AbstractRuleSet {
     addNonNullMethod(digester, "locality", "setLocality", 1);
     addNonNullParam(digester, "locality", 0);
 
-    addNonNullMethod(digester, "collectorName", "setCollectorName", 1);
-    addNonNullParam(digester, "collectorName", 0);
-
     addNonNullMethod(digester, "identifierName", "setIdentifierName", 1);
     addNonNullParam(digester, "identifierName", 0);
+
+    String ptrn = mappingProps.getProperty("collectorName");
+    if (ptrn != null) {
+      ptrn = ptrn.trim();
+      digester.addObjectCreate(ptrn, Collector.class);
+      digester.addSetNext(ptrn, "addCollectorName");
+
+      addNonNullMethod(digester, "collectorName", "setName", 1);
+      addNonNullParam(digester, "collectorName", 0);
+    }
   }
 }

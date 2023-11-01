@@ -17,8 +17,10 @@ package org.gbif.converters.parser.xml.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -71,7 +73,6 @@ public class RawOccurrenceRecord implements Serializable {
   private String countryCode;
   private String stateOrProvince;
   private String county;
-  private String collectorName;
   private String collectorsFieldNumber;
   private String locality;
   private String year;
@@ -88,6 +89,7 @@ public class RawOccurrenceRecord implements Serializable {
   private long created;
   private long modified;
 
+  private Set<Collector> collectors = new HashSet<>();
   private List<IdentifierRecord> identifierRecords = new ArrayList<>();
   private List<TypificationRecord> typificationRecords = new ArrayList<>();
   private List<ImageRecord> imageRecords = new ArrayList<>();

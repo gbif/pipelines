@@ -15,6 +15,7 @@ import org.gbif.converters.parser.xml.identifier.OccurrenceKeyHelper;
 import org.gbif.converters.parser.xml.identifier.PublisherProvidedUniqueIdentifier;
 import org.gbif.converters.parser.xml.identifier.Triplet;
 import org.gbif.converters.parser.xml.identifier.UniqueIdentifier;
+import org.gbif.converters.parser.xml.model.Collector;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
 import org.junit.Test;
@@ -31,7 +32,9 @@ public class XmlFragmentParserTest {
     RawXmlOccurrence rawRecord = createFakeOcc(xml);
     List<RawOccurrenceRecord> results = XmlFragmentParser.parseRecord(rawRecord);
     assertEquals(1, results.size());
-    assertEquals("Oschütz", results.get(0).getCollectorName());
+    assertEquals(
+        "Oschütz",
+        results.get(0).getCollectors().stream().map(Collector::getName).findFirst().get());
   }
 
   @Test

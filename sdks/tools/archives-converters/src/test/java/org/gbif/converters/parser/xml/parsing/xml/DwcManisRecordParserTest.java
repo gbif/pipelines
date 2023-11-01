@@ -2,6 +2,7 @@ package org.gbif.converters.parser.xml.parsing.xml;
 
 import static org.junit.Assert.assertEquals;
 
+import org.gbif.converters.parser.xml.model.Collector;
 import org.gbif.converters.parser.xml.model.IdentifierRecord;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.model.TypificationRecord;
@@ -26,7 +27,9 @@ public class DwcManisRecordParserTest extends ParserTestCase {
     assertEquals("Caudata", ror.getOrder());
     assertEquals("Plethodontidae", ror.getFamily());
     assertEquals("Gyrinophilus", ror.getGenus());
-    assertEquals("E. S. & W. I. Mattin", ror.getCollectorName());
+    assertEquals(
+        "E. S. & W. I. Mattin",
+        ror.getCollectors().stream().map(Collector::getName).findFirst().get());
     assertEquals("New Jersey", ror.getStateOrProvince());
     assertEquals("USA", ror.getCountry());
     assertEquals("Sussex Co.", ror.getCounty());

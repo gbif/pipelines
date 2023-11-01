@@ -17,9 +17,9 @@ public class PropertyPrioritizerTest {
     String expected = "Aa";
     Set<PrioritizedProperty> set =
         new TreeSet<>(Comparator.comparing(PrioritizedProperty::getProperty));
-    set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COLLECTOR_NAME, 1, "Aa"));
-    set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COLLECTOR_NAME, 1, "Bb"));
-    set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COLLECTOR_NAME, 1, "Cc"));
+    set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COUNTRY, 1, "Aa"));
+    set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COUNTRY, 2, "Bb"));
+    set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COUNTRY, 3, "Cc"));
 
     // When
     String result = PropertyPrioritizer.findHighestPriority(set);
@@ -32,12 +32,12 @@ public class PropertyPrioritizerTest {
   public void reverseFindHighestPriorityTest() {
 
     // State
-    String expected = "Aa";
+    String expected = "Cc";
     Set<PrioritizedProperty> set =
         new TreeSet<>(Comparator.comparing(PrioritizedProperty::getProperty).reversed());
-    set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COLLECTOR_NAME, 1, "Cc"));
-    set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COLLECTOR_NAME, 1, "Bb"));
-    set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COLLECTOR_NAME, 1, "Aa"));
+    set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COUNTRY, 1, "Cc"));
+    set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COUNTRY, 2, "Bb"));
+    set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COUNTRY, 3, "Aa"));
 
     // When
     String result = PropertyPrioritizer.findHighestPriority(set);
