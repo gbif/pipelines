@@ -27,8 +27,8 @@ public class Abcd206RecordParserTest extends ParserTestCase {
         "Kusber, W.-H.", ror.getCollectors().stream().map(Collector::getName).findFirst().get());
     assertEquals("Nikolassee, Berlin", ror.getLocality());
     assertEquals("5834", ror.getCatalogueNumber());
-    assertEquals("52.423798", ror.getLatitude());
-    assertEquals("13.191434", ror.getLongitude());
+    assertEquals("52.423798", ror.getDecimalLatitude());
+    assertEquals("13.191434", ror.getDecimalLongitude());
     assertEquals("1987-04-13T00:00:00", ror.getOccurrenceDate());
     assertEquals("400", ror.getMinAltitude());
     assertEquals("500", ror.getMaxAltitude());

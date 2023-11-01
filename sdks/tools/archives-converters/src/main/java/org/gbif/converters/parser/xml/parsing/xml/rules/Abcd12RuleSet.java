@@ -20,6 +20,7 @@ import java.net.URL;
 import java.util.Properties;
 import java.util.function.Consumer;
 import org.apache.commons.digester.Digester;
+import org.apache.logging.log4j.util.BiConsumer;
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.model.Collector;
@@ -45,24 +46,19 @@ public class Abcd12RuleSet extends AbstractRuleSet {
   public void addRuleInstances(Digester digester) {
     super.addRuleInstances(digester);
 
+    BiConsumer<String, String> addFn =
+        (property, methodName) -> {
+          addNonNullMethod(digester, property, methodName, 1);
+          addNonNullParam(digester, property, 0);
+        };
+
     // abcd simple fields
-    addNonNullMethod(digester, "catalogueNumber", "setCatalogueNumber", 1);
-    addNonNullParam(digester, "catalogueNumber", 0);
-
-    addNonNullMethod(digester, "altitudePrecision", "setAltitudePrecision", 1);
-    addNonNullParam(digester, "altitudePrecision", 0);
-
-    addNonNullMethod(digester, "depthPrecision", "setDepthPrecision", 1);
-    addNonNullParam(digester, "depthPrecision", 0);
-
-    addNonNullMethod(digester, "locality", "setLocality", 1);
-    addNonNullParam(digester, "locality", 0);
-
-    addNonNullMethod(digester, "latitude", "setLatitude", 1);
-    addNonNullParam(digester, "latitude", 0);
-
-    addNonNullMethod(digester, "longitude", "setLongitude", 1);
-    addNonNullParam(digester, "longitude", 0);
+    addFn.accept("catalogueNumber", "setCatalogueNumber");
+    addFn.accept("altitudePrecision", "setAltitudePrecision");
+    addFn.accept("depthPrecision", "setDepthPrecision");
+    addFn.accept("locality", "setLocality");
+    addFn.accept("latitudeDecimal", "setDecimalLatitude");
+    addFn.accept("longitudeDecimal", "setDecimalLongitude");
 
     addNonNullPrioritizedProperty(digester, "country", PrioritizedPropertyNameEnum.COUNTRY, 2);
     addNonNullPrioritizedProperty(
@@ -80,14 +76,8 @@ public class Abcd12RuleSet extends AbstractRuleSet {
       addNonNullMethod(digester, "idPreferredElement", "setPreferredAsString", 1);
       addNonNullAttParam(digester, "idPreferredElement", "idPreferredAttribute", 0);
 
-      addNonNullMethod(digester, "idGenus", "setGenus", 1);
-      addNonNullParam(digester, "idGenus", 0);
-
-      addNonNullMethod(digester, "idGenus", "setGenus", 1);
-      addNonNullParam(digester, "idGenus", 0);
-
-      addNonNullMethod(digester, "idIdentifierName", "setIdentifierName", 1);
-      addNonNullParam(digester, "idIdentifierName", 0);
+      addFn.accept("idGenus", "setGenus");
+      addFn.accept("idIdentifierName", "setIdentifierName");
 
       addNonNullPrioritizedProperty(
           digester, "idDateIdentified", PrioritizedPropertyNameEnum.ID_DATE_IDENTIFIED, 3);
@@ -108,21 +98,13 @@ public class Abcd12RuleSet extends AbstractRuleSet {
       digester.addObjectCreate(pattern, ImageRecord.class);
       digester.addSetNext(pattern, "addImage");
 
-      addNonNullMethod(digester, "imageType", "setRawImageType", 1);
-      addNonNullParam(digester, "imageType", 0);
-
-      addNonNullMethod(digester, "imageDescription", "setDescription", 1);
-      addNonNullParam(digester, "imageDescription", 0);
-
-      addNonNullMethod(digester, "imageRights", "setRights", 1);
-      addNonNullParam(digester, "imageRights", 0);
-
-      addNonNullMethod(digester, "imageUrl", "setUrl", 1);
-      addNonNullParam(digester, "imageUrl", 0);
+      addFn.accept("imageType", "setRawImageType");
+      addFn.accept("imageDescription", "setDescription");
+      addFn.accept("imageRights", "setRights");
+      addFn.accept("imageUrl", "setUrl");
     }
 
-    // NOTE: no links in abcd 1.2
-    // possible many collectors
+    // NOTE: no links in abcd 1.2 possible many collectors
     Consumer<String> collectorFn =
         prop -> {
           String ptrn = mappingProps.getProperty(prop);
@@ -131,8 +113,7 @@ public class Abcd12RuleSet extends AbstractRuleSet {
             digester.addObjectCreate(ptrn, Collector.class);
             digester.addSetNext(ptrn, "addCollectorName");
 
-            addNonNullMethod(digester, prop, "setName", 1);
-            addNonNullParam(digester, prop, 0);
+            addFn.accept(prop, "setName");
           }
         };
 

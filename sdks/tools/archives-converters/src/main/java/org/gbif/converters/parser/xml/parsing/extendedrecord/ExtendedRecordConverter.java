@@ -50,8 +50,10 @@ public class ExtendedRecordConverter {
     setter.accept(DwcTerm.genus, rawRecord.getGenus());
     setter.accept(DwcTerm.specificEpithet, rawRecord.getSpecies());
     setter.accept(DwcTerm.infraspecificEpithet, rawRecord.getSubspecies());
-    setter.accept(DwcTerm.decimalLatitude, rawRecord.getLatitude());
-    setter.accept(DwcTerm.decimalLongitude, rawRecord.getLongitude());
+    setter.accept(DwcTerm.decimalLatitude, rawRecord.getDecimalLatitude());
+    setter.accept(DwcTerm.decimalLongitude, rawRecord.getDecimalLongitude());
+    setter.accept(DwcTerm.verbatimLatitude, rawRecord.getVerbatimLatitude());
+    setter.accept(DwcTerm.verbatimLongitude, rawRecord.getVerbatimLongitude());
     setter.accept(DwcTerm.coordinateUncertaintyInMeters, rawRecord.getLatLongPrecision());
     setter.accept(DwcTerm.geodeticDatum, rawRecord.getGeodeticDatum());
     setter.accept(DwcTerm.minimumElevationInMeters, rawRecord.getMinAltitude());

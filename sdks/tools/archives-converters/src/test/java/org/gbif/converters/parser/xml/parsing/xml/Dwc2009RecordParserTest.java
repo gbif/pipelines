@@ -40,8 +40,8 @@ public class Dwc2009RecordParserTest extends ParserTestCase {
     assertEquals("7", ror.getMonth());
     assertEquals("1999", ror.getYear());
     assertEquals("1999-7-29", ror.getOccurrenceDate());
-    assertEquals("37.42", ror.getLatitude());
-    assertEquals("34.568", ror.getLongitude());
+    assertEquals("37.42", ror.getVerbatimLatitude());
+    assertEquals("34.568", ror.getVerbatimLongitude());
 
     IdentifierRecord id = ror.getIdentifierRecords().get(0);
     assertEquals("142316220", id.getIdentifier());

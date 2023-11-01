@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.Properties;
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RuleSet;
+import org.apache.logging.log4j.util.BiConsumer;
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 
@@ -27,26 +28,25 @@ public class Dwc2009RuleSet extends AbstractDwcRuleSet implements RuleSet {
   public void addRuleInstances(Digester digester) {
     super.addRuleInstances(digester);
 
-    addNonNullMethod(digester, "catalogueNumber", "setCatalogueNumber", 1);
-    addNonNullParam(digester, "catalogueNumber", 0);
+    BiConsumer<String, String> addFn =
+        (property, methodName) -> {
+          addNonNullMethod(digester, property, methodName, 1);
+          addNonNullParam(digester, property, 0);
+        };
 
-    addNonNullMethod(digester, "day", "setDay", 1);
-    addNonNullParam(digester, "day", 0);
-
-    addNonNullMethod(digester, "month", "setMonth", 1);
-    addNonNullParam(digester, "month", 0);
-
-    addNonNullMethod(digester, "year", "setYear", 1);
-    addNonNullParam(digester, "year", 0);
-
-    addNonNullMethod(digester, "dateIdentified", "setDateIdentified", 1);
-    addNonNullParam(digester, "dateIdentified", 0);
+    addFn.accept("catalogueNumber", "setCatalogueNumber");
+    addFn.accept("day", "setDay");
+    addFn.accept("month", "setMonth");
+    addFn.accept("year", "setYear");
+    addFn.accept("dateIdentified", "setDateIdentified");
+    addFn.accept("latitudeDecimal", "setDecimalLatitude");
+    addFn.accept("longitudeDecimal", "setDecimalLongitude");
+    addFn.accept("verbatimLatitude", "setVerbatimLatitude");
+    addFn.accept("verbatimLongitude", "setVerbatimLongitude");
 
     addNonNullPrioritizedProperty(
         digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 2);
     addNonNullPrioritizedProperty(
         digester, "continentOrOcean", PrioritizedPropertyNameEnum.CONTINENT_OR_OCEAN, 2);
-    addNonNullPrioritizedProperty(digester, "latitude", PrioritizedPropertyNameEnum.LATITUDE, 2);
-    addNonNullPrioritizedProperty(digester, "longitude", PrioritizedPropertyNameEnum.LONGITUDE, 2);
   }
 }

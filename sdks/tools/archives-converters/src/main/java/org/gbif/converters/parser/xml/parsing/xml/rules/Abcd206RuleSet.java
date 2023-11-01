@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.Properties;
 import java.util.function.Consumer;
 import org.apache.commons.digester.Digester;
+import org.apache.logging.log4j.util.BiConsumer;
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.model.Collector;
@@ -32,31 +33,26 @@ public class Abcd206RuleSet extends AbstractRuleSet {
   public void addRuleInstances(Digester digester) {
     super.addRuleInstances(digester);
 
+    BiConsumer<String, String> addFn =
+        (property, methodName) -> {
+          addNonNullMethod(digester, property, methodName, 1);
+          addNonNullParam(digester, property, 0);
+        };
+
     // abcd simple fields
-    addNonNullMethod(digester, "catalogueNumber", "setCatalogueNumber", 1);
-    addNonNullParam(digester, "catalogueNumber", 0);
-
-    addNonNullMethod(digester, "altitudePrecision", "setAltitudePrecision", 1);
-    addNonNullParam(digester, "altitudePrecision", 0);
-
-    addNonNullMethod(digester, "depthPrecision", "setDepthPrecision", 1);
-    addNonNullParam(digester, "depthPrecision", 0);
-
-    addNonNullMethod(digester, "locality", "setLocality", 1);
-    addNonNullParam(digester, "locality", 0);
-
-    addNonNullMethod(digester, "geodeticDatum", "setGeodeticDatum", 1);
-    addNonNullParam(digester, "geodeticDatum", 0);
-
-    addNonNullMethod(digester, "collectorsFieldNumber", "setCollectorsFieldNumber", 1);
-    addNonNullParam(digester, "collectorsFieldNumber", 0);
-
-    addNonNullMethod(digester, "countryCode", "setCountryCode", 1);
-    addNonNullParam(digester, "countryCode", 0);
+    addFn.accept("catalogueNumber", "setCatalogueNumber");
+    addFn.accept("altitudePrecision", "setAltitudePrecision");
+    addFn.accept("depthPrecision", "setDepthPrecision");
+    addFn.accept("locality", "setLocality");
+    addFn.accept("geodeticDatum", "setGeodeticDatum");
+    addFn.accept("collectorsFieldNumber", "setCollectorsFieldNumber");
+    addFn.accept("countryCode", "setCountryCode");
+    addFn.accept("latitudeDecimal", "setDecimalLatitude");
+    addFn.accept("longitudeDecimal", "setDecimalLongitude");
+    addFn.accept("verbatimLatitude", "setVerbatimLatitude");
+    addFn.accept("verbatimLongitude", "setVerbatimLongitude");
 
     addNonNullPrioritizedProperty(digester, "country", PrioritizedPropertyNameEnum.COUNTRY, 2);
-    addNonNullPrioritizedProperty(digester, "latitude", PrioritizedPropertyNameEnum.LATITUDE, 2);
-    addNonNullPrioritizedProperty(digester, "longitude", PrioritizedPropertyNameEnum.LONGITUDE, 2);
     addNonNullPrioritizedProperty(
         digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 3);
 
@@ -66,17 +62,10 @@ public class Abcd206RuleSet extends AbstractRuleSet {
       pattern = pattern.trim();
       digester.addObjectCreate(pattern, Identification.class);
       digester.addSetNext(pattern, "addIdentification");
-      addNonNullMethod(digester, "idPreferred", "setPreferredAsString", 1);
-      addNonNullParam(digester, "idPreferred", 0);
 
-      addNonNullMethod(digester, "idGenus", "setGenus", 1);
-      addNonNullParam(digester, "idGenus", 0);
-
-      addNonNullMethod(digester, "idGenus", "setGenus", 1);
-      addNonNullParam(digester, "idGenus", 0);
-
-      addNonNullMethod(digester, "idScientificName", "setScientificName", 1);
-      addNonNullParam(digester, "idScientificName", 0);
+      addFn.accept("idPreferred", "setPreferredAsString");
+      addFn.accept("idGenus", "setGenus");
+      addFn.accept("idScientificName", "setScientificName");
 
       addNonNullPrioritizedProperty(
           digester, "idDateIdentified", PrioritizedPropertyNameEnum.ID_DATE_IDENTIFIED, 2);
@@ -96,17 +85,10 @@ public class Abcd206RuleSet extends AbstractRuleSet {
       digester.addObjectCreate(pattern, ImageRecord.class);
       digester.addSetNext(pattern, "addImage");
 
-      addNonNullMethod(digester, "imageType", "setRawImageType", 1);
-      addNonNullParam(digester, "imageType", 0);
-
-      addNonNullMethod(digester, "imageDescription", "setDescription", 1);
-      addNonNullParam(digester, "imageDescription", 0);
-
-      addNonNullMethod(digester, "imageUrl", "setUrl", 1);
-      addNonNullParam(digester, "imageUrl", 0);
-
-      addNonNullMethod(digester, "imagePageUrl", "setPageUrl", 1);
-      addNonNullParam(digester, "imagePageUrl", 0);
+      addFn.accept("imageType", "setRawImageType");
+      addFn.accept("imageDescription", "setDescription");
+      addFn.accept("imageUrl", "setUrl");
+      addFn.accept("imagePageUrl", "setPageUrl");
 
       addNonNullPrioritizedProperty(
           digester, "imageRights", PrioritizedPropertyNameEnum.IMAGE_RIGHTS, 2);
@@ -119,8 +101,7 @@ public class Abcd206RuleSet extends AbstractRuleSet {
       digester.addObjectCreate(pattern, LinkRecord.class);
       digester.addSetNext(pattern, "addLink");
 
-      addNonNullMethod(digester, "linkUrl", "setUrl", 1);
-      addNonNullParam(digester, "linkUrl", 0);
+      addFn.accept("linkUrl", "setUrl");
     }
 
     // possible many collectors
@@ -132,8 +113,7 @@ public class Abcd206RuleSet extends AbstractRuleSet {
             digester.addObjectCreate(ptrn, Collector.class);
             digester.addSetNext(ptrn, "addCollectorName");
 
-            addNonNullMethod(digester, prop, "setName", 1);
-            addNonNullParam(digester, prop, 0);
+            addFn.accept(prop, "setName");
           }
         };
 

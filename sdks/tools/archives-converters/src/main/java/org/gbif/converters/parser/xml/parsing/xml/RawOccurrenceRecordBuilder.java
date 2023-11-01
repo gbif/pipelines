@@ -62,8 +62,10 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   private String genus;
   private String species;
   private String subspecies;
-  private String latitude;
-  private String longitude;
+  private String decimalLatitude;
+  private String verbatimLatitude;
+  private String decimalLongitude;
+  private String verbatimLongitude;
   private String latLongPrecision;
   private String geodeticDatum;
   private String minAltitude;
@@ -200,11 +202,13 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     bareBones.setInstitutionCode(institutionCode);
     bareBones.setKingdom(kingdom);
     bareBones.setKlass(klass);
-    bareBones.setLatitude(latitude);
+    bareBones.setDecimalLatitude(decimalLatitude);
+    bareBones.setVerbatimLatitude(verbatimLatitude);
+    bareBones.setDecimalLongitude(decimalLongitude);
+    bareBones.setVerbatimLongitude(verbatimLongitude);
     bareBones.setLatLongPrecision(latLongPrecision);
     bareBones.setLinkRecords(links);
     bareBones.setLocality(locality);
-    bareBones.setLongitude(longitude);
     bareBones.setMaxAltitude(maxAltitude);
     bareBones.setMaxDepth(maxDepth);
     bareBones.setMinAltitude(minAltitude);
@@ -301,12 +305,6 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
           break;
         case DATE_COLLECTED:
           this.occurrenceDate = result;
-          break;
-        case LATITUDE:
-          this.latitude = result;
-          break;
-        case LONGITUDE:
-          this.longitude = result;
           break;
         default:
           log.warn("Fell through priority resolution for [{}]", property.getKey());
@@ -485,20 +483,36 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     this.subspecies = subspecies;
   }
 
-  public String getLatitude() {
-    return latitude;
+  public String getDecimalLatitude() {
+    return decimalLatitude;
   }
 
-  public void setLatitude(String latitude) {
-    this.latitude = latitude;
+  public void setDecimalLatitude(String decimalLatitude) {
+    this.decimalLatitude = decimalLatitude;
   }
 
-  public String getLongitude() {
-    return longitude;
+  public String getVerbatimLatitude() {
+    return verbatimLatitude;
   }
 
-  public void setLongitude(String longitude) {
-    this.longitude = longitude;
+  public void setVerbatimLatitude(String verbatimLatitude) {
+    this.verbatimLatitude = verbatimLatitude;
+  }
+
+  public String getDecimalLongitude() {
+    return decimalLongitude;
+  }
+
+  public void setDecimalLongitude(String decimalLongitude) {
+    this.decimalLongitude = decimalLongitude;
+  }
+
+  public String getVerbatimLongitude() {
+    return verbatimLongitude;
+  }
+
+  public void setVerbatimLongitude(String verbatimLongitude) {
+    this.verbatimLongitude = verbatimLongitude;
   }
 
   public String getLatLongPrecision() {

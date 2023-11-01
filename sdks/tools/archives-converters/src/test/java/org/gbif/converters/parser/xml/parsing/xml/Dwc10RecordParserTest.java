@@ -37,8 +37,8 @@ public class Dwc10RecordParserTest extends ParserTestCase {
 
     // dwc 1.0 only
     assertEquals("1", ror.getCatalogueNumber());
-    assertEquals("52.755", ror.getLatitude());
-    assertEquals("5.9963", ror.getLongitude());
+    assertEquals("52.755", ror.getVerbatimLatitude());
+    assertEquals("5.9963", ror.getVerbatimLongitude());
     assertEquals("1958-8-15", ror.getOccurrenceDate());
   }
 

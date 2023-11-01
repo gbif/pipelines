@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.Properties;
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RuleSet;
+import org.apache.logging.log4j.util.BiConsumer;
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.model.ImageRecord;
@@ -29,13 +30,20 @@ public class Dwc14RuleSet extends AbstractDwcRuleSet implements RuleSet {
   public void addRuleInstances(Digester digester) {
     super.addRuleInstances(digester);
 
-    addNonNullMethod(digester, "dateIdentified", "setDateIdentified", 1);
-    addNonNullParam(digester, "dateIdentified", 0);
+    BiConsumer<String, String> addFn =
+        (property, methodName) -> {
+          addNonNullMethod(digester, property, methodName, 1);
+          addNonNullParam(digester, property, 0);
+        };
+
+    addFn.accept("dateIdentified", "setDateIdentified");
+    addFn.accept("latitudeDecimal", "setDecimalLatitude");
+    addFn.accept("longitudeDecimal", "setDecimalLongitude");
+    addFn.accept("verbatimLatitude", "setVerbatimLatitude");
+    addFn.accept("verbatimLongitude", "setVerbatimLongitude");
 
     addNonNullPrioritizedProperty(
         digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 2);
-    addNonNullPrioritizedProperty(digester, "latitude", PrioritizedPropertyNameEnum.LATITUDE, 2);
-    addNonNullPrioritizedProperty(digester, "longitude", PrioritizedPropertyNameEnum.LONGITUDE, 2);
     addNonNullPrioritizedProperty(
         digester, "continentOrOcean", PrioritizedPropertyNameEnum.CONTINENT_OR_OCEAN, 2);
     addNonNullPrioritizedProperty(
@@ -48,8 +56,7 @@ public class Dwc14RuleSet extends AbstractDwcRuleSet implements RuleSet {
       digester.addObjectCreate(pattern, ImageRecord.class);
       digester.addSetNext(pattern, "addImage");
 
-      addNonNullMethod(digester, "imageUrl", "setUrl", 1);
-      addNonNullParam(digester, "imageUrl", 0);
+      addFn.accept("imageUrl", "setUrl");
     }
 
     // 2 explicit links possible
@@ -61,8 +68,7 @@ public class Dwc14RuleSet extends AbstractDwcRuleSet implements RuleSet {
 
       digester.addRule(pattern, new SetLiteralRule("setLinkType", 0));
 
-      addNonNullMethod(digester, "linkUrlType0", "setUrl", 1);
-      addNonNullParam(digester, "linkUrlType0", 0);
+      addFn.accept("linkUrlType0", "setUrl");
     }
 
     pattern = mappingProps.getProperty("linkElement1");
@@ -73,8 +79,7 @@ public class Dwc14RuleSet extends AbstractDwcRuleSet implements RuleSet {
 
       digester.addRule(pattern, new SetLiteralRule("setLinkType", 1));
 
-      addNonNullMethod(digester, "linkUrlType1", "setUrl", 1);
-      addNonNullParam(digester, "linkUrlType1", 0);
+      addFn.accept("linkUrlType1", "setUrl");
     }
   }
 }

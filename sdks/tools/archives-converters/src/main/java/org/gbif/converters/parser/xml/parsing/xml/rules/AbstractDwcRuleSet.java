@@ -1,6 +1,7 @@
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
 import org.apache.commons.digester.Digester;
+import org.apache.logging.log4j.util.BiConsumer;
 import org.gbif.converters.parser.xml.model.Collector;
 
 public abstract class AbstractDwcRuleSet extends AbstractRuleSet {
@@ -9,50 +10,28 @@ public abstract class AbstractDwcRuleSet extends AbstractRuleSet {
   public void addRuleInstances(Digester digester) {
     super.addRuleInstances(digester);
 
-    addNonNullMethod(digester, "scientificName", "setScientificName", 1);
-    addNonNullParam(digester, "scientificName", 0);
+    BiConsumer<String, String> addFn =
+        (property, methodName) -> {
+          addNonNullMethod(digester, property, methodName, 1);
+          addNonNullParam(digester, property, 0);
+        };
 
-    addNonNullMethod(digester, "author", "setAuthor", 1);
-    addNonNullParam(digester, "author", 0);
+    addFn.accept("scientificName", "setScientificName");
+    addFn.accept("author", "setAuthor");
+    addFn.accept("kingdom", "setKingdom");
+    addFn.accept("phylum", "setPhylum");
+    addFn.accept("klass", "setKlass");
+    addFn.accept("order", "setOrder");
+    addFn.accept("family", "setFamily");
+    addFn.accept("genus", "setGenus");
+    addFn.accept("species", "setSpecies");
+    addFn.accept("subspecies", "setSubspecies");
+    addFn.accept("country", "setCountry");
+    addFn.accept("stateOrProvince", "setStateOrProvince");
 
-    addNonNullMethod(digester, "kingdom", "setKingdom", 1);
-    addNonNullParam(digester, "kingdom", 0);
-
-    addNonNullMethod(digester, "phylum", "setPhylum", 1);
-    addNonNullParam(digester, "phylum", 0);
-
-    addNonNullMethod(digester, "klass", "setKlass", 1);
-    addNonNullParam(digester, "klass", 0);
-
-    addNonNullMethod(digester, "order", "setOrder", 1);
-    addNonNullParam(digester, "order", 0);
-
-    addNonNullMethod(digester, "family", "setFamily", 1);
-    addNonNullParam(digester, "family", 0);
-
-    addNonNullMethod(digester, "genus", "setGenus", 1);
-    addNonNullParam(digester, "genus", 0);
-
-    addNonNullMethod(digester, "species", "setSpecies", 1);
-    addNonNullParam(digester, "species", 0);
-
-    addNonNullMethod(digester, "subspecies", "setSubspecies", 1);
-    addNonNullParam(digester, "subspecies", 0);
-
-    addNonNullMethod(digester, "country", "setCountry", 1);
-    addNonNullParam(digester, "country", 0);
-
-    addNonNullMethod(digester, "stateOrProvince", "setStateOrProvince", 1);
-    addNonNullParam(digester, "stateOrProvince", 0);
-
-    addNonNullMethod(digester, "county", "setCounty", 1);
-    addNonNullParam(digester, "county", 0);
-
-    addNonNullMethod(digester, "locality", "setLocality", 1);
-    addNonNullParam(digester, "locality", 0);
-
-    addNonNullMethod(digester, "identifierName", "setIdentifierName", 1);
-    addNonNullParam(digester, "identifierName", 0);
+    addFn.accept("county", "setCounty");
+    addFn.accept("locality", "setLocality");
+    addFn.accept("identifierName", "setIdentifierName");
 
     String ptrn = mappingProps.getProperty("collectorName");
     if (ptrn != null) {
@@ -60,8 +39,7 @@ public abstract class AbstractDwcRuleSet extends AbstractRuleSet {
       digester.addObjectCreate(ptrn, Collector.class);
       digester.addSetNext(ptrn, "addCollectorName");
 
-      addNonNullMethod(digester, "collectorName", "setName", 1);
-      addNonNullParam(digester, "collectorName", 0);
+      addFn.accept("collectorName", "setName");
     }
   }
 }

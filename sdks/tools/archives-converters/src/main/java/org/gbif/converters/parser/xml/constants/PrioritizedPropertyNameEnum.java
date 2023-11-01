@@ -24,8 +24,6 @@ public enum PrioritizedPropertyNameEnum {
   ID_DATE_IDENTIFIED,
   ID_IDENTIFIER_NAME,
   ID_SCIENTIFIC_NAME,
-  LATITUDE,
-  LONGITUDE,
   IMAGE_URL,
   IMAGE_RIGHTS
 }

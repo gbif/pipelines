@@ -19,7 +19,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -58,8 +57,10 @@ public class RawOccurrenceRecord implements Serializable {
   private String genus;
   private String species;
   private String subspecies;
-  private String latitude;
-  private String longitude;
+  private String decimalLatitude;
+  private String verbatimLatitude;
+  private String decimalLongitude;
+  private String verbatimLongitude;
   private String latLongPrecision;
   private String geodeticDatum;
   private String minAltitude;
@@ -106,12 +107,10 @@ public class RawOccurrenceRecord implements Serializable {
     this.countryCode = dwcr.value(DwcTerm.countryCode);
     this.county = dwcr.value(DwcTerm.county);
     this.dateIdentified = dwcr.value(DwcTerm.dateIdentified);
-    this.latitude =
-        Optional.ofNullable(dwcr.value(DwcTerm.verbatimLatitude))
-            .orElse(dwcr.value(DwcTerm.decimalLatitude));
-    this.longitude =
-        Optional.ofNullable(dwcr.value(DwcTerm.verbatimLongitude))
-            .orElse(dwcr.value(DwcTerm.decimalLongitude));
+    this.verbatimLatitude = dwcr.value(DwcTerm.verbatimLatitude);
+    this.decimalLatitude = dwcr.value(DwcTerm.decimalLatitude);
+    this.verbatimLongitude = dwcr.value(DwcTerm.verbatimLongitude);
+    this.decimalLongitude = dwcr.value(DwcTerm.decimalLongitude);
     this.geodeticDatum = dwcr.value(DwcTerm.geodeticDatum);
     this.family = dwcr.value(DwcTerm.family);
     this.scientificName = dwcr.value(DwcTerm.scientificName);
