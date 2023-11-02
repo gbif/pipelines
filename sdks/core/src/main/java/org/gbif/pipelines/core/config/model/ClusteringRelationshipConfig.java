@@ -14,4 +14,6 @@ public class ClusteringRelationshipConfig implements Serializable {
 
   private int relationshipTableSalt;
   private String relationshipTableName;
+  private int retryMaxAttempts;
+  private long retryDuration;
 }
