@@ -69,6 +69,7 @@ public class RawOccurrenceRecord implements Serializable {
   private String minDepth;
   private String maxDepth;
   private String depthPrecision;
+  private String footprintWKT;
   private String continentOrOcean;
   private String country;
   private String countryCode;
@@ -127,5 +128,6 @@ public class RawOccurrenceRecord implements Serializable {
     this.occurrenceDate =
         dwcr.value(DwcTerm.year) + '-' + dwcr.value(DwcTerm.month) + '-' + dwcr.value(DwcTerm.day);
     this.collectorsFieldNumber = dwcr.value(DwcTerm.recordNumber);
+    this.footprintWKT = dwcr.value(DwcTerm.footprintWKT);
   }
 }

@@ -76,6 +76,7 @@ public class ExtendedRecordConverter {
     setter.accept(GbifTerm.elevationAccuracy, rawRecord.getAltitudePrecision());
     setter.accept(GbifTerm.depthAccuracy, rawRecord.getDepthPrecision());
     setter.accept(DwcTerm.recordNumber, rawRecord.getCollectorsFieldNumber());
+    setter.accept(DwcTerm.footprintWKT, rawRecord.getFootprintWKT());
 
     if (rawRecord.getCollectors() != null) {
       String recordedBy =

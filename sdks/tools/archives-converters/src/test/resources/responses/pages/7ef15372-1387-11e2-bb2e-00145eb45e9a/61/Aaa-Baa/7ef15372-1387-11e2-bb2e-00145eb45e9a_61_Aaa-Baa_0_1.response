@@ -126,6 +126,7 @@
                     <abcd:AgentText>Gottschlich, G. (no. G.G. Nr. 55066)</abcd:AgentText>
                  </abcd:GatheringAgent>
               </abcd:Agents>
+              <abcd:GML>FootprintWKT</abcd:GML>
               <abcd:SiteCoordinateSets>
                 <abcd:SiteCoordinates>
                   <abcd:CoordinatesLatLong>

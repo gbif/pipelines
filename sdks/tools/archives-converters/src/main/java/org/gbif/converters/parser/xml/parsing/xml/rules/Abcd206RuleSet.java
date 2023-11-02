@@ -51,6 +51,7 @@ public class Abcd206RuleSet extends AbstractRuleSet {
     addFn.accept("longitudeDecimal", "setDecimalLongitude");
     addFn.accept("verbatimLatitude", "setVerbatimLatitude");
     addFn.accept("verbatimLongitude", "setVerbatimLongitude");
+    addFn.accept("footprintWKT", "setFootprintWKT");
 
     addNonNullPrioritizedProperty(digester, "country", COUNTRY, 2);
     addNonNullPrioritizedProperty(digester, "geodeticDatum", GEODETIC_DATUM, 2);

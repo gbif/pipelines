@@ -51,7 +51,7 @@ public class XmlToAvroConverterTest {
 
         Assert.assertNotNull(record);
         Assert.assertNotNull(record.getId());
-        Assert.assertEquals(16, record.getCoreTerms().size());
+        Assert.assertEquals(17, record.getCoreTerms().size());
         Assert.assertTrue(record.getId().contains("catalog"));
 
         Assert.assertEquals("PreservedSpecimen", fn.apply(DwcTerm.basisOfRecord));
@@ -64,6 +64,7 @@ public class XmlToAvroConverterTest {
         Assert.assertEquals("SMF", fn.apply(DwcTerm.institutionCode));
         Assert.assertEquals("Acanthopetalum minotauri", fn.apply(DwcTerm.scientificName));
         Assert.assertEquals("GDA94", fn.apply(DwcTerm.geodeticDatum));
+        Assert.assertEquals("FootprintWKT", fn.apply(DwcTerm.footprintWKT));
         Assert.assertTrue(fn.apply(DwcTerm.recordedBy).contains("|"));
         Assert.assertEquals(
             "near Ajil Deka, Gotys, SE-side of Akropolis", fn.apply(DwcTerm.locality));

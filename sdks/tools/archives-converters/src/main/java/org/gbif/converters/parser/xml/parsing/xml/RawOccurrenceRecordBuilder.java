@@ -75,6 +75,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   private String maxDepth;
   private String depthPrecision;
   private String continentOrOcean;
+  private String footprintWKT;
   private String country;
   private String countryCode;
   private String stateOrProvince;
@@ -193,6 +194,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     bareBones.setDayIdentified(dayIdentified);
     bareBones.setDateIdentified(dateIdentified);
     bareBones.setDepthPrecision(depthPrecision);
+    bareBones.setFootprintWKT(footprintWKT);
     bareBones.setFamily(family);
     bareBones.setGenus(genus);
     bareBones.setGeodeticDatum(geodeticDatum);
@@ -755,5 +757,13 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
 
   public void setCollectorsFieldNumber(String collectorsFieldNumber) {
     this.collectorsFieldNumber = collectorsFieldNumber;
+  }
+
+  public String getFootprintWKT() {
+    return footprintWKT;
+  }
+
+  public void setFootprintWKT(String footprintWKT) {
+    this.footprintWKT = footprintWKT;
   }
 }
