@@ -15,6 +15,8 @@
  */
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
+import static org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum.*;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
@@ -22,7 +24,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.apache.commons.digester.Digester;
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
-import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.model.Collector;
 import org.gbif.converters.parser.xml.model.Identification;
 import org.gbif.converters.parser.xml.model.ImageRecord;
@@ -60,11 +61,9 @@ public class Abcd12RuleSet extends AbstractRuleSet {
     addFn.accept("latitudeDecimal", "setDecimalLatitude");
     addFn.accept("longitudeDecimal", "setDecimalLongitude");
 
-    addNonNullPrioritizedProperty(digester, "country", PrioritizedPropertyNameEnum.COUNTRY, 2);
-    addNonNullPrioritizedProperty(
-        digester, "countryCode", PrioritizedPropertyNameEnum.COUNTRY_CODE, 2);
-    addNonNullPrioritizedProperty(
-        digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 3);
+    addNonNullPrioritizedProperty(digester, "country", COUNTRY, 2);
+    addNonNullPrioritizedProperty(digester, "countryCode", COUNTRY_CODE, 2);
+    addNonNullPrioritizedProperty(digester, "dateCollected", DATE_COLLECTED, 3);
 
     // possibly many identifications
     String pattern = mappingProps.getProperty("idElement");
@@ -79,10 +78,8 @@ public class Abcd12RuleSet extends AbstractRuleSet {
       addFn.accept("idGenus", "setGenus");
       addFn.accept("idIdentifierName", "setIdentifierName");
 
-      addNonNullPrioritizedProperty(
-          digester, "idDateIdentified", PrioritizedPropertyNameEnum.ID_DATE_IDENTIFIED, 3);
-      addNonNullPrioritizedProperty(
-          digester, "idScientificName", PrioritizedPropertyNameEnum.ID_SCIENTIFIC_NAME, 2);
+      addNonNullPrioritizedProperty(digester, "idDateIdentified", ID_DATE_IDENTIFIED, 3);
+      addNonNullPrioritizedProperty(digester, "idScientificName", ID_SCIENTIFIC_NAME, 2);
 
       // possibly many higher taxons for every identification
       addNonNullMethod(digester, "higherTaxonElement", "addHigherTaxon", 2);

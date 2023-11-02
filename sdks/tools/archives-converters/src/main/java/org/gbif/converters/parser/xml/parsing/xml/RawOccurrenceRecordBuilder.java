@@ -300,6 +300,9 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
         case COUNTRY:
           this.country = result;
           break;
+        case GEODETIC_DATUM:
+          this.geodeticDatum = result;
+          break;
         case COUNTRY_CODE:
           this.countryCode = result;
           break;

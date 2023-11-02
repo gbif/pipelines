@@ -1,5 +1,7 @@
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
+import static org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum.*;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
@@ -7,7 +9,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.apache.commons.digester.Digester;
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
-import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.model.Collector;
 import org.gbif.converters.parser.xml.model.Identification;
 import org.gbif.converters.parser.xml.model.ImageRecord;
@@ -44,7 +45,6 @@ public class Abcd206RuleSet extends AbstractRuleSet {
     addFn.accept("altitudePrecision", "setAltitudePrecision");
     addFn.accept("depthPrecision", "setDepthPrecision");
     addFn.accept("locality", "setLocality");
-    addFn.accept("geodeticDatum", "setGeodeticDatum");
     addFn.accept("collectorsFieldNumber", "setCollectorsFieldNumber");
     addFn.accept("countryCode", "setCountryCode");
     addFn.accept("latitudeDecimal", "setDecimalLatitude");
@@ -52,9 +52,9 @@ public class Abcd206RuleSet extends AbstractRuleSet {
     addFn.accept("verbatimLatitude", "setVerbatimLatitude");
     addFn.accept("verbatimLongitude", "setVerbatimLongitude");
 
-    addNonNullPrioritizedProperty(digester, "country", PrioritizedPropertyNameEnum.COUNTRY, 2);
-    addNonNullPrioritizedProperty(
-        digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 3);
+    addNonNullPrioritizedProperty(digester, "country", COUNTRY, 2);
+    addNonNullPrioritizedProperty(digester, "geodeticDatum", GEODETIC_DATUM, 2);
+    addNonNullPrioritizedProperty(digester, "dateCollected", DATE_COLLECTED, 3);
 
     // possibly many identifications
     String pattern = mappingProps.getProperty("idElement");
@@ -67,10 +67,8 @@ public class Abcd206RuleSet extends AbstractRuleSet {
       addFn.accept("idGenus", "setGenus");
       addFn.accept("idScientificName", "setScientificName");
 
-      addNonNullPrioritizedProperty(
-          digester, "idDateIdentified", PrioritizedPropertyNameEnum.ID_DATE_IDENTIFIED, 2);
-      addNonNullPrioritizedProperty(
-          digester, "idIdentifierName", PrioritizedPropertyNameEnum.ID_IDENTIFIER_NAME, 2);
+      addNonNullPrioritizedProperty(digester, "idDateIdentified", ID_DATE_IDENTIFIED, 2);
+      addNonNullPrioritizedProperty(digester, "idIdentifierName", ID_IDENTIFIER_NAME, 2);
 
       // possibly many higher taxons for every identification
       addNonNullMethod(digester, "higherTaxonElement", "addHigherTaxon", 2);
@@ -90,8 +88,7 @@ public class Abcd206RuleSet extends AbstractRuleSet {
       addFn.accept("imageUrl", "setUrl");
       addFn.accept("imagePageUrl", "setPageUrl");
 
-      addNonNullPrioritizedProperty(
-          digester, "imageRights", PrioritizedPropertyNameEnum.IMAGE_RIGHTS, 2);
+      addNonNullPrioritizedProperty(digester, "imageRights", IMAGE_RIGHTS, 2);
     }
 
     // possibly many links

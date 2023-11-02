@@ -126,6 +126,16 @@
                     <abcd:AgentText>Gottschlich, G. (no. G.G. Nr. 55066)</abcd:AgentText>
                  </abcd:GatheringAgent>
               </abcd:Agents>
+              <abcd:SiteCoordinateSets>
+                <abcd:SiteCoordinates>
+                  <abcd:CoordinatesLatLong>
+                    <abcd:LongitudeDecimal>13.191434</abcd:LongitudeDecimal>
+                    <abcd:LatitudeDecimal>52.423798</abcd:LatitudeDecimal>
+                    <abcd:CoordinateErrorDistanceInMeters>50</abcd:CoordinateErrorDistanceInMeters>
+                    <abcd:SpatialDatum>GDA94</abcd:SpatialDatum>
+                  </abcd:CoordinatesLatLong>
+                </abcd:SiteCoordinates>
+              </abcd:SiteCoordinateSets>
             </abcd:Gathering>
             <abcd:RecordURI>http://sesam.senckenberg.de/page/index.asp?objekt_id=704138&amp;sprache_kurz=en</abcd:RecordURI>
           </abcd:Unit>

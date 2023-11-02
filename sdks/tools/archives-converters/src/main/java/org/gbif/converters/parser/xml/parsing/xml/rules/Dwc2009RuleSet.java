@@ -1,5 +1,7 @@
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
+import static org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum.*;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
@@ -7,7 +9,6 @@ import java.util.function.BiConsumer;
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RuleSet;
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
-import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 
 public class Dwc2009RuleSet extends AbstractDwcRuleSet implements RuleSet {
 
@@ -44,9 +45,7 @@ public class Dwc2009RuleSet extends AbstractDwcRuleSet implements RuleSet {
     addFn.accept("verbatimLatitude", "setVerbatimLatitude");
     addFn.accept("verbatimLongitude", "setVerbatimLongitude");
 
-    addNonNullPrioritizedProperty(
-        digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 2);
-    addNonNullPrioritizedProperty(
-        digester, "continentOrOcean", PrioritizedPropertyNameEnum.CONTINENT_OR_OCEAN, 2);
+    addNonNullPrioritizedProperty(digester, "dateCollected", DATE_COLLECTED, 2);
+    addNonNullPrioritizedProperty(digester, "continentOrOcean", CONTINENT_OR_OCEAN, 2);
   }
 }

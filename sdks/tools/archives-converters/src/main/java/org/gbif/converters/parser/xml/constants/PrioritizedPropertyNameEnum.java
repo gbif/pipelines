@@ -18,6 +18,7 @@ package org.gbif.converters.parser.xml.constants;
 public enum PrioritizedPropertyNameEnum {
   CATALOGUE_NUMBER,
   COUNTRY,
+  GEODETIC_DATUM,
   COUNTRY_CODE,
   CONTINENT_OR_OCEAN,
   DATE_COLLECTED,
