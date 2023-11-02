@@ -1,7 +1,7 @@
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
+import java.util.function.BiConsumer;
 import org.apache.commons.digester.Digester;
-import org.apache.logging.log4j.util.BiConsumer;
 import org.gbif.converters.parser.xml.model.Collector;
 
 public abstract class AbstractDwcRuleSet extends AbstractRuleSet {

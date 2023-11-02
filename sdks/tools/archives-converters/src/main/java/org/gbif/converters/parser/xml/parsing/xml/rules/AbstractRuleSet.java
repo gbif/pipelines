@@ -1,10 +1,10 @@
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
 import java.util.Properties;
+import java.util.function.BiConsumer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RuleSet;
-import org.apache.logging.log4j.util.BiConsumer;
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
 
