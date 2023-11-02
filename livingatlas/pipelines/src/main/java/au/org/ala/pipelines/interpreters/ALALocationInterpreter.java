@@ -272,7 +272,10 @@ public class ALALocationInterpreter {
       // Convert GBIF IDENTIFIED_DATE_UNLIKELY to ALA GEOREFERENCED_DATE_UNLIKELY
       OccurrenceParseResult<TemporalAccessor> parsed =
           temporalParser.parseLocalDate(
-              normalizedValue, validRecordedDateRange, OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY);
+              normalizedValue,
+              validRecordedDateRange,
+              OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY,
+              null);
       if (parsed.isSuccessful()) {
         Optional.ofNullable(
                 TemporalAccessorUtils.toEarliestLocalDateTime(parsed.getPayload(), false))
