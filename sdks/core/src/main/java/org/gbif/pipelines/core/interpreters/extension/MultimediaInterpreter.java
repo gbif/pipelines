@@ -53,6 +53,7 @@ public class MultimediaInterpreter implements Serializable {
           .map(DcTerm.references, MultimediaInterpreter::parseAndSetReferences)
           .mapOne(DcTerm.identifier, MultimediaInterpreter::parseAndSetIdentifier)
           .mapOne(DcTerm.created, this::parseAndSetCreated)
+          .map(DcTerm.type, MultimediaInterpreter::parseAndSetType)
           .map(DcTerm.license, MultimediaInterpreter::parseAndSetLicense)
           .map(DcTerm.rights, MultimediaInterpreter::parseAndSetLicense)
           .map(DcTerm.format, MultimediaInterpreter::parseAndSetFormatAndType)
