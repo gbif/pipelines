@@ -6,12 +6,13 @@ import lombok.Getter;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
+import org.apache.hadoop.hbase.client.Table;
+import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
-import org.gbif.kvs.species.SpeciesMatchRequest;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
+import org.gbif.kvs.species.Identification;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -20,6 +21,7 @@ import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.factory.ClusteringServiceFactory;
 import org.gbif.pipelines.factory.FileVocabularyFactory;
+import org.gbif.pipelines.factory.FragmenterServiceFactory;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
 import org.gbif.pipelines.factory.KeygenServiceFactory;
@@ -108,7 +110,7 @@ public class TransformsFactory {
   public GbifIdAbsentTransform createGbifIdAbsentTransform() {
     SerializableSupplier<HBaseLockingKey> keyServiceSupplier = null;
     if (!options.isUseExtendedRecordId()) {
-      keyServiceSupplier = KeygenServiceFactory.createSupplier(config, options.getDatasetId());
+      keyServiceSupplier = createHBaseLockingKeySupplier();
     }
     return GbifIdAbsentTransform.builder()
         .isTripletValid(options.isTripletValid())
@@ -145,7 +147,7 @@ public class TransformsFactory {
     if (useGbifIdRecordWriteIO(options.getInterpretationTypes())) {
       SerializableSupplier<HBaseLockingKey> keyServiceSupplier = null;
       if (!options.isUseExtendedRecordId()) {
-        keyServiceSupplier = KeygenServiceFactory.createSupplier(config, options.getDatasetId());
+        keyServiceSupplier = createHBaseLockingKeySupplier();
       }
       gbifIdTransformBuilder
           .isTripletValid(options.isTripletValid())
@@ -162,7 +164,7 @@ public class TransformsFactory {
   }
 
   public TaxonomyTransform createTaxonomyTransform() {
-    SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>>
+    SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>>
         nameUsageMatchServiceSupplier = null;
     if (!options.getTestMode()) {
       nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createSupplier(config);
@@ -233,6 +235,14 @@ public class TransformsFactory {
 
   public MeasurementOrFactTransform createMeasurementOrFactTransform() {
     return MeasurementOrFactTransform.builder().create();
+  }
+
+  public SerializableSupplier<HBaseLockingKey> createHBaseLockingKeySupplier() {
+    return KeygenServiceFactory.createSupplier(config, options.getDatasetId());
+  }
+
+  public SerializableSupplier<Table> createFragmenterTableSupplier() {
+    return FragmenterServiceFactory.createSupplier(config);
   }
 
   private static boolean useGbifIdRecordWriteIO(Set<String> types) {

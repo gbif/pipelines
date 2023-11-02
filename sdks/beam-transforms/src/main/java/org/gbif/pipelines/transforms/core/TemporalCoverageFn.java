@@ -35,9 +35,11 @@ public class TemporalCoverageFn
         minDate = date;
       } else {
         minDate =
-            StringToDateFunctions.getStringToDateFn()
+            StringToDateFunctions.getStringToEarliestEpochSeconds(false)
                         .apply(date)
-                        .compareTo(StringToDateFunctions.getStringToDateFn().apply(minDate))
+                        .compareTo(
+                            StringToDateFunctions.getStringToEarliestEpochSeconds(false)
+                                .apply(minDate))
                     < 0
                 ? date
                 : minDate;
@@ -49,9 +51,11 @@ public class TemporalCoverageFn
         maxDate = date;
       } else {
         maxDate =
-            StringToDateFunctions.getStringToDateFn()
+            StringToDateFunctions.getStringToLatestEpochSeconds(false)
                         .apply(date)
-                        .compareTo(StringToDateFunctions.getStringToDateFn().apply(maxDate))
+                        .compareTo(
+                            StringToDateFunctions.getStringToLatestEpochSeconds(false)
+                                .apply(maxDate))
                     > 0
                 ? date
                 : maxDate;

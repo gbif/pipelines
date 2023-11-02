@@ -6,7 +6,7 @@
     </files>
     <id index="0"/>
     <field index="0" term="http://rs.tdwg.org/dwc/terms/eventID"/>
-    <field index="1" term="http://rs.gbif.org/terms/1.0/eventType"/>
+    <field index="1" term="http://rs.tdwg.org/dwc/terms/eventType"/>
     <field index="2" term="http://rs.tdwg.org/dwc/terms/parentEventID"/>
     <field index="3" term="http://rs.tdwg.org/dwc/terms/eventDate"/>
     <field index="4" term="http://rs.tdwg.org/dwc/terms/eventTime"/>

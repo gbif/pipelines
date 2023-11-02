@@ -1,8 +1,8 @@
 package org.gbif.pipelines.transforms.specific;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.IDENTIFIER;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GBIF_ID_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_INVALID;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
 
 import java.time.Instant;
 import java.util.Arrays;

@@ -1,7 +1,7 @@
 package org.gbif.pipelines.tasks.verbatims.fragmenter;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.OCCURRENCE;
 import static org.gbif.api.model.pipelines.PipelineStep.Status.COMPLETED;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
 import static org.gbif.pipelines.fragmenter.common.TableAssert.assertTable;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -87,6 +87,7 @@ public class FragmenterCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource(REPO_PATH).getFile();
     config.asyncThreshold = 1_000;
     config.generateIdIfAbsent = true;
+    config.switchRecordsNumber = 1_000_000;
 
     UUID uuid = UUID.fromString(DWCA_DATASET_UUID);
     int attempt = 2;

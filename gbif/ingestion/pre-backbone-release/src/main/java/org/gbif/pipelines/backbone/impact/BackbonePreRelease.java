@@ -21,9 +21,7 @@ import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchemaUtils;
 import org.apache.thrift.TException;
-import org.gbif.api.vocabulary.Rank;
-import org.gbif.kvs.species.SpeciesMatchRequest;
-import org.gbif.kvs.species.TaxonParsers;
+import org.gbif.kvs.species.Identification;
 import org.gbif.rest.client.configuration.ChecklistbankClientsConfiguration;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
@@ -65,7 +63,8 @@ public class BackbonePreRelease {
                     schema,
                     options.getScope(),
                     options.getMinimumOccurrenceCount(),
-                    options.getSkipKeys())));
+                    options.getSkipKeys(),
+                    options.getIgnoreWhitespace())));
 
     matched.apply(TextIO.write().to(options.getTargetDir()));
 
@@ -89,15 +88,22 @@ public class BackbonePreRelease {
     private final Integer scope;
     private final int minCount;
     private final boolean skipKeys;
+    private final boolean ignoreWhitespace;
     private ChecklistbankServiceSyncClient service; // direct service, no cache
 
     MatchTransform(
-        String baseAPIUrl, HCatSchema schema, Integer scope, int minCount, boolean skipKeys) {
+        String baseAPIUrl,
+        HCatSchema schema,
+        Integer scope,
+        int minCount,
+        boolean skipKeys,
+        boolean ignoreWhitespace) {
       this.baseAPIUrl = baseAPIUrl;
       this.schema = schema;
       this.scope = scope;
       this.minCount = minCount;
       this.skipKeys = skipKeys;
+      this.ignoreWhitespace = ignoreWhitespace;
     }
 
     @Setup
@@ -105,7 +111,7 @@ public class BackbonePreRelease {
       service =
           new ChecklistbankServiceSyncClient(
               ChecklistbankClientsConfiguration.builder()
-                  .nameUSageClientConfiguration(
+                  .nameUsageClientConfiguration(
                       ClientConfiguration.builder()
                           .withBaseApiUrl(baseAPIUrl)
                           .withFileCacheMaxSizeMb(1L)
@@ -131,8 +137,8 @@ public class BackbonePreRelease {
 
         // We use the request to ensure we apply the same "clean" operations as the production
         // pipelines, even though we short circuit the cache and use the lookup service directly.
-        SpeciesMatchRequest matchRequest =
-            SpeciesMatchRequest.builder()
+        Identification matchRequest =
+            Identification.builder()
                 .withKingdom(source.getString("v_kingdom", schema))
                 .withPhylum(source.getString("v_phylum", schema))
                 .withClazz(source.getString("v_class", schema))
@@ -140,28 +146,35 @@ public class BackbonePreRelease {
                 .withFamily(source.getString("v_family", schema))
                 .withGenus(source.getString("v_genus", schema))
                 .withScientificName(source.getString("v_scientificName", schema))
-                .withRank(source.getString("v_taxonRank", schema))
-                .withVerbatimRank(source.getString("v_verbatimTaxonRank", schema))
+                .withGenericName(source.getString("v_genericName", schema))
                 .withSpecificEpithet(source.getString("v_specificEpithet", schema))
                 .withInfraspecificEpithet(source.getString("v_infraSpecificEpithet", schema))
                 .withScientificNameAuthorship(
                     source.getString("v_scientificNameAuthorship", schema))
+                .withRank(source.getString("v_taxonRank", schema))
+                .withVerbatimRank(source.getString("v_verbatimTaxonRank", schema))
+                .withScientificNameID(source.getString("v_scientificNameID", schema))
+                .withTaxonID(source.getString("v_taxonID", schema))
+                .withTaxonConceptID(source.getString("v_taxonConceptID", schema))
                 .build();
 
         try {
           // short circuit the cache, but replicate same logic of the NameUsageMatchKVStoreFactory
           NameUsageMatch usageMatch =
               service.match(
+                  null, // rely only on names
                   matchRequest.getKingdom(),
                   matchRequest.getPhylum(),
                   matchRequest.getClazz(),
                   matchRequest.getOrder(),
                   matchRequest.getFamily(),
                   matchRequest.getGenus(),
-                  Optional.ofNullable(TaxonParsers.interpretRank(matchRequest))
-                      .map(Rank::name)
-                      .orElse(null),
-                  TaxonParsers.interpretScientificName(matchRequest),
+                  matchRequest.getScientificName(),
+                  matchRequest.getGenericName(),
+                  matchRequest.getSpecificEpithet(),
+                  matchRequest.getInfraspecificEpithet(),
+                  matchRequest.getScientificNameAuthorship(),
+                  matchRequest.getRank(),
                   false,
                   false);
 
@@ -180,7 +193,7 @@ public class BackbonePreRelease {
           }
 
           // emit classifications that differ, optionally considering the keys
-          if (skipKeys && !existing.classificationEquals(proposed)) {
+          if (skipKeys && !existing.classificationEquals(proposed, ignoreWhitespace)) {
             c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
 
           } else if (!skipKeys && !existing.equals(proposed)) {
@@ -225,7 +238,7 @@ public class BackbonePreRelease {
     /** Formats the data for the output line in the CSV. */
     private static String toTabDelimited(
         long count,
-        SpeciesMatchRequest verbatim,
+        Identification verbatim,
         GBIFClassification current,
         GBIFClassification proposed,
         boolean skipKeys) {
@@ -242,7 +255,7 @@ public class BackbonePreRelease {
           verbatim.getSpecificEpithet(),
           verbatim.getInfraspecificEpithet(),
           verbatim.getRank(),
-          verbatim.getVerbatimTaxonRank(),
+          verbatim.getRank(), // avoid breaking the API (verbatimTaxonRank)
           verbatim.getScientificName(),
           verbatim.getGenericName(),
           verbatim.getScientificNameAuthorship(),

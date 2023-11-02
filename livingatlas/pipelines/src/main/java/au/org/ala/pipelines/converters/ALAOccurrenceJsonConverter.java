@@ -10,7 +10,6 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.core.converters.JsonConverter;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.json.*;
@@ -150,7 +149,7 @@ public class ALAOccurrenceJsonConverter {
       if (eventCore.getEventType() != null) {
         eventTypes.add(eventCore.getEventType().getConcept());
       } else {
-        String rawEventType = verbatim.getCoreTerms().get(GbifTerm.eventType.qualifiedName());
+        String rawEventType = verbatim.getCoreTerms().get(DwcTerm.eventType.qualifiedName());
         if (rawEventType != null) {
           eventTypes.add(rawEventType);
         }

@@ -24,7 +24,6 @@ import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.UrlParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -114,13 +113,13 @@ public class CoreInterpreter {
 
         Parent.Builder parentBuilder = Parent.newBuilder().setId(parentEventID);
         VocabularyInterpreter.interpretVocabulary(
-                GbifTerm.eventType, parentValues.get(GbifTerm.eventType.name()), vocabularyService)
+                DwcTerm.eventType, parentValues.get(DwcTerm.eventType.name()), vocabularyService)
             .ifPresent(c -> parentBuilder.setEventType(c.getConcept()));
 
         // allow the raw event type value through if not matched to vocab
         // this is useful as vocab is a WIP
         if (parentBuilder.getEventType() == null) {
-          parentBuilder.setEventType(parentValues.get(GbifTerm.eventType.name()));
+          parentBuilder.setEventType(parentValues.get(DwcTerm.eventType.name()));
         }
 
         parentBuilder.setOrder(order++);

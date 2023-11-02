@@ -9,7 +9,8 @@
     "doc": "http://rs.tdwg.org/dwc/terms/eventDate",
     "fields":[
       {"name":"gte","type":["null","string"],"default":null},
-      {"name":"lte","type":["null","string"],"default":null}
+      {"name":"lte","type":["null","string"],"default":null},
+      {"name":"interval","type":["null","string"],"default":null}
     ]
   },
   {

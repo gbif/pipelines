@@ -9,7 +9,6 @@ import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.core.converters.JsonConverter;
 import org.gbif.pipelines.core.factory.SerDeFactory;
 import org.gbif.pipelines.core.utils.HashConverter;
@@ -142,7 +141,7 @@ public class ALAParentJsonConverter {
 
     // set the event type to the raw value, if the vocab not matched
     if (builder.getEventType() == null) {
-      Optional<String> eventType = extractOptValue(verbatim, GbifTerm.eventType);
+      Optional<String> eventType = extractOptValue(verbatim, DwcTerm.eventType);
       if (eventType.isPresent()) {
         VocabularyConcept eventTypeVoc =
             VocabularyConcept.newBuilder()
@@ -232,7 +231,7 @@ public class ALAParentJsonConverter {
         eventTypes.add(eventCore.getEventType().getConcept());
       } else {
         String rawEventType =
-            (String) verbatim.getCoreTerms().get(GbifTerm.eventType.qualifiedName());
+            (String) verbatim.getCoreTerms().get(DwcTerm.eventType.qualifiedName());
         if (rawEventType != null) {
           eventTypes.add(rawEventType);
         }

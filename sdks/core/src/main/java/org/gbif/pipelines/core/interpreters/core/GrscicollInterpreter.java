@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.api.model.collections.lookup.Match.Reason.*;
+import static org.gbif.api.model.collections.lookup.Match.Reason.DIFFERENT_OWNER;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.checkNullOrEmpty;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
@@ -8,7 +8,6 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -41,6 +40,13 @@ public class GrscicollInterpreter {
       }
 
       checkNullOrEmpty(er);
+
+      if (!isSpecimenRecord(er)) {
+        log.debug(
+            "Skipped GrSciColl Lookup for record {} because it's not an specimen record",
+            er.getId());
+        return;
+      }
 
       GrscicollLookupRequest lookupRequest =
           GrscicollLookupRequest.builder()
@@ -76,19 +82,10 @@ public class GrscicollInterpreter {
 
       gr.setId(er.getId());
 
-      boolean isSpecimen = isSpecimenRecord(er);
-      Consumer<OccurrenceIssue> flagRecord =
-          i -> {
-            // we only flag records that are specimens
-            if (isSpecimen) {
-              addIssue(gr, i);
-            }
-          };
-
       // institution match
       Match institutionMatchResponse = lookupResponse.getInstitutionMatch();
       if (institutionMatchResponse.getMatchType() == MatchType.NONE) {
-        flagRecord.accept(getInstitutionMatchNoneIssue(institutionMatchResponse.getStatus()));
+        addIssue(gr, getInstitutionMatchNoneIssue(institutionMatchResponse.getStatus()));
 
         // we skip the collections when there is no institution match
         return;
@@ -97,25 +94,25 @@ public class GrscicollInterpreter {
       gr.setInstitutionMatch(GrscicollRecordConverter.convertMatch(institutionMatchResponse));
 
       if (institutionMatchResponse.getMatchType() == MatchType.FUZZY) {
-        flagRecord.accept(OccurrenceIssue.INSTITUTION_MATCH_FUZZY);
+        addIssue(gr, OccurrenceIssue.INSTITUTION_MATCH_FUZZY);
       }
 
       // https://github.com/gbif/registry/issues/496 we accept matches that have different owner,
       // but we flag them
       if (institutionMatchResponse.getReasons() != null
           && institutionMatchResponse.getReasons().contains(DIFFERENT_OWNER)) {
-        flagRecord.accept(OccurrenceIssue.DIFFERENT_OWNER_INSTITUTION);
+        addIssue(gr, OccurrenceIssue.DIFFERENT_OWNER_INSTITUTION);
       }
 
       // collection match
       Match collectionMatchResponse = lookupResponse.getCollectionMatch();
       if (collectionMatchResponse.getMatchType() == MatchType.NONE) {
-        flagRecord.accept(getCollectionMatchNoneIssue(collectionMatchResponse.getStatus()));
+        addIssue(gr, getCollectionMatchNoneIssue(collectionMatchResponse.getStatus()));
       } else {
         gr.setCollectionMatch(GrscicollRecordConverter.convertMatch(collectionMatchResponse));
 
         if (collectionMatchResponse.getMatchType() == MatchType.FUZZY) {
-          flagRecord.accept(OccurrenceIssue.COLLECTION_MATCH_FUZZY);
+          addIssue(gr, OccurrenceIssue.COLLECTION_MATCH_FUZZY);
         }
       }
     };

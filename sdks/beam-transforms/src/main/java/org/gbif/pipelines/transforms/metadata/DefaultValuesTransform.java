@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.metadata;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.VERBATIM;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DEFAULT_VALUES_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
 
 import com.google.common.base.Strings;
 import java.util.Collections;

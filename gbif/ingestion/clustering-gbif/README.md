@@ -43,12 +43,15 @@ create 'occurrence_relationships_experimental',
 Remove hive tables from the target database:
 ```
 drop table occurrence_clustering_hashed;
+drop table occurrence_clustering_hashed_all;
 drop table occurrence_clustering_candidates;
 drop table occurrence_relationships;
 ```
 
 Run the job (In production this configuration takes 2.6 hours with ~2.3B records)
 ```
+hdfs dfs -rm -r /tmp/clustering
+
 nohup sudo -u hdfs spark2-submit --class org.gbif.pipelines.clustering.Cluster \
   --master yarn --num-executors 100 \
   --executor-cores 6 \

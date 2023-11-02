@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.utils;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER_TABLE;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.IDENTIFIER_TABLE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

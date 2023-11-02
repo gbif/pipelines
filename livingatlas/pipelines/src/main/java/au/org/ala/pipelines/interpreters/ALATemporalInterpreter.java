@@ -11,10 +11,10 @@ import lombok.Builder;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.common.parsers.date.MultiinputTemporalParser;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.functions.SerializableFunction;
-import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
@@ -33,7 +33,7 @@ public class ALATemporalInterpreter implements Serializable {
   public static final String YEAR_PRECISION = "YEAR";
   protected static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
 
-  private final TemporalParser temporalParser;
+  private final MultiinputTemporalParser temporalParser;
   private final SerializableFunction<String, String> preprocessDateFn;
 
   @Builder(buildMethodName = "create")
@@ -41,7 +41,7 @@ public class ALATemporalInterpreter implements Serializable {
       List<DateComponentOrdering> orderings,
       SerializableFunction<String, String> preprocessDateFn) {
     this.preprocessDateFn = preprocessDateFn;
-    this.temporalParser = TemporalParser.create(orderings);
+    this.temporalParser = MultiinputTemporalParser.create(orderings);
   }
 
   /**
@@ -67,10 +67,13 @@ public class ALATemporalInterpreter implements Serializable {
     if (tr.getDay() != null && tr.getDay() == 1) {
       addIssue(tr, ALAOccurrenceIssue.FIRST_OF_MONTH.name());
     }
-    if (tr.getMonth() != null && tr.getMonth() == 1) {
+    if (tr.getMonth() != null && tr.getMonth() == 1 && (tr.getDay() == null || tr.getDay() == 1)) {
       addIssue(tr, ALAOccurrenceIssue.FIRST_OF_YEAR.name());
     }
-    if (tr.getYear() != null && tr.getYear() % 100 == 0) {
+    if (tr.getYear() != null
+        && tr.getYear() % 100 == 0
+        && (tr.getDay() == null || tr.getDay() == 1)
+        && (tr.getMonth() == null || tr.getMonth() == 1)) {
       addIssue(tr, ALAOccurrenceIssue.FIRST_OF_CENTURY.name());
     }
   }
@@ -127,8 +130,15 @@ public class ALATemporalInterpreter implements Serializable {
         determinedDatePrecision =
             DAY_RANGE_PRECISION; // assume day range precision, then downgrade as required
 
-        // catch
-        if (tr.getEventDate().getLte().equals(tr.getEventDate().getGte())) {
+        // catch non-range precision after trimming time from the date strings
+        if (tr.getEventDate()
+            .getLte()
+            .substring(0, Math.min(DAY_PRECISION_LENGTH, tr.getEventDate().getLte().length()))
+            .equals(
+                tr.getEventDate()
+                    .getGte()
+                    .substring(
+                        0, Math.min(DAY_PRECISION_LENGTH, tr.getEventDate().getGte().length())))) {
           if (tr.getEventDate().getLte().length() == DAY_PRECISION_LENGTH) {
             determinedDatePrecision = DAY_PRECISION;
           }
@@ -138,62 +148,48 @@ public class ALATemporalInterpreter implements Serializable {
           if (tr.getEventDate().getLte().length() == YEAR_PRECISION_LENGTH) {
             determinedDatePrecision = YEAR_PRECISION;
           }
-        }
+        } else { // ranged precision
+          String startDay = null;
+          String startMonth = null;
+          String startYear = null;
 
-        String startDay = null;
-        String startMonth = null;
-        String startYear = null;
+          if (tr.getEventDate().getGte().length() >= YEAR_PRECISION_LENGTH) {
+            // first 4 chars
+            startYear = tr.getEventDate().getGte().substring(0, 4);
+          }
+          if (tr.getEventDate().getGte().length() >= MONTH_PRECISION_LENGTH) {
+            // first 4 chars
+            startMonth = tr.getEventDate().getGte().substring(5, 7);
+          }
+          if (tr.getEventDate().getGte().length() >= DAY_PRECISION_LENGTH) {
+            // first 4 chars
+            startDay = tr.getEventDate().getGte().substring(8, 10);
+          }
 
-        if (tr.getEventDate().getGte().length() >= YEAR_PRECISION_LENGTH) {
-          // first 4 chars
-          startYear = tr.getEventDate().getGte().substring(0, 4);
-        }
-        if (tr.getEventDate().getGte().length() >= MONTH_PRECISION_LENGTH) {
-          // first 4 chars
-          startMonth = tr.getEventDate().getGte().substring(5, 7);
-        }
-        if (tr.getEventDate().getGte().length() == DAY_PRECISION_LENGTH) {
-          // first 4 chars
-          startDay = tr.getEventDate().getGte().substring(8, 10);
-        }
+          String endDay = null;
+          String endMonth = null;
+          String endYear = null;
 
-        String endDay = null;
-        String endMonth = null;
-        String endYear = null;
+          if (tr.getEventDate().getLte().length() >= YEAR_PRECISION_LENGTH) {
+            // first 4 chars
+            endYear = tr.getEventDate().getLte().substring(0, 4);
+          }
+          if (tr.getEventDate().getLte().length() >= MONTH_PRECISION_LENGTH) {
+            // first 4 chars
+            endMonth = tr.getEventDate().getLte().substring(5, 7);
+          }
+          if (tr.getEventDate().getLte().length() >= DAY_PRECISION_LENGTH) {
+            // first 4 chars
+            endDay = tr.getEventDate().getLte().substring(8, 10);
+          }
 
-        if (tr.getEventDate().getLte().length() >= YEAR_PRECISION_LENGTH) {
-          // first 4 chars
-          endYear = tr.getEventDate().getLte().substring(0, 4);
-        }
-        if (tr.getEventDate().getLte().length() >= MONTH_PRECISION_LENGTH) {
-          // first 4 chars
-          endMonth = tr.getEventDate().getLte().substring(5, 7);
-        }
-        if (tr.getEventDate().getLte().length() == DAY_PRECISION_LENGTH) {
-          // first 4 chars
-          endDay = tr.getEventDate().getLte().substring(8, 10);
-        }
+          if ((StringUtils.isEmpty(startDay) && StringUtils.isEmpty(endDay))) {
+            determinedDatePrecision = MONTH_RANGE_PRECISION;
+          }
 
-        if (((StringUtils.isEmpty(startDay) && StringUtils.isEmpty(endDay)
-                || startDay.equals(endDay)))
-            && StringUtils.isNotEmpty(startMonth)
-            && startMonth.equals(endMonth)
-            && StringUtils.isNotEmpty(startYear)
-            && startYear.equals(endYear)) {
-          determinedDatePrecision = MONTH_PRECISION;
-        } else if (StringUtils.isEmpty(startDay) && StringUtils.isEmpty(endDay)) {
-          determinedDatePrecision = MONTH_RANGE_PRECISION;
-        }
-
-        if (((StringUtils.isEmpty(startDay) && StringUtils.isEmpty(endDay))
-                || startDay.equals(endDay))
-            && (startMonth != endMonth
-                || (StringUtils.isEmpty(startMonth) && StringUtils.isEmpty(endMonth)))
-            && startYear == endYear
-            && StringUtils.isNotEmpty(startYear)) {
-          determinedDatePrecision = YEAR_PRECISION;
-        } else if (StringUtils.isEmpty(startMonth) && StringUtils.isEmpty(endMonth)) {
-          determinedDatePrecision = YEAR_RANGE_PRECISION;
+          if ((StringUtils.isEmpty(startMonth) && StringUtils.isEmpty(endMonth))) {
+            determinedDatePrecision = YEAR_RANGE_PRECISION;
+          }
         }
 
       } else if (tr.getEventDate().getGte() != null) {

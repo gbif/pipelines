@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.transforms;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.METADATA;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
 
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.interpreters.ALAAttributionInterpreter;

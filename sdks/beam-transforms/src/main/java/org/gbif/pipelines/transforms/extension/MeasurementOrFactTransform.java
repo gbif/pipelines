@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.extension;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.MEASUREMENT_OR_FACT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT;
 import static org.gbif.pipelines.core.utils.ModelUtils.hasExtension;
 
 import java.time.Instant;

@@ -23,8 +23,12 @@ AS SELECT
   v_scientificNameAuthorship,
   v_taxonRank,
   v_verbatimTaxonRank,
+  v_genericName,
   v_specificEpithet,
   v_infraSpecificEpithet,
+  v_scientificNameID,
+  v_taxonID,
+  v_taxonConceptID,    
   kingdom,
   phylum,
   class,
@@ -46,7 +50,7 @@ AS SELECT
   taxonKey,
   acceptedTaxonKey,
   count(*) as occurrenceCount
-FROM uat.occurrence_hdfs
+FROM prod_h.occurrence
 GROUP BY
   v_kingdom,
   v_phylum,
@@ -59,8 +63,12 @@ GROUP BY
   v_scientificNameAuthorship,
   v_taxonRank,
   v_verbatimTaxonRank,
+  v_genericName,
   v_specificEpithet,
   v_infraSpecificEpithet,
+  v_scientificNameID,
+  v_taxonID,
+  v_taxonConceptID,  
   kingdom,
   phylum,
   class,

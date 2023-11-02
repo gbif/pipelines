@@ -10,16 +10,16 @@ import java.util.Optional;
 import lombok.Builder;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.common.parsers.date.MultiinputTemporalParser;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
-import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.SeedbankRecord;
 
 public class SeedbankInterpreter {
 
-  private final TemporalParser temporalParser;
+  private final MultiinputTemporalParser temporalParser;
   private final SerializableFunction<String, String> preprocessDateFn;
 
   public final ExtensionInterpretation.TargetHandler<SeedbankRecord> HANDLER =
@@ -60,7 +60,7 @@ public class SeedbankInterpreter {
   private SeedbankInterpreter(
       List<DateComponentOrdering> orderings,
       SerializableFunction<String, String> preprocessDateFn) {
-    this.temporalParser = TemporalParser.create(orderings);
+    this.temporalParser = MultiinputTemporalParser.create(orderings);
     this.preprocessDateFn = preprocessDateFn;
   }
 

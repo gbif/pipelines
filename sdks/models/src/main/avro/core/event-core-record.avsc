@@ -17,7 +17,7 @@
     "fields": [
       {"name": "id", "type": "string", "doc": "Pipelines identifier"},
       {"name": "parentEventID", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/parentEventID"},
-      {"name": "eventType", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.gbif.org/terms/1.0/eventType"},
+      {"name": "eventType", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/eventType"},
       {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
       {"name": "sampleSizeValue", "type": ["null", "double"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sampleSizeValue"},
       {"name": "sampleSizeUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sampleSizeUnit"},

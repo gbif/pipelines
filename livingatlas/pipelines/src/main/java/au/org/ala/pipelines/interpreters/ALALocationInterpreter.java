@@ -23,6 +23,7 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.common.parsers.date.MultiinputTemporalParser;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
@@ -30,7 +31,6 @@ import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
-import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
@@ -40,7 +40,7 @@ import org.gbif.rest.client.geocode.Location;
 @Slf4j
 public class ALALocationInterpreter {
 
-  private final TemporalParser temporalParser;
+  private final MultiinputTemporalParser temporalParser;
   private final SerializableFunction<String, String> preprocessDateFn;
 
   @Builder(buildMethodName = "create")
@@ -48,7 +48,7 @@ public class ALALocationInterpreter {
       List<DateComponentOrdering> orderings,
       SerializableFunction<String, String> preprocessDateFn) {
     this.preprocessDateFn = preprocessDateFn;
-    this.temporalParser = TemporalParser.create(orderings);
+    this.temporalParser = MultiinputTemporalParser.create(orderings);
   }
 
   /**

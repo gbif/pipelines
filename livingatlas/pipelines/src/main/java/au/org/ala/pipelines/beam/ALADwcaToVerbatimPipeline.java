@@ -21,7 +21,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.pipelines.common.beam.DwcaIO;
+import org.gbif.pipelines.common.beam.DwcaExtendedRecordIO;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
@@ -103,10 +103,10 @@ public class ALADwcaToVerbatimPipeline {
     boolean isDir = Paths.get(inputPath).toFile().isDirectory();
 
     log.info("Input path is isDir {}", isDir);
-    DwcaIO.Read reader =
+    DwcaExtendedRecordIO.Read reader =
         isDir
-            ? DwcaIO.Read.fromLocation(inputPath)
-            : DwcaIO.Read.fromCompressed(inputPath, tmpPath);
+            ? DwcaExtendedRecordIO.Read.fromLocation(inputPath)
+            : DwcaExtendedRecordIO.Read.fromCompressed(inputPath, tmpPath);
 
     log.info("Adding step 2: Pipeline steps");
     Pipeline p = Pipeline.create(options);

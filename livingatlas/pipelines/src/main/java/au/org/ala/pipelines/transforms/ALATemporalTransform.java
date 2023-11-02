@@ -9,8 +9,8 @@ import lombok.Builder;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.Interpretation;
@@ -56,6 +56,7 @@ public class ALATemporalTransform extends Transform<ExtendedRecord, TemporalReco
           TemporalInterpreter.builder()
               .orderings(orderings)
               .preprocessDateFn(preprocessDateFn)
+              .explicitRangeEnd(false)
               .create();
     }
     if (alaTemporalInterpreter == null) {

@@ -11,12 +11,12 @@ import java.util.function.Consumer;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
+import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
 import org.gbif.pipelines.common.configs.ElasticsearchConfiguration;
 import org.gbif.pipelines.common.configs.IndexConfiguration;
@@ -28,6 +28,7 @@ import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfig
 import org.gbif.pipelines.tasks.occurrences.identifier.IdentifierConfiguration;
 import org.gbif.pipelines.tasks.occurrences.indexing.IndexingConfiguration;
 import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
+import org.gbif.pipelines.tasks.verbatims.fragmenter.FragmenterConfiguration;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BeamSettings {
@@ -214,6 +215,34 @@ public class BeamSettings {
       } else {
         command.add("--esDocumentId=internalId");
       }
+    };
+  }
+
+  public static Consumer<StringJoiner> verbatimFragmenter(
+      FragmenterConfiguration config, PipelinesInterpretedMessage message) {
+    return command -> {
+      InterpretationCommon.builder()
+          .command(command)
+          .datasetUuid(message.getDatasetUuid())
+          .attempt(message.getAttempt())
+          .interpretTypes(message.getInterpretTypes())
+          .stepConfig(config.stepConfig)
+          .pipelinesConfigPath(config.pipelinesConfig)
+          .metaFileName(config.metaFileName)
+          .inputPath(config.stepConfig.repositoryPath)
+          .useBeamDeprecatedRead(config.useBeamDeprecatedRead)
+          .avroConfig(config.avroConfig)
+          .build()
+          .addToStringBuilder();
+
+      command.add("--generateIds=false");
+
+      Optional.ofNullable(message.getValidationResult())
+          .ifPresent(
+              vr ->
+                  command
+                      .add("--tripletValid=" + vr.isTripletValid())
+                      .add("--occurrenceIdValid=" + vr.isOccurrenceIdValid()));
     };
   }
 

@@ -2,6 +2,8 @@ package org.gbif.pipelines.core.converters;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -25,27 +27,7 @@ import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.core.utils.TemporalConverter;
-import org.gbif.pipelines.io.avro.AgentIdentifier;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.DegreeOfEstablishment;
-import org.gbif.pipelines.io.avro.Diagnostic;
-import org.gbif.pipelines.io.avro.EstablishmentMeans;
-import org.gbif.pipelines.io.avro.EventCoreRecord;
-import org.gbif.pipelines.io.avro.EventType;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.IssueRecord;
-import org.gbif.pipelines.io.avro.LifeStage;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.ParentEventGbifId;
-import org.gbif.pipelines.io.avro.Pathway;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 
 /** Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}. */
@@ -89,15 +71,6 @@ public class OccurrenceHdfsRecordConverter {
     mapExtendedRecord(occurrenceHdfsRecord);
     mapEventCoreRecord(occurrenceHdfsRecord);
     mapProjectIds(occurrenceHdfsRecord);
-
-    // The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and
-    // could only have been
-    // used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier for
-    // a long time in
-    // our public API v1, so we continue to do this.
-    if (extendedRecord != null && identifierRecord != null) {
-      setIdentifier(identifierRecord, extendedRecord, occurrenceHdfsRecord);
-    }
 
     return occurrenceHdfsRecord;
   }
@@ -230,11 +203,11 @@ public class OccurrenceHdfsRecordConverter {
       return;
     }
     Optional.ofNullable(temporalRecord.getDateIdentified())
-        .map(StringToDateFunctions.getStringToDateFn())
-        .ifPresent(date -> occurrenceHdfsRecord.setDateidentified(date.getTime()));
+        .map(StringToDateFunctions.getStringToEarliestEpochSeconds(false))
+        .ifPresent(date -> occurrenceHdfsRecord.setDateidentified(date));
     Optional.ofNullable(temporalRecord.getModified())
-        .map(StringToDateFunctions.getStringToDateFn())
-        .ifPresent(date -> occurrenceHdfsRecord.setModified(date.getTime()));
+        .map(StringToDateFunctions.getStringToEarliestEpochSeconds(false))
+        .ifPresent(date -> occurrenceHdfsRecord.setModified(date));
     occurrenceHdfsRecord.setDay(temporalRecord.getDay());
     occurrenceHdfsRecord.setMonth(temporalRecord.getMonth());
     occurrenceHdfsRecord.setYear(temporalRecord.getYear());
@@ -251,15 +224,35 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setEnddayofyear(null);
     }
 
-    if (temporalRecord.getEventDate() != null && temporalRecord.getEventDate().getGte() != null) {
-      Optional.ofNullable(temporalRecord.getEventDate().getGte())
-          .map(StringToDateFunctions.getStringToDateFn(true))
-          .ifPresent(eventDate -> occurrenceHdfsRecord.setEventdate(eventDate.getTime()));
+    if (temporalRecord.getEventDate() != null
+        && temporalRecord.getEventDate().getGte() != null
+        && temporalRecord.getEventDate().getLte() != null) {
+      Optional.ofNullable(temporalRecord.getEventDate())
+          .ifPresent(
+              eventDate -> {
+                occurrenceHdfsRecord.setEventdate(
+                    TemporalConverter.getEventDateToStringFn().apply(eventDate));
+                occurrenceHdfsRecord.setEventdategte(
+                    StringToDateFunctions.getStringToEarliestEpochSeconds(true)
+                        .apply(eventDate.getGte()));
+                occurrenceHdfsRecord.setEventdatelte(
+                    StringToDateFunctions.getStringToLatestEpochSeconds(true)
+                        .apply(eventDate.getLte()));
+              });
     } else {
       TemporalConverter.from(
               temporalRecord.getYear(), temporalRecord.getMonth(), temporalRecord.getDay())
-          .map(StringToDateFunctions.getTemporalToDateFn())
-          .ifPresent(eventDate -> occurrenceHdfsRecord.setEventdate(eventDate.getTime()));
+          .ifPresent(
+              eventDate -> {
+                occurrenceHdfsRecord.setEventdate(eventDate.toString());
+                long instant =
+                    ((LocalDate) eventDate)
+                        .atStartOfDay(ZoneOffset.UTC)
+                        .toInstant()
+                        .getEpochSecond();
+                occurrenceHdfsRecord.setEventdategte(instant);
+                occurrenceHdfsRecord.setEventdatelte(instant);
+              });
     }
 
     setCreatedIfGreater(occurrenceHdfsRecord, temporalRecord.getCreated());
@@ -341,15 +334,25 @@ public class OccurrenceHdfsRecordConverter {
           .ifPresent(r -> occurrenceHdfsRecord.setTaxonrank(r.name()));
     }
 
-    if (Objects.nonNull(taxonRecord.getUsageParsedName())) {
-      occurrenceHdfsRecord.setGenericname(
-          Objects.nonNull(taxonRecord.getUsageParsedName().getGenus())
-              ? taxonRecord.getUsageParsedName().getGenus()
-              : taxonRecord.getUsageParsedName().getUninomial());
-      occurrenceHdfsRecord.setSpecificepithet(
-          taxonRecord.getUsageParsedName().getSpecificEpithet());
-      occurrenceHdfsRecord.setInfraspecificepithet(
-          taxonRecord.getUsageParsedName().getInfraspecificEpithet());
+    if (Objects.nonNull(taxonRecord.getUsageParsedName())
+        && Objects.nonNull(taxonRecord.getUsage())) {
+      Rank rank = taxonRecord.getUsage().getRank();
+      if (Rank.GENUS.compareTo(rank) <= 0) {
+        occurrenceHdfsRecord.setGenericname(
+            Objects.nonNull(taxonRecord.getUsageParsedName().getGenus())
+                ? taxonRecord.getUsageParsedName().getGenus()
+                : taxonRecord.getUsageParsedName().getUninomial());
+      }
+
+      if (Rank.SPECIES.compareTo(rank) <= 0) {
+        occurrenceHdfsRecord.setSpecificepithet(
+            taxonRecord.getUsageParsedName().getSpecificEpithet());
+      }
+
+      if (Rank.INFRASPECIFIC_NAME.compareTo(rank) <= 0) {
+        occurrenceHdfsRecord.setInfraspecificepithet(
+            taxonRecord.getUsageParsedName().getInfraspecificEpithet());
+      }
     }
 
     Optional.ofNullable(taxonRecord.getDiagnostics())
@@ -494,35 +497,6 @@ public class OccurrenceHdfsRecordConverter {
 
     setCreatedIfGreater(occurrenceHdfsRecord, basicRecord.getCreated());
     addIssues(basicRecord.getIssues(), occurrenceHdfsRecord);
-  }
-
-  /**
-   * The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and could
-   * only have been used for "un-starring" a DWCA star record. However, we've exposed it as
-   * DcTerm.identifier for a long time in our public API v1, so we continue to do this.the id (the
-   * <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and could only have
-   * been used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier
-   * for a long time in our public API v1, so we continue to do this.
-   */
-  private static void setIdentifier(
-      IdentifierRecord ir, ExtendedRecord er, OccurrenceHdfsRecord occurrenceHdfsRecord) {
-
-    String institutionCode = er.getCoreTerms().get(DwcTerm.institutionCode.qualifiedName());
-    String collectionCode = er.getCoreTerms().get(DwcTerm.collectionCode.qualifiedName());
-    String catalogNumber = er.getCoreTerms().get(DwcTerm.catalogNumber.qualifiedName());
-
-    // id format following the convention of DwC (http://rs.tdwg.org/dwc/terms/#occurrenceID)
-    String triplet =
-        String.join(":", "urn:catalog", institutionCode, collectionCode, catalogNumber);
-    String gbifId = Optional.ofNullable(ir.getInternalId()).map(Object::toString).orElse("");
-
-    String occId = er.getCoreTerms().get(DwcTerm.occurrenceID.qualifiedName());
-
-    if (!ir.getId().equals(gbifId)
-        && (!Strings.isNullOrEmpty(occId) || !ir.getId().equals(triplet))) {
-      occurrenceHdfsRecord.setIdentifier(ir.getId());
-      occurrenceHdfsRecord.setVIdentifier(ir.getId());
-    }
   }
 
   /**

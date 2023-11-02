@@ -4,6 +4,7 @@ import java.io.IOException;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
@@ -35,7 +36,7 @@ public class HbaseServer extends ExternalResource {
   private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(CFG.getOccurrenceTable());
 
   private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
-
+  private TestingServer zkServer;
   private Connection connection = null;
 
   public void truncateTable() throws IOException {
@@ -46,6 +47,8 @@ public class HbaseServer extends ExternalResource {
   @Override
   protected void before() throws Exception {
     log.info("Create hbase mini-cluster");
+    zkServer = new TestingServer(true);
+    CFG.setZkConnectionString(zkServer.getConnectString());
     TEST_UTIL.getConfiguration().setInt("hbase.master.port", HBaseTestingUtility.randomFreePort());
     TEST_UTIL
         .getConfiguration()
@@ -56,6 +59,7 @@ public class HbaseServer extends ExternalResource {
     TEST_UTIL
         .getConfiguration()
         .setInt("hbase.regionserver.info.port", HBaseTestingUtility.randomFreePort());
+    TEST_UTIL.getConfiguration().setStrings("hbase.zookeeper.quorum", zkServer.getConnectString());
     TEST_UTIL.startMiniCluster(1);
 
     TEST_UTIL.createTable(FRAGMENT_TABLE, HbaseStore.getFragmentFamily());
@@ -73,6 +77,10 @@ public class HbaseServer extends ExternalResource {
     TEST_UTIL.shutdownMiniCluster();
     if (connection != null) {
       connection.close();
+    }
+    if (zkServer != null) {
+      zkServer.stop();
+      zkServer.close();
     }
   }
 }

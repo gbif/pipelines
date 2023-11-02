@@ -9,12 +9,12 @@ import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
+import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.ArchiveFile;
 import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.pojo.FileNameTerm;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

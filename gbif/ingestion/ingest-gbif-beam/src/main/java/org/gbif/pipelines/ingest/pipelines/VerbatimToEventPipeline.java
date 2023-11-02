@@ -1,11 +1,11 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.BASIC;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.EVENT;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.EVENT_IDENTIFIER;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.IDENTIFIER;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.IDENTIFIER_ABSENT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT_IDENTIFIER;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IDENTIFIER_ABSENT;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -23,9 +23,9 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;

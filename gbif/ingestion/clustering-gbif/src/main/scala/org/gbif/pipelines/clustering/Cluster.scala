@@ -198,29 +198,27 @@ object Cluster {
 
       // persist for debugging, enable for further processing in SQL
       deduplicatedHashedRecords.write.saveAsTable(hiveTableHashed + "_all") // for diagnostics in hive
-      deduplicatedHashedRecords.createOrReplaceTempView("DF_hashed_all")
 
-      // defend against NxN runtime issues by capping the number of records in a candidate group to 10000
+      //deduplicatedHashedRecords.createOrReplaceTempView("DF_hashed_all")
+
+      // defend against NxN runtime issues by capping the number of records in a candidate group to 1000
       val hashCounts = deduplicatedHashedRecords.groupBy("hash").count().withColumnRenamed("count", "c");
       hashCounts.createOrReplaceTempView("DF_hash_counts")
-      val hashedFiltered = sql("""
-          SELECT t1.gbifID, t1.datasetKey, t1.hash
-          FROM DF_hashed_all t1 JOIN DF_hash_counts t2 ON t1.hash=t2.hash
-          WHERE t2.c <= 10000
-          """)
+      val hashedFiltered = sql("SELECT t1.gbifID, t1.datasetKey, t1.hash " +
+          "FROM " + hiveTableHashed + "_all  t1 JOIN DF_hash_counts t2 ON t1.hash=t2.hash " +
+          "WHERE t2.c <= 1000")
       hashedFiltered.write.saveAsTable(hiveTableHashed) // for diagnostics in hive
-      hashedFiltered.createOrReplaceTempView("DF_hashed")
+
+      //hashedFiltered.createOrReplaceTempView("DF_hashed")
 
       // Cross join to distinct pairs of records spanning 2 datasets
-      val candidates = sql("""
-      SELECT t1.gbifId as id1, t1.datasetKey as ds1, t2.gbifId as id2, t2.datasetKey as ds2
-      FROM
-        DF_hashed t1 JOIN DF_hashed t2 ON t1.hash = t2.hash
-      WHERE
-        t1.gbifId < t2.gbifId AND
-        t1.datasetKey != t2.datasetKey
-      GROUP BY t1.gbifId, t1.datasetKey, t2.gbifId, t2.datasetKey
-      """);
+      val candidates = sql("SELECT t1.gbifId as id1, t1.datasetKey as ds1, t2.gbifId as id2, t2.datasetKey as ds2 " +
+      "FROM " +
+      hiveTableHashed + " t1 JOIN " + hiveTableHashed + " t2 ON t1.hash = t2.hash " +
+      "WHERE " +
+      "  t1.gbifId < t2.gbifId AND " +
+      "  t1.datasetKey != t2.datasetKey " +
+      "GROUP BY t1.gbifId, t1.datasetKey, t2.gbifId, t2.datasetKey");
 
       candidates.write.saveAsTable(hiveTableCandidates) // for diagnostics in hive
     }
