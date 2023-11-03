@@ -110,6 +110,7 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretRecordedByIds)
         .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
         .via(VocabularyInterpreter.interpretEstablishmentMeans(vocabularyService))
+        .via(VocabularyInterpreter.interpretDegreeOfEstablishment(vocabularyService))
         .via(VocabularyInterpreter.interpretLifeStage(vocabularyService))
         .via(ALABasicInterpreter::interpretLicense)
         .via(ALABasicInterpreter.interpretRecordedBy(recordedByKvStore))

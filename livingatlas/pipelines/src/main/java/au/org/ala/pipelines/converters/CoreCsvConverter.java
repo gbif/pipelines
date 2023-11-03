@@ -77,6 +77,7 @@ public class CoreCsvConverter {
           .addKeyTermFn(DwcTerm.datasetID, getMultivalue(DwcTerm.datasetID))
           .addKeyTermFn(DwcTerm.datasetName, getMultivalue(DwcTerm.datasetName))
           .addKeyTermFn(DwcTerm.dateIdentified, getString(DwcTerm.dateIdentified))
+          .addKeyTermFn(DwcTerm.degreeOfEstablishment, getString(DwcTerm.degreeOfEstablishment))
           .addKeyTermFn(DwcTerm.disposition, getString(DwcTerm.disposition))
           .addKeyTermFn(DwcTerm.dynamicProperties, getString(DwcTerm.dynamicProperties))
           .addKeyTermFn(DwcTerm.endDayOfYear, getInt(DwcTerm.endDayOfYear))

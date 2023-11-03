@@ -136,6 +136,12 @@ public class CompleteIngestPipelineTestIT {
     assertEquals(-37.990988, record.get().get("decimalLatitude"));
     assertEquals(145.125693, record.get().get("decimalLongitude"));
     assertEquals("EPSG:4326", record.get().get("raw_" + DwcTerm.geodeticDatum.simpleName()));
+
+    // 'other' is not in the degreeOfEstablishment vocab so will present as null when processed
+    assertNull(record.get().get("degreeOfEstablishment"));
+    assertEquals("other", record.get().get("raw_degreeOfEstablishment"));
+    assertEquals("native", record.get().get("raw_establishmentMeans"));
+    assertEquals("native", record.get().get("establishmentMeans"));
   }
 
   public void loadTestDataset(String datasetID, String inputPath) throws Exception {

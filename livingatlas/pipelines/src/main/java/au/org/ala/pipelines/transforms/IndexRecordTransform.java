@@ -192,6 +192,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     skipKeys.add("parentsLineage");
     skipKeys.add(
         "establishmentMeans"); // GBIF treats it as a JSON, but ALA needs a String which is defined
+    skipKeys.add(
+        "degreeOfEstablishment"); // GBIF treats it as a JSON, but ALA needs a String which is
+    // defined
     skipKeys.add("identifiedByIds");
     skipKeys.add("recordedByIds");
     skipKeys.add(DwcTerm.typeStatus.simpleName());
@@ -618,6 +621,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     if (br != null) {
       addEstablishmentValueSafely(
           indexRecord, DwcTerm.establishmentMeans.simpleName(), br.getEstablishmentMeans());
+      addDegreeOfEstablishmentValueSafely(
+          indexRecord, DwcTerm.degreeOfEstablishment.simpleName(), br.getDegreeOfEstablishment());
       addTermWithAgentsSafely(
           indexRecord, DwcTerm.recordedByID.simpleName(), br.getRecordedByIds());
       addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
@@ -803,6 +808,13 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       IndexRecord.Builder indexRecord, String field, VocabularyConcept establishmentMeans) {
     if (establishmentMeans != null) {
       indexRecord.getStrings().put(field, establishmentMeans.getConcept());
+    }
+  }
+
+  private static void addDegreeOfEstablishmentValueSafely(
+      IndexRecord.Builder indexRecord, String field, VocabularyConcept degreeOfEstablishment) {
+    if (degreeOfEstablishment != null) {
+      indexRecord.getStrings().put(field, degreeOfEstablishment.getConcept());
     }
   }
 
