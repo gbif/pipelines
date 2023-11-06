@@ -1,5 +1,8 @@
 package org.gbif.pipelines.transforms.java;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_ABSENT;
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
@@ -218,6 +221,49 @@ public class UniqueGbifIdTransformTest {
     Assert.assertEquals(expectedInvalid.size(), idInvalidMap.size());
     assertMap(expectedNormal, idMap);
     assertMap(expectedInvalid, idInvalidMap);
+  }
+
+  @Test
+  public void absentValuesAsyncTest() {
+    // State
+    final Map<String, ExtendedRecord> input = createErMap("1", "2_2", "3_3", "4_1", "5", "6_6");
+    final Map<String, IdentifierRecord> expectedNormal =
+        createGbifIdMap("2_2", "3_3", "4_1", "6_6");
+    final Map<String, IdentifierRecord> expectedInvalid = Collections.emptyMap();
+    final Map<String, IdentifierRecord> expectedAbsent = createIdMap("1", "5");
+
+    final BiConsumer<ExtendedRecord, IdentifierRecord> idFn =
+        (er, id) -> {
+          String key = er.getCoreTerms().get(KEY);
+          if (key == null) {
+            addIssue(id, GBIF_ID_ABSENT);
+          } else {
+            id.setInternalId(key);
+          }
+        };
+
+    final GbifIdTransform brTr =
+        GbifIdTransform.builder().gbifIdFn(idFn).useExtendedRecordId(true).create();
+
+    // When
+    UniqueGbifIdTransform gbifIdTransform =
+        UniqueGbifIdTransform.builder()
+            .erMap(input)
+            .idTransformFn(brTr::processElement)
+            .useSyncMode(false)
+            .build()
+            .run();
+
+    Map<String, IdentifierRecord> idMap = gbifIdTransform.getIdMap();
+    Map<String, IdentifierRecord> idInvalidMap = gbifIdTransform.getIdInvalidMap();
+    Map<String, IdentifierRecord> idAbsentMap = gbifIdTransform.getIdAbsentMap();
+
+    // Should
+    Assert.assertEquals(expectedNormal.size(), idMap.size());
+    Assert.assertEquals(expectedInvalid.size(), idInvalidMap.size());
+    Assert.assertEquals(expectedAbsent.size(), idAbsentMap.size());
+    assertMap(expectedNormal, idMap);
+    assertMap(expectedAbsent, idAbsentMap);
   }
 
   private static <K> void assertMap(

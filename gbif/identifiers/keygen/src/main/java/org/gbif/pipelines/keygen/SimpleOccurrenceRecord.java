@@ -12,7 +12,7 @@ public class SimpleOccurrenceRecord implements OccurrenceRecord {
   private String triplet;
 
   @Override
-  public String toStringRecord() {
+  public String getStringRecord() {
     return this.toString();
   }
 

@@ -10,7 +10,6 @@ import java.util.function.BiConsumer;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -56,7 +55,7 @@ public class VocabularyInterpreter {
   public static BiConsumer<ExtendedRecord, EventCoreRecord> interpretEventType(
       VocabularyService vocabularyService) {
     return (er, ecr) ->
-        interpretVocabulary(er, GbifTerm.eventType, vocabularyService).ifPresent(ecr::setEventType);
+        interpretVocabulary(er, DwcTerm.eventType, vocabularyService).ifPresent(ecr::setEventType);
   }
 
   /**

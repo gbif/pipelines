@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.table;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.DNA_DERIVED_DATA_TABLE;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DNA_DERIVED_DATA_TABLE_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.DNA_DERIVED_DATA_TABLE;
 
 import java.util.Set;
 import lombok.Builder;

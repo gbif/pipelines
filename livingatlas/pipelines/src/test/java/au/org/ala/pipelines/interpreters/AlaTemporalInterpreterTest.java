@@ -21,7 +21,8 @@ public class AlaTemporalInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
-    TemporalInterpreter temporalInterpreter = TemporalInterpreter.builder().create();
+    TemporalInterpreter temporalInterpreter =
+        TemporalInterpreter.builder().explicitRangeEnd(false).create();
     temporalInterpreter.interpretTemporal(er, tr);
     return tr;
   }
@@ -63,6 +64,15 @@ public class AlaTemporalInterpreterTest {
   }
 
   @Test
+  public void testDatePrecisionDayRange4() {
+    TemporalRecord tr = create("2000-01-01/2000-02-01");
+    ALATemporalInterpreter.checkDatePrecision(null, tr);
+    assertEquals("2000-01-01", tr.getEventDate().getGte());
+    assertEquals("2000-02-01", tr.getEventDate().getLte());
+    assertEquals(ALATemporalInterpreter.DAY_RANGE_PRECISION, tr.getDatePrecision());
+  }
+
+  @Test
   public void testDatePrecisionMonth() {
     TemporalRecord tr = create("2000-01/2000-01");
     ALATemporalInterpreter.checkDatePrecision(null, tr);
@@ -78,6 +88,20 @@ public class AlaTemporalInterpreterTest {
     assertEquals("2000-01", tr.getEventDate().getGte());
     assertNull(tr.getEventDate().getLte());
     assertEquals(ALATemporalInterpreter.MONTH_PRECISION, tr.getDatePrecision());
+  }
+
+  @Test
+  public void testDatePrecisionDayRange3() {
+    TemporalRecord tr = create("2020-12-18T06:00:00/2020-12-18T07:45:00");
+    ALATemporalInterpreter.checkDatePrecision(null, tr);
+    assertEquals(ALATemporalInterpreter.DAY_RANGE_PRECISION, tr.getDatePrecision());
+  }
+
+  @Test
+  public void testDatePrecisionDay() {
+    TemporalRecord tr = create("2020-12-18T06:00:00");
+    ALATemporalInterpreter.checkDatePrecision(null, tr);
+    assertEquals(ALATemporalInterpreter.DAY_PRECISION, tr.getDatePrecision());
   }
 
   @Test
@@ -105,7 +129,8 @@ public class AlaTemporalInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
 
-    TemporalInterpreter temporalInterpreter = TemporalInterpreter.builder().create();
+    TemporalInterpreter temporalInterpreter =
+        TemporalInterpreter.builder().explicitRangeEnd(false).create();
     temporalInterpreter.interpretTemporal(er, tr);
 
     assertEquals("2000", tr.getEventDate().getGte());
@@ -125,6 +150,7 @@ public class AlaTemporalInterpreterTest {
     TemporalInterpreter temporalInterpreter =
         TemporalInterpreter.builder()
             .orderings(Arrays.asList(DateComponentOrdering.DMY_FORMATS))
+            .explicitRangeEnd(false)
             .create();
     temporalInterpreter.interpretTemporal(er, tr);
     temporalInterpreter.interpretDateIdentified(er, tr);
@@ -182,6 +208,7 @@ public class AlaTemporalInterpreterTest {
     TemporalInterpreter temporalInterpreter =
         TemporalInterpreter.builder()
             .orderings(Arrays.asList(DateComponentOrdering.DMY_FORMATS))
+            .explicitRangeEnd(false)
             .create();
     temporalInterpreter.interpretTemporal(er, tr);
     temporalInterpreter.interpretDateIdentified(er, tr);
@@ -221,6 +248,7 @@ public class AlaTemporalInterpreterTest {
     TemporalInterpreter temporalInterpreter =
         TemporalInterpreter.builder()
             .orderings(Arrays.asList(DateComponentOrdering.DMY_FORMATS))
+            .explicitRangeEnd(false)
             .create();
     temporalInterpreter.interpretTemporal(er, tr);
     temporalInterpreter.interpretDateIdentified(er, tr);
@@ -254,6 +282,7 @@ public class AlaTemporalInterpreterTest {
     TemporalInterpreter temporalInterpreter =
         TemporalInterpreter.builder()
             .orderings(Arrays.asList(DateComponentOrdering.DMY_FORMATS))
+            .explicitRangeEnd(false)
             .create();
     temporalInterpreter.interpretTemporal(er, tr);
     temporalInterpreter.interpretDateIdentified(er, tr);
@@ -285,6 +314,7 @@ public class AlaTemporalInterpreterTest {
     TemporalInterpreter temporalInterpreter =
         TemporalInterpreter.builder()
             .orderings(Arrays.asList(DateComponentOrdering.DMY_FORMATS))
+            .explicitRangeEnd(false)
             .create();
     temporalInterpreter.interpretTemporal(er, tr);
     temporalInterpreter.interpretDateIdentified(er, tr);

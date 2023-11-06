@@ -1,6 +1,6 @@
 package au.org.ala.pipelines.beam;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.*;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.*;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
@@ -31,10 +31,10 @@ import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.gbif.api.model.pipelines.InterpretationType;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -418,7 +418,7 @@ public class ALAVerbatimToEventPipeline {
   }
 
   private static boolean useMetadataRecordWriteIO(Set<String> types) {
-    return types.contains(PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA.name())
-        || types.contains(PipelinesVariables.Pipeline.Interpretation.RecordType.ALL.name());
+    return types.contains(InterpretationType.RecordType.METADATA.name())
+        || types.contains(InterpretationType.RecordType.ALL.name());
   }
 }

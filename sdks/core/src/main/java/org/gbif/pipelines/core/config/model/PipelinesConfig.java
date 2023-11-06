@@ -8,6 +8,7 @@ import java.util.Set;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.kvs.species.IdMappingConfiguration;
 
 @Data
 @NoArgsConstructor
@@ -23,6 +24,8 @@ public class PipelinesConfig implements Serializable {
   private String imageCachePath = "bitmap/bitmap.png";
 
   private KvConfig nameUsageMatch;
+
+  private IdMappingConfiguration nameUsageIdMapping;
 
   private KvConfig grscicollLookup;
 
@@ -53,4 +56,6 @@ public class PipelinesConfig implements Serializable {
       Arrays.asList(DateComponentOrdering.ISO_FORMATS);
 
   private Set<String> extensionsAllowedForVerbatimSet;
+
+  private String fragmentsTable;
 }

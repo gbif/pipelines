@@ -54,6 +54,49 @@ public class DwcaToAvroCallbackIT {
   }
 
   @Test
+  public void failValidationCaseTest() {
+    // State
+    PipelinesHistoryClientTestStub historyClient = PipelinesHistoryClientTestStub.create();
+    DwcaToAvroConfiguration config = new DwcaToAvroConfiguration();
+    config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
+    config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
+
+    DwcaToAvroCallback callback =
+        DwcaToAvroCallback.builder()
+            .config(config)
+            .publisher(PUBLISHER)
+            .historyClient(historyClient)
+            .validationClient(validationClient)
+            .datasetClient(datasetClient)
+            .build();
+
+    UUID uuid = UUID.fromString(DATASET_UUID);
+    int attempt = 2;
+
+    OccurrenceValidationReport report = new OccurrenceValidationReport(1, 0, 0, 0, 0, true);
+    DwcaValidationReport reason = new DwcaValidationReport(uuid, report);
+    PipelinesDwcaMessage message =
+        new PipelinesDwcaMessage(
+            uuid,
+            DatasetType.OCCURRENCE,
+            URI.create(DUMMY_URL),
+            attempt,
+            reason,
+            Collections.emptySet(),
+            EndpointType.DWC_ARCHIVE,
+            Platform.PIPELINES,
+            null);
+
+    // When
+    callback.handleMessage(message);
+
+    // Should
+    Path path = Paths.get(config.stepConfig.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
+    assertFalse(path.toFile().exists());
+    assertEquals(0, PUBLISHER.getMessages().size());
+  }
+
+  @Test
   public void normalCaseTest() throws Exception {
     // State
     PipelinesHistoryClientTestStub historyClient = PipelinesHistoryClientTestStub.create();

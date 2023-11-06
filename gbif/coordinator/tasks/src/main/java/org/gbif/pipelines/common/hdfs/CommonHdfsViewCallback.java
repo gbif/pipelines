@@ -3,26 +3,28 @@ package org.gbif.pipelines.common.hdfs;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.model.pipelines.StepRunner;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
-import org.gbif.pipelines.common.interpretation.SparkSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
+import org.gbif.pipelines.common.process.RecordCountReader;
+import org.gbif.pipelines.common.process.SparkSettings;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.HdfsViewPipeline;
+import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
 import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
 
 /** Callback which is called when an instance {@link PipelinesInterpretationMessage} is received. */
@@ -71,15 +73,21 @@ public class CommonHdfsViewCallback {
    * Only correct messages can be handled, by now is only messages with the same runner as runner in
    * service config {@link HdfsViewConfiguration#processRunner}
    */
-  public boolean isMessageCorrect(PipelinesInterpretationMessage message) {
+  public boolean isMessageCorrect(PipelinesInterpretationMessage message, StepType type) {
     if (Strings.isNullOrEmpty(message.getRunner())) {
       throw new IllegalArgumentException("Runner can't be null or empty " + message);
     }
-    boolean isCorrectProcess = config.processRunner.equals(message.getRunner());
-    if (!isCorrectProcess) {
-      log.info("Skipping, because expected step is incorrect");
+
+    if (!config.processRunner.equals(message.getRunner())) {
+      log.warn("Skipping, because runner is incorrect");
+      return false;
     }
-    return isCorrectProcess;
+
+    if (!message.getPipelineSteps().contains(type.name())) {
+      log.warn("The message doesn't contain {} type", type);
+      return false;
+    }
+    return true;
   }
 
   private void runLocal(ProcessRunnerBuilderBuilder builder) {
@@ -90,66 +98,46 @@ public class CommonHdfsViewCallback {
       PipelinesInterpretationMessage message, ProcessRunnerBuilderBuilder builder)
       throws IOException, InterruptedException {
 
-    long recordsNumber = getRecordNumber(message);
+    Long messageNumber = null;
+    String metaFileName = null;
+    if (message instanceof PipelinesInterpretedMessage) {
+      messageNumber = ((PipelinesInterpretedMessage) message).getNumberOfRecords();
+      metaFileName = new InterpreterConfiguration().metaFileName;
+    } else if (message instanceof PipelinesEventsInterpretedMessage) {
+      messageNumber = ((PipelinesEventsInterpretedMessage) message).getNumberOfEventRecords();
+      metaFileName = new EventsInterpretationConfiguration().metaFileName;
+    }
+
+    long recordsNumber =
+        RecordCountReader.builder()
+            .stepConfig(config.stepConfig)
+            .datasetKey(message.getDatasetUuid().toString())
+            .attempt(message.getAttempt().toString())
+            .messageNumber(messageNumber)
+            .metaFileName(metaFileName)
+            .metricName(Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED)
+            .alternativeMetricName(Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED)
+            .build()
+            .get();
+
     log.info("Calculate job's settings based on {} records", recordsNumber);
-    SparkSettings sparkSettings = SparkSettings.create(config.sparkConfig, recordsNumber);
+    boolean useMemoryExtraCoef =
+        config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
+    SparkSettings sparkSettings =
+        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
     builder.sparkSettings(sparkSettings);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().get().start().waitFor();
+    ProcessRunnerBuilder prb = builder.build();
+    int exitValue = prb.get().start().waitFor();
 
     if (exitValue != 0) {
-      throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
+      throw new IllegalStateException(
+          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
     } else {
-      log.info("Process has been finished with exit value - {}", exitValue);
+      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
     }
-  }
-
-  /**
-   * Reads number of records from an archive-to-avro metadata file, verbatim-to-interpreted contains
-   * attempted records count, which is not accurate enough
-   */
-  private long getRecordNumber(PipelinesInterpretationMessage message) throws IOException {
-    String datasetId = message.getDatasetUuid().toString();
-    String attempt = Integer.toString(message.getAttempt());
-    String metaFileName = new InterpreterConfiguration().metaFileName;
-    String metaPath =
-        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
-
-    Long messageNumber = null;
-    if (message instanceof PipelinesInterpretedMessage) {
-      messageNumber = ((PipelinesInterpretedMessage) message).getNumberOfRecords();
-    } else if (message instanceof PipelinesEventsInterpretedMessage) {
-      messageNumber = ((PipelinesEventsInterpretedMessage) message).getNumberOfEventRecords();
-    }
-
-    HdfsConfigs hdfsConfigs =
-        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
-
-    Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(
-            hdfsConfigs, metaPath, Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED);
-    if (!fileNumber.isPresent()) {
-      fileNumber =
-          HdfsUtils.getLongByKey(
-              hdfsConfigs, metaPath, Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED);
-    }
-
-    if (messageNumber == null && !fileNumber.isPresent()) {
-      throw new IllegalArgumentException(
-          "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
-    }
-
-    if (messageNumber == null) {
-      return fileNumber.get();
-    }
-
-    if (!fileNumber.isPresent() || messageNumber > fileNumber.get()) {
-      return messageNumber;
-    }
-
-    return fileNumber.get();
   }
 
   private int computeNumberOfShards(PipelinesInterpretationMessage message) throws IOException {

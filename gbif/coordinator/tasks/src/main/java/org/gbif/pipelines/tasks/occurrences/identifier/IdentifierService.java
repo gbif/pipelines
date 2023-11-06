@@ -2,6 +2,8 @@ package org.gbif.pipelines.tasks.occurrences.identifier;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -23,6 +25,7 @@ public class IdentifierService extends AbstractIdleService {
   private MessageListener listener;
   private MessagePublisher publisher;
   private CloseableHttpClient httpClient;
+  private ExecutorService executor;
 
   public IdentifierService(IdentifierConfiguration config) {
     this.config = config;
@@ -48,6 +51,11 @@ public class IdentifierService extends AbstractIdleService {
                 RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
             .build();
 
+    executor =
+        config.standaloneNumberThreads == null
+            ? null
+            : Executors.newFixedThreadPool(config.standaloneNumberThreads);
+
     IdentifierCallback callback =
         IdentifierCallback.builder()
             .config(config)
@@ -55,6 +63,7 @@ public class IdentifierService extends AbstractIdleService {
             .historyClient(historyClient)
             .httpClient(httpClient)
             .datasetClient(datasetClient)
+            .executor(executor)
             .build();
 
     listener.listen(c.queueName, callback.getRouting(), c.poolSize, callback);
@@ -64,6 +73,7 @@ public class IdentifierService extends AbstractIdleService {
   protected void shutDown() {
     listener.close();
     publisher.close();
+    executor.shutdown();
     try {
       httpClient.close();
     } catch (IOException e) {

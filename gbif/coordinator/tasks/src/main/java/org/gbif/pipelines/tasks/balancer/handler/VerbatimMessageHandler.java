@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -21,11 +22,11 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.Validatio
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.balancer.BalancerConfiguration;
+import org.gbif.pipelines.tasks.occurrences.identifier.IdentifierConfiguration;
 import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 
 /**
@@ -85,7 +86,29 @@ public class VerbatimMessageHandler {
       publisher.send(eventsMessage);
       log.info("The events message has been sent - {}", eventsMessage);
     } else {
-      long recordsNumber = getRecordNumber(config, m);
+
+      Optional<Long> erCount =
+          getRecordNumber(
+              config, m, new DwcaToAvroConfiguration().metaFileName, Metrics.ARCHIVE_TO_ER_COUNT);
+      Optional<Long> uniqueIdsCount =
+          getRecordNumber(
+              config,
+              m,
+              new IdentifierConfiguration().metaFileName,
+              Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
+
+      long recordsNumber;
+      if (erCount.isPresent() && uniqueIdsCount.isPresent()) {
+        recordsNumber = Math.max(uniqueIdsCount.get(), erCount.get());
+      } else if (uniqueIdsCount.isPresent()) {
+        recordsNumber = uniqueIdsCount.get();
+      } else if (erCount.isPresent()) {
+        recordsNumber = erCount.get();
+      } else {
+        throw new IllegalArgumentException(
+            "Can't find information about amount of records in MQ of meta files");
+      }
+
       String runner = computeRunner(config, m, recordsNumber).name();
 
       ValidationResult result = m.getValidationResult();
@@ -161,13 +184,16 @@ public class VerbatimMessageHandler {
     throw new IllegalStateException("Runner computation is failed " + datasetId);
   }
 
-  /** Reads number of records from an archive-to-avro metadata file */
-  private static long getRecordNumber(
-      BalancerConfiguration config, PipelinesVerbatimMessage message) throws IOException {
+  /** Reads number of records from a metadata file */
+  private static Optional<Long> getRecordNumber(
+      BalancerConfiguration config,
+      PipelinesVerbatimMessage message,
+      String metaFileName,
+      String metricName)
+      throws IOException {
 
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
-    String metaFileName = new DwcaToAvroConfiguration().metaFileName;
     StepConfiguration stepConfig = config.stepConfig;
     String repositoryPath =
         isValidator(message.getPipelineSteps())
@@ -184,15 +210,13 @@ public class VerbatimMessageHandler {
 
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
-    Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
+    Optional<Long> fileNumber = HdfsUtils.getLongByKey(hdfsConfigs, metaPath, metricName);
 
     if (messageNumber == null && !fileNumber.isPresent()) {
-      throw new IllegalArgumentException(
-          "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
+      return Optional.empty();
     }
 
-    return fileNumber.orElse(messageNumber);
+    return Optional.of(fileNumber.orElse(messageNumber));
   }
 
   /** Finds the latest attempt number in HDFS */

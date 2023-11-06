@@ -3,10 +3,7 @@ package org.gbif.pipelines.core.interpreters.core;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_FUZZY;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_HIGHERRANK;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_NONE;
-import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.*;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
@@ -24,7 +21,7 @@ import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.vocabulary.Kingdom;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.species.SpeciesMatchRequest;
+import org.gbif.kvs.species.Identification;
 import org.gbif.nameparser.NameParserGBIF;
 import org.gbif.nameparser.NameParserGbifV1;
 import org.gbif.nameparser.api.NameParser;
@@ -68,7 +65,7 @@ public class TaxonomyInterpreter {
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
    */
   public static BiConsumer<ExtendedRecord, TaxonRecord> taxonomyInterpreter(
-      KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore) {
+      KeyValueStore<Identification, NameUsageMatch> kvStore) {
     return (er, tr) -> {
       if (kvStore == null) {
         return;
@@ -83,8 +80,8 @@ public class TaxonomyInterpreter {
           extractNullAwareOptValue(termsSource, DwcTerm.scientificName)
               .orElse(extractValue(termsSource, DwcTerm.verbatimIdentification));
 
-      SpeciesMatchRequest matchRequest =
-          SpeciesMatchRequest.builder()
+      Identification identification =
+          Identification.builder()
               .withKingdom(extractValue(termsSource, DwcTerm.kingdom))
               .withPhylum(extractValue(termsSource, DwcTerm.phylum))
               .withClazz(extractValue(termsSource, DwcTerm.class_))
@@ -92,23 +89,26 @@ public class TaxonomyInterpreter {
               .withFamily(extractValue(termsSource, DwcTerm.family))
               .withGenus(extractValue(termsSource, DwcTerm.genus))
               .withScientificName(scientificName)
-              .withRank(extractValue(termsSource, DwcTerm.taxonRank))
-              .withVerbatimRank(extractValue(termsSource, DwcTerm.verbatimTaxonRank))
+              .withGenericName(extractValue(termsSource, DwcTerm.genericName))
               .withSpecificEpithet(extractValue(termsSource, DwcTerm.specificEpithet))
               .withInfraspecificEpithet(extractValue(termsSource, DwcTerm.infraspecificEpithet))
               .withScientificNameAuthorship(
                   extractValue(termsSource, DwcTerm.scientificNameAuthorship))
-              .withGenericName(extractValue(termsSource, DwcTerm.genericName))
+              .withRank(extractValue(termsSource, DwcTerm.taxonRank))
+              .withVerbatimRank(extractValue(termsSource, DwcTerm.verbatimTaxonRank))
+              .withScientificNameID(extractValue(termsSource, DwcTerm.scientificNameID))
+              .withTaxonID(extractValue(termsSource, DwcTerm.taxonID))
+              .withTaxonConceptID(extractValue(termsSource, DwcTerm.taxonConceptID))
               .build();
 
       NameUsageMatch usageMatch = null;
       try {
-        usageMatch = kvStore.get(matchRequest);
+        usageMatch = kvStore.get(identification);
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
       }
 
-      if (usageMatch == null || isEmpty(usageMatch) || checkFuzzy(usageMatch, matchRequest)) {
+      if (usageMatch == null || isEmpty(usageMatch) || checkFuzzy(usageMatch, identification)) {
         // "NO_MATCHING_RESULTS". This
         // happens when we get an empty response from the WS
         addIssue(tr, TAXON_MATCH_NONE);
@@ -117,6 +117,11 @@ public class TaxonomyInterpreter {
       } else {
 
         MatchType matchType = usageMatch.getDiagnostics().getMatchType();
+
+        // copy any issues asserted by the lookup itself
+        if (usageMatch.getIssues() != null) {
+          addIssueSet(tr, usageMatch.getIssues());
+        }
 
         if (MatchType.NONE == matchType) {
           addIssue(tr, TAXON_MATCH_NONE);
@@ -171,14 +176,14 @@ public class TaxonomyInterpreter {
    * https://github.com/gbif/pipelines/issues/254
    */
   @VisibleForTesting
-  protected static boolean checkFuzzy(NameUsageMatch usageMatch, SpeciesMatchRequest matchRequest) {
+  protected static boolean checkFuzzy(NameUsageMatch usageMatch, Identification identification) {
     boolean isFuzzy = MatchType.FUZZY == usageMatch.getDiagnostics().getMatchType();
     boolean isEmptyTaxa =
-        Strings.isNullOrEmpty(matchRequest.getKingdom())
-            && Strings.isNullOrEmpty(matchRequest.getPhylum())
-            && Strings.isNullOrEmpty(matchRequest.getClazz())
-            && Strings.isNullOrEmpty(matchRequest.getOrder())
-            && Strings.isNullOrEmpty(matchRequest.getFamily());
+        Strings.isNullOrEmpty(identification.getKingdom())
+            && Strings.isNullOrEmpty(identification.getPhylum())
+            && Strings.isNullOrEmpty(identification.getClazz())
+            && Strings.isNullOrEmpty(identification.getOrder())
+            && Strings.isNullOrEmpty(identification.getFamily());
     return isFuzzy && isEmptyTaxa;
   }
 

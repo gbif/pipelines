@@ -72,16 +72,16 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       Retry.of(
           "registryCall",
           RetryConfig.custom()
-              .maxAttempts(3)
-              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(3)))
+              .maxAttempts(7)
+              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
               .build());
 
   private static final Retry RUNNING_EXECUTION_CALL =
       Retry.of(
           "runningExecutionCall",
           RetryConfig.custom()
-              .maxAttempts(3)
-              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(3)))
+              .maxAttempts(7)
+              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
               .retryOnResult(Objects::isNull)
               .build());
 
@@ -196,7 +196,14 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     } finally {
       if (message.getExecutionId() != null) {
         log.info("Mark execution as FINISHED if all steps are FINISHED");
-        historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
+        Runnable r =
+            () -> {
+              log.info(
+                  "History client: mark pipeline execution if finished, executionId {}",
+                  message.getExecutionId());
+              historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
+            };
+        Retry.decorateRunnable(RETRY, r).run();
       }
     }
 
@@ -205,7 +212,13 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
   private boolean isValidatorAborted() {
     if (isValidator) {
-      Validation validation = validationClient.get(message.getDatasetUuid());
+      Function<UUID, Validation> getValidationFn =
+          key -> {
+            log.info("Validation client: get validation by datasetKey {}", key);
+            return validationClient.get(key);
+          };
+      Validation validation =
+          Retry.decorateFunction(RETRY, getValidationFn).apply(message.getDatasetUuid());
       if (validation != null) {
         Status status = validation.getStatus();
         return status == Status.ABORTED
@@ -263,6 +276,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     try {
 
       if (isValidator) {
+        log.info("Skiping status updating, isValidator {}", isValidator);
         return Optional.empty();
       }
 
@@ -270,11 +284,22 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       // does an upsert).
       UUID datasetUuid = message.getDatasetUuid();
       Integer attempt = message.getAttempt();
-      long processKey =
-          historyClient.createPipelineProcess(new PipelineProcessParameters(datasetUuid, attempt));
+
+      Supplier<Long> pkSupplier =
+          () -> {
+            log.info(
+                "History client: create pipeline process, datasetKey {}, attempt {}",
+                datasetUuid,
+                attempt);
+            return historyClient.createPipelineProcess(
+                new PipelineProcessParameters(datasetUuid, attempt));
+          };
+
+      long processKey = Retry.decorateSupplier(RETRY, pkSupplier).get();
 
       Long executionId = message.getExecutionId();
       if (executionId == null) {
+        log.info("executionId is empty, create initial pipelines execution");
         // create execution
         DatasetInfo datasetInfo = message.getDatasetInfo();
         boolean containsOccurrences = datasetInfo.isContainsOccurrences();
@@ -290,12 +315,27 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         PipelineExecution execution =
             new PipelineExecution().setStepsToRun(stepTypes).setCreated(LocalDateTime.now());
 
-        executionId = historyClient.addPipelineExecution(processKey, execution);
+        Supplier<Long> executionIdSupplier =
+            () -> {
+              log.info(
+                  "History client: add pipeline execution, processKey {}, execution {}",
+                  processKey,
+                  execution);
+              return historyClient.addPipelineExecution(processKey, execution);
+            };
+        executionId = Retry.decorateSupplier(RETRY, executionIdSupplier).get();
+
         message.setExecutionId(executionId);
       }
 
+      Function<Long, List<PipelineStep>> getStepsByExecutionKeyFn =
+          ek -> {
+            log.info("History client: get steps by execution key {}", ek);
+            return historyClient.getPipelineStepsByExecutionKey(ek);
+          };
+
       List<PipelineStep> stepsByExecutionKey =
-          historyClient.getPipelineStepsByExecutionKey(executionId);
+          Retry.decorateFunction(RETRY, getStepsByExecutionKeyFn).apply(executionId);
 
       // add step to the process
       PipelineStep step =
@@ -321,7 +361,12 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
           .setStarted(LocalDateTime.now())
           .setPipelinesVersion(getPipelinesVersion());
 
-      long stepKey = historyClient.updatePipelineStep(step);
+      Function<PipelineStep, Long> pipelineStepFn =
+          s -> {
+            log.info("History client: update pipeline step: {}", s);
+            return historyClient.updatePipelineStep(s);
+          };
+      long stepKey = Retry.decorateFunction(RETRY, pipelineStepFn).apply(step);
 
       Map<StepType, PipelineStep> pipelineStepMap =
           stepsByExecutionKey.stream()
@@ -365,7 +410,13 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
           PipelineStep step = info.pipelineStepMap.get(e.getNode());
           if (step != null) {
             step.setState(PipelineStep.Status.QUEUED);
-            historyClient.updatePipelineStep(step);
+            // Call Registry to update
+            Runnable r =
+                () -> {
+                  log.info("History client: update pipeline step: {}", step);
+                  historyClient.updatePipelineStep(step);
+                };
+            Retry.decorateRunnable(RETRY, r).run();
           }
         });
   }
@@ -378,7 +429,13 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         HdfsConfigs.create(config.getHdfsSiteConfig(), config.getCoreSiteConfig());
     List<MetricInfo> metricInfos = HdfsUtils.readMetricsFromMetaFile(hdfsConfigs, path);
 
-    PipelineStep pipelineStep = historyClient.getPipelineStep(ti.stepKey);
+    Function<Long, PipelineStep> getPipelineStepFn =
+        sk -> {
+          log.info("History client: get steps by execution key {}", sk);
+          return historyClient.getPipelineStep(sk);
+        };
+    PipelineStep pipelineStep = Retry.decorateFunction(RETRY, getPipelineStepFn).apply(ti.stepKey);
+
     pipelineStep.setState(status);
     pipelineStep.setMetrics(new HashSet<>(metricInfos));
 
@@ -396,7 +453,11 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     }
 
     try {
-      Runnable r = () -> historyClient.updatePipelineStep(pipelineStep);
+      Runnable r =
+          () -> {
+            log.info("History client: update pipeline step: {}", pipelineStep);
+            historyClient.updatePipelineStep(pipelineStep);
+          };
       Retry.decorateRunnable(RETRY, r).run();
     } catch (Exception ex) {
       // we don't want to break the crawling if the tracking fails
@@ -427,7 +488,12 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
   private void checkIfDatasetIsDeleted() throws IOException {
     if (datasetClient != null) {
-      Dataset dataset = datasetClient.get(message.getDatasetUuid());
+      Function<UUID, Dataset> getDatasetFn =
+          key -> {
+            log.info("Dataset client: get dataset by key: {}", key);
+            return datasetClient.get(key);
+          };
+      Dataset dataset = Retry.decorateFunction(RETRY, getDatasetFn).apply(message.getDatasetUuid());
       if (dataset != null && dataset.getDeleted() != null) {
         publisher.send(
             new DeleteDatasetOccurrencesMessage(message.getDatasetUuid(), NOT_SEEN_IN_LAST_CRAWL));

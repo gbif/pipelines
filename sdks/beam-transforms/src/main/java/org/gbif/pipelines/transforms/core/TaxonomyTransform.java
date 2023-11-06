@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.TAXONOMY;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -12,7 +12,7 @@ import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.species.SpeciesMatchRequest;
+import org.gbif.kvs.species.Identification;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
@@ -34,13 +34,12 @@ import org.gbif.rest.client.species.NameUsageMatch;
 @Slf4j
 public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
 
-  private final SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>>
-      kvStoreSupplier;
-  private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore;
+  private final SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>> kvStoreSupplier;
+  private KeyValueStore<Identification, NameUsageMatch> kvStore;
 
   @Builder(buildMethodName = "create")
   private TaxonomyTransform(
-      SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> kvStoreSupplier) {
+      SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>> kvStoreSupplier) {
     super(TaxonRecord.class, TAXONOMY, TaxonomyTransform.class.getName(), TAXON_RECORDS_COUNT);
     this.kvStoreSupplier = kvStoreSupplier;
   }

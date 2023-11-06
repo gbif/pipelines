@@ -482,6 +482,7 @@ public class IndexRecordToSolrPipeline {
                         .setStrings(stringsToPersist)
                         .setDoubles(doublesToPersist)
                         .setDynamicProperties(indexRecord.getDynamicProperties())
+                        .setAnnotations(indexRecord.getAnnotations())
                         .build();
                 c.output(ir);
               } else {

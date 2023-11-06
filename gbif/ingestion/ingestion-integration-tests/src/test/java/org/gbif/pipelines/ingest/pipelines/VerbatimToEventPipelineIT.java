@@ -22,7 +22,6 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -105,7 +104,7 @@ public class VerbatimToEventPipelineIT {
       core.put(DwcTerm.datasetName.qualifiedName(), "datasetName");
       core.put(DwcTerm.eventID.qualifiedName(), "eventID");
       core.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
-      core.put(GbifTerm.eventType.qualifiedName(), "Survey");
+      core.put(DwcTerm.eventType.qualifiedName(), "Survey");
 
       Map<String, String> ext1 = new HashMap<>();
       ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");
@@ -125,7 +124,7 @@ public class VerbatimToEventPipelineIT {
       core2.put(DwcTerm.eventID.qualifiedName(), "eventID2");
       core2.put(DwcTerm.parentEventID.qualifiedName(), "777");
       core2.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
-      core2.put(GbifTerm.eventType.qualifiedName(), "Find");
+      core2.put(DwcTerm.eventType.qualifiedName(), "Find");
 
       Map<String, List<Map<String, String>>> ext = new HashMap<>();
       ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));

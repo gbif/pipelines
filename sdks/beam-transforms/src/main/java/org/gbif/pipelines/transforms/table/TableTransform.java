@@ -19,7 +19,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
+import org.gbif.api.model.pipelines.InterpretationType;
 import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.pojo.ErIdrMdrContainer;
 import org.gbif.pipelines.io.avro.ExtendedRecord;

@@ -179,6 +179,7 @@ public class OccurrenceJsonConverter {
 
     JsonConverter.convertEventDate(temporal.getEventDate()).ifPresent(builder::setEventDate);
     JsonConverter.convertEventDateSingle(temporal).ifPresent(builder::setEventDateSingle);
+    JsonConverter.convertEventDateInterval(temporal).ifPresent(builder::setEventDateInterval);
   }
 
   private void mapLocationRecord(OccurrenceJsonRecord.Builder builder) {
