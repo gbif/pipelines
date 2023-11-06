@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.util.List;
+import org.gbif.converters.parser.xml.model.Collector;
 import org.gbif.converters.parser.xml.model.ImageRecord;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.model.TypificationRecord;
@@ -34,12 +35,12 @@ public class Abcd12RecordParserTest extends ParserTestCase {
 
     assertEquals("TLMF", ror.getInstitutionCode());
     assertEquals("Tiroler Landesmuseum Ferdinandeum", ror.getCollectionCode());
-    assertEquals("AUT", ror.getCountry());
-    assertEquals("Oschütz", ror.getCollectorName());
+    assertEquals("AUT", ror.getCountryCode());
+    assertEquals("Oschütz", ror.getCollectors().stream().map(Collector::getName).findFirst().get());
     assertEquals("Seefeld", ror.getLocality());
     assertEquals("82D45C93-B297-490E-B7B0-E0A9BEED1326", ror.getCatalogueNumber());
-    assertEquals("47.3303167192", ror.getLatitude());
-    assertEquals("11.2041081855", ror.getLongitude());
+    assertEquals("47.3303167192", ror.getDecimalLatitude());
+    assertEquals("11.2041081855", ror.getDecimalLongitude());
     assertEquals("1999-12-31", ror.getOccurrenceDate());
   }
 
@@ -51,12 +52,14 @@ public class Abcd12RecordParserTest extends ParserTestCase {
 
     assertEquals("TLMF", ror.getInstitutionCode());
     assertEquals("Tiroler Landesmuseum Ferdinandeum", ror.getCollectionCode());
-    assertEquals("AUT", ror.getCountry());
-    assertEquals("Polatschek A.", ror.getCollectorName());
+    assertEquals("Australia", ror.getCountry());
+    assertEquals("AUT", ror.getCountryCode());
+    assertEquals(
+        "Polatschek A.", ror.getCollectors().stream().map(Collector::getName).findFirst().get());
     assertEquals("Woergl - Bhf. bis Woergler-Bach-Muendung und Angath", ror.getLocality());
     assertEquals("9DACB0BF-470D-4FD1-853A-5B04A995E073", ror.getCatalogueNumber());
-    assertEquals("47.5007432291", ror.getLatitude());
-    assertEquals("12.0669257631", ror.getLongitude());
+    assertEquals("47.5007432291", ror.getDecimalLatitude());
+    assertEquals("12.0669257631", ror.getDecimalLongitude());
     assertEquals("1968-06-23", ror.getOccurrenceDate());
   }
 

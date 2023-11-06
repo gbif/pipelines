@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -107,7 +108,7 @@ public class OccurrenceParser {
    * @throws ParsingException if there were any problems during parsing the stream
    */
   public List<RawXmlOccurrence> parseFile(File file) {
-    try (InputStream inputStream = new FileInputStream(file)) {
+    try (InputStream inputStream = Files.newInputStream(file.toPath())) {
       return parseStream(inputStream);
     } catch (IOException ex) {
       throw new ParsingException("Parsing failed", ex);

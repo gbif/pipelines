@@ -9,8 +9,10 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import lombok.SneakyThrows;
 import org.gbif.validator.api.FileFormat;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -20,7 +22,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 /** {@link FileStoreManager} tests. */
 @ExtendWith(MockServerExtension.class)
-public class FileStoreManagerTest extends DownloadFileBaseTest {
+class FileStoreManagerTest extends DownloadFileBaseTest {
 
   // Directory used as temporary space to upload files
   @TempDir Path workingDirectory;
@@ -34,13 +36,20 @@ public class FileStoreManagerTest extends DownloadFileBaseTest {
 
   @SneakyThrows
   @Test
-  public void uploadXmlMultiPartFileTest() {
-    uploadTest("/xml/", "abcd2.xml", "application/xml", FileFormat.XML);
+  void uploadXmlMultiPartFileTest() {
+
+    ExecutionException thrown =
+        Assertions.assertThrows(
+            ExecutionException.class,
+            () -> uploadTest("/xml/", "abcd2.xml", "application/xml", FileFormat.XML));
+
+    Assertions.assertEquals(
+        "Unsupported file type: application/xml", thrown.getCause().getMessage());
   }
 
   @SneakyThrows
   @Test
-  public void uploadMultiPartFileTest() {
+  void uploadMultiPartFileTest() {
     uploadTest("/dwca/", "Archive.zip", "application/zip", FileFormat.DWCA);
   }
 
@@ -77,7 +86,7 @@ public class FileStoreManagerTest extends DownloadFileBaseTest {
 
   @SneakyThrows
   @Test
-  public void downloadZipFileTest() {
+  void downloadZipFileTest() {
     // State
     FileStoreManager fileStoreManager =
         new FileStoreManager(

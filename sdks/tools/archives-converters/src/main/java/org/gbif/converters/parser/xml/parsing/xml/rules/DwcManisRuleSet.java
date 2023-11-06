@@ -1,12 +1,14 @@
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
+import static org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum.*;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
+import java.util.function.BiConsumer;
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RuleSet;
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
-import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 
 public class DwcManisRuleSet extends AbstractDwcRuleSet implements RuleSet {
 
@@ -27,30 +29,24 @@ public class DwcManisRuleSet extends AbstractDwcRuleSet implements RuleSet {
   public void addRuleInstances(Digester digester) {
     super.addRuleInstances(digester);
 
-    addNonNullPrioritizedProperty(
-        digester, "catalogueNumber", PrioritizedPropertyNameEnum.CATALOGUE_NUMBER, 2);
-    addNonNullPrioritizedProperty(digester, "latitude", PrioritizedPropertyNameEnum.LATITUDE, 2);
-    addNonNullPrioritizedProperty(digester, "longitude", PrioritizedPropertyNameEnum.LONGITUDE, 2);
+    BiConsumer<String, String> addFn =
+        (property, methodName) -> {
+          addNonNullMethod(digester, property, methodName, 1);
+          addNonNullParam(digester, property, 0);
+        };
 
-    addNonNullMethod(digester, "continentOrOcean", "setContinentOrOcean", 1);
-    addNonNullParam(digester, "continentOrOcean", 0);
+    addFn.accept("continentOrOcean", "setContinentOrOcean");
+    addFn.accept("year", "setYear");
+    addFn.accept("month", "setMonth");
+    addFn.accept("day", "setDay");
+    addFn.accept("yearIdentified", "setYearIdentified");
+    addFn.accept("monthIdentified", "setMonthIdentified");
+    addFn.accept("dayIdentified", "setDayIdentified");
+    addFn.accept("latitudeDecimal", "setDecimalLatitude");
+    addFn.accept("longitudeDecimal", "setDecimalLongitude");
+    addFn.accept("verbatimLatitude", "setVerbatimLatitude");
+    addFn.accept("verbatimLongitude", "setVerbatimLongitude");
 
-    addNonNullMethod(digester, "year", "setYear", 1);
-    addNonNullParam(digester, "year", 0);
-
-    addNonNullMethod(digester, "month", "setMonth", 1);
-    addNonNullParam(digester, "month", 0);
-
-    addNonNullMethod(digester, "day", "setDay", 1);
-    addNonNullParam(digester, "day", 0);
-
-    addNonNullMethod(digester, "yearIdentified", "setYearIdentified", 1);
-    addNonNullParam(digester, "yearIdentified", 0);
-
-    addNonNullMethod(digester, "monthIdentified", "setMonthIdentified", 1);
-    addNonNullParam(digester, "monthIdentified", 0);
-
-    addNonNullMethod(digester, "dayIdentified", "setDayIdentified", 1);
-    addNonNullParam(digester, "dayIdentified", 0);
+    addNonNullPrioritizedProperty(digester, "catalogueNumber", CATALOGUE_NUMBER, 2);
   }
 }

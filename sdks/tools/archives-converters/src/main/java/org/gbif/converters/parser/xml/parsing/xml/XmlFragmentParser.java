@@ -21,12 +21,14 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RuleSet;
@@ -51,12 +53,11 @@ import org.xml.sax.SAXException;
  * Methods for parsing {@link RawXmlOccurrence}s and {@link UniqueIdentifier}s from xml fragments.
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class XmlFragmentParser {
 
-  private static final Map<OccurrenceSchemaType, RuleSet> RULE_SETS = new HashMap<>();
-
-  // static class, should never be instantiated
-  private XmlFragmentParser() {}
+  private static final Map<OccurrenceSchemaType, RuleSet> RULE_SETS =
+      new EnumMap<>(OccurrenceSchemaType.class);
 
   static {
     try {
