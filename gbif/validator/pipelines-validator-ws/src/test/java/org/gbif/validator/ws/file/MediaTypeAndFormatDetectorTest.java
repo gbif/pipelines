@@ -14,7 +14,7 @@ import org.gbif.validator.api.FileFormat;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests related to {@link MediaTypeAndFormatDetector} */
-public class MediaTypeAndFormatDetectorTest {
+class MediaTypeAndFormatDetectorTest {
 
   private Path getTestFile(String file) {
     return new File(MediaTypeAndFormatDetectorTest.class.getResource(file).getFile()).toPath();
@@ -30,7 +30,7 @@ public class MediaTypeAndFormatDetectorTest {
   }
 
   @Test
-  public void testDetectMediaType() throws IOException {
+  void testDetectMediaType() throws IOException {
     assertEquals(
         SupportedMediaTypes.APPLICATION_EXCEL,
         MediaTypeAndFormatDetector.detectMediaType(
@@ -53,7 +53,7 @@ public class MediaTypeAndFormatDetectorTest {
   }
 
   @Test
-  public void testDetectMediaTypeByStream() throws IOException {
+  void testDetectMediaTypeByStream() throws IOException {
     try (InputStream occurrenceWorkBook =
         getTestFileInputStream("/workbooks/occurrence-workbook.xlsx")) {
       // without hint from the filename that's the best we can get
@@ -71,7 +71,7 @@ public class MediaTypeAndFormatDetectorTest {
 
   /** The following tests consider the folder as if it was the result of a zip extraction. */
   @Test
-  public void testEvaluateMediaTypeAndFormat() throws IOException {
+  void testEvaluateMediaTypeAndFormat() throws IOException {
 
     Path extractedFolder = getTestPath("/dwca/dwca-id-with-term/");
     Optional<MediaTypeAndFormatDetector.MediaTypeAndFormat> mediaTypeAndFormat =

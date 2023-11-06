@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.converters.parser.xml.model.Collector;
 import org.gbif.converters.parser.xml.model.IdentifierRecord;
 import org.gbif.converters.parser.xml.model.ImageRecord;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
@@ -23,16 +24,17 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 public class ExtendedRecordConverter {
 
   private static final String RECORD_ID_ERROR = "RECORD_ID_ERROR";
+  public static final String DEFAULT_SEPARATOR = "|";
 
   public static ExtendedRecord from(RawOccurrenceRecord rawRecord) {
 
-    ExtendedRecord record = ExtendedRecord.newBuilder().setId(rawRecord.getId()).build();
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(rawRecord.getId()).build();
 
     final BiConsumer<Term, String> setter =
         (term, value) ->
             Optional.ofNullable(value)
                 .filter(str -> !str.isEmpty())
-                .ifPresent(x -> record.getCoreTerms().put(term.qualifiedName(), x));
+                .ifPresent(x -> er.getCoreTerms().put(term.qualifiedName(), x));
 
     setter.accept(DwcTerm.institutionCode, rawRecord.getInstitutionCode());
     setter.accept(DwcTerm.collectionCode, rawRecord.getCollectionCode());
@@ -48,8 +50,10 @@ public class ExtendedRecordConverter {
     setter.accept(DwcTerm.genus, rawRecord.getGenus());
     setter.accept(DwcTerm.specificEpithet, rawRecord.getSpecies());
     setter.accept(DwcTerm.infraspecificEpithet, rawRecord.getSubspecies());
-    setter.accept(DwcTerm.decimalLatitude, rawRecord.getLatitude());
-    setter.accept(DwcTerm.decimalLongitude, rawRecord.getLongitude());
+    setter.accept(DwcTerm.decimalLatitude, rawRecord.getDecimalLatitude());
+    setter.accept(DwcTerm.decimalLongitude, rawRecord.getDecimalLongitude());
+    setter.accept(DwcTerm.verbatimLatitude, rawRecord.getVerbatimLatitude());
+    setter.accept(DwcTerm.verbatimLongitude, rawRecord.getVerbatimLongitude());
     setter.accept(DwcTerm.coordinateUncertaintyInMeters, rawRecord.getLatLongPrecision());
     setter.accept(DwcTerm.geodeticDatum, rawRecord.getGeodeticDatum());
     setter.accept(DwcTerm.minimumElevationInMeters, rawRecord.getMinAltitude());
@@ -58,9 +62,9 @@ public class ExtendedRecordConverter {
     setter.accept(DwcTerm.maximumDepthInMeters, rawRecord.getMaxDepth());
     setter.accept(DwcTerm.continent, rawRecord.getContinentOrOcean());
     setter.accept(DwcTerm.country, rawRecord.getCountry());
+    setter.accept(DwcTerm.countryCode, rawRecord.getCountryCode());
     setter.accept(DwcTerm.stateProvince, rawRecord.getStateOrProvince());
     setter.accept(DwcTerm.county, rawRecord.getCounty());
-    setter.accept(DwcTerm.recordedBy, rawRecord.getCollectorName());
     setter.accept(DwcTerm.locality, rawRecord.getLocality());
     setter.accept(DwcTerm.year, rawRecord.getYear());
     setter.accept(DwcTerm.month, rawRecord.getMonth());
@@ -71,6 +75,20 @@ public class ExtendedRecordConverter {
     setter.accept(DwcTerm.dateIdentified, rawRecord.getDateIdentified());
     setter.accept(GbifTerm.elevationAccuracy, rawRecord.getAltitudePrecision());
     setter.accept(GbifTerm.depthAccuracy, rawRecord.getDepthPrecision());
+    setter.accept(DwcTerm.recordNumber, rawRecord.getCollectorsFieldNumber());
+    setter.accept(DwcTerm.footprintWKT, rawRecord.getFootprintWKT());
+
+    if (rawRecord.getCollectors() != null) {
+      String recordedBy =
+          rawRecord.getCollectors().stream()
+              .map(Collector::getName)
+              .collect(Collectors.joining(DEFAULT_SEPARATOR));
+      setter.accept(DwcTerm.recordedBy, recordedBy);
+    }
+
+    if (rawRecord.getLinkRecords() != null && !rawRecord.getLinkRecords().isEmpty()) {
+      setter.accept(DcTerm.references, rawRecord.getLinkRecords().get(0).getUrl());
+    }
 
     if (rawRecord.getIdentifierRecords() != null) {
       rawRecord.getIdentifierRecords().stream()
@@ -94,10 +112,10 @@ public class ExtendedRecordConverter {
               .map(ExtendedRecordConverter::convertMediaTerms)
               .collect(Collectors.toList());
 
-      record.getExtensions().put(Extension.MULTIMEDIA.getRowType(), verbMediaList);
+      er.getExtensions().put(Extension.MULTIMEDIA.getRowType(), verbMediaList);
     }
 
-    return record;
+    return er;
   }
 
   private static Map<String, String> convertMediaTerms(ImageRecord imageRecord) {

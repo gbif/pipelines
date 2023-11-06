@@ -83,7 +83,7 @@ public abstract class DownloadFileBaseTest {
     return new FileInputStream(DownloadFileBaseTest.class.getResource(file).getFile());
   }
 
-  /** Creates a path to the a local MockServer url. */
+  /** Creates a path to the local MockServer url. */
   protected String testPath(String path) {
     return "http://127.0.0.1:" + clientAndServer.getPort() + path;
   }

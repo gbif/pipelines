@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
+import org.gbif.api.model.crawler.DwcaValidationReport;
 import org.gbif.api.model.crawler.GenericValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.model.pipelines.PipelinesWorkflow;
@@ -106,12 +107,17 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
   }
 
   private boolean isReportValid(PipelinesDwcaMessage message) {
+    DwcaValidationReport report = message.getValidationReport();
+
     boolean isValidOccurrenceReport =
-        message.getValidationReport().getOccurrenceReport() != null
-            && message.getValidationReport().getOccurrenceReport().getCheckedRecords() > 0;
+        report.getOccurrenceReport() != null
+            && (report.getOccurrenceReport().getUniqueOccurrenceIds() > 0
+                || report.getOccurrenceReport().getUniqueTriplets() > 0);
+
     boolean isValidGenericReport =
         message.getValidationReport().getGenericReport() != null
-            && message.getValidationReport().getGenericReport().getCheckedRecords() > 0;
+            && message.getValidationReport().getGenericReport().getCheckedRecords() > 0
+            && message.getDatasetType() != DatasetType.CHECKLIST;
     return isValidOccurrenceReport || isValidGenericReport;
   }
 

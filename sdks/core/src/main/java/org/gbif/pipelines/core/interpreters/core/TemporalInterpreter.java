@@ -61,7 +61,7 @@ public class TemporalInterpreter implements Serializable {
     this.temporalParser = MultiinputTemporalParser.create(orderings);
     this.temporalRangeParser =
         TemporalRangeParser.builder().temporalParser(temporalParser).create();
-    this.explicitRangeEnd = explicitRangeEnd == null ? true : false;
+    this.explicitRangeEnd = explicitRangeEnd == null;
   }
 
   public void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
@@ -105,6 +105,7 @@ public class TemporalInterpreter implements Serializable {
     fromTa
         .filter(t -> t.isSupported(ChronoField.DAY_OF_YEAR))
         .ifPresent(t -> tr.setStartDayOfYear(t.get(ChronoField.DAY_OF_YEAR)));
+
     toTa.filter(t -> t.isSupported(ChronoField.DAY_OF_YEAR))
         .ifPresent(t -> tr.setEndDayOfYear(t.get(ChronoField.DAY_OF_YEAR)));
 
@@ -122,7 +123,7 @@ public class TemporalInterpreter implements Serializable {
           .ifPresent(ed::setGte);
     }
 
-    if (explicitRangeEnd || (fromTa != null && !fromTa.equals(toTa))) {
+    if (explicitRangeEnd || (fromTa.isPresent() && !fromTa.equals(toTa))) {
       if (explicitRangeEnd) {
         toTa.map(ta -> TemporalAccessorUtils.toLatestLocalDateTime(ta, true))
             .map(StringToDateFunctions.getTemporalToStringFn())
@@ -153,7 +154,10 @@ public class TemporalInterpreter implements Serializable {
       Range<LocalDate> validModifiedDateRange = Range.closed(MIN_EPOCH_LOCAL_DATE, upperBound);
       OccurrenceParseResult<TemporalAccessor> parsed =
           temporalParser.parseLocalDate(
-              normalizedValue, validModifiedDateRange, OccurrenceIssue.MODIFIED_DATE_UNLIKELY);
+              normalizedValue,
+              validModifiedDateRange,
+              OccurrenceIssue.MODIFIED_DATE_UNLIKELY,
+              OccurrenceIssue.MODIFIED_DATE_INVALID);
       if (parsed.isSuccessful()) {
         Optional.ofNullable(parsed.getPayload())
             .map(TemporalAccessor::toString)
@@ -174,7 +178,10 @@ public class TemporalInterpreter implements Serializable {
       Range<LocalDate> validRecordedDateRange = Range.closed(EARLIEST_DATE_IDENTIFIED, upperBound);
       OccurrenceParseResult<TemporalAccessor> parsed =
           temporalParser.parseLocalDate(
-              normalizedValue, validRecordedDateRange, OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY);
+              normalizedValue,
+              validRecordedDateRange,
+              OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY,
+              OccurrenceIssue.IDENTIFIED_DATE_INVALID);
       if (parsed.isSuccessful()) {
         Optional.ofNullable(parsed.getPayload())
             .map(TemporalAccessor::toString)

@@ -15,12 +15,16 @@
  */
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
+import static org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum.*;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import org.apache.commons.digester.Digester;
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
-import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
+import org.gbif.converters.parser.xml.model.Collector;
 import org.gbif.converters.parser.xml.model.Identification;
 import org.gbif.converters.parser.xml.model.ImageRecord;
 
@@ -43,30 +47,23 @@ public class Abcd12RuleSet extends AbstractRuleSet {
   public void addRuleInstances(Digester digester) {
     super.addRuleInstances(digester);
 
+    BiConsumer<String, String> addFn =
+        (property, methodName) -> {
+          addNonNullMethod(digester, property, methodName, 1);
+          addNonNullParam(digester, property, 0);
+        };
+
     // abcd simple fields
-    addNonNullMethod(digester, "catalogueNumber", "setCatalogueNumber", 1);
-    addNonNullParam(digester, "catalogueNumber", 0);
+    addFn.accept("catalogueNumber", "setCatalogueNumber");
+    addFn.accept("altitudePrecision", "setAltitudePrecision");
+    addFn.accept("depthPrecision", "setDepthPrecision");
+    addFn.accept("locality", "setLocality");
+    addFn.accept("latitudeDecimal", "setDecimalLatitude");
+    addFn.accept("longitudeDecimal", "setDecimalLongitude");
 
-    addNonNullMethod(digester, "altitudePrecision", "setAltitudePrecision", 1);
-    addNonNullParam(digester, "altitudePrecision", 0);
-
-    addNonNullMethod(digester, "depthPrecision", "setDepthPrecision", 1);
-    addNonNullParam(digester, "depthPrecision", 0);
-
-    addNonNullMethod(digester, "locality", "setLocality", 1);
-    addNonNullParam(digester, "locality", 0);
-
-    addNonNullMethod(digester, "latitude", "setLatitude", 1);
-    addNonNullParam(digester, "latitude", 0);
-
-    addNonNullMethod(digester, "longitude", "setLongitude", 1);
-    addNonNullParam(digester, "longitude", 0);
-
-    addNonNullPrioritizedProperty(digester, "country", PrioritizedPropertyNameEnum.COUNTRY, 4);
-    addNonNullPrioritizedProperty(
-        digester, "collectorName", PrioritizedPropertyNameEnum.COLLECTOR_NAME, 3);
-    addNonNullPrioritizedProperty(
-        digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 3);
+    addNonNullPrioritizedProperty(digester, "country", COUNTRY, 2);
+    addNonNullPrioritizedProperty(digester, "countryCode", COUNTRY_CODE, 2);
+    addNonNullPrioritizedProperty(digester, "dateCollected", DATE_COLLECTED, 3);
 
     // possibly many identifications
     String pattern = mappingProps.getProperty("idElement");
@@ -78,19 +75,11 @@ public class Abcd12RuleSet extends AbstractRuleSet {
       addNonNullMethod(digester, "idPreferredElement", "setPreferredAsString", 1);
       addNonNullAttParam(digester, "idPreferredElement", "idPreferredAttribute", 0);
 
-      addNonNullMethod(digester, "idGenus", "setGenus", 1);
-      addNonNullParam(digester, "idGenus", 0);
+      addFn.accept("idGenus", "setGenus");
+      addFn.accept("idIdentifierName", "setIdentifierName");
 
-      addNonNullMethod(digester, "idGenus", "setGenus", 1);
-      addNonNullParam(digester, "idGenus", 0);
-
-      addNonNullMethod(digester, "idIdentifierName", "setIdentifierName", 1);
-      addNonNullParam(digester, "idIdentifierName", 0);
-
-      addNonNullPrioritizedProperty(
-          digester, "idDateIdentified", PrioritizedPropertyNameEnum.ID_DATE_IDENTIFIED, 3);
-      addNonNullPrioritizedProperty(
-          digester, "idScientificName", PrioritizedPropertyNameEnum.ID_SCIENTIFIC_NAME, 2);
+      addNonNullPrioritizedProperty(digester, "idDateIdentified", ID_DATE_IDENTIFIED, 3);
+      addNonNullPrioritizedProperty(digester, "idScientificName", ID_SCIENTIFIC_NAME, 2);
 
       // possibly many higher taxons for every identification
       addNonNullMethod(digester, "higherTaxonElement", "addHigherTaxon", 2);
@@ -106,19 +95,27 @@ public class Abcd12RuleSet extends AbstractRuleSet {
       digester.addObjectCreate(pattern, ImageRecord.class);
       digester.addSetNext(pattern, "addImage");
 
-      addNonNullMethod(digester, "imageType", "setRawImageType", 1);
-      addNonNullParam(digester, "imageType", 0);
-
-      addNonNullMethod(digester, "imageDescription", "setDescription", 1);
-      addNonNullParam(digester, "imageDescription", 0);
-
-      addNonNullMethod(digester, "imageRights", "setRights", 1);
-      addNonNullParam(digester, "imageRights", 0);
-
-      addNonNullMethod(digester, "imageUrl", "setUrl", 1);
-      addNonNullParam(digester, "imageUrl", 0);
+      addFn.accept("imageType", "setRawImageType");
+      addFn.accept("imageDescription", "setDescription");
+      addFn.accept("imageRights", "setRights");
+      addFn.accept("imageUrl", "setUrl");
     }
 
-    // NOTE: no links in abcd 1.2
+    // NOTE: no links in abcd 1.2 possible many collectors
+    Consumer<String> collectorFn =
+        prop -> {
+          String ptrn = mappingProps.getProperty(prop);
+          if (ptrn != null) {
+            ptrn = ptrn.trim();
+            digester.addObjectCreate(ptrn, Collector.class);
+            digester.addSetNext(ptrn, "addCollectorName");
+
+            addFn.accept(prop, "setName");
+          }
+        };
+
+    collectorFn.accept("collectorNameFullName");
+    collectorFn.accept("collectorNameGatheringAgentsText");
+    collectorFn.accept("collectorNameAgentText");
   }
 }

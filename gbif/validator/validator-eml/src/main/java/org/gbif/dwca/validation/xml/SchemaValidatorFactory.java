@@ -51,6 +51,7 @@ public class SchemaValidatorFactory {
       log.warn(ex.getMessage(), ex);
     }
     cache.put(schema.toString(), xmlSchema);
+    log.info("Put xml schema from {} to cache", schema);
     return xmlSchema;
   }
 

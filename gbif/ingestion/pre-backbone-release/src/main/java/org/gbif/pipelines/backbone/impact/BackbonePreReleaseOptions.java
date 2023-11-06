@@ -48,4 +48,10 @@ public interface BackbonePreReleaseOptions extends HadoopFileSystemOptions {
   boolean getSkipKeys();
 
   void setSkipKeys(boolean skipKeys);
+
+  @Description("Controls if whitespace should be ignored or not")
+  @Default.Boolean(false)
+  boolean getIgnoreWhitespace();
+
+  void setIgnoreWhitespace(boolean ignoreWhitespace);
 }
