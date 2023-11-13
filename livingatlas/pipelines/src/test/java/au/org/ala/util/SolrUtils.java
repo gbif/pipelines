@@ -31,11 +31,11 @@ import org.jetbrains.annotations.NotNull;
 public class SolrUtils {
 
   public static List<String> getZkHosts() throws Exception {
-    return Arrays.asList("localhost:" + 9983);
+    return Arrays.asList("localhost:" + System.getProperty("ZK_PORT"));
   }
 
   public static String getHttpHost() throws Exception {
-    return "localhost:" + 8983;
+    return "localhost:" + System.getProperty("SOLR_PORT");
   }
 
   public static void setupIndex(String indexName) throws Exception {
