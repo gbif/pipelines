@@ -3,7 +3,7 @@ version: "2.4"
 services:
   ala-sensitive-data-service:
     container_name: "ala-sensitive-data-service-non-it"
-    image: "charvolant/ala-sensitive-data-service:v20200214-3"
+    image: "charvolant/ala-sensitive-data-service:1.1.1-20210811-3"
     ports:
       - "9190:9190"
       - "9189:9189"

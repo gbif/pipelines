@@ -238,6 +238,7 @@
   <field name="day" type="int" docValues="true" indexed="true"/>
   <field name="decimalLatitude" type="double" docValues="true" indexed="true"/>
   <field name="decimalLongitude" type="double" docValues="true" indexed="true"/>
+  <field name="degreeOfEstablishment" type="string" docValues="true" indexed="true"/>
   <field name="depth" type="double" docValues="true" indexed="true"/>
   <field name="depthAccuracy" type="double" docValues="true" indexed="true"/>
   <field name="disposition" type="string" docValues="true" indexed="true"/>
@@ -590,6 +591,7 @@
   <field name="raw_day"					                 type="string"  docValues="true" indexed="true" />
   <field name="raw_decimalLatitude"					     type="string"  docValues="true" indexed="true" />
   <field name="raw_decimalLongitude"				     type="string"  docValues="true" indexed="true" />
+  <field name="raw_degreeOfEstablishment"                type="string"  docValues="true" indexed="true" />
   <field name="raw_depth"					             type="string"  docValues="true" indexed="true" />
   <field name="raw_depthAccuracy"					     type="string"  docValues="true" indexed="true" />
   <field name="raw_description"					         type="string"  docValues="true" indexed="true" />
