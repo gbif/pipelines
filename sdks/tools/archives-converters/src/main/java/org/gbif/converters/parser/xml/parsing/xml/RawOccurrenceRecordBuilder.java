@@ -17,11 +17,13 @@ package org.gbif.converters.parser.xml.parsing.xml;
 
 import com.google.common.base.Strings;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
+import org.gbif.converters.parser.xml.model.Collector;
 import org.gbif.converters.parser.xml.model.Identification;
 import org.gbif.converters.parser.xml.model.IdentifierRecord;
 import org.gbif.converters.parser.xml.model.ImageRecord;
@@ -60,8 +62,10 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   private String genus;
   private String species;
   private String subspecies;
-  private String latitude;
-  private String longitude;
+  private String decimalLatitude;
+  private String verbatimLatitude;
+  private String decimalLongitude;
+  private String verbatimLongitude;
   private String latLongPrecision;
   private String geodeticDatum;
   private String minAltitude;
@@ -71,10 +75,11 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   private String maxDepth;
   private String depthPrecision;
   private String continentOrOcean;
+  private String footprintWKT;
   private String country;
+  private String countryCode;
   private String stateOrProvince;
   private String county;
-  private String collectorName;
   private String collectorsFieldNumber;
   private String locality;
   private String basisOfRecord;
@@ -96,6 +101,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   private String dayIdentified;
   private String dateIdentified;
 
+  private Set<Collector> collectors = new HashSet<>();
   private List<IdentifierRecord> identifierRecords = new ArrayList<>();
   private List<TypificationRecord> typificationRecords = new ArrayList<>();
   private List<Identification> identifications = new ArrayList<>();
@@ -175,10 +181,11 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     bareBones.setBasisOfRecord(basisOfRecord);
     bareBones.setCatalogueNumber(catalogueNumber);
     bareBones.setCollectionCode(collectionCode);
-    bareBones.setCollectorName(collectorName);
+    bareBones.setCollectors(collectors);
     bareBones.setCollectorsFieldNumber(collectorsFieldNumber);
     bareBones.setContinentOrOcean(continentOrOcean);
     bareBones.setCountry(country);
+    bareBones.setCountryCode(countryCode);
     bareBones.setCounty(county);
     bareBones.setDataProviderId(dataProviderId);
     bareBones.setDataResourceId(dataResourceId);
@@ -187,6 +194,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     bareBones.setDayIdentified(dayIdentified);
     bareBones.setDateIdentified(dateIdentified);
     bareBones.setDepthPrecision(depthPrecision);
+    bareBones.setFootprintWKT(footprintWKT);
     bareBones.setFamily(family);
     bareBones.setGenus(genus);
     bareBones.setGeodeticDatum(geodeticDatum);
@@ -196,11 +204,13 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     bareBones.setInstitutionCode(institutionCode);
     bareBones.setKingdom(kingdom);
     bareBones.setKlass(klass);
-    bareBones.setLatitude(latitude);
+    bareBones.setDecimalLatitude(decimalLatitude);
+    bareBones.setVerbatimLatitude(verbatimLatitude);
+    bareBones.setDecimalLongitude(decimalLongitude);
+    bareBones.setVerbatimLongitude(verbatimLongitude);
     bareBones.setLatLongPrecision(latLongPrecision);
     bareBones.setLinkRecords(links);
     bareBones.setLocality(locality);
-    bareBones.setLongitude(longitude);
     bareBones.setMaxAltitude(maxAltitude);
     bareBones.setMaxDepth(maxDepth);
     bareBones.setMinAltitude(minAltitude);
@@ -221,6 +231,12 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     bareBones.setUnitQualifier(unitQualifier);
 
     return bareBones;
+  }
+
+  public void addCollectorName(Collector collector) {
+    if (collector != null && !collector.isEmpty()) {
+      this.collectors.add(collector);
+    }
   }
 
   public void addIdentification(Identification ident) {
@@ -280,23 +296,20 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
         case CATALOGUE_NUMBER:
           this.catalogueNumber = result;
           break;
-        case COLLECTOR_NAME:
-          this.collectorName = result;
-          break;
         case CONTINENT_OR_OCEAN:
           this.continentOrOcean = result;
           break;
         case COUNTRY:
           this.country = result;
           break;
+        case GEODETIC_DATUM:
+          this.geodeticDatum = result;
+          break;
+        case COUNTRY_CODE:
+          this.countryCode = result;
+          break;
         case DATE_COLLECTED:
           this.occurrenceDate = result;
-          break;
-        case LATITUDE:
-          this.latitude = result;
-          break;
-        case LONGITUDE:
-          this.longitude = result;
           break;
         default:
           log.warn("Fell through priority resolution for [{}]", property.getKey());
@@ -475,20 +488,36 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     this.subspecies = subspecies;
   }
 
-  public String getLatitude() {
-    return latitude;
+  public String getDecimalLatitude() {
+    return decimalLatitude;
   }
 
-  public void setLatitude(String latitude) {
-    this.latitude = latitude;
+  public void setDecimalLatitude(String decimalLatitude) {
+    this.decimalLatitude = decimalLatitude;
   }
 
-  public String getLongitude() {
-    return longitude;
+  public String getVerbatimLatitude() {
+    return verbatimLatitude;
   }
 
-  public void setLongitude(String longitude) {
-    this.longitude = longitude;
+  public void setVerbatimLatitude(String verbatimLatitude) {
+    this.verbatimLatitude = verbatimLatitude;
+  }
+
+  public String getDecimalLongitude() {
+    return decimalLongitude;
+  }
+
+  public void setDecimalLongitude(String decimalLongitude) {
+    this.decimalLongitude = decimalLongitude;
+  }
+
+  public String getVerbatimLongitude() {
+    return verbatimLongitude;
+  }
+
+  public void setVerbatimLongitude(String verbatimLongitude) {
+    this.verbatimLongitude = verbatimLongitude;
   }
 
   public String getLatLongPrecision() {
@@ -563,6 +592,14 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     this.country = country;
   }
 
+  public String getCountryCode() {
+    return countryCode;
+  }
+
+  public void setCountryCode(String countryCode) {
+    this.countryCode = countryCode;
+  }
+
   public String getStateOrProvince() {
     return stateOrProvince;
   }
@@ -579,12 +616,12 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     this.county = county;
   }
 
-  public String getCollectorName() {
-    return collectorName;
+  public Set<Collector> getCollectors() {
+    return collectors;
   }
 
-  public void setCollectorName(String collectorName) {
-    this.collectorName = collectorName;
+  public void setCollectors(Set<Collector> collectors) {
+    this.collectors = collectors;
   }
 
   public String getLocality() {
@@ -645,7 +682,9 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
         if (!Strings.isNullOrEmpty(day)) result = result + "-" + day;
       }
     }
-    if (result != null) this.dateIdentified = result;
+    if (result != null) {
+      this.dateIdentified = result;
+    }
   }
 
   public void setDateIdentified(String dateIdentified) {
@@ -718,5 +757,13 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
 
   public void setCollectorsFieldNumber(String collectorsFieldNumber) {
     this.collectorsFieldNumber = collectorsFieldNumber;
+  }
+
+  public String getFootprintWKT() {
+    return footprintWKT;
+  }
+
+  public void setFootprintWKT(String footprintWKT) {
+    this.footprintWKT = footprintWKT;
   }
 }

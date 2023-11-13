@@ -17,8 +17,9 @@ package org.gbif.converters.parser.xml.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -56,8 +57,10 @@ public class RawOccurrenceRecord implements Serializable {
   private String genus;
   private String species;
   private String subspecies;
-  private String latitude;
-  private String longitude;
+  private String decimalLatitude;
+  private String verbatimLatitude;
+  private String decimalLongitude;
+  private String verbatimLongitude;
   private String latLongPrecision;
   private String geodeticDatum;
   private String minAltitude;
@@ -66,11 +69,12 @@ public class RawOccurrenceRecord implements Serializable {
   private String minDepth;
   private String maxDepth;
   private String depthPrecision;
+  private String footprintWKT;
   private String continentOrOcean;
   private String country;
+  private String countryCode;
   private String stateOrProvince;
   private String county;
-  private String collectorName;
   private String collectorsFieldNumber;
   private String locality;
   private String year;
@@ -87,6 +91,7 @@ public class RawOccurrenceRecord implements Serializable {
   private long created;
   private long modified;
 
+  private Set<Collector> collectors = new HashSet<>();
   private List<IdentifierRecord> identifierRecords = new ArrayList<>();
   private List<TypificationRecord> typificationRecords = new ArrayList<>();
   private List<ImageRecord> imageRecords = new ArrayList<>();
@@ -99,18 +104,14 @@ public class RawOccurrenceRecord implements Serializable {
     this.klass = dwcr.value(DwcTerm.class_);
     this.collectionCode = dwcr.value(DwcTerm.collectionCode);
     this.continentOrOcean = dwcr.value(DwcTerm.continent);
-    this.country =
-        dwcr.value(DwcTerm.country) == null || dwcr.value(DwcTerm.country).isEmpty()
-            ? dwcr.value(DwcTerm.countryCode)
-            : dwcr.value(DwcTerm.country);
+    this.country = dwcr.value(DwcTerm.country);
+    this.countryCode = dwcr.value(DwcTerm.countryCode);
     this.county = dwcr.value(DwcTerm.county);
     this.dateIdentified = dwcr.value(DwcTerm.dateIdentified);
-    this.latitude =
-        Optional.ofNullable(dwcr.value(DwcTerm.verbatimLatitude))
-            .orElse(dwcr.value(DwcTerm.decimalLatitude));
-    this.longitude =
-        Optional.ofNullable(dwcr.value(DwcTerm.verbatimLongitude))
-            .orElse(dwcr.value(DwcTerm.decimalLongitude));
+    this.verbatimLatitude = dwcr.value(DwcTerm.verbatimLatitude);
+    this.decimalLatitude = dwcr.value(DwcTerm.decimalLatitude);
+    this.verbatimLongitude = dwcr.value(DwcTerm.verbatimLongitude);
+    this.decimalLongitude = dwcr.value(DwcTerm.decimalLongitude);
     this.geodeticDatum = dwcr.value(DwcTerm.geodeticDatum);
     this.family = dwcr.value(DwcTerm.family);
     this.scientificName = dwcr.value(DwcTerm.scientificName);
@@ -127,5 +128,6 @@ public class RawOccurrenceRecord implements Serializable {
     this.occurrenceDate =
         dwcr.value(DwcTerm.year) + '-' + dwcr.value(DwcTerm.month) + '-' + dwcr.value(DwcTerm.day);
     this.collectorsFieldNumber = dwcr.value(DwcTerm.recordNumber);
+    this.footprintWKT = dwcr.value(DwcTerm.footprintWKT);
   }
 }

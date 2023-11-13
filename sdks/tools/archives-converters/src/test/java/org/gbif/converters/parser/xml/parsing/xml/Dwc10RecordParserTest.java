@@ -2,6 +2,7 @@ package org.gbif.converters.parser.xml.parsing.xml;
 
 import static org.junit.Assert.assertEquals;
 
+import org.gbif.converters.parser.xml.model.Collector;
 import org.gbif.converters.parser.xml.model.IdentifierRecord;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.model.TypificationRecord;
@@ -28,14 +29,16 @@ public class Dwc10RecordParserTest extends ParserTestCase {
     assertEquals("STEMONITALES", ror.getOrder());
     assertEquals("STEMONITIDACEAE", ror.getFamily());
     assertEquals("Amaurochaete", ror.getGenus());
-    assertEquals("Mannenga-Bremekamp N.", ror.getCollectorName());
+    assertEquals(
+        "Mannenga-Bremekamp N.",
+        ror.getCollectors().stream().map(Collector::getName).findFirst().get());
     assertEquals("Wetering; Beukenburg - Beukenlaan", ror.getLocality());
     assertEquals("NL", ror.getCountry());
 
     // dwc 1.0 only
     assertEquals("1", ror.getCatalogueNumber());
-    assertEquals("52.755", ror.getLatitude());
-    assertEquals("5.9963", ror.getLongitude());
+    assertEquals("52.755", ror.getVerbatimLatitude());
+    assertEquals("5.9963", ror.getVerbatimLongitude());
     assertEquals("1958-8-15", ror.getOccurrenceDate());
   }
 

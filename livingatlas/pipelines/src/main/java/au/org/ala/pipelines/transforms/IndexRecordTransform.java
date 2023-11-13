@@ -192,6 +192,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     skipKeys.add("parentsLineage");
     skipKeys.add(
         "establishmentMeans"); // GBIF treats it as a JSON, but ALA needs a String which is defined
+    skipKeys.add(
+        "degreeOfEstablishment"); // GBIF treats it as a JSON, but ALA needs a String which is
+    // defined
+    skipKeys.add("identifiedByIds");
+    skipKeys.add("recordedByIds");
     skipKeys.add(DwcTerm.typeStatus.simpleName());
     skipKeys.add(DwcTerm.recordedBy.simpleName());
     skipKeys.add(DwcTerm.identifiedBy.simpleName());
@@ -616,6 +621,10 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     if (br != null) {
       addEstablishmentValueSafely(
           indexRecord, DwcTerm.establishmentMeans.simpleName(), br.getEstablishmentMeans());
+      addDegreeOfEstablishmentValueSafely(
+          indexRecord, DwcTerm.degreeOfEstablishment.simpleName(), br.getDegreeOfEstablishment());
+      addTermWithAgentsSafely(
+          indexRecord, DwcTerm.recordedByID.simpleName(), br.getRecordedByIds());
       addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
       addMultiValueTermSafely(indexRecord, DwcTerm.recordedBy.simpleName(), br.getRecordedBy());
       addMultiValueTermSafely(indexRecord, DwcTerm.identifiedBy.simpleName(), br.getIdentifiedBy());
@@ -781,8 +790,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     if (agents != null && !agents.isEmpty()) {
       indexRecord
           .getMultiValues()
-          // .put(field,
-          // agents.stream().map(AgentIdentifier::getValue).distinct().collect(Collectors.toList()));
           .put(field, agents.stream().map(AgentIdentifier::getValue).collect(Collectors.toList()));
     }
   }
@@ -801,6 +808,13 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       IndexRecord.Builder indexRecord, String field, VocabularyConcept establishmentMeans) {
     if (establishmentMeans != null) {
       indexRecord.getStrings().put(field, establishmentMeans.getConcept());
+    }
+  }
+
+  private static void addDegreeOfEstablishmentValueSafely(
+      IndexRecord.Builder indexRecord, String field, VocabularyConcept degreeOfEstablishment) {
+    if (degreeOfEstablishment != null) {
+      indexRecord.getStrings().put(field, degreeOfEstablishment.getConcept());
     }
   }
 

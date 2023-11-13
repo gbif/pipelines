@@ -1,6 +1,7 @@
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
 import java.util.Properties;
+import java.util.function.BiConsumer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RuleSet;
@@ -14,52 +15,31 @@ public abstract class AbstractRuleSet implements RuleSet {
 
   @Override
   public void addRuleInstances(Digester digester) {
+
+    BiConsumer<String, String> addFn =
+        (property, methodName) -> {
+          addNonNullMethod(digester, property, methodName, 1);
+          addNonNullParam(digester, property, 0);
+        };
+
     // common, simple fields
-    addNonNullMethod(digester, "institutionCode", "setInstitutionCode", 1);
-    addNonNullParam(digester, "institutionCode", 0);
-
-    addNonNullMethod(digester, "collectionCode", "setCollectionCode", 1);
-    addNonNullParam(digester, "collectionCode", 0);
-
-    addNonNullMethod(digester, "basisOfRecord", "setBasisOfRecord", 1);
-    addNonNullParam(digester, "basisOfRecord", 0);
-
-    addNonNullMethod(digester, "minDepth", "setMinDepth", 1);
-    addNonNullParam(digester, "minDepth", 0);
-
-    addNonNullMethod(digester, "maxDepth", "setMaxDepth", 1);
-    addNonNullParam(digester, "maxDepth", 0);
-
-    addNonNullMethod(digester, "latLongPrecision", "setLatLongPrecision", 1);
-    addNonNullParam(digester, "latLongPrecision", 0);
-
-    addNonNullMethod(digester, "minAltitude", "setMinAltitude", 1);
-    addNonNullParam(digester, "minAltitude", 0);
-
-    addNonNullMethod(digester, "maxAltitude", "setMaxAltitude", 1);
-    addNonNullParam(digester, "maxAltitude", 0);
+    addFn.accept("institutionCode", "setInstitutionCode");
+    addFn.accept("collectionCode", "setCollectionCode");
+    addFn.accept("basisOfRecord", "setBasisOfRecord");
+    addFn.accept("minDepth", "setMinDepth");
+    addFn.accept("maxDepth", "setMaxDepth");
+    addFn.accept("latLongPrecision", "setLatLongPrecision");
+    addFn.accept("minAltitude", "setMinAltitude");
+    addFn.accept("maxAltitude", "setMaxAltitude");
 
     // identifier records
-    addNonNullMethod(digester, "identifierType1", "setIdentifierType1", 1);
-    addNonNullParam(digester, "identifierType1", 0);
-
-    addNonNullMethod(digester, "identifierType2", "setIdentifierType2", 1);
-    addNonNullParam(digester, "identifierType2", 0);
-
-    addNonNullMethod(digester, "identifierType3", "setIdentifierType3", 1);
-    addNonNullParam(digester, "identifierType3", 0);
-
-    addNonNullMethod(digester, "identifierType4", "setIdentifierType4", 1);
-    addNonNullParam(digester, "identifierType4", 0);
-
-    addNonNullMethod(digester, "identifierType5", "setIdentifierType5", 1);
-    addNonNullParam(digester, "identifierType5", 0);
-
-    addNonNullMethod(digester, "identifierType6", "setIdentifierType6", 1);
-    addNonNullParam(digester, "identifierType6", 0);
-
-    addNonNullMethod(digester, "identifierType7", "setIdentifierType7", 1);
-    addNonNullParam(digester, "identifierType7", 0);
+    addFn.accept("identifierType1", "setIdentifierType1");
+    addFn.accept("identifierType2", "setIdentifierType2");
+    addFn.accept("identifierType3", "setIdentifierType3");
+    addFn.accept("identifierType4", "setIdentifierType4");
+    addFn.accept("identifierType5", "setIdentifierType5");
+    addFn.accept("identifierType6", "setIdentifierType6");
+    addFn.accept("identifierType7", "setIdentifierType7");
 
     // possibly many typifications
     addNonNullMethod(digester, "typificationElement", "addTypification", 4);

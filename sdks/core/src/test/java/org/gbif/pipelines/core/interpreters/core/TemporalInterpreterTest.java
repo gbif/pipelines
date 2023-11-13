@@ -1396,4 +1396,30 @@ public class TemporalInterpreterTest {
     assertEquals("2004-03-02T23:59:59.999", tr.getEventDate().getLte());
     assertEquals(0, tr.getIssues().getIssueList().size());
   }
+
+  @Test
+  public void testIssueDatesYear() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.year.qualifiedName(), "1879");
+    map.put(DwcTerm.eventDate.qualifiedName(), "1879");
+    map.put(DwcTerm.dateIdentified.qualifiedName(), "2012 oct");
+    map.put(DcTerm.modified.qualifiedName(), "2014 oct");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    TemporalInterpreter interpreter = TemporalInterpreter.builder().create();
+    interpreter.interpretTemporal(er, tr);
+    interpreter.interpretModified(er, tr);
+    interpreter.interpretDateIdentified(er, tr);
+
+    assertNull(tr.getModified());
+    assertNull("2012", tr.getDateIdentified());
+    assertEquals("1879-01-01T00:00:00.000", tr.getEventDate().getGte());
+    assertEquals("1879-12-31T23:59:59.999", tr.getEventDate().getLte());
+    assertEquals(1879, tr.getYear().intValue());
+    assertNull(tr.getMonth());
+    assertNull(tr.getDay());
+
+    assertEquals(2, tr.getIssues().getIssueList().size());
+  }
 }
