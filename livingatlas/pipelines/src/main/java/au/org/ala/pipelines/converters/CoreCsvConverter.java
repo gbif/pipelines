@@ -238,7 +238,7 @@ public class CoreCsvConverter {
           // Other Terms
           .addKeyTermFn("taxonRankID", getInt("taxonRankID"))
           // GBIF Terms
-          .addKeyTermFn(DwcTerm.recordedByID, getString(DwcTerm.recordedByID));
+          .addKeyTermFn(DwcTerm.recordedByID, getMultivalue(DwcTerm.recordedByID));
 
   public static String convert(IndexRecord indexRecord) {
     return CONVERTER.converter(indexRecord);

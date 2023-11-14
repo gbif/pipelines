@@ -50,5 +50,7 @@
         <field index="41" term="nonDwcFieldSalinity"/>
         <field index="42" term="http://rs.tdwg.org/dwc/terms/degreeOfEstablishment"/>
         <field index="43" term="http://rs.tdwg.org/dwc/terms/establishmentMeans"/>
+        <field index="44" term="http://rs.tdwg.org/dwc/terms/identifiedByID"/>
+        <field index="45" term="http://rs.tdwg.org/dwc/terms/recordedByID"/>
       </core>
     </archive>

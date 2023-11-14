@@ -10,6 +10,7 @@ import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.apache.commons.io.FileUtils;
@@ -142,6 +143,13 @@ public class CompleteIngestPipelineTestIT {
     assertEquals("other", record.get().get("raw_degreeOfEstablishment"));
     assertEquals("native", record.get().get("raw_establishmentMeans"));
     assertEquals("native", record.get().get("establishmentMeans"));
+
+    // recordByID and identifiedByID
+    assertEquals("id3", record.get().get("raw_recordedByID"));
+    assertEquals("id3", ((List) record.get().get("recordedByID")).get(0));
+    assertEquals("id1|id2", record.get().get("raw_identifiedByID"));
+    assertEquals("id1", ((List) record.get().get("identifiedByID")).get(0));
+    assertEquals("id2", ((List) record.get().get("identifiedByID")).get(1));
   }
 
   public void loadTestDataset(String datasetID, String inputPath) throws Exception {

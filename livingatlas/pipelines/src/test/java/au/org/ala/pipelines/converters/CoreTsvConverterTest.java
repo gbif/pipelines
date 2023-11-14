@@ -235,7 +235,7 @@ public class CoreTsvConverterTest {
       // Other Terms
       "\"5\"", // taxonRankID
       // GBIF Terms
-      "\"raw_er_recordedByID\"" // GbifTerm.recordedByID
+      "\"br_agent_value_rb\"" // GbifTerm.recordedByID
     };
 
     // State
