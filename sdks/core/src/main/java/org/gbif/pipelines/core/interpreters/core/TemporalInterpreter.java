@@ -154,7 +154,10 @@ public class TemporalInterpreter implements Serializable {
       Range<LocalDate> validModifiedDateRange = Range.closed(MIN_EPOCH_LOCAL_DATE, upperBound);
       OccurrenceParseResult<TemporalAccessor> parsed =
           temporalParser.parseLocalDate(
-              normalizedValue, validModifiedDateRange, OccurrenceIssue.MODIFIED_DATE_UNLIKELY);
+              normalizedValue,
+              validModifiedDateRange,
+              OccurrenceIssue.MODIFIED_DATE_UNLIKELY,
+              OccurrenceIssue.MODIFIED_DATE_INVALID);
       if (parsed.isSuccessful()) {
         Optional.ofNullable(parsed.getPayload())
             .map(TemporalAccessor::toString)
@@ -175,7 +178,10 @@ public class TemporalInterpreter implements Serializable {
       Range<LocalDate> validRecordedDateRange = Range.closed(EARLIEST_DATE_IDENTIFIED, upperBound);
       OccurrenceParseResult<TemporalAccessor> parsed =
           temporalParser.parseLocalDate(
-              normalizedValue, validRecordedDateRange, OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY);
+              normalizedValue,
+              validRecordedDateRange,
+              OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY,
+              OccurrenceIssue.MODIFIED_DATE_INVALID);
       if (parsed.isSuccessful()) {
         Optional.ofNullable(parsed.getPayload())
             .map(TemporalAccessor::toString)
