@@ -101,6 +101,7 @@ public class CoreTsvConverterTest {
       "\"br_datasetID\"", // DwcTerm.datasetID
       "\"br_datasetName\"", // DwcTerm.datasetName
       "\"2002\"", // DwcTerm.dateIdentified
+      "\"br_degreeOfEstablishment\"", // DwcTerm.degreeOfEstablishment
       "\"raw_er_disposition\"", // DwcTerm.disposition
       "\"raw_er_dynamicProperties\"", // DwcTerm.dynamicProperties
       "\"1111111\"", // DwcTerm.endDayOfYear
@@ -234,7 +235,7 @@ public class CoreTsvConverterTest {
       // Other Terms
       "\"5\"", // taxonRankID
       // GBIF Terms
-      "\"raw_er_recordedByID\"" // GbifTerm.recordedByID
+      "\"br_agent_value_rb\"" // GbifTerm.recordedByID
     };
 
     // State
@@ -337,6 +338,9 @@ public class CoreTsvConverterTest {
     core.put(DwcTerm.datasetName.qualifiedName(), "raw_er_" + DwcTerm.datasetName.simpleName());
     core.put(
         DwcTerm.dateIdentified.qualifiedName(), "raw_er_" + DwcTerm.dateIdentified.simpleName());
+    core.put(
+        DwcTerm.degreeOfEstablishment.qualifiedName(),
+        "raw_er_" + DwcTerm.degreeOfEstablishment.simpleName());
     core.put(DwcTerm.disposition.qualifiedName(), "raw_er_" + DwcTerm.disposition.simpleName());
     core.put(
         DwcTerm.dynamicProperties.qualifiedName(),
@@ -642,6 +646,11 @@ public class CoreTsvConverterTest {
                 VocabularyConcept.newBuilder()
                     .setConcept("br_establishmentMeans")
                     .setLineage(Collections.singletonList("br_establishmentMeans"))
+                    .build())
+            .setDegreeOfEstablishment(
+                VocabularyConcept.newBuilder()
+                    .setConcept("br_degreeOfEstablishment")
+                    .setLineage(Collections.singletonList("br_degreeOfEstablishment"))
                     .build())
             .setIndividualCount(222)
             .setTypeStatus(Collections.singletonList("br_typeStatus"))
@@ -957,6 +966,7 @@ public class CoreTsvConverterTest {
       "\"\"", // DwcTerm.datasetID
       "\"\"", // DwcTerm.datasetName
       "\"\"", // DwcTerm.dateIdentified
+      "\"\"", // DwcTerm.degreeOfEstablishment
       "\"\"", // DwcTerm.disposition
       "\"\"", // DwcTerm.dynamicProperties
       "\"\"", // DwcTerm.endDayOfYear
@@ -1300,6 +1310,7 @@ public class CoreTsvConverterTest {
     expected.add(DwcTerm.datasetID.qualifiedName());
     expected.add(DwcTerm.datasetName.qualifiedName());
     expected.add(DwcTerm.dateIdentified.qualifiedName());
+    expected.add(DwcTerm.degreeOfEstablishment.qualifiedName());
     expected.add(DwcTerm.disposition.qualifiedName());
     expected.add(DwcTerm.dynamicProperties.qualifiedName());
     expected.add(DwcTerm.endDayOfYear.qualifiedName());

@@ -188,12 +188,15 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     skipKeys.add("issues");
     skipKeys.add("identifiedByIds"); // multi value field
     skipKeys.add("recordedByIds"); // multi value field
+    skipKeys.add(DwcTerm.identifiedByID.simpleName()); // multi value field
+    skipKeys.add(DwcTerm.recordedByID.simpleName()); // multi value field
     skipKeys.add("machineTags");
     skipKeys.add("parentsLineage");
     skipKeys.add(
         "establishmentMeans"); // GBIF treats it as a JSON, but ALA needs a String which is defined
-    skipKeys.add("identifiedByIds");
-    skipKeys.add("recordedByIds");
+    skipKeys.add(
+        "degreeOfEstablishment"); // GBIF treats it as a JSON, but ALA needs a String which is
+    // defined
     skipKeys.add(DwcTerm.typeStatus.simpleName());
     skipKeys.add(DwcTerm.recordedBy.simpleName());
     skipKeys.add(DwcTerm.identifiedBy.simpleName());
@@ -618,8 +621,12 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     if (br != null) {
       addEstablishmentValueSafely(
           indexRecord, DwcTerm.establishmentMeans.simpleName(), br.getEstablishmentMeans());
+      addDegreeOfEstablishmentValueSafely(
+          indexRecord, DwcTerm.degreeOfEstablishment.simpleName(), br.getDegreeOfEstablishment());
       addTermWithAgentsSafely(
           indexRecord, DwcTerm.recordedByID.simpleName(), br.getRecordedByIds());
+      addTermWithAgentsSafely(
+          indexRecord, DwcTerm.identifiedByID.simpleName(), br.getIdentifiedByIds());
       addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
       addMultiValueTermSafely(indexRecord, DwcTerm.recordedBy.simpleName(), br.getRecordedBy());
       addMultiValueTermSafely(indexRecord, DwcTerm.identifiedBy.simpleName(), br.getIdentifiedBy());
@@ -806,6 +813,13 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
   }
 
+  private static void addDegreeOfEstablishmentValueSafely(
+      IndexRecord.Builder indexRecord, String field, VocabularyConcept degreeOfEstablishment) {
+    if (degreeOfEstablishment != null) {
+      indexRecord.getStrings().put(field, degreeOfEstablishment.getConcept());
+    }
+  }
+
   private static void addTermSafely(
       IndexRecord.Builder indexRecord, Map<String, String> extension, DwcTerm dwcTerm) {
     String termValue = extension.get(dwcTerm.name());
@@ -866,6 +880,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         .add(DwcTerm.class_.simpleName())
         .add(DwcTerm.geodeticDatum.simpleName())
         .add(DwcTerm.associatedOccurrences.simpleName())
+        .add(DwcTerm.identifiedByID.simpleName())
+        .add(DwcTerm.recordedByID.simpleName())
         .add(STATE_CONSERVATION)
         .add(COUNTRY_CONSERVATION)
         .build();

@@ -1,12 +1,13 @@
 package org.gbif.pipelines.keygen;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.hadoop.hbase.filter.CompareFilter.CompareOp.EQUAL;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.io.Serializable;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.ObjLongConsumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.SneakyThrows;
@@ -26,10 +28,11 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
-import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.PrefixFilter;
+import org.apache.hadoop.hbase.filter.RegexStringComparator;
+import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.gbif.dwc.terms.GbifTerm;
@@ -339,29 +342,43 @@ public class HBaseLockingKeyService implements HBaseLockingKey, Serializable {
   }
 
   @SneakyThrows
-  public Set<Long> findKeysByScope(String scope) {
-    Set<Long> keys = new HashSet<>();
-    // note HTableStore isn't capable of ad hoc scans
+  public Map<String, Long> findKeysByScope(String scope, Long maxResultSize) {
+    Map<String, Long> keysMap = new HashMap<>();
+    findKeysByScope(scope, keysMap::put, maxResultSize);
+    return keysMap;
+  }
+
+  @SneakyThrows
+  public void findKeysByScope(String scope, ObjLongConsumer<String> fn, Long maxResultSize) {
+
     Scan scan = new Scan();
     scan.setCacheBlocks(false);
     scan.setCaching(HBASE_CLIENT_CACHING);
-    scan.setFilter(new PrefixFilter(Bytes.toBytes(scope)));
+    scan.setAllowPartialResults(true);
+    scan.setMaxResultSize(maxResultSize);
 
-    try (Table table = connection.getTable(lookupTableName)) {
-      ResultScanner results = table.getScanner(scan);
-      for (Result result : results) {
+    Filter filter = new RowFilter(EQUAL, new RegexStringComparator("^[0-9]+:" + scope));
+    scan.setFilter(filter);
+
+    try (Table table = connection.getTable(lookupTableName);
+        ResultScanner results = table.getScanner(scan)) {
+
+      long counter = 0L;
+      Result result = results.next();
+      while (result != null && counter < maxResultSize) {
         byte[] rawKey = result.getValue(Columns.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN));
         if (rawKey != null) {
-          keys.add(Bytes.toLong(rawKey));
+          fn.accept(Bytes.toString(result.getRow()), Bytes.toLong(rawKey));
+          counter++;
         }
+        result = results.next();
       }
     }
-    return keys;
   }
 
   /** */
-  public Set<Long> findKeysByScope() {
-    return findKeysByScope(datasetId);
+  public Map<String, Long> findKeysByScope(Long maxResultSize) {
+    return findKeysByScope(datasetId, maxResultSize);
   }
 
   /**
@@ -404,7 +421,7 @@ public class HBaseLockingKeyService implements HBaseLockingKey, Serializable {
         new SingleColumnValueFilter(
             Columns.CF,
             Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN),
-            CompareFilter.CompareOp.EQUAL,
+            EQUAL,
             Bytes.toBytes(occurrenceKey));
     filters.add(valueFilter);
     Filter filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL, filters);

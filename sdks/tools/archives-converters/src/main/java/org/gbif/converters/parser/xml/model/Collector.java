@@ -13,18 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.converters.parser.xml.constants;
+package org.gbif.converters.parser.xml.model;
 
-public enum PrioritizedPropertyNameEnum {
-  CATALOGUE_NUMBER,
-  COUNTRY,
-  GEODETIC_DATUM,
-  COUNTRY_CODE,
-  CONTINENT_OR_OCEAN,
-  DATE_COLLECTED,
-  ID_DATE_IDENTIFIED,
-  ID_IDENTIFIER_NAME,
-  ID_SCIENTIFIC_NAME,
-  IMAGE_URL,
-  IMAGE_RIGHTS
+import java.io.Serializable;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class Collector implements Serializable {
+
+  private static final long serialVersionUID = 4281236213527339750L;
+
+  private String name;
+
+  public boolean isEmpty() {
+    return name == null || name.isEmpty();
+  }
 }

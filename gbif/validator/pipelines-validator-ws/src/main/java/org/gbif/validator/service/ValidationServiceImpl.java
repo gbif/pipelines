@@ -29,6 +29,7 @@ import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.MetadataPath;
 import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.metadata.eml.parse.DatasetEmlParser;
+import org.gbif.utils.file.CompressionUtil.UnsupportedCompressionType;
 import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
@@ -94,7 +95,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     if (error.isPresent()) {
       throw errorMapper.apply(error.get());
     }
-    log.info("Staring validation for the file {}", file.getName());
+    log.info("Staring validation for the file {}", file.getOriginalFilename());
     UUID key = UUID.randomUUID();
     FileStoreManager.AsyncDataFileTask task = fileStoreManager.uploadDataFile(file, key.toString());
     task.getTask()
@@ -105,7 +106,11 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
                 updateAndNotifySubmitted(key, df);
               } else {
                 log.error(tr.getMessage(), tr);
-                updateFailedValidation(key, "Error during the file submitting");
+                String message = "Error during the file submitting. ";
+                if (tr.getCause() instanceof UnsupportedCompressionType) {
+                  message += "Please check the archive compression type. ";
+                }
+                updateFailedValidation(key, message + tr.getCause().getMessage());
               }
             });
     return create(key, task.getStart(), Validation.Status.SUBMITTED, validationRequest);
@@ -235,7 +240,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     return validationMapper.getRunningValidations(date);
   }
 
-  /** Persists an validation entity. */
+  /** Persists a validation entity. */
   private Validation create(
       UUID key, DataFile dataFile, Validation.Status status, ValidationRequest validationRequest) {
     validationMapper.create(

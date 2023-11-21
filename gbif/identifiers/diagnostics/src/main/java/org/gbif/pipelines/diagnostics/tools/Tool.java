@@ -1,19 +1,19 @@
 package org.gbif.pipelines.diagnostics.tools;
 
 import com.beust.jcommander.JCommander;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 public interface Tool {
+  @Getter
+  @AllArgsConstructor
   enum CliTool {
     MIGRATOR(IdentifiersMigratorTool.builder().build()),
     REPAIR(RepairGbifIDLookupTool.builder().build()),
-    LOOKUP(RecordIDsByCrawlAttemptTool.builder().build());
+    LOOKUP(RecordIDsByCrawlAttemptTool.builder().build()),
+    ID_LOOKUP(DatasetIDsLookupTool.builder().build());
 
-    @Getter private final Tool tool;
-
-    CliTool(Tool tool) {
-      this.tool = tool;
-    }
+    private final Tool tool;
   }
 
   default boolean getHelp() {

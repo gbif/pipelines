@@ -239,6 +239,7 @@
   <field name="day" type="int" docValues="true" indexed="true"/>
   <field name="decimalLatitude" type="double" docValues="true" indexed="true"/>
   <field name="decimalLongitude" type="double" docValues="true" indexed="true"/>
+  <field name="degreeOfEstablishment" type="string" docValues="true" indexed="true"/>
   <field name="depth" type="double" docValues="true" indexed="true"/>
   <field name="depthAccuracy" type="double" docValues="true" indexed="true"/>
   <field name="disposition" type="string" docValues="true" indexed="true"/>
@@ -591,6 +592,7 @@
   <field name="raw_day"					                 type="string"  docValues="true" indexed="true" />
   <field name="raw_decimalLatitude"					     type="string"  docValues="true" indexed="true" />
   <field name="raw_decimalLongitude"				     type="string"  docValues="true" indexed="true" />
+  <field name="raw_degreeOfEstablishment"                type="string"  docValues="true" indexed="true" />
   <field name="raw_depth"					             type="string"  docValues="true" indexed="true" />
   <field name="raw_depthAccuracy"					     type="string"  docValues="true" indexed="true" />
   <field name="raw_description"					         type="string"  docValues="true" indexed="true" />
@@ -608,7 +610,7 @@
   <field name="raw_genus"					             type="string"  docValues="true" indexed="true" />
   <field name="raw_genusID"					             type="string"  docValues="true" indexed="true" />
   <field name="raw_georeferencedDate"				     type="string"  docValues="true" indexed="true" />
-  <field name="raw_identifiedByIds"					     type="string"  docValues="true" indexed="true" />
+  <field name="raw_identifiedByID"					     type="string"  docValues="true" indexed="true" />
   <field name="raw_identifier"					         type="string"  docValues="true" indexed="true" />
   <field name="raw_individualCount"					     type="string"  docValues="true" indexed="true" />
   <field name="raw_informationWithheld"				     type="string"  docValues="true" indexed="true" />
@@ -659,7 +661,7 @@
   <field name="raw_taxonRank"					         type="string"  docValues="true" indexed="true" />
   <field name="raw_taxonRankID"					         type="string"  docValues="true" indexed="true" />
   <field name="raw_recordedBy"					         type="string"  docValues="true" indexed="true" />
-  <field name="raw_recordedByIds"					     type="string"  docValues="true" indexed="true" />
+  <field name="raw_recordedByID"					     type="string"  docValues="true" indexed="true" />
   <field name="raw_references"					         type="string"  docValues="true" indexed="true" />
   <field name="raw_relativeOrganismQuantity"	         type="string"  docValues="true" indexed="true" />
   <field name="raw_repatriated"					         type="string"  docValues="true" indexed="true" />
