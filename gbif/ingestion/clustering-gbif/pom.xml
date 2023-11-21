@@ -24,45 +24,21 @@
     <sonar.skip>true</sonar.skip>
   </properties>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
-        <version>${maven-scala-plugin.version}</version>
-        <executions>
-          <execution>
-            <id>scala-compile-first</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>add-source</goal>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>scala-test-compile</id>
-            <phase>process-test-resources</phase>
-            <goals>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <secondaryCacheDir>/var/tmp/sbt</secondaryCacheDir>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
   <dependencies>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>core</artifactId>
+      <exclusions>
+        <!-- Brings in huge transitive dependencies, while we only need a single interface -->
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-catalyst_2.11</artifactId>
-      <version>${spark.version}</version>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -74,18 +50,6 @@
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-sql_2.11</artifactId>
-      <version>${spark.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-yarn_2.11</artifactId>
-      <version>${spark.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-hive_2.11</artifactId>
       <version>${spark.version}</version>
       <scope>provided</scope>
     </dependency>
@@ -158,11 +122,13 @@
       <groupId>org.codehaus.janino</groupId>
       <artifactId>commons-compiler</artifactId>
       <version>${commons-compiler.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.codehaus.janino</groupId>
       <artifactId>janino</artifactId>
       <version>${janino.version}</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -212,5 +178,4 @@
       </build>
     </profile>
   </profiles>
-
 </project>
