@@ -24,7 +24,7 @@ public class CoreCsvConverter {
           .addKeyTermFn(DwcTerm.institutionCode, getString(DwcTerm.institutionCode))
           .addKeyTermFn(DwcTerm.recordNumber, getString(DwcTerm.recordNumber))
           .addKeyTermFn(DwcTerm.basisOfRecord, getString(DwcTerm.basisOfRecord), "HumanObservation")
-          .addKeyTermFn(DwcTerm.recordedBy, getMultivalue(DwcTerm.recordedBy))
+          .addKeyTermFn(DwcTerm.recordedBy, getString(DwcTerm.recordedBy))
           .addKeyTermFn(DwcTerm.occurrenceStatus, getString(DwcTerm.occurrenceStatus))
           .addKeyTermFn(DwcTerm.individualCount, getInt(DwcTerm.individualCount))
           .addKeyTermFn(DwcTerm.scientificName, getString(DwcTerm.scientificName))
