@@ -10,6 +10,7 @@ import static au.org.ala.util.TestUtils.SOLR_IMG;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.utils.ALAFsUtils;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
@@ -78,12 +79,14 @@ public class IntegrationTestUtils extends ExternalResource {
 
       nameService =
           new GenericContainer(DockerImageName.parse(NAME_SERVICE_IMG))
-              .withExposedPorts(NAME_SERVICE_INTERNAL_PORT);
+              .withExposedPorts(NAME_SERVICE_INTERNAL_PORT)
+              .withStartupTimeout(Duration.ofMinutes(3));
       nameService.start();
 
       sdsService =
           new GenericContainer(DockerImageName.parse(SENSTIVE_SERVICE_IMG))
-              .withExposedPorts(SENSITIVE_SERVICE_INTERNAL_PORT);
+              .withExposedPorts(SENSITIVE_SERVICE_INTERNAL_PORT)
+              .withStartupTimeout(Duration.ofMinutes(3));
       sdsService.start();
 
       elasticsearchContainer =

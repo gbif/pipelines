@@ -52,5 +52,7 @@
         <field index="43" term="http://rs.tdwg.org/dwc/terms/establishmentMeans"/>
         <field index="44" term="http://rs.tdwg.org/dwc/terms/identifiedByID"/>
         <field index="45" term="http://rs.tdwg.org/dwc/terms/recordedByID"/>
+        <field index="46" term="stateConservation"/>
+        <field index="47" term="countryConservation"/>
       </core>
     </archive>
