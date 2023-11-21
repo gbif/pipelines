@@ -1,24 +1,13 @@
 ## Occurrence Clustering
 
-Provides utilities to cluster GBIF occurrence records.
+Processes occurrence data and establishes links between similar records. 
 
-Status: Having explored approaches using Spark ML (no success due to data skew) and
-[LinkedIn ScANNs](https://github.com/linkedin/scanns) (limited success, needs more investigation)
-this uses a declarative rule-based approach making use of domain knowledge. A multi-blocking stage
-groups candidate record pairs, followed by a pair-wise comparison to detect links within the group.
+The output is a set of HFiles suitable for bulk loading into HBase which drives the pipeline lookup and 
+public related occurrence API.
 
-The initial focus is on specimens to locate:
- 1. Physical records (e.g. Isotypes and specimens split and deposited in multiple herbaria)
- 2. Database duplicates across datasets (huge biases observed within datasets (e.g. gutworm datasets))
- 3. Strong links between sequence records, citations and specimens
+Build the project: `mvn spotless:apply test package -Pextra-artifacts`
 
-This is intended to be run regularly (e.g. daily) and therefore performance is of critical concern.
-
-The output is bulk loaded into HBase, suitable for an API to deployed on.
-
-Build the project: `mvn clean package`
-
-To run (while in exploration - will be made into Oozie workflow later):
+To run this against a completely new table:
 
 Setup hbase:
 ```
@@ -40,34 +29,30 @@ create 'occurrence_relationships_experimental',
   ]}
 ```
 
-Remove hive tables from the target database:
-```
-drop table occurrence_clustering_hashed;
-drop table occurrence_clustering_hashed_all;
-drop table occurrence_clustering_candidates;
-drop table occurrence_relationships;
-```
-
-Run the job (In production this configuration takes 2.6 hours with ~2.3B records)
+Run the job  
+(In production this configuration takes ~2hours with ~2.3B records)
 ```
 hdfs dfs -rm -r /tmp/clustering
 
 nohup sudo -u hdfs spark2-submit --class org.gbif.pipelines.clustering.Cluster \
   --master yarn --num-executors 100 \
-  --executor-cores 6 \
+  --executor-cores 4 \
   --conf spark.dynamicAllocation.enabled=false \
-  --conf spark.sql.shuffle.partitions=1000 \
+  --conf spark.sql.shuffle.partitions=1200 \
   --executor-memory 64G \
   --driver-memory 4G \
-  clustering-gbif-2.14.0-SNAPSHOT.jar \
-  --hive-db prod_h \
-  --hive-table-hashed occurrence_clustering_hashed \
-  --hive-table-candidates occurrence_clustering_candidates  \
-  --hive-table-relationships occurrence_relationships \
+  --conf spark.executor.memoryOverhead=4096 \
+  --conf spark.debug.maxToStringFields=100000 \
+  --conf spark.network.timeout=600s \
+  clustering-gbif-2.18.0-SNAPSHOT.jar \
+  --hive-db prod_TODO \
+  --source-table occurrence \
+  --hive-table-prefix clustering \
   --hbase-table occurrence_relationships_experimental \
   --hbase-regions 100 \
   --hbase-zk c5zk1.gbif.org,c5zk2.gbif.org,c5zk3.gbif.org \
-  --hfile-dir /tmp/clustering &
+  --target-dir /tmp/clustering \
+  --hash-count-threshold 100 &
 ```
 
 Load HBase
