@@ -2,13 +2,14 @@ package org.gbif.pipelines.core.utils;
 
 import static org.gbif.pipelines.core.utils.IdentificationUtils.extractFromIdentificationExtension;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Extension;
@@ -68,15 +69,20 @@ public class ModelUtils {
     return Optional.ofNullable(extractValue(er, term));
   }
 
-  public static Optional<List<String>> extractOptListValue(ExtendedRecord er, Term term) {
+  public static List<String> extractListValue(ExtendedRecord er, Term term) {
+    return extractListValue(DEFAULT_SEPARATOR, er, term);
+  }
+
+  public static List<String> extractListValue(String separatorRegex, ExtendedRecord er, Term term) {
     return extractOptValue(er, term)
         .filter(x -> !x.isEmpty())
         .map(
             x ->
-                Stream.of(x.split(DEFAULT_SEPARATOR))
+                Arrays.stream(x.split(separatorRegex))
                     .map(String::trim)
                     .filter(v -> !v.isEmpty())
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toList()))
+        .orElse(Collections.emptyList());
   }
 
   public static boolean hasValue(ExtendedRecord er, Term term) {
