@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<workflow-app xmlns="uri:oozie:workflow:0.4.5" name="clustering">
+
+  <global>
+    <job-tracker>${wf:conf("hadoop.jobtracker")}</job-tracker>
+    <name-node>${wf:conf("hdfs.namenode")}</name-node>
+    <configuration>
+      <property>
+        <name>oozie.launcher.mapred.job.queue.name</name>
+        <value>${wf:conf("hadoop.queuename")}</value>
+      </property>
+      <property>
+        <name>oozie.action.sharelib.for.spark</name>
+        <value>spark2</value>
+      </property>
+    </configuration>
+  </global>
+
+  <start to="clustering" />
+
+  <action name="clustering">
+    <spark xmlns="uri:oozie:spark-action:0.1">
+      <job-tracker>${wf:conf("hadoop.jobtracker")}</job-tracker>
+      <name-node>${wf:conf("hdfs.namenode")}</name-node>
+      <master>yarn-cluster</master>
+      <name>Clustering</name>
+      <class>org.gbif.pipelines.clustering.Cluster</class>
+      <jar>lib/clustering-gbif.jar</jar>
+      <!-- Following enabling static service pools (cgroups) we found the native libraries would not load. The only way we found to pass this through was using extraLibraryPath -->
+      <spark-opts>${wf:conf("gbif.clustering.spark.opts")} --conf spark.executor.extraLibraryPath=/opt/cloudera/parcels/CDH/lib/hadoop/lib/native</spark-opts>
+      <arg>--hive-db</arg>
+      <arg>${wf:conf("gbif.clustering.hive.db")}</arg>
+      <arg>--source-table</arg>
+      <arg>${wf:conf("gbif.clustering.source.table")}</arg>
+      <arg>--hive-table-prefix</arg>
+      <arg>${wf:conf("gbif.clustering.hive.table.prefix")}</arg>
+      <arg>--hbase-table</arg>
+      <arg>${wf:conf("gbif.clustering.hbase.table")}</arg>
+      <arg>--hbase-regions</arg>
+      <arg>${wf:conf("gbif.clustering.hbase.regions")}</arg>
+      <arg>--hbase-zk</arg>
+      <arg>${wf:conf("gbif.clustering.hbase.zk")}</arg>
+      <arg>--target-dir</arg>
+      <arg>${wf:conf("gbif.clustering.target.dir")}</arg>
+      <arg>--hash-count-threshold</arg>
+      <arg>${wf:conf("gbif.clustering.hash.count.threshold")}</arg>
+    </spark>
+    
+    <ok to="end" />
+    <error to="kill" />
+  </action>
+
+  <kill name="kill">
+    <message>Clustering failed:[${wf:errorMessage(wf:lastErrorNode())}]</message>
+  </kill>
+
+  <end name="end" />
+
+</workflow-app>
