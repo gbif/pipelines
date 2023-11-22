@@ -1,0 +1,11 @@
+<!--
+  Rebuilds clustering table on a schedule.
+-->
+<coordinator-app name="Clustering" frequency="${clustering.frequency}"
+                 start="${clustering.start}" end="2050-05-28T00:00Z" timezone="UTC" xmlns="uri:oozie:coordinator:0.4">
+  <action>
+    <workflow>
+      <app-path>hdfs://ha-nn/clustering-workflow</app-path>
+    </workflow>
+  </action>
+</coordinator-app>

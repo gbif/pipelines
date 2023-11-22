@@ -17,6 +17,7 @@
 
   <modules>
     <module>clustering-gbif</module>
+    <module>clustering-gbif-oozie</module>
     <module>ingest-gbif-beam</module>
     <module>ingest-gbif-fragmenter</module>
     <module>ingest-gbif-java</module>

@@ -5,16 +5,25 @@ import static org.gbif.pipelines.clustering.HashUtilities.recordHashes;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FsShell;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.exceptions.IllegalArgumentIOException;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
+import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.SnappyCodec;
@@ -34,9 +43,13 @@ import org.gbif.pipelines.core.parsers.clustering.RelationshipAssertion;
 import scala.Tuple2;
 
 /**
- * Regenerates the HBase and Hive tables for a data clustering run. This will read the production
- * occurrence Hive table, regenerate the relationships table storing intermediate tables in Hive for
- * diagnostics, and then truncate_preserve and repopulate the HBase table.
+ * Regenerates the HBase and Hive tables for a data clustering run. This will read the occurrence
+ * Hive table, generate HFiles for relationships and create intermediate tables in Hive for
+ * diagnostics, replacing any that exist. Finally, the HBase table is truncated preserving its
+ * partitioning and bulk loaded with new data. <br>
+ * This process works on the deliberate design principle that readers of the table will have
+ * implemented a retry mechanism for the brief outage during the table swap which is expected to be
+ * on an e.g. weekly basis.
  */
 @Builder
 @Data
@@ -74,7 +87,10 @@ public class Cluster implements Serializable {
     CommandLineParser.parse(args).build().run();
   }
 
-  void run() throws IOException {
+  /** Run the full process, generating relationships and refreshing the HBase table. */
+  private void run() throws IOException {
+    removeTargetDir(); // fail fast if given bad config
+
     SparkSession spark =
         SparkSession.builder()
             .appName("Occurrence clustering")
@@ -83,6 +99,17 @@ public class Cluster implements Serializable {
             .getOrCreate();
     spark.sql("use " + hiveDB);
 
+    createCandidatePairs(spark);
+    Dataset<Row> relationships = generateRelationships(spark);
+    generateHFiles(relationships);
+    replaceHBaseTable();
+  }
+
+  /**
+   * Reads the input, and through a series of record hashing creates a table of candidate record
+   * pairs for proper comparison.
+   */
+  private void createCandidatePairs(SparkSession spark) {
     // Read the input fields needed for generating the hashes
     Dataset<Row> occurrences =
         spark.sql(
@@ -133,7 +160,10 @@ public class Cluster implements Serializable {
                 hiveTablePrefix, hiveTablePrefix));
     spark.sql("DROP TABLE IF EXISTS " + hiveTablePrefix + "_candidates");
     candidates.write().format("parquet").saveAsTable(hiveTablePrefix + "_candidates");
+  }
 
+  /** Reads the candidate pairs table, and runs the record to record comparison. */
+  private Dataset<Row> generateRelationships(SparkSession spark) {
     // Spark DF naming convention requires that we alias each term to avoid naming collision while
     // still having named fields to access (i.e. not relying on the column number of the term). All
     // taxa keys are converted to String to allow shared routines between GBIF and ALA
@@ -169,10 +199,14 @@ public class Cluster implements Serializable {
 
     // Compare all candidate pairs and generate the relationships
     Dataset<Row> relationships =
-        pairs.flatMap(row -> generateRelationships(row), RowEncoder.apply(RELATIONSHIP_SCHEMA));
+        pairs.flatMap(row -> relateRecords(row), RowEncoder.apply(RELATIONSHIP_SCHEMA));
     spark.sql("DROP TABLE IF EXISTS " + hiveTablePrefix + "_relationships");
     relationships.write().format("parquet").saveAsTable(hiveTablePrefix + "_relationships");
+    return relationships;
+  }
 
+  /** Partitions the relationships to match the target table layout and creates the HFiles. */
+  private void generateHFiles(Dataset<Row> relationships) throws IOException {
     // convert to HFiles, prepared with modulo salted keys
     JavaPairRDD<Tuple2<String, String>, String> sortedRelationships =
         relationships
@@ -223,8 +257,67 @@ public class Cluster implements Serializable {
             hadoopConf());
   }
 
+  /** Truncates the target table preserving its layout and loads in the HFiles. */
+  private void replaceHBaseTable() throws IOException {
+    Configuration conf = hadoopConf();
+    try (Connection connection = ConnectionFactory.createConnection(conf);
+        HTable table = new HTable(conf, hbaseTable);
+        Admin admin = connection.getAdmin()) {
+      LoadIncrementalHFiles loader = new LoadIncrementalHFiles(conf);
+
+      // bulkload requires files to be in hbase ownership
+      FsShell shell = new FsShell(conf);
+      try {
+        System.out.println("Executing chown -R hbase:hbase for " + targetDir);
+        shell.run(new String[] {"-chown", "-R", "hbase:hbase", targetDir});
+      } catch (Exception e) {
+        throw new IOException("Unable to modify FS ownership to hbase", e);
+      }
+
+      System.out.println(String.format("Truncating table[%s]", hbaseTable));
+      Instant start = Instant.now();
+      admin.disableTable(table.getName());
+      admin.truncateTable(table.getName(), true);
+      System.out.println(
+          String.format(
+              "Table[%s] truncated in %d ms",
+              hbaseTable, Duration.between(start, Instant.now()).toMillis()));
+      System.out.println(String.format("Loading table[%s] from [%s]", hbaseTable, targetDir));
+      loader.doBulkLoad(new Path(targetDir), table);
+      System.out.println(
+          String.format(
+              "Table [%s] truncated and reloaded in %d ms",
+              hbaseTable, Duration.between(start, Instant.now()).toMillis()));
+      removeTargetDir();
+
+    } catch (Exception e) {
+      throw new IOException(e);
+    }
+  }
+
+  /** Removes the target directory provided it is in the /tmp location */
+  private void removeTargetDir() throws IOException {
+    // defensive, cleaning only /tmp in hdfs (we assume people won't do /tmp/../...
+    String regex = "/tmp/.+";
+    if (targetDir.matches(regex)) {
+      FsShell shell = new FsShell(new Configuration());
+      try {
+        System.out.println(
+            String.format(
+                "Deleting working directory [%s] which translates to [-rm -r -skipTrash %s ]",
+                targetDir, targetDir));
+
+        shell.run(new String[] {"-rm", "-r", "-skipTrash", targetDir});
+      } catch (Exception e) {
+        throw new IOException("Unable to delete the working directory", e);
+      }
+    } else {
+      throw new IllegalArgumentIOException("Target directory must be within /tmp");
+    }
+  }
+
   /** Runs the record to record comparison */
-  private Iterator<Row> generateRelationships(Row row) throws IOException {
+  private Iterator<Row> relateRecords(Row row) throws IOException {
     Set<Row> relationships = new HashSet<>();
 
     RowOccurrenceFeatures o1 = new RowOccurrenceFeatures(row, "t1_", "t1_media");
@@ -257,7 +350,7 @@ public class Cluster implements Serializable {
     return relationships.iterator();
   }
 
-  /** Creates the Hadoop configuration suitable for writing HFiles */
+  /** Creates the Hadoop configuration suitable for HDFS and HBase use. */
   private Configuration hadoopConf() throws IOException {
     Configuration conf = HBaseConfiguration.create();
     conf.set("hbase.zookeeper.quorum", hbaseZK);
@@ -270,8 +363,7 @@ public class Cluster implements Serializable {
   }
 
   /** Necessary as the Tuple2 does not implement a comparator in Java */
-  public static class Tuple2StringComparator
-      implements Comparator<Tuple2<String, String>>, Serializable {
+  static class Tuple2StringComparator implements Comparator<Tuple2<String, String>>, Serializable {
     @Override
     public int compare(Tuple2<String, String> o1, Tuple2<String, String> o2) {
       if (o1._1.equals(o2._1)) return o1._2.compareTo(o2._2);
