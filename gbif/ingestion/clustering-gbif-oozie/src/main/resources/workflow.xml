@@ -27,7 +27,7 @@
       <class>org.gbif.pipelines.clustering.Cluster</class>
       <jar>lib/clustering-gbif.jar</jar>
       <!-- Following enabling static service pools (cgroups) we found the native libraries would not load. The only way we found to pass this through was using extraLibraryPath -->
-      <spark-opts>${wf:conf("gbif.clustering.spark.opts")} --conf spark.executor.extraLibraryPath=/opt/cloudera/parcels/CDH/lib/hadoop/lib/native</spark-opts>
+      <spark-opts>${wf:conf("gbif.clustering.spark.opts")} --conf spark.executor.extraLibraryPath=/opt/cloudera/parcels/CDH/lib/hadoop/lib/native --conf spark.driver.extraLibraryPath=/opt/cloudera/parcels/CDH/lib/hadoop/lib/native</spark-opts>
       <arg>--hive-db</arg>
       <arg>${wf:conf("gbif.clustering.hive.db")}</arg>
       <arg>--source-table</arg>
