@@ -198,6 +198,7 @@
   <field name="occurrence_year"    type="date" docValues="true" multiValued="true"  indexed="true" />
 
   <!-- Legacy conservation fields -->
+  <field name="raw_countryConservation" type="string"  docValues="true" multiValued="false"  indexed="true" />
   <field name="raw_stateConservation" type="string"  docValues="true" multiValued="false"  indexed="true" />
   <field name="stateConservation"     type="string"  docValues="true" multiValued="false"  indexed="true" />
   <field name="countryConservation"   type="string"  docValues="true" multiValued="false"  indexed="true" />

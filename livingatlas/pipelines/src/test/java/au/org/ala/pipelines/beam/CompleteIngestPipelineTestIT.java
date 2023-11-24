@@ -150,6 +150,10 @@ public class CompleteIngestPipelineTestIT {
     assertEquals("id1|id2", record.get().get("raw_identifiedByID"));
     assertEquals("id1", ((List) record.get().get("identifiedByID")).get(0));
     assertEquals("id2", ((List) record.get().get("identifiedByID")).get(1));
+
+    // raw state and raw country conservation
+    assertEquals("Extinct", record.get().get("raw_stateConservation"));
+    assertEquals("Vulnerable", record.get().get("raw_countryConservation"));
   }
 
   public void loadTestDataset(String datasetID, String inputPath) throws Exception {

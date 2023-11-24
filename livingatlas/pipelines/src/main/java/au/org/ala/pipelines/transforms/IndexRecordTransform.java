@@ -882,6 +882,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         .add(DwcTerm.associatedOccurrences.simpleName())
         .add(DwcTerm.identifiedByID.simpleName())
         .add(DwcTerm.recordedByID.simpleName())
+        .add(STATE_CONSERVATION)
+        .add(COUNTRY_CONSERVATION)
         .build();
   }
 
@@ -903,12 +905,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     for (ConservationStatus conservationStatus : conservationStatuses) {
       if (conservationStatus.getRegion() != null) {
         if (conservationStatus.getRegion().equalsIgnoreCase(stateProvince)) {
-
-          if (isNotBlank(conservationStatus.getSourceStatus())) {
-            indexRecord
-                .getStrings()
-                .put(RAW_STATE_CONSERVATION, conservationStatus.getSourceStatus());
-          }
           if (isNotBlank(conservationStatus.getStatus())) {
             indexRecord.getStrings().put(STATE_CONSERVATION, conservationStatus.getStatus());
           }
