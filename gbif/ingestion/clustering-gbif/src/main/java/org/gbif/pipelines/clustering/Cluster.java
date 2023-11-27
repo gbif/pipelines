@@ -123,8 +123,11 @@ public class Cluster implements Serializable {
                     + "FROM %s",
                 sourceTable));
     Dataset<Row> hashes =
-        occurrences.flatMap(
-            row -> recordHashes(new RowOccurrenceFeatures(row)), RowEncoder.apply(HASH_ROW_SCHEMA));
+        occurrences
+            .flatMap(
+                row -> recordHashes(new RowOccurrenceFeatures(row)),
+                RowEncoder.apply(HASH_ROW_SCHEMA))
+            .dropDuplicates();
     spark.sql("DROP TABLE IF EXISTS " + hiveTablePrefix + "_hashes");
     hashes.write().format("parquet").saveAsTable(hiveTablePrefix + "_hashes");
 

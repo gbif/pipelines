@@ -3,7 +3,6 @@ package org.gbif.pipelines.clustering;
 import static org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships.concatIfEligible;
 import static org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships.hashOrNull;
 import static org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships.isEligibleCode;
-import static org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships.isNumeric;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,10 +33,11 @@ class HashUtilities {
     List<String> typeStatus = o.getTypeStatus();
     List<String> recordedBy = o.getRecordedBy();
     String speciesKey = o.getSpeciesKey();
+    Set<String> identifiers = hashCodesAndIDs(o, true);
 
     Set<Row> hashes = new HashSet<>();
 
-    // generic grouping
+    // generic grouping on species, time and space
     if (noNulls(lat, lng, year, month, day, speciesKey)) {
       hashes.add(
           RowFactory.create(
@@ -51,6 +51,14 @@ class HashUtilities {
                   year.toString(),
                   month.toString(),
                   day.toString())));
+    }
+
+    // identifiers overlap for the same species
+    if (noNulls(speciesKey)) {
+      for (String id : identifiers) {
+        hashes.add(
+            RowFactory.create(o.getId(), o.getDatasetKey(), String.join("|", speciesKey, id)));
+      }
     }
 
     // anything claiming a type for the same name is of interest (regardless of type stated)
@@ -80,63 +88,47 @@ class HashUtilities {
     Set<Row> hashes = new HashSet<>();
     String bor = o.getBasisOfRecord();
     if (SPECIMEN_BASIS_OF_RECORD_SET.contains(bor)) {
-      // extract all the IDs we can think of, hashed with the species key
-      Stream<String> ids =
-          Stream.of(
-              hashOrNull(o.getOccurrenceID(), true),
-              hashOrNull(o.getRecordNumber(), true),
-              hashOrNull(o.getFieldNumber(), true),
-              hashOrNull(o.getCatalogNumber(), true),
-              concatIfEligible(
-                  ":", o.getInstitutionCode(), o.getCollectionCode(), o.getCatalogNumber()),
-              concatIfEligible(":", o.getInstitutionCode(), o.getCatalogNumber()));
-      if (o.getOtherCatalogNumbers() != null) {
-        ids = Stream.concat(ids, o.getOtherCatalogNumbers().stream().map(c -> hashOrNull(c, true)));
-      }
-      ids = ids.filter(c -> isEligibleCode(c));
 
-      // hashed using codes (including numeric) and species
-      ids.forEach(
-          id -> {
-            hashes.add(
-                RowFactory.create(
-                    o.getId(),
-                    o.getDatasetKey(),
-                    String.join("|", o.getSpeciesKey(), OccurrenceRelationships.normalizeID(id))));
-          });
+      // non-numeric identifiers for specimens used across datasets
+      Set<String> codes = hashCodesAndIDs(o, true);
+      for (String code : codes) {
+        hashes.add(
+            RowFactory.create(
+                o.getId(),
+                o.getDatasetKey(),
+                String.join("|", o.getSpeciesKey(), OccurrenceRelationships.normalizeID(code))));
+      }
 
       // stricter code hashing (non-numeric) but without species
-      Stream<String> catalogNumbers = hashCatalogNumbers(o);
-      catalogNumbers.forEach(
-          cat -> {
-            hashes.add(RowFactory.create(o.getId(), o.getDatasetKey(), cat));
-          });
+      Set<String> codesStrict = hashCodesAndIDs(o, false);
+      for (String code : codesStrict) {
+        hashes.add(
+            RowFactory.create(
+                o.getId(),
+                o.getDatasetKey(),
+                String.join("|", OccurrenceRelationships.normalizeID(code))));
+      }
     }
     return hashes;
   }
 
-  /**
-   * Hashes the occurrenceID, catalogCode and otherCatalogNumber into a Set of codes. The
-   * catalogNumber is constructed as it's code and also prefixed in the commonly used format of
-   * IC:CC:CN and IC:CN.
-   *
-   * @return a set of hashes suitable for grouping specimen related records without other filters.
-   */
-  static Stream<String> hashCatalogNumbers(OccurrenceFeatures o) {
-    Stream<String> cats =
+  /** Hashes all the various ways that record codes and identifiers are commonly used. */
+  static Set<String> hashCodesAndIDs(OccurrenceFeatures o, boolean allowNumerics) {
+    Stream<String> ids =
         Stream.of(
-            hashOrNull(o.getCatalogNumber(), false),
-            hashOrNull(o.getOccurrenceID(), false),
+            hashOrNull(o.getOccurrenceID(), allowNumerics),
+            hashOrNull(o.getRecordNumber(), allowNumerics),
+            hashOrNull(o.getFieldNumber(), allowNumerics),
+            hashOrNull(o.getCatalogNumber(), allowNumerics),
             concatIfEligible(
                 ":", o.getInstitutionCode(), o.getCollectionCode(), o.getCatalogNumber()),
             concatIfEligible(":", o.getInstitutionCode(), o.getCatalogNumber()));
-
     if (o.getOtherCatalogNumbers() != null) {
-      cats =
-          Stream.concat(cats, o.getOtherCatalogNumbers().stream().map(c -> hashOrNull(c, false)));
+      ids =
+          Stream.concat(
+              ids, o.getOtherCatalogNumbers().stream().map(c -> hashOrNull(c, allowNumerics)));
     }
-    return cats.map(OccurrenceRelationships::normalizeID)
-        .filter(c -> isEligibleCode(c) && !isNumeric(c));
+    return ids.filter(c -> isEligibleCode(c)).collect(Collectors.toSet());
   }
 
   /** Return true of no nulls or empty strings provided */
