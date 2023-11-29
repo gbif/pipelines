@@ -24,7 +24,7 @@ public class BalancerService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-balancer service with parameters : {}", config);
+    log.info("Started pipelines-balancer service");
     StepConfiguration stepConfig = config.stepConfig;
 
     // Prefetch is one, since this is a long-running process.

@@ -36,7 +36,7 @@ public class InterpretationService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-occurrence-interpretation service with parameters : {}", config);
+    log.info("Started pipelines-occurrence-interpretation service");
     // Prefetch is one, since this is a long-running process.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);

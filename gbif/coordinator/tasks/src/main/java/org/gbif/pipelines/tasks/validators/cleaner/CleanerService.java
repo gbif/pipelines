@@ -25,7 +25,7 @@ public class CleanerService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-validator-cleaner service with parameters : {}", config);
+    log.info("Started pipelines-validator-cleaner service");
     // create the listener.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
