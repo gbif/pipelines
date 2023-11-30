@@ -290,6 +290,28 @@
 
       "fieldNumber": {"type": "keyword", "copy_to": "all"},
 
+      "geologicalContext": {
+        "type": "object",
+        "properties": {
+          "earliestEonOrLowestEonothem": {"type": "keyword", "copy_to": "all"},
+          "latestEonOrHighestEonothem": {"type": "keyword", "copy_to": "all"},
+          "earliestEraOrLowestErathem": {"type": "keyword", "copy_to": "all"},
+          "latestEraOrHighestErathem": {"type": "keyword", "copy_to": "all"},
+          "earliestPeriodOrLowestSystem": {"type": "keyword", "copy_to": "all"},
+          "latestPeriodOrHighestSystem": {"type": "keyword", "copy_to": "all"},
+          "earliestEpochOrLowestSeries": {"type": "keyword", "copy_to": "all"},
+          "latestEpochOrHighestSeries": {"type": "keyword", "copy_to": "all"},
+          "earliestAgeOrLowestStage": {"type": "keyword", "copy_to": "all"},
+          "latestAgeOrHighestStage": {"type": "keyword", "copy_to": "all"},
+          "lowestBiostratigraphicZone": {"type": "keyword", "copy_to": "all"},
+          "highestBiostratigraphicZone": {"type": "keyword", "copy_to": "all"},
+          "group": {"type": "keyword", "copy_to": "all"},
+          "formation": {"type": "keyword", "copy_to": "all"},
+          "member": {"type": "keyword", "copy_to": "all"},
+          "bed": {"type": "keyword", "copy_to": "all"}
+        }
+      },
+
       "issues": {"type": "keyword"},
       "notIssues": {"type": "keyword"},
       "extensions": {"type": "keyword"},
