@@ -290,6 +290,7 @@ public class OccurrenceJsonConverter {
     extractOptValue(verbatim, DwcTerm.collectionCode).ifPresent(builder::setCollectionCode);
     extractOptValue(verbatim, DwcTerm.catalogNumber).ifPresent(builder::setCatalogNumber);
     extractOptValue(verbatim, DwcTerm.occurrenceID).ifPresent(builder::setOccurrenceId);
+    extractOptValue(verbatim, DwcTerm.fieldNumber).ifPresent(builder::setFieldNumber);
   }
 
   private void mapIssues(OccurrenceJsonRecord.Builder builder) {

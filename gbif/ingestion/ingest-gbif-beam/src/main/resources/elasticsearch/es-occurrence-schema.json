@@ -288,6 +288,8 @@
       "dateIdentified": {"type": "date"},
       "eventDateSingle": {"type": "date"},
 
+      "fieldNumber": {"type": "keyword", "copy_to": "all"},
+
       "issues": {"type": "keyword"},
       "notIssues": {"type": "keyword"},
       "extensions": {"type": "keyword"},

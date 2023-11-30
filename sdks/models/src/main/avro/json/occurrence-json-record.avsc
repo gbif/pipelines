@@ -140,6 +140,7 @@
       {"name":"modified","type":["null","string"],"default":null,"doc":""},
       {"name":"dateIdentified","type":["null","string"],"default":null,"doc":""},
       {"name":"eventDateSingle","type":["null","string"],"default":null,"doc":""},
+      {"name":"fieldNumber","type":["null","string"],"default":null,"doc":""},
       {"name":"geologicalContext","type":["null","GeologicalContext"],"default":null,"doc":""},
       {"name":"issues","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"notIssues","type":{"type":"array","items":"string"},"default":[],"doc":""},

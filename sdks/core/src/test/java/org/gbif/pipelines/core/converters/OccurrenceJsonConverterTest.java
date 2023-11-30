@@ -97,6 +97,7 @@ public class OccurrenceJsonConverterTest {
     erMap.put(DwcTerm.formation.qualifiedName(), "test14");
     erMap.put(DwcTerm.member.qualifiedName(), "test15");
     erMap.put(DwcTerm.bed.qualifiedName(), "test16");
+    erMap.put(DwcTerm.fieldNumber.qualifiedName(), "fieldNumber");
 
     MetadataRecord mr =
         MetadataRecord.newBuilder()
@@ -541,11 +542,12 @@ public class OccurrenceJsonConverterTest {
     assertEquals("Level 3 Cipality", gadm.get("level3Name").asText());
     assertEquals(4, gadm.path("gids").size());
 
-    assertEquals(31, result.path("all").size());
+    assertEquals(32, result.path("all").size());
 
     String expectedVerbatim =
         "{\"core\":{\"http://rs.tdwg.org/dwc/terms/eventID\":\"eventId\",\"http://rs.tdwg.org/dwc/terms/organismID\":"
-            + "\"organismID\",\"http://rs.tdwg.org/dwc/terms/collectionCode\":\"collectionCode\","
+            + "\"organismID\",\"http://rs.tdwg.org/dwc/terms/fieldNumber\":\"fieldNumber\","
+            + "\"http://rs.tdwg.org/dwc/terms/collectionCode\":\"collectionCode\","
             + "\"http://rs.tdwg.org/dwc/terms/taxonID\":\"taxonID\",\"http://rs.gbif.org/terms/1.0/projectId\":"
             + "\"mv;à1|mv2\",\"http://rs.tdwg.org/dwc/terms/latestEpochOrHighestSeries\":\"test8\","
             + "\"http://rs.tdwg.org/dwc/terms/earliestPeriodOrLowestSystem\":\"test5\","
