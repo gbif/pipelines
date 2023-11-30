@@ -4,7 +4,9 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -19,6 +21,7 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GeologicalContext;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.junit.Rule;
 import org.junit.Test;
@@ -105,6 +108,73 @@ public class BasicRecordTransformTest {
             .setId("777")
             .setCoreTerms(Collections.singletonMap(DwcTerm.sex.qualifiedName(), ""))
             .build();
+
+    PCollection<BasicRecord> recordCollection =
+        p.apply(Create.of(er))
+            .apply(BasicTransform.builder().create().interpret())
+            .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
+
+    // Should
+    PAssert.that(recordCollection).containsInAnyOrder(expected);
+    p.run();
+  }
+
+  @Test
+  public void geologicalContextTest() {
+
+    // Expected
+    BasicRecord expected =
+        BasicRecord.newBuilder()
+            .setId("777")
+            .setBasisOfRecord(BasisOfRecord.OCCURRENCE.name())
+            .setCreated(0L)
+            .setLicense(License.UNSPECIFIED.name())
+            .setIssues(
+                IssueRecord.newBuilder()
+                    .setIssueList(Collections.singletonList(BASIS_OF_RECORD_INVALID.name()))
+                    .build())
+            .setGeologicalContext(
+                GeologicalContext.newBuilder()
+                    .setEarliestEonOrLowestEonothem("test1")
+                    .setLatestEonOrHighestEonothem("test2")
+                    .setEarliestEraOrLowestErathem("test3")
+                    .setLatestEraOrHighestErathem("test4")
+                    .setEarliestPeriodOrLowestSystem("test5")
+                    .setLatestPeriodOrHighestSystem("test6")
+                    .setEarliestEpochOrLowestSeries("test7")
+                    .setLatestEpochOrHighestSeries("test8")
+                    .setEarliestAgeOrLowestStage("test9")
+                    .setLatestAgeOrHighestStage("test10")
+                    .setLowestBiostratigraphicZone("test11")
+                    .setHighestBiostratigraphicZone("test12")
+                    .setGroup("test13")
+                    .setFormation("test14")
+                    .setMember("test15")
+                    .setBed("test16")
+                    .build())
+            .build();
+
+    // State
+
+    Map<String, String> coreTerms = new HashMap<>();
+    coreTerms.put(DwcTerm.earliestEonOrLowestEonothem.qualifiedName(), "test1");
+    coreTerms.put(DwcTerm.latestEonOrHighestEonothem.qualifiedName(), "test2");
+    coreTerms.put(DwcTerm.earliestEraOrLowestErathem.qualifiedName(), "test3");
+    coreTerms.put(DwcTerm.latestEraOrHighestErathem.qualifiedName(), "test4");
+    coreTerms.put(DwcTerm.earliestPeriodOrLowestSystem.qualifiedName(), "test5");
+    coreTerms.put(DwcTerm.latestPeriodOrHighestSystem.qualifiedName(), "test6");
+    coreTerms.put(DwcTerm.earliestEpochOrLowestSeries.qualifiedName(), "test7");
+    coreTerms.put(DwcTerm.latestEpochOrHighestSeries.qualifiedName(), "test8");
+    coreTerms.put(DwcTerm.earliestAgeOrLowestStage.qualifiedName(), "test9");
+    coreTerms.put(DwcTerm.latestAgeOrHighestStage.qualifiedName(), "test10");
+    coreTerms.put(DwcTerm.lowestBiostratigraphicZone.qualifiedName(), "test11");
+    coreTerms.put(DwcTerm.highestBiostratigraphicZone.qualifiedName(), "test12");
+    coreTerms.put(DwcTerm.group.qualifiedName(), "test13");
+    coreTerms.put(DwcTerm.formation.qualifiedName(), "test14");
+    coreTerms.put(DwcTerm.member.qualifiedName(), "test15");
+    coreTerms.put(DwcTerm.bed.qualifiedName(), "test16");
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").setCoreTerms(coreTerms).build();
 
     PCollection<BasicRecord> recordCollection =
         p.apply(Create.of(er))

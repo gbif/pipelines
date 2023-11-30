@@ -11,6 +11,30 @@
     ]
   },
   {
+    "name":"GeologicalContext",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"Darwin Core Geological Context terms",
+    "fields":[
+      {"name":"earliestEonOrLowestEonothem","type":["null","string"],"default":null,"doc":""},
+      {"name":"latestEonOrHighestEonothem","type":["null","string"],"default":null,"doc":""},
+      {"name":"earliestEraOrLowestErathem","type":["null","string"],"default":null,"doc":""},
+      {"name":"latestEraOrHighestErathem","type":["null","string"],"default":null,"doc":""},
+      {"name":"earliestPeriodOrLowestSystem","type":["null","string"],"default":null,"doc":""},
+      {"name":"latestPeriodOrHighestSystem","type":["null","string"],"default":null,"doc":""},
+      {"name":"earliestEpochOrLowestSeries","type":["null","string"],"default":null,"doc":""},
+      {"name":"latestEpochOrHighestSeries","type":["null","string"],"default":null,"doc":""},
+      {"name":"earliestAgeOrLowestStage","type":["null","string"],"default":null,"doc":""},
+      {"name":"latestAgeOrHighestStage","type":["null","string"],"default":null,"doc":""},
+      {"name":"lowestBiostratigraphicZone","type":["null","string"],"default":null,"doc":""},
+      {"name":"highestBiostratigraphicZone","type":["null","string"],"default":null,"doc":""},
+      {"name":"group","type":["null","string"],"default":null,"doc":""},
+      {"name":"formation","type":["null","string"],"default":null,"doc":""},
+      {"name":"member","type":["null","string"],"default":null,"doc":""},
+      {"name":"bed","type":["null","string"],"default":null,"doc":""}
+    ]
+  },
+  {
     "name":"OccurrenceJsonRecord",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
@@ -116,6 +140,7 @@
       {"name":"modified","type":["null","string"],"default":null,"doc":""},
       {"name":"dateIdentified","type":["null","string"],"default":null,"doc":""},
       {"name":"eventDateSingle","type":["null","string"],"default":null,"doc":""},
+      {"name":"geologicalContext","type":["null","GeologicalContext"],"default":null,"doc":""},
       {"name":"issues","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"notIssues","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"extensions","type":{"type":"array","items":"string"},"default":[],"doc":""},

@@ -18,6 +18,7 @@ import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.core.interpreters.core.CoreInterpreter;
 import org.gbif.pipelines.core.interpreters.core.DynamicPropertiesInterpreter;
+import org.gbif.pipelines.core.interpreters.core.GeologicalContextInterpreter;
 import org.gbif.pipelines.core.interpreters.core.VocabularyInterpreter;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -126,7 +127,24 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
             .via(BasicInterpreter::interpretIdentifiedBy)
             .via(BasicInterpreter::interpretPreparations)
             .via((e, r) -> CoreInterpreter.interpretSamplingProtocol(e, r::setSamplingProtocol))
-            .via(BasicInterpreter::interpretProjectId);
+            .via(BasicInterpreter::interpretProjectId)
+            // Geological context
+            .via(GeologicalContextInterpreter::interpretEarliestEonOrLowestEonothem)
+            .via(GeologicalContextInterpreter::interpretLatestEonOrHighestEonothem)
+            .via(GeologicalContextInterpreter::interpretEarliestEraOrLowestErathem)
+            .via(GeologicalContextInterpreter::interpretLatestEraOrHighestErathem)
+            .via(GeologicalContextInterpreter::interpretEarliestPeriodOrLowestSystem)
+            .via(GeologicalContextInterpreter::interpretLatestPeriodOrHighestSystem)
+            .via(GeologicalContextInterpreter::interpretEarliestEpochOrLowestSeries)
+            .via(GeologicalContextInterpreter::interpretLatestEpochOrHighestSeries)
+            .via(GeologicalContextInterpreter::interpretEarliestAgeOrLowestStage)
+            .via(GeologicalContextInterpreter::interpretLatestAgeOrHighestStage)
+            .via(GeologicalContextInterpreter::interpretLowestBiostratigraphicZone)
+            .via(GeologicalContextInterpreter::interpretHighestBiostratigraphicZone)
+            .via(GeologicalContextInterpreter::interpretGroup)
+            .via(GeologicalContextInterpreter::interpretFormation)
+            .via(GeologicalContextInterpreter::interpretMember)
+            .via(GeologicalContextInterpreter::interpretBed);
 
     if (useDynamicPropertiesInterpretation) {
       handler

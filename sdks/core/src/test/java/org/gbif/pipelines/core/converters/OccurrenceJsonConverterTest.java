@@ -30,6 +30,7 @@ import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GadmFeatures;
+import org.gbif.pipelines.io.avro.GeologicalContext;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MachineTag;
@@ -80,6 +81,22 @@ public class OccurrenceJsonConverterTest {
     erMap.put(DwcTerm.taxonID.qualifiedName(), "taxonID");
     erMap.put(DwcTerm.scientificName.qualifiedName(), "scientificName");
     erMap.put(GbifTerm.projectId.qualifiedName(), multivalue1 + "|" + multivalue2);
+    erMap.put(DwcTerm.earliestEonOrLowestEonothem.qualifiedName(), "test1");
+    erMap.put(DwcTerm.latestEonOrHighestEonothem.qualifiedName(), "test2");
+    erMap.put(DwcTerm.earliestEraOrLowestErathem.qualifiedName(), "test3");
+    erMap.put(DwcTerm.latestEraOrHighestErathem.qualifiedName(), "test4");
+    erMap.put(DwcTerm.earliestPeriodOrLowestSystem.qualifiedName(), "test5");
+    erMap.put(DwcTerm.latestPeriodOrHighestSystem.qualifiedName(), "test6");
+    erMap.put(DwcTerm.earliestEpochOrLowestSeries.qualifiedName(), "test7");
+    erMap.put(DwcTerm.latestEpochOrHighestSeries.qualifiedName(), "test8");
+    erMap.put(DwcTerm.earliestAgeOrLowestStage.qualifiedName(), "test9");
+    erMap.put(DwcTerm.latestAgeOrHighestStage.qualifiedName(), "test10");
+    erMap.put(DwcTerm.lowestBiostratigraphicZone.qualifiedName(), "test11");
+    erMap.put(DwcTerm.highestBiostratigraphicZone.qualifiedName(), "test12");
+    erMap.put(DwcTerm.group.qualifiedName(), "test13");
+    erMap.put(DwcTerm.formation.qualifiedName(), "test14");
+    erMap.put(DwcTerm.member.qualifiedName(), "test15");
+    erMap.put(DwcTerm.bed.qualifiedName(), "test16");
 
     MetadataRecord mr =
         MetadataRecord.newBuilder()
@@ -179,6 +196,25 @@ public class OccurrenceJsonConverterTest {
             .setSamplingProtocol(Arrays.asList(multivalue1, multivalue2))
             .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
             .setProjectId(Arrays.asList(multivalue1, multivalue2))
+            .setGeologicalContext(
+                GeologicalContext.newBuilder()
+                    .setEarliestEonOrLowestEonothem("test1")
+                    .setLatestEonOrHighestEonothem("test2")
+                    .setEarliestEraOrLowestErathem("test3")
+                    .setLatestEraOrHighestErathem("test4")
+                    .setEarliestPeriodOrLowestSystem("test5")
+                    .setLatestPeriodOrHighestSystem("test6")
+                    .setEarliestEpochOrLowestSeries("test7")
+                    .setLatestEpochOrHighestSeries("test8")
+                    .setEarliestAgeOrLowestStage("test9")
+                    .setLatestAgeOrHighestStage("test10")
+                    .setLowestBiostratigraphicZone("test11")
+                    .setHighestBiostratigraphicZone("test12")
+                    .setGroup("test13")
+                    .setFormation("test14")
+                    .setMember("test15")
+                    .setBed("test16")
+                    .build())
             .build();
 
     TemporalRecord tmr =
@@ -505,20 +541,38 @@ public class OccurrenceJsonConverterTest {
     assertEquals("Level 3 Cipality", gadm.get("level3Name").asText());
     assertEquals(4, gadm.path("gids").size());
 
-    assertEquals(15, result.path("all").size());
+    assertEquals(31, result.path("all").size());
 
     String expectedVerbatim =
         "{\"core\":{\"http://rs.tdwg.org/dwc/terms/eventID\":\"eventId\",\"http://rs.tdwg.org/dwc/terms/organismID\":"
             + "\"organismID\",\"http://rs.tdwg.org/dwc/terms/collectionCode\":\"collectionCode\","
-            + "\"http://rs.tdwg.org/dwc/terms/taxonID\":\"taxonID\",\"http://rs.gbif.org/terms/1.0/projectId\":\"mv;à1|mv2\","
-            + "\"http://rs.tdwg.org/dwc/terms/recordNumber\":\"recordNumber\","
+            + "\"http://rs.tdwg.org/dwc/terms/taxonID\":\"taxonID\",\"http://rs.gbif.org/terms/1.0/projectId\":"
+            + "\"mv;à1|mv2\",\"http://rs.tdwg.org/dwc/terms/latestEpochOrHighestSeries\":\"test8\","
+            + "\"http://rs.tdwg.org/dwc/terms/earliestPeriodOrLowestSystem\":\"test5\","
+            + "\"http://rs.tdwg.org/dwc/terms/latestAgeOrHighestStage\":\"test10\","
+            + "\"http://rs.tdwg.org/dwc/terms/bed\":\"test16\",\"http://rs.tdwg.org/dwc/terms/recordNumber\":"
+            + "\"recordNumber\",\"http://rs.tdwg.org/dwc/terms/highestBiostratigraphicZone\":\"test12\","
+            + "\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\","
+            + "\"http://rs.tdwg.org/dwc/terms/lowestBiostratigraphicZone\":\"test11\","
+            + "\"http://rs.tdwg.org/dwc/terms/formation\":\"test14\","
+            + "\"http://rs.tdwg.org/dwc/terms/earliestEpochOrLowestSeries\":\"test7\","
+            + "\"http://rs.tdwg.org/dwc/terms/recordedBy\":\"mv;à1|mv2\","
+            + "\"http://rs.tdwg.org/dwc/terms/scientificName\":\"scientificName\","
+            + "\"http://rs.tdwg.org/dwc/terms/latestEonOrHighestEonothem\":\"test2\","
+            + "\"http://rs.tdwg.org/dwc/terms/earliestEraOrLowestErathem\":\"test3\","
+            + "\"http://rs.tdwg.org/dwc/terms/latestPeriodOrHighestSystem\":\"test6\","
+            + "\"http://rs.tdwg.org/dwc/terms/group\":\"test13\","
             + "\"http://rs.tdwg.org/dwc/terms/parentEventID\":\"parentEventId\","
-            + "\"http://rs.tdwg.org/dwc/terms/occurrenceID\":\"occurrenceID\",\"http://rs.tdwg.org/dwc/terms/locality\":"
-            + "\"something:{something}\",\"http://purl.org/dc/terms/remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\","
-            + "\"http://rs.tdwg.org/dwc/terms/catalogNumber\":\"catalogNumber\",\"http://rs.tdwg.org/dwc/terms/footprintWKT\":"
-            + "\"footprintWKTfootprintWKTfootprintWKT\",\"http://rs.tdwg.org/dwc/terms/institutionCode\":\"institutionCode\","
-            + "\"http://rs.tdwg.org/dwc/terms/recordedBy\":\"mv;à1|mv2\",\"http://rs.tdwg.org/dwc/terms/scientificName\":"
-            + "\"scientificName\"},\"coreId\":null,\"extensions\":{\"http://rs.tdwg.org/ac/terms/Multimedia\":[{\"k\":\"v\"}]}}";
+            + "\"http://rs.tdwg.org/dwc/terms/earliestEonOrLowestEonothem\":\"test1\","
+            + "\"http://rs.tdwg.org/dwc/terms/occurrenceID\":\"occurrenceID\","
+            + "\"http://purl.org/dc/terms/remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\","
+            + "\"http://rs.tdwg.org/dwc/terms/earliestAgeOrLowestStage\":\"test9\","
+            + "\"http://rs.tdwg.org/dwc/terms/catalogNumber\":\"catalogNumber\","
+            + "\"http://rs.tdwg.org/dwc/terms/latestEraOrHighestErathem\":\"test4\","
+            + "\"http://rs.tdwg.org/dwc/terms/member\":\"test15\",\"http://rs.tdwg.org/dwc/terms/footprintWKT\":"
+            + "\"footprintWKTfootprintWKTfootprintWKT\",\"http://rs.tdwg.org/dwc/terms/institutionCode\":"
+            + "\"institutionCode\"},\"coreId\":null,\"extensions\":{\"http://rs.tdwg.org/ac/terms/Multimedia\""
+            + ":[{\"k\":\"v\"}]}}";
     assertEquals(expectedVerbatim, result.path("verbatim").toString());
 
     String expectedGbifClassification =
@@ -582,6 +636,17 @@ public class OccurrenceJsonConverterTest {
     assertEquals(
         "{\"concept\":\"bla4\",\"lineage\":[\"bla4_1\"]}",
         result.path("degreeOfEstablishment").toString());
+
+    String geologicalContextExpected =
+        "{\"earliestEonOrLowestEonothem\":\"test1\","
+            + "\"latestEonOrHighestEonothem\":\"test2\",\"earliestEraOrLowestErathem\":\"test3\","
+            + "\"latestEraOrHighestErathem\":\"test4\",\"earliestPeriodOrLowestSystem\":\"test5\","
+            + "\"latestPeriodOrHighestSystem\":\"test6\",\"earliestEpochOrLowestSeries\":\"test7\","
+            + "\"latestEpochOrHighestSeries\":\"test8\",\"earliestAgeOrLowestStage\":\"test9\","
+            + "\"latestAgeOrHighestStage\":\"test10\",\"lowestBiostratigraphicZone\":\"test11\","
+            + "\"highestBiostratigraphicZone\":\"test12\",\"group\":\"test13\",\"formation\":\"test14\","
+            + "\"member\":\"test15\",\"bed\":\"test16\"}";
+    assertEquals(geologicalContextExpected, result.path("geologicalContext").toString());
   }
 
   @Test

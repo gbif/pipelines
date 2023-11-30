@@ -24,6 +24,7 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
+import org.gbif.pipelines.io.avro.json.GeologicalContext;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 
 @Slf4j
@@ -164,6 +165,30 @@ public class OccurrenceJsonConverter {
         .ifPresent(builder::setSamplingProtocolJoined);
     JsonConverter.convertToMultivalue(basic.getOtherCatalogNumbers())
         .ifPresent(builder::setOtherCatalogNumbersJoined);
+
+    // Geological context
+    org.gbif.pipelines.io.avro.GeologicalContext gx = basic.getGeologicalContext();
+    if (gx != null) {
+      builder.setGeologicalContext(
+          GeologicalContext.newBuilder()
+              .setEarliestEonOrLowestEonothem(gx.getEarliestEonOrLowestEonothem())
+              .setLatestEonOrHighestEonothem(gx.getLatestEonOrHighestEonothem())
+              .setEarliestEraOrLowestErathem(gx.getEarliestEraOrLowestErathem())
+              .setLatestEraOrHighestErathem(gx.getLatestEraOrHighestErathem())
+              .setEarliestPeriodOrLowestSystem(gx.getEarliestPeriodOrLowestSystem())
+              .setLatestPeriodOrHighestSystem(gx.getLatestPeriodOrHighestSystem())
+              .setEarliestEpochOrLowestSeries(gx.getEarliestEpochOrLowestSeries())
+              .setLatestEpochOrHighestSeries(gx.getLatestEpochOrHighestSeries())
+              .setEarliestAgeOrLowestStage(gx.getEarliestAgeOrLowestStage())
+              .setLatestAgeOrHighestStage(gx.getLatestAgeOrHighestStage())
+              .setLowestBiostratigraphicZone(gx.getLowestBiostratigraphicZone())
+              .setHighestBiostratigraphicZone(gx.getHighestBiostratigraphicZone())
+              .setGroup(gx.getGroup())
+              .setFormation(gx.getFormation())
+              .setMember(gx.getMember())
+              .setBed(gx.getBed())
+              .build());
+    }
   }
 
   private void mapTemporalRecord(OccurrenceJsonRecord.Builder builder) {
