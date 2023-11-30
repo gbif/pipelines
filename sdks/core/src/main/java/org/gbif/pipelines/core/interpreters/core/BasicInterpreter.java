@@ -7,12 +7,14 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED
 import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT;
 import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
+import static org.gbif.pipelines.core.utils.ModelUtils.DEFAULT_SEPARATOR;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractOptListValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import com.google.common.base.Strings;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -287,27 +289,42 @@ public class BasicInterpreter {
 
   /** {@link DwcTerm#otherCatalogNumbers} interpretation. */
   public static void interpretOtherCatalogNumbers(ExtendedRecord er, BasicRecord br) {
-    extractOptListValue(er, DwcTerm.otherCatalogNumbers).ifPresent(br::setOtherCatalogNumbers);
+    List<String> list = extractListValue(DEFAULT_SEPARATOR + "|;", er, DwcTerm.otherCatalogNumbers);
+    if (!list.isEmpty()) {
+      br.setOtherCatalogNumbers(list);
+    }
   }
 
   /** {@link DwcTerm#recordedBy} interpretation. */
   public static void interpretRecordedBy(ExtendedRecord er, BasicRecord br) {
-    extractOptListValue(er, DwcTerm.recordedBy).ifPresent(br::setRecordedBy);
+    List<String> list = extractListValue(er, DwcTerm.recordedBy);
+    if (!list.isEmpty()) {
+      br.setRecordedBy(list);
+    }
   }
 
   /** {@link DwcTerm#identifiedBy} interpretation. */
   public static void interpretIdentifiedBy(ExtendedRecord er, BasicRecord br) {
-    extractOptListValue(er, DwcTerm.identifiedBy).ifPresent(br::setIdentifiedBy);
+    List<String> list = extractListValue(er, DwcTerm.identifiedBy);
+    if (!list.isEmpty()) {
+      br.setIdentifiedBy(list);
+    }
   }
 
   /** {@link DwcTerm#preparations} interpretation. */
   public static void interpretPreparations(ExtendedRecord er, BasicRecord br) {
-    extractOptListValue(er, DwcTerm.preparations).ifPresent(br::setPreparations);
+    List<String> list = extractListValue(er, DwcTerm.preparations);
+    if (!list.isEmpty()) {
+      br.setPreparations(list);
+    }
   }
 
   /** {@link org.gbif.dwc.terms.GbifTerm#projectId} interpretation. */
   public static void interpretProjectId(ExtendedRecord er, BasicRecord br) {
-    extractOptListValue(er, GbifTerm.projectId).ifPresent(br::setProjectId);
+    List<String> list = extractListValue(er, GbifTerm.projectId);
+    if (!list.isEmpty()) {
+      br.setProjectId(list);
+    }
   }
 
   /** Sets the coreId field. */
