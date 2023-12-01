@@ -33,6 +33,8 @@
         {"name": "country","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/country"},
         {"name": "countryCode","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/countryCode"},
         {"name": "publishingCountry","type":["null","string"],"default":null, "doc":"http://rs.gbif.org/terms/1.0/publishingCountry"},
+        {"name": "gbifRegion","type":["null","string"],"default":null},
+        {"name": "publishedByGbifRegion","type":["null","string"],"default":null},
         {"name": "stateProvince","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/stateProvince"},
         {"name": "minimumElevationInMeters","type":["null","double"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/minimumElevationInMeters"},
         {"name": "maximumElevationInMeters","type":["null","double"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/maximumElevationInMeters"},

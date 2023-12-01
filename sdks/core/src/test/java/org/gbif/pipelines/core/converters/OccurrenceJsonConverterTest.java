@@ -266,6 +266,8 @@ public class OccurrenceJsonConverterTest {
             .setHigherGeography(Collections.singletonList("HigherGeography"))
             .setIsland("Island")
             .setIslandGroup("IslandGroup")
+            .setGbifRegion("GbifRegion")
+            .setPublishedByGbifRegion("PublishedByGbifRegion")
             .setGadm(
                 GadmFeatures.newBuilder()
                     .setLevel0Gid("XAA_1")
@@ -484,6 +486,8 @@ public class OccurrenceJsonConverterTest {
     assertEquals("Island", result.path("island").asText());
     assertEquals("IslandGroup", result.path("islandGroup").asText());
     assertEquals("GeoreferencedBy", result.withArray("georeferencedBy").get(0).textValue());
+    assertEquals("GbifRegion", result.path("gbifRegion").asText());
+    assertEquals("PublishedByGbifRegion", result.path("publishedByGbifRegion").asText());
 
     assertTrue(result.path(Indexing.IS_CLUSTERED).asBoolean());
     assertEquals(

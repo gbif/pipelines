@@ -236,7 +236,9 @@ public class OccurrenceJsonConverter {
         .setHigherGeography(location.getHigherGeography())
         .setIsland(location.getIsland())
         .setIslandGroup(location.getIslandGroup())
-        .setGeoreferencedBy(location.getGeoreferencedBy());
+        .setGeoreferencedBy(location.getGeoreferencedBy())
+        .setGbifRegion(location.getGbifRegion())
+        .setPublishedByGbifRegion(location.getPublishedByGbifRegion());
 
     // Coordinates
     Double decimalLongitude = location.getDecimalLongitude();

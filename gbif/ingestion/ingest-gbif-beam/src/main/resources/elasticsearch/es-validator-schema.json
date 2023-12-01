@@ -55,6 +55,7 @@
       "license": {"type": "keyword", "copy_to": "all"},
       "protocol": {"type": "keyword", "copy_to": "all"},
       "publishingCountry": {"type": "keyword", "copy_to": "all"},
+      "publishedByGbifRegion": {"type": "keyword", "copy_to": "all"},
       "datasetPublishingCountry": {"type": "keyword", "copy_to": "all"},
       "publishingOrganizationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "networkKeys": {"type": "keyword", "normalizer": "lowercase_normalizer"},
@@ -262,6 +263,7 @@
       },
       "countryCode": {"type":"keyword", "copy_to": "all"},
       "country": {"type":"text", "copy_to": "all"},
+      "gbifRegion": {"type":"text", "copy_to": "all"},
       "stateProvince": {
         "type": "text",
         "fields": {

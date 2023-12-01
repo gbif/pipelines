@@ -155,6 +155,8 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via(LocationInterpreter::interpretIslandGroup)
         .via(LocationInterpreter::interpretHigherGeography)
         .via(LocationInterpreter::interpretGeoreferencedBy)
+        .via(LocationInterpreter::interpretGbifRegion)
+        .via(LocationInterpreter::interpretPublishedByGbifRegion)
         .via(LocationInterpreter::setCoreId)
         .via(LocationInterpreter::setParentEventId)
         .via(r -> this.incCounter())
