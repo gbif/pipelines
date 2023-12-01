@@ -232,7 +232,11 @@ public class OccurrenceJsonConverter {
         .setHasGeospatialIssue(location.getHasGeospatialIssue())
         .setLocality(location.getLocality())
         .setFootprintWKT(location.getFootprintWKT())
-        .setDistanceFromCentroidInMeters(location.getDistanceFromCentroidInMeters());
+        .setDistanceFromCentroidInMeters(location.getDistanceFromCentroidInMeters())
+        .setHigherGeography(location.getHigherGeography())
+        .setIsland(location.getIsland())
+        .setIslandGroup(location.getIslandGroup())
+        .setGeoreferencedBy(location.getGeoreferencedBy());
 
     // Coordinates
     Double decimalLongitude = location.getDecimalLongitude();

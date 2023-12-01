@@ -286,6 +286,10 @@
       "scoordinates": {"type": "geo_shape"},
       "decimalLatitude": {"type": "double"},
       "decimalLongitude": {"type": "double"},
+      "higherGeography": {"type":"keyword"},
+      "island": {"type":"keyword"},
+      "islandGroup": {"type":"keyword"},
+      "georeferencedBy": {"type":"keyword"},
 
       "gadm": {
         "type": "object",

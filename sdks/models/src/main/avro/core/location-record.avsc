@@ -57,6 +57,10 @@
         {"name": "footprintWKT","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/footprintWKT"},
         {"name": "biome","type":["null","string"],"default":null },
         {"name": "distanceFromCentroidInMeters","type":["null","double"],"default":null, "doc":"http://rs.gbif.org/terms/1.0/distanceFromCentroidInMeters"},
+        {"name": "higherGeography", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc":"http://rs.tdwg.org/dwc/terms/higherGeography"},
+        {"name": "island","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/island"},
+        {"name": "islandGroup","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/islandGroup"},
+        {"name": "georeferencedBy", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc":"http://rs.tdwg.org/dwc/terms/georeferencedBy"},
         {"name": "issues", "type": "IssueRecord", "default":{}}
       ]
     }

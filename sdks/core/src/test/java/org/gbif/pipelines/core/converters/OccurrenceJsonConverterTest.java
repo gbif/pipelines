@@ -262,6 +262,10 @@ public class OccurrenceJsonConverterTest {
             .setWaterBody("setWaterBody")
             .setStateProvince("setStateProvince")
             .setRepatriated(true)
+            .setGeoreferencedBy(Collections.singletonList("GeoreferencedBy"))
+            .setHigherGeography(Collections.singletonList("HigherGeography"))
+            .setIsland("Island")
+            .setIslandGroup("IslandGroup")
             .setGadm(
                 GadmFeatures.newBuilder()
                     .setLevel0Gid("XAA_1")
@@ -475,6 +479,12 @@ public class OccurrenceJsonConverterTest {
     assertEquals("Country", result.path(Indexing.COUNTRY).asText());
     assertEquals("Code 1'2\"", result.path(Indexing.COUNTRY_CODE).asText());
     assertEquals("[68]", result.path(Indexing.LOCALITY).asText());
+
+    assertEquals("HigherGeography", result.withArray("higherGeography").get(0).textValue());
+    assertEquals("Island", result.path("island").asText());
+    assertEquals("IslandGroup", result.path("islandGroup").asText());
+    assertEquals("GeoreferencedBy", result.withArray("georeferencedBy").get(0).textValue());
+
     assertTrue(result.path(Indexing.IS_CLUSTERED).asBoolean());
     assertEquals(
         "[\"" + expectedMultivalue1 + "\",\"" + multivalue2 + "\"]",

@@ -217,7 +217,6 @@
       },
       "otherCatalogNumbersJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
 
-
       "occurrenceStatus": {"type": "keyword", "copy_to": "all"},
 
       "organismQuantity": {"type": "double"},
@@ -262,6 +261,10 @@
       "decimalLatitude": {"type": "double"},
       "decimalLongitude": {"type": "double"},
       "distanceFromCentroidInMeters": {"type": "double"},
+      "higherGeography": {"type":"keyword"},
+      "island": {"type":"keyword"},
+      "islandGroup": {"type":"keyword"},
+      "georeferencedBy": {"type":"keyword"},
 
       "gadm": {
         "type": "object",

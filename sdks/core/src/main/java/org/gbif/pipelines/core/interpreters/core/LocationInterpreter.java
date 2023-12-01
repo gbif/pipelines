@@ -5,11 +5,13 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_MET
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_SRS_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_WKT_MISMATCH;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import com.google.common.base.Strings;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -378,6 +380,38 @@ public class LocationInterpreter {
     String value = extractNullAwareValue(er, DwcTerm.locality);
     if (!Strings.isNullOrEmpty(value)) {
       lr.setLocality(cleanName(value));
+    }
+  }
+
+  /** {@link DwcTerm#higherGeography} interpretation. */
+  public static void interpretHigherGeography(ExtendedRecord er, LocationRecord lr) {
+    List<String> list = extractListValue(er, DwcTerm.higherGeography);
+    if (!list.isEmpty()) {
+      lr.setHigherGeography(list);
+    }
+  }
+
+  /** {@link DwcTerm#locality} interpretation. */
+  public static void interpretGeoreferencedBy(ExtendedRecord er, LocationRecord lr) {
+    List<String> list = extractListValue(er, DwcTerm.georeferencedBy);
+    if (!list.isEmpty()) {
+      lr.setGeoreferencedBy(list);
+    }
+  }
+
+  /** {@link DwcTerm#locality} interpretation. */
+  public static void interpretIsland(ExtendedRecord er, LocationRecord lr) {
+    String value = extractNullAwareValue(er, DwcTerm.island);
+    if (!Strings.isNullOrEmpty(value)) {
+      lr.setIsland(value);
+    }
+  }
+
+  /** {@link DwcTerm#locality} interpretation. */
+  public static void interpretIslandGroup(ExtendedRecord er, LocationRecord lr) {
+    String value = extractNullAwareValue(er, DwcTerm.islandGroup);
+    if (!Strings.isNullOrEmpty(value)) {
+      lr.setIslandGroup(value);
     }
   }
 
