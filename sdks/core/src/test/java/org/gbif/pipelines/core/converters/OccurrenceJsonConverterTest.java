@@ -156,6 +156,7 @@ public class OccurrenceJsonConverterTest {
             .setReferences("setReferences")
             .setTypifiedName("setTypifiedName")
             .setIndividualCount(10)
+            .setIsSequenced(true)
             .setLifeStage(
                 VocabularyConcept.newBuilder()
                     .setConcept("bla1")
@@ -632,6 +633,8 @@ public class OccurrenceJsonConverterTest {
     assertEquals("10.0", result.path("distanceFromCentroidInMeters").asText());
 
     assertEquals(institutionMatch.getKey(), result.path("institutionKey").asText());
+
+    assertTrue(result.path("isSequenced").asBoolean());
 
     String expectedIssues =
         "[\"BASIS_OF_RECORD_INVALID\",\"INSTITUTION_MATCH_FUZZY\",\"ZERO_COORDINATE\"]";

@@ -572,6 +572,44 @@ public class BasicInterpreterTest {
     assertIssueSize(br, 0);
   }
 
+  @Test
+  public void interpretIsSequencedNullTest() {
+    final String seq = "null";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.associatedSequences.qualifiedName(), seq);
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretIsSequenced(er, br);
+
+    // Should
+    Assert.assertFalse(br.getIsSequenced());
+    assertIssueSize(br, 0);
+  }
+
+  @Test
+  public void interpretIsSequencedTest() {
+    final String seq = " awdawd ";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.associatedSequences.qualifiedName(), seq);
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretIsSequenced(er, br);
+
+    // Should
+    Assert.assertTrue(br.getIsSequenced());
+    assertIssueSize(br, 0);
+  }
+
   private void assertIssueSize(BasicRecord br, int expectedSize) {
     assertEquals(expectedSize, br.getIssues().getIssueList().size());
   }

@@ -136,7 +136,8 @@ public class OccurrenceJsonConverter {
         .setDatasetName(JsonConverter.getEscapedList(basic.getDatasetName()))
         .setOtherCatalogNumbers(JsonConverter.getEscapedList(basic.getOtherCatalogNumbers()))
         .setPreparations(JsonConverter.getEscapedList(basic.getPreparations()))
-        .setSamplingProtocol(JsonConverter.getEscapedList(basic.getSamplingProtocol()));
+        .setSamplingProtocol(JsonConverter.getEscapedList(basic.getSamplingProtocol()))
+        .setIsSequenced(basic.getIsSequenced());
 
     // Agent
     builder

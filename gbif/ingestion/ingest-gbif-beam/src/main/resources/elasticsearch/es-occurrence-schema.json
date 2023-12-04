@@ -220,6 +220,7 @@
 
       "occurrenceStatus": {"type": "keyword", "copy_to": "all"},
 
+      "isSequenced": {"type": "boolean"},
       "organismQuantity": {"type": "double"},
       "organismQuantityType": {"type": "keyword", "copy_to": "all"},
       "sampleSizeUnit": {"type": "keyword", "copy_to": "all"},
