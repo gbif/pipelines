@@ -482,8 +482,8 @@ public class LocationInterpreterTest {
     LocationRecord record =
         LocationRecord.newBuilder()
             .setId("777")
-            .setCountry(Country.ANDORRA.name())
-            .setPublishingCountry(Country.SPAIN.name())
+            .setCountryCode(Country.ANDORRA.getIso2LetterCode())
+            .setPublishingCountry(Country.SPAIN.getIso2LetterCode())
             .build();
 
     // When
