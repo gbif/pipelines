@@ -210,7 +210,10 @@
         "hasCoordinate": {"type": "boolean"},
         "repatriated": {"type": "boolean"},
         "hasGeospatialIssue": {"type": "boolean"},
-        "footprintWKT": {"type": "text"},
+        "footprintWKT": {
+          "type": "text",
+          "index": false
+        },
         "gadm": {
           "type": "object",
           "properties": {
