@@ -63,7 +63,7 @@
       {"name": "samplingProtocol", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/samplingProtocol"},
       {"name": "projectId", "type": {"type" : "array", "items" : "string"}, "default" : []},
       {"name": "geologicalContext","type":["null","GeologicalContext"],"default":null,"doc":""},
-      {"name": "isSequenced","type":["null","boolean"],"default":false, "doc":""},
+      {"name": "isSequenced","type":["null","boolean"],"default":null, "doc":""},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }
