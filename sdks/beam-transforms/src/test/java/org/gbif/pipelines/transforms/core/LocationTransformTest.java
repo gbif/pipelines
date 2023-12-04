@@ -370,6 +370,14 @@ public class LocationTransformTest {
                       .setElevation(Double.valueOf(x[19]))
                       .setElevationAccuracy(Double.valueOf(x[20]))
                       .setRepatriated(x[21] == null ? null : Boolean.parseBoolean(x[21]))
+                      .setGbifRegion(
+                          Optional.ofNullable(x[2])
+                              .map(v -> Country.fromIsoCode(v).getGbifRegion().name())
+                              .orElse(null))
+                      .setPublishedByGbifRegion(
+                          Country.fromIsoCode(mdr.getDatasetPublishingCountry())
+                              .getGbifRegion()
+                              .name())
                       .setGadm(
                           x[23] == null
                               ? null

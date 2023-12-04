@@ -419,7 +419,7 @@ public class LocationInterpreter {
 
   /** Use country to get GbifRegion */
   public static void interpretGbifRegion(LocationRecord lr) {
-    setGbifRegion(lr.getCountry(), lr::setGbifRegion);
+    setGbifRegion(lr.getCountryCode(), lr::setGbifRegion);
   }
 
   /** Use publishing country to get PublishedByGbifRegion */
@@ -437,9 +437,9 @@ public class LocationInterpreter {
     extractOptValue(er, DwcTerm.parentEventID).ifPresent(lr::setParentId);
   }
 
-  private static void setGbifRegion(String country, Consumer<String> fn) {
-    Optional.ofNullable(country)
-        .map(Country::valueOf)
+  private static void setGbifRegion(String countryIsoCode, Consumer<String> fn) {
+    Optional.ofNullable(countryIsoCode)
+        .map(Country::fromIsoCode)
         .map(Country::getGbifRegion)
         .map(GbifRegion::toString)
         .ifPresent(fn);
