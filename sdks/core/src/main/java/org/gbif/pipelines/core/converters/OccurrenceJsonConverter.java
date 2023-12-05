@@ -300,6 +300,8 @@ public class OccurrenceJsonConverter {
     extractOptValue(verbatim, DwcTerm.islandGroup).ifPresent(builder::setIslandGroup);
     extractOptValue(verbatim, DwcTerm.previousIdentifications)
         .ifPresent(builder::setPreviousIdentifications);
+    extractOptValue(verbatim, DwcTerm.taxonConceptID)
+        .ifPresent(builder.getGbifClassification()::setTaxonConceptID);
   }
 
   private void mapIssues(OccurrenceJsonRecord.Builder builder) {

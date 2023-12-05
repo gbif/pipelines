@@ -201,6 +201,7 @@
       {"name":"speciesKey","type":["null","string"],"default":null,"doc":""},
       {"name":"synonym","type":["null","boolean"],"default":null,"doc":""},
       {"name":"taxonID","type":["null","string"],"default":null,"doc":""},
+      {"name":"taxonConceptID","type":["null","string"],"default":null,"doc":""},
       {"name":"taxonKey","type":{"type":"array","items":"string"},"default":[]},
       {"name":"usage","type":["null","RankedName"],"default":null,"doc":""},
       {"name":"usageParsedName","type":["null","ParsedName"],"default":null,"doc":""},
