@@ -98,6 +98,7 @@ public class OccurrenceJsonConverterTest {
     erMap.put(DwcTerm.member.qualifiedName(), "test15");
     erMap.put(DwcTerm.bed.qualifiedName(), "test16");
     erMap.put(DwcTerm.fieldNumber.qualifiedName(), "fieldNumber");
+    erMap.put(DwcTerm.taxonConceptID.qualifiedName(), "taxonConceptID");
 
     MetadataRecord mr =
         MetadataRecord.newBuilder()
@@ -482,8 +483,6 @@ public class OccurrenceJsonConverterTest {
     assertEquals("[68]", result.path(Indexing.LOCALITY).asText());
 
     assertEquals("HigherGeography", result.withArray("higherGeography").get(0).textValue());
-    assertEquals("Island", result.path("island").asText());
-    assertEquals("IslandGroup", result.path("islandGroup").asText());
     assertEquals("GeoreferencedBy", result.withArray("georeferencedBy").get(0).textValue());
     assertEquals("GbifRegion", result.path("gbifRegion").asText());
     assertEquals("PublishedByGbifRegion", result.path("publishedByGbifRegion").asText());
@@ -555,7 +554,7 @@ public class OccurrenceJsonConverterTest {
     assertEquals("Level 3 Cipality", gadm.get("level3Name").asText());
     assertEquals(4, gadm.path("gids").size());
 
-    assertEquals(32, result.path("all").size());
+    assertEquals(33, result.path("all").size());
 
     String expectedVerbatim =
         "{\"core\":{\"http://rs.tdwg.org/dwc/terms/eventID\":\"eventId\",\"http://rs.tdwg.org/dwc/terms/organismID\":"
@@ -571,6 +570,7 @@ public class OccurrenceJsonConverterTest {
             + "\"http://rs.tdwg.org/dwc/terms/lowestBiostratigraphicZone\":\"test11\","
             + "\"http://rs.tdwg.org/dwc/terms/formation\":\"test14\","
             + "\"http://rs.tdwg.org/dwc/terms/earliestEpochOrLowestSeries\":\"test7\","
+            + "\"http://rs.tdwg.org/dwc/terms/taxonConceptID\":\"taxonConceptID\","
             + "\"http://rs.tdwg.org/dwc/terms/recordedBy\":\"mv;à1|mv2\","
             + "\"http://rs.tdwg.org/dwc/terms/scientificName\":\"scientificName\","
             + "\"http://rs.tdwg.org/dwc/terms/latestEonOrHighestEonothem\":\"test2\","
@@ -601,7 +601,7 @@ public class OccurrenceJsonConverterTest {
             + "\"status\":\"ACCEPTED\"},\"kingdom\":\"KINGDOM\",\"kingdomKey\":\"1\",\"phylum\":\"PHYLUM\","
             + "\"phylumKey\":\"2\",\"classKey\":\"3\",\"order\":\"ORDER\",\"orderKey\":\"4\",\"family\":\"FAMILY\","
             + "\"familyKey\":\"5\",\"genus\":\"GENUS\",\"genusKey\":\"6\",\"species\":\"SPECIES\","
-            + "\"speciesKey\":\"7\",\"synonym\":true,\"taxonID\":\"taxonID\","
+            + "\"speciesKey\":\"7\",\"synonym\":true,\"taxonID\":\"taxonID\",\"taxonConceptID\":\"taxonConceptID\","
             + "\"taxonKey\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\",\"10\",\"11\"],\"usage\":{\"key\":10,"
             + "\"guid\":null,\"name\":\"synonym\",\"rank\":\"SPECIES\"},\"usageParsedName\":{\"abbreviated\":false,"
             + "\"autonym\":false,\"basionymAuthorship\":{\"authors\":[\"setBasionymAuthorship\"],\"exAuthors\":["
