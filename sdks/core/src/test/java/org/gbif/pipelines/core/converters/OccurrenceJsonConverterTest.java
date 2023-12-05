@@ -265,8 +265,6 @@ public class OccurrenceJsonConverterTest {
             .setRepatriated(true)
             .setGeoreferencedBy(Collections.singletonList("GeoreferencedBy"))
             .setHigherGeography(Collections.singletonList("HigherGeography"))
-            .setIsland("Island")
-            .setIslandGroup("IslandGroup")
             .setGbifRegion("GbifRegion")
             .setPublishedByGbifRegion("PublishedByGbifRegion")
             .setGadm(

@@ -87,6 +87,7 @@
       {"name":"organismId","type":["null","string"],"default":null,"doc":""},
       {"name":"samplingProtocol","type":{"type":"array","items":"string"},"default":null,"doc":""},
       {"name":"samplingProtocolJoined","type":["null","string"],"default":null,"doc":""},
+      {"name":"previousIdentifications","type":["null","string"],"default":null,"doc":""},
       {"name":"eventId","type":["null","string"],"default":null,"doc":""},
       {"name":"parentEventId","type":["null","string"],"default":null,"doc":""},
       {"name":"institutionCode","type":["null","string"],"default":null,"doc":""},

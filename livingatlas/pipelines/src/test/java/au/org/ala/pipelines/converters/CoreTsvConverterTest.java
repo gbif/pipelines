@@ -132,8 +132,8 @@ public class CoreTsvConverterTest {
       "\"\"", // DwcTerm.informationWithheld
       "\"raw_er_infraspecificEpithet\"", // DwcTerm.infraspecificEpithet
       "\"raw_er_institutionID\"", // DwcTerm.institutionID
-      "\"lr_island\"", // DwcTerm.island
-      "\"lr_islandGroup\"", // DwcTerm.islandGroup
+      "\"raw_er_island\"", // DwcTerm.island
+      "\"raw_er_islandGroup\"", // DwcTerm.islandGroup
       "\"{concept: br_lifeStage, lineage: [br_lifeStageLineage]}\"", // DwcTerm.lifeStage
       "\"raw_er_locationAccordingTo\"", // DwcTerm.locationAccordingTo
       "\"raw_er_locationID\"", // DwcTerm.locationID
@@ -541,8 +541,6 @@ public class CoreTsvConverterTest {
             .setGeoreferencedDate("lr_georeferencedDate")
             .setGeoreferencedBy(Collections.singletonList("lr_georeferencedBy"))
             .setHigherGeography(Collections.singletonList("lr_higherGeography"))
-            .setIsland("lr_island")
-            .setIslandGroup("lr_islandGroup")
             .setFootprintWKT("lr_footprintWKT")
             .setBiome("lr_biome")
             .build();

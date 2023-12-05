@@ -235,8 +235,6 @@ public class OccurrenceJsonConverter {
         .setFootprintWKT(location.getFootprintWKT())
         .setDistanceFromCentroidInMeters(location.getDistanceFromCentroidInMeters())
         .setHigherGeography(location.getHigherGeography())
-        .setIsland(location.getIsland())
-        .setIslandGroup(location.getIslandGroup())
         .setGeoreferencedBy(location.getGeoreferencedBy())
         .setGbifRegion(location.getGbifRegion())
         .setPublishedByGbifRegion(location.getPublishedByGbifRegion());
@@ -298,6 +296,10 @@ public class OccurrenceJsonConverter {
     extractOptValue(verbatim, DwcTerm.catalogNumber).ifPresent(builder::setCatalogNumber);
     extractOptValue(verbatim, DwcTerm.occurrenceID).ifPresent(builder::setOccurrenceId);
     extractOptValue(verbatim, DwcTerm.fieldNumber).ifPresent(builder::setFieldNumber);
+    extractOptValue(verbatim, DwcTerm.island).ifPresent(builder::setIsland);
+    extractOptValue(verbatim, DwcTerm.islandGroup).ifPresent(builder::setIslandGroup);
+    extractOptValue(verbatim, DwcTerm.previousIdentifications)
+        .ifPresent(builder::setPreviousIdentifications);
   }
 
   private void mapIssues(OccurrenceJsonRecord.Builder builder) {

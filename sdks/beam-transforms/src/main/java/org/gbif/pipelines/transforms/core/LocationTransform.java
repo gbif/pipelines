@@ -151,8 +151,6 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via(LocationInterpreter.calculateCentroidDistance(geocodeKvStore))
         .via(LocationInterpreter::interpretLocality)
         .via(LocationInterpreter::interpretFootprintWKT)
-        .via(LocationInterpreter::interpretIsland)
-        .via(LocationInterpreter::interpretIslandGroup)
         .via(LocationInterpreter::interpretHigherGeography)
         .via(LocationInterpreter::interpretGeoreferencedBy)
         .via(LocationInterpreter::interpretGbifRegion)

@@ -401,22 +401,6 @@ public class LocationInterpreter {
     }
   }
 
-  /** {@link DwcTerm#locality} interpretation. */
-  public static void interpretIsland(ExtendedRecord er, LocationRecord lr) {
-    String value = extractNullAwareValue(er, DwcTerm.island);
-    if (!Strings.isNullOrEmpty(value)) {
-      lr.setIsland(value);
-    }
-  }
-
-  /** {@link DwcTerm#locality} interpretation. */
-  public static void interpretIslandGroup(ExtendedRecord er, LocationRecord lr) {
-    String value = extractNullAwareValue(er, DwcTerm.islandGroup);
-    if (!Strings.isNullOrEmpty(value)) {
-      lr.setIslandGroup(value);
-    }
-  }
-
   /** Use country to get GbifRegion */
   public static void interpretGbifRegion(LocationRecord lr) {
     setGbifRegion(lr.getCountryCode(), lr::setGbifRegion);
