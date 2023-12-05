@@ -143,6 +143,7 @@
         }
       },
       "samplingProtocolJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+      "previousIdentifications": {"type": "keyword"},
       "eventId": {
         "type": "text",
         "fields": {
@@ -362,6 +363,7 @@
           "speciesKey": {"type": "long"},
           "synonym": {"type": "boolean"},
           "taxonID": {"type": "keyword"},
+          "taxonConceptID": {"type": "keyword"},
           "taxonKey": {"type": "long"},
           "usage": {
             "properties": {
