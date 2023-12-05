@@ -826,26 +826,45 @@ public class CoreTsvConverterTest {
             .setFirstLoaded(6L)
             .build();
 
+    Image im1 =
+        Image.newBuilder()
+            .setCreated("ir_Image")
+            .setAudience("ir_Audienc")
+            .setCreator("ir_Creator")
+            .setContributor("ir_Contributor")
+            .setDatasetId("ir_DatasetId")
+            .setLicense("ir_License")
+            .setLatitude(77d)
+            .setLongitude(777d)
+            .setSpatial("ir_Spatial")
+            .setTitle("ir_Title")
+            .setRightsHolder("ir_RightsHolder")
+            .setIdentifier("ir_Identifier1")
+            .setFormat("image")
+            .build();
+
+    Image im2 =
+        Image.newBuilder()
+            .setCreated("ir_Audio")
+            .setAudience("ir_Audienc")
+            .setCreator("ir_Creator")
+            .setContributor("ir_Contributor")
+            .setDatasetId("ir_DatasetId")
+            .setLicense("ir_License")
+            .setLatitude(77d)
+            .setLongitude(777d)
+            .setSpatial("ir_Spatial")
+            .setTitle("ir_Title")
+            .setRightsHolder("ir_RightsHolder")
+            .setIdentifier("ir_Identifier2")
+            .setFormat("audio")
+            .build();
+
     ImageRecord ir =
         ImageRecord.newBuilder()
             .setId(DwcTerm.occurrenceID.simpleName())
             .setCreated(7L)
-            .setImageItems(
-                Collections.singletonList(
-                    Image.newBuilder()
-                        .setCreated("ir_Image")
-                        .setAudience("ir_Audienc")
-                        .setCreator("ir_Creator")
-                        .setContributor("ir_Contributor")
-                        .setDatasetId("ir_DatasetId")
-                        .setLicense("ir_License")
-                        .setLatitude(77d)
-                        .setLongitude(777d)
-                        .setSpatial("ir_Spatial")
-                        .setTitle("ir_Title")
-                        .setRightsHolder("ir_RightsHolder")
-                        .setIdentifier("ir_Identifier")
-                        .build()))
+            .setImageItems(Arrays.asList(im1, im2))
             .build();
 
     TaxonProfile tp = TaxonProfile.newBuilder().setId(DwcTerm.occurrenceID.simpleName()).build();
@@ -903,6 +922,10 @@ public class CoreTsvConverterTest {
 
     // Should
     Assert.assertEquals(String.join("\t", expected), result);
+
+    Assert.assertEquals(1, source.getMultiValues().get("imageIDs").size());
+    Assert.assertEquals(1, source.getMultiValues().get("soundIDs").size());
+    Assert.assertNull(source.getMultiValues().get("videoIDs"));
   }
 
   @Test
