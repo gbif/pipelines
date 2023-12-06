@@ -473,6 +473,36 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setLicense(basicRecord.getLicense());
     }
 
+    Optional.ofNullable(basicRecord.getGeologicalContext())
+        .ifPresent(
+            gc -> {
+              occurrenceHdfsRecord.setEarliesteonorlowesteonothem(
+                  gc.getEarliestEonOrLowestEonothem());
+              occurrenceHdfsRecord.setLatesteonorhighesteonothem(
+                  gc.getLatestEonOrHighestEonothem());
+              occurrenceHdfsRecord.setEarliesteraorlowesterathem(
+                  gc.getEarliestEraOrLowestErathem());
+              occurrenceHdfsRecord.setLatesteraorhighesterathem(gc.getLatestEraOrHighestErathem());
+              occurrenceHdfsRecord.setEarliestperiodorlowestsystem(
+                  gc.getEarliestPeriodOrLowestSystem());
+              occurrenceHdfsRecord.setLatestperiodorhighestsystem(
+                  gc.getLatestPeriodOrHighestSystem());
+              occurrenceHdfsRecord.setEarliestepochorlowestseries(
+                  gc.getEarliestEpochOrLowestSeries());
+              occurrenceHdfsRecord.setLatestepochorhighestseries(
+                  gc.getLatestEpochOrHighestSeries());
+              occurrenceHdfsRecord.setEarliestageorloweststage(gc.getEarliestAgeOrLowestStage());
+              occurrenceHdfsRecord.setLatestageorhigheststage(gc.getLatestAgeOrHighestStage());
+              occurrenceHdfsRecord.setLowestbiostratigraphiczone(
+                  gc.getLowestBiostratigraphicZone());
+              occurrenceHdfsRecord.setHighestbiostratigraphiczone(
+                  gc.getHighestBiostratigraphicZone());
+              occurrenceHdfsRecord.setGroup(gc.getGroup());
+              occurrenceHdfsRecord.setFormation(gc.getFormation());
+              occurrenceHdfsRecord.setMember(gc.getMember());
+              occurrenceHdfsRecord.setBed(gc.getBed());
+            });
+
     setCreatedIfGreater(occurrenceHdfsRecord, basicRecord.getCreated());
     addIssues(basicRecord.getIssues(), occurrenceHdfsRecord);
   }
