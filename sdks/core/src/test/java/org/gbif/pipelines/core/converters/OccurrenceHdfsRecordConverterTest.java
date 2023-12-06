@@ -30,8 +30,6 @@ import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
-import org.gbif.dwc.terms.Term;
-import org.gbif.occurrence.common.TermUtils;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
@@ -66,8 +64,6 @@ public class OccurrenceHdfsRecordConverterTest {
 
   @Test
   public void extendedRecordMapperTest() {
-
-    List<Term> terms = TermUtils.verbatimTerms();
 
     // State
     final String multiValue1 = "multi 1";

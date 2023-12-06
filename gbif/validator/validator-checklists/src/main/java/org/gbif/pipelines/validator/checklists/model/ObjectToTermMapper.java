@@ -392,7 +392,7 @@ public class ObjectToTermMapper {
         .ifPresent(v -> termsMap.put(DwcTerm.verbatimEventDate, v));
 
     Optional.ofNullable(typeSpecimen.getVerbatimLabel())
-        .ifPresent(v -> termsMap.put(GbifTerm.verbatimLabel, v));
+        .ifPresent(v -> termsMap.put(DwcTerm.verbatimLabel, v));
 
     Optional.ofNullable(typeSpecimen.getVerbatimLatitude())
         .ifPresent(v -> termsMap.put(DwcTerm.verbatimLatitude, v));
