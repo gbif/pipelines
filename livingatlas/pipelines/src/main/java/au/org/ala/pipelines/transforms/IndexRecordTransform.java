@@ -198,7 +198,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         "degreeOfEstablishment"); // GBIF treats it as a JSON, but ALA needs a String which is
     // defined
     skipKeys.add(DwcTerm.typeStatus.simpleName());
-    skipKeys.add(DwcTerm.recordedBy.simpleName());
+    skipKeys.add(DwcTerm.recordedBy.simpleName()); // Do not use processed recordedBy
     skipKeys.add(DwcTerm.identifiedBy.simpleName());
     skipKeys.add(DwcTerm.preparations.simpleName());
     skipKeys.add(DwcTerm.datasetID.simpleName());
@@ -610,7 +610,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       addTermWithAgentsSafely(
           indexRecord, DwcTerm.identifiedByID.simpleName(), br.getIdentifiedByIds());
       addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
-      addMultiValueTermSafely(indexRecord, DwcTerm.recordedBy.simpleName(), br.getRecordedBy());
       addMultiValueTermSafely(indexRecord, DwcTerm.identifiedBy.simpleName(), br.getIdentifiedBy());
       addMultiValueTermSafely(indexRecord, DwcTerm.preparations.simpleName(), br.getPreparations());
       addMultiValueTermSafely(indexRecord, DwcTerm.datasetID.simpleName(), br.getDatasetID());
@@ -850,6 +849,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         .addAll(
             BasicRecord.getClassSchema().getFields().stream()
                 .map(Field::name)
+                .filter(
+                    name ->
+                        !DwcTerm.recordedBy
+                            .simpleName()
+                            .equals(name)) // Do not use the processed recordedBy
                 .collect(Collectors.toList()))
         .addAll(
             TemporalRecord.getClassSchema().getFields().stream()

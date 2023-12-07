@@ -52,7 +52,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_institutionCode\"", // DwcTerm.institutionCode
       "\"raw_er_recordNumber\"", // DwcTerm.recordNumber
       "\"br_basisOfRecord\"", // DwcTerm.basisOfRecord
-      "\"br_recordedBy_1|br_recordedBy_2\"", // DwcTerm.recordedBy
+      "\"raw_er_recordedBy\"", // DwcTerm.recordedBy
       "\"br_occurrenceStatus\"", // DwcTerm.occurrenceStatus
       "\"222\"", // DwcTerm.individualCount
       "\"atxr_ScientificName\"", // DwcTerm.scientificName
@@ -940,7 +940,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_institutionCode\"", // DwcTerm.institutionCode
       "\"raw_er_recordNumber\"", // DwcTerm.recordNumber
       "\"HumanObservation\"", // DwcTerm.basisOfRecord
-      "\"\"", // DwcTerm.recordedBy
+      "\"raw_er_recordedBy\"", // DwcTerm.recordedBy
       "\"\"", // DwcTerm.occurrenceStatus
       "\"\"", // DwcTerm.individualCount
       "\"\"", // DwcTerm.scientificName
