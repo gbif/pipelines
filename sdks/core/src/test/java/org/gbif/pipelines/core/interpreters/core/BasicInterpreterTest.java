@@ -269,6 +269,28 @@ public class BasicInterpreterTest {
   }
 
   @Test
+  public void interpretSemicolonOtherCatalogNumbersTest() {
+    final String number1 = "111";
+    final String number2 = "22";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.otherCatalogNumbers.qualifiedName(), number1 + " ; " + number2 + " ; ");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretOtherCatalogNumbers(er, br);
+
+    // Should
+    Assert.assertEquals(2, br.getOtherCatalogNumbers().size());
+    Assert.assertTrue(br.getOtherCatalogNumbers().contains(number1));
+    Assert.assertTrue(br.getOtherCatalogNumbers().contains(number2));
+    assertIssueSize(br, 0);
+  }
+
+  @Test
   public void interpretRecordedByTest() {
     final String person1 = "person 1";
     final String person2 = "person, 2";

@@ -17,7 +17,7 @@
   <fieldType name="float" class="solr.FloatPointField" omitNorms="true" />
   <fieldType name="geohash"
             class="solr.SpatialRecursivePrefixTreeFieldType"
-            datelineRule="ccwRect"
+            datelineRule="none"
             spatialContextFactory="org.locationtech.spatial4j.context.jts.JtsSpatialContextFactory"
             validationRule="none"
             distanceUnits="degrees"
@@ -25,7 +25,7 @@
   />
   <fieldType name="quad"
             class="solr.SpatialRecursivePrefixTreeFieldType"
-            datelineRule="ccwRect"
+            datelineRule="none"
             spatialContextFactory="org.locationtech.spatial4j.context.jts.JtsSpatialContextFactory"
             validationRule="none"
             distanceUnits="degrees"
@@ -34,7 +34,7 @@
   />
   <fieldType name="packedQuad"
             class="solr.SpatialRecursivePrefixTreeFieldType"
-            datelineRule="ccwRect"
+            datelineRule="none"
             spatialContextFactory="org.locationtech.spatial4j.context.jts.JtsSpatialContextFactory"
             validationRule="none"
             distanceUnits="degrees"
@@ -198,6 +198,7 @@
   <field name="occurrence_year"    type="date" docValues="true" multiValued="true"  indexed="true" />
 
   <!-- Legacy conservation fields -->
+  <field name="raw_countryConservation" type="string"  docValues="true" multiValued="false"  indexed="true" />
   <field name="raw_stateConservation" type="string"  docValues="true" multiValued="false"  indexed="true" />
   <field name="stateConservation"     type="string"  docValues="true" multiValued="false"  indexed="true" />
   <field name="countryConservation"   type="string"  docValues="true" multiValued="false"  indexed="true" />
@@ -538,6 +539,7 @@
   <field name="text_eventID" type="textgen"  indexed="true" stored="false"/>
   <field name="text_parentEventID" type="textgen" indexed="true" stored="false"/>
   <field name="text_fieldNumber" type="textgen" indexed="true" stored="false"/>
+  <field name="text_catalogNumber" type="textgen" indexed="true" stored="false"/>
 
   <!-- occurrenceDetails needs to be remapped on export -->
   <!-- see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/236 -->
@@ -712,6 +714,7 @@
   <!-- Do we need this -->
   <copyField source="basisOfRecord" dest="text"/>
   <copyField source="catalogNumber" dest="text"/>
+  <copyField source="catalogNumber" dest="text_catalogNumber"/>
   <copyField source="class" dest="text"/>
   <copyField source="collectionCode" dest="text"/>
   <copyField source="collectionName" dest="text"/>

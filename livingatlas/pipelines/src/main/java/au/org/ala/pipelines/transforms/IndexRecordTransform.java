@@ -446,31 +446,13 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
       if (!images.isEmpty()) {
         indexRecord.getStrings().put(IMAGE_ID, isr.getImageItems().get(0).getIdentifier());
-        indexRecord
-            .getMultiValues()
-            .put(
-                IMAGE_IDS,
-                isr.getImageItems().stream()
-                    .map(Image::getIdentifier)
-                    .collect(Collectors.toList()));
+        indexRecord.getMultiValues().put(IMAGE_IDS, images);
       }
       if (!sounds.isEmpty()) {
-        indexRecord
-            .getMultiValues()
-            .put(
-                SOUND_IDS,
-                isr.getImageItems().stream()
-                    .map(Image::getIdentifier)
-                    .collect(Collectors.toList()));
+        indexRecord.getMultiValues().put(SOUND_IDS, sounds);
       }
       if (!videos.isEmpty()) {
-        indexRecord
-            .getMultiValues()
-            .put(
-                VIDEO_IDS,
-                isr.getImageItems().stream()
-                    .map(Image::getIdentifier)
-                    .collect(Collectors.toList()));
+        indexRecord.getMultiValues().put(VIDEO_IDS, videos);
       }
 
       List<MultimediaIndexRecord> mir =
@@ -886,6 +868,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         .add(DwcTerm.associatedOccurrences.simpleName())
         .add(DwcTerm.identifiedByID.simpleName())
         .add(DwcTerm.recordedByID.simpleName())
+        .add(STATE_CONSERVATION)
+        .add(COUNTRY_CONSERVATION)
         .build();
   }
 
@@ -907,12 +891,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     for (ConservationStatus conservationStatus : conservationStatuses) {
       if (conservationStatus.getRegion() != null) {
         if (conservationStatus.getRegion().equalsIgnoreCase(stateProvince)) {
-
-          if (isNotBlank(conservationStatus.getSourceStatus())) {
-            indexRecord
-                .getStrings()
-                .put(RAW_STATE_CONSERVATION, conservationStatus.getSourceStatus());
-          }
           if (isNotBlank(conservationStatus.getStatus())) {
             indexRecord.getStrings().put(STATE_CONSERVATION, conservationStatus.getStatus());
           }

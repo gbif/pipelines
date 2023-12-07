@@ -37,7 +37,7 @@ public class FragmenterService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-verbatim-fragmenter service with parameters : {}", config);
+    log.info("Started pipelines-verbatim-fragmenter service");
     // Prefetch is one, since this is a long-running process.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);

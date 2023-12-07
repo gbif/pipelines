@@ -302,6 +302,11 @@
           <groupId>org.gbif.registry</groupId>
           <artifactId>registry-ws-client</artifactId>
         </exclusion>
+        <!-- exclude jna when testing on arm64 -->
+<!--        <exclusion>-->
+<!--          <groupId>org.elasticsearch</groupId>-->
+<!--          <artifactId>jna</artifactId>-->
+<!--        </exclusion>-->
       </exclusions>
     </dependency>
     <dependency>
