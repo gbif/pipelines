@@ -137,8 +137,7 @@ public class ClusteringPipeline {
                     List<String> otherCatalogNumbers =
                         source.getMultiValues().get(DwcTerm.otherCatalogNumbers.simpleName());
 
-                    List<String> recordedBy =
-                        source.getMultiValues().get(DwcTerm.recordedBy.simpleName());
+                    String recordedBy = source.getStrings().get(DwcTerm.recordedBy.simpleName());
 
                     Long eventDateL = source.getLongs().get(DwcTerm.eventDate.simpleName());
                     String eventDate = "";
@@ -162,7 +161,7 @@ public class ClusteringPipeline {
                             .withDay(day)
                             .withEventDate(eventDate)
                             .withTypeStatus(typeStatus)
-                            .withRecordedBy(recordedBy)
+                            .withRecordedBy(Collections.singletonList(recordedBy))
                             .withFieldNumber(fieldNumber)
                             .withRecordNumber(recordNumber)
                             .withCatalogNumber(catalogNumber)
@@ -229,9 +228,8 @@ public class ClusteringPipeline {
 
                     // 3. taxonKey|year|recordedBy hashkeys
                     if (Strings.isNotEmpty(taxonKey) && year != null && recordedBy != null) {
-                      for (String r : recordedBy) {
-                        out.output(builder.withHashKey(taxonKey + "|" + year + "|" + r).build());
-                      }
+                      out.output(
+                          builder.withHashKey(taxonKey + "|" + year + "|" + recordedBy).build());
                     }
                   }
                 }));

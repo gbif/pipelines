@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.extension;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MULTIMEDIA_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.core.utils.ModelUtils.hasExtension;
 import static org.gbif.pipelines.core.utils.ModelUtils.hasValueNullAware;
 

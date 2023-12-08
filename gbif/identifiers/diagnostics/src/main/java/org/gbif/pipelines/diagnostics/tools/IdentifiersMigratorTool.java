@@ -45,11 +45,11 @@ public class IdentifiersMigratorTool implements Tool {
   @Builder.Default
   public boolean skipIssues = false;
 
-  @Parameter(names = "--from-dataset", description = "Zookeeper connection")
+  @Parameter(names = "--from-dataset", description = "Registry dataset key, from")
   @NotNull
   public String fromDatasetKey;
 
-  @Parameter(names = "--to-dataset", description = "Zookeeper connection")
+  @Parameter(names = "--to-dataset", description = "Registry dataset key, to")
   @NotNull
   public String toDatasetKey;
 

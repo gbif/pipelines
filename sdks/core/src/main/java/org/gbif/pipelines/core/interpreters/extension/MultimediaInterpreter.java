@@ -23,13 +23,13 @@ import org.gbif.common.parsers.UrlParser;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.common.parsers.date.MultiinputTemporalParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
-import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
@@ -69,13 +69,13 @@ public class MultimediaInterpreter implements Serializable {
           .postMap(MultimediaInterpreter::parseAndSetTypeFromReferences)
           .skipIf(MultimediaInterpreter::checkLinks);
 
-  private final TemporalParser temporalParser;
+  private final MultiinputTemporalParser temporalParser;
   private final SerializableFunction<String, String> preprocessDateFn;
 
   @Builder(buildMethodName = "create")
   private MultimediaInterpreter(
       List<DateComponentOrdering> ordering, SerializableFunction<String, String> preprocessDateFn) {
-    this.temporalParser = TemporalParser.create(ordering);
+    this.temporalParser = MultiinputTemporalParser.create(ordering);
     this.preprocessDateFn = preprocessDateFn;
   }
 

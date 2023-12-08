@@ -1,4 +1,4 @@
-package org.gbif.pipelines.validator.metircs.request;
+package org.gbif.pipelines.validator.metrics.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

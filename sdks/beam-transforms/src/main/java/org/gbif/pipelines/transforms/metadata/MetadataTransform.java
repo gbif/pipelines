@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms.metadata;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.METADATA;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
 
 import java.time.Instant;
 import java.util.Optional;

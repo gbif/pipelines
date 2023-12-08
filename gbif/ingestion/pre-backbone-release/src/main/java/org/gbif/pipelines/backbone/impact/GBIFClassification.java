@@ -188,20 +188,45 @@ class GBIFClassification {
     }
   }
 
-  /** An equals implementation that uses all fields except the keys. */
-  public boolean classificationEquals(Object o) {
+  /**
+   * An equals implementation that uses all fields except the keys, optionally ignoring whitespace.
+   */
+  public boolean classificationEquals(Object o, boolean ignoreWhitespace) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     GBIFClassification that = (GBIFClassification) o;
-    return Objects.equals(kingdom, that.kingdom)
-        && Objects.equals(phylum, that.phylum)
-        && Objects.equals(klass, that.klass)
-        && Objects.equals(order, that.order)
-        && Objects.equals(family, that.family)
-        && Objects.equals(genus, that.genus)
-        && Objects.equals(subGenus, that.subGenus)
-        && Objects.equals(species, that.species)
-        && Objects.equals(scientificName, that.scientificName)
-        && Objects.equals(acceptedScientificName, that.acceptedScientificName);
+
+    if (!ignoreWhitespace) {
+      return Objects.equals(kingdom, that.kingdom)
+          && Objects.equals(phylum, that.phylum)
+          && Objects.equals(klass, that.klass)
+          && Objects.equals(order, that.order)
+          && Objects.equals(family, that.family)
+          && Objects.equals(genus, that.genus)
+          && Objects.equals(subGenus, that.subGenus)
+          && Objects.equals(species, that.species)
+          && Objects.equals(scientificName, that.scientificName)
+          && Objects.equals(acceptedScientificName, that.acceptedScientificName);
+    } else {
+      return lenientEquals(kingdom, that.kingdom)
+          && lenientEquals(phylum, that.phylum)
+          && lenientEquals(klass, that.klass)
+          && lenientEquals(order, that.order)
+          && lenientEquals(family, that.family)
+          && lenientEquals(genus, that.genus)
+          && lenientEquals(subGenus, that.subGenus)
+          && lenientEquals(species, that.species)
+          && lenientEquals(scientificName, that.scientificName)
+          && lenientEquals(acceptedScientificName, that.acceptedScientificName);
+    }
+  }
+
+  /** returns true if both are null or they are the same without whitespace, ignoring case. */
+  private static boolean lenientEquals(String s1, String s2) {
+    if (s1 == null || s2 == null) {
+      return s1 == null && s2 == null;
+    } else {
+      return s1.replaceAll(" ", "").equalsIgnoreCase(s2.replaceAll(" ", ""));
+    }
   }
 }

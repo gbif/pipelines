@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.hadoop.conf.Configuration;
+import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
@@ -50,8 +50,8 @@ public class HbaseServer extends ExternalResource {
 
   private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 
-  @Getter private Configuration configuration = null;
   private Connection connection = null;
+  private TestingServer zkServer;
 
   public void truncateTable() throws IOException {
     log.info("Trancate the table");
@@ -62,6 +62,8 @@ public class HbaseServer extends ExternalResource {
   protected void before() throws Throwable {
 
     log.info("Create hbase mini-cluster");
+    zkServer = new TestingServer(true);
+    CFG.setZkConnectionString(zkServer.getConnectString());
     TEST_UTIL.getConfiguration().setInt("hbase.master.port", HBaseTestingUtility.randomFreePort());
     TEST_UTIL
         .getConfiguration()
@@ -72,6 +74,7 @@ public class HbaseServer extends ExternalResource {
     TEST_UTIL
         .getConfiguration()
         .setInt("hbase.regionserver.info.port", HBaseTestingUtility.randomFreePort());
+    TEST_UTIL.getConfiguration().setStrings("hbase.zookeeper.quorum", zkServer.getConnectString());
     TEST_UTIL.startMiniCluster(1);
 
     TEST_UTIL.createTable(FRAGMENT_TABLE, HbaseStore.getFragmentFamily());
@@ -79,8 +82,7 @@ public class HbaseServer extends ExternalResource {
     TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
     TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
 
-    configuration = TEST_UTIL.getConfiguration();
-    connection = ConnectionFactory.createConnection(configuration);
+    connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
 
     updateZkProperties();
   }
@@ -92,6 +94,10 @@ public class HbaseServer extends ExternalResource {
     TEST_UTIL.shutdownMiniCluster();
     if (connection != null) {
       connection.close();
+    }
+    if (zkServer != null) {
+      zkServer.stop();
+      zkServer.close();
     }
   }
 

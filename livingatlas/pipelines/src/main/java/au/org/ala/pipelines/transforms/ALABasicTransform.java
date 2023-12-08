@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.transforms;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.BASIC;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
 
 import au.org.ala.pipelines.interpreters.ALABasicInterpreter;
 import java.time.Instant;
@@ -110,6 +110,7 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretRecordedByIds)
         .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
         .via(VocabularyInterpreter.interpretEstablishmentMeans(vocabularyService))
+        .via(VocabularyInterpreter.interpretDegreeOfEstablishment(vocabularyService))
         .via(VocabularyInterpreter.interpretLifeStage(vocabularyService))
         .via(ALABasicInterpreter::interpretLicense)
         .via(ALABasicInterpreter.interpretRecordedBy(recordedByKvStore))

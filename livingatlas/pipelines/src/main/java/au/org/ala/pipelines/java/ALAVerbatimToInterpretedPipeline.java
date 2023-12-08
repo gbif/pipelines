@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.java;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.ALL;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
 import au.org.ala.kvs.ALANameMatchConfig;
 import au.org.ala.kvs.ALAPipelinesConfig;

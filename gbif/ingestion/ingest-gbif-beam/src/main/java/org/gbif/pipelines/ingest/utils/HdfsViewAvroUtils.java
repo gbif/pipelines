@@ -1,14 +1,14 @@
 package org.gbif.pipelines.ingest.utils;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.*;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.EVENT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.*;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.EVENT;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.OCCURRENCE;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;

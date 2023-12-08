@@ -63,7 +63,8 @@ public class BackbonePreRelease {
                     schema,
                     options.getScope(),
                     options.getMinimumOccurrenceCount(),
-                    options.getSkipKeys())));
+                    options.getSkipKeys(),
+                    options.getIgnoreWhitespace())));
 
     matched.apply(TextIO.write().to(options.getTargetDir()));
 
@@ -87,15 +88,22 @@ public class BackbonePreRelease {
     private final Integer scope;
     private final int minCount;
     private final boolean skipKeys;
+    private final boolean ignoreWhitespace;
     private ChecklistbankServiceSyncClient service; // direct service, no cache
 
     MatchTransform(
-        String baseAPIUrl, HCatSchema schema, Integer scope, int minCount, boolean skipKeys) {
+        String baseAPIUrl,
+        HCatSchema schema,
+        Integer scope,
+        int minCount,
+        boolean skipKeys,
+        boolean ignoreWhitespace) {
       this.baseAPIUrl = baseAPIUrl;
       this.schema = schema;
       this.scope = scope;
       this.minCount = minCount;
       this.skipKeys = skipKeys;
+      this.ignoreWhitespace = ignoreWhitespace;
     }
 
     @Setup
@@ -185,7 +193,7 @@ public class BackbonePreRelease {
           }
 
           // emit classifications that differ, optionally considering the keys
-          if (skipKeys && !existing.classificationEquals(proposed)) {
+          if (skipKeys && !existing.classificationEquals(proposed, ignoreWhitespace)) {
             c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
 
           } else if (!skipKeys && !existing.equals(proposed)) {

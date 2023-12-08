@@ -1,7 +1,7 @@
 package org.gbif.pipelines.tasks.occurrences.hdfs;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.OCCURRENCE;
 import static org.gbif.api.model.pipelines.PipelineStep.Status.COMPLETED;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 

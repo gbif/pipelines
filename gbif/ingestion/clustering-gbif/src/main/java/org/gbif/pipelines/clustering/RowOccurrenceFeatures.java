@@ -130,7 +130,7 @@ public class RowOccurrenceFeatures implements OccurrenceFeatures {
 
   @Override
   public String getId() {
-    return get("id");
+    return get("gbifId");
   }
 
   @Override

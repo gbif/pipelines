@@ -160,6 +160,11 @@ public class MultimediaCsvConverterTest {
                     .setConcept("br_establishmentMeans")
                     .setLineage(Collections.singletonList("br_establishmentMeans"))
                     .build())
+            .setDegreeOfEstablishment(
+                VocabularyConcept.newBuilder()
+                    .setConcept("br_degreeOfEstablishment")
+                    .setLineage(Collections.singletonList("br_degreeOfEstablishment"))
+                    .build())
             .setIndividualCount(222)
             .setTypeStatus(Collections.singletonList("br_typeStatus"))
             .setTypifiedName("br_typifiedName")

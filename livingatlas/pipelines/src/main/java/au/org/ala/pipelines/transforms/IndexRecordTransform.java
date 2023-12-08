@@ -34,12 +34,12 @@ import org.apache.solr.common.SolrInputDocument;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
+import org.gbif.common.parsers.date.MultiinputTemporalParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.common.PipelinesException;
-import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -188,14 +188,17 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     skipKeys.add("issues");
     skipKeys.add("identifiedByIds"); // multi value field
     skipKeys.add("recordedByIds"); // multi value field
+    skipKeys.add(DwcTerm.identifiedByID.simpleName()); // multi value field
+    skipKeys.add(DwcTerm.recordedByID.simpleName()); // multi value field
     skipKeys.add("machineTags");
     skipKeys.add("parentsLineage");
     skipKeys.add(
         "establishmentMeans"); // GBIF treats it as a JSON, but ALA needs a String which is defined
-    skipKeys.add("identifiedByIds");
-    skipKeys.add("recordedByIds");
+    skipKeys.add(
+        "degreeOfEstablishment"); // GBIF treats it as a JSON, but ALA needs a String which is
+    // defined
     skipKeys.add(DwcTerm.typeStatus.simpleName());
-    skipKeys.add(DwcTerm.recordedBy.simpleName());
+    skipKeys.add(DwcTerm.recordedBy.simpleName()); // Do not use processed recordedBy
     skipKeys.add(DwcTerm.identifiedBy.simpleName());
     skipKeys.add(DwcTerm.preparations.simpleName());
     skipKeys.add(DwcTerm.datasetID.simpleName());
@@ -443,31 +446,13 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
       if (!images.isEmpty()) {
         indexRecord.getStrings().put(IMAGE_ID, isr.getImageItems().get(0).getIdentifier());
-        indexRecord
-            .getMultiValues()
-            .put(
-                IMAGE_IDS,
-                isr.getImageItems().stream()
-                    .map(Image::getIdentifier)
-                    .collect(Collectors.toList()));
+        indexRecord.getMultiValues().put(IMAGE_IDS, images);
       }
       if (!sounds.isEmpty()) {
-        indexRecord
-            .getMultiValues()
-            .put(
-                SOUND_IDS,
-                isr.getImageItems().stream()
-                    .map(Image::getIdentifier)
-                    .collect(Collectors.toList()));
+        indexRecord.getMultiValues().put(SOUND_IDS, sounds);
       }
       if (!videos.isEmpty()) {
-        indexRecord
-            .getMultiValues()
-            .put(
-                VIDEO_IDS,
-                isr.getImageItems().stream()
-                    .map(Image::getIdentifier)
-                    .collect(Collectors.toList()));
+        indexRecord.getMultiValues().put(VIDEO_IDS, videos);
       }
 
       List<MultimediaIndexRecord> mir =
@@ -618,10 +603,13 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     if (br != null) {
       addEstablishmentValueSafely(
           indexRecord, DwcTerm.establishmentMeans.simpleName(), br.getEstablishmentMeans());
+      addDegreeOfEstablishmentValueSafely(
+          indexRecord, DwcTerm.degreeOfEstablishment.simpleName(), br.getDegreeOfEstablishment());
       addTermWithAgentsSafely(
           indexRecord, DwcTerm.recordedByID.simpleName(), br.getRecordedByIds());
+      addTermWithAgentsSafely(
+          indexRecord, DwcTerm.identifiedByID.simpleName(), br.getIdentifiedByIds());
       addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
-      addMultiValueTermSafely(indexRecord, DwcTerm.recordedBy.simpleName(), br.getRecordedBy());
       addMultiValueTermSafely(indexRecord, DwcTerm.identifiedBy.simpleName(), br.getIdentifiedBy());
       addMultiValueTermSafely(indexRecord, DwcTerm.preparations.simpleName(), br.getPreparations());
       addMultiValueTermSafely(indexRecord, DwcTerm.datasetID.simpleName(), br.getDatasetID());
@@ -756,7 +744,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
 
     try {
-      TemporalParser temporalParser = TemporalParser.create();
+      MultiinputTemporalParser temporalParser = MultiinputTemporalParser.create();
       OccurrenceParseResult<TemporalAccessor> r = temporalParser.parseRecordedDate(dateString);
 
       // FIXME  - im sure there is a better way to do this
@@ -803,6 +791,13 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       IndexRecord.Builder indexRecord, String field, VocabularyConcept establishmentMeans) {
     if (establishmentMeans != null) {
       indexRecord.getStrings().put(field, establishmentMeans.getConcept());
+    }
+  }
+
+  private static void addDegreeOfEstablishmentValueSafely(
+      IndexRecord.Builder indexRecord, String field, VocabularyConcept degreeOfEstablishment) {
+    if (degreeOfEstablishment != null) {
+      indexRecord.getStrings().put(field, degreeOfEstablishment.getConcept());
     }
   }
 
@@ -854,6 +849,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         .addAll(
             BasicRecord.getClassSchema().getFields().stream()
                 .map(Field::name)
+                .filter(
+                    name ->
+                        !DwcTerm.recordedBy
+                            .simpleName()
+                            .equals(name)) // Do not use the processed recordedBy
                 .collect(Collectors.toList()))
         .addAll(
             TemporalRecord.getClassSchema().getFields().stream()
@@ -866,6 +866,10 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         .add(DwcTerm.class_.simpleName())
         .add(DwcTerm.geodeticDatum.simpleName())
         .add(DwcTerm.associatedOccurrences.simpleName())
+        .add(DwcTerm.identifiedByID.simpleName())
+        .add(DwcTerm.recordedByID.simpleName())
+        .add(STATE_CONSERVATION)
+        .add(COUNTRY_CONSERVATION)
         .build();
   }
 
@@ -887,12 +891,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     for (ConservationStatus conservationStatus : conservationStatuses) {
       if (conservationStatus.getRegion() != null) {
         if (conservationStatus.getRegion().equalsIgnoreCase(stateProvince)) {
-
-          if (isNotBlank(conservationStatus.getSourceStatus())) {
-            indexRecord
-                .getStrings()
-                .put(RAW_STATE_CONSERVATION, conservationStatus.getSourceStatus());
-          }
           if (isNotBlank(conservationStatus.getStatus())) {
             indexRecord.getStrings().put(STATE_CONSERVATION, conservationStatus.getStatus());
           }

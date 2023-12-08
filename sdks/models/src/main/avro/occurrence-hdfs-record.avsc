@@ -99,7 +99,13 @@
     "name" : "v_reproductivecondition",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "v_caste",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "v_behavior",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_vitality",
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_establishmentmeans",
@@ -162,6 +168,15 @@
     "name" : "v_organismremarks",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "v_materialentityid",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_materialentityremarks",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_verbatimlabel",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "v_materialsampleid",
     "type" : [ "string", "null" ]
   }, {
@@ -169,6 +184,9 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_parenteventid",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_eventtype",
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_fieldnumber",
@@ -495,10 +513,19 @@
     "name" : "v_order",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "v_superfamily",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "v_family",
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_subfamily",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_tribe",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_subtribe",
     "type" : [ "string", "null" ]
   }, {
     "name" : "v_genus",
@@ -596,6 +623,12 @@
   }, {
     "name" : "datasettitle",
     "type" : [ "string", "null" ]
+  }, {
+    "name" : "eventdategte",
+    "type" : [ "long", "null" ]
+  }, {
+    "name" : "eventdatelte",
+    "type" : [ "long", "null" ]
   }, {
     "name" : "parenteventgbifid",
     "type" : [ {
@@ -732,7 +765,13 @@
     "name" : "reproductivecondition",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "caste",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "behavior",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "vitality",
     "type" : [ "string", "null" ]
   }, {
     "name" : "establishmentmeans",
@@ -837,6 +876,15 @@
     "name" : "organismremarks",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "materialentityid",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "materialentityremarks",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "verbatimlabel",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "materialsampleid",
     "type" : [ "string", "null" ]
   }, {
@@ -846,11 +894,27 @@
     "name" : "parenteventid",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "eventtype",
+    "type" : [ {
+      "type" : "record",
+      "name" : "EventType",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
+    }, "null" ]
+  }, {
     "name" : "fieldnumber",
     "type" : [ "string", "null" ]
   }, {
     "name" : "eventdate",
-    "type" : [ "long", "null" ]
+    "type" : [ "string", "null" ]
   }, {
     "name" : "eventtime",
     "type" : [ "string", "null" ]
@@ -1155,10 +1219,19 @@
     "name" : "order_",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "superfamily",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "family",
     "type" : [ "string", "null" ]
   }, {
     "name" : "subfamily",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "tribe",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "subtribe",
     "type" : [ "string", "null" ]
   }, {
     "name" : "genus",
@@ -1331,22 +1404,6 @@
   }, {
     "name" : "iucnredlistcategory",
     "type" : [ "string", "null" ]
-  }, {
-    "name" : "eventtype",
-    "type" : [ {
-      "type" : "record",
-      "name" : "EventType",
-      "fields" : [ {
-        "name" : "concept",
-        "type" : "string"
-      }, {
-        "name" : "lineage",
-        "type" : [ {
-          "type" : "array",
-          "items" : [ "string", "null" ]
-        }, "null" ]
-      } ]
-    }, "null" ]
   }, {
     "name" : "ext_multimedia",
     "type" : [ "string", "null" ]

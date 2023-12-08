@@ -24,7 +24,7 @@ public class CoreCsvConverter {
           .addKeyTermFn(DwcTerm.institutionCode, getString(DwcTerm.institutionCode))
           .addKeyTermFn(DwcTerm.recordNumber, getString(DwcTerm.recordNumber))
           .addKeyTermFn(DwcTerm.basisOfRecord, getString(DwcTerm.basisOfRecord), "HumanObservation")
-          .addKeyTermFn(DwcTerm.recordedBy, getMultivalue(DwcTerm.recordedBy))
+          .addKeyTermFn(DwcTerm.recordedBy, getString(DwcTerm.recordedBy))
           .addKeyTermFn(DwcTerm.occurrenceStatus, getString(DwcTerm.occurrenceStatus))
           .addKeyTermFn(DwcTerm.individualCount, getInt(DwcTerm.individualCount))
           .addKeyTermFn(DwcTerm.scientificName, getString(DwcTerm.scientificName))
@@ -77,6 +77,7 @@ public class CoreCsvConverter {
           .addKeyTermFn(DwcTerm.datasetID, getMultivalue(DwcTerm.datasetID))
           .addKeyTermFn(DwcTerm.datasetName, getMultivalue(DwcTerm.datasetName))
           .addKeyTermFn(DwcTerm.dateIdentified, getString(DwcTerm.dateIdentified))
+          .addKeyTermFn(DwcTerm.degreeOfEstablishment, getString(DwcTerm.degreeOfEstablishment))
           .addKeyTermFn(DwcTerm.disposition, getString(DwcTerm.disposition))
           .addKeyTermFn(DwcTerm.dynamicProperties, getString(DwcTerm.dynamicProperties))
           .addKeyTermFn(DwcTerm.endDayOfYear, getInt(DwcTerm.endDayOfYear))
@@ -237,7 +238,7 @@ public class CoreCsvConverter {
           // Other Terms
           .addKeyTermFn("taxonRankID", getInt("taxonRankID"))
           // GBIF Terms
-          .addKeyTermFn(DwcTerm.recordedByID, getString(DwcTerm.recordedByID));
+          .addKeyTermFn(DwcTerm.recordedByID, getMultivalue(DwcTerm.recordedByID));
 
   public static String convert(IndexRecord indexRecord) {
     return CONVERTER.converter(indexRecord);
