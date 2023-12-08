@@ -115,7 +115,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_footprintSpatialFit\"", // DwcTerm.footprintSpatialFit
       "\"raw_er_footprintSRS\"", // DwcTerm.footprintSRS
       "\"lr_footprintWKT\"", // DwcTerm.footprintWKT
-      "\"raw_er_georeferencedBy\"", // DwcTerm.georeferencedBy
+      "\"lr_georeferencedBy\"", // DwcTerm.georeferencedBy
       "\"lr_georeferencedDate\"", // DwcTerm.georeferencedDate
       "\"raw_er_georeferenceProtocol\"", // DwcTerm.georeferenceProtocol
       "\"raw_er_georeferenceRemarks\"", // DwcTerm.georeferenceRemarks
@@ -123,7 +123,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_georeferenceVerificationStatus\"", // DwcTerm.georeferenceVerificationStatus
       "\"raw_er_habitat\"", // DwcTerm.habitat
       "\"raw_er_higherClassification\"", // DwcTerm.higherClassification
-      "\"raw_er_higherGeography\"", // DwcTerm.higherGeography
+      "\"lr_higherGeography\"", // DwcTerm.higherGeography
       "\"raw_er_higherGeographyID\"", // DwcTerm.higherGeographyID
       "\"raw_er_identificationID\"", // DwcTerm.identificationID
       "\"raw_er_identificationQualifier\"", // DwcTerm.identificationQualifier
