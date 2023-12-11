@@ -157,7 +157,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_nomenclaturalCode\"", // DwcTerm.nomenclaturalCode
       "\"raw_er_nomenclaturalStatus\"", // DwcTerm.nomenclaturalStatus
       "\"raw_er_organismID\"", // DwcTerm.organismID
-      "\"2222.0\"", // DwcTerm.organismQuantity
+      "\"raw_er_organismQuantity\"", // DwcTerm.organismQuantity
       "\"br_organismQuantityType\"", // DwcTerm.organismQuantityType
       "\"raw_er_originalNameUsage\"", // DwcTerm.originalNameUsage
       "\"raw_er_originalNameUsageID\"", // DwcTerm.originalNameUsageID
@@ -877,7 +877,7 @@ public class CoreTsvConverterTest {
       "\"\"", // DwcTerm.nomenclaturalCode
       "\"\"", // DwcTerm.nomenclaturalStatus
       "\"\"", // DwcTerm.organismID
-      "\"\"", // DwcTerm.organismQuantity
+      "\"raw_er_organismQuantity\"", // DwcTerm.organismQuantity
       "\"\"", // DwcTerm.organismQuantityType
       "\"\"", // DwcTerm.originalNameUsage
       "\"\"", // DwcTerm.originalNameUsageID
@@ -1004,6 +1004,7 @@ public class CoreTsvConverterTest {
     coreFn.accept(DwcTerm.dataGeneralizations);
     coreFn.accept(DwcTerm.otherCatalogNumbers);
     coreFn.accept(DcTerm.references);
+    coreFn.accept(DwcTerm.organismQuantity);
 
     ExtendedRecord er =
         ExtendedRecord.newBuilder()

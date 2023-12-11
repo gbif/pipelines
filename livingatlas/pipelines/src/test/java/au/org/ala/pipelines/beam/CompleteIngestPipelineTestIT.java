@@ -154,6 +154,9 @@ public class CompleteIngestPipelineTestIT {
     // raw state and raw country conservation
     assertEquals("Extinct", record.get().get("raw_stateConservation"));
     assertEquals("Vulnerable", record.get().get("raw_countryConservation"));
+
+    // organismQuantity
+    assertEquals("e", record.get().get("organismQuantity"));
   }
 
   public void loadTestDataset(String datasetID, String inputPath) throws Exception {

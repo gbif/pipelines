@@ -649,7 +649,6 @@
   <field name="raw_occurrenceStatus"					 type="string"  docValues="true" indexed="true" />
   <field name="raw_order"					             type="string"  docValues="true" indexed="true" />
   <field name="raw_orderID"					             type="string"  docValues="true" indexed="true" />
-  <field name="raw_organismQuantity"					 type="string"  docValues="true" indexed="true" />
   <field name="raw_organismQuantityType"				 type="string"  docValues="true" indexed="true" />
   <field name="raw_original"					         type="string"  docValues="true" indexed="true" />
   <field name="raw_phylum"					             type="string"  docValues="true" indexed="true" />

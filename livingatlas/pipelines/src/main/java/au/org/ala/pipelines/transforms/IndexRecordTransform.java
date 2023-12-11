@@ -205,6 +205,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     skipKeys.add(DwcTerm.datasetName.simpleName());
     skipKeys.add(DwcTerm.samplingProtocol.simpleName());
     skipKeys.add(DwcTerm.otherCatalogNumbers.simpleName());
+    skipKeys.add(DwcTerm.organismQuantity.simpleName());
 
     IndexRecord.Builder indexRecord = IndexRecord.newBuilder().setId(ur.getUuid());
     indexRecord.setBooleans(new HashMap<>());
@@ -851,9 +852,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                 .map(Field::name)
                 .filter(
                     name ->
-                        !DwcTerm.recordedBy
-                            .simpleName()
-                            .equals(name)) // Do not use the processed recordedBy
+                        !DwcTerm.recordedBy.simpleName().equals(name)
+                            && !DwcTerm.organismQuantity
+                                .simpleName()
+                                .equals(
+                                    name)) // Do not use the processed recordedBy or ogansimQuantity
                 .collect(Collectors.toList()))
         .addAll(
             TemporalRecord.getClassSchema().getFields().stream()
