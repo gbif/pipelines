@@ -968,7 +968,10 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "highergeography",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "continent",
     "type" : [ "string", "null" ]
@@ -1052,7 +1055,10 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "georeferencedby",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "georeferenceddate",
     "type" : [ "string", "null" ]
@@ -1377,6 +1383,15 @@
       "type" : "array",
       "items" : [ "string", "null" ]
     }, "null" ]
+  }, {
+    "name" : "issequenced",
+    "type" : [ "boolean", "null" ]
+  }, {
+    "name" : "gbifregion",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "publishedbygbifregion",
+    "type" : [ "string", "null" ]
   }, {
     "name" : "level0gid",
     "type" : [ "string", "null" ]

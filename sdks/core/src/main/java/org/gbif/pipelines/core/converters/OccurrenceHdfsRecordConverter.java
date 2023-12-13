@@ -151,6 +151,10 @@ public class OccurrenceHdfsRecordConverter {
             });
     occurrenceHdfsRecord.setDistancefromcentroidinmeters(
         locationRecord.getDistanceFromCentroidInMeters());
+    occurrenceHdfsRecord.setGbifregion(locationRecord.getGbifRegion());
+    occurrenceHdfsRecord.setPublishedbygbifregion(locationRecord.getPublishedByGbifRegion());
+    occurrenceHdfsRecord.setHighergeography(locationRecord.getHigherGeography());
+    occurrenceHdfsRecord.setGeoreferencedby(locationRecord.getGeoreferencedBy());
 
     setCreatedIfGreater(occurrenceHdfsRecord, locationRecord.getCreated());
     addIssues(locationRecord.getIssues(), occurrenceHdfsRecord);
@@ -204,10 +208,10 @@ public class OccurrenceHdfsRecordConverter {
     }
     Optional.ofNullable(temporalRecord.getDateIdentified())
         .map(StringToDateFunctions.getStringToEarliestEpochSeconds(false))
-        .ifPresent(date -> occurrenceHdfsRecord.setDateidentified(date));
+        .ifPresent(occurrenceHdfsRecord::setDateidentified);
     Optional.ofNullable(temporalRecord.getModified())
         .map(StringToDateFunctions.getStringToEarliestEpochSeconds(false))
-        .ifPresent(date -> occurrenceHdfsRecord.setModified(date));
+        .ifPresent(occurrenceHdfsRecord::setModified);
     occurrenceHdfsRecord.setDay(temporalRecord.getDay());
     occurrenceHdfsRecord.setMonth(temporalRecord.getMonth());
     occurrenceHdfsRecord.setYear(temporalRecord.getYear());
@@ -438,6 +442,7 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setPreparations(basicRecord.getPreparations());
     occurrenceHdfsRecord.setSamplingprotocol(basicRecord.getSamplingProtocol());
     occurrenceHdfsRecord.setTypestatus(basicRecord.getTypeStatus());
+    occurrenceHdfsRecord.setIssequenced(basicRecord.getIsSequenced());
 
     // Vocabulary controlled
     Optional.ofNullable(basicRecord.getEstablishmentMeans())

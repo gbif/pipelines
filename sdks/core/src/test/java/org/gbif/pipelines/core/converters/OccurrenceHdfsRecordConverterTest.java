@@ -34,6 +34,7 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GeologicalContext;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -98,6 +99,9 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.identifiedBy.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.recordedBy.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(GbifTerm.projectId.simpleName(), multiValue1 + "|" + multiValue2);
+    coreTerms.put(DwcTerm.taxonConceptID.simpleName(), "taxonConceptID");
+    coreTerms.put(DwcTerm.bed.simpleName(), "v_bed");
+    coreTerms.put(DwcTerm.formation.simpleName(), "v_formation");
 
     Map<String, List<Map<String, String>>> extensions = new HashMap<>();
     extensions.put(
@@ -148,6 +152,9 @@ public class OccurrenceHdfsRecordConverterTest {
             .setSamplingProtocol(Arrays.asList(multiValue1, multiValue2))
             .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
             .setProjectId(Arrays.asList(multiValue1, multiValue2))
+            .setIsSequenced(true)
+            .setGeologicalContext(
+                GeologicalContext.newBuilder().setBed("bed").setFormation("formation").build())
             .build();
 
     List<RankedName> classification = new ArrayList<>();
@@ -234,6 +241,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("order", hdfsRecord.getVOrder());
     Assert.assertEquals("group", hdfsRecord.getGroup());
     Assert.assertEquals("group", hdfsRecord.getVGroup());
+    Assert.assertEquals("taxonConceptID", hdfsRecord.getTaxonconceptid());
+    Assert.assertEquals("taxonConceptID", hdfsRecord.getVTaxonconceptid());
 
     // Test temporal fields
     Assert.assertNotNull(hdfsRecord.getDateidentified());
@@ -261,6 +270,14 @@ public class OccurrenceHdfsRecordConverterTest {
         hdfsRecord.getEventdatelte().longValue());
     Assert.assertEquals(
         metadataRecord.getHostingOrganizationKey(), hdfsRecord.getHostingorganizationkey());
+    Assert.assertEquals(basicRecord.getIsSequenced(), hdfsRecord.getIssequenced());
+
+    Assert.assertEquals("v_" + basicRecord.getGeologicalContext().getBed(), hdfsRecord.getVBed());
+    Assert.assertEquals(basicRecord.getGeologicalContext().getBed(), hdfsRecord.getBed());
+    Assert.assertEquals(
+        "v_" + basicRecord.getGeologicalContext().getFormation(), hdfsRecord.getVFormation());
+    Assert.assertEquals(
+        basicRecord.getGeologicalContext().getFormation(), hdfsRecord.getFormation());
 
     // extensions
     Assert.assertEquals(2, hdfsRecord.getDwcaextension().size());
