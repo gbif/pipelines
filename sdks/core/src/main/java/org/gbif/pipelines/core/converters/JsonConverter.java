@@ -59,7 +59,10 @@ import org.gbif.pipelines.io.avro.json.VocabularyConcept;
 public class JsonConverter {
 
   private static final Set<String> EXCLUDE_ALL =
-      Collections.singleton(DwcTerm.footprintWKT.qualifiedName());
+      new HashSet<>(
+          Arrays.asList(
+              DwcTerm.footprintWKT.qualifiedName(),
+              DwcTerm.previousIdentifications.qualifiedName()));
 
   private static final Set<String> INCLUDE_EXT_ALL =
       new HashSet<>(
