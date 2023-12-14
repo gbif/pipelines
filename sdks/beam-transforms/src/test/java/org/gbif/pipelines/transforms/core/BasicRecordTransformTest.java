@@ -96,18 +96,19 @@ public class BasicRecordTransformTest {
             .setBasisOfRecord(BasisOfRecord.OCCURRENCE.name())
             .setCreated(0L)
             .setLicense(License.UNSPECIFIED.name())
+            .setIsSequenced(Boolean.TRUE)
             .setIssues(
                 IssueRecord.newBuilder()
                     .setIssueList(Collections.singletonList(BASIS_OF_RECORD_INVALID.name()))
                     .build())
             .build();
 
+    Map<String, String> map = new HashMap<>(2);
+    map.put(DwcTerm.sex.qualifiedName(), "");
+    map.put(DwcTerm.associatedSequences.qualifiedName(), "dawd");
+
     // State
-    ExtendedRecord er =
-        ExtendedRecord.newBuilder()
-            .setId("777")
-            .setCoreTerms(Collections.singletonMap(DwcTerm.sex.qualifiedName(), ""))
-            .build();
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").setCoreTerms(map).build();
 
     PCollection<BasicRecord> recordCollection =
         p.apply(Create.of(er))
@@ -129,6 +130,7 @@ public class BasicRecordTransformTest {
             .setBasisOfRecord(BasisOfRecord.OCCURRENCE.name())
             .setCreated(0L)
             .setLicense(License.UNSPECIFIED.name())
+            .setIsSequenced(Boolean.FALSE)
             .setIssues(
                 IssueRecord.newBuilder()
                     .setIssueList(Collections.singletonList(BASIS_OF_RECORD_INVALID.name()))
@@ -213,6 +215,7 @@ public class BasicRecordTransformTest {
                     .setTypeStatus(Collections.singletonList(x[4]))
                     .setIndividualCount(Integer.valueOf(x[5]))
                     .setReferences(x[6])
+                    .setIsSequenced(Boolean.FALSE)
                     .setLicense(License.UNSPECIFIED.name())
                     .build())
         .collect(Collectors.toList());
