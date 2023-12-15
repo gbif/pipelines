@@ -443,6 +443,7 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setSamplingprotocol(basicRecord.getSamplingProtocol());
     occurrenceHdfsRecord.setTypestatus(basicRecord.getTypeStatus());
     occurrenceHdfsRecord.setIssequenced(basicRecord.getIsSequenced());
+    occurrenceHdfsRecord.setAssociatedsequences(basicRecord.getAssociatedSequences());
 
     // Vocabulary controlled
     Optional.ofNullable(basicRecord.getEstablishmentMeans())

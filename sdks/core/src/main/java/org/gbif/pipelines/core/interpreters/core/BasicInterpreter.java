@@ -333,6 +333,14 @@ public class BasicInterpreter {
     br.setIsSequenced(extractNullAwareOptValue(er, DwcTerm.associatedSequences).isPresent());
   }
 
+  /** {@link DwcTerm#associatedSequences} interpretation. */
+  public static void interpretAssociatedSequences(ExtendedRecord er, BasicRecord br) {
+    List<String> list = extractListValue(er, DwcTerm.associatedSequences);
+    if (!list.isEmpty()) {
+      br.setAssociatedSequences(list);
+    }
+  }
+
   /** Sets the coreId field. */
   public static void setCoreId(ExtendedRecord er, BasicRecord br) {
     Optional.ofNullable(er.getCoreId()).ifPresent(br::setCoreId);

@@ -97,6 +97,7 @@ public class BasicRecordTransformTest {
             .setCreated(0L)
             .setLicense(License.UNSPECIFIED.name())
             .setIsSequenced(Boolean.TRUE)
+            .setAssociatedSequences(Collections.singletonList("dawd"))
             .setIssues(
                 IssueRecord.newBuilder()
                     .setIssueList(Collections.singletonList(BASIS_OF_RECORD_INVALID.name()))

@@ -246,6 +246,7 @@
       "occurrenceStatus": {"type": "keyword", "copy_to": "all"},
 
       "isSequenced": {"type": "boolean"},
+      "associatedSequences": {"type": "keyword", "copy_to": "all"},
       "organismQuantity": {"type": "double"},
       "organismQuantityType": {"type": "keyword", "copy_to": "all"},
       "sampleSizeUnit": {"type": "keyword", "copy_to": "all"},

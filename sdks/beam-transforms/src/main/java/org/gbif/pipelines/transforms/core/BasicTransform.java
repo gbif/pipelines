@@ -129,6 +129,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
             .via((e, r) -> CoreInterpreter.interpretSamplingProtocol(e, r::setSamplingProtocol))
             .via(BasicInterpreter::interpretProjectId)
             .via(BasicInterpreter::interpretIsSequenced)
+            .via(BasicInterpreter::interpretAssociatedSequences)
             // Geological context
             .via(GeologicalContextInterpreter::interpretEarliestEonOrLowestEonothem)
             .via(GeologicalContextInterpreter::interpretLatestEonOrHighestEonothem)

@@ -844,7 +844,10 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "associatedsequences",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "associatedtaxa",
     "type" : [ "string", "null" ]

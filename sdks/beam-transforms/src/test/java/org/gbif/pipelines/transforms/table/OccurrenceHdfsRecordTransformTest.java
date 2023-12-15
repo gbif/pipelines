@@ -230,6 +230,7 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setCollectionkey("setCollectionMatchKey");
     expected.setDatasettitle("setDatasetTitle");
     expected.setProjectid(Collections.singletonList("setProjectId"));
+    expected.setAssociatedsequences(Collections.emptyList());
     expected.setDay(25);
 
     PAssert.that(result).containsInAnyOrder(expected);

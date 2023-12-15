@@ -137,10 +137,9 @@ public class OccurrenceJsonConverter {
         .setOtherCatalogNumbers(JsonConverter.getEscapedList(basic.getOtherCatalogNumbers()))
         .setPreparations(JsonConverter.getEscapedList(basic.getPreparations()))
         .setSamplingProtocol(JsonConverter.getEscapedList(basic.getSamplingProtocol()))
-        .setIsSequenced(basic.getIsSequenced());
-
-    // Agent
-    builder
+        .setIsSequenced(basic.getIsSequenced())
+        .setAssociatedSequences(basic.getAssociatedSequences())
+        // Agent
         .setIdentifiedByIds(JsonConverter.convertAgentList(basic.getIdentifiedByIds()))
         .setRecordedByIds(JsonConverter.convertAgentList(basic.getRecordedByIds()));
 

@@ -404,6 +404,10 @@
           "type": "keyword",
           "copy_to": "all"
         },
+        "associatedSequences": {
+          "type": "keyword",
+          "copy_to": "all"
+        },
         "lifeStage": {
           "type": "object",
           "properties": {
