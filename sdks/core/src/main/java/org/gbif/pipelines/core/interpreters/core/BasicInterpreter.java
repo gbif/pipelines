@@ -335,7 +335,7 @@ public class BasicInterpreter {
 
   /** {@link DwcTerm#associatedSequences} interpretation. */
   public static void interpretAssociatedSequences(ExtendedRecord er, BasicRecord br) {
-    List<String> list = extractListValue(er, DwcTerm.associatedSequences);
+    List<String> list = extractListValue(DEFAULT_SEPARATOR + "|;", er, DwcTerm.associatedSequences);
     if (!list.isEmpty()) {
       br.setAssociatedSequences(list);
     }

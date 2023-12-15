@@ -99,8 +99,8 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.identifiedBy.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.recordedBy.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(GbifTerm.projectId.simpleName(), multiValue1 + "|" + multiValue2);
-    coreTerms.put(DwcTerm.taxonConceptID.simpleName(), "taxonConceptID");
-    coreTerms.put(DwcTerm.associatedSequences.simpleName(), "ad");
+    coreTerms.put(DwcTerm.taxonConceptID.simpleName(), "v_taxonConceptID");
+    coreTerms.put(DwcTerm.associatedSequences.simpleName(), "v_ad");
     coreTerms.put(DwcTerm.bed.simpleName(), "v_bed");
     coreTerms.put(DwcTerm.formation.simpleName(), "v_formation");
 
@@ -243,11 +243,11 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("order", hdfsRecord.getVOrder());
     Assert.assertEquals("group", hdfsRecord.getGroup());
     Assert.assertEquals("group", hdfsRecord.getVGroup());
-    Assert.assertEquals("taxonConceptID", hdfsRecord.getTaxonconceptid());
-    Assert.assertEquals("taxonConceptID", hdfsRecord.getVTaxonconceptid());
+    Assert.assertEquals("v_taxonConceptID", hdfsRecord.getTaxonconceptid());
+    Assert.assertEquals("v_taxonConceptID", hdfsRecord.getVTaxonconceptid());
 
     Assert.assertEquals(Collections.singletonList("ad"), hdfsRecord.getAssociatedsequences());
-    Assert.assertEquals("ad", hdfsRecord.getVAssociatedsequences());
+    Assert.assertEquals("v_ad", hdfsRecord.getVAssociatedsequences());
 
     // Test temporal fields
     Assert.assertNotNull(hdfsRecord.getDateidentified());

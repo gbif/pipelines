@@ -610,6 +610,31 @@ public class BasicInterpreterTest {
     assertIssueSize(br, 0);
   }
 
+  @Test
+  public void interpretAssociatedSequencesTest() {
+    final String number1 = "111";
+    final String number2 = "22";
+    final String number3 = "33";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(
+        DwcTerm.associatedSequences.qualifiedName(), number1 + " | " + number2 + " ; " + number3);
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretAssociatedSequences(er, br);
+
+    // Should
+    Assert.assertEquals(3, br.getAssociatedSequences().size());
+    Assert.assertTrue(br.getAssociatedSequences().contains(number1));
+    Assert.assertTrue(br.getAssociatedSequences().contains(number2));
+    Assert.assertTrue(br.getAssociatedSequences().contains(number3));
+    assertIssueSize(br, 0);
+  }
+
   private void assertIssueSize(BasicRecord br, int expectedSize) {
     assertEquals(expectedSize, br.getIssues().getIssueList().size());
   }
