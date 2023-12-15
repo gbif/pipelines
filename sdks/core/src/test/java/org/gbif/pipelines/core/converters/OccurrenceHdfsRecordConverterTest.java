@@ -100,6 +100,7 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.recordedBy.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(GbifTerm.projectId.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.taxonConceptID.simpleName(), "taxonConceptID");
+    coreTerms.put(DwcTerm.associatedSequences.simpleName(), "ad");
     coreTerms.put(DwcTerm.bed.simpleName(), "v_bed");
     coreTerms.put(DwcTerm.formation.simpleName(), "v_formation");
 
@@ -153,6 +154,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
             .setProjectId(Arrays.asList(multiValue1, multiValue2))
             .setIsSequenced(true)
+            .setAssociatedSequences(Collections.singletonList("ad"))
             .setGeologicalContext(
                 GeologicalContext.newBuilder().setBed("bed").setFormation("formation").build())
             .build();
@@ -243,6 +245,9 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("group", hdfsRecord.getVGroup());
     Assert.assertEquals("taxonConceptID", hdfsRecord.getTaxonconceptid());
     Assert.assertEquals("taxonConceptID", hdfsRecord.getVTaxonconceptid());
+
+    Assert.assertEquals(Collections.singletonList("ad"), hdfsRecord.getAssociatedsequences());
+    Assert.assertEquals("ad", hdfsRecord.getVAssociatedsequences());
 
     // Test temporal fields
     Assert.assertNotNull(hdfsRecord.getDateidentified());
