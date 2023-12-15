@@ -92,7 +92,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_acceptedNameUsageID\"", // DwcTerm.acceptedNameUsageID
       "\"\"", // DwcTerm.associatedOccurrences
       "\"raw_er_associatedReferences\"", // DwcTerm.associatedReferences
-      "\"raw_er_associatedSequences\"", // DwcTerm.associatedSequences
+      "\"\"", // DwcTerm.associatedSequences
       "\"raw_er_associatedTaxa\"", // DwcTerm.associatedTaxa
       "\"raw_er_behavior\"", // DwcTerm.behavior
       "\"raw_er_collectionID\"", // DwcTerm.collectionID
