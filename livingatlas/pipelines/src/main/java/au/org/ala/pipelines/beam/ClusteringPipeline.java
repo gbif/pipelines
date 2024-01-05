@@ -137,7 +137,12 @@ public class ClusteringPipeline {
                     List<String> otherCatalogNumbers =
                         source.getMultiValues().get(DwcTerm.otherCatalogNumbers.simpleName());
 
-                    String recordedBy = source.getStrings().get(DwcTerm.recordedBy.simpleName());
+                    String recordedByItem =
+                        source.getStrings().get(DwcTerm.recordedBy.simpleName());
+                    List<String> recordedBy = null;
+                    if (recordedByItem != null) {
+                      recordedBy = Collections.singletonList(recordedByItem);
+                    }
 
                     Long eventDateL = source.getLongs().get(DwcTerm.eventDate.simpleName());
                     String eventDate = "";
@@ -161,7 +166,7 @@ public class ClusteringPipeline {
                             .withDay(day)
                             .withEventDate(eventDate)
                             .withTypeStatus(typeStatus)
-                            .withRecordedBy(Collections.singletonList(recordedBy))
+                            .withRecordedBy(recordedBy)
                             .withFieldNumber(fieldNumber)
                             .withRecordNumber(recordNumber)
                             .withCatalogNumber(catalogNumber)
