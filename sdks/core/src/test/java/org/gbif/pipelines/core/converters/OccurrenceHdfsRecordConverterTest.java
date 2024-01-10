@@ -74,7 +74,7 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.class_.simpleName(), "classs");
     coreTerms.put(DcTerm.format.simpleName(), "format");
     coreTerms.put(DwcTerm.order.simpleName(), "order");
-    coreTerms.put(DwcTerm.group.simpleName(), "group");
+    coreTerms.put(DwcTerm.group.simpleName(), "v_group");
     coreTerms.put(DcTerm.date.simpleName(), "26/06/2019");
     coreTerms.put(
         DwcTerm.basisOfRecord.simpleName(), BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase());
@@ -103,6 +103,7 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.associatedSequences.simpleName(), "v_ad");
     coreTerms.put(DwcTerm.bed.simpleName(), "v_bed");
     coreTerms.put(DwcTerm.formation.simpleName(), "v_formation");
+    coreTerms.put(DwcTerm.previousIdentifications.simpleName(), "v_previousIdentifications");
 
     Map<String, List<Map<String, String>>> extensions = new HashMap<>();
     extensions.put(
@@ -241,8 +242,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("classs", hdfsRecord.getVClass());
     Assert.assertEquals("ORDER", hdfsRecord.getOrder());
     Assert.assertEquals("order", hdfsRecord.getVOrder());
-    Assert.assertEquals("group", hdfsRecord.getGroup());
-    Assert.assertEquals("group", hdfsRecord.getVGroup());
+    Assert.assertEquals("v_group", hdfsRecord.getGroup());
+    Assert.assertEquals("v_group", hdfsRecord.getVGroup());
     Assert.assertEquals("v_taxonConceptID", hdfsRecord.getTaxonconceptid());
     Assert.assertEquals("v_taxonConceptID", hdfsRecord.getVTaxonconceptid());
 
@@ -283,6 +284,8 @@ public class OccurrenceHdfsRecordConverterTest {
         "v_" + basicRecord.getGeologicalContext().getFormation(), hdfsRecord.getVFormation());
     Assert.assertEquals(
         basicRecord.getGeologicalContext().getFormation(), hdfsRecord.getFormation());
+    Assert.assertEquals("v_previousIdentifications", hdfsRecord.getPreviousidentifications());
+    Assert.assertEquals("v_previousIdentifications", hdfsRecord.getVPreviousidentifications());
 
     // extensions
     Assert.assertEquals(2, hdfsRecord.getDwcaextension().size());
