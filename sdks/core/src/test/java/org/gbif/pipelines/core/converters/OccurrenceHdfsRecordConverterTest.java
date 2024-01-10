@@ -103,6 +103,7 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.associatedSequences.simpleName(), "v_ad");
     coreTerms.put(DwcTerm.bed.simpleName(), "v_bed");
     coreTerms.put(DwcTerm.formation.simpleName(), "v_formation");
+    coreTerms.put(DwcTerm.member.simpleName(), "v_member");
     coreTerms.put(DwcTerm.previousIdentifications.simpleName(), "v_previousIdentifications");
 
     Map<String, List<Map<String, String>>> extensions = new HashMap<>();
@@ -157,7 +158,12 @@ public class OccurrenceHdfsRecordConverterTest {
             .setIsSequenced(true)
             .setAssociatedSequences(Collections.singletonList("ad"))
             .setGeologicalContext(
-                GeologicalContext.newBuilder().setBed("bed").setFormation("formation").build())
+                GeologicalContext.newBuilder()
+                    .setBed("bed")
+                    .setFormation("formation")
+                    .setGroup("group")
+                    .setMember("member")
+                    .build())
             .build();
 
     List<RankedName> classification = new ArrayList<>();
@@ -240,12 +246,24 @@ public class OccurrenceHdfsRecordConverterTest {
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());
     Assert.assertEquals("classs", hdfsRecord.getVClass());
+
     Assert.assertEquals("ORDER", hdfsRecord.getOrder());
     Assert.assertEquals("order", hdfsRecord.getVOrder());
-    Assert.assertEquals("v_group", hdfsRecord.getGroup());
+
+    Assert.assertEquals("group", hdfsRecord.getGroup());
     Assert.assertEquals("v_group", hdfsRecord.getVGroup());
+
     Assert.assertEquals("v_taxonConceptID", hdfsRecord.getTaxonconceptid());
     Assert.assertEquals("v_taxonConceptID", hdfsRecord.getVTaxonconceptid());
+
+    Assert.assertEquals("formation", hdfsRecord.getFormation());
+    Assert.assertEquals("v_formation", hdfsRecord.getVFormation());
+
+    Assert.assertEquals("bed", hdfsRecord.getBed());
+    Assert.assertEquals("v_bed", hdfsRecord.getVBed());
+
+    Assert.assertEquals("member", hdfsRecord.getMember());
+    Assert.assertEquals("v_member", hdfsRecord.getVMember());
 
     Assert.assertEquals(Collections.singletonList("ad"), hdfsRecord.getAssociatedsequences());
     Assert.assertEquals("v_ad", hdfsRecord.getVAssociatedsequences());
