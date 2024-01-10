@@ -240,7 +240,7 @@
       },
       "countryCode": {"type":"keyword", "copy_to": "all"},
       "country": {"type":"text", "copy_to": "all"},
-      "gbifRegion": {"type":"text", "copy_to": "all"},
+      "gbifRegion": {"type":"keyword", "copy_to": "all"},
       "stateProvince": {
         "type": "text",
         "fields": {
