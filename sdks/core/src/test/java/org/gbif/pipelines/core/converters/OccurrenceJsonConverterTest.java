@@ -663,14 +663,18 @@ public class OccurrenceJsonConverterTest {
         result.path("degreeOfEstablishment").toString());
 
     String geologicalContextExpected =
-        "{\"earliestEonOrLowestEonothem\":\"test1\","
-            + "\"latestEonOrHighestEonothem\":\"test2\",\"earliestEraOrLowestErathem\":\"test3\","
-            + "\"latestEraOrHighestErathem\":\"test4\",\"earliestPeriodOrLowestSystem\":\"test5\","
-            + "\"latestPeriodOrHighestSystem\":\"test6\",\"earliestEpochOrLowestSeries\":\"test7\","
-            + "\"latestEpochOrHighestSeries\":\"test8\",\"earliestAgeOrLowestStage\":\"test9\","
-            + "\"latestAgeOrHighestStage\":\"test10\",\"lowestBiostratigraphicZone\":\"test11\","
-            + "\"highestBiostratigraphicZone\":\"test12\",\"group\":\"test13\",\"formation\":\"test14\","
-            + "\"member\":\"test15\",\"bed\":\"test16\"}";
+        "{\"earliestEonOrLowestEonothem\":{\"concept\":\"test1\",\"lineage\":[\"test1\"]},"
+            + "\"latestEonOrHighestEonothem\":{\"concept\":\"test2\",\"lineage\":[\"test2\"]},"
+            + "\"earliestEraOrLowestErathem\":{\"concept\":\"test3\",\"lineage\":[\"test3\"]},"
+            + "\"latestEraOrHighestErathem\":{\"concept\":\"test4\",\"lineage\":[\"test4\"]},"
+            + "\"earliestPeriodOrLowestSystem\":{\"concept\":\"test5\",\"lineage\":[\"test5\"]},"
+            + "\"latestPeriodOrHighestSystem\":{\"concept\":\"test6\",\"lineage\":[\"test6\"]},"
+            + "\"earliestEpochOrLowestSeries\":{\"concept\":\"test7\",\"lineage\":[\"test7\"]},"
+            + "\"latestEpochOrHighestSeries\":{\"concept\":\"test8\",\"lineage\":[\"test8\"]},"
+            + "\"earliestAgeOrLowestStage\":{\"concept\":\"test9\",\"lineage\":[\"test9\"]},"
+            + "\"latestAgeOrHighestStage\":{\"concept\":\"test10\",\"lineage\":[\"test10\"]},"
+            + "\"lowestBiostratigraphicZone\":\"test11\",\"highestBiostratigraphicZone\":\"test12\","
+            + "\"group\":\"test13\",\"formation\":\"test14\",\"member\":\"test15\",\"bed\":\"test16\"}";
     assertEquals(geologicalContextExpected, result.path("geologicalContext").toString());
   }
 

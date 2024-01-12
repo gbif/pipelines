@@ -325,16 +325,69 @@
       "geologicalContext": {
         "type": "object",
         "properties": {
-          "earliestEonOrLowestEonothem": {"type": "keyword", "copy_to": "all"},
-          "latestEonOrHighestEonothem": {"type": "keyword", "copy_to": "all"},
-          "earliestEraOrLowestErathem": {"type": "keyword", "copy_to": "all"},
-          "latestEraOrHighestErathem": {"type": "keyword", "copy_to": "all"},
-          "earliestPeriodOrLowestSystem": {"type": "keyword", "copy_to": "all"},
-          "latestPeriodOrHighestSystem": {"type": "keyword", "copy_to": "all"},
-          "earliestEpochOrLowestSeries": {"type": "keyword", "copy_to": "all"},
-          "latestEpochOrHighestSeries": {"type": "keyword", "copy_to": "all"},
-          "earliestAgeOrLowestStage": {"type": "keyword", "copy_to": "all"},
-          "latestAgeOrHighestStage": {"type": "keyword", "copy_to": "all"},
+          "earliestEonOrLowestEonothem": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "latestEonOrHighestEonothem": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "earliestEraOrLowestErathem": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "earliestPeriodOrLowestSystem": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "latestPeriodOrHighestSystem": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "earliestEpochOrLowestSeries": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "latestEpochOrHighestSeries": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "earliestAgeOrLowestStage": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "latestAgeOrHighestStage": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
           "lowestBiostratigraphicZone": {"type": "keyword", "copy_to": "all"},
           "highestBiostratigraphicZone": {"type": "keyword", "copy_to": "all"},
           "group": {"type": "keyword", "copy_to": "all"},
