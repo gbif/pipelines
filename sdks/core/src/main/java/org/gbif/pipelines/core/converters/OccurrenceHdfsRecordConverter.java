@@ -501,38 +501,113 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setLicense(basicRecord.getLicense());
     }
 
-    Optional.ofNullable(basicRecord.getGeologicalContext())
-        .ifPresent(
-            gc -> {
-              occurrenceHdfsRecord.setEarliesteonorlowesteonothem(
-                  gc.getEarliestEonOrLowestEonothem());
-              occurrenceHdfsRecord.setLatesteonorhighesteonothem(
-                  gc.getLatestEonOrHighestEonothem());
-              occurrenceHdfsRecord.setEarliesteraorlowesterathem(
-                  gc.getEarliestEraOrLowestErathem());
-              occurrenceHdfsRecord.setLatesteraorhighesterathem(gc.getLatestEraOrHighestErathem());
-              occurrenceHdfsRecord.setEarliestperiodorlowestsystem(
-                  gc.getEarliestPeriodOrLowestSystem());
-              occurrenceHdfsRecord.setLatestperiodorhighestsystem(
-                  gc.getLatestPeriodOrHighestSystem());
-              occurrenceHdfsRecord.setEarliestepochorlowestseries(
-                  gc.getEarliestEpochOrLowestSeries());
-              occurrenceHdfsRecord.setLatestepochorhighestseries(
-                  gc.getLatestEpochOrHighestSeries());
-              occurrenceHdfsRecord.setEarliestageorloweststage(gc.getEarliestAgeOrLowestStage());
-              occurrenceHdfsRecord.setLatestageorhigheststage(gc.getLatestAgeOrHighestStage());
-              occurrenceHdfsRecord.setLowestbiostratigraphiczone(
-                  gc.getLowestBiostratigraphicZone());
-              occurrenceHdfsRecord.setHighestbiostratigraphiczone(
-                  gc.getHighestBiostratigraphicZone());
-              occurrenceHdfsRecord.setGroup(gc.getGroup());
-              occurrenceHdfsRecord.setFormation(gc.getFormation());
-              occurrenceHdfsRecord.setMember(gc.getMember());
-              occurrenceHdfsRecord.setBed(gc.getBed());
-            });
+    mapGeologicalContext(occurrenceHdfsRecord);
 
     setCreatedIfGreater(occurrenceHdfsRecord, basicRecord.getCreated());
     addIssues(basicRecord.getIssues(), occurrenceHdfsRecord);
+  }
+
+  private void mapGeologicalContext(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    GeologicalContext gc = basicRecord.getGeologicalContext();
+    if (gc != null) {
+
+      Optional.ofNullable(gc.getEarliestEonOrLowestEonothem())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setEarliesteonorlowesteonothem(
+                      EarliestEonOrLowestEonothem.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getLatestEonOrHighestEonothem())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setLatesteonorhighesteonothem(
+                      LatestEonOrHighestEonothem.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getEarliestEraOrLowestErathem())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setEarliesteraorlowesterathem(
+                      EarliestEraOrLowestErathem.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getLatestEraOrHighestErathem())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setLatesteraorhighesterathem(
+                      LatestEraOrHighestErathem.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getEarliestPeriodOrLowestSystem())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setEarliestperiodorlowestsystem(
+                      EarliestPeriodOrLowestSystem.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getLatestPeriodOrHighestSystem())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setLatestperiodorhighestsystem(
+                      LatestPeriodOrHighestSystem.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getEarliestEpochOrLowestSeries())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setEarliestepochorlowestseries(
+                      EarliestEpochOrLowestSeries.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getLatestEpochOrHighestSeries())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setLatestepochorhighestseries(
+                      LatestEpochOrHighestSeries.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getEarliestAgeOrLowestStage())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setEarliestageorloweststage(
+                      EarliestAgeOrLowestStage.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getLatestAgeOrHighestStage())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setLatestageorhigheststage(
+                      LatestAgeOrHighestStage.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      occurrenceHdfsRecord.setLowestbiostratigraphiczone(gc.getLowestBiostratigraphicZone());
+      occurrenceHdfsRecord.setHighestbiostratigraphiczone(gc.getHighestBiostratigraphicZone());
+      occurrenceHdfsRecord.setGroup(gc.getGroup());
+      occurrenceHdfsRecord.setFormation(gc.getFormation());
+      occurrenceHdfsRecord.setMember(gc.getMember());
+      occurrenceHdfsRecord.setBed(gc.getBed());
+    }
   }
 
   /**

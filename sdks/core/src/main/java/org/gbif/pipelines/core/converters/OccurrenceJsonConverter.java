@@ -169,25 +169,38 @@ public class OccurrenceJsonConverter {
     // Geological context
     org.gbif.pipelines.io.avro.GeologicalContext gx = basic.getGeologicalContext();
     if (gx != null) {
-      builder.setGeologicalContext(
+
+      GeologicalContext.Builder gcb =
           GeologicalContext.newBuilder()
-              .setEarliestEonOrLowestEonothem(gx.getEarliestEonOrLowestEonothem())
-              .setLatestEonOrHighestEonothem(gx.getLatestEonOrHighestEonothem())
-              .setEarliestEraOrLowestErathem(gx.getEarliestEraOrLowestErathem())
-              .setLatestEraOrHighestErathem(gx.getLatestEraOrHighestErathem())
-              .setEarliestPeriodOrLowestSystem(gx.getEarliestPeriodOrLowestSystem())
-              .setLatestPeriodOrHighestSystem(gx.getLatestPeriodOrHighestSystem())
-              .setEarliestEpochOrLowestSeries(gx.getEarliestEpochOrLowestSeries())
-              .setLatestEpochOrHighestSeries(gx.getLatestEpochOrHighestSeries())
-              .setEarliestAgeOrLowestStage(gx.getEarliestAgeOrLowestStage())
-              .setLatestAgeOrHighestStage(gx.getLatestAgeOrHighestStage())
               .setLowestBiostratigraphicZone(gx.getLowestBiostratigraphicZone())
               .setHighestBiostratigraphicZone(gx.getHighestBiostratigraphicZone())
               .setGroup(gx.getGroup())
               .setFormation(gx.getFormation())
               .setMember(gx.getMember())
-              .setBed(gx.getBed())
-              .build());
+              .setBed(gx.getBed());
+
+      JsonConverter.convertVocabularyConcept(gx.getEarliestEonOrLowestEonothem())
+          .ifPresent(gcb::setEarliestEonOrLowestEonothem);
+      JsonConverter.convertVocabularyConcept(gx.getLatestEonOrHighestEonothem())
+          .ifPresent(gcb::setLatestEonOrHighestEonothem);
+      JsonConverter.convertVocabularyConcept(gx.getEarliestEraOrLowestErathem())
+          .ifPresent(gcb::setEarliestEraOrLowestErathem);
+      JsonConverter.convertVocabularyConcept(gx.getLatestEraOrHighestErathem())
+          .ifPresent(gcb::setLatestEraOrHighestErathem);
+      JsonConverter.convertVocabularyConcept(gx.getEarliestPeriodOrLowestSystem())
+          .ifPresent(gcb::setEarliestPeriodOrLowestSystem);
+      JsonConverter.convertVocabularyConcept(gx.getLatestPeriodOrHighestSystem())
+          .ifPresent(gcb::setLatestPeriodOrHighestSystem);
+      JsonConverter.convertVocabularyConcept(gx.getEarliestEpochOrLowestSeries())
+          .ifPresent(gcb::setEarliestEpochOrLowestSeries);
+      JsonConverter.convertVocabularyConcept(gx.getLatestEpochOrHighestSeries())
+          .ifPresent(gcb::setLatestEpochOrHighestSeries);
+      JsonConverter.convertVocabularyConcept(gx.getEarliestAgeOrLowestStage())
+          .ifPresent(gcb::setEarliestAgeOrLowestStage);
+      JsonConverter.convertVocabularyConcept(gx.getLatestAgeOrHighestStage())
+          .ifPresent(gcb::setLatestAgeOrHighestStage);
+
+      builder.setGeologicalContext(gcb.build());
     }
   }
 

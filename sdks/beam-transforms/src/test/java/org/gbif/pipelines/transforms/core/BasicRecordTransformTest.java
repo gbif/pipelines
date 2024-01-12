@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -23,6 +24,7 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GeologicalContext;
 import org.gbif.pipelines.io.avro.IssueRecord;
+import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -124,6 +126,13 @@ public class BasicRecordTransformTest {
   @Test
   public void geologicalContextTest() {
 
+    Function<String, VocabularyConcept> vcFn =
+        v ->
+            VocabularyConcept.newBuilder()
+                .setConcept(v)
+                .setLineage(Collections.singletonList(v))
+                .build();
+
     // Expected
     BasicRecord expected =
         BasicRecord.newBuilder()
@@ -138,16 +147,16 @@ public class BasicRecordTransformTest {
                     .build())
             .setGeologicalContext(
                 GeologicalContext.newBuilder()
-                    .setEarliestEonOrLowestEonothem("test1")
-                    .setLatestEonOrHighestEonothem("test2")
-                    .setEarliestEraOrLowestErathem("test3")
-                    .setLatestEraOrHighestErathem("test4")
-                    .setEarliestPeriodOrLowestSystem("test5")
-                    .setLatestPeriodOrHighestSystem("test6")
-                    .setEarliestEpochOrLowestSeries("test7")
-                    .setLatestEpochOrHighestSeries("test8")
-                    .setEarliestAgeOrLowestStage("test9")
-                    .setLatestAgeOrHighestStage("test10")
+                    .setEarliestEonOrLowestEonothem(vcFn.apply("test1"))
+                    .setLatestEonOrHighestEonothem(vcFn.apply("test2"))
+                    .setEarliestEraOrLowestErathem(vcFn.apply("test3"))
+                    .setLatestEraOrHighestErathem(vcFn.apply("test4"))
+                    .setEarliestPeriodOrLowestSystem(vcFn.apply("test5"))
+                    .setLatestPeriodOrHighestSystem(vcFn.apply("test6"))
+                    .setEarliestEpochOrLowestSeries(vcFn.apply("test7"))
+                    .setLatestEpochOrHighestSeries(vcFn.apply("test8"))
+                    .setEarliestAgeOrLowestStage(vcFn.apply("test9"))
+                    .setLatestAgeOrHighestStage(vcFn.apply("test10"))
                     .setLowestBiostratigraphicZone("test11")
                     .setHighestBiostratigraphicZone("test12")
                     .setGroup("test13")
@@ -158,7 +167,6 @@ public class BasicRecordTransformTest {
             .build();
 
     // State
-
     Map<String, String> coreTerms = new HashMap<>();
     coreTerms.put(DwcTerm.earliestEonOrLowestEonothem.qualifiedName(), "test1");
     coreTerms.put(DwcTerm.latestEonOrHighestEonothem.qualifiedName(), "test2");

@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.License;
@@ -142,6 +143,13 @@ public class OccurrenceJsonConverterTest {
 
     ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").setIsClustered(true).build();
 
+    Function<String, VocabularyConcept> vcFn =
+        v ->
+            VocabularyConcept.newBuilder()
+                .setConcept(v)
+                .setLineage(Collections.singletonList(v))
+                .build();
+
     BasicRecord br =
         BasicRecord.newBuilder()
             .setId("777")
@@ -201,16 +209,16 @@ public class OccurrenceJsonConverterTest {
             .setProjectId(Arrays.asList(multivalue1, multivalue2))
             .setGeologicalContext(
                 GeologicalContext.newBuilder()
-                    .setEarliestEonOrLowestEonothem("test1")
-                    .setLatestEonOrHighestEonothem("test2")
-                    .setEarliestEraOrLowestErathem("test3")
-                    .setLatestEraOrHighestErathem("test4")
-                    .setEarliestPeriodOrLowestSystem("test5")
-                    .setLatestPeriodOrHighestSystem("test6")
-                    .setEarliestEpochOrLowestSeries("test7")
-                    .setLatestEpochOrHighestSeries("test8")
-                    .setEarliestAgeOrLowestStage("test9")
-                    .setLatestAgeOrHighestStage("test10")
+                    .setEarliestEonOrLowestEonothem(vcFn.apply("test1"))
+                    .setLatestEonOrHighestEonothem(vcFn.apply("test2"))
+                    .setEarliestEraOrLowestErathem(vcFn.apply("test3"))
+                    .setLatestEraOrHighestErathem(vcFn.apply("test4"))
+                    .setEarliestPeriodOrLowestSystem(vcFn.apply("test5"))
+                    .setLatestPeriodOrHighestSystem(vcFn.apply("test6"))
+                    .setEarliestEpochOrLowestSeries(vcFn.apply("test7"))
+                    .setLatestEpochOrHighestSeries(vcFn.apply("test8"))
+                    .setEarliestAgeOrLowestStage(vcFn.apply("test9"))
+                    .setLatestAgeOrHighestStage(vcFn.apply("test10"))
                     .setLowestBiostratigraphicZone("test11")
                     .setHighestBiostratigraphicZone("test12")
                     .setGroup("test13")
