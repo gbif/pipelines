@@ -113,7 +113,9 @@ public class ALADwcaToVerbatimPipeline {
 
     log.info("Write path: {}", targetPath);
     p.apply("Read from Darwin Core Archive", reader)
-        .apply("Write to avro", VerbatimTransform.create().write(targetPath));
+        .apply(
+            "Write to avro",
+            VerbatimTransform.create().write(targetPath).withNumShards(options.getNumShards()));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
