@@ -234,8 +234,7 @@ public class OccurrenceHdfsRecordConverter {
       Optional.ofNullable(temporalRecord.getEventDate())
           .ifPresent(
               eventDate -> {
-                occurrenceHdfsRecord.setEventdate(
-                    TemporalConverter.getEventDateToStringFn().apply(eventDate));
+                occurrenceHdfsRecord.setEventdate(eventDate.getInterval());
                 occurrenceHdfsRecord.setEventdategte(
                     StringToDateFunctions.getStringToEarliestEpochSeconds(true)
                         .apply(eventDate.getGte()));

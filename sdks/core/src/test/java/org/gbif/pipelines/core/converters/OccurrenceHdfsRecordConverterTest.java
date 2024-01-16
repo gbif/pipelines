@@ -183,7 +183,12 @@ public class OccurrenceHdfsRecordConverterTest {
             .setId("1")
             .setDateIdentified("2019-11-12T13:24:56.963591")
             .setModified("2019-04-15T17:17")
-            .setEventDate(EventDate.newBuilder().setGte("2000").setLte("2010").build())
+            .setEventDate(
+                EventDate.newBuilder()
+                    .setGte("2000")
+                    .setLte("2010")
+                    .setInterval("2000/2010")
+                    .build())
             .build();
 
     IdentifierRecord identifierRecord =
@@ -573,7 +578,12 @@ public class OccurrenceHdfsRecordConverterTest {
             .setMonth(1)
             .setStartDayOfYear(1)
             .setEndDayOfYear(1)
-            .setEventDate(EventDate.newBuilder().setGte(rawEventDate).setLte(rawEventDate).build())
+            .setEventDate(
+                EventDate.newBuilder()
+                    .setGte(rawEventDate)
+                    .setLte(rawEventDate)
+                    .setInterval("2019-01")
+                    .build())
             .setDateIdentified(rawEventDate)
             .setModified(rawEventDate)
             .build();
