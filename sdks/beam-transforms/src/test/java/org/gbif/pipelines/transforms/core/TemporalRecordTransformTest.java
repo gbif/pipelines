@@ -237,7 +237,7 @@ public class TemporalRecordTransformTest {
             .setEndDayOfYear(32)
             .setEventDate(
                 EventDate.newBuilder()
-                    .setInterval("1999-02-01T12:26")
+                    .setInterval("1999-02-01T12:26Z")
                     .setGte("1999-02-01T12:26:00.000")
                     .setLte("1999-02-01T12:26:00.000")
                     .build())

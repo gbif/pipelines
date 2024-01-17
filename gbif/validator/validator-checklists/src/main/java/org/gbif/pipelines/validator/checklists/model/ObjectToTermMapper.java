@@ -405,10 +405,6 @@ public class ObjectToTermMapper {
     return termsMap;
   }
 
-  public static List<Map<Term, String>> toTypeSpecimenTermMap(List<TypeSpecimen> typeSpecimens) {
-    return typeSpecimens.stream().map(ObjectToTermMapper::toTermMap).collect(Collectors.toList());
-  }
-
   public static Map<Term, String> toTermMap(VernacularName vernacularName) {
     Map<Term, String> termsMap = new HashMap<>();
 

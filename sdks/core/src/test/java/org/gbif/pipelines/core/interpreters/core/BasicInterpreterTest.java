@@ -269,6 +269,28 @@ public class BasicInterpreterTest {
   }
 
   @Test
+  public void interpretSemicolonOtherCatalogNumbersTest() {
+    final String number1 = "111";
+    final String number2 = "22";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.otherCatalogNumbers.qualifiedName(), number1 + " ; " + number2 + " ; ");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretOtherCatalogNumbers(er, br);
+
+    // Should
+    Assert.assertEquals(2, br.getOtherCatalogNumbers().size());
+    Assert.assertTrue(br.getOtherCatalogNumbers().contains(number1));
+    Assert.assertTrue(br.getOtherCatalogNumbers().contains(number2));
+    assertIssueSize(br, 0);
+  }
+
+  @Test
   public void interpretRecordedByTest() {
     final String person1 = "person 1";
     final String person2 = "person, 2";
@@ -547,6 +569,69 @@ public class BasicInterpreterTest {
     Assert.assertEquals(2, br.getProjectId().size());
     Assert.assertTrue(br.getProjectId().contains(id1));
     Assert.assertTrue(br.getProjectId().contains(id2));
+    assertIssueSize(br, 0);
+  }
+
+  @Test
+  public void interpretIsSequencedNullTest() {
+    final String seq = "null";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.associatedSequences.qualifiedName(), seq);
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretIsSequenced(er, br);
+
+    // Should
+    Assert.assertFalse(br.getIsSequenced());
+    assertIssueSize(br, 0);
+  }
+
+  @Test
+  public void interpretIsSequencedTest() {
+    final String seq = " awdawd ";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.associatedSequences.qualifiedName(), seq);
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretIsSequenced(er, br);
+
+    // Should
+    Assert.assertTrue(br.getIsSequenced());
+    assertIssueSize(br, 0);
+  }
+
+  @Test
+  public void interpretAssociatedSequencesTest() {
+    final String number1 = "111";
+    final String number2 = "22";
+    final String number3 = "33";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(
+        DwcTerm.associatedSequences.qualifiedName(), number1 + " | " + number2 + " ; " + number3);
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretAssociatedSequences(er, br);
+
+    // Should
+    Assert.assertEquals(3, br.getAssociatedSequences().size());
+    Assert.assertTrue(br.getAssociatedSequences().contains(number1));
+    Assert.assertTrue(br.getAssociatedSequences().contains(number2));
+    Assert.assertTrue(br.getAssociatedSequences().contains(number3));
     assertIssueSize(br, 0);
   }
 

@@ -7,8 +7,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
 import org.gbif.pipelines.io.avro.ALASensitivityRecord;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
@@ -52,7 +54,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_institutionCode\"", // DwcTerm.institutionCode
       "\"raw_er_recordNumber\"", // DwcTerm.recordNumber
       "\"br_basisOfRecord\"", // DwcTerm.basisOfRecord
-      "\"br_recordedBy_1|br_recordedBy_2\"", // DwcTerm.recordedBy
+      "\"raw_er_recordedBy\"", // DwcTerm.recordedBy
       "\"br_occurrenceStatus\"", // DwcTerm.occurrenceStatus
       "\"222\"", // DwcTerm.individualCount
       "\"atxr_ScientificName\"", // DwcTerm.scientificName
@@ -90,7 +92,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_acceptedNameUsageID\"", // DwcTerm.acceptedNameUsageID
       "\"\"", // DwcTerm.associatedOccurrences
       "\"raw_er_associatedReferences\"", // DwcTerm.associatedReferences
-      "\"raw_er_associatedSequences\"", // DwcTerm.associatedSequences
+      "\"\"", // DwcTerm.associatedSequences
       "\"raw_er_associatedTaxa\"", // DwcTerm.associatedTaxa
       "\"raw_er_behavior\"", // DwcTerm.behavior
       "\"raw_er_collectionID\"", // DwcTerm.collectionID
@@ -101,6 +103,7 @@ public class CoreTsvConverterTest {
       "\"br_datasetID\"", // DwcTerm.datasetID
       "\"br_datasetName\"", // DwcTerm.datasetName
       "\"2002\"", // DwcTerm.dateIdentified
+      "\"br_degreeOfEstablishment\"", // DwcTerm.degreeOfEstablishment
       "\"raw_er_disposition\"", // DwcTerm.disposition
       "\"raw_er_dynamicProperties\"", // DwcTerm.dynamicProperties
       "\"1111111\"", // DwcTerm.endDayOfYear
@@ -112,7 +115,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_footprintSpatialFit\"", // DwcTerm.footprintSpatialFit
       "\"raw_er_footprintSRS\"", // DwcTerm.footprintSRS
       "\"lr_footprintWKT\"", // DwcTerm.footprintWKT
-      "\"raw_er_georeferencedBy\"", // DwcTerm.georeferencedBy
+      "\"lr_georeferencedBy\"", // DwcTerm.georeferencedBy
       "\"lr_georeferencedDate\"", // DwcTerm.georeferencedDate
       "\"raw_er_georeferenceProtocol\"", // DwcTerm.georeferenceProtocol
       "\"raw_er_georeferenceRemarks\"", // DwcTerm.georeferenceRemarks
@@ -120,7 +123,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_georeferenceVerificationStatus\"", // DwcTerm.georeferenceVerificationStatus
       "\"raw_er_habitat\"", // DwcTerm.habitat
       "\"raw_er_higherClassification\"", // DwcTerm.higherClassification
-      "\"raw_er_higherGeography\"", // DwcTerm.higherGeography
+      "\"lr_higherGeography\"", // DwcTerm.higherGeography
       "\"raw_er_higherGeographyID\"", // DwcTerm.higherGeographyID
       "\"raw_er_identificationID\"", // DwcTerm.identificationID
       "\"raw_er_identificationQualifier\"", // DwcTerm.identificationQualifier
@@ -154,7 +157,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_nomenclaturalCode\"", // DwcTerm.nomenclaturalCode
       "\"raw_er_nomenclaturalStatus\"", // DwcTerm.nomenclaturalStatus
       "\"raw_er_organismID\"", // DwcTerm.organismID
-      "\"2222.0\"", // DwcTerm.organismQuantity
+      "\"raw_er_organismQuantity\"", // DwcTerm.organismQuantity
       "\"br_organismQuantityType\"", // DwcTerm.organismQuantityType
       "\"raw_er_originalNameUsage\"", // DwcTerm.originalNameUsage
       "\"raw_er_originalNameUsageID\"", // DwcTerm.originalNameUsageID
@@ -234,343 +237,176 @@ public class CoreTsvConverterTest {
       // Other Terms
       "\"5\"", // taxonRankID
       // GBIF Terms
-      "\"raw_er_recordedByID\"" // GbifTerm.recordedByID
+      "\"br_agent_value_rb\"" // GbifTerm.recordedByID
     };
 
     // State
     Map<String, String> core = new HashMap<>();
+    Consumer<Term> coreFn = t -> core.put(t.qualifiedName(), "raw_er_" + t.simpleName());
     // DWC Terms
-    core.put(DwcTerm.occurrenceID.qualifiedName(), "raw_er_" + DwcTerm.occurrenceID.simpleName());
-    core.put(DwcTerm.catalogNumber.qualifiedName(), "raw_er_" + DwcTerm.catalogNumber.simpleName());
-    core.put(
-        DwcTerm.collectionCode.qualifiedName(), "raw_er_" + DwcTerm.collectionCode.simpleName());
-    core.put(
-        DwcTerm.institutionCode.qualifiedName(), "raw_er_" + DwcTerm.institutionCode.simpleName());
-    core.put(DwcTerm.recordNumber.qualifiedName(), "raw_er_" + DwcTerm.recordNumber.simpleName());
-    core.put(DwcTerm.basisOfRecord.qualifiedName(), "raw_er_" + DwcTerm.basisOfRecord.simpleName());
-    core.put(DwcTerm.recordedBy.qualifiedName(), "raw_er_" + DwcTerm.recordedBy.simpleName());
-    core.put(
-        DwcTerm.occurrenceStatus.qualifiedName(),
-        "raw_er_" + DwcTerm.occurrenceStatus.simpleName());
-    core.put(
-        DwcTerm.individualCount.qualifiedName(), "raw_er_" + DwcTerm.individualCount.simpleName());
-    core.put(
-        DwcTerm.scientificName.qualifiedName(), "raw_er_" + DwcTerm.scientificName.simpleName());
-    core.put(
-        DwcTerm.taxonConceptID.qualifiedName(), "raw_er_" + DwcTerm.taxonConceptID.simpleName());
-    core.put(DwcTerm.taxonRank.qualifiedName(), "raw_er_" + DwcTerm.taxonRank.simpleName());
-    core.put(DwcTerm.kingdom.qualifiedName(), "raw_er_" + DwcTerm.kingdom.simpleName());
-    core.put(DwcTerm.phylum.qualifiedName(), "raw_er_" + DwcTerm.phylum.simpleName());
-    core.put(DwcTerm.class_.qualifiedName(), "raw_er_" + DwcTerm.class_.simpleName());
-    core.put(DwcTerm.order.qualifiedName(), "raw_er_" + DwcTerm.order.simpleName());
-    core.put(DwcTerm.family.qualifiedName(), "raw_er_" + DwcTerm.family.simpleName());
-    core.put(DwcTerm.genus.qualifiedName(), "raw_er_" + DwcTerm.genus.simpleName());
-    core.put(
-        DwcTerm.vernacularName.qualifiedName(), "raw_er_" + DwcTerm.vernacularName.simpleName());
-    core.put(
-        DwcTerm.decimalLatitude.qualifiedName(), "raw_er_" + DwcTerm.decimalLatitude.simpleName());
-    core.put(
-        DwcTerm.decimalLongitude.qualifiedName(),
-        "raw_er_" + DwcTerm.decimalLongitude.simpleName());
-    core.put(DwcTerm.geodeticDatum.qualifiedName(), "raw_er_" + DwcTerm.geodeticDatum.simpleName());
-    core.put(
-        DwcTerm.coordinateUncertaintyInMeters.qualifiedName(),
-        "raw_er_" + DwcTerm.coordinateUncertaintyInMeters.simpleName());
-    core.put(
-        DwcTerm.maximumElevationInMeters.qualifiedName(),
-        "raw_er_" + DwcTerm.maximumElevationInMeters.simpleName());
-    core.put(
-        DwcTerm.minimumElevationInMeters.qualifiedName(),
-        "raw_er_" + DwcTerm.minimumElevationInMeters.simpleName());
-    core.put(
-        DwcTerm.minimumDepthInMeters.qualifiedName(),
-        "raw_er_" + DwcTerm.minimumDepthInMeters.simpleName());
-    core.put(
-        DwcTerm.maximumDepthInMeters.qualifiedName(),
-        "raw_er_" + DwcTerm.maximumDepthInMeters.simpleName());
-    core.put(DwcTerm.country.qualifiedName(), "raw_er_" + DwcTerm.country.simpleName());
-    core.put(DwcTerm.stateProvince.qualifiedName(), "raw_er_" + DwcTerm.stateProvince.simpleName());
-    core.put(DwcTerm.locality.qualifiedName(), "raw_er_" + DwcTerm.locality.simpleName());
-    core.put(
-        DwcTerm.locationRemarks.qualifiedName(), "raw_er_" + DwcTerm.locationRemarks.simpleName());
-    core.put(DwcTerm.year.qualifiedName(), "raw_er_" + DwcTerm.year.simpleName());
-    core.put(DwcTerm.month.qualifiedName(), "raw_er_" + DwcTerm.month.simpleName());
-    core.put(DwcTerm.day.qualifiedName(), "raw_er_" + DwcTerm.day.simpleName());
-    core.put(DwcTerm.eventDate.qualifiedName(), "raw_er_" + DwcTerm.eventDate.simpleName());
-    core.put(DwcTerm.eventID.qualifiedName(), "raw_er_" + DwcTerm.eventID.simpleName());
-    core.put(DwcTerm.identifiedBy.qualifiedName(), "raw_er_" + DwcTerm.identifiedBy.simpleName());
-    core.put(
-        DwcTerm.occurrenceRemarks.qualifiedName(),
-        "raw_er_" + DwcTerm.occurrenceRemarks.simpleName());
-    core.put(
-        DwcTerm.dataGeneralizations.qualifiedName(),
-        "raw_er_" + DwcTerm.dataGeneralizations.simpleName());
-    core.put(
-        DwcTerm.otherCatalogNumbers.qualifiedName(),
-        "raw_er_" + DwcTerm.otherCatalogNumbers.simpleName());
-    core.put(
-        DwcTerm.acceptedNameUsage.qualifiedName(),
-        "raw_er_" + DwcTerm.acceptedNameUsage.simpleName());
-    core.put(
-        DwcTerm.acceptedNameUsageID.qualifiedName(),
-        "raw_er_" + DwcTerm.acceptedNameUsageID.simpleName());
-    core.put(
-        DwcTerm.associatedOccurrences.qualifiedName(),
-        "raw_er_" + DwcTerm.associatedOccurrences.simpleName());
-    core.put(
-        DwcTerm.associatedReferences.qualifiedName(),
-        "raw_er_" + DwcTerm.associatedReferences.simpleName());
-    core.put(
-        DwcTerm.associatedSequences.qualifiedName(),
-        "raw_er_" + DwcTerm.associatedSequences.simpleName());
-    core.put(
-        DwcTerm.associatedTaxa.qualifiedName(), "raw_er_" + DwcTerm.associatedTaxa.simpleName());
-    core.put(DwcTerm.behavior.qualifiedName(), "raw_er_" + DwcTerm.behavior.simpleName());
-    core.put(DwcTerm.collectionID.qualifiedName(), "raw_er_" + DwcTerm.collectionID.simpleName());
-    core.put(DwcTerm.continent.qualifiedName(), "raw_er_" + DwcTerm.continent.simpleName());
-    core.put(
-        DwcTerm.coordinatePrecision.qualifiedName(),
-        "raw_er_" + DwcTerm.coordinatePrecision.simpleName());
-    core.put(DwcTerm.countryCode.qualifiedName(), "raw_er_" + DwcTerm.countryCode.simpleName());
-    core.put(DwcTerm.county.qualifiedName(), "raw_er_" + DwcTerm.county.simpleName());
-    core.put(DwcTerm.datasetID.qualifiedName(), "raw_er_" + DwcTerm.datasetID.simpleName());
-    core.put(DwcTerm.datasetName.qualifiedName(), "raw_er_" + DwcTerm.datasetName.simpleName());
-    core.put(
-        DwcTerm.dateIdentified.qualifiedName(), "raw_er_" + DwcTerm.dateIdentified.simpleName());
-    core.put(DwcTerm.disposition.qualifiedName(), "raw_er_" + DwcTerm.disposition.simpleName());
-    core.put(
-        DwcTerm.dynamicProperties.qualifiedName(),
-        "raw_er_" + DwcTerm.dynamicProperties.simpleName());
-    core.put(DwcTerm.endDayOfYear.qualifiedName(), "raw_er_" + DwcTerm.endDayOfYear.simpleName());
-    core.put(
-        DwcTerm.establishmentMeans.qualifiedName(),
-        "raw_er_" + DwcTerm.establishmentMeans.simpleName());
-    core.put(DwcTerm.eventRemarks.qualifiedName(), "raw_er_" + DwcTerm.eventRemarks.simpleName());
-    core.put(DwcTerm.eventTime.qualifiedName(), "raw_er_" + DwcTerm.eventTime.simpleName());
-    core.put(DwcTerm.fieldNotes.qualifiedName(), "raw_er_" + DwcTerm.fieldNotes.simpleName());
-    core.put(DwcTerm.fieldNumber.qualifiedName(), "raw_er_" + DwcTerm.fieldNumber.simpleName());
-    core.put(
-        DwcTerm.footprintSpatialFit.qualifiedName(),
-        "raw_er_" + DwcTerm.footprintSpatialFit.simpleName());
-    core.put(DwcTerm.footprintSRS.qualifiedName(), "raw_er_" + DwcTerm.footprintSRS.simpleName());
-    core.put(DwcTerm.footprintWKT.qualifiedName(), "raw_er_" + DwcTerm.footprintWKT.simpleName());
-    core.put(
-        DwcTerm.georeferencedBy.qualifiedName(), "raw_er_" + DwcTerm.georeferencedBy.simpleName());
-    core.put(
-        DwcTerm.georeferencedDate.qualifiedName(),
-        "raw_er_" + DwcTerm.georeferencedDate.simpleName());
-    core.put(
-        DwcTerm.georeferenceProtocol.qualifiedName(),
-        "raw_er_" + DwcTerm.georeferenceProtocol.simpleName());
-    core.put(
-        DwcTerm.georeferenceRemarks.qualifiedName(),
-        "raw_er_" + DwcTerm.georeferenceRemarks.simpleName());
-    core.put(
-        DwcTerm.georeferenceSources.qualifiedName(),
-        "raw_er_" + DwcTerm.georeferenceSources.simpleName());
-    core.put(
-        DwcTerm.georeferenceVerificationStatus.qualifiedName(),
-        "raw_er_" + DwcTerm.georeferenceVerificationStatus.simpleName());
-    core.put(DwcTerm.habitat.qualifiedName(), "raw_er_" + DwcTerm.habitat.simpleName());
-    core.put(
-        DwcTerm.higherClassification.qualifiedName(),
-        "raw_er_" + DwcTerm.higherClassification.simpleName());
-    core.put(
-        DwcTerm.higherGeography.qualifiedName(), "raw_er_" + DwcTerm.higherGeography.simpleName());
-    core.put(
-        DwcTerm.higherGeographyID.qualifiedName(),
-        "raw_er_" + DwcTerm.higherGeographyID.simpleName());
-    core.put(
-        DwcTerm.identificationID.qualifiedName(),
-        "raw_er_" + DwcTerm.identificationID.simpleName());
-    core.put(
-        DwcTerm.identificationQualifier.qualifiedName(),
-        "raw_er_" + DwcTerm.identificationQualifier.simpleName());
-    core.put(
-        DwcTerm.identificationReferences.qualifiedName(),
-        "raw_er_" + DwcTerm.identificationReferences.simpleName());
-    core.put(
-        DwcTerm.identificationRemarks.qualifiedName(),
-        "raw_er_" + DwcTerm.identificationRemarks.simpleName());
-    core.put(
-        DwcTerm.identificationVerificationStatus.qualifiedName(),
-        "raw_er_" + DwcTerm.identificationVerificationStatus.simpleName());
-    core.put(
-        DwcTerm.informationWithheld.qualifiedName(),
-        "raw_er_" + DwcTerm.informationWithheld.simpleName());
-    core.put(
-        DwcTerm.infraspecificEpithet.qualifiedName(),
-        "raw_er_" + DwcTerm.infraspecificEpithet.simpleName());
-    core.put(DwcTerm.institutionID.qualifiedName(), "raw_er_" + DwcTerm.institutionID.simpleName());
-    core.put(DwcTerm.island.qualifiedName(), "raw_er_" + DwcTerm.island.simpleName());
-    core.put(DwcTerm.islandGroup.qualifiedName(), "raw_er_" + DwcTerm.islandGroup.simpleName());
-    core.put(DwcTerm.lifeStage.qualifiedName(), "raw_er_" + DwcTerm.lifeStage.simpleName());
-    core.put(
-        DwcTerm.locationAccordingTo.qualifiedName(),
-        "raw_er_" + DwcTerm.locationAccordingTo.simpleName());
-    core.put(DwcTerm.locationID.qualifiedName(), "raw_er_" + DwcTerm.locationID.simpleName());
-    core.put(
-        DwcTerm.maximumDistanceAboveSurfaceInMeters.qualifiedName(),
-        "raw_er_" + DwcTerm.maximumDistanceAboveSurfaceInMeters.simpleName());
-    core.put(
-        DwcTerm.measurementAccuracy.qualifiedName(),
-        "raw_er_" + DwcTerm.measurementAccuracy.simpleName());
-    core.put(
-        DwcTerm.measurementDeterminedBy.qualifiedName(),
-        "raw_er_" + DwcTerm.measurementDeterminedBy.simpleName());
-    core.put(
-        DwcTerm.measurementDeterminedDate.qualifiedName(),
-        "raw_er_" + DwcTerm.measurementDeterminedDate.simpleName());
-    core.put(DwcTerm.measurementID.qualifiedName(), "raw_er_" + DwcTerm.measurementID.simpleName());
-    core.put(
-        DwcTerm.measurementMethod.qualifiedName(),
-        "raw_er_" + DwcTerm.measurementMethod.simpleName());
-    core.put(
-        DwcTerm.measurementRemarks.qualifiedName(),
-        "raw_er_" + DwcTerm.measurementRemarks.simpleName());
-    core.put(
-        DwcTerm.measurementType.qualifiedName(), "raw_er_" + DwcTerm.measurementType.simpleName());
-    core.put(
-        DwcTerm.measurementUnit.qualifiedName(), "raw_er_" + DwcTerm.measurementUnit.simpleName());
-    core.put(
-        DwcTerm.measurementValue.qualifiedName(),
-        "raw_er_" + DwcTerm.measurementValue.simpleName());
-    core.put(DwcTerm.municipality.qualifiedName(), "raw_er_" + DwcTerm.municipality.simpleName());
-    core.put(
-        DwcTerm.nameAccordingTo.qualifiedName(), "raw_er_" + DwcTerm.nameAccordingTo.simpleName());
-    core.put(
-        DwcTerm.nameAccordingToID.qualifiedName(),
-        "raw_er_" + DwcTerm.nameAccordingToID.simpleName());
-    core.put(
-        DwcTerm.namePublishedIn.qualifiedName(), "raw_er_" + DwcTerm.namePublishedIn.simpleName());
-    core.put(
-        DwcTerm.namePublishedInID.qualifiedName(),
-        "raw_er_" + DwcTerm.namePublishedInID.simpleName());
-    core.put(
-        DwcTerm.namePublishedInYear.qualifiedName(),
-        "raw_er_" + DwcTerm.namePublishedInYear.simpleName());
-    core.put(
-        DwcTerm.nomenclaturalCode.qualifiedName(),
-        "raw_er_" + DwcTerm.nomenclaturalCode.simpleName());
-    core.put(
-        DwcTerm.nomenclaturalStatus.qualifiedName(),
-        "raw_er_" + DwcTerm.nomenclaturalStatus.simpleName());
-    core.put(DwcTerm.organismID.qualifiedName(), "raw_er_" + DwcTerm.organismID.simpleName());
-    core.put(
-        DwcTerm.organismQuantity.qualifiedName(),
-        "raw_er_" + DwcTerm.organismQuantity.simpleName());
-    core.put(
-        DwcTerm.organismQuantityType.qualifiedName(),
-        "raw_er_" + DwcTerm.organismQuantityType.simpleName());
-    core.put(
-        DwcTerm.originalNameUsage.qualifiedName(),
-        "raw_er_" + DwcTerm.originalNameUsage.simpleName());
-    core.put(
-        DwcTerm.originalNameUsageID.qualifiedName(),
-        "raw_er_" + DwcTerm.originalNameUsageID.simpleName());
-    core.put(
-        DwcTerm.ownerInstitutionCode.qualifiedName(),
-        "raw_er_" + DwcTerm.ownerInstitutionCode.simpleName());
-    core.put(
-        DwcTerm.parentNameUsage.qualifiedName(), "raw_er_" + DwcTerm.parentNameUsage.simpleName());
-    core.put(
-        DwcTerm.parentNameUsageID.qualifiedName(),
-        "raw_er_" + DwcTerm.parentNameUsageID.simpleName());
-    core.put(
-        DwcTerm.pointRadiusSpatialFit.qualifiedName(),
-        "raw_er_" + DwcTerm.pointRadiusSpatialFit.simpleName());
-    core.put(DwcTerm.preparations.qualifiedName(), "raw_er_" + DwcTerm.preparations.simpleName());
-    core.put(
-        DwcTerm.previousIdentifications.qualifiedName(),
-        "raw_er_" + DwcTerm.previousIdentifications.simpleName());
-    core.put(
-        DwcTerm.relatedResourceID.qualifiedName(),
-        "raw_er_" + DwcTerm.relatedResourceID.simpleName());
-    core.put(
-        DwcTerm.relationshipAccordingTo.qualifiedName(),
-        "raw_er_" + DwcTerm.relationshipAccordingTo.simpleName());
-    core.put(
-        DwcTerm.minimumDistanceAboveSurfaceInMeters.qualifiedName(),
-        "raw_er_" + DwcTerm.minimumDistanceAboveSurfaceInMeters.simpleName());
-    core.put(
-        DwcTerm.relationshipEstablishedDate.qualifiedName(),
-        "raw_er_" + DwcTerm.relationshipEstablishedDate.simpleName());
-    core.put(
-        DwcTerm.relationshipOfResource.qualifiedName(),
-        "raw_er_" + DwcTerm.relationshipOfResource.simpleName());
-    core.put(
-        DwcTerm.relationshipRemarks.qualifiedName(),
-        "raw_er_" + DwcTerm.relationshipRemarks.simpleName());
-    core.put(
-        DwcTerm.reproductiveCondition.qualifiedName(),
-        "raw_er_" + DwcTerm.reproductiveCondition.simpleName());
-    core.put(DwcTerm.resourceID.qualifiedName(), "raw_er_" + DwcTerm.resourceID.simpleName());
-    core.put(
-        DwcTerm.resourceRelationshipID.qualifiedName(),
-        "raw_er_" + DwcTerm.resourceRelationshipID.simpleName());
-    core.put(
-        DwcTerm.samplingEffort.qualifiedName(), "raw_er_" + DwcTerm.samplingEffort.simpleName());
-    core.put(
-        DwcTerm.samplingProtocol.qualifiedName(),
-        "raw_er_" + DwcTerm.samplingProtocol.simpleName());
-    core.put(
-        DwcTerm.scientificNameAuthorship.qualifiedName(),
-        "raw_er_" + DwcTerm.scientificNameAuthorship.simpleName());
-    core.put(
-        DwcTerm.scientificNameID.qualifiedName(),
-        "raw_er_" + DwcTerm.scientificNameID.simpleName());
-    core.put(DwcTerm.sex.qualifiedName(), "raw_er_" + DwcTerm.sex.simpleName());
-    core.put(
-        DwcTerm.specificEpithet.qualifiedName(), "raw_er_" + DwcTerm.specificEpithet.simpleName());
-    core.put(
-        DwcTerm.startDayOfYear.qualifiedName(), "raw_er_" + DwcTerm.startDayOfYear.simpleName());
-    core.put(DwcTerm.subgenus.qualifiedName(), "raw_er_" + DwcTerm.subgenus.simpleName());
-    core.put(DwcTerm.taxonID.qualifiedName(), "raw_er_" + DwcTerm.taxonID.simpleName());
-    core.put(
-        DwcTerm.taxonomicStatus.qualifiedName(), "raw_er_" + DwcTerm.taxonomicStatus.simpleName());
-    core.put(DwcTerm.taxonRemarks.qualifiedName(), "raw_er_" + DwcTerm.taxonRemarks.simpleName());
-    core.put(DwcTerm.typeStatus.qualifiedName(), "raw_er_" + DwcTerm.typeStatus.simpleName());
-    core.put(
-        DwcTerm.verbatimCoordinates.qualifiedName(),
-        "raw_er_" + DwcTerm.verbatimCoordinates.simpleName());
-    core.put(
-        DwcTerm.verbatimCoordinateSystem.qualifiedName(),
-        "raw_er_" + DwcTerm.verbatimCoordinateSystem.simpleName());
-    core.put(DwcTerm.verbatimDepth.qualifiedName(), "raw_er_" + DwcTerm.verbatimDepth.simpleName());
-    core.put(
-        DwcTerm.verbatimElevation.qualifiedName(),
-        "raw_er_" + DwcTerm.verbatimElevation.simpleName());
-    core.put(
-        DwcTerm.verbatimEventDate.qualifiedName(),
-        "raw_er_" + DwcTerm.verbatimEventDate.simpleName());
-    core.put(
-        DwcTerm.verbatimLatitude.qualifiedName(),
-        "raw_er_" + DwcTerm.verbatimLatitude.simpleName());
-    core.put(
-        DwcTerm.verbatimLocality.qualifiedName(),
-        "raw_er_" + DwcTerm.verbatimLocality.simpleName());
-    core.put(
-        DwcTerm.verbatimLongitude.qualifiedName(),
-        "raw_er_" + DwcTerm.verbatimLongitude.simpleName());
-    core.put(DwcTerm.verbatimSRS.qualifiedName(), "raw_er_" + DwcTerm.verbatimSRS.simpleName());
-    core.put(
-        DwcTerm.verbatimTaxonRank.qualifiedName(),
-        "raw_er_" + DwcTerm.verbatimTaxonRank.simpleName());
-    core.put(DwcTerm.waterBody.qualifiedName(), "raw_er_" + DwcTerm.waterBody.simpleName());
+    coreFn.accept(DwcTerm.occurrenceID);
+    coreFn.accept(DwcTerm.catalogNumber);
+    coreFn.accept(DwcTerm.collectionCode);
+    coreFn.accept(DwcTerm.institutionCode);
+    coreFn.accept(DwcTerm.recordNumber);
+    coreFn.accept(DwcTerm.basisOfRecord);
+    coreFn.accept(DwcTerm.recordedBy);
+    coreFn.accept(DwcTerm.occurrenceStatus);
+    coreFn.accept(DwcTerm.individualCount);
+    coreFn.accept(DwcTerm.scientificName);
+    coreFn.accept(DwcTerm.taxonConceptID);
+    coreFn.accept(DwcTerm.taxonRank);
+    coreFn.accept(DwcTerm.kingdom);
+    coreFn.accept(DwcTerm.phylum);
+    coreFn.accept(DwcTerm.class_);
+    coreFn.accept(DwcTerm.order);
+    coreFn.accept(DwcTerm.family);
+    coreFn.accept(DwcTerm.genus);
+    coreFn.accept(DwcTerm.vernacularName);
+    coreFn.accept(DwcTerm.decimalLatitude);
+    coreFn.accept(DwcTerm.decimalLongitude);
+    coreFn.accept(DwcTerm.geodeticDatum);
+    coreFn.accept(DwcTerm.coordinateUncertaintyInMeters);
+    coreFn.accept(DwcTerm.maximumElevationInMeters);
+    coreFn.accept(DwcTerm.minimumElevationInMeters);
+    coreFn.accept(DwcTerm.minimumDepthInMeters);
+    coreFn.accept(DwcTerm.maximumDepthInMeters);
+    coreFn.accept(DwcTerm.country);
+    coreFn.accept(DwcTerm.stateProvince);
+    coreFn.accept(DwcTerm.locality);
+    coreFn.accept(DwcTerm.locationRemarks);
+    coreFn.accept(DwcTerm.year);
+    coreFn.accept(DwcTerm.month);
+    coreFn.accept(DwcTerm.day);
+    coreFn.accept(DwcTerm.eventDate);
+    coreFn.accept(DwcTerm.eventID);
+    coreFn.accept(DwcTerm.identifiedBy);
+    coreFn.accept(DwcTerm.occurrenceRemarks);
+    coreFn.accept(DwcTerm.dataGeneralizations);
+    coreFn.accept(DwcTerm.otherCatalogNumbers);
+    coreFn.accept(DwcTerm.acceptedNameUsage);
+    coreFn.accept(DwcTerm.acceptedNameUsageID);
+    coreFn.accept(DwcTerm.associatedOccurrences);
+    coreFn.accept(DwcTerm.associatedReferences);
+    coreFn.accept(DwcTerm.associatedSequences);
+    coreFn.accept(DwcTerm.associatedTaxa);
+    coreFn.accept(DwcTerm.behavior);
+    coreFn.accept(DwcTerm.collectionID);
+    coreFn.accept(DwcTerm.continent);
+    coreFn.accept(DwcTerm.coordinatePrecision);
+    coreFn.accept(DwcTerm.countryCode);
+    coreFn.accept(DwcTerm.county);
+    coreFn.accept(DwcTerm.datasetID);
+    coreFn.accept(DwcTerm.datasetName);
+    coreFn.accept(DwcTerm.dateIdentified);
+    coreFn.accept(DwcTerm.disposition);
+    coreFn.accept(DwcTerm.dynamicProperties);
+    coreFn.accept(DwcTerm.endDayOfYear);
+    coreFn.accept(DwcTerm.establishmentMeans);
+    coreFn.accept(DwcTerm.eventRemarks);
+    coreFn.accept(DwcTerm.eventTime);
+    coreFn.accept(DwcTerm.fieldNotes);
+    coreFn.accept(DwcTerm.fieldNumber);
+    coreFn.accept(DwcTerm.footprintSpatialFit);
+    coreFn.accept(DwcTerm.footprintSRS);
+    coreFn.accept(DwcTerm.footprintWKT);
+    coreFn.accept(DwcTerm.georeferencedBy);
+    coreFn.accept(DwcTerm.georeferencedDate);
+    coreFn.accept(DwcTerm.georeferenceProtocol);
+    coreFn.accept(DwcTerm.georeferenceRemarks);
+    coreFn.accept(DwcTerm.georeferenceSources);
+    coreFn.accept(DwcTerm.georeferenceVerificationStatus);
+    coreFn.accept(DwcTerm.habitat);
+    coreFn.accept(DwcTerm.higherClassification);
+    coreFn.accept(DwcTerm.higherGeography);
+    coreFn.accept(DwcTerm.higherGeographyID);
+    coreFn.accept(DwcTerm.identificationID);
+    coreFn.accept(DwcTerm.identificationQualifier);
+    coreFn.accept(DwcTerm.identificationReferences);
+    coreFn.accept(DwcTerm.identificationRemarks);
+    coreFn.accept(DwcTerm.identificationVerificationStatus);
+    coreFn.accept(DwcTerm.informationWithheld);
+    coreFn.accept(DwcTerm.infraspecificEpithet);
+    coreFn.accept(DwcTerm.institutionID);
+    coreFn.accept(DwcTerm.island);
+    coreFn.accept(DwcTerm.islandGroup);
+    coreFn.accept(DwcTerm.lifeStage);
+    coreFn.accept(DwcTerm.locationAccordingTo);
+    coreFn.accept(DwcTerm.locationID);
+    coreFn.accept(DwcTerm.maximumDistanceAboveSurfaceInMeters);
+    coreFn.accept(DwcTerm.measurementAccuracy);
+    coreFn.accept(DwcTerm.measurementDeterminedBy);
+    coreFn.accept(DwcTerm.measurementDeterminedDate);
+    coreFn.accept(DwcTerm.measurementID);
+    coreFn.accept(DwcTerm.measurementMethod);
+    coreFn.accept(DwcTerm.measurementRemarks);
+    coreFn.accept(DwcTerm.measurementType);
+    coreFn.accept(DwcTerm.measurementUnit);
+    coreFn.accept(DwcTerm.measurementValue);
+    coreFn.accept(DwcTerm.municipality);
+    coreFn.accept(DwcTerm.nameAccordingTo);
+    coreFn.accept(DwcTerm.nameAccordingToID);
+    coreFn.accept(DwcTerm.namePublishedIn);
+    coreFn.accept(DwcTerm.namePublishedInID);
+    coreFn.accept(DwcTerm.namePublishedInYear);
+    coreFn.accept(DwcTerm.nomenclaturalCode);
+    coreFn.accept(DwcTerm.nomenclaturalStatus);
+    coreFn.accept(DwcTerm.organismID);
+    coreFn.accept(DwcTerm.organismQuantity);
+    coreFn.accept(DwcTerm.organismQuantityType);
+    coreFn.accept(DwcTerm.originalNameUsage);
+    coreFn.accept(DwcTerm.originalNameUsageID);
+    coreFn.accept(DwcTerm.ownerInstitutionCode);
+    coreFn.accept(DwcTerm.parentNameUsage);
+    coreFn.accept(DwcTerm.parentNameUsageID);
+    coreFn.accept(DwcTerm.pointRadiusSpatialFit);
+    coreFn.accept(DwcTerm.preparations);
+    coreFn.accept(DwcTerm.previousIdentifications);
+    coreFn.accept(DwcTerm.relatedResourceID);
+    coreFn.accept(DwcTerm.relationshipAccordingTo);
+    coreFn.accept(DwcTerm.minimumDistanceAboveSurfaceInMeters);
+    coreFn.accept(DwcTerm.relationshipEstablishedDate);
+    coreFn.accept(DwcTerm.relationshipOfResource);
+    coreFn.accept(DwcTerm.relationshipRemarks);
+    coreFn.accept(DwcTerm.reproductiveCondition);
+    coreFn.accept(DwcTerm.resourceID);
+    coreFn.accept(DwcTerm.resourceRelationshipID);
+    coreFn.accept(DwcTerm.samplingEffort);
+    coreFn.accept(DwcTerm.samplingProtocol);
+    coreFn.accept(DwcTerm.scientificNameAuthorship);
+    coreFn.accept(DwcTerm.scientificNameID);
+    coreFn.accept(DwcTerm.sex);
+    coreFn.accept(DwcTerm.specificEpithet);
+    coreFn.accept(DwcTerm.startDayOfYear);
+    coreFn.accept(DwcTerm.subgenus);
+    coreFn.accept(DwcTerm.taxonID);
+    coreFn.accept(DwcTerm.taxonomicStatus);
+    coreFn.accept(DwcTerm.taxonRemarks);
+    coreFn.accept(DwcTerm.typeStatus);
+    coreFn.accept(DwcTerm.verbatimCoordinates);
+    coreFn.accept(DwcTerm.verbatimCoordinateSystem);
+    coreFn.accept(DwcTerm.verbatimDepth);
+    coreFn.accept(DwcTerm.verbatimElevation);
+    coreFn.accept(DwcTerm.verbatimEventDate);
+    coreFn.accept(DwcTerm.verbatimLatitude);
+    coreFn.accept(DwcTerm.verbatimLocality);
+    coreFn.accept(DwcTerm.verbatimLongitude);
+    coreFn.accept(DwcTerm.verbatimSRS);
+    coreFn.accept(DwcTerm.verbatimTaxonRank);
+    coreFn.accept(DwcTerm.waterBody);
+    coreFn.accept(DwcTerm.recordedByID);
     core.put("http://rs.tdwg.org/dwc/terms/occurrenceAttributes", "raw_er_occurrenceAttributes");
     // DC Terms
-    core.put(DcTerm.references.qualifiedName(), "raw_er_" + DcTerm.references.simpleName());
-    core.put(DcTerm.accessRights.qualifiedName(), "raw_er_" + DcTerm.accessRights.simpleName());
-    core.put(
-        DcTerm.bibliographicCitation.qualifiedName(),
-        "raw_er_" + DcTerm.bibliographicCitation.simpleName());
-    core.put(DcTerm.language.qualifiedName(), "raw_er_" + DcTerm.language.simpleName());
-    core.put(DcTerm.license.qualifiedName(), "raw_er_" + DcTerm.license.simpleName());
-    core.put(DcTerm.modified.qualifiedName(), "raw_er_" + DcTerm.modified.simpleName());
-    core.put(DcTerm.rights.qualifiedName(), "raw_er_" + DcTerm.rights.simpleName());
-    core.put(DcTerm.rightsHolder.qualifiedName(), "raw_er_" + DcTerm.rightsHolder.simpleName());
-    core.put(DcTerm.source.qualifiedName(), "raw_er_" + DcTerm.source.simpleName());
-    core.put(DcTerm.type.qualifiedName(), "raw_er_" + DcTerm.type.simpleName());
+    coreFn.accept(DcTerm.references);
+    coreFn.accept(DcTerm.accessRights);
+    coreFn.accept(DcTerm.bibliographicCitation);
+    coreFn.accept(DcTerm.language);
+    coreFn.accept(DcTerm.license);
+    coreFn.accept(DcTerm.modified);
+    coreFn.accept(DcTerm.rights);
+    coreFn.accept(DcTerm.rightsHolder);
+    coreFn.accept(DcTerm.source);
+    coreFn.accept(DcTerm.type);
     // ALA Terms
     core.put("http://rs.ala.org.au/terms/1.0/photographer", "raw_er_photographer");
     core.put("http://rs.ala.org.au/terms/1.0/northing", "raw_er_northing");
@@ -643,6 +479,11 @@ public class CoreTsvConverterTest {
                     .setConcept("br_establishmentMeans")
                     .setLineage(Collections.singletonList("br_establishmentMeans"))
                     .build())
+            .setDegreeOfEstablishment(
+                VocabularyConcept.newBuilder()
+                    .setConcept("br_degreeOfEstablishment")
+                    .setLineage(Collections.singletonList("br_degreeOfEstablishment"))
+                    .build())
             .setIndividualCount(222)
             .setTypeStatus(Collections.singletonList("br_typeStatus"))
             .setTypifiedName("br_typifiedName")
@@ -705,6 +546,8 @@ public class CoreTsvConverterTest {
             .setHasGeospatialIssue(false)
             .setLocality("lr_locality")
             .setGeoreferencedDate("lr_georeferencedDate")
+            .setGeoreferencedBy(Collections.singletonList("lr_georeferencedBy"))
+            .setHigherGeography(Collections.singletonList("lr_higherGeography"))
             .setFootprintWKT("lr_footprintWKT")
             .setBiome("lr_biome")
             .build();
@@ -817,26 +660,45 @@ public class CoreTsvConverterTest {
             .setFirstLoaded(6L)
             .build();
 
+    Image im1 =
+        Image.newBuilder()
+            .setCreated("ir_Image")
+            .setAudience("ir_Audienc")
+            .setCreator("ir_Creator")
+            .setContributor("ir_Contributor")
+            .setDatasetId("ir_DatasetId")
+            .setLicense("ir_License")
+            .setLatitude(77d)
+            .setLongitude(777d)
+            .setSpatial("ir_Spatial")
+            .setTitle("ir_Title")
+            .setRightsHolder("ir_RightsHolder")
+            .setIdentifier("ir_Identifier1")
+            .setFormat("image")
+            .build();
+
+    Image im2 =
+        Image.newBuilder()
+            .setCreated("ir_Audio")
+            .setAudience("ir_Audienc")
+            .setCreator("ir_Creator")
+            .setContributor("ir_Contributor")
+            .setDatasetId("ir_DatasetId")
+            .setLicense("ir_License")
+            .setLatitude(77d)
+            .setLongitude(777d)
+            .setSpatial("ir_Spatial")
+            .setTitle("ir_Title")
+            .setRightsHolder("ir_RightsHolder")
+            .setIdentifier("ir_Identifier2")
+            .setFormat("audio")
+            .build();
+
     ImageRecord ir =
         ImageRecord.newBuilder()
             .setId(DwcTerm.occurrenceID.simpleName())
             .setCreated(7L)
-            .setImageItems(
-                Collections.singletonList(
-                    Image.newBuilder()
-                        .setCreated("ir_Image")
-                        .setAudience("ir_Audienc")
-                        .setCreator("ir_Creator")
-                        .setContributor("ir_Contributor")
-                        .setDatasetId("ir_DatasetId")
-                        .setLicense("ir_License")
-                        .setLatitude(77d)
-                        .setLongitude(777d)
-                        .setSpatial("ir_Spatial")
-                        .setTitle("ir_Title")
-                        .setRightsHolder("ir_RightsHolder")
-                        .setIdentifier("ir_Identifier")
-                        .build()))
+            .setImageItems(Arrays.asList(im1, im2))
             .build();
 
     TaxonProfile tp = TaxonProfile.newBuilder().setId(DwcTerm.occurrenceID.simpleName()).build();
@@ -894,6 +756,10 @@ public class CoreTsvConverterTest {
 
     // Should
     Assert.assertEquals(String.join("\t", expected), result);
+
+    Assert.assertEquals(1, source.getMultiValues().get("imageIDs").size());
+    Assert.assertEquals(1, source.getMultiValues().get("soundIDs").size());
+    Assert.assertNull(source.getMultiValues().get("videoIDs"));
   }
 
   @Test
@@ -908,7 +774,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_institutionCode\"", // DwcTerm.institutionCode
       "\"raw_er_recordNumber\"", // DwcTerm.recordNumber
       "\"HumanObservation\"", // DwcTerm.basisOfRecord
-      "\"\"", // DwcTerm.recordedBy
+      "\"raw_er_recordedBy\"", // DwcTerm.recordedBy
       "\"\"", // DwcTerm.occurrenceStatus
       "\"\"", // DwcTerm.individualCount
       "\"\"", // DwcTerm.scientificName
@@ -957,6 +823,7 @@ public class CoreTsvConverterTest {
       "\"\"", // DwcTerm.datasetID
       "\"\"", // DwcTerm.datasetName
       "\"\"", // DwcTerm.dateIdentified
+      "\"\"", // DwcTerm.degreeOfEstablishment
       "\"\"", // DwcTerm.disposition
       "\"\"", // DwcTerm.dynamicProperties
       "\"\"", // DwcTerm.endDayOfYear
@@ -1010,7 +877,7 @@ public class CoreTsvConverterTest {
       "\"\"", // DwcTerm.nomenclaturalCode
       "\"\"", // DwcTerm.nomenclaturalStatus
       "\"\"", // DwcTerm.organismID
-      "\"\"", // DwcTerm.organismQuantity
+      "\"raw_er_organismQuantity\"", // DwcTerm.organismQuantity
       "\"\"", // DwcTerm.organismQuantityType
       "\"\"", // DwcTerm.originalNameUsage
       "\"\"", // DwcTerm.originalNameUsageID
@@ -1095,68 +962,49 @@ public class CoreTsvConverterTest {
 
     // State
     Map<String, String> core = new HashMap<>();
-    core.put(DwcTerm.occurrenceID.simpleName(), "raw_er_" + DwcTerm.occurrenceID.simpleName());
-    core.put(DwcTerm.catalogNumber.simpleName(), "raw_er_" + DwcTerm.catalogNumber.simpleName());
-    core.put(DwcTerm.collectionCode.simpleName(), "raw_er_" + DwcTerm.collectionCode.simpleName());
-    core.put(
-        DwcTerm.institutionCode.simpleName(), "raw_er_" + DwcTerm.institutionCode.simpleName());
-    core.put(DwcTerm.recordNumber.simpleName(), "raw_er_" + DwcTerm.recordNumber.simpleName());
-    core.put(DwcTerm.basisOfRecord.simpleName(), "raw_er_" + DwcTerm.basisOfRecord.simpleName());
-    core.put(DwcTerm.recordedBy.simpleName(), "raw_er_" + DwcTerm.recordedBy.simpleName());
-    core.put(
-        DwcTerm.occurrenceStatus.simpleName(), "raw_er_" + DwcTerm.occurrenceStatus.simpleName());
-    core.put(
-        DwcTerm.individualCount.simpleName(), "raw_er_" + DwcTerm.individualCount.simpleName());
-    core.put(DwcTerm.scientificName.simpleName(), "raw_er_" + DwcTerm.scientificName.simpleName());
-    core.put(DwcTerm.taxonConceptID.simpleName(), "raw_er_" + DwcTerm.taxonConceptID.simpleName());
-    core.put(DwcTerm.taxonRank.simpleName(), "raw_er_" + DwcTerm.taxonRank.simpleName());
-    core.put(DwcTerm.kingdom.simpleName(), "raw_er_" + DwcTerm.kingdom.simpleName());
-    core.put(DwcTerm.phylum.simpleName(), "raw_er_" + DwcTerm.phylum.simpleName());
-    core.put(DwcTerm.class_.simpleName(), "raw_er_" + DwcTerm.class_.simpleName());
-    core.put(DwcTerm.order.simpleName(), "raw_er_" + DwcTerm.order.simpleName());
-    core.put(DwcTerm.family.simpleName(), "raw_er_" + DwcTerm.family.simpleName());
-    core.put(DwcTerm.genus.simpleName(), "raw_er_" + DwcTerm.genus.simpleName());
-    core.put(DwcTerm.vernacularName.simpleName(), "raw_er_" + DwcTerm.vernacularName.simpleName());
-    core.put(
-        DwcTerm.decimalLatitude.simpleName(), "raw_er_" + DwcTerm.decimalLatitude.simpleName());
-    core.put(
-        DwcTerm.decimalLongitude.simpleName(), "raw_er_" + DwcTerm.decimalLongitude.simpleName());
-    core.put(DwcTerm.geodeticDatum.simpleName(), "raw_er_" + DwcTerm.geodeticDatum.simpleName());
-    core.put(
-        DwcTerm.coordinateUncertaintyInMeters.simpleName(),
-        "raw_er_" + DwcTerm.coordinateUncertaintyInMeters.simpleName());
-    core.put(
-        DwcTerm.maximumElevationInMeters.simpleName(),
-        "raw_er_" + DwcTerm.maximumElevationInMeters.simpleName());
-    core.put(
-        DwcTerm.minimumElevationInMeters.simpleName(),
-        "raw_er_" + DwcTerm.minimumElevationInMeters.simpleName());
-    core.put(
-        DwcTerm.minimumDepthInMeters.simpleName(),
-        "raw_er_" + DwcTerm.minimumDepthInMeters.simpleName());
-    core.put(
-        DwcTerm.maximumDepthInMeters.simpleName(),
-        "raw_er_" + DwcTerm.maximumDepthInMeters.simpleName());
-    core.put(DwcTerm.country.simpleName(), "raw_er_" + DwcTerm.country.simpleName());
-    core.put(DwcTerm.stateProvince.simpleName(), "raw_er_" + DwcTerm.stateProvince.simpleName());
-    core.put(DwcTerm.locality.simpleName(), "raw_er_" + DwcTerm.locality.simpleName());
-    core.put(
-        DwcTerm.locationRemarks.simpleName(), "raw_er_" + DwcTerm.locationRemarks.simpleName());
-    core.put(DwcTerm.year.simpleName(), "raw_er_" + DwcTerm.year.simpleName());
-    core.put(DwcTerm.month.simpleName(), "raw_er_" + DwcTerm.month.simpleName());
-    core.put(DwcTerm.day.simpleName(), "raw_er_" + DwcTerm.day.simpleName());
-    core.put(DwcTerm.eventDate.simpleName(), "raw_er_" + DwcTerm.eventDate.simpleName());
-    core.put(DwcTerm.eventID.simpleName(), "raw_er_" + DwcTerm.eventID.simpleName());
-    core.put(DwcTerm.identifiedBy.simpleName(), "raw_er_" + DwcTerm.identifiedBy.simpleName());
-    core.put(
-        DwcTerm.occurrenceRemarks.simpleName(), "raw_er_" + DwcTerm.occurrenceRemarks.simpleName());
-    core.put(
-        DwcTerm.dataGeneralizations.simpleName(),
-        "raw_er_" + DwcTerm.dataGeneralizations.simpleName());
-    core.put(
-        DwcTerm.otherCatalogNumbers.simpleName(),
-        "raw_er_" + DwcTerm.otherCatalogNumbers.simpleName());
-    core.put(DcTerm.references.simpleName(), "raw_er_" + DcTerm.references.simpleName());
+    Consumer<Term> coreFn = t -> core.put(t.simpleName(), "raw_er_" + t.simpleName());
+    coreFn.accept(DwcTerm.occurrenceID);
+    coreFn.accept(DwcTerm.catalogNumber);
+    coreFn.accept(DwcTerm.collectionCode);
+    coreFn.accept(DwcTerm.institutionCode);
+    coreFn.accept(DwcTerm.recordNumber);
+    coreFn.accept(DwcTerm.basisOfRecord);
+    coreFn.accept(DwcTerm.recordedBy);
+    coreFn.accept(DwcTerm.occurrenceStatus);
+    coreFn.accept(DwcTerm.individualCount);
+    coreFn.accept(DwcTerm.scientificName);
+    coreFn.accept(DwcTerm.taxonConceptID);
+    coreFn.accept(DwcTerm.taxonRank);
+    coreFn.accept(DwcTerm.kingdom);
+    coreFn.accept(DwcTerm.phylum);
+    coreFn.accept(DwcTerm.class_);
+    coreFn.accept(DwcTerm.order);
+    coreFn.accept(DwcTerm.family);
+    coreFn.accept(DwcTerm.genus);
+    coreFn.accept(DwcTerm.vernacularName);
+    coreFn.accept(DwcTerm.decimalLatitude);
+    coreFn.accept(DwcTerm.decimalLongitude);
+    coreFn.accept(DwcTerm.geodeticDatum);
+    coreFn.accept(DwcTerm.coordinateUncertaintyInMeters);
+    coreFn.accept(DwcTerm.maximumElevationInMeters);
+    coreFn.accept(DwcTerm.minimumElevationInMeters);
+    coreFn.accept(DwcTerm.minimumDepthInMeters);
+    coreFn.accept(DwcTerm.maximumDepthInMeters);
+    coreFn.accept(DwcTerm.country);
+    coreFn.accept(DwcTerm.stateProvince);
+    coreFn.accept(DwcTerm.locality);
+    coreFn.accept(DwcTerm.locationRemarks);
+    coreFn.accept(DwcTerm.year);
+    coreFn.accept(DwcTerm.month);
+    coreFn.accept(DwcTerm.day);
+    coreFn.accept(DwcTerm.eventDate);
+    coreFn.accept(DwcTerm.eventID);
+    coreFn.accept(DwcTerm.identifiedBy);
+    coreFn.accept(DwcTerm.occurrenceRemarks);
+    coreFn.accept(DwcTerm.dataGeneralizations);
+    coreFn.accept(DwcTerm.otherCatalogNumbers);
+    coreFn.accept(DcTerm.references);
+    coreFn.accept(DwcTerm.organismQuantity);
 
     ExtendedRecord er =
         ExtendedRecord.newBuilder()
@@ -1300,6 +1148,7 @@ public class CoreTsvConverterTest {
     expected.add(DwcTerm.datasetID.qualifiedName());
     expected.add(DwcTerm.datasetName.qualifiedName());
     expected.add(DwcTerm.dateIdentified.qualifiedName());
+    expected.add(DwcTerm.degreeOfEstablishment.qualifiedName());
     expected.add(DwcTerm.disposition.qualifiedName());
     expected.add(DwcTerm.dynamicProperties.qualifiedName());
     expected.add(DwcTerm.endDayOfYear.qualifiedName());

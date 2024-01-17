@@ -474,4 +474,24 @@ public class LocationInterpreterTest {
     // Should
     assertEquals(1110.7, result.getDistanceFromCentroidInMeters(), 0);
   }
+
+  @Test
+  public void gbifRegionTest() {
+
+    // State
+    LocationRecord record =
+        LocationRecord.newBuilder()
+            .setId("777")
+            .setCountryCode(Country.ANDORRA.getIso2LetterCode())
+            .setPublishingCountry(Country.SPAIN.getIso2LetterCode())
+            .build();
+
+    // When
+    LocationInterpreter.interpretGbifRegion(record);
+    LocationInterpreter.interpretPublishedByGbifRegion(record);
+
+    // Should
+    assertEquals("EUROPE", record.getGbifRegion());
+    assertEquals("EUROPE", record.getPublishedByGbifRegion());
+  }
 }

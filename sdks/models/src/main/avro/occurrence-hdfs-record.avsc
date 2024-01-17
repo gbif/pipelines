@@ -844,7 +844,10 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "associatedsequences",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "associatedtaxa",
     "type" : [ "string", "null" ]
@@ -968,7 +971,10 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "highergeography",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "continent",
     "type" : [ "string", "null" ]
@@ -1052,7 +1058,10 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "georeferencedby",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "georeferenceddate",
     "type" : [ "string", "null" ]
@@ -1070,34 +1079,164 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "earliesteonorlowesteonothem",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "record",
+      "name" : "EarliestEonOrLowestEonothem",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
+    }, "null" ]
   }, {
     "name" : "latesteonorhighesteonothem",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "record",
+      "name" : "LatestEonOrHighestEonothem",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
+    }, "null" ]
   }, {
     "name" : "earliesteraorlowesterathem",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "record",
+      "name" : "EarliestEraOrLowestErathem",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
+    }, "null" ]
   }, {
     "name" : "latesteraorhighesterathem",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "record",
+      "name" : "LatestEraOrHighestErathem",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
+    }, "null" ]
   }, {
     "name" : "earliestperiodorlowestsystem",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "record",
+      "name" : "EarliestPeriodOrLowestSystem",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
+    }, "null" ]
   }, {
     "name" : "latestperiodorhighestsystem",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "record",
+      "name" : "LatestPeriodOrHighestSystem",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
+    }, "null" ]
   }, {
     "name" : "earliestepochorlowestseries",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "record",
+      "name" : "EarliestEpochOrLowestSeries",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
+    }, "null" ]
   }, {
     "name" : "latestepochorhighestseries",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "record",
+      "name" : "LatestEpochOrHighestSeries",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
+    }, "null" ]
   }, {
     "name" : "earliestageorloweststage",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "record",
+      "name" : "EarliestAgeOrLowestStage",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
+    }, "null" ]
   }, {
     "name" : "latestageorhigheststage",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "record",
+      "name" : "LatestAgeOrHighestStage",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
+    }, "null" ]
   }, {
     "name" : "lowestbiostratigraphiczone",
     "type" : [ "string", "null" ]
@@ -1377,6 +1516,15 @@
       "type" : "array",
       "items" : [ "string", "null" ]
     }, "null" ]
+  }, {
+    "name" : "issequenced",
+    "type" : [ "boolean", "null" ]
+  }, {
+    "name" : "gbifregion",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "publishedbygbifregion",
+    "type" : [ "string", "null" ]
   }, {
     "name" : "level0gid",
     "type" : [ "string", "null" ]

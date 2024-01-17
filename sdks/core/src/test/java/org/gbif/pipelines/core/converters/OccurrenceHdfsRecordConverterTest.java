@@ -27,8 +27,6 @@ import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
-import org.gbif.dwc.terms.Term;
-import org.gbif.occurrence.common.TermUtils;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
@@ -36,6 +34,7 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GeologicalContext;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -63,8 +62,6 @@ public class OccurrenceHdfsRecordConverterTest {
   @Test
   public void extendedRecordMapperTest() {
 
-    List<Term> terms = TermUtils.verbatimTerms();
-
     // State
     final String multiValue1 = "multi 1";
     final String multiValue2 = "multi 2";
@@ -77,7 +74,7 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.class_.simpleName(), "classs");
     coreTerms.put(DcTerm.format.simpleName(), "format");
     coreTerms.put(DwcTerm.order.simpleName(), "order");
-    coreTerms.put(DwcTerm.group.simpleName(), "group");
+    coreTerms.put(DwcTerm.group.simpleName(), "v_group");
     coreTerms.put(DcTerm.date.simpleName(), "26/06/2019");
     coreTerms.put(
         DwcTerm.basisOfRecord.simpleName(), BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase());
@@ -102,6 +99,12 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.identifiedBy.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.recordedBy.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(GbifTerm.projectId.simpleName(), multiValue1 + "|" + multiValue2);
+    coreTerms.put(DwcTerm.taxonConceptID.simpleName(), "v_taxonConceptID");
+    coreTerms.put(DwcTerm.associatedSequences.simpleName(), "v_ad");
+    coreTerms.put(DwcTerm.bed.simpleName(), "v_bed");
+    coreTerms.put(DwcTerm.formation.simpleName(), "v_formation");
+    coreTerms.put(DwcTerm.member.simpleName(), "v_member");
+    coreTerms.put(DwcTerm.previousIdentifications.simpleName(), "v_previousIdentifications");
 
     Map<String, List<Map<String, String>>> extensions = new HashMap<>();
     extensions.put(
@@ -152,6 +155,15 @@ public class OccurrenceHdfsRecordConverterTest {
             .setSamplingProtocol(Arrays.asList(multiValue1, multiValue2))
             .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
             .setProjectId(Arrays.asList(multiValue1, multiValue2))
+            .setIsSequenced(true)
+            .setAssociatedSequences(Collections.singletonList("ad"))
+            .setGeologicalContext(
+                GeologicalContext.newBuilder()
+                    .setBed("bed")
+                    .setFormation("formation")
+                    .setGroup("group")
+                    .setMember("member")
+                    .build())
             .build();
 
     List<RankedName> classification = new ArrayList<>();
@@ -171,7 +183,12 @@ public class OccurrenceHdfsRecordConverterTest {
             .setId("1")
             .setDateIdentified("2019-11-12T13:24:56.963591")
             .setModified("2019-04-15T17:17")
-            .setEventDate(EventDate.newBuilder().setGte("2000").setLte("2010").build())
+            .setEventDate(
+                EventDate.newBuilder()
+                    .setGte("2000")
+                    .setLte("2010")
+                    .setInterval("2000/2010")
+                    .build())
             .build();
 
     IdentifierRecord identifierRecord =
@@ -234,10 +251,27 @@ public class OccurrenceHdfsRecordConverterTest {
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());
     Assert.assertEquals("classs", hdfsRecord.getVClass());
+
     Assert.assertEquals("ORDER", hdfsRecord.getOrder());
     Assert.assertEquals("order", hdfsRecord.getVOrder());
+
     Assert.assertEquals("group", hdfsRecord.getGroup());
-    Assert.assertEquals("group", hdfsRecord.getVGroup());
+    Assert.assertEquals("v_group", hdfsRecord.getVGroup());
+
+    Assert.assertEquals("v_taxonConceptID", hdfsRecord.getTaxonconceptid());
+    Assert.assertEquals("v_taxonConceptID", hdfsRecord.getVTaxonconceptid());
+
+    Assert.assertEquals("formation", hdfsRecord.getFormation());
+    Assert.assertEquals("v_formation", hdfsRecord.getVFormation());
+
+    Assert.assertEquals("bed", hdfsRecord.getBed());
+    Assert.assertEquals("v_bed", hdfsRecord.getVBed());
+
+    Assert.assertEquals("member", hdfsRecord.getMember());
+    Assert.assertEquals("v_member", hdfsRecord.getVMember());
+
+    Assert.assertEquals(Collections.singletonList("ad"), hdfsRecord.getAssociatedsequences());
+    Assert.assertEquals("v_ad", hdfsRecord.getVAssociatedsequences());
 
     // Test temporal fields
     Assert.assertNotNull(hdfsRecord.getDateidentified());
@@ -265,6 +299,16 @@ public class OccurrenceHdfsRecordConverterTest {
         hdfsRecord.getEventdatelte().longValue());
     Assert.assertEquals(
         metadataRecord.getHostingOrganizationKey(), hdfsRecord.getHostingorganizationkey());
+    Assert.assertEquals(basicRecord.getIsSequenced(), hdfsRecord.getIssequenced());
+
+    Assert.assertEquals("v_" + basicRecord.getGeologicalContext().getBed(), hdfsRecord.getVBed());
+    Assert.assertEquals(basicRecord.getGeologicalContext().getBed(), hdfsRecord.getBed());
+    Assert.assertEquals(
+        "v_" + basicRecord.getGeologicalContext().getFormation(), hdfsRecord.getVFormation());
+    Assert.assertEquals(
+        basicRecord.getGeologicalContext().getFormation(), hdfsRecord.getFormation());
+    Assert.assertEquals("v_previousIdentifications", hdfsRecord.getPreviousidentifications());
+    Assert.assertEquals("v_previousIdentifications", hdfsRecord.getVPreviousidentifications());
 
     // extensions
     Assert.assertEquals(2, hdfsRecord.getDwcaextension().size());
@@ -534,7 +578,12 @@ public class OccurrenceHdfsRecordConverterTest {
             .setMonth(1)
             .setStartDayOfYear(1)
             .setEndDayOfYear(1)
-            .setEventDate(EventDate.newBuilder().setGte(rawEventDate).setLte(rawEventDate).build())
+            .setEventDate(
+                EventDate.newBuilder()
+                    .setGte(rawEventDate)
+                    .setLte(rawEventDate)
+                    .setInterval("2019-01")
+                    .build())
             .setDateIdentified(rawEventDate)
             .setModified(rawEventDate)
             .build();

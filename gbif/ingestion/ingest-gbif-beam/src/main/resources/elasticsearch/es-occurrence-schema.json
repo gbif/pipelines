@@ -30,6 +30,7 @@
       "license": {"type": "keyword", "copy_to": "all"},
       "protocol": {"type": "keyword", "copy_to": "all"},
       "publishingCountry": {"type": "keyword", "copy_to": "all"},
+      "publishedByGbifRegion": {"type": "keyword", "copy_to": "all"},
       "datasetPublishingCountry": {"type": "keyword", "copy_to": "all"},
       "publishingOrganizationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "networkKeys": {"type": "keyword", "normalizer": "lowercase_normalizer"},
@@ -142,6 +143,7 @@
         }
       },
       "samplingProtocolJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+      "previousIdentifications": {"type": "keyword"},
       "eventId": {
         "type": "text",
         "fields": {
@@ -217,9 +219,10 @@
       },
       "otherCatalogNumbersJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
 
-
       "occurrenceStatus": {"type": "keyword", "copy_to": "all"},
 
+      "isSequenced": {"type": "boolean"},
+      "associatedSequences": {"type": "keyword", "copy_to": "all"},
       "organismQuantity": {"type": "double"},
       "organismQuantityType": {"type": "keyword", "copy_to": "all"},
       "sampleSizeUnit": {"type": "keyword", "copy_to": "all"},
@@ -237,6 +240,7 @@
       },
       "countryCode": {"type":"keyword", "copy_to": "all"},
       "country": {"type":"text", "copy_to": "all"},
+      "gbifRegion": {"type":"keyword", "copy_to": "all"},
       "stateProvince": {
         "type": "text",
         "fields": {
@@ -262,6 +266,10 @@
       "decimalLatitude": {"type": "double"},
       "decimalLongitude": {"type": "double"},
       "distanceFromCentroidInMeters": {"type": "double"},
+      "higherGeography": {"type":"keyword"},
+      "island": {"type":"keyword"},
+      "islandGroup": {"type":"keyword"},
+      "georeferencedBy": {"type":"keyword"},
 
       "gadm": {
         "type": "object",
@@ -288,6 +296,90 @@
       "endDayOfYear": {"type": "short"},
       "modified": {"type": "date"},
       "dateIdentified": {"type": "date"},
+
+      "fieldNumber": {"type": "keyword", "copy_to": "all"},
+
+      "geologicalContext": {
+        "type": "object",
+        "properties": {
+          "earliestEonOrLowestEonothem": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "latestEonOrHighestEonothem": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "earliestEraOrLowestErathem": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "latestEraOrHighestErathem": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "earliestPeriodOrLowestSystem": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "latestPeriodOrHighestSystem": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "earliestEpochOrLowestSeries": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "latestEpochOrHighestSeries": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "earliestAgeOrLowestStage": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "latestAgeOrHighestStage": {
+            "type": "object",
+            "properties": {
+              "concept": {"type": "keyword"},
+              "lineage": {"type": "keyword", "copy_to": "all"}
+            }
+          },
+          "lowestBiostratigraphicZone": {"type": "keyword", "copy_to": "all"},
+          "highestBiostratigraphicZone": {"type": "keyword", "copy_to": "all"},
+          "group": {"type": "keyword", "copy_to": "all"},
+          "formation": {"type": "keyword", "copy_to": "all"},
+          "member": {"type": "keyword", "copy_to": "all"},
+          "bed": {"type": "keyword", "copy_to": "all"}
+        }
+      },
 
       "issues": {"type": "keyword"},
       "notIssues": {"type": "keyword"},
@@ -333,6 +425,7 @@
           "speciesKey": {"type": "long"},
           "synonym": {"type": "boolean"},
           "taxonID": {"type": "keyword"},
+          "taxonConceptID": {"type": "keyword"},
           "taxonKey": {"type": "long"},
           "usage": {
             "properties": {

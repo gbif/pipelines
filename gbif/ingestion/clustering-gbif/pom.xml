@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>ingestion</artifactId>
-    <version>2.18.0-H3-SNAPSHOT</version>
+    <version>2.19.0-H3-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -19,67 +19,22 @@
     <maven-scala-plugin.version>4.8.0</maven-scala-plugin.version>
     <sonar.skip>true</sonar.skip>
   </properties>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
-        <version>${maven-scala-plugin.version}</version>
-        <executions>
-          <execution>
-            <id>scala-compile-first</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>add-source</goal>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>scala-test-compile</id>
-            <phase>process-test-resources</phase>
-            <goals>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <secondaryCacheDir>/var/tmp/sbt</secondaryCacheDir>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 
   <dependencies>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>core</artifactId>
       <exclusions>
+        <!-- Brings in huge transitive dependencies, while we only need a single interface -->
         <exclusion>
-          <groupId>org.gbif.occurrence</groupId>
-          <artifactId>occurrence-hdfs-table</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.gbif.registry</groupId>
-          <artifactId>registry-ws-client</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.gbif.kvs</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.elasticsearch.client</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.geotools</groupId>
+          <groupId>*</groupId>
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-catalyst_2.12</artifactId>
-      <version>${spark.version}</version>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -91,18 +46,6 @@
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-sql_2.12</artifactId>
-      <version>${spark.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-yarn_2.12</artifactId>
-      <version>${spark.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-hive_2.12</artifactId>
       <version>${spark.version}</version>
       <scope>provided</scope>
     </dependency>
@@ -124,20 +67,9 @@
     </dependency>
 
     <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-library</artifactId>
-      <version>${scala.version}</version>
-    </dependency>
-
-    <dependency>
       <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-mapreduce</artifactId>
+      <artifactId>hbase-server</artifactId>
       <version>${hbase.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-common</artifactId>
       <exclusions>
         <!-- stops the MRAppMaster in Oozie from even starting (when in Oozie) -->
         <exclusion>
@@ -171,27 +103,33 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
+      <version>${hadoop.version}</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
           <groupId>org.codehaus.jackson</groupId>
           <artifactId>jackson-mapper-asl</artifactId>
         </exclusion>
-        <exclusion>
-          <groupId>com.squareup.okhttp</groupId>
-          <artifactId>okhttp</artifactId>
-        </exclusion>
       </exclusions>
+    </dependency>
+
+    <!-- These needed for embedded Spark tests https://stackoverflow.com/a/50114083 -->
+    <dependency>
+      <groupId>org.codehaus.janino</groupId>
+      <artifactId>commons-compiler</artifactId>
+      <version>${commons-compiler.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.janino</groupId>
+      <artifactId>janino</artifactId>
+      <version>${janino.version}</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.thoughtworks.paranamer</groupId>
-      <artifactId>paranamer</artifactId>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -207,6 +145,8 @@
             <configuration>
               <createDependencyReducedPom>false</createDependencyReducedPom>
               <keepDependenciesWithProvidedScope>false</keepDependenciesWithProvidedScope>
+              <!-- Breaks relocations otherwise -->
+              <shadeTestJar>false</shadeTestJar>
               <filters>
                 <filter>
                   <artifact>*:*</artifact>
@@ -228,6 +168,13 @@
                   <transformers>
                     <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                   </transformers>
+                  <relocations>
+                    <!-- Necessary for Oozie-based launching -->
+                    <relocation>
+                      <pattern>com.fasterxml.jackson</pattern>
+                      <shadedPattern>gbif.com.fasterxml.jackson</shadedPattern>
+                    </relocation>
+                  </relocations>
                 </configuration>
               </execution>
             </executions>

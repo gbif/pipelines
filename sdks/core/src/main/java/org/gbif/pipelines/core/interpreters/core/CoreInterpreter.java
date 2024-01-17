@@ -2,8 +2,8 @@ package org.gbif.pipelines.core.interpreters.core;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractOptListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
@@ -78,12 +78,18 @@ public class CoreInterpreter {
 
   /** {@link DwcTerm#datasetID} interpretation. */
   public static void interpretDatasetID(ExtendedRecord er, Consumer<List<String>> consumer) {
-    extractOptListValue(er, DwcTerm.datasetID).ifPresent(consumer);
+    List<String> list = extractListValue(er, DwcTerm.datasetID);
+    if (!list.isEmpty()) {
+      consumer.accept(list);
+    }
   }
 
   /** {@link DwcTerm#datasetName} interpretation. */
   public static void interpretDatasetName(ExtendedRecord er, Consumer<List<String>> consumer) {
-    extractOptListValue(er, DwcTerm.datasetName).ifPresent(consumer);
+    List<String> list = extractListValue(er, DwcTerm.datasetName);
+    if (!list.isEmpty()) {
+      consumer.accept(list);
+    }
   }
 
   /** {@link DwcTerm#parentEventID} interpretation. */
@@ -134,7 +140,10 @@ public class CoreInterpreter {
 
   /** {@link DwcTerm#samplingProtocol} interpretation. */
   public static void interpretSamplingProtocol(ExtendedRecord er, Consumer<List<String>> consumer) {
-    extractOptListValue(er, DwcTerm.samplingProtocol).ifPresent(consumer);
+    List<String> list = extractListValue(er, DwcTerm.samplingProtocol);
+    if (!list.isEmpty()) {
+      consumer.accept(list);
+    }
   }
 
   /** {@link DwcTerm#locationID} interpretation. */

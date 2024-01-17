@@ -20,7 +20,7 @@ import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.directory.api.util.Strings;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
@@ -137,8 +137,12 @@ public class ClusteringPipeline {
                     List<String> otherCatalogNumbers =
                         source.getMultiValues().get(DwcTerm.otherCatalogNumbers.simpleName());
 
-                    List<String> recordedBy =
-                        source.getMultiValues().get(DwcTerm.recordedBy.simpleName());
+                    String recordedByItem =
+                        source.getStrings().get(DwcTerm.recordedBy.simpleName());
+                    List<String> recordedBy = null;
+                    if (recordedByItem != null) {
+                      recordedBy = Collections.singletonList(recordedByItem);
+                    }
 
                     Long eventDateL = source.getLongs().get(DwcTerm.eventDate.simpleName());
                     String eventDate = "";
@@ -170,8 +174,8 @@ public class ClusteringPipeline {
                             .withOtherCatalogNumbers(otherCatalogNumbers);
 
                     // specimen only hashes
-                    if (StringUtils.isNotEmpty(speciesKey)
-                        && StringUtils.isNotEmpty(basisOfRecord)
+                    if (Strings.isNotEmpty(speciesKey)
+                        && Strings.isNotEmpty(basisOfRecord)
                         && specimenBORs.contains(basisOfRecord)) {
 
                       Stream<String> ids =
@@ -184,8 +188,7 @@ public class ClusteringPipeline {
                       // output hashes for each combination
                       ids.filter(
                               value ->
-                                  StringUtils.isNotEmpty(value)
-                                      && !omitIds.contains(value.toUpperCase()))
+                                  !Strings.isEmpty(value) && !omitIds.contains(value.toUpperCase()))
                           .distinct()
                           .collect(Collectors.toList())
                           .forEach(
@@ -222,17 +225,16 @@ public class ClusteringPipeline {
                     }
 
                     // 2. type status hashkeys
-                    if (StringUtils.isNotEmpty(taxonKey) && typeStatus != null) {
+                    if (Strings.isNotEmpty(taxonKey) && typeStatus != null) {
                       for (String t : typeStatus) {
                         out.output(builder.withHashKey(taxonKey + "|" + t).build());
                       }
                     }
 
                     // 3. taxonKey|year|recordedBy hashkeys
-                    if (StringUtils.isNotEmpty(taxonKey) && year != null && recordedBy != null) {
-                      for (String r : recordedBy) {
-                        out.output(builder.withHashKey(taxonKey + "|" + year + "|" + r).build());
-                      }
+                    if (Strings.isNotEmpty(taxonKey) && year != null && recordedBy != null) {
+                      out.output(
+                          builder.withHashKey(taxonKey + "|" + year + "|" + recordedBy).build());
                     }
                   }
                 }));

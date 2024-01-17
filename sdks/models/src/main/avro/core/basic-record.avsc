@@ -3,6 +3,30 @@
  */
 [
   {
+    "name":"GeologicalContext",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "doc":"Darwin Core Geological Context terms",
+    "fields":[
+      {"name":"earliestEonOrLowestEonothem","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/earliestEonOrLowestEonothem"},
+      {"name":"latestEonOrHighestEonothem","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/latestEonOrHighestEonothem"},
+      {"name":"earliestEraOrLowestErathem","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/earliestEraOrLowestErathem"},
+      {"name":"latestEraOrHighestErathem","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/latestEraOrHighestErathem"},
+      {"name":"earliestPeriodOrLowestSystem","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/earliestPeriodOrLowestSystem"},
+      {"name":"latestPeriodOrHighestSystem","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/latestPeriodOrHighestSystem"},
+      {"name":"earliestEpochOrLowestSeries","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/earliestEpochOrLowestSeries"},
+      {"name":"latestEpochOrHighestSeries","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/latestEpochOrHighestSeries"},
+      {"name":"earliestAgeOrLowestStage","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/earliestAgeOrLowestStage"},
+      {"name":"latestAgeOrHighestStage","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/latestAgeOrHighestStage"},
+      {"name":"lowestBiostratigraphicZone","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/lowestBiostratigraphicZone"},
+      {"name":"highestBiostratigraphicZone","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/highestBiostratigraphicZone"},
+      {"name":"group","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/group"},
+      {"name":"formation","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/formation"},
+      {"name":"member","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/member"},
+      {"name":"bed","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/bed"}
+    ]
+  },
+  {
     "name": "BasicRecord",
     "namespace": "org.gbif.pipelines.io.avro",
     "type": "record",
@@ -38,6 +62,9 @@
       {"name": "preparations", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/preparations"},
       {"name": "samplingProtocol", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/samplingProtocol"},
       {"name": "projectId", "type": {"type" : "array", "items" : "string"}, "default" : []},
+      {"name": "geologicalContext","type":["null","GeologicalContext"],"default":null,"doc":""},
+      {"name": "isSequenced","type":["null","boolean"],"default":null, "doc":""},
+      {"name": "associatedSequences", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/associatedSequences"},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

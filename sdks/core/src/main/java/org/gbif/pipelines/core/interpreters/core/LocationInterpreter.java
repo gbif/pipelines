@@ -4,12 +4,15 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVAL
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_SRS_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_WKT_MISMATCH;
+import static org.gbif.dwc.terms.DwcTerm.country;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import com.google.common.base.Strings;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -22,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
@@ -381,6 +385,32 @@ public class LocationInterpreter {
     }
   }
 
+  /** {@link DwcTerm#higherGeography} interpretation. */
+  public static void interpretHigherGeography(ExtendedRecord er, LocationRecord lr) {
+    List<String> list = extractListValue(er, DwcTerm.higherGeography);
+    if (!list.isEmpty()) {
+      lr.setHigherGeography(list);
+    }
+  }
+
+  /** {@link DwcTerm#locality} interpretation. */
+  public static void interpretGeoreferencedBy(ExtendedRecord er, LocationRecord lr) {
+    List<String> list = extractListValue(er, DwcTerm.georeferencedBy);
+    if (!list.isEmpty()) {
+      lr.setGeoreferencedBy(list);
+    }
+  }
+
+  /** Use country to get GbifRegion */
+  public static void interpretGbifRegion(LocationRecord lr) {
+    setGbifRegion(lr.getCountryCode(), lr::setGbifRegion);
+  }
+
+  /** Use publishing country to get PublishedByGbifRegion */
+  public static void interpretPublishedByGbifRegion(LocationRecord lr) {
+    setGbifRegion(lr.getPublishingCountry(), lr::setPublishedByGbifRegion);
+  }
+
   /** Sets the coreId field. */
   public static void setCoreId(ExtendedRecord er, LocationRecord lr) {
     Optional.ofNullable(er.getCoreId()).ifPresent(lr::setCoreId);
@@ -389,6 +419,14 @@ public class LocationInterpreter {
   /** Sets the parentEventId field. */
   public static void setParentEventId(ExtendedRecord er, LocationRecord lr) {
     extractOptValue(er, DwcTerm.parentEventID).ifPresent(lr::setParentId);
+  }
+
+  private static void setGbifRegion(String countryIsoCode, Consumer<String> fn) {
+    Optional.ofNullable(countryIsoCode)
+        .map(Country::fromIsoCode)
+        .map(Country::getGbifRegion)
+        .map(GbifRegion::toString)
+        .ifPresent(fn);
   }
 
   private static String cleanName(String x) {

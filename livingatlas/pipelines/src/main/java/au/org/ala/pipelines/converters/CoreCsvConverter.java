@@ -24,7 +24,7 @@ public class CoreCsvConverter {
           .addKeyTermFn(DwcTerm.institutionCode, getString(DwcTerm.institutionCode))
           .addKeyTermFn(DwcTerm.recordNumber, getString(DwcTerm.recordNumber))
           .addKeyTermFn(DwcTerm.basisOfRecord, getString(DwcTerm.basisOfRecord), "HumanObservation")
-          .addKeyTermFn(DwcTerm.recordedBy, getMultivalue(DwcTerm.recordedBy))
+          .addKeyTermFn(DwcTerm.recordedBy, getString(DwcTerm.recordedBy))
           .addKeyTermFn(DwcTerm.occurrenceStatus, getString(DwcTerm.occurrenceStatus))
           .addKeyTermFn(DwcTerm.individualCount, getInt(DwcTerm.individualCount))
           .addKeyTermFn(DwcTerm.scientificName, getString(DwcTerm.scientificName))
@@ -77,6 +77,7 @@ public class CoreCsvConverter {
           .addKeyTermFn(DwcTerm.datasetID, getMultivalue(DwcTerm.datasetID))
           .addKeyTermFn(DwcTerm.datasetName, getMultivalue(DwcTerm.datasetName))
           .addKeyTermFn(DwcTerm.dateIdentified, getString(DwcTerm.dateIdentified))
+          .addKeyTermFn(DwcTerm.degreeOfEstablishment, getString(DwcTerm.degreeOfEstablishment))
           .addKeyTermFn(DwcTerm.disposition, getString(DwcTerm.disposition))
           .addKeyTermFn(DwcTerm.dynamicProperties, getString(DwcTerm.dynamicProperties))
           .addKeyTermFn(DwcTerm.endDayOfYear, getInt(DwcTerm.endDayOfYear))
@@ -88,7 +89,7 @@ public class CoreCsvConverter {
           .addKeyTermFn(DwcTerm.footprintSpatialFit, getString(DwcTerm.footprintSpatialFit))
           .addKeyTermFn(DwcTerm.footprintSRS, getString(DwcTerm.footprintSRS))
           .addKeyTermFn(DwcTerm.footprintWKT, getString(DwcTerm.footprintWKT))
-          .addKeyTermFn(DwcTerm.georeferencedBy, getString(DwcTerm.georeferencedBy))
+          .addKeyTermFn(DwcTerm.georeferencedBy, getMultivalue(DwcTerm.georeferencedBy))
           .addKeyTermFn(DwcTerm.georeferencedDate, getString(DwcTerm.georeferencedDate))
           .addKeyTermFn(DwcTerm.georeferenceProtocol, getString(DwcTerm.georeferenceProtocol))
           .addKeyTermFn(DwcTerm.georeferenceRemarks, getString(DwcTerm.georeferenceRemarks))
@@ -98,7 +99,7 @@ public class CoreCsvConverter {
               getString(DwcTerm.georeferenceVerificationStatus))
           .addKeyTermFn(DwcTerm.habitat, getString(DwcTerm.habitat))
           .addKeyTermFn(DwcTerm.higherClassification, getString(DwcTerm.higherClassification))
-          .addKeyTermFn(DwcTerm.higherGeography, getString(DwcTerm.higherGeography))
+          .addKeyTermFn(DwcTerm.higherGeography, getMultivalue(DwcTerm.higherGeography))
           .addKeyTermFn(DwcTerm.higherGeographyID, getString(DwcTerm.higherGeographyID))
           .addKeyTermFn(DwcTerm.identificationID, getString(DwcTerm.identificationID))
           .addKeyTermFn(DwcTerm.identificationQualifier, getString(DwcTerm.identificationQualifier))
@@ -138,7 +139,7 @@ public class CoreCsvConverter {
           .addKeyTermFn(DwcTerm.nomenclaturalCode, getString(DwcTerm.nomenclaturalCode))
           .addKeyTermFn(DwcTerm.nomenclaturalStatus, getString(DwcTerm.nomenclaturalStatus))
           .addKeyTermFn(DwcTerm.organismID, getString(DwcTerm.organismID))
-          .addKeyTermFn(DwcTerm.organismQuantity, getDouble(DwcTerm.organismQuantity))
+          .addKeyTermFn(DwcTerm.organismQuantity, getString(DwcTerm.organismQuantity))
           .addKeyTermFn(DwcTerm.organismQuantityType, getString(DwcTerm.organismQuantityType))
           .addKeyTermFn(DwcTerm.originalNameUsage, getString(DwcTerm.originalNameUsage))
           .addKeyTermFn(DwcTerm.originalNameUsageID, getString(DwcTerm.originalNameUsageID))
@@ -237,7 +238,7 @@ public class CoreCsvConverter {
           // Other Terms
           .addKeyTermFn("taxonRankID", getInt("taxonRankID"))
           // GBIF Terms
-          .addKeyTermFn(DwcTerm.recordedByID, getString(DwcTerm.recordedByID));
+          .addKeyTermFn(DwcTerm.recordedByID, getMultivalue(DwcTerm.recordedByID));
 
   public static String convert(IndexRecord indexRecord) {
     return CONVERTER.converter(indexRecord);

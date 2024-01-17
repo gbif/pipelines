@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.18.0-H3-SNAPSHOT</version>
+  <version>2.19.0-H3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -88,17 +88,17 @@
     <lombok.version>1.18.28</lombok.version>
 
     <!-- GBIF libraries -->
-    <gbif-parsers.version>0.63-SNAPSHOT</gbif-parsers.version>
+    <gbif-parsers.version>0.63</gbif-parsers.version>
     <dwca-io.version>2.17-H3-SNAPSHOT</dwca-io.version>
-    <gbif-api.version>1.13.0-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>1.13.0</gbif-api.version>
     <gbif-common.version>0.56</gbif-common.version>
     <dwc-api.version>1.48-H3-SNAPSHOT</dwc-api.version>
     <kvs.version>1.33-H3-SNAPSHOT</kvs.version>
     <hbase-utils.version>0.14-H3-SNAPSHOT</hbase-utils.version>
     <gbif-wrangler.version>0.5-SNAPSHOT</gbif-wrangler.version>
     <gbif-occurrence.version>0.194.0-H3-SNAPSHOT</gbif-occurrence.version>
-    <vocabulary-lookup.version>1.0.1-SNAPSHOT</vocabulary-lookup.version>
-    <registry.version>3.95.4-SNAPSHOT</registry.version>
+    <vocabulary-lookup.version>1.0.0</vocabulary-lookup.version>
+    <registry.version>3.95.15</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>
     <gbif-postal-service.version>1.7.0</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>

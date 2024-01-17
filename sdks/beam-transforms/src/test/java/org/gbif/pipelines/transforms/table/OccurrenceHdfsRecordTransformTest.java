@@ -225,9 +225,12 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setParenteventgbifid(Collections.emptyList());
     expected.setTypestatus(Collections.emptyList());
     expected.setSamplingprotocol(Collections.emptyList());
+    expected.setHighergeography(Collections.emptyList());
+    expected.setGeoreferencedby(Collections.emptyList());
     expected.setCollectionkey("setCollectionMatchKey");
     expected.setDatasettitle("setDatasetTitle");
     expected.setProjectid(Collections.singletonList("setProjectId"));
+    expected.setAssociatedsequences(Collections.emptyList());
     expected.setDay(25);
 
     PAssert.that(result).containsInAnyOrder(expected);

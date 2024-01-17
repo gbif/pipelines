@@ -48,5 +48,12 @@
         <field index="39" term="http://rs.tdwg.org/dwc/terms/otherCatalogNumbers"/>
         <field index="40" term="http://purl.org/dc/terms/references"/>
         <field index="41" term="nonDwcFieldSalinity"/>
+        <field index="42" term="http://rs.tdwg.org/dwc/terms/degreeOfEstablishment"/>
+        <field index="43" term="http://rs.tdwg.org/dwc/terms/establishmentMeans"/>
+        <field index="44" term="http://rs.tdwg.org/dwc/terms/identifiedByID"/>
+        <field index="45" term="http://rs.tdwg.org/dwc/terms/recordedByID"/>
+        <field index="46" term="stateConservation"/>
+        <field index="47" term="countryConservation"/>
+        <field index="48" term="http://rs.tdwg.org/dwc/terms/organismQuantity"/>
       </core>
     </archive>

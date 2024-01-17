@@ -3,7 +3,7 @@ version: "2.4"
 services:
   ala-name-service:
     container_name: "ala-name-service-non-it"
-    image: "charvolant/ala-namematching-service:v20200214-6"
+    image: "atlasoflivingaustralia/ala-namematching-service:v20210811-3"
     ports:
       - "9180:9180"
       - "9179:9179"
