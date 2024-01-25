@@ -178,13 +178,15 @@ public final class StackableSparkRunner {
     Optional.ofNullable(distributedConfig.driverJavaOptions)
         .ifPresent(x -> newSparkConf.put("driver-java-options", x));
 
-    if (sparkSettings.getParallelism() < 1) {
-      throw new IllegalArgumentException("sparkParallelism can't be 0");
-    }
-
-    newSparkConf.put("spark.default.parallelism", String.valueOf(sparkSettings.getParallelism()));
-    newSparkConf.put("spark.executor.memoryOverhead", String.valueOf(sparkConfig.memoryOverhead));
-    newSparkConf.put("spark.dynamicAllocation.enabled", "false");
+    //    if (sparkSettings.getParallelism() < 1) {
+    //      throw new IllegalArgumentException("sparkParallelism can't be 0");
+    //    }
+    //
+    //    newSparkConf.put("spark.default.parallelism",
+    // String.valueOf(sparkSettings.getParallelism()));
+    //    newSparkConf.put("spark.executor.memoryOverhead",
+    // String.valueOf(sparkConfig.memoryOverhead));
+    //    newSparkConf.put("spark.dynamicAllocation.enabled", "false");
     newSparkConf.put("spark.driver.userClassPathFirst", "true");
 
     return newSparkConf;
@@ -205,9 +207,9 @@ public final class StackableSparkRunner {
                 .mainClass(distributedConfig.mainClass)
                 .mainApplicationFile(distributedConfig.jarPath)
                 .args(buildArgs())
-                .driver(mergeDriverSettings(sparkCrd.getSpec().getDriver()))
                 .sparkConf(mergeSparkConfSettings(sparkCrd.getSpec().getSparkConf()))
-                .executor(mergeExecutorSettings(sparkCrd.getSpec().getExecutor()))
+                // .driver(mergeDriverSettings(sparkCrd.getSpec().getDriver()))
+                // .executor(mergeExecutorSettings(sparkCrd.getSpec().getExecutor()))
                 .build())
         .build();
   }
