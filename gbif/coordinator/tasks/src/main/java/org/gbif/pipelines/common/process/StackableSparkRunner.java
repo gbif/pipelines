@@ -84,59 +84,56 @@ public final class StackableSparkRunner {
     return Optional.ofNullable(buildable).map(b -> b.toBuilder()).orElse(supplier.get());
   }
 
-  private SparkCrd.Spec.Resources.ResourcesBuilder cloneOrCreateResources(
-      ToBuilder<SparkCrd.Spec.Resources.ResourcesBuilder> buildable) {
-    return cloneOrCreate(buildable, () -> SparkCrd.Spec.Resources.builder());
+  private SparkCrd.Resources.ResourcesBuilder cloneOrCreateResources(
+      ToBuilder<SparkCrd.Resources.ResourcesBuilder> buildable) {
+    return cloneOrCreate(buildable, () -> SparkCrd.Resources.builder());
   }
 
-  private SparkCrd.Spec.Resources.Memory.MemoryBuilder cloneOrCreateMemory(
-      ToBuilder<SparkCrd.Spec.Resources.Memory.MemoryBuilder> buildable) {
-    return cloneOrCreate(buildable, () -> SparkCrd.Spec.Resources.Memory.builder());
+  private SparkCrd.Resources.Memory.MemoryBuilder cloneOrCreateMemory(
+      ToBuilder<SparkCrd.Resources.Memory.MemoryBuilder> buildable) {
+    return cloneOrCreate(buildable, () -> SparkCrd.Resources.Memory.builder());
   }
 
-  private SparkCrd.Spec.Resources.Cpu.CpuBuilder cloneOrCreateCpu(
-      ToBuilder<SparkCrd.Spec.Resources.Cpu.CpuBuilder> buildable) {
-    return cloneOrCreate(buildable, () -> SparkCrd.Spec.Resources.Cpu.builder());
+  private SparkCrd.Resources.Cpu.CpuBuilder cloneOrCreateCpu(
+      ToBuilder<SparkCrd.Resources.Cpu.CpuBuilder> buildable) {
+    return cloneOrCreate(buildable, () -> SparkCrd.Resources.Cpu.builder());
   }
 
-  private SparkCrd.Spec.Driver.DriverBuilder cloneOrCreateDriver(
-      ToBuilder<SparkCrd.Spec.Driver.DriverBuilder> buildable) {
-    return cloneOrCreate(buildable, () -> SparkCrd.Spec.Driver.builder());
+  private SparkCrd.Driver.DriverBuilder cloneOrCreateDriver(
+      ToBuilder<SparkCrd.Driver.DriverBuilder> buildable) {
+    return cloneOrCreate(buildable, () -> SparkCrd.Driver.builder());
   }
 
-  private SparkCrd.Spec.Executor.ExecutorBuilder cloneOrCreateExecutor(
-      ToBuilder<SparkCrd.Spec.Executor.ExecutorBuilder> buildable) {
-    return cloneOrCreate(buildable, () -> SparkCrd.Spec.Executor.builder());
+  private SparkCrd.Executor.ExecutorBuilder cloneOrCreateExecutor(
+      ToBuilder<SparkCrd.Executor.ExecutorBuilder> buildable) {
+    return cloneOrCreate(buildable, () -> SparkCrd.Executor.builder());
   }
 
-  private SparkCrd.Spec.Resources.Memory.MemoryBuilder getMemoryOrCreate(
-      SparkCrd.Spec.Resources resources) {
+  private SparkCrd.Resources.Memory.MemoryBuilder getMemoryOrCreate(SparkCrd.Resources resources) {
     return resources != null
         ? cloneOrCreateMemory(resources.getMemory())
-        : SparkCrd.Spec.Resources.Memory.builder();
+        : SparkCrd.Resources.Memory.builder();
   }
 
-  private SparkCrd.Spec.Resources.Cpu.CpuBuilder getCpuOrCreate(SparkCrd.Spec.Resources resources) {
+  private SparkCrd.Resources.Cpu.CpuBuilder getCpuOrCreate(SparkCrd.Resources resources) {
     return resources != null
         ? cloneOrCreateCpu(resources.getCpu())
-        : SparkCrd.Spec.Resources.Cpu.builder();
+        : SparkCrd.Resources.Cpu.builder();
   }
 
-  private SparkCrd.Spec.Resources.ResourcesBuilder getResourcesOrCreate(
-      SparkCrd.Spec.Driver driver) {
+  private SparkCrd.Resources.ResourcesBuilder getResourcesOrCreate(SparkCrd.Driver driver) {
     return driver != null
         ? cloneOrCreateResources(driver.getResources())
-        : SparkCrd.Spec.Resources.builder();
+        : SparkCrd.Resources.builder();
   }
 
-  private SparkCrd.Spec.Resources.ResourcesBuilder getResourcesOrCreate(
-      SparkCrd.Spec.Executor executor) {
+  private SparkCrd.Resources.ResourcesBuilder getResourcesOrCreate(SparkCrd.Executor executor) {
     return executor != null
         ? cloneOrCreateResources(executor.getResources())
-        : SparkCrd.Spec.Resources.builder();
+        : SparkCrd.Resources.builder();
   }
 
-  private SparkCrd.Spec.Resources mergeDriverResources(SparkCrd.Spec.Resources resources) {
+  private SparkCrd.Resources mergeDriverResources(SparkCrd.Resources resources) {
     return cloneOrCreateResources(resources)
         .memory(getMemoryOrCreate(resources).limit(sparkConfig.driverMemory + "Gi").build())
         .cpu(
@@ -146,7 +143,7 @@ public final class StackableSparkRunner {
         .build();
   }
 
-  private SparkCrd.Spec.Resources mergeExecutorResources(SparkCrd.Spec.Resources resources) {
+  private SparkCrd.Resources mergeExecutorResources(SparkCrd.Resources resources) {
     return cloneOrCreateResources(resources)
         .memory(
             getMemoryOrCreate(resources)
@@ -159,13 +156,13 @@ public final class StackableSparkRunner {
         .build();
   }
 
-  private SparkCrd.Spec.Driver mergeDriverSettings(SparkCrd.Spec.Driver driver) {
+  private SparkCrd.Driver mergeDriverSettings(SparkCrd.Driver driver) {
     return cloneOrCreateDriver(driver)
         .resources(mergeDriverResources(getResourcesOrCreate(driver).build()))
         .build();
   }
 
-  private SparkCrd.Spec.Executor mergeExecutorSettings(SparkCrd.Spec.Executor executor) {
+  private SparkCrd.Executor mergeExecutorSettings(SparkCrd.Executor executor) {
     return cloneOrCreateExecutor(executor)
         .resources(mergeExecutorResources(getResourcesOrCreate(executor).build()))
         .instances(sparkSettings.getExecutorNumbers())
