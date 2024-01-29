@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.converters;
 
-import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -300,20 +300,24 @@ public class OccurrenceJsonConverter {
         .setVerbatim(JsonConverter.convertVerbatimRecord(verbatim));
 
     // Set raw as indexed
-    extractOptValue(verbatim, DwcTerm.recordNumber).ifPresent(builder::setRecordNumber);
-    extractOptValue(verbatim, DwcTerm.organismID).ifPresent(builder::setOrganismId);
-    extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventId);
-    extractOptValue(verbatim, DwcTerm.parentEventID).ifPresent(builder::setParentEventId);
-    extractOptValue(verbatim, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
-    extractOptValue(verbatim, DwcTerm.collectionCode).ifPresent(builder::setCollectionCode);
-    extractOptValue(verbatim, DwcTerm.catalogNumber).ifPresent(builder::setCatalogNumber);
-    extractOptValue(verbatim, DwcTerm.occurrenceID).ifPresent(builder::setOccurrenceId);
-    extractOptValue(verbatim, DwcTerm.fieldNumber).ifPresent(builder::setFieldNumber);
-    extractOptValue(verbatim, DwcTerm.island).ifPresent(builder::setIsland);
-    extractOptValue(verbatim, DwcTerm.islandGroup).ifPresent(builder::setIslandGroup);
-    extractOptValue(verbatim, DwcTerm.previousIdentifications)
+    extractLengthAwareOptValue(verbatim, DwcTerm.recordNumber).ifPresent(builder::setRecordNumber);
+    extractLengthAwareOptValue(verbatim, DwcTerm.organismID).ifPresent(builder::setOrganismId);
+    extractLengthAwareOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventId);
+    extractLengthAwareOptValue(verbatim, DwcTerm.parentEventID)
+        .ifPresent(builder::setParentEventId);
+    extractLengthAwareOptValue(verbatim, DwcTerm.institutionCode)
+        .ifPresent(builder::setInstitutionCode);
+    extractLengthAwareOptValue(verbatim, DwcTerm.collectionCode)
+        .ifPresent(builder::setCollectionCode);
+    extractLengthAwareOptValue(verbatim, DwcTerm.catalogNumber)
+        .ifPresent(builder::setCatalogNumber);
+    extractLengthAwareOptValue(verbatim, DwcTerm.occurrenceID).ifPresent(builder::setOccurrenceId);
+    extractLengthAwareOptValue(verbatim, DwcTerm.fieldNumber).ifPresent(builder::setFieldNumber);
+    extractLengthAwareOptValue(verbatim, DwcTerm.island).ifPresent(builder::setIsland);
+    extractLengthAwareOptValue(verbatim, DwcTerm.islandGroup).ifPresent(builder::setIslandGroup);
+    extractLengthAwareOptValue(verbatim, DwcTerm.previousIdentifications)
         .ifPresent(builder::setPreviousIdentifications);
-    extractOptValue(verbatim, DwcTerm.taxonConceptID)
+    extractLengthAwareOptValue(verbatim, DwcTerm.taxonConceptID)
         .ifPresent(builder.getGbifClassification()::setTaxonConceptID);
   }
 
