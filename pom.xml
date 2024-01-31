@@ -88,7 +88,7 @@
     <lombok.version>1.18.28</lombok.version>
 
     <!-- GBIF libraries -->
-    <gbif-parsers.version>0.63</gbif-parsers.version>
+    <gbif-parsers.version>0.67</gbif-parsers.version>
     <dwca-io.version>2.17-H3-SNAPSHOT</dwca-io.version>
     <gbif-api.version>1.13.0</gbif-api.version>
     <gbif-common.version>0.56</gbif-common.version>
