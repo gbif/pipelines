@@ -80,6 +80,7 @@ public class DwcaArchiveValidatorTest {
     PipelinesDwcaMessage dValue =
         new ObjectMapper().readValue(result.toString(), PipelinesDwcaMessage.class);
     dValue.setPipelineSteps(null);
+    dValue.setPlatform(null);
 
     // Should
     assertEquals(result.toString(), dValue.toString());
