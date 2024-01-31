@@ -25,7 +25,6 @@ import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
-import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
@@ -96,7 +95,7 @@ public class XmlToAvroCallbackIT {
             FinishReason.NORMAL,
             Collections.emptySet(),
             EndpointType.BIOCASE_XML_ARCHIVE,
-            Platform.PIPELINES,
+            null,
             null);
 
     // When
@@ -172,7 +171,7 @@ public class XmlToAvroCallbackIT {
             FinishReason.NORMAL,
             Collections.emptySet(),
             EndpointType.BIOCASE_XML_ARCHIVE,
-            Platform.PIPELINES,
+            null,
             null);
 
     // When
@@ -249,7 +248,7 @@ public class XmlToAvroCallbackIT {
             FinishReason.NOT_MODIFIED,
             Collections.emptySet(),
             EndpointType.BIOCASE_XML_ARCHIVE,
-            Platform.PIPELINES,
+            null,
             null);
     String crawlId = datasetKey.toString();
 

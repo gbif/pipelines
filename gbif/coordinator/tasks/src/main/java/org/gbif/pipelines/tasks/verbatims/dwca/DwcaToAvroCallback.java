@@ -27,7 +27,6 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
-import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.converters.DwcaToAvroConverter;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.UnsupportedArchiveException;
@@ -86,10 +85,6 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
   /** Only correct messages can be handled, by now is only OCCURRENCE type messages */
   @Override
   public boolean isMessageCorrect(PipelinesDwcaMessage message) {
-    boolean isPlatformCorrect = Platform.PIPELINES.equivalent(message.getPlatform());
-    if (!isPlatformCorrect) {
-      log.info("Skipping the task, because of the platform {} is incorrect", message.getPlatform());
-    }
     boolean isMessageValid =
         message.getDatasetType() != null && message.getValidationReport().isValid();
     if (!isMessageValid) {
@@ -103,7 +98,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
       log.info(
           "Skipping the task, because of the validation report is missed or there are no records");
     }
-    return isPlatformCorrect && isMessageValid && isReportValid;
+    return isMessageValid && isReportValid;
   }
 
   private boolean isReportValid(PipelinesDwcaMessage message) {
@@ -118,6 +113,11 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         message.getValidationReport().getGenericReport() != null
             && message.getValidationReport().getGenericReport().getCheckedRecords() > 0
             && message.getDatasetType() != DatasetType.CHECKLIST;
+
+    if (!config.eventsEnabled && message.getDatasetType() == DatasetType.SAMPLING_EVENT) {
+      isValidGenericReport = false;
+    }
+
     return isValidOccurrenceReport || isValidGenericReport;
   }
 
@@ -183,7 +183,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
               archive.getExtensions().stream().anyMatch(x -> x.getRowType() == DwcTerm.Occurrence);
 
           boolean hasOccurrences = coreType == DwcTerm.Occurrence || hasOccExt;
-          boolean hasEvents = coreType == DwcTerm.Event;
+          boolean hasEvents = coreType == DwcTerm.Event && config.eventsEnabled;
 
           workflow = PipelinesWorkflow.getWorkflow(hasOccurrences, hasEvents);
         }

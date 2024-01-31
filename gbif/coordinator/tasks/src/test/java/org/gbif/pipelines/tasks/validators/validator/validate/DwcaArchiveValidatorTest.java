@@ -9,7 +9,6 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
-import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 import org.gbif.validator.api.DwcFileType;
@@ -90,6 +89,5 @@ public class DwcaArchiveValidatorTest {
     assertEquals(message.getExecutionId(), result.getExecutionId());
     assertEquals(DatasetType.OCCURRENCE, result.getDatasetType());
     assertEquals(EndpointType.DWC_ARCHIVE, result.getEndpointType());
-    assertEquals(Platform.PIPELINES, result.getPlatform());
   }
 }

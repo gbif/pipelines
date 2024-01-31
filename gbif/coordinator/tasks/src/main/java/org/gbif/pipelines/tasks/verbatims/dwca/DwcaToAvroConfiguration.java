@@ -41,6 +41,9 @@ public class DwcaToAvroConfiguration implements BaseConfiguration {
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
 
+  @Parameter(names = "--events-enabled")
+  public boolean eventsEnabled = false;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;

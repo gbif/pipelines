@@ -28,7 +28,6 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
-import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.converters.XmlToAvroConverter;
 import org.gbif.pipelines.common.GbifApi;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
@@ -182,10 +181,6 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
 
   @Override
   public boolean isMessageCorrect(PipelinesXmlMessage message) {
-    boolean isPlatform = Platform.PIPELINES.equivalent(message.getPlatform());
-    if (!isPlatform) {
-      log.info("Skipping, because the platform is incorrect");
-    }
     boolean isTotalCount = message.getTotalRecordCount() != 0;
     if (!isTotalCount) {
       log.info("Skipping, because total count of records is 0");
@@ -194,7 +189,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     if (!isReason) {
       log.info("Skipping, because the reason is {}", message.getReason());
     }
-    return isPlatform && isTotalCount && isReason;
+    return isTotalCount && isReason;
   }
 
   @SneakyThrows
