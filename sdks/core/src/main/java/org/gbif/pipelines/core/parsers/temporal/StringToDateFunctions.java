@@ -111,6 +111,9 @@ public class StringToDateFunctions {
       }
 
       TemporalAccessor ta = getStringToTemporalAccessor().apply(dateAsString);
+      if (ta == null) {
+        return null;
+      }
       return TemporalAccessorUtils.toEarliestLocalDateTime(ta, ignoreOffset)
           .toEpochSecond(ZoneOffset.UTC);
     };
@@ -123,6 +126,9 @@ public class StringToDateFunctions {
       }
 
       TemporalAccessor ta = getStringToTemporalAccessor().apply(dateAsString);
+      if (ta == null) {
+        return null;
+      }
       return TemporalAccessorUtils.toLatestLocalDateTime(ta, ignoreOffset)
           .toEpochSecond(ZoneOffset.UTC);
     };
