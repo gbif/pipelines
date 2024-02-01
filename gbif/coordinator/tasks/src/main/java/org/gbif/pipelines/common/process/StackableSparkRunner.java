@@ -1,5 +1,6 @@
 package org.gbif.pipelines.common.process;
 
+import io.kubernetes.client.openapi.ApiException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -9,6 +10,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.configs.DistributedConfiguration;
 import org.gbif.pipelines.common.configs.SparkConfiguration;
 import org.gbif.stackable.ConfigUtils;
@@ -214,10 +216,14 @@ public final class StackableSparkRunner {
         .build();
   }
 
-  @SneakyThrows
   public StackableSparkRunner start() {
     log.info("Submitting Spark Application {}", sparkAppName);
-    sparkApplicationData = k8StackableSparkController.submitSparkApplication(sparkAppName);
+    try {
+      sparkApplicationData = k8StackableSparkController.submitSparkApplication(sparkAppName);
+    } catch (ApiException ex) {
+      log.error("K8s API error: {}", ex.getResponseBody());
+      throw new PipelinesException(ex);
+    }
     return this;
   }
 
