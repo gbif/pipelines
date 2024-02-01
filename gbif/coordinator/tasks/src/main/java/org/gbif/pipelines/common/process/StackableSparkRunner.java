@@ -16,12 +16,17 @@ import org.gbif.pipelines.common.configs.SparkConfiguration;
 import org.gbif.stackable.ConfigUtils;
 import org.gbif.stackable.K8StackableSparkController;
 import org.gbif.stackable.SparkCrd;
+import org.gbif.stackable.SparkCrd.Config;
+import org.gbif.stackable.SparkCrd.Driver;
+import org.gbif.stackable.SparkCrd.Executor;
+import org.gbif.stackable.SparkCrd.Resources;
 import org.gbif.stackable.ToBuilder;
 
 /** Class to build an instance of ProcessBuilder for direct or spark command */
 @SuppressWarnings("all")
 @Slf4j
 public final class StackableSparkRunner {
+
   private static final String DELIMITER = " ";
 
   @NonNull private final String kubeConfigFile;
@@ -74,9 +79,6 @@ public final class StackableSparkRunner {
   /**
    * A lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.'.
    * Must start and end with an alphanumeric character and its max lentgh is 64 characters.
-   *
-   * @param sparkAppName
-   * @return
    */
   private static String normalize(String sparkAppName) {
     return sparkAppName.toLowerCase().replace("_to_", "-").replace("_", "-");
@@ -124,14 +126,14 @@ public final class StackableSparkRunner {
   }
 
   private SparkCrd.Resources.ResourcesBuilder getResourcesOrCreate(SparkCrd.Driver driver) {
-    return driver != null
-        ? cloneOrCreateResources(driver.getResources())
+    return driver != null && driver.getConfig() != null
+        ? cloneOrCreateResources(driver.getConfig().getResources())
         : SparkCrd.Resources.builder();
   }
 
   private SparkCrd.Resources.ResourcesBuilder getResourcesOrCreate(SparkCrd.Executor executor) {
-    return executor != null
-        ? cloneOrCreateResources(executor.getResources())
+    return executor != null && executor.getConfig() != null
+        ? cloneOrCreateResources(executor.getConfig().getResources())
         : SparkCrd.Resources.builder();
   }
 
@@ -159,16 +161,28 @@ public final class StackableSparkRunner {
   }
 
   private SparkCrd.Driver mergeDriverSettings(SparkCrd.Driver driver) {
-    return cloneOrCreateDriver(driver)
-        .resources(mergeDriverResources(getResourcesOrCreate(driver).build()))
-        .build();
+    Driver d = cloneOrCreateDriver(driver).build();
+    Resources r = mergeDriverResources(getResourcesOrCreate(driver).build());
+
+    if (d.getConfig() != null) {
+      d.getConfig().setResources(r);
+    } else {
+      d.setConfig(Config.builder().resources(r).build());
+    }
+    return d;
   }
 
   private SparkCrd.Executor mergeExecutorSettings(SparkCrd.Executor executor) {
-    return cloneOrCreateExecutor(executor)
-        .resources(mergeExecutorResources(getResourcesOrCreate(executor).build()))
-        .instances(sparkSettings.getExecutorNumbers())
-        .build();
+    Executor e =
+        cloneOrCreateExecutor(executor).instances(sparkSettings.getExecutorNumbers()).build();
+    Resources r = mergeExecutorResources(getResourcesOrCreate(executor).build());
+
+    if (e.getConfig() != null) {
+      e.getConfig().setResources(r);
+    } else {
+      e.setConfig(Config.builder().resources(r).build());
+    }
+    return e;
   }
 
   private Map<String, String> mergeSparkConfSettings(Map<String, String> sparkConf) {
