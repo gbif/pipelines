@@ -76,7 +76,7 @@ public class InterpretedMessageHandler {
     publisher.send(outputMessage);
     log.info("The message has been sent - {}", outputMessage);
 
-    if (config.eventsEnabled
+    if (config.stepConfig.eventsEnabled
         && m.getDatasetType() == DatasetType.SAMPLING_EVENT
         && !isValidator(m.getPipelineSteps())) {
       Set<String> interpretationTypes = new HashSet<>(m.getInterpretTypes());

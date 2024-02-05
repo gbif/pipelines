@@ -498,5 +498,10 @@ public class PipelinesCallbackIT {
     public String getMetaFileName() {
       return "";
     }
+
+    @Override
+    public boolean eventsEnabled() {
+      return false;
+    }
   }
 }

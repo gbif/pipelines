@@ -77,4 +77,9 @@ public class HdfsViewConfiguration implements BaseConfiguration {
   public String getMetaFileName() {
     return metaFileName;
   }
+
+  @Override
+  public boolean eventsEnabled() {
+    return stepConfig.eventsEnabled;
+  }
 }

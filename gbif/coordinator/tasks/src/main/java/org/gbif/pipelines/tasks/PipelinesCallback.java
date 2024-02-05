@@ -272,6 +272,15 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     }
   }
 
+  private boolean containsEvents() {
+    DatasetInfo datasetInfo = message.getDatasetInfo();
+    boolean containsEvents = false;
+    if (config.eventsEnabled() && datasetInfo.getDatasetType() == DatasetType.SAMPLING_EVENT) {
+      containsEvents = datasetInfo.isContainsEvents();
+    }
+    return containsEvents;
+  }
+
   private Optional<TrackingInfo> trackPipelineStep() {
     try {
 
@@ -301,13 +310,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       if (executionId == null) {
         log.info("executionId is empty, create initial pipelines execution");
         // create execution
-        DatasetInfo datasetInfo = message.getDatasetInfo();
-        boolean containsOccurrences = datasetInfo.isContainsOccurrences();
-        boolean containsEvents = false;
-        if (datasetInfo.getDatasetType() == DatasetType.SAMPLING_EVENT) {
-          containsEvents = datasetInfo.isContainsEvents();
-        }
-
+        boolean containsEvents = containsEvents();
+        boolean containsOccurrences = message.getDatasetInfo().isContainsOccurrences();
         Set<StepType> stepTypes =
             PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents)
                 .getAllNodesFor(Collections.singleton(stepType));
@@ -396,12 +400,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     if (isValidator) {
       nodeEdges = PipelinesWorkflow.getValidatorWorkflow().getNodeEdges(stepType);
     } else {
-      DatasetInfo datasetInfo = message.getDatasetInfo();
-      boolean containsOccurrences = datasetInfo.isContainsOccurrences();
-      boolean containsEvents = false;
-      if (datasetInfo.getDatasetType() == DatasetType.SAMPLING_EVENT) {
-        containsEvents = datasetInfo.isContainsEvents();
-      }
+      boolean containsEvents = containsEvents();
+      boolean containsOccurrences = message.getDatasetInfo().isContainsOccurrences();
       Graph<StepType> workflow = PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents);
       nodeEdges = workflow.getNodeEdges(stepType);
     }

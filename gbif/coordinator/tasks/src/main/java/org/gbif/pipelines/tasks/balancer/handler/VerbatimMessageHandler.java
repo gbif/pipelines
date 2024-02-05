@@ -57,7 +57,7 @@ public class VerbatimMessageHandler {
     }
 
     // case of sampling event dataset without occurrences. We only run the events pipelines
-    if (config.eventsEnabled
+    if (config.stepConfig.eventsEnabled
         && m.getDatasetType() == DatasetType.SAMPLING_EVENT
         && (m.getValidationResult().getNumberOfRecords() == null
             || m.getValidationResult().getNumberOfRecords() == 0)

@@ -114,7 +114,8 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
             && message.getValidationReport().getGenericReport().getCheckedRecords() > 0
             && message.getDatasetType() != DatasetType.CHECKLIST;
 
-    if (!config.eventsEnabled && message.getDatasetType() == DatasetType.SAMPLING_EVENT) {
+    if (!config.stepConfig.eventsEnabled
+        && message.getDatasetType() == DatasetType.SAMPLING_EVENT) {
       isValidGenericReport = false;
     }
 
@@ -179,11 +180,11 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
           workflow = PipelinesWorkflow.getValidatorWorkflow();
         } else {
           Term coreType = archive.getCore().getRowType();
-          boolean hasOccExt =
+          boolean hasOccurrenceExtension =
               archive.getExtensions().stream().anyMatch(x -> x.getRowType() == DwcTerm.Occurrence);
 
-          boolean hasOccurrences = coreType == DwcTerm.Occurrence || hasOccExt;
-          boolean hasEvents = coreType == DwcTerm.Event && config.eventsEnabled;
+          boolean hasOccurrences = coreType == DwcTerm.Occurrence || hasOccurrenceExtension;
+          boolean hasEvents = coreType == DwcTerm.Event && config.stepConfig.eventsEnabled;
 
           workflow = PipelinesWorkflow.getWorkflow(hasOccurrences, hasEvents);
         }
