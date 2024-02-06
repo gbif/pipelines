@@ -103,7 +103,7 @@ public class CommonHdfsViewCallback {
             .beamConfigFn(beamSettings)
             .sparkAppName(
                 config.stepType + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-            .deleteOnFinish(true);
+            .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish);
 
     Long messageNumber = null;
     String metaFileName = null;
