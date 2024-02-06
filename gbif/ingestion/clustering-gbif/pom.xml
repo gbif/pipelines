@@ -73,6 +73,16 @@
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-mapreduce</artifactId>
       <version>${hbase.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>hadoop-mapreduce-client-core</artifactId>
+          <groupId>org.apache.hadoop</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>hadoop-hdfs-client</artifactId>
+          <groupId>org.apache.hadoop</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
@@ -139,6 +149,13 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>${scala.version}</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <profiles>
@@ -153,6 +170,8 @@
             <configuration>
               <createDependencyReducedPom>false</createDependencyReducedPom>
               <keepDependenciesWithProvidedScope>false</keepDependenciesWithProvidedScope>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
+              <shadedClassifierName>shaded</shadedClassifierName>
               <!-- Breaks relocations otherwise -->
               <shadeTestJar>false</shadeTestJar>
               <filters>
@@ -162,6 +181,9 @@
                     <exclude>META-INF/*.SF</exclude>
                     <exclude>META-INF/*.DSA</exclude>
                     <exclude>META-INF/*.RSA</exclude>
+                    <exclude>core-site.xml</exclude>
+                    <exclude>hbase-site.xml</exclude>
+                    <exclude>**/config-default.xml</exclude>
                   </excludes>
                 </filter>
               </filters>
@@ -181,6 +203,10 @@
                     <relocation>
                       <pattern>com.fasterxml.jackson</pattern>
                       <shadedPattern>gbif.com.fasterxml.jackson</shadedPattern>
+                    </relocation>
+                    <relocation>
+                      <pattern>org.apache.hadoop.hive</pattern>
+                      <shadedPattern>h.org.apache.hadoop.hive.conf</shadedPattern>
                     </relocation>
                   </relocations>
                 </configuration>
