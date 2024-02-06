@@ -83,7 +83,7 @@ public class Cluster implements Serializable {
           });
 
   public static void main(String[] args) throws IOException {
-    CommandLineParser.parse(args).build().run();
+    ArgsParser.parse(args).build().run();
   }
 
   /** Run the full process, generating relationships and refreshing the HBase table. */
