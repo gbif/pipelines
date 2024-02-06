@@ -216,18 +216,21 @@ public final class StackableSparkRunner {
 
   private SparkCrd loadSparkCrd() {
     SparkCrd sparkCrd = ConfigUtils.loadSparkCdr(sparkCrdConfigFile);
-    return sparkCrd.toBuilder()
-        .metadata(sparkCrd.getMetadata().builder().name(sparkAppName).build())
-        .spec(
-            sparkCrd.getSpec().toBuilder()
-                .mainClass(distributedConfig.mainClass)
-                .mainApplicationFile(distributedConfig.jarPath)
-                .args(buildArgs())
-                .sparkConf(mergeSparkConfSettings(sparkCrd.getSpec().getSparkConf()))
-                // .driver(mergeDriverSettings(sparkCrd.getSpec().getDriver()))
-                // .executor(mergeExecutorSettings(sparkCrd.getSpec().getExecutor()))
-                .build())
-        .build();
+    SparkCrd crd =
+        sparkCrd.toBuilder()
+            .metadata(sparkCrd.getMetadata().builder().name(sparkAppName).build())
+            .spec(
+                sparkCrd.getSpec().toBuilder()
+                    .mainClass(distributedConfig.mainClass)
+                    .mainApplicationFile(distributedConfig.jarPath)
+                    .args(buildArgs())
+                    .sparkConf(mergeSparkConfSettings(sparkCrd.getSpec().getSparkConf()))
+                    // .driver(mergeDriverSettings(sparkCrd.getSpec().getDriver()))
+                    // .executor(mergeExecutorSettings(sparkCrd.getSpec().getExecutor()))
+                    .build())
+            .build();
+    log.info("SparkCrd: {}", crd.toString());
+    return crd;
   }
 
   public StackableSparkRunner start() {
