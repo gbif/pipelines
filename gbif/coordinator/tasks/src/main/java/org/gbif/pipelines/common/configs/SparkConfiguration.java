@@ -17,29 +17,17 @@ public class SparkConfiguration {
   @Parameter(names = "--spark-parallelism-max")
   public int parallelismMax;
 
-  @Parameter(names = "--spark-memory-overhead")
-  public int memoryOverhead;
-
   @Parameter(names = "--spark-executor-memory-gb-min")
   public int executorMemoryGbMin;
 
   @Parameter(names = "--spark-executor-memory-gb-max")
   public int executorMemoryGbMax;
 
-  @Parameter(names = "--spark-executor-cores")
-  public int executorCores;
-
   @Parameter(names = "--spark-executor-numbers-min")
   public int executorNumbersMin;
 
   @Parameter(names = "--spark-executor-numbers-max")
   public int executorNumbersMax;
-
-  @Parameter(names = "--spark-driver-cores")
-  public int driverCores;
-
-  @Parameter(names = "--spark-driver-memory")
-  public int driverMemory;
 
   @Parameter(names = "--max-record-limit")
   public long maxRecordsLimit;

@@ -16,13 +16,10 @@ public class SparkSettingsTest {
     CONFIG.recordsPerThread = 250_000;
     CONFIG.parallelismMin = 8;
     CONFIG.parallelismMax = 750;
-    CONFIG.memoryOverhead = 6144;
     CONFIG.executorMemoryGbMin = 8;
     CONFIG.executorMemoryGbMax = 70;
-    CONFIG.executorCores = 5;
     CONFIG.executorNumbersMin = 2;
     CONFIG.executorNumbersMax = 70;
-    CONFIG.driverMemory = 1;
     // Power function setting
     CONFIG.powerFnCoefficient = 0.000138d;
     CONFIG.powerFnExponent = 0.626d;

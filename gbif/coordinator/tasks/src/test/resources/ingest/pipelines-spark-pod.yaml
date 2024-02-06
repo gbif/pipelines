@@ -1,0 +1,77 @@
+apiVersion: spark.stackable.tech/v1alpha1
+kind: SparkApplication
+metadata:
+  name:
+spec:
+  version: "1.0"
+  sparkImage:
+    productVersion: 3.4.0
+    stackableVersion: 23.11.0
+  mode: cluster
+  mainApplicationFile:
+  mainClass:
+  args:
+  sparkConf:
+    "spark.driver.extraJavaOptions": "-XX:+UseConcMarkSweepGC"
+    "spark.executor.extraJavaOptions": "-XX:+UseConcMarkSweepGC"
+    "spark.jars.ivy": "/tmp"
+    "spark.broadcast.compress": "true"
+    "spark.checkpoint.compress": "true"
+    "spark.executor.memoryOverhead": "4096"
+    "spark.executor.heartbeatInterval": "20s"
+    "spark.network.timeout": "240s"
+    "spark.io.compression.codec": "snappy"
+    "spark.rdd.compress": "true"
+    "spark.driver.userClassPathFirst" : "true"
+    "spark.driver.extraClassPath": "/etc/hadoop/conf/:/stackable/spark/extra-jars/*"
+    "spark.executor.extraClassPath": "/etc/hadoop/conf/:/stackable/spark/extra-jars/*"
+    "spark.kubernetes.authenticate.driver.serviceAccountName": "gbif-spark-sa"
+    "spark.kubernetes.scheduler.name": "yunikorn"
+    "spark.kubernetes.driver.label.queue": "root.default"
+    "spark.kubernetes.executor.label.queue": "root.default"
+    "spark.kubernetes.driver.annotation.yunikorn.apache.org/app-id": "{{APP_ID}}"
+    "spark.kubernetes.executor.annotation.yunikorn.apache.org/app-id": "{{APP_ID}}"
+  # The following config maps are managed in our K8s environment using GBIF naming convention
+  driver:
+    podOverrides:
+      metadata:
+        annotations:
+          yunikorn.apache.org/task-group-name: "spark-driver"
+          yunikorn.apache.org/task-groups: |-
+            [{
+              "name": "spark-driver",
+              "minMember": 1,
+              "minResource": {
+                "cpu": "1",
+                "memory": "1Gi"
+              }
+            }]
+    config:
+      resources:
+        cpu:
+          min: "100m"
+          max: "1"
+        memory:
+          limit: "1Gi"
+  executor:
+    podOverrides:
+      metadata:
+        annotations:
+          yunikorn.apache.org/task-group-name: "spark-executor"
+          yunikorn.apache.org/task-groups: |-
+            [{
+              "name": "spark-executor",
+              "minMember": 1,
+              "minResource": {
+                "cpu": "1",
+                "memory": "1Gi"
+              }
+            }]
+    instances: 1
+    config:
+      resources:
+        cpu:
+          min: "100m"
+          max: "1"
+        memory:
+          limit: "1Gi"

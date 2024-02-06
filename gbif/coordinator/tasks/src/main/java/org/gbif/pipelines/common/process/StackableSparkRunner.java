@@ -3,7 +3,6 @@ package org.gbif.pipelines.common.process;
 import io.kubernetes.client.openapi.ApiException;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,10 +16,9 @@ import org.gbif.stackable.ConfigUtils;
 import org.gbif.stackable.K8StackableSparkController;
 import org.gbif.stackable.SparkCrd;
 import org.gbif.stackable.SparkCrd.Config;
-import org.gbif.stackable.SparkCrd.Driver;
 import org.gbif.stackable.SparkCrd.Executor;
 import org.gbif.stackable.SparkCrd.Resources;
-import org.gbif.stackable.ToBuilder;
+import org.gbif.stackable.SparkCrd.Resources.Memory;
 
 /** Class to build an instance of ProcessBuilder for direct or spark command */
 @SuppressWarnings("all")
@@ -34,8 +32,6 @@ public final class StackableSparkRunner {
   @Builder.Default private Consumer<StringJoiner> beamConfigFn = j -> {};
 
   @NonNull private final String sparkCrdConfigFile;
-
-  @NonNull private final SparkConfiguration sparkConfig;
 
   @NonNull private final DistributedConfiguration distributedConfig;
 
@@ -51,6 +47,8 @@ public final class StackableSparkRunner {
 
   private boolean deleteOnFinish;
 
+  @Getter private SparkCrd sparkCrd;
+
   @Builder
   public StackableSparkRunner(
       @NonNull String kubeConfigFile,
@@ -63,172 +61,17 @@ public final class StackableSparkRunner {
       @NonNull boolean deleteOnFinish) {
     this.kubeConfigFile = kubeConfigFile;
     this.sparkCrdConfigFile = sparkCrdConfigFile;
-    this.sparkConfig = sparkConfig;
     this.distributedConfig = distributedConfig;
     this.sparkAppName = normalize(sparkAppName);
     this.sparkSettings = sparkSettings;
     this.beamConfigFn = beamConfigFn;
+    this.sparkCrd = loadSparkCrd();
     this.k8StackableSparkController =
         K8StackableSparkController.builder()
             .kubeConfig(ConfigUtils.loadKubeConfig(kubeConfigFile))
-            .sparkCrd(loadSparkCrd())
+            .sparkCrd(sparkCrd)
             .build();
     this.deleteOnFinish = deleteOnFinish;
-  }
-
-  /**
-   * A lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.'.
-   * Must start and end with an alphanumeric character and its max lentgh is 64 characters.
-   */
-  private static String normalize(String sparkAppName) {
-    return sparkAppName.toLowerCase().replace("_to_", "-").replace("_", "-");
-  }
-
-  private <B> B cloneOrCreate(ToBuilder<B> buildable, Supplier<B> supplier) {
-    return Optional.ofNullable(buildable).map(b -> b.toBuilder()).orElse(supplier.get());
-  }
-
-  private SparkCrd.Resources.ResourcesBuilder cloneOrCreateResources(
-      ToBuilder<SparkCrd.Resources.ResourcesBuilder> buildable) {
-    return cloneOrCreate(buildable, () -> SparkCrd.Resources.builder());
-  }
-
-  private SparkCrd.Resources.Memory.MemoryBuilder cloneOrCreateMemory(
-      ToBuilder<SparkCrd.Resources.Memory.MemoryBuilder> buildable) {
-    return cloneOrCreate(buildable, () -> SparkCrd.Resources.Memory.builder());
-  }
-
-  private SparkCrd.Resources.Cpu.CpuBuilder cloneOrCreateCpu(
-      ToBuilder<SparkCrd.Resources.Cpu.CpuBuilder> buildable) {
-    return cloneOrCreate(buildable, () -> SparkCrd.Resources.Cpu.builder());
-  }
-
-  private SparkCrd.Driver.DriverBuilder cloneOrCreateDriver(
-      ToBuilder<SparkCrd.Driver.DriverBuilder> buildable) {
-    return cloneOrCreate(buildable, () -> SparkCrd.Driver.builder());
-  }
-
-  private SparkCrd.Executor.ExecutorBuilder cloneOrCreateExecutor(
-      ToBuilder<SparkCrd.Executor.ExecutorBuilder> buildable) {
-    return cloneOrCreate(buildable, () -> SparkCrd.Executor.builder());
-  }
-
-  private SparkCrd.Resources.Memory.MemoryBuilder getMemoryOrCreate(SparkCrd.Resources resources) {
-    return resources != null
-        ? cloneOrCreateMemory(resources.getMemory())
-        : SparkCrd.Resources.Memory.builder();
-  }
-
-  private SparkCrd.Resources.Cpu.CpuBuilder getCpuOrCreate(SparkCrd.Resources resources) {
-    return resources != null
-        ? cloneOrCreateCpu(resources.getCpu())
-        : SparkCrd.Resources.Cpu.builder();
-  }
-
-  private SparkCrd.Resources.ResourcesBuilder getResourcesOrCreate(SparkCrd.Driver driver) {
-    return driver != null && driver.getConfig() != null
-        ? cloneOrCreateResources(driver.getConfig().getResources())
-        : SparkCrd.Resources.builder();
-  }
-
-  private SparkCrd.Resources.ResourcesBuilder getResourcesOrCreate(SparkCrd.Executor executor) {
-    return executor != null && executor.getConfig() != null
-        ? cloneOrCreateResources(executor.getConfig().getResources())
-        : SparkCrd.Resources.builder();
-  }
-
-  private SparkCrd.Resources mergeDriverResources(SparkCrd.Resources resources) {
-    return cloneOrCreateResources(resources)
-        .memory(getMemoryOrCreate(resources).limit(sparkConfig.driverMemory + "Gi").build())
-        .cpu(
-            getCpuOrCreate(resources)
-                .max(String.valueOf(sparkConfig.driverCores * 1000) + "m")
-                .build())
-        .build();
-  }
-
-  private SparkCrd.Resources mergeExecutorResources(SparkCrd.Resources resources) {
-    return cloneOrCreateResources(resources)
-        .memory(
-            getMemoryOrCreate(resources)
-                .limit(String.valueOf(sparkSettings.getExecutorMemory()) + "Gi")
-                .build())
-        .cpu(
-            getCpuOrCreate(resources)
-                .max(String.valueOf(sparkConfig.executorCores * 1000) + "m")
-                .build())
-        .build();
-  }
-
-  private SparkCrd.Driver mergeDriverSettings(SparkCrd.Driver driver) {
-    Driver d = cloneOrCreateDriver(driver).build();
-    Resources r = mergeDriverResources(getResourcesOrCreate(driver).build());
-
-    if (d.getConfig() != null) {
-      d.getConfig().setResources(r);
-    } else {
-      d.setConfig(Config.builder().resources(r).build());
-    }
-    return d;
-  }
-
-  private SparkCrd.Executor mergeExecutorSettings(SparkCrd.Executor executor) {
-    Executor e =
-        cloneOrCreateExecutor(executor).instances(sparkSettings.getExecutorNumbers()).build();
-    Resources r = mergeExecutorResources(getResourcesOrCreate(executor).build());
-
-    if (e.getConfig() != null) {
-      e.getConfig().setResources(r);
-    } else {
-      e.setConfig(Config.builder().resources(r).build());
-    }
-    return e;
-  }
-
-  private Map<String, String> mergeSparkConfSettings(Map<String, String> sparkConf) {
-
-    Map<String, String> newSparkConf = new HashMap<>(sparkConf);
-
-    Optional.ofNullable(distributedConfig.metricsPropertiesPath)
-        .ifPresent(x -> newSparkConf.put("spark.metrics.conf", x));
-    Optional.ofNullable(distributedConfig.driverJavaOptions)
-        .ifPresent(x -> newSparkConf.put("driver-java-options", x));
-
-    if (sparkSettings.getParallelism() < 1) {
-      throw new IllegalArgumentException("sparkParallelism can't be 0");
-    }
-
-    newSparkConf.put("spark.default.parallelism", String.valueOf(sparkSettings.getParallelism()));
-    newSparkConf.put("spark.executor.memoryOverhead", String.valueOf(sparkConfig.memoryOverhead));
-    newSparkConf.put("spark.dynamicAllocation.enabled", "false");
-    newSparkConf.put("spark.driver.userClassPathFirst", "true");
-
-    return newSparkConf;
-  }
-
-  public List<String> buildArgs() {
-    StringJoiner joiner = new StringJoiner(DELIMITER);
-    beamConfigFn.accept(joiner);
-    return Arrays.asList(joiner.toString().split(DELIMITER));
-  }
-
-  private SparkCrd loadSparkCrd() {
-    SparkCrd sparkCrd = ConfigUtils.loadSparkCdr(sparkCrdConfigFile);
-    SparkCrd crd =
-        sparkCrd.toBuilder()
-            .metadata(sparkCrd.getMetadata().builder().name(sparkAppName).build())
-            .spec(
-                sparkCrd.getSpec().toBuilder()
-                    .mainClass(distributedConfig.mainClass)
-                    .mainApplicationFile(distributedConfig.jarPath)
-                    .args(buildArgs())
-                    .sparkConf(mergeSparkConfSettings(sparkCrd.getSpec().getSparkConf()))
-                    .driver(mergeDriverSettings(sparkCrd.getSpec().getDriver()))
-                    .executor(mergeExecutorSettings(sparkCrd.getSpec().getExecutor()))
-                    .build())
-            .build();
-    log.info("SparkCrd: {}", crd.toString());
-    return crd;
   }
 
   public StackableSparkRunner start() {
@@ -262,6 +105,72 @@ public final class StackableSparkRunner {
       return -1;
     }
     return 0;
+  }
+
+  private SparkCrd loadSparkCrd() {
+    SparkCrd sparkCrd = ConfigUtils.loadSparkCdr(sparkCrdConfigFile);
+    SparkCrd crd =
+        sparkCrd.toBuilder()
+            .metadata(sparkCrd.getMetadata().builder().name(sparkAppName).build())
+            .spec(
+                sparkCrd.getSpec().toBuilder()
+                    .mainClass(distributedConfig.mainClass)
+                    .mainApplicationFile(distributedConfig.jarPath)
+                    .args(buildArgs())
+                    .sparkConf(mergeSparkConfSettings(sparkCrd.getSpec().getSparkConf()))
+                    .executor(mergeExecutorSettings(sparkCrd.getSpec().getExecutor()))
+                    .build())
+            .build();
+
+    log.debug("SparkCrd: {}", crd.toString());
+
+    return crd;
+  }
+
+  private List<String> buildArgs() {
+    StringJoiner joiner = new StringJoiner(DELIMITER);
+    beamConfigFn.accept(joiner);
+    return Arrays.asList(joiner.toString().split(DELIMITER));
+  }
+
+  /**
+   * A lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.'.
+   * Must start and end with an alphanumeric character and its max lentgh is 64 characters.
+   */
+  private static String normalize(String sparkAppName) {
+    return sparkAppName.toLowerCase().replace("_to_", "-").replace("_", "-");
+  }
+
+  private SparkCrd.Executor mergeExecutorSettings(SparkCrd.Executor executor) {
+
+    Resources r =
+        executor.getConfig().getResources().toBuilder()
+            .memory(
+                Memory.builder()
+                    .limit(String.valueOf(sparkSettings.getExecutorMemory()) + "Gi")
+                    .build())
+            .build();
+
+    Executor e = executor.toBuilder().instances(sparkSettings.getExecutorNumbers()).build();
+    if (e.getConfig() != null) {
+      e.getConfig().setResources(r);
+    } else {
+      e.setConfig(Config.builder().resources(r).build());
+    }
+    return e;
+  }
+
+  private Map<String, String> mergeSparkConfSettings(Map<String, String> sparkConf) {
+
+    Map<String, String> newSparkConf = new HashMap<>(sparkConf);
+
+    if (sparkSettings.getParallelism() < 1) {
+      throw new IllegalArgumentException("sparkParallelism can't be 0");
+    }
+
+    newSparkConf.put("spark.default.parallelism", String.valueOf(sparkSettings.getParallelism()));
+
+    return newSparkConf;
   }
 
   @SneakyThrows

@@ -21,9 +21,23 @@ public class SparkSettings {
     this.executorMemory = computeExecutorMemory(sparkConfig, fileRecordsNumber);
   }
 
+  // For testing
+  private SparkSettings(
+      int parallelism, int executorMemory, int executorNumbers, double memoryExtraCoef) {
+    this.parallelism = parallelism;
+    this.executorMemory = executorMemory;
+    this.executorNumbers = executorNumbers;
+    this.memoryExtraCoef = memoryExtraCoef;
+  }
+
   public static SparkSettings create(
       SparkConfiguration sparkConfig, long fileRecordsNumber, boolean memoryExtraCoef) {
     return new SparkSettings(sparkConfig, fileRecordsNumber, memoryExtraCoef);
+  }
+
+  public static SparkSettings create(
+      int parallelism, int executorMemory, int executorNumbers, double memoryExtraCoef) {
+    return new SparkSettings(parallelism, executorMemory, executorNumbers, memoryExtraCoef);
   }
 
   /**
