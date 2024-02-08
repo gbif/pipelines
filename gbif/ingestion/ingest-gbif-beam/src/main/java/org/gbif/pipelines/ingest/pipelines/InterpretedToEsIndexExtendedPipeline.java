@@ -1,10 +1,13 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
+
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
@@ -112,5 +115,27 @@ public class InterpretedToEsIndexExtendedPipeline {
 
     EsIndexUtils.updateAlias(options, indices, config != null ? config.getIndexLock() : null);
     EsIndexUtils.refreshIndex(options);
+
+    saveMetrics(options);
+  }
+
+  /**
+   * Query Elasticseach documnets count using dataset key as a filter and save as a meta metrics
+   * file
+   */
+  private static void saveMetrics(EsIndexingPipelineOptions options) {
+
+    long documentsCountByDatasetKey = EsIndexUtils.getDocumentsCountByDatasetKey(options);
+    String metrics = AVRO_TO_JSON_COUNT + "Attempted: " + documentsCountByDatasetKey;
+
+    log.info("Save metrics into the file and set files owner");
+    MetricsHandler.saveMetricsToFile(options, metrics, false);
+    String metadataPath =
+        PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
+    FsUtils.setOwner(
+        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
+        metadataPath,
+        "crap",
+        "supergroup");
   }
 }

@@ -196,4 +196,12 @@ public class EsIndexUtils {
       EsService.refreshIndex(esClient, options.getEsIndexName());
     }
   }
+
+  /** Connects to Elasticsearch instance and get documents count by dataset key */
+  public static long getDocumentsCountByDatasetKey(EsIndexingPipelineOptions options) {
+    try (EsClient esClient = EsClient.from(EsConfig.from(options.getEsHosts()))) {
+      return EsService.countIndexDocumentsByDatasetKey(
+          esClient, options.getEsIndexName(), options.getDatasetId());
+    }
+  }
 }
