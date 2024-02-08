@@ -18,6 +18,7 @@ import org.gbif.pipelines.ingest.resources.EsServer;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EsTestUtils {
+
   public static final String MATCH_QUERY = "{\"query\":{\"match\":{\"%s\":\"%s\"}}}";
   // default number of records per dataset
   public static final int DEFAULT_REC_DATASET = 10;
@@ -40,7 +41,10 @@ public class EsTestUtils {
       "--indexRefreshInterval=1ms",
       "--esHosts=" + server.getServerAddress(),
       "--esSchemaPath=dataset-mapping.json",
-      "--properties=" + propertiesPath
+      "--properties=" + propertiesPath,
+      "--metaFileName=test.yml",
+      "--targetPath="
+          + Thread.currentThread().getContextClassLoader().getResource("data7/ingest").getPath()
     };
     return PipelineOptionsFactory.fromArgs(args).as(EsIndexingPipelineOptions.class);
   }
