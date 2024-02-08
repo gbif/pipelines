@@ -49,9 +49,6 @@ public class HdfsViewConfiguration implements BaseConfiguration {
   @NotNull
   public String pipelinesConfig;
 
-  @Parameter(names = "--use-beam-deprecated-read")
-  public boolean useBeamDeprecatedRead = true;
-
   @Parameter(names = "--step-type")
   public StepType stepType = StepType.HDFS_VIEW;
 

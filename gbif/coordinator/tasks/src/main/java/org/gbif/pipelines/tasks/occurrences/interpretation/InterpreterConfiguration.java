@@ -52,9 +52,6 @@ public class InterpreterConfiguration implements BaseConfiguration {
   @Parameter(names = "--delete-after-days")
   public long deleteAfterDays = 7L;
 
-  @Parameter(names = "--use-beam-deprecated-read")
-  public boolean useBeamDeprecatedRead = true;
-
   @Parameter(names = "--fail-if-duplicate-id-percent")
   public int failIfDuplicateIdPercent = 5;
 

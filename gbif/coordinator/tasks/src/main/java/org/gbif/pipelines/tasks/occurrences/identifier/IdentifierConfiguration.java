@@ -38,9 +38,6 @@ public class IdentifierConfiguration implements BaseConfiguration {
   @Parameter(names = "--standalone-number-threads")
   public Integer standaloneNumberThreads;
 
-  @Parameter(names = "--use-beam-deprecated-read")
-  public boolean useBeamDeprecatedRead = true;
-
   @Parameter(names = "--id-threshold-percent")
   public double idThresholdPercent = 5;
 

@@ -2,9 +2,9 @@ package org.gbif.pipelines.common.beam.coders;
 
 import static org.junit.Assert.*;
 
-import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.KvCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
+import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
 import org.gbif.pipelines.core.pojo.Edge;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Test;

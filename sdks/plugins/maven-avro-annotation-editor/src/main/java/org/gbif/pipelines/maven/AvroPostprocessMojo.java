@@ -21,7 +21,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * <p>Adds Beam Avro annotation:
  *
  * <pre>{@code
- * import org.apache.beam.sdk.coders.AvroCoder;
+ * import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
  * import org.apache.beam.sdk.coders.DefaultCoder;
  *
  * @DefaultCoder(AvroCoder.class)
@@ -153,7 +153,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
     int beforeIdx = idxs.get(0);
     if (beforeIdx != -1) {
       String imports =
-          "import org.apache.beam.sdk.coders.AvroCoder;\n"
+          "import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;\n"
               + "import org.apache.beam.sdk.coders.DefaultCoder;\n";
       lines.add(beforeIdx, imports);
       lines.add(beforeIdx + 1, "@DefaultCoder(AvroCoder.class)");

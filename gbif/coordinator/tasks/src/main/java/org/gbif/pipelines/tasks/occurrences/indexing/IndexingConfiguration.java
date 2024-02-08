@@ -43,9 +43,6 @@ public class IndexingConfiguration implements BaseConfiguration {
   @NotNull
   public String pipelinesConfig;
 
-  @Parameter(names = "--use-beam-deprecated-read")
-  public boolean useBeamDeprecatedRead = true;
-
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
 

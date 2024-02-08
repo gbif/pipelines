@@ -50,7 +50,6 @@ public class BeamSettings {
           .pipelinesConfigPath(config.pipelinesConfig)
           .metaFileName(config.metaFileName)
           .inputPath(inputPath)
-          .useBeamDeprecatedRead(config.useBeamDeprecatedRead)
           .build()
           .addToStringBuilder();
 
@@ -97,7 +96,6 @@ public class BeamSettings {
           .pipelinesConfigPath(config.pipelinesConfig)
           .esIndexName(indexSettings.getIndexName())
           .esShardsNumber(indexSettings.getNumberOfShards())
-          .useBeamDeprecatedRead(config.useBeamDeprecatedRead)
           .build()
           .addToStringBuilder();
 
@@ -122,7 +120,6 @@ public class BeamSettings {
           .pipelinesConfigPath(config.pipelinesConfig)
           .metaFileName(config.metaFileName)
           .inputPath(inputPath)
-          .useBeamDeprecatedRead(config.useBeamDeprecatedRead)
           .build()
           .addToStringBuilder();
 
@@ -158,10 +155,6 @@ public class BeamSettings {
               "--interpretationTypes="
                   + Objects.requireNonNull(String.join(",", message.getInterpretTypes())));
 
-      if (config.useBeamDeprecatedRead) {
-        command.add("--experiments=use_deprecated_read");
-      }
-
       if (config.recordType == RecordType.EVENT) {
         command.add("--coreRecordType=EVENT");
       }
@@ -181,7 +174,6 @@ public class BeamSettings {
           .pipelinesConfigPath(config.pipelinesConfig)
           .metaFileName(config.metaFileName)
           .inputPath(inputPath)
-          .useBeamDeprecatedRead(config.useBeamDeprecatedRead)
           .build()
           .addToStringBuilder();
 
@@ -205,7 +197,6 @@ public class BeamSettings {
           .pipelinesConfigPath(config.pipelinesConfig)
           .esIndexName(indexSettings.getIndexName())
           .esShardsNumber(indexSettings.getNumberOfShards())
-          .useBeamDeprecatedRead(config.useBeamDeprecatedRead)
           .build()
           .addToStringBuilder();
 
@@ -231,7 +222,6 @@ public class BeamSettings {
           .pipelinesConfigPath(config.pipelinesConfig)
           .metaFileName(config.metaFileName)
           .inputPath(config.stepConfig.repositoryPath)
-          .useBeamDeprecatedRead(config.useBeamDeprecatedRead)
           .avroConfig(config.avroConfig)
           .build()
           .addToStringBuilder();
@@ -259,7 +249,6 @@ public class BeamSettings {
     private final String pipelinesConfigPath;
     private final String metaFileName;
     private final String inputPath;
-    private final boolean useBeamDeprecatedRead;
 
     private void addToStringBuilder() {
       String interpretationTypes = String.join(",", interpretTypes);
@@ -277,10 +266,6 @@ public class BeamSettings {
           .add("--hdfsSiteConfig=" + Objects.requireNonNull(stepConfig.hdfsSiteConfig))
           .add("--coreSiteConfig=" + Objects.requireNonNull(stepConfig.coreSiteConfig))
           .add("--properties=" + Objects.requireNonNull(pipelinesConfigPath));
-
-      if (useBeamDeprecatedRead) {
-        command.add("--experiments=use_deprecated_read");
-      }
     }
   }
 
@@ -297,7 +282,6 @@ public class BeamSettings {
     private final String metaFileName;
     private final String esIndexName;
     private final Integer esShardsNumber;
-    private final boolean useBeamDeprecatedRead;
 
     private void addToStringBuilder() {
       String esHosts = String.join(",", esConfig.hosts);
@@ -328,10 +312,6 @@ public class BeamSettings {
       Optional.ofNullable(esShardsNumber).ifPresent(x -> command.add("--indexNumberShards=" + x));
       Optional.ofNullable(indexConfig.numberReplicas)
           .ifPresent(x -> command.add("--indexNumberReplicas=" + x));
-
-      if (useBeamDeprecatedRead) {
-        command.add("--experiments=use_deprecated_read");
-      }
     }
   }
 

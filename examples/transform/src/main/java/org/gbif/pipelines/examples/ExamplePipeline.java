@@ -3,7 +3,7 @@ package org.gbif.pipelines.examples;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.extensions.avro.io.AvroIO;
 import org.gbif.example.io.avro.ExampleRecord;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
