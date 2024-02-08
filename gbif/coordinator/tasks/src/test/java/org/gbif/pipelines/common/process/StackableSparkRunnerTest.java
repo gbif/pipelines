@@ -27,7 +27,7 @@ public class StackableSparkRunnerTest {
       new ValidationResult(true, true, false, 100L, null);
 
   @Test
-  public void tests() {
+  public void dynamicSparkSettingsTest() {
 
     int fileShards = 10;
 
