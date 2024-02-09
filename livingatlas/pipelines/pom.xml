@@ -5,7 +5,7 @@
   <parent>
     <groupId>au.org.ala</groupId>
     <artifactId>livingatlas</artifactId>
-    <version>2.18.3-SNAPSHOT</version>
+    <version>2.18.3</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -19,7 +19,7 @@
     <connection>scm:git:git@github.com:gbif/pipelines.git</connection>
     <url>https://github.com/gbif/pipelines</url>
     <developerConnection>scm:git:git@github.com:gbif/pipelines.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>pipelines-parent-2.18.3</tag>
   </scm>
 
   <properties>
