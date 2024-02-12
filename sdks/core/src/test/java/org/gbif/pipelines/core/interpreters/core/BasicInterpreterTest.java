@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.api.vocabulary.Extension.DNA_DERIVED_DATA;
+import static org.gbif.api.vocabulary.Extension.GEL_IMAGE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -592,13 +594,91 @@ public class BasicInterpreterTest {
   }
 
   @Test
-  public void interpretIsSequencedTest() {
-    final String seq = " awdawd ";
+  public void interpretIsSequencedAssociatedSequencesTest() {
 
     // State
+    final String seq = " awdawd ";
     Map<String, String> coreMap = new HashMap<>(1);
     coreMap.put(DwcTerm.associatedSequences.qualifiedName(), seq);
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretIsSequenced(er, br);
+
+    // Should
+    Assert.assertTrue(br.getIsSequenced());
+    assertIssueSize(br, 0);
+  }
+
+  @Test
+  public void interpretIsSequencedExtensionTest() {
+
+    // State
+    Map<String, List<Map<String, String>>> extension =
+        Collections.singletonMap(
+            DNA_DERIVED_DATA.getRowType(),
+            Collections.singletonList(Collections.singletonMap("awd", "daw")));
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setExtensions(extension).build();
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretIsSequenced(er, br);
+
+    // Should
+    Assert.assertTrue(br.getIsSequenced());
+    assertIssueSize(br, 0);
+
+    // State
+    Map<String, List<Map<String, String>>> extension2 =
+        Collections.singletonMap(
+            GEL_IMAGE.getRowType(),
+            Collections.singletonList(Collections.singletonMap("awd", "daw")));
+    ExtendedRecord er2 = ExtendedRecord.newBuilder().setId(ID).setExtensions(extension2).build();
+    BasicRecord br2 = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretIsSequenced(er2, br2);
+
+    // Should
+    Assert.assertTrue(br2.getIsSequenced());
+    assertIssueSize(br2, 0);
+  }
+
+  @Test
+  public void interpretIsSequencedExtensionEmptyTest() {
+
+    // State
+    Map<String, List<Map<String, String>>> extension =
+        Collections.singletonMap(DNA_DERIVED_DATA.getRowType(), Collections.emptyList());
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setExtensions(extension).build();
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretIsSequenced(er, br);
+
+    // Should
+    Assert.assertFalse(br.getIsSequenced());
+    assertIssueSize(br, 0);
+  }
+
+  @Test
+  public void interpretIsSequencedMixedTest() {
+
+    // State
+    final String seq = " awdawd ";
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.associatedSequences.qualifiedName(), seq);
+    Map<String, List<Map<String, String>>> extension =
+        Collections.singletonMap(DNA_DERIVED_DATA.getRowType(), Collections.emptyList());
+
+    ExtendedRecord er =
+        ExtendedRecord.newBuilder()
+            .setId(ID)
+            .setCoreTerms(coreMap)
+            .setExtensions(extension)
+            .build();
 
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
