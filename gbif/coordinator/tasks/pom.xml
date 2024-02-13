@@ -527,7 +527,7 @@
             <artifactId>maven-shade-plugin</artifactId>
             <configuration>
               <createDependencyReducedPom>true</createDependencyReducedPom>
-              <shadedArtifactAttached>false</shadedArtifactAttached>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
               <filters>
                 <filter>
                   <artifact>*:*</artifact>
