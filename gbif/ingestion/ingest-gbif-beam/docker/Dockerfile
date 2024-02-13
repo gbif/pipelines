@@ -1,8 +1,8 @@
-FROM alpine:latest
-RUN apk update && \
-    apk upgrade && \
-    apk add bash && \
-    rm -rf /var/cache/apk/*
+# Simple image that copy the already previous builds shaded jar into a specific location.
+# This is used for SparkApplications to have a simple way to access the artifacts during their execution
+FROM docker.gbif.org/gbif/base-image:1.0.0
+ARG JAR_FILE=${JAVA_JAR_FILE}
+USER root
 RUN mkdir /jobs
-COPY ./target/ingest-gbif-beam-2.15.0-SNAPSHOT.jar /jobs/gbif-ingest.jar
-
+COPY --chown=1000:1000 "./target/${JAR_FILE}" "/jobs/${JAR_FILE}"
+USER gbif

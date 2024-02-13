@@ -1,3 +1,0 @@
-FROM docker.gbif.org/gbif-base-image:0.2.0
-WORKDIR /home/gbif
-COPY ./gbif/coordinator/tasks/target/tasks-coordinator-cli-2.15.0-H3-SNAPSHOT-shaded.jar ./pipelines-coordinator-cli-2.15.0-H3-SNAPSHOT.jar

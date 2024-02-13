@@ -1,11 +1,8 @@
-FROM docker.gbif.org/gbif-builder-image:0.1.0 as builder
-WORKDIR /home/gbif
-COPY gbif ./gbif
-COPY sdks ./sdks
-COPY pom.xml .
-RUN mvn -f pom.xml clean package install -Dmaven.test.skip=true -T 2 -P gbif-docker,gbif-artifacts,extra-artifacts
-
-FROM docker.gbif.org/gbif-base-image:0.2.0
-WORKDIR /home/gbif
-COPY --from=builder /home/gbif/lib ./lib
-COPY --from=builder /home/gbif/tasks-coordinator-cli-2.15.0-H3-SNAPSHOT.jar ./pipelines-coordinator-cli-2.15.0-H3-SNAPSHOT.jar
+# Simple image that copy the already previous builds shaded jar into a specific location.
+# This is used for SparkApplications to have a simple way to access the artifacts during their execution
+FROM docker.gbif.org/gbif/base-image:1.0.0
+ARG JAR_FILE=${JAVA_JAR_FILE}
+USER root
+RUN mkdir /jobs
+COPY --chown=1000:1000 "./target/${JAR_FILE}" "/jobs/${JAR_FILE}"
+USER gbif
