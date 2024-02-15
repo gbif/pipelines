@@ -12,7 +12,7 @@
   </fieldType>
   <fieldType name="binary" class="solr.BinaryField"/>
   <fieldType name="boolean" class="solr.BoolField" omitNorms="true" sortMissingLast="true"/>
-  <fieldType name="date" class="solr.DatePointField" omitNorms="true" />
+  <fieldType name="date" class="solr.DatePointField" omitNorms="true" sortMissingLast="true"/>
   <fieldType name="double" class="solr.DoublePointField" omitNorms="true" />
   <fieldType name="float" class="solr.FloatPointField" omitNorms="true" />
   <fieldType name="geohash"
