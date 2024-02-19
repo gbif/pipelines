@@ -94,6 +94,22 @@ public class EsIndexUtils {
     settings.put(Field.INDEX_MAX_RESULT_WINDOW, options.getIndexMaxResultWindow().toString());
     settings.put(Field.INDEX_UNASSIGNED_NODE_DELAY, options.getUnassignedNodeDelay());
 
+    if (options.getUseSlowlog()) {
+      settings.put(
+          Field.INDEX_SEARCH_SLOWLOG_THRESHOLD_QUERY_WARN,
+          options.getIndexSearchSlowlogThresholdQueryWarn());
+      settings.put(
+          Field.INDEX_SEARCH_SLOWLOG_THRESHOLD_QUERY_INFO,
+          options.getIndexSearchSlowlogThresholdQueryInfo());
+      settings.put(
+          Field.INDEX_SEARCH_SLOWLOG_THRESHOLD_FETCH_WARN,
+          options.getIndexSearchSlowlogThresholdFetchWarn());
+      settings.put(
+          Field.INDEX_SEARCH_SLOWLOG_THRESHOLD_FETCH_INFO,
+          options.getIndexSearchSlowlogThresholdFetchInfo());
+      settings.put(Field.INDEX_SEARCH_SLOWLOG_LEVEL, options.getIndexSearchSlowlogLevel());
+    }
+
     return IndexParams.builder()
         .indexName(options.getEsIndexName())
         .datasetKey(options.getDatasetId())

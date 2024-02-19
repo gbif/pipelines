@@ -35,6 +35,16 @@ public final class EsConstants {
     public static final String INDEX_UNASSIGNED_NODE_DELAY =
         Util.INDEX_PREFIX + UNASSIGNED_NODE_DELAY;
 
+    public static final String INDEX_SEARCH_SLOWLOG_THRESHOLD_QUERY_WARN =
+        "index.search.slowlog.threshold.query.warn";
+    public static final String INDEX_SEARCH_SLOWLOG_THRESHOLD_QUERY_INFO =
+        "index.search.slowlog.threshold.query.info";
+    public static final String INDEX_SEARCH_SLOWLOG_THRESHOLD_FETCH_WARN =
+        "index.search.slowlog.threshold.fetch.warn";
+    public static final String INDEX_SEARCH_SLOWLOG_THRESHOLD_FETCH_INFO =
+        "index.search.slowlog.threshold.fetch.info";
+    public static final String INDEX_SEARCH_SLOWLOG_LEVEL = "index.search.slowlog.level";
+
     public static final String INDEX_ANALYSIS = "analysis";
   }
 
