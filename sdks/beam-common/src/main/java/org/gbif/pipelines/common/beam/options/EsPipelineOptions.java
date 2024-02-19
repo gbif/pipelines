@@ -109,4 +109,40 @@ public interface EsPipelineOptions extends PipelineOptions {
   Integer getBackPressure();
 
   void setBackPressure(Integer backPressure);
+
+  @Description("Use search slowlogs")
+  @Default.Boolean(true)
+  boolean getUseSlowlog();
+
+  void setUseSlowlog(boolean useSlowlog);
+
+  @Description("Index search slowlog threshold query warn")
+  @Default.String("20s")
+  String getIndexSearchSlowlogThresholdQueryWarn();
+
+  void setIndexSearchSlowlogThresholdQueryWarn(String indexSearchSlowlogThresholdQueryWarn);
+
+  @Description("Index search slowlog threshold query info")
+  @Default.String("10s")
+  String getIndexSearchSlowlogThresholdQueryInfo();
+
+  void setIndexSearchSlowlogThresholdQueryInfo(String indexSearchSlowlogThresholdQueryInfo);
+
+  @Description("Index search slowlog threshold fetch warn")
+  @Default.String("2s")
+  String getIndexSearchSlowlogThresholdFetchWarn();
+
+  void setIndexSearchSlowlogThresholdFetchWarn(String indexSearchSlowlogThresholdFetchWarn);
+
+  @Description("Index search slowlog threshold fetch info")
+  @Default.String("1s")
+  String getIndexSearchSlowlogThresholdFetchInfo();
+
+  void setIndexSearchSlowlogThresholdFetchInfo(String indexSearchSlowlogThresholdFetchInfo);
+
+  @Description("Index search slowlog level")
+  @Default.String("info")
+  String getIndexSearchSlowlogLevel();
+
+  void setIndexSearchSlowlogLevel(String indexSearchSlowlogLevel);
 }
