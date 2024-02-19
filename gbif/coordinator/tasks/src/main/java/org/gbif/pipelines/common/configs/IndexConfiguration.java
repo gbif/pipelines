@@ -33,6 +33,9 @@ public class IndexConfiguration {
   @NotNull
   public Integer defaultNewIfSize;
 
+  @Parameter(names = "--index-default-extra-shard")
+  public boolean defaultExtraShard = true;
+
   @Parameter(names = "--index-default-smallest-index-cat-url")
   @NotNull
   public String defaultSmallestIndexCatUrl;
