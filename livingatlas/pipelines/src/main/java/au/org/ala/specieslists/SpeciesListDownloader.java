@@ -92,8 +92,9 @@ public class SpeciesListDownloader {
     }
 
     // Load species list service
-    SpeciesListService service =
-        WsUtils.createClient(config.getSpeciesListService(), SpeciesListService.class);
+    SpeciesListService service = options.getUseSpeciesListV2() ?
+        WsUtils.createClient(config.getSpeciesListService(), SpeciesListServiceV2.class) :
+        WsUtils.createClient(config.getSpeciesListService(), SpeciesListServiceV1.class);
 
     // get authoritative list of lists
     Call<ListSearchResponse> call = service.getAuthoritativeLists();
@@ -114,15 +115,21 @@ public class SpeciesListDownloader {
       int counter = 0;
       for (SpeciesList list : listsResponse.getLists()) {
 
+        // SpeciesListServiceV2 returns both id and dataResourceUid. We only want to use id.
+        String listId = list.getId();
+        if (listId == null) {
+          listId = list.getDataResourceUid();
+        }
+
         counter++;
         log.info(
             "Downloading list {} of {} - {} -  {}",
             counter,
             listsResponse.getLists().size(),
-            list.getDataResourceUid(),
+                listId,
             list.getListName());
         ResponseBody responseBody =
-            SyncCall.syncCall(service.downloadList(list.getDataResourceUid()));
+            SyncCall.syncCall(service.downloadList(listId));
 
         // File source, String encoding, String delimiter, Character quotes, Integer headerRows
         try (CSVReader csvReader =
@@ -168,7 +175,7 @@ public class SpeciesListDownloader {
                 SpeciesListRecord speciesListRecord =
                     SpeciesListRecord.newBuilder()
                         .setTaxonID(taxonID)
-                        .setSpeciesListID(list.getDataResourceUid())
+                        .setSpeciesListID(listId)
                         .setStatus(status)
                         .setRegion(region)
                         .setIsInvasive(list.isInvasive())
@@ -180,11 +187,11 @@ public class SpeciesListDownloader {
               }
               currentLine = csvReader.readNext();
             }
-            log.info("List " + list.getDataResourceUid() + " has " + taxaRead + " taxa");
+            log.info("List " + listId + " has " + taxaRead + " taxa");
           } else {
             log.warn(
                 "List {} - {} does not supply a GUID column - hence this list will not be used",
-                list.getDataResourceUid(),
+                listId,
                 list.getListName());
           }
         }
