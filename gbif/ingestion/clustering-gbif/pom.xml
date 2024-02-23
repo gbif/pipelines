@@ -170,7 +170,7 @@
             <configuration>
               <createDependencyReducedPom>false</createDependencyReducedPom>
               <keepDependenciesWithProvidedScope>false</keepDependenciesWithProvidedScope>
-              <shadedArtifactAttached>false</shadedArtifactAttached>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
               <shadedClassifierName>shaded</shadedClassifierName>
               <!-- Breaks relocations otherwise -->
               <shadeTestJar>false</shadeTestJar>
