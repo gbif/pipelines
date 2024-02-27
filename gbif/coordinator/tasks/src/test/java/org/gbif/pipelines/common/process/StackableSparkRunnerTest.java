@@ -58,7 +58,7 @@ public class StackableSparkRunnerTest {
     Assert.assertEquals(
         String.valueOf(sparkSettings.getParallelism()),
         sparkCrd.getSpec().getSparkConf().get("spark.default.parallelism"));
-    Assert.assertEquals(sparkSettings.getExecutorNumbers(), executor.getInstances());
+    Assert.assertEquals(sparkSettings.getExecutorNumbers(), executor.getReplicas());
     Assert.assertEquals(
         sparkSettings.getExecutorMemory() + "Gi",
         executor.getConfig().getResources().getMemory().getLimit());

@@ -1,5 +1,7 @@
 package org.gbif.pipelines.common.process;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kubernetes.client.openapi.ApiException;
 import java.util.*;
 import java.util.function.Consumer;
@@ -17,6 +19,9 @@ import org.gbif.stackable.K8StackableSparkController;
 import org.gbif.stackable.SparkCrd;
 import org.gbif.stackable.SparkCrd.Config;
 import org.gbif.stackable.SparkCrd.Executor;
+import org.gbif.stackable.SparkCrd.PodOverrides.Metadata.Annotations;
+import org.gbif.stackable.SparkCrd.PodOverrides.Metadata.Annotations.TaskGroup;
+import org.gbif.stackable.SparkCrd.PodOverrides.Metadata.Annotations.TaskGroup.MinResource;
 import org.gbif.stackable.SparkCrd.Resources;
 import org.gbif.stackable.SparkCrd.Resources.Memory;
 
@@ -24,6 +29,8 @@ import org.gbif.stackable.SparkCrd.Resources.Memory;
 @SuppressWarnings("all")
 @Slf4j
 public final class StackableSparkRunner {
+
+  private static final ObjectMapper MAPPER = new ObjectMapper(new JsonFactory());
 
   private static final String DELIMITER = " ";
 
@@ -141,23 +148,56 @@ public final class StackableSparkRunner {
     return sparkAppName.toLowerCase().replace("_to_", "-").replace("_", "-");
   }
 
+  @SneakyThrows
   private SparkCrd.Executor mergeExecutorSettings(SparkCrd.Executor executor) {
 
-    Resources r =
+    String memoryLimit = String.valueOf(sparkSettings.getExecutorMemory()) + "Gi";
+
+    Executor updatedExecutor =
+        executor.toBuilder().replicas(sparkSettings.getExecutorNumbers()).build();
+
+    // Update yunikorn taskGroups settings
+    if (updatedExecutor.getPodOverrides() != null
+        && updatedExecutor.getPodOverrides().getMetadata() != null) {
+      String taskGroups =
+          updatedExecutor.getPodOverrides().getMetadata().getAnnotations().getTaskGroups();
+      String updatedTaskGroups =
+          MAPPER
+              .readValue(taskGroups, TaskGroup.class)
+              .builder()
+              .minMember(String.valueOf(sparkSettings.getExecutorNumbers()))
+              .minResource(
+                  MinResource.builder()
+                      .cpu(executor.getConfig().getResources().getCpu().getMin())
+                      .memory(memoryLimit)
+                      .build())
+              .build()
+              .toString();
+
+      Annotations updatedAnnotations =
+          updatedExecutor
+              .getPodOverrides()
+              .getMetadata()
+              .getAnnotations()
+              .builder()
+              .taskGroupName(updatedTaskGroups)
+              .build();
+
+      updatedExecutor.getPodOverrides().getMetadata().setAnnotations(updatedAnnotations);
+    }
+
+    Resources updatedResources =
         executor.getConfig().getResources().toBuilder()
-            .memory(
-                Memory.builder()
-                    .limit(String.valueOf(sparkSettings.getExecutorMemory()) + "Gi")
-                    .build())
+            .memory(Memory.builder().limit(memoryLimit).build())
             .build();
 
-    Executor e = executor.toBuilder().instances(sparkSettings.getExecutorNumbers()).build();
-    if (e.getConfig() != null) {
-      e.getConfig().setResources(r);
+    if (updatedExecutor.getConfig() != null) {
+      updatedExecutor.getConfig().setResources(updatedResources);
     } else {
-      e.setConfig(Config.builder().resources(r).build());
+      updatedExecutor.setConfig(Config.builder().resources(updatedResources).build());
     }
-    return e;
+
+    return updatedExecutor;
   }
 
   private Map<String, String> mergeSparkConfSettings(Map<String, String> sparkConf) {
