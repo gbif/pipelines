@@ -12,8 +12,12 @@ spec:
   mainClass:
   args:
   sparkConf:
-    "spark.driver.extraJavaOptions": "-XX:+UseConcMarkSweepGC"
-    "spark.executor.extraJavaOptions": "-XX:+UseConcMarkSweepGC"
+    "spark.dynamicAllocation.enabled": "true"
+    "spark.dynamicAllocation.shuffleTracking.enabled": "true"
+    "spark.dynamicAllocation.minExecutors": "0"
+    "spark.dynamicAllocation.maxExecutors": # Will be updated by pipelines in runtime
+    "spark.dynamicAllocation.initialExecutors": # Will be updated by pipelines in runtime
+    "spark.dynamicAllocation.executorIdleTimeout": "30s"
     "spark.jars.ivy": "/tmp"
     "spark.broadcast.compress": "true"
     "spark.checkpoint.compress": "true"
@@ -67,7 +71,6 @@ spec:
                 "memory": "1Gi"
               }
             }]
-    instances: 1
     config:
       resources:
         cpu:

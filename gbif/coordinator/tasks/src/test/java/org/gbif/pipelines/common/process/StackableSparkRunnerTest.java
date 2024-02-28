@@ -56,9 +56,14 @@ public class StackableSparkRunnerTest {
 
     Executor executor = sparkCrd.getSpec().getExecutor();
     Assert.assertEquals(
+        String.valueOf(sparkSettings.getExecutorNumbers()),
+        sparkCrd.getSpec().getSparkConf().get("spark.dynamicAllocation.maxExecutors"));
+    Assert.assertEquals(
+        String.valueOf(sparkSettings.getExecutorNumbers()),
+        sparkCrd.getSpec().getSparkConf().get("spark.dynamicAllocation.initialExecutors"));
+    Assert.assertEquals(
         String.valueOf(sparkSettings.getParallelism()),
         sparkCrd.getSpec().getSparkConf().get("spark.default.parallelism"));
-    Assert.assertEquals(sparkSettings.getExecutorNumbers(), executor.getReplicas());
     Assert.assertEquals(
         sparkSettings.getExecutorMemory() + "Gi",
         executor.getConfig().getResources().getMemory().getLimit());

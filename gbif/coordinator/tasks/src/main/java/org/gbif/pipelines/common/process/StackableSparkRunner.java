@@ -1,6 +1,7 @@
 package org.gbif.pipelines.common.process;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kubernetes.client.openapi.ApiException;
 import java.util.*;
@@ -19,6 +20,7 @@ import org.gbif.stackable.K8StackableSparkController;
 import org.gbif.stackable.SparkCrd;
 import org.gbif.stackable.SparkCrd.Config;
 import org.gbif.stackable.SparkCrd.Executor;
+import org.gbif.stackable.SparkCrd.PodOverrides;
 import org.gbif.stackable.SparkCrd.PodOverrides.Metadata.Annotations;
 import org.gbif.stackable.SparkCrd.PodOverrides.Metadata.Annotations.TaskGroup;
 import org.gbif.stackable.SparkCrd.PodOverrides.Metadata.Annotations.TaskGroup.MinResource;
@@ -153,17 +155,19 @@ public final class StackableSparkRunner {
 
     String memoryLimit = String.valueOf(sparkSettings.getExecutorMemory()) + "Gi";
 
-    Executor updatedExecutor =
-        executor.toBuilder().replicas(sparkSettings.getExecutorNumbers()).build();
+    Executor updatedExecutor = executor.toBuilder().build();
+    if (executor.getReplicas() != null) {
+      updatedExecutor.setReplicas(sparkSettings.getExecutorNumbers());
+    }
 
     // Update yunikorn taskGroups settings
-    if (updatedExecutor.getPodOverrides() != null
-        && updatedExecutor.getPodOverrides().getMetadata() != null) {
-      String taskGroups =
-          updatedExecutor.getPodOverrides().getMetadata().getAnnotations().getTaskGroups();
-      String updatedTaskGroups =
+    PodOverrides podOverrides = updatedExecutor.getPodOverrides();
+    if (podOverrides != null && podOverrides.getMetadata() != null) {
+      String taskGroups = podOverrides.getMetadata().getAnnotations().getTaskGroups();
+      TaskGroup updatedTaskGroups =
           MAPPER
-              .readValue(taskGroups, TaskGroup.class)
+              .readValue(taskGroups, new TypeReference<List<TaskGroup>>() {})
+              .get(0)
               .builder()
               .minMember(String.valueOf(sparkSettings.getExecutorNumbers()))
               .minResource(
@@ -171,19 +175,18 @@ public final class StackableSparkRunner {
                       .cpu(executor.getConfig().getResources().getCpu().getMin())
                       .memory(memoryLimit)
                       .build())
-              .build()
-              .toString();
+              .build();
 
       Annotations updatedAnnotations =
-          updatedExecutor
-              .getPodOverrides()
+          podOverrides
               .getMetadata()
               .getAnnotations()
               .builder()
-              .taskGroupName(updatedTaskGroups)
+              .taskGroupName(
+                  MAPPER.writeValueAsString(Collections.singletonList(updatedTaskGroups)))
               .build();
 
-      updatedExecutor.getPodOverrides().getMetadata().setAnnotations(updatedAnnotations);
+      podOverrides.getMetadata().setAnnotations(updatedAnnotations);
     }
 
     Resources updatedResources =
@@ -207,6 +210,14 @@ public final class StackableSparkRunner {
     if (sparkSettings.getParallelism() < 1) {
       throw new IllegalArgumentException("sparkParallelism can't be 0");
     }
+
+    newSparkConf.computeIfAbsent(
+        "spark.dynamicAllocation.maxExecutors",
+        (key) -> String.valueOf(sparkSettings.getExecutorNumbers()));
+
+    newSparkConf.computeIfAbsent(
+        "spark.dynamicAllocation.initialExecutors",
+        (key) -> String.valueOf(sparkSettings.getExecutorNumbers()));
 
     newSparkConf.put("spark.default.parallelism", String.valueOf(sparkSettings.getParallelism()));
 
