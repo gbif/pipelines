@@ -168,7 +168,7 @@ public final class StackableSparkRunner {
           MAPPER
               .readValue(taskGroups, new TypeReference<List<TaskGroup>>() {})
               .get(0)
-              .builder()
+              .toBuilder()
               .minMember(String.valueOf(sparkSettings.getExecutorNumbers()))
               .minResource(
                   MinResource.builder()
@@ -181,8 +181,8 @@ public final class StackableSparkRunner {
           podOverrides
               .getMetadata()
               .getAnnotations()
-              .builder()
-              .taskGroupName(
+              .toBuilder()
+              .taskGroups(
                   MAPPER.writeValueAsString(Collections.singletonList(updatedTaskGroups)))
               .build();
 
