@@ -165,10 +165,7 @@ public final class StackableSparkRunner {
     if (podOverrides != null && podOverrides.getMetadata() != null) {
       String taskGroups = podOverrides.getMetadata().getAnnotations().getTaskGroups();
       TaskGroup updatedTaskGroups =
-          MAPPER
-              .readValue(taskGroups, new TypeReference<List<TaskGroup>>() {})
-              .get(0)
-              .toBuilder()
+          MAPPER.readValue(taskGroups, new TypeReference<List<TaskGroup>>() {}).get(0).toBuilder()
               .minMember(String.valueOf(sparkSettings.getExecutorNumbers()))
               .minResource(
                   MinResource.builder()
@@ -178,12 +175,8 @@ public final class StackableSparkRunner {
               .build();
 
       Annotations updatedAnnotations =
-          podOverrides
-              .getMetadata()
-              .getAnnotations()
-              .toBuilder()
-              .taskGroups(
-                  MAPPER.writeValueAsString(Collections.singletonList(updatedTaskGroups)))
+          podOverrides.getMetadata().getAnnotations().toBuilder()
+              .taskGroups(MAPPER.writeValueAsString(Collections.singletonList(updatedTaskGroups)))
               .build();
 
       podOverrides.getMetadata().setAnnotations(updatedAnnotations);
