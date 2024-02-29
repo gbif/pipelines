@@ -1,6 +1,7 @@
 package org.gbif.pipelines.common.process;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kubernetes.client.openapi.ApiException;
@@ -21,9 +22,8 @@ import org.gbif.stackable.SparkCrd;
 import org.gbif.stackable.SparkCrd.Config;
 import org.gbif.stackable.SparkCrd.Executor;
 import org.gbif.stackable.SparkCrd.PodOverrides;
-import org.gbif.stackable.SparkCrd.PodOverrides.Metadata.Annotations;
-import org.gbif.stackable.SparkCrd.PodOverrides.Metadata.Annotations.TaskGroup;
-import org.gbif.stackable.SparkCrd.PodOverrides.Metadata.Annotations.TaskGroup.MinResource;
+import org.gbif.stackable.SparkCrd.PodOverrides.Metadata.TaskGroup;
+import org.gbif.stackable.SparkCrd.PodOverrides.Metadata.TaskGroup.MinResource;
 import org.gbif.stackable.SparkCrd.Resources;
 import org.gbif.stackable.SparkCrd.Resources.Memory;
 
@@ -163,21 +163,28 @@ public final class StackableSparkRunner {
     // Update yunikorn taskGroups settings
     PodOverrides podOverrides = updatedExecutor.getPodOverrides();
     if (podOverrides != null && podOverrides.getMetadata() != null) {
-      String taskGroups = podOverrides.getMetadata().getAnnotations().getTaskGroups();
-      TaskGroup updatedTaskGroups =
-          MAPPER.readValue(taskGroups, new TypeReference<List<TaskGroup>>() {}).get(0).toBuilder()
-              .minMember(String.valueOf(sparkSettings.getExecutorNumbers()))
-              .minResource(
-                  MinResource.builder()
-                      .cpu(executor.getConfig().getResources().getCpu().getMin())
-                      .memory(memoryLimit)
-                      .build())
-              .build();
 
-      Annotations updatedAnnotations =
-          podOverrides.getMetadata().getAnnotations().toBuilder()
-              .taskGroups(MAPPER.writeValueAsString(Collections.singletonList(updatedTaskGroups)))
-              .build();
+      HashMap<String, String> updatedAnnotations =
+          new HashMap<>(podOverrides.getMetadata().getAnnotations());
+
+      updatedAnnotations.computeIfPresent(
+          "yunikorn.apache.org/task-groups",
+          (k, v) -> {
+            try {
+              TaskGroup taskGroup =
+                  MAPPER.readValue(v, new TypeReference<List<TaskGroup>>() {}).get(0).toBuilder()
+                      .minMember(String.valueOf(sparkSettings.getExecutorNumbers()))
+                      .minResource(
+                          MinResource.builder()
+                              .cpu(executor.getConfig().getResources().getCpu().getMin())
+                              .memory(memoryLimit)
+                              .build())
+                      .build();
+              return MAPPER.writeValueAsString(Collections.singletonList(taskGroup));
+            } catch (JsonProcessingException e) {
+              throw new RuntimeException(e);
+            }
+          });
 
       podOverrides.getMetadata().setAnnotations(updatedAnnotations);
     }
