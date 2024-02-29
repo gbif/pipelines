@@ -52,7 +52,7 @@ public final class StackableSparkRunner {
 
   @Builder.Default private final int sleepTimeInMills = 1_000;
 
-  private AbstractMap<String, Object> sparkApplicationData;
+  private Object sparkApplicationData;
 
   private boolean deleteOnFinish;
 
@@ -211,6 +211,8 @@ public final class StackableSparkRunner {
     newSparkConf.computeIfAbsent(
         "spark.dynamicAllocation.initialExecutors",
         (key) -> String.valueOf(sparkSettings.getExecutorNumbers()));
+
+    newSparkConf.computeIfAbsent("spark.kubernetes.executor.podNamePrefix", (key) -> sparkAppName);
 
     newSparkConf.put("spark.default.parallelism", String.valueOf(sparkSettings.getParallelism()));
 
