@@ -173,7 +173,7 @@ public final class StackableSparkRunner {
             try {
               TaskGroup taskGroup =
                   MAPPER.readValue(v, new TypeReference<List<TaskGroup>>() {}).get(0).toBuilder()
-                      .minMember(String.valueOf(sparkSettings.getExecutorNumbers()))
+                      .minMember(sparkSettings.getExecutorNumbers())
                       .minResource(
                           MinResource.builder()
                               .cpu(executor.getConfig().getResources().getCpu().getMin())
