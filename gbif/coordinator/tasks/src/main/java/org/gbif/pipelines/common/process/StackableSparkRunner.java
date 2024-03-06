@@ -213,10 +213,6 @@ public final class StackableSparkRunner {
         "spark.dynamicAllocation.initialExecutors",
         (key) -> String.valueOf(sparkSettings.getExecutorNumbers()));
 
-    newSparkConf.computeIfAbsent(
-        "spark.dynamicAllocation.executorAllocationRatio",
-        (key) -> String.valueOf(sparkSettings.getExecutorAllocationRatio()));
-
     newSparkConf.computeIfAbsent("spark.kubernetes.executor.podNamePrefix", (key) -> sparkAppName);
 
     return newSparkConf;

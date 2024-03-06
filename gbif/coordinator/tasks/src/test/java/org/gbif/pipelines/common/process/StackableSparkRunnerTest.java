@@ -110,7 +110,6 @@ public class StackableSparkRunnerTest {
 
     config.stackableConfiguration.sparkCrdConfigFile = podConfigPath;
     config.stackableConfiguration.kubeConfigFile = kubeconfigPath;
-    config.sparkConfig.executorAllocationRatio = 1d;
 
     return config;
   }
