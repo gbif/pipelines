@@ -48,6 +48,8 @@ public final class StackableSparkRunner {
 
   @NonNull private final SparkSettings sparkSettings;
 
+  @NonNull private final SparkConfiguration sparkConfig;
+
   private final K8StackableSparkController k8StackableSparkController;
 
   @Builder.Default private final int sleepTimeInMills = 1_000;
@@ -75,6 +77,7 @@ public final class StackableSparkRunner {
     this.sparkSettings = sparkSettings;
     this.beamConfigFn = beamConfigFn;
     this.sparkCrd = loadSparkCrd();
+    this.sparkConfig = sparkConfig;
     this.k8StackableSparkController =
         K8StackableSparkController.builder()
             .kubeConfig(ConfigUtils.loadKubeConfig(kubeConfigFile))
@@ -207,10 +210,6 @@ public final class StackableSparkRunner {
 
     Map<String, String> newSparkConf = new HashMap<>(sparkConf);
 
-    if (sparkSettings.getParallelism() < 1) {
-      throw new IllegalArgumentException("sparkParallelism can't be 0");
-    }
-
     newSparkConf.computeIfAbsent(
         "spark.dynamicAllocation.maxExecutors",
         (key) -> String.valueOf(sparkSettings.getExecutorNumbers()));
@@ -219,9 +218,11 @@ public final class StackableSparkRunner {
         "spark.dynamicAllocation.initialExecutors",
         (key) -> String.valueOf(sparkSettings.getExecutorNumbers()));
 
-    newSparkConf.computeIfAbsent("spark.kubernetes.executor.podNamePrefix", (key) -> sparkAppName);
+    newSparkConf.computeIfAbsent(
+        "spark.dynamicAllocation.executorAllocationRatio",
+        (key) -> String.valueOf(sparkConfig.executorAllocationRatio));
 
-    newSparkConf.put("spark.default.parallelism", String.valueOf(sparkSettings.getParallelism()));
+    newSparkConf.computeIfAbsent("spark.kubernetes.executor.podNamePrefix", (key) -> sparkAppName);
 
     return newSparkConf;
   }

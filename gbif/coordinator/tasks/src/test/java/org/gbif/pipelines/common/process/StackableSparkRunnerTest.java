@@ -34,7 +34,7 @@ public class StackableSparkRunnerTest {
     HdfsViewConfiguration config = createConfig();
     PipelinesInterpretedMessage message = createMessage();
 
-    SparkSettings sparkSettings = SparkSettings.create(1_000, 4, 4, 1.0d);
+    SparkSettings sparkSettings = SparkSettings.create(4, 4, 1.0d);
 
     Consumer<StringJoiner> beamSettings =
         BeamSettings.occurrenceHdfsView(config, message, fileShards);
@@ -61,9 +61,6 @@ public class StackableSparkRunnerTest {
     Assert.assertEquals(
         String.valueOf(sparkSettings.getExecutorNumbers()),
         sparkCrd.getSpec().getSparkConf().get("spark.dynamicAllocation.initialExecutors"));
-    Assert.assertEquals(
-        String.valueOf(sparkSettings.getParallelism()),
-        sparkCrd.getSpec().getSparkConf().get("spark.default.parallelism"));
     Assert.assertEquals(
         sparkSettings.getExecutorMemory() + "Gi",
         executor.getConfig().getResources().getMemory().getLimit());

@@ -108,8 +108,6 @@ public class IdentifierCallbackIT {
     config.stepConfig.hdfsSiteConfig = "";
 
     config.sparkConfig.recordsPerThread = 100000;
-    config.sparkConfig.parallelismMin = 10;
-    config.sparkConfig.parallelismMax = 100;
     config.sparkConfig.executorMemoryGbMin = 4;
     config.sparkConfig.executorMemoryGbMax = 12;
     config.sparkConfig.executorNumbersMin = 6;

@@ -11,11 +11,8 @@ public class SparkConfiguration {
   @Parameter(names = "--spark-records-per-thread")
   public int recordsPerThread;
 
-  @Parameter(names = "--spark-parallelism-min")
-  public int parallelismMin;
-
-  @Parameter(names = "--spark-parallelism-max")
-  public int parallelismMax;
+  @Parameter(names = "--spark-executor-allocation-ratio")
+  public int executorAllocationRatio;
 
   @Parameter(names = "--spark-executor-memory-gb-min")
   public int executorMemoryGbMin;

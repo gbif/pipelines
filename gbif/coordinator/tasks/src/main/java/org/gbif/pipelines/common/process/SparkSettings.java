@@ -8,7 +8,6 @@ import org.gbif.pipelines.common.configs.SparkConfiguration;
 @Slf4j
 public class SparkSettings {
 
-  private final int parallelism;
   private final int executorMemory;
   private final int executorNumbers;
   private final double memoryExtraCoef;
@@ -17,14 +16,11 @@ public class SparkSettings {
       SparkConfiguration sparkConfig, long fileRecordsNumber, boolean useMemoryExtraCoef) {
     this.memoryExtraCoef = useMemoryExtraCoef ? sparkConfig.memoryExtraCoef : 1d;
     this.executorNumbers = computeExecutorNumbers(sparkConfig, fileRecordsNumber);
-    this.parallelism = computeParallelism(sparkConfig, fileRecordsNumber);
     this.executorMemory = computeExecutorMemory(sparkConfig, fileRecordsNumber);
   }
 
   // For testing
-  private SparkSettings(
-      int parallelism, int executorMemory, int executorNumbers, double memoryExtraCoef) {
-    this.parallelism = parallelism;
+  private SparkSettings(int executorMemory, int executorNumbers, double memoryExtraCoef) {
     this.executorMemory = executorMemory;
     this.executorNumbers = executorNumbers;
     this.memoryExtraCoef = memoryExtraCoef;
@@ -36,29 +32,8 @@ public class SparkSettings {
   }
 
   public static SparkSettings create(
-      int parallelism, int executorMemory, int executorNumbers, double memoryExtraCoef) {
-    return new SparkSettings(parallelism, executorMemory, executorNumbers, memoryExtraCoef);
-  }
-
-  /**
-   * Compute the number of thread for spark.default.parallelism, top limit is
-   * config.sparkParallelismMax
-   *
-   * <p>YARN will create the same number of files
-   *
-   * @return even value
-   */
-  private int computeParallelism(SparkConfiguration sparkConfig, long recordsNumber) {
-    int count = computePowerFn(sparkConfig, recordsNumber, sparkConfig.powerFnParallelismCoef);
-    count = count % 2 == 0 ? count : count + 1;
-
-    if (count < sparkConfig.parallelismMin) {
-      return sparkConfig.parallelismMin;
-    }
-    if (count > sparkConfig.parallelismMax) {
-      return sparkConfig.parallelismMax;
-    }
-    return count;
+      int executorMemory, int executorNumbers, double memoryExtraCoef) {
+    return new SparkSettings(executorMemory, executorNumbers, memoryExtraCoef);
   }
 
   /**
