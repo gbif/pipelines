@@ -35,9 +35,6 @@ public class SparkConfiguration {
   @Parameter(names = "--power-fn-executor-coefficient")
   public double powerFnExecutorCoefficient;
 
-  @Parameter(names = "--power-fn-parallelism-coefficient")
-  public double powerFnParallelismCoef;
-
   @Parameter(names = "--power-fn-memory-coefficient")
   public double powerFnMemoryCoef;
 

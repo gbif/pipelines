@@ -22,7 +22,6 @@ public class SparkSettingsTest {
     CONFIG.powerFnExponent = 0.626d;
     CONFIG.powerFnMemoryCoef = 2.8d;
     CONFIG.powerFnExecutorCoefficient = 1d;
-    CONFIG.powerFnParallelismCoef = 10d;
     CONFIG.memoryExtraCoef = 1.3d;
   }
 
