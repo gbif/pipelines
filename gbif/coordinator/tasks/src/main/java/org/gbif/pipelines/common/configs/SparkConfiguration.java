@@ -8,9 +8,6 @@ import lombok.ToString;
 @ToString
 public class SparkConfiguration {
 
-  @Parameter(names = "--spark-records-per-thread")
-  public int recordsPerThread;
-
   @Parameter(names = "--spark-executor-allocation-ratio")
   public int executorAllocationRatio;
 

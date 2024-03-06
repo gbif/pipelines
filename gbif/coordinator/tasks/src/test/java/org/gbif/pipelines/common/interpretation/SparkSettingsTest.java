@@ -13,7 +13,6 @@ public class SparkSettingsTest {
 
   @BeforeClass
   public static void setUp() {
-    CONFIG.recordsPerThread = 250_000;
     CONFIG.executorMemoryGbMin = 8;
     CONFIG.executorMemoryGbMax = 70;
     CONFIG.executorNumbersMin = 2;
