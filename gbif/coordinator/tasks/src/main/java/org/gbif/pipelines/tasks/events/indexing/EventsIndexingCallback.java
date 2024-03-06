@@ -120,7 +120,6 @@ public class EventsIndexingCallback
     StackableSparkRunner.StackableSparkRunnerBuilder builder =
         StackableSparkRunner.builder()
             .distributedConfig(config.distributedConfig)
-            .sparkConfig(config.sparkConfig)
             .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
             .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
             .beamConfigFn(BeamSettings.eventIndexing(config, message, indexSettings))

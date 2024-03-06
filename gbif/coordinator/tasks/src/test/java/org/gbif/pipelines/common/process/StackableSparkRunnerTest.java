@@ -34,7 +34,7 @@ public class StackableSparkRunnerTest {
     HdfsViewConfiguration config = createConfig();
     PipelinesInterpretedMessage message = createMessage();
 
-    SparkSettings sparkSettings = SparkSettings.create(4, 4, 1.0d);
+    SparkSettings sparkSettings = SparkSettings.create(4, 4, 1d, 1d);
 
     Consumer<StringJoiner> beamSettings =
         BeamSettings.occurrenceHdfsView(config, message, fileShards);
@@ -42,7 +42,6 @@ public class StackableSparkRunnerTest {
     StackableSparkRunner sparkRunner =
         StackableSparkRunner.builder()
             .distributedConfig(config.distributedConfig)
-            .sparkConfig(config.sparkConfig)
             .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
             .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
             .beamConfigFn(beamSettings)
@@ -111,6 +110,7 @@ public class StackableSparkRunnerTest {
 
     config.stackableConfiguration.sparkCrdConfigFile = podConfigPath;
     config.stackableConfiguration.kubeConfigFile = kubeconfigPath;
+    config.sparkConfig.executorAllocationRatio = 1d;
 
     return config;
   }

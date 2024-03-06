@@ -15,7 +15,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.configs.DistributedConfiguration;
-import org.gbif.pipelines.common.configs.SparkConfiguration;
 import org.gbif.stackable.ConfigUtils;
 import org.gbif.stackable.K8StackableSparkController;
 import org.gbif.stackable.SparkCrd;
@@ -48,8 +47,6 @@ public final class StackableSparkRunner {
 
   @NonNull private final SparkSettings sparkSettings;
 
-  @NonNull private final SparkConfiguration sparkConfig;
-
   private final K8StackableSparkController k8StackableSparkController;
 
   @Builder.Default private final int sleepTimeInMills = 1_000;
@@ -64,7 +61,6 @@ public final class StackableSparkRunner {
   public StackableSparkRunner(
       @NonNull String kubeConfigFile,
       @NonNull String sparkCrdConfigFile,
-      @NonNull SparkConfiguration sparkConfig,
       @NonNull DistributedConfiguration distributedConfig,
       @NonNull @Size(min = 10, max = 63) String sparkAppName,
       @NonNull SparkSettings sparkSettings,
@@ -77,7 +73,6 @@ public final class StackableSparkRunner {
     this.sparkSettings = sparkSettings;
     this.beamConfigFn = beamConfigFn;
     this.sparkCrd = loadSparkCrd();
-    this.sparkConfig = sparkConfig;
     this.k8StackableSparkController =
         K8StackableSparkController.builder()
             .kubeConfig(ConfigUtils.loadKubeConfig(kubeConfigFile))
@@ -220,7 +215,7 @@ public final class StackableSparkRunner {
 
     newSparkConf.computeIfAbsent(
         "spark.dynamicAllocation.executorAllocationRatio",
-        (key) -> String.valueOf(sparkConfig.executorAllocationRatio));
+        (key) -> String.valueOf(sparkSettings.getExecutorAllocationRatio()));
 
     newSparkConf.computeIfAbsent("spark.kubernetes.executor.podNamePrefix", (key) -> sparkAppName);
 

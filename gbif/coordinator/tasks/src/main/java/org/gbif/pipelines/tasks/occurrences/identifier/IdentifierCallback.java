@@ -182,7 +182,6 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
             .beamConfigFn(beamSettings)
             .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
             .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
-            .sparkConfig(config.sparkConfig)
             .sparkAppName(TYPE.name() + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
             .distributedConfig(config.distributedConfig)
             .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)

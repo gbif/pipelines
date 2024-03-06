@@ -11,19 +11,26 @@ public class SparkSettings {
   private final int executorMemory;
   private final int executorNumbers;
   private final double memoryExtraCoef;
+  private final double executorAllocationRatio;
 
   private SparkSettings(
       SparkConfiguration sparkConfig, long fileRecordsNumber, boolean useMemoryExtraCoef) {
     this.memoryExtraCoef = useMemoryExtraCoef ? sparkConfig.memoryExtraCoef : 1d;
+    this.executorAllocationRatio = sparkConfig.executorAllocationRatio;
     this.executorNumbers = computeExecutorNumbers(sparkConfig, fileRecordsNumber);
     this.executorMemory = computeExecutorMemory(sparkConfig, fileRecordsNumber);
   }
 
   // For testing
-  private SparkSettings(int executorMemory, int executorNumbers, double memoryExtraCoef) {
+  private SparkSettings(
+      int executorMemory,
+      int executorNumbers,
+      double memoryExtraCoef,
+      double executorAllocationRatio) {
     this.executorMemory = executorMemory;
     this.executorNumbers = executorNumbers;
     this.memoryExtraCoef = memoryExtraCoef;
+    this.executorAllocationRatio = executorAllocationRatio;
   }
 
   public static SparkSettings create(
@@ -32,8 +39,12 @@ public class SparkSettings {
   }
 
   public static SparkSettings create(
-      int executorMemory, int executorNumbers, double memoryExtraCoef) {
-    return new SparkSettings(executorMemory, executorNumbers, memoryExtraCoef);
+      int executorMemory,
+      int executorNumbers,
+      double memoryExtraCoef,
+      double executorAllocationRatio) {
+    return new SparkSettings(
+        executorMemory, executorNumbers, memoryExtraCoef, executorAllocationRatio);
   }
 
   /**
