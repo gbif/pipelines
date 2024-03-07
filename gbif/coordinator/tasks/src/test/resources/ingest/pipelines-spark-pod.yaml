@@ -17,7 +17,6 @@ spec:
     "spark.dynamicAllocation.minExecutors": "0"
     "spark.dynamicAllocation.maxExecutors": # Will be updated by pipelines in runtime
     "spark.dynamicAllocation.initialExecutors": # Will be updated by pipelines in runtime
-    "spark.dynamicAllocation.executorAllocationRatio": # Will be updated by pipelines in runtime
     "spark.dynamicAllocation.executorIdleTimeout": "30s"
     "spark.jars.ivy": "/tmp"
     "spark.broadcast.compress": "true"

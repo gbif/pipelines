@@ -20,11 +20,7 @@ public class SparkSettings {
   }
 
   // For testing
-  private SparkSettings(
-      int executorMemory,
-      int executorNumbers,
-      double memoryExtraCoef,
-      double executorAllocationRatio) {
+  private SparkSettings(int executorMemory, int executorNumbers, double memoryExtraCoef) {
     this.executorMemory = executorMemory;
     this.executorNumbers = executorNumbers;
     this.memoryExtraCoef = memoryExtraCoef;
@@ -36,12 +32,8 @@ public class SparkSettings {
   }
 
   public static SparkSettings create(
-      int executorMemory,
-      int executorNumbers,
-      double memoryExtraCoef,
-      double executorAllocationRatio) {
-    return new SparkSettings(
-        executorMemory, executorNumbers, memoryExtraCoef, executorAllocationRatio);
+      int executorMemory, int executorNumbers, double memoryExtraCoef) {
+    return new SparkSettings(executorMemory, executorNumbers, memoryExtraCoef);
   }
 
   /**

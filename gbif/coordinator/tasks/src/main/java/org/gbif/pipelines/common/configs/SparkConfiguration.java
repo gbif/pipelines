@@ -8,9 +8,6 @@ import lombok.ToString;
 @ToString
 public class SparkConfiguration {
 
-  @Parameter(names = "--spark-executor-allocation-ratio")
-  public double executorAllocationRatio;
-
   @Parameter(names = "--spark-executor-memory-gb-min")
   public int executorMemoryGbMin;
 

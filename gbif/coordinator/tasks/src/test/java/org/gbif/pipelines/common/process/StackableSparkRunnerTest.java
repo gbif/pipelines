@@ -34,7 +34,7 @@ public class StackableSparkRunnerTest {
     HdfsViewConfiguration config = createConfig();
     PipelinesInterpretedMessage message = createMessage();
 
-    SparkSettings sparkSettings = SparkSettings.create(4, 4, 1d, 1d);
+    SparkSettings sparkSettings = SparkSettings.create(4, 4, 1d);
 
     Consumer<StringJoiner> beamSettings =
         BeamSettings.occurrenceHdfsView(config, message, fileShards);
