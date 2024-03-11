@@ -32,8 +32,7 @@ public class AvroPostprocessMojoTest {
     Assert.assertTrue(Files.exists(testPath));
 
     List<String> lines = Files.readAllLines(testPath);
-    Assert.assertTrue(
-        lines.contains("import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;"));
+    Assert.assertTrue(lines.contains("import org.apache.beam.sdk.coders.AvroCoder;"));
     Assert.assertTrue(lines.contains("import org.apache.beam.sdk.coders.DefaultCoder;"));
     Assert.assertTrue(lines.contains("@DefaultCoder(AvroCoder.class)"));
     Assert.assertTrue(

@@ -3,7 +3,7 @@ package org.gbif.pipelines.transforms.converters;
 import java.io.Serializable;
 import lombok.Data;
 import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.beam.sdk.extensions.avro.coders.AvroCoder;
+import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
