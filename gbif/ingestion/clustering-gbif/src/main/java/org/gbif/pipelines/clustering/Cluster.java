@@ -95,6 +95,8 @@ public class Cluster implements Serializable {
             .appName("Occurrence clustering")
             .config("spark.sql.warehouse.dir", new File("spark-warehouse").getAbsolutePath())
             .enableHiveSupport()
+            .config("spark.sql.catalog.iceberg.type", "hive")
+            .config("spark.sql.catalog.iceberg", "org.apache.iceberg.spark.SparkCatalog")
             .getOrCreate();
     spark.sql("use " + hiveDB);
 
@@ -102,6 +104,10 @@ public class Cluster implements Serializable {
     Dataset<Row> relationships = generateRelationships(spark);
     generateHFiles(relationships);
     replaceHBaseTable();
+  }
+
+  private String sourceTableQualifiedName() {
+    return "iceberg." + hiveDB + "." + sourceTable;
   }
 
   /**
@@ -120,7 +126,7 @@ public class Cluster implements Serializable {
                     + "  recordNumber, fieldNumber, occurrenceID, otherCatalogNumbers, institutionCode, "
                     + "  collectionCode, catalogNumber "
                     + "FROM %s",
-                sourceTable));
+                sourceTableQualifiedName()));
     Dataset<Row> hashes =
         occurrences
             .flatMap(
@@ -197,7 +203,9 @@ public class Cluster implements Serializable {
                     + "FROM %s h"
                     + "  JOIN %s t1 ON h.id1 = t1.gbifID "
                     + "  JOIN %s t2 ON h.id2 = t2.gbifID",
-                hiveTablePrefix + "_candidates", sourceTable, sourceTable));
+                hiveTablePrefix + "_candidates",
+                sourceTableQualifiedName(),
+                sourceTableQualifiedName()));
 
     // Compare all candidate pairs and generate the relationships
     Dataset<Row> relationships =
