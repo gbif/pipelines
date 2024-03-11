@@ -106,7 +106,8 @@
 
     <!-- Main distributed libraries -->
     <avro.version>1.11.1</avro.version>
-    <apache.beam.version>2.53.0</apache.beam.version>
+    <!-- Beam can duplicate data in the index, before bumping the version please test next issue https://github.com/gbif/pipelines/issues/1042 -->
+    <apache.beam.version>2.34.0</apache.beam.version>
 
     <hadoop.version>3.2.4</hadoop.version>
     <hbase.version>2.5.3-hadoop3</hbase.version>
@@ -573,11 +574,6 @@
       <dependency>
         <groupId>org.apache.beam</groupId>
         <artifactId>beam-sdks-java-io-hbase</artifactId>
-        <version>${apache.beam.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.beam</groupId>
-        <artifactId>beam-sdks-java-extensions-avro</artifactId>
         <version>${apache.beam.version}</version>
       </dependency>
 

@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.extensions.joinlibrary.Join;
-import org.apache.beam.sdk.extensions.avro.io.AvroIO;
+import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;

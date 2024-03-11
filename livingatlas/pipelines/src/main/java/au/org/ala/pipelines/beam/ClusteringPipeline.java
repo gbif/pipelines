@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.extensions.avro.io.AvroIO;
+import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.transforms.*;
 import org.apache.beam.sdk.values.KV;
