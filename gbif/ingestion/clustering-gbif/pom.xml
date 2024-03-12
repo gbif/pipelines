@@ -212,17 +212,6 @@
                   <transformers>
                     <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                   </transformers>
-                  <relocations>
-                    <!-- Necessary for Oozie-based launching -->
-                    <relocation>
-                      <pattern>com.fasterxml.jackson</pattern>
-                      <shadedPattern>gbif.com.fasterxml.jackson</shadedPattern>
-                    </relocation>
-                    <relocation>
-                      <pattern>org.apache.hadoop.hive</pattern>
-                      <shadedPattern>h.org.apache.hadoop.hive.conf</shadedPattern>
-                    </relocation>
-                  </relocations>
                 </configuration>
               </execution>
             </executions>
