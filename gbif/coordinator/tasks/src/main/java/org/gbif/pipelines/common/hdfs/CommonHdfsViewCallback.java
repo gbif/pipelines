@@ -27,6 +27,7 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.HdfsViewPipeline;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
 import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
+import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 
 /** Callback which is called when an instance {@link PipelinesInterpretationMessage} is received. */
 @Slf4j
@@ -114,7 +115,7 @@ public class CommonHdfsViewCallback {
       metaFileName = new EventsInterpretationConfiguration().metaFileName;
     }
 
-    long recordsNumber =
+    long interpretationRecordsNumber =
         RecordCountReader.builder()
             .stepConfig(config.stepConfig)
             .datasetKey(message.getDatasetUuid().toString())
@@ -125,6 +126,19 @@ public class CommonHdfsViewCallback {
             .alternativeMetricName(Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED)
             .build()
             .get();
+
+    long dwcaRecordsNumber =
+        RecordCountReader.builder()
+            .stepConfig(config.stepConfig)
+            .datasetKey(message.getDatasetUuid().toString())
+            .attempt(message.getAttempt().toString())
+            .messageNumber(messageNumber)
+            .metaFileName(new DwcaToAvroConfiguration().metaFileName)
+            .metricName(Metrics.ARCHIVE_TO_OCC_COUNT)
+            .build()
+            .get();
+
+    long recordsNumber = Math.min(dwcaRecordsNumber, interpretationRecordsNumber);
 
     log.info("Calculate job's settings based on {} records", recordsNumber);
     boolean useMemoryExtraCoef =

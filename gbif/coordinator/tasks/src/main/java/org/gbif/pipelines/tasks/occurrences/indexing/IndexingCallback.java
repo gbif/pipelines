@@ -28,6 +28,7 @@ import org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipe
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
+import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -120,7 +121,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     return () -> {
       try {
 
-        long recordsNumber =
+        long interpretationRecordsNumber =
             RecordCountReader.builder()
                 .stepConfig(config.stepConfig)
                 .datasetKey(message.getDatasetUuid().toString())
@@ -131,6 +132,19 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
                 .alternativeMetricName(Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED)
                 .build()
                 .get();
+
+        long dwcaRecordsNumber =
+            RecordCountReader.builder()
+                .stepConfig(config.stepConfig)
+                .datasetKey(message.getDatasetUuid().toString())
+                .attempt(message.getAttempt().toString())
+                .messageNumber(message.getNumberOfRecords())
+                .metaFileName(new DwcaToAvroConfiguration().metaFileName)
+                .metricName(Metrics.ARCHIVE_TO_OCC_COUNT)
+                .build()
+                .get();
+
+        long recordsNumber = Math.min(dwcaRecordsNumber, interpretationRecordsNumber);
 
         IndexSettings indexSettings =
             IndexSettings.create(

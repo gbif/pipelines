@@ -205,7 +205,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
     Optional<Double> fileNumber =
-        HdfsUtils.getDoubleByKey(hdfsConfigs, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
+        HdfsUtils.getDoubleByKey(hdfsConfigs, metaPath, Metrics.ARCHIVE_TO_OCC_COUNT);
 
     if (!fileNumber.isPresent()) {
       throw new IllegalArgumentException(

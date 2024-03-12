@@ -89,7 +89,7 @@ public class VerbatimMessageHandler {
 
       Optional<Long> erCount =
           getRecordNumber(
-              config, m, new DwcaToAvroConfiguration().metaFileName, Metrics.ARCHIVE_TO_ER_COUNT);
+              config, m, new DwcaToAvroConfiguration().metaFileName, Metrics.ARCHIVE_TO_OCC_COUNT);
       Optional<Long> uniqueIdsCount =
           getRecordNumber(
               config,
