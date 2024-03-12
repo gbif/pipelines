@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.converters.converter.Metric;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ConverterTask;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ExecutorPoolFactory;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ParserFileUtils;
@@ -35,7 +36,7 @@ public class ExtendedRecordConverter {
   /**
    * @param inputPath path to directory with response files or a tar.xz archive
    */
-  public long toAvro(String inputPath, SyncDataFileWriter<ExtendedRecord> writer) {
+  public Metric toAvro(String inputPath, SyncDataFileWriter<ExtendedRecord> writer) {
     if (Strings.isNullOrEmpty(inputPath)) {
       throw new ParsingException("Input or output stream must not be empty or null!");
     }
@@ -58,7 +59,7 @@ public class ExtendedRecordConverter {
       // Wait all threads
       CompletableFuture.allOf(futures).get();
 
-      return counter.get();
+      return Metric.create(counter.get(), counter.get());
 
     } catch (Exception ex) {
       log.error(ex.getMessage(), ex);

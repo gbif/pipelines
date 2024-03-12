@@ -6,7 +6,7 @@ import java.io.IOException;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Test;
 
-public class DwcaReaderTest {
+public class DwcaExtendedRecordReaderTest {
 
   @Test
   public void uncompressedReaderExtensionTest() throws IOException {
