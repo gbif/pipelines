@@ -125,7 +125,7 @@ public final class StackableSparkRunner {
                     .mainApplicationFile(distributedConfig.jarPath)
                     .args(buildArgs())
                     .sparkConf(mergeSparkConfSettings(sparkCrd.getSpec().getSparkConf()))
-                    .executor(mergeExecutorSettings(sparkCrd.getSpec().getExecutor()))
+                    .executor(mergeExecutorSettings(sparkCrd.getSpec()))
                     .build())
             .build();
 
@@ -149,10 +149,9 @@ public final class StackableSparkRunner {
   }
 
   @SneakyThrows
-  private SparkCrd.Executor mergeExecutorSettings(SparkCrd.Executor executor) {
+  private SparkCrd.Executor mergeExecutorSettings(SparkCrd.Spec spec) {
 
-    String memoryLimit = String.valueOf(sparkSettings.getExecutorMemory()) + "Gi";
-
+    Executor executor = spec.getExecutor();
     Executor updatedExecutor = executor.toBuilder().build();
     if (executor.getReplicas() != null) {
       updatedExecutor.setReplicas(sparkSettings.getExecutorNumbers());
@@ -169,13 +168,22 @@ public final class StackableSparkRunner {
           "yunikorn.apache.org/task-groups",
           (k, v) -> {
             try {
+
+              int executorMemory = sparkSettings.getExecutorMemory() * 1024;
+              int memoryOverhead =
+                  Integer.valueOf(
+                      spec.getSparkConf().getOrDefault("spark.executor.memoryOverhead", "0"));
+
+              int memory =
+                  Double.valueOf(Math.ceil((executorMemory + memoryOverhead) / 1024d)).intValue();
+
               TaskGroup taskGroup =
                   MAPPER.readValue(v, new TypeReference<List<TaskGroup>>() {}).get(0).toBuilder()
                       .minMember(sparkSettings.getExecutorNumbers())
                       .minResource(
                           MinResource.builder()
                               .cpu(executor.getConfig().getResources().getCpu().getMin())
-                              .memory(memoryLimit)
+                              .memory(String.valueOf(memory) + "Gi")
                               .build())
                       .build();
               return MAPPER.writeValueAsString(Collections.singletonList(taskGroup));
@@ -187,6 +195,7 @@ public final class StackableSparkRunner {
       podOverrides.getMetadata().setAnnotations(updatedAnnotations);
     }
 
+    String memoryLimit = String.valueOf(sparkSettings.getExecutorMemory()) + "Gi";
     Resources updatedResources =
         executor.getConfig().getResources().toBuilder()
             .memory(Memory.builder().limit(memoryLimit).build())
