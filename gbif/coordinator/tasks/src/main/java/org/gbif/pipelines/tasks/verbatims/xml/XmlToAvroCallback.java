@@ -31,6 +31,7 @@ import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.converters.XmlToAvroConverter;
 import org.gbif.pipelines.common.GbifApi;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.common.process.RecordCountReader;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
@@ -143,6 +144,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     return createRunnable(datasetId, attempt, message.getTotalRecordCount(), isValidator);
   }
 
+  @SneakyThrows
   @Override
   public PipelinesVerbatimMessage createOutgoingMessage(PipelinesXmlMessage message) {
 
@@ -165,6 +167,16 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
             ? getAllValidatorInterpretationAsString()
             : getAllInterpretationAsString();
 
+    long dwcaOccurrenceRecordsNumber =
+        RecordCountReader.builder()
+            .stepConfig(config.stepConfig)
+            .datasetKey(message.getDatasetUuid().toString())
+            .attempt(message.getAttempt().toString())
+            .metaFileName(config.metaFileName)
+            .metricName(Metrics.ARCHIVE_TO_OCC_COUNT)
+            .build()
+            .get();
+
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
@@ -173,7 +185,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         null,
         message.getEndpointType(),
         null,
-        new ValidationResult(true, true, false, null, null),
+        new ValidationResult(true, true, false, dwcaOccurrenceRecordsNumber, null),
         null,
         message.getExecutionId(),
         DatasetType.OCCURRENCE);

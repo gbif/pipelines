@@ -146,8 +146,6 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         return;
       }
 
-      O outgoingMessage = handler.createOutgoingMessage(message);
-
       // track the pipeline step
       info = trackPipelineStep();
 
@@ -164,6 +162,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       info.ifPresent(i -> updateTrackingStatus(i, PipelineStep.Status.COMPLETED));
 
       // Send a wrapped outgoing message to Balancer queue
+      O outgoingMessage = handler.createOutgoingMessage(message);
       if (outgoingMessage != null) {
 
         // set the executionId
