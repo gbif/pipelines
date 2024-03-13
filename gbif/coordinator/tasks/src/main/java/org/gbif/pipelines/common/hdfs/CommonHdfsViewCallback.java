@@ -132,7 +132,6 @@ public class CommonHdfsViewCallback {
             .stepConfig(config.stepConfig)
             .datasetKey(message.getDatasetUuid().toString())
             .attempt(message.getAttempt().toString())
-            .messageNumber(messageNumber)
             .metaFileName(new DwcaToAvroConfiguration().metaFileName)
             .metricName(Metrics.ARCHIVE_TO_OCC_COUNT)
             .build()

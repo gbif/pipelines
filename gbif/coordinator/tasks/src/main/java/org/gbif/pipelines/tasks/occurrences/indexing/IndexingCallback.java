@@ -138,7 +138,6 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
                 .stepConfig(config.stepConfig)
                 .datasetKey(message.getDatasetUuid().toString())
                 .attempt(message.getAttempt().toString())
-                .messageNumber(message.getNumberOfRecords())
                 .metaFileName(new DwcaToAvroConfiguration().metaFileName)
                 .metricName(Metrics.ARCHIVE_TO_OCC_COUNT)
                 .build()
