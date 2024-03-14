@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -103,10 +104,7 @@ public class InterpretedMessageHandler {
     String attempt = message.getAttempt().toString();
 
     StepRunner runner;
-    long recordsNumber =
-        message.getNumberOfRecords().longValue() == message.getNumberOfEventRecords().longValue()
-            ? message.getNumberOfRecords()
-            : message.getNumberOfRecords() + message.getNumberOfEventRecords();
+    long recordsNumber = Optional.ofNullable(message.getNumberOfRecords()).orElse(0L);
 
     // Strategy 1: Chooses a runner type by number of records in a dataset
     if (recordsNumber > 0) {
