@@ -35,7 +35,6 @@ public class MetadataInterpreter {
 
       // Set required metadata properties
       mdr.setDatasetKey(datasetId);
-      mdr.setNetworkKeys(Collections.emptyList());
 
       if (client != null) {
 
