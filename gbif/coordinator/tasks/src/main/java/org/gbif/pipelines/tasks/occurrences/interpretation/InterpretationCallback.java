@@ -231,6 +231,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
             .distributedConfig(config.distributedConfig)
             .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
             .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
+            .sparkConfiguration(config.sparkConfig)
             .beamConfigFn(beamSettings)
             .sparkAppName(
                 getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())

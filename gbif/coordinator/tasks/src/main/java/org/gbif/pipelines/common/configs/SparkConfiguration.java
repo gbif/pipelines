@@ -20,6 +20,9 @@ public class SparkConfiguration {
   @Parameter(names = "--spark-executor-numbers-max")
   public int executorNumbersMax;
 
+  @Parameter(names = "--extra-memory-for-sidecar-mb")
+  public int extraMemoryForSidecarMb = 256;
+
   @Parameter(names = "--max-record-limit")
   public long maxRecordsLimit;
 

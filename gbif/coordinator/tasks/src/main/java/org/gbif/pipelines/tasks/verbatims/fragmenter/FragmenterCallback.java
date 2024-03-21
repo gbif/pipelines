@@ -122,6 +122,7 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
             .distributedConfig(config.distributedConfig)
             .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
             .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
+            .sparkConfiguration(config.sparkConfig)
             .beamConfigFn(beamSettings)
             .sparkAppName(
                 StepType.FRAGMENTER + "_" + message.getDatasetUuid() + "_" + message.getAttempt())

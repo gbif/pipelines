@@ -15,6 +15,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.configs.DistributedConfiguration;
+import org.gbif.pipelines.common.configs.SparkConfiguration;
 import org.gbif.stackable.ConfigUtils;
 import org.gbif.stackable.K8StackableSparkController;
 import org.gbif.stackable.SparkCrd;
@@ -47,6 +48,8 @@ public final class StackableSparkRunner {
 
   @NonNull private final SparkSettings sparkSettings;
 
+  @NonNull private final SparkConfiguration sparkConfiguration;
+
   private final K8StackableSparkController k8StackableSparkController;
 
   @Builder.Default private final int sleepTimeInMills = 1_000;
@@ -64,6 +67,7 @@ public final class StackableSparkRunner {
       @NonNull DistributedConfiguration distributedConfig,
       @NonNull @Size(min = 10, max = 63) String sparkAppName,
       @NonNull SparkSettings sparkSettings,
+      @NonNull SparkConfiguration sparkConfiguration,
       @NonNull Consumer<StringJoiner> beamConfigFn,
       @NonNull boolean deleteOnFinish) {
     this.kubeConfigFile = kubeConfigFile;
@@ -71,6 +75,7 @@ public final class StackableSparkRunner {
     this.distributedConfig = distributedConfig;
     this.sparkAppName = normalize(sparkAppName);
     this.sparkSettings = sparkSettings;
+    this.sparkConfiguration = sparkConfiguration;
     this.beamConfigFn = beamConfigFn;
     this.sparkCrd = loadSparkCrd();
     this.k8StackableSparkController =
@@ -173,9 +178,12 @@ public final class StackableSparkRunner {
               int memoryOverhead =
                   Integer.valueOf(
                       spec.getSparkConf().getOrDefault("spark.executor.memoryOverhead", "0"));
+              int sidecarMemory = sparkConfiguration.extraMemoryForSidecarMb;
 
-              int memory =
-                  Double.valueOf(Math.ceil((executorMemory + memoryOverhead) / 1024d)).intValue();
+              int totalRequestedMemoryGb =
+                  Double.valueOf(
+                          Math.ceil((executorMemory + memoryOverhead + sidecarMemory) / 1024d))
+                      .intValue();
 
               TaskGroup taskGroup =
                   MAPPER.readValue(v, new TypeReference<List<TaskGroup>>() {}).get(0).toBuilder()
@@ -183,7 +191,7 @@ public final class StackableSparkRunner {
                       .minResource(
                           MinResource.builder()
                               .cpu(executor.getConfig().getResources().getCpu().getMin())
-                              .memory(String.valueOf(memory) + "Gi")
+                              .memory(String.valueOf(totalRequestedMemoryGb) + "Gi")
                               .build())
                       .build();
               return MAPPER.writeValueAsString(Collections.singletonList(taskGroup));

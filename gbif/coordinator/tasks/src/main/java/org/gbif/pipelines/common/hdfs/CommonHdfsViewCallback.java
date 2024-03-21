@@ -100,6 +100,7 @@ public class CommonHdfsViewCallback {
             .distributedConfig(config.distributedConfig)
             .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
             .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
+            .sparkConfiguration(config.sparkConfig)
             .beamConfigFn(beamSettings)
             .sparkAppName(
                 config.stepType + "_" + message.getDatasetUuid() + "_" + message.getAttempt())

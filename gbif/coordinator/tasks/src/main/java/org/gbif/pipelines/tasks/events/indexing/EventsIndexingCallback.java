@@ -122,6 +122,7 @@ public class EventsIndexingCallback
             .distributedConfig(config.distributedConfig)
             .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
             .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
+            .sparkConfiguration(config.sparkConfig)
             .beamConfigFn(BeamSettings.eventIndexing(config, message, indexSettings))
             .sparkAppName(
                 SPARK_NAME_PREFIX + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
