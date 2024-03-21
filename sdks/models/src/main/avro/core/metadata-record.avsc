@@ -35,8 +35,8 @@
       {"name": "license","type":["null","string"],"default":null},
       {"name": "datasetPublishingCountry","type":["null","string"],"default":null},
       {"name": "hostingOrganizationKey","type":["null","string"],"default":null},
-      {"name": "networkKeys", "type" : {"type" : "array", "items" : "string"}, "default": null},
-      {"name": "machineTags", "type" : {"type" : "array", "items" : "MachineTag"}, "default": null},
+      {"name": "networkKeys", "type" : ["null", {"type" : "array", "items" : "string"}], "default": null},
+      {"name": "machineTags", "type" : ["null", {"type" : "array", "items" : "MachineTag"}], "default": null},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

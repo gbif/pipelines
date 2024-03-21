@@ -1,7 +1,6 @@
 package org.gbif.pipelines.core.interpreters.metadata;
 
 import java.net.URI;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
