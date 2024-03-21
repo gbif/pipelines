@@ -217,7 +217,6 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setIdentifiedbyid(Collections.emptyList());
     expected.setIssue(Collections.emptyList());
     expected.setMediatype(Collections.emptyList());
-    expected.setNetworkkey(Collections.emptyList());
     expected.setRecordedby(Collections.emptyList());
     expected.setRecordedbyid(Collections.emptyList());
     expected.setPreparations(Collections.emptyList());
