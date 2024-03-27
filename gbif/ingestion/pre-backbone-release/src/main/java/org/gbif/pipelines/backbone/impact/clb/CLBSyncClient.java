@@ -25,19 +25,31 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
 
   private final CLBMatchUsageRetrofitService clbMatchUsageRetrofitService;
   private final OkHttpClient clbOkHttpClient;
+  private final Integer clbDatasetKey;
 
-  public CLBSyncClient(ClientConfiguration clientConfiguration) {
+  public CLBSyncClient(ClientConfiguration clientConfiguration, Integer datasetKey) {
     clbOkHttpClient = RetrofitClientFactory.createClient(clientConfiguration);
     clbMatchUsageRetrofitService =
         RetrofitClientFactory.createRetrofitClient(
             clbOkHttpClient,
             clientConfiguration.getBaseApiUrl(),
             CLBMatchUsageRetrofitService.class);
+    clbDatasetKey = datasetKey;
+  }
+
+  static NameUsageMatch noMatch(){
+    NameUsageMatch num = new NameUsageMatch();
+    RankedName usage = new RankedName();
+    usage.setKey(0);
+    usage.setName("Incertae sedis");
+    usage.setRank(Rank.UNRANKED);
+    num.setUsage(usage);
+    return num;
   }
 
   @Override
   public NameUsageMatch match(
-      Integer datasetKey,
+      Integer usageKeyIgnored, // this is ignored
       String kingdom,
       String phylum,
       String clazz,
@@ -52,20 +64,72 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
       String rank,
       boolean verbose,
       boolean strict) {
-    CLBUsageMatch clbUsageMatch =
-        syncCall(
-            clbMatchUsageRetrofitService.match(
-                datasetKey,
-                kingdom,
-                phylum,
-                clazz,
-                order,
-                family,
-                genus,
-                scientificName,
-                scientificNameAuthorship,
-                rank,
-                verbose));
+
+    if (scientificName == null
+        && genus == null
+        && family == null
+        && order == null
+        && clazz == null
+        && phylum == null
+        && kingdom == null) {
+      return noMatch();
+    }
+
+    // if scientificName is not provided, we will use the highest rank available
+    if (scientificName == null) {
+      if (kingdom != null) scientificName = kingdom;
+      if (phylum != null) scientificName = phylum;
+      if (clazz != null) scientificName = clazz;
+      if (order != null) scientificName = order;
+      if (family != null) scientificName = family;
+      if (genus != null) scientificName = genus;
+    }
+
+    CLBUsageMatch clbUsageMatch = null;
+
+    try {
+      clbUsageMatch =
+          syncCall(
+              clbMatchUsageRetrofitService.match(
+                  clbDatasetKey,
+                  kingdom,
+                  phylum,
+                  clazz,
+                  order,
+                  family,
+                  genus,
+                  scientificName,
+                  scientificNameAuthorship,
+                  rank,
+                  verbose));
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.err.println(
+          "#### Error - "
+              + e.getMessage()
+              + " while calling CLB service with: "
+              + "kingdom="
+              + kingdom
+              + "&phylum="
+              + phylum
+              + "&class="
+              + clazz
+              + "&order="
+              + order
+              + "&family="
+              + family
+              + "&genus="
+              + genus
+              + "&scientificName="
+              + scientificName
+              + "&authorship="
+              + scientificNameAuthorship
+              + "&rank="
+              + rank
+              + "&verbose="
+              + verbose);
+      return noMatch();
+    }
 
     if (Objects.nonNull(clbUsageMatch.getUsage()) && clbUsageMatch.match) {
       NameUsageMatch num = new NameUsageMatch();
@@ -77,28 +141,50 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
 
       // set classification - handling the fact CLB now returns ranks that are not in the GBIF Rank
       // enum
-      num.setClassification(
-          clbUsageMatch.getUsage().getClassification().stream()
-              .filter(c -> getRank(c.getRank()) != null)
-              .map(
-                  c -> {
-                    RankedName cn = new RankedName();
-                    cn.setKey(c.namesIndexId);
-                    cn.setName(c.getName());
-                    cn.setRank(Rank.valueOf(c.getRank().toUpperCase()));
-                    return cn;
-                  })
-              .collect(Collectors.toList()));
-      return num;
-    } else {
-      NameUsageMatch num = new NameUsageMatch();
-      RankedName usage = new RankedName();
-      usage.setKey(0);
-      usage.setName("Incertae sedis");
-      usage.setRank(Rank.UNRANKED);
-      num.setUsage(usage);
-      return num;
+      try {
+        num.setClassification(
+            clbUsageMatch.getUsage().getClassification().stream()
+                .filter(c -> getRank(c.getRank()) != null)
+                .map(
+                    c -> {
+                      RankedName cn = new RankedName();
+                      cn.setKey(c.getNamesIndexId());
+                      cn.setName(c.getName());
+                      cn.setRank(Rank.valueOf(c.getRank().toUpperCase()));
+                      return cn;
+                    })
+                .collect(Collectors.toList()));
+        return num;
+      } catch (Exception e) {
+        e.printStackTrace();
+
+        System.err.println(
+            "#### Error "
+                + e.getMessage()
+                + " + while setting classification for: "
+                + "kingdom="
+                + kingdom
+                + "&phylum="
+                + phylum
+                + "&class="
+                + clazz
+                + "&order="
+                + order
+                + "&family="
+                + family
+                + "&genus="
+                + genus
+                + "&scientificName="
+                + scientificName
+                + "&authorship="
+                + scientificNameAuthorship
+                + "&rank="
+                + rank
+                + "&verbose="
+                + verbose);
+      }
     }
+    return noMatch();
   }
 
   @Override

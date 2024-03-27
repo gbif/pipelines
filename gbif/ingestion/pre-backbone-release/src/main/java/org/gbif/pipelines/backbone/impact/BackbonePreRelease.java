@@ -62,7 +62,7 @@ public class BackbonePreRelease {
             ParDo.of(
                 new MatchTransform(
                     options.getAPIBaseURI(),
-                    options.useClbApi(),
+                    options.getClbDatasetKey(),
                     schema,
                     options.getScope(),
                     options.getMinimumOccurrenceCount(),
@@ -87,7 +87,7 @@ public class BackbonePreRelease {
   /** Performs the lookup. */
   static class MatchTransform extends DoFn<HCatRecord, String> {
     private final String baseAPIUrl;
-    private final boolean useClb2;
+    private final Integer clbDatasetKey;
     private final HCatSchema schema;
     private final Integer scope;
     private final int minCount;
@@ -97,14 +97,14 @@ public class BackbonePreRelease {
 
     MatchTransform(
         String baseAPIUrl,
-        boolean useClb2,
+        Integer clbDatasetKey,
         HCatSchema schema,
         Integer scope,
         int minCount,
         boolean skipKeys,
         boolean ignoreWhitespace) {
       this.baseAPIUrl = baseAPIUrl;
-      this.useClb2 = useClb2;
+      this.clbDatasetKey = clbDatasetKey;
       this.schema = schema;
       this.scope = scope;
       this.minCount = minCount;
@@ -115,14 +115,14 @@ public class BackbonePreRelease {
     @Setup
     public void setup() {
 
-      if (useClb2) {
+      if (clbDatasetKey >= 0) {
         ClientConfiguration clientConfiguration =
             ClientConfiguration.builder()
                 .withBaseApiUrl(baseAPIUrl)
                 .withTimeOut(1L)
                 .withFileCacheMaxSizeMb(200L)
                 .build();
-        service = new CLBSyncClient(clientConfiguration);
+        service = new CLBSyncClient(clientConfiguration, clbDatasetKey);
       } else {
         service =
             new ChecklistbankServiceSyncClient(
