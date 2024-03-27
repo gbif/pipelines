@@ -117,7 +117,7 @@ Prepend a header (optionally use the header-no-keys.tsv)
 cat header.tsv /tmp/report-1000.txt > ./report-1000.tsv
 ```
 
-## Using with ChecklistBank API
+## Using with ChecklistBank API to match against an ChecklistBank dataset
 
 Execute the pipeline using e.g. (note --skipKeys=false can be added to omit taxa keys in the result):
 ```
@@ -132,5 +132,5 @@ spark2-submit \
   --APIBaseURI=https://api.checklistbank.org
   --minimumOccurrenceCount=1000
   --skipKeys=false
-  --useClbApi=true
+  --clbDatasetKey=278852
 ```
