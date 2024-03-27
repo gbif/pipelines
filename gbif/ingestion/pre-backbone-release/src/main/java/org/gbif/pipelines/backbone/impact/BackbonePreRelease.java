@@ -22,8 +22,10 @@ import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchemaUtils;
 import org.apache.thrift.TException;
 import org.gbif.kvs.species.Identification;
+import org.gbif.pipelines.backbone.impact.clb.CLBSyncClient;
 import org.gbif.rest.client.configuration.ChecklistbankClientsConfiguration;
 import org.gbif.rest.client.configuration.ClientConfiguration;
+import org.gbif.rest.client.species.ChecklistbankService;
 import org.gbif.rest.client.species.NameUsageMatch;
 import org.gbif.rest.client.species.retrofit.ChecklistbankServiceSyncClient;
 
@@ -60,6 +62,7 @@ public class BackbonePreRelease {
             ParDo.of(
                 new MatchTransform(
                     options.getAPIBaseURI(),
+                    options.useClbApi(),
                     schema,
                     options.getScope(),
                     options.getMinimumOccurrenceCount(),
@@ -84,21 +87,24 @@ public class BackbonePreRelease {
   /** Performs the lookup. */
   static class MatchTransform extends DoFn<HCatRecord, String> {
     private final String baseAPIUrl;
+    private final boolean useClb2;
     private final HCatSchema schema;
     private final Integer scope;
     private final int minCount;
     private final boolean skipKeys;
     private final boolean ignoreWhitespace;
-    private ChecklistbankServiceSyncClient service; // direct service, no cache
+    private ChecklistbankService service; // direct service, no cache
 
     MatchTransform(
         String baseAPIUrl,
+        boolean useClb2,
         HCatSchema schema,
         Integer scope,
         int minCount,
         boolean skipKeys,
         boolean ignoreWhitespace) {
       this.baseAPIUrl = baseAPIUrl;
+      this.useClb2 = useClb2;
       this.schema = schema;
       this.scope = scope;
       this.minCount = minCount;
@@ -108,22 +114,33 @@ public class BackbonePreRelease {
 
     @Setup
     public void setup() {
-      service =
-          new ChecklistbankServiceSyncClient(
-              ChecklistbankClientsConfiguration.builder()
-                  .nameUsageClientConfiguration(
-                      ClientConfiguration.builder()
-                          .withBaseApiUrl(baseAPIUrl)
-                          .withFileCacheMaxSizeMb(1L)
-                          .withTimeOut(120L)
-                          .build())
-                  .checklistbankClientConfiguration( // required but not used
-                      ClientConfiguration.builder()
-                          .withBaseApiUrl(baseAPIUrl)
-                          .withFileCacheMaxSizeMb(1L)
-                          .withTimeOut(120L)
-                          .build())
-                  .build());
+
+      if (useClb2) {
+        ClientConfiguration clientConfiguration =
+            ClientConfiguration.builder()
+                .withBaseApiUrl(baseAPIUrl)
+                .withTimeOut(1L)
+                .withFileCacheMaxSizeMb(200L)
+                .build();
+        service = new CLBSyncClient(clientConfiguration);
+      } else {
+        service =
+            new ChecklistbankServiceSyncClient(
+                ChecklistbankClientsConfiguration.builder()
+                    .nameUsageClientConfiguration(
+                        ClientConfiguration.builder()
+                            .withBaseApiUrl(baseAPIUrl)
+                            .withFileCacheMaxSizeMb(1L)
+                            .withTimeOut(120L)
+                            .build())
+                    .checklistbankClientConfiguration( // required but not used
+                        ClientConfiguration.builder()
+                            .withBaseApiUrl(baseAPIUrl)
+                            .withFileCacheMaxSizeMb(1L)
+                            .withTimeOut(120L)
+                            .build())
+                    .build());
+      }
     }
 
     @ProcessElement

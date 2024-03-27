@@ -54,4 +54,10 @@ public interface BackbonePreReleaseOptions extends HadoopFileSystemOptions {
   boolean getIgnoreWhitespace();
 
   void setIgnoreWhitespace(boolean ignoreWhitespace);
+
+  @Description("Use the checklistbank API for name usage mapping")
+  @Default.Boolean(false)
+  boolean useClbApi();
+
+  void setUseClbApi(boolean useClbApi);
 }
