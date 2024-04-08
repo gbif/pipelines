@@ -10,6 +10,7 @@ import lombok.Data;
 public class CLBUsageWithClassification implements Serializable {
   String id;
   String name;
+  String label;
   String authorship;
   String rank;
   String code;

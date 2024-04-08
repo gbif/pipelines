@@ -61,4 +61,11 @@ public interface BackbonePreReleaseOptions extends HadoopFileSystemOptions {
   Integer getClbDatasetKey();
 
   void setClbDatasetKey(Integer clbDatasetKey);
+
+  @Description(
+      "Output infrageneric markers in the scientific name (CLB v2 includes these in the scientific name)")
+  @Default.Boolean(false)
+  boolean getOutputInfragenericEpithet();
+
+  void setOutputInfragenericEpithet(boolean outputInfragenericEpithet);
 }

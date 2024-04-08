@@ -14,6 +14,10 @@ import java.util.stream.Stream;
 import okhttp3.OkHttpClient;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Rank;
+import org.gbif.nameparser.NameParserGBIF;
+import org.gbif.nameparser.api.NomCode;
+import org.gbif.nameparser.api.ParsedName;
+import org.gbif.nameparser.util.NameFormatter;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.retrofit.RetrofitClientFactory;
 import org.gbif.rest.client.species.ChecklistbankService;
@@ -26,22 +30,28 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
   private final CLBMatchUsageRetrofitService clbMatchUsageRetrofitService;
   private final OkHttpClient clbOkHttpClient;
   private final Integer clbDatasetKey;
+  private final Boolean outputInfragenericEpithet;
+  private static final NameParserGBIF parser = new NameParserGBIF(20000, 1, 1);
 
-  public CLBSyncClient(ClientConfiguration clientConfiguration, Integer datasetKey) {
-    clbOkHttpClient = RetrofitClientFactory.createClient(clientConfiguration);
-    clbMatchUsageRetrofitService =
+  public CLBSyncClient(
+      ClientConfiguration clientConfiguration,
+      Integer datasetKey,
+      Boolean outputInfragenericEpithet) {
+    this.clbOkHttpClient = RetrofitClientFactory.createClient(clientConfiguration);
+    this.clbMatchUsageRetrofitService =
         RetrofitClientFactory.createRetrofitClient(
             clbOkHttpClient,
             clientConfiguration.getBaseApiUrl(),
             CLBMatchUsageRetrofitService.class);
-    clbDatasetKey = datasetKey;
+    this.clbDatasetKey = datasetKey;
+    this.outputInfragenericEpithet = outputInfragenericEpithet;
   }
 
-  static NameUsageMatch noMatch(){
+  static NameUsageMatch noMatch() {
     NameUsageMatch num = new NameUsageMatch();
     RankedName usage = new RankedName();
     usage.setKey(0);
-    usage.setName("Incertae sedis");
+    usage.setName("incertae sedis");
     usage.setRank(Rank.UNRANKED);
     num.setUsage(usage);
     return num;
@@ -135,8 +145,51 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
       NameUsageMatch num = new NameUsageMatch();
       RankedName usage = new RankedName();
       usage.setKey(clbUsageMatch.getUsage().namesIndexId);
-      usage.setName(clbUsageMatch.getUsage().getName());
-      usage.setRank(Rank.valueOf(clbUsageMatch.getUsage().getRank().toUpperCase()));
+
+      if (!outputInfragenericEpithet) {
+        // reconstruct the name without the infrageneric epithet
+        try {
+          org.gbif.nameparser.api.Rank rankParsed =
+              org.gbif.nameparser.api.Rank.valueOf(
+                  clbUsageMatch.getUsage().getRank().toUpperCase());
+          NomCode nomCode = NomCode.valueOf(clbUsageMatch.getUsage().getCode().toUpperCase());
+          ParsedName parsedName =
+              parser.parse(clbUsageMatch.getUsage().getLabel(), rankParsed, nomCode);
+          usage.setName(NameFormatter.canonical(parsedName));
+        } catch (Exception e) {
+          e.printStackTrace();
+          System.err.println(
+              "#### Error "
+                  + e.getMessage()
+                  + " + while parsing name for: "
+                  + "kingdom="
+                  + kingdom
+                  + "&phylum="
+                  + phylum
+                  + "&class="
+                  + clazz
+                  + "&order="
+                  + order
+                  + "&family="
+                  + family
+                  + "&genus="
+                  + genus
+                  + "&scientificName="
+                  + scientificName
+                  + "&authorship="
+                  + scientificNameAuthorship
+                  + "&rank="
+                  + rank
+                  + "&verbose="
+                  + verbose);
+        }
+      } else {
+        // use the label - which includes the authorship and infrageneric epithet
+        usage.setName(clbUsageMatch.getUsage().getLabel());
+      }
+
+      Rank rankParsed = Rank.valueOf(clbUsageMatch.getUsage().getRank().toUpperCase());
+      usage.setRank(rankParsed);
       num.setUsage(usage);
 
       // set classification - handling the fact CLB now returns ranks that are not in the GBIF Rank
@@ -154,6 +207,15 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
                       return cn;
                     })
                 .collect(Collectors.toList()));
+
+        // add the matched taxon to the classification - this is not included in the CLB API classification
+        RankedName species = new RankedName();
+        species.setRank(rankParsed);
+        // use the name without authorship for the species
+        species.setName(clbUsageMatch.getUsage().getName());
+        species.setKey(usage.getKey()); // use the usage key
+        num.getClassification().add(species);
+
         return num;
       } catch (Exception e) {
         e.printStackTrace();
