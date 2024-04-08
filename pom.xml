@@ -90,16 +90,16 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <dwca-io.version>2.17-H3-SNAPSHOT</dwca-io.version>
-    <gbif-api.version>1.14.0-SNAPSHOT</gbif-api.version>
-    <gbif-common.version>0.56</gbif-common.version>
+    <gbif-api.version>1.16.0</gbif-api.version>
+    <gbif-common.version>0.59</gbif-common.version>
     <dwc-api.version>1.49-H3-SNAPSHOT</dwc-api.version>
     <kvs.version>1.33-H3-SNAPSHOT</kvs.version>
     <hbase-utils.version>0.14-H3-SNAPSHOT</hbase-utils.version>
     <gbif-wrangler.version>0.5-SNAPSHOT</gbif-wrangler.version>
     <gbif-occurrence.version>0.195.0-H3-SNAPSHOT</gbif-occurrence.version>
     <vocabulary-lookup.version>1.0.0</vocabulary-lookup.version>
-    <registry.version>3.96.0-SNAPSHOT</registry.version>
-    <gbif-common-ws.version>1.18</gbif-common-ws.version>
+    <registry.version>3.96.2-SNAPSHOT</registry.version>
+    <gbif-common-ws.version>1.26</gbif-common-ws.version>
     <gbif-postal-service.version>1.9.0-SNAPSHOT</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
     <stackable-spark.version>1.0-SNAPSHOT</stackable-spark.version>
