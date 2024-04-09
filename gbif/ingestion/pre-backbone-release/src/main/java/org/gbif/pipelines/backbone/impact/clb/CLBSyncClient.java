@@ -18,6 +18,7 @@ import org.gbif.api.vocabulary.Rank;
 import org.gbif.nameparser.NameParserGBIF;
 import org.gbif.nameparser.api.NomCode;
 import org.gbif.nameparser.api.ParsedName;
+import org.gbif.nameparser.api.UnparsableNameException;
 import org.gbif.nameparser.util.NameFormatter;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.retrofit.RetrofitClientFactory;
@@ -32,12 +33,14 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
   private final OkHttpClient clbOkHttpClient;
   private final Integer clbDatasetKey;
   private final Boolean outputInfragenericEpithet;
+  private final Boolean ignoreVerbatimRank;
   private static final NameParserGBIF parser = new NameParserGBIF(20000, 1, 1);
 
   public CLBSyncClient(
       ClientConfiguration clientConfiguration,
       Integer datasetKey,
-      Boolean outputInfragenericEpithet) {
+      Boolean outputInfragenericEpithet,
+      Boolean ignoreVerbatimRank) {
     this.clbOkHttpClient = RetrofitClientFactory.createClient(clientConfiguration);
     this.clbMatchUsageRetrofitService =
         RetrofitClientFactory.createRetrofitClient(
@@ -46,6 +49,7 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
             CLBMatchUsageRetrofitService.class);
     this.clbDatasetKey = datasetKey;
     this.outputInfragenericEpithet = outputInfragenericEpithet;
+    this.ignoreVerbatimRank = ignoreVerbatimRank;
   }
 
   static NameUsageMatch noMatch() {
@@ -111,7 +115,7 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
                   genus,
                   scientificName,
                   scientificNameAuthorship,
-                  rank,
+                  ignoreVerbatimRank ? null : rank, // the verbatim
                   verbose));
     } catch (Exception e) {
       e.printStackTrace();
@@ -150,16 +154,8 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
       if (!outputInfragenericEpithet) {
         // reconstruct the name without the infrageneric epithet
         try {
-          org.gbif.nameparser.api.Rank rankParsed =
-              org.gbif.nameparser.api.Rank.valueOf(
-                  clbUsageMatch.getUsage().getRank().toUpperCase());
-          NomCode nomCode = null;
-          if (clbUsageMatch.getUsage().getCode() != null) {
-            nomCode = NomCode.valueOf(clbUsageMatch.getUsage().getCode().toUpperCase());
-          }
-          ParsedName parsedName =
-              parser.parse(clbUsageMatch.getUsage().getLabel(), rankParsed, nomCode);
-          usage.setName(NameFormatter.canonical(parsedName));
+          String canonical = getCanonical(clbUsageMatch);
+          usage.setName(canonical);
         } catch (Exception e) {
           e.printStackTrace();
           System.err.println(
@@ -192,7 +188,12 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
         usage.setName(clbUsageMatch.getUsage().getLabel());
       }
 
-      Rank rankParsed = Rank.valueOf(clbUsageMatch.getUsage().getRank().toUpperCase());
+      Rank rankParsed = Rank.UNRANKED;
+      try {
+        rankParsed = Rank.valueOf(clbUsageMatch.getUsage().getRank().toUpperCase());
+      } catch (Exception e) {
+        System.err.println("Unrecognised rank: " + clbUsageMatch.getUsage().getRank());
+      }
       usage.setRank(rankParsed);
       num.setUsage(usage);
 
@@ -206,7 +207,13 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
                     c -> {
                       RankedName cn = new RankedName();
                       cn.setKey(c.getNamesIndexId());
-                      cn.setName(c.getName());
+
+                      if (!outputInfragenericEpithet) {
+                        cn.setName(getCanonical(c.getName(), c.getRank(), c.getCode()));
+                      } else {
+                        cn.setName(c.getName());
+                      }
+
                       cn.setRank(Rank.valueOf(c.getRank().toUpperCase()));
                       return cn;
                     })
@@ -214,12 +221,22 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
 
         // add the matched taxon to the classification - this is not included in the CLB API
         // classification
-        RankedName species = new RankedName();
-        species.setRank(rankParsed);
+        RankedName leafTaxon = new RankedName();
+        leafTaxon.setRank(rankParsed);
         // use the name without authorship for the species
-        species.setName(clbUsageMatch.getUsage().getName());
-        species.setKey(usage.getKey()); // use the usage key
-        num.getClassification().add(species);
+        leafTaxon.setName(clbUsageMatch.getUsage().getName());
+        if (!outputInfragenericEpithet) {
+          String canonical =
+              getCanonical(
+                  clbUsageMatch.getUsage().getName(),
+                  clbUsageMatch.getUsage().getRank(),
+                  clbUsageMatch.getUsage().getCode());
+          leafTaxon.setName(canonical);
+        } else {
+          leafTaxon.setName(clbUsageMatch.getUsage().getName());
+        }
+        leafTaxon.setKey(usage.getKey()); // use the usage key
+        num.getClassification().add(leafTaxon);
 
         return num;
       } catch (Exception e) {
@@ -252,6 +269,44 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
       }
     }
     return noMatch();
+  }
+
+  private static String getCanonical(CLBUsageMatch clbUsageMatch)
+      throws UnparsableNameException, InterruptedException {
+    org.gbif.nameparser.api.Rank rankParsed =
+        org.gbif.nameparser.api.Rank.valueOf(clbUsageMatch.getUsage().getRank().toUpperCase());
+    NomCode nomCode = null;
+    if (clbUsageMatch.getUsage().getCode() != null) {
+      nomCode = NomCode.valueOf(clbUsageMatch.getUsage().getCode().toUpperCase());
+    }
+    ParsedName parsedName = parser.parse(clbUsageMatch.getUsage().getLabel(), rankParsed, nomCode);
+    String canonical = NameFormatter.canonical(parsedName);
+    return canonical;
+  }
+
+  private static String getCanonical(String scientificName, String rank, String nomCodeStr) {
+    try {
+      org.gbif.nameparser.api.Rank rankParsed =
+          org.gbif.nameparser.api.Rank.valueOf(rank.toUpperCase());
+      NomCode nomCode = null;
+      if (nomCodeStr != null) {
+        nomCode = NomCode.valueOf(nomCodeStr.toUpperCase());
+      }
+      ParsedName parsedName = parser.parse(scientificName, rankParsed, nomCode);
+      return NameFormatter.canonical(parsedName);
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.err.println(
+          "#### Error "
+              + e.getMessage()
+              + " + while parsing name for: "
+              + scientificName
+              + "&rank="
+              + rank
+              + "&nomCode="
+              + nomCodeStr);
+      return scientificName;
+    }
   }
 
   @Override

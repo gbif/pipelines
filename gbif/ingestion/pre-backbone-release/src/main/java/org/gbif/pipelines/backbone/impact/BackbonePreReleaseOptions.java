@@ -68,4 +68,10 @@ public interface BackbonePreReleaseOptions extends HadoopFileSystemOptions {
   boolean getOutputInfragenericEpithet();
 
   void setOutputInfragenericEpithet(boolean outputInfragenericEpithet);
+
+  @Description("Whether to include the rank in the CLB lookup (CLB matching only)")
+  @Default.Boolean(true)
+  boolean getIgnoreSuppliedRank();
+
+  void setIgnoreSuppliedRank(boolean ignoreSuppliedRank);
 }

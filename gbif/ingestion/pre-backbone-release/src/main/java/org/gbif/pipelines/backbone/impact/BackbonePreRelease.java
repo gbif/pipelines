@@ -68,7 +68,8 @@ public class BackbonePreRelease {
                     options.getMinimumOccurrenceCount(),
                     options.getSkipKeys(),
                     options.getIgnoreWhitespace(),
-                    options.getOutputInfragenericEpithet())));
+                    options.getOutputInfragenericEpithet(),
+                    options.getIgnoreSuppliedRank())));
 
     matched.apply(TextIO.write().to(options.getTargetDir()));
 
@@ -95,6 +96,7 @@ public class BackbonePreRelease {
     private final boolean skipKeys;
     private final boolean ignoreWhitespace;
     private final boolean outputInfragenericEpithet;
+    private final boolean ignoreSuppliedRank;
     private ChecklistbankService service; // direct service, no cache
 
     MatchTransform(
@@ -105,7 +107,8 @@ public class BackbonePreRelease {
         int minCount,
         boolean skipKeys,
         boolean ignoreWhitespace,
-        boolean outputInfragenericEpithet) {
+        boolean outputInfragenericEpithet,
+        boolean ignoreSuppliedRank) {
       this.baseAPIUrl = baseAPIUrl;
       this.clbDatasetKey = clbDatasetKey;
       this.schema = schema;
@@ -114,6 +117,7 @@ public class BackbonePreRelease {
       this.skipKeys = skipKeys;
       this.ignoreWhitespace = ignoreWhitespace;
       this.outputInfragenericEpithet = outputInfragenericEpithet;
+      this.ignoreSuppliedRank = ignoreSuppliedRank;
     }
 
     @Setup
@@ -126,7 +130,9 @@ public class BackbonePreRelease {
                 .withTimeOut(1L)
                 .withFileCacheMaxSizeMb(200L)
                 .build();
-        service = new CLBSyncClient(clientConfiguration, clbDatasetKey, outputInfragenericEpithet);
+        service =
+            new CLBSyncClient(
+                clientConfiguration, clbDatasetKey, outputInfragenericEpithet, ignoreSuppliedRank);
       } else {
         service =
             new ChecklistbankServiceSyncClient(
