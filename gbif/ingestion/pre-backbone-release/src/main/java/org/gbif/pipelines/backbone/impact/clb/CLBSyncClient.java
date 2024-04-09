@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import okhttp3.OkHttpClient;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.nameparser.NameParserGBIF;
@@ -75,24 +76,24 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
       boolean verbose,
       boolean strict) {
 
-    if (scientificName == null
-        && genus == null
-        && family == null
-        && order == null
-        && clazz == null
-        && phylum == null
-        && kingdom == null) {
+    if (StringUtils.isBlank(scientificName)
+        && StringUtils.isBlank(genus)
+        && StringUtils.isBlank(family)
+        && StringUtils.isBlank(order)
+        && StringUtils.isBlank(clazz)
+        && StringUtils.isBlank(phylum)
+        && StringUtils.isBlank(kingdom)) {
       return noMatch();
     }
 
     // if scientificName is not provided, we will use the highest rank available
-    if (scientificName == null) {
-      if (kingdom != null) scientificName = kingdom;
-      if (phylum != null) scientificName = phylum;
-      if (clazz != null) scientificName = clazz;
-      if (order != null) scientificName = order;
-      if (family != null) scientificName = family;
-      if (genus != null) scientificName = genus;
+    if (StringUtils.isBlank(scientificName)) {
+      if (StringUtils.isNotBlank(kingdom)) scientificName = kingdom;
+      if (StringUtils.isNotBlank(phylum)) scientificName = phylum;
+      if (StringUtils.isNotBlank(clazz)) scientificName = clazz;
+      if (StringUtils.isNotBlank(order)) scientificName = order;
+      if (StringUtils.isNotBlank(family)) scientificName = family;
+      if (StringUtils.isNotBlank(genus)) scientificName = genus;
     }
 
     CLBUsageMatch clbUsageMatch = null;
@@ -152,7 +153,10 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
           org.gbif.nameparser.api.Rank rankParsed =
               org.gbif.nameparser.api.Rank.valueOf(
                   clbUsageMatch.getUsage().getRank().toUpperCase());
-          NomCode nomCode = NomCode.valueOf(clbUsageMatch.getUsage().getCode().toUpperCase());
+          NomCode nomCode = null;
+          if (clbUsageMatch.getUsage().getCode() != null) {
+            nomCode = NomCode.valueOf(clbUsageMatch.getUsage().getCode().toUpperCase());
+          }
           ParsedName parsedName =
               parser.parse(clbUsageMatch.getUsage().getLabel(), rankParsed, nomCode);
           usage.setName(NameFormatter.canonical(parsedName));
@@ -208,7 +212,8 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
                     })
                 .collect(Collectors.toList()));
 
-        // add the matched taxon to the classification - this is not included in the CLB API classification
+        // add the matched taxon to the classification - this is not included in the CLB API
+        // classification
         RankedName species = new RankedName();
         species.setRank(rankParsed);
         // use the name without authorship for the species
