@@ -207,6 +207,10 @@
                       <pattern>org.apache.calcite</pattern>
                       <pattern>org.apache.beam.repackaged.sql</pattern>
                     </relocation>
+                    <relocation>
+                      <pattern>com.google.common</pattern>
+                      <shadedPattern>g20.com.google.common</shadedPattern>
+                    </relocation>
                     <!-- Fixes GBIF Name parser cph issue -->
                     <relocation>
                       <pattern>it.unimi.dsi</pattern>

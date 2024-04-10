@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import okhttp3.OkHttpClient;
@@ -146,56 +147,32 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
       return noMatch();
     }
 
-    if (Objects.nonNull(clbUsageMatch.getUsage()) && clbUsageMatch.match) {
+    if (!clbUsageMatch.match) {
+      return noMatch();
+    }
+
+    if (Objects.nonNull(clbUsageMatch.getUsage())) {
       NameUsageMatch num = new NameUsageMatch();
-      RankedName usage = new RankedName();
-      usage.setKey(clbUsageMatch.getUsage().namesIndexId);
 
-      if (!outputInfragenericEpithet) {
-        // reconstruct the name without the infrageneric epithet
-        try {
-          String canonical = getCanonical(clbUsageMatch);
-          usage.setName(canonical);
-        } catch (Exception e) {
-          e.printStackTrace();
-          System.err.println(
-              "#### Error "
-                  + e.getMessage()
-                  + " + while parsing name for: "
-                  + "kingdom="
-                  + kingdom
-                  + "&phylum="
-                  + phylum
-                  + "&class="
-                  + clazz
-                  + "&order="
-                  + order
-                  + "&family="
-                  + family
-                  + "&genus="
-                  + genus
-                  + "&scientificName="
-                  + scientificName
-                  + "&authorship="
-                  + scientificNameAuthorship
-                  + "&rank="
-                  + rank
-                  + "&verbose="
-                  + verbose);
-        }
-      } else {
-        // use the label - which includes the authorship and infrageneric epithet
-        usage.setName(clbUsageMatch.getUsage().getLabel());
-      }
-
-      Rank rankParsed = Rank.UNRANKED;
-      try {
-        rankParsed = Rank.valueOf(clbUsageMatch.getUsage().getRank().toUpperCase());
-      } catch (Exception e) {
-        System.err.println("Unrecognised rank: " + clbUsageMatch.getUsage().getRank());
-      }
-      usage.setRank(rankParsed);
+      CLBUsage clbUsage = clbUsageMatch.getUsage();
+      RankedName usage = getRankedNameFromUsage(clbUsage, outputInfragenericEpithet);
       num.setUsage(usage);
+
+      // check if its a synonym
+      if (clbUsageMatch.getUsage().getStatus() != null
+          && clbUsageMatch.getUsage().getStatus().equalsIgnoreCase("synonym")) {
+        // use the first taxon in the classification instead
+        Optional<CLBUsage> firstInClass =
+            clbUsageMatch.getUsage().classification.stream().findFirst();
+
+        if (firstInClass.isPresent()) {
+          CLBUsage acceptedCLBUsage = firstInClass.get();
+          RankedName acceptedUsage =
+              getRankedNameFromUsage(acceptedCLBUsage, outputInfragenericEpithet);
+          num.setAcceptedUsage(acceptedUsage);
+          num.setSynonym(true);
+        }
+      }
 
       // set classification - handling the fact CLB now returns ranks that are not in the GBIF Rank
       // enum
@@ -219,24 +196,27 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
                     })
                 .collect(Collectors.toList()));
 
-        // add the matched taxon to the classification - this is not included in the CLB API
-        // classification
-        RankedName leafTaxon = new RankedName();
-        leafTaxon.setRank(rankParsed);
-        // use the name without authorship for the species
-        leafTaxon.setName(clbUsageMatch.getUsage().getName());
-        if (!outputInfragenericEpithet) {
-          String canonical =
-              getCanonical(
-                  clbUsageMatch.getUsage().getName(),
-                  clbUsageMatch.getUsage().getRank(),
-                  clbUsageMatch.getUsage().getCode());
-          leafTaxon.setName(canonical);
-        } else {
+        if (clbUsageMatch.getUsage().getStatus() == null
+            || !clbUsageMatch.getUsage().getStatus().equalsIgnoreCase("synonym")) {
+          // add the matched taxon to the classification - this is not included in the CLB API
+          // classification
+          RankedName leafTaxon = new RankedName();
+          leafTaxon.setRank(usage.getRank());
+          // use the name without authorship for the species
           leafTaxon.setName(clbUsageMatch.getUsage().getName());
+          if (!outputInfragenericEpithet) {
+            String canonical =
+                getCanonical(
+                    clbUsageMatch.getUsage().getName(),
+                    clbUsageMatch.getUsage().getRank(),
+                    clbUsageMatch.getUsage().getCode());
+            leafTaxon.setName(canonical);
+          } else {
+            leafTaxon.setName(clbUsageMatch.getUsage().getName());
+          }
+          leafTaxon.setKey(usage.getKey()); // use the usage key
+          num.getClassification().add(leafTaxon);
         }
-        leafTaxon.setKey(usage.getKey()); // use the usage key
-        num.getClassification().add(leafTaxon);
 
         return num;
       } catch (Exception e) {
@@ -271,15 +251,44 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
     return noMatch();
   }
 
-  private static String getCanonical(CLBUsageMatch clbUsageMatch)
+  private static RankedName getRankedNameFromUsage(
+      CLBUsage clbUsage, boolean outputInfragenericEpithet) {
+
+    RankedName usage = new RankedName();
+    usage.setKey(clbUsage.namesIndexId);
+
+    if (!outputInfragenericEpithet) {
+      // reconstruct the name without the infrageneric epithet
+      try {
+        String canonical = getCanonical(clbUsage);
+        usage.setName(canonical);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    } else {
+      // use the label - which includes the authorship and infrageneric epithet
+      usage.setName(clbUsage.getLabel());
+    }
+
+    Rank rankParsed = Rank.UNRANKED;
+    try {
+      rankParsed = Rank.valueOf(clbUsage.getRank().toUpperCase());
+    } catch (Exception e) {
+      System.err.println("Unrecognised rank: " + clbUsage.getRank());
+    }
+    usage.setRank(rankParsed);
+    return usage;
+  }
+
+  private static String getCanonical(CLBUsage clbUsage)
       throws UnparsableNameException, InterruptedException {
     org.gbif.nameparser.api.Rank rankParsed =
-        org.gbif.nameparser.api.Rank.valueOf(clbUsageMatch.getUsage().getRank().toUpperCase());
+        org.gbif.nameparser.api.Rank.valueOf(clbUsage.getRank().toUpperCase());
     NomCode nomCode = null;
-    if (clbUsageMatch.getUsage().getCode() != null) {
-      nomCode = NomCode.valueOf(clbUsageMatch.getUsage().getCode().toUpperCase());
+    if (clbUsage.getCode() != null) {
+      nomCode = NomCode.valueOf(clbUsage.getCode().toUpperCase());
     }
-    ParsedName parsedName = parser.parse(clbUsageMatch.getUsage().getLabel(), rankParsed, nomCode);
+    ParsedName parsedName = parser.parse(clbUsage.getLabel(), rankParsed, nomCode);
     String canonical = NameFormatter.canonical(parsedName);
     return canonical;
   }

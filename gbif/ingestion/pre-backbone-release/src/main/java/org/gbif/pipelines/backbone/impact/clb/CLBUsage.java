@@ -9,6 +9,7 @@ import lombok.Data;
 public class CLBUsage implements Serializable {
   String id;
   String name;
+  String label;
   String authorship;
   String rank;
   String code;

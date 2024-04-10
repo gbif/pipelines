@@ -8,6 +8,7 @@ import lombok.Data;
 public class CLBUsageMatch {
   CLBUsageWithClassification usage;
   String type;
+  String status;
   String id;
   boolean match;
 }
