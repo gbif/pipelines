@@ -304,8 +304,8 @@ public class BackbonePreRelease {
     private static boolean isEmpty(NameUsageMatch response) {
       return response == null
           || response.getUsage() == null
-          || (response.getClassification() == null || response.getClassification().isEmpty())
-          || response.getDiagnostics() == null;
+          || (response.getClassification() == null || response.getClassification().isEmpty());
+      //          || response.getDiagnostics() == null;
     }
   }
 }

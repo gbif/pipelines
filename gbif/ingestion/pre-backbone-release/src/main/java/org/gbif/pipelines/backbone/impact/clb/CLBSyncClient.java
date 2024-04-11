@@ -2,14 +2,13 @@ package org.gbif.pipelines.backbone.impact.clb;
 
 import static org.gbif.rest.client.retrofit.SyncCall.syncCall;
 
+import com.google.common.collect.Lists;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import okhttp3.OkHttpClient;
@@ -57,7 +56,7 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
     NameUsageMatch num = new NameUsageMatch();
     RankedName usage = new RankedName();
     usage.setKey(0);
-    usage.setName("incertae sedis");
+    usage.setName("incertae sedis-clb-client");
     usage.setRank(Rank.UNRANKED);
     num.setUsage(usage);
     return num;
@@ -91,6 +90,21 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
       return noMatch();
     }
 
+    // construct the trinomial scientific name if not provided
+    if (StringUtils.isBlank(scientificName)
+        && StringUtils.isNotBlank(genus)
+        && StringUtils.isNotBlank(specificEpithet)
+        && StringUtils.isNotBlank(infraspecificEpithet)) {
+      scientificName = genus + " " + specificEpithet + " " + infraspecificEpithet;
+    }
+
+    // construct the binomial scientific name if not provided
+    if (StringUtils.isBlank(scientificName)
+        && StringUtils.isNotBlank(genus)
+        && StringUtils.isNotBlank(specificEpithet)) {
+      scientificName = genus + " " + specificEpithet;
+    }
+
     // if scientificName is not provided, we will use the highest rank available
     if (StringUtils.isBlank(scientificName)) {
       if (StringUtils.isNotBlank(kingdom)) scientificName = kingdom;
@@ -105,78 +119,63 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
 
     try {
       clbUsageMatch =
-          syncCall(
-              clbMatchUsageRetrofitService.match(
-                  clbDatasetKey,
-                  kingdom,
-                  phylum,
-                  clazz,
-                  order,
-                  family,
-                  genus,
-                  scientificName,
-                  scientificNameAuthorship,
-                  ignoreVerbatimRank ? null : rank, // the verbatim
-                  verbose));
+          matchToHigherTaxon(
+              kingdom,
+              phylum,
+              clazz,
+              order,
+              family,
+              genus,
+              scientificName,
+              scientificNameAuthorship,
+              "",
+              verbose);
     } catch (Exception e) {
       e.printStackTrace();
-      System.err.println(
-          "#### Error - "
-              + e.getMessage()
-              + " while calling CLB service with: "
-              + "kingdom="
-              + kingdom
-              + "&phylum="
-              + phylum
-              + "&class="
-              + clazz
-              + "&order="
-              + order
-              + "&family="
-              + family
-              + "&genus="
-              + genus
-              + "&scientificName="
-              + scientificName
-              + "&authorship="
-              + scientificNameAuthorship
-              + "&rank="
-              + rank
-              + "&verbose="
-              + verbose);
+      debugUrl(
+          clbDatasetKey.toString(),
+          e.getMessage() + " while calling CLB service with: ",
+          kingdom,
+          phylum,
+          clazz,
+          order,
+          family,
+          genus,
+          scientificName,
+          scientificNameAuthorship,
+          "");
       return noMatch();
     }
 
-    if (!clbUsageMatch.match) {
+    if (!clbUsageMatch.match || Objects.isNull(clbUsageMatch.getUsage())) {
       return noMatch();
     }
 
-    if (Objects.nonNull(clbUsageMatch.getUsage())) {
-      NameUsageMatch num = new NameUsageMatch();
+    NameUsageMatch num = new NameUsageMatch();
+    CLBUsage clbUsage = clbUsageMatch.getUsage();
+    RankedName usage = getRankedNameFromUsage(clbUsage, outputInfragenericEpithet);
+    num.setUsage(usage);
 
-      CLBUsage clbUsage = clbUsageMatch.getUsage();
-      RankedName usage = getRankedNameFromUsage(clbUsage, outputInfragenericEpithet);
-      num.setUsage(usage);
+    // check if its a synonym
+    if (clbUsageMatch.getUsage().getStatus() != null
+        && clbUsageMatch.getUsage().getStatus().equalsIgnoreCase("synonym")) {
+      // use the first taxon in the classification instead
+      Optional<CLBUsage> firstInClass =
+          clbUsageMatch.getUsage().classification.stream().findFirst();
 
-      // check if its a synonym
-      if (clbUsageMatch.getUsage().getStatus() != null
-          && clbUsageMatch.getUsage().getStatus().equalsIgnoreCase("synonym")) {
-        // use the first taxon in the classification instead
-        Optional<CLBUsage> firstInClass =
-            clbUsageMatch.getUsage().classification.stream().findFirst();
-
-        if (firstInClass.isPresent()) {
-          CLBUsage acceptedCLBUsage = firstInClass.get();
-          RankedName acceptedUsage =
-              getRankedNameFromUsage(acceptedCLBUsage, outputInfragenericEpithet);
-          num.setAcceptedUsage(acceptedUsage);
-          num.setSynonym(true);
-        }
+      if (firstInClass.isPresent()) {
+        CLBUsage acceptedCLBUsage = firstInClass.get();
+        RankedName acceptedUsage =
+            getRankedNameFromUsage(acceptedCLBUsage, outputInfragenericEpithet);
+        num.setAcceptedUsage(acceptedUsage);
+        num.setSynonym(true);
       }
+    }
 
-      // set classification - handling the fact CLB now returns ranks that are not in the GBIF Rank
-      // enum
-      try {
+    // set classification - handling the fact CLB now returns ranks that are not in the GBIF Rank
+    // enum
+    try {
+      if (clbUsageMatch.getUsage().getClassification() != null) {
         num.setClassification(
             clbUsageMatch.getUsage().getClassification().stream()
                 .filter(c -> getRank(c.getRank()) != null)
@@ -195,60 +194,147 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
                       return cn;
                     })
                 .collect(Collectors.toList()));
-
-        if (clbUsageMatch.getUsage().getStatus() == null
-            || !clbUsageMatch.getUsage().getStatus().equalsIgnoreCase("synonym")) {
-          // add the matched taxon to the classification - this is not included in the CLB API
-          // classification
-          RankedName leafTaxon = new RankedName();
-          leafTaxon.setRank(usage.getRank());
-          // use the name without authorship for the species
-          leafTaxon.setName(clbUsageMatch.getUsage().getName());
-          if (!outputInfragenericEpithet) {
-            String canonical =
-                getCanonical(
-                    clbUsageMatch.getUsage().getName(),
-                    clbUsageMatch.getUsage().getRank(),
-                    clbUsageMatch.getUsage().getCode());
-            leafTaxon.setName(canonical);
-          } else {
-            leafTaxon.setName(clbUsageMatch.getUsage().getName());
-          }
-          leafTaxon.setKey(usage.getKey()); // use the usage key
-          num.getClassification().add(leafTaxon);
-        }
-
-        return num;
-      } catch (Exception e) {
-        e.printStackTrace();
-
-        System.err.println(
-            "#### Error "
-                + e.getMessage()
-                + " + while setting classification for: "
-                + "kingdom="
-                + kingdom
-                + "&phylum="
-                + phylum
-                + "&class="
-                + clazz
-                + "&order="
-                + order
-                + "&family="
-                + family
-                + "&genus="
-                + genus
-                + "&scientificName="
-                + scientificName
-                + "&authorship="
-                + scientificNameAuthorship
-                + "&rank="
-                + rank
-                + "&verbose="
-                + verbose);
+      } else {
+        num.setClassification(new ArrayList<>());
       }
+
+      if (clbUsageMatch.getUsage().getStatus() == null
+          || !clbUsageMatch.getUsage().getStatus().equalsIgnoreCase("synonym")) {
+        // add the matched taxon to the classification - this is not included in the CLB API
+        // classification
+        RankedName leafTaxon = new RankedName();
+        leafTaxon.setKey(usage.getKey()); // use the usage key
+        leafTaxon.setRank(usage.getRank());
+        // use the name without authorship for the species
+        leafTaxon.setName(clbUsageMatch.getUsage().getName());
+        if (!outputInfragenericEpithet) {
+          String canonical =
+              getCanonical(
+                  clbUsageMatch.getUsage().getName(),
+                  clbUsageMatch.getUsage().getRank(),
+                  clbUsageMatch.getUsage().getCode());
+          leafTaxon.setName(canonical);
+        }
+        num.getClassification().add(0, leafTaxon);
+      }
+
+      return num;
+    } catch (Exception e) {
+      e.printStackTrace();
+      debugUrl(
+          clbDatasetKey.toString(),
+          "#### Error " + e.getMessage() + " + while setting classification with ",
+          kingdom,
+          phylum,
+          clazz,
+          order,
+          family,
+          genus,
+          scientificName,
+          scientificNameAuthorship,
+          rank);
     }
     return noMatch();
+  }
+
+  private static void debugUrl(
+      String datasetID,
+      String msg,
+      String kingdom,
+      String phylum,
+      String clazz,
+      String order,
+      String family,
+      String genus,
+      String scientificName,
+      String scientificNameAuthorship,
+      String rank) {
+    System.err.println(
+        msg
+            + " "
+            + "http://api.checklistbank.org/dataset/"
+            + datasetID
+            + "/match/nameusage?"
+            + "kingdom="
+            + kingdom
+            + "&phylum="
+            + phylum
+            + "&class="
+            + clazz
+            + "&order="
+            + order
+            + "&family="
+            + family
+            + "&genus="
+            + genus
+            + "&scientificName="
+            + scientificName
+            + "&authorship="
+            + scientificNameAuthorship
+            + "&rank="
+            + rank
+            + "&verbose=false");
+  }
+
+  private CLBUsageMatch matchToHigherTaxon(
+      String kingdom,
+      String phylum,
+      String clazz,
+      String order,
+      String family,
+      String genus,
+      String scientificName,
+      String scientificNameAuthorship,
+      String rank,
+      boolean verbose) {
+
+    CLBUsageMatch clbUsageMatch =
+        syncCall(
+            clbMatchUsageRetrofitService.match(
+                clbDatasetKey,
+                StringUtils.isNotBlank(kingdom) ? kingdom : "",
+                StringUtils.isNotBlank(phylum) ? phylum : "",
+                StringUtils.isNotBlank(clazz) ? clazz : "",
+                StringUtils.isNotBlank(order) ? order : "",
+                StringUtils.isNotBlank(family) ? family : "",
+                StringUtils.isNotBlank(genus) ? genus : "",
+                scientificName,
+                StringUtils.isNotBlank(scientificNameAuthorship) ? scientificNameAuthorship : "",
+                ignoreVerbatimRank ? "" : rank, // the verbatim
+                verbose));
+
+    if (clbUsageMatch.match) {
+      return clbUsageMatch;
+    }
+
+    List<String> linneanRanks = Lists.newArrayList(genus, family, order, clazz, phylum, kingdom);
+    // try again with the next rank
+    for (int i = 0; i < linneanRanks.size(); i++) {
+      if (StringUtils.isNotBlank(linneanRanks.get(i))) {
+
+        String higherTaxon = linneanRanks.get(i);
+        clbUsageMatch =
+            syncCall(
+                clbMatchUsageRetrofitService.match(
+                    clbDatasetKey,
+                    i <= 5 && StringUtils.isNotBlank(kingdom) ? kingdom : "",
+                    i <= 4 && StringUtils.isNotBlank(phylum) ? phylum : "",
+                    i <= 3 && StringUtils.isNotBlank(clazz) ? clazz : "",
+                    i <= 2 && StringUtils.isNotBlank(order) ? order : "",
+                    i <= 1 && StringUtils.isNotBlank(family) ? family : "",
+                    i == 0 && StringUtils.isNotBlank(genus) ? genus : "",
+                    higherTaxon,
+                    "",
+                    "", // the verbatim
+                    verbose));
+
+        if (clbUsageMatch.match) {
+          break;
+        }
+      }
+    }
+
+    return clbUsageMatch;
   }
 
   private static RankedName getRankedNameFromUsage(

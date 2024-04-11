@@ -19,7 +19,7 @@ import org.gbif.rest.client.species.NameUsageMatch;
 @Getter
 @Setter
 @EqualsAndHashCode
-class GBIFClassification {
+public class GBIFClassification {
 
   private String kingdom;
   private String phylum;
@@ -81,7 +81,7 @@ class GBIFClassification {
   }
 
   /** Builder from a lookup web service response. */
-  static GBIFClassification buildFromNameUsageMatch(NameUsageMatch usageMatch) {
+  public static GBIFClassification buildFromNameUsageMatch(NameUsageMatch usageMatch) {
     GBIFClassification c = new GBIFClassification();
     if (Objects.nonNull(usageMatch.getClassification())) {
       usageMatch
