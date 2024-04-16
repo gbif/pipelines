@@ -1,7 +1,7 @@
 pipeline {
   agent any
   parameters {
-    choice(name: 'TYPE', choices: ['DEV build', 'Nightly build'], description: 'Type')
+    choice(name: 'TYPE', choices: ['DEV', 'NIGHTLY'], description: 'Build type')
   }
   tools {
     maven 'Maven3.6'
@@ -16,7 +16,7 @@ pipeline {
     stage('DEV build') {
       when {
         expression {
-          params.TYPE == 'DEV build'
+          params.TYPE == 'DEV'
         }
       }
       steps {
@@ -27,7 +27,7 @@ pipeline {
     stage('Nightly build') {
       when {
         expression {
-          params.TYPE == 'Nightly build'
+          params.TYPE == 'NIGHTLY'
         }
       }
       steps {
@@ -38,7 +38,7 @@ pipeline {
     stage('Build and push Docker image') {
       when {
         expression {
-          params.TYPE == 'Nightly build'
+          params.TYPE == 'NIGHTLY'
         }
       }
       steps {
