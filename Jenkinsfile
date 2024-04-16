@@ -3,8 +3,8 @@ pipeline {
   agent any
 
   tools {
-    maven 'Maven 3.8.5'
-    jdk 'OpenJDK 11'
+    maven 'Maven3.6'
+    jdk 'OpenJDK11'
   }
   options {
     skipStagesAfterUnstable()
