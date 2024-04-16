@@ -1,6 +1,8 @@
 #Simple script for pushing a image containing the named modules build artifact
 MODULE="clustering-gbif"
 
+POM_VERSION=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
+
 echo "Building Docker image module:version - ${MODULE}:${POM_VERSION}"
 docker build -f ./gbif/ingestion/${MODULE}/docker/Dockerfile ./gbif/ingestion/${MODULE} --build-arg JAR_FILE=${MODULE}-${POM_VERSION}-shaded.jar -t docker.gbif.org/${MODULE}:${POM_VERSION}
 
