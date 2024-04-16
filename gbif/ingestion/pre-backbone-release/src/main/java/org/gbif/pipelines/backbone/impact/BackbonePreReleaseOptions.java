@@ -55,6 +55,12 @@ public interface BackbonePreReleaseOptions extends HadoopFileSystemOptions {
 
   void setIgnoreWhitespace(boolean ignoreWhitespace);
 
+  @Description("Controls if whitespace should be ignored or not")
+  @Default.Boolean(false)
+  boolean getIgnoreAuthorshipFormatting();
+
+  void setIgnoreAuthorshipFormatting(boolean ignoreAuthorshipFormatting);
+
   @Description(
       "Match against the checklistbank API and use the specified dataset key for name usage mapping")
   @Default.Integer(-1)

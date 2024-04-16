@@ -68,6 +68,7 @@ public class BackbonePreRelease {
                     options.getMinimumOccurrenceCount(),
                     options.getSkipKeys(),
                     options.getIgnoreWhitespace(),
+                    options.getIgnoreAuthorshipFormatting(),
                     options.getOutputInfragenericEpithet(),
                     options.getIgnoreSuppliedRank())));
 
@@ -95,6 +96,7 @@ public class BackbonePreRelease {
     private final int minCount;
     private final boolean skipKeys;
     private final boolean ignoreWhitespace;
+    private final boolean ignoreAuthorshipFormatting;
     private final boolean outputInfragenericEpithet;
     private final boolean ignoreSuppliedRank;
     private ChecklistbankService service; // direct service, no cache
@@ -107,6 +109,7 @@ public class BackbonePreRelease {
         int minCount,
         boolean skipKeys,
         boolean ignoreWhitespace,
+        boolean ignoreAuthorshipFormatting,
         boolean outputInfragenericEpithet,
         boolean ignoreSuppliedRank) {
       this.baseAPIUrl = baseAPIUrl;
@@ -116,6 +119,7 @@ public class BackbonePreRelease {
       this.minCount = minCount;
       this.skipKeys = skipKeys;
       this.ignoreWhitespace = ignoreWhitespace;
+      this.ignoreAuthorshipFormatting = ignoreAuthorshipFormatting;
       this.outputInfragenericEpithet = outputInfragenericEpithet;
       this.ignoreSuppliedRank = ignoreSuppliedRank;
     }
@@ -220,9 +224,10 @@ public class BackbonePreRelease {
           }
 
           // emit classifications that differ, optionally considering the keys
-          if (skipKeys && !existing.classificationEquals(proposed, ignoreWhitespace)) {
+          if (skipKeys
+              && !existing.classificationEquals(
+                  proposed, ignoreWhitespace, ignoreAuthorshipFormatting)) {
             c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
-
           } else if (!skipKeys && !existing.equals(proposed)) {
             c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
           }

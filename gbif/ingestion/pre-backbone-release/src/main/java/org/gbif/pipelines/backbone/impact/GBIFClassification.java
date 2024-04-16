@@ -191,7 +191,8 @@ public class GBIFClassification {
   /**
    * An equals implementation that uses all fields except the keys, optionally ignoring whitespace.
    */
-  public boolean classificationEquals(Object o, boolean ignoreWhitespace) {
+  public boolean classificationEquals(
+      Object o, boolean ignoreWhitespace, boolean ignoreAuthorshipFormatting) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     GBIFClassification that = (GBIFClassification) o;
@@ -208,25 +209,32 @@ public class GBIFClassification {
           && Objects.equals(scientificName, that.scientificName)
           && Objects.equals(acceptedScientificName, that.acceptedScientificName);
     } else {
-      return lenientEquals(kingdom, that.kingdom)
-          && lenientEquals(phylum, that.phylum)
-          && lenientEquals(klass, that.klass)
-          && lenientEquals(order, that.order)
-          && lenientEquals(family, that.family)
-          && lenientEquals(genus, that.genus)
-          && lenientEquals(subGenus, that.subGenus)
-          && lenientEquals(species, that.species)
-          && lenientEquals(scientificName, that.scientificName)
-          && lenientEquals(acceptedScientificName, that.acceptedScientificName);
+      return lenientEquals(ignoreAuthorshipFormatting, kingdom, that.kingdom)
+          && lenientEquals(ignoreAuthorshipFormatting, phylum, that.phylum)
+          && lenientEquals(ignoreAuthorshipFormatting, klass, that.klass)
+          && lenientEquals(ignoreAuthorshipFormatting, order, that.order)
+          && lenientEquals(ignoreAuthorshipFormatting, family, that.family)
+          && lenientEquals(ignoreAuthorshipFormatting, genus, that.genus)
+          && lenientEquals(ignoreAuthorshipFormatting, subGenus, that.subGenus)
+          && lenientEquals(ignoreAuthorshipFormatting, species, that.species)
+          && lenientEquals(ignoreAuthorshipFormatting, scientificName, that.scientificName)
+          && lenientEquals(
+              ignoreAuthorshipFormatting, acceptedScientificName, that.acceptedScientificName);
     }
   }
 
   /** returns true if both are null or they are the same without whitespace, ignoring case. */
-  private static boolean lenientEquals(String s1, String s2) {
+  public static boolean lenientEquals(boolean ignoreAuthorshipFormatting, String s1, String s2) {
     if (s1 == null || s2 == null) {
       return s1 == null && s2 == null;
     } else {
-      return s1.replaceAll(" ", "").equalsIgnoreCase(s2.replaceAll(" ", ""));
+      String s1c = s1.replaceAll(" ", "");
+      String s2c = s2.replaceAll(" ", "");
+      if (ignoreAuthorshipFormatting) {
+        s1c = s1c.replaceAll("[\\s(),\"']", "");
+        s2c = s2c.replaceAll("[\\s(),\"']", "");
+      }
+      return s1c.equalsIgnoreCase(s2c);
     }
   }
 }
