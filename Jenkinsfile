@@ -43,7 +43,7 @@ pipeline {
     stage('Deploy artifacts') {
       steps {
         configFileProvider([configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS')]) {
-          sh 'mvn -s $MAVEN_SETTINGS -B deploy:deploy'
+          sh 'mvn -s $MAVEN_SETTINGS -B jar:jar deploy:deploy'
         }
       }
     }

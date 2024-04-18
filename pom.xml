@@ -39,7 +39,7 @@
       <url>https://repository.gbif.org/content/repositories/releases</url>
     </repository>
     <snapshotRepository>
-      <id>gbif-snapshot</id>
+      <id>gbif-deploy</id>
       <url>https://repository.gbif.org/content/repositories/snapshots</url>
     </snapshotRepository>
   </distributionManagement>
