@@ -14,6 +14,7 @@ pipeline {
   options {
     buildDiscarder(logRotator(numToKeepStr: '10'))
     skipStagesAfterUnstable()
+    timestamps()
   }
 
   stages {
@@ -25,7 +26,7 @@ pipeline {
         }
       }
       steps {
-          sh 'mvn clean verify install -U -T 3 -P skip-coverage,skip-release-it,gbif-artifacts'
+        sh 'mvn clean verify -U -T 3 -P skip-coverage,skip-release-it'
       }
     }
 
@@ -36,14 +37,17 @@ pipeline {
         }
       }
       steps {
-        sh 'mvn clean verify install -U -P coverage,gbif-artifacts,extra-artifacts'
+        sh 'mvn clean verify -U -P coverage'
       }
     }
 
-    stage('Deploy artifacts') {
+    stage('Snapshots to nexus') {
+      environment {
+        PROFILES = getProfiles()
+      }
       steps {
         configFileProvider([configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS')]) {
-          sh 'mvn -s $MAVEN_SETTINGS -B jar:jar deploy:deploy'
+          sh 'mvn -s $MAVEN_SETTINGS deploy -B -P $PROFILES -DskipTests'
         }
       }
     }
@@ -68,4 +72,12 @@ pipeline {
         echo 'Pipeline execution failed!'
     }
   }
+}
+
+def getProfiles() {
+  def profiles = "skip-coverage,skip-release-it,gbif-artifacts"
+  if (params.TYPE == 'FULL') {
+      profiles += ",extra-artifacts"
+  }
+  return profiles
 }
