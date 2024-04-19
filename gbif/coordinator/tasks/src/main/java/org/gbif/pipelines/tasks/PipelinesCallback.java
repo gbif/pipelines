@@ -157,6 +157,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       log.info("Handler has been started, datasetKey - {}", datasetKey);
       checkIfDatasetIsDeleted();
       runnable.run();
+      checkIfDatasetIsDeleted();
       log.info("Handler has been finished, datasetKey - {}", datasetKey);
 
       // update tracking status
