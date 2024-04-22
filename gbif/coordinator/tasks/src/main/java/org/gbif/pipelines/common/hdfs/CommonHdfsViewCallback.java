@@ -14,15 +14,12 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
 import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.common.process.RecordCountReader;
 import org.gbif.pipelines.common.process.SparkSettings;
-import org.gbif.pipelines.common.utils.HdfsUtils;
-import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.HdfsViewPipeline;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
 import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
@@ -43,15 +40,13 @@ public class CommonHdfsViewCallback {
         // If there is one step only like metadata, we have to run pipelines steps
         message.setInterpretTypes(swapInterpretTypes(message.getInterpretTypes()));
 
-        int fileShards = computeNumberOfShards(message);
-
         ProcessRunnerBuilderBuilder builder =
             ProcessRunnerBuilder.builder()
                 .distributedConfig(config.distributedConfig)
                 .sparkConfig(config.sparkConfig)
                 .sparkAppName(
                     config.stepType + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-                .beamConfigFn(BeamSettings.occurrenceHdfsView(config, message, fileShards));
+                .beamConfigFn(BeamSettings.occurrenceHdfsView(config, message));
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
@@ -138,33 +133,6 @@ public class CommonHdfsViewCallback {
     } else {
       log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
     }
-  }
-
-  private int computeNumberOfShards(PipelinesInterpretationMessage message) throws IOException {
-    String datasetId = message.getDatasetUuid().toString();
-    String attempt = Integer.toString(message.getAttempt());
-    String dirPath =
-        String.join(
-            "/",
-            config.stepConfig.repositoryPath,
-            datasetId,
-            attempt,
-            config.recordType == RecordType.EVENT
-                ? DwcTerm.Event.simpleName().toLowerCase()
-                : DwcTerm.Occurrence.simpleName().toLowerCase());
-    HdfsConfigs hdfsConfigs =
-        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
-    long sizeByte = HdfsUtils.getFileSizeByte(hdfsConfigs, dirPath);
-    if (sizeByte == -1d) {
-      throw new IllegalArgumentException(
-          "Please check interpretation source directory! - " + dirPath);
-    }
-    long sizeExpected = config.hdfsAvroExpectedFileSizeInMb * 1048576L; // 1024 * 1024
-    double numberOfShards = (sizeByte * config.hdfsAvroCoefficientRatio / 100f) / sizeExpected;
-    double numberOfShardsFloor = Math.floor(numberOfShards);
-    numberOfShards =
-        numberOfShards - numberOfShardsFloor > 0.5d ? numberOfShardsFloor + 1 : numberOfShardsFloor;
-    return numberOfShards <= 0 ? 1 : (int) numberOfShards;
   }
 
   // If there is one step only like metadata, we have to run the RecordType steps

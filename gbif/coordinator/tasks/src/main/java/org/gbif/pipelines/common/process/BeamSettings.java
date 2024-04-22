@@ -139,7 +139,7 @@ public class BeamSettings {
   }
 
   public static Consumer<StringJoiner> occurrenceHdfsView(
-      HdfsViewConfiguration config, PipelinesInterpretationMessage message, int numberOfShards) {
+      HdfsViewConfiguration config, PipelinesInterpretationMessage message) {
     return command -> {
       // Common properties
       command
@@ -152,7 +152,6 @@ public class BeamSettings {
           .add("--hdfsSiteConfig=" + Objects.requireNonNull(config.stepConfig.hdfsSiteConfig))
           .add("--coreSiteConfig=" + Objects.requireNonNull(config.stepConfig.coreSiteConfig))
           .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig))
-          .add("--numberOfShards=" + numberOfShards)
           .add(
               "--interpretationTypes="
                   + Objects.requireNonNull(String.join(",", message.getInterpretTypes())));

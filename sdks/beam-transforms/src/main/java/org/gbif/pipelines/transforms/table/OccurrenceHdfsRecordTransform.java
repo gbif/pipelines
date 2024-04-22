@@ -165,12 +165,11 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
    *
    * @param toPath path with name to output files, like - directory/name
    */
-  public AvroIO.Write<OccurrenceHdfsRecord> write(String toPath, Integer numShards) {
-    AvroIO.Write<OccurrenceHdfsRecord> write =
-        AvroIO.write(OccurrenceHdfsRecord.class)
-            .to(toPath)
-            .withSuffix(PipelinesVariables.Pipeline.AVRO_EXTENSION)
-            .withCodec(Transform.getBaseCodec());
-    return numShards == null ? write : write.withNumShards(numShards);
+  public AvroIO.Write<OccurrenceHdfsRecord> write(String toPath) {
+    return AvroIO.write(OccurrenceHdfsRecord.class)
+        .to(toPath)
+        .withSuffix(PipelinesVariables.Pipeline.AVRO_EXTENSION)
+        .withCodec(Transform.getBaseCodec())
+        .withoutSharding();
   }
 }

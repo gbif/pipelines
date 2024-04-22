@@ -21,7 +21,6 @@ public class IdentifierTableTransform extends TableTransform<IdentifierTable> {
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
-      Integer numShards,
       Set<String> types) {
     super(
         IdentifierTable.class,
@@ -33,7 +32,6 @@ public class IdentifierTableTransform extends TableTransform<IdentifierTable> {
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
-        .setNumShards(numShards)
         .setTypes(types);
   }
 }

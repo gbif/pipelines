@@ -21,7 +21,6 @@ public class AmplificationTableTransform extends TableTransform<AmplificationTab
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
-      Integer numShards,
       Set<String> types) {
     super(
         AmplificationTable.class,
@@ -33,7 +32,6 @@ public class AmplificationTableTransform extends TableTransform<AmplificationTab
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
-        .setNumShards(numShards)
         .setTypes(types);
   }
 }
