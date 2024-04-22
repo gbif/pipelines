@@ -47,8 +47,6 @@ public abstract class TableTransform<T extends SpecificRecordBase>
 
   @NonNull private String path;
 
-  @NonNull private Integer numShards;
-
   @NonNull private Set<String> types;
 
   private final Counter counter;
@@ -85,11 +83,6 @@ public abstract class TableTransform<T extends SpecificRecordBase>
     return this;
   }
 
-  public TableTransform<T> setNumShards(Integer numShards) {
-    this.numShards = numShards;
-    return this;
-  }
-
   public TableTransform<T> setTypes(Set<String> types) {
     this.types = types;
     return this;
@@ -111,15 +104,11 @@ public abstract class TableTransform<T extends SpecificRecordBase>
   }
 
   public AvroIO.Write<T> write() {
-    AvroIO.Write<T> write =
-        AvroIO.write(clazz).to(path).withSuffix(AVRO_EXTENSION).withCodec(BASE_CODEC);
-
-    if (numShards == null || numShards <= 0) {
-      return write;
-    } else {
-      int shards = -Math.floorDiv(-numShards, 2);
-      return write.withNumShards(shards);
-    }
+    return AvroIO.write(clazz)
+        .to(path)
+        .withSuffix(AVRO_EXTENSION)
+        .withCodec(BASE_CODEC)
+        .withoutSharding();
   }
 
   public SingleOutput<KV<String, CoGbkResult>, T> convert() {

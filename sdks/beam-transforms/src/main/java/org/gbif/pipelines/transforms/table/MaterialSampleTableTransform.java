@@ -21,7 +21,6 @@ public class MaterialSampleTableTransform extends TableTransform<MaterialSampleT
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
-      Integer numShards,
       Set<String> types) {
     super(
         MaterialSampleTable.class,
@@ -33,7 +32,6 @@ public class MaterialSampleTableTransform extends TableTransform<MaterialSampleT
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
-        .setNumShards(numShards)
         .setTypes(types);
   }
 }

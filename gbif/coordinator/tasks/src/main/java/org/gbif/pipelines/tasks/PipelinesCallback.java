@@ -499,6 +499,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         log.error("The dataset marked as deleted while was being in the processing");
         throw new PipelinesException("The dataset marked as deleted");
       }
+    } else {
+      log.warn("datasetClient object is null, skip checkIfDatasetIsDeleted");
     }
   }
 

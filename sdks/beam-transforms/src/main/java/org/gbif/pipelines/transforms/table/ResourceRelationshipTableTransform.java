@@ -21,7 +21,6 @@ public class ResourceRelationshipTableTransform extends TableTransform<ResourceR
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
-      Integer numShards,
       Set<String> types) {
     super(
         ResourceRelationshipTable.class,
@@ -33,7 +32,6 @@ public class ResourceRelationshipTableTransform extends TableTransform<ResourceR
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
-        .setNumShards(numShards)
         .setTypes(types);
   }
 }
