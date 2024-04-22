@@ -136,7 +136,11 @@ public abstract class Transform<R, T extends SpecificRecordBase & Record> extend
    * @param toPath path with name to output files, like - directory/name
    */
   public AvroIO.Write<T> write(String toPath) {
-    return AvroIO.write(clazz).to(toPath).withSuffix(Pipeline.AVRO_EXTENSION).withCodec(BASE_CODEC);
+    return AvroIO.write(clazz)
+        .to(toPath)
+        .withSuffix(Pipeline.AVRO_EXTENSION)
+        .withCodec(BASE_CODEC)
+        .withoutSharding();
   }
 
   /**

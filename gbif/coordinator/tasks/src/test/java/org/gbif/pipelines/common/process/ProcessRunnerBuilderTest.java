@@ -214,7 +214,7 @@ public class ProcessRunnerBuilderTest {
             + "--class org.gbif.Test --master yarn --deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 "
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --runner=SparkRunner "
             + "--metaFileName=occurrence-to-hdfs.yml --inputPath=tmp --targetPath=target --hdfsSiteConfig=hdfs.xml "
-            + "--coreSiteConfig=core.xml --properties=/path/ws.config --numberOfShards=10 --interpretationTypes=OCCURRENCE "
+            + "--coreSiteConfig=core.xml --properties=/path/ws.config --interpretationTypes=OCCURRENCE "
             + "--experiments=use_deprecated_read";
 
     HdfsViewConfiguration config = new HdfsViewConfiguration();
@@ -271,7 +271,7 @@ public class ProcessRunnerBuilderTest {
             .sparkConfig(config.sparkConfig)
             .sparkSettings(SparkSettings.create(config.sparkConfig, 1L, false))
             .sparkAppName("HDFS_VIEW_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
-            .beamConfigFn(BeamSettings.occurrenceHdfsView(config, message, 10))
+            .beamConfigFn(BeamSettings.occurrenceHdfsView(config, message))
             .build()
             .get();
 
@@ -291,7 +291,7 @@ public class ProcessRunnerBuilderTest {
             + "--class org.gbif.Test --master yarn --deploy-mode cluster "
             + "--executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d "
             + "--attempt=1 --runner=SparkRunner --metaFileName=occurrence-to-hdfs.yml --inputPath=tmp --targetPath=target --hdfsSiteConfig=hdfs.xml "
-            + "--coreSiteConfig=core.xml --properties=/path/ws.config --numberOfShards=10 --interpretationTypes=OCCURRENCE "
+            + "--coreSiteConfig=core.xml --properties=/path/ws.config --interpretationTypes=OCCURRENCE "
             + "--experiments=use_deprecated_read";
 
     HdfsViewConfiguration config = new HdfsViewConfiguration();
@@ -352,7 +352,7 @@ public class ProcessRunnerBuilderTest {
             .sparkConfig(config.sparkConfig)
             .sparkSettings(SparkSettings.create(config.sparkConfig, 1L, false))
             .sparkAppName("HDFS_VIEW_de7ffb5e-c07b-42dc-8a88-f67a4465fe3d_1")
-            .beamConfigFn(BeamSettings.occurrenceHdfsView(config, message, 10))
+            .beamConfigFn(BeamSettings.occurrenceHdfsView(config, message))
             .build()
             .get();
 

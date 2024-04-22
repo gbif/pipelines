@@ -21,7 +21,6 @@ public class DnaDerivedDataTableTransform extends TableTransform<DnaDerivedDataT
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
-      Integer numShards,
       Set<String> types) {
     super(
         DnaDerivedDataTable.class,
@@ -33,7 +32,6 @@ public class DnaDerivedDataTableTransform extends TableTransform<DnaDerivedDataT
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
-        .setNumShards(numShards)
         .setTypes(types);
   }
 }

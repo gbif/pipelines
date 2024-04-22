@@ -21,7 +21,6 @@ public class PreparationTableTransform extends TableTransform<PreparationTable> 
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
-      Integer numShards,
       Set<String> types) {
     super(
         PreparationTable.class,
@@ -33,7 +32,6 @@ public class PreparationTableTransform extends TableTransform<PreparationTable> 
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
-        .setNumShards(numShards)
         .setTypes(types);
   }
 }
