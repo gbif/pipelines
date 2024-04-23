@@ -71,7 +71,8 @@ public class VerbatimToIdentifierPipelineIT {
       "--targetPath=" + outputFile,
       "--interpretationTypes=" + IDENTIFIER,
       "--properties=" + outputFile + "/pipelines.yaml",
-      "--testMode=true"
+      "--testMode=true",
+      "--numberOfShards=1"
     };
 
     String pipelinesProperties = outputFile + "/pipelines.yaml";

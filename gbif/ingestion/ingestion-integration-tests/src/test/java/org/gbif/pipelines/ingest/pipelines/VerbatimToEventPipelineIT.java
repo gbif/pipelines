@@ -75,7 +75,8 @@ public class VerbatimToEventPipelineIT {
       "--interpretationTypes=ALL",
       "--syncThreshold=0",
       "--testMode=true",
-      "--dwcCore=Event"
+      "--dwcCore=Event",
+      "--numberOfShards=1"
     };
     // State
     String pipelinesProperties = outputFile + "/pipelines.yaml";
