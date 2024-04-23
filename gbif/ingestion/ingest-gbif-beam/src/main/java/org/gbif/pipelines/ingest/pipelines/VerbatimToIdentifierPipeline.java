@@ -50,6 +50,7 @@ public class VerbatimToIdentifierPipeline {
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
     String targetPath = options.getTargetPath();
+    Integer numberOfShards = options.getNumberOfShards();
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
 
@@ -104,17 +105,17 @@ public class VerbatimToIdentifierPipeline {
 
     idsTuple
         .get(uniqueIdTransform.getTag())
-        .apply("Write GBIF ids to avro", idTransform.write(pathFn));
+        .apply("Write GBIF ids to avro", idTransform.write(pathFn, numberOfShards));
 
     idsTuple
         .get(uniqueIdTransform.getInvalidTag())
-        .apply("Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn));
+        .apply("Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn, numberOfShards));
 
     idCollection
         .get(tupleTransform.getAbsentTag())
         .apply(
             "Write absent GBIF ids to avro",
-            idTransform.write(pathFn.apply(idTransform.getAbsentName())));
+            idTransform.write(pathFn.apply(idTransform.getAbsentName()), numberOfShards));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

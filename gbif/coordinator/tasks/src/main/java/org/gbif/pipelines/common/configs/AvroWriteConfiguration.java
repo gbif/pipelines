@@ -15,4 +15,7 @@ public class AvroWriteConfiguration {
   @Parameter(names = "--sync-interval")
   @NotNull
   public int syncInterval = 2 * 1024 * 1024;
+
+  @Parameter(names = "--records-per-avro-file")
+  public long recordsPerAvroFile = 20_000_000L;
 }

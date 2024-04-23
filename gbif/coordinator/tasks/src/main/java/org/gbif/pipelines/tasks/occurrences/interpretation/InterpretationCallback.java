@@ -31,6 +31,7 @@ import org.gbif.pipelines.common.GbifApi;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.hdfs.HdfsViewSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.RecordCountReader;
 import org.gbif.pipelines.common.process.SparkSettings;
@@ -139,8 +140,11 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         defaultDateFormat = getDefaultDateFormat(datasetId);
       }
 
+      int numberOfShards = computeNumberOfShards(message);
+
       Consumer<StringJoiner> beamSettings =
-          BeamSettings.occurrenceInterpretation(config, message, path, defaultDateFormat);
+          BeamSettings.occurrenceInterpretation(
+              config, message, path, defaultDateFormat, numberOfShards);
 
       Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
@@ -166,6 +170,11 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
             "Failed interpretation on " + message.getDatasetUuid().toString(), ex);
       }
     };
+  }
+
+  private int computeNumberOfShards(PipelinesVerbatimMessage message) {
+    Long numberOfRecords = message.getValidationResult().getNumberOfRecords();
+    return HdfsViewSettings.computeNumberOfShards(config.avroConfig, numberOfRecords);
   }
 
   @Override

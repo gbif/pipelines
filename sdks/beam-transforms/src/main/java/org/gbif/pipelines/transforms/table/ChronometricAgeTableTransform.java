@@ -21,6 +21,7 @@ public class ChronometricAgeTableTransform extends TableTransform<ChronometricAg
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
+      Integer numShards,
       Set<String> types) {
     super(
         ChronometricAgeTable.class,
@@ -32,6 +33,7 @@ public class ChronometricAgeTableTransform extends TableTransform<ChronometricAg
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
+        .setNumShards(numShards)
         .setTypes(types);
   }
 }

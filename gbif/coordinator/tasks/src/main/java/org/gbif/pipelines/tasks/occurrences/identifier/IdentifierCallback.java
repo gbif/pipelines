@@ -20,6 +20,7 @@ import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.hdfs.HdfsViewSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.RecordCountReader;
 import org.gbif.pipelines.common.process.SparkSettings;
@@ -91,8 +92,11 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
+        int numberOfShards = computeNumberOfShards(message);
+
         Consumer<StringJoiner> beamSettings =
-            BeamSettings.occurrenceIdentifier(config, message, getFilePath(message));
+            BeamSettings.occurrenceIdentifier(
+                config, message, getFilePath(message), numberOfShards);
 
         log.info("Start the process. Message - {}", message);
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
@@ -130,6 +134,11 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
             "Failed interpretation on " + message.getDatasetUuid().toString(), ex);
       }
     };
+  }
+
+  private int computeNumberOfShards(PipelinesVerbatimMessage message) {
+    Long numberOfRecords = message.getValidationResult().getNumberOfRecords();
+    return HdfsViewSettings.computeNumberOfShards(config.avroConfig, numberOfRecords);
   }
 
   @Override

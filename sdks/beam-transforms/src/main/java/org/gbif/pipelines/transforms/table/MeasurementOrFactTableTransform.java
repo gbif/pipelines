@@ -21,6 +21,7 @@ public class MeasurementOrFactTableTransform extends TableTransform<MeasurementO
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
+      Integer numShards,
       Set<String> types) {
     super(
         MeasurementOrFactTable.class,
@@ -32,6 +33,7 @@ public class MeasurementOrFactTableTransform extends TableTransform<MeasurementO
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
+        .setNumShards(numShards)
         .setTypes(types);
   }
 }

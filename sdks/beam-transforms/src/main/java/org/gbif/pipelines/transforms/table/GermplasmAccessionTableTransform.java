@@ -21,6 +21,7 @@ public class GermplasmAccessionTableTransform extends TableTransform<GermplasmAc
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
+      Integer numShards,
       Set<String> types) {
     super(
         GermplasmAccessionTable.class,
@@ -32,6 +33,7 @@ public class GermplasmAccessionTableTransform extends TableTransform<GermplasmAc
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
+        .setNumShards(numShards)
         .setTypes(types);
   }
 }

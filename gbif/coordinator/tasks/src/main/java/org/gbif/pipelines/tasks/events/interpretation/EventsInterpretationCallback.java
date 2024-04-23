@@ -12,6 +12,7 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.hdfs.HdfsViewSettings;
 import org.gbif.pipelines.common.process.BeamSettings;
 import org.gbif.pipelines.common.process.SparkSettings;
 import org.gbif.pipelines.common.process.StackableSparkRunner;
@@ -83,6 +84,11 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
     };
   }
 
+  private int computeNumberOfShards(PipelinesEventsMessage message) {
+    Long numberOfRecords = message.getValidationResult().getNumberOfRecords();
+    return HdfsViewSettings.computeNumberOfShards(config.avroConfig, numberOfRecords);
+  }
+
   @Override
   public PipelinesEventsInterpretedMessage createOutgoingMessage(PipelinesEventsMessage message) {
     boolean repeatAttempt = pathExists(message);
@@ -114,13 +120,15 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
         SparkSettings.create(
             config.sparkConfig, message.getNumberOfEventRecords(), useMemoryExtraCoef);
 
+    int numberOfShards = computeNumberOfShards(message);
+
     StackableSparkRunner.StackableSparkRunnerBuilder builder =
         StackableSparkRunner.builder()
             .distributedConfig(config.distributedConfig)
             .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
             .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
             .sparkConfiguration(config.sparkConfig)
-            .beamConfigFn(BeamSettings.eventInterpretation(config, message, path))
+            .beamConfigFn(BeamSettings.eventInterpretation(config, message, path, numberOfShards))
             .sparkAppName(
                 SPARK_NAME_PREFIX + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
             .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)

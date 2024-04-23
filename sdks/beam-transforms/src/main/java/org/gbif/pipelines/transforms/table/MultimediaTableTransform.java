@@ -21,6 +21,7 @@ public class MultimediaTableTransform extends TableTransform<MultimediaTable> {
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
+      Integer numShards,
       Set<String> types) {
     super(
         MultimediaTable.class,
@@ -32,6 +33,7 @@ public class MultimediaTableTransform extends TableTransform<MultimediaTable> {
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
+        .setNumShards(numShards)
         .setTypes(types);
   }
 }

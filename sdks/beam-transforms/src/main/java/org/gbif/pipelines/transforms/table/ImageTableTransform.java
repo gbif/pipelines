@@ -21,6 +21,7 @@ public class ImageTableTransform extends TableTransform<ImageTable> {
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
+      Integer numShards,
       Set<String> types) {
     super(
         ImageTable.class,
@@ -32,6 +33,7 @@ public class ImageTableTransform extends TableTransform<ImageTable> {
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
+        .setNumShards(numShards)
         .setTypes(types);
   }
 }

@@ -92,7 +92,7 @@ public class AirflowBodyTest {
                     + message.getDatasetUuid()
                     + "_"
                     + message.getAttempt())
-            .beamConfigFn(BeamSettings.eventInterpretation(config, message, "verbatim.avro"))
+            .beamConfigFn(BeamSettings.eventInterpretation(config, message, "verbatim.avro", 2))
             .build()
             .buildAirflowRunner();
 
@@ -108,7 +108,7 @@ public class AirflowBodyTest {
     }
 
     String expected =
-        "{\"main\":\"org.gbif.ATestClass\",\"args\":[\"--datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d\",\"--attempt=1\",\"--interpretationTypes=ALL\",\"--runner=SparkRunner\",\"--targetPath=tmp\",\"--metaFileName=verbatim-to-event.yml\",\"--inputPath=verbatim.avro\",\"--avroCompressionType=SNAPPY\",\"--avroSyncInterval=1\",\"--hdfsSiteConfig=hdfs.xml\",\"--coreSiteConfig=core.xml\",\"--properties=/path/ws.config\",\"--dwcCore=Event\"],\"driverCores\":\"1000m\",\"driverMemory\":\"1Gi\",\"executorInstances\":2,\"executorCores\":\"1000m\",\"executorMemory\":\"1Gi\",\"clusterName\":\"test-cluster\"}";
+        "{\"main\":\"org.gbif.ATestClass\",\"args\":[\"--datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d\",\"--attempt=1\",\"--interpretationTypes=ALL\",\"--runner=SparkRunner\",\"--targetPath=tmp\",\"--metaFileName=verbatim-to-event.yml\",\"--inputPath=verbatim.avro\",\"--avroCompressionType=SNAPPY\",\"--avroSyncInterval=1\",\"--hdfsSiteConfig=hdfs.xml\",\"--coreSiteConfig=core.xml\",\"--properties=/path/ws.config\",\"--numberOfShards=2\",\"--dwcCore=Event\"],\"driverCores\":\"1000m\",\"driverMemory\":\"1Gi\",\"executorInstances\":2,\"executorCores\":\"1000m\",\"executorMemory\":\"1Gi\",\"clusterName\":\"test-cluster\"}";
 
     assertEquals(expected, result);
   }

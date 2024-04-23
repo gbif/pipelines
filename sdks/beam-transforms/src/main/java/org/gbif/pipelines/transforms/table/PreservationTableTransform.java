@@ -21,6 +21,7 @@ public class PreservationTableTransform extends TableTransform<PreservationTable
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
+      Integer numShards,
       Set<String> types) {
     super(
         PreservationTable.class,
@@ -32,6 +33,7 @@ public class PreservationTableTransform extends TableTransform<PreservationTable
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
+        .setNumShards(numShards)
         .setTypes(types);
   }
 }

@@ -21,6 +21,7 @@ public class CloningTableTransform extends TableTransform<CloningTable> {
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
+      Integer numShards,
       Set<String> types) {
     super(
         CloningTable.class,
@@ -32,6 +33,7 @@ public class CloningTableTransform extends TableTransform<CloningTable> {
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
+        .setNumShards(numShards)
         .setTypes(types);
   }
 }

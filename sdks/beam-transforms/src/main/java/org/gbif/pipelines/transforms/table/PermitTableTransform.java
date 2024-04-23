@@ -21,6 +21,7 @@ public class PermitTableTransform extends TableTransform<PermitTable> {
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
+      Integer numShards,
       Set<String> types) {
     super(
         PermitTable.class,
@@ -32,6 +33,7 @@ public class PermitTableTransform extends TableTransform<PermitTable> {
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
+        .setNumShards(numShards)
         .setTypes(types);
   }
 }

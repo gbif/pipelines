@@ -21,6 +21,7 @@ public class AudubonTableTransform extends TableTransform<AudubonTable> {
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
+      Integer numShards,
       Set<String> types) {
     super(
         AudubonTable.class,
@@ -32,6 +33,7 @@ public class AudubonTableTransform extends TableTransform<AudubonTable> {
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
+        .setNumShards(numShards)
         .setTypes(types);
   }
 }

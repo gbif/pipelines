@@ -21,6 +21,7 @@ public class LoanTableTransform extends TableTransform<LoanTable> {
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
+      Integer numShards,
       Set<String> types) {
     super(
         LoanTable.class,
@@ -32,6 +33,7 @@ public class LoanTableTransform extends TableTransform<LoanTable> {
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
+        .setNumShards(numShards)
         .setTypes(types);
   }
 }

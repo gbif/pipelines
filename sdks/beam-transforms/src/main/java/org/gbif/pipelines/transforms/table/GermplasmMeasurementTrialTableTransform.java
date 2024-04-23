@@ -22,6 +22,7 @@ public class GermplasmMeasurementTrialTableTransform
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
+      Integer numShards,
       Set<String> types) {
     super(
         GermplasmMeasurementTrialTable.class,
@@ -33,6 +34,7 @@ public class GermplasmMeasurementTrialTableTransform
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
+        .setNumShards(numShards)
         .setTypes(types);
   }
 }

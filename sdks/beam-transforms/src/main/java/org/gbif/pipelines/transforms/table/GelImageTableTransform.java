@@ -21,6 +21,7 @@ public class GelImageTableTransform extends TableTransform<GelImageTable> {
       TupleTag<IdentifierRecord> identifierRecordTag,
       PCollectionView<MetadataRecord> metadataView,
       String path,
+      Integer numShards,
       Set<String> types) {
     super(
         GelImageTable.class,
@@ -32,6 +33,7 @@ public class GelImageTableTransform extends TableTransform<GelImageTable> {
         .setIdentifierRecordTag(identifierRecordTag)
         .setMetadataRecord(metadataView)
         .setPath(path)
+        .setNumShards(numShards)
         .setTypes(types);
   }
 }

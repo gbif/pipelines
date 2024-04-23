@@ -38,7 +38,8 @@ public class BeamSettings {
       InterpreterConfiguration config,
       PipelinesVerbatimMessage message,
       String inputPath,
-      String defaultDateFormat) {
+      String defaultDateFormat,
+      int numberOfShards) {
     return command -> {
       InterpretationCommon.builder()
           .command(command)
@@ -50,6 +51,7 @@ public class BeamSettings {
           .pipelinesConfigPath(config.pipelinesConfig)
           .metaFileName(config.metaFileName)
           .inputPath(inputPath)
+          .numberOfShards(numberOfShards)
           .build()
           .addToStringBuilder();
 
@@ -108,7 +110,10 @@ public class BeamSettings {
   }
 
   public static Consumer<StringJoiner> occurrenceIdentifier(
-      IdentifierConfiguration config, PipelinesVerbatimMessage message, String inputPath) {
+      IdentifierConfiguration config,
+      PipelinesVerbatimMessage message,
+      String inputPath,
+      int numberOfShards) {
     return command -> {
       InterpretationCommon.builder()
           .command(command)
@@ -120,6 +125,7 @@ public class BeamSettings {
           .pipelinesConfigPath(config.pipelinesConfig)
           .metaFileName(config.metaFileName)
           .inputPath(inputPath)
+          .numberOfShards(numberOfShards)
           .build()
           .addToStringBuilder();
 
@@ -137,7 +143,7 @@ public class BeamSettings {
   }
 
   public static Consumer<StringJoiner> occurrenceHdfsView(
-      HdfsViewConfiguration config, PipelinesInterpretationMessage message) {
+      HdfsViewConfiguration config, PipelinesInterpretationMessage message, int numberOfShards) {
     return command -> {
       // Common properties
       command
@@ -150,6 +156,7 @@ public class BeamSettings {
           .add("--hdfsSiteConfig=" + Objects.requireNonNull(config.stepConfig.hdfsSiteConfig))
           .add("--coreSiteConfig=" + Objects.requireNonNull(config.stepConfig.coreSiteConfig))
           .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig))
+          .add("--numberOfShards=" + numberOfShards)
           .add(
               "--interpretationTypes="
                   + Objects.requireNonNull(String.join(",", message.getInterpretTypes())));
@@ -161,7 +168,10 @@ public class BeamSettings {
   }
 
   public static Consumer<StringJoiner> eventInterpretation(
-      EventsInterpretationConfiguration config, PipelinesEventsMessage message, String inputPath) {
+      EventsInterpretationConfiguration config,
+      PipelinesEventsMessage message,
+      String inputPath,
+      int numberOfShards) {
     return command -> {
       InterpretationCommon.builder()
           .command(command)
@@ -173,6 +183,7 @@ public class BeamSettings {
           .pipelinesConfigPath(config.pipelinesConfig)
           .metaFileName(config.metaFileName)
           .inputPath(inputPath)
+          .numberOfShards(numberOfShards)
           .build()
           .addToStringBuilder();
 
@@ -248,6 +259,7 @@ public class BeamSettings {
     private final String pipelinesConfigPath;
     private final String metaFileName;
     private final String inputPath;
+    private final int numberOfShards;
 
     private void addToStringBuilder() {
       String interpretationTypes = String.join(",", interpretTypes);
@@ -264,7 +276,8 @@ public class BeamSettings {
           .add("--avroSyncInterval=" + avroConfig.syncInterval)
           .add("--hdfsSiteConfig=" + Objects.requireNonNull(stepConfig.hdfsSiteConfig))
           .add("--coreSiteConfig=" + Objects.requireNonNull(stepConfig.coreSiteConfig))
-          .add("--properties=" + Objects.requireNonNull(pipelinesConfigPath));
+          .add("--properties=" + Objects.requireNonNull(pipelinesConfigPath))
+          .add("--numberOfShards=" + numberOfShards);
     }
   }
 
