@@ -142,7 +142,8 @@ public class VerbatimToEventPipeline {
           p.apply("Create metadata collection", Create.of(options.getDatasetId()))
               .apply("Interpret metadata", metadataTransform.interpret());
 
-      metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn).withoutSharding());
+      metadataRecord.apply(
+          "Write metadata to avro", metadataTransform.write(pathFn).withoutSharding());
     } else {
       metadataRecord = p.apply("Read metadata record", metadataTransform.read(interpretedPathFn));
     }
@@ -166,7 +167,8 @@ public class VerbatimToEventPipeline {
 
     uniqueRawRecords
         .apply("Interpret event identifiers", identifierTransform.interpret())
-        .apply("Write event identifiers to avro", identifierTransform.write(pathFn).withoutSharding());
+        .apply(
+            "Write event identifiers to avro", identifierTransform.write(pathFn).withoutSharding());
 
     uniqueRawRecords
         .apply("Check event core transform", eventCoreTransform.check(types))
@@ -186,7 +188,8 @@ public class VerbatimToEventPipeline {
     uniqueRawRecords
         .apply("Check event multimedia transform", multimediaTransform.check(types))
         .apply("Interpret event multimedia", multimediaTransform.interpret())
-        .apply("Write event multimedia to avro", multimediaTransform.write(pathFn).withoutSharding());
+        .apply(
+            "Write event multimedia to avro", multimediaTransform.write(pathFn).withoutSharding());
 
     uniqueRawRecords
         .apply("Check event audubon transform", audubonTransform.check(types))
@@ -206,7 +209,9 @@ public class VerbatimToEventPipeline {
     uniqueRawRecords
         .apply("Check event measurementOrFact", measurementOrFactTransform.check(types))
         .apply("Interpret event measurementOrFact", measurementOrFactTransform.interpret())
-        .apply("Write event measurementOrFact to avro", measurementOrFactTransform.write(pathFn).withoutSharding());
+        .apply(
+            "Write event measurementOrFact to avro",
+            measurementOrFactTransform.write(pathFn).withoutSharding());
 
     uniqueRawRecords
         .apply("Check event verbatim transform", verbatimTransform.check(types))

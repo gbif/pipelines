@@ -165,7 +165,8 @@ public class VerbatimToOccurrencePipeline {
           p.apply("Create metadata collection", Create.of(options.getDatasetId()))
               .apply("Interpret metadata", metadataTransform.interpret());
 
-      metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn).withoutSharding());
+      metadataRecord.apply(
+          "Write metadata to avro", metadataTransform.write(pathFn).withoutSharding());
     } else {
       metadataRecord = p.apply("Read metadata record", metadataTransform.read(interpretedPathFn));
     }
@@ -225,7 +226,8 @@ public class VerbatimToOccurrencePipeline {
       PCollection<IdentifierRecord> absentCreatedGbifIds =
           absentTyple.get(uniqueIdTransform.getTag());
 
-      absentCreatedGbifIds.apply("Write GBIF ids to avro", idTransform.write(pathFn).withoutSharding());
+      absentCreatedGbifIds.apply(
+          "Write GBIF ids to avro", idTransform.write(pathFn).withoutSharding());
 
       absentTyple
           .get(uniqueIdTransform.getInvalidTag())
