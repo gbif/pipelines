@@ -142,7 +142,7 @@ public class VerbatimToEventPipeline {
           p.apply("Create metadata collection", Create.of(options.getDatasetId()))
               .apply("Interpret metadata", metadataTransform.interpret());
 
-      metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
+      metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn).withoutSharding());
     } else {
       metadataRecord = p.apply("Read metadata record", metadataTransform.read(interpretedPathFn));
     }
@@ -166,51 +166,51 @@ public class VerbatimToEventPipeline {
 
     uniqueRawRecords
         .apply("Interpret event identifiers", identifierTransform.interpret())
-        .apply("Write event identifiers to avro", identifierTransform.write(pathFn));
+        .apply("Write event identifiers to avro", identifierTransform.write(pathFn).withoutSharding());
 
     uniqueRawRecords
         .apply("Check event core transform", eventCoreTransform.check(types))
         .apply("Interpret event core", eventCoreTransform.interpret())
-        .apply("Write event core to avro", eventCoreTransform.write(pathFn));
+        .apply("Write event core to avro", eventCoreTransform.write(pathFn).withoutSharding());
 
     uniqueRawRecords
         .apply("Check event temporal transform", temporalTransform.check(types))
         .apply("Interpret event temporal", temporalTransform.interpret())
-        .apply("Write event temporal to avro", temporalTransform.write(pathFn));
+        .apply("Write event temporal to avro", temporalTransform.write(pathFn).withoutSharding());
 
     uniqueRawRecords
         .apply("Check event taxonomy transform", taxonomyTransform.check(types))
         .apply("Interpret event taxonomy", taxonomyTransform.interpret())
-        .apply("Write event taxon to avro", taxonomyTransform.write(pathFn));
+        .apply("Write event taxon to avro", taxonomyTransform.write(pathFn).withoutSharding());
 
     uniqueRawRecords
         .apply("Check event multimedia transform", multimediaTransform.check(types))
         .apply("Interpret event multimedia", multimediaTransform.interpret())
-        .apply("Write event multimedia to avro", multimediaTransform.write(pathFn));
+        .apply("Write event multimedia to avro", multimediaTransform.write(pathFn).withoutSharding());
 
     uniqueRawRecords
         .apply("Check event audubon transform", audubonTransform.check(types))
         .apply("Interpret event audubon", audubonTransform.interpret())
-        .apply("Write event audubon to avro", audubonTransform.write(pathFn));
+        .apply("Write event audubon to avro", audubonTransform.write(pathFn).withoutSharding());
 
     uniqueRawRecords
         .apply("Check event image transform", imageTransform.check(types))
         .apply("Interpret event image", imageTransform.interpret())
-        .apply("Write event image to avro", imageTransform.write(pathFn));
+        .apply("Write event image to avro", imageTransform.write(pathFn).withoutSharding());
 
     uniqueRawRecords
         .apply("Check location transform", locationTransform.check(types))
         .apply("Interpret event location", locationTransform.interpret(metadataView))
-        .apply("Write event location to avro", locationTransform.write(pathFn));
+        .apply("Write event location to avro", locationTransform.write(pathFn).withoutSharding());
 
     uniqueRawRecords
         .apply("Check event measurementOrFact", measurementOrFactTransform.check(types))
         .apply("Interpret event measurementOrFact", measurementOrFactTransform.interpret())
-        .apply("Write event measurementOrFact to avro", measurementOrFactTransform.write(pathFn));
+        .apply("Write event measurementOrFact to avro", measurementOrFactTransform.write(pathFn).withoutSharding());
 
     uniqueRawRecords
         .apply("Check event verbatim transform", verbatimTransform.check(types))
-        .apply("Write event verbatim to avro", verbatimTransform.write(pathFn));
+        .apply("Write event verbatim to avro", verbatimTransform.write(pathFn).withoutSharding());
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
