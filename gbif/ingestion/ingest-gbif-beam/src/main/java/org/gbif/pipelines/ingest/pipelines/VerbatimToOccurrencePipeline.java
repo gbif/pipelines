@@ -203,7 +203,8 @@ public class VerbatimToOccurrencePipeline {
       uniqueGbifId.apply("Write GBIF IDs to avro", idTransform.write(pathFn).withoutSharding());
       idsTuple
           .get(uniqueIdTransform.getInvalidTag())
-          .apply("Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn).withoutSharding());
+          .apply(
+              "Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn).withoutSharding());
     } else if (useGbifIdReadIO(types)) {
       uniqueGbifId = p.apply("Read GBIF ids records", idTransform.read(interpretedPathFn));
     } else {
@@ -231,7 +232,8 @@ public class VerbatimToOccurrencePipeline {
 
       absentTyple
           .get(uniqueIdTransform.getInvalidTag())
-          .apply("Write invalid GBIF ids to avro", idTransform.writeInvalid(pathFn).withoutSharding());
+          .apply(
+              "Write invalid GBIF ids to avro", idTransform.writeInvalid(pathFn).withoutSharding());
 
       // Merge GBIF ids collections
       uniqueGbifId =
