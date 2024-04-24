@@ -159,7 +159,8 @@ public class BeamSettings {
           .add("--numberOfShards=" + numberOfShards)
           .add(
               "--interpretationTypes="
-                  + Objects.requireNonNull(String.join(",", message.getInterpretTypes())));
+                  + Objects.requireNonNull(String.join(",", message.getInterpretTypes())))
+          .add("--experiments=use_deprecated_read");
 
       if (config.recordType == RecordType.EVENT) {
         command.add("--coreRecordType=EVENT");
@@ -277,7 +278,8 @@ public class BeamSettings {
           .add("--hdfsSiteConfig=" + Objects.requireNonNull(stepConfig.hdfsSiteConfig))
           .add("--coreSiteConfig=" + Objects.requireNonNull(stepConfig.coreSiteConfig))
           .add("--properties=" + Objects.requireNonNull(pipelinesConfigPath))
-          .add("--numberOfShards=" + numberOfShards);
+          .add("--numberOfShards=" + numberOfShards)
+          .add("--experiments=use_deprecated_read");
     }
   }
 
@@ -310,7 +312,8 @@ public class BeamSettings {
           .add("--coreSiteConfig=" + Objects.requireNonNull(stepConfig.coreSiteConfig))
           .add("--esHosts=" + Objects.requireNonNull(esHosts))
           .add("--properties=" + Objects.requireNonNull(pipelinesConfigPath))
-          .add("--esIndexName=" + Objects.requireNonNull(esIndexName));
+          .add("--esIndexName=" + Objects.requireNonNull(esIndexName))
+          .add("--experiments=use_deprecated_read");
 
       Optional.ofNullable(indexConfig.occurrenceAlias)
           .ifPresent(x -> command.add("--esAlias=" + x));
