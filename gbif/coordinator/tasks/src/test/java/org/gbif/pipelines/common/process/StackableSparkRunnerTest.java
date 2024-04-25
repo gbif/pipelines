@@ -1,7 +1,6 @@
 package org.gbif.pipelines.common.process;
 
 import static org.gbif.api.model.pipelines.InterpretationType.RecordType.OCCURRENCE;
-import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,7 +14,7 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
-import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
+import org.gbif.pipelines.tasks.common.hdfs.HdfsViewConfiguration;
 import org.gbif.stackable.SparkCrd;
 import org.gbif.stackable.SparkCrd.Executor;
 import org.junit.Assert;

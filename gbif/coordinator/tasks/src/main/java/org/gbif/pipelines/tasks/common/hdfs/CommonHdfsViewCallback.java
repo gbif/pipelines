@@ -1,4 +1,4 @@
-package org.gbif.pipelines.common.hdfs;
+package org.gbif.pipelines.tasks.common.hdfs;
 
 import com.google.common.base.Strings;
 import java.io.IOException;
