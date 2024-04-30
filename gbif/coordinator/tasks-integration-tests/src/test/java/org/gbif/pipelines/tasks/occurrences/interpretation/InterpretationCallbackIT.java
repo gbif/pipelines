@@ -119,8 +119,8 @@ public class InterpretationCallbackIT {
 
     config.sparkConfig.executorMemoryGbMin = 4;
     config.sparkConfig.executorMemoryGbMax = 12;
-    config.sparkConfig.executorNumbersMin = 6;
-    config.sparkConfig.executorNumbersMax = 10;
+    config.sparkConfig.executorInstancesMin = 6;
+    config.sparkConfig.executorInstancesMax = 10;
 
     config.distributedConfig.mainClass =
         "org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline";

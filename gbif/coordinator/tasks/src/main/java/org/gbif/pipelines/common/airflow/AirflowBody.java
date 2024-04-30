@@ -1,32 +1,43 @@
 package org.gbif.pipelines.common.airflow;
 
-import java.util.ArrayList;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
-import java.util.Optional;
-import lombok.Getter;
-import lombok.Setter;
-import org.gbif.pipelines.common.configs.AirflowConfiguration;
+import lombok.Builder;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
+@Builder
 public class AirflowBody {
-  private String main;
-  private List<String> args;
-  private String driverCores;
-  private String driverMemory;
-  private int executorInstances;
-  private String executorCores;
-  private String executorMemory;
-  private String clusterName;
 
-  public AirflowBody(AirflowConfiguration conf) {
-    Optional.ofNullable(conf.airflowCluster).ifPresent(x -> clusterName = x);
-    Optional.ofNullable(conf.maxCoresDriver).ifPresent(x -> driverCores = x);
-    Optional.ofNullable(conf.maxMemoryDriver).ifPresent(x -> driverMemory = x);
-    Optional.ofNullable(conf.maxCoresWorkers).ifPresent(x -> executorCores = x);
-    Optional.ofNullable(conf.maxMemoryWorkers).ifPresent(x -> executorMemory = x);
-    Optional.of(conf.numberOfWorkers).ifPresent(x -> executorInstances = x);
-    main = "";
-    args = new ArrayList<>();
+  @JsonProperty("dag_run_id")
+  private final String dagRunId;
+
+  private final Conf conf;
+
+  @Data
+  @Builder
+  public static class Conf {
+
+    private final List<String> args;
+
+    private final String driverMinCpu;
+    private final String driverMaxCpu;
+    private final String driverLimitMemory;
+    // Sum of driver + vector containers request memory
+    private final String driverMinResourceMemory;
+    // Sum of driver + vector containers request cpu
+    private final String driverMinResourceCpu;
+
+    private final String memoryOverhead;
+    private final String executorMinCpu;
+    private final String executorMaxCpu;
+    private final String executorLimitMemory;
+    // Sum of memoryOverhead + executorLimitMemory + vector request memory
+    private final String executorMinResourceMemory;
+    // Sum of executor + vector containers request cpu
+    private final String executorMinResourceCpu;
+    private final int minExecutors;
+    private final int maxExecutors;
+    private final int initialExecutors;
   }
 }

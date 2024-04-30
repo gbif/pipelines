@@ -7,47 +7,41 @@ import java.util.Base64;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.http.Header;
+import org.apache.http.HttpHeaders;
+import org.apache.http.entity.ContentType;
+import org.apache.http.message.BasicHeader;
 
 @ToString
 @Getter
 @Setter
 public class AirflowConfiguration {
 
-  public static final String SPARK_DAG_NAME = "gbif_spark_execution_dag";
+  @Parameter(names = "--dag-name")
+  public String dagName;
 
-  @Parameter(names = "--airflow-number-of-workers")
-  public int numberOfWorkers;
+  @Parameter(names = "--user")
+  public String user;
 
-  @Parameter(names = "--airflow-worker-max-memory")
-  public String maxMemoryWorkers;
+  @Parameter(names = "--pass")
+  public String pass;
 
-  @Parameter(names = "--airflow-worker-max-cores")
-  public String maxCoresWorkers;
+  @Parameter(names = "--address")
+  public String address;
 
-  @Parameter(names = "--airflow-driver-max-memory")
-  public String maxMemoryDriver;
-
-  @Parameter(names = "--airflow-driver-max-cores")
-  public String maxCoresDriver;
-
-  @Parameter(names = "--airflow-cluster")
-  public String airflowCluster;
-
-  @Parameter(names = "--use-airflow")
-  public boolean useAirflow;
-
-  @Parameter(names = "--airflow-user")
-  public String airflowUser;
-
-  @Parameter(names = "--airflow-pass")
-  public String airflowPass;
-
-  @Parameter(names = "--airflow-address")
-  public String airflowAddress;
+  @Parameter(names = "--api-check-delay-sec")
+  public int apiCheckDelaySec = 5;
 
   @JsonIgnore
   public String getBasicAuthString() {
-    String stringToEncode = airflowUser + ":" + airflowPass;
+    String stringToEncode = user + ":" + pass;
     return Base64.getEncoder().encodeToString(stringToEncode.getBytes(StandardCharsets.UTF_8));
+  }
+
+  public Header[] getHeaders() {
+    return new Header[] {
+      new BasicHeader(HttpHeaders.AUTHORIZATION, "Basic " + getBasicAuthString()),
+      new BasicHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+    };
   }
 }

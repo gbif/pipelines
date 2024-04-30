@@ -3,14 +3,14 @@ package org.gbif.pipelines.tasks.occurrences.identifier;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.gbif.api.model.pipelines.PipelineStep.Status;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -21,10 +21,11 @@ import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.hdfs.HdfsViewSettings;
-import org.gbif.pipelines.common.process.BeamSettings;
+import org.gbif.pipelines.common.process.AirflowSparkLauncher;
+import org.gbif.pipelines.common.process.BeamParametersBuilder;
+import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
 import org.gbif.pipelines.common.process.RecordCountReader;
 import org.gbif.pipelines.common.process.SparkSettings;
-import org.gbif.pipelines.common.process.StackableSparkRunner;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToIdentifierPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
@@ -94,15 +95,15 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
 
         int numberOfShards = computeNumberOfShards(message);
 
-        Consumer<StringJoiner> beamSettings =
-            BeamSettings.occurrenceIdentifier(
+        BeamParameters beamParameters =
+            BeamParametersBuilder.occurrenceIdentifier(
                 config, message, getFilePath(message), numberOfShards);
 
         log.info("Start the process. Message - {}", message);
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          runDistributed(message, beamSettings);
+          runDistributed(message, beamParameters);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
-          runLocal(beamSettings);
+          runLocal(beamParameters);
         }
 
         IdentifierValidationResult validationResult =
@@ -161,7 +162,7 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
         message.getDatasetType());
   }
 
-  private void runDistributed(PipelinesVerbatimMessage message, Consumer<StringJoiner> beamSettings)
+  private void runDistributed(PipelinesVerbatimMessage message, BeamParameters beamParameters)
       throws IOException {
 
     Long messageNumber =
@@ -186,32 +187,28 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
     SparkSettings sparkSettings =
         SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
-    StackableSparkRunner.StackableSparkRunnerBuilder builder =
-        StackableSparkRunner.builder()
-            .beamConfigFn(beamSettings)
-            .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
-            .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
-            .sparkConfiguration(config.sparkConfig)
-            .sparkAppName(TYPE.name() + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-            .distributedConfig(config.distributedConfig)
-            .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
-            .sparkSettings(sparkSettings);
+    String appName = TYPE.name() + "_" + message.getDatasetUuid() + "_" + message.getAttempt();
 
-    // Assembles a terminal java process and runs it
-    StackableSparkRunner ssr = builder.build();
-    int exitValue = ssr.start().waitFor();
+    Optional<Status> status =
+        AirflowSparkLauncher.builder()
+            .airflowConfiguration(config.airflowConfiguration)
+            .sparkStaticConfiguration(config.sparkConfig)
+            .sparkDynamicSettings(sparkSettings)
+            .beamParameters(beamParameters)
+            .sparkAppName(appName)
+            .build()
+            .submitAndAwait();
 
-    if (exitValue != 0) {
+    if (status.isEmpty() || status.get() == Status.ABORTED || status.get() == Status.FAILED) {
       throw new IllegalStateException(
-          "Process failed in distributed Job. Check k8s logs " + ssr.getSparkAppName());
+          "Process failed in distributed Job. Check k8s logs " + appName);
     } else {
-      log.info("Process has been finished, Spark job name - {}", ssr.getSparkAppName());
+      log.info("Process has been finished, Spark job name - {}", appName);
     }
   }
 
-  private void runLocal(Consumer<StringJoiner> beamSettings) {
-    String[] pipelineOptions = BeamSettings.buildOptions(beamSettings);
-    VerbatimToIdentifierPipeline.run(pipelineOptions, executor);
+  private void runLocal(BeamParameters beamParameters) {
+    VerbatimToIdentifierPipeline.run(beamParameters.toArray(), executor);
   }
 
   private String getFilePath(PipelinesVerbatimMessage message) {

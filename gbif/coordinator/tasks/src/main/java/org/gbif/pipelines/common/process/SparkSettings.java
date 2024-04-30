@@ -55,19 +55,19 @@ public class SparkSettings {
   }
 
   /**
-   * Computes the numbers of executors, where min is config.sparkConfig.executorNumbersMin and max
-   * is config.sparkConfig.executorNumbersMax
+   * Computes the numbers of executors, where min is config.sparkConfig.executorInstancesMin and max
+   * is config.sparkConfig.executorInstancesMax
    */
   private int computeExecutorNumbers(SparkConfiguration sparkConfig, long recordsNumber) {
 
     int sparkExecutorNumbers =
         computePowerFn(sparkConfig, recordsNumber, sparkConfig.powerFnExecutorCoefficient);
 
-    if (sparkExecutorNumbers < sparkConfig.executorNumbersMin) {
-      return sparkConfig.executorNumbersMin;
+    if (sparkExecutorNumbers < sparkConfig.executorInstancesMin) {
+      return sparkConfig.executorInstancesMin;
     }
-    if (sparkExecutorNumbers > sparkConfig.executorNumbersMax) {
-      return sparkConfig.executorNumbersMax;
+    if (sparkExecutorNumbers > sparkConfig.executorInstancesMax) {
+      return sparkConfig.executorInstancesMax;
     }
     return sparkExecutorNumbers;
   }

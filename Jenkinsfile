@@ -60,6 +60,7 @@ pipeline {
       }
       steps {
           sh 'build/clustering-docker-build.sh'
+          sh 'build/ingestion-docker-build.sh'
         }
       }
     }

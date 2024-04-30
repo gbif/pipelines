@@ -15,8 +15,8 @@ public class SparkSettingsTest {
   public static void setUp() {
     CONFIG.executorMemoryGbMin = 8;
     CONFIG.executorMemoryGbMax = 70;
-    CONFIG.executorNumbersMin = 2;
-    CONFIG.executorNumbersMax = 70;
+    CONFIG.executorInstancesMin = 2;
+    CONFIG.executorInstancesMax = 70;
     // Power function setting
     CONFIG.powerFnCoefficient = 0.000138d;
     CONFIG.powerFnExponent = 0.626d;
@@ -36,7 +36,7 @@ public class SparkSettingsTest {
 
     // Should
     assertNotNull(sparkSettings);
-    assertEquals(CONFIG.executorNumbersMin, sparkSettings.getExecutorNumbers());
+    assertEquals(CONFIG.executorInstancesMin, sparkSettings.getExecutorNumbers());
     assertEquals(CONFIG.executorMemoryGbMin, sparkSettings.getExecutorMemory());
   }
 
@@ -51,7 +51,7 @@ public class SparkSettingsTest {
 
     // Should
     assertNotNull(sparkSettings);
-    assertEquals(CONFIG.executorNumbersMin, sparkSettings.getExecutorNumbers());
+    assertEquals(CONFIG.executorInstancesMin, sparkSettings.getExecutorNumbers());
     assertEquals(CONFIG.executorMemoryGbMin, sparkSettings.getExecutorMemory());
   }
 
@@ -156,7 +156,7 @@ public class SparkSettingsTest {
 
     // Should
     assertNotNull(sparkSettings);
-    assertEquals(CONFIG.executorNumbersMax, sparkSettings.getExecutorNumbers());
+    assertEquals(CONFIG.executorInstancesMax, sparkSettings.getExecutorNumbers());
     assertEquals(CONFIG.executorMemoryGbMax, sparkSettings.getExecutorMemory());
   }
 
@@ -171,7 +171,7 @@ public class SparkSettingsTest {
 
     // Should
     assertNotNull(sparkSettings);
-    assertEquals(CONFIG.executorNumbersMax, sparkSettings.getExecutorNumbers());
+    assertEquals(CONFIG.executorInstancesMax, sparkSettings.getExecutorNumbers());
     assertEquals(CONFIG.executorMemoryGbMax, sparkSettings.getExecutorMemory());
   }
 }

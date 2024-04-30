@@ -178,7 +178,7 @@ public final class StackableSparkRunner {
               int memoryOverhead =
                   Integer.valueOf(
                       spec.getSparkConf().getOrDefault("spark.executor.memoryOverhead", "0"));
-              int sidecarMemory = sparkConfiguration.extraMemoryForSidecarMb;
+              int sidecarMemory = sparkConfiguration.vectorMemoryMb;
 
               int totalRequestedMemoryGb =
                   Double.valueOf(

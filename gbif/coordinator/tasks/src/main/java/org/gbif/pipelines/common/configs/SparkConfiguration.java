@@ -8,23 +8,49 @@ import lombok.ToString;
 @ToString
 public class SparkConfiguration {
 
+  // Driver settings
+
+  @Parameter(names = "--spark-driver-cpu-min")
+  public String driverCpuMin;
+
+  @Parameter(names = "--spark-driver-cpu-max")
+  public String driverCpuMax;
+
+  @Parameter(names = "--spark-driver-cpu-max")
+  public int driverMemoryLimit;
+
+  // Executor settings
+
+  @Parameter(names = "--memory-overhead-mb")
+  public int memoryOverheadMb;
+
+  @Parameter(names = "--spark-executor-cpu-min")
+  public String executorCpuMin;
+
+  @Parameter(names = "--spark-executor-cpu-max")
+  public String executorCpuMax;
+
   @Parameter(names = "--spark-executor-memory-gb-min")
   public int executorMemoryGbMin;
 
   @Parameter(names = "--spark-executor-memory-gb-max")
   public int executorMemoryGbMax;
 
-  @Parameter(names = "--spark-executor-numbers-min")
-  public int executorNumbersMin;
+  @Parameter(names = "--spark-executor-instances-min")
+  public int executorInstancesMin;
 
-  @Parameter(names = "--spark-executor-numbers-max")
-  public int executorNumbersMax;
+  @Parameter(names = "--spark-executor-instances-max")
+  public int executorInstancesMax;
 
-  @Parameter(names = "--extra-memory-for-sidecar-mb")
-  public int extraMemoryForSidecarMb = 256;
+  // Sidecar pod settings
 
-  @Parameter(names = "--max-record-limit")
-  public long maxRecordsLimit;
+  @Parameter(names = "--vector-memory-mb")
+  public int vectorMemoryMb;
+
+  @Parameter(names = "--vector-cpu")
+  public int vectorCpu;
+
+  // Dynamic settings section
 
   @Parameter(names = "--power-fn-coefficient")
   public double powerFnCoefficient;
