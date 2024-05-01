@@ -79,7 +79,7 @@ public class AirflowSparkLauncher {
                 .executorLimitMemory(sparkDynamicSettings.getExecutorMemory() + "Gi")
                 // dynamicAllocation
                 .initialExecutors(sparkDynamicSettings.getExecutorNumbers())
-                .minExecutors(sparkStaticConfiguration.executorMemoryGbMin)
+                .minExecutors(sparkStaticConfiguration.executorInstancesMin)
                 .maxExecutors(sparkDynamicSettings.getExecutorNumbers())
                 // Extra
                 .build())
