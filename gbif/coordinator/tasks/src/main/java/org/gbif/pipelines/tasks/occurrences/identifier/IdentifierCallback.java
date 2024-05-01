@@ -191,7 +191,7 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
 
     Optional<Status> status =
         AirflowSparkLauncher.builder()
-            .airflowConfiguration(config.airflowConfiguration)
+            .airflowConfiguration(config.airflowConfig)
             .sparkStaticConfiguration(config.sparkConfig)
             .sparkDynamicSettings(sparkSettings)
             .beamParameters(beamParameters)

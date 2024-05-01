@@ -25,10 +25,7 @@ public class IdentifierConfiguration implements BaseConfiguration {
   public AvroWriteConfiguration avroConfig = new AvroWriteConfiguration();
 
   @ParametersDelegate @Valid @NotNull
-  public StackableConfiguration stackableConfiguration = new StackableConfiguration();
-
-  @ParametersDelegate @Valid @NotNull
-  public AirflowConfiguration airflowConfiguration = new AirflowConfiguration();
+  public AirflowConfiguration airflowConfig = new AirflowConfiguration();
 
   @Parameter(names = "--meta-file-name")
   public String metaFileName = Pipeline.VERBATIM_TO_IDENTIFIER + ".yml";
