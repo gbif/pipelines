@@ -52,7 +52,14 @@ pipeline {
       }
     }
 
-    stage('Build and push Docker images') {
+    stage('Build and push Docker images: Ingestion') {
+      steps {
+          sh 'build/ingestion-docker-build.sh'
+        }
+      }
+    }
+
+    stage('Build and push Docker images: Clustering') {
       when {
         expression {
           params.TYPE == 'FULL'
@@ -60,7 +67,6 @@ pipeline {
       }
       steps {
           sh 'build/clustering-docker-build.sh'
-          sh 'build/ingestion-docker-build.sh'
         }
       }
     }
