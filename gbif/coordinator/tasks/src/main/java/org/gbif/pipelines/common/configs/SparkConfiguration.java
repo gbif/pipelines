@@ -16,7 +16,7 @@ public class SparkConfiguration {
   @Parameter(names = "--spark-driver-cpu-max")
   public String driverCpuMax;
 
-  @Parameter(names = "--spark-driver-cpu-max")
+  @Parameter(names = "--spark-driver-memory-limit")
   public int driverMemoryLimit;
 
   // Executor settings
