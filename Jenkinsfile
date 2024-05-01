@@ -54,8 +54,7 @@ pipeline {
 
     stage('Build and push Docker images: Ingestion') {
       steps {
-          sh 'build/ingestion-docker-build.sh'
-        }
+        sh 'build/ingestion-docker-build.sh'
       }
     }
 
@@ -66,10 +65,11 @@ pipeline {
         }
       }
       steps {
-          sh 'build/clustering-docker-build.sh'
-        }
+        sh 'build/clustering-docker-build.sh'
       }
     }
+
+  }
 
     post {
       success {
