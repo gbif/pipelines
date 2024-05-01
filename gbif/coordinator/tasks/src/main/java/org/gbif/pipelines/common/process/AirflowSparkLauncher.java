@@ -134,6 +134,7 @@ public class AirflowSparkLauncher {
    * Must start and end with an alphanumeric character and its max lentgh is 64 characters.
    */
   private static String normalize(String sparkAppName) {
-    return sparkAppName.toLowerCase().replace("_to_", "-").replace("_", "-").substring(0, 63);
+    String v = sparkAppName.toLowerCase().replace("_to_", "-").replace("_", "-");
+    return v.length() > 64 ? v.substring(0, 63) : v;
   }
 }
