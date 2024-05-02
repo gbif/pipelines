@@ -91,15 +91,25 @@ public class AirflowSparkLauncher {
     try {
 
       String normalizedAppName = normalize(sparkAppName);
-      airflowRunner.createRun(getAirflowBody(normalizedAppName));
+      AirflowBody airflowBody = getAirflowBody(normalizedAppName);
+
+      log.info("Running Airflow DAG ID {}: {}", airflowBody.getDagRunId(), airflowBody);
+
+      airflowRunner.createRun(airflowBody);
 
       Optional<Status> status = getStatusByName(normalizedAppName);
+
+      log.info("Waiting Airflow DAG ID {} to be finished", airflowBody.getDagRunId());
       while (status.isPresent()
           && Status.COMPLETED != status.get()
           && Status.FAILED != status.get()) {
         TimeUnit.SECONDS.sleep(airflowConfiguration.apiCheckDelaySec);
         status = getStatusByName(normalizedAppName);
       }
+      log.info(
+          "Airflow DAG ID {} is finished with status - {}",
+          airflowBody.getDagRunId(),
+          status.orElse(Status.FAILED));
 
       return status;
     } catch (Exception ex) {
