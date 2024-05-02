@@ -122,10 +122,6 @@ public class InterpretationCallbackIT {
     config.sparkConfig.executorInstancesMin = 6;
     config.sparkConfig.executorInstancesMax = 10;
 
-    config.distributedConfig.mainClass =
-        "org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline";
-    config.distributedConfig.jarPath = "a://b/a/c/ingest-gbif.jar";
-
     ExecutorService executorService = Executors.newSingleThreadExecutor();
     CloseableHttpClient closeableHttpClient = new CloseableHttpClientStub(200, "[]");
 

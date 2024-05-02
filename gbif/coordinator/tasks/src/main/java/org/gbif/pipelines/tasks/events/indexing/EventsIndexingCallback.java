@@ -11,11 +11,13 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.common.airflow.AppName;
 import org.gbif.pipelines.common.indexing.IndexSettings;
-import org.gbif.pipelines.common.process.BeamSettings;
+import org.gbif.pipelines.common.process.AirflowSparkLauncher;
+import org.gbif.pipelines.common.process.BeamParametersBuilder;
+import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
 import org.gbif.pipelines.common.process.RecordCountReader;
-import org.gbif.pipelines.common.process.SparkSettings;
-import org.gbif.pipelines.common.process.StackableSparkRunner;
+import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
@@ -32,9 +34,6 @@ public class EventsIndexingCallback
     implements StepHandler<PipelinesEventsInterpretedMessage, PipelinesEventsIndexedMessage> {
 
   private static final StepType TYPE = StepType.EVENTS_INTERPRETED_TO_INDEX;
-
-  // Required because K8 supports up to 64 characters in names
-  private static final String SPARK_NAME_PREFIX = "event-interpreted-idx";
 
   private final EventsIndexingConfiguration config;
   private final MessagePublisher publisher;
@@ -104,6 +103,7 @@ public class EventsIndexingCallback
   private void runDistributed(PipelinesEventsInterpretedMessage message, long recordsNumber)
       throws IOException {
 
+    // Spark dynamic settings
     IndexSettings indexSettings =
         IndexSettings.create(
             config.indexConfig,
@@ -114,31 +114,24 @@ public class EventsIndexingCallback
 
     boolean useMemoryExtraCoef =
         config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
-    SparkSettings sparkSettings =
-        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
+    SparkDynamicSettings sparkDynamicSettings =
+        SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
-    StackableSparkRunner.StackableSparkRunnerBuilder builder =
-        StackableSparkRunner.builder()
-            .distributedConfig(config.distributedConfig)
-            .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
-            .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
-            .sparkConfiguration(config.sparkConfig)
-            .beamConfigFn(BeamSettings.eventIndexing(config, message, indexSettings))
-            .sparkAppName(
-                SPARK_NAME_PREFIX + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-            .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
-            .sparkSettings(sparkSettings);
+    BeamParameters beamParameters =
+        BeamParametersBuilder.eventIndexing(config, message, indexSettings);
 
-    // Assembles a terminal java process and runs it
-    StackableSparkRunner ssr = builder.build();
-    int exitValue = ssr.start().waitFor();
+    // App name
+    String sparkAppName = AppName.get(TYPE, message.getDatasetUuid(), message.getAttempt());
 
-    if (exitValue != 0) {
-      throw new IllegalStateException(
-          "Process failed in distributed Job. Check k8s logs " + ssr.getSparkAppName());
-    } else {
-      log.info("Process has been finished, Spark job name - {}", ssr.getSparkAppName());
-    }
+    // Submit
+    AirflowSparkLauncher.builder()
+        .airflowConfiguration(config.airflowConfig)
+        .sparkStaticConfiguration(config.sparkConfig)
+        .sparkDynamicSettings(sparkDynamicSettings)
+        .beamParameters(beamParameters)
+        .sparkAppName(sparkAppName)
+        .build()
+        .submitAwaitVoid();
   }
 
   /** Sum of event and occurrence records */

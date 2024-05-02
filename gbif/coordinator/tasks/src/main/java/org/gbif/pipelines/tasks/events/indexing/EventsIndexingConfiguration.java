@@ -16,11 +16,8 @@ public class EventsIndexingConfiguration implements BaseConfiguration {
 
   @ParametersDelegate @Valid public SparkConfiguration sparkConfig = new SparkConfiguration();
 
-  @ParametersDelegate @Valid
-  public DistributedConfiguration distributedConfig = new DistributedConfiguration();
-
   @ParametersDelegate @Valid @NotNull
-  public StackableConfiguration stackableConfiguration = new StackableConfiguration();
+  public AirflowConfiguration airflowConfig = new AirflowConfiguration();
 
   @ParametersDelegate @Valid @NotNull
   public ElasticsearchConfiguration esConfig = new ElasticsearchConfiguration();

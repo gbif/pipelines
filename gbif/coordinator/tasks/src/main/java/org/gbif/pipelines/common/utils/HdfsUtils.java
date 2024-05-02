@@ -4,7 +4,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Strings;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -48,14 +47,10 @@ public class HdfsUtils {
   }
 
   /**
-   * @param filePath
-   * @param fs
    * @return list of absolute file path present in given path
-   * @throws FileNotFoundException
-   * @throws IOException
    */
   public static List<FileStatus> getAllFilesRecursive(Path filePath, FileSystem fs)
-      throws FileNotFoundException, IOException {
+      throws IOException {
     List<FileStatus> fileList = new ArrayList<>();
     FileStatus[] fileStatus = fs.listStatus(filePath);
     for (FileStatus fileStat : fileStatus) {
@@ -66,19 +61,6 @@ public class HdfsUtils {
       }
     }
     return fileList;
-  }
-
-  /**
-   * Returns number of files in the directory
-   *
-   * @param hdfsConfigs path to hdfs-site.xml and core-site.xml config file
-   * @param directoryPath path to some directory
-   */
-  public static int getFileCount(HdfsConfigs hdfsConfigs, String directoryPath) throws IOException {
-    URI fileUri = URI.create(directoryPath);
-    FileSystem fs = getFileSystem(hdfsConfigs, directoryPath);
-
-    return getAllFilesRecursive(new Path(fileUri), fs).size();
   }
 
   /**
@@ -212,7 +194,7 @@ public class HdfsUtils {
     return true;
   }
 
-  /** Delete HDFS sub-directories where modification date is older than deleteAfterDays value */
+  /** Delete HDFS subdirectories where modification date is older than deleteAfterDays value */
   public static void deleteSubFolders(
       HdfsConfigs hdfsConfigs, String filePath, long deleteAfterDays, Set<String> exclude)
       throws IOException {

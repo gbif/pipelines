@@ -4,9 +4,7 @@ import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +16,12 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
-import org.gbif.pipelines.common.process.BeamSettings;
+import org.gbif.pipelines.common.airflow.AppName;
+import org.gbif.pipelines.common.process.AirflowSparkLauncher;
+import org.gbif.pipelines.common.process.BeamParametersBuilder;
+import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
 import org.gbif.pipelines.common.process.RecordCountReader;
-import org.gbif.pipelines.common.process.SparkSettings;
-import org.gbif.pipelines.common.process.StackableSparkRunner;
+import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.HdfsViewPipeline;
@@ -46,16 +46,16 @@ public class CommonHdfsViewCallback {
         message.setInterpretTypes(swapInterpretTypes(message.getInterpretTypes()));
 
         int fileShards = computeNumberOfShards(message);
-        Consumer<StringJoiner> beamSettings =
-            BeamSettings.occurrenceHdfsView(config, message, fileShards);
+        BeamParameters beamParameters =
+            BeamParametersBuilder.occurrenceHdfsView(config, message, fileShards);
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
         log.info("Start the process. Message - {}", message);
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          runDistributed(message, beamSettings);
+          runDistributed(message, beamParameters);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
-          runLocal(beamSettings);
+          runLocal(beamParameters);
         }
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
@@ -86,26 +86,14 @@ public class CommonHdfsViewCallback {
     return true;
   }
 
-  private void runLocal(Consumer<StringJoiner> beamSettings) {
-    String[] pipelineOptions = BeamSettings.buildOptions(beamSettings);
-    HdfsViewPipeline.run(pipelineOptions, executor);
+  private void runLocal(BeamParameters beamParameters) {
+    HdfsViewPipeline.run(beamParameters.toArray(), executor);
   }
 
-  private void runDistributed(
-      PipelinesInterpretationMessage message, Consumer<StringJoiner> beamSettings)
+  private void runDistributed(PipelinesInterpretationMessage message, BeamParameters beamParameters)
       throws IOException {
 
-    StackableSparkRunner.StackableSparkRunnerBuilder builder =
-        StackableSparkRunner.builder()
-            .distributedConfig(config.distributedConfig)
-            .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
-            .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
-            .sparkConfiguration(config.sparkConfig)
-            .beamConfigFn(beamSettings)
-            .sparkAppName(
-                config.stepType + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-            .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish);
-
+    // Spark dynamic settings
     Long messageNumber = null;
     String metaFileName = null;
     if (message instanceof PipelinesInterpretedMessage) {
@@ -143,21 +131,22 @@ public class CommonHdfsViewCallback {
     log.info("Calculate job's settings based on {} records", recordsNumber);
     boolean useMemoryExtraCoef =
         config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
-    SparkSettings sparkSettings =
-        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
+    SparkDynamicSettings sparkDynamicSettings =
+        SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
-    builder.sparkSettings(sparkSettings);
+    // App name
+    String sparkAppName =
+        AppName.get(config.stepType, message.getDatasetUuid(), message.getAttempt());
 
-    // Assembles a terminal java process and runs it
-    StackableSparkRunner ssr = builder.build();
-    int exitValue = ssr.start().waitFor();
-
-    if (exitValue != 0) {
-      throw new IllegalStateException(
-          "Process failed in distributed Job. Check k8s logs " + ssr.getSparkAppName());
-    } else {
-      log.info("Process has been finished, Spark job name - {}", ssr.getSparkAppName());
-    }
+    // Submit
+    AirflowSparkLauncher.builder()
+        .airflowConfiguration(config.airflowConfig)
+        .sparkStaticConfiguration(config.sparkConfig)
+        .sparkDynamicSettings(sparkDynamicSettings)
+        .beamParameters(beamParameters)
+        .sparkAppName(sparkAppName)
+        .build()
+        .submitAwaitVoid();
   }
 
   private int computeNumberOfShards(PipelinesInterpretationMessage message) throws IOException {

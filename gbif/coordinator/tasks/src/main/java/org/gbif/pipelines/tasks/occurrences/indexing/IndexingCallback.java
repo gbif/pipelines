@@ -5,9 +5,7 @@ import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import java.util.Collections;
-import java.util.StringJoiner;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -19,11 +17,13 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.common.airflow.AppName;
 import org.gbif.pipelines.common.indexing.IndexSettings;
-import org.gbif.pipelines.common.process.BeamSettings;
+import org.gbif.pipelines.common.process.AirflowSparkLauncher;
+import org.gbif.pipelines.common.process.BeamParametersBuilder;
+import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
 import org.gbif.pipelines.common.process.RecordCountReader;
-import org.gbif.pipelines.common.process.SparkSettings;
-import org.gbif.pipelines.common.process.StackableSparkRunner;
+import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
@@ -152,16 +152,16 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
                 message.getDatasetUuid().toString(),
                 message.getAttempt(),
                 recordsNumber);
-        Consumer<StringJoiner> beamSettings =
-            BeamSettings.occurrenceIndexing(config, message, indexSettings);
+        BeamParameters beamParameters =
+            BeamParametersBuilder.occurrenceIndexing(config, message, indexSettings);
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
         log.info("Start the process. Message - {}", message);
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          runDistributed(message, beamSettings, recordsNumber);
+          runDistributed(message, beamParameters, recordsNumber);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
-          runLocal(beamSettings);
+          runLocal(beamParameters);
         }
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
@@ -182,43 +182,32 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         message.getEndpointType());
   }
 
-  private void runLocal(Consumer<StringJoiner> beamSettings) {
-    String[] pipelineOptions = BeamSettings.buildOptions(beamSettings);
-    InterpretedToEsIndexExtendedPipeline.run(pipelineOptions, executor);
+  private void runLocal(BeamParameters beamParameters) {
+    InterpretedToEsIndexExtendedPipeline.run(beamParameters.toArray(), executor);
   }
 
   private void runDistributed(
-      PipelinesInterpretedMessage message,
-      Consumer<StringJoiner> beamSettings,
-      long recordsNumber) {
+      PipelinesInterpretedMessage message, BeamParameters beamParameters, long recordsNumber) {
 
+    // Spark dynamic settings
     boolean useMemoryExtraCoef =
         config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
-    SparkSettings sparkSettings =
-        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
-    StackableSparkRunner.StackableSparkRunnerBuilder builder =
-        StackableSparkRunner.builder()
-            .distributedConfig(config.distributedConfig)
-            .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
-            .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
-            .sparkConfiguration(config.sparkConfig)
-            .beamConfigFn(beamSettings)
-            .sparkAppName(
-                getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-            .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
-            .sparkSettings(sparkSettings);
+    // App name
+    String sparkAppName =
+        AppName.get(getType(message), message.getDatasetUuid(), message.getAttempt());
 
-    // Assembles a terminal java process and runs it
-    StackableSparkRunner ssr = builder.build();
-    int exitValue = ssr.start().waitFor();
-
-    if (exitValue != 0) {
-      throw new IllegalStateException(
-          "Process failed in distributed Job. Check k8s logs " + ssr.getSparkAppName());
-    } else {
-      log.info("Process has been finished, Spark job name - {}", ssr.getSparkAppName());
-    }
+    // Submit
+    AirflowSparkLauncher.builder()
+        .airflowConfiguration(config.airflowConfig)
+        .sparkStaticConfiguration(config.sparkConfig)
+        .sparkDynamicSettings(sparkSettings)
+        .beamParameters(beamParameters)
+        .sparkAppName(sparkAppName)
+        .build()
+        .submitAwaitVoid();
   }
 
   private StepType getType(PipelinesInterpretedMessage message) {

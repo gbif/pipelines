@@ -10,9 +10,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.StringJoiner;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import lombok.Builder;
@@ -31,11 +29,13 @@ import org.gbif.pipelines.common.GbifApi;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.airflow.AppName;
 import org.gbif.pipelines.common.hdfs.HdfsViewSettings;
-import org.gbif.pipelines.common.process.BeamSettings;
+import org.gbif.pipelines.common.process.AirflowSparkLauncher;
+import org.gbif.pipelines.common.process.BeamParametersBuilder;
+import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
 import org.gbif.pipelines.common.process.RecordCountReader;
-import org.gbif.pipelines.common.process.SparkSettings;
-import org.gbif.pipelines.common.process.StackableSparkRunner;
+import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToOccurrencePipeline;
@@ -142,8 +142,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
       int numberOfShards = computeNumberOfShards(message);
 
-      Consumer<StringJoiner> beamSettings =
-          BeamSettings.occurrenceInterpretation(
+      BeamParameters beamParameters =
+          BeamParametersBuilder.occurrenceInterpretation(
               config, message, path, defaultDateFormat, numberOfShards);
 
       Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
@@ -152,9 +152,9 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
       try {
 
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          runDistributed(message, beamSettings);
+          runDistributed(message, beamParameters);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
-          runLocal(beamSettings);
+          runLocal(beamParameters);
         }
 
         log.info("Deleting old attempts directories");
@@ -204,14 +204,14 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         message.getDatasetType());
   }
 
-  private void runLocal(Consumer<StringJoiner> beamSettings) {
-    String[] pipelineOptions = BeamSettings.buildOptions(beamSettings);
-    VerbatimToOccurrencePipeline.run(pipelineOptions, executor);
+  private void runLocal(BeamParameters beamParameters) {
+    VerbatimToOccurrencePipeline.run(beamParameters.toArray(), executor);
   }
 
-  private void runDistributed(PipelinesVerbatimMessage message, Consumer<StringJoiner> beamSettings)
+  private void runDistributed(PipelinesVerbatimMessage message, BeamParameters beamParameters)
       throws IOException {
 
+    // Spark dynamic settings
     Long messageNumber =
         message.getValidationResult() != null
                 && message.getValidationResult().getNumberOfRecords() != null
@@ -232,31 +232,22 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     boolean useMemoryExtraCoef =
         config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
 
-    SparkSettings sparkSettings =
-        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
-    StackableSparkRunner.StackableSparkRunnerBuilder builder =
-        StackableSparkRunner.builder()
-            .distributedConfig(config.distributedConfig)
-            .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
-            .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
-            .sparkConfiguration(config.sparkConfig)
-            .beamConfigFn(beamSettings)
-            .sparkAppName(
-                getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-            .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
-            .sparkSettings(sparkSettings);
+    // App name
+    String sparkAppName =
+        AppName.get(getType(message), message.getDatasetUuid(), message.getAttempt());
 
-    // Assembles a terminal java process and runs it
-    StackableSparkRunner ssr = builder.build();
-    int exitValue = ssr.start().waitFor();
-
-    if (exitValue != 0) {
-      throw new IllegalStateException(
-          "Process failed in distributed Job. Check k8s logs " + ssr.getSparkAppName());
-    } else {
-      log.info("Process has been finished, Spark job name - {}", ssr.getSparkAppName());
-    }
+    // Submit
+    AirflowSparkLauncher.builder()
+        .airflowConfiguration(config.airflowConfig)
+        .sparkStaticConfiguration(config.sparkConfig)
+        .sparkDynamicSettings(sparkSettings)
+        .beamParameters(beamParameters)
+        .sparkAppName(sparkAppName)
+        .build()
+        .submitAwaitVoid();
   }
 
   /** Checks if the directory exists */

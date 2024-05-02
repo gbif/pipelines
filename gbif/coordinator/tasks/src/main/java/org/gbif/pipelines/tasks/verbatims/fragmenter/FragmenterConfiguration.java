@@ -7,11 +7,10 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
+import org.gbif.pipelines.common.configs.AirflowConfiguration;
 import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
-import org.gbif.pipelines.common.configs.DistributedConfiguration;
 import org.gbif.pipelines.common.configs.SparkConfiguration;
-import org.gbif.pipelines.common.configs.StackableConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 
 /** Configuration required to start raw fragments processing */
@@ -22,14 +21,11 @@ public class FragmenterConfiguration implements BaseConfiguration {
 
   @ParametersDelegate @Valid public SparkConfiguration sparkConfig = new SparkConfiguration();
 
-  @ParametersDelegate @Valid
-  public DistributedConfiguration distributedConfig = new DistributedConfiguration();
+  @ParametersDelegate @Valid @NotNull
+  public AirflowConfiguration airflowConfig = new AirflowConfiguration();
 
   @ParametersDelegate @Valid @NotNull
   public AvroWriteConfiguration avroConfig = new AvroWriteConfiguration();
-
-  @ParametersDelegate @Valid @NotNull
-  public StackableConfiguration stackableConfiguration = new StackableConfiguration();
 
   @Parameter(names = "--number-threads")
   @Valid

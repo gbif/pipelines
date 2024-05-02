@@ -7,10 +7,8 @@ import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Consumer;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
@@ -23,10 +21,12 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesFragmenterMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
-import org.gbif.pipelines.common.process.BeamSettings;
+import org.gbif.pipelines.common.airflow.AppName;
+import org.gbif.pipelines.common.process.AirflowSparkLauncher;
+import org.gbif.pipelines.common.process.BeamParametersBuilder;
+import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
 import org.gbif.pipelines.common.process.RecordCountReader;
-import org.gbif.pipelines.common.process.SparkSettings;
-import org.gbif.pipelines.common.process.StackableSparkRunner;
+import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
@@ -110,35 +110,26 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
   }
 
   private void runDistributed(PipelinesInterpretedMessage message, long recordsNumber) {
-    Consumer<StringJoiner> beamSettings = BeamSettings.verbatimFragmenter(config, message);
+    BeamParameters beamParameters = BeamParametersBuilder.verbatimFragmenter(config, message);
 
+    // Spark dynamic settings
     boolean useMemoryExtraCoef =
         config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
-    SparkSettings sparkSettings =
-        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
+    SparkDynamicSettings sparkDynamicSettings =
+        SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
-    StackableSparkRunner.StackableSparkRunnerBuilder builder =
-        StackableSparkRunner.builder()
-            .distributedConfig(config.distributedConfig)
-            .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
-            .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
-            .sparkConfiguration(config.sparkConfig)
-            .beamConfigFn(beamSettings)
-            .sparkAppName(
-                StepType.FRAGMENTER + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-            .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
-            .sparkSettings(sparkSettings);
+    // App name
+    String sparkAppName = AppName.get(TYPE, message.getDatasetUuid(), message.getAttempt());
 
-    // Assembles a terminal java process and runs it
-    StackableSparkRunner ssr = builder.build();
-    int exitValue = ssr.start().waitFor();
-
-    if (exitValue != 0) {
-      throw new IllegalStateException(
-          "Process failed in distributed Job. Check k8s logs " + ssr.getSparkAppName());
-    } else {
-      log.info("Process has been finished, Spark job name - {}", ssr.getSparkAppName());
-    }
+    // Submit
+    AirflowSparkLauncher.builder()
+        .airflowConfiguration(config.airflowConfig)
+        .sparkStaticConfiguration(config.sparkConfig)
+        .sparkDynamicSettings(sparkDynamicSettings)
+        .beamParameters(beamParameters)
+        .sparkAppName(sparkAppName)
+        .build()
+        .submitAwaitVoid();
   }
 
   private void runLocal(PipelinesInterpretedMessage message) {

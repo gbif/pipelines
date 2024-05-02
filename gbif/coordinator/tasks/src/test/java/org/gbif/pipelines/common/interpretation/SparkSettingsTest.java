@@ -3,7 +3,7 @@ package org.gbif.pipelines.common.interpretation;
 import static org.junit.Assert.*;
 
 import org.gbif.pipelines.common.configs.SparkConfiguration;
-import org.gbif.pipelines.common.process.SparkSettings;
+import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -32,7 +32,8 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 100;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);
@@ -47,7 +48,8 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 1_000_000;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);
@@ -62,7 +64,8 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 10_000_000;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);
@@ -77,7 +80,8 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 10_000_000;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, true);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(CONFIG, fileRecordsNumber, true);
 
     // Should
     assertNotNull(sparkSettings);
@@ -92,7 +96,8 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 30_000_000;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);
@@ -107,7 +112,8 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 100_000_000;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);
@@ -122,7 +128,8 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 300_000_000;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);
@@ -137,7 +144,8 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 500_000_000;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);
@@ -152,7 +160,8 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 1_277_000_000;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);
@@ -167,7 +176,8 @@ public class SparkSettingsTest {
     long fileRecordsNumber = 1_500_000_000;
 
     // When
-    SparkSettings sparkSettings = SparkSettings.create(CONFIG, fileRecordsNumber, false);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(CONFIG, fileRecordsNumber, false);
 
     // Should
     assertNotNull(sparkSettings);

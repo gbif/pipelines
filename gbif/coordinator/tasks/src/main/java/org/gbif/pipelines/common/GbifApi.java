@@ -55,8 +55,7 @@ public class GbifApi {
     HttpResponse response = executeGet(httpClient, url);
 
     List<MachineTag> machineTags =
-        MAPPER.readValue(
-            response.getEntity().getContent(), new TypeReference<List<MachineTag>>() {});
+        MAPPER.readValue(response.getEntity().getContent(), new TypeReference<>() {});
 
     return machineTags.stream()
         .filter(x -> x.getName().equals(tagName))

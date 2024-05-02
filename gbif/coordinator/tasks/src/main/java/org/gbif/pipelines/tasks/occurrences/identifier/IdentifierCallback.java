@@ -3,14 +3,12 @@ package org.gbif.pipelines.tasks.occurrences.identifier;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.gbif.api.model.pipelines.PipelineStep.Status;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -20,12 +18,13 @@ import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.airflow.AppName;
 import org.gbif.pipelines.common.hdfs.HdfsViewSettings;
 import org.gbif.pipelines.common.process.AirflowSparkLauncher;
 import org.gbif.pipelines.common.process.BeamParametersBuilder;
 import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
 import org.gbif.pipelines.common.process.RecordCountReader;
-import org.gbif.pipelines.common.process.SparkSettings;
+import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToIdentifierPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
@@ -165,6 +164,7 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
   private void runDistributed(PipelinesVerbatimMessage message, BeamParameters beamParameters)
       throws IOException {
 
+    // Spark dynamic settings
     Long messageNumber =
         message.getValidationResult() != null
                 && message.getValidationResult().getNumberOfRecords() != null
@@ -184,27 +184,21 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
 
     boolean useMemoryExtraCoef =
         config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
-    SparkSettings sparkSettings =
-        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
-    String appName = TYPE.name() + "_" + message.getDatasetUuid() + "_" + message.getAttempt();
+    // App name
+    String sparkAppName = AppName.get(TYPE, message.getDatasetUuid(), message.getAttempt());
 
-    Optional<Status> status =
-        AirflowSparkLauncher.builder()
-            .airflowConfiguration(config.airflowConfig)
-            .sparkStaticConfiguration(config.sparkConfig)
-            .sparkDynamicSettings(sparkSettings)
-            .beamParameters(beamParameters)
-            .sparkAppName(appName)
-            .build()
-            .submitAndAwait();
-
-    if (status.isEmpty() || status.get() == Status.ABORTED || status.get() == Status.FAILED) {
-      throw new IllegalStateException(
-          "Process failed in distributed Job. Check k8s logs " + appName);
-    } else {
-      log.info("Process has been finished, Spark job name - {}", appName);
-    }
+    // Submit
+    AirflowSparkLauncher.builder()
+        .airflowConfiguration(config.airflowConfig)
+        .sparkStaticConfiguration(config.sparkConfig)
+        .sparkDynamicSettings(sparkSettings)
+        .beamParameters(beamParameters)
+        .sparkAppName(sparkAppName)
+        .build()
+        .submitAwaitVoid();
   }
 
   private void runLocal(BeamParameters beamParameters) {

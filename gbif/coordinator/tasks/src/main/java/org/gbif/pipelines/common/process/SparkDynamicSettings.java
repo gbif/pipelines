@@ -6,13 +6,13 @@ import org.gbif.pipelines.common.configs.SparkConfiguration;
 
 @Getter
 @Slf4j
-public class SparkSettings {
+public class SparkDynamicSettings {
 
   private final int executorMemory;
   private final int executorNumbers;
   private final double memoryExtraCoef;
 
-  private SparkSettings(
+  private SparkDynamicSettings(
       SparkConfiguration sparkConfig, long fileRecordsNumber, boolean useMemoryExtraCoef) {
     this.memoryExtraCoef = useMemoryExtraCoef ? sparkConfig.memoryExtraCoef : 1d;
     this.executorNumbers = computeExecutorNumbers(sparkConfig, fileRecordsNumber);
@@ -20,20 +20,20 @@ public class SparkSettings {
   }
 
   // For testing
-  private SparkSettings(int executorMemory, int executorNumbers, double memoryExtraCoef) {
+  private SparkDynamicSettings(int executorMemory, int executorNumbers, double memoryExtraCoef) {
     this.executorMemory = executorMemory;
     this.executorNumbers = executorNumbers;
     this.memoryExtraCoef = memoryExtraCoef;
   }
 
-  public static SparkSettings create(
+  public static SparkDynamicSettings create(
       SparkConfiguration sparkConfig, long fileRecordsNumber, boolean memoryExtraCoef) {
-    return new SparkSettings(sparkConfig, fileRecordsNumber, memoryExtraCoef);
+    return new SparkDynamicSettings(sparkConfig, fileRecordsNumber, memoryExtraCoef);
   }
 
-  public static SparkSettings create(
+  public static SparkDynamicSettings create(
       int executorMemory, int executorNumbers, double memoryExtraCoef) {
-    return new SparkSettings(executorMemory, executorNumbers, memoryExtraCoef);
+    return new SparkDynamicSettings(executorMemory, executorNumbers, memoryExtraCoef);
   }
 
   /**

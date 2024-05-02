@@ -102,7 +102,6 @@
     <gbif-common-ws.version>1.26</gbif-common-ws.version>
     <gbif-postal-service.version>1.9.0-SNAPSHOT</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
-    <stackable-spark.version>1.0-SNAPSHOT</stackable-spark.version>
 
     <!-- Main distributed libraries -->
     <avro.version>1.11.1</avro.version>
@@ -516,11 +515,6 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-common-spreadsheet</artifactId>
         <version>${gbif-common-spreadsheet.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.stackable</groupId>
-        <artifactId>stackable-spark</artifactId>
-        <version>${stackable-spark.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>

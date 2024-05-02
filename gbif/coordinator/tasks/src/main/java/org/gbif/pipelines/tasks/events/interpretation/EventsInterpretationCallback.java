@@ -12,10 +12,12 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.airflow.AppName;
 import org.gbif.pipelines.common.hdfs.HdfsViewSettings;
-import org.gbif.pipelines.common.process.BeamSettings;
-import org.gbif.pipelines.common.process.SparkSettings;
-import org.gbif.pipelines.common.process.StackableSparkRunner;
+import org.gbif.pipelines.common.process.AirflowSparkLauncher;
+import org.gbif.pipelines.common.process.BeamParametersBuilder;
+import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
+import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
@@ -30,9 +32,6 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
     implements StepHandler<PipelinesEventsMessage, PipelinesEventsInterpretedMessage> {
 
   private static final StepType TYPE = StepType.EVENTS_VERBATIM_TO_INTERPRETED;
-
-  // Required because K8 supports up to 64 characters in names
-  private static final String SPARK_NAME_PREFIX = "event-verb-interpreted";
 
   private final EventsInterpretationConfiguration config;
   private final MessagePublisher publisher;
@@ -111,37 +110,31 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
 
-    String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
-    String path = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
-
+    // Spark dynamic settings
     boolean useMemoryExtraCoef =
         config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
-    SparkSettings sparkSettings =
-        SparkSettings.create(
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(
             config.sparkConfig, message.getNumberOfEventRecords(), useMemoryExtraCoef);
 
+    String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
+    String path = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
     int numberOfShards = computeNumberOfShards(message);
+    BeamParameters beamParameters =
+        BeamParametersBuilder.eventInterpretation(config, message, path, numberOfShards);
 
-    StackableSparkRunner.StackableSparkRunnerBuilder builder =
-        StackableSparkRunner.builder()
-            .distributedConfig(config.distributedConfig)
-            .kubeConfigFile(config.stackableConfiguration.kubeConfigFile)
-            .sparkCrdConfigFile(config.stackableConfiguration.sparkCrdConfigFile)
-            .sparkConfiguration(config.sparkConfig)
-            .beamConfigFn(BeamSettings.eventInterpretation(config, message, path, numberOfShards))
-            .sparkAppName(
-                SPARK_NAME_PREFIX + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-            .deleteOnFinish(config.stackableConfiguration.deletePodsOnFinish)
-            .sparkSettings(sparkSettings);
+    // App name
+    String sparkAppName = AppName.get(TYPE, message.getDatasetUuid(), message.getAttempt());
 
-    // Assembles a terminal java process and runs it
-    int exitValue = builder.build().start().waitFor();
-
-    if (exitValue != 0) {
-      throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
-    } else {
-      log.info("Process has been finished with exit value - {}", exitValue);
-    }
+    // Submit
+    AirflowSparkLauncher.builder()
+        .airflowConfiguration(config.airflowConfig)
+        .sparkStaticConfiguration(config.sparkConfig)
+        .sparkDynamicSettings(sparkSettings)
+        .beamParameters(beamParameters)
+        .sparkAppName(sparkAppName)
+        .build()
+        .submitAwaitVoid();
   }
 
   /** Checks if the directory exists */

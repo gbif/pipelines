@@ -19,7 +19,7 @@ public class AirflowSparkLauncher {
   private final SparkConfiguration sparkStaticConfiguration;
   private final AirflowClient airflowRunner;
   private final AirflowConfiguration airflowConfiguration;
-  private final SparkSettings sparkDynamicSettings;
+  private final SparkDynamicSettings sparkDynamicSettings;
   private final BeamParameters beamParameters;
   private final String sparkAppName;
 
@@ -27,7 +27,7 @@ public class AirflowSparkLauncher {
   public AirflowSparkLauncher(
       SparkConfiguration sparkStaticConfiguration,
       AirflowConfiguration airflowConfiguration,
-      SparkSettings sparkDynamicSettings,
+      SparkDynamicSettings sparkDynamicSettings,
       BeamParameters beamParameters,
       String sparkAppName) {
     this.sparkStaticConfiguration = sparkStaticConfiguration;
@@ -87,7 +87,7 @@ public class AirflowSparkLauncher {
         .build();
   }
 
-  public Optional<Status> submitAndAwait() {
+  public Optional<Status> submitAwait() {
     try {
 
       String normalizedAppName = normalize(sparkAppName);
@@ -115,6 +115,16 @@ public class AirflowSparkLauncher {
     } catch (Exception ex) {
       log.error(ex.getMessage(), ex);
       return Optional.of(Status.FAILED);
+    }
+  }
+
+  public void submitAwaitVoid() {
+    Optional<Status> status = submitAwait();
+    if (status.isEmpty() || status.get() == Status.ABORTED || status.get() == Status.FAILED) {
+      throw new IllegalStateException(
+          "Process failed in distributed Job. Check K8s logs " + sparkAppName);
+    } else {
+      log.info("Process has been finished, Spark job name - {}", sparkAppName);
     }
   }
 
