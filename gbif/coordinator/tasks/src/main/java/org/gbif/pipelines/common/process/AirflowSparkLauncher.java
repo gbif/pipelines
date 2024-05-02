@@ -99,7 +99,7 @@ public class AirflowSparkLauncher {
 
       Optional<Status> status = getStatusByName(normalizedAppName);
 
-      log.info("Waiting Airflow DAG ID {} to be finished", airflowBody.getDagRunId());
+      log.info("Waiting Airflow DAG ID {} to finish", airflowBody.getDagRunId());
       while (status.isPresent()
           && Status.COMPLETED != status.get()
           && Status.FAILED != status.get()) {
