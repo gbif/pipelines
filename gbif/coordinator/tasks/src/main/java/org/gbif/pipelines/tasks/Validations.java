@@ -1,6 +1,6 @@
 package org.gbif.pipelines.tasks;
 
-import io.github.resilience4j.retry.IntervalFunction;
+import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import java.sql.Timestamp;

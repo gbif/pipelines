@@ -1,5 +1,9 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.api.vocabulary.Extension.AMPLIFICATION;
+import static org.gbif.api.vocabulary.Extension.CLONING;
+import static org.gbif.api.vocabulary.Extension.DNA_DERIVED_DATA;
+import static org.gbif.api.vocabulary.Extension.GEL_IMAGE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS;
 import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
@@ -20,10 +24,13 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 import org.gbif.api.vocabulary.BasisOfRecord;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
@@ -330,7 +337,26 @@ public class BasicInterpreter {
 
   /** {@link DwcTerm#associatedSequences} interpretation. */
   public static void interpretIsSequenced(ExtendedRecord er, BasicRecord br) {
-    br.setIsSequenced(extractNullAwareOptValue(er, DwcTerm.associatedSequences).isPresent());
+
+    boolean hasExt = false;
+    var extensions = er.getExtensions();
+
+    if (extensions != null) {
+      Predicate<Extension> fn =
+          ext -> {
+            var e = extensions.get(ext.getRowType());
+            return e != null && !e.isEmpty();
+          };
+      hasExt = fn.test(DNA_DERIVED_DATA);
+      hasExt = fn.test(AMPLIFICATION) || hasExt;
+      hasExt = fn.test(CLONING) || hasExt;
+      hasExt = fn.test(GEL_IMAGE) || hasExt;
+    }
+
+    boolean hasAssociatedSequences =
+        extractNullAwareOptValue(er, DwcTerm.associatedSequences).isPresent();
+
+    br.setIsSequenced(hasExt || hasAssociatedSequences);
   }
 
   /** {@link DwcTerm#associatedSequences} interpretation. */

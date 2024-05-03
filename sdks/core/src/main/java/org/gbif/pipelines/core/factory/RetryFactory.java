@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.factory;
 
-import io.github.resilience4j.retry.IntervalFunction;
+import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import java.util.Objects;
 import javax.annotation.Nullable;

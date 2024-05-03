@@ -100,8 +100,11 @@ public class IndexSettings {
   private int computeNumberOfShards(
       IndexConfiguration indexConfig, String indexName, long recordsNumber) {
     if (indexName.startsWith(indexConfig.defaultPrefixName)) {
-      return (int)
-          Math.ceil((double) indexConfig.defaultSize / (double) indexConfig.recordsPerShard);
+      int s =
+          (int) Math.ceil((double) indexConfig.defaultSize / (double) indexConfig.recordsPerShard);
+
+      // Add extra shard to accumulate deleted documents
+      return indexConfig.defaultExtraShard ? s + 1 : s;
     }
 
     double shards = recordsNumber / (double) indexConfig.recordsPerShard;
