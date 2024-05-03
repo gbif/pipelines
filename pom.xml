@@ -148,7 +148,7 @@
 
     <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
 
-    <commons-compress.version>1.19</commons-compress.version>
+    <commons-compress.version>1.26.0</commons-compress.version>
     <commons-digester.version>2.1</commons-digester.version>
     <mapdb.version>3.0.8</mapdb.version>
     <!-- Matches checklist project version -->
