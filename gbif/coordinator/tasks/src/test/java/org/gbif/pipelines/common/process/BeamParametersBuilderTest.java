@@ -94,6 +94,7 @@ public class BeamParametersBuilderTest {
   @Test
   public void occurrenceIdentifierTest() {
 
+    // State
     IdentifierConfiguration config = new IdentifierConfiguration();
     config.stepConfig.repositoryPath = "repositoryPath";
     config.pipelinesConfig = "pipelines.yaml";
@@ -121,9 +122,11 @@ public class BeamParametersBuilderTest {
     String inputPath = "inputPath";
     int numberOfShards = 1;
 
+    // When
     BeamParameters resultParameters =
         BeamParametersBuilder.occurrenceIdentifier(config, message, inputPath, numberOfShards);
 
+    // Should
     List<String> resultList =
         resultParameters.toList().stream().sorted().collect(Collectors.toList());
 
@@ -153,6 +156,7 @@ public class BeamParametersBuilderTest {
   @Test
   public void occurrenceIndexingTest() {
 
+    // State
     IndexingConfiguration config = new IndexingConfiguration();
     config.stepConfig.repositoryPath = "repositoryPath";
     config.pipelinesConfig = "pipelines.yaml";
@@ -182,9 +186,11 @@ public class BeamParametersBuilderTest {
 
     IndexSettings indexSettings = IndexSettings.create("index", 5);
 
+    // When
     BeamParameters resultParameters =
         BeamParametersBuilder.occurrenceIndexing(config, message, indexSettings);
 
+    // Should
     List<String> resultList =
         resultParameters.toList().stream().sorted().collect(Collectors.toList());
 
@@ -210,6 +216,7 @@ public class BeamParametersBuilderTest {
   @Test
   public void occurrenceHdfsViewTest() {
 
+    // State
     HdfsViewConfiguration config = new HdfsViewConfiguration();
     config.stepConfig.repositoryPath = "repositoryPath";
     config.pipelinesConfig = "pipelines.yaml";
@@ -237,8 +244,10 @@ public class BeamParametersBuilderTest {
             Collections.singleton(OCCURRENCE.name()),
             null);
 
+    // When
     BeamParameters resultParameters = BeamParametersBuilder.occurrenceHdfsView(config, message, 5);
 
+    // Should
     List<String> resultList =
         resultParameters.toList().stream().sorted().collect(Collectors.toList());
 

@@ -122,8 +122,7 @@ public class IndexSettings {
       throw new IOException("ES _cat API exception " + response.getStatusLine().getReasonPhrase());
     }
     List<EsCatIndex> indices =
-        MAPPER.readValue(
-            response.getEntity().getContent(), new TypeReference<List<EsCatIndex>>() {});
+        MAPPER.readValue(response.getEntity().getContent(), new TypeReference<>() {});
     if (!indices.isEmpty() && indices.get(0).getCount() <= indexConfig.defaultNewIfSize) {
       return Optional.of(indices.get(0).getName());
     }
