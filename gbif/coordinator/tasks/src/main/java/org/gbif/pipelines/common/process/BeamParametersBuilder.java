@@ -39,8 +39,25 @@ public class BeamParametersBuilder {
   public static class BeamParameters {
     private final Map<String, String> map = new HashMap<>();
 
-    public void put(String key, String value) {
-      map.put(key, value);
+    public BeamParameters put(String key, Object value) {
+      map.put(key, String.valueOf(value));
+      return this;
+    }
+
+    public BeamParameters putCondition(boolean condition, String key, String value) {
+      if (condition) {
+        map.put(key, value);
+      }
+      return this;
+    }
+
+    public BeamParameters putRequireNonNull(String key, Object value) {
+      return put(key, Objects.requireNonNull(value));
+    }
+
+    public BeamParameters putIfPresent(String key, Object value) {
+      Optional.ofNullable(value).ifPresent(result -> put(key, result));
+      return this;
     }
 
     public List<String> toList() {
@@ -75,23 +92,25 @@ public class BeamParametersBuilder {
             .build()
             .create();
 
-    Optional.ofNullable(defaultDateFormat).ifPresent(x -> arguments.put("defaultDateFormat", x));
-
-    if (isValidator(message.getPipelineSteps(), config.validatorOnly)) {
-      arguments.put("useMetadataWsCalls", "false");
-    }
+    arguments
+        .putIfPresent("defaultDateFormat", defaultDateFormat)
+        .putCondition(
+            isValidator(message.getPipelineSteps(), config.validatorOnly),
+            "useMetadataWsCalls",
+            "false");
 
     if (config.skipGbifIds) {
-      arguments.put("tripletValid", "false");
-      arguments.put("occurrenceIdValid", "false");
-      arguments.put("useExtendedRecordId", "true");
+      arguments
+          .put("tripletValid", "false")
+          .put("occurrenceIdValid", "false")
+          .put("useExtendedRecordId", "true");
     } else {
       Optional.ofNullable(message.getValidationResult())
           .ifPresent(
-              vr -> {
-                arguments.put("tripletValid", String.valueOf(vr.isTripletValid()));
-                arguments.put("occurrenceIdValid", String.valueOf(vr.isOccurrenceIdValid()));
-              });
+              vr ->
+                  arguments
+                      .put("tripletValid", String.valueOf(vr.isTripletValid()))
+                      .put("occurrenceIdValid", String.valueOf(vr.isOccurrenceIdValid())));
 
       Optional.ofNullable(message.getValidationResult())
           .flatMap(vr -> Optional.ofNullable(vr.isUseExtendedRecordId()))
@@ -107,28 +126,21 @@ public class BeamParametersBuilder {
       PipelinesInterpretedMessage message,
       IndexSettings indexSettings) {
 
-    BeamParameters arguments =
-        IndexingCommon.builder()
-            .datasetUuid(message.getDatasetUuid())
-            .attempt(message.getAttempt())
-            .stepConfig(config.stepConfig)
-            .esConfig(config.esConfig)
-            .indexConfig(config.indexConfig)
-            .metaFileName(config.metaFileName)
-            .pipelinesConfigPath(config.pipelinesConfig)
-            .esIndexName(indexSettings.getIndexName())
-            .esShardsNumber(indexSettings.getNumberOfShards())
-            .build()
-            .create();
-
-    Optional.ofNullable(config.backPressure)
-        .map(String::valueOf)
-        .ifPresent(x -> arguments.put("backPressure", x));
-
-    if (config.esGeneratedIds) {
-      arguments.put("esDocumentId", "");
-    }
-    return arguments;
+    return IndexingCommon.builder()
+        .datasetUuid(message.getDatasetUuid())
+        .attempt(message.getAttempt())
+        .stepConfig(config.stepConfig)
+        .esConfig(config.esConfig)
+        .indexConfig(config.indexConfig)
+        .metaFileName(config.metaFileName)
+        .pipelinesConfigPath(config.pipelinesConfig)
+        .esIndexName(indexSettings.getIndexName())
+        .esShardsNumber(indexSettings.getNumberOfShards())
+        .build()
+        .create()
+        // Extra
+        .putIfPresent("backPressure", config.backPressure)
+        .putCondition(config.esGeneratedIds, "esDocumentId", "");
   }
 
   public static BeamParameters occurrenceIdentifier(
@@ -167,27 +179,20 @@ public class BeamParametersBuilder {
   public static BeamParameters occurrenceHdfsView(
       HdfsViewConfiguration config, PipelinesInterpretationMessage message, int numberOfShards) {
 
-    BeamParameters arguments = BeamParameters.create();
-    // Common properties
-    arguments.put("datasetId", Objects.requireNonNull(message.getDatasetUuid()).toString());
-    arguments.put("attempt", String.valueOf(message.getAttempt()));
-    arguments.put("runner", "SparkRunner");
-    arguments.put("metaFileName", Objects.requireNonNull(config.metaFileName));
-    arguments.put("inputPath", Objects.requireNonNull(config.stepConfig.repositoryPath));
-    arguments.put("targetPath", Objects.requireNonNull(config.repositoryTargetPath));
-    arguments.put("hdfsSiteConfig", Objects.requireNonNull(config.stepConfig.hdfsSiteConfig));
-    arguments.put("coreSiteConfig", Objects.requireNonNull(config.stepConfig.coreSiteConfig));
-    arguments.put("properties", Objects.requireNonNull(config.pipelinesConfig));
-    arguments.put("numberOfShards", String.valueOf(numberOfShards));
-    arguments.put(
-        "interpretationTypes",
-        Objects.requireNonNull(String.join(",", message.getInterpretTypes())));
-    arguments.put("experiments", "use_deprecated_read");
-
-    if (config.recordType == RecordType.EVENT) {
-      arguments.put("coreRecordType", "EVENT");
-    }
-    return arguments;
+    return BeamParameters.create()
+        .putRequireNonNull("datasetId", message.getDatasetUuid())
+        .put("attempt", message.getAttempt())
+        .put("runner", "SparkRunner")
+        .putRequireNonNull("metaFileName", config.metaFileName)
+        .putRequireNonNull("inputPath", config.stepConfig.repositoryPath)
+        .putRequireNonNull("targetPath", config.repositoryTargetPath)
+        .putRequireNonNull("hdfsSiteConfig", config.stepConfig.hdfsSiteConfig)
+        .putRequireNonNull("coreSiteConfig", config.stepConfig.coreSiteConfig)
+        .putRequireNonNull("properties", config.pipelinesConfig)
+        .put("numberOfShards", numberOfShards)
+        .putRequireNonNull("interpretationTypes", String.join(",", message.getInterpretTypes()))
+        .put("experiments", "use_deprecated_read")
+        .putCondition(config.recordType == RecordType.EVENT, "coreRecordType", "EVENT");
   }
 
   public static BeamParameters eventInterpretation(
@@ -196,23 +201,20 @@ public class BeamParametersBuilder {
       String inputPath,
       int numberOfShards) {
 
-    BeamParameters arguments =
-        InterpretationCommon.builder()
-            .datasetUuid(message.getDatasetUuid())
-            .attempt(message.getAttempt())
-            .interpretTypes(message.getInterpretTypes())
-            .stepConfig(config.stepConfig)
-            .avroConfig(config.avroConfig)
-            .pipelinesConfigPath(config.pipelinesConfig)
-            .metaFileName(config.metaFileName)
-            .inputPath(inputPath)
-            .numberOfShards(numberOfShards)
-            .build()
-            .create();
-
-    arguments.put("dwcCore", "Event");
-
-    return arguments;
+    return InterpretationCommon.builder()
+        .datasetUuid(message.getDatasetUuid())
+        .attempt(message.getAttempt())
+        .interpretTypes(message.getInterpretTypes())
+        .stepConfig(config.stepConfig)
+        .avroConfig(config.avroConfig)
+        .pipelinesConfigPath(config.pipelinesConfig)
+        .metaFileName(config.metaFileName)
+        .inputPath(inputPath)
+        .numberOfShards(numberOfShards)
+        .build()
+        .create()
+        // Extra
+        .put("dwcCore", "Event");
   }
 
   public static BeamParameters eventIndexing(
@@ -220,30 +222,23 @@ public class BeamParametersBuilder {
       PipelinesEventsInterpretedMessage message,
       IndexSettings indexSettings) {
 
-    BeamParameters arguments =
-        IndexingCommon.builder()
-            .datasetUuid(message.getDatasetUuid())
-            .attempt(message.getAttempt())
-            .stepConfig(config.stepConfig)
-            .esConfig(config.esConfig)
-            .indexConfig(config.indexConfig)
-            .metaFileName(config.metaFileName)
-            .pipelinesConfigPath(config.pipelinesConfig)
-            .esIndexName(indexSettings.getIndexName())
-            .esShardsNumber(indexSettings.getNumberOfShards())
-            .build()
-            .create();
-
-    arguments.put("datasetType", "SAMPLING_EVENT");
-    arguments.put("dwcCore", "Event");
-
-    if (config.esGeneratedIds) {
-      arguments.put("esDocumentId", "");
-    } else {
-      arguments.put("esDocumentId", "internalId");
-    }
-
-    return arguments;
+    return IndexingCommon.builder()
+        .datasetUuid(message.getDatasetUuid())
+        .attempt(message.getAttempt())
+        .stepConfig(config.stepConfig)
+        .esConfig(config.esConfig)
+        .indexConfig(config.indexConfig)
+        .metaFileName(config.metaFileName)
+        .pipelinesConfigPath(config.pipelinesConfig)
+        .esIndexName(indexSettings.getIndexName())
+        .esShardsNumber(indexSettings.getNumberOfShards())
+        .build()
+        .create()
+        // Extra
+        .put("datasetType", "SAMPLING_EVENT")
+        .put("dwcCore", "Event")
+        .putCondition(config.esGeneratedIds, "esDocumentId", "")
+        .putCondition(!config.esGeneratedIds, "esDocumentId", "internalId");
   }
 
   public static BeamParameters verbatimFragmenter(
@@ -266,10 +261,10 @@ public class BeamParametersBuilder {
 
     Optional.ofNullable(message.getValidationResult())
         .ifPresent(
-            vr -> {
-              arguments.put("tripletValid", String.valueOf(vr.isTripletValid()));
-              arguments.put("occurrenceIdValid", String.valueOf(vr.isOccurrenceIdValid()));
-            });
+            vr ->
+                arguments
+                    .put("tripletValid", String.valueOf(vr.isTripletValid()))
+                    .put("occurrenceIdValid", String.valueOf(vr.isOccurrenceIdValid())));
 
     return arguments;
   }
@@ -288,27 +283,21 @@ public class BeamParametersBuilder {
     private final int numberOfShards;
 
     private BeamParameters create() {
-
-      BeamParameters arguments = BeamParameters.create();
-
-      String interpretationTypes = String.join(",", interpretTypes);
-
-      arguments.put("datasetId", Objects.requireNonNull(datasetUuid).toString());
-      arguments.put("attempt", String.valueOf(attempt));
-      arguments.put("interpretationTypes", Objects.requireNonNull(interpretationTypes));
-      arguments.put("runner", "SparkRunner");
-      arguments.put("targetPath", Objects.requireNonNull(stepConfig.repositoryPath));
-      arguments.put("metaFileName", Objects.requireNonNull(metaFileName));
-      arguments.put("inputPath", Objects.requireNonNull(inputPath));
-      arguments.put("avroCompressionType", Objects.requireNonNull(avroConfig.compressionType));
-      arguments.put("avroSyncInterval", String.valueOf(avroConfig.syncInterval));
-      arguments.put("hdfsSiteConfig", Objects.requireNonNull(stepConfig.hdfsSiteConfig));
-      arguments.put("coreSiteConfig", Objects.requireNonNull(stepConfig.coreSiteConfig));
-      arguments.put("properties", Objects.requireNonNull(pipelinesConfigPath));
-      arguments.put("numberOfShards", String.valueOf(numberOfShards));
-      arguments.put("experiments", "use_deprecated_read");
-
-      return arguments;
+      return BeamParameters.create()
+          .putRequireNonNull("datasetId", datasetUuid)
+          .put("attempt", attempt)
+          .putRequireNonNull("interpretationTypes", String.join(",", interpretTypes))
+          .put("runner", "SparkRunner")
+          .putRequireNonNull("targetPath", stepConfig.repositoryPath)
+          .putRequireNonNull("metaFileName", metaFileName)
+          .putRequireNonNull("inputPath", inputPath)
+          .putRequireNonNull("avroCompressionType", avroConfig.compressionType)
+          .put("avroSyncInterval", avroConfig.syncInterval)
+          .putRequireNonNull("hdfsSiteConfig", stepConfig.hdfsSiteConfig)
+          .putRequireNonNull("coreSiteConfig", stepConfig.coreSiteConfig)
+          .putRequireNonNull("properties", pipelinesConfigPath)
+          .put("numberOfShards", numberOfShards)
+          .put("experiments", "use_deprecated_read");
     }
   }
 
@@ -326,43 +315,26 @@ public class BeamParametersBuilder {
     private final Integer esShardsNumber;
 
     private BeamParameters create() {
-
-      BeamParameters arguments = BeamParameters.create();
-
-      String esHosts = String.join(",", esConfig.hosts);
-
-      // Common properties
-      arguments.put("datasetId", Objects.requireNonNull(datasetUuid).toString());
-      arguments.put("attempt", String.valueOf(attempt));
-      arguments.put("runner", "SparkRunner");
-      arguments.put("inputPath", Objects.requireNonNull(stepConfig.repositoryPath));
-      arguments.put("targetPath", Objects.requireNonNull(stepConfig.repositoryPath));
-      arguments.put("metaFileName", Objects.requireNonNull(metaFileName));
-      arguments.put("hdfsSiteConfig", Objects.requireNonNull(stepConfig.hdfsSiteConfig));
-      arguments.put("coreSiteConfig", Objects.requireNonNull(stepConfig.coreSiteConfig));
-      arguments.put("esHosts", Objects.requireNonNull(esHosts));
-      arguments.put("properties", Objects.requireNonNull(pipelinesConfigPath));
-      arguments.put("esIndexName", Objects.requireNonNull(esIndexName));
-      arguments.put("experiments", "use_deprecated_read");
-
-      Optional.ofNullable(indexConfig.occurrenceAlias).ifPresent(x -> arguments.put("esAlias", x));
-      Optional.ofNullable(esConfig.maxBatchSizeBytes)
-          .map(String::valueOf)
-          .ifPresent(x -> arguments.put("esMaxBatchSizeBytes", x));
-      Optional.ofNullable(esConfig.maxBatchSize)
-          .map(String::valueOf)
-          .ifPresent(x -> arguments.put("esMaxBatchSize", x));
-      Optional.ofNullable(esConfig.schemaPath).ifPresent(x -> arguments.put("esSchemaPath", x));
-      Optional.ofNullable(indexConfig.refreshInterval)
-          .ifPresent(x -> arguments.put("indexRefreshInterval", x));
-      Optional.ofNullable(esShardsNumber)
-          .map(String::valueOf)
-          .ifPresent(x -> arguments.put("indexNumberShards", x));
-      Optional.ofNullable(indexConfig.numberReplicas)
-          .map(String::valueOf)
-          .ifPresent(x -> arguments.put("indexNumberReplicas", x));
-
-      return arguments;
+      return BeamParameters.create()
+          .putRequireNonNull("datasetId", datasetUuid)
+          .put("attempt", attempt)
+          .put("runner", "SparkRunner")
+          .putRequireNonNull("inputPath", stepConfig.repositoryPath)
+          .putRequireNonNull("targetPath", stepConfig.repositoryPath)
+          .putRequireNonNull("metaFileName", metaFileName)
+          .putRequireNonNull("hdfsSiteConfig", stepConfig.hdfsSiteConfig)
+          .putRequireNonNull("coreSiteConfig", stepConfig.coreSiteConfig)
+          .putRequireNonNull("esHosts", String.join(",", esConfig.hosts))
+          .putRequireNonNull("properties", pipelinesConfigPath)
+          .putRequireNonNull("esIndexName", esIndexName)
+          .put("experiments", "use_deprecated_read")
+          .putIfPresent("esAlias", indexConfig.occurrenceAlias)
+          .putIfPresent("esMaxBatchSizeBytes", esConfig.maxBatchSizeBytes)
+          .putIfPresent("esMaxBatchSize", esConfig.maxBatchSize)
+          .putIfPresent("esSchemaPath", esConfig.schemaPath)
+          .putIfPresent("indexRefreshInterval", indexConfig.refreshInterval)
+          .putIfPresent("indexNumberShards", esShardsNumber)
+          .putIfPresent("indexNumberReplicas", indexConfig.numberReplicas);
     }
   }
 }

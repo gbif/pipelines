@@ -16,8 +16,6 @@ package org.gbif.pipelines.common.airflow;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.HttpGet;
@@ -28,8 +26,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.gbif.pipelines.common.configs.AirflowConfiguration;
 
-@Getter
-@Setter
 @Slf4j
 @Builder
 public class AirflowClient {

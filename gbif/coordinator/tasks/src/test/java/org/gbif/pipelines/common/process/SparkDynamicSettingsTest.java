@@ -1,13 +1,12 @@
-package org.gbif.pipelines.common.interpretation;
+package org.gbif.pipelines.common.process;
 
 import static org.junit.Assert.*;
 
 import org.gbif.pipelines.common.configs.SparkConfiguration;
-import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class SparkSettingsTest {
+public class SparkDynamicSettingsTest {
 
   private static final SparkConfiguration CONFIG = new SparkConfiguration();
 
