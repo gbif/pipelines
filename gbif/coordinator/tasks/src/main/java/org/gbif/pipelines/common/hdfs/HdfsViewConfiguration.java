@@ -35,7 +35,7 @@ public class HdfsViewConfiguration implements BaseConfiguration {
   public int hdfsAvroCoefficientRatio = 75;
 
   @Parameter(names = "--hdfs-avro-expected-file-size-in-mb")
-  public int hdfsAvroExpectedFileSizeInMb = 300;
+  public int hdfsAvroExpectedFileSizeInMb = 4_096;
 
   @Parameter(names = "--process-runner")
   @NotNull
