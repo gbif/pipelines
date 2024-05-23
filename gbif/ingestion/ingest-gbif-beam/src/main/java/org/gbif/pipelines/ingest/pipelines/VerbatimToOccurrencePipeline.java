@@ -115,7 +115,6 @@ public class VerbatimToOccurrencePipeline {
     Integer attempt = options.getAttempt();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
-    Integer numberOfShards = options.getNumberOfShards();
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -201,11 +200,11 @@ public class VerbatimToOccurrencePipeline {
               .apply("Lookup GBIF IDs records", idTransform.interpret())
               .apply("Filter unique GBIF ids", uniqueIdTransform);
       uniqueGbifId = idsTuple.get(uniqueIdTransform.getTag());
-      uniqueGbifId.apply("Write GBIF IDs to avro", idTransform.write(pathFn, numberOfShards));
+      uniqueGbifId.apply("Write GBIF IDs to avro", idTransform.write(pathFn).withoutSharding());
       idsTuple
           .get(uniqueIdTransform.getInvalidTag())
           .apply(
-              "Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn, numberOfShards));
+              "Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn).withoutSharding());
     } else if (useGbifIdReadIO(types)) {
       uniqueGbifId = p.apply("Read GBIF ids records", idTransform.read(interpretedPathFn));
     } else {
@@ -229,12 +228,12 @@ public class VerbatimToOccurrencePipeline {
           absentTyple.get(uniqueIdTransform.getTag());
 
       absentCreatedGbifIds.apply(
-          "Write GBIF ids to avro", idTransform.write(pathFn, numberOfShards));
+          "Write GBIF ids to avro", idTransform.write(pathFn).withoutSharding());
 
       absentTyple
           .get(uniqueIdTransform.getInvalidTag())
           .apply(
-              "Write invalid GBIF ids to avro", idTransform.writeInvalid(pathFn, numberOfShards));
+              "Write invalid GBIF ids to avro", idTransform.writeInvalid(pathFn).withoutSharding());
 
       // Merge GBIF ids collections
       uniqueGbifId =
@@ -263,54 +262,54 @@ public class VerbatimToOccurrencePipeline {
 
     filteredUniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
-        .apply("Write verbatim to avro", verbatimTransform.write(pathFn, numberOfShards));
+        .apply("Write verbatim to avro", verbatimTransform.write(pathFn).withoutSharding());
 
     uniqueGbifId
         .apply(
             "Check clustering transform condition",
             clusteringTransform.check(types, IdentifierRecord.class))
         .apply("Interpret clustering", clusteringTransform.interpret())
-        .apply("Write clustering to avro", clusteringTransform.write(pathFn, numberOfShards));
+        .apply("Write clustering to avro", clusteringTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check basic transform condition", basicTransform.check(types))
         .apply("Interpret basic", basicTransform.interpret())
-        .apply("Write basic to avro", basicTransform.write(pathFn, numberOfShards));
+        .apply("Write basic to avro", basicTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check temporal transform condition", temporalTransform.check(types))
         .apply("Interpret temporal", temporalTransform.interpret())
-        .apply("Write temporal to avro", temporalTransform.write(pathFn, numberOfShards));
+        .apply("Write temporal to avro", temporalTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check multimedia transform condition", multimediaTransform.check(types))
         .apply("Interpret multimedia", multimediaTransform.interpret())
-        .apply("Write multimedia to avro", multimediaTransform.write(pathFn, numberOfShards));
+        .apply("Write multimedia to avro", multimediaTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check image transform condition", imageTransform.check(types))
         .apply("Interpret image", imageTransform.interpret())
-        .apply("Write image to avro", imageTransform.write(pathFn, numberOfShards));
+        .apply("Write image to avro", imageTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check audubon transform condition", audubonTransform.check(types))
         .apply("Interpret audubon", audubonTransform.interpret())
-        .apply("Write audubon to avro", audubonTransform.write(pathFn, numberOfShards));
+        .apply("Write audubon to avro", audubonTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check taxonomy transform condition", taxonomyTransform.check(types))
         .apply("Interpret taxonomy", taxonomyTransform.interpret())
-        .apply("Write taxon to avro", taxonomyTransform.write(pathFn, numberOfShards));
+        .apply("Write taxon to avro", taxonomyTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check grscicoll transform condition", grscicollTransform.check(types))
         .apply("Interpret grscicoll", grscicollTransform.interpret(metadataView))
-        .apply("Write grscicoll to avro", grscicollTransform.write(pathFn, numberOfShards));
+        .apply("Write grscicoll to avro", grscicollTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check location transform condition", locationTransform.check(types))
         .apply("Interpret location", locationTransform.interpret(metadataView))
-        .apply("Write location to avro", locationTransform.write(pathFn, numberOfShards));
+        .apply("Write location to avro", locationTransform.write(pathFn).withoutSharding());
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
