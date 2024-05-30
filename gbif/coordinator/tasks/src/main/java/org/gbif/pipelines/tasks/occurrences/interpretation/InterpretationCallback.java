@@ -236,8 +236,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
     // App name
-    String sparkAppName =
-        AppName.get(getType(message), message.getDatasetUuid(), message.getAttempt());
+    String sparkAppName = AppName.get(getType(message), message.getDatasetUuid());
 
     // Submit
     AirflowSparkLauncher.builder()

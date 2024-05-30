@@ -124,7 +124,7 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
         BeamParametersBuilder.eventInterpretation(config, message, path, numberOfShards);
 
     // App name
-    String sparkAppName = AppName.get(TYPE, message.getDatasetUuid(), message.getAttempt());
+    String sparkAppName = AppName.get(TYPE, message.getDatasetUuid());
 
     // Submit
     AirflowSparkLauncher.builder()

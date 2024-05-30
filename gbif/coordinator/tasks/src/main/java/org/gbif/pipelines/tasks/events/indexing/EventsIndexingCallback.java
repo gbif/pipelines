@@ -121,7 +121,7 @@ public class EventsIndexingCallback
         BeamParametersBuilder.eventIndexing(config, message, indexSettings);
 
     // App name
-    String sparkAppName = AppName.get(TYPE, message.getDatasetUuid(), message.getAttempt());
+    String sparkAppName = AppName.get(TYPE, message.getDatasetUuid());
 
     // Submit
     AirflowSparkLauncher.builder()
