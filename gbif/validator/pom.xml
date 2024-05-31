@@ -33,7 +33,7 @@
     <gbif-metadata-profile-eml.version>2.1</gbif-metadata-profile-eml.version>
 
     <!-- Checklists validation-->
-    <gbif-checklistbank.version>2.127-SNAPSHOT</gbif-checklistbank.version>
+    <gbif-checklistbank.version>2.126</gbif-checklistbank.version>
     <neo4j.version>3.5.29</neo4j.version>
     <neo4j-lucene.version>5.5.0</neo4j-lucene.version>
     <lucene-analyzers.version>5.4.1</lucene-analyzers.version>
