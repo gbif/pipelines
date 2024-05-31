@@ -128,6 +128,7 @@
     <commons-lang3.version>3.10</commons-lang3.version>
     <!-- Be carful when change the guava version, it can break XML parsing and etc at runtime -->
     <guava.version>27.0.1-jre</guava.version>
+    <amqp-client.version>4.8.0</amqp-client.version>
 
     <!-- Fault tolerance -->
     <resilience4j.version>1.7.0</resilience4j.version>

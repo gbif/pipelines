@@ -30,7 +30,6 @@
   </build>
 
   <properties>
-    <amqp-client.version>4.8.0</amqp-client.version>
 
     <gbif-cli.version>0.14</gbif-cli.version>
     <gbif-httputils.version>0.12</gbif-httputils.version>
