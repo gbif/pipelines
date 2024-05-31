@@ -274,6 +274,7 @@
     <dependency>
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
+      <version>${zookeeper.version}</version>
       <scope>runtime</scope>
       <exclusions>
         <exclusion>
