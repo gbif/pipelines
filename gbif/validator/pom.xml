@@ -44,7 +44,6 @@
     <spring-cloud-openfeign.version>2.2.10.RELEASE</spring-cloud-openfeign.version>
     <spring-cloud-zookeeper.version>2.2.5.RELEASE</spring-cloud-zookeeper.version>
     <mybatis-spring-boot-starter.version>2.3.2</mybatis-spring-boot-starter.version>
-    <springdoc-openapi-ui.version>1.8.0</springdoc-openapi-ui.version>
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
     <spring.version>5.2.12.RELEASE</spring.version>
@@ -214,11 +213,6 @@
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-starter-sleuth</artifactId>
         <version>${spring-cloud-sleuth.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springdoc</groupId>
-        <artifactId>springdoc-openapi-ui</artifactId>
-        <version>${springdoc-openapi-ui.version}</version>
       </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
