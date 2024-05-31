@@ -53,6 +53,8 @@ import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.slf4j.MDC;
+import uk.org.nbn.pipelines.io.avro.NBNAccessControlledRecord;
+import uk.org.nbn.transforms.NBNAccessControlRecordTransform;
 
 /**
  * Pipeline sequence:
@@ -174,8 +176,9 @@ public class IndexRecordPipeline {
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
     ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
-    ALASensitiveDataRecordTransform sensitiveTransform =
-        ALASensitiveDataRecordTransform.builder().create();
+    ALASensitiveDataRecordTransform sensitiveTransform = ALASensitiveDataRecordTransform.builder().create();
+
+    NBNAccessControlRecordTransform nbnAccessControlledTransform = NBNAccessControlRecordTransform.builder().create();
 
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
@@ -284,6 +287,15 @@ public class IndexRecordPipeline {
                     pathFn.apply(sensitiveTransform.getBaseName())),
             executor);
 
+    CompletableFuture<Map<String, NBNAccessControlledRecord>> nbnAccessControlledMapFeature =
+        CompletableFuture.supplyAsync(
+            () ->
+                AvroReader.readRecords(
+                    hdfsConfigs,
+                    NBNAccessControlledRecord.class,
+                    pathFn.apply(nbnAccessControlledTransform.getBaseName())),
+            executor);
+
     CompletableFuture<Map<String, ImageRecord>> imageServiceMapFeature =
         CompletableFuture.supplyAsync(
             () ->
@@ -343,7 +355,7 @@ public class IndexRecordPipeline {
             : Collections.emptyMap();
     Map<String, ImageRecord> imageServiceMap =
         options.getIncludeImages() ? imageServiceMapFeature.get() : Collections.emptyMap();
-
+    Map<String, NBNAccessControlledRecord> nbnAccessControlledMap = nbnAccessControlledMapFeature.get();
     Map<String, TaxonProfile> taxonProfileMap =
         options.getIncludeSpeciesLists() ? taxonProfileMapFeature.get() : Collections.emptyMap();
 
@@ -407,6 +419,8 @@ public class IndexRecordPipeline {
           LocationRecord elr = eventLocationMap.getOrDefault(k, null);
           TemporalRecord etr = eventTemporalMap.getOrDefault(k, null);
 
+            NBNAccessControlledRecord nbnAccessControlledRecord = nbnAccessControlledMap.getOrDefault(k, null);
+
           return IndexRecordTransform.createIndexRecord(
               br,
               tr,
@@ -419,6 +433,7 @@ public class IndexRecordPipeline {
               isr,
               tpr,
               sr,
+                  nbnAccessControlledRecord,
               mr,
               ecr,
               elr,

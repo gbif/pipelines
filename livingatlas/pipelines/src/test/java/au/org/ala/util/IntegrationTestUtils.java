@@ -58,7 +58,8 @@ public class IntegrationTestUtils extends ExternalResource {
 
   @Override
   protected void before() throws Throwable {
-
+    propertiesFilePath = TestUtils.getPipelinesConfigFile();
+if(true) return;
     if (COUNTER.get() == 0) {
 
       // setup containers
@@ -125,6 +126,7 @@ public class IntegrationTestUtils extends ExternalResource {
 
   @Override
   protected void after() {
+    if(true) return;
     if (COUNTER.addAndGet(-1) == 0) {
       elasticsearchContainer.stop();
       solrService.close();

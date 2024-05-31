@@ -36,6 +36,7 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.junit.Assert;
 import org.junit.Test;
+import uk.org.nbn.pipelines.io.avro.NBNAccessControlledRecord;
 
 public class MultimediaCsvConverterTest {
 
@@ -370,6 +371,18 @@ public class MultimediaCsvConverterTest {
             .setAltered(Collections.singletonMap("asr_Altered_key", "asr_Altered_value"))
             .build();
 
+    NBNAccessControlledRecord acr =
+            NBNAccessControlledRecord.newBuilder()
+                    .setId(DwcTerm.occurrenceID.simpleName())
+                    .setCreated(8L)
+                    .setAccessControlled(true)
+                    .setDataGeneralizations("acr_DataGeneralizations")
+                    .setInformationWithheld("acrr_InformationWithheld")
+                    .setPublicResolutionInMetres("1000")
+                    .setOriginal(Collections.singletonMap("acr_Original_key", "acr_Original_value"))
+                    .setAltered(Collections.singletonMap("acr_Altered_key", "acr_Altered_value"))
+                    .build();
+
     Long lastLoadDate = 9L;
     Long lastProcessedDate = 10L;
 
@@ -386,6 +399,7 @@ public class MultimediaCsvConverterTest {
             ir,
             tp,
             asr,
+            acr,
             mr,
             null,
             null,

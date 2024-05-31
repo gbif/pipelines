@@ -42,6 +42,8 @@ import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.io.avro.*;
 import org.jetbrains.annotations.NotNull;
+import uk.org.nbn.pipelines.interpreters.NBNAccessControlledDataInterpreter;
+import uk.org.nbn.pipelines.io.avro.NBNAccessControlledRecord;
 
 /**
  * A transform that creates IndexRecords which are used downstream to push data to a search index
@@ -84,6 +86,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
   @NonNull private TupleTag<ALASensitivityRecord> srTag;
 
+  @NonNull private TupleTag<NBNAccessControlledRecord> accessControlledRecordTag;
+
   @NonNull private TupleTag<EventCoreRecord> eventCoreTag;
 
   @NonNull private TupleTag<LocationRecord> eventLocationTag;
@@ -115,6 +119,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       TupleTag<ImageRecord> isTag,
       TupleTag<TaxonProfile> tpTag,
       TupleTag<ALASensitivityRecord> srTag,
+      TupleTag<NBNAccessControlledRecord> accessControlledRecordTag,
       TupleTag<EventCoreRecord> eventCoreTag,
       TupleTag<LocationRecord> eventLocationTag,
       TupleTag<TemporalRecord> eventTemporalTag,
@@ -140,6 +145,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     t.datasetID = datasetID;
     t.lastLoadDate = lastLoadDate;
     t.lastLoadProcessed = lastLoadProcessed;
+    t.accessControlledRecordTag = accessControlledRecordTag;
     return t;
   }
 
@@ -161,6 +167,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       ImageRecord isr,
       TaxonProfile tpr,
       ALASensitivityRecord sr,
+      NBNAccessControlledRecord accessControlledRecord,
       MultimediaRecord mr,
       EventCoreRecord ecr,
       LocationRecord elr,
@@ -223,17 +230,17 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
     // If a sensitive record, construct new versions of the data with adjustments
     boolean isSensitive = sr != null && sr.getIsSensitive() != null && sr.getIsSensitive();
-    if (isSensitive) {
-      Set<Term> sensitiveTerms =
-          sr.getAltered().keySet().stream().map(TERM_FACTORY::findTerm).collect(Collectors.toSet());
+
+    if (isSensitive ) {
+      Set<Term> sensitiveTerms = sr.getAltered().keySet().stream().map(TERM_FACTORY::findTerm).collect(Collectors.toSet());
       if (br != null) {
         br = BasicRecord.newBuilder(br).build();
         SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, br);
       }
-      if (tr != null) {
-        tr = TemporalRecord.newBuilder(tr).build();
-        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, tr);
-      }
+//      if (tr != null) { //NBN does not wipe temporal records with sensitive species
+//        tr = TemporalRecord.newBuilder(tr).build();
+//        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, tr);
+//      }
       if (lr != null) {
         lr = LocationRecord.newBuilder(lr).build();
         SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, lr);
@@ -254,7 +261,35 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         aar = ALAAttributionRecord.newBuilder(aar).build();
         SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, aar);
       }
+
+      //TODO HMJ - need to implement this
+//      if (osgridRecord ! = null) {
+//        osgridRecord = OSGridRecord.newBuilder(osgridRecord).build();
+//        SensitiveDataInterpreter.applyAccessControls(accessControlledRecord, osgridRecord);
+//      }
     }
+
+    boolean isAccessControlled = accessControlledRecord != null && accessControlledRecord.isAccessControlled() != null && accessControlledRecord.isAccessControlled();
+
+    if (isAccessControlled) {
+      if (!isSensitive || (Integer.parseInt(accessControlledRecord.getPublicResolutionInMetres()) < Integer.parseInt(sr.getGeneralisationInMetres())))
+      {
+        NBNAccessControlledDataInterpreter.applyAccessControls(accessControlledRecord, lr);
+      }
+
+      if (er != null) {
+        er = ExtendedRecord.newBuilder(er).build();
+        NBNAccessControlledDataInterpreter.applyAccessControls(accessControlledRecord, er);
+      }
+
+      //TODO HMJ - need to implement this
+//      if (osgridRecord ! = null) {
+//        osgridRecord = OSGridRecord.newBuilder(osgridRecord).build();
+//        NBNAccessControlledDataInterpreter.applyAccessControls(accessControlledRecord, osgridRecord);
+//      }
+    }
+
+    //TODO HMJ addToIndexRecord(osgridRecord, indexRecord, skipKeys);
 
     addToIndexRecord(lr, indexRecord, skipKeys);
     addToIndexRecord(tr, indexRecord, skipKeys);
@@ -287,6 +322,28 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             .getStrings()
             .put(GENERALISATION_TO_APPLY_IN_METRES, sr.getGeneralisationInMetres());
       for (Map.Entry<String, String> entry : sr.getOriginal().entrySet()) {
+        Term field = TERM_FACTORY.findTerm(entry.getKey());
+        if (entry.getValue() != null) {
+          indexRecord.getStrings().put(SENSITIVE_PREFIX + field.simpleName(), entry.getValue());
+        }
+      }
+    }
+    else if (accessControlledRecord != null){
+       if (accessControlledRecord.getDataGeneralizations() != null)
+        indexRecord
+                .getStrings()
+                .put(DwcTerm.dataGeneralizations.simpleName(), accessControlledRecord.getDataGeneralizations());
+      if (accessControlledRecord.getInformationWithheld() != null)
+        indexRecord
+                .getStrings()
+                .put(DwcTerm.informationWithheld.simpleName(), accessControlledRecord.getInformationWithheld());
+      if (accessControlledRecord.getPublicResolutionInMetres() != null)
+        indexRecord.getStrings().put(GENERALISATION_IN_METRES, accessControlledRecord.getPublicResolutionInMetres());
+//      if (sr.getGeneralisationInMetres() != null)
+//        indexRecord
+//                .getStrings()
+//                .put(GENERALISATION_TO_APPLY_IN_METRES, sr.getGeneralisationInMetres());
+      for (Map.Entry<String, String> entry : accessControlledRecord.getOriginal().entrySet()) {
         Term field = TERM_FACTORY.findTerm(entry.getKey());
         if (entry.getValue() != null) {
           indexRecord.getStrings().put(SENSITIVE_PREFIX + field.simpleName(), entry.getValue());
@@ -1009,6 +1066,11 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                 sr = v.getOnly(srTag, null);
               }
 
+              NBNAccessControlledRecord accessControlledRecord = null;
+                if (accessControlledRecordTag != null) {
+                  accessControlledRecord = v.getOnly(accessControlledRecordTag, null);
+                }
+
               MultimediaRecord mr = null;
               if (srTag != null) {
                 mr = v.getOnly(mrTag, null);
@@ -1032,6 +1094,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                         isr,
                         tpr,
                         sr,
+                            accessControlledRecord,
                         mr,
                         ecr,
                         elr,

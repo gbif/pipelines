@@ -64,7 +64,8 @@ public class TestUtils {
               "SDS_PORT",
               System.getProperty("SDS_PORT", String.valueOf(SENSITIVE_SERVICE_INTERNAL_PORT)));
       template =
-          template.replaceAll("COLLECTORY_PORT", System.getProperty("COLLECTORY_PORT", "3939"));
+          template.replaceAll("COLLECTORY_PORT", System.getProperty("COLLECTORY_PORT", "" +
+                  "8082"));
       template = template.replaceAll("LISTS_PORT", System.getProperty("LISTS_PORT", "4949"));
       template = template.replaceAll("SPATIAL_PORT", System.getProperty("SPATIAL_PORT", "5959"));
       template =
