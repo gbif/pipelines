@@ -210,7 +210,7 @@ public class ALASensitiveDataRecordTransform
 
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, iatxr);
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, itxr);
-//    SensitiveDataInterpreter.constructFields(sensitiveFields, properties, itr);
+    SensitiveDataInterpreter.constructFields(sensitiveFields, properties, itr);
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, ilr);
     SensitiveDataInterpreter.constructFields(sensitiveFields, properties, ier);
 
