@@ -128,32 +128,35 @@ public class NBNAccessControlledDataInterpreter {
     Map<String, String> blurred = new HashMap<>();
 
     if (original.get("decimalLatitude") != null && original.get("decimalLongitude") != null) {
-
       GeneralisedLocation generalisedLocation = new GeneralisedLocation(original.get("decimalLatitude"), original.get("decimalLongitude"), publicResolutionToBeApplied);
       blurred.put("decimalLatitude", generalisedLocation.getGeneralisedLatitude());
       blurred.put("decimalLongitude", generalisedLocation.getGeneralisedLongitude());
+    }
 
+    if (original.get("gridReference") != null && !original.get("gridReference").isEmpty()) {
+      blurred.put("gridReference", ScalaToJavaUtil.scalaOptionToString(GridUtil.convertReferenceToResolution(original.get("gridReference"), String.valueOf(publicResolutionToBeApplied))));
     }
 
     String blurredCoordinateUncertainty =  GridUtil.gridToCoordinateUncertaintyString(publicResolutionToBeApplied);
 
     if (original.get("coordinateUncertaintyInMeters") != null && !original.get("coordinateUncertaintyInMeters").isEmpty() &&  (java.lang.Double.parseDouble(original.get("coordinateUncertaintyInMeters")) < java.lang.Double.parseDouble(blurredCoordinateUncertainty)) ){
-      blurred.put("coordinateUncertaintyInMeters",GridUtil.gridToCoordinateUncertaintyString(publicResolutionToBeApplied));
+      blurred.put("coordinateUncertaintyInMeters",blurredCoordinateUncertainty);
     }
 
-    if (original.get("gridReference") != null && !original.get("gridReference").isEmpty()) {
-
-      blurred.put("gridReference", ScalaToJavaUtil.scalaOptionToString(GridUtil.convertReferenceToResolution(original.get("gridReference"), String.valueOf(publicResolutionToBeApplied))));
+    if (original.get("gridSizeInMeters") != null && !original.get("gridSizeInMeters").isEmpty() && java.lang.Integer.parseInt(original.get("coordinateUncertaintyInMeters")) < publicResolutionToBeApplied){
+      blurred.put("gridSizeInMeters", String.valueOf(publicResolutionToBeApplied));
     }
 
-//    if (!StringUtils.isEmpty(raw.location.gridSizeInMeters) && raw.location.gridSizeInMeters.toInt < raw.publicResolutionToBeAppliedInMeters.toInt){
-//      raw.location.gridSizeInMeters = raw.publicResolutionToBeAppliedInMeters
-//    }
-//
-//    AccessControlUtil.clearAccessControlledValuesThatWillNotBeBlurred(raw)
-//
-//
-//    raw.publicResolutionInMeters = raw.publicResolutionToBeAppliedInMeters
+  //clear the remaining access controlled values
+    blurred.put("locality","");
+    blurred.put("verbatimLatitude","");
+    blurred.put("verbatimLongitude","");
+    blurred.put("verbatimLocality","");
+    blurred.put("verbatimCoordinates","");
+    blurred.put("footprintWKT","");
+    blurred.put("locationRemarks","");
+    blurred.put("occurrenceRemarks","");
+
     return blurred;
 
   }
@@ -192,6 +195,7 @@ public class NBNAccessControlledDataInterpreter {
       original.put("verbatimCoordinates", extendedRecord.getCoreTerms().get(DwcTerm.verbatimCoordinates.simpleName()));
       original.put("footprintWKT", locationRecord.getFootprintWKT());
       original.put("locationRemarks", extendedRecord.getCoreTerms().get(DwcTerm.locationRemarks.simpleName()));
+      original.put("occurrenceRemarks", extendedRecord.getCoreTerms().get(DwcTerm.occurrenceRemarks.simpleName()));
 
       Map<String, String> blurred = blur(original, dataResourceNbn.getPublicResolutionToBeApplied());
 
