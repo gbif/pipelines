@@ -102,7 +102,7 @@ public class ChecklistValidatorCallbackIT {
     assertEquals(4, distribution.getTerms().size());
     assertEquals(0, distribution.getIssues().size());
     assertTerm(DwcTerm.countryCode, 475, 475, distribution);
-    assertTerm(DwcTerm.occurrenceStatus, 475, 0, distribution);
+    assertTerm(DwcTerm.occurrenceStatus, 475, 475, distribution);
     assertTerm(DwcTerm.establishmentMeans, 475, 0, distribution);
     assertTerm(DwcTerm.locationID, 0, 0, distribution);
     callback.close();
