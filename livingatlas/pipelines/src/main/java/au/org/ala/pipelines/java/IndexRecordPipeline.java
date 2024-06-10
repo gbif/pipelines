@@ -54,7 +54,7 @@ import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.slf4j.MDC;
 import uk.org.nbn.pipelines.io.avro.NBNAccessControlledRecord;
-import uk.org.nbn.transforms.NBNAccessControlRecordTransform;
+import uk.org.nbn.pipelines.transforms.NBNAccessControlRecordTransform;
 
 /**
  * Pipeline sequence:

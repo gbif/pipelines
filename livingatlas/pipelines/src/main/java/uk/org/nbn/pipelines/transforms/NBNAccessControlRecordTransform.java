@@ -1,4 +1,4 @@
-package uk.org.nbn.transforms;
+package uk.org.nbn.pipelines.transforms;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import lombok.Builder;
