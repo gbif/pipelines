@@ -13,6 +13,7 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -33,8 +34,8 @@ import org.gbif.rest.client.species.retrofit.ChecklistbankServiceSyncClient;
  * Takes the classification from verbatim data and runs it against a two species lookup services,
  * bypassing the key value caches.
  *
- * Outputs a report capturing the verbatim, old service response
- * and new service values for the classifications.
+ * <p>Outputs a report capturing the verbatim, old service response and new service values for the
+ * classifications.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -67,6 +68,8 @@ public class NameServiceComparison {
                     options.getNewAPIBaseURI(),
                     options.getClbDatasetKey(),
                     options.getNewClbDatasetKey(),
+                    options.getClbUsername(),
+                    options.getClbPassword(),
                     schema,
                     options.getScope(),
                     options.getMinimumOccurrenceCount(),
@@ -95,8 +98,10 @@ public class NameServiceComparison {
   static class MatchTransform extends DoFn<HCatRecord, String> {
     private final String oldBaseAPIUrl;
     private final String newBaseAPIUrl;
-    private final Integer clbDatasetKey;
-    private final Integer newClbDatasetKey;
+    private final String clbDatasetKey;
+    private final String newClbDatasetKey;
+    private final String clbUsername;
+    private final String clbPassword;
     private final HCatSchema schema;
     private final Integer scope;
     private final int minCount;
@@ -111,8 +116,10 @@ public class NameServiceComparison {
     MatchTransform(
         String oldBaseAPIUrl,
         String newBaseAPIUrl,
-        Integer clbDatasetKey,
-        Integer newClbDatasetKey,
+        String clbDatasetKey,
+        String newClbDatasetKey,
+        String clbUsername,
+        String clbPassword,
         HCatSchema schema,
         Integer scope,
         int minCount,
@@ -125,6 +132,8 @@ public class NameServiceComparison {
       this.newBaseAPIUrl = newBaseAPIUrl;
       this.clbDatasetKey = clbDatasetKey;
       this.newClbDatasetKey = newClbDatasetKey;
+      this.clbUsername = clbUsername;
+      this.clbPassword = clbPassword;
       this.schema = schema;
       this.scope = scope;
       this.minCount = minCount;
@@ -138,14 +147,18 @@ public class NameServiceComparison {
     @Setup
     public void setup() {
       // setup services to compare
-      this.oldService = createChecklistbankService(oldBaseAPIUrl, clbDatasetKey);
-      this.newService = createChecklistbankService(newBaseAPIUrl, newClbDatasetKey);
+      this.oldService =
+          createChecklistbankService(
+              oldBaseAPIUrl, clbDatasetKey, this.clbUsername, this.clbPassword);
+      this.newService =
+          createChecklistbankService(
+              newBaseAPIUrl, newClbDatasetKey, this.clbUsername, this.clbPassword);
     }
 
     private ChecklistbankService createChecklistbankService(
-        String baseAPIUrl, Integer clbDatasetKey) {
+        String baseAPIUrl, String clbDatasetKey, String clbUsername, String clbPassword) {
 
-      if (clbDatasetKey >= 0) {
+      if (StringUtils.isNotBlank(clbDatasetKey)) {
         ClientConfiguration clientConfiguration =
             ClientConfiguration.builder()
                 .withBaseApiUrl(baseAPIUrl)
@@ -153,7 +166,12 @@ public class NameServiceComparison {
                 .withFileCacheMaxSizeMb(200L)
                 .build();
         return new CLBSyncClient(
-            clientConfiguration, clbDatasetKey, outputInfragenericEpithet, ignoreSuppliedRank);
+            clientConfiguration,
+            clbDatasetKey,
+            clbUsername,
+            clbPassword,
+            outputInfragenericEpithet,
+            ignoreSuppliedRank);
       } else {
         return new ChecklistbankServiceSyncClient(
             ChecklistbankClientsConfiguration.builder()
@@ -213,9 +231,11 @@ public class NameServiceComparison {
       }
     }
 
-    private boolean shouldOutputClassification(GBIFClassification oldProposed, GBIFClassification newProposed) {
+    private boolean shouldOutputClassification(
+        GBIFClassification oldProposed, GBIFClassification newProposed) {
       if (skipKeys) {
-        return !oldProposed.classificationEquals(newProposed, ignoreWhitespace, ignoreAuthorshipFormatting);
+        return !oldProposed.classificationEquals(
+            newProposed, ignoreWhitespace, ignoreAuthorshipFormatting);
       } else {
         return !oldProposed.equals(newProposed);
       }
@@ -223,44 +243,43 @@ public class NameServiceComparison {
 
     private Identification buildMatchRequest(HCatRecord source) throws HCatException {
       return Identification.builder()
-              .withKingdom(source.getString("v_kingdom", schema))
-              .withPhylum(source.getString("v_phylum", schema))
-              .withClazz(source.getString("v_class", schema))
-              .withOrder(source.getString("v_order", schema))
-              .withFamily(source.getString("v_family", schema))
-              .withGenus(source.getString("v_genus", schema))
-              .withScientificName(source.getString("v_scientificName", schema))
-              .withGenericName(source.getString("v_genericName", schema))
-              .withSpecificEpithet(source.getString("v_specificEpithet", schema))
-              .withInfraspecificEpithet(source.getString("v_infraSpecificEpithet", schema))
-              .withScientificNameAuthorship(
-                      source.getString("v_scientificNameAuthorship", schema))
-              .withRank(source.getString("v_taxonRank", schema))
-              .withVerbatimRank(source.getString("v_verbatimTaxonRank", schema))
-              .withScientificNameID(source.getString("v_scientificNameID", schema))
-              .withTaxonID(source.getString("v_taxonID", schema))
-              .withTaxonConceptID(source.getString("v_taxonConceptID", schema))
-              .build();
+          .withKingdom(source.getString("v_kingdom", schema))
+          .withPhylum(source.getString("v_phylum", schema))
+          .withClazz(source.getString("v_class", schema))
+          .withOrder(source.getString("v_order", schema))
+          .withFamily(source.getString("v_family", schema))
+          .withGenus(source.getString("v_genus", schema))
+          .withScientificName(source.getString("v_scientificName", schema))
+          .withGenericName(source.getString("v_genericName", schema))
+          .withSpecificEpithet(source.getString("v_specificEpithet", schema))
+          .withInfraspecificEpithet(source.getString("v_infraSpecificEpithet", schema))
+          .withScientificNameAuthorship(source.getString("v_scientificNameAuthorship", schema))
+          .withRank(source.getString("v_taxonRank", schema))
+          .withVerbatimRank(source.getString("v_verbatimTaxonRank", schema))
+          .withScientificNameID(source.getString("v_scientificNameID", schema))
+          .withTaxonID(source.getString("v_taxonID", schema))
+          .withTaxonConceptID(source.getString("v_taxonConceptID", schema))
+          .build();
     }
 
-    private NameUsageMatch matchWithService(ChecklistbankService service, Identification matchRequest) {
+    private NameUsageMatch matchWithService(
+        ChecklistbankService service, Identification matchRequest) {
       return service.match(
-              null, // rely only on names
-              matchRequest.getKingdom(),
-              matchRequest.getPhylum(),
-              matchRequest.getClazz(),
-              matchRequest.getOrder(),
-              matchRequest.getFamily(),
-              matchRequest.getGenus(),
-              matchRequest.getScientificName(),
-              matchRequest.getGenericName(),
-              matchRequest.getSpecificEpithet(),
-              matchRequest.getInfraspecificEpithet(),
-              matchRequest.getScientificNameAuthorship(),
-              matchRequest.getRank(),
-              false,
-              false
-      );
+          null, // rely only on names
+          matchRequest.getKingdom(),
+          matchRequest.getPhylum(),
+          matchRequest.getClazz(),
+          matchRequest.getOrder(),
+          matchRequest.getFamily(),
+          matchRequest.getGenus(),
+          matchRequest.getScientificName(),
+          matchRequest.getGenericName(),
+          matchRequest.getSpecificEpithet(),
+          matchRequest.getInfraspecificEpithet(),
+          matchRequest.getScientificNameAuthorship(),
+          matchRequest.getRank(),
+          false,
+          false);
     }
 
     private GBIFClassification buildProposedClassification(NameUsageMatch match) {

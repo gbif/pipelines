@@ -9,9 +9,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import okhttp3.OkHttpClient;
+import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Rank;
@@ -26,28 +27,59 @@ import org.gbif.rest.client.species.ChecklistbankService;
 import org.gbif.rest.client.species.IucnRedListCategory;
 import org.gbif.rest.client.species.NameUsageMatch;
 import org.gbif.rest.client.species.NameUsageSearchResponse;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class CLBSyncClient implements ChecklistbankService, Closeable {
 
   private final CLBMatchUsageRetrofitService clbMatchUsageRetrofitService;
   private final OkHttpClient clbOkHttpClient;
-  private final Integer clbDatasetKey;
+  private final String clbDatasetKey;
+  private final String clbUsername;
+  private final String clbPassword;
   private final Boolean outputInfragenericEpithet;
   private final Boolean ignoreVerbatimRank;
   private static final NameParserGBIF parser = new NameParserGBIF(20000, 1, 1);
 
+  public static OkHttpClient createClient(
+      ClientConfiguration config, String username, String password) {
+    OkHttpClient.Builder clientBuilder =
+        (new OkHttpClient.Builder())
+            .authenticator(
+                new Authenticator() {
+                  @Override
+                  public Request authenticate(@Nullable Route route, @NotNull Response response)
+                      throws IOException {
+                    String credential = Credentials.basic(username, password);
+                    return response
+                        .request()
+                        .newBuilder()
+                        .addHeader("Authorization", credential)
+                        .build();
+                  }
+                })
+            .connectTimeout(config.getTimeOut(), TimeUnit.SECONDS)
+            .readTimeout(config.getTimeOut(), TimeUnit.SECONDS)
+            .callTimeout(config.getTimeOut(), TimeUnit.SECONDS);
+    return clientBuilder.build();
+  }
+
   public CLBSyncClient(
       ClientConfiguration clientConfiguration,
-      Integer datasetKey,
+      String datasetKey,
+      String clbUsername,
+      String clbPassword,
       Boolean outputInfragenericEpithet,
       Boolean ignoreVerbatimRank) {
-    this.clbOkHttpClient = RetrofitClientFactory.createClient(clientConfiguration);
+    this.clbDatasetKey = datasetKey;
+    this.clbUsername = clbUsername;
+    this.clbPassword = clbPassword;
+    this.clbOkHttpClient = createClient(clientConfiguration, this.clbUsername, this.clbPassword);
     this.clbMatchUsageRetrofitService =
         RetrofitClientFactory.createRetrofitClient(
-            clbOkHttpClient,
+            this.clbOkHttpClient,
             clientConfiguration.getBaseApiUrl(),
             CLBMatchUsageRetrofitService.class);
-    this.clbDatasetKey = datasetKey;
     this.outputInfragenericEpithet = outputInfragenericEpithet;
     this.ignoreVerbatimRank = ignoreVerbatimRank;
   }
@@ -165,6 +197,10 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
 
       if (firstInClass.isPresent()) {
         CLBUsage acceptedCLBUsage = firstInClass.get();
+        if (acceptedCLBUsage.namesIndexId == null) {
+          // FIXME why is the nameIndexId null in this instance ?
+          return noMatch();
+        }
         RankedName acceptedUsage =
             getRankedNameFromUsage(acceptedCLBUsage, outputInfragenericEpithet);
         num.setAcceptedUsage(acceptedUsage);
@@ -338,7 +374,7 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
   }
 
   private static RankedName getRankedNameFromUsage(
-      CLBUsage clbUsage, boolean outputInfragenericEpithet) {
+      @NotNull CLBUsage clbUsage, boolean outputInfragenericEpithet) {
 
     RankedName usage = new RankedName();
     usage.setKey(clbUsage.namesIndexId);

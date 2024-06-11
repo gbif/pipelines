@@ -13,6 +13,7 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -63,6 +64,8 @@ public class BackbonePreRelease {
                 new MatchTransform(
                     options.getAPIBaseURI(),
                     options.getClbDatasetKey(),
+                    options.getClbUsername(),
+                    options.getClbPassword(),
                     schema,
                     options.getScope(),
                     options.getMinimumOccurrenceCount(),
@@ -90,7 +93,9 @@ public class BackbonePreRelease {
   /** Performs the lookup. */
   static class MatchTransform extends DoFn<HCatRecord, String> {
     private final String baseAPIUrl;
-    private final Integer clbDatasetKey;
+    private final String clbDatasetKey;
+    private final String clbUsername;
+    private final String clbPassword;
     private final HCatSchema schema;
     private final Integer scope;
     private final int minCount;
@@ -103,7 +108,9 @@ public class BackbonePreRelease {
 
     MatchTransform(
         String baseAPIUrl,
-        Integer clbDatasetKey,
+        String clbDatasetKey,
+        String clbUsername,
+        String clbPassword,
         HCatSchema schema,
         Integer scope,
         int minCount,
@@ -114,6 +121,8 @@ public class BackbonePreRelease {
         boolean ignoreSuppliedRank) {
       this.baseAPIUrl = baseAPIUrl;
       this.clbDatasetKey = clbDatasetKey;
+      this.clbUsername = clbUsername;
+      this.clbPassword = clbPassword;
       this.schema = schema;
       this.scope = scope;
       this.minCount = minCount;
@@ -127,7 +136,7 @@ public class BackbonePreRelease {
     @Setup
     public void setup() {
 
-      if (clbDatasetKey >= 0) {
+      if (StringUtils.isNotBlank(clbDatasetKey)) {
         ClientConfiguration clientConfiguration =
             ClientConfiguration.builder()
                 .withBaseApiUrl(baseAPIUrl)
@@ -136,7 +145,12 @@ public class BackbonePreRelease {
                 .build();
         service =
             new CLBSyncClient(
-                clientConfiguration, clbDatasetKey, outputInfragenericEpithet, ignoreSuppliedRank);
+                clientConfiguration,
+                clbDatasetKey,
+                clbUsername,
+                clbPassword,
+                outputInfragenericEpithet,
+                ignoreSuppliedRank);
       } else {
         service =
             new ChecklistbankServiceSyncClient(

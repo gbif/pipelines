@@ -12,8 +12,8 @@ public interface NameServiceComparisonOptions extends BackbonePreReleaseOptions 
 
   @Description(
       "Match against the checklistbank API and use the specified dataset key for name usage mapping")
-  @Default.Integer(-1)
-  Integer getNewClbDatasetKey();
+  @Default.String("")
+  String getNewClbDatasetKey();
 
-  void setNewClbDatasetKey(Integer newClbDatasetKey);
+  void setNewClbDatasetKey(String newClbDatasetKey);
 }

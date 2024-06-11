@@ -8,7 +8,7 @@ import retrofit2.http.Query;
 public interface CLBMatchUsageRetrofitService {
   @GET("dataset/{datasetKey}/match/nameusage")
   Call<CLBUsageMatch> match(
-      @Path("datasetKey") Integer datasetKey,
+      @Path("datasetKey") String datasetKey,
       @Query("kingdom") String kingdom,
       @Query("phylum") String phylum,
       @Query("class") String clazz,

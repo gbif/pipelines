@@ -63,10 +63,22 @@ public interface BackbonePreReleaseOptions extends HadoopFileSystemOptions {
 
   @Description(
       "Match against the checklistbank API and use the specified dataset key for name usage mapping")
-  @Default.Integer(-1)
-  Integer getClbDatasetKey();
+  @Default.String("")
+  String getClbDatasetKey();
 
-  void setClbDatasetKey(Integer clbDatasetKey);
+  void setClbDatasetKey(String clbDatasetKey);
+
+  @Description("CLB user to use for basic auth requests")
+  @Default.String("")
+  String getClbUsername();
+
+  void setClbUsername(String clbUsername);
+
+  @Description("CLB password to use for basic auth requests")
+  @Default.String("")
+  String getClbPassword();
+
+  void setClbPassword(String clbPassword);
 
   @Description(
       "Output infrageneric markers in the scientific name (CLB v2 includes these in the scientific name)")
