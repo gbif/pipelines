@@ -155,6 +155,6 @@ public class AirflowSparkLauncher {
    */
   private static String normalize(String sparkAppName) {
     String v = sparkAppName.toLowerCase().replace("_to_", "-").replace("_", "-");
-    return v.length() > 64 ? v.substring(0, 63) : v;
+    return v.length() >= 64 ? v.substring(0, 63) : v;
   }
 }
