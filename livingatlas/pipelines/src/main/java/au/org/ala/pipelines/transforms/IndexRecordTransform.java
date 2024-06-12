@@ -231,16 +231,17 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     // If a sensitive record, construct new versions of the data with adjustments
     boolean isSensitive = sr != null && sr.getIsSensitive() != null && sr.getIsSensitive();
 
-    if (isSensitive ) {
-      Set<Term> sensitiveTerms = sr.getAltered().keySet().stream().map(TERM_FACTORY::findTerm).collect(Collectors.toSet());
+    if (isSensitive) {
+      Set<Term> sensitiveTerms =
+          sr.getAltered().keySet().stream().map(TERM_FACTORY::findTerm).collect(Collectors.toSet());
       if (br != null) {
         br = BasicRecord.newBuilder(br).build();
         SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, br);
       }
-//      if (tr != null) { //NBN does not wipe temporal records with sensitive species
-//        tr = TemporalRecord.newBuilder(tr).build();
-//        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, tr);
-//      }
+      if (tr != null) { // TODO HMJ NBN does not wipe temporal records with sensitive species
+        tr = TemporalRecord.newBuilder(tr).build();
+        SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, tr);
+      }
       if (lr != null) {
         lr = LocationRecord.newBuilder(lr).build();
         SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, lr);
@@ -262,18 +263,22 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         SensitiveDataInterpreter.applySensitivity(sensitiveTerms, sr, aar);
       }
 
-      //TODO HMJ - need to implement this
-//      if (osgridRecord ! = null) {
-//        osgridRecord = OSGridRecord.newBuilder(osgridRecord).build();
-//        SensitiveDataInterpreter.applyAccessControls(accessControlledRecord, osgridRecord);
-//      }
+      // TODO HMJ - need to implement this
+      //      if (osgridRecord ! = null) {
+      //        osgridRecord = OSGridRecord.newBuilder(osgridRecord).build();
+      //        SensitiveDataInterpreter.applyAccessControls(accessControlledRecord, osgridRecord);
+      //      }
     }
 
-    boolean isAccessControlled = accessControlledRecord != null && accessControlledRecord.isAccessControlled() != null && accessControlledRecord.isAccessControlled();
+    boolean isAccessControlled =
+        accessControlledRecord != null
+            && accessControlledRecord.isAccessControlled() != null
+            && accessControlledRecord.isAccessControlled();
 
     if (isAccessControlled) {
-      if (!isSensitive || (Integer.parseInt(accessControlledRecord.getPublicResolutionInMetres()) < Integer.parseInt(sr.getGeneralisationInMetres())))
-      {
+      if (!isSensitive
+          || (Integer.parseInt(accessControlledRecord.getPublicResolutionInMetres())
+              < Integer.parseInt(sr.getGeneralisationInMetres()))) {
         NBNAccessControlledDataInterpreter.applyAccessControls(accessControlledRecord, lr);
       }
 
@@ -282,14 +287,15 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         NBNAccessControlledDataInterpreter.applyAccessControls(accessControlledRecord, er);
       }
 
-      //TODO HMJ - need to implement this
-//      if (osgridRecord ! = null) {
-//        osgridRecord = OSGridRecord.newBuilder(osgridRecord).build();
-//        NBNAccessControlledDataInterpreter.applyAccessControls(accessControlledRecord, osgridRecord);
-//      }
+      // TODO HMJ - need to implement this
+      //      if (osgridRecord ! = null) {
+      //        osgridRecord = OSGridRecord.newBuilder(osgridRecord).build();
+      //        NBNAccessControlledDataInterpreter.applyAccessControls(accessControlledRecord,
+      // osgridRecord);
+      //      }
     }
 
-    //TODO HMJ addToIndexRecord(osgridRecord, indexRecord, skipKeys);
+    // TODO HMJ addToIndexRecord(osgridRecord, indexRecord, skipKeys);
 
     addToIndexRecord(lr, indexRecord, skipKeys);
     addToIndexRecord(tr, indexRecord, skipKeys);
@@ -328,21 +334,25 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         }
       }
     }
-    else if (accessControlledRecord != null){
-       if (accessControlledRecord.getDataGeneralizations() != null)
-        indexRecord
-                .getStrings()
-                .put(DwcTerm.dataGeneralizations.simpleName(), accessControlledRecord.getDataGeneralizations());
-      if (accessControlledRecord.getInformationWithheld() != null)
-        indexRecord
-                .getStrings()
-                .put(DwcTerm.informationWithheld.simpleName(), accessControlledRecord.getInformationWithheld());
+
+    if (isAccessControlled) {
+      //       if (accessControlledRecord.getDataGeneralizations() != null)
+      //        indexRecord
+      //                .getStrings()
+      //                .put(DwcTerm.dataGeneralizations.simpleName(),
+      // accessControlledRecord.getDataGeneralizations());
+      //      if (accessControlledRecord.getInformationWithheld() != null)
+      //        indexRecord
+      //                .getStrings()
+      //                .put(DwcTerm.informationWithheld.simpleName(),
+      // accessControlledRecord.getInformationWithheld());
       if (accessControlledRecord.getPublicResolutionInMetres() != null)
-        indexRecord.getStrings().put(GENERALISATION_IN_METRES, accessControlledRecord.getPublicResolutionInMetres());
-//      if (sr.getGeneralisationInMetres() != null)
-//        indexRecord
-//                .getStrings()
-//                .put(GENERALISATION_TO_APPLY_IN_METRES, sr.getGeneralisationInMetres());
+        indexRecord
+            .getStrings()
+            .put("publicResolutionInMeters", accessControlledRecord.getPublicResolutionInMetres());
+
+      // add original sensitive values - these will overwrite whatever the sensitive original values
+      // were
       for (Map.Entry<String, String> entry : accessControlledRecord.getOriginal().entrySet()) {
         Term field = TERM_FACTORY.findTerm(entry.getKey());
         if (entry.getValue() != null) {
@@ -1067,9 +1077,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
               }
 
               NBNAccessControlledRecord accessControlledRecord = null;
-                if (accessControlledRecordTag != null) {
-                  accessControlledRecord = v.getOnly(accessControlledRecordTag, null);
-                }
+              if (accessControlledRecordTag != null) {
+                accessControlledRecord = v.getOnly(accessControlledRecordTag, null);
+              }
 
               MultimediaRecord mr = null;
               if (srTag != null) {
@@ -1094,7 +1104,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
                         isr,
                         tpr,
                         sr,
-                            accessControlledRecord,
+                        accessControlledRecord,
                         mr,
                         ecr,
                         elr,

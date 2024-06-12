@@ -2,7 +2,6 @@ package au.org.ala.pipelines.beam;
 
 import static org.junit.Assert.*;
 
-import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
@@ -29,12 +28,13 @@ public class SensitiveDataPipelineTestIT {
   @Test
   public void testSensitivePipeline() throws Exception {
 
-//    File shapefiles = new File("/tmp/pipelines-shp");
-//    assertTrue(
-//        "The shapefiles "
-//            + shapefiles
-//            + " should be loaded. If you are running this test standalone use mvn pre-integration-test",
-//        shapefiles.exists());
+    //    File shapefiles = new File("/tmp/pipelines-shp");
+    //    assertTrue(
+    //        "The shapefiles "
+    //            + shapefiles
+    //            + " should be loaded. If you are running this test standalone use mvn
+    // pre-integration-test",
+    //        shapefiles.exists());
     // clear up previous test runs
     File pipeline = new File("/tmp/la-pipelines-test/sensitive-pipeline");
     FileUtils.deleteQuietly(pipeline);
@@ -106,23 +106,23 @@ public class SensitiveDataPipelineTestIT {
     // check validation - should be false as UUIDs not generated
     assertFalse(ValidationUtils.checkValidationFile(dwcaOptions).getValid());
 
-//    UUIDPipelineOptions uuidOptions =
-//        PipelinesOptionsFactory.create(
-//            UUIDPipelineOptions.class,
-//            new String[] {
-//              "--datasetId=" + datasetID,
-//              "--attempt=1",
-//              "--runner=DirectRunner",
-//              "--metaFileName=" + ValidationUtils.UUID_METRICS,
-//              "--targetPath=/tmp/la-pipelines-test/sensitive-pipeline",
-//              "--inputPath=/tmp/la-pipelines-test/sensitive-pipeline",
-//              "--properties=" + itUtils.getPropertiesFilePath(),
-//              "--useExtendedRecordId=true"
-//            });
-//    ALAUUIDMintingPipeline.run(uuidOptions);
-//
-//    // check validation - should be true as UUIDs are validated and generated
-//    assertTrue(ValidationUtils.checkValidationFile(uuidOptions).getValid());
+    //    UUIDPipelineOptions uuidOptions =
+    //        PipelinesOptionsFactory.create(
+    //            UUIDPipelineOptions.class,
+    //            new String[] {
+    //              "--datasetId=" + datasetID,
+    //              "--attempt=1",
+    //              "--runner=DirectRunner",
+    //              "--metaFileName=" + ValidationUtils.UUID_METRICS,
+    //              "--targetPath=/tmp/la-pipelines-test/sensitive-pipeline",
+    //              "--inputPath=/tmp/la-pipelines-test/sensitive-pipeline",
+    //              "--properties=" + itUtils.getPropertiesFilePath(),
+    //              "--useExtendedRecordId=true"
+    //            });
+    //    ALAUUIDMintingPipeline.run(uuidOptions);
+    //
+    //    // check validation - should be true as UUIDs are validated and generated
+    //    assertTrue(ValidationUtils.checkValidationFile(uuidOptions).getValid());
 
     // sensitive data
     InterpretationPipelineOptions sensitiveOptions =

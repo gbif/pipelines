@@ -1,6 +1,12 @@
 package uk.org.nbn.pipelines.transforms;
 
+import static uk.org.nbn.pipelines.common.NBNRecordTypes.NBN_ACCESS_CONTROLLED_DATA;
+
 import au.org.ala.kvs.ALAPipelinesConfig;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -19,13 +25,6 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.transforms.Transform;
 import uk.org.nbn.pipelines.interpreters.NBNAccessControlledDataInterpreter;
 import uk.org.nbn.pipelines.io.avro.NBNAccessControlledRecord;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-
-import static uk.org.nbn.pipelines.common.NBNRecordTypes.NBN_ACCESS_CONTROLLED_DATA;
 
 /**
  * Perform transformations on sensitive data.
@@ -57,11 +56,10 @@ public class NBNAccessControlRecordTransform
       ALAPipelinesConfig config,
       String datasetId,
       TupleTag<ExtendedRecord> erTag,
-      TupleTag<LocationRecord> lrTag
-  ) {
+      TupleTag<LocationRecord> lrTag) {
     super(
-            NBNAccessControlledRecord.class,
-            NBN_ACCESS_CONTROLLED_DATA,
+        NBNAccessControlledRecord.class,
+        NBN_ACCESS_CONTROLLED_DATA,
         NBNAccessControlRecordTransform.class.getName(),
         "nbnAccessControlledDataRecordCount");
 
@@ -72,7 +70,8 @@ public class NBNAccessControlRecordTransform
   }
 
   /**
-   * Maps {@link NBNAccessControlledRecord} to key value, where key is {@link NBNAccessControlledRecord#getId}
+   * Maps {@link NBNAccessControlledRecord} to key value, where key is {@link
+   * NBNAccessControlledRecord#getId}
    */
   public MapElements<NBNAccessControlledRecord, KV<String, NBNAccessControlledRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, NBNAccessControlledRecord>>() {})
@@ -91,9 +90,7 @@ public class NBNAccessControlRecordTransform
 
   /** Beam @Setup initializes resources */
   @Setup
-  public void setup() {
-
-  }
+  public void setup() {}
 
   /** Beam @Teardown closes initialized resources */
   @Teardown
@@ -122,15 +119,17 @@ public class NBNAccessControlRecordTransform
 
     LocationRecord lr = lrTag == null ? null : v.getOnly(lrTag, null);
     ExtendedRecord er = erTag == null ? null : v.getOnly(erTag, null);
-   //TODO HMJ OSGridRecord osgr = osgTag == null ? null : v.getOnly(osgTag, null);
+    // TODO HMJ OSGridRecord osgr = osgTag == null ? null : v.getOnly(osgTag, null);
 
-    NBNAccessControlledRecord accessControlledRecord = NBNAccessControlledRecord.newBuilder().setId(id).build();
+    NBNAccessControlledRecord accessControlledRecord =
+        NBNAccessControlledRecord.newBuilder().setId(id).build();
 
-        NBNAccessControlledDataInterpreter.accessControlledDataInterpreter(datasetId,
-                er,
-                lr,
-// TODO HMJ     osgr,
-                accessControlledRecord);
+    NBNAccessControlledDataInterpreter.accessControlledDataInterpreter(
+        datasetId,
+        er,
+        lr,
+        // TODO HMJ     osgr,
+        accessControlledRecord);
 
     return Optional.of(accessControlledRecord);
   }

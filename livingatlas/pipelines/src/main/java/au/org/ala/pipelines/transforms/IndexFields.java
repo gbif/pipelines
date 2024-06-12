@@ -78,4 +78,7 @@ public interface IndexFields {
   String SURVEY_ID = "surveyID";
   String EVENT_HIERARCHY = "eventHierarchy";
   String EVENT_TYPE_HIERARCHY = "eventTypeHierarchy";
+
+  // NBN
+  String NBN_PUBLIC_RESOLUTION_IN_METERS = "publicResolutionInMeters";
 }

@@ -1,10 +1,16 @@
 package uk.org.nbn.pipelines.beam;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
+
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,13 +33,6 @@ import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.slf4j.MDC;
 import uk.org.nbn.pipelines.transforms.NBNAccessControlRecordTransform;
-
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.function.UnaryOperator;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 /** ALA Beam pipeline to process sensitive data. */
 @Slf4j
@@ -89,10 +88,10 @@ public class NBNInterpretedToAccessControlledPipeline {
     // Core
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     LocationTransform locationTransform = LocationTransform.builder().create();
-    //TODO HMJ osgrid eventCoreTransform = EventCoreTransform.builder().create();
+    // TODO HMJ osgrid eventCoreTransform = EventCoreTransform.builder().create();
 
     NBNAccessControlRecordTransform nbnAccessControlRecordTransform =
-            NBNAccessControlRecordTransform.builder()
+        NBNAccessControlRecordTransform.builder()
             .config(config)
             .datasetId(options.getDatasetId())
             .erTag(verbatimTransform.getTag())
@@ -114,11 +113,11 @@ public class NBNInterpretedToAccessControlledPipeline {
             .of(verbatimTransform.getTag(), inputVerbatimCollection)
             .and(locationTransform.getTag(), inputLocationCollection);
 
-
     log.info("Creating access controlled records");
     inputTuples
         .apply("Grouping objects", CoGroupByKey.create())
-        .apply("Converting to access controlled records", nbnAccessControlRecordTransform.interpret())
+        .apply(
+            "Converting to access controlled records", nbnAccessControlRecordTransform.interpret())
         .apply("Write to AVRO", nbnAccessControlRecordTransform.write(outputPathFn));
 
     log.info("Running the pipeline");
@@ -129,7 +128,6 @@ public class NBNInterpretedToAccessControlledPipeline {
 
     log.info("Pipeline has been finished");
   }
-
 
   public static void deletePreviousAccessControl(InterpretationPipelineOptions options) {
 

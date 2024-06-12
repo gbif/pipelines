@@ -372,16 +372,16 @@ public class MultimediaCsvConverterTest {
             .build();
 
     NBNAccessControlledRecord acr =
-            NBNAccessControlledRecord.newBuilder()
-                    .setId(DwcTerm.occurrenceID.simpleName())
-                    .setCreated(8L)
-                    .setAccessControlled(true)
-                    .setDataGeneralizations("acr_DataGeneralizations")
-                    .setInformationWithheld("acrr_InformationWithheld")
-                    .setPublicResolutionInMetres("1000")
-                    .setOriginal(Collections.singletonMap("acr_Original_key", "acr_Original_value"))
-                    .setAltered(Collections.singletonMap("acr_Altered_key", "acr_Altered_value"))
-                    .build();
+        NBNAccessControlledRecord.newBuilder()
+            .setId(DwcTerm.occurrenceID.simpleName())
+            .setCreated(8L)
+            .setAccessControlled(true)
+            .setDataGeneralizations("acr_DataGeneralizations")
+            .setInformationWithheld("acrr_InformationWithheld")
+            .setPublicResolutionInMetres("1000")
+            .setOriginal(Collections.singletonMap("acr_Original_key", "acr_Original_value"))
+            .setAltered(Collections.singletonMap("acr_Altered_key", "acr_Altered_value"))
+            .build();
 
     Long lastLoadDate = 9L;
     Long lastProcessedDate = 10L;
