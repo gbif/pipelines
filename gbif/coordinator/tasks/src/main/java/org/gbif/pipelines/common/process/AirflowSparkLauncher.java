@@ -1,6 +1,10 @@
 package org.gbif.pipelines.common.process;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.Builder;
@@ -16,8 +20,16 @@ import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
 @Slf4j
 public class AirflowSparkLauncher {
 
+  private static final Retry AIRFLOW_RETRY =
+      Retry.of(
+          "airflowApiCall",
+          RetryConfig.custom()
+              .maxAttempts(7)
+              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
+              .build());
+
   private final SparkConfiguration sparkStaticConfiguration;
-  private final AirflowClient airflowRunner;
+  private final AirflowClient airflowClient;
   private final AirflowConfiguration airflowConfiguration;
   private final SparkDynamicSettings sparkDynamicSettings;
   private final BeamParameters beamParameters;
@@ -35,7 +47,7 @@ public class AirflowSparkLauncher {
     this.sparkDynamicSettings = sparkDynamicSettings;
     this.beamParameters = beamParameters;
     this.sparkAppName = sparkAppName;
-    this.airflowRunner = AirflowClient.builder().configuration(airflowConfiguration).build();
+    this.airflowClient = AirflowClient.builder().configuration(airflowConfiguration).build();
   }
 
   private AirflowBody getAirflowBody(String dagId) {
@@ -94,8 +106,7 @@ public class AirflowSparkLauncher {
       AirflowBody airflowBody = getAirflowBody(normalizedAppName);
 
       log.info("Running Airflow DAG ID {}: {}", airflowBody.getDagRunId(), airflowBody);
-
-      airflowRunner.createRun(airflowBody);
+      Retry.decorateFunction(AIRFLOW_RETRY, airflowClient::createRun).apply(airflowBody);
 
       Optional<Status> status = getStatusByName(normalizedAppName);
 
@@ -130,7 +141,7 @@ public class AirflowSparkLauncher {
 
   @SneakyThrows
   public Optional<Status> getStatusByName(String dagId) {
-    JsonNode jsonStatus = airflowRunner.getRun(dagId);
+    JsonNode jsonStatus = Retry.decorateFunction(AIRFLOW_RETRY, airflowClient::getRun).apply(dagId);
     String status = jsonStatus.get("state").asText();
     if ("queued".equalsIgnoreCase(status)) {
       return Optional.of(Status.QUEUED);
