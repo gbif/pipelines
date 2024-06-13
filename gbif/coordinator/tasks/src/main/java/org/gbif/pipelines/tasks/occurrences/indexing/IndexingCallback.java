@@ -196,7 +196,8 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
     // App name
-    String sparkAppName = AppName.get(getType(message), message.getDatasetUuid());
+    String sparkAppName =
+        AppName.get(getType(message), message.getDatasetUuid(), message.getAttempt());
 
     // Submit
     AirflowSparkLauncher.builder()

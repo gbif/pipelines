@@ -8,7 +8,7 @@ import org.gbif.api.model.pipelines.StepType;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AppName {
 
-  public static String get(StepType type, UUID datasetKey) {
-    return String.join("_", type.name(), datasetKey.toString());
+  public static String get(StepType type, UUID datasetKey, int attempt) {
+    return String.join("_", type.name(), datasetKey.toString(), String.valueOf(attempt));
   }
 }

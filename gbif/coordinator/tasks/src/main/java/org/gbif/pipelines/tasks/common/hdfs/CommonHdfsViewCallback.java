@@ -135,7 +135,8 @@ public class CommonHdfsViewCallback {
         SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
     // App name
-    String sparkAppName = AppName.get(config.stepType, message.getDatasetUuid());
+    String sparkAppName =
+        AppName.get(config.stepType, message.getDatasetUuid(), message.getAttempt());
 
     // Submit
     AirflowSparkLauncher.builder()

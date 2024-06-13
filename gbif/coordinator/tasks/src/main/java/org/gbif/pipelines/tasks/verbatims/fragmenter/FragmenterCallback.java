@@ -119,7 +119,7 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
         SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
     // App name
-    String sparkAppName = AppName.get(TYPE, message.getDatasetUuid());
+    String sparkAppName = AppName.get(TYPE, message.getDatasetUuid(), message.getAttempt());
 
     // Submit
     AirflowSparkLauncher.builder()
