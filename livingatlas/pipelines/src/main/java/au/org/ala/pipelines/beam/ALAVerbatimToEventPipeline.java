@@ -102,6 +102,7 @@ public class ALAVerbatimToEventPipeline {
       InterpretationPipelineOptions options,
       Function<InterpretationPipelineOptions, Pipeline> pipelinesFn) {
 
+    PipelinesOptionsFactory.registerHdfs(options);
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
     Set<String> types = getEventTypes(options.getInterpretationTypes());
