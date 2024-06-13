@@ -27,7 +27,7 @@
     <surefireArgLine>-Xmx1024m</surefireArgLine>
 
     <!-- ALA libraries -->
-    <ala-namematching-service.version>1.0</ala-namematching-service.version>
+    <ala-namematching-service.version>1.7-NBN-0-0-1</ala-namematching-service.version>
     <ala-sensitive-data-service.version>1.1</ala-sensitive-data-service.version>
     <sql-predicates.version>1.2.0</sql-predicates.version>
 

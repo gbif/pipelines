@@ -105,41 +105,41 @@ public class NBNAccessControlledDataInterpreter {
     }
     extendedRecord
         .getCoreTerms()
-        .put(DwcTerm.decimalLatitude.simpleName(), altered.get("decimalLatitude"));
+        .put(DwcTerm.decimalLatitude.qualifiedName(), altered.get("decimalLatitude"));
     extendedRecord
         .getCoreTerms()
-        .put(DwcTerm.decimalLongitude.simpleName(), altered.get("decimalLongitude"));
+        .put(DwcTerm.decimalLongitude.qualifiedName(), altered.get("decimalLongitude"));
     extendedRecord
         .getCoreTerms()
         .put(
-            DwcTerm.coordinateUncertaintyInMeters.simpleName(),
+            DwcTerm.coordinateUncertaintyInMeters.qualifiedName(),
             altered.get("coordinateUncertaintyInMeters"));
-    //    extendedRecord.getCoreTerms().put(DwcTerm.gridReference.simpleName(),
+    //    extendedRecord.getCoreTerms().put(DwcTerm.gridReference.qualifiedName(),
     // altered.get("gridReference"));
-    //    extendedRecord.getCoreTerms().put(DwcTerm.gridSizeInMeters.simpleName(),
+    //    extendedRecord.getCoreTerms().put(DwcTerm.gridSizeInMeters.qualifiedName(),
     // altered.get("gridSizeInMeters"));
-    extendedRecord.getCoreTerms().put(DwcTerm.locality.simpleName(), altered.get("locality"));
+    extendedRecord.getCoreTerms().put(DwcTerm.locality.qualifiedName(), altered.get("locality"));
     extendedRecord
         .getCoreTerms()
-        .put(DwcTerm.verbatimLatitude.simpleName(), altered.get("verbatimLatitude"));
+        .put(DwcTerm.verbatimLatitude.qualifiedName(), altered.get("verbatimLatitude"));
     extendedRecord
         .getCoreTerms()
-        .put(DwcTerm.verbatimLongitude.simpleName(), altered.get("verbatimLongitude"));
+        .put(DwcTerm.verbatimLongitude.qualifiedName(), altered.get("verbatimLongitude"));
     extendedRecord
         .getCoreTerms()
-        .put(DwcTerm.verbatimLocality.simpleName(), altered.get("verbatimLocality"));
+        .put(DwcTerm.verbatimLocality.qualifiedName(), altered.get("verbatimLocality"));
     extendedRecord
         .getCoreTerms()
-        .put(DwcTerm.verbatimCoordinates.simpleName(), altered.get("verbatimCoordinates"));
+        .put(DwcTerm.verbatimCoordinates.qualifiedName(), altered.get("verbatimCoordinates"));
     extendedRecord
         .getCoreTerms()
-        .put(DwcTerm.footprintWKT.simpleName(), altered.get("footprintWKT"));
+        .put(DwcTerm.footprintWKT.qualifiedName(), altered.get("footprintWKT"));
     extendedRecord
         .getCoreTerms()
-        .put(DwcTerm.locationRemarks.simpleName(), altered.get("locationRemarks"));
+        .put(DwcTerm.locationRemarks.qualifiedName(), altered.get("locationRemarks"));
     extendedRecord
         .getCoreTerms()
-        .put(DwcTerm.occurrenceRemarks.simpleName(), altered.get("occurrenceRemarks"));
+        .put(DwcTerm.occurrenceRemarks.qualifiedName(), altered.get("occurrenceRemarks"));
   }
 
   private static Map<String, String> blur(
@@ -209,6 +209,7 @@ public class NBNAccessControlledDataInterpreter {
       // OSGridRecord osGridRecord,
       NBNAccessControlledRecord accessControlledRecord) {
 
+    //TODO HMJ implement this using the ALA ws framework (which includes caching)
     DataResourceNbn dataResourceNbn =
         DataResourceNbnCache.getInstance().getDataResourceNbn(dataResourceUid);
 
@@ -241,23 +242,23 @@ public class NBNAccessControlledDataInterpreter {
       original.put("locality", locationRecord.getLocality());
       original.put(
           "verbatimLatitude",
-          extendedRecord.getCoreTerms().get(DwcTerm.verbatimLatitude.simpleName()));
+          extendedRecord.getCoreTerms().get(DwcTerm.verbatimLatitude.qualifiedName()));
       original.put(
           "verbatimLongitude",
-          extendedRecord.getCoreTerms().get(DwcTerm.verbatimLongitude.simpleName()));
+          extendedRecord.getCoreTerms().get(DwcTerm.verbatimLongitude.qualifiedName()));
       original.put(
           "verbatimLocality",
-          extendedRecord.getCoreTerms().get(DwcTerm.verbatimLocality.simpleName()));
+          extendedRecord.getCoreTerms().get(DwcTerm.verbatimLocality.qualifiedName()));
       original.put(
           "verbatimCoordinates",
-          extendedRecord.getCoreTerms().get(DwcTerm.verbatimCoordinates.simpleName()));
+          extendedRecord.getCoreTerms().get(DwcTerm.verbatimCoordinates.qualifiedName()));
       original.put("footprintWKT", locationRecord.getFootprintWKT());
       original.put(
           "locationRemarks",
-          extendedRecord.getCoreTerms().get(DwcTerm.locationRemarks.simpleName()));
+          extendedRecord.getCoreTerms().get(DwcTerm.locationRemarks.qualifiedName()));
       original.put(
           "occurrenceRemarks",
-          extendedRecord.getCoreTerms().get(DwcTerm.occurrenceRemarks.simpleName()));
+          extendedRecord.getCoreTerms().get(DwcTerm.occurrenceRemarks.qualifiedName()));
 
       Map<String, String> blurred = blur(original, publicResolutionToBeApplied);
 

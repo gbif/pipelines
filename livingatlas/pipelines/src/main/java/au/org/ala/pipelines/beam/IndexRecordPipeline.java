@@ -304,6 +304,8 @@ public class IndexRecordPipeline {
       kpct = kpct.and(alaSensitiveDataRecordTransform.getTag(), alaSensitiveDataCollection);
     }
 
+    kpct = kpct.and(nbnAccessControlRecordTransform.getTag(), nbnAccessControlledDataCollection);
+
     PCollection<IndexRecord> indexRecordCollection =
         kpct.apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to Solr doc", alaSolrDoFn);

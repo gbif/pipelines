@@ -933,6 +933,10 @@ public class IndexRecordTransform implements Serializable, IndexFields {
             ALASensitivityRecord.getClassSchema().getFields().stream()
                 .map(Field::name)
                 .collect(Collectors.toList()))
+        .addAll(
+            NBNAccessControlledRecord.getClassSchema().getFields().stream()
+                .map(Field::name)
+                .collect(Collectors.toList()))
         .add(DwcTerm.class_.simpleName())
         .add(DwcTerm.geodeticDatum.simpleName())
         .add(DwcTerm.associatedOccurrences.simpleName())
