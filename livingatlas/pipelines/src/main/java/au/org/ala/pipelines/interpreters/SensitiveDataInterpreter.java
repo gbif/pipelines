@@ -439,6 +439,7 @@ public class SensitiveDataInterpreter {
       Map<String, Object> result = new HashMap<>();
       for (Generalisation generalisation : generalisations)
         generalisation.process(properties, original, result, report);
+      nbnProcess(properties, original, result, report);
       sr.setDataGeneralizations(
           DATA_GENERALIZATIONS.get(result).getValue().map(Object::toString).orElse(null));
       sr.setInformationWithheld(
@@ -578,5 +579,10 @@ public class SensitiveDataInterpreter {
     } catch (NumberFormatException ex) {
       return null;
     }
+  }
+
+  private static void nbnProcess(Map<String, String> supplied, Map<String, Object> original, Map<String, Object> updated, SensitivityReport report) {
+    original.put("occurrenceRemarks", supplied.get("occurrenceRemarks"));
+    updated.put("occurrenceRemarks", "");
   }
 }
