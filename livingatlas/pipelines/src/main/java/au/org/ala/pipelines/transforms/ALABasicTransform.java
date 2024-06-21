@@ -4,10 +4,13 @@ import static org.gbif.api.model.pipelines.InterpretationType.RecordType.BASIC;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
 
 import au.org.ala.pipelines.interpreters.ALABasicInterpreter;
+import au.org.ala.pipelines.vocabulary.Vocab;
+import java.io.FileNotFoundException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -23,6 +26,9 @@ import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.Transform;
+import uk.org.nbn.pipelines.interpreters.NBNBasicInterpreter;
+import uk.org.nbn.pipelines.vocabulary.IdentificationVerificationStatus;
+import uk.org.nbn.pipelines.vocabulary.NBNLicense;
 
 /**
  * Beam level transformations for the DWC Occurrence, reads an avro, writs an avro, maps from value
@@ -30,6 +36,7 @@ import org.gbif.pipelines.transforms.Transform;
  *
  * @see <a href="https://dwc.tdwg.org/terms/#occurrence</a>
  */
+@Slf4j
 public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
   private final SerializableSupplier<KeyValueStore<String, OccurrenceStatus>>
@@ -40,6 +47,9 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   private KeyValueStore<String, OccurrenceStatus> occStatusKvStore;
   private KeyValueStore<String, List<String>> recordedByKvStore;
   private VocabularyService vocabularyService;
+
+  private Vocab identificationVerificationStatusVocab;
+  private Vocab nbnLicenseVocab;
 
   @Builder(buildMethodName = "create")
   private ALABasicTransform(
@@ -74,6 +84,20 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     }
     if (vocabularyService == null && vocabularyServiceSupplier != null) {
       vocabularyService = vocabularyServiceSupplier.get();
+    }
+
+    try {
+      identificationVerificationStatusVocab = IdentificationVerificationStatus.getInstance(null);
+    } catch (FileNotFoundException e) {
+      log.error("Unable to get vocabulary file for identificationVerificationStatus", e);
+      identificationVerificationStatusVocab = null;
+    }
+
+    try {
+      nbnLicenseVocab = NBNLicense.getInstance(null);
+    } catch (FileNotFoundException e) {
+      log.error("Unable to get vocabulary file nbnlicense", e);
+      nbnLicenseVocab = null;
     }
   }
 
@@ -113,6 +137,11 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(VocabularyInterpreter.interpretDegreeOfEstablishment(vocabularyService))
         .via(VocabularyInterpreter.interpretLifeStage(vocabularyService))
         .via(ALABasicInterpreter::interpretLicense)
+        .via(NBNBasicInterpreter.interpretLicense(nbnLicenseVocab))
+        .via(NBNBasicInterpreter::interpretBasisOfRecord)
+        .via(
+            NBNBasicInterpreter.interpretIdentificationVerificationStatus(
+                identificationVerificationStatusVocab))
         .via(ALABasicInterpreter.interpretRecordedBy(recordedByKvStore))
         .via((e, r) -> CoreInterpreter.interpretDatasetID(e, r::setDatasetID))
         .via((e, r) -> CoreInterpreter.interpretDatasetName(e, r::setDatasetName))

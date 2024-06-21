@@ -1,0 +1,8 @@
+Accepted	Confirmed	confirmed
+Accepted - correct
+Accepted - considered	correct
+Unconfirmed
+Unconfirmed - plausible	Unconfirmed but plausible
+Unconfirmed - not reviewed	Unassessed	Unconfirmed - unreviewed	Not Reviewed
+Accepted - considered correct	Considered Correct
+Accepted - correct	Correct

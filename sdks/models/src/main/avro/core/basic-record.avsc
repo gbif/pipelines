@@ -65,7 +65,9 @@
       {"name": "geologicalContext","type":["null","GeologicalContext"],"default":null,"doc":""},
       {"name": "isSequenced","type":["null","boolean"],"default":null, "doc":""},
       {"name": "associatedSequences", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/associatedSequences"},
-      {"name": "issues", "type": "IssueRecord", "default":{}}
+      {"name": "issues", "type": "IssueRecord", "default":{}},
+      {"name": "identificationVerificationStatus", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/identificationVerificationStatus"}
+
     ]
   }
 ]

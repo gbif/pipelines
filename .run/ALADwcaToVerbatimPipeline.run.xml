@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ALADwcaToVerbatimPipeline" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline" />
+    <module name="pipelines" />
+    <option name="PROGRAM_PARAMETERS" value="--datasetId=dr819 --config=/data/la-pipelines/config/la-pipelines.yaml,/data/la-pipelines/config/la-pipelines-local.yaml --fsPath=/data" />
+    <option name="VM_PARAMETERS" value="-Xmx8g -XX:+UseG1GC -Dspark.master=local[*]" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="au.org.ala.pipelines.java.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
