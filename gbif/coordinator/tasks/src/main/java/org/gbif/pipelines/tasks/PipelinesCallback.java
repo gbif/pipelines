@@ -94,7 +94,11 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
               PipelineStep.Status.ABORTED));
 
   private static final Set<PipelineStep.Status> FINISHED_STATE_SET =
-      new HashSet<>(Arrays.asList(PipelineStep.Status.COMPLETED, PipelineStep.Status.ABORTED, PipelineStep.Status.FAILED));
+      new HashSet<>(
+          Arrays.asList(
+              PipelineStep.Status.COMPLETED,
+              PipelineStep.Status.ABORTED,
+              PipelineStep.Status.FAILED));
 
   private static Properties properties;
   private final MessagePublisher publisher;
