@@ -94,7 +94,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
               PipelineStep.Status.ABORTED));
 
   private static final Set<PipelineStep.Status> FINISHED_STATE_SET =
-      new HashSet<>(Arrays.asList(PipelineStep.Status.COMPLETED, PipelineStep.Status.ABORTED));
+      new HashSet<>(Arrays.asList(PipelineStep.Status.COMPLETED, PipelineStep.Status.ABORTED, PipelineStep.Status.FAILED));
 
   private static Properties properties;
   private final MessagePublisher publisher;
@@ -408,7 +408,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     nodeEdges.forEach(
         e -> {
           PipelineStep step = info.pipelineStepMap.get(e.getNode());
-          if (step != null) {
+          if (step != null && !FINISHED_STATE_SET.contains(step.getState())) {
             step.setState(PipelineStep.Status.QUEUED);
             // Call Registry to update
             Runnable r =
