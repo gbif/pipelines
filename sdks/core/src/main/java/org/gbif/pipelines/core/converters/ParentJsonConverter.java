@@ -318,6 +318,11 @@ public class ParentJsonConverter {
     extractOptValue(verbatim, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
     extractOptValue(verbatim, DwcTerm.verbatimDepth).ifPresent(builder::setVerbatimDepth);
     extractOptValue(verbatim, DwcTerm.verbatimElevation).ifPresent(builder::setVerbatimElevation);
+
+    String eventName = verbatim.getCoreTerms().get("http://rs.gbif.org/terms/1.0/eventName");
+    if (eventName != null) {
+      builder.setEventName(eventName);
+    }
   }
 
   private void mapIssues(EventJsonRecord.Builder builder) {
