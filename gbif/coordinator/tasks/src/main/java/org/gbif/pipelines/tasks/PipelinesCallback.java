@@ -412,15 +412,18 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     nodeEdges.forEach(
         e -> {
           PipelineStep step = info.pipelineStepMap.get(e.getNode());
-          if (step != null && !FINISHED_STATE_SET.contains(step.getState())) {
+          if (step != null
+              && !FINISHED_STATE_SET.contains(step.getState())
+              && PipelineStep.Status.QUEUED != step.getState()) {
             step.setState(PipelineStep.Status.QUEUED);
             // Call Registry to update
-            Runnable r =
-                () -> {
-                  log.info("History client: update pipeline step: {}", step);
-                  historyClient.updatePipelineStep(step);
+            Function<PipelineStep, Long> pipelineStepFn =
+                s -> {
+                  log.info("History client: update pipeline step: {}", s);
+                  return historyClient.updatePipelineStep(s);
                 };
-            Retry.decorateRunnable(RETRY, r).run();
+            long stepKey = Retry.decorateFunction(RETRY, pipelineStepFn).apply(step);
+            log.info("Step {} with step key {} as QUEUED", step.getType(), stepKey);
           }
         });
   }
@@ -457,12 +460,18 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     }
 
     try {
-      Runnable r =
-          () -> {
-            log.info("History client: update pipeline step: {}", pipelineStep);
-            historyClient.updatePipelineStep(pipelineStep);
+      Function<PipelineStep, Long> pipelineStepFn =
+          s -> {
+            log.info("History client: update pipeline step: {}", s);
+            return historyClient.updatePipelineStep(s);
           };
-      Retry.decorateRunnable(RETRY, r).run();
+      long stepKey = Retry.decorateFunction(RETRY, pipelineStepFn).apply(pipelineStep);
+      log.info(
+          "Step key {}, step type {} is {}",
+          stepKey,
+          pipelineStep.getType(),
+          pipelineStep.getState());
+
     } catch (Exception ex) {
       // we don't want to break the crawling if the tracking fails
       log.error(
