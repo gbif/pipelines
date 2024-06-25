@@ -409,23 +409,21 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       Graph<StepType> workflow = PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents);
       nodeEdges = workflow.getNodeEdges(stepType);
     }
-    nodeEdges.forEach(
-        e -> {
-          PipelineStep step = info.pipelineStepMap.get(e.getNode());
-          if (step != null
-              && !FINISHED_STATE_SET.contains(step.getState())
-              && PipelineStep.Status.QUEUED != step.getState()) {
-            step.setState(PipelineStep.Status.QUEUED);
-            // Call Registry to update
-            Function<PipelineStep, Long> pipelineStepFn =
-                s -> {
-                  log.info("History client: update pipeline step: {}", s);
-                  return historyClient.updatePipelineStep(s);
-                };
-            long stepKey = Retry.decorateFunction(RETRY, pipelineStepFn).apply(step);
-            log.info("Step {} with step key {} as QUEUED", step.getType(), stepKey);
-          }
-        });
+
+    for (Graph<StepType>.Edge e : nodeEdges) {
+      PipelineStep step = info.pipelineStepMap.get(e.getNode());
+      if (step != null) {
+        step.setState(PipelineStep.Status.QUEUED);
+        // Call Registry to update
+        Function<PipelineStep, Long> pipelineStepFn =
+            s -> {
+              log.info("History client: update pipeline step: {}", s);
+              return historyClient.updatePipelineStep(s);
+            };
+        long stepKey = Retry.decorateFunction(RETRY, pipelineStepFn).apply(step);
+        log.info("Step {} with step key {} as QUEUED", step.getType(), stepKey);
+      }
+    }
   }
 
   private void updateTrackingStatus(TrackingInfo ti, PipelineStep.Status status) {
@@ -463,6 +461,10 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       Function<PipelineStep, Long> pipelineStepFn =
           s -> {
             log.info("History client: update pipeline step: {}", s);
+            PipelineStep step = historyClient.getPipelineStep(s.getKey());
+            if (FINISHED_STATE_SET.contains(step.getState())) {
+              return step.getKey();
+            }
             return historyClient.updatePipelineStep(s);
           };
       long stepKey = Retry.decorateFunction(RETRY, pipelineStepFn).apply(pipelineStep);
