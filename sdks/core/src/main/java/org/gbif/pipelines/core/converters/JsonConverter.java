@@ -71,8 +71,6 @@ public class JsonConverter {
               Extension.AUDUBON.getRowType(),
               Extension.IMAGE.getRowType()));
 
-  private static final String OCCURRENCE_EXT = "http://rs.tdwg.org/dwc/terms/Occurrence";
-
   private static final Map<Character, Character> CHAR_MAP = new HashMap<>(2);
 
   static {
@@ -161,7 +159,8 @@ public class JsonConverter {
   }
 
   public static VerbatimRecord convertVerbatimEventRecord(ExtendedRecord extendedRecord) {
-    return convertVerbatimRecord(extendedRecord, Collections.singletonList(OCCURRENCE_EXT));
+    return convertVerbatimRecord(
+        extendedRecord, Collections.singletonList(ConverterConstants.OCCURRENCE_EXT));
   }
 
   private static Map<String, List<Map<String, String>>> filterExtensions(
