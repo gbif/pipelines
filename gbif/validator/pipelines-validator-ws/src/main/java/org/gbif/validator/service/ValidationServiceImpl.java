@@ -11,9 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -286,12 +284,12 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     try {
       Optional<Path> existedPath = MetadataPath.parsePath(pathToArchive);
 
-      if (!existedPath.isPresent()) {
+      if (existedPath.isEmpty()) {
         log.error("Can't find metadata eml file");
         return null;
       }
 
-      String eml = new String(Files.readAllBytes(existedPath.get()), StandardCharsets.UTF_8);
+      String eml = Files.readString(existedPath.get());
       return DatasetEmlParser.build(eml.getBytes(StandardCharsets.UTF_8));
 
     } catch (Exception ex) {
@@ -347,12 +345,11 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
               + " file format is not supported, file name: "
               + dataFile.getSourceFileName());
     }
-    return new HashSet<>(
-        Arrays.asList(
-            StepType.VALIDATOR_VALIDATE_ARCHIVE.name(),
-            stepType,
-            StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name(),
-            StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
-            StepType.VALIDATOR_COLLECT_METRICS.name()));
+    return Set.of(
+        StepType.VALIDATOR_VALIDATE_ARCHIVE.name(),
+        stepType,
+        StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name(),
+        StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
+        StepType.VALIDATOR_COLLECT_METRICS.name());
   }
 }

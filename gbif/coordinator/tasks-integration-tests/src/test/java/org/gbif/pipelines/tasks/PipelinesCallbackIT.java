@@ -5,8 +5,6 @@ import static org.gbif.api.model.pipelines.PipelineStep.Status.FAILED;
 import static org.gbif.api.model.pipelines.PipelineStep.Status.QUEUED;
 import static org.gbif.api.model.pipelines.PipelineStep.Status.SUBMITTED;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -43,14 +41,13 @@ public class PipelinesCallbackIT {
     StepType stepType = StepType.DWCA_TO_VERBATIM;
 
     Set<String> pipelineSteps =
-        new HashSet<>(
-            Arrays.asList(
-                StepType.DWCA_TO_VERBATIM.name(),
-                StepType.VERBATIM_TO_IDENTIFIER.name(),
-                StepType.VERBATIM_TO_INTERPRETED.name(),
-                StepType.INTERPRETED_TO_INDEX.name(),
-                StepType.HDFS_VIEW.name(),
-                StepType.FRAGMENTER.name()));
+        Set.of(
+            StepType.DWCA_TO_VERBATIM.name(),
+            StepType.VERBATIM_TO_IDENTIFIER.name(),
+            StepType.VERBATIM_TO_INTERPRETED.name(),
+            StepType.INTERPRETED_TO_INDEX.name(),
+            StepType.HDFS_VIEW.name(),
+            StepType.FRAGMENTER.name());
 
     PipelineBasedMessage incomingMessage =
         TestMessage.create(
@@ -112,12 +109,11 @@ public class PipelinesCallbackIT {
     StepType stepType = StepType.VERBATIM_TO_INTERPRETED;
 
     Set<String> pipelineSteps =
-        new HashSet<>(
-            Arrays.asList(
-                StepType.VERBATIM_TO_INTERPRETED.name(),
-                StepType.INTERPRETED_TO_INDEX.name(),
-                StepType.HDFS_VIEW.name(),
-                StepType.FRAGMENTER.name()));
+        Set.of(
+            StepType.VERBATIM_TO_INTERPRETED.name(),
+            StepType.INTERPRETED_TO_INDEX.name(),
+            StepType.HDFS_VIEW.name(),
+            StepType.FRAGMENTER.name());
 
     PipelineBasedMessage incomingMessage =
         TestMessage.create(
@@ -214,14 +210,13 @@ public class PipelinesCallbackIT {
     StepType stepType = StepType.DWCA_TO_VERBATIM;
 
     Set<String> pipelineSteps =
-        new HashSet<>(
-            Arrays.asList(
-                StepType.DWCA_TO_VERBATIM.name(),
-                StepType.VERBATIM_TO_IDENTIFIER.name(),
-                StepType.VERBATIM_TO_INTERPRETED.name(),
-                StepType.INTERPRETED_TO_INDEX.name(),
-                StepType.HDFS_VIEW.name(),
-                StepType.FRAGMENTER.name()));
+        Set.of(
+            StepType.DWCA_TO_VERBATIM.name(),
+            StepType.VERBATIM_TO_IDENTIFIER.name(),
+            StepType.VERBATIM_TO_INTERPRETED.name(),
+            StepType.INTERPRETED_TO_INDEX.name(),
+            StepType.HDFS_VIEW.name(),
+            StepType.FRAGMENTER.name());
 
     PipelineBasedMessage incomingMessage =
         TestMessage.create(
@@ -282,14 +277,13 @@ public class PipelinesCallbackIT {
     Long executionId = null; // New interpretation
 
     Set<String> pipelineSteps =
-        new HashSet<>(
-            Arrays.asList(
-                StepType.DWCA_TO_VERBATIM.name(),
-                StepType.VERBATIM_TO_IDENTIFIER.name(),
-                StepType.VERBATIM_TO_INTERPRETED.name(),
-                StepType.INTERPRETED_TO_INDEX.name(),
-                StepType.HDFS_VIEW.name(),
-                StepType.FRAGMENTER.name()));
+        Set.of(
+            StepType.DWCA_TO_VERBATIM.name(),
+            StepType.VERBATIM_TO_IDENTIFIER.name(),
+            StepType.VERBATIM_TO_INTERPRETED.name(),
+            StepType.INTERPRETED_TO_INDEX.name(),
+            StepType.HDFS_VIEW.name(),
+            StepType.FRAGMENTER.name());
 
     PipelineBasedMessage incomingMessage =
         TestMessage.create(

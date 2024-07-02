@@ -7,8 +7,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -105,7 +103,7 @@ public class MetricsCollectorCallbackIT {
             .metrics(
                 Metrics.builder()
                     .stepTypes(
-                        Arrays.asList(
+                        List.of(
                             ValidationStep.builder()
                                 .stepType(StepType.VALIDATOR_DWCA_TO_VERBATIM.name())
                                 .executionOrder(WF.getLevel(StepType.VALIDATOR_DWCA_TO_VERBATIM))
@@ -296,7 +294,7 @@ public class MetricsCollectorCallbackIT {
             .metrics(
                 Metrics.builder()
                     .stepTypes(
-                        Arrays.asList(
+                        List.of(
                             ValidationStep.builder()
                                 .stepType(StepType.VALIDATOR_DWCA_TO_VERBATIM.name())
                                 .executionOrder(WF.getLevel(StepType.VALIDATOR_DWCA_TO_VERBATIM))
@@ -349,10 +347,9 @@ public class MetricsCollectorCallbackIT {
     message.setRunner(StepRunner.STANDALONE.name());
     message.setEndpointType(EndpointType.DWC_ARCHIVE);
     message.setPipelineSteps(
-        new HashSet<>(
-            Arrays.asList(
-                StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
-                StepType.VALIDATOR_COLLECT_METRICS.name())));
+        Set.of(
+            StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
+            StepType.VALIDATOR_COLLECT_METRICS.name()));
     return message;
   }
 

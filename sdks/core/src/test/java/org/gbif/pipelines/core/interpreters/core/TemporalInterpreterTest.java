@@ -12,7 +12,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.time.Year;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,7 +99,7 @@ public class TemporalInterpreterTest {
     // Test again with a strict ISO parser
     interpreter =
         TemporalInterpreter.builder()
-            .orderings(Arrays.asList(DateComponentOrdering.ISO_FORMATS))
+            .orderings(List.of(DateComponentOrdering.ISO_FORMATS))
             .create();
     tr = TemporalRecord.newBuilder().setId("1").build();
     interpreter.interpretTemporal(er, tr);
@@ -983,7 +982,7 @@ public class TemporalInterpreterTest {
 
     // When
     TemporalInterpreter interpreter =
-        TemporalInterpreter.builder().orderings(Arrays.asList(DMY_FORMATS)).create();
+        TemporalInterpreter.builder().orderings(List.of(DMY_FORMATS)).create();
     interpreter.interpretTemporal(er, tr);
 
     // Should
@@ -1080,7 +1079,7 @@ public class TemporalInterpreterTest {
 
     // When
     TemporalInterpreter interpreter =
-        TemporalInterpreter.builder().orderings(Arrays.asList(DMY_FORMATS)).create();
+        TemporalInterpreter.builder().orderings(List.of(DMY_FORMATS)).create();
     interpreter.interpretTemporal(er, tr);
 
     // Should
@@ -1258,10 +1257,7 @@ public class TemporalInterpreterTest {
           return v;
         };
     TemporalInterpreter interpreter =
-        TemporalInterpreter.builder()
-            .orderings(Arrays.asList(DMY_FORMATS))
-            .preprocessDateFn(fn)
-            .create();
+        TemporalInterpreter.builder().orderings(List.of(DMY_FORMATS)).preprocessDateFn(fn).create();
     interpreter.interpretTemporal(er, tr);
 
     // Should
@@ -1293,10 +1289,7 @@ public class TemporalInterpreterTest {
           return v;
         };
     TemporalInterpreter interpreter =
-        TemporalInterpreter.builder()
-            .orderings(Arrays.asList(DMY_FORMATS))
-            .preprocessDateFn(fn)
-            .create();
+        TemporalInterpreter.builder().orderings(List.of(DMY_FORMATS)).preprocessDateFn(fn).create();
     interpreter.interpretTemporal(er, tr);
 
     // Should
@@ -1328,10 +1321,7 @@ public class TemporalInterpreterTest {
           return v;
         };
     TemporalInterpreter interpreter =
-        TemporalInterpreter.builder()
-            .orderings(Arrays.asList(DMY_FORMATS))
-            .preprocessDateFn(fn)
-            .create();
+        TemporalInterpreter.builder().orderings(List.of(DMY_FORMATS)).preprocessDateFn(fn).create();
     interpreter.interpretTemporal(er, tr);
 
     // Should

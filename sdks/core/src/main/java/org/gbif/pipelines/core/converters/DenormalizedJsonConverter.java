@@ -3,7 +3,6 @@ package org.gbif.pipelines.core.converters;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.Builder;
@@ -223,7 +222,7 @@ public class DenormalizedJsonConverter {
 
   private void mapIssues(EventJsonRecord.Builder builder) {
     JsonConverter.mapIssues(
-        Arrays.asList(metadata, eventCore, temporal, location, multimedia),
+        List.of(metadata, eventCore, temporal, location, multimedia),
         builder::setIssues,
         builder::setNotIssues);
   }

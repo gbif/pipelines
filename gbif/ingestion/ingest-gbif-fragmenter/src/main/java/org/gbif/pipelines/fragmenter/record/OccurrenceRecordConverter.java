@@ -49,7 +49,7 @@ public class OccurrenceRecordConverter {
       log.error(ex.getMessage(), ex);
     }
 
-    if (!key.isPresent()
+    if (key.isEmpty()
         || Keygen.getErrorKey().equals(key.get())
         || !validator.test(key.toString())) {
       return Optional.empty();

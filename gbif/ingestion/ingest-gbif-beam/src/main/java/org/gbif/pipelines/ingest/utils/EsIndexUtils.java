@@ -6,10 +6,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -63,7 +61,7 @@ public class EsIndexUtils {
     String index = options.getEsIndexName();
     Objects.requireNonNull(index, "index are required");
     if (!index.startsWith(options.getDatasetId())) {
-      Set<String> aliases = new HashSet<>(Arrays.asList(options.getEsAlias()));
+      Set<String> aliases = Set.of(options.getEsAlias());
 
       Objects.requireNonNull(aliases, "aliases are required");
 
@@ -82,7 +80,7 @@ public class EsIndexUtils {
 
     boolean independentIndex = options.getEsIndexName().startsWith(options.getDatasetId());
 
-    Map<String, String> settings = new HashMap<>(6);
+    Map<String, String> settings = new HashMap<>();
     settings.put(
         Field.INDEX_REFRESH_INTERVAL,
         independentIndex ? Indexing.REFRESH_INTERVAL : options.getIndexRefreshInterval());
@@ -123,7 +121,7 @@ public class EsIndexUtils {
   public static void swapIndex(EsIndexingPipelineOptions options, LockConfig lockConfig) {
     EsConfig config = EsConfig.from(options.getEsHosts());
 
-    Set<String> aliases = new HashSet<>(Arrays.asList(options.getEsAlias()));
+    Set<String> aliases = Set.of(options.getEsAlias());
     String index = options.getEsIndexName();
 
     // Lock the index to avoid modifications and stop reads.
@@ -168,18 +166,15 @@ public class EsIndexUtils {
 
     // we first check if there are indexes to swap to avoid unnecessary locks
     if (idxToAdd != null || !idxToRemove.isEmpty()) {
-      Map<String, String> searchSettings = new HashMap<>(2);
-      searchSettings.put(Field.INDEX_REFRESH_INTERVAL, options.getIndexRefreshInterval());
-      searchSettings.put(Field.INDEX_NUMBER_REPLICAS, options.getIndexNumberReplicas().toString());
+      Map<String, String> searchSettings =
+          Map.of(
+              Field.INDEX_REFRESH_INTERVAL, options.getIndexRefreshInterval(),
+              Field.INDEX_NUMBER_REPLICAS, options.getIndexNumberReplicas().toString());
 
       Mutex.Action action =
           () ->
               EsIndex.swapIndexInAliases(
-                  config,
-                  new HashSet<>(Arrays.asList(options.getEsAlias())),
-                  idxToAdd,
-                  idxToRemove,
-                  searchSettings);
+                  config, Set.of(options.getEsAlias()), idxToAdd, idxToRemove, searchSettings);
       if (lockConfig != null) {
         SharedLockUtils.doInWriteLock(lockConfig, action);
       } else {

@@ -212,7 +212,7 @@ public class VerbatimMessageHandler {
         HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
     Optional<Long> fileNumber = HdfsUtils.getLongByKey(hdfsConfigs, metaPath, metricName);
 
-    if (messageNumber == null && !fileNumber.isPresent()) {
+    if (messageNumber == null && fileNumber.isEmpty()) {
       return Optional.empty();
     }
 

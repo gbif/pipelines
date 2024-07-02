@@ -1,7 +1,6 @@
 package org.gbif.pipelines.core.utils;
 
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -89,7 +88,7 @@ public class DwcaUtils {
 
   public static Map<FileNameTerm, Set<Term>> getCoreTerms(Archive archive) {
     archive.validate();
-    return Collections.singletonMap(
+    return Map.of(
         FileNameTerm.create(
             archive.getCore().getTitle(), archive.getCore().getRowType().qualifiedName()),
         archive.getCore().getTerms());

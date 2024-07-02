@@ -21,9 +21,7 @@ public class OccurrenceRelationships {
   private static final Set<String> idOmitList = newIdOmitList();
 
   private static final Set<String> SPECIMEN_BORS =
-      new HashSet<>(
-          Arrays.asList(
-              "PRESERVED_SPECIMEN", "LIVING_SPECIMEN", "FOSSIL_SPECIMEN", "MATERIAL_CITATION"));
+      Set.of("PRESERVED_SPECIMEN", "LIVING_SPECIMEN", "FOSSIL_SPECIMEN", "MATERIAL_CITATION");
 
   /** Will either generate an assertion with justification or return null. */
   public static <T extends OccurrenceFeatures> RelationshipAssertion<T> generate(T o1, T o2) {
@@ -51,29 +49,18 @@ public class OccurrenceRelationships {
 
     // fact combinations that are of interest as assertions
     List<FeatureAssertion[]> passConditions =
-        new ArrayList<>(
-            Arrays.asList(
-                new FeatureAssertion[][] {
-                  {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, SAME_DATE},
-                  {SAME_ACCEPTED_SPECIES, WITHIN_200m, SAME_DATE},
-                  {
-                    SAME_ACCEPTED_SPECIES,
-                    SAME_COORDINATES,
-                    NON_CONFLICTING_DATE,
-                    IDENTIFIERS_OVERLAP
-                  },
-                  {SAME_ACCEPTED_SPECIES, WITHIN_200m, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
-                  {SAME_ACCEPTED_SPECIES, WITHIN_2Km, SAME_DATE, IDENTIFIERS_OVERLAP},
-                  {SAME_ACCEPTED_SPECIES, WITHIN_2Km, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
-                  {
-                    SAME_ACCEPTED_SPECIES,
-                    NON_CONFLICTING_COORDINATES,
-                    SAME_DATE,
-                    IDENTIFIERS_OVERLAP
-                  },
-                  {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, APPROXIMATE_DATE, SAME_RECORDER_NAME},
-                  {SAME_ACCEPTED_SPECIES, WITHIN_2Km, APPROXIMATE_DATE, SAME_RECORDER_NAME},
-                }));
+        Arrays.asList(
+            new FeatureAssertion[][] {
+              {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, SAME_DATE},
+              {SAME_ACCEPTED_SPECIES, WITHIN_200m, SAME_DATE},
+              {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
+              {SAME_ACCEPTED_SPECIES, WITHIN_200m, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
+              {SAME_ACCEPTED_SPECIES, WITHIN_2Km, SAME_DATE, IDENTIFIERS_OVERLAP},
+              {SAME_ACCEPTED_SPECIES, WITHIN_2Km, NON_CONFLICTING_DATE, IDENTIFIERS_OVERLAP},
+              {SAME_ACCEPTED_SPECIES, NON_CONFLICTING_COORDINATES, SAME_DATE, IDENTIFIERS_OVERLAP},
+              {SAME_ACCEPTED_SPECIES, SAME_COORDINATES, APPROXIMATE_DATE, SAME_RECORDER_NAME},
+              {SAME_ACCEPTED_SPECIES, WITHIN_2Km, APPROXIMATE_DATE, SAME_RECORDER_NAME},
+            });
 
     // Accommodate sparse data from sequence repositories
     // see https://github.com/gbif/pipelines/issues/733
@@ -333,7 +320,7 @@ public class OccurrenceRelationships {
   }
 
   static boolean allNull(Object... o1) {
-    return o1 == null || Arrays.stream(o1).allMatch(o -> o == null);
+    return o1 == null || Arrays.stream(o1).allMatch(Objects::isNull);
   }
 
   static boolean presentOnBoth(Object o1, Object o2) {
@@ -362,7 +349,7 @@ public class OccurrenceRelationships {
   public static String normalizeID(String id) {
     if (id != null) {
       String n = id.toUpperCase().replaceAll(REGEX_IDENTIFIERS, "");
-      return n.length() == 0 ? null : n;
+      return n.isEmpty() ? null : n;
     }
     return null;
   }
@@ -408,41 +395,40 @@ public class OccurrenceRelationships {
 
   /** Creates a new exclusion list for IDs. See https://github.com/gbif/pipelines/issues/309. */
   public static Set<String> newIdOmitList() {
-    return new HashSet(
-        Arrays.asList(
-            null,
-            "",
-            "[]",
-            "*",
-            "--",
-            normalizeID("NO APLICA"),
-            normalizeID("NA"),
-            normalizeID("NO DISPONIBLE"),
-            normalizeID("NO DISPONIBL"),
-            normalizeID("NO NUMBER"),
-            normalizeID("UNKNOWN"),
-            normalizeID("SN"),
-            normalizeID("ANONYMOUS"),
-            normalizeID("NONE"),
-            normalizeID("s.n."),
-            normalizeID("Unknown s.n."),
-            normalizeID("Unreadable s.n."),
-            normalizeID("se kommentar"),
-            normalizeID("inget id"),
-            normalizeID("x"),
-            normalizeID("Anonymous s.n."),
-            normalizeID("Collector Number: s.n."),
-            normalizeID("No Number"),
-            normalizeID("Anonymous"),
-            normalizeID("None"),
-            normalizeID("No Field Number"),
-            normalizeID("not recorded"),
-            normalizeID("s.l."),
-            normalizeID("s.c."),
-            normalizeID("present"),
-            normalizeID("Undef/entomo"),
-            normalizeID("s/nº"),
-            normalizeID("undef"),
-            normalizeID("no data")));
+    return Set.of(
+        null,
+        "",
+        "[]",
+        "*",
+        "--",
+        normalizeID("NO APLICA"),
+        normalizeID("NA"),
+        normalizeID("NO DISPONIBLE"),
+        normalizeID("NO DISPONIBL"),
+        normalizeID("NO NUMBER"),
+        normalizeID("UNKNOWN"),
+        normalizeID("SN"),
+        normalizeID("ANONYMOUS"),
+        normalizeID("NONE"),
+        normalizeID("s.n."),
+        normalizeID("Unknown s.n."),
+        normalizeID("Unreadable s.n."),
+        normalizeID("se kommentar"),
+        normalizeID("inget id"),
+        normalizeID("x"),
+        normalizeID("Anonymous s.n."),
+        normalizeID("Collector Number: s.n."),
+        normalizeID("No Number"),
+        normalizeID("Anonymous"),
+        normalizeID("None"),
+        normalizeID("No Field Number"),
+        normalizeID("not recorded"),
+        normalizeID("s.l."),
+        normalizeID("s.c."),
+        normalizeID("present"),
+        normalizeID("Undef/entomo"),
+        normalizeID("s/nº"),
+        normalizeID("undef"),
+        normalizeID("no data"));
   }
 }

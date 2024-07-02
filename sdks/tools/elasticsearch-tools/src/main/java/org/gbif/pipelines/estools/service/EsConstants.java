@@ -1,6 +1,5 @@
 package org.gbif.pipelines.estools.service;
 
-import java.util.HashMap;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -73,15 +72,13 @@ public final class EsConstants {
             + "\"lowercase_ascii_folding_normalizer\":{\"type\":\"custom\",\"char_filter\":[],\"filter\":[\"lowercase\", \"asciifolding\"]}},"
             + "\"analyzer\": {\"lowercase_analyzer\": {\"filter\": [\"lowercase\"],\"tokenizer\": \"keyword\",\"type\": \"custom\",\"char_filter\": []},"
             + "\"lowercase_ascii_folding_analyzer\": {\"filter\": [\"lowercase\", \"asciifolding\"],\"tokenizer\": \"keyword\",\"type\": \"custom\",\"char_filter\": []}}}";
-    private static final Map<String, String> DEFAULT_INDEXING_SETTINGS = new HashMap<>(5);
-
-    static {
-      DEFAULT_INDEXING_SETTINGS.put(Field.INDEX_REFRESH_INTERVAL, Indexing.REFRESH_INTERVAL);
-      DEFAULT_INDEXING_SETTINGS.put(Field.INDEX_NUMBER_SHARDS, Constant.NUMBER_SHARDS);
-      DEFAULT_INDEXING_SETTINGS.put(Field.INDEX_NUMBER_REPLICAS, Indexing.NUMBER_REPLICAS);
-      DEFAULT_INDEXING_SETTINGS.put(Field.INDEX_TRANSLOG_DURABILITY, Constant.TRANSLOG_DURABILITY);
-      DEFAULT_INDEXING_SETTINGS.put(Field.INDEX_ANALYSIS, Indexing.ANALYSIS);
-    }
+    private static final Map<String, String> DEFAULT_INDEXING_SETTINGS =
+        Map.of(
+            Field.INDEX_REFRESH_INTERVAL, Indexing.REFRESH_INTERVAL,
+            Field.INDEX_NUMBER_SHARDS, Constant.NUMBER_SHARDS,
+            Field.INDEX_NUMBER_REPLICAS, Indexing.NUMBER_REPLICAS,
+            Field.INDEX_TRANSLOG_DURABILITY, Constant.TRANSLOG_DURABILITY,
+            Field.INDEX_ANALYSIS, Indexing.ANALYSIS);
 
     public static Map<String, String> getDefaultIndexingSettings() {
       return DEFAULT_INDEXING_SETTINGS;
@@ -93,12 +90,10 @@ public final class EsConstants {
 
     public static final String REFRESH_INTERVAL = "1s";
     public static final String NUMBER_REPLICAS = "1";
-    private static final Map<String, String> DEFAULT_SEARCH_SETTINGS = new HashMap<>();
-
-    static {
-      DEFAULT_SEARCH_SETTINGS.put(Field.INDEX_REFRESH_INTERVAL, Searching.REFRESH_INTERVAL);
-      DEFAULT_SEARCH_SETTINGS.put(Field.INDEX_NUMBER_REPLICAS, Searching.NUMBER_REPLICAS);
-    }
+    private static final Map<String, String> DEFAULT_SEARCH_SETTINGS =
+        Map.of(
+            Field.INDEX_REFRESH_INTERVAL, Searching.REFRESH_INTERVAL,
+            Field.INDEX_NUMBER_REPLICAS, Searching.NUMBER_REPLICAS);
 
     public static Map<String, String> getDefaultSearchSettings() {
       return DEFAULT_SEARCH_SETTINGS;

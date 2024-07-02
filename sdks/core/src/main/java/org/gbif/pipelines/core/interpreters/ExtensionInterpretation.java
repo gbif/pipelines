@@ -307,7 +307,7 @@ public class ExtensionInterpretation {
                         first.ifPresent(issues::add);
 
                         // Collects the result
-                        if (!first.isPresent()) {
+                        if (first.isEmpty()) {
                           result.add(t);
                         }
                       }));

@@ -1,8 +1,8 @@
 package org.gbif.pipelines.transforms.common;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -61,7 +61,7 @@ public class UniqueIdTransformTest {
               String[] array = x.split("_");
               return ExtendedRecord.newBuilder()
                   .setId(array[0])
-                  .setCoreTerms(Collections.singletonMap("key", array[1]))
+                  .setCoreTerms(Map.of("key", array[1]))
                   .build();
             })
         .collect(Collectors.toList());

@@ -16,7 +16,7 @@ public class MaxStrategy implements DeletionStrategy {
     Optional<Long> tripletKey = LookupKeyUtils.getKey(keygenService, triplet);
     Optional<Long> occurrenceIdtKey = LookupKeyUtils.getKey(keygenService, occurrenceId);
 
-    if (!tripletKey.isPresent() || !occurrenceIdtKey.isPresent()) {
+    if (tripletKey.isEmpty() || occurrenceIdtKey.isEmpty()) {
       return Collections.emptyMap();
     }
 
@@ -26,7 +26,7 @@ public class MaxStrategy implements DeletionStrategy {
 
     long max = Math.max(tripletKey.get(), occurrenceIdtKey.get());
     return max == tripletKey.get()
-        ? Collections.singletonMap(triplet, tripletKey.get())
-        : Collections.singletonMap(occurrenceId, occurrenceIdtKey.get());
+        ? Map.of(triplet, tripletKey.get())
+        : Map.of(occurrenceId, occurrenceIdtKey.get());
   }
 }

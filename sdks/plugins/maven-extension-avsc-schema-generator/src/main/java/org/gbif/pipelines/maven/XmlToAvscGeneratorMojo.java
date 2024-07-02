@@ -10,7 +10,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -38,8 +37,7 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
 
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
-  private static final Set<String> RESERVED_WORDS =
-      new HashSet<>(Arrays.asList("date", "order", "format", "group"));
+  private static final Set<String> RESERVED_WORDS = Set.of("date", "order", "format", "group");
 
   @Parameter(property = "avroschemageneration.pathToWrite")
   private String pathToWrite;

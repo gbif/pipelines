@@ -132,7 +132,7 @@ public class ContinentParser {
       ExtendedRecord er, VocabularyParser<Continent> parser, String issue) {
     Optional<ParseResult<Continent>> parseResultOpt = parser.map(er, parseRes -> parseRes);
 
-    if (!parseResultOpt.isPresent()) {
+    if (parseResultOpt.isEmpty()) {
       // case when the continent is null in the extended record. We return an issue not to break the
       // whole interpretation
       return ParsedField.fail();

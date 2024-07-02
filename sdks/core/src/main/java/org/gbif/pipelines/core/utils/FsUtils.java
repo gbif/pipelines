@@ -22,7 +22,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -367,8 +366,7 @@ public final class FsUtils {
       Integer attempt,
       DwcTerm coreTerm,
       String... steps) {
-    Set<String> s = new HashSet<>(Arrays.asList(steps));
-    deleteInterpretIfExist(hdfsConfigs, basePath, datasetId, attempt, coreTerm, s);
+    deleteInterpretIfExist(hdfsConfigs, basePath, datasetId, attempt, coreTerm, Set.of(steps));
   }
 
   /**

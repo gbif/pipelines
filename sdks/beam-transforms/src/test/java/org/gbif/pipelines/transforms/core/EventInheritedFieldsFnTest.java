@@ -2,7 +2,6 @@ package org.gbif.pipelines.transforms.core;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
@@ -57,20 +56,20 @@ public class EventInheritedFieldsFnTest {
             .setId("3")
             .setParentEventID("2")
             .setParentsLineage(
-                Arrays.asList(
+                List.of(
                     Parent.newBuilder().setId("2").setEventType("sampling").build(),
                     Parent.newBuilder().setId("1").setEventType("survey").build()))
             .build());
 
     // Merge
     EventInheritedFieldsFn.Accum mergedAccum =
-        eventInheritedFieldsFn.mergeAccumulators(Arrays.asList(accum1, accum2));
+        eventInheritedFieldsFn.mergeAccumulators(List.of(accum1, accum2));
 
     // Get the result
     EventInheritedRecord eventInheritedRecord = eventInheritedFieldsFn.extractOutput(mergedAccum);
 
     // Results are from the immediate parent
-    assertEquals(Arrays.asList("sampling", "survey"), eventInheritedRecord.getEventType());
+    assertEquals(List.of("sampling", "survey"), eventInheritedRecord.getEventType());
     assertEquals("L2", eventInheritedRecord.getLocationID());
   }
 }

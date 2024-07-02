@@ -5,9 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.resources.HbaseServer;
 import org.junit.Before;
@@ -151,8 +150,7 @@ public class KeygenIT {
     occurrenceRecord.setOccurrenceId(occurrenceId);
     occurrenceRecord.setTriplet(triplet);
 
-    KeyLookupResult expected =
-        HBASE_SERVER.keyService.generateKey(new HashSet<>(Arrays.asList(occurrenceId, triplet)));
+    KeyLookupResult expected = HBASE_SERVER.keyService.generateKey(Set.of(occurrenceId, triplet));
 
     // When
     Optional<Long> key =
@@ -178,8 +176,7 @@ public class KeygenIT {
     SimpleOccurrenceRecord occurrenceOnlyRecord = SimpleOccurrenceRecord.create();
     occurrenceOnlyRecord.setOccurrenceId(newOccurrenceId);
 
-    KeyLookupResult expected =
-        HBASE_SERVER.keyService.generateKey(new HashSet<>(Arrays.asList(occurrenceId, triplet)));
+    KeyLookupResult expected = HBASE_SERVER.keyService.generateKey(Set.of(occurrenceId, triplet));
 
     // When
     Optional<Long> relinkKey =

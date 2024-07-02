@@ -2,7 +2,6 @@ package org.gbif.pipelines.core.config.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import lombok.Data;
@@ -53,7 +52,7 @@ public class PipelinesConfig implements Serializable {
    * will parse 2/3/2008 as 2 Mar 2008 <code>MDY</code> will parse 2/3/2008 as 3 Feb 2008
    */
   private List<DateComponentOrdering> defaultDateFormat =
-      Arrays.asList(DateComponentOrdering.ISO_FORMATS);
+      List.of(DateComponentOrdering.ISO_FORMATS);
 
   private Set<String> extensionsAllowedForVerbatimSet;
 

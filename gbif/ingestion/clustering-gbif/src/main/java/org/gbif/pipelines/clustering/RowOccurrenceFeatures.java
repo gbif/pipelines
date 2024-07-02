@@ -26,7 +26,7 @@ public class RowOccurrenceFeatures implements OccurrenceFeatures {
 
   // Dataset keys are considered reliable over time
   private static final List<String> SEQUENCE_REPOSITORY_KEYS =
-      Arrays.asList(
+      List.of(
           "d8cd16ba-bb74-4420-821e-083f2bac17c2", // INSDC sequences
           "393b8c26-e4e0-4dd0-a218-93fc074ebf4e", // INSDC host organisms
           "583d91fe-bbc0-4b4a-afe1-801f88263016", // INSDC environmental samples

@@ -7,8 +7,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -273,8 +271,7 @@ public class IndexingCallbackIT {
     message.setInterpretTypes(Set.of("ALL"));
     message.setValidationResult(new ValidationResult(true, true, false, 10L, 0L));
     message.setPipelineSteps(
-        new HashSet<>(
-            Arrays.asList(StepType.INTERPRETED_TO_INDEX.name(), StepType.HDFS_VIEW.name())));
+        Set.of(StepType.INTERPRETED_TO_INDEX.name(), StepType.HDFS_VIEW.name()));
     return message;
   }
 

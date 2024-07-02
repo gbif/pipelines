@@ -327,7 +327,7 @@ public class ParentJsonConverter {
 
   private void mapIssues(EventJsonRecord.Builder builder) {
     JsonConverter.mapIssues(
-        Arrays.asList(metadata, eventCore, temporal, location, multimedia),
+        List.of(metadata, eventCore, temporal, location, multimedia),
         builder::setIssues,
         builder::setNotIssues);
   }

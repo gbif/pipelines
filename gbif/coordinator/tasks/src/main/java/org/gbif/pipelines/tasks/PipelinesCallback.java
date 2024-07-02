@@ -9,7 +9,6 @@ import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -85,15 +84,14 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
               .build());
 
   private static final Set<PipelineStep.Status> PROCESSED_STATE_SET =
-      new HashSet<>(
-          Arrays.asList(
-              PipelineStep.Status.RUNNING,
-              PipelineStep.Status.FAILED,
-              PipelineStep.Status.COMPLETED,
-              PipelineStep.Status.ABORTED));
+      Set.of(
+          PipelineStep.Status.RUNNING,
+          PipelineStep.Status.FAILED,
+          PipelineStep.Status.COMPLETED,
+          PipelineStep.Status.ABORTED);
 
   private static final Set<PipelineStep.Status> FINISHED_STATE_SET =
-      new HashSet<>(Arrays.asList(PipelineStep.Status.COMPLETED, PipelineStep.Status.ABORTED));
+      Set.of(PipelineStep.Status.COMPLETED, PipelineStep.Status.ABORTED);
 
   private static Properties properties;
   private final MessagePublisher publisher;

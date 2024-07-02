@@ -1,9 +1,7 @@
 package org.gbif.pipelines.transforms.common;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,20 +32,16 @@ public class ExtensionFilterTransformTest {
         List.of(
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
-                .setExtensions(
-                    Collections.singletonMap(
-                        "ext", List.of(Collections.singletonMap("test", "test"))))
+                .setCoreTerms(Map.of("test", "test"))
+                .setExtensions(Map.of("ext", List.of(Map.of("test", "test"))))
                 .build());
 
     final List<ExtendedRecord> expected =
         List.of(
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
-                .setExtensions(
-                    Collections.singletonMap(
-                        "ext", List.of(Collections.singletonMap("test", "test"))))
+                .setCoreTerms(Map.of("test", "test"))
+                .setExtensions(Map.of("ext", List.of(Map.of("test", "test"))))
                 .build());
 
     // When
@@ -67,20 +61,16 @@ public class ExtensionFilterTransformTest {
         List.of(
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
-                .setExtensions(
-                    Collections.singletonMap(
-                        "ext", List.of(Collections.singletonMap("test", "test"))))
+                .setCoreTerms(Map.of("test", "test"))
+                .setExtensions(Map.of("ext", List.of(Map.of("test", "test"))))
                 .build());
 
     final List<ExtendedRecord> expected =
         List.of(
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
-                .setExtensions(
-                    Collections.singletonMap(
-                        "ext", List.of(Collections.singletonMap("test", "test"))))
+                .setCoreTerms(Map.of("test", "test"))
+                .setExtensions(Map.of("ext", List.of(Map.of("test", "test"))))
                 .build());
 
     // When
@@ -96,7 +86,7 @@ public class ExtensionFilterTransformTest {
   public void allowExtensionBeamTest() {
 
     Map<String, List<Map<String, String>>> extMap = new HashMap<>();
-    extMap.put("ext", List.of(Collections.singletonMap("test", "test")));
+    extMap.put("ext", List.of(Map.of("test", "test")));
     extMap.put("ext-empt", Collections.emptyList());
 
     // State
@@ -104,7 +94,7 @@ public class ExtensionFilterTransformTest {
         List.of(
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
+                .setCoreTerms(Map.of("test", "test"))
                 .setExtensions(extMap)
                 .build());
 
@@ -112,13 +102,11 @@ public class ExtensionFilterTransformTest {
         List.of(
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
-                .setExtensions(
-                    Collections.singletonMap(
-                        "ext", List.of(Collections.singletonMap("test", "test"))))
+                .setCoreTerms(Map.of("test", "test"))
+                .setExtensions(Map.of("ext", List.of(Map.of("test", "test"))))
                 .build());
 
-    final Set<String> allowSet = new HashSet<>(Arrays.asList("ext", "ext-empt"));
+    final Set<String> allowSet = Set.of("ext", "ext-empt");
 
     // When
     PCollection<ExtendedRecord> result =
@@ -137,17 +125,15 @@ public class ExtensionFilterTransformTest {
         List.of(
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
-                .setExtensions(
-                    Collections.singletonMap(
-                        "ext", List.of(Collections.singletonMap("test", "test"))))
+                .setCoreTerms(Map.of("test", "test"))
+                .setExtensions(Map.of("ext", List.of(Map.of("test", "test"))))
                 .build());
 
     final List<ExtendedRecord> expected =
         List.of(
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
+                .setCoreTerms(Map.of("test", "test"))
                 .setExtensions(Collections.emptyMap())
                 .build());
 
@@ -167,25 +153,21 @@ public class ExtensionFilterTransformTest {
 
     // State
     final Map<String, ExtendedRecord> input =
-        Collections.singletonMap(
+        Map.of(
             "777",
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
-                .setExtensions(
-                    Collections.singletonMap(
-                        "ext", List.of(Collections.singletonMap("test", "test"))))
+                .setCoreTerms(Map.of("test", "test"))
+                .setExtensions(Map.of("ext", List.of(Map.of("test", "test"))))
                 .build());
 
     final Map<String, ExtendedRecord> expected =
-        Collections.singletonMap(
+        Map.of(
             "777",
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
-                .setExtensions(
-                    Collections.singletonMap(
-                        "ext", List.of(Collections.singletonMap("test", "test"))))
+                .setCoreTerms(Map.of("test", "test"))
+                .setExtensions(Map.of("ext", List.of(Map.of("test", "test"))))
                 .build());
 
     // When
@@ -200,25 +182,21 @@ public class ExtensionFilterTransformTest {
 
     // State
     final Map<String, ExtendedRecord> input =
-        Collections.singletonMap(
+        Map.of(
             "777",
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
-                .setExtensions(
-                    Collections.singletonMap(
-                        "ext", List.of(Collections.singletonMap("test", "test"))))
+                .setCoreTerms(Map.of("test", "test"))
+                .setExtensions(Map.of("ext", List.of(Map.of("test", "test"))))
                 .build());
 
     final Map<String, ExtendedRecord> expected =
-        Collections.singletonMap(
+        Map.of(
             "777",
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
-                .setExtensions(
-                    Collections.singletonMap(
-                        "ext", List.of(Collections.singletonMap("test", "test"))))
+                .setCoreTerms(Map.of("test", "test"))
+                .setExtensions(Map.of("ext", List.of(Map.of("test", "test"))))
                 .build());
 
     // When
@@ -234,25 +212,21 @@ public class ExtensionFilterTransformTest {
 
     // State
     final Map<String, ExtendedRecord> input =
-        Collections.singletonMap(
+        Map.of(
             "777",
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
-                .setExtensions(
-                    Collections.singletonMap(
-                        "ext", List.of(Collections.singletonMap("test", "test"))))
+                .setCoreTerms(Map.of("test", "test"))
+                .setExtensions(Map.of("ext", List.of(Map.of("test", "test"))))
                 .build());
 
     final Map<String, ExtendedRecord> expected =
-        Collections.singletonMap(
+        Map.of(
             "777",
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
-                .setExtensions(
-                    Collections.singletonMap(
-                        "ext", List.of(Collections.singletonMap("test", "test"))))
+                .setCoreTerms(Map.of("test", "test"))
+                .setExtensions(Map.of("ext", List.of(Map.of("test", "test"))))
                 .build());
 
     final Set<String> allowSet = Set.of("ext");
@@ -269,22 +243,20 @@ public class ExtensionFilterTransformTest {
 
     // State
     final Map<String, ExtendedRecord> input =
-        Collections.singletonMap(
+        Map.of(
             "777",
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
-                .setExtensions(
-                    Collections.singletonMap(
-                        "ext", List.of(Collections.singletonMap("test", "test"))))
+                .setCoreTerms(Map.of("test", "test"))
+                .setExtensions(Map.of("ext", List.of(Map.of("test", "test"))))
                 .build());
 
     final Map<String, ExtendedRecord> expected =
-        Collections.singletonMap(
+        Map.of(
             "777",
             ExtendedRecord.newBuilder()
                 .setId("777")
-                .setCoreTerms(Collections.singletonMap("test", "test"))
+                .setCoreTerms(Map.of("test", "test"))
                 .setExtensions(Collections.emptyMap())
                 .build());
 

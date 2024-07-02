@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.converters;
 
-import java.util.Arrays;
 import java.util.List;
 import org.gbif.api.vocabulary.MediaType;
 import org.gbif.pipelines.io.avro.Audubon;
@@ -128,7 +127,7 @@ public class MultimediaConverterTest {
         MultimediaRecord.newBuilder()
             .setId("777")
             .setMultimediaItems(
-                Arrays.asList(
+                List.of(
                     Multimedia.newBuilder()
                         .setIdentifier("http://url-i1")
                         .setReferences("http://url-r1")
@@ -136,7 +135,7 @@ public class MultimediaConverterTest {
                         .setLicense("license1")
                         .build(),
                     Multimedia.newBuilder().setIdentifier("http://url-i3").build()))
-            .setIssues(IssueRecord.newBuilder().setIssueList(Arrays.asList("ONE", "THREE")).build())
+            .setIssues(IssueRecord.newBuilder().setIssueList(List.of("ONE", "THREE")).build())
             .build();
 
     ImageRecord ir =
@@ -150,7 +149,7 @@ public class MultimediaConverterTest {
                         .setCreated("2010-11-11")
                         .setLicense("license2")
                         .build()))
-            .setIssues(IssueRecord.newBuilder().setIssueList(Arrays.asList("TWO", "THREE")).build())
+            .setIssues(IssueRecord.newBuilder().setIssueList(List.of("TWO", "THREE")).build())
             .build();
 
     AudubonRecord ar =
@@ -169,7 +168,7 @@ public class MultimediaConverterTest {
         MultimediaRecord.newBuilder()
             .setId("777")
             .setMultimediaItems(
-                Arrays.asList(
+                List.of(
                     Multimedia.newBuilder()
                         .setIdentifier("http://url-i1")
                         .setReferences("http://url-r1")
@@ -189,13 +188,13 @@ public class MultimediaConverterTest {
                         .setLicense("license3")
                         .build()))
             .setIssues(
-                IssueRecord.newBuilder().setIssueList(Arrays.asList("ONE", "TWO", "THREE")).build())
+                IssueRecord.newBuilder().setIssueList(List.of("ONE", "TWO", "THREE")).build())
             .build();
 
     // When
-    MultimediaRecord record = MultimediaConverter.merge(mr, ir, ar);
+    MultimediaRecord rec = MultimediaConverter.merge(mr, ir, ar);
 
     // Should
-    Assert.assertEquals(result, record);
+    Assert.assertEquals(result, rec);
   }
 }

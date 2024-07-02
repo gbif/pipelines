@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.interpreters;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -65,9 +64,7 @@ public class ExtensionInterpretationTest {
     ExtendedRecord erSource =
         ExtendedRecord.newBuilder()
             .setId("id")
-            .setExtensions(
-                Collections.singletonMap(
-                    "mmm", Arrays.asList(source, Collections.singletonMap("val1", ""))))
+            .setExtensions(Map.of("mmm", List.of(source, Map.of("val1", ""))))
             .build();
 
     // When

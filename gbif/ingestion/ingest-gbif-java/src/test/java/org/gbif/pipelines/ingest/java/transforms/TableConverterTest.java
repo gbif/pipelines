@@ -2,7 +2,6 @@ package org.gbif.pipelines.ingest.java.transforms;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +44,7 @@ public class TableConverterTest {
         TableConverter.<MeasurementOrFactTable>builder()
             .metrics(metrics)
             .metadataRecord(metadataRecord)
-            .verbatimMap(Collections.singletonMap(ID, extendedRecord))
+            .verbatimMap(Map.of(ID, extendedRecord))
             .converterFn(MeasurementOrFactTableConverter::convert)
             .counterName(MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT)
             .build()

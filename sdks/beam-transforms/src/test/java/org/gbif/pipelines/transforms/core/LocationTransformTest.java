@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -397,8 +398,7 @@ public class LocationTransformTest {
                       .setCreated(0L)
                       .setFootprintWKT(x[32])
                       .build();
-              Arrays.asList(x[16].split(","))
-                  .forEach(z -> record.getIssues().getIssueList().add(z));
+              Stream.of(x[16].split(",")).forEach(z -> record.getIssues().getIssueList().add(z));
               return record;
             })
         .collect(Collectors.toList());

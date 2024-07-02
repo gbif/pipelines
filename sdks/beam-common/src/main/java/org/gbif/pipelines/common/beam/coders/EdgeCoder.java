@@ -3,7 +3,6 @@ package org.gbif.pipelines.common.beam.coders;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -51,7 +50,7 @@ public class EdgeCoder<T extends SpecificRecordBase & Record> extends Structured
 
   @Override
   public List<? extends Coder<?>> getCoderArguments() {
-    return Arrays.asList(fromIdCoder, toIdCoder, recordCoder);
+    return List.of(fromIdCoder, toIdCoder, recordCoder);
   }
 
   @Override

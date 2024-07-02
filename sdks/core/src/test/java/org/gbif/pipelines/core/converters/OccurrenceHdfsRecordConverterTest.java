@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -106,13 +105,12 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.member.simpleName(), "v_member");
     coreTerms.put(DwcTerm.previousIdentifications.simpleName(), "v_previousIdentifications");
 
-    Map<String, List<Map<String, String>>> extensions = new HashMap<>();
-    extensions.put(
-        "http://rs.tdwg.org/ac/terms/Multimedia",
-        List.of(Collections.singletonMap("key", "value")));
-    extensions.put(
-        "http://data.ggbn.org/schemas/ggbn/terms/Amplification",
-        List.of(Collections.singletonMap("key", "value")));
+    Map<String, List<Map<String, String>>> extensions =
+        Map.of(
+            "http://rs.tdwg.org/ac/terms/Multimedia",
+            List.of(Map.of("key", "value")),
+            "http://data.ggbn.org/schemas/ggbn/terms/Amplification",
+            List.of(Map.of("key", "value")));
 
     ExtendedRecord extendedRecord =
         ExtendedRecord.newBuilder()
@@ -146,15 +144,15 @@ public class OccurrenceHdfsRecordConverterTest {
             .setIndividualCount(0)
             .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name())
             .setOccurrenceStatus(OccurrenceStatus.ABSENT.name())
-            .setDatasetID(Arrays.asList(multiValue1, multiValue2))
-            .setDatasetName(Arrays.asList(multiValue1, multiValue2))
-            .setOtherCatalogNumbers(Arrays.asList(multiValue1, multiValue2))
-            .setRecordedBy(Arrays.asList(multiValue1, multiValue2))
-            .setIdentifiedBy(Arrays.asList(multiValue1, multiValue2))
-            .setPreparations(Arrays.asList(multiValue1, multiValue2))
-            .setSamplingProtocol(Arrays.asList(multiValue1, multiValue2))
-            .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
-            .setProjectId(Arrays.asList(multiValue1, multiValue2))
+            .setDatasetID(List.of(multiValue1, multiValue2))
+            .setDatasetName(List.of(multiValue1, multiValue2))
+            .setOtherCatalogNumbers(List.of(multiValue1, multiValue2))
+            .setRecordedBy(List.of(multiValue1, multiValue2))
+            .setIdentifiedBy(List.of(multiValue1, multiValue2))
+            .setPreparations(List.of(multiValue1, multiValue2))
+            .setSamplingProtocol(List.of(multiValue1, multiValue2))
+            .setTypeStatus(List.of(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
+            .setProjectId(List.of(multiValue1, multiValue2))
             .setIsSequenced(true)
             .setAssociatedSequences(List.of("ad"))
             .setGeologicalContext(
@@ -227,26 +225,25 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(
         ThreatStatus.CRITICALLY_ENDANGERED.getCode(), hdfsRecord.getIucnredlistcategory());
     Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVDatasetid());
-    Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getDatasetid());
+    Assert.assertEquals(List.of(multiValue1, multiValue2), hdfsRecord.getDatasetid());
     Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVDatasetname());
-    Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getDatasetname());
+    Assert.assertEquals(List.of(multiValue1, multiValue2), hdfsRecord.getDatasetname());
     Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVOthercatalognumbers());
-    Assert.assertEquals(
-        Arrays.asList(multiValue1, multiValue2), hdfsRecord.getOthercatalognumbers());
+    Assert.assertEquals(List.of(multiValue1, multiValue2), hdfsRecord.getOthercatalognumbers());
     Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVRecordedby());
-    Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getRecordedby());
+    Assert.assertEquals(List.of(multiValue1, multiValue2), hdfsRecord.getRecordedby());
     Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVIdentifiedby());
-    Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getIdentifiedby());
+    Assert.assertEquals(List.of(multiValue1, multiValue2), hdfsRecord.getIdentifiedby());
     Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVPreparations());
-    Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getPreparations());
+    Assert.assertEquals(List.of(multiValue1, multiValue2), hdfsRecord.getPreparations());
     Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVSamplingprotocol());
-    Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getSamplingprotocol());
+    Assert.assertEquals(List.of(multiValue1, multiValue2), hdfsRecord.getSamplingprotocol());
     Assert.assertEquals(
         TypeStatus.TYPE.name() + "|" + TypeStatus.TYPE_SPECIES.name(), hdfsRecord.getVTypestatus());
     Assert.assertEquals(
-        Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()),
+        List.of(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()),
         hdfsRecord.getTypestatus());
-    Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getProjectid());
+    Assert.assertEquals(List.of(multiValue1, multiValue2), hdfsRecord.getProjectid());
 
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());
@@ -332,8 +329,7 @@ public class OccurrenceHdfsRecordConverterTest {
     multimedia.setLicense(License.CC_BY_4_0.name());
     multimedia.setSource("image.jpg");
     multimediaRecord.setMultimediaItems(List.of(multimedia));
-    multimediaRecord.setIssues(
-        IssueRecord.newBuilder().setIssueList(Arrays.asList(issues)).build());
+    multimediaRecord.setIssues(IssueRecord.newBuilder().setIssueList(List.of(issues)).build());
 
     // When
     OccurrenceHdfsRecord hdfsRecord =
@@ -397,7 +393,7 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name());
     basicRecord.setSex(Sex.HERMAPHRODITE.name());
     basicRecord.setIndividualCount(99);
-    basicRecord.setTypeStatus(Arrays.asList(TypeStatus.ALLOTYPE.name(), TypeStatus.TYPE.name()));
+    basicRecord.setTypeStatus(List.of(TypeStatus.ALLOTYPE.name(), TypeStatus.TYPE.name()));
     basicRecord.setTypifiedName("noName");
     basicRecord.setLifeStage(
         VocabularyConcept.newBuilder().setConcept("Tadpole").setLineage(List.of("Larva")).build());
@@ -414,7 +410,7 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setSampleSizeValue(2d);
     basicRecord.setRelativeOrganismQuantity(2d);
     basicRecord.setLicense(License.UNSPECIFIED.name());
-    basicRecord.setProjectId(Arrays.asList("id1", "id2"));
+    basicRecord.setProjectId(List.of("id1", "id2"));
 
     // When
     OccurrenceHdfsRecord hdfsRecord =
@@ -425,8 +421,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Sex.HERMAPHRODITE.name(), hdfsRecord.getSex());
     Assert.assertEquals(Integer.valueOf(99), hdfsRecord.getIndividualcount());
     Assert.assertEquals(
-        Arrays.asList(TypeStatus.ALLOTYPE.name(), TypeStatus.TYPE.name()),
-        hdfsRecord.getTypestatus());
+        List.of(TypeStatus.ALLOTYPE.name(), TypeStatus.TYPE.name()), hdfsRecord.getTypestatus());
     Assert.assertEquals("noName", hdfsRecord.getTypifiedname());
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getOrganismquantity());
     Assert.assertEquals("type", hdfsRecord.getOrganismquantitytype());
@@ -697,7 +692,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setYear(2019)
             .setMonth(1)
             .setStartDayOfYear(1)
-            .setIssues(IssueRecord.newBuilder().setIssueList(Arrays.asList(issues)).build())
+            .setIssues(IssueRecord.newBuilder().setIssueList(List.of(issues)).build())
             .build();
 
     // When
@@ -730,7 +725,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setId("1")
             .setInstitutionMatch(institutionMatch)
             .setCollectionMatch(collectionMatch)
-            .setIssues(IssueRecord.newBuilder().setIssueList(Arrays.asList(issues)).build())
+            .setIssues(IssueRecord.newBuilder().setIssueList(List.of(issues)).build())
             .build();
 
     // When

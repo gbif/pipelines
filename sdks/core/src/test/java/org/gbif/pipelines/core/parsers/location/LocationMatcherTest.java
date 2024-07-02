@@ -2,7 +2,6 @@ package org.gbif.pipelines.core.parsers.location;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
 
-import java.util.Arrays;
 import java.util.List;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
@@ -55,7 +54,7 @@ public class LocationMatcherTest {
     location2.setDistance(0.2d);
     location2.setIsoCountryCode2Digit(country2.getIso2LetterCode());
 
-    return new GeocodeResponse(Arrays.asList(location1, location2));
+    return new GeocodeResponse(List.of(location1, location2));
   }
 
   private static GeocodeResponse toGeocodeNonISOResponse(String title) {

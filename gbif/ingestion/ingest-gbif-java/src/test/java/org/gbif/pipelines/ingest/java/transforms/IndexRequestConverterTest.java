@@ -3,7 +3,6 @@ package org.gbif.pipelines.ingest.java.transforms;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.elasticsearch.action.index.IndexRequest;
@@ -53,16 +52,16 @@ public class IndexRequestConverterTest {
             .metadata(metadataRecord)
             .esIndexName("name")
             .esDocumentId(GBIF_ID)
-            .verbatimMap(Collections.singletonMap(ID, extendedRecord))
-            .clusteringMap(Collections.singletonMap(ID, clusteringRecord))
-            .temporalMap(Collections.singletonMap(ID, temporalRecord))
-            .basicMap(Collections.singletonMap(ID, basicRecord))
-            .locationMap(Collections.singletonMap(ID, locationRecord))
-            .taxonMap(Collections.singletonMap(ID, taxonRecord))
-            .grscicollMap(Collections.singletonMap(ID, grscicollRecord))
-            .multimediaMap(Collections.singletonMap(ID, multimediaRecord))
-            .imageMap(Collections.singletonMap(ID, imageRecord))
-            .audubonMap(Collections.singletonMap(ID, audubonRecord))
+            .verbatimMap(Map.of(ID, extendedRecord))
+            .clusteringMap(Map.of(ID, clusteringRecord))
+            .temporalMap(Map.of(ID, temporalRecord))
+            .basicMap(Map.of(ID, basicRecord))
+            .locationMap(Map.of(ID, locationRecord))
+            .taxonMap(Map.of(ID, taxonRecord))
+            .grscicollMap(Map.of(ID, grscicollRecord))
+            .multimediaMap(Map.of(ID, multimediaRecord))
+            .imageMap(Map.of(ID, imageRecord))
+            .audubonMap(Map.of(ID, audubonRecord))
             .build()
             .getFn()
             .apply(idRecord);
@@ -106,16 +105,16 @@ public class IndexRequestConverterTest {
             .metrics(metrics)
             .metadata(metadataRecord)
             .esIndexName("name")
-            .verbatimMap(Collections.singletonMap(ID, extendedRecord))
-            .temporalMap(Collections.singletonMap(ID, temporalRecord))
-            .clusteringMap(Collections.singletonMap(ID, clusteringRecord))
-            .locationMap(Collections.singletonMap(ID, locationRecord))
-            .basicMap(Collections.singletonMap(ID, basicRecord))
-            .taxonMap(Collections.singletonMap(ID, taxonRecord))
-            .grscicollMap(Collections.singletonMap(ID, grscicollRecord))
-            .multimediaMap(Collections.singletonMap(ID, multimediaRecord))
-            .imageMap(Collections.singletonMap(ID, imageRecord))
-            .audubonMap(Collections.singletonMap(ID, audubonRecord))
+            .verbatimMap(Map.of(ID, extendedRecord))
+            .temporalMap(Map.of(ID, temporalRecord))
+            .clusteringMap(Map.of(ID, clusteringRecord))
+            .locationMap(Map.of(ID, locationRecord))
+            .basicMap(Map.of(ID, basicRecord))
+            .taxonMap(Map.of(ID, taxonRecord))
+            .grscicollMap(Map.of(ID, grscicollRecord))
+            .multimediaMap(Map.of(ID, multimediaRecord))
+            .imageMap(Map.of(ID, imageRecord))
+            .audubonMap(Map.of(ID, audubonRecord))
             .build()
             .getFn()
             .apply(idRecord);

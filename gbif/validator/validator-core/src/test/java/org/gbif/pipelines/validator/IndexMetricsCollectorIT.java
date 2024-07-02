@@ -8,9 +8,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -108,9 +105,7 @@ public class IndexMetricsCollectorIT {
             .fileType(DwcFileType.CORE)
             .rowType(DwcTerm.Occurrence.qualifiedName())
             .count(3L)
-            .terms(
-                new ArrayList<>(
-                    Arrays.asList(maximumElevationInMeters, organismID, occurrenceID, bed)))
+            .terms(List.of(maximumElevationInMeters, organismID, occurrenceID, bed))
             .build();
 
     // Extension
@@ -125,12 +120,12 @@ public class IndexMetricsCollectorIT {
             .fileType(DwcFileType.CORE)
             .rowType(Extension.MEASUREMENT_OR_FACT.getRowType())
             .count(3L)
-            .terms(new ArrayList<>(Arrays.asList(measurementValue, measurementType)))
+            .terms(List.of(measurementValue, measurementType))
             .build();
 
     Metrics result =
         IndexMetricsCollector.builder()
-            .fileInfos(new ArrayList<>(Arrays.asList(occurrenceFileInfo, extensionFileInfo)))
+            .fileInfos(List.of(occurrenceFileInfo, extensionFileInfo))
             .key(UUID.fromString(datasetKey))
             .index(IDX_NAME)
             .corePrefix("verbatim.core")
@@ -199,7 +194,7 @@ public class IndexMetricsCollectorIT {
             .issue("RANDOM_ISSUE")
             .count(2L)
             .samples(
-                Arrays.asList(
+                List.of(
                     IssueSample.builder().recordId("bla1").build(),
                     IssueSample.builder().recordId("bla2").build()))
             .build());
@@ -220,9 +215,7 @@ public class IndexMetricsCollectorIT {
             .samples(
                 List.of(
                     IssueSample.builder()
-                        .relatedData(
-                            Collections.singletonMap(
-                                DwcTerm.maximumElevationInMeters.toString(), "1150"))
+                        .relatedData(Map.of(DwcTerm.maximumElevationInMeters.toString(), "1150"))
                         .recordId("bla")
                         .build()))
             .build());

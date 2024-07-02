@@ -104,7 +104,7 @@ public class LocationParser {
       ExtendedRecord er, VocabularyParser<Country> parser, String issue) {
     Optional<ParseResult<Country>> parseResultOpt = parser.map(er, parseRes -> parseRes);
 
-    if (!parseResultOpt.isPresent()) {
+    if (parseResultOpt.isEmpty()) {
       // case when the country is null in the extended record. We return an issue not to break the
       // whole interpretation
       return ParsedField.fail();

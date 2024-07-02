@@ -1,6 +1,6 @@
 package org.gbif.pipelines.transforms.common;
 
-import java.util.Collections;
+import java.util.Map;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -31,10 +31,7 @@ public class FilterRecordTransformTest {
     // State
     String id = "777";
     ExtendedRecord er =
-        ExtendedRecord.newBuilder()
-            .setId(id)
-            .setCoreTerms(Collections.singletonMap("map", "value"))
-            .build();
+        ExtendedRecord.newBuilder().setId(id).setCoreTerms(Map.of("map", "value")).build();
     IdentifierRecord ir =
         IdentifierRecord.newBuilder().setId(id).setInternalId("1").setFirstLoaded(1L).build();
 
@@ -73,10 +70,7 @@ public class FilterRecordTransformTest {
     // State
     String id = "777";
     ExtendedRecord er =
-        ExtendedRecord.newBuilder()
-            .setId(id)
-            .setCoreTerms(Collections.singletonMap("map", "value"))
-            .build();
+        ExtendedRecord.newBuilder().setId(id).setCoreTerms(Map.of("map", "value")).build();
     IdentifierRecord ir = IdentifierRecord.newBuilder().setId(id).setFirstLoaded(1L).build();
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();

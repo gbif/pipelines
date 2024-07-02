@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
@@ -189,13 +188,13 @@ public class InterpretedToEsIndexExtendedPipelineIT {
     String dynIndex = "dyn-switching-index-test";
     String alias = "alias-switching-index-test";
     // index in default static
-    List<String> staticDatasets = Arrays.asList(datasetKey, datasetKey2, datasetKey3);
+    List<String> staticDatasets = List.of(datasetKey, datasetKey2, datasetKey3);
     EsTestUtils.indexDatasets(ES_SERVER, staticDatasets, attempt, defIndex, alias);
     // index in default dynamic
-    List<String> dynamicDatasets = Arrays.asList(datasetKey4, datasetKey5, datasetKey6);
+    List<String> dynamicDatasets = List.of(datasetKey4, datasetKey5, datasetKey6);
     EsTestUtils.indexDatasets(ES_SERVER, dynamicDatasets, attempt, dynIndex, alias);
     // index some independent datasets
-    List<String> independentDatasets = Arrays.asList(datasetKey7, datasetKey8, datasetKey9);
+    List<String> independentDatasets = List.of(datasetKey7, datasetKey8, datasetKey9);
     EsTestUtils.indexDatasets(ES_SERVER, independentDatasets, attempt, null, alias);
 
     // Should
@@ -225,8 +224,8 @@ public class InterpretedToEsIndexExtendedPipelineIT {
     // When
     // 2. Switch some datasets to other indexes without changing the number of records
     attempt++;
-    switchDatasetAndRecords(Arrays.asList(datasetKey, datasetKey9), dynIndex, alias, attempt, 0);
-    switchDatasetAndRecords(Arrays.asList(datasetKey4, datasetKey7), defIndex, alias, attempt, 0);
+    switchDatasetAndRecords(List.of(datasetKey, datasetKey9), dynIndex, alias, attempt, 0);
+    switchDatasetAndRecords(List.of(datasetKey4, datasetKey7), defIndex, alias, attempt, 0);
     switchDatasetAndRecords(datasetKey2, datasetKey2 + "_" + attempt, alias, attempt, 0);
 
     // assert number of records for each dataset, it should remain as in the beginning

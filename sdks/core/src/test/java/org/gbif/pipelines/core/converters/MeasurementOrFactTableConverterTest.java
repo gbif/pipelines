@@ -1,7 +1,5 @@
 package org.gbif.pipelines.core.converters;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.gbif.api.vocabulary.Extension;
@@ -20,30 +18,32 @@ public class MeasurementOrFactTableConverterTest {
   public void measurementOrFactTableTest() {
 
     // State
-    Map<String, String> ext1 = new HashMap<>();
-    ext1.put(DwcTerm.measurementID.qualifiedName(), "1");
-    ext1.put(DwcTerm.measurementType.qualifiedName(), "Type1");
-    ext1.put(DwcTerm.measurementValue.qualifiedName(), "1.5");
-    ext1.put(DwcTerm.measurementAccuracy.qualifiedName(), "Accurancy1");
-    ext1.put(DwcTerm.measurementUnit.qualifiedName(), "Unit1");
-    ext1.put(DwcTerm.measurementDeterminedBy.qualifiedName(), "By1");
-    ext1.put(DwcTerm.measurementMethod.qualifiedName(), "Method1");
-    ext1.put(DwcTerm.measurementRemarks.qualifiedName(), "Remarks1");
-    ext1.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2011");
+    Map<String, String> ext1 =
+        Map.of(
+            DwcTerm.measurementID.qualifiedName(), "1",
+            DwcTerm.measurementType.qualifiedName(), "Type1",
+            DwcTerm.measurementValue.qualifiedName(), "1.5",
+            DwcTerm.measurementAccuracy.qualifiedName(), "Accurancy1",
+            DwcTerm.measurementUnit.qualifiedName(), "Unit1",
+            DwcTerm.measurementDeterminedBy.qualifiedName(), "By1",
+            DwcTerm.measurementMethod.qualifiedName(), "Method1",
+            DwcTerm.measurementRemarks.qualifiedName(), "Remarks1",
+            DwcTerm.measurementDeterminedDate.qualifiedName(), "2011");
 
-    Map<String, String> ext2 = new HashMap<>();
-    ext2.put(DwcTerm.measurementID.qualifiedName(), "2");
-    ext2.put(DwcTerm.measurementType.qualifiedName(), "Type2");
-    ext2.put(DwcTerm.measurementValue.qualifiedName(), "1.5");
-    ext2.put(DwcTerm.measurementAccuracy.qualifiedName(), "Accurancy2");
-    ext2.put(DwcTerm.measurementUnit.qualifiedName(), "Unit2");
-    ext2.put(DwcTerm.measurementDeterminedBy.qualifiedName(), "By2");
-    ext2.put(DwcTerm.measurementMethod.qualifiedName(), "Method2");
-    ext2.put(DwcTerm.measurementRemarks.qualifiedName(), "Remarks2");
-    ext2.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2012");
+    Map<String, String> ext2 =
+        Map.of(
+            DwcTerm.measurementID.qualifiedName(), "2",
+            DwcTerm.measurementType.qualifiedName(), "Type2",
+            DwcTerm.measurementValue.qualifiedName(), "1.5",
+            DwcTerm.measurementAccuracy.qualifiedName(), "Accurancy2",
+            DwcTerm.measurementUnit.qualifiedName(), "Unit2",
+            DwcTerm.measurementDeterminedBy.qualifiedName(), "By2",
+            DwcTerm.measurementMethod.qualifiedName(), "Method2",
+            DwcTerm.measurementRemarks.qualifiedName(), "Remarks2",
+            DwcTerm.measurementDeterminedDate.qualifiedName(), "2012");
 
-    Map<String, List<Map<String, String>>> ext = new HashMap<>();
-    ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Arrays.asList(ext1, ext2));
+    Map<String, List<Map<String, String>>> ext =
+        Map.of(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1, ext2));
 
     ExtendedRecord extendedRecord =
         ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
@@ -146,19 +146,20 @@ public class MeasurementOrFactTableConverterTest {
   public void extendedRecordNullTest() {
 
     // State
-    Map<String, String> ext1 = new HashMap<>();
-    ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");
-    ext1.put(DwcTerm.measurementType.qualifiedName(), "Type1");
-    ext1.put(DwcTerm.measurementValue.qualifiedName(), "1.5");
-    ext1.put(DwcTerm.measurementAccuracy.qualifiedName(), "Accurancy1");
-    ext1.put(DwcTerm.measurementUnit.qualifiedName(), "Unit1");
-    ext1.put(DwcTerm.measurementDeterminedBy.qualifiedName(), "By1");
-    ext1.put(DwcTerm.measurementMethod.qualifiedName(), "Method1");
-    ext1.put(DwcTerm.measurementRemarks.qualifiedName(), "Remarks1");
-    ext1.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
+    Map<String, String> ext1 =
+        Map.of(
+            DwcTerm.measurementID.qualifiedName(), "Id1",
+            DwcTerm.measurementType.qualifiedName(), "Type1",
+            DwcTerm.measurementValue.qualifiedName(), "1.5",
+            DwcTerm.measurementAccuracy.qualifiedName(), "Accurancy1",
+            DwcTerm.measurementUnit.qualifiedName(), "Unit1",
+            DwcTerm.measurementDeterminedBy.qualifiedName(), "By1",
+            DwcTerm.measurementMethod.qualifiedName(), "Method1",
+            DwcTerm.measurementRemarks.qualifiedName(), "Remarks1",
+            DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
 
-    Map<String, List<Map<String, String>>> ext = new HashMap<>();
-    ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
+    Map<String, List<Map<String, String>>> ext =
+        Map.of(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
 
     ExtendedRecord extendedRecord =
         ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();

@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +56,7 @@ public class ImageInterpreterTest {
     ext3.put(DcTerm.created.qualifiedName(), "not a date");
 
     Map<String, List<Map<String, String>>> ext = new HashMap<>();
-    ext.put(Extension.IMAGE.getRowType(), Arrays.asList(ext1, ext2, ext3));
+    ext.put(Extension.IMAGE.getRowType(), List.of(ext1, ext2, ext3));
 
     ExtendedRecord record = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
 

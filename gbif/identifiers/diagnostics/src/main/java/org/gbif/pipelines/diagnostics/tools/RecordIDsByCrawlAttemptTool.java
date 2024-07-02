@@ -5,6 +5,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.SneakyThrows;
@@ -78,7 +79,7 @@ public class RecordIDsByCrawlAttemptTool implements Tool {
     System.out.printf(
         "%s\t%s\t%s\t%s\t%s%n",
         "Attempt", "institutionCode", "collectionCode", "catalogNumber", "occurrenceID");
-    Arrays.asList(archives).forEach(this::print);
+    Stream.of(archives).forEach(this::print);
   }
 
   private static int attemptFromName(File file) {

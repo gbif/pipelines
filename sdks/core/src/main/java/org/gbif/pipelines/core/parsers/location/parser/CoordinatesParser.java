@@ -2,7 +2,6 @@ package org.gbif.pipelines.core.parsers.location.parser;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -44,7 +43,7 @@ class CoordinatesParser {
 
   // list with all the parsing functions
   private static final List<Function<ExtendedRecord, ParsedField<LatLng>>> PARSING_FUNCTIONS =
-      Arrays.asList(DECIMAL_LAT_LNG_FN, VERBATIM_LAT_LNG_FN, VERBATIM_COORDS_FN);
+      List.of(DECIMAL_LAT_LNG_FN, VERBATIM_LAT_LNG_FN, VERBATIM_COORDS_FN);
 
   /**
    * Parses the coordinates fields of a {@link ExtendedRecord}.

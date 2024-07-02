@@ -1,8 +1,6 @@
 package org.gbif.pipelines.transforms.converters;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -137,9 +135,7 @@ public class OccurrenceJsonTransformTest {
             .setCoreRowType("core")
             .setCoreTerms(erMap)
             .setExtensions(
-                Collections.singletonMap(
-                    "http://rs.tdwg.org/ac/terms/Multimedia",
-                    List.of(Collections.singletonMap("k", "v"))))
+                Map.of("http://rs.tdwg.org/ac/terms/Multimedia", List.of(Map.of("k", "v"))))
             .build();
 
     IdentifierRecord id = IdentifierRecord.newBuilder().setId("777").setInternalId("111").build();
@@ -193,14 +189,14 @@ public class OccurrenceJsonTransformTest {
                         .setType(AgentIdentifierType.OTHER.name())
                         .setValue("someId")
                         .build()))
-            .setDatasetID(Arrays.asList(multivalue1, multivalue2))
-            .setDatasetName(Arrays.asList(multivalue1, multivalue2))
-            .setOtherCatalogNumbers(Arrays.asList(multivalue1, multivalue2))
-            .setRecordedBy(Arrays.asList(multivalue1, multivalue2))
-            .setIdentifiedBy(Arrays.asList(multivalue1, multivalue2))
-            .setPreparations(Arrays.asList(multivalue1, multivalue2))
-            .setSamplingProtocol(Arrays.asList(multivalue1, multivalue2))
-            .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
+            .setDatasetID(List.of(multivalue1, multivalue2))
+            .setDatasetName(List.of(multivalue1, multivalue2))
+            .setOtherCatalogNumbers(List.of(multivalue1, multivalue2))
+            .setRecordedBy(List.of(multivalue1, multivalue2))
+            .setIdentifiedBy(List.of(multivalue1, multivalue2))
+            .setPreparations(List.of(multivalue1, multivalue2))
+            .setSamplingProtocol(List.of(multivalue1, multivalue2))
+            .setTypeStatus(List.of(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
             .build();
 
     TemporalRecord tmr =
@@ -415,7 +411,7 @@ public class OccurrenceJsonTransformTest {
     MultimediaRecord mmr =
         MultimediaRecord.newBuilder()
             .setId("777")
-            .setMultimediaItems(Arrays.asList(stillImage, movingImage))
+            .setMultimediaItems(List.of(stillImage, movingImage))
             .build();
 
     // Core

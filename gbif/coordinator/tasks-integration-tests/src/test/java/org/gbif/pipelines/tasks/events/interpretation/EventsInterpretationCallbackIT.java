@@ -5,8 +5,6 @@ import static org.gbif.api.model.pipelines.StepType.EVENTS_VERBATIM_TO_INTERPRET
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -64,9 +62,7 @@ public class EventsInterpretationCallbackIT {
         new PipelinesEventsMessage(
             uuid,
             attempt,
-            new HashSet<>(
-                Arrays.asList(
-                    EVENTS_VERBATIM_TO_INTERPRETED.name(), EVENTS_INTERPRETED_TO_INDEX.name())),
+            Set.of(EVENTS_VERBATIM_TO_INTERPRETED.name(), EVENTS_INTERPRETED_TO_INDEX.name()),
             0L,
             0L,
             null,

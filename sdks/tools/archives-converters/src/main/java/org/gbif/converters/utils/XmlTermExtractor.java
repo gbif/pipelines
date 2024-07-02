@@ -2,7 +2,6 @@ package org.gbif.converters.utils;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +50,7 @@ public class XmlTermExtractor {
 
     Map<FileNameTerm, Set<Term>> extenstionsTerms = new HashMap<>();
     records.stream()
-        .map(record -> record.getExtensions().entrySet())
+        .map(r -> r.getExtensions().entrySet())
         .flatMap(Collection::stream)
         .forEach(
             es -> {
@@ -65,8 +64,7 @@ public class XmlTermExtractor {
             });
 
     return new XmlTermExtractor(
-        Collections.singletonMap(
-            FileNameTerm.create("core.file", DwcTerm.Occurrence.qualifiedName()), collect),
+        Map.of(FileNameTerm.create("core.file", DwcTerm.Occurrence.qualifiedName()), collect),
         extenstionsTerms);
   }
 

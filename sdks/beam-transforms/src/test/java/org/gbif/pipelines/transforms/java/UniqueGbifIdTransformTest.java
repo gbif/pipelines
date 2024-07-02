@@ -284,7 +284,7 @@ public class UniqueGbifIdTransformTest {
               String[] array = x.split("_");
               return ExtendedRecord.newBuilder()
                   .setId(array[0])
-                  .setCoreTerms(Collections.singletonMap("KEY", array.length > 1 ? array[1] : null))
+                  .setCoreTerms(Map.of("KEY", array.length > 1 ? array[1] : null))
                   .build();
             })
         .collect(Collectors.toMap(ExtendedRecord::getId, Function.identity()));

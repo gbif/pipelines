@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.parsers.vertnet;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -33,7 +32,7 @@ public class LifeStageParser {
               + "|subadultes?|subads?|sub-adults?|yearlings?|matures?|adults?|adulte?|ads?)(?:\\s*\\?)?)\\b");
 
   private static final List<Pattern> PATTERNS =
-      Arrays.asList(
+      List.of(
           LIFE_STAGE_KEY_VALUE_DELIMITED,
           LIFE_STAGE_KEY_VALUE_UNDELIMITED,
           LIFE_STAGE_NO_KEYWORD,

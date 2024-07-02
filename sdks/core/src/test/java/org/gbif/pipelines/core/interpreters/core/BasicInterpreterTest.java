@@ -617,8 +617,7 @@ public class BasicInterpreterTest {
 
     // State
     Map<String, List<Map<String, String>>> extension =
-        Collections.singletonMap(
-            DNA_DERIVED_DATA.getRowType(), List.of(Collections.singletonMap("awd", "daw")));
+        Map.of(DNA_DERIVED_DATA.getRowType(), List.of(Map.of("awd", "daw")));
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setExtensions(extension).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
@@ -631,8 +630,7 @@ public class BasicInterpreterTest {
 
     // State
     Map<String, List<Map<String, String>>> extension2 =
-        Collections.singletonMap(
-            GEL_IMAGE.getRowType(), List.of(Collections.singletonMap("awd", "daw")));
+        Map.of(GEL_IMAGE.getRowType(), List.of(Map.of("awd", "daw")));
     ExtendedRecord er2 = ExtendedRecord.newBuilder().setId(ID).setExtensions(extension2).build();
     BasicRecord br2 = BasicRecord.newBuilder().setId(ID).build();
 
@@ -649,7 +647,7 @@ public class BasicInterpreterTest {
 
     // State
     Map<String, List<Map<String, String>>> extension =
-        Collections.singletonMap(DNA_DERIVED_DATA.getRowType(), Collections.emptyList());
+        Map.of(DNA_DERIVED_DATA.getRowType(), Collections.emptyList());
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setExtensions(extension).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
@@ -669,7 +667,7 @@ public class BasicInterpreterTest {
     Map<String, String> coreMap = new HashMap<>(1);
     coreMap.put(DwcTerm.associatedSequences.qualifiedName(), seq);
     Map<String, List<Map<String, String>>> extension =
-        Collections.singletonMap(DNA_DERIVED_DATA.getRowType(), Collections.emptyList());
+        Map.of(DNA_DERIVED_DATA.getRowType(), Collections.emptyList());
 
     ExtendedRecord er =
         ExtendedRecord.newBuilder()

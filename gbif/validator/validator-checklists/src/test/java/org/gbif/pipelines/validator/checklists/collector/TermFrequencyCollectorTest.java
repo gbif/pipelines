@@ -4,9 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.gbif.api.vocabulary.Extension;
@@ -24,20 +21,26 @@ public class TermFrequencyCollectorTest {
   @Test
   public void termFrequencyOfTest() {
     // State
-    Map<Term, String> termMapOne = new HashMap<>(3);
-    termMapOne.put(DwcTerm.locationID, null);
-    termMapOne.put(DwcTerm.occurrenceID, null);
-    termMapOne.put(DwcTerm.county, "county");
-    termMapOne.put(DwcTerm.eventDate, "eventDate");
+    Map<Term, String> termMapOne =
+        Map.of(
+            DwcTerm.locationID,
+            null,
+            DwcTerm.occurrenceID,
+            null,
+            DwcTerm.county,
+            "county",
+            DwcTerm.eventDate,
+            "eventDate");
 
-    Map<Term, String> termMapTwo = new HashMap<>(3);
-    termMapTwo.put(DwcTerm.locationID, null);
-    termMapTwo.put(DwcTerm.occurrenceID, null);
-    termMapTwo.put(DwcTerm.county, null);
-    termMapTwo.put(DwcTerm.eventDate, "eventDate");
+    Map<Term, String> termMapTwo =
+        Map.of(
+            DwcTerm.locationID, null,
+            DwcTerm.occurrenceID, null,
+            DwcTerm.county, null,
+            DwcTerm.eventDate, "eventDate");
 
     // When
-    TermFrequency result = TermFrequency.of(Arrays.asList(termMapOne, termMapTwo));
+    TermFrequency result = TermFrequency.of(List.of(termMapOne, termMapTwo));
 
     // Should
     assertEquals(4, result.getTermsFrequency().size());
@@ -118,7 +121,7 @@ public class TermFrequencyCollectorTest {
     assertEquals(5L, termFrequency.getFrequency(DwcTerm.scientificName) + 1);
 
     // State
-    Map<Term, Long> frequencies = Collections.singletonMap(DwcTerm.scientificName, 2L);
+    Map<Term, Long> frequencies = Map.of(DwcTerm.scientificName, 2L);
 
     // When
     anotherTermFrequency.add(frequencies);
@@ -129,7 +132,7 @@ public class TermFrequencyCollectorTest {
     // State
     List<Map<Term, Long>> frequenciesList = new ArrayList<>();
     frequenciesList.add(frequencies);
-    frequenciesList.add(Collections.singletonMap(DwcTerm.lifeStage, 1L));
+    frequenciesList.add(Map.of(DwcTerm.lifeStage, 1L));
 
     // When
     anotherTermFrequency.add(frequenciesList);

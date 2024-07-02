@@ -1,7 +1,5 @@
 package org.gbif.pipelines.transforms.extension;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +66,7 @@ public class MeasurementOrFactTransformTest {
             .setMeasurementType("ext")
             .build();
 
-    List<MeasurementOrFact> mfcList = Arrays.asList(ext, length, mass);
+    List<MeasurementOrFact> mfcList = List.of(ext, length, mass);
     MeasurementOrFactRecord mfc =
         MeasurementOrFactRecord.newBuilder()
             .setId(RECORD_ID)
@@ -114,7 +112,7 @@ public class MeasurementOrFactTransformTest {
             .setMeasurementType("total weight")
             .build();
 
-    List<MeasurementOrFact> mfcList = Arrays.asList(length, mass);
+    List<MeasurementOrFact> mfcList = List.of(length, mass);
     MeasurementOrFactRecord mfc =
         MeasurementOrFactRecord.newBuilder()
             .setId(RECORD_ID)
@@ -195,8 +193,7 @@ public class MeasurementOrFactTransformTest {
     ExtendedRecord.Builder builder = ExtendedRecord.newBuilder().setId(RECORD_ID);
 
     if (dynamic != null) {
-      builder.setCoreTerms(
-          Collections.singletonMap(DwcTerm.dynamicProperties.qualifiedName(), dynamic));
+      builder.setCoreTerms(Map.of(DwcTerm.dynamicProperties.qualifiedName(), dynamic));
     }
 
     if (extension != null) {
@@ -205,8 +202,7 @@ public class MeasurementOrFactTransformTest {
       map.put(DwcTerm.measurementValue.qualifiedName(), extension);
       map.put(DwcTerm.measurementUnit.qualifiedName(), extension);
 
-      builder.setExtensions(
-          Collections.singletonMap(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(map)));
+      builder.setExtensions(Map.of(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(map)));
     }
 
     return builder.build();

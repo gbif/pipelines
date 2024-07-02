@@ -32,8 +32,8 @@ public class AlaTaxonomyInterpreterTest {
     Map<String, String> defaults = new HashMap<>();
     defaults.put("kingdom", "Plantae");
     List<Map<String, String>> hints = new ArrayList<>();
-    hints.add(Collections.singletonMap("phylum", "Charophyta"));
-    hints.add(Collections.singletonMap("phylum", "Bryophyta"));
+    hints.add(Map.of("phylum", "Charophyta"));
+    hints.add(Map.of("phylum", "Bryophyta"));
 
     this.dataResource =
         ALACollectoryMetadata.builder()

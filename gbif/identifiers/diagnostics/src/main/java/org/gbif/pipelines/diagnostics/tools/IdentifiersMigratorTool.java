@@ -117,7 +117,7 @@ public class IdentifiersMigratorTool implements Tool {
                   .build()
                   .migrate();
 
-          if (!skipIssues && !migratedKey.isPresent()) {
+          if (!skipIssues && migratedKey.isEmpty()) {
             log.warn("If you want to skip issues, please use flag --skip-issues");
             break;
           }

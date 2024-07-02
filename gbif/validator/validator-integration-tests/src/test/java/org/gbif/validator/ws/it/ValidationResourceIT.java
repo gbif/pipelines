@@ -12,9 +12,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -129,7 +127,7 @@ public class ValidationResourceIT {
     return ValidationRequest.builder()
         .installationKey(UUID.randomUUID())
         .sourceId(UUID.randomUUID().toString())
-        .notificationEmail(new HashSet<>(Arrays.asList("nobody@gbif.org", "test@gbif.org")))
+        .notificationEmail(Set.of("nobody@gbif.org", "test@gbif.org"))
         .build();
   }
 

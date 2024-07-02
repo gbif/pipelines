@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.utils;
 
-import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -17,8 +17,7 @@ public class ModelUtilsTest {
     ExtendedRecord record =
         ExtendedRecord.newBuilder()
             .setId("777")
-            .setCoreTerms(
-                Collections.singletonMap(DwcTerm.previousIdentifications.qualifiedName(), value))
+            .setCoreTerms(Map.of(DwcTerm.previousIdentifications.qualifiedName(), value))
             .build();
 
     // When
@@ -36,8 +35,7 @@ public class ModelUtilsTest {
     ExtendedRecord record =
         ExtendedRecord.newBuilder()
             .setId("777")
-            .setCoreTerms(
-                Collections.singletonMap(DwcTerm.previousIdentifications.qualifiedName(), value))
+            .setCoreTerms(Map.of(DwcTerm.previousIdentifications.qualifiedName(), value))
             .build();
 
     // When

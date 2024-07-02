@@ -1,6 +1,5 @@
 package org.gbif.pipelines.transforms.core;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +24,7 @@ public class ConvexHullFnTest {
 
     // Tests an accumulator built from a collection of coordinates
     ConvexHullFn.Accum accum = new ConvexHullFn.Accum();
-    List<Coordinate> coordinates = Arrays.asList(geometry.getCoordinates());
+    List<Coordinate> coordinates = List.of(geometry.getCoordinates());
     accum.acc(new HashSet<>(coordinates));
     assertAccum(accum, geometry);
 

@@ -1,7 +1,5 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,14 +69,12 @@ public class MultimediaInterpreterTest {
     ext5.put(DcTerm.identifier.qualifiedName(), "https://iiif.rbge.org.uk/herb/iiif/E0001001");
 
     Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
-    ext.put(Extension.MULTIMEDIA.getRowType(), Arrays.asList(ext1, ext2, ext3, ext4, ext5));
+    ext.put(Extension.MULTIMEDIA.getRowType(), List.of(ext1, ext2, ext3, ext4, ext5));
 
     ExtendedRecord record =
         ExtendedRecord.newBuilder()
             .setId("id")
-            .setCoreTerms(
-                Collections.singletonMap(
-                    DwcTerm.associatedMedia.qualifiedName(), "www.gbif.org/tmp22.jpg"))
+            .setCoreTerms(Map.of(DwcTerm.associatedMedia.qualifiedName(), "www.gbif.org/tmp22.jpg"))
             .setExtensions(ext)
             .build();
 

@@ -8,9 +8,6 @@ import static org.junit.Assert.assertTrue;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -85,9 +82,8 @@ public class HttpRequestBuilderTest {
   public void bodyWithSettingsMapTest() {
 
     // State
-    Map<String, String> settings = new HashMap<>();
-    settings.put(Field.INDEX_NUMBER_REPLICAS, "1");
-    settings.put(Field.INDEX_NUMBER_SHARDS, "2");
+    Map<String, String> settings =
+        Map.of(Field.INDEX_NUMBER_REPLICAS, "1", Field.INDEX_NUMBER_SHARDS, "2");
 
     HttpEntity entity = HttpRequestBuilder.newInstance().withSettingsMap(settings).build();
 
@@ -107,9 +103,9 @@ public class HttpRequestBuilderTest {
     // State
     String alias1 = "alias1";
     String alias2 = "alias2";
-    Set<String> aliases = new HashSet<>(Arrays.asList(alias1, alias2));
-    Set<String> idxToAdd = new HashSet<>(Arrays.asList("add1", "add2"));
-    Set<String> idxToRemove = new HashSet<>(Arrays.asList("remove1", "remove2"));
+    Set<String> aliases = Set.of(alias1, alias2);
+    Set<String> idxToAdd = Set.of("add1", "add2");
+    Set<String> idxToRemove = Set.of("remove1", "remove2");
 
     HttpEntity entity =
         HttpRequestBuilder.newInstance()

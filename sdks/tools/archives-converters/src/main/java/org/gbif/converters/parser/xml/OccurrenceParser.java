@@ -162,7 +162,7 @@ public class OccurrenceParser {
               .map(charset -> read(gzipFile, charset))
               .filter(Objects::nonNull)
               .findFirst();
-      if (!responseBody.isPresent()) {
+      if (responseBody.isEmpty()) {
         log.warn(
             "Could not parse gzipFile (malformed parsing) - skipping gzipFile [{}]",
             gzipFile.getAbsolutePath());

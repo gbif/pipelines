@@ -1,7 +1,6 @@
 package org.gbif.pipelines.transforms.java;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,17 +15,18 @@ public class OccurrenceExtensionTransformTest {
   public void extraOccInExtTest() {
 
     // State
-    List<Map<String, String>> ext = new ArrayList<>();
-    ext.add(Collections.singletonMap(DwcTerm.occurrenceID.qualifiedName(), "value1"));
-    ext.add(Collections.singletonMap(DwcTerm.occurrenceID.qualifiedName(), "value2"));
-    ext.add(Collections.singletonMap(DwcTerm.occurrenceID.qualifiedName(), "value3"));
+    List<Map<String, String>> ext =
+        List.of(
+            Map.of(DwcTerm.occurrenceID.qualifiedName(), "value1"),
+            Map.of(DwcTerm.occurrenceID.qualifiedName(), "value2"),
+            Map.of(DwcTerm.occurrenceID.qualifiedName(), "value3"));
     ExtendedRecord record =
         ExtendedRecord.newBuilder()
             .setId("777")
-            .setCoreTerms(Collections.singletonMap("key1", "value1"))
-            .setExtensions(Collections.singletonMap(DwcTerm.Occurrence.qualifiedName(), ext))
+            .setCoreTerms(Map.of("key1", "value1"))
+            .setExtensions(Map.of(DwcTerm.Occurrence.qualifiedName(), ext))
             .build();
-    Map<String, ExtendedRecord> value = Collections.singletonMap(record.getId(), record);
+    Map<String, ExtendedRecord> value = Map.of(record.getId(), record);
 
     AtomicInteger counter = new AtomicInteger(0);
 
@@ -46,15 +46,15 @@ public class OccurrenceExtensionTransformTest {
 
     // State
     List<Map<String, String>> ext = new ArrayList<>();
-    ext.add(Collections.singletonMap(DwcTerm.occurrenceID.qualifiedName(), "value1"));
-    ext.add(Collections.singletonMap(DwcTerm.occurrenceID.qualifiedName(), ""));
+    ext.add(Map.of(DwcTerm.occurrenceID.qualifiedName(), "value1"));
+    ext.add(Map.of(DwcTerm.occurrenceID.qualifiedName(), ""));
     ExtendedRecord record =
         ExtendedRecord.newBuilder()
             .setId("")
-            .setCoreTerms(Collections.singletonMap("key1", "value1"))
-            .setExtensions(Collections.singletonMap(DwcTerm.Occurrence.qualifiedName(), ext))
+            .setCoreTerms(Map.of("key1", "value1"))
+            .setExtensions(Map.of(DwcTerm.Occurrence.qualifiedName(), ext))
             .build();
-    Map<String, ExtendedRecord> value = Collections.singletonMap(record.getId(), record);
+    Map<String, ExtendedRecord> value = Map.of(record.getId(), record);
 
     AtomicInteger counter = new AtomicInteger(0);
 

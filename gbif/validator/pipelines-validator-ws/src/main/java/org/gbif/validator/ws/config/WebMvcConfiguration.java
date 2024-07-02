@@ -15,7 +15,6 @@
  */
 package org.gbif.validator.ws.config;
 
-import java.util.Arrays;
 import java.util.List;
 import org.gbif.ws.converter.UuidTextMessageConverter;
 import org.gbif.ws.server.provider.PageableHandlerMethodArgumentResolver;
@@ -48,7 +47,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
   public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
     StringHttpMessageConverter stringHttpMessageConverter = new StringHttpMessageConverter();
     stringHttpMessageConverter.setSupportedMediaTypes(
-        Arrays.asList(MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN));
+        List.of(MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN));
     converters.add(stringHttpMessageConverter);
     converters.add(new UuidTextMessageConverter());
   }

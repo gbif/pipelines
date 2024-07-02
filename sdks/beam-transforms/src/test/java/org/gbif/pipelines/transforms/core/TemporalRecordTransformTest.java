@@ -3,7 +3,6 @@ package org.gbif.pipelines.transforms.core;
 import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -248,11 +247,7 @@ public class TemporalRecordTransformTest {
     // When
     PCollection<TemporalRecord> dataStream =
         p.apply(Create.of(input))
-            .apply(
-                TemporalTransform.builder()
-                    .orderings(Arrays.asList(DMY_FORMATS))
-                    .create()
-                    .interpret())
+            .apply(TemporalTransform.builder().orderings(List.of(DMY_FORMATS)).create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should

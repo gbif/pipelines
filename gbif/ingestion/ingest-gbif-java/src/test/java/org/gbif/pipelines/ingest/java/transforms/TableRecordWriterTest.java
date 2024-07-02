@@ -6,7 +6,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -35,7 +34,7 @@ public class TableRecordWriterTest {
         IdentifierRecord.newBuilder().setId("1").setInternalId(gbifID).build();
     IdentifierRecord skipIdRecord =
         IdentifierRecord.newBuilder().setId("1").setInternalId("-" + gbifID).build();
-    List<IdentifierRecord> list = Arrays.asList(idRecord, skipIdRecord);
+    List<IdentifierRecord> list = List.of(idRecord, skipIdRecord);
 
     Function<IdentifierRecord, List<OccurrenceHdfsRecord>> fn =
         id -> {
@@ -109,7 +108,7 @@ public class TableRecordWriterTest {
         IdentifierRecord.newBuilder().setId("1").setInternalId(gbifID).build();
     IdentifierRecord skipIdRecord =
         IdentifierRecord.newBuilder().setId("1").setInternalId("-" + gbifID).build();
-    List<IdentifierRecord> list = Arrays.asList(idRecord, skipIdRecord);
+    List<IdentifierRecord> list = List.of(idRecord, skipIdRecord);
 
     Function<IdentifierRecord, List<OccurrenceHdfsRecord>> fn =
         id -> {

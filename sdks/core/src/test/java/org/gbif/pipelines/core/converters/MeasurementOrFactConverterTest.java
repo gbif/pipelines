@@ -22,8 +22,7 @@ public class MeasurementOrFactConverterTest {
     ExtendedRecord er =
         ExtendedRecord.newBuilder()
             .setId(ID)
-            .setCoreTerms(
-                Collections.singletonMap(DwcTerm.dynamicProperties.qualifiedName(), value))
+            .setCoreTerms(Map.of(DwcTerm.dynamicProperties.qualifiedName(), value))
             .build();
 
     // When
@@ -49,8 +48,7 @@ public class MeasurementOrFactConverterTest {
     ExtendedRecord er =
         ExtendedRecord.newBuilder()
             .setId(ID)
-            .setCoreTerms(
-                Collections.singletonMap(DwcTerm.dynamicProperties.qualifiedName(), value))
+            .setCoreTerms(Map.of(DwcTerm.dynamicProperties.qualifiedName(), value))
             .build();
 
     // When

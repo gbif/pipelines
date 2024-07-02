@@ -1,7 +1,5 @@
 package org.gbif.pipelines.transforms.converters;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,9 +110,7 @@ public class EventJsonTransformTest {
             .setCoreRowType("core")
             .setCoreTerms(erMap)
             .setExtensions(
-                Collections.singletonMap(
-                    "http://rs.tdwg.org/ac/terms/Multimedia",
-                    List.of(Collections.singletonMap("k", "v"))))
+                Map.of("http://rs.tdwg.org/ac/terms/Multimedia", List.of(Map.of("k", "v"))))
             .build();
 
     EventCoreRecord ecr = EventCoreRecord.newBuilder().setId("777").build();
@@ -223,7 +219,7 @@ public class EventJsonTransformTest {
     MultimediaRecord mmr =
         MultimediaRecord.newBuilder()
             .setId("777")
-            .setMultimediaItems(Arrays.asList(stillImage, movingImage))
+            .setMultimediaItems(List.of(stillImage, movingImage))
             .build();
 
     // Core

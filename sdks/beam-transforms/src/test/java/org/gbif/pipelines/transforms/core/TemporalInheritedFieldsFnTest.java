@@ -2,7 +2,7 @@ package org.gbif.pipelines.transforms.core;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
+import java.util.List;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 import org.junit.Test;
@@ -32,14 +32,14 @@ public class TemporalInheritedFieldsFnTest {
 
     // Merge
     TemporalInheritedFieldsFn.Accum mergedAccum =
-        temporalInheritedFieldsFn.mergeAccumulators(Arrays.asList(accum1, accum2));
+        temporalInheritedFieldsFn.mergeAccumulators(List.of(accum1, accum2));
 
     // Get the result
     TemporalInheritedRecord temporalInheritedRecord =
         temporalInheritedFieldsFn.extractOutput(mergedAccum);
 
     // Results are from the immediate parent
-    assertEquals(new Integer(2022), temporalInheritedRecord.getYear());
-    assertEquals(new Integer(6), temporalInheritedRecord.getMonth());
+    assertEquals(Integer.valueOf(2022), temporalInheritedRecord.getYear());
+    assertEquals(Integer.valueOf(6), temporalInheritedRecord.getMonth());
   }
 }

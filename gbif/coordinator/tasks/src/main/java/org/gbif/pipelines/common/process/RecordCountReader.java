@@ -35,11 +35,11 @@ public class RecordCountReader {
     }
 
     Optional<Long> fileNumber = HdfsUtils.getLongByKey(hdfsConfigs, metaPath, metricName);
-    if (alternativeMetricName != null && !fileNumber.isPresent()) {
+    if (alternativeMetricName != null && fileNumber.isEmpty()) {
       fileNumber = HdfsUtils.getLongByKey(hdfsConfigs, metaPath, alternativeMetricName);
     }
 
-    if (messageNumber == null && !fileNumber.isPresent()) {
+    if (messageNumber == null && fileNumber.isEmpty()) {
       throw new IllegalArgumentException(
           "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
@@ -48,7 +48,7 @@ public class RecordCountReader {
       return fileNumber.get();
     }
 
-    if (!fileNumber.isPresent() || messageNumber > fileNumber.get()) {
+    if (fileNumber.isEmpty() || messageNumber > fileNumber.get()) {
       return messageNumber;
     }
 

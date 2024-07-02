@@ -5,8 +5,6 @@ import static org.gbif.api.model.pipelines.StepRunner.DISTRIBUTED;
 import static org.gbif.api.model.pipelines.StepType.VERBATIM_TO_INTERPRETED;
 import static org.junit.Assert.*;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -68,7 +66,7 @@ public class BeamParametersBuilderTest {
         resultParameters.toList().stream().sorted().collect(Collectors.toList());
 
     List<String> expectedList =
-        Arrays.asList(
+        List.of(
             "--attempt=60",
             "--avroCompressionType=snappy",
             "--avroSyncInterval=2097152",
@@ -131,7 +129,7 @@ public class BeamParametersBuilderTest {
         resultParameters.toList().stream().sorted().collect(Collectors.toList());
 
     List<String> expectedList =
-        Arrays.asList(
+        List.of(
             "--attempt=60",
             "--avroCompressionType=snappy",
             "--avroSyncInterval=2097152",
@@ -172,7 +170,7 @@ public class BeamParametersBuilderTest {
         new PipelinesInterpretedMessage(
             uuid,
             attempt,
-            new HashSet<>(Arrays.asList(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name())),
+            Set.of(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name()),
             (long) 10,
             null,
             StepRunner.STANDALONE.name(),
@@ -195,7 +193,7 @@ public class BeamParametersBuilderTest {
         resultParameters.toList().stream().sorted().collect(Collectors.toList());
 
     List<String> expectedList =
-        Arrays.asList(
+        List.of(
             "--attempt=60",
             "--coreSiteConfig=coreSiteConfig",
             "--datasetId=9bed66b3-4caa-42bb-9c93-71d7ba109dad",
@@ -232,7 +230,7 @@ public class BeamParametersBuilderTest {
         new PipelinesInterpretedMessage(
             uuid,
             attempt,
-            new HashSet<>(Arrays.asList(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name())),
+            Set.of(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name()),
             (long) 10,
             null,
             StepRunner.STANDALONE.name(),
@@ -252,7 +250,7 @@ public class BeamParametersBuilderTest {
         resultParameters.toList().stream().sorted().collect(Collectors.toList());
 
     List<String> expectedList =
-        Arrays.asList(
+        List.of(
             "--attempt=60",
             "--coreSiteConfig=coreSiteConfig",
             "--datasetId=9bed66b3-4caa-42bb-9c93-71d7ba109dad",

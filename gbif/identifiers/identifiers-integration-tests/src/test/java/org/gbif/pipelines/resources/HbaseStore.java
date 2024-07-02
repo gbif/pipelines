@@ -1,7 +1,5 @@
 package org.gbif.pipelines.resources;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -21,7 +19,7 @@ public class HbaseStore {
   }
 
   public static void putRecords(HBaseStore<String> lookupTableStore, KV... kv) {
-    putRecords(lookupTableStore, new HashSet<>(Arrays.asList(kv)));
+    putRecords(lookupTableStore, Set.of(kv));
   }
 
   @AllArgsConstructor(staticName = "create")

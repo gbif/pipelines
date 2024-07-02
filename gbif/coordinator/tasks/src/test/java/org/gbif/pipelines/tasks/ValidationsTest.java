@@ -1,8 +1,6 @@
 package org.gbif.pipelines.tasks;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -35,16 +33,15 @@ public class ValidationsTest {
             .metrics(
                 Metrics.builder()
                     .stepTypes(
-                        new ArrayList<>(
-                            Arrays.asList(
-                                ValidationStep.builder()
-                                    .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE.name())
-                                    .status(Status.FINISHED)
-                                    .build(),
-                                ValidationStep.builder()
-                                    .stepType(StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name())
-                                    .status(Status.RUNNING)
-                                    .build())))
+                        List.of(
+                            ValidationStep.builder()
+                                .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE.name())
+                                .status(Status.FINISHED)
+                                .build(),
+                            ValidationStep.builder()
+                                .stepType(StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name())
+                                .status(Status.RUNNING)
+                                .build()))
                     .fileInfos(
                         List.of(
                             FileInfo.builder()
@@ -78,16 +75,15 @@ public class ValidationsTest {
             .metrics(
                 Metrics.builder()
                     .stepTypes(
-                        new ArrayList<>(
-                            Arrays.asList(
-                                ValidationStep.builder()
-                                    .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE.name())
-                                    .status(Status.FINISHED)
-                                    .build(),
-                                ValidationStep.builder()
-                                    .stepType(StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name())
-                                    .status(Status.RUNNING)
-                                    .build())))
+                        List.of(
+                            ValidationStep.builder()
+                                .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE.name())
+                                .status(Status.FINISHED)
+                                .build(),
+                            ValidationStep.builder()
+                                .stepType(StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name())
+                                .status(Status.RUNNING)
+                                .build()))
                     .fileInfos(
                         List.of(
                             FileInfo.builder()

@@ -1,7 +1,6 @@
 package org.gbif.converters.parser.xml.parsing.validators;
 
 import com.google.common.base.Stopwatch;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +35,7 @@ public class UniquenessValidatorTest {
 
     try (UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
       // add duplicates
-      List<String> duplicates = Arrays.asList("12.1", "1234.1", "111.1", "12.12");
+      List<String> duplicates = List.of("12.1", "1234.1", "111.1", "12.12");
 
       long duplicatesFound = duplicates.stream().filter(id -> !validator.isUnique(id)).count();
 
@@ -55,7 +54,7 @@ public class UniquenessValidatorTest {
 
       // add more duplicates
       duplicates =
-          Arrays.asList(
+          List.of(
               "12.1", "1234.1", "11.1", "12.1", "1234.1", "11.1", "12.12", "12.1", "1234.1",
               "11.1");
 

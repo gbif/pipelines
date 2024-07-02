@@ -8,8 +8,6 @@ import static org.junit.Assert.assertTrue;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -171,8 +169,7 @@ public class HdfsViewCallbackIT {
     message.setRunner(StepRunner.STANDALONE.name());
     message.setInterpretTypes(Set.of("ALL"));
     message.setPipelineSteps(
-        new HashSet<>(
-            Arrays.asList(StepType.INTERPRETED_TO_INDEX.name(), StepType.HDFS_VIEW.name())));
+        Set.of(StepType.INTERPRETED_TO_INDEX.name(), StepType.HDFS_VIEW.name()));
     message.setValidationResult(new ValidationResult(true, true, false, 1_000L, 0L));
     return message;
   }

@@ -3,7 +3,6 @@ package org.gbif.pipelines.transforms.common;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -18,7 +17,7 @@ public class NotNullOrEmptyFilterTest {
     ExtendedRecord withParentCoredId =
         ExtendedRecord.newBuilder().setId("1").setCoreId("1").build();
     ExtendedRecord withOutParentCoredId = ExtendedRecord.newBuilder().setId("1").build();
-    List<ExtendedRecord> verbatimRecords = Arrays.asList(withParentCoredId, withOutParentCoredId);
+    List<ExtendedRecord> verbatimRecords = List.of(withParentCoredId, withOutParentCoredId);
 
     // Filter using Beam function
     Optional<ExtendedRecord> filteredRecord =

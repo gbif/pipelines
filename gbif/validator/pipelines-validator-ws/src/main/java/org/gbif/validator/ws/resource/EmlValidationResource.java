@@ -1,7 +1,6 @@
 package org.gbif.validator.ws.resource;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -37,6 +36,6 @@ public class EmlValidationResource {
   /** List the supported schemas. */
   @GetMapping("schemas")
   public List<String> getSchemas() {
-    return Arrays.asList(schemaLocations.getEml(), schemaLocations.getEmlGbifProfile());
+    return List.of(schemaLocations.getEml(), schemaLocations.getEmlGbifProfile());
   }
 }

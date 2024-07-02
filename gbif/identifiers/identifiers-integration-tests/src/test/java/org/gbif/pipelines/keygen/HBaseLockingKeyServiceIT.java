@@ -7,8 +7,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -41,10 +39,7 @@ public class HBaseLockingKeyServiceIT {
 
   @Test
   public void testNoContention() {
-    Set<String> uniqueIds = new HashSet<>();
-    uniqueIds.add("a");
-    uniqueIds.add("b");
-    uniqueIds.add("c");
+    Set<String> uniqueIds = Set.of("a", "b", "c");
     KeyLookupResult result = HBASE_SERVER.keyService.generateKey(uniqueIds, "boo");
     assertEquals(1, result.getKey());
     assertTrue(result.isCreated());
@@ -74,8 +69,7 @@ public class HBaseLockingKeyServiceIT {
     // test: keygen attempt uses previous unique id and a new "occurrenceId", expects the existing
     // key to be returned
     KeyLookupResult result =
-        HBASE_SERVER.keyService.generateKey(
-            new HashSet<>(Arrays.asList(triplet, "ABCD")), datasetKey);
+        HBASE_SERVER.keyService.generateKey(Set.of(triplet, "ABCD"), datasetKey);
     assertEquals(2, result.getKey());
     assertFalse(result.isCreated());
   }
@@ -131,8 +125,7 @@ public class HBaseLockingKeyServiceIT {
 
     // test: 3rd keygen attempt uses both previous unique ids, expects a new key to be generated
     KeyLookupResult result =
-        HBASE_SERVER.keyService.generateKey(
-            new HashSet<>(Arrays.asList("ABCD", "EFGH")), datasetKey);
+        HBASE_SERVER.keyService.generateKey(Set.of("ABCD", "EFGH"), datasetKey);
     assertEquals(1, result.getKey());
   }
 
@@ -165,7 +158,7 @@ public class HBaseLockingKeyServiceIT {
             + "|ABCD]=[1]["
             + datasetKey
             + "|EFGH]=[2]");
-    HBASE_SERVER.keyService.generateKey(new HashSet<>(Arrays.asList("ABCD", "EFGH")), datasetKey);
+    HBASE_SERVER.keyService.generateKey(Set.of("ABCD", "EFGH"), datasetKey);
   }
 
   @Test

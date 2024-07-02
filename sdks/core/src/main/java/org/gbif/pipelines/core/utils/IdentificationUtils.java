@@ -73,7 +73,7 @@ public class IdentificationUtils {
         TemporalAccessor result = TEMPORAL_PARSER.parse(rawDateIdentified).getPayload();
 
         Optional<Long> time = getTime(result);
-        if (!time.isPresent()) {
+        if (time.isEmpty()) {
           // since we can't determine the time of this extension we can't determine which extension
           // is the most recent
           return Optional.empty();

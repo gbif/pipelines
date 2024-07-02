@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.parsers.vertnet;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -23,7 +22,7 @@ public class SexParser {
       Pattern.compile("\\b(?<value>(?:males?|females?)(?:\\s*\\?)?)\\b");
 
   private static final List<Pattern> PATTERNS =
-      Arrays.asList(SEX_KEY_VALUE_DELIMITED, SEX_KEY_VALUE_UNDELIMITED, SEX_UNKEYED);
+      List.of(SEX_KEY_VALUE_DELIMITED, SEX_KEY_VALUE_UNDELIMITED, SEX_UNKEYED);
 
   public static Optional<String> parse(String source) {
     if (source == null || source.isEmpty()) {

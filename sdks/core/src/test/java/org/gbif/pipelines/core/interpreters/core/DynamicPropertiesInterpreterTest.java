@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import java.util.Collections;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -20,7 +20,7 @@ public class DynamicPropertiesInterpreterTest {
       (term, value) ->
           ExtendedRecord.newBuilder()
               .setId(ID)
-              .setCoreTerms(Collections.singletonMap(term.qualifiedName(), value))
+              .setCoreTerms(Map.of(term.qualifiedName(), value))
               .build();
 
   private final Function<String, ExtendedRecord> erDynamicPropertiesFn =

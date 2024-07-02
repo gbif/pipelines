@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -94,19 +93,21 @@ public class VerbatimToIdentifierPipelineIT {
     try (SyncDataFileWriter<ExtendedRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             options, VerbatimTransform.create(), CORE_TERM, ID)) {
-      Map<String, String> ext1 = new HashMap<>();
-      ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");
-      ext1.put(DwcTerm.measurementType.qualifiedName(), "Type1");
-      ext1.put(DwcTerm.measurementValue.qualifiedName(), "1.5");
-      ext1.put(DwcTerm.measurementAccuracy.qualifiedName(), "Accurancy1");
-      ext1.put(DwcTerm.measurementUnit.qualifiedName(), "Unit1");
-      ext1.put(DwcTerm.measurementDeterminedBy.qualifiedName(), "By1");
-      ext1.put(DwcTerm.measurementMethod.qualifiedName(), "Method1");
-      ext1.put(DwcTerm.measurementRemarks.qualifiedName(), "Remarks1");
-      ext1.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
 
-      Map<String, List<Map<String, String>>> ext = new HashMap<>();
-      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
+      Map<String, String> ext1 =
+          Map.of(
+              DwcTerm.measurementID.qualifiedName(), "Id1",
+              DwcTerm.measurementType.qualifiedName(), "Type1",
+              DwcTerm.measurementValue.qualifiedName(), "1.5",
+              DwcTerm.measurementAccuracy.qualifiedName(), "Accurancy1",
+              DwcTerm.measurementUnit.qualifiedName(), "Unit1",
+              DwcTerm.measurementDeterminedBy.qualifiedName(), "By1",
+              DwcTerm.measurementMethod.qualifiedName(), "Method1",
+              DwcTerm.measurementRemarks.qualifiedName(), "Remarks1",
+              DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
+
+      Map<String, List<Map<String, String>>> ext =
+          Map.of(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
 
       ExtendedRecord extendedRecord =
           ExtendedRecord.newBuilder().setId(ID).setExtensions(ext).build();

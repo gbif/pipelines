@@ -4,8 +4,8 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_NEGATED_LATITUDE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_NEGATED_LONGITUDE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE;
 
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.UnaryOperator;
@@ -44,7 +44,7 @@ public class CoordinatesFunction {
     }
     if (transformation == NEGATED_COORDS_FN) {
       return new TreeSet<>(
-          Arrays.asList(PRESUMED_NEGATED_LATITUDE.name(), PRESUMED_NEGATED_LONGITUDE.name()));
+          List.of(PRESUMED_NEGATED_LATITUDE.name(), PRESUMED_NEGATED_LONGITUDE.name()));
     }
     if (transformation == SWAPPED_COORDS_FN) {
       return Set.of(PRESUMED_SWAPPED_COORDINATE.name());

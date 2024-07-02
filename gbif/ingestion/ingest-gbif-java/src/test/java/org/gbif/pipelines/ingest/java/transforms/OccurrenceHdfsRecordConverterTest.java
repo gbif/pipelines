@@ -2,7 +2,6 @@ package org.gbif.pipelines.ingest.java.transforms;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,17 +52,17 @@ public class OccurrenceHdfsRecordConverterTest {
         OccurrenceHdfsRecordConverter.builder()
             .metrics(metrics)
             .metadata(metadataRecord)
-            .verbatimMap(Collections.singletonMap(ID, extendedRecord))
-            .temporalMap(Collections.singletonMap(ID, temporalRecord))
-            .basicMap(Collections.singletonMap(ID, basicRecord))
-            .clusteringMap(Collections.singletonMap(ID, clusteringRecord))
-            .locationMap(Collections.singletonMap(ID, locationRecord))
-            .taxonMap(Collections.singletonMap(ID, taxonRecord))
-            .grscicollMap(Collections.singletonMap(ID, grscicollRecord))
-            .multimediaMap(Collections.singletonMap(ID, multimediaRecord))
-            .imageMap(Collections.singletonMap(ID, imageRecord))
-            .audubonMap(Collections.singletonMap(ID, audubonRecord))
-            .eventCoreRecordMap(Collections.singletonMap(ID, eventCoreRecord))
+            .verbatimMap(Map.of(ID, extendedRecord))
+            .temporalMap(Map.of(ID, temporalRecord))
+            .basicMap(Map.of(ID, basicRecord))
+            .clusteringMap(Map.of(ID, clusteringRecord))
+            .locationMap(Map.of(ID, locationRecord))
+            .taxonMap(Map.of(ID, taxonRecord))
+            .grscicollMap(Map.of(ID, grscicollRecord))
+            .multimediaMap(Map.of(ID, multimediaRecord))
+            .imageMap(Map.of(ID, imageRecord))
+            .audubonMap(Map.of(ID, audubonRecord))
+            .eventCoreRecordMap(Map.of(ID, eventCoreRecord))
             .build()
             .getFn()
             .apply(idRecord);

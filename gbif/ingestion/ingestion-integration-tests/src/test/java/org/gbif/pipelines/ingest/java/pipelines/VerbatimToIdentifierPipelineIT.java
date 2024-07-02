@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -91,15 +90,15 @@ public class VerbatimToIdentifierPipelineIT {
         InterpretedAvroWriter.createAvroWriter(
             options, VerbatimTransform.create(), CORE_TERM, ID)) {
 
-      Map<String, String> core = new HashMap<>();
-      core.put(DwcTerm.identifiedBy.qualifiedName(), "Id1");
+      Map<String, String> core = Map.of(DwcTerm.identifiedBy.qualifiedName(), "Id1");
 
-      Map<String, String> ext1 = new HashMap<>();
-      ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");
-      ext1.put(DwcTerm.measurementType.qualifiedName(), "Type1");
+      Map<String, String> ext1 =
+          Map.of(
+              DwcTerm.measurementID.qualifiedName(), "Id1",
+              DwcTerm.measurementType.qualifiedName(), "Type1");
 
-      Map<String, List<Map<String, String>>> ext = new HashMap<>();
-      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
+      Map<String, List<Map<String, String>>> ext =
+          Map.of(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
 
       ExtendedRecord extendedRecord =
           ExtendedRecord.newBuilder().setId(ID).setCoreTerms(core).setExtensions(ext).build();

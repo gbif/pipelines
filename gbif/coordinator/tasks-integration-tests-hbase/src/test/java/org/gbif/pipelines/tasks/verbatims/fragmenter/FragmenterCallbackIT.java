@@ -7,8 +7,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,7 +96,7 @@ public class FragmenterCallbackIT {
         new PipelinesInterpretedMessage(
             uuid,
             attempt,
-            new HashSet<>(Arrays.asList(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name())),
+            Set.of(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name()),
             (long) expSize,
             null,
             StepRunner.STANDALONE.name(),
@@ -161,7 +159,7 @@ public class FragmenterCallbackIT {
         new PipelinesInterpretedMessage(
             uuid,
             attempt,
-            new HashSet<>(Arrays.asList(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name())),
+            Set.of(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name()),
             (long) expSize,
             null,
             StepRunner.DISTRIBUTED.name(),
@@ -224,7 +222,7 @@ public class FragmenterCallbackIT {
         new PipelinesInterpretedMessage(
             uuid,
             attempt,
-            new HashSet<>(Arrays.asList(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name())),
+            Set.of(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name()),
             (long) expSize,
             null,
             StepRunner.STANDALONE.name(),

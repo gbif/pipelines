@@ -11,9 +11,7 @@ import static org.junit.Assert.assertTrue;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -171,7 +169,7 @@ public class EsServiceIT extends EsApiIntegration {
                 .indexName("get-indexes-by-alias-and-swap-index-test-3")
                 .settingsType(INDEXING)
                 .build());
-    Set<String> initialIndexes = new HashSet<>(Arrays.asList(idx1, idx2, idx3));
+    Set<String> initialIndexes = Set.of(idx1, idx2, idx3);
 
     EsApiIntegration.addIndexesToAlias(alias, initialIndexes);
 
@@ -246,9 +244,9 @@ public class EsServiceIT extends EsApiIntegration {
                 .indexName("swap-in-multiple-aliases-test-3")
                 .settingsType(INDEXING)
                 .build());
-    Set<String> initialIndexes = new HashSet<>(Arrays.asList(idx1, idx2, idx3));
+    Set<String> initialIndexes = Set.of(idx1, idx2, idx3);
 
-    Set<String> aliases = new HashSet<>(Arrays.asList(alias1, alias2));
+    Set<String> aliases = Set.of(alias1, alias2);
     EsApiIntegration.addIndexesToAliases(aliases, initialIndexes);
 
     String idx4 =
@@ -489,9 +487,7 @@ public class EsServiceIT extends EsApiIntegration {
                 .settingsType(INDEXING)
                 .mappings(TEST_MAPPINGS)
                 .build());
-    Set<String> indexes = new HashSet<>();
-    indexes.add(idx1);
-    indexes.add(idx2);
+    Set<String> indexes = Set.of(idx1, idx2);
 
     // we create another empty index to check that it's discarded
     EsService.createIndex(

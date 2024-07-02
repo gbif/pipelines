@@ -98,36 +98,39 @@ public class VerbatimToEventPipelineIT {
         InterpretedAvroWriter.createAvroWriter(
             options, VerbatimTransform.create(), CORE_TERM, ID)) {
 
-      Map<String, String> core = new HashMap<>();
-      core.put(DwcTerm.datasetID.qualifiedName(), "datasetID");
-      core.put(DwcTerm.institutionID.qualifiedName(), "institutionID");
-      core.put(DwcTerm.datasetName.qualifiedName(), "datasetName");
-      core.put(DwcTerm.eventID.qualifiedName(), "eventID");
-      core.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
-      core.put(DwcTerm.eventType.qualifiedName(), "Survey");
+      Map<String, String> core =
+          Map.of(
+              DwcTerm.datasetID.qualifiedName(), "datasetID",
+              DwcTerm.institutionID.qualifiedName(), "institutionID",
+              DwcTerm.datasetName.qualifiedName(), "datasetName",
+              DwcTerm.eventID.qualifiedName(), "eventID",
+              DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol",
+              DwcTerm.eventType.qualifiedName(), "Survey");
 
-      Map<String, String> ext1 = new HashMap<>();
-      ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");
-      ext1.put(DwcTerm.measurementType.qualifiedName(), "Type1");
-      ext1.put(DwcTerm.measurementValue.qualifiedName(), "1.5");
-      ext1.put(DwcTerm.measurementAccuracy.qualifiedName(), "Accurancy1");
-      ext1.put(DwcTerm.measurementUnit.qualifiedName(), "Unit1");
-      ext1.put(DwcTerm.measurementDeterminedBy.qualifiedName(), "By1");
-      ext1.put(DwcTerm.measurementMethod.qualifiedName(), "Method1");
-      ext1.put(DwcTerm.measurementRemarks.qualifiedName(), "Remarks1");
-      ext1.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
+      Map<String, String> ext1 =
+          Map.of(
+              DwcTerm.measurementID.qualifiedName(), "Id1",
+              DwcTerm.measurementType.qualifiedName(), "Type1",
+              DwcTerm.measurementValue.qualifiedName(), "1.5",
+              DwcTerm.measurementAccuracy.qualifiedName(), "Accurancy1",
+              DwcTerm.measurementUnit.qualifiedName(), "Unit1",
+              DwcTerm.measurementDeterminedBy.qualifiedName(), "By1",
+              DwcTerm.measurementMethod.qualifiedName(), "Method1",
+              DwcTerm.measurementRemarks.qualifiedName(), "Remarks1",
+              DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
 
-      Map<String, String> core2 = new HashMap<>();
-      core2.put(DwcTerm.datasetID.qualifiedName(), "datasetID");
-      core2.put(DwcTerm.institutionID.qualifiedName(), "institutionID");
-      core2.put(DwcTerm.datasetName.qualifiedName(), "datasetName");
-      core2.put(DwcTerm.eventID.qualifiedName(), "eventID2");
-      core2.put(DwcTerm.parentEventID.qualifiedName(), "777");
-      core2.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
-      core2.put(DwcTerm.eventType.qualifiedName(), "Find");
+      Map<String, String> core2 =
+          Map.of(
+              DwcTerm.datasetID.qualifiedName(), "datasetID",
+              DwcTerm.institutionID.qualifiedName(), "institutionID",
+              DwcTerm.datasetName.qualifiedName(), "datasetName",
+              DwcTerm.eventID.qualifiedName(), "eventID2",
+              DwcTerm.parentEventID.qualifiedName(), "777",
+              DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol",
+              DwcTerm.eventType.qualifiedName(), "Find");
 
-      Map<String, List<Map<String, String>>> ext = new HashMap<>();
-      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
+      Map<String, List<Map<String, String>>> ext =
+          Map.of(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
 
       ExtendedRecord extendedRecord =
           ExtendedRecord.newBuilder()

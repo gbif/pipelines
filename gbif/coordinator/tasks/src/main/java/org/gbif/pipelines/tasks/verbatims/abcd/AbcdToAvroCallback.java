@@ -9,8 +9,6 @@ import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import lombok.Builder;
@@ -90,14 +88,13 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
 
     if (message.getPipelineSteps().isEmpty()) {
       message.setPipelineSteps(
-          new HashSet<>(
-              Arrays.asList(
-                  StepType.ABCD_TO_VERBATIM.name(),
-                  StepType.VERBATIM_TO_IDENTIFIER.name(),
-                  StepType.VERBATIM_TO_INTERPRETED.name(),
-                  StepType.INTERPRETED_TO_INDEX.name(),
-                  StepType.HDFS_VIEW.name(),
-                  StepType.FRAGMENTER.name())));
+          Set.of(
+              StepType.ABCD_TO_VERBATIM.name(),
+              StepType.VERBATIM_TO_IDENTIFIER.name(),
+              StepType.VERBATIM_TO_INTERPRETED.name(),
+              StepType.INTERPRETED_TO_INDEX.name(),
+              StepType.HDFS_VIEW.name(),
+              StepType.FRAGMENTER.name()));
     }
 
     Set<String> allInterpretationAsString =

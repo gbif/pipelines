@@ -12,7 +12,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import org.apache.spark.sql.Dataset;
@@ -302,7 +301,7 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
     String datasetKey = UUID.randomUUID().toString();
 
     List<Row> rows =
-        Arrays.asList(
+        List.of(
             new RowBuilder()
                 .with("occurrenceID", "1")
                 .with("speciesKey", "1")
@@ -344,7 +343,7 @@ public class OccurrenceRelationshipsSparkTest extends BaseSparkTest {
     private final Object[] values = new Object[SCHEMA.fieldNames().length];
 
     private RowBuilder with(String field, Object value) {
-      values[Arrays.asList(SCHEMA.fieldNames()).indexOf(field)] = value;
+      values[List.of(SCHEMA.fieldNames()).indexOf(field)] = value;
       return this;
     }
 

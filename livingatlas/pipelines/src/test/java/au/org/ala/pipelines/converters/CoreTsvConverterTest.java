@@ -724,8 +724,8 @@ public class CoreTsvConverterTest {
             .setInformationWithheld("asr_InformationWithheld")
             .setGeneralisationToApplyInMetres("asr_GeneralisationToApplyInMetres")
             .setGeneralisationInMetres("asr_GeneralisationInMetres")
-            .setOriginal(Collections.singletonMap("asr_Original_key", "asr_Original_value"))
-            .setAltered(Collections.singletonMap("asr_Altered_key", "asr_Altered_value"))
+            .setOriginal(Map.of("asr_Original_key", "asr_Original_value"))
+            .setAltered(Map.of("asr_Altered_key", "asr_Altered_value"))
             .build();
 
     Long lastLoadDate = 9L;

@@ -4,9 +4,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATC
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -31,8 +29,7 @@ public class LocationMatcher {
   // Antarctica: "Territories south of 60° south latitude"
   private static final double ANTARCTICA_LATITUDE = -60d;
 
-  private static final Set<String> LAYERS_FILTER_SET =
-      new HashSet<>(Arrays.asList("Political", "EEZ", "PoliticalEEZ"));
+  private static final Set<String> LAYERS_FILTER_SET = Set.of("Political", "EEZ", "PoliticalEEZ");
 
   private final LatLng latLng;
   private final Country country;

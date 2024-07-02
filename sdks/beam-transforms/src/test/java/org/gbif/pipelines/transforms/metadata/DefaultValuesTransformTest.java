@@ -1,8 +1,8 @@
 package org.gbif.pipelines.transforms.metadata;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -47,7 +47,7 @@ public class DefaultValuesTransformTest {
             ExtendedRecord.newBuilder()
                 .setId("777")
                 .setCoreTerms(
-                    Collections.singletonMap(
+                    Map.of(
                         DwcTerm.occurrenceStatus.qualifiedName(), OccurrenceStatus.ABSENT.name()))
                 .build());
 

@@ -2,7 +2,6 @@ package org.gbif.pipelines.clustering;
 
 import java.io.File;
 import java.io.FileReader;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import lombok.SneakyThrows;
@@ -24,8 +23,7 @@ class ArgsParser {
       throw new IllegalArgumentException("Incorrect configuration provided: " + provided);
     }
 
-    Cluster.ClusterBuilder builder =
-        nextCliOption(new Cluster.ClusterBuilder(), Arrays.asList(args));
+    Cluster.ClusterBuilder builder = nextCliOption(new Cluster.ClusterBuilder(), List.of(args));
     System.out.println("Clustering started with configuration: " + builder);
     return builder;
   }

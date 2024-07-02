@@ -49,8 +49,7 @@ public class BackbonePreRelease {
         p.apply(
             HCatalogIO.read()
                 .withConfigProperties(
-                    Collections.singletonMap(
-                        HiveConf.ConfVars.METASTOREURIS.varname, options.getMetastoreUris()))
+                    Map.of(HiveConf.ConfVars.METASTOREURIS.varname, options.getMetastoreUris()))
                 .withDatabase(options.getDatabase())
                 .withTable(options.getTable()));
 

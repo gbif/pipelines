@@ -1,8 +1,6 @@
 package org.gbif.pipelines.common.beam;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +50,7 @@ public class XmlIOTest {
 
     final List<Map<String, String>> multimediaExtension2 = new ArrayList<>();
     multimediaExtension2.add(
-        Collections.singletonMap(
+        Map.of(
             DcTerm.identifier.qualifiedName(),
             "http://biocase.zfmk.de/resource/zfmk/COL/Ob0363.jpg"));
     Map<String, String> mediaItem2 = new HashMap<>();
@@ -69,8 +67,7 @@ public class XmlIOTest {
             .setId("ZFMK/Ob/223903199/909708/169734")
             .setCoreRowType(DwcTerm.Occurrence.qualifiedName())
             .setCoreTerms(coreMap1)
-            .setExtensions(
-                Collections.singletonMap(Extension.MULTIMEDIA.getRowType(), multimediaExtension2))
+            .setExtensions(Map.of(Extension.MULTIMEDIA.getRowType(), multimediaExtension2))
             .build();
 
     // When
@@ -104,7 +101,7 @@ public class XmlIOTest {
 
     final List<Map<String, String>> multimediaExtension1 = new ArrayList<>();
     multimediaExtension1.add(
-        Collections.singletonMap(
+        Map.of(
             DcTerm.identifier.qualifiedName(),
             "http://biocase.zfmk.de/resource/zfmk/COL/Ob0363.jpg"));
     Map<String, String> mediaItem1 = new HashMap<>();
@@ -121,8 +118,7 @@ public class XmlIOTest {
             .setId("ZFMK/Ob/223903199/909708/169734")
             .setCoreRowType(DwcTerm.Occurrence.qualifiedName())
             .setCoreTerms(coreMap1)
-            .setExtensions(
-                Collections.singletonMap(Extension.MULTIMEDIA.getRowType(), multimediaExtension1))
+            .setExtensions(Map.of(Extension.MULTIMEDIA.getRowType(), multimediaExtension1))
             .build();
 
     final Map<String, String> coreMap2 = new HashMap<>();
@@ -137,7 +133,7 @@ public class XmlIOTest {
 
     final List<Map<String, String>> multimediaExtension2 = new ArrayList<>();
     multimediaExtension2.add(
-        Collections.singletonMap(
+        Map.of(
             DcTerm.identifier.qualifiedName(),
             "http://biocase.zfmk.de/resource/zfmk/COL/Ob0001.jpg"));
     Map<String, String> mediaItem2 = new HashMap<>();
@@ -154,11 +150,10 @@ public class XmlIOTest {
             .setId("ZFMK/Ob/223902837/908708/169372")
             .setCoreRowType(DwcTerm.Occurrence.qualifiedName())
             .setCoreTerms(coreMap2)
-            .setExtensions(
-                Collections.singletonMap(Extension.MULTIMEDIA.getRowType(), multimediaExtension2))
+            .setExtensions(Map.of(Extension.MULTIMEDIA.getRowType(), multimediaExtension2))
             .build();
 
-    final List<ExtendedRecord> expected = Arrays.asList(ex1, ex2);
+    final List<ExtendedRecord> expected = List.of(ex1, ex2);
 
     // When
     PCollection<ExtendedRecord> result = p.apply(XmlIO.read(path));

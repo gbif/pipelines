@@ -5,8 +5,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GBIF_ID_RECOR
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_INVALID;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -61,7 +61,7 @@ public class GbifIdTransform extends Transform<ExtendedRecord, IdentifierRecord>
     this.gbifIdFn = gbifIdFn;
     this.keygenServiceSupplier = keygenServiceSupplier;
     this.absentName = this.getBaseName() + "_absent";
-    allNames.addAll(Arrays.asList(this.getBaseName(), this.getBaseInvalidName(), absentName));
+    allNames.addAll(List.of(this.getBaseName(), this.getBaseInvalidName(), absentName));
   }
 
   /** Maps {@link IdentifierRecord} to key value, where key is {@link IdentifierRecord#getId} */

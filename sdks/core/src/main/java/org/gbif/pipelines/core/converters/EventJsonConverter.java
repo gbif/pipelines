@@ -2,7 +2,6 @@ package org.gbif.pipelines.core.converters;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
@@ -160,7 +159,7 @@ public class EventJsonConverter {
 
   private void mapIssues(EventJsonRecord.Builder builder) {
     JsonConverter.mapIssues(
-        Arrays.asList(metadata, eventCore, temporal, location, multimedia),
+        List.of(metadata, eventCore, temporal, location, multimedia),
         builder::setIssues,
         builder::setNotIssues);
   }

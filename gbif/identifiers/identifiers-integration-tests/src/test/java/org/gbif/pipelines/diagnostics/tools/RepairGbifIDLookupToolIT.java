@@ -2,9 +2,8 @@ package org.gbif.pipelines.diagnostics.tools;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import org.gbif.pipelines.diagnostics.MainTool;
 import org.gbif.pipelines.diagnostics.strategy.DeletionStrategy.DeletionStrategyType;
 import org.gbif.pipelines.diagnostics.strategy.LookupKeyUtils;
@@ -122,7 +121,7 @@ public class RepairGbifIDLookupToolIT {
     HBaseLockingKeyService keygenService =
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
-    keygenService.generateKey(new HashSet<>(Arrays.asList(occId, triplet)));
+    keygenService.generateKey(Set.of(occId, triplet));
 
     // Should
     Optional<Long> tripletKey = LookupKeyUtils.getKey(keygenService, triplet);
@@ -164,7 +163,7 @@ public class RepairGbifIDLookupToolIT {
     HBaseLockingKeyService keygenService =
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
-    keygenService.generateKey(new HashSet<>(Arrays.asList(occId, triplet)));
+    keygenService.generateKey(Set.of(occId, triplet));
 
     // Should
     Optional<Long> tripletKey = LookupKeyUtils.getKey(keygenService, triplet);
@@ -212,7 +211,7 @@ public class RepairGbifIDLookupToolIT {
     HBaseLockingKeyService keygenService =
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
-    keygenService.generateKey(new HashSet<>(Arrays.asList(occId, triplet)));
+    keygenService.generateKey(Set.of(occId, triplet));
 
     // Should
     Optional<Long> tripletKey = LookupKeyUtils.getKey(keygenService, triplet);
@@ -258,7 +257,7 @@ public class RepairGbifIDLookupToolIT {
     HBaseLockingKeyService keygenService =
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.getConnection(), datasetKey);
 
-    keygenService.generateKey(new HashSet<>(Arrays.asList(occId, triplet)));
+    keygenService.generateKey(Set.of(occId, triplet));
 
     // Should
     Optional<Long> tripletKey = LookupKeyUtils.getKey(keygenService, triplet);

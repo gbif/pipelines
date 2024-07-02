@@ -4,9 +4,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -48,17 +46,16 @@ public class ChecklistValidator implements Closeable {
   }
 
   private static final Set<String> NAME_USAGES_RELATED_EXTENSIONS =
-      new HashSet<>(
-          Arrays.asList(
-              Extension.DISTRIBUTION.getRowType(),
-              Extension.DESCRIPTION.getRowType(),
-              Extension.IDENTIFIER.getRowType(),
-              Extension.REFERENCE.getRowType(),
-              Extension.VERNACULAR_NAME.getRowType(),
-              Extension.TYPES_AND_SPECIMEN.getRowType(),
-              Extension.SPECIES_PROFILE.getRowType(),
-              Extension.MULTIMEDIA.getRowType(),
-              DwcTerm.Taxon.qualifiedName()));
+      Set.of(
+          Extension.DISTRIBUTION.getRowType(),
+          Extension.DESCRIPTION.getRowType(),
+          Extension.IDENTIFIER.getRowType(),
+          Extension.REFERENCE.getRowType(),
+          Extension.VERNACULAR_NAME.getRowType(),
+          Extension.TYPES_AND_SPECIMEN.getRowType(),
+          Extension.SPECIES_PROFILE.getRowType(),
+          Extension.MULTIMEDIA.getRowType(),
+          DwcTerm.Taxon.qualifiedName());
 
   private final Configuration configuration;
 

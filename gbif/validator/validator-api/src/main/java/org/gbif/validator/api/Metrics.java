@@ -91,11 +91,7 @@ public class Metrics {
       return IssueInfo.builder()
           .issue(type.name())
           .issueCategory(type.getCategory())
-          .samples(
-              List.of(
-                  IssueSample.builder()
-                      .relatedData(Collections.singletonMap(dataKey, dataValue))
-                      .build()))
+          .samples(List.of(IssueSample.builder().relatedData(Map.of(dataKey, dataValue)).build()))
           .build();
     }
   }

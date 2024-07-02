@@ -5,7 +5,6 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORD
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84;
 
-import java.util.Arrays;
 import java.util.List;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
@@ -69,7 +68,7 @@ public class LocationParserTest {
     location2.setDistance(distance2);
     location2.setIsoCountryCode2Digit(country2.getIso2LetterCode());
 
-    return new GeocodeResponse(Arrays.asList(location1, location2));
+    return new GeocodeResponse(List.of(location1, location2));
   }
 
   private KeyValueStore<LatLng, GeocodeResponse> getGeocodeKvStore() {
@@ -173,7 +172,7 @@ public class LocationParserTest {
         result
             .getIssues()
             .containsAll(
-                Arrays.asList(
+                List.of(
                     COORDINATE_ROUNDED.name(),
                     COUNTRY_DERIVED_FROM_COORDINATES.name(),
                     GEODETIC_DATUM_ASSUMED_WGS84.name())));
@@ -202,7 +201,7 @@ public class LocationParserTest {
         result
             .getIssues()
             .containsAll(
-                Arrays.asList(
+                List.of(
                     COORDINATE_ROUNDED.name(),
                     COUNTRY_DERIVED_FROM_COORDINATES.name(),
                     GEODETIC_DATUM_ASSUMED_WGS84.name())));
@@ -227,7 +226,7 @@ public class LocationParserTest {
         result
             .getIssues()
             .containsAll(
-                Arrays.asList(
+                List.of(
                     COORDINATE_ROUNDED.name(),
                     COUNTRY_DERIVED_FROM_COORDINATES.name(),
                     GEODETIC_DATUM_ASSUMED_WGS84.name())));

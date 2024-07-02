@@ -4,7 +4,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.G
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_INVALID;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 
-import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -77,10 +77,7 @@ public class GbifIdTransformTest {
     // State
     String id = "777";
     ExtendedRecord er =
-        ExtendedRecord.newBuilder()
-            .setId(id)
-            .setCoreTerms(Collections.singletonMap("map", "value"))
-            .build();
+        ExtendedRecord.newBuilder().setId(id).setCoreTerms(Map.of("map", "value")).build();
 
     // Expected
     IdentifierRecord ir = IdentifierRecord.newBuilder().setId(id).setInternalId(id).build();
@@ -103,10 +100,7 @@ public class GbifIdTransformTest {
     // State
     String id = "777";
     ExtendedRecord er =
-        ExtendedRecord.newBuilder()
-            .setId(id)
-            .setCoreTerms(Collections.singletonMap("map", "value"))
-            .build();
+        ExtendedRecord.newBuilder().setId(id).setCoreTerms(Map.of("map", "value")).build();
 
     // Expected
     IdentifierRecord ir = IdentifierRecord.newBuilder().setId(id).build();
@@ -135,10 +129,7 @@ public class GbifIdTransformTest {
     // State
     String id = "777";
     ExtendedRecord er =
-        ExtendedRecord.newBuilder()
-            .setId(id)
-            .setCoreTerms(Collections.singletonMap("map", "value"))
-            .build();
+        ExtendedRecord.newBuilder().setId(id).setCoreTerms(Map.of("map", "value")).build();
 
     // Expected
     IdentifierRecord ir = IdentifierRecord.newBuilder().setId(id).build();
@@ -169,7 +160,7 @@ public class GbifIdTransformTest {
     ExtendedRecord er =
         ExtendedRecord.newBuilder()
             .setId(id)
-            .setCoreTerms(Collections.singletonMap(DwcTerm.occurrenceID.qualifiedName(), "value"))
+            .setCoreTerms(Map.of(DwcTerm.occurrenceID.qualifiedName(), "value"))
             .build();
 
     // Expected

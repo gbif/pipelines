@@ -3,7 +3,6 @@ package org.gbif.pipelines.core.converters;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -323,7 +322,7 @@ public class OccurrenceJsonConverter {
 
   private void mapIssues(OccurrenceJsonRecord.Builder builder) {
     JsonConverter.mapIssues(
-        Arrays.asList(
+        List.of(
             metadata,
             identifier,
             clustering,

@@ -7,8 +7,6 @@ import static org.junit.Assert.assertNotNull;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import org.gbif.common.messaging.api.messages.PipelinesCleanerMessage;
@@ -119,10 +117,7 @@ public class CleanerCallbackIT {
     EsService.indexDocument(ES_SERVER.getEsClient(), indexName, 1L, document);
     EsService.refreshIndex(ES_SERVER.getEsClient(), indexName);
     EsService.swapIndexes(
-        ES_SERVER.getEsClient(),
-        new HashSet<>(Arrays.asList(config.esAliases)),
-        Set.of(indexName),
-        Set.of(indexToSwap));
+        ES_SERVER.getEsClient(), Set.of(config.esAliases), Set.of(indexName), Set.of(indexToSwap));
 
     // When
     new CleanerCallback(config, validationClient).handleMessage(message);

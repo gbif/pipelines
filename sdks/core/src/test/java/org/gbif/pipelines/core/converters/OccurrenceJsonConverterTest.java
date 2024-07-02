@@ -7,8 +7,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -134,9 +132,7 @@ public class OccurrenceJsonConverterTest {
             .setCoreRowType("core")
             .setCoreTerms(erMap)
             .setExtensions(
-                Collections.singletonMap(
-                    "http://rs.tdwg.org/ac/terms/Multimedia",
-                    List.of(Collections.singletonMap("k", "v"))))
+                Map.of("http://rs.tdwg.org/ac/terms/Multimedia", List.of(Map.of("k", "v"))))
             .build();
 
     IdentifierRecord id = IdentifierRecord.newBuilder().setId("777").setInternalId("111").build();
@@ -194,15 +190,15 @@ public class OccurrenceJsonConverterTest {
                         .setType(AgentIdentifierType.OTHER.name())
                         .setValue("someId")
                         .build()))
-            .setDatasetID(Arrays.asList(multivalue1, multivalue2))
-            .setDatasetName(Arrays.asList(multivalue1, multivalue2))
-            .setOtherCatalogNumbers(Arrays.asList(multivalue1, multivalue2))
-            .setRecordedBy(Arrays.asList(multivalue1, multivalue2))
-            .setIdentifiedBy(Arrays.asList(multivalue1, multivalue2))
-            .setPreparations(Arrays.asList(multivalue1, "\u001E" + multivalue2))
-            .setSamplingProtocol(Arrays.asList(multivalue1, multivalue2))
-            .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
-            .setProjectId(Arrays.asList(multivalue1, multivalue2))
+            .setDatasetID(List.of(multivalue1, multivalue2))
+            .setDatasetName(List.of(multivalue1, multivalue2))
+            .setOtherCatalogNumbers(List.of(multivalue1, multivalue2))
+            .setRecordedBy(List.of(multivalue1, multivalue2))
+            .setIdentifiedBy(List.of(multivalue1, multivalue2))
+            .setPreparations(List.of(multivalue1, "\u001E" + multivalue2))
+            .setSamplingProtocol(List.of(multivalue1, multivalue2))
+            .setTypeStatus(List.of(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
+            .setProjectId(List.of(multivalue1, multivalue2))
             .setGeologicalContext(
                 GeologicalContext.newBuilder()
                     .setEarliestEonOrLowestEonothem(vcFn.apply("test1"))
@@ -441,7 +437,7 @@ public class OccurrenceJsonConverterTest {
     MultimediaRecord mmr =
         MultimediaRecord.newBuilder()
             .setId("777")
-            .setMultimediaItems(Arrays.asList(stillImage, movingImage))
+            .setMultimediaItems(List.of(stillImage, movingImage))
             .build();
 
     // When
@@ -539,7 +535,7 @@ public class OccurrenceJsonConverterTest {
         .forEachRemaining(
             n -> assertTrue(n.asText().equals(multivalue1) || n.asText().equals(multivalue2)));
     List<String> projectIdJoined =
-        Arrays.asList(result.path(Indexing.PROJECT_ID_JOINED).asText().split("\\|"));
+        List.of(result.path(Indexing.PROJECT_ID_JOINED).asText().split("\\|"));
     assertEquals(2, projectIdJoined.size());
     assertTrue(projectIdJoined.contains(multivalue1));
     assertTrue(projectIdJoined.contains(multivalue2));

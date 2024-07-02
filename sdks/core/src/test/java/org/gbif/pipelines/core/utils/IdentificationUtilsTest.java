@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.utils;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +35,7 @@ public class IdentificationUtilsTest {
     identification1.put(DwcTerm.kingdom.qualifiedName(), "Animalia");
     Map<String, String> identification2 = new HashMap<>(1);
     identification2.put(DwcTerm.kingdom.qualifiedName(), "Animalia");
-    ext.put(Extension.IDENTIFICATION.getRowType(), Arrays.asList(identification1, identification2));
+    ext.put(Extension.IDENTIFICATION.getRowType(), List.of(identification1, identification2));
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setExtensions(ext).build();
 
     // When
@@ -73,7 +72,7 @@ public class IdentificationUtilsTest {
     identification7.put(DwcTerm.dateIdentified.qualifiedName(), "2022-09-01T10:00");
     ext.put(
         Extension.IDENTIFICATION.getRowType(),
-        Arrays.asList(
+        List.of(
             identification1,
             identification2,
             identification3,
@@ -106,7 +105,7 @@ public class IdentificationUtilsTest {
     identification1.put(DwcTerm.dateIdentified.qualifiedName(), "2022-09-01T10:00:01");
     Map<String, String> identification2 = new HashMap<>(1);
     identification2.put(DwcTerm.class_.qualifiedName(), "c");
-    ext.put(Extension.IDENTIFICATION.getRowType(), Arrays.asList(identification1, identification2));
+    ext.put(Extension.IDENTIFICATION.getRowType(), List.of(identification1, identification2));
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setExtensions(ext).build();
 
     // When

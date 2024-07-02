@@ -73,9 +73,8 @@ public class OccurrenceExtensionTransformTest {
 
     // Map
     Map<String, List<Map<String, String>>> extensions = new HashMap<>(2);
-    extensions.put(Occurrence.qualifiedName(), Arrays.asList(occExt1, occExt2, occExt3));
-    extensions.put(
-        MeasurementOrFact.qualifiedName(), Arrays.asList(mediaExt1, mediaExt2, mediaExt3));
+    extensions.put(Occurrence.qualifiedName(), List.of(occExt1, occExt2, occExt3));
+    extensions.put(MeasurementOrFact.qualifiedName(), List.of(mediaExt1, mediaExt2, mediaExt3));
 
     ExtendedRecord er =
         ExtendedRecord.newBuilder()
@@ -116,8 +115,7 @@ public class OccurrenceExtensionTransformTest {
         ExtendedRecord.newBuilder()
             .setId(id)
             .setCoreTerms(ext)
-            .setExtensions(
-                Collections.singletonMap(Occurrence.qualifiedName(), Collections.emptyList()))
+            .setExtensions(Map.of(Occurrence.qualifiedName(), Collections.emptyList()))
             .build();
 
     // When
@@ -200,8 +198,7 @@ public class OccurrenceExtensionTransformTest {
                 Map<String, String> ext = new HashMap<>(32);
                 ext.put(DwcTerm.occurrenceID.qualifiedName(), array[0]);
                 ext.put(array[3], array[3]);
-                builder.setExtensions(
-                    Collections.singletonMap(MeasurementOrFact.qualifiedName(), List.of(ext)));
+                builder.setExtensions(Map.of(MeasurementOrFact.qualifiedName(), List.of(ext)));
               }
 
               return builder.build();

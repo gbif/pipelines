@@ -10,9 +10,7 @@ import static org.junit.Assert.assertTrue;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -117,7 +115,7 @@ public class EsIndexIT extends EsApiIntegration {
         EsIndex.createIndex(
             EsApiIntegration.ES_SERVER.getEsConfig(),
             IndexParams.builder().datasetKey(i).attempt(2).settingsType(INDEXING).build());
-    Set<String> initialIndexes = new HashSet<>(Arrays.asList(idx1, idx2));
+    Set<String> initialIndexes = Set.of(idx1, idx2);
 
     // add the indexes to the alias
     EsApiIntegration.addIndexesToAlias(alias, initialIndexes);

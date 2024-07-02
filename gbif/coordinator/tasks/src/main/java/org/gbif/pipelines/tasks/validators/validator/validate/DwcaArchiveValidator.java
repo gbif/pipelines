@@ -4,7 +4,6 @@ import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 import static org.gbif.validator.api.DwcFileType.CORE;
 
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -102,7 +101,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
 
     FileInfoBuilder fileInfoBuilder = FileInfo.builder().fileType(DwcFileType.METADATA);
 
-    if (!emlPath.isPresent()) {
+    if (emlPath.isEmpty()) {
       return fileInfoBuilder
           .issues(
               List.of(
@@ -114,7 +113,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     }
 
     try {
-      String xmlDoc = new String(Files.readAllBytes(emlPath.get()), StandardCharsets.UTF_8);
+      String xmlDoc = Files.readString(emlPath.get());
 
       List<IssueInfo> issueInfos = new ArrayList<>();
       // Validate XML file

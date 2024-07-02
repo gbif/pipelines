@@ -1,8 +1,8 @@
 package org.gbif.pipelines.keygen.common;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.DcTerm;
@@ -20,8 +20,8 @@ import org.gbif.dwc.terms.Term;
 public class TermUtils {
 
   /** Interpreted terms that exist as java properties on Occurrence. */
-  private static final ImmutableSet<Term> JAVA_PROPERTY_TERMS =
-      ImmutableSet.of(
+  private static final Set<Term> JAVA_PROPERTY_TERMS =
+      Set.of(
           DwcTerm.decimalLatitude,
           DwcTerm.decimalLongitude,
           DwcTerm.continent,
@@ -87,49 +87,50 @@ public class TermUtils {
    * TODO: is this correct? -> Terms used during interpretation and superseded by an interpreted
    * property
    */
-  private static final ImmutableSet<Term> INTERPRETED_SOURCE_TERMS =
-      ImmutableSet.copyOf(
-          Iterables.concat(
-              JAVA_PROPERTY_TERMS,
-              Arrays.asList(
-                  DwcTerm.decimalLatitude,
-                  DwcTerm.decimalLongitude,
-                  DwcTerm.verbatimLatitude,
-                  DwcTerm.verbatimLongitude,
-                  DwcTerm.verbatimCoordinates,
-                  DwcTerm.geodeticDatum,
-                  DwcTerm.coordinateUncertaintyInMeters,
-                  DwcTerm.coordinatePrecision,
-                  DwcTerm.continent,
-                  DwcTerm.waterBody,
-                  DwcTerm.stateProvince,
-                  DwcTerm.country,
-                  DwcTerm.countryCode,
-                  DwcTerm.scientificName,
-                  DwcTerm.scientificNameAuthorship,
-                  DwcTerm.taxonRank,
-                  DwcTerm.taxonomicStatus,
-                  DwcTerm.kingdom,
-                  DwcTerm.phylum,
-                  DwcTerm.class_,
-                  DwcTerm.order,
-                  DwcTerm.family,
-                  DwcTerm.genus,
-                  DwcTerm.subgenus,
-                  DwcTerm.genericName,
-                  DwcTerm.specificEpithet,
-                  DwcTerm.infraspecificEpithet,
-                  DcTerm.modified,
-                  DwcTerm.dateIdentified,
-                  DwcTerm.eventDate,
-                  DwcTerm.year,
-                  DwcTerm.month,
-                  DwcTerm.day,
-                  DwcTerm.minimumDepthInMeters,
-                  DwcTerm.maximumDepthInMeters,
-                  DwcTerm.minimumElevationInMeters,
-                  DwcTerm.maximumElevationInMeters,
-                  DwcTerm.associatedMedia)));
+  private static final Set<Term> INTERPRETED_SOURCE_TERMS =
+      Set.copyOf(
+          Stream.concat(
+                  JAVA_PROPERTY_TERMS.stream(),
+                  Stream.of(
+                      DwcTerm.decimalLatitude,
+                      DwcTerm.decimalLongitude,
+                      DwcTerm.verbatimLatitude,
+                      DwcTerm.verbatimLongitude,
+                      DwcTerm.verbatimCoordinates,
+                      DwcTerm.geodeticDatum,
+                      DwcTerm.coordinateUncertaintyInMeters,
+                      DwcTerm.coordinatePrecision,
+                      DwcTerm.continent,
+                      DwcTerm.waterBody,
+                      DwcTerm.stateProvince,
+                      DwcTerm.country,
+                      DwcTerm.countryCode,
+                      DwcTerm.scientificName,
+                      DwcTerm.scientificNameAuthorship,
+                      DwcTerm.taxonRank,
+                      DwcTerm.taxonomicStatus,
+                      DwcTerm.kingdom,
+                      DwcTerm.phylum,
+                      DwcTerm.class_,
+                      DwcTerm.order,
+                      DwcTerm.family,
+                      DwcTerm.genus,
+                      DwcTerm.subgenus,
+                      DwcTerm.genericName,
+                      DwcTerm.specificEpithet,
+                      DwcTerm.infraspecificEpithet,
+                      DcTerm.modified,
+                      DwcTerm.dateIdentified,
+                      DwcTerm.eventDate,
+                      DwcTerm.year,
+                      DwcTerm.month,
+                      DwcTerm.day,
+                      DwcTerm.minimumDepthInMeters,
+                      DwcTerm.maximumDepthInMeters,
+                      DwcTerm.minimumElevationInMeters,
+                      DwcTerm.maximumElevationInMeters,
+                      DwcTerm.associatedMedia))
+              .collect(Collectors.toSet()));
 
   /**
    * @return true if the term is used during interpretation and superseded by an interpreted

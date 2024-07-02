@@ -1,6 +1,5 @@
 package org.gbif.mail;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -18,14 +17,14 @@ import org.springframework.stereotype.Service;
 public class UserHelperService {
 
   // supported locales
-  private static final List<String> SUPPORTED_LOCALES = Arrays.asList("en", "ru", "es");
+  private static final List<String> SUPPORTED_LOCALES = List.of("en", "ru", "es");
 
   private final IdentityAccessService identityAccessService;
 
   /** User lookup by username. */
   public Optional<GbifUser> getUser(String username) {
     Optional<GbifUser> user = Optional.ofNullable(identityAccessService.get(username));
-    if (!user.isPresent()) {
+    if (user.isEmpty()) {
       log.warn("User with name [{}] was not found!", username);
     }
     return user;

@@ -2,7 +2,7 @@ package org.gbif.pipelines.transforms.core;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
+import java.util.List;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 import org.junit.Test;
@@ -43,14 +43,14 @@ public class LocationInheritedFieldsFnTest {
 
     // Merge accumulators
     LocationInheritedFieldsFn.Accum mergedAccum =
-        locationInheritedFieldsFn.mergeAccumulators(Arrays.asList(accum1, accum2));
+        locationInheritedFieldsFn.mergeAccumulators(List.of(accum1, accum2));
 
     // Get the results
     LocationInheritedRecord locationInheritedRecord =
         locationInheritedFieldsFn.extractOutput(mergedAccum);
 
     // Results are gotten from the immediate parent of the leaf record
-    assertEquals(new Double(1.0d), locationInheritedRecord.getDecimalLatitude());
-    assertEquals(new Double(91.0d), locationInheritedRecord.getDecimalLongitude());
+    assertEquals(Double.valueOf(1.0d), locationInheritedRecord.getDecimalLatitude());
+    assertEquals(Double.valueOf(91.0d), locationInheritedRecord.getDecimalLongitude());
   }
 }

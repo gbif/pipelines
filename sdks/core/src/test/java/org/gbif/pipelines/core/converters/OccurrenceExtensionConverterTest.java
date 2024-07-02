@@ -4,8 +4,6 @@ import static org.gbif.dwc.terms.DwcTerm.MeasurementOrFact;
 import static org.gbif.dwc.terms.DwcTerm.Occurrence;
 import static org.gbif.dwc.terms.DwcTerm.ResourceRelationship;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.gbif.dwc.terms.DwcTerm;
@@ -24,24 +22,22 @@ public class OccurrenceExtensionConverterTest {
     String somethingExt = "somethingExt";
 
     // Core
-    Map<String, String> coreMap = new HashMap<>(2);
-    coreMap.put(DwcTerm.occurrenceID.qualifiedName(), idCore);
-    coreMap.put(somethingCore, somethingCore);
+    Map<String, String> coreMap =
+        Map.of(DwcTerm.occurrenceID.qualifiedName(), idCore, somethingCore, somethingCore);
 
     // Ext
-    Map<String, String> extCoreMap = new HashMap<>(2);
-    extCoreMap.put(DwcTerm.occurrenceID.qualifiedName(), idExt);
-    extCoreMap.put(somethingExt, somethingExt);
+    Map<String, String> extCoreMap =
+        Map.of(DwcTerm.occurrenceID.qualifiedName(), idExt, somethingExt, somethingExt);
 
-    Map<String, String> extMap = new HashMap<>(2);
-    extMap.put(DwcTerm.occurrenceID.qualifiedName(), idExt);
-    extMap.put(somethingExt, somethingExt);
+    Map<String, String> extMap =
+        Map.of(DwcTerm.occurrenceID.qualifiedName(), idExt, somethingExt, somethingExt);
 
     // Set
-    Map<String, List<Map<String, String>>> exts = new HashMap<>(2);
-    exts.put(Occurrence.qualifiedName(), List.of(extCoreMap));
-    exts.put(MeasurementOrFact.qualifiedName(), Arrays.asList(extMap, extMap));
-    exts.put(ResourceRelationship.qualifiedName(), Arrays.asList(extMap, extMap));
+    Map<String, List<Map<String, String>>> exts =
+        Map.of(
+            Occurrence.qualifiedName(), List.of(extCoreMap),
+            MeasurementOrFact.qualifiedName(), List.of(extMap, extMap),
+            ResourceRelationship.qualifiedName(), List.of(extMap, extMap));
 
     ExtendedRecord extendedRecord =
         ExtendedRecord.newBuilder().setId(idCore).setCoreTerms(coreMap).setExtensions(exts).build();

@@ -7,8 +7,6 @@ import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
 import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
 
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -151,14 +149,13 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
 
     if (message.getPipelineSteps().isEmpty()) {
       message.setPipelineSteps(
-          new HashSet<>(
-              Arrays.asList(
-                  StepType.XML_TO_VERBATIM.name(),
-                  StepType.VERBATIM_TO_IDENTIFIER.name(),
-                  StepType.VERBATIM_TO_INTERPRETED.name(),
-                  StepType.INTERPRETED_TO_INDEX.name(),
-                  StepType.HDFS_VIEW.name(),
-                  StepType.FRAGMENTER.name())));
+          Set.of(
+              StepType.XML_TO_VERBATIM.name(),
+              StepType.VERBATIM_TO_IDENTIFIER.name(),
+              StepType.VERBATIM_TO_INTERPRETED.name(),
+              StepType.INTERPRETED_TO_INDEX.name(),
+              StepType.HDFS_VIEW.name(),
+              StepType.FRAGMENTER.name()));
     }
 
     Set<String> allInterpretationAsString =
@@ -218,7 +215,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     Optional<Double> fileNumber =
         HdfsUtils.getDoubleByKey(hdfsConfigs, metaPath, Metrics.ARCHIVE_TO_OCC_COUNT);
 
-    if (!fileNumber.isPresent()) {
+    if (fileNumber.isEmpty()) {
       throw new IllegalArgumentException(
           "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }

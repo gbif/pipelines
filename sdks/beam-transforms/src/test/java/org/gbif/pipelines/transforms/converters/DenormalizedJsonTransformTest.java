@@ -1,7 +1,5 @@
 package org.gbif.pipelines.transforms.converters;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -106,9 +104,12 @@ public class DenormalizedJsonTransformTest {
                         .build()))
             .build();
 
-    Map<String, List<Map<String, String>>> exts = new HashMap<>(2);
-    exts.put(DwcTerm.Occurrence.qualifiedName(), List.of(erMap));
-    exts.put("http://rs.tdwg.org/ac/terms/Multimedia", List.of(Collections.singletonMap("k", "v")));
+    Map<String, List<Map<String, String>>> exts =
+        Map.of(
+            DwcTerm.Occurrence.qualifiedName(),
+            List.of(erMap),
+            "http://rs.tdwg.org/ac/terms/Multimedia",
+            List.of(Map.of("k", "v")));
 
     ExtendedRecord er =
         ExtendedRecord.newBuilder()
@@ -224,7 +225,7 @@ public class DenormalizedJsonTransformTest {
     MultimediaRecord mmr =
         MultimediaRecord.newBuilder()
             .setId("777")
-            .setMultimediaItems(Arrays.asList(stillImage, movingImage))
+            .setMultimediaItems(List.of(stillImage, movingImage))
             .build();
 
     // Core

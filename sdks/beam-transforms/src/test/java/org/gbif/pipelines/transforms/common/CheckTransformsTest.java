@@ -1,6 +1,5 @@
 package org.gbif.pipelines.transforms.common;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.beam.sdk.testing.NeedsRunner;
@@ -52,9 +51,7 @@ public class CheckTransformsTest {
   public void checkRecordTypeMatchManyValueTest() {
 
     // State
-    Set<String> set = new HashSet<>();
-    set.add(RecordType.BASIC.name());
-    set.add(RecordType.AUDUBON.name());
+    Set<String> set = Set.of(RecordType.BASIC.name(), RecordType.AUDUBON.name());
 
     // When
     boolean result = CheckTransforms.checkRecordType(set, RecordType.BASIC, RecordType.AUDUBON);
@@ -80,9 +77,7 @@ public class CheckTransformsTest {
   public void checkRecordTypeMismatchManyValueTest() {
 
     // State
-    Set<String> set = new HashSet<>();
-    set.add(RecordType.AMPLIFICATION.name());
-    set.add(RecordType.IMAGE.name());
+    Set<String> set = Set.of(RecordType.AMPLIFICATION.name(), RecordType.IMAGE.name());
 
     // When
     boolean result = CheckTransforms.checkRecordType(set, RecordType.BASIC, RecordType.AUDUBON);

@@ -3,6 +3,7 @@ package org.gbif.pipelines.diagnostics;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import java.util.Arrays;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,7 @@ public class MainTool {
   public static void main(String... argv) {
 
     MainTool main = MainTool.builder().build();
-    int index = Arrays.asList(argv).indexOf("--tool");
+    int index = List.of(argv).indexOf("--tool");
     String[] mainArgv = {};
     if (index >= 0) {
       mainArgv = Arrays.copyOfRange(argv, index, index + 2);

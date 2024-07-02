@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -59,26 +58,17 @@ import org.gbif.pipelines.io.avro.json.VocabularyConcept;
 public class JsonConverter {
 
   private static final Set<String> EXCLUDE_ALL =
-      new HashSet<>(
-          Arrays.asList(
-              DwcTerm.footprintWKT.qualifiedName(),
-              DwcTerm.previousIdentifications.qualifiedName()));
+      Set.of(DwcTerm.footprintWKT.qualifiedName(), DwcTerm.previousIdentifications.qualifiedName());
 
   private static final Set<String> INCLUDE_EXT_ALL =
-      new HashSet<>(
-          Arrays.asList(
-              Extension.MULTIMEDIA.getRowType(),
-              Extension.AUDUBON.getRowType(),
-              Extension.IMAGE.getRowType()));
+      Set.of(
+          Extension.MULTIMEDIA.getRowType(),
+          Extension.AUDUBON.getRowType(),
+          Extension.IMAGE.getRowType());
 
   private static final String OCCURRENCE_EXT = "http://rs.tdwg.org/dwc/terms/Occurrence";
 
-  private static final Map<Character, Character> CHAR_MAP = new HashMap<>(2);
-
-  static {
-    CHAR_MAP.put('\u001E', ',');
-    CHAR_MAP.put('\u001f', ' ');
-  }
+  private static final Map<Character, Character> CHAR_MAP = Map.of('\u001E', ',', '\u001f', ' ');
 
   private static final LongFunction<LocalDateTime> DATE_FN =
       l -> LocalDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneId.of("UTC"));

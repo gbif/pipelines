@@ -7,8 +7,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -66,9 +64,7 @@ public class ArchiveValidatorCallbackIT {
         new PipelinesArchiveValidatorMessage(
             uuid,
             attempt,
-            new HashSet<>(
-                Arrays.asList(
-                    VALIDATOR_VALIDATE_ARCHIVE.name(), VALIDATOR_VERBATIM_TO_INTERPRETED.name())),
+            Set.of(VALIDATOR_VALIDATE_ARCHIVE.name(), VALIDATOR_VERBATIM_TO_INTERPRETED.name()),
             EXECUTION_ID,
             FileFormat.DWCA.name());
 
@@ -136,9 +132,7 @@ public class ArchiveValidatorCallbackIT {
         new PipelinesArchiveValidatorMessage(
             uuid,
             attempt,
-            new HashSet<>(
-                Arrays.asList(
-                    VALIDATOR_VALIDATE_ARCHIVE.name(), VALIDATOR_VERBATIM_TO_INTERPRETED.name())),
+            Set.of(VALIDATOR_VALIDATE_ARCHIVE.name(), VALIDATOR_VERBATIM_TO_INTERPRETED.name()),
             EXECUTION_ID,
             FileFormat.DWCA.name());
 
@@ -200,9 +194,7 @@ public class ArchiveValidatorCallbackIT {
         new PipelinesArchiveValidatorMessage(
             uuid,
             attempt,
-            new HashSet<>(
-                Arrays.asList(
-                    VALIDATOR_VALIDATE_ARCHIVE.name(), VALIDATOR_VERBATIM_TO_INTERPRETED.name())),
+            Set.of(VALIDATOR_VALIDATE_ARCHIVE.name(), VALIDATOR_VERBATIM_TO_INTERPRETED.name()),
             EXECUTION_ID,
             FileFormat.DWCA.name());
 

@@ -11,7 +11,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -202,24 +201,24 @@ public class FragmenterPipelineIT {
         InterpretedAvroWriter.createAvroWriter(
             options, VerbatimTransform.create(), CORE_TERM, ID)) {
 
-      Map<String, String> ext1 = new HashMap<>(5);
-      ext1.put(DwcTerm.measurementID.qualifiedName(), value);
-      ext1.put(DwcTerm.measurementType.qualifiedName(), value);
-      ext1.put(DwcTerm.measurementValue.qualifiedName(), value);
-      ext1.put(DwcTerm.measurementAccuracy.qualifiedName(), value);
-      ext1.put(DwcTerm.measurementUnit.qualifiedName(), value);
+      Map<String, String> ext1 =
+          Map.of(
+              DwcTerm.measurementID.qualifiedName(), value,
+              DwcTerm.measurementType.qualifiedName(), value,
+              DwcTerm.measurementValue.qualifiedName(), value,
+              DwcTerm.measurementAccuracy.qualifiedName(), value,
+              DwcTerm.measurementUnit.qualifiedName(), value);
 
-      Map<String, List<Map<String, String>>> ext = new HashMap<>();
-      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
+      Map<String, List<Map<String, String>>> ext =
+          Map.of(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
 
-      Map<String, String> coreTerm = new HashMap<>(5);
-
-      coreTerm.put(DwcTerm.occurrenceID.qualifiedName(), ids);
-      coreTerm.put(DwcTerm.institutionCode.qualifiedName(), ids);
-      coreTerm.put(DwcTerm.collectionCode.qualifiedName(), ids);
-      coreTerm.put(DwcTerm.catalogNumber.qualifiedName(), ids);
-
-      coreTerm.put(DwcTerm.recordedBy.qualifiedName(), value);
+      Map<String, String> coreTerm =
+          Map.of(
+              DwcTerm.occurrenceID.qualifiedName(), ids,
+              DwcTerm.institutionCode.qualifiedName(), ids,
+              DwcTerm.collectionCode.qualifiedName(), ids,
+              DwcTerm.catalogNumber.qualifiedName(), ids,
+              DwcTerm.recordedBy.qualifiedName(), value);
 
       ExtendedRecord extendedRecord =
           ExtendedRecord.newBuilder().setCoreTerms(coreTerm).setId(ids).setExtensions(ext).build();

@@ -53,8 +53,7 @@ public class ValidationRequestParams {
 
   private static final String SORT_BY_SEPARATOR = ":";
 
-  private static final Set<String> SORTABLES =
-      new HashSet<>(Arrays.asList(INSTALLATION_KEY, CREATED));
+  private static final Set<String> SORTABLES = Set.of(INSTALLATION_KEY, CREATED);
 
   private static Optional<String> sorteable(String fieldName) {
     return SORTABLES.stream().filter(s -> s.equalsIgnoreCase(fieldName)).findFirst();

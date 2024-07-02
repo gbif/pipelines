@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.SneakyThrows;
@@ -117,10 +116,7 @@ public class AvroReaderTest {
     // State
     ExtendedRecord expectedOne = ExtendedRecord.newBuilder().setId("1").build();
     ExtendedRecord expectedTwo =
-        ExtendedRecord.newBuilder()
-            .setId("1")
-            .setCoreTerms(Collections.singletonMap("1", "2"))
-            .build();
+        ExtendedRecord.newBuilder().setId("1").setCoreTerms(Map.of("1", "2")).build();
     ExtendedRecord expectedThree = ExtendedRecord.newBuilder().setId("3").build();
     writeExtendedRecords(verbatimPath1, expectedOne, expectedTwo, expectedThree);
     AtomicInteger counter = new AtomicInteger(0);
@@ -143,10 +139,7 @@ public class AvroReaderTest {
 
     // State
     ExtendedRecord expectedOne =
-        ExtendedRecord.newBuilder()
-            .setId("1")
-            .setCoreTerms(Collections.singletonMap("key", "value"))
-            .build();
+        ExtendedRecord.newBuilder().setId("1").setCoreTerms(Map.of("key", "value")).build();
     ExtendedRecord expectedTwo = ExtendedRecord.newBuilder().setId("1").build();
     ExtendedRecord expectedThree = ExtendedRecord.newBuilder().setId("3").build();
     writeExtendedRecords(verbatimPath1, expectedOne, expectedTwo, expectedThree);
@@ -167,17 +160,11 @@ public class AvroReaderTest {
 
     // State
     ExtendedRecord expectedOne =
-        ExtendedRecord.newBuilder()
-            .setId("1")
-            .setCoreTerms(Collections.singletonMap("key", "value"))
-            .build();
+        ExtendedRecord.newBuilder().setId("1").setCoreTerms(Map.of("key", "value")).build();
     ExtendedRecord expectedTwo = ExtendedRecord.newBuilder().setId("1").build();
     ExtendedRecord expectedThree = ExtendedRecord.newBuilder().setId("3").build();
     ExtendedRecord expectedFour =
-        ExtendedRecord.newBuilder()
-            .setId("1")
-            .setCoreTerms(Collections.singletonMap("key", "value"))
-            .build();
+        ExtendedRecord.newBuilder().setId("1").setCoreTerms(Map.of("key", "value")).build();
     ExtendedRecord expectedFive = ExtendedRecord.newBuilder().setId("1").build();
     ExtendedRecord expectedSix = ExtendedRecord.newBuilder().setId("3").build();
 
@@ -202,20 +189,11 @@ public class AvroReaderTest {
 
     // State
     ExtendedRecord expectedOne =
-        ExtendedRecord.newBuilder()
-            .setId("1")
-            .setCoreTerms(Collections.singletonMap("key1", "value"))
-            .build();
+        ExtendedRecord.newBuilder().setId("1").setCoreTerms(Map.of("key1", "value")).build();
     ExtendedRecord expectedTwo =
-        ExtendedRecord.newBuilder()
-            .setId("1")
-            .setCoreTerms(Collections.singletonMap("key2", "value"))
-            .build();
+        ExtendedRecord.newBuilder().setId("1").setCoreTerms(Map.of("key2", "value")).build();
     ExtendedRecord expectedThree =
-        ExtendedRecord.newBuilder()
-            .setId("1")
-            .setCoreTerms(Collections.singletonMap("key3", "value"))
-            .build();
+        ExtendedRecord.newBuilder().setId("1").setCoreTerms(Map.of("key3", "value")).build();
     writeExtendedRecords(verbatimPath1, expectedOne, expectedTwo, expectedThree);
 
     // When

@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -278,7 +277,7 @@ public class AudubonInterpreterTest {
         "http://ns.adobe.com/xap/1.0/rights/Owner", "Stichting Xeno-canto voor Natuurgeluiden");
     audubon2.put("http://purl.org/dc/terms/rights", "CC BY-NC-SA 4.0");
 
-    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", Arrays.asList(audubon1, audubon2));
+    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", List.of(audubon1, audubon2));
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
 
