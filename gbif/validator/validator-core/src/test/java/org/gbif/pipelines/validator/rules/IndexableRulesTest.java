@@ -3,7 +3,7 @@ package org.gbif.pipelines.validator.rules;
 import static org.gbif.validator.api.EvaluationType.DWCA_UNREADABLE;
 import static org.junit.Assert.*;
 
-import java.util.Collections;
+import java.util.List;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
@@ -21,16 +21,15 @@ public class IndexableRulesTest {
     Metrics metrics =
         Metrics.builder()
             .stepTypes(
-                Collections.singletonList(
+                List.of(
                     ValidationStep.builder()
                         .stepType(StepType.ABCD_TO_VERBATIM.name())
                         .status(Status.FINISHED)
                         .build()))
             .fileInfos(
-                Collections.singletonList(
+                List.of(
                     FileInfo.builder()
-                        .issues(
-                            Collections.singletonList(IssueInfo.builder().issue("TEST").build()))
+                        .issues(List.of(IssueInfo.builder().issue("TEST").build()))
                         .build()))
             .build();
 
@@ -47,17 +46,15 @@ public class IndexableRulesTest {
     Metrics metrics =
         Metrics.builder()
             .stepTypes(
-                Collections.singletonList(
+                List.of(
                     ValidationStep.builder()
                         .stepType(StepType.ABCD_TO_VERBATIM.name())
                         .status(Status.FINISHED)
                         .build()))
             .fileInfos(
-                Collections.singletonList(
+                List.of(
                     FileInfo.builder()
-                        .issues(
-                            Collections.singletonList(
-                                IssueInfo.builder().issue(DWCA_UNREADABLE.name()).build()))
+                        .issues(List.of(IssueInfo.builder().issue(DWCA_UNREADABLE.name()).build()))
                         .build()))
             .build();
 

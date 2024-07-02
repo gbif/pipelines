@@ -1,7 +1,6 @@
 package org.gbif.pipelines.tasks.occurrences.identifier;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -66,7 +65,7 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
   @Override
   public String getRouting() {
     return new PipelinesVerbatimMessage()
-        .setPipelineSteps(Collections.singleton(StepType.VERBATIM_TO_IDENTIFIER.name()))
+        .setPipelineSteps(Set.of(StepType.VERBATIM_TO_IDENTIFIER.name()))
         .setRunner(config.processRunner)
         .getRoutingKey();
   }

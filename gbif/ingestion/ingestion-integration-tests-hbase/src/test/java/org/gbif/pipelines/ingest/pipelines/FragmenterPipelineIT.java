@@ -11,7 +11,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -211,7 +210,7 @@ public class FragmenterPipelineIT {
       ext1.put(DwcTerm.measurementUnit.qualifiedName(), value);
 
       Map<String, List<Map<String, String>>> ext = new HashMap<>();
-      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
+      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
 
       Map<String, String> coreTerm = new HashMap<>(5);
 

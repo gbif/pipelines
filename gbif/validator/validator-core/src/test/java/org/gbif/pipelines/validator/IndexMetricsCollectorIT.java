@@ -209,7 +209,7 @@ public class IndexMetricsCollectorIT {
         IssueInfo.builder()
             .issue(OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name())
             .count(1L)
-            .samples(Collections.singletonList(IssueSample.builder().recordId("bla").build()))
+            .samples(List.of(IssueSample.builder().recordId("bla").build()))
             .build());
 
     assertIssueInfo(
@@ -218,7 +218,7 @@ public class IndexMetricsCollectorIT {
             .issue(OccurrenceIssue.ELEVATION_UNLIKELY.name())
             .count(1L)
             .samples(
-                Collections.singletonList(
+                List.of(
                     IssueSample.builder()
                         .relatedData(
                             Collections.singletonMap(

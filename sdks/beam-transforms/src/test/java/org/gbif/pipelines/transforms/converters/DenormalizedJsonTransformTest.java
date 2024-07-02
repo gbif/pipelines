@@ -96,9 +96,9 @@ public class DenormalizedJsonTransformTest {
             .setPublisherTitle("setPublisherTitle")
             .setPublishingOrganizationKey("setPublishingOrganizationKey")
             .setInstallationKey("setInstallationKey")
-            .setNetworkKeys(Collections.singletonList("setNetworkKeys"))
+            .setNetworkKeys(List.of("setNetworkKeys"))
             .setMachineTags(
-                Collections.singletonList(
+                List.of(
                     MachineTag.newBuilder()
                         .setName("Name")
                         .setNamespace("Namespace")
@@ -107,10 +107,8 @@ public class DenormalizedJsonTransformTest {
             .build();
 
     Map<String, List<Map<String, String>>> exts = new HashMap<>(2);
-    exts.put(DwcTerm.Occurrence.qualifiedName(), Collections.singletonList(erMap));
-    exts.put(
-        "http://rs.tdwg.org/ac/terms/Multimedia",
-        Collections.singletonList(Collections.singletonMap("k", "v")));
+    exts.put(DwcTerm.Occurrence.qualifiedName(), List.of(erMap));
+    exts.put("http://rs.tdwg.org/ac/terms/Multimedia", List.of(Collections.singletonMap("k", "v")));
 
     ExtendedRecord er =
         ExtendedRecord.newBuilder()

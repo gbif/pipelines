@@ -345,7 +345,7 @@ public class BasicInterpreterTest {
     Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
     Map<String, String> identification = new HashMap<>(1);
     identification.put(DwcTerm.identifiedBy.qualifiedName(), person1 + " | " + person2 + " | ");
-    ext.put(Extension.IDENTIFICATION.getRowType(), Collections.singletonList(identification));
+    ext.put(Extension.IDENTIFICATION.getRowType(), List.of(identification));
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setExtensions(ext).build();
 
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
@@ -371,7 +371,7 @@ public class BasicInterpreterTest {
     Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
     Map<String, String> identification = new HashMap<>(1);
     identification.put(DwcTerm.identifiedBy.qualifiedName(), person2);
-    ext.put(Extension.IDENTIFICATION.getRowType(), Collections.singletonList(identification));
+    ext.put(Extension.IDENTIFICATION.getRowType(), List.of(identification));
     ExtendedRecord er =
         ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).setExtensions(ext).build();
 
@@ -398,7 +398,7 @@ public class BasicInterpreterTest {
     Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
     Map<String, String> identification = new HashMap<>(1);
     identification.put(DwcTerm.identifiedBy.qualifiedName(), person2);
-    ext.put(Extension.IDENTIFICATION.getRowType(), Collections.singletonList(identification));
+    ext.put(Extension.IDENTIFICATION.getRowType(), List.of(identification));
     ExtendedRecord er =
         ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).setExtensions(ext).build();
 
@@ -465,7 +465,7 @@ public class BasicInterpreterTest {
     Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
     Map<String, String> identification = new HashMap<>(1);
     identification.put(DwcTerm.typeStatus.qualifiedName(), tp1 + " | " + tp2 + " | ");
-    ext.put(Extension.IDENTIFICATION.getRowType(), Collections.singletonList(identification));
+    ext.put(Extension.IDENTIFICATION.getRowType(), List.of(identification));
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setExtensions(ext).build();
 
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
@@ -491,7 +491,7 @@ public class BasicInterpreterTest {
     Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
     Map<String, String> identification = new HashMap<>(1);
     identification.put(DwcTerm.typeStatus.qualifiedName(), tp2);
-    ext.put(Extension.IDENTIFICATION.getRowType(), Collections.singletonList(identification));
+    ext.put(Extension.IDENTIFICATION.getRowType(), List.of(identification));
     ExtendedRecord er =
         ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).setExtensions(ext).build();
 
@@ -517,7 +517,7 @@ public class BasicInterpreterTest {
     Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
     Map<String, String> identification = new HashMap<>(1);
     identification.put(DwcTerm.typeStatus.qualifiedName(), tp1);
-    ext.put(Extension.IDENTIFICATION.getRowType(), Collections.singletonList(identification));
+    ext.put(Extension.IDENTIFICATION.getRowType(), List.of(identification));
     ExtendedRecord er =
         ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).setExtensions(ext).build();
 
@@ -618,8 +618,7 @@ public class BasicInterpreterTest {
     // State
     Map<String, List<Map<String, String>>> extension =
         Collections.singletonMap(
-            DNA_DERIVED_DATA.getRowType(),
-            Collections.singletonList(Collections.singletonMap("awd", "daw")));
+            DNA_DERIVED_DATA.getRowType(), List.of(Collections.singletonMap("awd", "daw")));
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setExtensions(extension).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
@@ -633,8 +632,7 @@ public class BasicInterpreterTest {
     // State
     Map<String, List<Map<String, String>>> extension2 =
         Collections.singletonMap(
-            GEL_IMAGE.getRowType(),
-            Collections.singletonList(Collections.singletonMap("awd", "daw")));
+            GEL_IMAGE.getRowType(), List.of(Collections.singletonMap("awd", "daw")));
     ExtendedRecord er2 = ExtendedRecord.newBuilder().setId(ID).setExtensions(extension2).build();
     BasicRecord br2 = BasicRecord.newBuilder().setId(ID).build();
 

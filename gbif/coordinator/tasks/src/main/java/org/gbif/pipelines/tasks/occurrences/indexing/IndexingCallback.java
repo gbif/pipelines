@@ -4,7 +4,7 @@ import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
-import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import lombok.Builder;
@@ -72,7 +72,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
 
     String routingKey;
     if (config.validatorOnly) {
-      pm.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_INTERPRETED_TO_INDEX.name()));
+      pm.setPipelineSteps(Set.of(StepType.VALIDATOR_INTERPRETED_TO_INDEX.name()));
       if (config.validatorListenAllMq) {
         routingKey = pm.getRoutingKey() + ".*";
       } else {

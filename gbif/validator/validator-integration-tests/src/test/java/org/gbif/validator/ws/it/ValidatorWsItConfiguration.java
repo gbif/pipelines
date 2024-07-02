@@ -1,7 +1,7 @@
 package org.gbif.validator.ws.it;
 
 import com.zaxxer.hikari.HikariDataSource;
-import java.util.Collections;
+import java.util.Set;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.mail.validator.ValidatorEmailService;
@@ -78,7 +78,7 @@ public class ValidatorWsItConfiguration extends ValidatorWsConfiguration {
       LoggedUser.builder()
           .userName("admin")
           .email("nothing@gbif.org")
-          .roles(Collections.singleton(UserRole.USER.name()))
+          .roles(Set.of(UserRole.USER.name()))
           .build();
   public static final String TEST_USER_PASSWORD = "hi";
 

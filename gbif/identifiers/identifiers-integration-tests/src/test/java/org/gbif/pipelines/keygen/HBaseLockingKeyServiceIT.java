@@ -8,7 +8,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -85,7 +84,7 @@ public class HBaseLockingKeyServiceIT {
   public void testSimpleIdContig() {
     KeyLookupResult result = null;
     for (int i = 0; i < 1000; i++) {
-      Set<String> uniqueIds = Collections.singleton(String.valueOf(i));
+      Set<String> uniqueIds = Set.of(String.valueOf(i));
       result = HBASE_SERVER.keyService.generateKey(uniqueIds, "boo");
     }
     assertEquals(1000, result.getKey());
@@ -95,7 +94,7 @@ public class HBaseLockingKeyServiceIT {
   public void testResumeCountAfterFailure() {
     KeyLookupResult result = null;
     for (int i = 0; i < 1001; i++) {
-      Set<String> uniqueIds = Collections.singleton(String.valueOf(i));
+      Set<String> uniqueIds = Set.of(String.valueOf(i));
       result = HBASE_SERVER.keyService.generateKey(uniqueIds, "boo");
     }
     assertEquals(1001, result.getKey());
@@ -104,7 +103,7 @@ public class HBaseLockingKeyServiceIT {
     HBaseLockingKeyService keyService2 =
         new HBaseLockingKeyService(HbaseServer.CFG, HBASE_SERVER.connection);
     for (int i = 0; i < 5; i++) {
-      Set<String> uniqueIds = Collections.singleton("A" + i);
+      Set<String> uniqueIds = Set.of("A" + i);
       result = keyService2.generateKey(uniqueIds, "boo");
     }
     assertEquals(2005, result.getKey());
@@ -182,8 +181,7 @@ public class HBaseLockingKeyServiceIT {
       lookupTable.put(put);
     }
 
-    KeyLookupResult result =
-        HBASE_SERVER.keyService.generateKey(Collections.singleton("ABCD"), datasetKey);
+    KeyLookupResult result = HBASE_SERVER.keyService.generateKey(Set.of("ABCD"), datasetKey);
     assertEquals(1, result.getKey());
   }
 
@@ -203,8 +201,7 @@ public class HBaseLockingKeyServiceIT {
       lookupTable.put(put);
     }
 
-    KeyLookupResult result =
-        HBASE_SERVER.keyService.generateKey(Collections.singleton("ABCD"), datasetKey);
+    KeyLookupResult result = HBASE_SERVER.keyService.generateKey(Set.of("ABCD"), datasetKey);
     assertEquals(1, result.getKey());
   }
 
@@ -221,8 +218,7 @@ public class HBaseLockingKeyServiceIT {
     for (Thread thread : threads) {
       thread.join();
     }
-    KeyLookupResult result =
-        HBASE_SERVER.keyService.generateKey(Collections.singleton("asdf"), "wqer");
+    KeyLookupResult result = HBASE_SERVER.keyService.generateKey(Set.of("asdf"), "wqer");
     assertEquals(5001, result.getKey());
   }
 
@@ -241,7 +237,7 @@ public class HBaseLockingKeyServiceIT {
     @Override
     public void run() {
       for (int i = 0; i < keyCount; i++) {
-        Set<String> uniqueIds = Collections.singleton(name + i);
+        Set<String> uniqueIds = Set.of(name + i);
         keyService.generateKey(uniqueIds, "boo");
       }
     }

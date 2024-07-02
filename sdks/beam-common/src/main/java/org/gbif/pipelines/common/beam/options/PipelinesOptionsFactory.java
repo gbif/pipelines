@@ -2,7 +2,7 @@ package org.gbif.pipelines.common.beam.options;
 
 import com.google.common.base.Strings;
 import java.io.File;
-import java.util.Collections;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -37,7 +37,7 @@ public final class PipelinesOptionsFactory {
       Configuration conf = new Configuration(false);
       conf.addResource(new Path(hdfsPath));
       conf.addResource(new Path(corePath));
-      options.setHdfsConfiguration(Collections.singletonList(conf));
+      options.setHdfsConfiguration(List.of(conf));
     }
   }
 

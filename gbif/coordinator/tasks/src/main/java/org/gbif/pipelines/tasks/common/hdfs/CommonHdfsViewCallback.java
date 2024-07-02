@@ -2,7 +2,6 @@ package org.gbif.pipelines.tasks.common.hdfs;
 
 import com.google.common.base.Strings;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
@@ -179,14 +178,14 @@ public class CommonHdfsViewCallback {
   // If there is one step only like metadata, we have to run the RecordType steps
   private Set<String> swapInterpretTypes(Set<String> interpretTypes) {
     if (interpretTypes.isEmpty()) {
-      return Collections.singleton(RecordType.ALL.name());
+      return Set.of(RecordType.ALL.name());
     }
     if (interpretTypes.size() == 1 && interpretTypes.contains(RecordType.ALL.name())) {
-      return Collections.singleton(RecordType.ALL.name());
+      return Set.of(RecordType.ALL.name());
     }
     if (interpretTypes.size() == 1
         && RecordType.getAllInterpretationAsString().containsAll(interpretTypes)) {
-      return Collections.singleton(config.recordType.name());
+      return Set.of(config.recordType.name());
     }
     return interpretTypes;
   }

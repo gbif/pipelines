@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -313,7 +312,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         boolean containsOccurrences = message.getDatasetInfo().isContainsOccurrences();
         Set<StepType> stepTypes =
             PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents)
-                .getAllNodesFor(Collections.singleton(stepType));
+                .getAllNodesFor(Set.of(stepType));
 
         PipelineExecution execution =
             new PipelineExecution().setStepsToRun(stepTypes).setCreated(LocalDateTime.now());

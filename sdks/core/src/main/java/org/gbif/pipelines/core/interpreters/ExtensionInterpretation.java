@@ -200,9 +200,7 @@ public class ExtensionInterpretation {
           key,
           (t, v) -> {
             String r = function.apply(t, v);
-            return Strings.isNullOrEmpty(r)
-                ? Collections.emptyList()
-                : Collections.singletonList(r);
+            return Strings.isNullOrEmpty(r) ? Collections.emptyList() : List.of(r);
           });
       return this;
     }
@@ -242,9 +240,7 @@ public class ExtensionInterpretation {
       return postMap(
           t -> {
             String r = function.apply(t);
-            return Strings.isNullOrEmpty(r)
-                ? Collections.emptyList()
-                : Collections.singletonList(r);
+            return Strings.isNullOrEmpty(r) ? Collections.emptyList() : List.of(r);
           });
     }
 
@@ -324,7 +320,7 @@ public class ExtensionInterpretation {
      * @return result of conversion
      */
     public Result<T> convert(Map<String, String> extension) {
-      List<Map<String, String>> extensions = Collections.singletonList(extension);
+      List<Map<String, String>> extensions = List.of(extension);
       return convert(extensions);
     }
 

@@ -89,7 +89,7 @@ public class ValidatorEmailServiceImpl implements ValidatorEmailService {
   private Set<String> getUserNotificationAddresses(GbifUser user) {
     return Optional.ofNullable(user)
         .filter(u -> u.getEmail() != null)
-        .map(u -> Collections.singleton(u.getEmail()))
+        .map(u -> Set.of(u.getEmail()))
         .orElse(Collections.emptySet());
   }
 

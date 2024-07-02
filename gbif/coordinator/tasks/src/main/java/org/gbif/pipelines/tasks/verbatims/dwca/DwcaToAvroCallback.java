@@ -6,7 +6,6 @@ import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -78,7 +77,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
   public String getRouting() {
     PipelinesDwcaMessage message = new PipelinesDwcaMessage();
     if (config.validatorOnly) {
-      message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_DWCA_TO_VERBATIM.name()));
+      message.setPipelineSteps(Set.of(StepType.VALIDATOR_DWCA_TO_VERBATIM.name()));
     }
     return message.getRoutingKey();
   }
@@ -194,7 +193,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
             isValidator ? StepType.VALIDATOR_DWCA_TO_VERBATIM : StepType.DWCA_TO_VERBATIM;
 
         Set<String> steps =
-            workflow.getAllNodesFor(Collections.singleton(type)).stream()
+            workflow.getAllNodesFor(Set.of(type)).stream()
                 .map(StepType::name)
                 .collect(Collectors.toSet());
 

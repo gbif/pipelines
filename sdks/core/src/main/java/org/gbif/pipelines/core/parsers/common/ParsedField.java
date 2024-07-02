@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.parsers.common;
 
-import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 import lombok.Builder;
@@ -27,7 +26,7 @@ public class ParsedField<T> {
   }
 
   public static <S> ParsedField<S> fail(String issue) {
-    return ParsedField.<S>builder().issues(Collections.singleton(issue)).build();
+    return ParsedField.<S>builder().issues(Set.of(issue)).build();
   }
 
   public static <S> ParsedField<S> fail(Set<String> issues) {

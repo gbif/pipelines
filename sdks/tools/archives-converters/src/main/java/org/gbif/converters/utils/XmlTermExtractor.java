@@ -28,7 +28,7 @@ public class XmlTermExtractor {
   private final Map<FileNameTerm, Set<Term>> extenstionsTerms;
 
   public XmlTermExtractor extract(File file) {
-    return extract(Collections.singletonList(file));
+    return extract(List.of(file));
   }
 
   public static XmlTermExtractor extract(List<File> files) {

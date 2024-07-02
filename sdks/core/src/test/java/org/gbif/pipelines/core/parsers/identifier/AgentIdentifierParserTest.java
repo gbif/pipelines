@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -51,7 +50,7 @@ public class AgentIdentifierParserTest {
   public void parseOrcidTest() {
     // Expected
     Set<AgentIdentifier> expected =
-        Collections.singleton(
+        Set.of(
             AgentIdentifier.newBuilder()
                 .setType(AgentIdentifierType.ORCID.name())
                 .setValue("https://orcid.org/0000-0002-0144-1997")
@@ -72,7 +71,7 @@ public class AgentIdentifierParserTest {
   public void parseOrcidWithoutSchemaTest() {
     // Expected
     Set<AgentIdentifier> expected =
-        Collections.singleton(
+        Set.of(
             AgentIdentifier.newBuilder()
                 .setType(AgentIdentifierType.ORCID.name())
                 .setValue("https://orcid.org/0000-0002-0144-1997")
@@ -93,7 +92,7 @@ public class AgentIdentifierParserTest {
   public void parseWikidataTest() {
     // Expected
     Set<AgentIdentifier> expected =
-        Collections.singleton(
+        Set.of(
             AgentIdentifier.newBuilder()
                 .setType(AgentIdentifierType.WIKIDATA.name())
                 .setValue("https://www.wikidata.org/wiki/0000")
@@ -114,7 +113,7 @@ public class AgentIdentifierParserTest {
   public void parseWikidataWithoutSchemaTest() {
     // Expected
     Set<AgentIdentifier> expected =
-        Collections.singleton(
+        Set.of(
             AgentIdentifier.newBuilder()
                 .setType(AgentIdentifierType.WIKIDATA.name())
                 .setValue("wikidata.org/wiki/0000")
@@ -135,7 +134,7 @@ public class AgentIdentifierParserTest {
   public void parseOtherTest() {
     // Expected
     Set<AgentIdentifier> expected =
-        Collections.singleton(
+        Set.of(
             AgentIdentifier.newBuilder()
                 .setType(AgentIdentifierType.OTHER.name())
                 .setValue("something")

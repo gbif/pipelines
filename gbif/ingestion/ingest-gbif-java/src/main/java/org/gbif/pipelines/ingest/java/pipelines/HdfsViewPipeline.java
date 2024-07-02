@@ -28,7 +28,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 import static org.gbif.pipelines.ingest.java.transforms.InterpretedAvroReader.readAvroAsFuture;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -318,7 +317,7 @@ public class HdfsViewPipeline {
         .schema(OccurrenceHdfsRecord.getClassSchema())
         .executor(executor)
         .options(options)
-        .types(Collections.singleton(recordType.name()))
+        .types(Set.of(recordType.name()))
         .recordType(recordType)
         .build()
         .write();

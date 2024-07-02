@@ -1,7 +1,6 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +70,7 @@ public class AudubonInterpreterTest {
         "Carnegie Museum of Natural History Herps Collection (CM:Herps)");
     audubon.put("http://ns.adobe.com/xap/1.0/CreateDate", "2010/12/10");
 
-    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", Collections.singletonList(audubon));
+    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", List.of(audubon));
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
 
@@ -131,7 +130,7 @@ public class AudubonInterpreterTest {
     audubon1.put("http://purl.org/dc/terms/rights", "CC0 4.0");
     audubon1.put("http://ns.adobe.com/xap/1.0/rights/Owner", "Naturalis Biodiversity Center");
 
-    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", Collections.singletonList(audubon1));
+    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", List.of(audubon1));
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
 
@@ -178,7 +177,7 @@ public class AudubonInterpreterTest {
     audubon.put("http://purl.org/dc/elements/1.1/type", "image");
     audubon.put("http://ns.adobe.com/xap/1.0/CreateDate", "not_a_date");
 
-    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", Collections.singletonList(audubon));
+    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", List.of(audubon));
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
 
@@ -305,7 +304,7 @@ public class AudubonInterpreterTest {
         "http://purl.org/dc/terms/rights",
         "http://creativecommons.org/licences/by-nc-sa/3.0/legalcode");
 
-    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", Collections.singletonList(audubon1));
+    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", List.of(audubon1));
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
 
@@ -315,7 +314,7 @@ public class AudubonInterpreterTest {
         AudubonRecord.newBuilder()
             .setId("id")
             .setAudubonItems(
-                Collections.singletonList(
+                List.of(
                     Audubon.newBuilder()
                         .setRights("http://creativecommons.org/licenses/by-nc-sa/3.0/")
                         .setRightsUri("http://creativecommons.org/licenses/by-nc-sa/3.0/")
@@ -339,7 +338,7 @@ public class AudubonInterpreterTest {
         "http://purl.org/dc/terms/rights",
         "http://creativecommons.org/licences/by-nc-sa/3.0/legalcode");
 
-    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", Collections.singletonList(audubon1));
+    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", List.of(audubon1));
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
 
@@ -349,7 +348,7 @@ public class AudubonInterpreterTest {
         AudubonRecord.newBuilder()
             .setId("id")
             .setAudubonItems(
-                Collections.singletonList(
+                List.of(
                     Audubon.newBuilder()
                         .setRights("http://creativecommons.org/licenses/by-nc-sa/3.0/")
                         .setRightsUri("http://creativecommons.org/licenses/by-nc-sa/3.0/")
@@ -373,7 +372,7 @@ public class AudubonInterpreterTest {
         "http://purl.org/dc/elements/1.1/rights",
         "https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode");
 
-    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", Collections.singletonList(audubon1));
+    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", List.of(audubon1));
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
 
@@ -383,7 +382,7 @@ public class AudubonInterpreterTest {
         AudubonRecord.newBuilder()
             .setId("id")
             .setAudubonItems(
-                Collections.singletonList(
+                List.of(
                     Audubon.newBuilder()
                         .setRights("http://creativecommons.org/licenses/by-nc-sa/4.0/")
                         .setRightsUri("http://creativecommons.org/licenses/by-nc-sa/4.0/")
@@ -412,7 +411,7 @@ public class AudubonInterpreterTest {
         "https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg");
     audubon1.put("http://ns.adobe.com/xap/1.0/MetadataDate", "2019-07-12 06:30:57.0");
 
-    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", Collections.singletonList(audubon1));
+    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", List.of(audubon1));
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
 
@@ -422,7 +421,7 @@ public class AudubonInterpreterTest {
         AudubonRecord.newBuilder()
             .setId("id")
             .setAudubonItems(
-                Collections.singletonList(
+                List.of(
                     Audubon.newBuilder()
                         .setRights("http://creativecommons.org/licenses/by-nc-sa/4.0/")
                         .setRightsUri("http://creativecommons.org/licenses/by-nc-sa/4.0/")

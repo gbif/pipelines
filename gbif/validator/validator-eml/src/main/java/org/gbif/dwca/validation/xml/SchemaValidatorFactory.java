@@ -2,7 +2,6 @@ package org.gbif.dwca.validation.xml;
 
 import java.io.StringReader;
 import java.net.URI;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +73,7 @@ public class SchemaValidatorFactory {
     try {
       return newValidatorFromDocument(xmlDocument).validate(xmlDocument);
     } catch (Exception ex) {
-      return Collections.singletonList(
+      return List.of(
           IssueInfo.create(
               EvaluationType.EML_GBIF_SCHEMA, "EML document", ex.getLocalizedMessage()));
     }

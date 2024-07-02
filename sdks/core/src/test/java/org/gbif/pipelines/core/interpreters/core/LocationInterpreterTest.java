@@ -63,7 +63,7 @@ public class LocationInterpreterTest {
     location.setType("Political");
     location.setDistance(0.0d);
     location.setIsoCountryCode2Digit(country.getIso2LetterCode());
-    return new GeocodeResponse(Collections.singletonList(location));
+    return new GeocodeResponse(List.of(location));
   }
 
   private static GeocodeResponse toGeocodeCentroidResponse(Country country, Double distanceMeters) {
@@ -71,7 +71,7 @@ public class LocationInterpreterTest {
     location.setType("Centroids");
     location.setDistanceMeters(distanceMeters);
     location.setIsoCountryCode2Digit(country.getIso2LetterCode());
-    return new GeocodeResponse(Collections.singletonList(location));
+    return new GeocodeResponse(List.of(location));
   }
 
   private static ExtendedRecord createEr(

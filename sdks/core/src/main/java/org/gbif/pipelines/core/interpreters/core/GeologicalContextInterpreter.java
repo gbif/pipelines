@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import java.util.Collections;
+import java.util.List;
 import java.util.function.BiConsumer;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -164,10 +164,7 @@ public class GeologicalContextInterpreter {
                 br.setGeologicalContext(gx);
               }
               VocabularyConcept vc =
-                  VocabularyConcept.newBuilder()
-                      .setConcept(v)
-                      .setLineage(Collections.singletonList(v))
-                      .build();
+                  VocabularyConcept.newBuilder().setConcept(v).setLineage(List.of(v)).build();
               setFn.accept(gx, vc);
             });
   }

@@ -8,8 +8,8 @@ import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -84,7 +84,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
     String routingKey;
     if (config.validatorOnly) {
-      vm.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name()));
+      vm.setPipelineSteps(Set.of(StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name()));
       if (config.validatorListenAllMq) {
         routingKey = vm.getRoutingKey() + ".*";
       } else {
@@ -162,7 +162,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         HdfsConfigs hdfsConfigs =
             HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
         HdfsUtils.deleteSubFolders(
-            hdfsConfigs, pathToDelete, config.deleteAfterDays, Collections.singleton(attempt));
+            hdfsConfigs, pathToDelete, config.deleteAfterDays, Set.of(attempt));
 
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);

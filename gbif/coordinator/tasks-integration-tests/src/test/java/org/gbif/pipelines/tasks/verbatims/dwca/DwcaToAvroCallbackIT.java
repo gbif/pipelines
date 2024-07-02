@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.model.crawler.DwcaValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
@@ -433,7 +434,7 @@ public class DwcaToAvroCallbackIT {
             URI.create(DUMMY_URL),
             attempt,
             reason,
-            Collections.singleton(DWCA_TO_VERBATIM.name()),
+            Set.of(DWCA_TO_VERBATIM.name()),
             EndpointType.DWC_ARCHIVE,
             null,
             null);
@@ -583,7 +584,7 @@ public class DwcaToAvroCallbackIT {
             URI.create(DUMMY_URL),
             attempt,
             reason,
-            Collections.singleton(DWCA_TO_VERBATIM.name()),
+            Set.of(DWCA_TO_VERBATIM.name()),
             EndpointType.DWC_ARCHIVE,
             null,
             null);

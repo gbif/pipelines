@@ -1,7 +1,6 @@
 package org.gbif.pipelines.core.utils;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +18,7 @@ public class IdentificationUtilsTest {
     Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
     Map<String, String> identification1 = new HashMap<>(1);
     identification1.put(DwcTerm.kingdom.qualifiedName(), "Animalia");
-    ext.put(Extension.IDENTIFICATION.getRowType(), Collections.singletonList(identification1));
+    ext.put(Extension.IDENTIFICATION.getRowType(), List.of(identification1));
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setExtensions(ext).build();
 
     // When
@@ -125,7 +124,7 @@ public class IdentificationUtilsTest {
     coreMap.put(DwcTerm.kingdom.qualifiedName(), "Animalia");
     Map<String, String> identification = new HashMap<>(1);
     identification.put(DwcTerm.class_.qualifiedName(), "Aves");
-    ext.put(Extension.IDENTIFICATION.getRowType(), Collections.singletonList(identification));
+    ext.put(Extension.IDENTIFICATION.getRowType(), List.of(identification));
     ExtendedRecord er =
         ExtendedRecord.newBuilder().setId("1").setCoreTerms(coreMap).setExtensions(ext).build();
 

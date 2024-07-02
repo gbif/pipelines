@@ -1,8 +1,8 @@
 package org.gbif.pipelines.diagnostics.tools;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.resources.HbaseServer;
@@ -46,13 +46,13 @@ public class IdentifiersMigratorToolIT {
 
     // Should
     Optional<KeyLookupResult> old1Key =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(old1Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(old1Occurrence), datasetKey);
     Optional<KeyLookupResult> old2Key =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(old2Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(old2Occurrence), datasetKey);
     Optional<KeyLookupResult> new1Key =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(new1Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(new1Occurrence), datasetKey);
     Optional<KeyLookupResult> new2Key =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(new2Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(new2Occurrence), datasetKey);
 
     Assert.assertFalse(old1Key.isPresent());
     Assert.assertFalse(old2Key.isPresent());
@@ -86,13 +86,13 @@ public class IdentifiersMigratorToolIT {
 
     // Should
     Optional<KeyLookupResult> old1Key =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(old1Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(old1Occurrence), datasetKey);
     Optional<KeyLookupResult> old2Key =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(old2Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(old2Occurrence), datasetKey);
     Optional<KeyLookupResult> new1Key =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(new1Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(new1Occurrence), datasetKey);
     Optional<KeyLookupResult> new2Key =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(new2Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(new2Occurrence), datasetKey);
 
     Assert.assertFalse(old1Key.isPresent());
     Assert.assertFalse(old2Key.isPresent());
@@ -112,9 +112,9 @@ public class IdentifiersMigratorToolIT {
     String new2Occurrence = "new2";
 
     KeyLookupResult old1Key =
-        HBASE_SERVER.getKeyService().generateKey(Collections.singleton(old1Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().generateKey(Set.of(old1Occurrence), datasetKey);
     KeyLookupResult old2Key =
-        HBASE_SERVER.getKeyService().generateKey(Collections.singleton(old2Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().generateKey(Set.of(old2Occurrence), datasetKey);
 
     // When
     IdentifiersMigratorTool.builder()
@@ -131,13 +131,13 @@ public class IdentifiersMigratorToolIT {
 
     // Should
     Optional<KeyLookupResult> old1DeletedKey =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(old1Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(old1Occurrence), datasetKey);
     Optional<KeyLookupResult> old2DeletedKey =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(old2Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(old2Occurrence), datasetKey);
     Optional<KeyLookupResult> new1Key =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(new1Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(new1Occurrence), datasetKey);
     Optional<KeyLookupResult> new2Key =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(new2Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(new2Occurrence), datasetKey);
 
     Assert.assertFalse(old1DeletedKey.isPresent());
     Assert.assertFalse(old2DeletedKey.isPresent());
@@ -160,9 +160,9 @@ public class IdentifiersMigratorToolIT {
     String new2Occurrence = "new2";
 
     KeyLookupResult old1Key =
-        HBASE_SERVER.getKeyService().generateKey(Collections.singleton(old1Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().generateKey(Set.of(old1Occurrence), datasetKey);
     KeyLookupResult old2Key =
-        HBASE_SERVER.getKeyService().generateKey(Collections.singleton(old2Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().generateKey(Set.of(old2Occurrence), datasetKey);
 
     // When
     IdentifiersMigratorTool.builder()
@@ -179,13 +179,13 @@ public class IdentifiersMigratorToolIT {
 
     // Should
     Optional<KeyLookupResult> old1DeletedKey =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(old1Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(old1Occurrence), datasetKey);
     Optional<KeyLookupResult> old2DeletedKey =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(old2Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(old2Occurrence), datasetKey);
     Optional<KeyLookupResult> new1Key =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(new1Occurrence), newDatasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(new1Occurrence), newDatasetKey);
     Optional<KeyLookupResult> new2Key =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(new2Occurrence), newDatasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(new2Occurrence), newDatasetKey);
 
     Assert.assertFalse(old1DeletedKey.isPresent());
     Assert.assertFalse(old2DeletedKey.isPresent());
@@ -207,17 +207,13 @@ public class IdentifiersMigratorToolIT {
     String new2Occurrence = "new2";
 
     KeyLookupResult old1ExistingKey =
-        HBASE_SERVER.getKeyService().generateKey(Collections.singleton(old1Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().generateKey(Set.of(old1Occurrence), datasetKey);
     KeyLookupResult old2ExistingKey =
-        HBASE_SERVER.getKeyService().generateKey(Collections.singleton(old2Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().generateKey(Set.of(old2Occurrence), datasetKey);
     KeyLookupResult new1ExistingKey =
-        HBASE_SERVER
-            .getKeyService()
-            .generateKey(Collections.singleton(new1Occurrence), newDatasetKey);
+        HBASE_SERVER.getKeyService().generateKey(Set.of(new1Occurrence), newDatasetKey);
     KeyLookupResult new2ExistingKey =
-        HBASE_SERVER
-            .getKeyService()
-            .generateKey(Collections.singleton(new2Occurrence), newDatasetKey);
+        HBASE_SERVER.getKeyService().generateKey(Set.of(new2Occurrence), newDatasetKey);
 
     // When
     IdentifiersMigratorTool.builder()
@@ -235,13 +231,13 @@ public class IdentifiersMigratorToolIT {
 
     // Should
     Optional<KeyLookupResult> old1DeletedKey =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(old1Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(old1Occurrence), datasetKey);
     Optional<KeyLookupResult> old2DeletedKey =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(old2Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(old2Occurrence), datasetKey);
     Optional<KeyLookupResult> new1MigratedKey =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(new1Occurrence), newDatasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(new1Occurrence), newDatasetKey);
     Optional<KeyLookupResult> new2MigratedKey =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(new2Occurrence), newDatasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(new2Occurrence), newDatasetKey);
 
     Assert.assertTrue(old1DeletedKey.isPresent());
     Assert.assertTrue(old2DeletedKey.isPresent());
@@ -265,11 +261,11 @@ public class IdentifiersMigratorToolIT {
     String new2Occurrence = "new2";
 
     KeyLookupResult old1ExistingKey =
-        HBASE_SERVER.getKeyService().generateKey(Collections.singleton(old1Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().generateKey(Set.of(old1Occurrence), datasetKey);
     KeyLookupResult old2ExistingKey =
-        HBASE_SERVER.getKeyService().generateKey(Collections.singleton(old2Occurrence), datasetKey);
-    HBASE_SERVER.getKeyService().generateKey(Collections.singleton(new1Occurrence), newDatasetKey);
-    HBASE_SERVER.getKeyService().generateKey(Collections.singleton(new2Occurrence), newDatasetKey);
+        HBASE_SERVER.getKeyService().generateKey(Set.of(old2Occurrence), datasetKey);
+    HBASE_SERVER.getKeyService().generateKey(Set.of(new1Occurrence), newDatasetKey);
+    HBASE_SERVER.getKeyService().generateKey(Set.of(new2Occurrence), newDatasetKey);
 
     // When
     IdentifiersMigratorTool.builder()
@@ -287,13 +283,13 @@ public class IdentifiersMigratorToolIT {
 
     // Should
     Optional<KeyLookupResult> old1DeletedKey =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(old1Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(old1Occurrence), datasetKey);
     Optional<KeyLookupResult> old2DeletedKey =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(old2Occurrence), datasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(old2Occurrence), datasetKey);
     Optional<KeyLookupResult> new1MigratedKey =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(new1Occurrence), newDatasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(new1Occurrence), newDatasetKey);
     Optional<KeyLookupResult> new2MigratedKey =
-        HBASE_SERVER.getKeyService().findKey(Collections.singleton(new2Occurrence), newDatasetKey);
+        HBASE_SERVER.getKeyService().findKey(Set.of(new2Occurrence), newDatasetKey);
 
     Assert.assertFalse(old1DeletedKey.isPresent());
     Assert.assertFalse(old2DeletedKey.isPresent());

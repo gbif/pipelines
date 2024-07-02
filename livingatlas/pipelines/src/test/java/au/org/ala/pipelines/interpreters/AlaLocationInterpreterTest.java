@@ -62,7 +62,7 @@ public class AlaLocationInterpreterTest {
     terrestrial.setName("Terrestrial");
     kvStore.put(
         LatLng.create(-31.25d, 146.921099d),
-        new GeocodeResponse(Collections.singletonList(terrestrial)));
+        new GeocodeResponse(List.of(terrestrial)));
 
     Map<String, String> coreMap = new HashMap<>();
     coreMap.put(DwcTerm.decimalLatitude.qualifiedName(), "-31.25");
@@ -173,7 +173,7 @@ public class AlaLocationInterpreterTest {
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        LatLng.create(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
+        LatLng.create(-31.25d, 146.921099d), new GeocodeResponse(List.of(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -206,7 +206,7 @@ public class AlaLocationInterpreterTest {
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        LatLng.create(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
+        LatLng.create(-31.25d, 146.921099d), new GeocodeResponse(List.of(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -236,7 +236,7 @@ public class AlaLocationInterpreterTest {
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        LatLng.create(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
+        LatLng.create(-31.25d, 146.921099d), new GeocodeResponse(List.of(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -271,7 +271,7 @@ public class AlaLocationInterpreterTest {
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        LatLng.create(-37.47d, 144.785153d), new GeocodeResponse(Collections.singletonList(state)));
+        LatLng.create(-37.47d, 144.785153d), new GeocodeResponse(List.of(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -310,7 +310,7 @@ public class AlaLocationInterpreterTest {
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
         LatLng.create(-31.2532183d, 146.921099d),
-        new GeocodeResponse(Collections.singletonList(state)));
+        new GeocodeResponse(List.of(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -333,7 +333,7 @@ public class AlaLocationInterpreterTest {
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
         LatLng.create(-31.2532183d, 146.921099d),
-        new GeocodeResponse(Collections.singletonList(state)));
+        new GeocodeResponse(List.of(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -388,7 +388,7 @@ public class AlaLocationInterpreterTest {
     Location location = new Location();
     location.setIsoCountryCode2Digit(country.getIso2LetterCode());
     location.setType("Political");
-    return new GeocodeResponse(Collections.singletonList(location));
+    return new GeocodeResponse(List.of(location));
   }
 
   private static class KeyValueTestStoreStub<K, V> implements KeyValueStore<K, V>, Serializable {

@@ -45,7 +45,7 @@ public class ValidationWsClientStub implements ValidationWsClient {
 
   @Override
   public PagingResponse<Validation> list(Map<String, Object> validationSearchRequest) {
-    return new PagingResponse<>(0L, 1, 1L, Collections.singletonList(validation));
+    return new PagingResponse<>(0L, 1, 1L, List.of(validation));
   }
 
   @Override

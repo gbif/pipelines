@@ -144,7 +144,7 @@ public class ContinentParser {
       builder.successful(true);
       builder.result(parseResult.getPayload());
     } else {
-      builder.issues(Collections.singleton(issue));
+      builder.issues(Set.of(issue));
     }
     return builder.build();
   }

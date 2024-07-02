@@ -1,7 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,7 +109,7 @@ public class HdfsViewPipelineIT {
       ext1.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
 
       Map<String, List<Map<String, String>>> ext = new HashMap<>();
-      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
+      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
 
       ExtendedRecord extendedRecord =
           ExtendedRecord.newBuilder().setId(ID).setExtensions(ext).build();
@@ -265,7 +264,7 @@ public class HdfsViewPipelineIT {
       ext1.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
 
       Map<String, List<Map<String, String>>> ext = new HashMap<>();
-      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
+      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
 
       ExtendedRecord extendedRecord =
           ExtendedRecord.newBuilder()

@@ -2,8 +2,8 @@ package org.gbif.pipelines.tasks.events.indexing;
 
 import static org.gbif.api.model.pipelines.StepType.EVENTS_INTERPRETED_TO_INDEX;
 
-import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.gbif.api.model.pipelines.InterpretationType.RecordType;
@@ -54,13 +54,13 @@ public class EventsIndexingCallbackIT {
         new PipelinesEventsInterpretedMessage(
             uuid,
             attempt,
-            Collections.singleton(EVENTS_INTERPRETED_TO_INDEX.name()),
+            Set.of(EVENTS_INTERPRETED_TO_INDEX.name()),
             0L,
             0L,
             null,
             null,
             EndpointType.DWC_ARCHIVE,
-            Collections.singleton(RecordType.EVENT.name()),
+            Set.of(RecordType.EVENT.name()),
             false,
             StepRunner.DISTRIBUTED.name());
 

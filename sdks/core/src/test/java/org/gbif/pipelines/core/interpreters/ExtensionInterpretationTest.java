@@ -45,13 +45,13 @@ public class ExtensionInterpretationTest {
     Set<String> issues = new TreeSet<>();
     issues.add("multi");
     issues.add("single");
-    Result<EiTest> expected = new Result<>(Collections.singletonList(e), issues);
+    Result<EiTest> expected = new Result<>(List.of(e), issues);
 
     Set<String> issuesEr = new TreeSet<>();
     issuesEr.add("checker");
     issuesEr.add("multi");
     issuesEr.add("single");
-    Result<EiTest> expectedEr = new Result<>(Collections.singletonList(e), issuesEr);
+    Result<EiTest> expectedEr = new Result<>(List.of(e), issuesEr);
 
     // State
     Map<String, String> source = new HashMap<>(3);
@@ -80,12 +80,12 @@ public class ExtensionInterpretationTest {
     BiFunction<EiTest, String, List<String>> val3Fn =
         (eiTest, s) -> {
           eiTest.val3 = s;
-          return Collections.singletonList("single");
+          return List.of("single");
         };
     BiFunction<EiTest, String, List<String>> val4Fn =
         (eiTest, s) -> {
           eiTest.val4 = s;
-          return Collections.singletonList("multi");
+          return List.of("multi");
         };
     BiFunction<EiTest, String, String> val5Fn =
         (eiTest, s) -> {
@@ -101,7 +101,7 @@ public class ExtensionInterpretationTest {
     Function<EiTest, List<String>> postFn2 =
         eiTest -> {
           eiTest.val2 = eiTest.val1 + eiTest.val3;
-          return Collections.singletonList("single");
+          return List.of("single");
         };
     Function<EiTest, String> postFn3 =
         eiTest -> {
@@ -131,7 +131,7 @@ public class ExtensionInterpretationTest {
             .skipIf(checker);
 
     Result<EiTest> result1 = handler.convert(source);
-    Result<EiTest> result2 = handler.convert(Collections.singletonList(source));
+    Result<EiTest> result2 = handler.convert(List.of(source));
     Result<EiTest> resultEr = handler.convert(erSource);
 
     // Should

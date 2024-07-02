@@ -4,7 +4,6 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_MISMATCH;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
-import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -117,7 +116,7 @@ public class LocationParser {
       builder.successful(true);
       builder.result(parseResult.getPayload());
     } else {
-      builder.issues(Collections.singleton(issue));
+      builder.issues(Set.of(issue));
     }
     return builder.build();
   }

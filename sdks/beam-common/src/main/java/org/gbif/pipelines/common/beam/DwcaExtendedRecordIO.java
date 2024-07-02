@@ -3,7 +3,6 @@ package org.gbif.pipelines.common.beam;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.ARCHIVE_TO_ER_COUNT;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -118,7 +117,7 @@ public class DwcaExtendedRecordIO {
     @Override
     public List<? extends BoundedSource<ExtendedRecord>> split(
         long desiredBundleSizeBytes, PipelineOptions options) {
-      return Collections.singletonList(this);
+      return List.of(this);
     }
 
     @Override

@@ -9,9 +9,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -147,7 +147,7 @@ public class HdfsViewCallbackIT {
             .build();
 
     PipelinesInterpretedMessage message = createMessage(uuid, attempt);
-    message.setPipelineSteps(Collections.singleton(StepType.INTERPRETED_TO_INDEX.name()));
+    message.setPipelineSteps(Set.of(StepType.INTERPRETED_TO_INDEX.name()));
 
     // When
     callback.handleMessage(message);
@@ -169,7 +169,7 @@ public class HdfsViewCallbackIT {
     message.setEndpointType(EndpointType.DWC_ARCHIVE);
     message.setNumberOfRecords(1L);
     message.setRunner(StepRunner.STANDALONE.name());
-    message.setInterpretTypes(Collections.singleton("ALL"));
+    message.setInterpretTypes(Set.of("ALL"));
     message.setPipelineSteps(
         new HashSet<>(
             Arrays.asList(StepType.INTERPRETED_TO_INDEX.name(), StepType.HDFS_VIEW.name())));

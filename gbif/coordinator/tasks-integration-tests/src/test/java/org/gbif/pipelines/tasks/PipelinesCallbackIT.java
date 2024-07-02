@@ -6,7 +6,6 @@ import static org.gbif.api.model.pipelines.PipelineStep.Status.QUEUED;
 import static org.gbif.api.model.pipelines.PipelineStep.Status.SUBMITTED;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -171,7 +170,7 @@ public class PipelinesCallbackIT {
     Long executionId = null; // New interpretation
     StepType stepType = StepType.INTERPRETED_TO_INDEX;
 
-    Set<String> pipelineSteps = Collections.singleton(StepType.INTERPRETED_TO_INDEX.name());
+    Set<String> pipelineSteps = Set.of(StepType.INTERPRETED_TO_INDEX.name());
 
     PipelineBasedMessage incomingMessage =
         TestMessage.create(

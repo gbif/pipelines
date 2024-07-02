@@ -183,8 +183,7 @@ public class EventToEsIndexPipelineIT {
                       .setLineage(Collections.emptyList())
                       .build())
               .setParentEventID(ID)
-              .setParentsLineage(
-                  Collections.singletonList(Parent.newBuilder().setId(ID).setOrder(0).build()))
+              .setParentsLineage(List.of(Parent.newBuilder().setId(ID).setOrder(0).build()))
               .setLocationID("L1")
               .build();
       writer.append(subEventCoreRecord);
@@ -266,7 +265,7 @@ public class EventToEsIndexPipelineIT {
           TaxonRecord.newBuilder()
               .setId(ID)
               .setClassification(
-                  Collections.singletonList(
+                  List.of(
                       RankedName.newBuilder()
                           .setRank(Rank.SPECIES)
                           .setName("Puma concolor subsp. coryi (Bangs, 1899)")
@@ -280,7 +279,7 @@ public class EventToEsIndexPipelineIT {
               .setId(SUB_EVENT_ID)
               .setParentId(ID)
               .setClassification(
-                  Collections.singletonList(
+                  List.of(
                       RankedName.newBuilder()
                           .setRank(Rank.SPECIES)
                           .setName("Puma concolor subsp. concolor")
@@ -294,7 +293,7 @@ public class EventToEsIndexPipelineIT {
               .setId(SUB_EVENT_ID_2)
               .setParentId(SUB_EVENT_ID)
               .setClassification(
-                  Collections.singletonList(
+                  List.of(
                       RankedName.newBuilder()
                           .setRank(Rank.SPECIES)
                           .setName("Puma concolor (Linnaeus, 1771)")
@@ -346,7 +345,7 @@ public class EventToEsIndexPipelineIT {
       ext1.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
 
       Map<String, List<Map<String, String>>> ext = new HashMap<>();
-      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
+      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
 
       ExtendedRecord extendedRecord =
           ExtendedRecord.newBuilder().setId(ID).setCoreId(ID).setExtensions(ext).build();
@@ -470,8 +469,7 @@ public class EventToEsIndexPipelineIT {
     assertEquals(SUB_EVENT_ID_2, eventRecordSub2.getTemporalInherited().getId());
     assertEquals(new Integer(10), eventRecordSub2.getTemporalInherited().getMonth());
     assertEquals(new Integer(2017), eventRecordSub2.getTemporalInherited().getYear());
-    assertEquals(
-        Collections.singletonList("survey"), eventRecordSub2.getEventInherited().getEventType());
+    assertEquals(List.of("survey"), eventRecordSub2.getEventInherited().getEventType());
     assertEquals("L1", eventRecordSub2.getEventInherited().getLocationID());
   }
 

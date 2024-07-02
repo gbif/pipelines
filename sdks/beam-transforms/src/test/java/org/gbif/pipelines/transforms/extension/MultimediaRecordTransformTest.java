@@ -1,6 +1,6 @@
 package org.gbif.pipelines.transforms.extension;
 
-import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -101,7 +101,7 @@ public class MultimediaRecordTransformTest {
     return MultimediaRecord.newBuilder()
         .setId(RECORD_ID)
         .setCreated(0L)
-        .setMultimediaItems(Collections.singletonList(multimedia))
+        .setMultimediaItems(List.of(multimedia))
         .build();
   }
 }

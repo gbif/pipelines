@@ -1,6 +1,5 @@
 package org.gbif.pipelines.validator.checklists.model;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +56,7 @@ public class TestData {
     terms.put(IucnTerm.iucnRedListCategory, "endangered");
     terms.put(DwcTerm.locationID, null);
 
-    extensions.put(Extension.DISTRIBUTION, Collections.singletonList(terms));
+    extensions.put(Extension.DISTRIBUTION, List.of(terms));
     verbatimNameUsage.setExtensions(extensions);
 
     return NormalizedNameUsageData.builder()

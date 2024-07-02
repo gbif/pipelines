@@ -72,7 +72,7 @@ public class OccurrenceHdfsRecordTransformTest {
     ext1.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
 
     Map<String, List<Map<String, String>>> ext = new HashMap<>();
-    ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
+    ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").setExtensions(ext).build();
     IdentifierRecord id =
@@ -88,10 +88,7 @@ public class OccurrenceHdfsRecordTransformTest {
             .setProjectId("setProjectId")
             .build();
     BasicRecord br =
-        BasicRecord.newBuilder()
-            .setId("777")
-            .setDatasetName(Collections.singletonList("setDatasetName"))
-            .build();
+        BasicRecord.newBuilder().setId("777").setDatasetName(List.of("setDatasetName")).build();
     ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").setIsClustered(true).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("777").setDay(25).build();
     TaxonRecord txr = TaxonRecord.newBuilder().setId("777").setCoreId("setCoreId").build();
@@ -209,9 +206,8 @@ public class OccurrenceHdfsRecordTransformTest {
     OccurrenceHdfsRecord expected = new OccurrenceHdfsRecord();
     expected.setGbifid("777");
     expected.setDatasetid(Collections.emptyList());
-    expected.setDatasetname(Collections.singletonList("setDatasetName"));
-    expected.setDwcaextension(
-        Collections.singletonList("http://rs.tdwg.org/dwc/terms/MeasurementOrFact"));
+    expected.setDatasetname(List.of("setDatasetName"));
+    expected.setDwcaextension(List.of("http://rs.tdwg.org/dwc/terms/MeasurementOrFact"));
     expected.setIsincluster(true);
     expected.setIdentifiedby(Collections.emptyList());
     expected.setIdentifiedbyid(Collections.emptyList());
@@ -229,7 +225,7 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setGeoreferencedby(Collections.emptyList());
     expected.setCollectionkey("setCollectionMatchKey");
     expected.setDatasettitle("setDatasetTitle");
-    expected.setProjectid(Collections.singletonList("setProjectId"));
+    expected.setProjectid(List.of("setProjectId"));
     expected.setAssociatedsequences(Collections.emptyList());
     expected.setDay(25);
 

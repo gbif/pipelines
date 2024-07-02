@@ -74,7 +74,7 @@ public class MeasurementOrFactTransformTest {
             .setId(RECORD_ID)
             .setMeasurementOrFactItems(mfcList)
             .build();
-    List<MeasurementOrFactRecord> result = Collections.singletonList(mfc);
+    List<MeasurementOrFactRecord> result = List.of(mfc);
 
     // State
     ExtendedRecord extendedRecord =
@@ -120,7 +120,7 @@ public class MeasurementOrFactTransformTest {
             .setId(RECORD_ID)
             .setMeasurementOrFactItems(mfcList)
             .build();
-    List<MeasurementOrFactRecord> result = Collections.singletonList(mfc);
+    List<MeasurementOrFactRecord> result = List.of(mfc);
 
     // State
     ExtendedRecord extendedRecord =
@@ -156,9 +156,9 @@ public class MeasurementOrFactTransformTest {
     MeasurementOrFactRecord mfc =
         MeasurementOrFactRecord.newBuilder()
             .setId(RECORD_ID)
-            .setMeasurementOrFactItems(Collections.singletonList(ext))
+            .setMeasurementOrFactItems(List.of(ext))
             .build();
-    List<MeasurementOrFactRecord> result = Collections.singletonList(mfc);
+    List<MeasurementOrFactRecord> result = List.of(mfc);
 
     // State
     ExtendedRecord extendedRecord = getExtended(null, "ext");
@@ -206,8 +206,7 @@ public class MeasurementOrFactTransformTest {
       map.put(DwcTerm.measurementUnit.qualifiedName(), extension);
 
       builder.setExtensions(
-          Collections.singletonMap(
-              Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(map)));
+          Collections.singletonMap(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(map)));
     }
 
     return builder.build();

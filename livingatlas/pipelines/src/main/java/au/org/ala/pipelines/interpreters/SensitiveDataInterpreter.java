@@ -46,7 +46,7 @@ public class SensitiveDataInterpreter {
   protected static final double UNALTERED = 0.000001;
 
   /** Bits to skip when generically updating the temporal record */
-  private static final Set<Term> SKIP_TEMPORAL_UPDATE = Collections.singleton(DwcTerm.eventDate);
+  private static final Set<Term> SKIP_TEMPORAL_UPDATE = Set.of(DwcTerm.eventDate);
 
   /**
    * Construct information from the extended record.

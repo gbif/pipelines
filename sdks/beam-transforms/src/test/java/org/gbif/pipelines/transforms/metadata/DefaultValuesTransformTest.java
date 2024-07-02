@@ -37,14 +37,13 @@ public class DefaultValuesTransformTest {
     machineTag.setValue(OccurrenceStatus.ABSENT.name());
 
     Dataset dataset = new Dataset();
-    dataset.setMachineTags(Collections.singletonList(machineTag));
+    dataset.setMachineTags(List.of(machineTag));
 
-    List<ExtendedRecord> sourceList =
-        Collections.singletonList(ExtendedRecord.newBuilder().setId("777").build());
+    List<ExtendedRecord> sourceList = List.of(ExtendedRecord.newBuilder().setId("777").build());
 
     // Expected
     List<ExtendedRecord> expectedList =
-        Collections.singletonList(
+        List.of(
             ExtendedRecord.newBuilder()
                 .setId("777")
                 .setCoreTerms(
@@ -73,12 +72,10 @@ public class DefaultValuesTransformTest {
     // State
     Dataset dataset = new Dataset();
 
-    List<ExtendedRecord> sourceList =
-        Collections.singletonList(ExtendedRecord.newBuilder().setId("777").build());
+    List<ExtendedRecord> sourceList = List.of(ExtendedRecord.newBuilder().setId("777").build());
 
     // Expected
-    List<ExtendedRecord> expectedList =
-        Collections.singletonList(ExtendedRecord.newBuilder().setId("777").build());
+    List<ExtendedRecord> expectedList = List.of(ExtendedRecord.newBuilder().setId("777").build());
 
     // When
     PCollection<ExtendedRecord> resultCollection =

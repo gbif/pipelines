@@ -1,6 +1,6 @@
 package org.gbif.pipelines.tasks.validators.metrics;
 
-import java.util.Collections;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
@@ -46,7 +46,7 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
   public String getRouting() {
     PipelinesIndexedMessage message = new PipelinesIndexedMessage();
     if (config.validatorOnly) {
-      message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_COLLECT_METRICS.name()));
+      message.setPipelineSteps(Set.of(StepType.VALIDATOR_COLLECT_METRICS.name()));
     }
     return message.getRoutingKey() + ".*";
   }

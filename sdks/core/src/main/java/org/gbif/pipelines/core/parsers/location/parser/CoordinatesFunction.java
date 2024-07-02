@@ -37,17 +37,17 @@ public class CoordinatesFunction {
 
   public static Set<String> getIssueTypes(UnaryOperator<LatLng> transformation) {
     if (transformation == NEGATED_LAT_FN) {
-      return Collections.singleton(PRESUMED_NEGATED_LATITUDE.name());
+      return Set.of(PRESUMED_NEGATED_LATITUDE.name());
     }
     if (transformation == NEGATED_LNG_FN) {
-      return Collections.singleton(PRESUMED_NEGATED_LONGITUDE.name());
+      return Set.of(PRESUMED_NEGATED_LONGITUDE.name());
     }
     if (transformation == NEGATED_COORDS_FN) {
       return new TreeSet<>(
           Arrays.asList(PRESUMED_NEGATED_LATITUDE.name(), PRESUMED_NEGATED_LONGITUDE.name()));
     }
     if (transformation == SWAPPED_COORDS_FN) {
-      return Collections.singleton(PRESUMED_SWAPPED_COORDINATE.name());
+      return Set.of(PRESUMED_SWAPPED_COORDINATE.name());
     }
 
     return Collections.emptySet();

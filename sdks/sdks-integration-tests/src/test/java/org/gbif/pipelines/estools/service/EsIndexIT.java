@@ -91,8 +91,7 @@ public class EsIndexIT extends EsApiIntegration {
             IndexParams.builder().datasetKey(i).attempt(1).settingsType(INDEXING).build());
 
     // swap index
-    EsIndex.swapIndexInAliases(
-        EsApiIntegration.ES_SERVER.getEsConfig(), Collections.singleton(alias), idxCreated);
+    EsIndex.swapIndexInAliases(EsApiIntegration.ES_SERVER.getEsConfig(), Set.of(alias), idxCreated);
 
     // assert result
     EsApiIntegration.assertSwapResults(idxCreated, search, alias, Collections.emptySet());
@@ -128,8 +127,7 @@ public class EsIndexIT extends EsApiIntegration {
         EsIndex.createIndex(
             EsApiIntegration.ES_SERVER.getEsConfig(),
             IndexParams.builder().datasetKey(i).attempt(3).settingsType(INDEXING).build());
-    EsIndex.swapIndexInAliases(
-        EsApiIntegration.ES_SERVER.getEsConfig(), Collections.singleton(alias), idx3);
+    EsIndex.swapIndexInAliases(EsApiIntegration.ES_SERVER.getEsConfig(), Set.of(alias), idx3);
 
     // alias should have only the last index created
     EsApiIntegration.assertSwapResults(idx3, search, alias, initialIndexes);
@@ -143,11 +141,10 @@ public class EsIndexIT extends EsApiIntegration {
         EsIndex.createIndex(
             EsApiIntegration.ES_SERVER.getEsConfig(),
             IndexParams.builder().datasetKey(i).attempt(4).settingsType(INDEXING).build());
-    EsIndex.swapIndexInAliases(
-        EsApiIntegration.ES_SERVER.getEsConfig(), Collections.singleton(alias), idx4);
+    EsIndex.swapIndexInAliases(EsApiIntegration.ES_SERVER.getEsConfig(), Set.of(alias), idx4);
 
     // alias should have only the last index created
-    EsApiIntegration.assertSwapResults(idx4, search, alias, Collections.singleton(idx3));
+    EsApiIntegration.assertSwapResults(idx4, search, alias, Set.of(idx3));
 
     // check settings of index after swapping
     assertTrue(EsService.existsIndex(EsApiIntegration.ES_SERVER.getEsClient(), idx4));
@@ -164,8 +161,7 @@ public class EsIndexIT extends EsApiIntegration {
     thrown.expectMessage(
         CoreMatchers.containsString("URI [/_aliases], status line [HTTP/1.1 404 Not Found"));
 
-    EsIndex.swapIndexInAliases(
-        EsApiIntegration.ES_SERVER.getEsConfig(), Collections.singleton(alias), "dummy_1");
+    EsIndex.swapIndexInAliases(EsApiIntegration.ES_SERVER.getEsConfig(), Set.of(alias), "dummy_1");
   }
 
   @Test
@@ -192,8 +188,7 @@ public class EsIndexIT extends EsApiIntegration {
     }
 
     // swap index in alias
-    EsIndex.swapIndexInAliases(
-        EsApiIntegration.ES_SERVER.getEsConfig(), Collections.singleton(alias), idx);
+    EsIndex.swapIndexInAliases(EsApiIntegration.ES_SERVER.getEsConfig(), Set.of(alias), idx);
 
     // wait the refresh interval for the documents to become searchable.
     TimeUnit.MILLISECONDS.sleep(
@@ -235,8 +230,7 @@ public class EsIndexIT extends EsApiIntegration {
 
     // add index to alias
     final String alias = "alias1";
-    EsIndex.swapIndexInAliases(
-        EsApiIntegration.ES_SERVER.getEsConfig(), Collections.singleton(alias), idx1);
+    EsIndex.swapIndexInAliases(EsApiIntegration.ES_SERVER.getEsConfig(), Set.of(alias), idx1);
 
     // When
     Set<String> indexesFound =
@@ -269,12 +263,10 @@ public class EsIndexIT extends EsApiIntegration {
 
     // add index to aliases
     final String alias1 = "alias10";
-    EsIndex.swapIndexInAliases(
-        EsApiIntegration.ES_SERVER.getEsConfig(), Collections.singleton(alias1), idx1);
+    EsIndex.swapIndexInAliases(EsApiIntegration.ES_SERVER.getEsConfig(), Set.of(alias1), idx1);
 
     final String alias2 = "alias20";
-    EsIndex.swapIndexInAliases(
-        EsApiIntegration.ES_SERVER.getEsConfig(), Collections.singleton(alias2), idx1);
+    EsIndex.swapIndexInAliases(EsApiIntegration.ES_SERVER.getEsConfig(), Set.of(alias2), idx1);
 
     // When
     Set<String> indexesFound =

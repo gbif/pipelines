@@ -3,7 +3,6 @@ package org.gbif.pipelines.transforms.core;
 import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,10 +98,10 @@ public class BasicRecordTransformTest {
             .setCreated(0L)
             .setLicense(License.UNSPECIFIED.name())
             .setIsSequenced(Boolean.TRUE)
-            .setAssociatedSequences(Collections.singletonList("dawd"))
+            .setAssociatedSequences(List.of("dawd"))
             .setIssues(
                 IssueRecord.newBuilder()
-                    .setIssueList(Collections.singletonList(BASIS_OF_RECORD_INVALID.name()))
+                    .setIssueList(List.of(BASIS_OF_RECORD_INVALID.name()))
                     .build())
             .build();
 
@@ -127,11 +126,7 @@ public class BasicRecordTransformTest {
   public void geologicalContextTest() {
 
     Function<String, VocabularyConcept> vcFn =
-        v ->
-            VocabularyConcept.newBuilder()
-                .setConcept(v)
-                .setLineage(Collections.singletonList(v))
-                .build();
+        v -> VocabularyConcept.newBuilder().setConcept(v).setLineage(List.of(v)).build();
 
     // Expected
     BasicRecord expected =
@@ -143,7 +138,7 @@ public class BasicRecordTransformTest {
             .setIsSequenced(Boolean.FALSE)
             .setIssues(
                 IssueRecord.newBuilder()
-                    .setIssueList(Collections.singletonList(BASIS_OF_RECORD_INVALID.name()))
+                    .setIssueList(List.of(BASIS_OF_RECORD_INVALID.name()))
                     .build())
             .setGeologicalContext(
                 GeologicalContext.newBuilder()
@@ -221,7 +216,7 @@ public class BasicRecordTransformTest {
                     .setCreated(0L)
                     .setBasisOfRecord(x[1])
                     .setSex(x[2])
-                    .setTypeStatus(Collections.singletonList(x[4]))
+                    .setTypeStatus(List.of(x[4]))
                     .setIndividualCount(Integer.valueOf(x[5]))
                     .setReferences(x[6])
                     .setIsSequenced(Boolean.FALSE)

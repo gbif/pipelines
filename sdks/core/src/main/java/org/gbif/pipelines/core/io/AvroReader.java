@@ -179,6 +179,6 @@ public class AvroReader {
       Path pp = new Path(path).getParent();
       return FsUtils.getFilesByExt(fs, pp, AVRO_EXTENSION);
     }
-    return Collections.singletonList(new Path(path));
+    return List.of(new Path(path));
   }
 }

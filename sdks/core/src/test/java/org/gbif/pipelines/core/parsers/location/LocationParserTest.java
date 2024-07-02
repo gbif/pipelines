@@ -6,7 +6,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84;
 
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
@@ -54,7 +54,7 @@ public class LocationParserTest {
     location.setType("Political");
     location.setDistance(0.0d);
     location.setIsoCountryCode2Digit(country.getIso2LetterCode());
-    return new GeocodeResponse(Collections.singletonList(location));
+    return new GeocodeResponse(List.of(location));
   }
 
   private static GeocodeResponse toGeocodeResponse(

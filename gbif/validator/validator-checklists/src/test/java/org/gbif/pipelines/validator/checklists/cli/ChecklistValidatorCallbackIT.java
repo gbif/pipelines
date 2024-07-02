@@ -5,8 +5,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
@@ -42,11 +43,11 @@ public class ChecklistValidatorCallbackIT {
     validation.setMetrics(
         Metrics.builder()
             .fileInfos(
-                Collections.singletonList(
+                List.of(
                     FileInfo.builder()
                         .fileName("distribution.txt")
                         .terms(
-                            Collections.singletonList(
+                            List.of(
                                 TermInfo.builder()
                                     .term(DwcTerm.locationID.qualifiedName())
                                     .interpretedIndexed(0L)
@@ -59,7 +60,7 @@ public class ChecklistValidatorCallbackIT {
 
     PipelinesChecklistValidatorMessage message =
         new PipelinesChecklistValidatorMessage(
-            uuid, 1, Collections.singleton("VALIDATOR_COLLECT_METRICS"), 1L, "dwca");
+            uuid, 1, Set.of("VALIDATOR_COLLECT_METRICS"), 1L, "dwca");
 
     // When
     ChecklistValidatorCallback callback =

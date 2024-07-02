@@ -14,8 +14,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.validation.ValidationException;
@@ -157,7 +158,7 @@ public class ValidationResourceIT {
             ValidationSearchRequest.builder()
                 .offset(0L)
                 .limit(10)
-                .status(Collections.singleton(Status.QUEUED))
+                .status(Set.of(Status.QUEUED))
                 .sortByCreated(ValidationSearchRequest.SortOrder.DESC)
                 .build());
     assertNotNull(validations.getCount());
@@ -168,7 +169,7 @@ public class ValidationResourceIT {
             ValidationSearchRequest.builder()
                 .offset(0L)
                 .limit(10)
-                .status(Collections.singleton(Validation.Status.RUNNING))
+                .status(Set.of(Validation.Status.RUNNING))
                 .build());
     assertEquals(0, runningValidations.getCount());
 
@@ -242,7 +243,7 @@ public class ValidationResourceIT {
             validationWsClient.validateFileFromUrl(
                 testPath("/archive.zip"),
                 ValidationRequest.builder()
-                    .notificationEmail(Collections.singleton("thisnotandEmail!gmail.com"))
+                    .notificationEmail(Set.of("thisnotandEmail!gmail.com"))
                     .build()));
   }
 
@@ -255,18 +256,18 @@ public class ValidationResourceIT {
 
     NameUsage nameUsage = new NameUsage();
     nameUsage.setScientificName("Wild dog");
-    nameUsage.setIssues(Collections.singleton(NameUsageIssue.ACCEPTED_NAME_MISSING));
+    nameUsage.setIssues(Set.of(NameUsageIssue.ACCEPTED_NAME_MISSING));
 
     Metrics metrics =
         Metrics.builder()
             .fileInfos(
-                Collections.singletonList(
+                List.of(
                     FileInfo.builder()
                         .fileName("somename.txt")
                         .fileType(DwcFileType.CORE)
                         .rowType(DwcTerm.Occurrence.qualifiedName())
                         .terms(
-                            Collections.singletonList(
+                            List.of(
                                 TermInfo.builder()
                                     .term(DwcTerm.occurrenceStatus.qualifiedName())
                                     .interpretedIndexed(1L)

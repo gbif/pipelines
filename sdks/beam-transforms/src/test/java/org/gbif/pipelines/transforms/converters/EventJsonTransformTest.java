@@ -3,6 +3,7 @@ package org.gbif.pipelines.transforms.converters;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -95,9 +96,9 @@ public class EventJsonTransformTest {
             .setPublisherTitle("setPublisherTitle")
             .setPublishingOrganizationKey("setPublishingOrganizationKey")
             .setInstallationKey("setInstallationKey")
-            .setNetworkKeys(Collections.singletonList("setNetworkKeys"))
+            .setNetworkKeys(List.of("setNetworkKeys"))
             .setMachineTags(
-                Collections.singletonList(
+                List.of(
                     MachineTag.newBuilder()
                         .setName("Name")
                         .setNamespace("Namespace")
@@ -113,7 +114,7 @@ public class EventJsonTransformTest {
             .setExtensions(
                 Collections.singletonMap(
                     "http://rs.tdwg.org/ac/terms/Multimedia",
-                    Collections.singletonList(Collections.singletonMap("k", "v"))))
+                    List.of(Collections.singletonMap("k", "v"))))
             .build();
 
     EventCoreRecord ecr = EventCoreRecord.newBuilder().setId("777").build();
@@ -318,7 +319,7 @@ public class EventJsonTransformTest {
             .build()
             .toJson();
 
-    PAssert.that(jsonCollection).containsInAnyOrder(Collections.singletonList(json));
+    PAssert.that(jsonCollection).containsInAnyOrder(List.of(json));
     p.run();
   }
 }

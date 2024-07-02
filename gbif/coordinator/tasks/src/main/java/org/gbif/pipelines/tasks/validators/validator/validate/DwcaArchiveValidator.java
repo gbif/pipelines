@@ -8,7 +8,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
@@ -106,7 +105,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     if (!emlPath.isPresent()) {
       return fileInfoBuilder
           .issues(
-              Collections.singletonList(
+              List.of(
                   IssueInfo.create(
                       EvaluationType.EML_NOT_FOUND,
                       Level.FATAL.name(),
@@ -132,7 +131,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
       return fileInfoBuilder
           .fileName(emlPath.get().toString())
           .issues(
-              Collections.singletonList(
+              List.of(
                   IssueInfo.create(
                       EvaluationType.EML_GBIF_SCHEMA,
                       Level.FATAL.name(),
@@ -177,7 +176,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
 
     } catch (UnsupportedArchiveException ex) {
       fileInfoBuilder.issues(
-          Collections.singletonList(
+          List.of(
               IssueInfo.create(
                   EvaluationType.UNHANDLED_ERROR, Level.FATAL.name(), ex.getLocalizedMessage())));
     }

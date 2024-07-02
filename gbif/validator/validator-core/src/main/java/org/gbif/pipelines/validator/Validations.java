@@ -1,7 +1,6 @@
 package org.gbif.pipelines.validator;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -32,8 +31,7 @@ public class Validations {
   public static void mergeFileInfo(Validation validation, FileInfo fileInfo) {
     if (validation != null && fileInfo != null) {
       if (validation.getMetrics() == null) {
-        validation.setMetrics(
-            Metrics.builder().fileInfos(Collections.singletonList(fileInfo)).build());
+        validation.setMetrics(Metrics.builder().fileInfos(List.of(fileInfo)).build());
       } else if (fileInfo.getFileName() == null) {
         addFileInfo(validation, validation.getMetrics().getFileInfos(), fileInfo);
       } else {

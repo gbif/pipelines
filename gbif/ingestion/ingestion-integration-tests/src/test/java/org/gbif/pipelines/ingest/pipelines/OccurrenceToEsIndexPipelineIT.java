@@ -2,7 +2,6 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import static org.junit.Assert.*;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +103,7 @@ public class OccurrenceToEsIndexPipelineIT {
       ext1.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
 
       Map<String, List<Map<String, String>>> ext = new HashMap<>();
-      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
+      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
 
       ExtendedRecord extendedRecord =
           ExtendedRecord.newBuilder().setId(ID).setExtensions(ext).build();

@@ -7,6 +7,7 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import com.google.common.base.Strings;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -107,7 +108,7 @@ public class GbifIdInterpreter {
         ir.setInternalId(gbifId.get().toString());
         ir.getIssues().setIssueList(Collections.emptyList());
       } else {
-        ir.getIssues().setIssueList(Collections.singletonList(GBIF_ID_INVALID));
+        ir.getIssues().setIssueList(List.of(GBIF_ID_INVALID));
       }
     };
   }

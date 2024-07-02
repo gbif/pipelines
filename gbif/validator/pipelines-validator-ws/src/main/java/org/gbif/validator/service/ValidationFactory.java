@@ -1,6 +1,6 @@
 package org.gbif.validator.service;
 
-import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import lombok.experimental.UtilityClass;
@@ -37,7 +37,7 @@ public class ValidationFactory {
         .metrics(
             Metrics.builder()
                 .stepTypes(
-                    Collections.singletonList(
+                    List.of(
                         ValidationStep.builder()
                             .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE.name())
                             .status(Status.RUNNING)

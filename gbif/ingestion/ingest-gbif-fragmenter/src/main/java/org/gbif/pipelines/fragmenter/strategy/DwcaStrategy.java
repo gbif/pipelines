@@ -3,7 +3,6 @@ package org.gbif.pipelines.fragmenter.strategy;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -46,7 +45,7 @@ public class DwcaStrategy implements Strategy {
   private List<OccurrenceRecord> convertToOccurrenceRecords(StarRecord starRecord) {
     List<Record> records = starRecord.extension(DwcTerm.Occurrence);
     if (records == null || records.isEmpty()) {
-      return Collections.singletonList(DwcaOccurrenceRecord.create(starRecord));
+      return List.of(DwcaOccurrenceRecord.create(starRecord));
     } else {
       return records.stream()
           .map(r -> DwcaExtensionOccurrenceRecord.create(starRecord.core(), r))

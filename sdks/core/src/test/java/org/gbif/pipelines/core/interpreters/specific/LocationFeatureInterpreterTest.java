@@ -20,7 +20,7 @@ public class LocationFeatureInterpreterTest {
     LocationFeatureRecord record = LocationFeatureRecord.newBuilder().setId("777").build();
 
     KeyValueStore<LatLng, String> kvStore =
-        new KeyValueStore<LatLng, String>() {
+        new KeyValueStore<>() {
           @Override
           public String get(LatLng latLng) {
             return "{\"layers: \"{\"cb1\":\"1\",\"cb2\":\"2\",\"cb3\":\"3\"}}";

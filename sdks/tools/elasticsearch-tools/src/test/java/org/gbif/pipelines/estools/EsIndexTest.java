@@ -1,6 +1,6 @@
 package org.gbif.pipelines.estools;
 
-import java.util.Collections;
+import java.util.Set;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.hamcrest.CoreMatchers;
 import org.junit.Rule;
@@ -28,7 +28,7 @@ public class EsIndexTest {
   @Test(expected = IllegalArgumentException.class)
   public void swapIndexInAliasEmptyAliasTest() {
     // When
-    EsIndex.swapIndexInAliases(EsConfig.from(DUMMY_HOST), Collections.singleton(""), "index_1");
+    EsIndex.swapIndexInAliases(EsConfig.from(DUMMY_HOST), Set.of(""), "index_1");
 
     // Should
     thrown.expectMessage("aliases are required");
@@ -38,7 +38,7 @@ public class EsIndexTest {
   public void swapIndexInAliasNullIndexTest() {
 
     // When
-    EsIndex.swapIndexInAliases(EsConfig.from(DUMMY_HOST), Collections.singleton("alias"), null);
+    EsIndex.swapIndexInAliases(EsConfig.from(DUMMY_HOST), Set.of("alias"), null);
 
     // Should
     thrown.expectMessage("index is required");
@@ -48,7 +48,7 @@ public class EsIndexTest {
   public void swapIndexInAliasEmptyIndexTest() {
 
     // When
-    EsIndex.swapIndexInAliases(EsConfig.from(DUMMY_HOST), Collections.singleton("alias"), "");
+    EsIndex.swapIndexInAliases(EsConfig.from(DUMMY_HOST), Set.of("alias"), "");
 
     // Should
     thrown.expectMessage("index is required");
@@ -58,7 +58,7 @@ public class EsIndexTest {
   public void swapIndexInAliasWrongFormatIndexTest() {
 
     // When
-    EsIndex.swapIndexInAliases(EsConfig.from(DUMMY_HOST), Collections.singleton("alias"), "index");
+    EsIndex.swapIndexInAliases(EsConfig.from(DUMMY_HOST), Set.of("alias"), "index");
 
     // Should
     thrown.expectMessage(CoreMatchers.containsString("index has to follow the pattern"));

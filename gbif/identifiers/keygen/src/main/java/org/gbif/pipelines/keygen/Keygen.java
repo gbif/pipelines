@@ -1,6 +1,5 @@
 package org.gbif.pipelines.keygen;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -30,7 +29,7 @@ public class Keygen {
       Optional<String> occurrenceId = record.getOccurrenceId();
       if (occurrenceId.isPresent()) {
         Optional<KeyLookupResult> keyForOccurrence =
-            keygenService.findKey(Collections.singleton(occurrenceId.get()));
+            keygenService.findKey(Set.of(occurrenceId.get()));
         if (keyForOccurrence.isPresent()) {
           return Optional.of(keyForOccurrence.get().getKey());
         } else {
@@ -46,7 +45,7 @@ public class Keygen {
       } else {
         record
             .getTriplet()
-            .filter(t -> keygenService.findKey(Collections.singleton(t)).isPresent())
+            .filter(t -> keygenService.findKey(Set.of(t)).isPresent())
             .ifPresent(uniqueStrings::add);
       }
     }

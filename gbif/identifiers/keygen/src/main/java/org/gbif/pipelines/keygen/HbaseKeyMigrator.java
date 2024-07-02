@@ -1,6 +1,5 @@
 package org.gbif.pipelines.keygen;
 
-import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import lombok.Builder;
@@ -24,8 +23,8 @@ public class HbaseKeyMigrator {
 
   public Optional<KeyLookupResult> migrate() {
 
-    Set<String> oldLkSet = Collections.singleton(oldLookupKey);
-    Set<String> newLkSet = Collections.singleton(newLookupKey);
+    Set<String> oldLkSet = Set.of(oldLookupKey);
+    Set<String> newLkSet = Set.of(newLookupKey);
 
     Optional<KeyLookupResult> oldKeyFromDataset = keyService.findKey(oldLkSet, fromDatasetKey);
 

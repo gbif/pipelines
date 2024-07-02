@@ -2,7 +2,6 @@ package org.gbif.pipelines.tasks.verbatims.xml;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
-import java.util.Collections;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -41,7 +40,7 @@ public class XmlToAvroConfiguration implements BaseConfiguration {
 
   @Parameter(names = "--interpret-types")
   @NotNull
-  public Set<String> interpretTypes = Collections.singleton(RecordType.ALL.name());
+  public Set<String> interpretTypes = Set.of(RecordType.ALL.name());
 
   @Parameter(names = "--file-name")
   @NotNull

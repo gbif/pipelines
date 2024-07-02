@@ -118,9 +118,9 @@ public class OccurrenceJsonConverterTest {
             .setPublisherTitle("setPublisherTitle")
             .setPublishingOrganizationKey("setPublishingOrganizationKey")
             .setInstallationKey("setInstallationKey")
-            .setNetworkKeys(Collections.singletonList("setNetworkKeys"))
+            .setNetworkKeys(List.of("setNetworkKeys"))
             .setMachineTags(
-                Collections.singletonList(
+                List.of(
                     MachineTag.newBuilder()
                         .setName("Name")
                         .setNamespace("Namespace")
@@ -136,7 +136,7 @@ public class OccurrenceJsonConverterTest {
             .setExtensions(
                 Collections.singletonMap(
                     "http://rs.tdwg.org/ac/terms/Multimedia",
-                    Collections.singletonList(Collections.singletonMap("k", "v"))))
+                    List.of(Collections.singletonMap("k", "v"))))
             .build();
 
     IdentifierRecord id = IdentifierRecord.newBuilder().setId("777").setInternalId("111").build();
@@ -144,11 +144,7 @@ public class OccurrenceJsonConverterTest {
     ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").setIsClustered(true).build();
 
     Function<String, VocabularyConcept> vcFn =
-        v ->
-            VocabularyConcept.newBuilder()
-                .setConcept(v)
-                .setLineage(Collections.singletonList(v))
-                .build();
+        v -> VocabularyConcept.newBuilder().setConcept(v).setLineage(List.of(v)).build();
 
     BasicRecord br =
         BasicRecord.newBuilder()
@@ -169,31 +165,31 @@ public class OccurrenceJsonConverterTest {
             .setLifeStage(
                 VocabularyConcept.newBuilder()
                     .setConcept("bla1")
-                    .setLineage(Collections.singletonList("bla1_1"))
+                    .setLineage(List.of("bla1_1"))
                     .build())
             .setPathway(
                 VocabularyConcept.newBuilder()
                     .setConcept("bla2")
-                    .setLineage(Collections.singletonList("bla2_1"))
+                    .setLineage(List.of("bla2_1"))
                     .build())
             .setEstablishmentMeans(
                 VocabularyConcept.newBuilder()
                     .setConcept("bla3")
-                    .setLineage(Collections.singletonList("bla3_1"))
+                    .setLineage(List.of("bla3_1"))
                     .build())
             .setDegreeOfEstablishment(
                 VocabularyConcept.newBuilder()
                     .setConcept("bla4")
-                    .setLineage(Collections.singletonList("bla4_1"))
+                    .setLineage(List.of("bla4_1"))
                     .build())
             .setRecordedByIds(
-                Collections.singletonList(
+                List.of(
                     AgentIdentifier.newBuilder()
                         .setType(AgentIdentifierType.OTHER.name())
                         .setValue("someId")
                         .build()))
             .setIdentifiedByIds(
-                Collections.singletonList(
+                List.of(
                     AgentIdentifier.newBuilder()
                         .setType(AgentIdentifierType.OTHER.name())
                         .setValue("someId")
@@ -272,8 +268,8 @@ public class OccurrenceJsonConverterTest {
             .setWaterBody("setWaterBody")
             .setStateProvince("setStateProvince")
             .setRepatriated(true)
-            .setGeoreferencedBy(Collections.singletonList("GeoreferencedBy"))
-            .setHigherGeography(Collections.singletonList("HigherGeography"))
+            .setGeoreferencedBy(List.of("GeoreferencedBy"))
+            .setHigherGeography(List.of("HigherGeography"))
             .setGbifRegion("GbifRegion")
             .setPublishedByGbifRegion("PublishedByGbifRegion")
             .setGadm(
@@ -327,9 +323,9 @@ public class OccurrenceJsonConverterTest {
             .setConfidence(1)
             .setMatchType(org.gbif.pipelines.io.avro.MatchType.EXACT)
             .setNote("note")
-            .setLineage(Collections.singletonList("setLineage"))
+            .setLineage(List.of("setLineage"))
             .setAlternatives(
-                Collections.singletonList(
+                List.of(
                     TaxonRecord.newBuilder()
                         .setId("888")
                         .setAcceptedUsage(au)
@@ -371,15 +367,15 @@ public class OccurrenceJsonConverterTest {
                     .setBasionymAuthorship(
                         Authorship.newBuilder()
                             .setYear("2000")
-                            .setAuthors(Collections.singletonList("setBasionymAuthorship"))
-                            .setExAuthors(Collections.singletonList("setBasionymAuthorship"))
+                            .setAuthors(List.of("setBasionymAuthorship"))
+                            .setExAuthors(List.of("setBasionymAuthorship"))
                             .setEmpty(true)
                             .build())
                     .setCombinationAuthorship(
                         Authorship.newBuilder()
                             .setYear("2020")
-                            .setAuthors(Collections.singletonList("setCombinationAuthorship"))
-                            .setExAuthors(Collections.singletonList("setCombinationAuthorship"))
+                            .setAuthors(List.of("setCombinationAuthorship"))
+                            .setExAuthors(List.of("setCombinationAuthorship"))
                             .setEmpty(false)
                             .build())
                     .build())

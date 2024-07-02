@@ -3,7 +3,7 @@ package org.gbif.pipelines.validator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import java.util.Collections;
+import java.util.List;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
@@ -61,12 +61,10 @@ public class ValidationsTest {
             .metrics(
                 Metrics.builder()
                     .fileInfos(
-                        Collections.singletonList(
+                        List.of(
                             FileInfo.builder()
                                 .fileName("ONE")
-                                .issues(
-                                    Collections.singletonList(
-                                        IssueInfo.builder().issue("ONE").build()))
+                                .issues(List.of(IssueInfo.builder().issue("ONE").build()))
                                 .build()))
                     .build())
             .build();
@@ -74,7 +72,7 @@ public class ValidationsTest {
     FileInfo fileInfo =
         FileInfo.builder()
             .fileName("TWO")
-            .issues(Collections.singletonList(IssueInfo.builder().issue("TWO").build()))
+            .issues(List.of(IssueInfo.builder().issue("TWO").build()))
             .build();
 
     // When
@@ -92,13 +90,11 @@ public class ValidationsTest {
             .metrics(
                 Metrics.builder()
                     .fileInfos(
-                        Collections.singletonList(
+                        List.of(
                             FileInfo.builder()
                                 .fileName("ONE")
                                 .fileType(DwcFileType.CORE)
-                                .issues(
-                                    Collections.singletonList(
-                                        IssueInfo.builder().issue("ONE").build()))
+                                .issues(List.of(IssueInfo.builder().issue("ONE").build()))
                                 .build()))
                     .build())
             .build();
@@ -107,7 +103,7 @@ public class ValidationsTest {
         FileInfo.builder()
             .fileName("ONE")
             .fileType(DwcFileType.CORE)
-            .issues(Collections.singletonList(IssueInfo.builder().issue("TWO").build()))
+            .issues(List.of(IssueInfo.builder().issue("TWO").build()))
             .build();
 
     // When
@@ -130,13 +126,11 @@ public class ValidationsTest {
             .metrics(
                 Metrics.builder()
                     .fileInfos(
-                        Collections.singletonList(
+                        List.of(
                             FileInfo.builder()
                                 .fileName("ONE")
                                 .fileType(DwcFileType.CORE)
-                                .issues(
-                                    Collections.singletonList(
-                                        IssueInfo.builder().issue("ONE").build()))
+                                .issues(List.of(IssueInfo.builder().issue("ONE").build()))
                                 .build()))
                     .build())
             .build();
@@ -145,7 +139,7 @@ public class ValidationsTest {
         FileInfo.builder()
             .fileName("TWO")
             .fileType(DwcFileType.METADATA)
-            .issues(Collections.singletonList(IssueInfo.builder().issue("TWO").build()))
+            .issues(List.of(IssueInfo.builder().issue("TWO").build()))
             .build();
 
     // When

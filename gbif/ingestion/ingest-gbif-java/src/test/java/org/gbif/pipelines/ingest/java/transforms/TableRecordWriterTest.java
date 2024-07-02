@@ -44,7 +44,7 @@ public class TableRecordWriterTest {
           }
           OccurrenceHdfsRecord hdfsRecord = new OccurrenceHdfsRecord();
           hdfsRecord.setGbifid(id.getInternalId());
-          return Collections.singletonList(hdfsRecord);
+          return List.of(hdfsRecord);
         };
 
     String outputFile = getClass().getResource("/hdfsview/occurrence/").getFile();
@@ -118,7 +118,7 @@ public class TableRecordWriterTest {
           }
           OccurrenceHdfsRecord hdfsRecord = new OccurrenceHdfsRecord();
           hdfsRecord.setGbifid(id.getInternalId());
-          return Collections.singletonList(hdfsRecord);
+          return List.of(hdfsRecord);
         };
 
     String outputFile = getClass().getResource("/hdfsview/occurrence/").getFile();

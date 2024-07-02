@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +28,7 @@ public class MeasurementOrFactInterpreterTest {
     ext1.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
 
     Map<String, List<Map<String, String>>> ext = new HashMap<>();
-    ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
+    ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
 
     ExtendedRecord record = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
 

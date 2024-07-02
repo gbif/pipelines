@@ -5,7 +5,6 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORD
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -101,7 +100,7 @@ public class LocationMatcher {
     }
 
     // no result found
-    return ParsedField.fail(Collections.singleton(COUNTRY_COORDINATE_MISMATCH.name()));
+    return ParsedField.fail(Set.of(COUNTRY_COORDINATE_MISMATCH.name()));
   }
 
   private ParsedField<ParsedLocation> applyWithoutCountry() {
@@ -116,7 +115,7 @@ public class LocationMatcher {
   private Optional<List<Country>> getCountryFromCoordinates(LatLng latLng) {
     if (latLng.isValid()) {
       if (isAntarctica(latLng.getLatitude(), this.country)) {
-        return Optional.of(Collections.singletonList(Country.ANTARCTICA));
+        return Optional.of(List.of(Country.ANTARCTICA));
       }
 
       GeocodeResponse geocodeResponse = geocodeKvStore.get(latLng);
@@ -153,7 +152,7 @@ public class LocationMatcher {
 
   private static ParsedField<ParsedLocation> success(
       Country country, LatLng latLng, OccurrenceIssue issue) {
-    return success(country, latLng, Collections.singleton(issue.name()));
+    return success(country, latLng, Set.of(issue.name()));
   }
 
   private static ParsedField<ParsedLocation> success(Country country, LatLng latLng) {

@@ -201,8 +201,7 @@ public class OccurrenceExtensionTransformTest {
                 ext.put(DwcTerm.occurrenceID.qualifiedName(), array[0]);
                 ext.put(array[3], array[3]);
                 builder.setExtensions(
-                    Collections.singletonMap(
-                        MeasurementOrFact.qualifiedName(), Collections.singletonList(ext)));
+                    Collections.singletonMap(MeasurementOrFact.qualifiedName(), List.of(ext)));
               }
 
               return builder.build();

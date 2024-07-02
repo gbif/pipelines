@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,7 +127,7 @@ public class VerbatimToEventPipelineIT {
       core2.put(DwcTerm.eventType.qualifiedName(), "Find");
 
       Map<String, List<Map<String, String>>> ext = new HashMap<>();
-      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
+      ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
 
       ExtendedRecord extendedRecord =
           ExtendedRecord.newBuilder()

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.Parent;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
@@ -40,8 +41,7 @@ public class EventInheritedFieldsFnTest {
             .setLocationID("L2")
             .setParentEventID("1")
             .setParentsLineage(
-                Collections.singletonList(
-                    Parent.newBuilder().setId("1").setEventType("survey").build()))
+                List.of(Parent.newBuilder().setId("1").setEventType("survey").build()))
             .setEventType(
                 VocabularyConcept.newBuilder()
                     .setConcept("sampling")

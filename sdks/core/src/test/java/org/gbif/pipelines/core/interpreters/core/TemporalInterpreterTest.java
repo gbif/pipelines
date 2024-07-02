@@ -13,8 +13,8 @@ import static org.junit.Assert.assertNull;
 
 import java.time.Year;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.common.parsers.date.DateComponentOrdering;
@@ -554,8 +554,7 @@ public class TemporalInterpreterTest {
   /** Parsing ambiguous date like 01/02/1999 with D/M/Y format */
   @Test
   public void testDmyDate() {
-    TemporalInterpreter ti =
-        TemporalInterpreter.builder().orderings(Collections.singletonList(DMY)).create();
+    TemporalInterpreter ti = TemporalInterpreter.builder().orderings(List.of(DMY)).create();
 
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.eventDate.qualifiedName(), "1/11/1879");
@@ -584,8 +583,7 @@ public class TemporalInterpreterTest {
 
   @Test
   public void testMdyDate() {
-    TemporalInterpreter ti =
-        TemporalInterpreter.builder().orderings(Collections.singletonList(MDY)).create();
+    TemporalInterpreter ti = TemporalInterpreter.builder().orderings(List.of(MDY)).create();
 
     Map<String, String> map = new HashMap<>();
     map.put(DwcTerm.eventDate.qualifiedName(), "1/11/1879");

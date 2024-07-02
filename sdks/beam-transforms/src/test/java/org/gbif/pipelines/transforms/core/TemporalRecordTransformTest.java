@@ -4,7 +4,6 @@ import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -50,11 +49,11 @@ public class TemporalRecordTransformTest {
     record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), " 1999-02-02 ");
     record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1999-02-02T12:26");
     record.getCoreTerms().put(DcTerm.modified.qualifiedName(), "1999-02-02T12:26");
-    final List<ExtendedRecord> input = Collections.singletonList(record);
+    final List<ExtendedRecord> input = List.of(record);
 
     // Expected
     final List<TemporalRecord> dataExpected =
-        Collections.singletonList(
+        List.of(
             TemporalRecord.newBuilder()
                 .setId("0")
                 .setYear(1999)
@@ -93,11 +92,11 @@ public class TemporalRecordTransformTest {
     record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "1999-02");
     record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1999-02");
     record.getCoreTerms().put(DcTerm.modified.qualifiedName(), "1999-02");
-    final List<ExtendedRecord> input = Collections.singletonList(record);
+    final List<ExtendedRecord> input = List.of(record);
 
     // Expected
     final List<TemporalRecord> dataExpected =
-        Collections.singletonList(
+        List.of(
             TemporalRecord.newBuilder()
                 .setId("0")
                 .setYear(1999)
@@ -131,11 +130,11 @@ public class TemporalRecordTransformTest {
     record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
     record.getCoreTerms().put(DwcTerm.startDayOfYear.qualifiedName(), "60");
     record.getCoreTerms().put(DwcTerm.endDayOfYear.qualifiedName(), "90");
-    final List<ExtendedRecord> input = Collections.singletonList(record);
+    final List<ExtendedRecord> input = List.of(record);
 
     // Expected
     final List<TemporalRecord> dataExpected =
-        Collections.singletonList(
+        List.of(
             TemporalRecord.newBuilder()
                 .setId("0")
                 .setYear(1999)
@@ -167,11 +166,11 @@ public class TemporalRecordTransformTest {
     // State
     ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
     record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "1999-04-28T18:13:34.987654321");
-    final List<ExtendedRecord> input = Collections.singletonList(record);
+    final List<ExtendedRecord> input = List.of(record);
 
     // Expected
     final List<TemporalRecord> dataExpected =
-        Collections.singletonList(
+        List.of(
             TemporalRecord.newBuilder()
                 .setId("0")
                 .setYear(1999)
@@ -257,7 +256,7 @@ public class TemporalRecordTransformTest {
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
-    PAssert.that(dataStream).containsInAnyOrder(Collections.singletonList(expected));
+    PAssert.that(dataStream).containsInAnyOrder(List.of(expected));
     p.run();
   }
 }

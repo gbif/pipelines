@@ -3,7 +3,7 @@ package org.gbif.pipelines.core.parsers.location;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
 
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
@@ -41,7 +41,7 @@ public class LocationMatcherTest {
     location.setType("Political");
     location.setDistance(0.0d);
     location.setIsoCountryCode2Digit(country.getIso2LetterCode());
-    return new GeocodeResponse(Collections.singletonList(location));
+    return new GeocodeResponse(List.of(location));
   }
 
   private static GeocodeResponse toGeocodeResponse(Country country1, Country country2) {
@@ -61,7 +61,7 @@ public class LocationMatcherTest {
   private static GeocodeResponse toGeocodeNonISOResponse(String title) {
     Location location = new Location();
     location.setName(title);
-    return new GeocodeResponse(Collections.singletonList(location));
+    return new GeocodeResponse(List.of(location));
   }
 
   @Test

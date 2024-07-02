@@ -8,9 +8,10 @@ import static org.junit.Assert.assertTrue;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.model.pipelines.PipelinesWorkflow;
 import org.gbif.api.model.pipelines.StepRunner;
@@ -118,13 +119,12 @@ public class MetricsCollectorCallbackIT {
                                 .executionOrder(WF.getLevel(StepType.VALIDATOR_COLLECT_METRICS))
                                 .build()))
                     .fileInfos(
-                        Collections.singletonList(
+                        List.of(
                             FileInfo.builder()
                                 .fileName("verbatim.txt")
                                 .fileType(DwcFileType.CORE)
                                 .issues(
-                                    Collections.singletonList(
-                                        IssueInfo.builder().issue("OLD").count(999L).build()))
+                                    List.of(IssueInfo.builder().issue("OLD").count(999L).build()))
                                 .build()))
                     .build())
             .build());
@@ -192,7 +192,7 @@ public class MetricsCollectorCallbackIT {
     int attempt = 60;
 
     PipelinesIndexedMessage message = createMessage(uuid, attempt);
-    message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_COLLECT_METRICS.name()));
+    message.setPipelineSteps(Set.of(StepType.VALIDATOR_COLLECT_METRICS.name()));
 
     // Index document
     String document =
@@ -243,7 +243,7 @@ public class MetricsCollectorCallbackIT {
     int attempt = 60;
 
     PipelinesIndexedMessage message = createMessage(uuid, attempt);
-    message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_COLLECT_METRICS.name()));
+    message.setPipelineSteps(Set.of(StepType.VALIDATOR_COLLECT_METRICS.name()));
 
     // When
     callback.handleMessage(message);
@@ -310,13 +310,12 @@ public class MetricsCollectorCallbackIT {
                                 .executionOrder(WF.getLevel(StepType.VALIDATOR_COLLECT_METRICS))
                                 .build()))
                     .fileInfos(
-                        Collections.singletonList(
+                        List.of(
                             FileInfo.builder()
                                 .fileName("example.txt")
                                 .fileType(DwcFileType.EXTENSION)
                                 .issues(
-                                    Collections.singletonList(
-                                        IssueInfo.builder().issue("OLD").count(999L).build()))
+                                    List.of(IssueInfo.builder().issue("OLD").count(999L).build()))
                                 .build()))
                     .build())
             .build());

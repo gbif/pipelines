@@ -203,10 +203,7 @@ public class EsServiceIT extends EsApiIntegration {
 
     // When
     EsService.swapIndexes(
-        EsApiIntegration.ES_SERVER.getEsClient(),
-        Collections.singleton(alias),
-        Collections.singleton(idx4),
-        initialIndexes);
+        EsApiIntegration.ES_SERVER.getEsClient(), Set.of(alias), Set.of(idx4), initialIndexes);
 
     // Should
     EsApiIntegration.assertSwapResults(
@@ -214,14 +211,11 @@ public class EsServiceIT extends EsApiIntegration {
 
     // When
     EsService.swapIndexes(
-        EsApiIntegration.ES_SERVER.getEsClient(),
-        Collections.singleton(alias),
-        Collections.singleton(idx5),
-        Collections.singleton(idx4));
+        EsApiIntegration.ES_SERVER.getEsClient(), Set.of(alias), Set.of(idx5), Set.of(idx4));
 
     // Should
     EsApiIntegration.assertSwapResults(
-        idx5, "get-indexes-by-alias-and-swap-index-test-*", alias, Collections.singleton(idx4));
+        idx5, "get-indexes-by-alias-and-swap-index-test-*", alias, Set.of(idx4));
   }
 
   @Test
@@ -283,10 +277,7 @@ public class EsServiceIT extends EsApiIntegration {
 
     // When
     EsService.swapIndexes(
-        EsApiIntegration.ES_SERVER.getEsClient(),
-        aliases,
-        Collections.singleton(idx4),
-        initialIndexes);
+        EsApiIntegration.ES_SERVER.getEsClient(), aliases, Set.of(idx4), initialIndexes);
 
     // Should
     EsApiIntegration.assertSwapResults(
@@ -294,14 +285,11 @@ public class EsServiceIT extends EsApiIntegration {
 
     // When
     EsService.swapIndexes(
-        EsApiIntegration.ES_SERVER.getEsClient(),
-        aliases,
-        Collections.singleton(idx5),
-        Collections.singleton(idx4));
+        EsApiIntegration.ES_SERVER.getEsClient(), aliases, Set.of(idx5), Set.of(idx4));
 
     // Should
     EsApiIntegration.assertSwapResults(
-        idx5, "swap-in-multiple-aliases-test-*", aliases, Collections.singleton(idx4));
+        idx5, "swap-in-multiple-aliases-test-*", aliases, Set.of(idx4));
   }
 
   @Test
@@ -335,8 +323,8 @@ public class EsServiceIT extends EsApiIntegration {
     // When
     EsService.swapIndexes(
         EsApiIntegration.ES_SERVER.getEsClient(),
-        Collections.singleton(alias),
-        Collections.singleton(idx1),
+        Set.of(alias),
+        Set.of(idx1),
         Collections.emptySet());
 
     // Should
@@ -349,8 +337,8 @@ public class EsServiceIT extends EsApiIntegration {
     // When
     EsService.swapIndexes(
         EsApiIntegration.ES_SERVER.getEsClient(),
-        Collections.singleton("swap-missing-index-test-alias"),
-        Collections.singleton("swap-missing-index-test-index"),
+        Set.of("swap-missing-index-test-alias"),
+        Set.of("swap-missing-index-test-index"),
         Collections.emptySet());
 
     // Should
@@ -524,10 +512,7 @@ public class EsServiceIT extends EsApiIntegration {
 
     final String alias = "alias-find-dataset-indexes-in-alias";
     EsService.swapIndexes(
-        EsApiIntegration.ES_SERVER.getEsClient(),
-        Collections.singleton(alias),
-        indexes,
-        Collections.emptySet());
+        EsApiIntegration.ES_SERVER.getEsClient(), Set.of(alias), indexes, Collections.emptySet());
 
     // When
     Set<String> indexesFound =

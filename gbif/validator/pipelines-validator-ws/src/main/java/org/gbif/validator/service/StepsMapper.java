@@ -1,6 +1,5 @@
 package org.gbif.validator.service;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -49,7 +48,7 @@ public class StepsMapper {
    */
   public static List<Metrics.ValidationStep> getUploadingSteps(
       Validation.Status status, String message) {
-    return Collections.singletonList(
+    return List.of(
         Metrics.ValidationStep.builder()
             .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE.name())
             .status(status)

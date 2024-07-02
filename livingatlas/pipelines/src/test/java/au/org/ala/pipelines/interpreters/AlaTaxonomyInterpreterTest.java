@@ -61,7 +61,7 @@ public class AlaTaxonomyInterpreterTest {
             .rank("SPECIES")
             .matchType("exactMatch")
             .nameType("SCIENTIFIC")
-            .issues(Collections.singletonList("noIssue"))
+            .issues(List.of("noIssue"))
             .build();
     this.nameMap.put(search, match);
     // Full search
@@ -94,7 +94,7 @@ public class AlaTaxonomyInterpreterTest {
             .rank("KINGDOM")
             .matchType("exactMatch")
             .nameType("SCIENTIFIC")
-            .issues(Collections.singletonList("noIssue"))
+            .issues(List.of("noIssue"))
             .build();
     this.nameMap.put(search, match);
     // TaxonID lookup
@@ -109,7 +109,7 @@ public class AlaTaxonomyInterpreterTest {
             .rank("SPECIES")
             .matchType("exactMatch")
             .nameType("SCIENTIFIC")
-            .issues(Collections.singletonList("noIssue"))
+            .issues(List.of("noIssue"))
             .build();
     this.nameMap.put(search, match);
 
@@ -151,10 +151,10 @@ public class AlaTaxonomyInterpreterTest {
             .species("Osphranter rufus")
             .speciesID(
                 "urn:lsid:biodiversity.org.au:afd.taxon:e6aff6af-ff36-4ad5-95f2-2dfdcca8caff")
-            .issues(Collections.singletonList("homonym"))
+            .issues(List.of("homonym"))
             .vernacularName("Red Kangaroo")
             .speciesGroup(Arrays.asList("Animals", "Mammals"))
-            .speciesSubgroup(Collections.singletonList("Herbivorous Marsupials"))
+            .speciesSubgroup(List.of("Herbivorous Marsupials"))
             .build();
     this.nameMap.put(search, match);
     this.lookup =
@@ -364,7 +364,7 @@ public class AlaTaxonomyInterpreterTest {
     ALATaxonomyInterpreter.alaSourceQualityChecks(this.dataResource, this.kingdomLookup)
         .accept(er, atr);
     assertEquals(
-        Collections.singletonList(ALAOccurrenceIssue.MISSING_TAXONRANK.name()),
+        List.of(ALAOccurrenceIssue.MISSING_TAXONRANK.name()),
         atr.getIssues().getIssueList());
   }
 
@@ -432,7 +432,7 @@ public class AlaTaxonomyInterpreterTest {
         .accept(er, atr);
     ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
     assertEquals(
-        Collections.singletonList(ALAOccurrenceIssue.TAXON_DEFAULT_MATCH.name()),
+        List.of(ALAOccurrenceIssue.TAXON_DEFAULT_MATCH.name()),
         atr.getIssues().getIssueList());
   }
 
@@ -451,7 +451,7 @@ public class AlaTaxonomyInterpreterTest {
             .build();
     ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
     assertEquals(
-        Collections.singletonList(OccurrenceIssue.TAXON_MATCH_HIGHERRANK.name()),
+        List.of(OccurrenceIssue.TAXON_MATCH_HIGHERRANK.name()),
         atr.getIssues().getIssueList());
   }
 
@@ -470,7 +470,7 @@ public class AlaTaxonomyInterpreterTest {
             .build();
     ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
     assertEquals(
-        Collections.singletonList(OccurrenceIssue.TAXON_MATCH_FUZZY.name()),
+        List.of(OccurrenceIssue.TAXON_MATCH_FUZZY.name()),
         atr.getIssues().getIssueList());
   }
 
@@ -489,7 +489,7 @@ public class AlaTaxonomyInterpreterTest {
             .build();
     ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
     assertEquals(
-        Collections.singletonList(ALAOccurrenceIssue.INVALID_SCIENTIFIC_NAME.name()),
+        List.of(ALAOccurrenceIssue.INVALID_SCIENTIFIC_NAME.name()),
         atr.getIssues().getIssueList());
   }
 }

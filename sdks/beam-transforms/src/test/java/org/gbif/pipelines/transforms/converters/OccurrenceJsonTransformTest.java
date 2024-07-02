@@ -121,9 +121,9 @@ public class OccurrenceJsonTransformTest {
             .setPublisherTitle("setPublisherTitle")
             .setPublishingOrganizationKey("setPublishingOrganizationKey")
             .setInstallationKey("setInstallationKey")
-            .setNetworkKeys(Collections.singletonList("setNetworkKeys"))
+            .setNetworkKeys(List.of("setNetworkKeys"))
             .setMachineTags(
-                Collections.singletonList(
+                List.of(
                     MachineTag.newBuilder()
                         .setName("Name")
                         .setNamespace("Namespace")
@@ -139,7 +139,7 @@ public class OccurrenceJsonTransformTest {
             .setExtensions(
                 Collections.singletonMap(
                     "http://rs.tdwg.org/ac/terms/Multimedia",
-                    Collections.singletonList(Collections.singletonMap("k", "v"))))
+                    List.of(Collections.singletonMap("k", "v"))))
             .build();
 
     IdentifierRecord id = IdentifierRecord.newBuilder().setId("777").setInternalId("111").build();
@@ -164,31 +164,31 @@ public class OccurrenceJsonTransformTest {
             .setLifeStage(
                 VocabularyConcept.newBuilder()
                     .setConcept("bla1")
-                    .setLineage(Collections.singletonList("bla1_1"))
+                    .setLineage(List.of("bla1_1"))
                     .build())
             .setPathway(
                 VocabularyConcept.newBuilder()
                     .setConcept("bla2")
-                    .setLineage(Collections.singletonList("bla2_1"))
+                    .setLineage(List.of("bla2_1"))
                     .build())
             .setEstablishmentMeans(
                 VocabularyConcept.newBuilder()
                     .setConcept("bla3")
-                    .setLineage(Collections.singletonList("bla3_1"))
+                    .setLineage(List.of("bla3_1"))
                     .build())
             .setDegreeOfEstablishment(
                 VocabularyConcept.newBuilder()
                     .setConcept("bla4")
-                    .setLineage(Collections.singletonList("bla4_1"))
+                    .setLineage(List.of("bla4_1"))
                     .build())
             .setRecordedByIds(
-                Collections.singletonList(
+                List.of(
                     AgentIdentifier.newBuilder()
                         .setType(AgentIdentifierType.OTHER.name())
                         .setValue("someId")
                         .build()))
             .setIdentifiedByIds(
-                Collections.singletonList(
+                List.of(
                     AgentIdentifier.newBuilder()
                         .setType(AgentIdentifierType.OTHER.name())
                         .setValue("someId")
@@ -297,9 +297,9 @@ public class OccurrenceJsonTransformTest {
             .setConfidence(1)
             .setMatchType(org.gbif.pipelines.io.avro.MatchType.EXACT)
             .setNote("note")
-            .setLineage(Collections.singletonList("setLineage"))
+            .setLineage(List.of("setLineage"))
             .setAlternatives(
-                Collections.singletonList(
+                List.of(
                     TaxonRecord.newBuilder()
                         .setId("777")
                         .setAcceptedUsage(au)
@@ -341,15 +341,15 @@ public class OccurrenceJsonTransformTest {
                     .setBasionymAuthorship(
                         Authorship.newBuilder()
                             .setYear("2000")
-                            .setAuthors(Collections.singletonList("setBasionymAuthorship"))
-                            .setExAuthors(Collections.singletonList("setBasionymAuthorship"))
+                            .setAuthors(List.of("setBasionymAuthorship"))
+                            .setExAuthors(List.of("setBasionymAuthorship"))
                             .setEmpty(true)
                             .build())
                     .setCombinationAuthorship(
                         Authorship.newBuilder()
                             .setYear("2020")
-                            .setAuthors(Collections.singletonList("setCombinationAuthorship"))
-                            .setExAuthors(Collections.singletonList("setCombinationAuthorship"))
+                            .setAuthors(List.of("setCombinationAuthorship"))
+                            .setExAuthors(List.of("setCombinationAuthorship"))
                             .setEmpty(false)
                             .build())
                     .build())
@@ -531,7 +531,7 @@ public class OccurrenceJsonTransformTest {
             .build()
             .toJsonWithNulls();
 
-    PAssert.that(jsonCollection).containsInAnyOrder(Collections.singletonList(json));
+    PAssert.that(jsonCollection).containsInAnyOrder(List.of(json));
     p.run();
   }
 }

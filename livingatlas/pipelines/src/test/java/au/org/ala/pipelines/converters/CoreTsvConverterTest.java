@@ -472,20 +472,20 @@ public class CoreTsvConverterTest {
             .setLifeStage(
                 VocabularyConcept.newBuilder()
                     .setConcept("br_lifeStage")
-                    .setLineage(Collections.singletonList("br_lifeStageLineage"))
+                    .setLineage(List.of("br_lifeStageLineage"))
                     .build())
             .setEstablishmentMeans(
                 VocabularyConcept.newBuilder()
                     .setConcept("br_establishmentMeans")
-                    .setLineage(Collections.singletonList("br_establishmentMeans"))
+                    .setLineage(List.of("br_establishmentMeans"))
                     .build())
             .setDegreeOfEstablishment(
                 VocabularyConcept.newBuilder()
                     .setConcept("br_degreeOfEstablishment")
-                    .setLineage(Collections.singletonList("br_degreeOfEstablishment"))
+                    .setLineage(List.of("br_degreeOfEstablishment"))
                     .build())
             .setIndividualCount(222)
-            .setTypeStatus(Collections.singletonList("br_typeStatus"))
+            .setTypeStatus(List.of("br_typeStatus"))
             .setTypifiedName("br_typifiedName")
             .setSampleSizeValue(222d)
             .setSampleSizeUnit("br_sampleSizeUnit")
@@ -495,25 +495,25 @@ public class CoreTsvConverterTest {
             .setReferences("br_References")
             .setLicense("br_license")
             .setIdentifiedByIds(
-                Collections.singletonList(
+                List.of(
                     AgentIdentifier.newBuilder()
                         .setType("br_agent_type")
                         .setValue("br_agent_value")
                         .build()))
             .setRecordedByIds(
-                Collections.singletonList(
+                List.of(
                     AgentIdentifier.newBuilder()
                         .setType("br_agent_type_rb")
                         .setValue("br_agent_value_rb")
                         .build()))
             .setRecordedBy(Arrays.asList("br_recordedBy_1", "br_recordedBy_2"))
             .setOccurrenceStatus("br_occurrenceStatus")
-            .setDatasetID(Collections.singletonList("br_datasetID"))
-            .setDatasetName(Collections.singletonList("br_datasetName"))
-            .setOtherCatalogNumbers(Collections.singletonList("br_otherCatalogNumbers"))
-            .setIdentifiedBy(Collections.singletonList("br_identifiedBy"))
-            .setPreparations(Collections.singletonList("br_preparations"))
-            .setSamplingProtocol(Collections.singletonList("br_samplingProtocol"))
+            .setDatasetID(List.of("br_datasetID"))
+            .setDatasetName(List.of("br_datasetName"))
+            .setOtherCatalogNumbers(List.of("br_otherCatalogNumbers"))
+            .setIdentifiedBy(List.of("br_identifiedBy"))
+            .setPreparations(List.of("br_preparations"))
+            .setSamplingProtocol(List.of("br_samplingProtocol"))
             .build();
 
     LocationRecord lr =
@@ -546,8 +546,8 @@ public class CoreTsvConverterTest {
             .setHasGeospatialIssue(false)
             .setLocality("lr_locality")
             .setGeoreferencedDate("lr_georeferencedDate")
-            .setGeoreferencedBy(Collections.singletonList("lr_georeferencedBy"))
-            .setHigherGeography(Collections.singletonList("lr_higherGeography"))
+            .setGeoreferencedBy(List.of("lr_georeferencedBy"))
+            .setHigherGeography(List.of("lr_higherGeography"))
             .setFootprintWKT("lr_footprintWKT")
             .setBiome("lr_biome")
             .build();
@@ -591,7 +591,7 @@ public class CoreTsvConverterTest {
                     .setStatus(Status.ACCEPTED)
                     .setNote("txr_Diagnostic_Note")
                     .setMatchType(MatchType.EXACT)
-                    .setLineage(Collections.singletonList("txr_Diagnostic_Lineage"))
+                    .setLineage(List.of("txr_Diagnostic_Lineage"))
                     .build())
             .setUsageParsedName(ParsedName.newBuilder().build())
             .setIucnRedListCategoryCode("txr_IucnRedListCategoryCode")
@@ -624,8 +624,8 @@ public class CoreTsvConverterTest {
             .setSpecies("atxr_Species")
             .setSpeciesID("atxr_SpeciesID")
             .setVernacularName("atxr_VernacularName")
-            .setSpeciesGroup(Collections.singletonList("atxr_SpeciesGroup"))
-            .setSpeciesSubgroup(Collections.singletonList("atxr_SpeciesSubgroup"))
+            .setSpeciesGroup(List.of("atxr_SpeciesGroup"))
+            .setSpeciesSubgroup(List.of("atxr_SpeciesSubgroup"))
             .build();
 
     ALAAttributionRecord aar =
@@ -644,7 +644,7 @@ public class CoreTsvConverterTest {
             .setProvenance("aar_Provenance")
             .setHasDefaultValues(false)
             .setHubMembership(
-                Collections.singletonList(
+                List.of(
                     EntityReference.newBuilder()
                         .setName("aar_EntityReference_name")
                         .setUid("aar_EntityReference_uuid")

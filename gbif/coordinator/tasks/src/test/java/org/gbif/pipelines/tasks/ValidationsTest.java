@@ -46,13 +46,12 @@ public class ValidationsTest {
                                     .status(Status.RUNNING)
                                     .build())))
                     .fileInfos(
-                        Collections.singletonList(
+                        List.of(
                             FileInfo.builder()
                                 .fileName("verbatim.txt")
                                 .fileType(DwcFileType.CORE)
                                 .issues(
-                                    Collections.singletonList(
-                                        IssueInfo.builder().issue("OLD").count(999L).build()))
+                                    List.of(IssueInfo.builder().issue("OLD").count(999L).build()))
                                 .build()))
                     .build())
             .build();
@@ -90,13 +89,12 @@ public class ValidationsTest {
                                     .status(Status.RUNNING)
                                     .build())))
                     .fileInfos(
-                        Collections.singletonList(
+                        List.of(
                             FileInfo.builder()
                                 .fileName("verbatim.txt")
                                 .fileType(DwcFileType.CORE)
                                 .issues(
-                                    Collections.singletonList(
-                                        IssueInfo.builder().issue("OLD").count(999L).build()))
+                                    List.of(IssueInfo.builder().issue("OLD").count(999L).build()))
                                 .build()))
                     .build())
             .build();

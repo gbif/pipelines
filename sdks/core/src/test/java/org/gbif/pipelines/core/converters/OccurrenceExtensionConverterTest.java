@@ -5,7 +5,6 @@ import static org.gbif.dwc.terms.DwcTerm.Occurrence;
 import static org.gbif.dwc.terms.DwcTerm.ResourceRelationship;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +39,7 @@ public class OccurrenceExtensionConverterTest {
 
     // Set
     Map<String, List<Map<String, String>>> exts = new HashMap<>(2);
-    exts.put(Occurrence.qualifiedName(), Collections.singletonList(extCoreMap));
+    exts.put(Occurrence.qualifiedName(), List.of(extCoreMap));
     exts.put(MeasurementOrFact.qualifiedName(), Arrays.asList(extMap, extMap));
     exts.put(ResourceRelationship.qualifiedName(), Arrays.asList(extMap, extMap));
 

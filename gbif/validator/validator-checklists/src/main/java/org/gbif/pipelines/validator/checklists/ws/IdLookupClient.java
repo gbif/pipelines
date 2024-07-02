@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import org.gbif.api.model.checklistbank.ParsedName;
@@ -80,7 +79,7 @@ public class IdLookupClient implements IdLookup {
   /** Proxies the call to the method that handles all parameters. */
   @Override
   public List<LookupUsage> match(String canonicalName) {
-    return Collections.singletonList(match(canonicalName, null, null, null, null, null));
+    return List.of(match(canonicalName, null, null, null, null, null));
   }
 
   @Override

@@ -73,7 +73,7 @@ public class EsIndexUtils {
               .collect(Collectors.toSet());
       Preconditions.checkArgument(!validAliases.isEmpty(), "aliases are required");
 
-      swapIndexes(esClient, validAliases, Collections.singleton(index), Collections.emptySet());
+      swapIndexes(esClient, validAliases, Set.of(index), Collections.emptySet());
     }
   }
 

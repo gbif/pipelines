@@ -1,6 +1,5 @@
 package org.gbif.pipelines.transforms.table;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,7 +91,7 @@ public class MeasurementOrFactTableTransformTest {
     ext1.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
 
     Map<String, List<Map<String, String>>> ext = new HashMap<>();
-    ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
+    ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), List.of(ext1));
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").setExtensions(ext).build();
     IdentifierRecord id = IdentifierRecord.newBuilder().setId("777").setInternalId("777").build();

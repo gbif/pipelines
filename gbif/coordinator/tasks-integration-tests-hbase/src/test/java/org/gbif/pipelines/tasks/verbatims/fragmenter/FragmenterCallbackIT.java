@@ -8,10 +8,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -107,7 +107,7 @@ public class FragmenterCallbackIT {
             null,
             endpointType,
             VALIDATION_RESULT,
-            Collections.singleton(OCCURRENCE.name()),
+            Set.of(OCCURRENCE.name()),
             null);
 
     FragmenterCallback callback =
@@ -170,7 +170,7 @@ public class FragmenterCallbackIT {
             null,
             endpointType,
             VALIDATION_RESULT,
-            Collections.singleton(OCCURRENCE.name()),
+            Set.of(OCCURRENCE.name()),
             null);
 
     FragmenterCallback callback =
@@ -233,7 +233,7 @@ public class FragmenterCallbackIT {
             null,
             endpointType,
             VALIDATION_RESULT,
-            Collections.singleton(OCCURRENCE.name()),
+            Set.of(OCCURRENCE.name()),
             null);
 
     FragmenterCallback callback =
@@ -285,7 +285,7 @@ public class FragmenterCallbackIT {
         new PipelinesInterpretedMessage(
             uuid,
             attempt,
-            Collections.singleton(StepType.HDFS_VIEW.name()),
+            Set.of(StepType.HDFS_VIEW.name()),
             (long) expSize,
             null,
             StepRunner.STANDALONE.name(),
@@ -294,7 +294,7 @@ public class FragmenterCallbackIT {
             null,
             endpointType,
             VALIDATION_RESULT,
-            Collections.singleton(OCCURRENCE.name()),
+            Set.of(OCCURRENCE.name()),
             null);
 
     FragmenterCallback callback =

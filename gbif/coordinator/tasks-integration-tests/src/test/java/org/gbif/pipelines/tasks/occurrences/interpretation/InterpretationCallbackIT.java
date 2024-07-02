@@ -10,8 +10,8 @@ import static org.junit.Assert.assertFalse;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -78,8 +78,8 @@ public class InterpretationCallbackIT {
         new PipelinesVerbatimMessage(
             uuid,
             attempt,
-            Collections.singleton(RecordType.ALL.name()),
-            Collections.singleton(VERBATIM_TO_INTERPRETED.name()),
+            Set.of(RecordType.ALL.name()),
+            Set.of(VERBATIM_TO_INTERPRETED.name()),
             DISTRIBUTED.name(),
             EndpointType.DWC_ARCHIVE,
             null,
@@ -144,8 +144,8 @@ public class InterpretationCallbackIT {
         new PipelinesVerbatimMessage(
             uuid,
             attempt,
-            Collections.singleton(RecordType.ALL.name()),
-            Collections.singleton(VERBATIM_TO_INTERPRETED.name()),
+            Set.of(RecordType.ALL.name()),
+            Set.of(VERBATIM_TO_INTERPRETED.name()),
             DISTRIBUTED.name(),
             EndpointType.DWC_ARCHIVE,
             null,

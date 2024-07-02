@@ -92,7 +92,7 @@ public class Metrics {
           .issue(type.name())
           .issueCategory(type.getCategory())
           .samples(
-              Collections.singletonList(
+              List.of(
                   IssueSample.builder()
                       .relatedData(Collections.singletonMap(dataKey, dataValue))
                       .build()))

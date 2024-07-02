@@ -153,20 +153,20 @@ public class MultimediaCsvConverterTest {
             .setLifeStage(
                 VocabularyConcept.newBuilder()
                     .setConcept("br_lifeStage")
-                    .setLineage(Collections.singletonList("br_lifeStageLineage"))
+                    .setLineage(List.of("br_lifeStageLineage"))
                     .build())
             .setEstablishmentMeans(
                 VocabularyConcept.newBuilder()
                     .setConcept("br_establishmentMeans")
-                    .setLineage(Collections.singletonList("br_establishmentMeans"))
+                    .setLineage(List.of("br_establishmentMeans"))
                     .build())
             .setDegreeOfEstablishment(
                 VocabularyConcept.newBuilder()
                     .setConcept("br_degreeOfEstablishment")
-                    .setLineage(Collections.singletonList("br_degreeOfEstablishment"))
+                    .setLineage(List.of("br_degreeOfEstablishment"))
                     .build())
             .setIndividualCount(222)
-            .setTypeStatus(Collections.singletonList("br_typeStatus"))
+            .setTypeStatus(List.of("br_typeStatus"))
             .setTypifiedName("br_typifiedName")
             .setSampleSizeValue(222d)
             .setSampleSizeUnit("br_sampleSizeUnit")
@@ -176,13 +176,13 @@ public class MultimediaCsvConverterTest {
             .setReferences("br_References")
             .setLicense("br_license")
             .setIdentifiedByIds(
-                Collections.singletonList(
+                List.of(
                     AgentIdentifier.newBuilder()
                         .setType("br_agent_type")
                         .setValue("br_agent_value")
                         .build()))
             .setRecordedByIds(
-                Collections.singletonList(
+                List.of(
                     AgentIdentifier.newBuilder()
                         .setType("br_agent_type_rb")
                         .setValue("br_agent_value_rb")
@@ -264,7 +264,7 @@ public class MultimediaCsvConverterTest {
                     .setStatus(Status.ACCEPTED)
                     .setNote("txr_Diagnostic_Note")
                     .setMatchType(MatchType.EXACT)
-                    .setLineage(Collections.singletonList("txr_Diagnostic_Lineage"))
+                    .setLineage(List.of("txr_Diagnostic_Lineage"))
                     .build())
             .setUsageParsedName(ParsedName.newBuilder().build())
             .setIucnRedListCategoryCode("txr_IucnRedListCategoryCode")
@@ -297,8 +297,8 @@ public class MultimediaCsvConverterTest {
             .setSpecies("atxr_Species")
             .setSpeciesID("atxr_SpeciesID")
             .setVernacularName("atxr_VernacularName")
-            .setSpeciesGroup(Collections.singletonList("atxr_SpeciesGroup"))
-            .setSpeciesSubgroup(Collections.singletonList("atxr_SpeciesSubgroup"))
+            .setSpeciesGroup(List.of("atxr_SpeciesGroup"))
+            .setSpeciesSubgroup(List.of("atxr_SpeciesSubgroup"))
             .build();
 
     ALAAttributionRecord aar =
@@ -317,7 +317,7 @@ public class MultimediaCsvConverterTest {
             .setProvenance("aar_Provenance")
             .setHasDefaultValues(false)
             .setHubMembership(
-                Collections.singletonList(
+                List.of(
                     EntityReference.newBuilder()
                         .setName("aar_EntityReference_name")
                         .setUid("aar_EntityReference_uuid")
@@ -338,7 +338,7 @@ public class MultimediaCsvConverterTest {
             .setId(DwcTerm.occurrenceID.simpleName())
             .setCreated(7L)
             .setImageItems(
-                Collections.singletonList(
+                List.of(
                     Image.newBuilder()
                         .setIdentifier("ir_Identifier")
                         .setCreator("ir_Creator")

@@ -5,7 +5,6 @@ import static org.gbif.validator.api.DwcFileType.CORE;
 import static org.gbif.validator.api.EvaluationType.OCCURRENCE_NOT_UNIQUELY_IDENTIFIED;
 
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -139,8 +138,7 @@ public class DwcaMetricsCollector implements MetricsCollector {
       for (FileInfo file : validation.getMetrics().getFileInfos()) {
         if (file.getFileType().equals(CORE)) {
           if (file.getIssues() == null || file.getIssues().isEmpty()) {
-            file.setIssues(
-                Collections.singletonList(IssueInfo.create(OCCURRENCE_NOT_UNIQUELY_IDENTIFIED)));
+            file.setIssues(List.of(IssueInfo.create(OCCURRENCE_NOT_UNIQUELY_IDENTIFIED)));
           } else if (file.getIssues().stream()
               .noneMatch(x -> x.getIssue().equals(OCCURRENCE_NOT_UNIQUELY_IDENTIFIED.name()))) {
             file.getIssues().add(IssueInfo.create(OCCURRENCE_NOT_UNIQUELY_IDENTIFIED));

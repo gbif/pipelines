@@ -1,6 +1,5 @@
 package org.gbif.pipelines.transforms.common;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,7 +26,7 @@ public class CheckTransformsTest {
   public void checkRecordTypeAllValueTest() {
 
     // State
-    Set<String> set = Collections.singleton(RecordType.ALL.name());
+    Set<String> set = Set.of(RecordType.ALL.name());
 
     // When
     boolean result = CheckTransforms.checkRecordType(set, RecordType.BASIC, RecordType.AUDUBON);
@@ -40,7 +39,7 @@ public class CheckTransformsTest {
   public void checkRecordTypeMatchValueTest() {
 
     // State
-    Set<String> set = Collections.singleton(RecordType.BASIC.name());
+    Set<String> set = Set.of(RecordType.BASIC.name());
 
     // When
     boolean result = CheckTransforms.checkRecordType(set, RecordType.BASIC, RecordType.AUDUBON);
@@ -68,7 +67,7 @@ public class CheckTransformsTest {
   public void checkRecordTypeMismatchOneValueTest() {
 
     // State
-    Set<String> set = Collections.singleton(RecordType.AMPLIFICATION.name());
+    Set<String> set = Set.of(RecordType.AMPLIFICATION.name());
 
     // When
     boolean result = CheckTransforms.checkRecordType(set, RecordType.BASIC, RecordType.AUDUBON);
@@ -96,7 +95,7 @@ public class CheckTransformsTest {
   public void checkTrueConditionFlagTest() {
 
     // State
-    final List<String> input = Collections.singletonList("something");
+    final List<String> input = List.of("something");
 
     // When
     CheckTransforms<String> transforms = CheckTransforms.create(String.class, true);
@@ -111,7 +110,7 @@ public class CheckTransformsTest {
   public void checkFalseConditionFlagTest() {
 
     // State
-    final List<String> input = Collections.singletonList("something");
+    final List<String> input = List.of("something");
 
     // When
     CheckTransforms<String> transforms = CheckTransforms.create(String.class, false);

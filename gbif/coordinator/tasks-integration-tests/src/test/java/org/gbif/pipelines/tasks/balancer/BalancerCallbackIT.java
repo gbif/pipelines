@@ -3,8 +3,8 @@ package org.gbif.pipelines.tasks.balancer;
 import static org.gbif.api.model.pipelines.StepRunner.DISTRIBUTED;
 import static org.gbif.api.model.pipelines.StepType.VERBATIM_TO_IDENTIFIER;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.model.pipelines.StepRunner;
@@ -132,8 +132,8 @@ public class BalancerCallbackIT {
     return new PipelinesVerbatimMessage(
         uuid,
         attempt,
-        Collections.singleton(RecordType.ALL.name()),
-        Collections.singleton(VERBATIM_TO_IDENTIFIER.name()),
+        Set.of(RecordType.ALL.name()),
+        Set.of(VERBATIM_TO_IDENTIFIER.name()),
         DISTRIBUTED.name(),
         EndpointType.DWC_ARCHIVE,
         null,

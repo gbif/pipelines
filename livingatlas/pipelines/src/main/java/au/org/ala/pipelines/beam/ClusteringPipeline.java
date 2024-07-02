@@ -141,7 +141,7 @@ public class ClusteringPipeline {
                         source.getStrings().get(DwcTerm.recordedBy.simpleName());
                     List<String> recordedBy = null;
                     if (recordedByItem != null) {
-                      recordedBy = Collections.singletonList(recordedByItem);
+                      recordedBy = List.of(recordedByItem);
                     }
 
                     Long eventDateL = source.getLongs().get(DwcTerm.eventDate.simpleName());

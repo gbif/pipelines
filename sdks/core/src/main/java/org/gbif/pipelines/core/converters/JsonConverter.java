@@ -161,7 +161,7 @@ public class JsonConverter {
   }
 
   public static VerbatimRecord convertVerbatimEventRecord(ExtendedRecord extendedRecord) {
-    return convertVerbatimRecord(extendedRecord, Collections.singletonList(OCCURRENCE_EXT));
+    return convertVerbatimRecord(extendedRecord, List.of(OCCURRENCE_EXT));
   }
 
   private static Map<String, List<Map<String, String>>> filterExtensions(

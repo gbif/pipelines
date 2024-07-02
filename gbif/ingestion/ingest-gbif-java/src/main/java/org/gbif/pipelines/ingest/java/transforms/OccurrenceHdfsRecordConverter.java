@@ -2,7 +2,6 @@ package org.gbif.pipelines.ingest.java.transforms;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,7 +44,7 @@ public class OccurrenceHdfsRecordConverter {
   private Map<String, EventCoreRecord> eventCoreRecordMap;
 
   public Function<IdentifierRecord, List<OccurrenceHdfsRecord>> getFn() {
-    return id -> Collections.singletonList(convert(id));
+    return id -> List.of(convert(id));
   }
 
   /** Join all records, convert into OccurrenceHdfsRecord and save as an avro file */

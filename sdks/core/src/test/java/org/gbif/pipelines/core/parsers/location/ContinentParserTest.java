@@ -3,7 +3,7 @@ package org.gbif.pipelines.core.parsers.location;
 import static org.gbif.api.vocabulary.OccurrenceIssue.*;
 
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
@@ -51,7 +51,7 @@ public class ContinentParserTest {
     location.setType("Political");
     location.setDistance(0.0d);
     location.setIsoCountryCode2Digit(country.getIso2LetterCode());
-    return new GeocodeResponse(Collections.singletonList(location));
+    return new GeocodeResponse(List.of(location));
   }
 
   private KeyValueStore<LatLng, GeocodeResponse> getGeocodeKvStore() {

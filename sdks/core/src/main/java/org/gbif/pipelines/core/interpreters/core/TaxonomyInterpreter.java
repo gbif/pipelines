@@ -8,7 +8,7 @@ import static org.gbif.pipelines.core.utils.ModelUtils.*;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -113,7 +113,7 @@ public class TaxonomyInterpreter {
         // happens when we get an empty response from the WS
         addIssue(tr, TAXON_MATCH_NONE);
         tr.setUsage(INCERTAE_SEDIS);
-        tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
+        tr.setClassification(List.of(INCERTAE_SEDIS));
       } else {
 
         MatchType matchType = usageMatch.getDiagnostics().getMatchType();

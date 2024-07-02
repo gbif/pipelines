@@ -30,10 +30,10 @@ public class GeocodeKvStoreFactory {
   static {
     final Location terrestrial = new Location();
     terrestrial.setName("TERRESTRIAL");
-    BIOME_TERRESTRIAL = new GeocodeResponse(Collections.singletonList(terrestrial));
+    BIOME_TERRESTRIAL = new GeocodeResponse(List.of(terrestrial));
     final Location marine = new Location();
     marine.setName("MARINE");
-    BIOME_MARINE = new GeocodeResponse(Collections.singletonList(marine));
+    BIOME_MARINE = new GeocodeResponse(List.of(marine));
   }
 
   @SneakyThrows

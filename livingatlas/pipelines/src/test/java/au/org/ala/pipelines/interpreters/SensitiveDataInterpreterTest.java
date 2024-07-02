@@ -122,7 +122,7 @@ public class SensitiveDataInterpreterTest {
                   SensitiveTaxon.builder()
                       .scientificName(sensitivityQuery.getScientificName())
                       .taxonId(sensitivityQuery.getTaxonId())
-                      .instances(Collections.singletonList(instance))
+                      .instances(List.of(instance))
                       .build();
               ValidationReport vr =
                   ValidationReport.builder().category("Sensitive").taxon(taxon).build();

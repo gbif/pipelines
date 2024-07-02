@@ -168,7 +168,7 @@ public class ALAVerbatimToInterpretedPipeline {
     String postfix = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
-    Set<String> types = Collections.singleton(ALL.name());
+    Set<String> types = Set.of(ALL.name());
     String targetPath = options.getTargetPath();
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());

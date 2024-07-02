@@ -6,9 +6,9 @@ import static org.gbif.api.model.pipelines.StepType.VERBATIM_TO_INTERPRETED;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.gbif.api.model.pipelines.InterpretationType.RecordType;
@@ -46,8 +46,8 @@ public class BeamParametersBuilderTest {
         new PipelinesVerbatimMessage(
             uuid,
             attempt,
-            Collections.singleton(RecordType.ALL.name()),
-            Collections.singleton(VERBATIM_TO_INTERPRETED.name()),
+            Set.of(RecordType.ALL.name()),
+            Set.of(VERBATIM_TO_INTERPRETED.name()),
             DISTRIBUTED.name(),
             EndpointType.DWC_ARCHIVE,
             null,
@@ -109,8 +109,8 @@ public class BeamParametersBuilderTest {
         new PipelinesVerbatimMessage(
             uuid,
             attempt,
-            Collections.singleton(RecordType.ALL.name()),
-            Collections.singleton(VERBATIM_TO_INTERPRETED.name()),
+            Set.of(RecordType.ALL.name()),
+            Set.of(VERBATIM_TO_INTERPRETED.name()),
             DISTRIBUTED.name(),
             EndpointType.DWC_ARCHIVE,
             null,
@@ -181,7 +181,7 @@ public class BeamParametersBuilderTest {
             null,
             EndpointType.DWC_ARCHIVE,
             validationResult,
-            Collections.singleton(OCCURRENCE.name()),
+            Set.of(OCCURRENCE.name()),
             null);
 
     IndexSettings indexSettings = IndexSettings.create("index", 5);
@@ -241,7 +241,7 @@ public class BeamParametersBuilderTest {
             null,
             EndpointType.DWC_ARCHIVE,
             validationResult,
-            Collections.singleton(OCCURRENCE.name()),
+            Set.of(OCCURRENCE.name()),
             null);
 
     // When

@@ -5,7 +5,6 @@ import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
@@ -275,12 +274,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
 
           // When
           EsTestUtils.indexDatasets(
-              ES_SERVER,
-              Collections.singletonList(datasetKey),
-              attempt,
-              targetIdx,
-              alias,
-              recordsDataset);
+              ES_SERVER, List.of(datasetKey), attempt, targetIdx, alias, recordsDataset);
 
           // Should
           assertEquals(
@@ -308,7 +302,6 @@ public class InterpretedToEsIndexExtendedPipelineIT {
 
   private void switchDatasetAndRecords(
       String datasetKey, String targetIdx, String alias, int attempt, int diffRecords) {
-    switchDatasetAndRecords(
-        Collections.singletonList(datasetKey), targetIdx, alias, attempt, diffRecords);
+    switchDatasetAndRecords(List.of(datasetKey), targetIdx, alias, attempt, diffRecords);
   }
 }

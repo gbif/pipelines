@@ -109,10 +109,10 @@ public class OccurrenceHdfsRecordConverterTest {
     Map<String, List<Map<String, String>>> extensions = new HashMap<>();
     extensions.put(
         "http://rs.tdwg.org/ac/terms/Multimedia",
-        Collections.singletonList(Collections.singletonMap("key", "value")));
+        List.of(Collections.singletonMap("key", "value")));
     extensions.put(
         "http://data.ggbn.org/schemas/ggbn/terms/Amplification",
-        Collections.singletonList(Collections.singletonMap("key", "value")));
+        List.of(Collections.singletonMap("key", "value")));
 
     ExtendedRecord extendedRecord =
         ExtendedRecord.newBuilder()
@@ -130,7 +130,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .build();
 
     List<AgentIdentifier> agentIds =
-        Collections.singletonList(
+        List.of(
             AgentIdentifier.newBuilder()
                 .setType(AgentIdentifierType.OTHER.name())
                 .setValue("13123")
@@ -156,7 +156,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
             .setProjectId(Arrays.asList(multiValue1, multiValue2))
             .setIsSequenced(true)
-            .setAssociatedSequences(Collections.singletonList("ad"))
+            .setAssociatedSequences(List.of("ad"))
             .setGeologicalContext(
                 GeologicalContext.newBuilder()
                     .setBed("bed")
@@ -270,7 +270,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("member", hdfsRecord.getMember());
     Assert.assertEquals("v_member", hdfsRecord.getVMember());
 
-    Assert.assertEquals(Collections.singletonList("ad"), hdfsRecord.getAssociatedsequences());
+    Assert.assertEquals(List.of("ad"), hdfsRecord.getAssociatedsequences());
     Assert.assertEquals("v_ad", hdfsRecord.getVAssociatedsequences());
 
     // Test temporal fields
@@ -286,8 +286,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastparsed());
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastinterpreted());
     Assert.assertEquals(License.CC0_1_0.name(), hdfsRecord.getLicense());
-    Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getRecordedbyid());
-    Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getIdentifiedbyid());
+    Assert.assertEquals(List.of("13123"), hdfsRecord.getRecordedbyid());
+    Assert.assertEquals(List.of("13123"), hdfsRecord.getIdentifiedbyid());
     Assert.assertEquals(OccurrenceStatus.ABSENT.name(), hdfsRecord.getOccurrencestatus());
     Assert.assertEquals(Integer.valueOf(0), hdfsRecord.getIndividualcount());
     Assert.assertEquals("2000/2010", hdfsRecord.getEventdate());
@@ -331,7 +331,7 @@ public class OccurrenceHdfsRecordConverterTest {
     multimedia.setType(MediaType.StillImage.name());
     multimedia.setLicense(License.CC_BY_4_0.name());
     multimedia.setSource("image.jpg");
-    multimediaRecord.setMultimediaItems(Collections.singletonList(multimedia));
+    multimediaRecord.setMultimediaItems(List.of(multimedia));
     multimediaRecord.setIssues(
         IssueRecord.newBuilder().setIssueList(Arrays.asList(issues)).build());
 
@@ -400,25 +400,13 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setTypeStatus(Arrays.asList(TypeStatus.ALLOTYPE.name(), TypeStatus.TYPE.name()));
     basicRecord.setTypifiedName("noName");
     basicRecord.setLifeStage(
-        VocabularyConcept.newBuilder()
-            .setConcept("Tadpole")
-            .setLineage(Collections.singletonList("Larva"))
-            .build());
+        VocabularyConcept.newBuilder().setConcept("Tadpole").setLineage(List.of("Larva")).build());
     basicRecord.setEstablishmentMeans(
-        VocabularyConcept.newBuilder()
-            .setConcept("Bla")
-            .setLineage(Collections.singletonList("BlaBla"))
-            .build());
+        VocabularyConcept.newBuilder().setConcept("Bla").setLineage(List.of("BlaBla")).build());
     basicRecord.setPathway(
-        VocabularyConcept.newBuilder()
-            .setConcept("Bla1")
-            .setLineage(Collections.singletonList("BlaBla1"))
-            .build());
+        VocabularyConcept.newBuilder().setConcept("Bla1").setLineage(List.of("BlaBla1")).build());
     basicRecord.setDegreeOfEstablishment(
-        VocabularyConcept.newBuilder()
-            .setConcept("Bla2")
-            .setLineage(Collections.singletonList("BlaBla2"))
-            .build());
+        VocabularyConcept.newBuilder().setConcept("Bla2").setLineage(List.of("BlaBla2")).build());
     basicRecord.setCreated(now);
     basicRecord.setOrganismQuantity(2d);
     basicRecord.setOrganismQuantityType("type");
@@ -500,7 +488,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setBasionymAuthorship(
                 Authorship.newBuilder()
                     .setYear("2003")
-                    .setAuthors(Collections.singletonList("Itoh & al."))
+                    .setAuthors(List.of("Itoh & al."))
                     .setExAuthors(Collections.emptyList())
                     .setEmpty(Boolean.FALSE)
                     .build())
@@ -608,7 +596,7 @@ public class OccurrenceHdfsRecordConverterTest {
     String nodeKey = UUID.randomUUID().toString();
     String installationKey = UUID.randomUUID().toString();
     String organizationKey = UUID.randomUUID().toString();
-    List<String> networkKey = Collections.singletonList(UUID.randomUUID().toString());
+    List<String> networkKey = List.of(UUID.randomUUID().toString());
 
     MetadataRecord metadataRecord =
         MetadataRecord.newBuilder()

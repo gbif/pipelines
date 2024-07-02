@@ -1,7 +1,7 @@
 package org.gbif.pipelines.core.converters;
 
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 import org.gbif.api.vocabulary.MediaType;
 import org.gbif.pipelines.io.avro.Audubon;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -45,7 +45,7 @@ public class MultimediaConverterTest {
         MultimediaRecord.newBuilder()
             .setId("777")
             .setMultimediaItems(
-                Collections.singletonList(
+                List.of(
                     Multimedia.newBuilder()
                         .setIdentifier("http://url-i1")
                         .setReferences("http://url-r1")
@@ -59,7 +59,7 @@ public class MultimediaConverterTest {
         MultimediaRecord.newBuilder()
             .setId("777")
             .setMultimediaItems(
-                Collections.singletonList(
+                List.of(
                     Multimedia.newBuilder()
                         .setIdentifier("http://url-i1")
                         .setReferences("http://url-r1")
@@ -81,7 +81,7 @@ public class MultimediaConverterTest {
         MultimediaRecord.newBuilder()
             .setId("777")
             .setMultimediaItems(
-                Collections.singletonList(
+                List.of(
                     Multimedia.newBuilder()
                         .setIdentifier("http://url-i1")
                         .setReferences("http://url-r1")
@@ -92,7 +92,7 @@ public class MultimediaConverterTest {
         ImageRecord.newBuilder()
             .setId("777")
             .setImageItems(
-                Collections.singletonList(
+                List.of(
                     Image.newBuilder()
                         .setIdentifier("http://url-i1")
                         .setReferences("http://url-r1")
@@ -105,7 +105,7 @@ public class MultimediaConverterTest {
         MultimediaRecord.newBuilder()
             .setId("777")
             .setMultimediaItems(
-                Collections.singletonList(
+                List.of(
                     Multimedia.newBuilder()
                         .setIdentifier("http://url-i1")
                         .setReferences("http://url-r1")
@@ -143,7 +143,7 @@ public class MultimediaConverterTest {
         ImageRecord.newBuilder()
             .setId("777")
             .setImageItems(
-                Collections.singletonList(
+                List.of(
                     Image.newBuilder()
                         .setIdentifier("http://url-i2")
                         .setReferences("http://url-r2")
@@ -157,7 +157,7 @@ public class MultimediaConverterTest {
         AudubonRecord.newBuilder()
             .setId("777")
             .setAudubonItems(
-                Collections.singletonList(
+                List.of(
                     Audubon.newBuilder()
                         .setAccessUri("http://url-i3")
                         .setCreateDate("2010-09-09")

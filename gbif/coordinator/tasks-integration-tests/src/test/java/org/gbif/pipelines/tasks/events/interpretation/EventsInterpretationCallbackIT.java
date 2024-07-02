@@ -6,9 +6,9 @@ import static org.gbif.api.model.pipelines.StepType.EVENTS_VERBATIM_TO_INTERPRET
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.model.pipelines.PipelineStep;
@@ -75,7 +75,7 @@ public class EventsInterpretationCallbackIT {
             EXECUTION_ID,
             EndpointType.DWC_ARCHIVE,
             validationResult,
-            Collections.singleton(RecordType.EVENT.name()),
+            Set.of(RecordType.EVENT.name()),
             DatasetType.SAMPLING_EVENT);
 
     // When

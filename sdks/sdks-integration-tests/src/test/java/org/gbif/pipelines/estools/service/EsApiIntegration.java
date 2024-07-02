@@ -85,7 +85,7 @@ public abstract class EsApiIntegration {
   /** Asserts that the swap operation was done as expected in the embedded ES instance. */
   static void assertSwapResults(
       String idxAdded, String idxPattern, String alias, Set<String> idxRemoved) {
-    assertSwapResults(idxAdded, idxPattern, Collections.singleton(alias), idxRemoved);
+    assertSwapResults(idxAdded, idxPattern, Set.of(alias), idxRemoved);
   }
 
   /** Asserts that the swap operation was done as expected in the embedded ES instance. */
@@ -111,7 +111,7 @@ public abstract class EsApiIntegration {
 
   /** Utility method to add an index to an alias. */
   static void addIndexesToAlias(String alias, Set<String> idxToAdd) {
-    addIndexesToAliases(Collections.singleton(alias), idxToAdd);
+    addIndexesToAliases(Set.of(alias), idxToAdd);
   }
 
   /** Utility method to add an index to some aliases. */
