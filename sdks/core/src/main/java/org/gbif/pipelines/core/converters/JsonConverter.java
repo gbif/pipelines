@@ -7,18 +7,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.LongFunction;
 import java.util.stream.Collectors;
@@ -542,14 +532,14 @@ public class JsonConverter {
       return Collections.emptyList();
     }
 
-    Set<String> taxonKey = new HashSet<>();
-
-    Optional.ofNullable(taxonRecord.getUsage()).ifPresent(s -> taxonKey.add(s.getKey()));
-    Optional.ofNullable(taxonRecord.getAcceptedUsage()).ifPresent(au -> taxonKey.add(au.getKey()));
+    Set<String> taxonKey = new LinkedHashSet<>();
 
     taxonRecord.getClassification().stream()
         .map(org.gbif.pipelines.io.avro.RankedName::getKey)
         .forEach(taxonKey::add);
+
+    Optional.ofNullable(taxonRecord.getUsage()).ifPresent(s -> taxonKey.add(s.getKey()));
+    Optional.ofNullable(taxonRecord.getAcceptedUsage()).ifPresent(au -> taxonKey.add(au.getKey()));
 
     return taxonKey.stream().map(String::valueOf).collect(Collectors.toList());
   }

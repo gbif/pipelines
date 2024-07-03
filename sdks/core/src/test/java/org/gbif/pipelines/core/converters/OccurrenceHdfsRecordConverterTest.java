@@ -546,30 +546,30 @@ public class OccurrenceHdfsRecordConverterTest {
 
     // Should
     Assert.assertEquals("Archaea", hdfsRecord.getKingdom());
-    Assert.assertEquals(Integer.valueOf(2), hdfsRecord.getKingdomkey());
+    Assert.assertEquals(String.valueOf(2), hdfsRecord.getKingdomkey());
 
     Assert.assertEquals("Crenarchaeota", hdfsRecord.getPhylum());
-    Assert.assertEquals(Integer.valueOf(79), hdfsRecord.getPhylumkey());
+    Assert.assertEquals(String.valueOf(79), hdfsRecord.getPhylumkey());
 
     Assert.assertEquals("Acidilobales", hdfsRecord.getOrder());
-    Assert.assertEquals(Integer.valueOf(8016360), hdfsRecord.getOrderkey());
+    Assert.assertEquals(String.valueOf(8016360), hdfsRecord.getOrderkey());
 
     Assert.assertEquals("Thermoprotei", hdfsRecord.getClass$());
-    Assert.assertEquals(Integer.valueOf(292), hdfsRecord.getClasskey());
+    Assert.assertEquals(String.valueOf(292), hdfsRecord.getClasskey());
 
     Assert.assertEquals("Caldisphaeraceae", hdfsRecord.getFamily());
-    Assert.assertEquals(Integer.valueOf(7785), hdfsRecord.getFamilykey());
+    Assert.assertEquals(String.valueOf(7785), hdfsRecord.getFamilykey());
 
     Assert.assertEquals("Caldisphaera", hdfsRecord.getGenus());
-    Assert.assertEquals(Integer.valueOf(1000002), hdfsRecord.getGenuskey());
+    Assert.assertEquals(String.valueOf(1000002), hdfsRecord.getGenuskey());
 
     Assert.assertEquals("Caldisphaera lagunensis", hdfsRecord.getSpecies());
-    Assert.assertEquals(Integer.valueOf(1000003), hdfsRecord.getSpecieskey());
+    Assert.assertEquals(String.valueOf(1000003), hdfsRecord.getSpecieskey());
 
     Assert.assertEquals("2492483", hdfsRecord.getAcceptednameusageid());
     Assert.assertEquals(
         "Caldisphaera lagunensis Itoh & al., 2003", hdfsRecord.getAcceptedscientificname());
-    Assert.assertEquals(Integer.valueOf(2492483), hdfsRecord.getAcceptedtaxonkey());
+    Assert.assertEquals(String.valueOf(2492483), hdfsRecord.getAcceptedtaxonkey());
 
     Assert.assertEquals("Caldisphaera", hdfsRecord.getGenericname());
     Assert.assertEquals("lagunensis", hdfsRecord.getSpecificepithet());
