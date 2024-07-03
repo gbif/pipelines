@@ -322,7 +322,8 @@ public class OccurrenceHdfsRecordConverter {
       }
       Optional.ofNullable(taxonRecord.getAcceptedUsage().getRank())
           .ifPresent(r -> occurrenceHdfsRecord.setTaxonrank(r.name()));
-    } else if (Objects.nonNull(taxonRecord.getUsage()) && taxonRecord.getUsage().getKey() != 0) {
+    } else if (Objects.nonNull(taxonRecord.getUsage())
+        && !taxonRecord.getUsage().getKey().equals("0")) {
       // if the acceptedUsage is null we use the usage as the accepted as longs as it's not
       // incertidae sedis
       occurrenceHdfsRecord.setAcceptedtaxonkey(taxonRecord.getUsage().getKey());

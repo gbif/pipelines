@@ -120,7 +120,7 @@
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
     "fields":[
-      {"name":"key","type":["null","int"],"default":null,"doc":""},
+      {"name":"key","type":["null","string"],"default":null,"doc":""},
       {"name":"guid","type":["null","string"],"default":null,"doc":""},
       {"name":"name","type":["null","string"],"default":null,"doc":""},
       {"name":"rank","type":["null","string"],"default":null}

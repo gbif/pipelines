@@ -294,24 +294,60 @@ public class OccurrenceJsonConverterTest {
     List<RankedName> rankedNameList = new ArrayList<>();
 
     RankedName synonym =
-        RankedName.newBuilder().setKey(10).setName("synonym").setRank(Rank.SPECIES).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(10))
+            .setName("synonym")
+            .setRank(Rank.SPECIES)
+            .build();
     RankedName au =
-        RankedName.newBuilder().setKey(11).setName("accepted usage").setRank(Rank.SPECIES).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(11))
+            .setName("accepted usage")
+            .setRank(Rank.SPECIES)
+            .build();
 
     RankedName name1 =
-        RankedName.newBuilder().setKey(1).setName("KINGDOM").setRank(Rank.KINGDOM).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(1))
+            .setName("KINGDOM")
+            .setRank(Rank.KINGDOM)
+            .build();
     RankedName name2 =
-        RankedName.newBuilder().setKey(2).setName("PHYLUM").setRank(Rank.PHYLUM).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(2))
+            .setName("PHYLUM")
+            .setRank(Rank.PHYLUM)
+            .build();
     RankedName name3 =
-        RankedName.newBuilder().setKey(3).setName("CLASS").setRank(Rank.CLASS).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(3))
+            .setName("CLASS")
+            .setRank(Rank.CLASS)
+            .build();
     RankedName name4 =
-        RankedName.newBuilder().setKey(4).setName("ORDER").setRank(Rank.ORDER).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(4))
+            .setName("ORDER")
+            .setRank(Rank.ORDER)
+            .build();
     RankedName name5 =
-        RankedName.newBuilder().setKey(5).setName("FAMILY").setRank(Rank.FAMILY).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(5))
+            .setName("FAMILY")
+            .setRank(Rank.FAMILY)
+            .build();
     RankedName name6 =
-        RankedName.newBuilder().setKey(6).setName("GENUS").setRank(Rank.GENUS).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(6))
+            .setName("GENUS")
+            .setRank(Rank.GENUS)
+            .build();
     RankedName name7 =
-        RankedName.newBuilder().setKey(7).setName("SPECIES").setRank(Rank.SPECIES).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(7))
+            .setName("SPECIES")
+            .setRank(Rank.SPECIES)
+            .build();
 
     rankedNameList.add(name1);
     rankedNameList.add(name2);

@@ -1,6 +1,5 @@
 package org.gbif.pipelines.backbone.impact;
 
-import java.io.IOException;
 import java.util.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -22,10 +21,10 @@ import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchemaUtils;
 import org.apache.thrift.TException;
 import org.gbif.kvs.species.Identification;
-import org.gbif.rest.client.configuration.ChecklistbankClientsConfiguration;
+import org.gbif.rest.client.RestClientFactory;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
-import org.gbif.rest.client.species.retrofit.ChecklistbankServiceSyncClient;
+import org.gbif.rest.client.species.NameUsageMatchService;
 
 /**
  * Takes the classification from verbatim data and runs it against a species lookup service
@@ -89,7 +88,7 @@ public class BackbonePreRelease {
     private final int minCount;
     private final boolean skipKeys;
     private final boolean ignoreWhitespace;
-    private ChecklistbankServiceSyncClient service; // direct service, no cache
+    private NameUsageMatchService service; // direct service, no cache
 
     MatchTransform(
         String baseAPIUrl,
@@ -109,20 +108,11 @@ public class BackbonePreRelease {
     @Setup
     public void setup() {
       service =
-          new ChecklistbankServiceSyncClient(
-              ChecklistbankClientsConfiguration.builder()
-                  .nameUsageClientConfiguration(
-                      ClientConfiguration.builder()
-                          .withBaseApiUrl(baseAPIUrl)
-                          .withFileCacheMaxSizeMb(1L)
-                          .withTimeOut(120L)
-                          .build())
-                  .checklistbankClientConfiguration( // required but not used
-                      ClientConfiguration.builder()
-                          .withBaseApiUrl(baseAPIUrl)
-                          .withFileCacheMaxSizeMb(1L)
-                          .withTimeOut(120L)
-                          .build())
+          RestClientFactory.createNameMatchService(
+              ClientConfiguration.builder()
+                  .withBaseApiUrl(baseAPIUrl)
+                  .withFileCacheMaxSizeMb(1L)
+                  .withTimeOut(120L)
                   .build());
     }
 
@@ -162,19 +152,24 @@ public class BackbonePreRelease {
           // short circuit the cache, but replicate same logic of the NameUsageMatchKVStoreFactory
           NameUsageMatch usageMatch =
               service.match(
-                  null, // rely only on names
-                  matchRequest.getKingdom(),
-                  matchRequest.getPhylum(),
-                  matchRequest.getClazz(),
-                  matchRequest.getOrder(),
-                  matchRequest.getFamily(),
-                  matchRequest.getGenus(),
+                  null,
+                  matchRequest.getTaxonID(),
+                  matchRequest.getTaxonConceptID(),
+                  matchRequest.getScientificNameID(),
                   matchRequest.getScientificName(),
                   matchRequest.getGenericName(),
                   matchRequest.getSpecificEpithet(),
                   matchRequest.getInfraspecificEpithet(),
                   matchRequest.getScientificNameAuthorship(),
                   matchRequest.getRank(),
+                  matchRequest.getKingdom(),
+                  matchRequest.getPhylum(),
+                  matchRequest.getClazz(),
+                  matchRequest.getOrder(),
+                  matchRequest.getFamily(),
+                  matchRequest.getGenus(),
+                  matchRequest.getSubgenus(),
+                  matchRequest.getSpecies(),
                   false,
                   false);
 
@@ -189,7 +184,7 @@ public class BackbonePreRelease {
           // copy pipelines to put unknown content into incertae sedis kingdom
           if (proposed.getKingdom() == null) {
             proposed.setKingdom("incertae sedis");
-            proposed.setKingdomKey(0);
+            proposed.setKingdomKey("0");
           }
 
           // emit classifications that differ, optionally considering the keys
@@ -261,17 +256,6 @@ public class BackbonePreRelease {
           verbatim.getScientificNameAuthorship(),
           current.toString(skipKeys),
           proposed.toString(skipKeys));
-    }
-
-    @Teardown
-    public void tearDown() {
-      if (Objects.nonNull(service)) {
-        try {
-          service.close();
-        } catch (IOException ex) {
-          log.error("Error closing lookup service", ex);
-        }
-      }
     }
 
     private static boolean isEmpty(NameUsageMatch response) {

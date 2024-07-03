@@ -10,7 +10,6 @@ import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
-import org.gbif.rest.client.configuration.ChecklistbankClientsConfiguration;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
 
@@ -50,27 +49,17 @@ public class NameUsageMatchStoreFactory {
             .map(WsConfig::getWsUrl)
             .orElse(config.getGbifApi().getWsUrl());
 
-    ChecklistbankClientsConfiguration clientConfiguration =
-        ChecklistbankClientsConfiguration.builder()
-            .nameUsageClientConfiguration(
-                ClientConfiguration.builder()
-                    .withBaseApiUrl(api)
-                    .withFileCacheMaxSizeMb(config.getNameUsageMatch().getWsCacheSizeMb())
-                    .withTimeOut(config.getNameUsageMatch().getWsTimeoutSec())
-                    .build())
-            .checklistbankClientConfiguration(
-                ClientConfiguration.builder()
-                    .withBaseApiUrl(api)
-                    .withFileCacheMaxSizeMb(config.getNameUsageMatch().getWsCacheSizeMb())
-                    .withTimeOut(config.getNameUsageMatch().getWsTimeoutSec())
-                    .build())
+    ClientConfiguration clientConfiguration =
+        ClientConfiguration.builder()
+            .withBaseApiUrl(api)
+            .withFileCacheMaxSizeMb(config.getNameUsageMatch().getWsCacheSizeMb())
+            .withTimeOut(config.getNameUsageMatch().getWsTimeoutSec())
             .build();
 
     String zk = config.getNameUsageMatch().getZkConnectionString();
     zk = zk == null || zk.isEmpty() ? config.getZkConnectionString() : zk;
     if (zk == null || config.getNameUsageMatch().isRestOnly()) {
-      return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(
-          clientConfiguration, config.getNameUsageIdMapping());
+      return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(clientConfiguration);
     }
 
     CachedHBaseKVStoreConfiguration matchConfig =
@@ -82,14 +71,14 @@ public class NameUsageMatchStoreFactory {
                     .withColumnFamily("v") // Column in which qualifiers are stored
                     .withNumOfKeyBuckets(config.getNameUsageMatch().getNumOfKeyBuckets())
                     .withHBaseZk(zk)
-                    .withHBaseZnode(config.getNameUsageMatch().getHbaseZnode())
+                    //
+                    // .withHBaseZnode(config.getNameUsageMatch().getHbaseZnode())
                     .build())
             .withCacheCapacity(15_000L)
             .withCacheExpiryTimeInSeconds(config.getNameUsageMatch().getCacheExpiryTimeInSeconds())
             .build();
 
-    return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(
-        matchConfig, clientConfiguration, config.getNameUsageIdMapping());
+    return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, clientConfiguration);
   }
 
   public static SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>> createSupplier(

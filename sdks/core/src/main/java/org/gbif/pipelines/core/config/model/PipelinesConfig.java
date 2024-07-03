@@ -8,7 +8,8 @@ import java.util.Set;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.gbif.common.parsers.date.DateComponentOrdering;
-import org.gbif.kvs.species.IdMappingConfiguration;
+
+// import org.gbif.kvs.species.IdMappingConfiguration;
 
 @Data
 @NoArgsConstructor
@@ -25,7 +26,7 @@ public class PipelinesConfig implements Serializable {
 
   private KvConfig nameUsageMatch;
 
-  private IdMappingConfiguration nameUsageIdMapping;
+  //  private IdMappingConfiguration nameUsageIdMapping;
 
   private KvConfig grscicollLookup;
 

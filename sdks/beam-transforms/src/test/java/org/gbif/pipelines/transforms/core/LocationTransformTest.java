@@ -30,7 +30,7 @@ import org.gbif.pipelines.io.avro.GadmFeatures;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
+import org.gbif.rest.client.geocode.GeocodeResponse.Location;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

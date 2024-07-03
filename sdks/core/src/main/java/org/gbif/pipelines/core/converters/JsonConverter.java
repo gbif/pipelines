@@ -542,7 +542,7 @@ public class JsonConverter {
       return Collections.emptyList();
     }
 
-    Set<Integer> taxonKey = new HashSet<>();
+    Set<String> taxonKey = new HashSet<>();
 
     Optional.ofNullable(taxonRecord.getUsage()).ifPresent(s -> taxonKey.add(s.getKey()));
     Optional.ofNullable(taxonRecord.getAcceptedUsage()).ifPresent(au -> taxonKey.add(au.getKey()));

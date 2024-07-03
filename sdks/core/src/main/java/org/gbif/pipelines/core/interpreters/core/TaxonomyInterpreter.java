@@ -17,13 +17,11 @@ import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.vocabulary.Kingdom;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.Identification;
 import org.gbif.nameparser.NameParserGBIF;
-import org.gbif.nameparser.NameParserGbifV1;
 import org.gbif.nameparser.api.NameParser;
 import org.gbif.nameparser.api.UnparsableNameException;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonRecordConverter;
@@ -57,7 +55,7 @@ public class TaxonomyInterpreter {
       RankedName.newBuilder()
           .setRank(Rank.KINGDOM)
           .setName(Kingdom.INCERTAE_SEDIS.scientificName())
-          .setKey(Kingdom.INCERTAE_SEDIS.nubUsageKey())
+          .setKey(Integer.toString(Kingdom.INCERTAE_SEDIS.nubUsageKey()))
           .build();
   private static final NameParser NAME_PARSER = new NameParserGBIF();
 
@@ -116,18 +114,22 @@ public class TaxonomyInterpreter {
         tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
       } else {
 
-        MatchType matchType = usageMatch.getDiagnostics().getMatchType();
+        NameUsageMatch.MatchType matchType = usageMatch.getDiagnostics().getMatchType();
 
         // copy any issues asserted by the lookup itself
-        if (usageMatch.getIssues() != null) {
-          addIssueSet(tr, usageMatch.getIssues());
+        if (usageMatch.getDiagnostics().getIssues() != null) {
+          addIssueSet(
+              tr,
+              usageMatch.getDiagnostics().getIssues().stream()
+                  .map(org.gbif.api.vocabulary.OccurrenceIssue::valueOf)
+                  .collect(Collectors.toSet()));
         }
 
-        if (MatchType.NONE == matchType) {
+        if (NameUsageMatch.MatchType.NONE == matchType) {
           addIssue(tr, TAXON_MATCH_NONE);
-        } else if (MatchType.FUZZY == matchType) {
+        } else if (NameUsageMatch.MatchType.VARIANT == matchType) {
           addIssue(tr, TAXON_MATCH_FUZZY);
-        } else if (MatchType.HIGHERRANK == matchType) {
+        } else if (NameUsageMatch.MatchType.HIGHERRANK == matchType) {
           addIssue(tr, TAXON_MATCH_HIGHERRANK);
         }
 
@@ -136,9 +138,7 @@ public class TaxonomyInterpreter {
           if (Objects.nonNull(usageMatch.getUsage())) {
             org.gbif.nameparser.api.ParsedName pn =
                 NAME_PARSER.parse(
-                    usageMatch.getUsage().getName(),
-                    NameParserGbifV1.fromGbif(usageMatch.getUsage().getRank()),
-                    null);
+                    usageMatch.getUsage().getName(), usageMatch.getUsage().getRank(), null);
             tr.setUsageParsedName(toParsedNameAvro(pn));
           }
         } catch (UnparsableNameException e) {
@@ -177,7 +177,8 @@ public class TaxonomyInterpreter {
    */
   @VisibleForTesting
   protected static boolean checkFuzzy(NameUsageMatch usageMatch, Identification identification) {
-    boolean isFuzzy = MatchType.FUZZY == usageMatch.getDiagnostics().getMatchType();
+    boolean isFuzzy =
+        NameUsageMatch.MatchType.VARIANT == usageMatch.getDiagnostics().getMatchType();
     boolean isEmptyTaxa =
         Strings.isNullOrEmpty(identification.getKingdom())
             && Strings.isNullOrEmpty(identification.getPhylum())

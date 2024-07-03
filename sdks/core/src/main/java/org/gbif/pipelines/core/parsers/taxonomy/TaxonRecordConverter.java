@@ -8,12 +8,10 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.MatchType;
-import org.gbif.pipelines.io.avro.Nomenclature;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.Status;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.rest.client.species.IucnRedListCategory;
 import org.gbif.rest.client.species.NameUsageMatch;
 
 /** Adapts a {@link NameUsageMatch} into a {@link TaxonRecord} */
@@ -43,18 +41,22 @@ public class TaxonRecordConverter {
     taxonRecord.setAcceptedUsage(
         Optional.ofNullable(convertRankedName(source.getAcceptedUsage()))
             .orElse(taxonRecord.getUsage()));
-    taxonRecord.setNomenclature(convertNomenclature(source.getNomenclature()));
+
+    // nom code doesnt seem to be set...
+    //    taxonRecord.setNomenclature(convertNomenclature(source.getNomenclature()));
     taxonRecord.setDiagnostics(convertDiagnostics(source.getDiagnostics()));
 
     // IUCN Red List Category
-    Optional.ofNullable(source.getIucnRedListCategory())
-        .map(IucnRedListCategory::getCode)
+    Optional.ofNullable(source.getAdditionalStatus()).orElseGet(List::of).stream()
+        .filter(status -> status.getGbifKey().equals("19491596-35ae-4a91-9a98-85cf505f1bd3"))
+        .findFirst()
+        .map(status -> status.getCategory())
         .ifPresent(taxonRecord::setIucnRedListCategoryCode);
 
     return taxonRecord;
   }
 
-  private static RankedName convertRankedName(org.gbif.api.v2.RankedName rankedNameApi) {
+  private static RankedName convertRankedName(NameUsageMatch.RankedName rankedNameApi) {
     if (rankedNameApi == null) {
       return null;
     }
@@ -66,16 +68,16 @@ public class TaxonRecordConverter {
         .build();
   }
 
-  private static Nomenclature convertNomenclature(NameUsageMatch.Nomenclature nomenclatureApi) {
-    if (nomenclatureApi == null) {
-      return null;
-    }
-
-    return Nomenclature.newBuilder()
-        .setId(nomenclatureApi.getId())
-        .setSource(nomenclatureApi.getSource())
-        .build();
-  }
+  //  private static Nomenclature convertNomenclature(NameUsageMatch.Nomenclature nomenclatureApi) {
+  //    if (nomenclatureApi == null) {
+  //      return null;
+  //    }
+  //
+  //    return Nomenclature.newBuilder()
+  //        .setId(nomenclatureApi.getId())
+  //        .setSource(nomenclatureApi.getSource())
+  //        .build();
+  //  }
 
   private static Diagnostic convertDiagnostics(NameUsageMatch.Diagnostics diagnosticsApi) {
     if (diagnosticsApi == null) {
@@ -94,11 +96,11 @@ public class TaxonRecordConverter {
             .setConfidence(diagnosticsApi.getConfidence())
             .setMatchType(MatchType.valueOf(diagnosticsApi.getMatchType().name()))
             .setNote(diagnosticsApi.getNote())
-            .setLineage(diagnosticsApi.getLineage());
+            .setLineage(List.of());
 
     // status. A bit of defensive programming...
     if (diagnosticsApi.getStatus() != null) {
-      builder.setStatus(Status.valueOf(diagnosticsApi.getStatus().name()));
+      builder.setStatus(Status.valueOf(diagnosticsApi.getStatus()));
     }
 
     return builder.build();

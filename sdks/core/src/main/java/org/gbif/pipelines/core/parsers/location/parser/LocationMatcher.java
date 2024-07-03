@@ -22,7 +22,6 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
 
 /** Matches the location fields related to Country and Coordinates to find possible mismatches. */
 @Slf4j
@@ -124,8 +123,8 @@ public class LocationMatcher {
         return Optional.of(
             geocodeResponse.getLocations().stream()
                 .filter(l -> LAYERS_FILTER_SET.contains(l.getType()))
-                .sorted(Comparator.comparingDouble(Location::getDistance))
-                .map(Location::getIsoCountryCode2Digit)
+                .sorted(Comparator.comparingDouble(GeocodeResponse.Location::getDistance))
+                .map(GeocodeResponse.Location::getIsoCountryCode2Digit)
                 .map(Country::fromIsoCode)
                 .collect(Collectors.toList()));
       }

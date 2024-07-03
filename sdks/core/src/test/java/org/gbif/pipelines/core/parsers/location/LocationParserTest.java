@@ -16,7 +16,7 @@ import org.gbif.pipelines.core.parsers.location.parser.ParsedLocation;
 import org.gbif.pipelines.core.utils.ExtendedRecordBuilder;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
+import org.gbif.rest.client.geocode.GeocodeResponse.Location;
 import org.junit.Assert;
 import org.junit.Test;
 

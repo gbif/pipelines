@@ -16,7 +16,6 @@ import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ContinentParser {
@@ -116,8 +115,8 @@ public class ContinentParser {
         List<Continent> continents =
             geocodeResponse.getLocations().stream()
                 .filter(l -> "Continent".equals(l.getType()))
-                .sorted(Comparator.comparingDouble(Location::getDistance))
-                .map(Location::getId)
+                .sorted(Comparator.comparingDouble(GeocodeResponse.Location::getDistance))
+                .map(GeocodeResponse.Location::getId)
                 .map(Continent::fromString)
                 .collect(Collectors.toList());
         if (!continents.isEmpty()) {

@@ -1,9 +1,9 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.kvs.species.Identification;
 import org.gbif.rest.client.species.NameUsageMatch;
 import org.gbif.rest.client.species.NameUsageMatch.Diagnostics;
+import org.gbif.rest.client.species.NameUsageMatch.MatchType;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -25,7 +25,7 @@ public class TaxonomyInterpreterTest {
 
     NameUsageMatch usageMatch = new NameUsageMatch();
     Diagnostics diagnostics = new Diagnostics();
-    diagnostics.setMatchType(MatchType.FUZZY);
+    diagnostics.setMatchType(MatchType.VARIANT);
     usageMatch.setDiagnostics(diagnostics);
 
     // When
@@ -51,7 +51,7 @@ public class TaxonomyInterpreterTest {
 
     NameUsageMatch usageMatch = new NameUsageMatch();
     Diagnostics diagnostics = new Diagnostics();
-    diagnostics.setMatchType(MatchType.FUZZY);
+    diagnostics.setMatchType(MatchType.VARIANT);
     usageMatch.setDiagnostics(diagnostics);
 
     // When

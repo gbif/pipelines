@@ -31,16 +31,16 @@ class GBIFClassification {
   private String species;
   private String scientificName;
   private String acceptedScientificName;
-  private Integer kingdomKey;
-  private Integer phylumKey;
-  private Integer classKey;
-  private Integer orderKey;
-  private Integer familyKey;
-  private Integer genusKey;
-  private Integer subGenusKey;
-  private Integer speciesKey;
-  private Integer taxonKey;
-  private Integer acceptedTaxonKey;
+  private String kingdomKey;
+  private String phylumKey;
+  private String classKey;
+  private String orderKey;
+  private String familyKey;
+  private String genusKey;
+  private String subGenusKey;
+  private String speciesKey;
+  private String taxonKey;
+  private String acceptedTaxonKey;
 
   /**
    * @return A new classification representing unknown.
@@ -48,7 +48,7 @@ class GBIFClassification {
   static GBIFClassification newIncertaeSedis() {
     GBIFClassification c = new GBIFClassification();
     c.scientificName = "incertae sedis";
-    c.taxonKey = 0;
+    c.taxonKey = "0";
     return c;
   }
 
@@ -69,16 +69,16 @@ class GBIFClassification {
     c.species = source.getString("species", schema);
     c.scientificName = source.getString("scientificName", schema);
     c.acceptedScientificName = source.getString("acceptedScientificName", schema);
-    c.kingdomKey = source.getInteger("kingdomKey", schema);
-    c.phylumKey = source.getInteger("phylumKey", schema);
-    c.classKey = source.getInteger("classKey", schema);
-    c.orderKey = source.getInteger("orderKey", schema);
-    c.familyKey = source.getInteger("familyKey", schema);
-    c.genusKey = source.getInteger("genusKey", schema);
-    c.subGenusKey = source.getInteger("subGenusKey", schema);
-    c.speciesKey = source.getInteger("speciesKey", schema);
-    c.taxonKey = source.getInteger("taxonKey", schema);
-    c.acceptedTaxonKey = source.getInteger("acceptedTaxonKey", schema);
+    c.kingdomKey = source.getString("kingdomKey", schema);
+    c.phylumKey = source.getString("phylumKey", schema);
+    c.classKey = source.getString("classKey", schema);
+    c.orderKey = source.getString("orderKey", schema);
+    c.familyKey = source.getString("familyKey", schema);
+    c.genusKey = source.getString("genusKey", schema);
+    c.subGenusKey = source.getString("subGenusKey", schema);
+    c.speciesKey = source.getString("speciesKey", schema);
+    c.taxonKey = source.getString("taxonKey", schema);
+    c.acceptedTaxonKey = source.getString("acceptedTaxonKey", schema);
     return c;
   }
 

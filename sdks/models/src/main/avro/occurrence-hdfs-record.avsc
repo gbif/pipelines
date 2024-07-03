@@ -1458,34 +1458,34 @@
     "type" : [ "boolean", "null" ]
   }, {
     "name" : "taxonkey",
-    "type" : [ "int", "null" ]
+    "type" : [ "string", "null" ]
   }, {
     "name" : "acceptedtaxonkey",
-    "type" : [ "int", "null" ]
+    "type" : [ "string", "null" ]
   }, {
     "name" : "kingdomkey",
-    "type" : [ "int", "null" ]
+    "type" : [ "string", "null" ]
   }, {
     "name" : "phylumkey",
-    "type" : [ "int", "null" ]
+    "type" : [ "string", "null" ]
   }, {
     "name" : "classkey",
-    "type" : [ "int", "null" ]
+    "type" : [ "string", "null" ]
   }, {
     "name" : "orderkey",
-    "type" : [ "int", "null" ]
+    "type" : [ "string", "null" ]
   }, {
     "name" : "familykey",
-    "type" : [ "int", "null" ]
+    "type" : [ "string", "null" ]
   }, {
     "name" : "genuskey",
-    "type" : [ "int", "null" ]
+    "type" : [ "string", "null" ]
   }, {
     "name" : "subgenuskey",
-    "type" : [ "int", "null" ]
+    "type" : [ "string", "null" ]
   }, {
     "name" : "specieskey",
-    "type" : [ "int", "null" ]
+    "type" : [ "string", "null" ]
   }, {
     "name" : "species",
     "type" : [ "string", "null" ]

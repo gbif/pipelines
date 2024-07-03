@@ -9,7 +9,6 @@ import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.GadmFeatures;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class GadmParser {
@@ -51,7 +50,7 @@ public class GadmParser {
     return Optional.empty();
   }
 
-  public static void accept(Location l, GadmFeatures gf) {
+  public static void accept(GeocodeResponse.Location l, GadmFeatures gf) {
     if (l.getType() != null && l.getDistance() != null && l.getDistance() == 0) {
       switch (l.getType()) {
         case "GADM0":

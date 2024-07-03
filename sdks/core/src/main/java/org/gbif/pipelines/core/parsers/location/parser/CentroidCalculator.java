@@ -9,7 +9,6 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CentroidCalculator {
@@ -51,9 +50,9 @@ public class CentroidCalculator {
                         "Centroids".equals(l.getType())
                             && l.getDistanceMeters() != null
                             && l.getDistanceMeters() <= MAXIMUM_DISTANCE_FROM_CENTROID_METRES)
-                .sorted(Comparator.comparingDouble(Location::getDistanceMeters))
+                .sorted(Comparator.comparingDouble(GeocodeResponse.Location::getDistanceMeters))
                 .findFirst()
-                .map(Location::getDistanceMeters);
+                .map(GeocodeResponse.Location::getDistanceMeters);
         return centroidDistance;
       }
     }

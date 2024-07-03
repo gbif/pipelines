@@ -20,8 +20,7 @@
     "namespace" : "org.gbif.pipelines.io.avro",
     "type" : "enum",
     "symbols" : [
-      "ACCEPTED", "DOUBTFUL", "SYNONYM", "HETEROTYPIC_SYNONYM", "HOMOTYPIC_SYNONYM", "PROPARTE_SYNONYM", "MISAPPLIED",
-      "INTERMEDIATE_RANK_SYNONYM", "DETERMINATION_SYNONYM"
+      "ACCEPTED", "PROVISIONALLY_ACCEPTED", "SYNONYM", "AMBIGUOUS_SYNONYM", "MISAPPLIED", "BARE_NAME"
     ]
   },
   {
@@ -46,7 +45,7 @@
     "namespace" : "org.gbif.pipelines.io.avro",
     "type" : "record",
     "fields" : [
-      {"name" : "key", "type" : ["null", "int"], "default" : null},
+      {"name" : "key", "type" : ["null", "string"], "default" : null},
       {"name" : "name", "type" : ["null", "string"], "default" : null},
       {"name" : "rank", "type" : ["null", "Rank"], "default" : null}
     ]

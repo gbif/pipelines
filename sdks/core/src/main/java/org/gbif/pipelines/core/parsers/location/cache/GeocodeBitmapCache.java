@@ -11,7 +11,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
+import org.gbif.rest.client.geocode.GeocodeResponse.Location;
 
 /** A cache which uses a bitmap to cache coordinate lookups. */
 @Slf4j
