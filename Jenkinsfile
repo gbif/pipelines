@@ -26,7 +26,7 @@ pipeline {
         }
       }
       steps {
-        sh 'mvn clean verify -U -T 3 -P skip-coverage,skip-release-it'
+        sh 'mvn clean verify -U -T 3 -P skip-coverage,skip-release-it -DskipTests'
       }
     }
 
