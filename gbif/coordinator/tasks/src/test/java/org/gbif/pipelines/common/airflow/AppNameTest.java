@@ -12,12 +12,40 @@ public class AppNameTest {
     // State
     StepType dwca = StepType.DWCA_TO_VERBATIM;
     UUID uuid = UUID.fromString("ad2ef207-969e-418a-ab4f-102e8d9bf7ac");
-    int attempt = 1;
+    int attempt = 1_000_000;
 
     // When
     String string = AppName.get(dwca, uuid, attempt);
 
     // Should
-    Assert.assertEquals("DWCA_TO_VERBATIM_ad2ef207-969e-418a-ab4f-102e8d9bf7ac_1", string);
+    Assert.assertEquals("dwca-verba-ad2ef207-969e-418a-ab4f-102e8d9bf7ac-1000000", string);
+  }
+
+  @Test
+  public void getOccurrenceTest() {
+    // State
+    StepType dwca = StepType.VERBATIM_TO_INTERPRETED;
+    UUID uuid = UUID.fromString("ad2ef207-969e-418a-ab4f-102e8d9bf7ac");
+    int attempt = 1_000_000;
+
+    // When
+    String string = AppName.get(dwca, uuid, attempt);
+
+    // Should
+    Assert.assertEquals("verba-inter-ad2ef207-969e-418a-ab4f-102e8d9bf7ac-1000000", string);
+  }
+
+  @Test
+  public void getEventTest() {
+    // State
+    StepType dwca = StepType.EVENTS_VERBATIM_TO_INTERPRETED;
+    UUID uuid = UUID.fromString("ad2ef207-969e-418a-ab4f-102e8d9bf7ac");
+    int attempt = 1_000_000;
+
+    // When
+    String string = AppName.get(dwca, uuid, attempt);
+
+    // Should
+    Assert.assertEquals("event-verba-inter-ad2ef207-969e-418a-ab4f-102e8d9bf7ac-1000000", string);
   }
 }
