@@ -50,13 +50,13 @@ public interface BackbonePreReleaseOptions extends HadoopFileSystemOptions {
   void setSkipKeys(boolean skipKeys);
 
   @Description("Controls if whitespace should be ignored or not")
-  @Default.Boolean(false)
+  @Default.Boolean(true)
   boolean getIgnoreWhitespace();
 
   void setIgnoreWhitespace(boolean ignoreWhitespace);
 
   @Description("Controls if whitespace should be ignored or not")
-  @Default.Boolean(false)
+  @Default.Boolean(true)
   boolean getIgnoreAuthorshipFormatting();
 
   void setIgnoreAuthorshipFormatting(boolean ignoreAuthorshipFormatting);

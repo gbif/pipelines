@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.apache.hive.hcatalog.common.HCatException;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
+import org.gbif.pipelines.backbone.impact.v2.NameUsageMatchV2;
 import org.gbif.rest.client.species.NameUsageMatch;
 
 /**
@@ -31,22 +32,32 @@ public class GBIFClassification {
   private String species;
   private String scientificName;
   private String acceptedScientificName;
-  private Integer kingdomKey;
-  private Integer phylumKey;
-  private Integer classKey;
-  private Integer orderKey;
-  private Integer familyKey;
-  private Integer genusKey;
-  private Integer subGenusKey;
-  private Integer speciesKey;
-  private Integer taxonKey;
-  private Integer acceptedTaxonKey;
+  private String kingdomKey;
+  private String phylumKey;
+  private String classKey;
+  private String orderKey;
+  private String familyKey;
+  private String genusKey;
+  private String subGenusKey;
+  private String speciesKey;
+  private String taxonKey;
+  private String acceptedTaxonKey;
+
+  /** @return A new classification representing unknown. */
+  static GBIFClassification error() {
+    GBIFClassification c = new GBIFClassification();
+    c.scientificName = "ERROR";
+    c.kingdom = "ERROR";
+    c.setKingdomKey("-1");
+    c.taxonKey = "-1";
+    return c;
+  }
 
   /** @return A new classification representing unknown. */
   static GBIFClassification newIncertaeSedis() {
     GBIFClassification c = new GBIFClassification();
     c.scientificName = "incertae sedis";
-    c.taxonKey = 0;
+    c.taxonKey = "0";
     return c;
   }
 
@@ -67,21 +78,85 @@ public class GBIFClassification {
     c.species = source.getString("species", schema);
     c.scientificName = source.getString("scientificName", schema);
     c.acceptedScientificName = source.getString("acceptedScientificName", schema);
-    c.kingdomKey = source.getInteger("kingdomKey", schema);
-    c.phylumKey = source.getInteger("phylumKey", schema);
-    c.classKey = source.getInteger("classKey", schema);
-    c.orderKey = source.getInteger("orderKey", schema);
-    c.familyKey = source.getInteger("familyKey", schema);
-    c.genusKey = source.getInteger("genusKey", schema);
-    c.subGenusKey = source.getInteger("subGenusKey", schema);
-    c.speciesKey = source.getInteger("speciesKey", schema);
-    c.taxonKey = source.getInteger("taxonKey", schema);
-    c.acceptedTaxonKey = source.getInteger("acceptedTaxonKey", schema);
+    c.kingdomKey = source.getInteger("kingdomKey", schema) + "";
+    c.phylumKey = source.getInteger("phylumKey", schema) + "";
+    c.classKey = source.getInteger("classKey", schema) + "";
+    c.orderKey = source.getInteger("orderKey", schema) + "";
+    c.familyKey = source.getInteger("familyKey", schema) + "";
+    c.genusKey = source.getInteger("genusKey", schema) + "";
+    c.subGenusKey = source.getInteger("subGenusKey", schema) + "";
+    c.speciesKey = source.getInteger("speciesKey", schema) + "";
+    c.taxonKey = source.getInteger("taxonKey", schema) + "";
+    c.acceptedTaxonKey = source.getInteger("acceptedTaxonKey", schema) + "";
+    ;
     return c;
   }
 
   /** Builder from a lookup web service response. */
   public static GBIFClassification buildFromNameUsageMatch(NameUsageMatch usageMatch) {
+    GBIFClassification c = new GBIFClassification();
+    if (Objects.nonNull(usageMatch.getClassification())) {
+      usageMatch
+          .getClassification()
+          .forEach(
+              rankedName -> {
+                switch (rankedName.getRank()) {
+                  case KINGDOM:
+                    c.kingdom = rankedName.getName();
+                    c.kingdomKey = rankedName.getKey() + "";
+                    break;
+                  case PHYLUM:
+                    c.phylum = rankedName.getName();
+                    c.phylumKey = rankedName.getKey() + "";
+                    break;
+                  case CLASS:
+                    c.klass = rankedName.getName();
+                    c.classKey = rankedName.getKey() + "";
+                    break;
+                  case ORDER:
+                    c.order = rankedName.getName();
+                    c.orderKey = rankedName.getKey() + "";
+                    break;
+                  case FAMILY:
+                    c.family = rankedName.getName();
+                    c.familyKey = rankedName.getKey() + "";
+                    break;
+                  case GENUS:
+                    c.genus = rankedName.getName();
+                    c.genusKey = rankedName.getKey() + "";
+                    break;
+                  case SUBGENUS:
+                    c.subGenus = rankedName.getName();
+                    c.subGenusKey = rankedName.getKey() + "";
+                    break;
+                  case SPECIES:
+                    c.species = rankedName.getName();
+                    c.speciesKey = rankedName.getKey() + "";
+                    break;
+                  default:
+                    break;
+                }
+              });
+
+      if (usageMatch.getUsage() != null) {
+        c.scientificName = usageMatch.getUsage().getName();
+        c.taxonKey = usageMatch.getUsage().getKey() + "";
+      }
+
+      if (usageMatch.getAcceptedUsage() != null) {
+        c.acceptedScientificName = usageMatch.getAcceptedUsage().getName();
+        c.acceptedTaxonKey = usageMatch.getAcceptedUsage().getKey() + "";
+      } else if (usageMatch.getUsage() != null) {
+        c.acceptedScientificName = usageMatch.getUsage().getName();
+        c.acceptedTaxonKey = usageMatch.getUsage().getKey() + "";
+      }
+    }
+
+    return c;
+  }
+
+  /** Builder from a lookup web service response. */
+  public static GBIFClassification buildFromNameUsageMatch(NameUsageMatchV2 usageMatch) {
     GBIFClassification c = new GBIFClassification();
     if (Objects.nonNull(usageMatch.getClassification())) {
       usageMatch

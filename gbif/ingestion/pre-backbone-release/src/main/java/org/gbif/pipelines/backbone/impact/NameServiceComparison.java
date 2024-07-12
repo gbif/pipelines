@@ -283,7 +283,9 @@ public class NameServiceComparison {
     }
 
     private GBIFClassification buildProposedClassification(NameUsageMatch match) {
-      if (match == null || isEmpty(match)) {
+      if (match == null) {
+        return GBIFClassification.error();
+      } else if (isEmpty(match)) {
         return GBIFClassification.newIncertaeSedis();
       } else {
         return GBIFClassification.buildFromNameUsageMatch(match);
@@ -293,7 +295,7 @@ public class NameServiceComparison {
     private void updateClassification(GBIFClassification classification) {
       if (classification.getKingdom() == null) {
         classification.setKingdom("incertae sedis");
-        classification.setKingdomKey(0);
+        classification.setKingdomKey("0");
       }
     }
 
@@ -369,8 +371,7 @@ public class NameServiceComparison {
     }
 
     private static boolean isEmpty(NameUsageMatch response) {
-      return response == null
-          || response.getUsage() == null
+      return response.getUsage() == null
           || (response.getClassification() == null || response.getClassification().isEmpty());
       //          || response.getDiagnostics() == null;
     }

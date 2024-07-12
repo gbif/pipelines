@@ -10,5 +10,5 @@ public class CLBUsageMatch {
   String type;
   String status;
   String id;
-  boolean match;
+  Boolean match;
 }

@@ -88,7 +88,7 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
     NameUsageMatch num = new NameUsageMatch();
     RankedName usage = new RankedName();
     usage.setKey(0);
-    usage.setName("incertae sedis-clb-client");
+    usage.setName("incertae sedis");
     usage.setRank(Rank.UNRANKED);
     num.setUsage(usage);
     return num;
@@ -176,10 +176,14 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
           scientificName,
           scientificNameAuthorship,
           "");
-      return noMatch();
+      return null;
     }
 
-    if (!clbUsageMatch.match || Objects.isNull(clbUsageMatch.getUsage())) {
+    if (Objects.isNull(clbUsageMatch)) {
+      return null;
+    }
+
+    if (!clbUsageMatch.match || Objects.isNull(clbUsageMatch.getMatch())) {
       return noMatch();
     }
 
@@ -197,10 +201,6 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
 
       if (firstInClass.isPresent()) {
         CLBUsage acceptedCLBUsage = firstInClass.get();
-        if (acceptedCLBUsage.namesIndexId == null) {
-          // FIXME why is the nameIndexId null in this instance ?
-          return noMatch();
-        }
         RankedName acceptedUsage =
             getRankedNameFromUsage(acceptedCLBUsage, outputInfragenericEpithet);
         num.setAcceptedUsage(acceptedUsage);
@@ -270,7 +270,7 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
           scientificNameAuthorship,
           rank);
     }
-    return noMatch();
+    return null;
   }
 
   private static void debugUrl(
@@ -377,7 +377,7 @@ public class CLBSyncClient implements ChecklistbankService, Closeable {
       @NotNull CLBUsage clbUsage, boolean outputInfragenericEpithet) {
 
     RankedName usage = new RankedName();
-    usage.setKey(clbUsage.namesIndexId);
+    usage.setKey(1); // we are ignoring keys from CLB
 
     if (!outputInfragenericEpithet) {
       // reconstruct the name without the infrageneric epithet
