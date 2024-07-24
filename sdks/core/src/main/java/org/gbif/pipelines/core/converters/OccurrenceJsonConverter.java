@@ -13,6 +13,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
+import org.gbif.pipelines.core.interpreters.core.GeologicalContextInterpreter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -22,9 +23,12 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.VocabularyConcept;
+import org.gbif.pipelines.io.avro.VocabularyTag;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.gbif.pipelines.io.avro.json.GeologicalContext;
+import org.gbif.pipelines.io.avro.json.GeologicalRange;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 
 @Slf4j
@@ -200,8 +204,40 @@ public class OccurrenceJsonConverter {
       JsonConverter.convertVocabularyConcept(gx.getLatestAgeOrHighestStage())
           .ifPresent(gcb::setLatestAgeOrHighestStage);
 
+      GeologicalRange.Builder rangeBuilder = GeologicalRange.newBuilder();
+      chooseFirst(
+              GeologicalContextInterpreter.START_AGE_TAG,
+              gx.getEarliestAgeOrLowestStage(),
+              gx.getEarliestEpochOrLowestSeries(),
+              gx.getEarliestPeriodOrLowestSystem(),
+              gx.getEarliestEraOrLowestErathem(),
+              gx.getEarliestEonOrLowestEonothem())
+          .ifPresent(rangeBuilder::setLte);
+      chooseFirst(
+              GeologicalContextInterpreter.END_AGE_TAG,
+              gx.getLatestAgeOrHighestStage(),
+              gx.getLatestEpochOrHighestSeries(),
+              gx.getLatestPeriodOrHighestSystem(),
+              gx.getLatestEraOrHighestErathem(),
+              gx.getLatestEonOrHighestEonothem())
+          .ifPresent(rangeBuilder::setGt);
+      gcb.setRange(rangeBuilder.build());
+
       builder.setGeologicalContext(gcb.build());
     }
+  }
+
+  private Optional<String> chooseFirst(String tag, VocabularyConcept... vocabularyConcepts) {
+    for (VocabularyConcept vc : vocabularyConcepts) {
+      if (vc.getTags() != null) {
+        Optional<VocabularyTag> tagFound =
+            vc.getTags().stream().filter(t -> t != null && t.getName().equals(tag)).findFirst();
+        if (tagFound.isPresent()) {
+          return Optional.of(tagFound.get().getValue());
+        }
+      }
+    }
+    return Optional.empty();
   }
 
   private void mapTemporalRecord(OccurrenceJsonRecord.Builder builder) {

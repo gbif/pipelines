@@ -18,14 +18,13 @@ public class VocabularyConfig implements Serializable {
   // directory where the vocabulary files are stored
   private String vocabulariesPath;
 
-  private Map<Term, String> vocabulariesNames = Collections.emptyMap();
+  private Map<String, String> vocabulariesNames = Collections.emptyMap();
 
   public String getVocabularyFileName(Term term) {
     return vocabulariesNames.computeIfAbsent(
-        term,
+        term.qualifiedName(),
         t -> {
-          throw new IllegalArgumentException(
-              "Can't find associated vocabulary for term " + t.qualifiedName());
+          throw new IllegalArgumentException("Can't find associated vocabulary for term " + t);
         });
   }
 }

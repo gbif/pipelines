@@ -2,9 +2,6 @@ package org.gbif.pipelines.core.interpreters.core;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import lombok.AccessLevel;
@@ -12,11 +9,11 @@ import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
+import org.gbif.pipelines.core.utils.VocabularyUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
-import org.gbif.vocabulary.lookup.LookupConcept;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VocabularyInterpreter {
@@ -58,26 +55,6 @@ public class VocabularyInterpreter {
         interpretVocabulary(er, DwcTerm.eventType, vocabularyService).ifPresent(ecr::setEventType);
   }
 
-  /**
-   * Extracts the value of vocabulary concept and set
-   *
-   * @param c to extract the value from
-   */
-  protected static VocabularyConcept getConcept(LookupConcept c) {
-
-    // we sort the parents starting from the top as in taxonomy
-    List<String> parents = new ArrayList<>(c.getParents());
-    Collections.reverse(parents);
-
-    // add the concept itself
-    parents.add(c.getConcept().getName());
-
-    return VocabularyConcept.newBuilder()
-        .setConcept(c.getConcept().getName())
-        .setLineage(parents)
-        .build();
-  }
-
   /** {@link DwcTerm#lifeStage} interpretation. */
   private static Optional<VocabularyConcept> interpretVocabulary(
       ExtendedRecord er, Term term, VocabularyService vocabularyService) {
@@ -91,7 +68,7 @@ public class VocabularyInterpreter {
       return vocabularyService
           .get(term)
           .flatMap(lookup -> Optional.ofNullable(value).flatMap(lookup::lookup))
-          .map(VocabularyInterpreter::getConcept);
+          .map(VocabularyUtils::getConcept);
     }
     return Optional.empty();
   }

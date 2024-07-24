@@ -31,7 +31,8 @@
       {"name":"group","type":["null","string"],"default":null,"doc":""},
       {"name":"formation","type":["null","string"],"default":null,"doc":""},
       {"name":"member","type":["null","string"],"default":null,"doc":""},
-      {"name":"bed","type":["null","string"],"default":null,"doc":""}
+      {"name":"bed","type":["null","string"],"default":null,"doc":""},
+      {"name":"range","type":["null","GeologicalRange"],"default":null,"doc":""}
     ]
   },
   {

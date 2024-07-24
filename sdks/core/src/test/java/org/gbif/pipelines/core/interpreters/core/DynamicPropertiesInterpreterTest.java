@@ -31,7 +31,8 @@ public class DynamicPropertiesInterpreterTest {
   private final VocabularyService vocabularyService =
       VocabularyService.builder()
           .vocabularyLookup(
-              DwcTerm.lifeStage, new MockVocabularyLookups.LifeStageMockVocabularyLookup())
+              DwcTerm.lifeStage.qualifiedName(),
+              new MockVocabularyLookups.LifeStageMockVocabularyLookup())
           .build();
 
   @Test

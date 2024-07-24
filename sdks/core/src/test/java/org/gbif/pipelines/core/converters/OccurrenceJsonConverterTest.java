@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.AgentIdentifierType;
@@ -23,6 +24,7 @@ import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
+import org.gbif.pipelines.core.interpreters.core.GeologicalContextInterpreter;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -50,6 +52,7 @@ import org.gbif.pipelines.io.avro.Status;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
+import org.gbif.pipelines.io.avro.VocabularyTag;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Test;
@@ -143,12 +146,27 @@ public class OccurrenceJsonConverterTest {
 
     ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").setIsClustered(true).build();
 
-    Function<String, VocabularyConcept> vcFn =
+    Function<String, BiFunction<String, String, VocabularyConcept>> vcFn =
         v ->
-            VocabularyConcept.newBuilder()
-                .setConcept(v)
-                .setLineage(Collections.singletonList(v))
-                .build();
+            (s, e) ->
+                VocabularyConcept.newBuilder()
+                    .setConcept(v)
+                    .setLineage(Collections.singletonList(v))
+                    .setTags(
+                        Arrays.asList(
+                            s != null
+                                ? VocabularyTag.newBuilder()
+                                    .setName(GeologicalContextInterpreter.START_AGE_TAG)
+                                    .setValue(s)
+                                    .build()
+                                : null,
+                            e != null
+                                ? VocabularyTag.newBuilder()
+                                    .setName(GeologicalContextInterpreter.END_AGE_TAG)
+                                    .setValue(e)
+                                    .build()
+                                : null))
+                    .build();
 
     BasicRecord br =
         BasicRecord.newBuilder()
@@ -209,16 +227,16 @@ public class OccurrenceJsonConverterTest {
             .setProjectId(Arrays.asList(multivalue1, multivalue2))
             .setGeologicalContext(
                 GeologicalContext.newBuilder()
-                    .setEarliestEonOrLowestEonothem(vcFn.apply("test1"))
-                    .setLatestEonOrHighestEonothem(vcFn.apply("test2"))
-                    .setEarliestEraOrLowestErathem(vcFn.apply("test3"))
-                    .setLatestEraOrHighestErathem(vcFn.apply("test4"))
-                    .setEarliestPeriodOrLowestSystem(vcFn.apply("test5"))
-                    .setLatestPeriodOrHighestSystem(vcFn.apply("test6"))
-                    .setEarliestEpochOrLowestSeries(vcFn.apply("test7"))
-                    .setLatestEpochOrHighestSeries(vcFn.apply("test8"))
-                    .setEarliestAgeOrLowestStage(vcFn.apply("test9"))
-                    .setLatestAgeOrHighestStage(vcFn.apply("test10"))
+                    .setEarliestEonOrLowestEonothem(vcFn.apply("test1").apply("1000", "500"))
+                    .setLatestEonOrHighestEonothem(vcFn.apply("test2").apply("500", "0"))
+                    .setEarliestEraOrLowestErathem(vcFn.apply("test3").apply("500", "100"))
+                    .setLatestEraOrHighestErathem(vcFn.apply("test4").apply("500", "100"))
+                    .setEarliestPeriodOrLowestSystem(vcFn.apply("test5").apply("500", "400"))
+                    .setLatestPeriodOrHighestSystem(vcFn.apply("test6").apply("400", "200"))
+                    .setEarliestEpochOrLowestSeries(vcFn.apply("test7").apply("400", "300"))
+                    .setLatestEpochOrHighestSeries(vcFn.apply("test8").apply("400", "300"))
+                    .setEarliestAgeOrLowestStage(vcFn.apply("test9").apply("350", "310"))
+                    .setLatestAgeOrHighestStage(vcFn.apply("test10").apply(null, "300"))
                     .setLowestBiostratigraphicZone("test11")
                     .setHighestBiostratigraphicZone("test12")
                     .setGroup("test13")
@@ -674,7 +692,8 @@ public class OccurrenceJsonConverterTest {
             + "\"earliestAgeOrLowestStage\":{\"concept\":\"test9\",\"lineage\":[\"test9\"]},"
             + "\"latestAgeOrHighestStage\":{\"concept\":\"test10\",\"lineage\":[\"test10\"]},"
             + "\"lowestBiostratigraphicZone\":\"test11\",\"highestBiostratigraphicZone\":\"test12\","
-            + "\"group\":\"test13\",\"formation\":\"test14\",\"member\":\"test15\",\"bed\":\"test16\"}";
+            + "\"group\":\"test13\",\"formation\":\"test14\",\"member\":\"test15\",\"bed\":\"test16\","
+            + "\"range\":{\"gt\":\"300\",\"lte\":\"350\"}}";
     assertEquals(geologicalContextExpected, result.path("geologicalContext").toString());
   }
 
