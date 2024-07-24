@@ -112,7 +112,9 @@ public class CoreInterpreter {
       while (parentEventID != null) {
         Map<String, String> parentValues = erWithParents.get(parentEventID);
 
-        if (parentValues == null) {
+        // Users can use the same eventId for parentEventID creating infinite loop
+        if (parentValues == null
+            || parentEventID.equals(parentValues.get(DwcTerm.parentEventID.name()))) {
           // case when there is no event with that parentEventID
           break;
         }

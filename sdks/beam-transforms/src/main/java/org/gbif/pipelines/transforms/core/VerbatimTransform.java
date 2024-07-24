@@ -65,8 +65,14 @@ public class VerbatimTransform extends Transform<ExtendedRecord, ExtendedRecord>
     SerializableFunction<ExtendedRecord, Map<String, String>> termValues =
         (er) -> {
           Map<String, String> values = new HashMap<>();
-          extractOptValue(er, DwcTerm.parentEventID)
-              .ifPresent(v -> values.put(DwcTerm.parentEventID.name(), v));
+          Optional<String> parentIdOpt = extractOptValue(er, DwcTerm.parentEventID);
+          Optional<String> eventIdOpt = extractOptValue(er, DwcTerm.eventID);
+          // Users can use the same eventId for parentEventID creating infinite loop
+          if (parentIdOpt.isPresent()
+              && (!eventIdOpt.isPresent() || !eventIdOpt.get().equals(parentIdOpt.get()))) {
+            values.put(DwcTerm.parentEventID.name(), parentIdOpt.get());
+          }
+
           extractOptValue(er, DwcTerm.eventType)
               .ifPresent(v -> values.put(DwcTerm.eventType.name(), v));
           return values;

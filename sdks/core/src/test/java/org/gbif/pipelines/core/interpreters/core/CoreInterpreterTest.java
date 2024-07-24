@@ -2,11 +2,14 @@ package org.gbif.pipelines.core.interpreters.core;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import org.gbif.api.vocabulary.License;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Assert;
 import org.junit.Test;
@@ -304,6 +307,33 @@ public class CoreInterpreterTest {
     Assert.assertTrue(br.getSamplingProtocol().contains(sp1));
     Assert.assertTrue(br.getSamplingProtocol().contains(sp2));
     assertIssueSizeZero(br);
+  }
+
+  @Test
+  public void interpretLineagesInfiniteLoopCheckTest() {
+
+    // State
+    String id = "same_id";
+
+    // ExtendedRecord
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.eventID.qualifiedName(), id);
+    coreMap.put(DwcTerm.parentEventID.qualifiedName(), id);
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    // EventCoreRecord
+    EventCoreRecord evr = EventCoreRecord.newBuilder().setId(id).build();
+
+    Map<String, Map<String, String>> source = new HashMap<>();
+    source.put(id, Collections.singletonMap(DwcTerm.parentEventID.name(), id));
+
+    // When
+    BiConsumer<ExtendedRecord, EventCoreRecord> result =
+        CoreInterpreter.interpretLineages(source, null);
+    result.accept(er, evr);
+
+    // Should
+    Assert.assertEquals(0, evr.getParentsLineage().size());
   }
 
   private void assertIssueSizeZero(BasicRecord br) {
