@@ -377,7 +377,8 @@
           "group": {"type": "keyword", "copy_to": "all"},
           "formation": {"type": "keyword", "copy_to": "all"},
           "member": {"type": "keyword", "copy_to": "all"},
-          "bed": {"type": "keyword", "copy_to": "all"}
+          "bed": {"type": "keyword", "copy_to": "all"},
+          "range": {"type": "float_range"}
         }
       },
 
