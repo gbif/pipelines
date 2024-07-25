@@ -606,6 +606,17 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setFormation(gc.getFormation());
       occurrenceHdfsRecord.setMember(gc.getMember());
       occurrenceHdfsRecord.setBed(gc.getBed());
+
+      if (gc.getStartAge() != null && gc.getEndAge() != null) {
+        Optional.ofNullable(gc.getStartAge())
+            .ifPresent(
+                s ->
+                    occurrenceHdfsRecord.setRange(
+                        GeologicalRange.newBuilder()
+                            .setLte(gc.getStartAge())
+                            .setGt(gc.getEndAge())
+                            .build()));
+      }
     }
   }
 

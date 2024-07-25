@@ -1,7 +1,6 @@
 package org.gbif.pipelines.core.interpreters;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -38,23 +37,23 @@ public class MockVocabularyLookups {
   public static class GeoTimeMockVocabularyLookup implements VocabularyLookup {
 
     private static final List<String> CENOZOIC_TAGS =
-        Arrays.asList("rank: Era", "startAge: 66.0", "endAge: 0");
+        List.of("rank: Era", "startAge: 66.0", "endAge: 0");
     private static final List<String> MESOZOIC_TAGS =
-        Arrays.asList("rank: Era", "startAge: 251.902", "endAge: 66.0");
+        List.of("rank: Era", "startAge: 251.902", "endAge: 66.0");
     private static final List<String> PALEOZOIC_TAGS =
-        Arrays.asList("rank: Era", "startAge: 538.8", "endAge: 251.902");
+        List.of("rank: Era", "startAge: 538.8", "endAge: 251.902");
     private static final List<String> NEOGENE_TAGS =
-        Arrays.asList("rank: Period", "startAge: 23.03", "endAge: 2.58");
+        List.of("rank: Period", "startAge: 23.03", "endAge: 2.58");
     private static final List<String> QUATERNARY_TAGS =
-        Arrays.asList("rank: Period", "startAge: 2.58", "endAge: 0");
+        List.of("rank: Period", "startAge: 2.58", "endAge: 0");
     private static final List<String> MIOCENE_TAGS =
-        Arrays.asList("rank: Epoch", "startAge: 23.03", "endAge: 5.333");
+        List.of("rank: Epoch", "startAge: 23.03", "endAge: 5.333");
     private static final List<String> PLIOCENE_TAGS =
-        Arrays.asList("rank: Epoch", "startAge: 5.333", "endAge: 2.58");
+        List.of("rank: Epoch", "startAge: 5.333", "endAge: 2.58");
     private static final List<String> BURDIGALIAN_TAGS =
-        Arrays.asList("rank: Age", "startAge: 20.44", "endAge: 15.98");
+        List.of("rank: Age", "startAge: 20.44", "endAge: 15.98");
     private static final List<String> ZANCLEAN_TAGS =
-        Arrays.asList("rank: Age", "startAge: 5.333", "endAge: 3.600");
+        List.of("rank: Age", "startAge: 5.333", "endAge: 3.600");
 
     @Override
     public Optional<LookupConcept> lookup(String s) {
@@ -92,7 +91,7 @@ public class MockVocabularyLookups {
         return Optional.of(
             LookupConcept.of(
                 concept("Miocene"),
-                Arrays.asList(parent("Neogene", NEOGENE_TAGS), parent("Cenozoic", CENOZOIC_TAGS)),
+                List.of(parent("Neogene", NEOGENE_TAGS), parent("Cenozoic", CENOZOIC_TAGS)),
                 MIOCENE_TAGS));
       }
 
@@ -100,7 +99,7 @@ public class MockVocabularyLookups {
         return Optional.of(
             LookupConcept.of(
                 concept("Pliocene"),
-                Arrays.asList(parent("Neogene", NEOGENE_TAGS), parent("Cenozoic", CENOZOIC_TAGS)),
+                List.of(parent("Neogene", NEOGENE_TAGS), parent("Cenozoic", CENOZOIC_TAGS)),
                 PLIOCENE_TAGS));
       }
 
@@ -108,7 +107,7 @@ public class MockVocabularyLookups {
         return Optional.of(
             LookupConcept.of(
                 concept("Burdigalian"),
-                Arrays.asList(
+                List.of(
                     parent("Miocene", MIOCENE_TAGS),
                     parent("Neogene", NEOGENE_TAGS),
                     parent("Cenozoic", CENOZOIC_TAGS)),
@@ -119,7 +118,7 @@ public class MockVocabularyLookups {
         return Optional.of(
             LookupConcept.of(
                 concept("Zanclean"),
-                Arrays.asList(
+                List.of(
                     parent("Pliocene", PLIOCENE_TAGS),
                     parent("Neogene", NEOGENE_TAGS),
                     parent("Cenozoic", CENOZOIC_TAGS)),

@@ -84,6 +84,8 @@ public class GeologicalContextInterpreterTest {
     Assert.assertEquals(
         3, br.getGeologicalContext().getEarliestEraOrLowestErathem().getTags().size());
     Assert.assertNull(br.getGeologicalContext().getLatestPeriodOrHighestSystem());
+    Assert.assertEquals("23.03", br.getGeologicalContext().getStartAge());
+    Assert.assertEquals("2.58", br.getGeologicalContext().getEndAge());
   }
 
   @Test
@@ -136,6 +138,8 @@ public class GeologicalContextInterpreterTest {
         br.getIssues()
             .getIssueList()
             .contains(OccurrenceIssue.ERA_OR_ERATHEM_AND_PERIOD_OR_SYSTEM_MISMATCH.name()));
+    Assert.assertEquals("23.03", br.getGeologicalContext().getStartAge());
+    Assert.assertEquals("0.0", br.getGeologicalContext().getEndAge());
   }
 
   @Test
@@ -171,6 +175,8 @@ public class GeologicalContextInterpreterTest {
         br.getIssues()
             .getIssueList()
             .contains(OccurrenceIssue.ERA_OR_ERATHEM_AND_PERIOD_OR_SYSTEM_MISMATCH.name()));
+    Assert.assertEquals("20.44", br.getGeologicalContext().getStartAge());
+    Assert.assertEquals("15.98", br.getGeologicalContext().getEndAge());
   }
 
   @Test
@@ -207,5 +213,7 @@ public class GeologicalContextInterpreterTest {
         br.getIssues()
             .getIssueList()
             .contains(OccurrenceIssue.EPOCH_OR_SERIES_AND_AGE_OR_STAGE_MISMATCH.name()));
+    Assert.assertEquals("5.333", br.getGeologicalContext().getStartAge());
+    Assert.assertEquals("3.6", br.getGeologicalContext().getEndAge());
   }
 }

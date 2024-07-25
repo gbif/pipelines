@@ -13,7 +13,7 @@ import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.core.parsers.vertnet.LifeStageParser;
 import org.gbif.pipelines.core.parsers.vertnet.SexParser;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
-import org.gbif.pipelines.core.utils.VocabularyUtils;
+import org.gbif.pipelines.core.utils.VocabularyConceptFactory;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -47,7 +47,7 @@ public class DynamicPropertiesInterpreter {
                 lookup ->
                     extractNullAwareOptValue(er, DwcTerm.dynamicProperties)
                         .flatMap(v -> LifeStageParser.parse(v).flatMap(lookup::lookup)))
-            .map(VocabularyUtils::getConcept)
+            .map(VocabularyConceptFactory::createConcept)
             .ifPresent(br::setLifeStage);
       }
     };

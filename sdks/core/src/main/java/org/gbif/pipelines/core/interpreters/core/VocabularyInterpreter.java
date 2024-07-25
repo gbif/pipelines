@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
-import org.gbif.pipelines.core.utils.VocabularyUtils;
+import org.gbif.pipelines.core.utils.VocabularyConceptFactory;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -68,7 +68,7 @@ public class VocabularyInterpreter {
       return vocabularyService
           .get(term)
           .flatMap(lookup -> Optional.ofNullable(value).flatMap(lookup::lookup))
-          .map(VocabularyUtils::getConcept);
+          .map(VocabularyConceptFactory::createConcept);
     }
     return Optional.empty();
   }

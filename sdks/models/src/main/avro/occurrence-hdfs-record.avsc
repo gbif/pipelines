@@ -1238,6 +1238,19 @@
       } ]
     }, "null" ]
   }, {
+     "name" : "range",
+     "type" : [ {
+        "type" : "record",
+        "name" : "GeologicalRange",
+         "fields":[ {
+            "name" : "gt",
+            "type" : "string"
+          }, {
+            "name" : "lte",
+            "type" : "string"
+          }]
+         }, "null"]
+  },{
     "name" : "lowestbiostratigraphiczone",
     "type" : [ "string", "null" ]
   }, {

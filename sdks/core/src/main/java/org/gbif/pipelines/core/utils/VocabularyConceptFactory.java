@@ -12,22 +12,22 @@ import org.gbif.pipelines.io.avro.VocabularyTag;
 import org.gbif.vocabulary.lookup.LookupConcept;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class VocabularyUtils {
+public class VocabularyConceptFactory {
 
   /**
    * Extracts the value of vocabulary concept and set
    *
    * @param c to extract the value from
    */
-  public static VocabularyConcept getConcept(LookupConcept c) {
-    return getConcept(c.getConcept().getName(), c.getParents(), null);
+  public static VocabularyConcept createConcept(LookupConcept c) {
+    return createConcept(c.getConcept().getName(), c.getParents(), null);
   }
 
-  public static VocabularyConcept getConcept(LookupConcept c, Map<String, String> tagsMap) {
-    return getConcept(c.getConcept().getName(), c.getParents(), tagsMap);
+  public static VocabularyConcept createConcept(LookupConcept c, Map<String, String> tagsMap) {
+    return createConcept(c.getConcept().getName(), c.getParents(), tagsMap);
   }
 
-  public static VocabularyConcept getConcept(
+  public static VocabularyConcept createConcept(
       String conceptName, List<LookupConcept.Parent> parents, Map<String, String> tagsMap) {
     // we sort the parents starting from the top as in taxonomy
     List<String> sortedParents =
@@ -49,7 +49,7 @@ public class VocabularyUtils {
     return builder.build();
   }
 
-  public static List<VocabularyTag> tagsMapToVocabularyTags(Map<String, String> tagsMap) {
+  private static List<VocabularyTag> tagsMapToVocabularyTags(Map<String, String> tagsMap) {
     return tagsMap.entrySet().stream()
         .map(v -> VocabularyTag.newBuilder().setName(v.getKey()).setValue(v.getValue()).build())
         .collect(Collectors.toList());

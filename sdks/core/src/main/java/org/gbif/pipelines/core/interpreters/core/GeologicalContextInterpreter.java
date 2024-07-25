@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.dwc.terms.DwcTerm.earliestEraOrLowestErathem;
+import static org.gbif.dwc.terms.DwcTerm.latestEraOrHighestErathem;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 
 import java.util.Arrays;
@@ -15,7 +17,7 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.core.utils.ModelUtils;
-import org.gbif.pipelines.core.utils.VocabularyUtils;
+import org.gbif.pipelines.core.utils.VocabularyConceptFactory;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GeologicalContext;
@@ -70,8 +72,8 @@ public class GeologicalContextInterpreter {
               br,
               TermPair.of(
                   eonRange,
-                  DwcTerm.earliestEraOrLowestErathem,
-                  DwcTerm.latestEraOrHighestErathem,
+                  earliestEraOrLowestErathem,
+                  latestEraOrHighestErathem,
                   GeologicalContext::setEarliestEraOrLowestErathem,
                   GeologicalContext::setLatestEraOrHighestErathem),
               vocabularyService);
@@ -80,7 +82,7 @@ public class GeologicalContextInterpreter {
               er,
               br,
               TermPair.of(
-                  chooseFirst(eraRange, eonRange),
+                  chooseFirst(eraRange, eonRange).orElse(null),
                   DwcTerm.earliestPeriodOrLowestSystem,
                   DwcTerm.latestPeriodOrHighestSystem,
                   GeologicalContext::setEarliestPeriodOrLowestSystem,
@@ -91,22 +93,34 @@ public class GeologicalContextInterpreter {
               er,
               br,
               TermPair.of(
-                  chooseFirst(periodRange, eraRange, eonRange),
+                  chooseFirst(periodRange, eraRange, eonRange).orElse(null),
                   DwcTerm.earliestEpochOrLowestSeries,
                   DwcTerm.latestEpochOrHighestSeries,
                   GeologicalContext::setEarliestEpochOrLowestSeries,
                   GeologicalContext::setLatestEpochOrHighestSeries),
               vocabularyService);
-      interpretTermPair(
-          er,
-          br,
-          TermPair.of(
-              chooseFirst(epochRange, periodRange, eraRange, eonRange),
-              DwcTerm.earliestAgeOrLowestStage,
-              DwcTerm.latestAgeOrHighestStage,
-              GeologicalContext::setEarliestAgeOrLowestStage,
-              GeologicalContext::setLatestAgeOrHighestStage),
-          vocabularyService);
+      Range ageRange =
+          interpretTermPair(
+              er,
+              br,
+              TermPair.of(
+                  chooseFirst(epochRange, periodRange, eraRange, eonRange).orElse(null),
+                  DwcTerm.earliestAgeOrLowestStage,
+                  DwcTerm.latestAgeOrHighestStage,
+                  GeologicalContext::setEarliestAgeOrLowestStage,
+                  GeologicalContext::setLatestAgeOrHighestStage),
+              vocabularyService);
+
+      chooseFirst(ageRange, epochRange, periodRange, eraRange, eonRange)
+          .ifPresent(
+              r -> {
+                if (r.start != null) {
+                  br.getGeologicalContext().setStartAge(String.valueOf(r.start));
+                }
+                if (r.end != null) {
+                  br.getGeologicalContext().setEndAge(String.valueOf(r.end));
+                }
+              });
     };
   }
 
@@ -165,13 +179,13 @@ public class GeologicalContextInterpreter {
             });
   }
 
-  private static Range chooseFirst(Range... ranges) {
+  private static Optional<Range> chooseFirst(Range... ranges) {
     for (Range r : ranges) {
       if (!r.isEmpty()) {
-        return r;
+        return Optional.of(r);
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   private static Range interpretTermPair(
@@ -222,7 +236,7 @@ public class GeologicalContextInterpreter {
             earliestStartAge != null ? earliestStartAge : latestStartAge,
             latestEndAge != null ? latestEndAge : earliestEndAge);
 
-    if (termPair.parentRange != null) {
+    if (termPair.parentRange != null && !termPair.parentRange.isEmpty()) {
       if ((termPair.parentRange.start != null && termRange.start > termPair.parentRange.start)
           || (termPair.parentRange.end != null && termRange.end < termPair.parentRange.end)) {
         Optional.ofNullable(getTermData(termPair.earliestTerm).parentMismatch)
@@ -247,7 +261,7 @@ public class GeologicalContextInterpreter {
     Map<String, String> tagsMap = getTagsMap(lookupConcept.getTags());
     String termRank = getTermData(term).rank;
     if (tagsMap.get(RANK_TAG).equals(termRank)) {
-      return Optional.of(VocabularyUtils.getConcept(lookupConcept, tagsMap));
+      return Optional.of(VocabularyConceptFactory.createConcept(lookupConcept, tagsMap));
     } else {
       // rank doesn't match
       if (RANK_HIERARCHY.indexOf(tagsMap.get(RANK_TAG)) > RANK_HIERARCHY.indexOf(termRank)) {
@@ -264,7 +278,7 @@ public class GeologicalContextInterpreter {
           List<LookupConcept.Parent> filteredParents =
               allParents.subList(allParents.indexOf(parent) + 1, allParents.size());
           return Optional.of(
-              VocabularyUtils.getConcept(
+              VocabularyConceptFactory.createConcept(
                   parent.getName(), filteredParents, getTagsMap(parent.getTags())));
         }
       } else {
@@ -287,48 +301,50 @@ public class GeologicalContextInterpreter {
   }
 
   private static TermData getTermData(DwcTerm term) {
-    if (term.equals(DwcTerm.earliestEonOrLowestEonothem)
-        || term.equals(DwcTerm.latestEonOrHighestEonothem)) {
-      return TermData.of(
-          EON,
-          null,
-          OccurrenceIssue.EON_OR_EONOTHEM_RANK_MISMATCH,
-          OccurrenceIssue.EON_OR_EONOTHEM_INVALID_RANGE,
-          null);
-    } else if (term.equals(DwcTerm.earliestEraOrLowestErathem)
-        || term.equals(DwcTerm.latestEraOrHighestErathem)) {
-      return TermData.of(
-          ERA,
-          OccurrenceIssue.ERA_OR_ERATHEM_INFERRED_FROM_PARENT_RANK,
-          OccurrenceIssue.ERA_OR_ERATHEM_RANK_MISMATCH,
-          OccurrenceIssue.ERA_OR_ERATHEM_INVALID_RANGE,
-          OccurrenceIssue.EON_OR_EONOTHEM_AND_ERA_OR_ERATHEM_MISMATCH);
-    } else if (term.equals(DwcTerm.earliestPeriodOrLowestSystem)
-        || term.equals(DwcTerm.latestPeriodOrHighestSystem)) {
-      return TermData.of(
-          PERIOD,
-          OccurrenceIssue.PERIOD_OR_SYSTEM_INFERRED_FROM_PARENT_RANK,
-          OccurrenceIssue.PERIOD_OR_SYSTEM_RANK_MISMATCH,
-          OccurrenceIssue.PERIOD_OR_SYSTEM_INVALID_RANGE,
-          OccurrenceIssue.ERA_OR_ERATHEM_AND_PERIOD_OR_SYSTEM_MISMATCH);
-    } else if (term.equals(DwcTerm.earliestEpochOrLowestSeries)
-        || term.equals(DwcTerm.latestEpochOrHighestSeries)) {
-      return TermData.of(
-          EPOCH,
-          OccurrenceIssue.EPOCH_OR_SERIES_INFERRED_FROM_PARENT_RANK,
-          OccurrenceIssue.EPOCH_OR_SERIES_RANK_MISMATCH,
-          OccurrenceIssue.EPOCH_OR_SERIES_INVALID_RANGE,
-          OccurrenceIssue.PERIOD_OR_SYSTEM_AND_EPOCH_OR_SERIES_MISMATCH);
-    } else if (term.equals(DwcTerm.earliestAgeOrLowestStage)
-        || term.equals(DwcTerm.latestAgeOrHighestStage)) {
-      return TermData.of(
-          AGE,
-          OccurrenceIssue.AGE_OR_STAGE_INFERRED_FROM_PARENT_RANK,
-          OccurrenceIssue.AGE_OR_STAGE_RANK_MISMATCH,
-          OccurrenceIssue.AGE_OR_STAGE_INVALID_RANGE,
-          OccurrenceIssue.EPOCH_OR_SERIES_AND_AGE_OR_STAGE_MISMATCH);
+    switch (term) {
+      case earliestEonOrLowestEonothem:
+      case latestEonOrHighestEonothem:
+        return TermData.of(
+            EON,
+            null,
+            OccurrenceIssue.EON_OR_EONOTHEM_RANK_MISMATCH,
+            OccurrenceIssue.EON_OR_EONOTHEM_INVALID_RANGE,
+            null);
+      case earliestEraOrLowestErathem:
+      case latestEraOrHighestErathem:
+        return TermData.of(
+            ERA,
+            OccurrenceIssue.ERA_OR_ERATHEM_INFERRED_FROM_PARENT_RANK,
+            OccurrenceIssue.ERA_OR_ERATHEM_RANK_MISMATCH,
+            OccurrenceIssue.ERA_OR_ERATHEM_INVALID_RANGE,
+            OccurrenceIssue.EON_OR_EONOTHEM_AND_ERA_OR_ERATHEM_MISMATCH);
+      case earliestPeriodOrLowestSystem:
+      case latestPeriodOrHighestSystem:
+        return TermData.of(
+            PERIOD,
+            OccurrenceIssue.PERIOD_OR_SYSTEM_INFERRED_FROM_PARENT_RANK,
+            OccurrenceIssue.PERIOD_OR_SYSTEM_RANK_MISMATCH,
+            OccurrenceIssue.PERIOD_OR_SYSTEM_INVALID_RANGE,
+            OccurrenceIssue.ERA_OR_ERATHEM_AND_PERIOD_OR_SYSTEM_MISMATCH);
+      case earliestEpochOrLowestSeries:
+      case latestEpochOrHighestSeries:
+        return TermData.of(
+            EPOCH,
+            OccurrenceIssue.EPOCH_OR_SERIES_INFERRED_FROM_PARENT_RANK,
+            OccurrenceIssue.EPOCH_OR_SERIES_RANK_MISMATCH,
+            OccurrenceIssue.EPOCH_OR_SERIES_INVALID_RANGE,
+            OccurrenceIssue.PERIOD_OR_SYSTEM_AND_EPOCH_OR_SERIES_MISMATCH);
+      case earliestAgeOrLowestStage:
+      case latestAgeOrHighestStage:
+        return TermData.of(
+            AGE,
+            OccurrenceIssue.AGE_OR_STAGE_INFERRED_FROM_PARENT_RANK,
+            OccurrenceIssue.AGE_OR_STAGE_RANK_MISMATCH,
+            OccurrenceIssue.AGE_OR_STAGE_INVALID_RANGE,
+            OccurrenceIssue.EPOCH_OR_SERIES_AND_AGE_OR_STAGE_MISMATCH);
+      default:
+        return TermData.of(null, null, null, null, null);
     }
-    return TermData.of(null, null, null, null, null);
   }
 
   @AllArgsConstructor(staticName = "of")
