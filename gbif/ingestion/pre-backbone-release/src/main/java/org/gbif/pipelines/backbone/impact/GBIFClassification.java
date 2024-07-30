@@ -9,7 +9,7 @@ import lombok.Setter;
 import org.apache.hive.hcatalog.common.HCatException;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
-import org.gbif.rest.client.species.NameUsageMatch;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 /**
  * A classification container intended for use when classifications are to be compared for equality;
@@ -83,14 +83,14 @@ class GBIFClassification {
   }
 
   /** Builder from a lookup web service response. */
-  static GBIFClassification buildFromNameUsageMatch(NameUsageMatch usageMatch) {
+  static GBIFClassification buildFromNameUsageMatch(NameUsageMatchResponse usageMatch) {
     GBIFClassification c = new GBIFClassification();
     if (Objects.nonNull(usageMatch.getClassification())) {
       usageMatch
           .getClassification()
           .forEach(
               rankedName -> {
-                switch (rankedName.getRank()) {
+                switch (org.gbif.nameparser.api.Rank.valueOf(rankedName.getRank())) {
                   case KINGDOM:
                     c.kingdom = rankedName.getName();
                     c.kingdomKey = rankedName.getKey();

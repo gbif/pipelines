@@ -12,7 +12,7 @@ import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.Status;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.rest.client.species.NameUsageMatch;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 /** Adapts a {@link NameUsageMatch} into a {@link TaxonRecord} */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -22,12 +22,13 @@ public class TaxonRecordConverter {
    * I modify the parameter instead of creating a new one and returning it because the lambda
    * parameters are final used in Interpreter.
    */
-  public static void convert(NameUsageMatch nameUsageMatch, TaxonRecord taxonRecord) {
+  public static void convert(NameUsageMatchResponse nameUsageMatch, TaxonRecord taxonRecord) {
     Objects.requireNonNull(nameUsageMatch);
     convertInternal(nameUsageMatch, taxonRecord);
   }
 
-  private static TaxonRecord convertInternal(NameUsageMatch source, TaxonRecord taxonRecord) {
+  private static TaxonRecord convertInternal(
+      NameUsageMatchResponse source, TaxonRecord taxonRecord) {
 
     List<RankedName> classifications =
         source.getClassification().stream()
@@ -56,7 +57,7 @@ public class TaxonRecordConverter {
     return taxonRecord;
   }
 
-  private static RankedName convertRankedName(NameUsageMatch.RankedName rankedNameApi) {
+  private static RankedName convertRankedName(NameUsageMatchResponse.RankedName rankedNameApi) {
     if (rankedNameApi == null) {
       return null;
     }
@@ -64,7 +65,7 @@ public class TaxonRecordConverter {
     return RankedName.newBuilder()
         .setKey(rankedNameApi.getKey())
         .setName(rankedNameApi.getName())
-        .setRank(Rank.valueOf(rankedNameApi.getRank().name()))
+        .setRank(Rank.valueOf(rankedNameApi.getRank()))
         .build();
   }
 
@@ -79,7 +80,7 @@ public class TaxonRecordConverter {
   //        .build();
   //  }
 
-  private static Diagnostic convertDiagnostics(NameUsageMatch.Diagnostics diagnosticsApi) {
+  private static Diagnostic convertDiagnostics(NameUsageMatchResponse.Diagnostics diagnosticsApi) {
     if (diagnosticsApi == null) {
       return null;
     }

@@ -22,7 +22,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.parsers.location.GeocodeKvStore;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -130,7 +130,7 @@ public class LocationTransformTest {
   public void emptyLrTest() {
 
     // State
-    SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStore =
+    SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> geocodeKvStore =
         () -> GeocodeKvStore.create(new KeyValueTestStoreStub<>());
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
@@ -161,11 +161,13 @@ public class LocationTransformTest {
   public void transformationTest() {
 
     // State
-    KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
-    kvStore.put(LatLng.create(56.26d, 9.51d), toGeocodeResponse(Country.DENMARK, Continent.EUROPE));
-    kvStore.put(LatLng.create(36.21d, 138.25d), toGeocodeResponse(Country.JAPAN, Continent.ASIA));
-    kvStore.put(LatLng.create(88.21d, -32.01d), toGeocodeResponse(null, null));
-    SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStore =
+    KeyValueTestStoreStub<GeocodeRequest, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
+    kvStore.put(
+        GeocodeRequest.create(56.26d, 9.51d), toGeocodeResponse(Country.DENMARK, Continent.EUROPE));
+    kvStore.put(
+        GeocodeRequest.create(36.21d, 138.25d), toGeocodeResponse(Country.JAPAN, Continent.ASIA));
+    kvStore.put(GeocodeRequest.create(88.21d, -32.01d), toGeocodeResponse(null, null));
+    SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> geocodeKvStore =
         () -> GeocodeKvStore.create(kvStore);
 
     final String[] denmark = {

@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.Kingdom;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.species.Identification;
+import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.nameparser.NameParserGBIF;
 import org.gbif.nameparser.api.NameParser;
 import org.gbif.nameparser.api.UnparsableNameException;
@@ -38,7 +38,7 @@ import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.State;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.rest.client.species.NameUsageMatch;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 /**
  * Interpreter for taxonomic fields present in an {@link ExtendedRecord} avro file. These fields
@@ -63,7 +63,7 @@ public class TaxonomyInterpreter {
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
    */
   public static BiConsumer<ExtendedRecord, TaxonRecord> taxonomyInterpreter(
-      KeyValueStore<Identification, NameUsageMatch> kvStore) {
+      KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore) {
     return (er, tr) -> {
       if (kvStore == null) {
         return;
@@ -78,8 +78,8 @@ public class TaxonomyInterpreter {
           extractNullAwareOptValue(termsSource, DwcTerm.scientificName)
               .orElse(extractValue(termsSource, DwcTerm.verbatimIdentification));
 
-      Identification identification =
-          Identification.builder()
+      NameUsageMatchRequest identification =
+          NameUsageMatchRequest.builder()
               .withKingdom(extractValue(termsSource, DwcTerm.kingdom))
               .withPhylum(extractValue(termsSource, DwcTerm.phylum))
               .withClazz(extractValue(termsSource, DwcTerm.class_))
@@ -90,8 +90,7 @@ public class TaxonomyInterpreter {
               .withGenericName(extractValue(termsSource, DwcTerm.genericName))
               .withSpecificEpithet(extractValue(termsSource, DwcTerm.specificEpithet))
               .withInfraspecificEpithet(extractValue(termsSource, DwcTerm.infraspecificEpithet))
-              .withScientificNameAuthorship(
-                  extractValue(termsSource, DwcTerm.scientificNameAuthorship))
+              .withAuthorship(extractValue(termsSource, DwcTerm.scientificNameAuthorship))
               .withRank(extractValue(termsSource, DwcTerm.taxonRank))
               .withVerbatimRank(extractValue(termsSource, DwcTerm.verbatimTaxonRank))
               .withScientificNameID(extractValue(termsSource, DwcTerm.scientificNameID))
@@ -99,7 +98,7 @@ public class TaxonomyInterpreter {
               .withTaxonConceptID(extractValue(termsSource, DwcTerm.taxonConceptID))
               .build();
 
-      NameUsageMatch usageMatch = null;
+      NameUsageMatchResponse usageMatch = null;
       try {
         usageMatch = kvStore.get(identification);
       } catch (Exception ex) {
@@ -114,7 +113,7 @@ public class TaxonomyInterpreter {
         tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
       } else {
 
-        NameUsageMatch.MatchType matchType = usageMatch.getDiagnostics().getMatchType();
+        NameUsageMatchResponse.MatchType matchType = usageMatch.getDiagnostics().getMatchType();
 
         // copy any issues asserted by the lookup itself
         if (usageMatch.getDiagnostics().getIssues() != null) {
@@ -125,20 +124,22 @@ public class TaxonomyInterpreter {
                   .collect(Collectors.toSet()));
         }
 
-        if (NameUsageMatch.MatchType.NONE == matchType) {
+        if (NameUsageMatchResponse.MatchType.NONE == matchType) {
           addIssue(tr, TAXON_MATCH_NONE);
-        } else if (NameUsageMatch.MatchType.VARIANT == matchType) {
+        } else if (NameUsageMatchResponse.MatchType.VARIANT == matchType) {
           addIssue(tr, TAXON_MATCH_FUZZY);
-        } else if (NameUsageMatch.MatchType.HIGHERRANK == matchType) {
+        } else if (NameUsageMatchResponse.MatchType.HIGHERRANK == matchType) {
           addIssue(tr, TAXON_MATCH_HIGHERRANK);
         }
 
         // parse name into pieces - we don't get them from the nub lookup
         try {
           if (Objects.nonNull(usageMatch.getUsage())) {
+
+            org.gbif.nameparser.api.Rank rank =
+                org.gbif.nameparser.api.Rank.valueOf(usageMatch.getUsage().getRank());
             org.gbif.nameparser.api.ParsedName pn =
-                NAME_PARSER.parse(
-                    usageMatch.getUsage().getName(), usageMatch.getUsage().getRank(), null);
+                NAME_PARSER.parse(usageMatch.getUsage().getName(), rank, null);
             tr.setUsageParsedName(toParsedNameAvro(pn));
           }
         } catch (UnparsableNameException e) {
@@ -176,9 +177,10 @@ public class TaxonomyInterpreter {
    * https://github.com/gbif/pipelines/issues/254
    */
   @VisibleForTesting
-  protected static boolean checkFuzzy(NameUsageMatch usageMatch, Identification identification) {
+  protected static boolean checkFuzzy(
+      NameUsageMatchResponse usageMatch, NameUsageMatchRequest identification) {
     boolean isFuzzy =
-        NameUsageMatch.MatchType.VARIANT == usageMatch.getDiagnostics().getMatchType();
+        NameUsageMatchResponse.MatchType.VARIANT == usageMatch.getDiagnostics().getMatchType();
     boolean isEmptyTaxa =
         Strings.isNullOrEmpty(identification.getKingdom())
             && Strings.isNullOrEmpty(identification.getPhylum())
@@ -259,7 +261,7 @@ public class TaxonomyInterpreter {
         .build();
   }
 
-  private static boolean isEmpty(NameUsageMatch response) {
+  private static boolean isEmpty(NameUsageMatchResponse response) {
     return response == null
         || response.getUsage() == null
         || (response.getClassification() == null || response.getClassification().isEmpty())

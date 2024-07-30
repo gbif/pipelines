@@ -5,7 +5,7 @@ import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.io.avro.GadmFeatures;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
@@ -14,13 +14,13 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 public class GadmParser {
 
   public static Optional<GadmFeatures> parseGadm(
-      LocationRecord lr, KeyValueStore<LatLng, GeocodeResponse> kvStore) {
+      LocationRecord lr, KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
     Objects.requireNonNull(lr, "LocationRecord is required");
     Objects.requireNonNull(kvStore, "GeocodeService kvStore is required");
 
     // Take parsed values. Uncertainty isn't needed, but included anyway so we hit the cache.
-    LatLng latLng =
-        LatLng.create(
+    GeocodeRequest latLng =
+        GeocodeRequest.create(
             lr.getDecimalLatitude(),
             lr.getDecimalLongitude(),
             lr.getCoordinateUncertaintyInMeters());
@@ -37,7 +37,7 @@ public class GadmParser {
   }
 
   private static Optional<GadmFeatures> getGadmFromCoordinates(
-      LatLng latLng, KeyValueStore<LatLng, GeocodeResponse> kvStore) {
+      GeocodeRequest latLng, KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
     if (latLng.isValid()) {
       GeocodeResponse geocodeResponse = kvStore.get(latLng);
 

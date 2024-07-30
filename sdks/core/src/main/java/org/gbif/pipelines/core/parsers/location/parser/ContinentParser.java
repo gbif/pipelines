@@ -10,7 +10,7 @@ import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -21,7 +21,9 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 public class ContinentParser {
 
   public static ParsedField<Continent> parseContinent(
-      ExtendedRecord er, LocationRecord lr, KeyValueStore<LatLng, GeocodeResponse> kvStore) {
+      ExtendedRecord er,
+      LocationRecord lr,
+      KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
     Objects.requireNonNull(er, "ExtendedRecord is required");
     Objects.requireNonNull(lr, "LocationRecord is required");
     Objects.requireNonNull(kvStore, "GeocodeService kvStore is required");
@@ -43,8 +45,8 @@ public class ContinentParser {
     }
 
     // Take parsed coordinate value
-    LatLng latLng =
-        LatLng.create(
+    GeocodeRequest latLng =
+        GeocodeRequest.create(
             lr.getDecimalLatitude(),
             lr.getDecimalLongitude(),
             lr.getCoordinateUncertaintyInMeters());
@@ -108,7 +110,7 @@ public class ContinentParser {
   }
 
   private static Optional<List<Continent>> getContinentFromCoordinates(
-      LatLng latLng, KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
+      GeocodeRequest latLng, KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore) {
     if (latLng.isValid()) {
       GeocodeResponse geocodeResponse = geocodeKvStore.get(latLng);
       if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {

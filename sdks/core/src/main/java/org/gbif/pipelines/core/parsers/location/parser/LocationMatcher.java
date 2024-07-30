@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
@@ -34,12 +34,12 @@ public class LocationMatcher {
   private static final Set<String> LAYERS_FILTER_SET =
       new HashSet<>(Arrays.asList("Political", "EEZ", "PoliticalEEZ"));
 
-  private final LatLng latLng;
+  private final GeocodeRequest latLng;
   private final Country country;
-  private final KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore;
-  private final List<UnaryOperator<LatLng>> alternativeTransformations = new ArrayList<>();
+  private final KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore;
+  private final List<UnaryOperator<GeocodeRequest>> alternativeTransformations = new ArrayList<>();
 
-  public LocationMatcher additionalTransform(UnaryOperator<LatLng> transformation) {
+  public LocationMatcher additionalTransform(UnaryOperator<GeocodeRequest> transformation) {
     alternativeTransformations.add(transformation);
     return this;
   }
@@ -85,9 +85,9 @@ public class LocationMatcher {
     }
 
     // if still not found, try alternatives
-    for (UnaryOperator<LatLng> transformation : alternativeTransformations) {
+    for (UnaryOperator<GeocodeRequest> transformation : alternativeTransformations) {
       // transform location
-      LatLng latLngTransformed = transformation.apply(latLng);
+      GeocodeRequest latLngTransformed = transformation.apply(latLng);
 
       // call ws
       Optional<List<Country>> countriesFound = getCountryFromCoordinates(latLngTransformed);
@@ -112,7 +112,7 @@ public class LocationMatcher {
         .orElse(ParsedField.fail());
   }
 
-  private Optional<List<Country>> getCountryFromCoordinates(LatLng latLng) {
+  private Optional<List<Country>> getCountryFromCoordinates(GeocodeRequest latLng) {
     if (latLng.isValid()) {
       if (isAntarctica(latLng.getLatitude(), this.country)) {
         return Optional.of(Collections.singletonList(Country.ANTARCTICA));
@@ -145,17 +145,17 @@ public class LocationMatcher {
   }
 
   private static ParsedField<ParsedLocation> success(
-      Country country, LatLng latLng, Set<String> issues) {
+      Country country, GeocodeRequest latLng, Set<String> issues) {
     ParsedLocation pl = new ParsedLocation(country, latLng);
     return ParsedField.success(pl, issues);
   }
 
   private static ParsedField<ParsedLocation> success(
-      Country country, LatLng latLng, OccurrenceIssue issue) {
+      Country country, GeocodeRequest latLng, OccurrenceIssue issue) {
     return success(country, latLng, Collections.singleton(issue.name()));
   }
 
-  private static ParsedField<ParsedLocation> success(Country country, LatLng latLng) {
+  private static ParsedField<ParsedLocation> success(Country country, GeocodeRequest latLng) {
     ParsedLocation pl = new ParsedLocation(country, latLng);
     return ParsedField.success(pl);
   }

@@ -459,6 +459,11 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.kvs</groupId>
+        <artifactId>kvs-common</artifactId>
+        <version>${kvs.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.kvs</groupId>
         <artifactId>kvs-gbif</artifactId>
         <version>${kvs.version}</version>
         <exclusions>

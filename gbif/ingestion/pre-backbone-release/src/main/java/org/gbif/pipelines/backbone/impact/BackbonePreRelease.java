@@ -20,11 +20,11 @@ import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchemaUtils;
 import org.apache.thrift.TException;
-import org.gbif.kvs.species.Identification;
+import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.rest.client.RestClientFactory;
 import org.gbif.rest.client.configuration.ClientConfiguration;
-import org.gbif.rest.client.species.NameUsageMatch;
-import org.gbif.rest.client.species.NameUsageMatchService;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
+import org.gbif.rest.client.species.NameUsageMatchingService;
 
 /**
  * Takes the classification from verbatim data and runs it against a species lookup service
@@ -88,7 +88,7 @@ public class BackbonePreRelease {
     private final int minCount;
     private final boolean skipKeys;
     private final boolean ignoreWhitespace;
-    private NameUsageMatchService service; // direct service, no cache
+    private NameUsageMatchingService service; // direct service, no cache
 
     MatchTransform(
         String baseAPIUrl,
@@ -127,8 +127,8 @@ public class BackbonePreRelease {
 
         // We use the request to ensure we apply the same "clean" operations as the production
         // pipelines, even though we short circuit the cache and use the lookup service directly.
-        Identification matchRequest =
-            Identification.builder()
+        NameUsageMatchRequest matchRequest =
+            NameUsageMatchRequest.builder()
                 .withKingdom(source.getString("v_kingdom", schema))
                 .withPhylum(source.getString("v_phylum", schema))
                 .withClazz(source.getString("v_class", schema))
@@ -139,8 +139,7 @@ public class BackbonePreRelease {
                 .withGenericName(source.getString("v_genericName", schema))
                 .withSpecificEpithet(source.getString("v_specificEpithet", schema))
                 .withInfraspecificEpithet(source.getString("v_infraSpecificEpithet", schema))
-                .withScientificNameAuthorship(
-                    source.getString("v_scientificNameAuthorship", schema))
+                .withAuthorship(source.getString("v_scientificNameAuthorship", schema))
                 .withRank(source.getString("v_taxonRank", schema))
                 .withVerbatimRank(source.getString("v_verbatimTaxonRank", schema))
                 .withScientificNameID(source.getString("v_scientificNameID", schema))
@@ -150,28 +149,7 @@ public class BackbonePreRelease {
 
         try {
           // short circuit the cache, but replicate same logic of the NameUsageMatchKVStoreFactory
-          NameUsageMatch usageMatch =
-              service.match(
-                  null,
-                  matchRequest.getTaxonID(),
-                  matchRequest.getTaxonConceptID(),
-                  matchRequest.getScientificNameID(),
-                  matchRequest.getScientificName(),
-                  matchRequest.getGenericName(),
-                  matchRequest.getSpecificEpithet(),
-                  matchRequest.getInfraspecificEpithet(),
-                  matchRequest.getScientificNameAuthorship(),
-                  matchRequest.getRank(),
-                  matchRequest.getKingdom(),
-                  matchRequest.getPhylum(),
-                  matchRequest.getClazz(),
-                  matchRequest.getOrder(),
-                  matchRequest.getFamily(),
-                  matchRequest.getGenus(),
-                  matchRequest.getSubgenus(),
-                  matchRequest.getSpecies(),
-                  false,
-                  false);
+          NameUsageMatchResponse usageMatch = service.match(matchRequest);
 
           GBIFClassification existing = GBIFClassification.buildFromHive(source, schema);
           GBIFClassification proposed;
@@ -233,7 +211,7 @@ public class BackbonePreRelease {
     /** Formats the data for the output line in the CSV. */
     private static String toTabDelimited(
         long count,
-        Identification verbatim,
+        NameUsageMatchRequest verbatim,
         GBIFClassification current,
         GBIFClassification proposed,
         boolean skipKeys) {
@@ -253,12 +231,12 @@ public class BackbonePreRelease {
           verbatim.getRank(), // avoid breaking the API (verbatimTaxonRank)
           verbatim.getScientificName(),
           verbatim.getGenericName(),
-          verbatim.getScientificNameAuthorship(),
+          verbatim.getAuthorship(),
           current.toString(skipKeys),
           proposed.toString(skipKeys));
     }
 
-    private static boolean isEmpty(NameUsageMatch response) {
+    private static boolean isEmpty(NameUsageMatchResponse response) {
       return response == null
           || response.getUsage() == null
           || (response.getClassification() == null || response.getClassification().isEmpty())

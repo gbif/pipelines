@@ -5,18 +5,18 @@ import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
-import org.gbif.kvs.species.Identification;
 import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
+import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.rest.client.configuration.ClientConfiguration;
-import org.gbif.rest.client.species.NameUsageMatch;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 /** Factory to get singleton instance of KV store {@link KeyValueStore} */
 public class NameUsageMatchStoreFactory {
 
-  private final KeyValueStore<Identification, NameUsageMatch> kvStore;
+  private final KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore;
   private static volatile NameUsageMatchStoreFactory instance;
   private static final Object MUTEX = new Object();
 
@@ -26,7 +26,8 @@ public class NameUsageMatchStoreFactory {
   }
 
   /* TODO Comment */
-  public static KeyValueStore<Identification, NameUsageMatch> getInstance(PipelinesConfig config) {
+  public static KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> getInstance(
+      PipelinesConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
@@ -39,7 +40,8 @@ public class NameUsageMatchStoreFactory {
 
   /* TODO Comment */
   @SneakyThrows
-  public static KeyValueStore<Identification, NameUsageMatch> create(PipelinesConfig config) {
+  public static KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> create(
+      PipelinesConfig config) {
     if (config == null) {
       return null;
     }
@@ -71,8 +73,7 @@ public class NameUsageMatchStoreFactory {
                     .withColumnFamily("v") // Column in which qualifiers are stored
                     .withNumOfKeyBuckets(config.getNameUsageMatch().getNumOfKeyBuckets())
                     .withHBaseZk(zk)
-                    //
-                    // .withHBaseZnode(config.getNameUsageMatch().getHbaseZnode())
+                    .withHBaseZnode(config.getNameUsageMatch().getHbaseZnode())
                     .build())
             .withCacheCapacity(15_000L)
             .withCacheExpiryTimeInSeconds(config.getNameUsageMatch().getCacheExpiryTimeInSeconds())
@@ -81,12 +82,12 @@ public class NameUsageMatchStoreFactory {
     return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, clientConfiguration);
   }
 
-  public static SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>> createSupplier(
-      PipelinesConfig config) {
+  public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
+      createSupplier(PipelinesConfig config) {
     return () -> NameUsageMatchStoreFactory.create(config);
   }
 
-  public static SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>>
+  public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
       getInstanceSupplier(PipelinesConfig config) {
     return () -> NameUsageMatchStoreFactory.getInstance(config);
   }

@@ -147,11 +147,15 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.kvs</groupId>
-      <artifactId>kvs-gbif</artifactId>
+      <artifactId>kvs-common</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.kvs</groupId>
       <artifactId>kvs-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.kvs</groupId>
+      <artifactId>kvs-gbif</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.vocabulary</groupId>

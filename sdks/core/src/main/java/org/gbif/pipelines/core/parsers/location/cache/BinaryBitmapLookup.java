@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 
 /** A cache which uses a bitmap to cache coordinate lookups. */
 @Slf4j
@@ -37,7 +37,7 @@ public class BinaryBitmapLookup {
    *
    * @return Locations or null if the bitmap can't answer.
    */
-  public boolean intersects(LatLng latLng) {
+  public boolean intersects(GeocodeRequest latLng) {
     double lat = latLng.getLatitude();
     double lng = latLng.getLongitude();
     // Convert the latitude and longitude to x,y coordinates on the image.

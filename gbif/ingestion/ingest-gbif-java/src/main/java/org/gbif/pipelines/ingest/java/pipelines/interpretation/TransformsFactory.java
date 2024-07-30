@@ -4,9 +4,9 @@ import java.util.List;
 import lombok.Getter;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
-import org.gbif.kvs.species.Identification;
+import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -43,7 +43,7 @@ import org.gbif.pipelines.transforms.specific.GbifIdAbsentTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
-import org.gbif.rest.client.species.NameUsageMatch;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 public class TransformsFactory {
 
@@ -138,7 +138,7 @@ public class TransformsFactory {
   }
 
   public TaxonomyTransform createTaxonomyTransform() {
-    SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>>
+    SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
         nameUsageMatchServiceSupplier = null;
     if (!options.getTestMode()) {
       nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.getInstanceSupplier(config);
@@ -168,7 +168,8 @@ public class TransformsFactory {
   }
 
   public LocationTransform createLocationTransform() {
-    SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeServiceSupplier = null;
+    SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> geocodeServiceSupplier =
+        null;
     if (!options.getTestMode()) {
       geocodeServiceSupplier = GeocodeKvStoreFactory.getInstanceSupplier(hdfsConfigs, config);
     }

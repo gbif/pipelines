@@ -10,9 +10,9 @@ import org.apache.hadoop.hbase.client.Table;
 import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
-import org.gbif.kvs.species.Identification;
+import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -55,7 +55,7 @@ import org.gbif.pipelines.transforms.specific.GbifIdTransform.GbifIdTransformBui
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
-import org.gbif.rest.client.species.NameUsageMatch;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 @Getter
 public class TransformsFactory {
@@ -164,7 +164,7 @@ public class TransformsFactory {
   }
 
   public TaxonomyTransform createTaxonomyTransform() {
-    SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>>
+    SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
         nameUsageMatchServiceSupplier = null;
     if (!options.getTestMode()) {
       nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createSupplier(config);
@@ -182,7 +182,8 @@ public class TransformsFactory {
   }
 
   public LocationTransform createLocationTransform() {
-    SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeServiceSupplier = null;
+    SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> geocodeServiceSupplier =
+        null;
     if (!options.getTestMode()) {
       geocodeServiceSupplier = GeocodeKvStoreFactory.createSupplier(hdfsConfigs, config);
     }

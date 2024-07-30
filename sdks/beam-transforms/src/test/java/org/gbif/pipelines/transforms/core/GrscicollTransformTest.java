@@ -182,11 +182,13 @@ public class GrscicollTransformTest {
   private static SerializableSupplier<
           KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse>>
       createKvStore() {
-    GrscicollLookupRequest request1 = new GrscicollLookupRequest();
-    request1.setInstitutionCode(INSTITUTION_CODE);
-    request1.setCollectionCode(COLLECTION_CODE);
-    request1.setDatasetKey(DATASET_KEY.toString());
-    request1.setCountry(COUNTRY.getIso2LetterCode());
+    GrscicollLookupRequest request1 =
+        GrscicollLookupRequest.builder()
+            .withInstitutionCode(INSTITUTION_CODE)
+            .withCollectionCode(COLLECTION_CODE)
+            .withDatasetKey(DATASET_KEY.toString())
+            .withCountry(COUNTRY.getIso2LetterCode())
+            .build();
 
     GrscicollLookupResponse response1 = new GrscicollLookupResponse();
     Match institutionMatch = new Match();
@@ -203,11 +205,13 @@ public class GrscicollTransformTest {
     collectionMatch.setEntityMatched(collMatchResponse1);
     response1.setCollectionMatch(collectionMatch);
 
-    GrscicollLookupRequest request2 = new GrscicollLookupRequest();
-    request2.setInstitutionCode(FAKE_INSTITUTION_CODE);
-    request2.setCollectionCode(COLLECTION_CODE);
-    request2.setDatasetKey(DATASET_KEY.toString());
-    request2.setCountry(COUNTRY.getIso2LetterCode());
+    GrscicollLookupRequest request2 =
+        GrscicollLookupRequest.builder()
+            .withInstitutionCode(FAKE_INSTITUTION_CODE)
+            .withCollectionCode(COLLECTION_CODE)
+            .withDatasetKey(DATASET_KEY.toString())
+            .withCountry(COUNTRY.getIso2LetterCode())
+            .build();
 
     GrscicollLookupResponse response2 = new GrscicollLookupResponse();
     Match institutionMatch2 = new Match();

@@ -1,9 +1,9 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import org.gbif.kvs.species.Identification;
-import org.gbif.rest.client.species.NameUsageMatch;
-import org.gbif.rest.client.species.NameUsageMatch.Diagnostics;
-import org.gbif.rest.client.species.NameUsageMatch.MatchType;
+import org.gbif.kvs.species.NameUsageMatchRequest;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
+import org.gbif.rest.client.species.NameUsageMatchResponse.Diagnostics;
+import org.gbif.rest.client.species.NameUsageMatchResponse.MatchType;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -13,8 +13,8 @@ public class TaxonomyInterpreterTest {
   public void checkFuzzyPositiveTest() {
 
     // State
-    Identification identification =
-        Identification.builder()
+    NameUsageMatchRequest identification =
+        NameUsageMatchRequest.builder()
             .withKingdom("")
             .withPhylum("")
             .withClazz("")
@@ -23,7 +23,7 @@ public class TaxonomyInterpreterTest {
             .withGenus("something")
             .build();
 
-    NameUsageMatch usageMatch = new NameUsageMatch();
+    NameUsageMatchResponse usageMatch = new NameUsageMatchResponse();
     Diagnostics diagnostics = new Diagnostics();
     diagnostics.setMatchType(MatchType.VARIANT);
     usageMatch.setDiagnostics(diagnostics);
@@ -39,8 +39,8 @@ public class TaxonomyInterpreterTest {
   public void checkFuzzyNegativeTest() {
 
     // State
-    Identification identification =
-        Identification.builder()
+    NameUsageMatchRequest identification =
+        NameUsageMatchRequest.builder()
             .withKingdom("")
             .withPhylum("")
             .withClazz("")
@@ -49,7 +49,7 @@ public class TaxonomyInterpreterTest {
             .withGenus("something")
             .build();
 
-    NameUsageMatch usageMatch = new NameUsageMatch();
+    NameUsageMatchResponse usageMatch = new NameUsageMatchResponse();
     Diagnostics diagnostics = new Diagnostics();
     diagnostics.setMatchType(MatchType.VARIANT);
     usageMatch.setDiagnostics(diagnostics);
@@ -65,8 +65,8 @@ public class TaxonomyInterpreterTest {
   public void checkFuzzyHighrankTest() {
 
     // State
-    Identification identification =
-        Identification.builder()
+    NameUsageMatchRequest identification =
+        NameUsageMatchRequest.builder()
             .withKingdom("")
             .withPhylum("")
             .withClazz("")
@@ -75,7 +75,7 @@ public class TaxonomyInterpreterTest {
             .withGenus("something")
             .build();
 
-    NameUsageMatch usageMatch = new NameUsageMatch();
+    NameUsageMatchResponse usageMatch = new NameUsageMatchResponse();
     Diagnostics diagnostics = new Diagnostics();
     diagnostics.setMatchType(MatchType.HIGHERRANK);
     usageMatch.setDiagnostics(diagnostics);
