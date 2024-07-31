@@ -1272,6 +1272,18 @@
     "name" : "bed",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "lithostratigraphy",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
+  }, {
+    "name" : "biostratigraphy",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
+  }, {
     "name" : "identificationid",
     "type" : [ "string", "null" ]
   }, {

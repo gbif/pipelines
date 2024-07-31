@@ -32,7 +32,9 @@
       {"name":"formation","type":["null","string"],"default":null,"doc":""},
       {"name":"member","type":["null","string"],"default":null,"doc":""},
       {"name":"bed","type":["null","string"],"default":null,"doc":""},
-      {"name":"range","type":["null","GeologicalRange"],"default":null,"doc":""}
+      {"name":"range","type":["null","GeologicalRange"],"default":null,"doc":""},
+      {"name":"lithostratigraphy","type":{"type":"array","items":"string"},"default":[]},
+      {"name":"biostratigraphy","type":{"type":"array","items":"string"},"default":[]}
     ]
   },
   {

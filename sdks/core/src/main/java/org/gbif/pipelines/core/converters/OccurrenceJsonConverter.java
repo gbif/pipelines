@@ -6,8 +6,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -179,6 +182,16 @@ public class OccurrenceJsonConverter {
               .setFormation(gx.getFormation())
               .setMember(gx.getMember())
               .setBed(gx.getBed());
+
+      gcb.setLithostratigraphy(
+          Stream.of(gcb.getBed(), gcb.getFormation(), gcb.getGroup(), gcb.getMember())
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList()));
+
+      gcb.setBiostratigraphy(
+          Stream.of(gcb.getLowestBiostratigraphicZone(), gcb.getHighestBiostratigraphicZone())
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList()));
 
       JsonConverter.convertVocabularyConcept(gx.getEarliestEonOrLowestEonothem())
           .ifPresent(gcb::setEarliestEonOrLowestEonothem);
