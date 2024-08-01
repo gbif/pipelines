@@ -2,7 +2,13 @@ package org.gbif.pipelines.core.converters;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
@@ -10,7 +16,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
 import org.gbif.pipelines.core.utils.HashConverter;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFact;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
 import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
@@ -58,11 +72,11 @@ public class ParentJsonConverter {
             .setId(verbatim.getId())
             .setInternalId(identifier.getInternalId())
             .setUniqueKey(identifier.getUniqueKey())
-            .setType("event")
+            .setType(ConverterConstants.EVENT)
             .setEventBuilder(convertToEvent())
             .setAll(JsonConverter.convertFieldAll(verbatim, false))
             .setVerbatim(JsonConverter.convertVerbatimEventRecord(verbatim))
-            .setJoinRecordBuilder(JoinRecord.newBuilder().setName("event"));
+            .setJoinRecordBuilder(JoinRecord.newBuilder().setName(ConverterConstants.EVENT));
 
     mapCreated(builder);
     mapDerivedMetadata(builder);
@@ -78,7 +92,7 @@ public class ParentJsonConverter {
   /** Converts to a parent record based on an occurrence record. */
   private ParentJsonRecord convertToParentOccurrence() {
     return convertToParentRecord()
-        .setType("occurrence")
+        .setType(ConverterConstants.OCCURRENCE)
         .setId(occurrenceJsonRecord.getId())
         .setInternalId(
             HashConverter.getSha1(
@@ -87,7 +101,7 @@ public class ParentJsonConverter {
                 occurrenceJsonRecord.getOccurrenceId()))
         .setJoinRecordBuilder(
             JoinRecord.newBuilder()
-                .setName("occurrence")
+                .setName(ConverterConstants.OCCURRENCE)
                 .setParent(
                     HashConverter.getSha1(
                         metadata.getDatasetKey(), occurrenceJsonRecord.getVerbatim().getCoreId())))
@@ -146,7 +160,7 @@ public class ParentJsonConverter {
   private void mapEventCoreRecord(EventJsonRecord.Builder builder) {
 
     if (eventCore.getEventType() != null
-        && eventCore.getEventType().getConcept().equalsIgnoreCase("Survey")) {
+        && eventCore.getEventType().getConcept().equalsIgnoreCase(ConverterConstants.SURVEY)) {
       builder.setSurveyID(builder.getEventID());
     }
 
@@ -168,16 +182,18 @@ public class ParentJsonConverter {
 
       builder
           .setEventTypeHierarchy(eventTypes)
-          .setEventTypeHierarchyJoined(String.join(" / ", eventTypes))
+          .setEventTypeHierarchyJoined(String.join(ConverterConstants.DELIMITER, eventTypes))
           .setEventHierarchy(eventIDs)
-          .setEventHierarchyJoined(String.join(" / ", eventIDs))
+          .setEventHierarchyJoined(String.join(ConverterConstants.DELIMITER, eventIDs))
           .setEventHierarchyLevels(eventIDs.size());
 
       if (builder.getSurveyID() == null) {
         List<org.gbif.pipelines.io.avro.Parent> surveys =
             eventCore.getParentsLineage().stream()
                 .filter(
-                    e -> e.getEventType() != null && e.getEventType().equalsIgnoreCase("Survey"))
+                    e ->
+                        e.getEventType() != null
+                            && e.getEventType().equalsIgnoreCase(ConverterConstants.SURVEY))
                 .collect(Collectors.toList());
         if (!surveys.isEmpty()) {
           builder.setSurveyID(surveys.get(0).getId());
@@ -270,14 +286,13 @@ public class ParentJsonConverter {
             .map(org.gbif.pipelines.io.avro.Parent::getEventType)
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
+
     if (eventCore.getEventType() != null) {
       eventTypes.add(eventCore.getEventType().getConcept());
     } else {
-      String rawEventType = verbatim.getCoreTerms().get(DwcTerm.eventType.qualifiedName());
-      if (rawEventType != null) {
-        eventTypes.add(rawEventType);
-      }
+      extractOptValue(verbatim, DwcTerm.eventType).ifPresent(eventTypes::add);
     }
+
     return eventTypes;
   }
 
@@ -319,10 +334,9 @@ public class ParentJsonConverter {
     extractOptValue(verbatim, DwcTerm.verbatimDepth).ifPresent(builder::setVerbatimDepth);
     extractOptValue(verbatim, DwcTerm.verbatimElevation).ifPresent(builder::setVerbatimElevation);
 
-    String eventName = verbatim.getCoreTerms().get("http://rs.gbif.org/terms/1.0/eventName");
-    if (eventName != null) {
-      builder.setEventName(eventName);
-    }
+    // Todo: replce with extractOptValue
+    String eventName = verbatim.getCoreTerms().get(ConverterConstants.EVENT_NAME);
+    Optional.ofNullable(eventName).ifPresent(builder::setEventName);
   }
 
   private void mapIssues(EventJsonRecord.Builder builder) {
