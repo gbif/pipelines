@@ -33,17 +33,14 @@
 
     <!-- Tools-->
     <commons-configuration.version>1.6</commons-configuration.version>
-    <netty.version>3.9.9.Final</netty.version>
-    <netty-all.version>4.1.42.Final</netty-all.version>
+<!--    <netty.version>3.9.9.Final</netty.version>-->
+    <netty-all.version>4.1.100.Final</netty-all.version>
     <snakeyaml.version>1.25</snakeyaml.version>
     <streamex.version>0.7.2</streamex.version>
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
     <json-simple.version>1.1.1</json-simple.version>
     <hadoop-compress.version>1.2</hadoop-compress.version>
-
-    <!-- GBIF parent currently using 2.4.0 -->
-    <spark.embedded.version>2.4.5</spark.embedded.version>
 
     <!-- Plugins -->
     <org.jetbrains.annotations>13.0</org.jetbrains.annotations>
@@ -58,10 +55,8 @@
     <checker-qual.version>3.9.1</checker-qual.version>
     <snappy-java.version>1.1.8.4</snappy-java.version>
 
-    <spark.version>3.3.1</spark.version>
-    <hadoop.version>3.3.4</hadoop.version>
+    <hadoop.version>3.4.0</hadoop.version>
     <maven-scala-plugin.version>4.8.0</maven-scala-plugin.version>
-    <scala.version>2.12.17</scala.version>
   </properties>
 
   <build>
@@ -184,7 +179,7 @@
         <configuration combine.self="override">
           <java>
             <googleJavaFormat>
-              <version>1.7</version>
+              <version>${googleJavaFormat.version}</version>
               <style>GOOGLE</style>
             </googleJavaFormat>
           </java>
@@ -252,6 +247,12 @@
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-sdks-java-io-solr</artifactId>
       <version>${apache.beam.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-buffer</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>
@@ -268,11 +269,11 @@
       <artifactId>commons-configuration</artifactId>
       <version>${commons-configuration.version}</version>
     </dependency>
-    <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty</artifactId>
-      <version>${netty.version}</version>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>io.netty</groupId>-->
+<!--      <artifactId>netty</artifactId>-->
+<!--      <version>${netty.version}</version>-->
+<!--    </dependency>-->
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
@@ -303,6 +304,13 @@
           <groupId>org.gbif.registry</groupId>
           <artifactId>registry-ws-client</artifactId>
         </exclusion>
+        <!-- DO NOT REMOVE -->
+        <!-- This is required for integration tests in some envronments. -->
+        <!-- The integration test error is an java.lang.UnsatisfiedLinkError for a JNA path -->
+                <exclusion>
+                  <groupId>org.elasticsearch</groupId>
+                  <artifactId>jna</artifactId>
+                </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -737,7 +745,7 @@
     <dependency>
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
-      <version>${zookeeper-version}</version>
+      <version>${zookeeper.version}</version>
       <exclusions>
         <exclusion>
           <groupId>org.jboss.netty</groupId>
@@ -831,6 +839,12 @@
       <groupId>org.gbif.hadoop</groupId>
       <artifactId>hadoop-compress</artifactId>
       <version>${hadoop-compress.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>2.23.1</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
