@@ -266,6 +266,7 @@ public class GeocodeServiceTestIT {
 
     assertFalse(resp.getLocations().isEmpty());
   }
+
   //    -35.482884,146.804061
   @Test
   public void testCountryEEZ2() {

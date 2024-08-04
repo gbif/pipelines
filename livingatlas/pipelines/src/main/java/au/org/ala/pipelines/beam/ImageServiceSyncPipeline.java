@@ -95,6 +95,7 @@ public class ImageServiceSyncPipeline {
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
     System.exit(0);
   }
+
   /**
    * Includes the following steps:
    *
