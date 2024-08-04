@@ -149,12 +149,16 @@ public class CentrePoints {
     }
   }
 
-  /** @return size of centres */
+  /**
+   * @return size of centres
+   */
   public int size() {
     return centres.size();
   }
 
-  /** @return keys */
+  /**
+   * @return keys
+   */
   public Set<String> keys() {
     return centres.keySet();
   }
