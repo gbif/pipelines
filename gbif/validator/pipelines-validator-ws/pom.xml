@@ -286,6 +286,11 @@
       <version>${curator.version}</version>
       <scope>runtime</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-x-discovery</artifactId>
+      <version>${curator.version}</version>
+    </dependency>
 
     <!-- Commons -->
     <dependency>
