@@ -17,6 +17,8 @@
   <properties>
     <main.basedir>${project.parent.basedir}</main.basedir>
     <start-class>org.gbif.validator.ws.ValidatorWsApplication</start-class>
+    <zookeeper.version>3.8.1</zookeeper.version>
+    <curator.version>5.5.0</curator.version>
   </properties>
 
   <build>
