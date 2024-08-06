@@ -12,12 +12,22 @@
     ]
   },
   {
+    "name":"VocabularyTag",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "fields":[
+      {"name": "name", "type": ["null", "string"] },
+      {"name": "value", "type": ["null", "string"] }
+    ]
+  },
+  {
     "name":"VocabularyConcept",
     "namespace":"org.gbif.pipelines.io.avro",
     "type":"record",
     "fields":[
       {"name": "concept", "type": ["null", "string"] },
-      {"name": "lineage", "type": {"type" : "array", "items" : "string"} }
+      {"name": "lineage", "type": {"type" : "array", "items" : "string"} },
+      {"name": "tags", "type": {"type" : "array", "items" : "VocabularyTag"}, "default" : [] }
     ]
   }
 ]

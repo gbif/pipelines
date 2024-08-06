@@ -225,6 +225,8 @@ public class OccurrenceJsonConverterTest {
                     .setFormation("test14")
                     .setMember("test15")
                     .setBed("test16")
+                    .setStartAge("350")
+                    .setEndAge("300")
                     .build())
             .build();
 
@@ -674,7 +676,8 @@ public class OccurrenceJsonConverterTest {
             + "\"earliestAgeOrLowestStage\":{\"concept\":\"test9\",\"lineage\":[\"test9\"]},"
             + "\"latestAgeOrHighestStage\":{\"concept\":\"test10\",\"lineage\":[\"test10\"]},"
             + "\"lowestBiostratigraphicZone\":\"test11\",\"highestBiostratigraphicZone\":\"test12\","
-            + "\"group\":\"test13\",\"formation\":\"test14\",\"member\":\"test15\",\"bed\":\"test16\"}";
+            + "\"group\":\"test13\",\"formation\":\"test14\",\"member\":\"test15\",\"bed\":\"test16\","
+            + "\"range\":{\"gt\":\"300\",\"lte\":\"350\"}}";
     assertEquals(geologicalContextExpected, result.path("geologicalContext").toString());
   }
 

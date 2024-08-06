@@ -23,7 +23,9 @@
       {"name":"group","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/group"},
       {"name":"formation","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/formation"},
       {"name":"member","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/member"},
-      {"name":"bed","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/bed"}
+      {"name":"bed","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/bed"},
+      {"name":"startAge","type":["null","string"],"default":null},
+      {"name":"endAge","type":["null","string"],"default":null}
     ]
   },
   {

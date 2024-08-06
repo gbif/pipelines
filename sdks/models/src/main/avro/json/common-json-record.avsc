@@ -265,5 +265,14 @@
       {"name": "viabilityPercentage", "type": ["null", "double"], "default": null},
       {"name": "numberNotViable", "type": ["null", "long"], "default": null}
     ]
-  }
+  },
+  {
+      "name":"GeologicalRange",
+      "namespace":"org.gbif.pipelines.io.avro.json",
+      "type":"record",
+      "fields":[
+        {"name":"gt","type":["null","string"],"default":null},
+        {"name":"lte","type":["null","string"],"default":null}
+      ]
+    }
 ]
