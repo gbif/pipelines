@@ -13,7 +13,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
@@ -610,14 +609,14 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setBed(gc.getBed());
 
       occurrenceHdfsRecord.setLithostratigraphy(
-        Stream.of(gc.getBed(), gc.getFormation(), gc.getGroup(), gc.getMember())
-          .filter(Objects::nonNull)
-          .collect(Collectors.toList()));
+          Stream.of(gc.getBed(), gc.getFormation(), gc.getGroup(), gc.getMember())
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList()));
 
       occurrenceHdfsRecord.setBiostratigraphy(
-        Stream.of(gc.getLowestBiostratigraphicZone(), gc.getHighestBiostratigraphicZone())
-          .filter(Objects::nonNull)
-          .collect(Collectors.toList()));
+          Stream.of(gc.getLowestBiostratigraphicZone(), gc.getHighestBiostratigraphicZone())
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList()));
 
       if (gc.getStartAge() != null && gc.getEndAge() != null) {
         Optional.ofNullable(gc.getStartAge())
