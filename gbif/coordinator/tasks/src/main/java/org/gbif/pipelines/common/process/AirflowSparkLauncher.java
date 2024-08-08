@@ -130,6 +130,7 @@ public class AirflowSparkLauncher {
   public void submitAwaitVoid() {
     Optional<Status> status = submitAwait();
     if (status.isEmpty() || status.get() == Status.ABORTED || status.get() == Status.FAILED) {
+      status.ifPresent(s -> log.warn(s.toString()));
       throw new IllegalStateException(
           "Process failed in distributed Job. Check K8s logs " + sparkAppName);
     } else {
@@ -141,18 +142,24 @@ public class AirflowSparkLauncher {
   public Optional<Status> getStatusByName(String dagId) {
     JsonNode jsonStatus = Retry.decorateFunction(AIRFLOW_RETRY, airflowClient::getRun).apply(dagId);
     String status = jsonStatus.get("state").asText();
-    if ("queued".equalsIgnoreCase(status)) {
+
+    if ("queued".equalsIgnoreCase(status)
+        || "scheduled".equalsIgnoreCase(status)
+        || "up_for_reschedule".equalsIgnoreCase(status)
+        || "deferred".equalsIgnoreCase(status)) {
       return Optional.of(Status.QUEUED);
     }
     if ("running".equalsIgnoreCase(status)
         || "rescheduled".equalsIgnoreCase(status)
+        || "restarting".equalsIgnoreCase(status)
+        || "up_for_retry".equalsIgnoreCase(status)
         || "retry".equalsIgnoreCase(status)) {
       return Optional.of(Status.RUNNING);
     }
     if ("success".equalsIgnoreCase(status)) {
       return Optional.of(Status.COMPLETED);
     }
-    if ("failed".equalsIgnoreCase(status)) {
+    if ("failed".equalsIgnoreCase(status) || "upstream_failed".equalsIgnoreCase(status)) {
       return Optional.of(Status.FAILED);
     }
     return Optional.empty();
