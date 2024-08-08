@@ -671,7 +671,12 @@ public class OccurrenceHdfsRecordConverter {
           break;
       }
     } catch (Exception ex) {
-      log.error("Ignoring error setting field {}", avroField, ex);
+      log.error(
+          "Ignoring error setting field {}, field name {}, value. Exception: {}",
+          avroField,
+          fieldName,
+          value,
+          ex);
     }
   }
 
