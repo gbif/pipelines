@@ -53,11 +53,14 @@ public class AirflowClient {
 
       // Delete dag_run_id to avoid issues with params cache
       if (dagRun.has(DAG_RUN_ID) && dagRun.get(DAG_RUN_ID).asText().equals(body.getDagRunId())) {
+        log.info(
+            "dag_run_id {} exists. Deleting the run to avoid caching issues", body.getDagRunId());
         HttpDelete delete = new HttpDelete(getUri(configuration, body.getDagRunId()));
         delete.setHeaders(configuration.getHeaders());
         client.execute(delete);
       }
 
+      log.info("Submit dag_run_id {}", body.getDagRunId());
       HttpPost post = new HttpPost(getUri(configuration));
       StringEntity input = new StringEntity(MAPPER.writeValueAsString(body));
       input.setContentType(ContentType.APPLICATION_JSON.toString());
