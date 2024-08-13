@@ -198,7 +198,8 @@ public class RepairGbifIDLookupTool implements Tool {
         deletionStrategyType.getKeysToDelete(keygenService, onlyCollisions, triplet, occurrenceId);
     if (!keysToDelete.isEmpty()) {
       log.info("Use keys to request, triplet: {} and occurrenceId: {}", triplet, occurrenceId);
-      keysToDelete.forEach((k, v) -> log.info("Delete lookup key - {}, gbifID - {}", k, v));
+      String message = dryRun ? "Lookup key" : "Delete lookup key";
+      keysToDelete.forEach((k, v) -> log.info("{} - {}, gbifID - {}", message, k, v));
       counter++;
     }
     if (!dryRun && !keysToDelete.isEmpty()) {
