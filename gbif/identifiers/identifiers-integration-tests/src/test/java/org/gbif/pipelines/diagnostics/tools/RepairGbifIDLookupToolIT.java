@@ -224,7 +224,7 @@ public class RepairGbifIDLookupToolIT {
     // When
     RepairGbifIDLookupTool.builder()
         .datasetKey(datasetKey)
-        .dwcaSource(dwca)
+        .source(dwca)
         .lookupTable(HbaseServer.CFG.getLookupTable())
         .counterTable(HbaseServer.CFG.getCounterTable())
         .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
@@ -270,7 +270,7 @@ public class RepairGbifIDLookupToolIT {
     // When
     RepairGbifIDLookupTool.builder()
         .datasetKey(datasetKey)
-        .dwcaSource(dwca)
+        .source(dwca)
         .lookupTable(HbaseServer.CFG.getLookupTable())
         .counterTable(HbaseServer.CFG.getCounterTable())
         .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
