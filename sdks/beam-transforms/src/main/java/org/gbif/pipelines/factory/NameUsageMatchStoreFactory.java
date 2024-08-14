@@ -1,12 +1,17 @@
 package org.gbif.pipelines.factory;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
 import org.gbif.kvs.species.NameUsageMatchRequest;
+import org.gbif.pipelines.core.config.model.DatasetKvConfig;
+import org.gbif.pipelines.core.config.model.KvConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -40,27 +45,54 @@ public class NameUsageMatchStoreFactory {
 
   /* TODO Comment */
   @SneakyThrows
-  public static KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> create(
-      PipelinesConfig config) {
+  public static List<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
+      createMultipleServices(PipelinesConfig config) {
     if (config == null) {
       return null;
     }
 
-    String api =
-        Optional.ofNullable(config.getNameUsageMatch().getApi())
-            .map(WsConfig::getWsUrl)
-            .orElse(config.getGbifApi().getWsUrl());
+    if (config.getNameUsageMatchServices() == null
+        || config.getNameUsageMatchServices().isEmpty()) {
+      return null;
+    }
+    return config.getNameUsageMatchServices().stream()
+        .map(DatasetKvConfig::getWs)
+        .map(
+            kvConfig ->
+                NameUsageMatchStoreFactory.constructKV(kvConfig, config.getGbifApi().getWsUrl()))
+        .collect(Collectors.toUnmodifiableList());
+  }
+
+  @SneakyThrows
+  public static KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> create(
+      PipelinesConfig configX) {
+    if (configX == null) {
+      return null;
+    }
+
+    if (configX.getNameUsageMatch() == null) {
+      return null;
+    }
+
+    KvConfig kvConfig = configX.getNameUsageMatch();
+    String gbifApi = configX.getGbifApi().getWsUrl();
+    return constructKV(kvConfig, gbifApi);
+  }
+
+  private static KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> constructKV(
+      KvConfig kvConfig, String gbifApi) {
+    String api = Optional.ofNullable(kvConfig.getApi()).map(WsConfig::getWsUrl).orElse(gbifApi);
 
     ClientConfiguration clientConfiguration =
         ClientConfiguration.builder()
             .withBaseApiUrl(api)
-            .withFileCacheMaxSizeMb(config.getNameUsageMatch().getWsCacheSizeMb())
-            .withTimeOut(config.getNameUsageMatch().getWsTimeoutSec())
+            .withFileCacheMaxSizeMb(kvConfig.getWsCacheSizeMb())
+            .withTimeOut(kvConfig.getWsTimeoutSec() * 1000)
             .build();
 
-    String zk = config.getNameUsageMatch().getZkConnectionString();
-    zk = zk == null || zk.isEmpty() ? config.getZkConnectionString() : zk;
-    if (zk == null || config.getNameUsageMatch().isRestOnly()) {
+    String zk = kvConfig.getZkConnectionString();
+    zk = zk == null || zk.isEmpty() ? kvConfig.getZkConnectionString() : zk;
+    if (zk == null || kvConfig.isRestOnly()) {
       return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(clientConfiguration);
     }
 
@@ -69,22 +101,32 @@ public class NameUsageMatchStoreFactory {
             .withValueColumnQualifier("j") // stores JSON data
             .withHBaseKVStoreConfiguration(
                 HBaseKVStoreConfiguration.builder()
-                    .withTableName(config.getNameUsageMatch().getTableName())
+                    .withTableName(kvConfig.getTableName())
                     .withColumnFamily("v") // Column in which qualifiers are stored
-                    .withNumOfKeyBuckets(config.getNameUsageMatch().getNumOfKeyBuckets())
+                    .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets())
                     .withHBaseZk(zk)
-                    .withHBaseZnode(config.getNameUsageMatch().getHbaseZnode())
+                    .withHBaseZnode(kvConfig.getHbaseZnode())
                     .build())
             .withCacheCapacity(15_000L)
-            .withCacheExpiryTimeInSeconds(config.getNameUsageMatch().getCacheExpiryTimeInSeconds())
+            .withCacheExpiryTimeInSeconds(kvConfig.getCacheExpiryTimeInSeconds())
             .build();
 
-    return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, clientConfiguration);
+    try {
+      return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, clientConfiguration);
+    } catch (IOException ex) {
+      throw new IllegalStateException(ex);
+    }
   }
 
   public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
       createSupplier(PipelinesConfig config) {
     return () -> NameUsageMatchStoreFactory.create(config);
+  }
+
+  public static SerializableSupplier<
+          List<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
+      createMultiServiceSupplier(PipelinesConfig config) {
+    return () -> NameUsageMatchStoreFactory.createMultipleServices(config);
   }
 
   public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>

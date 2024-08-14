@@ -53,7 +53,7 @@ public class TaxonomyInterpreter {
 
   private static final RankedName INCERTAE_SEDIS =
       RankedName.newBuilder()
-          .setRank(Rank.KINGDOM)
+          .setRank(Rank.KINGDOM.toString())
           .setName(Kingdom.INCERTAE_SEDIS.scientificName())
           .setKey(Integer.toString(Kingdom.INCERTAE_SEDIS.nubUsageKey()))
           .build();
@@ -70,96 +70,105 @@ public class TaxonomyInterpreter {
       }
 
       ModelUtils.checkNullOrEmpty(er);
-
-      Map<String, String> termsSource = IdentificationUtils.getIdentificationFieldTermsSource(er);
-
-      // https://github.com/gbif/portal-feedback/issues/4231
-      String scientificName =
-          extractNullAwareOptValue(termsSource, DwcTerm.scientificName)
-              .orElse(extractValue(termsSource, DwcTerm.verbatimIdentification));
-
-      NameUsageMatchRequest identification =
-          NameUsageMatchRequest.builder()
-              .withKingdom(extractValue(termsSource, DwcTerm.kingdom))
-              .withPhylum(extractValue(termsSource, DwcTerm.phylum))
-              .withClazz(extractValue(termsSource, DwcTerm.class_))
-              .withOrder(extractValue(termsSource, DwcTerm.order))
-              .withFamily(extractValue(termsSource, DwcTerm.family))
-              .withGenus(extractValue(termsSource, DwcTerm.genus))
-              .withScientificName(scientificName)
-              .withGenericName(extractValue(termsSource, DwcTerm.genericName))
-              .withSpecificEpithet(extractValue(termsSource, DwcTerm.specificEpithet))
-              .withInfraspecificEpithet(extractValue(termsSource, DwcTerm.infraspecificEpithet))
-              .withAuthorship(extractValue(termsSource, DwcTerm.scientificNameAuthorship))
-              .withRank(extractValue(termsSource, DwcTerm.taxonRank))
-              .withVerbatimRank(extractValue(termsSource, DwcTerm.verbatimTaxonRank))
-              .withScientificNameID(extractValue(termsSource, DwcTerm.scientificNameID))
-              .withTaxonID(extractValue(termsSource, DwcTerm.taxonID))
-              .withTaxonConceptID(extractValue(termsSource, DwcTerm.taxonConceptID))
-              .build();
-
-      NameUsageMatchResponse usageMatch = null;
-      try {
-        usageMatch = kvStore.get(identification);
-      } catch (Exception ex) {
-        log.error(ex.getMessage(), ex);
-      }
-
-      if (usageMatch == null || isEmpty(usageMatch) || checkFuzzy(usageMatch, identification)) {
-        // "NO_MATCHING_RESULTS". This
-        // happens when we get an empty response from the WS
-        addIssue(tr, TAXON_MATCH_NONE);
-        tr.setUsage(INCERTAE_SEDIS);
-        tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
-      } else {
-
-        NameUsageMatchResponse.MatchType matchType = usageMatch.getDiagnostics().getMatchType();
-
-        // copy any issues asserted by the lookup itself
-        if (usageMatch.getDiagnostics().getIssues() != null) {
-          addIssueSet(
-              tr,
-              usageMatch.getDiagnostics().getIssues().stream()
-                  .map(org.gbif.api.vocabulary.OccurrenceIssue::valueOf)
-                  .collect(Collectors.toSet()));
-        }
-
-        if (NameUsageMatchResponse.MatchType.NONE == matchType) {
-          addIssue(tr, TAXON_MATCH_NONE);
-        } else if (NameUsageMatchResponse.MatchType.VARIANT == matchType) {
-          addIssue(tr, TAXON_MATCH_FUZZY);
-        } else if (NameUsageMatchResponse.MatchType.HIGHERRANK == matchType) {
-          addIssue(tr, TAXON_MATCH_HIGHERRANK);
-        }
-
-        // parse name into pieces - we don't get them from the nub lookup
-        try {
-          if (Objects.nonNull(usageMatch.getUsage())) {
-
-            org.gbif.nameparser.api.Rank rank =
-                org.gbif.nameparser.api.Rank.valueOf(usageMatch.getUsage().getRank());
-            org.gbif.nameparser.api.ParsedName pn =
-                NAME_PARSER.parse(usageMatch.getUsage().getName(), rank, null);
-            tr.setUsageParsedName(toParsedNameAvro(pn));
-          }
-        } catch (UnparsableNameException e) {
-          if (e.getType().isParsable()) {
-            log.warn(
-                "Fail to parse backbone {} name for occurrence {}: {}",
-                e.getType(),
-                er.getId(),
-                e.getName());
-          }
-        } catch (InterruptedException e) {
-          log.warn("Parsing backbone name failed with interruption for occurrence {}", er.getId());
-        }
-
-        // convert taxon record
-        TaxonRecordConverter.convert(usageMatch, tr);
-      }
-
+      NameUsageMatchRequest nameUsageMatchRequest = createNameUsageMatchRequest(er);
+      createTaxonRecord(nameUsageMatchRequest, kvStore, er, tr);
       tr.setId(er.getId());
     };
+  }
+
+  protected static NameUsageMatchRequest createNameUsageMatchRequest(ExtendedRecord er) {
+    Map<String, String> termsSource = IdentificationUtils.getIdentificationFieldTermsSource(er);
+    // https://github.com/gbif/portal-feedback/issues/4231
+    String scientificName =
+        extractNullAwareOptValue(termsSource, DwcTerm.scientificName)
+            .orElse(extractValue(termsSource, DwcTerm.verbatimIdentification));
+    return NameUsageMatchRequest.builder()
+        .withKingdom(extractValue(termsSource, DwcTerm.kingdom))
+        .withPhylum(extractValue(termsSource, DwcTerm.phylum))
+        .withClazz(extractValue(termsSource, DwcTerm.class_))
+        .withOrder(extractValue(termsSource, DwcTerm.order))
+        .withFamily(extractValue(termsSource, DwcTerm.family))
+        .withGenus(extractValue(termsSource, DwcTerm.genus))
+        .withScientificName(scientificName)
+        .withGenericName(extractValue(termsSource, DwcTerm.genericName))
+        .withSpecificEpithet(extractValue(termsSource, DwcTerm.specificEpithet))
+        .withInfraspecificEpithet(extractValue(termsSource, DwcTerm.infraspecificEpithet))
+        .withAuthorship(extractValue(termsSource, DwcTerm.scientificNameAuthorship))
+        .withRank(extractValue(termsSource, DwcTerm.taxonRank))
+        .withVerbatimRank(extractValue(termsSource, DwcTerm.verbatimTaxonRank))
+        .withScientificNameID(extractValue(termsSource, DwcTerm.scientificNameID))
+        .withTaxonID(extractValue(termsSource, DwcTerm.taxonID))
+        .withTaxonConceptID(extractValue(termsSource, DwcTerm.taxonConceptID))
+        .build();
+  }
+
+  protected static void createTaxonRecord(
+      NameUsageMatchRequest nameUsageMatchRequest,
+      KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore,
+      ExtendedRecord er,
+      TaxonRecord tr) {
+
+    NameUsageMatchResponse usageMatch = null;
+    try {
+      usageMatch = kvStore.get(nameUsageMatchRequest);
+    } catch (Exception ex) {
+      log.error(ex.getMessage(), ex);
+    }
+
+    if (usageMatch == null
+        || isEmpty(usageMatch)
+        || checkFuzzy(usageMatch, nameUsageMatchRequest)) {
+      // "NO_MATCHING_RESULTS". This
+      // happens when we get an empty response from the WS
+      addIssue(tr, TAXON_MATCH_NONE);
+      tr.setUsage(INCERTAE_SEDIS);
+      tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
+    } else {
+
+      NameUsageMatchResponse.MatchType matchType = usageMatch.getDiagnostics().getMatchType();
+
+      // copy any issues asserted by the lookup itself
+      if (usageMatch.getDiagnostics().getIssues() != null) {
+        addIssueSet(
+            tr,
+            usageMatch.getDiagnostics().getIssues().stream()
+                .map(org.gbif.api.vocabulary.OccurrenceIssue::valueOf)
+                .collect(Collectors.toSet()));
+      }
+
+      if (NameUsageMatchResponse.MatchType.NONE == matchType) {
+        addIssue(tr, TAXON_MATCH_NONE);
+      } else if (NameUsageMatchResponse.MatchType.VARIANT == matchType) {
+        addIssue(tr, TAXON_MATCH_FUZZY);
+      } else if (NameUsageMatchResponse.MatchType.HIGHERRANK == matchType) {
+        addIssue(tr, TAXON_MATCH_HIGHERRANK);
+      }
+
+      // parse name into pieces - we don't get them from the nub lookup
+      try {
+        if (Objects.nonNull(usageMatch.getUsage())) {
+
+          org.gbif.nameparser.api.Rank rank =
+              org.gbif.nameparser.api.Rank.valueOf(usageMatch.getUsage().getRank());
+          org.gbif.nameparser.api.ParsedName pn =
+              NAME_PARSER.parse(usageMatch.getUsage().getName(), rank, null);
+          tr.setUsageParsedName(toParsedNameAvro(pn));
+        }
+      } catch (UnparsableNameException e) {
+        if (e.getType().isParsable()) {
+          log.warn(
+              "Fail to parse backbone {} name for occurrence {}: {}",
+              e.getType(),
+              er.getId(),
+              e.getName());
+        }
+      } catch (InterruptedException e) {
+        log.warn("Parsing backbone name failed with interruption for occurrence {}", er.getId());
+      }
+
+      // convert taxon record
+      TaxonRecordConverter.convert(usageMatch, tr);
+    }
   }
 
   /** Sets the coreId field. */

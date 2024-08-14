@@ -167,8 +167,10 @@ public class OccurrenceHdfsRecordConverterTest {
             .build();
 
     List<RankedName> classification = new ArrayList<>();
-    classification.add(RankedName.newBuilder().setName("CLASS").setRank(Rank.CLASS).build());
-    classification.add(RankedName.newBuilder().setName("ORDER").setRank(Rank.ORDER).build());
+    classification.add(
+        RankedName.newBuilder().setName("CLASS").setRank(Rank.CLASS.toString()).build());
+    classification.add(
+        RankedName.newBuilder().setName("ORDER").setRank(Rank.ORDER.toString()).build());
     TaxonRecord taxonRecord =
         TaxonRecord.newBuilder()
             .setCreated(
@@ -465,43 +467,43 @@ public class OccurrenceHdfsRecordConverterTest {
     classification.add(
         RankedName.newBuilder()
             .setKey(String.valueOf(2))
-            .setRank(Rank.KINGDOM)
+            .setRank(Rank.KINGDOM.toString())
             .setName("Archaea")
             .build());
     classification.add(
         RankedName.newBuilder()
             .setKey(String.valueOf(79))
-            .setRank(Rank.PHYLUM)
+            .setRank(Rank.PHYLUM.toString())
             .setName("Crenarchaeota")
             .build());
     classification.add(
         RankedName.newBuilder()
             .setKey(String.valueOf(8016360))
-            .setRank(Rank.ORDER)
+            .setRank(Rank.ORDER.toString())
             .setName("Acidilobales")
             .build());
     classification.add(
         RankedName.newBuilder()
             .setKey(String.valueOf(292))
-            .setRank(Rank.CLASS)
+            .setRank(Rank.CLASS.toString())
             .setName("Thermoprotei")
             .build());
     classification.add(
         RankedName.newBuilder()
             .setKey(String.valueOf(7785))
-            .setRank(Rank.FAMILY)
+            .setRank(Rank.FAMILY.toString())
             .setName("Caldisphaeraceae")
             .build());
     classification.add(
         RankedName.newBuilder()
             .setKey(String.valueOf(1000002))
-            .setRank(Rank.GENUS)
+            .setRank(Rank.GENUS.toString())
             .setName("Caldisphaera")
             .build());
     classification.add(
         RankedName.newBuilder()
             .setKey(String.valueOf(1000003))
-            .setRank(Rank.SPECIES)
+            .setRank(Rank.SPECIES.toString())
             .setName("Caldisphaera lagunensis")
             .build());
 
@@ -528,7 +530,7 @@ public class OccurrenceHdfsRecordConverterTest {
     RankedName rankedName =
         RankedName.newBuilder()
             .setKey(String.valueOf(2492483))
-            .setRank(Rank.SPECIES)
+            .setRank(Rank.SPECIES.toString())
             .setName("Caldisphaera lagunensis Itoh & al., 2003")
             .build();
 

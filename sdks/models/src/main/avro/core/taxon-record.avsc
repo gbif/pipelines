@@ -47,7 +47,7 @@
     "fields" : [
       {"name" : "key", "type" : ["null", "string"], "default" : null},
       {"name" : "name", "type" : ["null", "string"], "default" : null},
-      {"name" : "rank", "type" : ["null", "Rank"], "default" : null}
+      {"name" : "rank", "type" : ["null", "string"], "default" : null}
     ]
   },
   {
@@ -134,6 +134,19 @@
       {"name" : "usageParsedName", "type" : ["null", "ParsedName"], "default" : null},
       {"name" : "issues", "type": "IssueRecord", "default":{}},
       {"name" : "iucnRedListCategoryCode", "type" : ["null", "string"], "default" : null, "doc":"The IUCN Red List Category or conservation status"}
+    ]
+  },
+  {
+    "name" : "MultiTaxonRecord",
+    "namespace" : "org.gbif.pipelines.io.avro",
+    "type" : "record",
+    "doc" : "A collection of taxonomic records",
+    "fields" : [
+      {"name" : "id", "type" : ["null", "string"], "default" : null, "doc":"Pipelines identifier"},
+      {"name" : "coreId","type":["null","string"],"default":null, "doc":"Id of the core record when this record belongs to an extension"},
+      {"name" : "parentId","type":["null","string"],"default":null, "doc":"Id of the parent record if applies"},
+      {"name" : "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
+      {"name" : "taxonRecords", "type" : { "type" : "array", "items" : "TaxonRecord" }, "default": [] }
     ]
   }
 ]

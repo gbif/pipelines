@@ -326,7 +326,7 @@ public class JsonConverter {
             rn ->
                 RankedName.newBuilder()
                     .setName(rn.getName())
-                    .setRank(rn.getRank() != null ? rn.getRank().name() : null)
+                    .setRank(rn.getRank())
                     .setKey(rn.getKey())
                     .build());
   }
@@ -408,7 +408,7 @@ public class JsonConverter {
   public static Optional<String> convertGenericName(TaxonRecord taxonRecord) {
     // only set generic name for genus or more specific
     if (Objects.nonNull(taxonRecord.getUsage())
-        && Rank.GENUS.compareTo(taxonRecord.getUsage().getRank()) <= 0) {
+        && Rank.GENUS.compareTo(Rank.valueOf(taxonRecord.getUsage().getRank())) <= 0) {
       return Optional.ofNullable(taxonRecord.getUsageParsedName())
           .map(upn -> upn.getGenus() != null ? upn.getGenus() : upn.getUninomial());
     } else {
@@ -450,45 +450,45 @@ public class JsonConverter {
     // Classification
     if (taxon.getClassification() != null) {
       for (org.gbif.pipelines.io.avro.RankedName rankedName : taxon.getClassification()) {
-        Rank rank = rankedName.getRank();
+        String rank = rankedName.getRank();
         switch (rank) {
-          case KINGDOM:
+          case "KINGDOM":
             classificationBuilder.setKingdom(rankedName.getName());
             Optional.ofNullable(rankedName.getKey())
                 .map(String::valueOf)
                 .ifPresent(classificationBuilder::setKingdomKey);
             break;
-          case PHYLUM:
+          case "PHYLUM":
             classificationBuilder.setPhylum(rankedName.getName());
             Optional.ofNullable(rankedName.getKey())
                 .map(String::valueOf)
                 .ifPresent(classificationBuilder::setPhylumKey);
             break;
-          case CLASS:
+          case "CLASS":
             classificationBuilder.setClass$(rankedName.getName());
             Optional.ofNullable(rankedName.getKey())
                 .map(String::valueOf)
                 .ifPresent(classificationBuilder::setClassKey);
             break;
-          case ORDER:
+          case "ORDER":
             classificationBuilder.setOrder(rankedName.getName());
             Optional.ofNullable(rankedName.getKey())
                 .map(String::valueOf)
                 .ifPresent(classificationBuilder::setOrderKey);
             break;
-          case FAMILY:
+          case "FAMILY":
             classificationBuilder.setFamily(rankedName.getName());
             Optional.ofNullable(rankedName.getKey())
                 .map(String::valueOf)
                 .ifPresent(classificationBuilder::setFamilyKey);
             break;
-          case GENUS:
+          case "GENUS":
             classificationBuilder.setGenus(rankedName.getName());
             Optional.ofNullable(rankedName.getKey())
                 .map(String::valueOf)
                 .ifPresent(classificationBuilder::setGenusKey);
             break;
-          case SPECIES:
+          case "SPECIES":
             classificationBuilder.setSpecies(rankedName.getName());
             Optional.ofNullable(rankedName.getKey())
                 .map(String::valueOf)

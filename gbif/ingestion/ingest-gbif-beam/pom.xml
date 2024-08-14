@@ -155,15 +155,10 @@
     </dependency>
 
     <!-- Hadoop -->
-<!--    <dependency>-->
-<!--      <groupId>org.apache.hadoop</groupId>-->
-<!--      <artifactId>hadoop-core</artifactId>-->
-<!--      <version>3.2.4</version>-->
-<!--    </dependency>-->
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
-<!--      <scope>provided</scope>-->
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
@@ -321,6 +316,13 @@
                   <transformers>
                     <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                   </transformers>
+                  <relocations>
+                    <!-- To avoid guava problem in Spark cluster mode -->
+                    <relocation>
+                      <pattern>org.apache.curator</pattern>
+                      <shadedPattern>relocation.org.apache.curator</shadedPattern>
+                    </relocation>
+                  </relocations>
                 </configuration>
               </execution>
             </executions>
@@ -329,6 +331,4 @@
       </build>
     </profile>
   </profiles>
-
-
 </project>

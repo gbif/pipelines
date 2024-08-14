@@ -38,12 +38,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
-import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.GrscicollTransform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
-import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -158,6 +153,7 @@ public class VerbatimToOccurrencePipeline {
     ClusteringTransform clusteringTr = transformsFactory.createClusteringTransform();
     BasicTransform basicTr = transformsFactory.createBasicTransform();
     TaxonomyTransform taxonomyTr = transformsFactory.createTaxonomyTransform();
+    MultiTaxonomyTransform multiTaxonomyTr = transformsFactory.createMultiTaxonomyTransform();
     VerbatimTransform verbatimTr = transformsFactory.createVerbatimTransform();
     GrscicollTransform grscicollTr = transformsFactory.createGrscicollTransform();
     LocationTransform locationTr = transformsFactory.createLocationTransform();
@@ -169,6 +165,10 @@ public class VerbatimToOccurrencePipeline {
         transformsFactory.createOccurrenceExtensionTransform();
     ExtensionFilterTransform extensionFilterTr = transformsFactory.createExtensionFilterTransform();
     DefaultValuesTransform defaultValuesTr = transformsFactory.createDefaultValuesTransform();
+
+    boolean useMultiTaxonomy =
+        transformsFactory.getConfig().getNameUsageMatchServices() != null
+            && !transformsFactory.getConfig().getNameUsageMatchServices().isEmpty();
 
     try {
 
@@ -263,7 +263,12 @@ public class VerbatimToOccurrencePipeline {
           var multimediaWriter = createAvroWriter(options, multimediaTr, CORE_TERM, postfix);
           var imageWriter = createAvroWriter(options, imageTr, CORE_TERM, postfix);
           var audubonWriter = createAvroWriter(options, audubonTr, CORE_TERM, postfix);
-          var taxonWriter = createAvroWriter(options, taxonomyTr, CORE_TERM, postfix);
+          var taxonWriter =
+              !useMultiTaxonomy ? createAvroWriter(options, taxonomyTr, CORE_TERM, postfix) : null;
+          var multiTaxonWriter =
+              useMultiTaxonomy
+                  ? createAvroWriter(options, multiTaxonomyTr, CORE_TERM, postfix)
+                  : null;
           var grscicollWriter = createAvroWriter(options, grscicollTr, CORE_TERM, postfix);
           var locationWriter = createAvroWriter(options, locationTr, CORE_TERM, postfix);
           var gbifIdInvalidWriter =
@@ -309,7 +314,11 @@ public class VerbatimToOccurrencePipeline {
                   audubonTr.processElement(er).ifPresent(audubonWriter::append);
                 }
                 if (taxonomyTr.checkType(types)) {
-                  taxonomyTr.processElement(er).ifPresent(taxonWriter::append);
+                  if (useMultiTaxonomy) {
+                    multiTaxonomyTr.processElement(er).ifPresent(multiTaxonWriter::append);
+                  } else {
+                    taxonomyTr.processElement(er).ifPresent(taxonWriter::append);
+                  }
                 }
                 if (grscicollTr.checkType(types)) {
                   grscicollTr.processElement(er, mdr).ifPresent(grscicollWriter::append);

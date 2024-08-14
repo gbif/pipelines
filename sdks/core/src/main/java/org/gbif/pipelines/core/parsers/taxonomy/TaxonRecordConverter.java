@@ -8,13 +8,12 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.MatchType;
-import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.Status;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 
-/** Adapts a {@link NameUsageMatch} into a {@link TaxonRecord} */
+/** Adapts a {@link NameUsageMatchResponse} into a {@link TaxonRecord} */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TaxonRecordConverter {
 
@@ -65,7 +64,7 @@ public class TaxonRecordConverter {
     return RankedName.newBuilder()
         .setKey(rankedNameApi.getKey())
         .setName(rankedNameApi.getName())
-        .setRank(Rank.valueOf(rankedNameApi.getRank()))
+        .setRank(rankedNameApi.getRank())
         .build();
   }
 

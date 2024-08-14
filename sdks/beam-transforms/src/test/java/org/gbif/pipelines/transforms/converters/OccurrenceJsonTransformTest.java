@@ -267,56 +267,56 @@ public class OccurrenceJsonTransformTest {
         RankedName.newBuilder()
             .setKey(String.valueOf(10))
             .setName("synonym")
-            .setRank(Rank.SPECIES)
+            .setRank(Rank.SPECIES.toString())
             .build();
     RankedName au =
         RankedName.newBuilder()
             .setKey(String.valueOf(11))
             .setName("accepted usage")
-            .setRank(Rank.SPECIES)
+            .setRank(Rank.SPECIES.toString())
             .build();
 
     RankedName name1 =
         RankedName.newBuilder()
             .setKey(String.valueOf(1))
             .setName("KINGDOM")
-            .setRank(Rank.KINGDOM)
+            .setRank(Rank.KINGDOM.toString())
             .build();
     RankedName name2 =
         RankedName.newBuilder()
             .setKey(String.valueOf(2))
             .setName("PHYLUM")
-            .setRank(Rank.PHYLUM)
+            .setRank(Rank.PHYLUM.toString())
             .build();
     RankedName name3 =
         RankedName.newBuilder()
             .setKey(String.valueOf(3))
             .setName("CLASS")
-            .setRank(Rank.CLASS)
+            .setRank(Rank.CLASS.toString())
             .build();
     RankedName name4 =
         RankedName.newBuilder()
             .setKey(String.valueOf(4))
             .setName("ORDER")
-            .setRank(Rank.ORDER)
+            .setRank(Rank.ORDER.toString())
             .build();
     RankedName name5 =
         RankedName.newBuilder()
             .setKey(String.valueOf(5))
             .setName("FAMILY")
-            .setRank(Rank.FAMILY)
+            .setRank(Rank.FAMILY.toString())
             .build();
     RankedName name6 =
         RankedName.newBuilder()
             .setKey(String.valueOf(6))
             .setName("GENUS")
-            .setRank(Rank.GENUS)
+            .setRank(Rank.GENUS.toString())
             .build();
     RankedName name7 =
         RankedName.newBuilder()
             .setKey(String.valueOf(7))
             .setName("SPECIES")
-            .setRank(Rank.SPECIES)
+            .setRank(Rank.SPECIES.toString())
             .build();
 
     rankedNameList.add(name1);

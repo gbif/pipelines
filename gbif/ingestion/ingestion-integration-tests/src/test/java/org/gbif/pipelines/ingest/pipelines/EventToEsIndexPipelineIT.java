@@ -268,7 +268,7 @@ public class EventToEsIndexPipelineIT {
               .setClassification(
                   Collections.singletonList(
                       RankedName.newBuilder()
-                          .setRank(Rank.SPECIES)
+                          .setRank(Rank.SPECIES.toString())
                           .setName("Puma concolor subsp. coryi (Bangs, 1899)")
                           .setKey(String.valueOf(6164600))
                           .build()))
@@ -282,7 +282,7 @@ public class EventToEsIndexPipelineIT {
               .setClassification(
                   Collections.singletonList(
                       RankedName.newBuilder()
-                          .setRank(Rank.SPECIES)
+                          .setRank(Rank.SPECIES.toString())
                           .setName("Puma concolor subsp. concolor")
                           .setKey(String.valueOf(7193927))
                           .build()))
@@ -296,7 +296,7 @@ public class EventToEsIndexPipelineIT {
               .setClassification(
                   Collections.singletonList(
                       RankedName.newBuilder()
-                          .setRank(Rank.SPECIES)
+                          .setRank(Rank.SPECIES.toString())
                           .setName("Puma concolor (Linnaeus, 1771)")
                           .setKey(String.valueOf(2435099))
                           .build()))

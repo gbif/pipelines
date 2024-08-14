@@ -25,6 +25,10 @@
 
     <!-- This project -->
     <dependency>
+      <groupId>org.gbif.kvs</groupId>
+      <artifactId>kvs-common</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>models</artifactId>
     </dependency>

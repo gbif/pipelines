@@ -275,35 +275,35 @@ public class OccurrenceHdfsRecordConverter {
           .forEach(
               rankedName -> {
                 switch (rankedName.getRank()) {
-                  case KINGDOM:
+                  case "KINGDOM":
                     occurrenceHdfsRecord.setKingdom(rankedName.getName());
                     occurrenceHdfsRecord.setKingdomkey(rankedName.getKey());
                     break;
-                  case PHYLUM:
+                  case "PHYLUM":
                     occurrenceHdfsRecord.setPhylum(rankedName.getName());
                     occurrenceHdfsRecord.setPhylumkey(rankedName.getKey());
                     break;
-                  case CLASS:
+                  case "CLASS":
                     occurrenceHdfsRecord.setClass$(rankedName.getName());
                     occurrenceHdfsRecord.setClasskey(rankedName.getKey());
                     break;
-                  case ORDER:
+                  case "ORDER":
                     occurrenceHdfsRecord.setOrder(rankedName.getName());
                     occurrenceHdfsRecord.setOrderkey(rankedName.getKey());
                     break;
-                  case FAMILY:
+                  case "FAMILY":
                     occurrenceHdfsRecord.setFamily(rankedName.getName());
                     occurrenceHdfsRecord.setFamilykey(rankedName.getKey());
                     break;
-                  case GENUS:
+                  case "GENUS":
                     occurrenceHdfsRecord.setGenus(rankedName.getName());
                     occurrenceHdfsRecord.setGenuskey(rankedName.getKey());
                     break;
-                  case SUBGENUS:
+                  case "SUBGENUS":
                     occurrenceHdfsRecord.setSubgenus(rankedName.getName());
                     occurrenceHdfsRecord.setSubgenuskey(rankedName.getKey());
                     break;
-                  case SPECIES:
+                  case "SPECIES":
                     occurrenceHdfsRecord.setSpecies(rankedName.getName());
                     occurrenceHdfsRecord.setSpecieskey(rankedName.getKey());
                     break;
@@ -321,7 +321,7 @@ public class OccurrenceHdfsRecordConverter {
         occurrenceHdfsRecord.setAcceptedtaxonkey(taxonRecord.getAcceptedUsage().getKey());
       }
       Optional.ofNullable(taxonRecord.getAcceptedUsage().getRank())
-          .ifPresent(r -> occurrenceHdfsRecord.setTaxonrank(r.name()));
+          .ifPresent(occurrenceHdfsRecord::setTaxonrank);
     } else if (Objects.nonNull(taxonRecord.getUsage())
         && !taxonRecord.getUsage().getKey().equals("0")) {
       // if the acceptedUsage is null we use the usage as the accepted as longs as it's not
@@ -335,25 +335,25 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setTaxonkey(taxonRecord.getUsage().getKey());
       occurrenceHdfsRecord.setScientificname(taxonRecord.getUsage().getName());
       Optional.ofNullable(taxonRecord.getUsage().getRank())
-          .ifPresent(r -> occurrenceHdfsRecord.setTaxonrank(r.name()));
+          .ifPresent(occurrenceHdfsRecord::setTaxonrank);
     }
 
     if (Objects.nonNull(taxonRecord.getUsageParsedName())
         && Objects.nonNull(taxonRecord.getUsage())) {
-      Rank rank = taxonRecord.getUsage().getRank();
-      if (Rank.GENUS.compareTo(rank) <= 0) {
+      String rank = taxonRecord.getUsage().getRank();
+      if (Rank.GENUS.compareTo(Rank.valueOf(rank)) <= 0) {
         occurrenceHdfsRecord.setGenericname(
             Objects.nonNull(taxonRecord.getUsageParsedName().getGenus())
                 ? taxonRecord.getUsageParsedName().getGenus()
                 : taxonRecord.getUsageParsedName().getUninomial());
       }
 
-      if (Rank.SPECIES.compareTo(rank) <= 0) {
+      if (Rank.SPECIES.compareTo(Rank.valueOf(rank)) <= 0) {
         occurrenceHdfsRecord.setSpecificepithet(
             taxonRecord.getUsageParsedName().getSpecificEpithet());
       }
 
-      if (Rank.INFRASPECIFIC_NAME.compareTo(rank) <= 0) {
+      if (Rank.INFRASPECIFIC_NAME.compareTo(Rank.valueOf(rank)) <= 0) {
         occurrenceHdfsRecord.setInfraspecificepithet(
             taxonRecord.getUsageParsedName().getInfraspecificEpithet());
       }

@@ -39,12 +39,7 @@ import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
-import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.GrscicollTransform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
-import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -149,6 +144,8 @@ public class VerbatimToOccurrencePipeline {
     BasicTransform basicTransform = transformsFactory.createBasicTransform();
     TemporalTransform temporalTransform = transformsFactory.createTemporalTransform();
     TaxonomyTransform taxonomyTransform = transformsFactory.createTaxonomyTransform();
+    MultiTaxonomyTransform multiTaxonomyTransform =
+        transformsFactory.createMultiTaxonomyTransform();
     GrscicollTransform grscicollTransform = transformsFactory.createGrscicollTransform();
     LocationTransform locationTransform = transformsFactory.createLocationTransform();
     MultimediaTransform multimediaTransform = transformsFactory.createMultimediaTransform();
@@ -296,10 +293,18 @@ public class VerbatimToOccurrencePipeline {
         .apply("Interpret audubon", audubonTransform.interpret())
         .apply("Write audubon to avro", audubonTransform.write(pathFn).withoutSharding());
 
-    filteredUniqueRecords
-        .apply("Check taxonomy transform condition", taxonomyTransform.check(types))
-        .apply("Interpret taxonomy", taxonomyTransform.interpret())
-        .apply("Write taxon to avro", taxonomyTransform.write(pathFn).withoutSharding());
+    if (transformsFactory.getConfig().getNameUsageMatchServices() != null
+        && !transformsFactory.getConfig().getNameUsageMatchServices().isEmpty()) {
+      filteredUniqueRecords
+          .apply("Check multi-taxonomy transform condition", multiTaxonomyTransform.check(types))
+          .apply("Interpret multi-taxonomy", multiTaxonomyTransform.interpret())
+          .apply("Write taxon to avro", multiTaxonomyTransform.write(pathFn).withoutSharding());
+    } else {
+      filteredUniqueRecords
+          .apply("Check taxonomy transform condition", taxonomyTransform.check(types))
+          .apply("Interpret taxonomy", taxonomyTransform.interpret())
+          .apply("Write taxon to avro", taxonomyTransform.write(pathFn).withoutSharding());
+    }
 
     filteredUniqueRecords
         .apply("Check grscicoll transform condition", grscicollTransform.check(types))

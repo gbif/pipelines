@@ -26,12 +26,7 @@ import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
-import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.GrscicollTransform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
-import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -53,7 +48,7 @@ public class TransformsFactory {
   @Getter private final SerializableConsumer<String> incMetricFn = metrics::incMetric;
   private final InterpretationPipelineOptions options;
   private final HdfsConfigs hdfsConfigs;
-  private final PipelinesConfig config;
+  @Getter private final PipelinesConfig config;
   private final List<DateComponentOrdering> dateComponentOrdering;
 
   private TransformsFactory(InterpretationPipelineOptions options) {
@@ -145,6 +140,20 @@ public class TransformsFactory {
     }
     return TaxonomyTransform.builder()
         .kvStoreSupplier(nameUsageMatchServiceSupplier)
+        .create()
+        .counterFn(incMetricFn)
+        .init();
+  }
+
+  public MultiTaxonomyTransform createMultiTaxonomyTransform() {
+    SerializableSupplier<List<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
+        nameUsageMatchServiceSupplier = null;
+
+    if (!options.getTestMode()) {
+      nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createMultiServiceSupplier(config);
+    }
+    return MultiTaxonomyTransform.builder()
+        .kvStoresSupplier(nameUsageMatchServiceSupplier)
         .create()
         .counterFn(incMetricFn)
         .init();
