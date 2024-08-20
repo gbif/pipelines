@@ -12,17 +12,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 
@@ -41,6 +31,7 @@ public class IndexRequestConverter {
   @NonNull private final Map<String, TemporalRecord> temporalMap;
   @NonNull private final Map<String, LocationRecord> locationMap;
   @NonNull private final Map<String, TaxonRecord> taxonMap;
+  @NonNull private final Map<String, MultiTaxonRecord> multiTaxonMap;
   @NonNull private final Map<String, GrscicollRecord> grscicollMap;
   @NonNull private final Map<String, MultimediaRecord> multimediaMap;
   @NonNull private final Map<String, ImageRecord> imageMap;
@@ -58,6 +49,7 @@ public class IndexRequestConverter {
       TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
       LocationRecord lr = locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
       TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
+      MultiTaxonRecord mtxr = multiTaxonMap.getOrDefault(k, MultiTaxonRecord.newBuilder().setId(k).build());
       GrscicollRecord gr =
           grscicollMap.getOrDefault(k, GrscicollRecord.newBuilder().setId(k).build());
       // Extension
@@ -76,6 +68,7 @@ public class IndexRequestConverter {
               .temporal(tr)
               .location(lr)
               .taxon(txr)
+              .multiTaxon(mtxr)
               .grscicoll(gr)
               .multimedia(mmr)
               .verbatim(er)

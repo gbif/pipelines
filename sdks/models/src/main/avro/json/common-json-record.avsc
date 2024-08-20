@@ -121,7 +121,6 @@
     "type":"record",
     "fields":[
       {"name":"key","type":["null","string"],"default":null,"doc":""},
-      {"name":"guid","type":["null","string"],"default":null,"doc":""},
       {"name":"name","type":["null","string"],"default":null,"doc":""},
       {"name":"rank","type":["null","string"],"default":null}
     ]
@@ -207,6 +206,18 @@
       {"name":"usageParsedName","type":["null","ParsedName"],"default":null,"doc":""},
       {"name":"verbatimScientificName","type":["null","string"],"default":null,"doc":""},
       {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""}
+    ]
+  },
+  {
+    "name":"Classification",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"Taxonomy classification",
+    "fields":[
+      {"name":"usage","type":["null","RankedName"],"default":null,"doc":""},
+      {"name":"acceptedUsage","type":["null","RankedName"],"default":null,"doc":""},
+      {"name":"classification","type":{ "type":"array","items":"RankedName" },"default":[]},
+      {"name":"diagnostics","type":["null","Diagnostic"],"default":null,"doc":""}
     ]
   },
   {

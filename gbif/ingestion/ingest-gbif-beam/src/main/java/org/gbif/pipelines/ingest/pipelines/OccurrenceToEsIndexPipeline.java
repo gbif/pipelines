@@ -27,25 +27,10 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.converters.OccurrenceJsonTransform;
-import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.GrscicollTransform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
-import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -187,6 +172,7 @@ public class OccurrenceToEsIndexPipeline {
     private final VerbatimTransform verbatimTransform = VerbatimTransform.create();
     private final TemporalTransform temporalTransform = TemporalTransform.builder().create();
     private final TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+    private final MultiTaxonomyTransform multiTaxonomyTransform = MultiTaxonomyTransform.builder().create();
     private final GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     private final LocationTransform locationTransform = LocationTransform.builder().create();
     private final MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
@@ -235,6 +221,11 @@ public class OccurrenceToEsIndexPipeline {
               .apply("Read occurrence Taxon", taxonomyTransform.read(pathFn))
               .apply("Map occurrence Taxon to KV", taxonomyTransform.toKv());
 
+      PCollection<KV<String, MultiTaxonRecord>> multiTaxonCollection =
+              pipeline
+                      .apply("Read occurrence Taxon", multiTaxonomyTransform.read(pathFn))
+                      .apply("Map occurrence Taxon to KV", multiTaxonomyTransform.toKv());
+
       PCollection<KV<String, GrscicollRecord>> grscicollCollection =
           pipeline
               .apply("Read occurrence Grscicoll", grscicollTransform.read(pathFn))
@@ -265,6 +256,7 @@ public class OccurrenceToEsIndexPipeline {
               .temporalRecordTag(temporalTransform.getTag())
               .locationRecordTag(locationTransform.getTag())
               .taxonRecordTag(taxonomyTransform.getTag())
+              .multiTaxonRecordTag(multiTaxonomyTransform.getTag())
               .grscicollRecordTag(grscicollTransform.getTag())
               .multimediaRecordTag(multimediaTransform.getTag())
               .imageRecordTag(imageTransform.getTag())
@@ -282,6 +274,7 @@ public class OccurrenceToEsIndexPipeline {
           .and(temporalTransform.getTag(), temporalCollection)
           .and(locationTransform.getTag(), locationCollection)
           .and(taxonomyTransform.getTag(), taxonCollection)
+          .and(multiTaxonomyTransform.getTag(), multiTaxonCollection)
           .and(grscicollTransform.getTag(), grscicollCollection)
           // Extension
           .and(multimediaTransform.getTag(), multimediaCollection)

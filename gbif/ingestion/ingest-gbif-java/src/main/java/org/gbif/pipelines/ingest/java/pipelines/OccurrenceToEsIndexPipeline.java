@@ -22,24 +22,9 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.ElasticsearchWriter;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.java.transforms.IndexRequestConverter;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.GrscicollTransform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
-import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -157,6 +142,9 @@ public class OccurrenceToEsIndexPipeline {
     CompletableFuture<Map<String, TaxonRecord>> taxonMapFeature =
         readAvroAsFuture(options, CORE_TERM, executor, TaxonomyTransform.builder().create());
 
+    CompletableFuture<Map<String, MultiTaxonRecord>> multiTaxonMapFeature =
+            readAvroAsFuture(options, CORE_TERM, executor, MultiTaxonomyTransform.builder().create());
+
     CompletableFuture<Map<String, GrscicollRecord>> grscicollMapFeature =
         readAvroAsFuture(options, CORE_TERM, executor, GrscicollTransform.builder().create());
 
@@ -181,6 +169,7 @@ public class OccurrenceToEsIndexPipeline {
             .temporalMap(temporalMapFeature.get())
             .locationMap(locationMapFeature.get())
             .taxonMap(taxonMapFeature.get())
+            .multiTaxonMap(multiTaxonMapFeature.get())
             .grscicollMap(grscicollMapFeature.get())
             .multimediaMap(multimediaMapFeature.get())
             .imageMap(imageMapFeature.get())

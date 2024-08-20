@@ -25,6 +25,7 @@ import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -44,6 +45,7 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
  * final TupleTag<TemporalRecord> trTag = new TupleTag<TemporalRecord>() {};
  * final TupleTag<LocationRecord> lrTag = new TupleTag<LocationRecord>() {};
  * final TupleTag<TaxonRecord> txrTag = new TupleTag<TaxonRecord>() {};
+ * final TupleTag<GrscicollRecord> grTag = new TupleTag<GrscicollRecord>() {};
  * final TupleTag<MultimediaRecord> mrTag = new TupleTag<MultimediaRecord>() {};
  * final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
  * final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
@@ -97,6 +99,7 @@ public class OccurrenceJsonTransform implements Serializable {
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
   @NonNull private final TupleTag<TaxonRecord> taxonRecordTag;
+  @NonNull private final TupleTag<MultiTaxonRecord> multiTaxonRecordTag;
   @NonNull private final TupleTag<GrscicollRecord> grscicollRecordTag;
   // Extension
   @NonNull private final TupleTag<MultimediaRecord> multimediaRecordTag;
@@ -134,6 +137,9 @@ public class OccurrenceJsonTransform implements Serializable {
             LocationRecord lr =
                 v.getOnly(locationRecordTag, LocationRecord.newBuilder().setId(k).build());
             TaxonRecord txr = v.getOnly(taxonRecordTag, TaxonRecord.newBuilder().setId(k).build());
+            MultiTaxonRecord mtxr =
+                v.getOnly(multiTaxonRecordTag, MultiTaxonRecord.newBuilder().setId(k).build());
+
             GrscicollRecord gr =
                 v.getOnly(grscicollRecordTag, GrscicollRecord.newBuilder().setId(k).build());
 
@@ -154,6 +160,7 @@ public class OccurrenceJsonTransform implements Serializable {
                     .temporal(tr)
                     .location(lr)
                     .taxon(txr)
+                    .multiTaxon(mtxr)
                     .grscicoll(gr)
                     .multimedia(mmr)
                     .verbatim(er)

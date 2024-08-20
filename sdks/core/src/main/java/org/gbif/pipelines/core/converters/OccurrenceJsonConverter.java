@@ -13,15 +13,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.gbif.pipelines.io.avro.json.GeologicalContext;
@@ -38,6 +30,7 @@ public class OccurrenceJsonConverter {
   private final TemporalRecord temporal;
   private final LocationRecord location;
   private final TaxonRecord taxon;
+  private final MultiTaxonRecord multiTaxon;
   private final GrscicollRecord grscicoll;
   private final MultimediaRecord multimedia;
   private final ExtendedRecord verbatim;
@@ -56,7 +49,8 @@ public class OccurrenceJsonConverter {
     mapBasicRecord(builder);
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
-    mapTaxonRecord(builder);
+    //    mapTaxonRecord(builder);
+    mapMultiTaxonRecord(builder);
     mapGrscicollRecord(builder);
     mapMultimediaRecord(builder);
     mapExtendedRecord(builder);
@@ -270,7 +264,16 @@ public class OccurrenceJsonConverter {
 
   private void mapTaxonRecord(OccurrenceJsonRecord.Builder builder) {
     // Set  GbifClassification
-    builder.setGbifClassification(JsonConverter.convertClassification(verbatim, taxon));
+    builder.setGbifClassification(JsonConverter.convertToGbifClassification(verbatim, taxon));
+  }
+
+  private void mapMultiTaxonRecord(OccurrenceJsonRecord.Builder builder) {
+
+    List<TaxonRecord> records = multiTaxon.getTaxonRecords();
+    // Set  GbifClassification
+    builder.setGbifClassification(
+        JsonConverter.convertToGbifClassification(verbatim, records.get(0)));
+    builder.setClassifications(JsonConverter.convertToClassifications(multiTaxon));
   }
 
   private void mapGrscicollRecord(OccurrenceJsonRecord.Builder builder) {

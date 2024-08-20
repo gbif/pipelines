@@ -25,24 +25,17 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.core.utils.TemporalConverter;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.Issues;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.json.*;
 import org.gbif.pipelines.io.avro.json.AgentIdentifier;
 import org.gbif.pipelines.io.avro.json.Authorship;
-import org.gbif.pipelines.io.avro.json.Coordinates;
 import org.gbif.pipelines.io.avro.json.Diagnostic;
 import org.gbif.pipelines.io.avro.json.EventDate;
 import org.gbif.pipelines.io.avro.json.GadmFeatures;
-import org.gbif.pipelines.io.avro.json.GbifClassification;
 import org.gbif.pipelines.io.avro.json.ParsedName;
 import org.gbif.pipelines.io.avro.json.ParsedName.Builder;
 import org.gbif.pipelines.io.avro.json.RankedName;
-import org.gbif.pipelines.io.avro.json.VerbatimRecord;
 import org.gbif.pipelines.io.avro.json.VocabularyConcept;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -416,7 +409,30 @@ public class JsonConverter {
     }
   }
 
-  public static GbifClassification convertClassification(
+  public static List<Classification> convertToClassifications(MultiTaxonRecord taxon) {
+    return taxon.getTaxonRecords().stream()
+        .map(JsonConverter::convertToClassification)
+        .collect(Collectors.toList());
+  }
+
+  public static Classification convertToClassification(TaxonRecord taxon) {
+
+    Classification.Builder classificationBuilder =
+        Classification.newBuilder()
+            .setClassification(JsonConverter.convertRankedNames(taxon.getClassification()));
+
+    JsonConverter.convertRankedName(taxon.getUsage()).ifPresent(classificationBuilder::setUsage);
+
+    JsonConverter.convertRankedName(taxon.getAcceptedUsage())
+        .ifPresent(classificationBuilder::setAcceptedUsage);
+
+    JsonConverter.convertDiagnostic(taxon.getDiagnostics())
+        .ifPresent(classificationBuilder::setDiagnostics);
+
+    return classificationBuilder.build();
+  }
+
+  public static GbifClassification convertToGbifClassification(
       ExtendedRecord verbatim, TaxonRecord taxon) {
     GbifClassification.Builder classificationBuilder =
         GbifClassification.newBuilder()
@@ -520,8 +536,10 @@ public class JsonConverter {
 
     String pathJoiner =
         taxonRecord.getClassification().stream()
-            .filter(rankedName -> taxonRecord.getUsage().getRank() != rankedName.getRank())
-            .map(rankedName -> rankedName.getKey().toString())
+            .filter(
+                rankedName ->
+                    !Objects.equals(taxonRecord.getUsage().getRank(), rankedName.getRank()))
+            .map(org.gbif.pipelines.io.avro.RankedName::getKey)
             .collect(Collectors.joining("_"));
 
     return Optional.of("_" + pathJoiner);
