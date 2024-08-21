@@ -1,7 +1,7 @@
 package org.gbif.pipelines.factory;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -43,9 +43,8 @@ public class NameUsageMatchStoreFactory {
     return instance.kvStore;
   }
 
-  /* TODO Comment */
   @SneakyThrows
-  public static List<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
+  public static Map<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
       createMultipleServices(PipelinesConfig config) {
     if (config == null) {
       return null;
@@ -56,11 +55,12 @@ public class NameUsageMatchStoreFactory {
       return null;
     }
     return config.getNameUsageMatchServices().stream()
-        .map(DatasetKvConfig::getWs)
-        .map(
-            kvConfig ->
-                NameUsageMatchStoreFactory.constructKV(kvConfig, config.getGbifApi().getWsUrl()))
-        .collect(Collectors.toUnmodifiableList());
+        .collect(
+            Collectors.toMap(
+                DatasetKvConfig::getDatasetKey,
+                kvConfig ->
+                    NameUsageMatchStoreFactory.constructKV(
+                        kvConfig.getWs(), config.getGbifApi().getWsUrl())));
   }
 
   @SneakyThrows
@@ -124,7 +124,7 @@ public class NameUsageMatchStoreFactory {
   }
 
   public static SerializableSupplier<
-          List<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
+          Map<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
       createMultiServiceSupplier(PipelinesConfig config) {
     return () -> NameUsageMatchStoreFactory.createMultipleServices(config);
   }

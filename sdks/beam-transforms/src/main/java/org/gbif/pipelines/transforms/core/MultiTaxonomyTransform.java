@@ -5,7 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -36,13 +36,14 @@ import org.gbif.rest.client.species.NameUsageMatchResponse;
 public class MultiTaxonomyTransform extends Transform<ExtendedRecord, MultiTaxonRecord> {
 
   private final SerializableSupplier<
-          List<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
+          Map<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
       kvStoresSupplier;
-  private List<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>> kvStores;
+  private Map<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>> kvStores;
 
   @Builder(buildMethodName = "create")
   private MultiTaxonomyTransform(
-      SerializableSupplier<List<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
+      SerializableSupplier<
+              Map<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
           kvStoresSupplier) {
     super(
         MultiTaxonRecord.class,
@@ -88,14 +89,16 @@ public class MultiTaxonomyTransform extends Transform<ExtendedRecord, MultiTaxon
   public void tearDown() {
     if (kvStores != null && !kvStores.isEmpty()) {
       log.info("Close NameUsageMatchKvStores");
-      kvStores.forEach(
-          kvStore -> {
-            try {
-              kvStore.close();
-            } catch (IOException ex) {
-              log.error("Error closing KV Store", ex);
-            }
-          });
+      kvStores
+          .values()
+          .forEach(
+              kvStore -> {
+                try {
+                  kvStore.close();
+                } catch (IOException ex) {
+                  log.error("Error closing KV Store", ex);
+                }
+              });
     }
   }
 

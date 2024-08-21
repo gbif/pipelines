@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DatasetKvConfig implements Serializable {
   String name;
-  String datasetId;
+  String datasetKey;
   KvConfig ws;
 }

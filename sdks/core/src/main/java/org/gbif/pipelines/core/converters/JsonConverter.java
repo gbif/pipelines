@@ -419,6 +419,7 @@ public class JsonConverter {
 
     Classification.Builder classificationBuilder =
         Classification.newBuilder()
+            .setDatasetKey(taxon.getDatasetKey())
             .setClassification(JsonConverter.convertRankedNames(taxon.getClassification()));
 
     JsonConverter.convertRankedName(taxon.getUsage()).ifPresent(classificationBuilder::setUsage);

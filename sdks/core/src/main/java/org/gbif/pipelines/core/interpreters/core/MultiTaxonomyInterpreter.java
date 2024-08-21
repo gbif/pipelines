@@ -31,7 +31,7 @@ public class MultiTaxonomyInterpreter {
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
    */
   public static BiConsumer<ExtendedRecord, MultiTaxonRecord> taxonomyInterpreter(
-      List<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>> kvStores) {
+      Map<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>> kvStores) {
     return (er, mtr) -> {
       if (kvStores == null || kvStores.isEmpty()) {
         return;
@@ -42,9 +42,13 @@ public class MultiTaxonomyInterpreter {
       final NameUsageMatchRequest nameUsageMatchRequest = createNameUsageMatchRequest(er);
       final List<TaxonRecord> trs = new ArrayList<>();
 
-      for (KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore : kvStores) {
-        TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(er.getId()).build();
-        createTaxonRecord(nameUsageMatchRequest, kvStore, er, taxonRecord);
+      for (Map.Entry<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
+          kvStoreEntry : kvStores.entrySet()) {
+
+        String datasetKey = kvStoreEntry.getKey();
+        TaxonRecord taxonRecord =
+            TaxonRecord.newBuilder().setId(er.getId()).setDatasetKey(datasetKey).build();
+        createTaxonRecord(nameUsageMatchRequest, kvStoreEntry.getValue(), er, taxonRecord);
         trs.add(taxonRecord);
       }
 

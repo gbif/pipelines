@@ -1,6 +1,7 @@
 package org.gbif.pipelines.ingest.pipelines.interpretation;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
@@ -168,7 +169,7 @@ public class TransformsFactory {
 
   public MultiTaxonomyTransform createMultiTaxonomyTransform() {
 
-    SerializableSupplier<List<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
+    SerializableSupplier<Map<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
         nameUsageMatchServiceSupplier = null;
 
     if (!options.getTestMode()) {
