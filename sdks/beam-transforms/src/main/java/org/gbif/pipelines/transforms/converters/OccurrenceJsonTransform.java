@@ -139,7 +139,6 @@ public class OccurrenceJsonTransform implements Serializable {
             TaxonRecord txr = v.getOnly(taxonRecordTag, TaxonRecord.newBuilder().setId(k).build());
             MultiTaxonRecord mtxr =
                 v.getOnly(multiTaxonRecordTag, MultiTaxonRecord.newBuilder().setId(k).build());
-
             GrscicollRecord gr =
                 v.getOnly(grscicollRecordTag, GrscicollRecord.newBuilder().setId(k).build());
 
@@ -173,7 +172,7 @@ public class OccurrenceJsonTransform implements Serializable {
                       .build()
                       .toJson());
             } else {
-              // Occurrence index clients (GraphQL) rely on exinsting fields null vaules
+              // Occurrence index clients (GraphQL) rely on existing fields null values
               c.output(occurrenceJsonConverter.toJsonWithNulls());
             }
 

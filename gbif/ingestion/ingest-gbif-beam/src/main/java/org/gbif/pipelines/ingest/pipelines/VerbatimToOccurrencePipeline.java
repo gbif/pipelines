@@ -293,13 +293,19 @@ public class VerbatimToOccurrencePipeline {
         .apply("Interpret audubon", audubonTransform.interpret())
         .apply("Write audubon to avro", audubonTransform.write(pathFn).withoutSharding());
 
+    // if the config is available, then run the taxonomy transform
     if (transformsFactory.getConfig().getNameUsageMatchServices() != null
         && !transformsFactory.getConfig().getNameUsageMatchServices().isEmpty()) {
       filteredUniqueRecords
           .apply("Check multi-taxonomy transform condition", multiTaxonomyTransform.check(types))
           .apply("Interpret multi-taxonomy", multiTaxonomyTransform.interpret())
-          .apply("Write taxon to avro", multiTaxonomyTransform.write(pathFn).withoutSharding());
-    } else {
+          .apply(
+              "Write multi-taxon to avro", multiTaxonomyTransform.write(pathFn).withoutSharding());
+    }
+
+    // if the config is available, then run the taxonomy transform
+    if (transformsFactory.getConfig().getNameUsageMatch() != null
+        && transformsFactory.getConfig().getNameUsageMatch().getApi() != null) {
       filteredUniqueRecords
           .apply("Check taxonomy transform condition", taxonomyTransform.check(types))
           .apply("Interpret taxonomy", taxonomyTransform.interpret())

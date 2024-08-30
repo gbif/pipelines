@@ -1,16 +1,15 @@
 package org.gbif.pipelines.factory;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
 import org.gbif.kvs.species.NameUsageMatchRequest;
-import org.gbif.pipelines.core.config.model.DatasetKvConfig;
 import org.gbif.pipelines.core.config.model.KvConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.WsConfig;
@@ -54,13 +53,17 @@ public class NameUsageMatchStoreFactory {
         || config.getNameUsageMatchServices().isEmpty()) {
       return null;
     }
+
+    // preserve order of the services
     return config.getNameUsageMatchServices().stream()
         .collect(
-            Collectors.toMap(
-                DatasetKvConfig::getDatasetKey,
-                kvConfig ->
-                    NameUsageMatchStoreFactory.constructKV(
-                        kvConfig.getWs(), config.getGbifApi().getWsUrl())));
+            LinkedHashMap::new,
+            (map, item) -> {
+              KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore =
+                  constructKV(item.getWs(), config.getGbifApi().getWsUrl());
+              map.put(item.getDatasetKey(), kvStore);
+            },
+            Map::putAll);
   }
 
   @SneakyThrows

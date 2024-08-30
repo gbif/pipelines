@@ -143,7 +143,7 @@ public class OccurrenceToEsIndexPipeline {
         readAvroAsFuture(options, CORE_TERM, executor, TaxonomyTransform.builder().create());
 
     CompletableFuture<Map<String, MultiTaxonRecord>> multiTaxonMapFeature =
-            readAvroAsFuture(options, CORE_TERM, executor, MultiTaxonomyTransform.builder().create());
+        readAvroAsFuture(options, CORE_TERM, executor, MultiTaxonomyTransform.builder().create());
 
     CompletableFuture<Map<String, GrscicollRecord>> grscicollMapFeature =
         readAvroAsFuture(options, CORE_TERM, executor, GrscicollTransform.builder().create());

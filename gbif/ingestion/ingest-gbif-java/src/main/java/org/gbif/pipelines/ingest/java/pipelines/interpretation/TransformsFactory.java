@@ -1,6 +1,7 @@
 package org.gbif.pipelines.ingest.java.pipelines.interpretation;
 
 import java.util.List;
+import java.util.Map;
 import lombok.Getter;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.kvs.KeyValueStore;
@@ -146,7 +147,7 @@ public class TransformsFactory {
   }
 
   public MultiTaxonomyTransform createMultiTaxonomyTransform() {
-    SerializableSupplier<List<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
+    SerializableSupplier<Map<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
         nameUsageMatchServiceSupplier = null;
 
     if (!options.getTestMode()) {

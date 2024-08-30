@@ -1,6 +1,6 @@
 package org.gbif.pipelines.transforms.core;
 
-import static org.gbif.api.model.pipelines.InterpretationType.RecordType.TAXONOMY;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.MULTI_TAXONOMY;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
 
 import java.io.IOException;
@@ -47,7 +47,7 @@ public class MultiTaxonomyTransform extends Transform<ExtendedRecord, MultiTaxon
           kvStoresSupplier) {
     super(
         MultiTaxonRecord.class,
-        TAXONOMY,
+        MULTI_TAXONOMY,
         MultiTaxonomyTransform.class.getName(),
         TAXON_RECORDS_COUNT);
     this.kvStoresSupplier = kvStoresSupplier;

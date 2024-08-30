@@ -49,7 +49,8 @@ public class IndexRequestConverter {
       TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
       LocationRecord lr = locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
       TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
-      MultiTaxonRecord mtxr = multiTaxonMap.getOrDefault(k, MultiTaxonRecord.newBuilder().setId(k).build());
+      MultiTaxonRecord mtxr =
+          multiTaxonMap.getOrDefault(k, MultiTaxonRecord.newBuilder().setId(k).build());
       GrscicollRecord gr =
           grscicollMap.getOrDefault(k, GrscicollRecord.newBuilder().setId(k).build());
       // Extension

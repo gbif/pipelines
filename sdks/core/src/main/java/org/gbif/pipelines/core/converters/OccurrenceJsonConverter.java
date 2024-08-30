@@ -49,7 +49,7 @@ public class OccurrenceJsonConverter {
     mapBasicRecord(builder);
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
-    //    mapTaxonRecord(builder);
+    mapTaxonRecord(builder);
     mapMultiTaxonRecord(builder);
     mapGrscicollRecord(builder);
     mapMultimediaRecord(builder);
@@ -263,16 +263,10 @@ public class OccurrenceJsonConverter {
   }
 
   private void mapTaxonRecord(OccurrenceJsonRecord.Builder builder) {
-    // Set  GbifClassification
     builder.setGbifClassification(JsonConverter.convertToGbifClassification(verbatim, taxon));
   }
 
   private void mapMultiTaxonRecord(OccurrenceJsonRecord.Builder builder) {
-
-    List<TaxonRecord> records = multiTaxon.getTaxonRecords();
-    // Set  GbifClassification
-    builder.setGbifClassification(
-        JsonConverter.convertToGbifClassification(verbatim, records.get(0)));
     builder.setClassifications(JsonConverter.convertToClassifications(multiTaxon));
   }
 

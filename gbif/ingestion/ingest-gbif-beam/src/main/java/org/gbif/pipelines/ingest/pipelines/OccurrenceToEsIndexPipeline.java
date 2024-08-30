@@ -25,8 +25,10 @@ import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.ingest.pipelines.interpretation.TransformsFactory;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.converters.OccurrenceJsonTransform;
@@ -112,6 +114,12 @@ public class OccurrenceToEsIndexPipeline {
         t ->
             PathBuilder.buildPathInterpretUsingTargetPath(options, DwcTerm.Occurrence, t, ALL_AVRO);
 
+    TransformsFactory transformsFactory = TransformsFactory.create(options);
+    PipelinesConfig config = transformsFactory.getConfig();
+    boolean isTaxonomyEnabled = config.getNameUsageMatch() != null;
+    boolean isMultiTaxonomyEnabled =
+        config.getNameUsageMatchServices() != null && !config.getNameUsageMatchServices().isEmpty();
+
     Pipeline p = pipelinesFn.apply(options);
 
     PCollection<String> jsonCollection =
@@ -119,6 +127,8 @@ public class OccurrenceToEsIndexPipeline {
             .pipeline(p)
             .pathFn(pathFn)
             .asParentChildRecord(false)
+            .isTaxonomyEnabled(isTaxonomyEnabled)
+            .isMultiTaxonomyEnabled(isMultiTaxonomyEnabled)
             .build()
             .apply();
 
@@ -163,6 +173,8 @@ public class OccurrenceToEsIndexPipeline {
     private final Pipeline pipeline;
     private final UnaryOperator<String> pathFn;
     private final boolean asParentChildRecord;
+    private final boolean isTaxonomyEnabled;
+    private final boolean isMultiTaxonomyEnabled;
 
     // Init transforms
     private final BasicTransform basicTransform = BasicTransform.builder().create();
@@ -172,7 +184,8 @@ public class OccurrenceToEsIndexPipeline {
     private final VerbatimTransform verbatimTransform = VerbatimTransform.create();
     private final TemporalTransform temporalTransform = TemporalTransform.builder().create();
     private final TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
-    private final MultiTaxonomyTransform multiTaxonomyTransform = MultiTaxonomyTransform.builder().create();
+    private final MultiTaxonomyTransform multiTaxonomyTransform =
+        MultiTaxonomyTransform.builder().create();
     private final GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     private final LocationTransform locationTransform = LocationTransform.builder().create();
     private final MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
@@ -218,13 +231,15 @@ public class OccurrenceToEsIndexPipeline {
 
       PCollection<KV<String, TaxonRecord>> taxonCollection =
           pipeline
-              .apply("Read occurrence Taxon", taxonomyTransform.read(pathFn))
+              .apply("Read occurrence Taxon", taxonomyTransform.read(pathFn, !isTaxonomyEnabled))
               .apply("Map occurrence Taxon to KV", taxonomyTransform.toKv());
 
       PCollection<KV<String, MultiTaxonRecord>> multiTaxonCollection =
-              pipeline
-                      .apply("Read occurrence Taxon", multiTaxonomyTransform.read(pathFn))
-                      .apply("Map occurrence Taxon to KV", multiTaxonomyTransform.toKv());
+          pipeline
+              .apply(
+                  "Read occurrence Taxon",
+                  multiTaxonomyTransform.read(pathFn, !isMultiTaxonomyEnabled))
+              .apply("Map occurrence Taxon to KV", multiTaxonomyTransform.toKv());
 
       PCollection<KV<String, GrscicollRecord>> grscicollCollection =
           pipeline
