@@ -9,8 +9,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 
-// import org.gbif.kvs.species.IdMappingConfiguration;
-
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)

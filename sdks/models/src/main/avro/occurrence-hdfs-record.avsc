@@ -1238,6 +1238,19 @@
       } ]
     }, "null" ]
   }, {
+     "name" : "range",
+     "type" : [ {
+        "type" : "record",
+        "name" : "GeologicalRange",
+         "fields":[ {
+            "name" : "gt",
+            "type" : "string"
+          }, {
+            "name" : "lte",
+            "type" : "string"
+          }]
+         }, "null"]
+  },{
     "name" : "lowestbiostratigraphiczone",
     "type" : [ "string", "null" ]
   }, {
@@ -1258,6 +1271,18 @@
   }, {
     "name" : "bed",
     "type" : [ "string", "null" ]
+  }, {
+    "name" : "lithostratigraphy",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
+  }, {
+    "name" : "biostratigraphy",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "identificationid",
     "type" : [ "string", "null" ]

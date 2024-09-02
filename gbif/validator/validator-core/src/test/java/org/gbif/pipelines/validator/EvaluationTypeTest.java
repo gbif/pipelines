@@ -11,7 +11,7 @@ public class EvaluationTypeTest {
   @Test
   public void addNewEvaluationTypeTest() {
     // When we add new OccurrenceIssue this will fail, then we need add new value to EvaluationType
-    assertEquals(77, OccurrenceIssue.values().length);
-    assertEquals(112, EvaluationType.values().length);
+    assertEquals(95, OccurrenceIssue.values().length);
+    assertEquals(151, EvaluationType.values().length);
   }
 }

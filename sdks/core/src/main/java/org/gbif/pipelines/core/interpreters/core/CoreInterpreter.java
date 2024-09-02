@@ -10,9 +10,11 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 import com.google.common.base.Strings;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import lombok.AccessLevel;
@@ -106,6 +108,12 @@ public class CoreInterpreter {
         return;
       }
 
+      // Users can use the same eventId for parentEventID creating infinite loop
+      if (infinitLoopCheck(parentEventID, erWithParents)) {
+        addIssue(evr, "EVENT_ID_TO_PARENT_ID_LOOPING_ISSUE");
+        return;
+      }
+
       // parent event IDs
       List<Parent> parents = new ArrayList<>();
       int order = 1;
@@ -149,6 +157,29 @@ public class CoreInterpreter {
   /** {@link DwcTerm#locationID} interpretation. */
   public static void interpretLocationID(ExtendedRecord er, Consumer<String> consumer) {
     extractOptValue(er, DwcTerm.locationID).ifPresent(consumer);
+  }
+
+  /** Some parentEventID can have looped link */
+  private static boolean infinitLoopCheck(
+      String initialId, Map<String, Map<String, String>> erWithParents) {
+
+    Set<String> idSet = new HashSet<>();
+    idSet.add(initialId);
+    Map<String, String> nextMap = erWithParents.get(initialId);
+    while (nextMap != null) {
+      String nextId = nextMap.get(DwcTerm.parentEventID.name());
+      if (nextId == null) {
+        return false;
+      } else {
+        nextMap = erWithParents.get(nextId);
+      }
+      if (idSet.contains(nextId)) {
+        return true;
+      } else {
+        idSet.add(nextId);
+      }
+    }
+    return false;
   }
 
   /** Returns ENUM instead of url string */

@@ -62,7 +62,7 @@ public class FileVocabularyFactory implements Serializable {
                 try (InputStream is = readFile(hdfsConfigs, path, name)) {
                   InMemoryVocabularyLookupBuilder builder =
                       InMemoryVocabularyLookup.newBuilder().from(is);
-                  if (term == DwcTerm.lifeStage) {
+                  if (term.equals(DwcTerm.lifeStage.qualifiedName())) {
                     builder.withPrefilter(PreFilters.REMOVE_NUMERIC_PREFIX);
                   }
 

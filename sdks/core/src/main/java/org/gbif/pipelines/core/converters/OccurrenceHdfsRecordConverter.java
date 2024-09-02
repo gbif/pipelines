@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
@@ -607,6 +608,27 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setFormation(gc.getFormation());
       occurrenceHdfsRecord.setMember(gc.getMember());
       occurrenceHdfsRecord.setBed(gc.getBed());
+
+      occurrenceHdfsRecord.setLithostratigraphy(
+          Stream.of(gc.getBed(), gc.getFormation(), gc.getGroup(), gc.getMember())
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList()));
+
+      occurrenceHdfsRecord.setBiostratigraphy(
+          Stream.of(gc.getLowestBiostratigraphicZone(), gc.getHighestBiostratigraphicZone())
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList()));
+
+      if (gc.getStartAge() != null && gc.getEndAge() != null) {
+        Optional.ofNullable(gc.getStartAge())
+            .ifPresent(
+                s ->
+                    occurrenceHdfsRecord.setRange(
+                        GeologicalRange.newBuilder()
+                            .setLte(gc.getStartAge())
+                            .setGt(gc.getEndAge())
+                            .build()));
+      }
     }
   }
 
@@ -650,7 +672,12 @@ public class OccurrenceHdfsRecordConverter {
           break;
       }
     } catch (Exception ex) {
-      log.error("Ignoring error setting field {}", avroField, ex);
+      log.error(
+          "Ignoring error setting field {}, field name {}, value. Exception: {}",
+          avroField,
+          fieldName,
+          value,
+          ex);
     }
   }
 

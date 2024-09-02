@@ -101,21 +101,19 @@ public class AirflowSparkLauncher {
 
   public Optional<Status> submitAwait() {
     try {
-
-      String normalizedAppName = normalize(sparkAppName);
-      AirflowBody airflowBody = getAirflowBody(normalizedAppName);
+      AirflowBody airflowBody = getAirflowBody(sparkAppName);
 
       log.info("Running Airflow DAG ID {}: {}", airflowBody.getDagRunId(), airflowBody);
       Retry.decorateFunction(AIRFLOW_RETRY, airflowClient::createRun).apply(airflowBody);
 
-      Optional<Status> status = getStatusByName(normalizedAppName);
+      Optional<Status> status = getStatusByName(sparkAppName);
 
       log.info("Waiting Airflow DAG ID {} to finish", airflowBody.getDagRunId());
       while (status.isPresent()
           && Status.COMPLETED != status.get()
           && Status.FAILED != status.get()) {
         TimeUnit.SECONDS.sleep(airflowConfiguration.apiCheckDelaySec);
-        status = getStatusByName(normalizedAppName);
+        status = getStatusByName(sparkAppName);
       }
       log.info(
           "Airflow DAG ID {} is finished with status - {}",
@@ -132,6 +130,7 @@ public class AirflowSparkLauncher {
   public void submitAwaitVoid() {
     Optional<Status> status = submitAwait();
     if (status.isEmpty() || status.get() == Status.ABORTED || status.get() == Status.FAILED) {
+      status.ifPresent(s -> log.warn(s.toString()));
       throw new IllegalStateException(
           "Process failed in distributed Job. Check K8s logs " + sparkAppName);
     } else {
@@ -143,29 +142,26 @@ public class AirflowSparkLauncher {
   public Optional<Status> getStatusByName(String dagId) {
     JsonNode jsonStatus = Retry.decorateFunction(AIRFLOW_RETRY, airflowClient::getRun).apply(dagId);
     String status = jsonStatus.get("state").asText();
-    if ("queued".equalsIgnoreCase(status)) {
+
+    if ("queued".equalsIgnoreCase(status)
+        || "scheduled".equalsIgnoreCase(status)
+        || "up_for_reschedule".equalsIgnoreCase(status)
+        || "deferred".equalsIgnoreCase(status)) {
       return Optional.of(Status.QUEUED);
     }
     if ("running".equalsIgnoreCase(status)
         || "rescheduled".equalsIgnoreCase(status)
+        || "restarting".equalsIgnoreCase(status)
+        || "up_for_retry".equalsIgnoreCase(status)
         || "retry".equalsIgnoreCase(status)) {
       return Optional.of(Status.RUNNING);
     }
     if ("success".equalsIgnoreCase(status)) {
       return Optional.of(Status.COMPLETED);
     }
-    if ("failed".equalsIgnoreCase(status)) {
+    if ("failed".equalsIgnoreCase(status) || "upstream_failed".equalsIgnoreCase(status)) {
       return Optional.of(Status.FAILED);
     }
     return Optional.empty();
-  }
-
-  /**
-   * A lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.'.
-   * Must start and end with an alphanumeric character and its max lentgh is 64 characters.
-   */
-  private static String normalize(String sparkAppName) {
-    String v = sparkAppName.toLowerCase().replace("_to_", "-").replace("_", "-");
-    return v.length() >= 64 ? v.substring(0, 63) : v;
   }
 }

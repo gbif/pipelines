@@ -107,7 +107,7 @@ public class Metrics {
   @JsonDeserialize(builder = IssueSample.IssueSampleBuilder.class)
   public static class IssueSample {
     private String recordId;
-    private Map<String, String> relatedData;
+    private Map<String, String> relatedData = Collections.emptyMap();
   }
 
   @Override
