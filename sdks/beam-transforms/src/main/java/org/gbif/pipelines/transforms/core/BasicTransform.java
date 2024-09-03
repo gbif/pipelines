@@ -104,7 +104,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
             .via(BasicInterpreter::interpretBasisOfRecord)
             .via(BasicInterpreter::interpretTypifiedName)
             .via(BasicInterpreter::interpretSex)
-            .via(BasicInterpreter::interpretTypeStatus)
+            .via(VocabularyInterpreter.interpretTypeStatus(vocabularyService))
             .via(BasicInterpreter::interpretIndividualCount)
             .via((e, r) -> CoreInterpreter.interpretReferences(e, r, r::setReferences))
             .via(BasicInterpreter::interpretOrganismQuantity)

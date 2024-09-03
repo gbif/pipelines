@@ -23,7 +23,6 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.ThreatStatus;
-import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
@@ -91,9 +90,7 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.datasetID.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.datasetName.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.otherCatalogNumbers.simpleName(), multiValue1 + "|" + multiValue2);
-    coreTerms.put(
-        DwcTerm.typeStatus.simpleName(),
-        TypeStatus.TYPE.name() + "|" + TypeStatus.TYPE_SPECIES.name());
+    coreTerms.put(DwcTerm.typeStatus.simpleName(), "Type|TypeSpecies");
     coreTerms.put(DwcTerm.preparations.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.samplingProtocol.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.identifiedBy.simpleName(), multiValue1 + "|" + multiValue2);
@@ -153,7 +150,16 @@ public class OccurrenceHdfsRecordConverterTest {
             .setIdentifiedBy(Arrays.asList(multiValue1, multiValue2))
             .setPreparations(Arrays.asList(multiValue1, multiValue2))
             .setSamplingProtocol(Arrays.asList(multiValue1, multiValue2))
-            .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
+            .setTypeStatus(
+                Arrays.asList(
+                    VocabularyConcept.newBuilder()
+                        .setConcept("Type")
+                        .setLineage(Collections.singletonList("Type"))
+                        .build(),
+                    VocabularyConcept.newBuilder()
+                        .setConcept("TypeSpecies")
+                        .setLineage(Collections.singletonList("TypeSpecies"))
+                        .build()))
             .setProjectId(Arrays.asList(multiValue1, multiValue2))
             .setIsSequenced(true)
             .setAssociatedSequences(Collections.singletonList("ad"))
@@ -241,10 +247,12 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getPreparations());
     Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVSamplingprotocol());
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getSamplingprotocol());
+    Assert.assertEquals("Type|TypeSpecies", hdfsRecord.getVTypestatus());
     Assert.assertEquals(
-        TypeStatus.TYPE.name() + "|" + TypeStatus.TYPE_SPECIES.name(), hdfsRecord.getVTypestatus());
-    Assert.assertEquals(
-        Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()),
+        org.gbif.pipelines.io.avro.TypeStatus.newBuilder()
+            .setConcepts(Arrays.asList("Type", "TypeSpecies"))
+            .setLineage(Arrays.asList("Type", "TypeSpecies"))
+            .build(),
         hdfsRecord.getTypestatus());
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getProjectid());
 
@@ -397,7 +405,16 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name());
     basicRecord.setSex(Sex.HERMAPHRODITE.name());
     basicRecord.setIndividualCount(99);
-    basicRecord.setTypeStatus(Arrays.asList(TypeStatus.ALLOTYPE.name(), TypeStatus.TYPE.name()));
+    basicRecord.setTypeStatus(
+        Arrays.asList(
+            VocabularyConcept.newBuilder()
+                .setConcept("Type")
+                .setLineage(Collections.singletonList("Type"))
+                .build(),
+            VocabularyConcept.newBuilder()
+                .setConcept("Allotype")
+                .setLineage(Collections.singletonList("Allotype"))
+                .build()));
     basicRecord.setTypifiedName("noName");
     basicRecord.setLifeStage(
         VocabularyConcept.newBuilder()
@@ -437,7 +454,10 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Sex.HERMAPHRODITE.name(), hdfsRecord.getSex());
     Assert.assertEquals(Integer.valueOf(99), hdfsRecord.getIndividualcount());
     Assert.assertEquals(
-        Arrays.asList(TypeStatus.ALLOTYPE.name(), TypeStatus.TYPE.name()),
+        org.gbif.pipelines.io.avro.TypeStatus.newBuilder()
+            .setConcepts(Arrays.asList("Type", "Allotype"))
+            .setLineage(Arrays.asList("Type", "Allotype"))
+            .build(),
         hdfsRecord.getTypestatus());
     Assert.assertEquals("noName", hdfsRecord.getTypifiedname());
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getOrganismquantity());

@@ -10,7 +10,6 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD;
 import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT;
 import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE;
-import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
 import static org.gbif.pipelines.core.utils.ModelUtils.DEFAULT_SEPARATOR;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
@@ -32,7 +31,6 @@ import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.Sex;
-import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.core.Parsable;
 import org.gbif.common.parsers.core.ParseResult;
@@ -70,29 +68,6 @@ public class BasicInterpreter {
         };
 
     SimpleTypeParser.parsePositiveInt(er, DwcTerm.individualCount, fn);
-  }
-
-  /** {@link DwcTerm#typeStatus} interpretation. */
-  public static void interpretTypeStatus(ExtendedRecord er, BasicRecord br) {
-
-    Function<ParseResult<TypeStatus>, BasicRecord> fn =
-        parseResult -> {
-          if (parseResult.isSuccessful()) {
-            if (br.getTypeStatus() == null) {
-              br.setTypeStatus(new ArrayList<>());
-            }
-
-            String result = parseResult.getPayload().name();
-            if (!br.getTypeStatus().contains(result)) {
-              br.getTypeStatus().add(result);
-            }
-          } else {
-            addIssue(br, TYPE_STATUS_INVALID);
-          }
-          return br;
-        };
-
-    VocabularyParser.typeStatusParser().mapList(er, fn);
   }
 
   /** {@link DwcTerm#sex} interpretation. */

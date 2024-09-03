@@ -19,7 +19,6 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MediaType;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
-import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
@@ -205,7 +204,7 @@ public class OccurrenceJsonConverterTest {
             .setIdentifiedBy(Arrays.asList(multivalue1, multivalue2))
             .setPreparations(Arrays.asList(multivalue1, "\u001E" + multivalue2))
             .setSamplingProtocol(Arrays.asList(multivalue1, multivalue2))
-            .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
+            .setTypeStatus(Arrays.asList(vcFn.apply("Type"), vcFn.apply("TypeSpecies")))
             .setProjectId(Arrays.asList(multivalue1, multivalue2))
             .setGeologicalContext(
                 GeologicalContext.newBuilder()
@@ -535,7 +534,7 @@ public class OccurrenceJsonConverterTest {
         "\"" + expectedMultivalue1 + "|" + multivalue2 + "\"",
         result.path(Indexing.SAMPLING_PROTOCOL_JOINED).toString());
     assertEquals(
-        "[\"" + TypeStatus.TYPE.name() + "\",\"" + TypeStatus.TYPE_SPECIES.name() + "\"]",
+        "{\"concepts\":[\"Type\",\"TypeSpecies\"],\"lineage\":[\"Type\",\"TypeSpecies\"]}",
         result.path(Indexing.TYPE_STATUS).toString());
 
     ArrayNode projectIdArray = (ArrayNode) result.path(Indexing.PROJECT_ID);

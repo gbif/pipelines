@@ -75,7 +75,7 @@
       {"name":"pathway","type":["null","VocabularyConcept"],"default":null,"doc":""},
       {"name":"degreeOfEstablishment","type":["null","VocabularyConcept"],"default":null,"doc":""},
       {"name":"individualCount","type":["null","int"],"default":null,"doc":""},
-      {"name":"typeStatus","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"typeStatus","type":["null","VocabularyConceptList"],"default":null,"doc":""},
       {"name":"typifiedName","type":["null","string"],"default":null,"doc":""},
       {"name":"references","type":["null","string"],"default":null,"doc":""},
       {"name":"preparations","type":{"type":"array","items":"string"},"default":[],"doc":""},

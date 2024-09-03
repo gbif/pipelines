@@ -441,7 +441,6 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setIdentifiedby(basicRecord.getIdentifiedBy());
     occurrenceHdfsRecord.setPreparations(basicRecord.getPreparations());
     occurrenceHdfsRecord.setSamplingprotocol(basicRecord.getSamplingProtocol());
-    occurrenceHdfsRecord.setTypestatus(basicRecord.getTypeStatus());
     occurrenceHdfsRecord.setIssequenced(basicRecord.getIsSequenced());
     occurrenceHdfsRecord.setAssociatedsequences(basicRecord.getAssociatedSequences());
 
@@ -481,6 +480,21 @@ public class OccurrenceHdfsRecordConverter {
                         .setConcept(c.getConcept())
                         .setLineage(c.getLineage())
                         .build()));
+
+    Optional.ofNullable(basicRecord.getTypeStatus())
+        .ifPresent(
+            c -> {
+              List<String> allConcepts =
+                  c.stream()
+                      .map(org.gbif.pipelines.io.avro.VocabularyConcept::getConcept)
+                      .collect(Collectors.toList());
+
+              List<String> allParents =
+                  c.stream().flatMap(c2 -> c2.getLineage().stream()).collect(Collectors.toList());
+
+              occurrenceHdfsRecord.setTypestatus(
+                  TypeStatus.newBuilder().setConcepts(allConcepts).setLineage(allParents).build());
+            });
 
     // Others
     Optional.ofNullable(basicRecord.getRecordedByIds())

@@ -99,7 +99,13 @@
       },
 
       "individualCount": {"type": "integer"},
-      "typeStatus": {"type": "keyword", "copy_to": "all"},
+      "typeStatus": {
+        "type": "object",
+        "properties": {
+          "concepts": {"type": "keyword"},
+          "lineage": {"type": "keyword", "copy_to": "all"}
+        }
+      },
       "typifiedName": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "references": {"type":"text", "copy_to": "all"},
       "preparations": {

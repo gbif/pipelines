@@ -25,7 +25,6 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MediaType;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
-import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
@@ -200,7 +199,16 @@ public class OccurrenceJsonTransformTest {
             .setIdentifiedBy(Arrays.asList(multivalue1, multivalue2))
             .setPreparations(Arrays.asList(multivalue1, multivalue2))
             .setSamplingProtocol(Arrays.asList(multivalue1, multivalue2))
-            .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
+            .setTypeStatus(
+                Arrays.asList(
+                    VocabularyConcept.newBuilder()
+                        .setConcept("Type")
+                        .setLineage(Collections.singletonList("Type0"))
+                        .build(),
+                    VocabularyConcept.newBuilder()
+                        .setConcept("TypeSpecies")
+                        .setLineage(Collections.singletonList("TypeSpecies0"))
+                        .build()))
             .build();
 
     TemporalRecord tmr =

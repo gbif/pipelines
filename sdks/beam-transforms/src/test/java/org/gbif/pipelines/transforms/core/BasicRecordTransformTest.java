@@ -53,10 +53,10 @@ public class BasicRecordTransformTest {
 
     // State
     final String[] one = {
-      "0", "OBSERVATION", "MALE", "INTRODUCED", "HOLOTYPE", "2", "http://refs.com"
+      "0", "OBSERVATION", "MALE", "INTRODUCED", "2", "http://refs.com"
     };
     final String[] two = {
-      "1", "OCCURRENCE", "HERMAPHRODITE", "INTRODUCED", "HAPANTOTYPE", "1", "http://refs.com"
+      "1", "OCCURRENCE", "HERMAPHRODITE", "INTRODUCED", "1", "http://refs.com"
     };
     final List<ExtendedRecord> records = createExtendedRecordList(one, two);
 
@@ -207,9 +207,8 @@ public class BasicRecordTransformTest {
               ExtendedRecord record = ExtendedRecord.newBuilder().setId(x[0]).build();
               record.getCoreTerms().put(DwcTerm.basisOfRecord.qualifiedName(), x[1]);
               record.getCoreTerms().put(DwcTerm.sex.qualifiedName(), x[2]);
-              record.getCoreTerms().put(DwcTerm.typeStatus.qualifiedName(), x[4]);
-              record.getCoreTerms().put(DwcTerm.individualCount.qualifiedName(), x[5]);
-              record.getCoreTerms().put(DcTerm.references.qualifiedName(), x[6]);
+              record.getCoreTerms().put(DwcTerm.individualCount.qualifiedName(), x[4]);
+              record.getCoreTerms().put(DcTerm.references.qualifiedName(), x[5]);
               return record;
             })
         .collect(Collectors.toList());
@@ -224,9 +223,8 @@ public class BasicRecordTransformTest {
                     .setCreated(0L)
                     .setBasisOfRecord(x[1])
                     .setSex(x[2])
-                    .setTypeStatus(Collections.singletonList(x[4]))
-                    .setIndividualCount(Integer.valueOf(x[5]))
-                    .setReferences(x[6])
+                    .setIndividualCount(Integer.valueOf(x[4]))
+                    .setReferences(x[5])
                     .setIsSequenced(Boolean.FALSE)
                     .setLicense(License.UNSPECIFIED.name())
                     .setGeologicalContext(GeologicalContext.newBuilder().build())
