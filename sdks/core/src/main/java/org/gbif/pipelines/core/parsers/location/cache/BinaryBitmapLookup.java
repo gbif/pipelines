@@ -38,8 +38,8 @@ public class BinaryBitmapLookup {
    * @return Locations or null if the bitmap can't answer.
    */
   public boolean intersects(GeocodeRequest latLng) {
-    double lat = latLng.getLatitude();
-    double lng = latLng.getLongitude();
+    double lat = latLng.getLat();
+    double lng = latLng.getLng();
     // Convert the latitude and longitude to x,y coordinates on the image.
     // The axes are swapped, and the image's origin is the top left.
     int x = (int) Math.round((lng + 180d) / 360d * (imgWidth - 1));

@@ -47,7 +47,7 @@ public class LocationMatcher {
   public ParsedField<ParsedLocation> apply() {
     // Check parameters
     Objects.requireNonNull(latLng);
-    if (latLng.getLatitude() == null || latLng.getLongitude() == null) {
+    if (latLng.getLat() == null || latLng.getLng() == null) {
       throw new IllegalArgumentException("Empty coordinates");
     }
 
@@ -114,7 +114,7 @@ public class LocationMatcher {
 
   private Optional<List<Country>> getCountryFromCoordinates(GeocodeRequest latLng) {
     if (latLng.isValid()) {
-      if (isAntarctica(latLng.getLatitude(), this.country)) {
+      if (isAntarctica(latLng.getLat(), this.country)) {
         return Optional.of(Collections.singletonList(Country.ANTARCTICA));
       }
 

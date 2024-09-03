@@ -65,8 +65,8 @@ public class GeocodeBitmapCache {
    * @return Locations or null if the bitmap can't answer.
    */
   public GeocodeResponse getFromBitmap(GeocodeRequest latLng) {
-    double lat = latLng.getLatitude();
-    double lng = latLng.getLongitude();
+    double lat = latLng.getLat();
+    double lng = latLng.getLng();
     // Convert the latitude and longitude to x,y coordinates on the image.
     // The axes are swapped, and the image's origin is the top left.
     int x = (int) Math.round((lng + 180d) / 360d * (imgWidth - 1));
@@ -100,7 +100,7 @@ public class GeocodeBitmapCache {
       return locations;
     }
 
-    locations = loadFn.apply(GeocodeRequest.builder().withLatitude(lat).withLongitude(lng).build());
+    locations = loadFn.apply(GeocodeRequest.builder().withLat(lat).withLng(lng).build());
     // Don't store this if there aren't any locations.
     if (locations.getLocations().isEmpty()) {
       if (missEqualsFail) {

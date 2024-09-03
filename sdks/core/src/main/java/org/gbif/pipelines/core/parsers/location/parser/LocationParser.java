@@ -151,8 +151,8 @@ public class LocationParser {
     // the reprojection will keep the original values even if it failed with issues
     ParsedField<GeocodeRequest> projectedLatLng =
         Wgs84Projection.reproject(
-            parsedLatLon.getResult().getLatitude(),
-            parsedLatLon.getResult().getLongitude(),
+            parsedLatLon.getResult().getLat(),
+            parsedLatLon.getResult().getLng(),
             extractValue(er, datum));
 
     // collect issues

@@ -141,8 +141,8 @@ public class ImageInterpreter {
       ParsedField<GeocodeRequest> latLng = CoordinateParseUtils.parseLatLng(lat, lng);
       if (latLng.isSuccessful()) {
         GeocodeRequest result = latLng.getResult();
-        i.setLatitude(result.getLatitude());
-        i.setLongitude(result.getLongitude());
+        i.setLatitude(result.getLat());
+        i.setLongitude(result.getLng());
       }
     }
   }

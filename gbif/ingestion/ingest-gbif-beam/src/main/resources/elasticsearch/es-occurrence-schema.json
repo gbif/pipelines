@@ -385,6 +385,7 @@
       "notIssues": {"type": "keyword"},
       "extensions": {"type": "keyword"},
       "classifications" : {
+        "type": "nested",
         "properties": {
           "classification": {
             "properties": {
@@ -414,7 +415,6 @@
           }
         }
       },
-
       "gbifClassification": {
         "properties": {
           "acceptedUsage": {

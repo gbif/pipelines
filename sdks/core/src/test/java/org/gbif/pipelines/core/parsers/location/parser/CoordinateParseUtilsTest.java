@@ -132,8 +132,8 @@ public class CoordinateParseUtilsTest {
 
   private void assertDMS(String lat, String lon, double eLat, double eLon) {
     ParsedField<GeocodeRequest> result = CoordinateParseUtils.parseLatLng(lat, lon);
-    assertEquals(eLat, result.getResult().getLatitude(), 0.000001);
-    assertEquals(eLon, result.getResult().getLongitude(), 0.000001);
+    assertEquals(eLat, result.getResult().getLat(), 0.000001);
+    assertEquals(eLon, result.getResult().getLng(), 0.000001);
   }
 
   private void assertIllegalArg(String coord) {
@@ -143,8 +143,8 @@ public class CoordinateParseUtilsTest {
   private void assertFootprint(String footprint, double eLat, double eLon) {
     ParsedField<GeocodeRequest> result = CoordinateParseUtils.parsePointFootprintWKT(footprint);
     System.out.println(result.getResult());
-    assertEquals(eLat, result.getResult().getLatitude(), 0.000001);
-    assertEquals(eLon, result.getResult().getLongitude(), 0.000001);
+    assertEquals(eLat, result.getResult().getLat(), 0.000001);
+    assertEquals(eLon, result.getResult().getLng(), 0.000001);
   }
 
   private void assertBadFootprint(String footprint) {

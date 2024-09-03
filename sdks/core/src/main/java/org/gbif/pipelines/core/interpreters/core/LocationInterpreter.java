@@ -96,8 +96,8 @@ public class LocationInterpreter {
 
         GeocodeRequest latLng = parsedLocation.getLatLng();
         if (Objects.nonNull(latLng)) {
-          lr.setDecimalLatitude(latLng.getLatitude());
-          lr.setDecimalLongitude(latLng.getLongitude());
+          lr.setDecimalLatitude(latLng.getLat());
+          lr.setDecimalLongitude(latLng.getLng());
           lr.setHasCoordinate(Boolean.TRUE);
         } else {
           lr.setHasCoordinate(Boolean.FALSE);
@@ -158,8 +158,8 @@ public class LocationInterpreter {
         if (parsedFootprint.isSuccessful()) {
           // Check for conflict with the interpreted coordinates
           GeocodeRequest latLng = parsedFootprint.getResult();
-          if (Math.abs(lr.getDecimalLatitude() - latLng.getLatitude()) <= 0.000001
-              && Math.abs(lr.getDecimalLongitude() - latLng.getLongitude()) <= 0.000001) {
+          if (Math.abs(lr.getDecimalLatitude() - latLng.getLat()) <= 0.000001
+              && Math.abs(lr.getDecimalLongitude() - latLng.getLng()) <= 0.000001) {
             // No conflict, but don't set the footprintWKT in the LocationRecord as it just
             // duplicates the coordinate.
             log.debug("duplicates the coordinate.");

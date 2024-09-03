@@ -169,8 +169,8 @@ public class LocationParserTest {
     // Should
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
-    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLatitude(), 0);
-    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLongitude(), 0);
+    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat(), 0);
+    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLng(), 0);
     Assert.assertTrue(
         result
             .getIssues()
@@ -198,8 +198,8 @@ public class LocationParserTest {
     // Should
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
-    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLatitude(), 0);
-    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLongitude(), 0);
+    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat(), 0);
+    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLng(), 0);
     Assert.assertTrue(
         result
             .getIssues()
@@ -223,8 +223,8 @@ public class LocationParserTest {
     // Should
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
-    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLatitude(), 0);
-    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLongitude(), 0);
+    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat(), 0);
+    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLng(), 0);
     Assert.assertTrue(
         result
             .getIssues()
@@ -254,8 +254,8 @@ public class LocationParserTest {
     // Should
     Assert.assertTrue(result.isSuccessful());
     Assert.assertEquals(Country.CANADA, result.getResult().getCountry());
-    Assert.assertEquals(LATITUDE_CANADA, result.getResult().getLatLng().getLatitude(), 0);
-    Assert.assertEquals(LONGITUDE_CANADA, result.getResult().getLatLng().getLongitude(), 0);
+    Assert.assertEquals(LATITUDE_CANADA, result.getResult().getLatLng().getLat(), 0);
+    Assert.assertEquals(LONGITUDE_CANADA, result.getResult().getLatLng().getLng(), 0);
     Assert.assertEquals(1, result.getIssues().size());
     Assert.assertTrue(result.getIssues().contains(GEODETIC_DATUM_ASSUMED_WGS84.name()));
   }
@@ -278,9 +278,8 @@ public class LocationParserTest {
     // Should
     Assert.assertTrue(result.isSuccessful());
     Assert.assertEquals(Country.ZIMBABWE, result.getResult().getCountry());
-    Assert.assertEquals(LATITUDE_ALMOST_ZIMBABWE, result.getResult().getLatLng().getLatitude(), 0);
-    Assert.assertEquals(
-        LONGITUDE_ALMOST_ZIMBABWE, result.getResult().getLatLng().getLongitude(), 0);
+    Assert.assertEquals(LATITUDE_ALMOST_ZIMBABWE, result.getResult().getLatLng().getLat(), 0);
+    Assert.assertEquals(LONGITUDE_ALMOST_ZIMBABWE, result.getResult().getLatLng().getLng(), 0);
     Assert.assertEquals(1, result.getIssues().size());
     Assert.assertTrue(result.getIssues().contains(GEODETIC_DATUM_ASSUMED_WGS84.name()));
   }

@@ -20,21 +20,18 @@ public class CoordinatesFunction {
   public static final UnaryOperator<GeocodeRequest> NEGATED_LAT_FN =
       latLng ->
           GeocodeRequest.create(
-              -1d * latLng.getLatitude(), latLng.getLongitude(), latLng.getUncertaintyMeters());
+              -1d * latLng.getLat(), latLng.getLng(), latLng.getUncertaintyMeters());
   public static final UnaryOperator<GeocodeRequest> NEGATED_LNG_FN =
       latLng ->
           GeocodeRequest.create(
-              latLng.getLatitude(), -1d * latLng.getLongitude(), latLng.getUncertaintyMeters());
+              latLng.getLat(), -1d * latLng.getLng(), latLng.getUncertaintyMeters());
   public static final UnaryOperator<GeocodeRequest> NEGATED_COORDS_FN =
       latLng ->
           GeocodeRequest.create(
-              -1d * latLng.getLatitude(),
-              -1d * latLng.getLongitude(),
-              latLng.getUncertaintyMeters());
+              -1d * latLng.getLat(), -1d * latLng.getLng(), latLng.getUncertaintyMeters());
   public static final UnaryOperator<GeocodeRequest> SWAPPED_COORDS_FN =
       latLng ->
-          GeocodeRequest.create(
-              latLng.getLongitude(), latLng.getLatitude(), latLng.getUncertaintyMeters());
+          GeocodeRequest.create(latLng.getLng(), latLng.getLat(), latLng.getUncertaintyMeters());
 
   public static Set<String> getIssueTypes(UnaryOperator<GeocodeRequest> transformation) {
     if (transformation == NEGATED_LAT_FN) {

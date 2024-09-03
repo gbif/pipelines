@@ -10,7 +10,6 @@ import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -23,7 +22,6 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.nameparser.NameParserGBIF;
 import org.gbif.nameparser.api.NameParser;
-import org.gbif.nameparser.api.UnparsableNameException;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.core.utils.IdentificationUtils;
 import org.gbif.pipelines.core.utils.ModelUtils;
@@ -143,28 +141,29 @@ public class TaxonomyInterpreter {
       } else if (NameUsageMatchResponse.MatchType.HIGHERRANK == matchType) {
         addIssue(tr, TAXON_MATCH_HIGHERRANK);
       }
-
-      // parse name into pieces - we don't get them from the nub lookup
-      try {
-        if (Objects.nonNull(usageMatch.getUsage())) {
-
-          org.gbif.nameparser.api.Rank rank =
-              org.gbif.nameparser.api.Rank.valueOf(usageMatch.getUsage().getRank());
-          org.gbif.nameparser.api.ParsedName pn =
-              NAME_PARSER.parse(usageMatch.getUsage().getName(), rank, null);
-          tr.setUsageParsedName(toParsedNameAvro(pn));
-        }
-      } catch (UnparsableNameException e) {
-        if (e.getType().isParsable()) {
-          log.warn(
-              "Fail to parse backbone {} name for occurrence {}: {}",
-              e.getType(),
-              er.getId(),
-              e.getName());
-        }
-      } catch (InterruptedException e) {
-        log.warn("Parsing backbone name failed with interruption for occurrence {}", er.getId());
-      }
+      //
+      //      // parse name into pieces - we don't get them from the nub lookup
+      //      try {
+      //        if (Objects.nonNull(usageMatch.getUsage())) {
+      //
+      //          org.gbif.nameparser.api.Rank rank =
+      //              org.gbif.nameparser.api.Rank.valueOf(usageMatch.getUsage().getRank());
+      //          org.gbif.nameparser.api.ParsedName pn =
+      //              NAME_PARSER.parse(usageMatch.getUsage().getName(), rank, null);
+      //          tr.setUsageParsedName(toParsedNameAvro(pn));
+      //        }
+      //      } catch (UnparsableNameException e) {
+      //        if (e.getType().isParsable()) {
+      //          log.warn(
+      //              "Fail to parse backbone {} name for occurrence {}: {}",
+      //              e.getType(),
+      //              er.getId(),
+      //              e.getName());
+      //        }
+      //      } catch (InterruptedException e) {
+      //        log.warn("Parsing backbone name failed with interruption for occurrence {}",
+      // er.getId());
+      //      }
 
       // convert taxon record
       TaxonRecordConverter.convert(usageMatch, tr);

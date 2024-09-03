@@ -68,17 +68,17 @@ public class NameUsageMatchStoreFactory {
 
   @SneakyThrows
   public static KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> create(
-      PipelinesConfig configX) {
-    if (configX == null) {
+      PipelinesConfig config) {
+    if (config == null) {
       return null;
     }
 
-    if (configX.getNameUsageMatch() == null) {
+    if (config.getNameUsageMatch() == null) {
       return null;
     }
 
-    KvConfig kvConfig = configX.getNameUsageMatch();
-    String gbifApi = configX.getGbifApi().getWsUrl();
+    KvConfig kvConfig = config.getNameUsageMatch();
+    String gbifApi = config.getGbifApi().getWsUrl();
     return constructKV(kvConfig, gbifApi);
   }
 
@@ -129,7 +129,7 @@ public class NameUsageMatchStoreFactory {
   public static SerializableSupplier<
           Map<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
       createMultiServiceSupplier(PipelinesConfig config) {
-    return () -> NameUsageMatchStoreFactory.createMultipleServices(config);
+    return () -> createMultipleServices(config);
   }
 
   public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>

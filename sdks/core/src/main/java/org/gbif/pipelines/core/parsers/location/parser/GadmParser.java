@@ -28,7 +28,7 @@ public class GadmParser {
     // Use these to retrieve the GADM areas.
     // Check parameters
     Objects.requireNonNull(latLng);
-    if (latLng.getLatitude() == null || latLng.getLongitude() == null) {
+    if (latLng.getLat() == null || latLng.getLng() == null) {
       throw new IllegalArgumentException("Empty coordinates");
     }
 

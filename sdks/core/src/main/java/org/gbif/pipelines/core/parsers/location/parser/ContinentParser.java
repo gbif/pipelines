@@ -52,7 +52,7 @@ public class ContinentParser {
             lr.getCoordinateUncertaintyInMeters());
 
     // Use these to retrieve the Continent.
-    if (latLng.getLatitude() != null && latLng.getLongitude() != null) {
+    if (latLng.getLat() != null && latLng.getLng() != null) {
       Optional<List<Continent>> continentsKv = getContinentFromCoordinates(latLng, kvStore);
 
       if (continentsKv.isPresent()) {
