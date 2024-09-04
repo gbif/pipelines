@@ -123,7 +123,7 @@ public class NameUsageMatchStoreFactory {
 
   public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
       createSupplier(PipelinesConfig config) {
-    return () -> NameUsageMatchStoreFactory.create(config);
+    return () -> create(config);
   }
 
   public static SerializableSupplier<
@@ -134,6 +134,6 @@ public class NameUsageMatchStoreFactory {
 
   public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
       getInstanceSupplier(PipelinesConfig config) {
-    return () -> NameUsageMatchStoreFactory.getInstance(config);
+    return () -> getInstance(config);
   }
 }
