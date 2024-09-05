@@ -308,6 +308,18 @@
                       <pattern>org.apache.curator</pattern>
                       <shadedPattern>relocation.org.apache.curator</shadedPattern>
                     </relocation>
+
+                    <!-- Transient from core: conflicts with Spark -->
+                    <relocation>
+                      <pattern>com.google.common</pattern>
+                      <shadedPattern>g20.com.google.common</shadedPattern>
+                    </relocation>
+
+                    <!-- Fixes GBIF Name parser cph issue -->
+                    <relocation>
+                      <pattern>it.unimi.dsi</pattern>
+                      <shadedPattern>nameparser.it.unimi.dsi</shadedPattern>
+                    </relocation>
                   </relocations>
                 </configuration>
               </execution>
