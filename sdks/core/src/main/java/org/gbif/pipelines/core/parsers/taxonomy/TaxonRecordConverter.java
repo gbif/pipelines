@@ -44,7 +44,7 @@ public class TaxonRecordConverter {
             .orElse(taxonRecord.getUsage()));
 
     // nom code doesnt seem to be set...
-//    taxonRecord.setNomenclature(convertNomenclature(source.getNomenclature()));
+    //    taxonRecord.setNomenclature(convertNomenclature(source.getNomenclature()));
     taxonRecord.setDiagnostics(convertDiagnostics(source.getDiagnostics()));
 
     // IUCN Red List Category
@@ -63,10 +63,10 @@ public class TaxonRecordConverter {
     }
 
     return RankedName.newBuilder()
-            .setKey(rankedNameApi.getKey())
-            .setName(rankedNameApi.getName())
-            .setRank(rankedNameApi.getRank())
-            .build();
+        .setKey(rankedNameApi.getKey())
+        .setName(rankedNameApi.getName())
+        .setRank(rankedNameApi.getRank())
+        .build();
   }
 
   private static RankedName convertRankedName(NameUsageMatchResponse.RankedName rankedNameApi) {

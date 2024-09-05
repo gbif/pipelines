@@ -239,7 +239,7 @@ public class TaxonomyInterpreter {
     try {
       return Enum.valueOf(enumClass, value.toUpperCase());
     } catch (IllegalArgumentException | NullPointerException e) {
-      return null;  // Return null if conversion fails
+      return null; // Return null if conversion fails
     }
   }
 
