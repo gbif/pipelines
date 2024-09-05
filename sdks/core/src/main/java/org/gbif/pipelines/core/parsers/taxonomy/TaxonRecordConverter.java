@@ -36,14 +36,15 @@ public class TaxonRecordConverter {
 
     taxonRecord.setClassification(classifications);
     taxonRecord.setSynonym(source.isSynonym());
-    taxonRecord.setUsage(convertRankedName(source.getUsage()));
+    taxonRecord.setUsage(convertUsage(source.getUsage()));
+
     // Usage is set as the accepted usage if the accepted usage is null
     taxonRecord.setAcceptedUsage(
-        Optional.ofNullable(convertRankedName(source.getAcceptedUsage()))
+        Optional.ofNullable(convertUsage(source.getAcceptedUsage()))
             .orElse(taxonRecord.getUsage()));
 
     // nom code doesnt seem to be set...
-    //    taxonRecord.setNomenclature(convertNomenclature(source.getNomenclature()));
+//    taxonRecord.setNomenclature(convertNomenclature(source.getNomenclature()));
     taxonRecord.setDiagnostics(convertDiagnostics(source.getDiagnostics()));
 
     // IUCN Red List Category
@@ -54,6 +55,18 @@ public class TaxonRecordConverter {
         .ifPresent(taxonRecord::setIucnRedListCategoryCode);
 
     return taxonRecord;
+  }
+
+  private static RankedName convertUsage(NameUsageMatchResponse.Usage rankedNameApi) {
+    if (rankedNameApi == null) {
+      return null;
+    }
+
+    return RankedName.newBuilder()
+            .setKey(rankedNameApi.getKey())
+            .setName(rankedNameApi.getName())
+            .setRank(rankedNameApi.getRank())
+            .build();
   }
 
   private static RankedName convertRankedName(NameUsageMatchResponse.RankedName rankedNameApi) {
@@ -67,17 +80,6 @@ public class TaxonRecordConverter {
         .setRank(rankedNameApi.getRank())
         .build();
   }
-
-  //  private static Nomenclature convertNomenclature(NameUsageMatch.Nomenclature nomenclatureApi) {
-  //    if (nomenclatureApi == null) {
-  //      return null;
-  //    }
-  //
-  //    return Nomenclature.newBuilder()
-  //        .setId(nomenclatureApi.getId())
-  //        .setSource(nomenclatureApi.getSource())
-  //        .build();
-  //  }
 
   private static Diagnostic convertDiagnostics(NameUsageMatchResponse.Diagnostics diagnosticsApi) {
     if (diagnosticsApi == null) {

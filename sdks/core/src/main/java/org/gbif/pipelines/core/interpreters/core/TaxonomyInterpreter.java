@@ -141,29 +141,8 @@ public class TaxonomyInterpreter {
       } else if (NameUsageMatchResponse.MatchType.HIGHERRANK == matchType) {
         addIssue(tr, TAXON_MATCH_HIGHERRANK);
       }
-      //
-      //      // parse name into pieces - we don't get them from the nub lookup
-      //      try {
-      //        if (Objects.nonNull(usageMatch.getUsage())) {
-      //
-      //          org.gbif.nameparser.api.Rank rank =
-      //              org.gbif.nameparser.api.Rank.valueOf(usageMatch.getUsage().getRank());
-      //          org.gbif.nameparser.api.ParsedName pn =
-      //              NAME_PARSER.parse(usageMatch.getUsage().getName(), rank, null);
-      //          tr.setUsageParsedName(toParsedNameAvro(pn));
-      //        }
-      //      } catch (UnparsableNameException e) {
-      //        if (e.getType().isParsable()) {
-      //          log.warn(
-      //              "Fail to parse backbone {} name for occurrence {}: {}",
-      //              e.getType(),
-      //              er.getId(),
-      //              e.getName());
-      //        }
-      //      } catch (InterruptedException e) {
-      //        log.warn("Parsing backbone name failed with interruption for occurrence {}",
-      // er.getId());
-      //      }
+
+      tr.setUsageParsedName(toParsedNameAvro(usageMatch.getUsage()));
 
       // convert taxon record
       TaxonRecordConverter.convert(usageMatch, tr);
@@ -202,7 +181,7 @@ public class TaxonomyInterpreter {
    * Converts a {@link org.gbif.nameparser.api.ParsedName} into {@link
    * org.gbif.pipelines.io.avro.ParsedName}.
    */
-  private static ParsedName toParsedNameAvro(org.gbif.nameparser.api.ParsedName pn) {
+  private static ParsedName toParsedNameAvro(NameUsageMatchResponse.Usage pn) {
     ParsedName.Builder builder =
         ParsedName.newBuilder()
             .setAbbreviated(pn.isAbbreviated())
@@ -238,31 +217,39 @@ public class TaxonomyInterpreter {
     Optional.ofNullable(pn.getCombinationAuthorship())
         .ifPresent(authorship -> builder.setCombinationAuthorship(toAuthorshipAvro(authorship)));
     Optional.ofNullable(pn.getCode())
-        .ifPresent(code -> builder.setCode(NomCode.valueOf(code.name())));
+        .ifPresent(code -> builder.setCode(convertToEnum(NomCode.class, code)));
     Optional.ofNullable(pn.getType())
-        .ifPresent(type -> builder.setType(NameType.valueOf(type.name())));
+        .ifPresent(type -> builder.setType(convertToEnum(NameType.class, type)));
     Optional.ofNullable(pn.getNotho())
-        .ifPresent(notho -> builder.setNotho(NamePart.valueOf(notho.name())));
+        .ifPresent(notho -> builder.setNotho(convertToEnum(NamePart.class, notho)));
     Optional.ofNullable(pn.getRank())
-        .ifPresent(rank -> builder.setRank(NameRank.valueOf(rank.name())));
+        .ifPresent(rank -> builder.setRank(convertToEnum(NameRank.class, rank)));
     Optional.ofNullable(pn.getState())
-        .ifPresent(state -> builder.setState(State.valueOf(state.name())));
+        .ifPresent(state -> builder.setState(convertToEnum(State.class, state)));
     Optional.ofNullable(pn.getEpithetQualifier())
         .map(
             eq ->
                 eq.entrySet().stream()
-                    .collect(Collectors.toMap(e -> e.getKey().name(), Map.Entry::getValue)))
+                    .collect(Collectors.toMap(e -> e.getKey(), Map.Entry::getValue)))
         .ifPresent(builder::setEpithetQualifier);
     return builder.build();
+  }
+
+  public static <T extends Enum<T>> T convertToEnum(Class<T> enumClass, String value) {
+    try {
+      return Enum.valueOf(enumClass, value.toUpperCase());
+    } catch (IllegalArgumentException | NullPointerException e) {
+      return null;  // Return null if conversion fails
+    }
   }
 
   /**
    * Converts a {@link org.gbif.nameparser.api.Authorship} into {@link
    * org.gbif.pipelines.io.avro.Authorship}.
    */
-  private static Authorship toAuthorshipAvro(org.gbif.nameparser.api.Authorship authorship) {
+  private static Authorship toAuthorshipAvro(NameUsageMatchResponse.Authorship authorship) {
     return Authorship.newBuilder()
-        .setEmpty(authorship.isEmpty())
+        .setEmpty(authorship.getAuthors().isEmpty() && authorship.getExAuthors().isEmpty())
         .setYear(authorship.getYear())
         .setAuthors(authorship.getAuthors())
         .setExAuthors(authorship.getExAuthors())

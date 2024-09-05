@@ -436,6 +436,7 @@ public class JsonConverter {
 
   public static GbifClassification convertToGbifClassification(
       ExtendedRecord verbatim, TaxonRecord taxon) {
+
     GbifClassification.Builder classificationBuilder =
         GbifClassification.newBuilder()
             .setSynonym(taxon.getSynonym())
