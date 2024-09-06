@@ -51,7 +51,7 @@ public class TaxonRecordConverter {
     Optional.ofNullable(source.getAdditionalStatus()).orElseGet(List::of).stream()
         .filter(status -> status.getGbifKey().equals("19491596-35ae-4a91-9a98-85cf505f1bd3"))
         .findFirst()
-        .map(status -> status.getCategory())
+        .map(status -> status.getStatus())
         .ifPresent(taxonRecord::setIucnRedListCategoryCode);
 
     return taxonRecord;
