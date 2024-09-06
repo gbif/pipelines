@@ -47,7 +47,8 @@
     "fields" : [
       {"name" : "key", "type" : ["null", "string"], "default" : null},
       {"name" : "name", "type" : ["null", "string"], "default" : null},
-      {"name" : "rank", "type" : ["null", "string"], "default" : null}
+      {"name" : "rank", "type" : ["null", "string"], "default" : null},
+      {"name" : "authorship", "type" : ["null", "string"], "default" : null}
     ]
   },
   {

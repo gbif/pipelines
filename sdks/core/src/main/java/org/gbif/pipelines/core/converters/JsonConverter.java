@@ -431,6 +431,9 @@ public class JsonConverter {
     JsonConverter.convertDiagnostic(taxon.getDiagnostics())
         .ifPresent(classificationBuilder::setDiagnostics);
 
+    JsonConverter.convertClassificationPath(taxon)
+        .ifPresent(classificationBuilder::setClassificationPath);
+
     return classificationBuilder.build();
   }
 

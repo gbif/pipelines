@@ -66,6 +66,7 @@ public class TaxonRecordConverter {
         .setKey(rankedNameApi.getKey())
         .setName(rankedNameApi.getName())
         .setRank(rankedNameApi.getRank())
+        .setAuthorship(rankedNameApi.getAuthorship())
         .build();
   }
 
