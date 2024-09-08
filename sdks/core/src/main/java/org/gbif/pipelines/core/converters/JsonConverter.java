@@ -322,6 +322,7 @@ public class JsonConverter {
                     .setName(rn.getName())
                     .setRank(rn.getRank())
                     .setKey(rn.getKey())
+                    .setAuthorship(rn.getAuthorship())
                     .build());
   }
 
@@ -523,9 +524,11 @@ public class JsonConverter {
     }
 
     // Raw to index classification
-    extractOptValue(verbatim, DwcTerm.taxonID).ifPresent(classificationBuilder::setTaxonID);
-    extractOptValue(verbatim, DwcTerm.scientificName)
-        .ifPresent(classificationBuilder::setVerbatimScientificName);
+    if (verbatim != null) {
+      extractOptValue(verbatim, DwcTerm.taxonID).ifPresent(classificationBuilder::setTaxonID);
+      extractOptValue(verbatim, DwcTerm.scientificName)
+          .ifPresent(classificationBuilder::setVerbatimScientificName);
+    }
 
     return classificationBuilder.build();
   }
