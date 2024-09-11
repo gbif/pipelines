@@ -30,4 +30,22 @@ public class KvConfig implements Serializable {
   private WsConfig api;
 
   private long cacheExpiryTimeInSeconds = 300L;
+
+  private LoaderRetryConfig loaderRetryConfig;
+
+  @Data
+  @NoArgsConstructor
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class LoaderRetryConfig implements Serializable {
+
+    private static final long serialVersionUID = 9165679151024245962L;
+
+    private Integer maxAttempts = 3;
+
+    private Long initialIntervalMillis = 1_000L;
+
+    private Double multiplier = 1.5d;
+
+    private Double randomizationFactor = 0.5d;
+  }
 }
