@@ -572,7 +572,7 @@ public class HdfsViewPipeline {
     PipelineResult result = p.run();
 
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
-      Mutex.Action action = () -> HdfsViewAvroUtils.cleanAndMove(options);
+      Mutex.Action action = () -> HdfsViewAvroUtils.copyAndOverwrite(options);
       if (options.getTestMode()) {
         action.execute();
       } else {
