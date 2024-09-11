@@ -7,8 +7,6 @@ import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.kvs.species.*;
-import org.gbif.kvs.species.NameUsageMatchRequest;
-import org.gbif.pipelines.core.converters.JsonConverter;
 import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.MatchType;
 import org.gbif.pipelines.io.avro.RankedName;

@@ -437,8 +437,7 @@ public class JsonConverter {
                             org.gbif.pipelines.io.avro.RankedName::getRank,
                             org.gbif.pipelines.io.avro.RankedName::getKey,
                             (existing, replacement) -> existing,
-                            LinkedHashMap::new
-                )))
+                            LinkedHashMap::new)))
             .setTaxonKeys(JsonConverter.convertTaxonKey(taxon));
 
     JsonConverter.convertRankedName(taxon.getUsage()).ifPresent(classificationBuilder::setUsage);
