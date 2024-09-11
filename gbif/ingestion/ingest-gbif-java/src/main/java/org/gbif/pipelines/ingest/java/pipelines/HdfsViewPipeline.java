@@ -853,16 +853,12 @@ public class HdfsViewPipeline {
         .write();
 
     // Move files
-    Mutex.Action action = () -> HdfsViewAvroUtils.cleanAndMove(options);
+    Mutex.Action action = () -> HdfsViewAvroUtils.copyAndOverwrite(options);
     if (options.getTestMode()) {
       action.execute();
     } else {
       SharedLockUtils.doHdfsPrefixLock(options, action);
     }
-    // Delete root directory of table records
-    FsUtils.deleteIfExist(
-        hdfsConfigs, PathBuilder.buildFilePathViewUsingInputPath(options, recordType));
-
     MetricsHandler.saveCountersToInputPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
   }
