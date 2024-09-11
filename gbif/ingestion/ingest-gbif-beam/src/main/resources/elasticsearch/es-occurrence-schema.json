@@ -384,37 +384,6 @@
       "issues": {"type": "keyword"},
       "notIssues": {"type": "keyword"},
       "extensions": {"type": "keyword"},
-      "classifications" : {
-        "type": "nested",
-        "properties": {
-          "classification": {
-            "properties": {
-              "acceptedUsage": {
-                "properties": {
-                  "key": {"type": "keyword" },
-                  "name": {"type": "text", "index":  false, "boost": 100.0, "copy_to": "all"},
-                  "rank": {"type": "keyword", "index":  false}
-                }
-              },
-              "classification": {
-                "properties": {
-                  "key": {"type": "keyword" },
-                  "name": {"type": "text", "boost": 90.0, "copy_to": "all"},
-                  "rank": {"type": "keyword"}
-                }
-              },
-              "classificationPath": {"type": "keyword"},
-              "diagnostics": {
-                "properties": {
-                  "matchType": {"type": "keyword"},
-                  "note": {"type": "text","index":  false},
-                  "status": {"type": "keyword"}
-                }
-              }
-            }
-          }
-        }
-      },
       "gbifClassification": {
         "properties": {
           "acceptedUsage": {

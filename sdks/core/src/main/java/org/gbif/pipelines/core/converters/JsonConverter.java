@@ -411,10 +411,10 @@ public class JsonConverter {
     }
   }
 
-  public static List<Classification> convertToClassifications(MultiTaxonRecord taxon) {
+  public static Map<String, Classification> convertToClassifications(MultiTaxonRecord taxon) {
     return taxon.getTaxonRecords().stream()
-        .map(JsonConverter::convertToClassification)
-        .collect(Collectors.toList());
+        .collect(
+            Collectors.toMap(TaxonRecord::getDatasetKey, JsonConverter::convertToClassification));
   }
 
   public static Classification convertToClassification(TaxonRecord taxon) {
@@ -422,7 +422,24 @@ public class JsonConverter {
     Classification.Builder classificationBuilder =
         Classification.newBuilder()
             .setDatasetKey(taxon.getDatasetKey())
-            .setClassification(JsonConverter.convertRankedNames(taxon.getClassification()));
+            .setClassification(
+                taxon.getClassification().stream()
+                    .collect(
+                        Collectors.toMap(
+                            org.gbif.pipelines.io.avro.RankedName::getRank,
+                            org.gbif.pipelines.io.avro.RankedName::getName,
+                            (existing, replacement) -> existing,
+                            LinkedHashMap::new)))
+            .setClassificationKeys(
+                taxon.getClassification().stream()
+                    .collect(
+                        Collectors.toMap(
+                            org.gbif.pipelines.io.avro.RankedName::getRank,
+                            org.gbif.pipelines.io.avro.RankedName::getKey,
+                            (existing, replacement) -> existing,
+                            LinkedHashMap::new
+                )))
+            .setTaxonKeys(JsonConverter.convertTaxonKey(taxon));
 
     JsonConverter.convertRankedName(taxon.getUsage()).ifPresent(classificationBuilder::setUsage);
 

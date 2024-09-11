@@ -219,7 +219,19 @@
       {"name":"classificationPath","type":["null","string"],"default":null,"doc":""},
       {"name":"usage","type":["null","RankedName"],"default":null,"doc":""},
       {"name":"acceptedUsage","type":["null","RankedName"],"default":null,"doc":""},
-      {"name":"classification","type":{ "type":"array","items":"RankedName" },"default":[]},
+      {"name":"classification",
+        "type":{ "type":"map","values":"string" },
+        "default": {}
+      },
+      {"name":"classificationKeys",
+        "type":{ "type":"map","values":"string" },
+        "default": {}
+      },
+      {"name":"taxonKeys",
+        "type":{"type":"array","items":"string"},
+        "default":[]
+      },
+      {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""},
       {"name":"diagnostics","type":["null","Diagnostic"],"default":null,"doc":""}
     ]
   },

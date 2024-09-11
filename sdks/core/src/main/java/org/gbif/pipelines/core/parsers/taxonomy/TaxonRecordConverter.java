@@ -14,40 +14,11 @@ import org.gbif.pipelines.io.avro.MatchType;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.Status;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.json.*;
-import org.gbif.pipelines.io.avro.json.GbifClassification;
-import org.gbif.rest.client.RestClientFactory;
-import org.gbif.rest.client.configuration.*;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
-import org.gbif.rest.client.species.NameUsageMatchingService;
 
 /** Adapts a {@link NameUsageMatchResponse} into a {@link TaxonRecord} */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TaxonRecordConverter {
-
-  public static void main(String[] args) {
-
-    NameUsageMatchingService service =
-        RestClientFactory.createNameMatchService(
-            ClientConfiguration.builder()
-                .withBaseApiUrl("http://localhost:8555/")
-                .withTimeOut(60000L)
-                .withFileCacheMaxSizeMb(64L)
-                .build());
-
-    NameUsageMatchResponse nameUsageMatchResponse =
-        service.match(NameUsageMatchRequest.builder().withScientificName("Tringa totanus").build());
-    TaxonRecord taxonRecord = new TaxonRecord();
-    taxonRecord.setDatasetKey("test");
-    convert(nameUsageMatchResponse, taxonRecord);
-
-    System.out.println(taxonRecord);
-
-    GbifClassification c1 = JsonConverter.convertToGbifClassification(null, taxonRecord);
-    Classification c2 = JsonConverter.convertToClassification(taxonRecord);
-    System.out.println(c1);
-    System.out.println(c2);
-  }
 
   /**
    * I modify the parameter instead of creating a new one and returning it because the lambda
