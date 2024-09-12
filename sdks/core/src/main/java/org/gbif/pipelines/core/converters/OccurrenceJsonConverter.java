@@ -290,7 +290,8 @@ public class OccurrenceJsonConverter {
   }
 
   private void mapMultiTaxonRecord(OccurrenceJsonRecord.Builder builder) {
-    Map<String, Classification> classifications = JsonConverter.convertToClassifications(multiTaxon);
+    Map<String, Classification> classifications =
+        JsonConverter.convertToClassifications(multiTaxon);
     builder.setClassifications(classifications);
     builder.setAssociatedClassifications(new ArrayList<>(classifications.keySet()));
   }
