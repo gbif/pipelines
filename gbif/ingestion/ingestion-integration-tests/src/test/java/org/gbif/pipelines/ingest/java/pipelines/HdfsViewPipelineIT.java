@@ -132,10 +132,10 @@ public class HdfsViewPipelineIT {
     assertFile(OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
     assertFile(MeasurementOrFactTable.class, outputFn.apply("measurementorfacttable"));
 
-    assertFileExistFalse(outputFn.apply("extendedmeasurementorfacttable"));
-    assertFileExistFalse(outputFn.apply("germplasmmeasurementtrialtable"));
-    assertFileExistFalse(outputFn.apply("permittable"));
-    assertFileExistFalse(outputFn.apply("loantable"));
+    assertFileExists(outputFn.apply("extendedmeasurementorfacttable"));
+    assertFileExists(outputFn.apply("germplasmmeasurementtrialtable"));
+    assertFileExists(outputFn.apply("permittable"));
+    assertFileExists(outputFn.apply("loantable"));
   }
 
   @Test
@@ -204,11 +204,11 @@ public class HdfsViewPipelineIT {
                 + "_147.avro";
 
     assertFile(OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
-    assertFileExistFalse(outputFn.apply("measurementorfacttable"));
-    assertFileExistFalse(outputFn.apply("extendedmeasurementorfacttable"));
-    assertFileExistFalse(outputFn.apply("germplasmmeasurementtrialtable"));
-    assertFileExistFalse(outputFn.apply("permittable"));
-    assertFileExistFalse(outputFn.apply("loantable"));
+    assertFileExists(outputFn.apply("measurementorfacttable"));
+    assertFileExists(outputFn.apply("extendedmeasurementorfacttable"));
+    assertFileExists(outputFn.apply("germplasmmeasurementtrialtable"));
+    assertFileExists(outputFn.apply("permittable"));
+    assertFileExists(outputFn.apply("loantable"));
   }
 
   @SneakyThrows
@@ -330,8 +330,8 @@ public class HdfsViewPipelineIT {
     }
   }
 
-  private void assertFileExistFalse(String output) {
-    Assert.assertFalse(new File(output).exists());
+  private void assertFileExists(String output) {
+    Assert.assertTrue(new File(output).exists());
   }
 
   private <T extends SpecificRecordBase> void assertFile(Class<T> clazz, String output)
