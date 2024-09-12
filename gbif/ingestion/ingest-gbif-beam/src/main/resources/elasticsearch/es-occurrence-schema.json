@@ -478,7 +478,7 @@
           "iucnRedListCategoryCode": {"type": "keyword"}
         }
       },
-
+      "associatedClassifications": {"type": "keyword"},
       "mediaTypes": {"type": "keyword", "copy_to": "all"},
       "mediaLicenses": {"type": "keyword", "copy_to": "all"},
       "multimediaItems": {"type": "nested", "enabled": false,

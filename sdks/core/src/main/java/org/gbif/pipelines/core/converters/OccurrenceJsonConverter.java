@@ -2,13 +2,7 @@ package org.gbif.pipelines.core.converters;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Builder;
@@ -28,6 +22,7 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
+import org.gbif.pipelines.io.avro.json.Classification;
 import org.gbif.pipelines.io.avro.json.GeologicalContext;
 import org.gbif.pipelines.io.avro.json.GeologicalRange;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
@@ -295,7 +290,9 @@ public class OccurrenceJsonConverter {
   }
 
   private void mapMultiTaxonRecord(OccurrenceJsonRecord.Builder builder) {
-    builder.setClassifications(JsonConverter.convertToClassifications(multiTaxon));
+    Map<String, Classification> classifications = JsonConverter.convertToClassifications(multiTaxon);
+    builder.setClassifications(classifications);
+    builder.setAssociatedClassifications(new ArrayList<>(classifications.keySet()));
   }
 
   private void mapGrscicollRecord(OccurrenceJsonRecord.Builder builder) {
