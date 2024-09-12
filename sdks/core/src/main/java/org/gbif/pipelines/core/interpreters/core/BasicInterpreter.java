@@ -30,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceStatus;
-import org.gbif.api.vocabulary.Sex;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.core.Parsable;
 import org.gbif.common.parsers.core.ParseResult;
@@ -68,20 +67,6 @@ public class BasicInterpreter {
         };
 
     SimpleTypeParser.parsePositiveInt(er, DwcTerm.individualCount, fn);
-  }
-
-  /** {@link DwcTerm#sex} interpretation. */
-  public static void interpretSex(ExtendedRecord er, BasicRecord br) {
-
-    Function<ParseResult<Sex>, BasicRecord> fn =
-        parseResult -> {
-          if (parseResult.isSuccessful()) {
-            br.setSex(parseResult.getPayload().name());
-          }
-          return br;
-        };
-
-    VocabularyParser.sexParser().map(er, fn);
   }
 
   /** {@link DwcTerm#basisOfRecord} interpretation. */

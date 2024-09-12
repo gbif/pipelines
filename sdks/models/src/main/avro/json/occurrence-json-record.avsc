@@ -69,7 +69,7 @@
       {"name":"collectionKey","type":["null","string"],"default":null,"doc":""},
       {"name":"isClustered","type":["null","boolean"],"default":null,"doc":""},
       {"name":"basisOfRecord","type":["null","string"],"default":null,"doc":""},
-      {"name":"sex","type":["null","string"],"default":null,"doc":""},
+      {"name":"sex","type":["null","VocabularyConcept"],"default":null,"doc":""},
       {"name":"lifeStage","type":["null","VocabularyConcept"],"default":null,"doc":""},
       {"name":"establishmentMeans","type":["null","VocabularyConcept"],"default":null,"doc":""},
       {"name":"pathway","type":["null","VocabularyConcept"],"default":null,"doc":""},

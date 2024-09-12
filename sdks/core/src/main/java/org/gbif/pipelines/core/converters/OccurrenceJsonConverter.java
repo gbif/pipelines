@@ -123,7 +123,6 @@ public class OccurrenceJsonConverter {
     // Simple
     builder
         .setBasisOfRecord(basic.getBasisOfRecord())
-        .setSex(basic.getSex())
         .setIndividualCount(basic.getIndividualCount())
         .setTypifiedName(basic.getTypifiedName())
         .setSampleSizeValue(basic.getSampleSizeValue())
@@ -155,6 +154,7 @@ public class OccurrenceJsonConverter {
     JsonConverter.convertVocabularyConcept(basic.getPathway()).ifPresent(builder::setPathway);
     JsonConverter.convertVocabularyConceptList(basic.getTypeStatus())
         .ifPresent(builder::setTypeStatus);
+    JsonConverter.convertVocabularyConcept(basic.getSex()).ifPresent(builder::setSex);
 
     // License
     JsonConverter.convertLicense(basic.getLicense()).ifPresent(builder::setLicense);

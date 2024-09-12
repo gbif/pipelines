@@ -29,7 +29,26 @@ public class VocabularyInterpreterTest {
           .vocabularyLookup(
               DwcTerm.typeStatus.qualifiedName(),
               new MockVocabularyLookups.TypeStatusMockVocabularyLookup())
+          .vocabularyLookup(
+              DwcTerm.sex.qualifiedName(), new MockVocabularyLookups.SexMockVocabularyLookup())
           .build();
+
+  @Test
+  public void sexTest() {
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.sex.qualifiedName(), "male");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    VocabularyInterpreter.interpretSex(vocabularyService).accept(er, br);
+
+    // Should
+    Assert.assertEquals("male", br.getSex().getConcept());
+    Assert.assertEquals("male", br.getSex().getLineage().get(0));
+  }
 
   @Test
   public void lifeStageEmptyValueTest() {

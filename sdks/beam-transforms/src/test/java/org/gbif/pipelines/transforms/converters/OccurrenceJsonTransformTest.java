@@ -156,7 +156,11 @@ public class OccurrenceJsonTransformTest {
             .setRelativeOrganismQuantity(0.001d)
             .setLicense(License.CC_BY_NC_4_0.name())
             .setOccurrenceStatus(OccurrenceStatus.PRESENT.name())
-            .setSex("sex")
+            .setSex(
+                VocabularyConcept.newBuilder()
+                    .setConcept("sex")
+                    .setLineage(Collections.singletonList("sex"))
+                    .build())
             .setReferences("setReferences")
             .setTypifiedName("setTypifiedName")
             .setIndividualCount(10)

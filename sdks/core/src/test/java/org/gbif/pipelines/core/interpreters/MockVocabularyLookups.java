@@ -35,6 +35,29 @@ public class MockVocabularyLookups {
     public void close() {}
   }
 
+  public static class SexMockVocabularyLookup implements VocabularyLookup {
+
+    @Override
+    public Optional<LookupConcept> lookup(String s) {
+      return lookup(s, null);
+    }
+
+    @Override
+    public Optional<LookupConcept> lookup(String s, LanguageRegion languageRegion) {
+      if ("unknown".equalsIgnoreCase(s)) {
+        return Optional.empty();
+      }
+
+      Concept concept = new Concept();
+      concept.setName(s);
+      LookupConcept lookupConcept = LookupConcept.of(concept, new ArrayList<>(1), null);
+      return Optional.of(lookupConcept);
+    }
+
+    @Override
+    public void close() {}
+  }
+
   public static class TypeStatusMockVocabularyLookup implements VocabularyLookup {
 
     @Override

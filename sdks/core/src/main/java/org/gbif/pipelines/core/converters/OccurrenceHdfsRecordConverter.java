@@ -426,7 +426,6 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setBasisofrecord(basicRecord.getBasisOfRecord());
     occurrenceHdfsRecord.setIndividualcount(basicRecord.getIndividualCount());
     occurrenceHdfsRecord.setReferences(basicRecord.getReferences());
-    occurrenceHdfsRecord.setSex(basicRecord.getSex());
     occurrenceHdfsRecord.setTypifiedname(basicRecord.getTypifiedName());
     occurrenceHdfsRecord.setOrganismquantity(basicRecord.getOrganismQuantity());
     occurrenceHdfsRecord.setOrganismquantitytype(basicRecord.getOrganismQuantityType());
@@ -445,6 +444,15 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setAssociatedsequences(basicRecord.getAssociatedSequences());
 
     // Vocabulary controlled
+    Optional.ofNullable(basicRecord.getSex())
+        .ifPresent(
+            c ->
+                occurrenceHdfsRecord.setSex(
+                    Sex.newBuilder()
+                        .setConcept(c.getConcept())
+                        .setLineage(c.getLineage())
+                        .build()));
+
     Optional.ofNullable(basicRecord.getEstablishmentMeans())
         .ifPresent(
             c ->

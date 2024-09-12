@@ -94,6 +94,13 @@ public class VocabularyInterpreter {
                             }));
   }
 
+  /** {@link DwcTerm#sex} interpretation. */
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretSex(
+      VocabularyService vocabularyService) {
+    return (er, br) ->
+        interpretVocabulary(er, DwcTerm.sex, vocabularyService).ifPresent(br::setSex);
+  }
+
   private static Optional<VocabularyConcept> interpretVocabulary(
       ExtendedRecord er, Term term, VocabularyService vocabularyService) {
     return interpretVocabulary(term, extractNullAwareValue(er, term), vocabularyService, null);

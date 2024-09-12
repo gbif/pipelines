@@ -21,7 +21,6 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MediaType;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
-import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.ThreatStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
@@ -403,7 +402,11 @@ public class OccurrenceHdfsRecordConverterTest {
     long now = new Date().getTime();
     BasicRecord basicRecord = new BasicRecord();
     basicRecord.setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name());
-    basicRecord.setSex(Sex.HERMAPHRODITE.name());
+    basicRecord.setSex(
+        VocabularyConcept.newBuilder()
+            .setConcept("Mixed")
+            .setLineage(Collections.singletonList("Mixed"))
+            .build());
     basicRecord.setIndividualCount(99);
     basicRecord.setTypeStatus(
         Arrays.asList(
@@ -451,7 +454,7 @@ public class OccurrenceHdfsRecordConverterTest {
 
     // Should
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
-    Assert.assertEquals(Sex.HERMAPHRODITE.name(), hdfsRecord.getSex());
+    Assert.assertEquals("Mixed", hdfsRecord.getSex().getLineage().get(0));
     Assert.assertEquals(Integer.valueOf(99), hdfsRecord.getIndividualcount());
     Assert.assertEquals(
         org.gbif.pipelines.io.avro.TypeStatus.newBuilder()

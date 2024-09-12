@@ -38,7 +38,7 @@
       {"name": "coreId","type":["null","string"],"default":null, "doc":"Id of the core record when this record belongs to an extension"},
       {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
       {"name": "basisOfRecord", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/basisOfRecord"},
-      {"name": "sex", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sex"},
+      {"name": "sex", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sex"},
       {"name": "lifeStage", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/lifeStage"},
       {"name": "establishmentMeans", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/establishmentMeans"},
       {"name": "degreeOfEstablishment", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/degreeOfEstablishment"},

@@ -42,8 +42,14 @@
       "isClustered": {"type": "boolean"},
 
       "basisOfRecord": {"type": "keyword"},
-      "sex": {"type": "keyword", "copy_to": "all"},
 
+      "sex": {
+        "type": "object",
+        "properties": {
+          "concept": {"type": "keyword"},
+          "lineage": {"type": "keyword", "copy_to": "all"}
+        }
+      },
       "lifeStage": {
         "type": "object",
         "properties": {
