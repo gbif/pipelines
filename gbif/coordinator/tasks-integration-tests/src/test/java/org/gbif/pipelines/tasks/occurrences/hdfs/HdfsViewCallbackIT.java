@@ -105,25 +105,25 @@ public class HdfsViewCallbackIT {
 
     assertTrue(Files.exists(prFn.apply("occurrence")));
 
-    assertFalse(Files.exists(prFn.apply("amplificationtable")));
-    assertFalse(Files.exists(prFn.apply("chronometricagetable")));
-    assertFalse(Files.exists(prFn.apply("cloningtable")));
-    assertFalse(Files.exists(prFn.apply("extendedmeasurementorfacttable")));
-    assertFalse(Files.exists(prFn.apply("gelimagetable")));
-    assertFalse(Files.exists(prFn.apply("germplasmaccessiontable")));
-    assertFalse(Files.exists(prFn.apply("germplasmmeasurementscoretable")));
-    assertFalse(Files.exists(prFn.apply("germplasmmeasurementtraittable")));
-    assertFalse(Files.exists(prFn.apply("germplasmmeasurementtrialtable")));
-    assertFalse(Files.exists(prFn.apply("identificationtable")));
-    assertFalse(Files.exists(prFn.apply("identifiertable")));
-    assertFalse(Files.exists(prFn.apply("loantable")));
-    assertFalse(Files.exists(prFn.apply("materialsampletable")));
-    assertFalse(Files.exists(prFn.apply("measurementorfacttable")));
-    assertFalse(Files.exists(prFn.apply("permittable")));
-    assertFalse(Files.exists(prFn.apply("preparationtable")));
-    assertFalse(Files.exists(prFn.apply("preservationtable")));
-    assertFalse(Files.exists(prFn.apply("referencetable")));
-    assertFalse(Files.exists(prFn.apply("resourcerelationshiptable")));
+    assertTrue(Files.exists(prFn.apply("amplificationtable")));
+    assertTrue(Files.exists(prFn.apply("chronometricagetable")));
+    assertTrue(Files.exists(prFn.apply("cloningtable")));
+    assertTrue(Files.exists(prFn.apply("extendedmeasurementorfacttable")));
+    assertTrue(Files.exists(prFn.apply("gelimagetable")));
+    assertTrue(Files.exists(prFn.apply("germplasmaccessiontable")));
+    assertTrue(Files.exists(prFn.apply("germplasmmeasurementscoretable")));
+    assertTrue(Files.exists(prFn.apply("germplasmmeasurementtraittable")));
+    assertTrue(Files.exists(prFn.apply("germplasmmeasurementtrialtable")));
+    assertTrue(Files.exists(prFn.apply("identificationtable")));
+    assertTrue(Files.exists(prFn.apply("identifiertable")));
+    assertTrue(Files.exists(prFn.apply("loantable")));
+    assertTrue(Files.exists(prFn.apply("materialsampletable")));
+    assertTrue(Files.exists(prFn.apply("measurementorfacttable")));
+    assertTrue(Files.exists(prFn.apply("permittable")));
+    assertTrue(Files.exists(prFn.apply("preparationtable")));
+    assertTrue(Files.exists(prFn.apply("preservationtable")));
+    assertTrue(Files.exists(prFn.apply("referencetable")));
+    assertTrue(Files.exists(prFn.apply("resourcerelationshiptable")));
   }
 
   @Test
