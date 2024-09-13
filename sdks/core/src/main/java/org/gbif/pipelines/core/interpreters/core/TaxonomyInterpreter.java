@@ -69,7 +69,7 @@ public class TaxonomyInterpreter {
 
       ModelUtils.checkNullOrEmpty(er);
       NameUsageMatchRequest nameUsageMatchRequest = createNameUsageMatchRequest(er);
-      createTaxonRecord(nameUsageMatchRequest, kvStore, er, tr);
+      createTaxonRecord(nameUsageMatchRequest, kvStore, tr);
       tr.setId(er.getId());
     };
   }
@@ -103,7 +103,6 @@ public class TaxonomyInterpreter {
   protected static void createTaxonRecord(
       NameUsageMatchRequest nameUsageMatchRequest,
       KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore,
-      ExtendedRecord er,
       TaxonRecord tr) {
 
     NameUsageMatchResponse usageMatch = null;

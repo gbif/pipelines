@@ -48,7 +48,7 @@ public class MultiTaxonomyInterpreter {
         String datasetKey = kvStoreEntry.getKey();
         TaxonRecord taxonRecord =
             TaxonRecord.newBuilder().setId(er.getId()).setDatasetKey(datasetKey).build();
-        createTaxonRecord(nameUsageMatchRequest, kvStoreEntry.getValue(), er, taxonRecord);
+        createTaxonRecord(nameUsageMatchRequest, kvStoreEntry.getValue(), taxonRecord);
         trs.add(taxonRecord);
       }
 
