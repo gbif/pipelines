@@ -38,7 +38,7 @@ public class HdfsViewAvroUtils {
     copyAndOverwrite(options, OCCURRENCE);
   }
 
-  private static void cleanAndMoveTables(InterpretationPipelineOptions opt, RecordType coreType) {
+  private static void copyAndOverwriteTables(InterpretationPipelineOptions opt, RecordType coreType) {
 
     copyAndOverwrite(opt, coreType, MEASUREMENT_OR_FACT_TABLE, Extension.MEASUREMENT_OR_FACT);
     copyAndOverwrite(opt, coreType, IDENTIFICATION_TABLE, Extension.IDENTIFICATION);
@@ -72,10 +72,10 @@ public class HdfsViewAvroUtils {
   private static void copyAll(InterpretationPipelineOptions options) {
     if (options.getCoreRecordType() == OCCURRENCE) {
       copyAndOverwrite(options, OCCURRENCE);
-      cleanAndMoveTables(options, OCCURRENCE);
+      copyAndOverwriteTables(options, OCCURRENCE);
     } else if (options.getCoreRecordType() == EVENT) {
       copyAndOverwrite(options, EVENT);
-      cleanAndMoveTables(options, EVENT);
+      copyAndOverwriteTables(options, EVENT);
     }
   }
 

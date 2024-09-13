@@ -134,8 +134,10 @@ public class HdfsViewPipelineIT {
 
     assertFileExists(outputFn.apply("extendedmeasurementorfacttable"));
     assertFileExists(outputFn.apply("germplasmmeasurementtrialtable"));
-    assertFileExists(outputFn.apply("permittable"));
-    assertFileExists(outputFn.apply("loantable"));
+
+    //Next two interpretations were not in the list of interpretation types param, --interpretationTypes
+    assertFileNotExists(outputFn.apply("permittable"));
+    assertFileNotExists(outputFn.apply("loantable"));
   }
 
   @Test
@@ -204,11 +206,13 @@ public class HdfsViewPipelineIT {
                 + "_147.avro";
 
     assertFile(OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
-    assertFileExists(outputFn.apply("measurementorfacttable"));
-    assertFileExists(outputFn.apply("extendedmeasurementorfacttable"));
-    assertFileExists(outputFn.apply("germplasmmeasurementtrialtable"));
-    assertFileExists(outputFn.apply("permittable"));
-    assertFileExists(outputFn.apply("loantable"));
+
+    //Tables were not requested in the interpretation types
+    assertFileNotExists(outputFn.apply("measurementorfacttable"));
+    assertFileNotExists(outputFn.apply("extendedmeasurementorfacttable"));
+    assertFileNotExists(outputFn.apply("germplasmmeasurementtrialtable"));
+    assertFileNotExists(outputFn.apply("permittable"));
+    assertFileNotExists(outputFn.apply("loantable"));
   }
 
   @SneakyThrows
@@ -332,6 +336,10 @@ public class HdfsViewPipelineIT {
 
   private void assertFileExists(String output) {
     Assert.assertTrue(new File(output).exists());
+  }
+
+  private void assertFileNotExists(String output) {
+    Assert.assertFalse(new File(output).exists());
   }
 
   private <T extends SpecificRecordBase> void assertFile(Class<T> clazz, String output)
