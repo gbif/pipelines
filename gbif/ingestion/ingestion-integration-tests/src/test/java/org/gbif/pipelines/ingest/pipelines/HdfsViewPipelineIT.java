@@ -210,7 +210,8 @@ public class HdfsViewPipelineIT {
     assertFileExists(outputFn.apply("audubontable"));
     assertFileExists(outputFn.apply("extendedmeasurementorfacttable"));
 
-    //Next two interpretations were not in the list of interpretation types param, --interpretationTypes
+    // Next two interpretations were not in the list of interpretation types param,
+    // --interpretationTypes
     assertFileNotExists(outputFn.apply("permittable"));
     assertFileNotExists(outputFn.apply("loantable"));
   }

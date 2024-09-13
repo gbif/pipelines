@@ -38,7 +38,8 @@ public class HdfsViewAvroUtils {
     copyAndOverwrite(options, OCCURRENCE);
   }
 
-  private static void copyAndOverwriteTables(InterpretationPipelineOptions opt, RecordType coreType) {
+  private static void copyAndOverwriteTables(
+      InterpretationPipelineOptions opt, RecordType coreType) {
 
     copyAndOverwrite(opt, coreType, MEASUREMENT_OR_FACT_TABLE, Extension.MEASUREMENT_OR_FACT);
     copyAndOverwrite(opt, coreType, IDENTIFICATION_TABLE, Extension.IDENTIFICATION);
