@@ -52,12 +52,8 @@ public class BasicRecordTransformTest {
   public void transformationTest() {
 
     // State
-    final String[] one = {
-      "0", "OBSERVATION", "MALE", "INTRODUCED", "HOLOTYPE", "2", "http://refs.com"
-    };
-    final String[] two = {
-      "1", "OCCURRENCE", "HERMAPHRODITE", "INTRODUCED", "HAPANTOTYPE", "1", "http://refs.com"
-    };
+    final String[] one = {"0", "OBSERVATION", "INTRODUCED", "2", "http://refs.com"};
+    final String[] two = {"1", "OCCURRENCE", "INTRODUCED", "1", "http://refs.com"};
     final List<ExtendedRecord> records = createExtendedRecordList(one, two);
 
     // Expected
@@ -206,10 +202,8 @@ public class BasicRecordTransformTest {
             x -> {
               ExtendedRecord record = ExtendedRecord.newBuilder().setId(x[0]).build();
               record.getCoreTerms().put(DwcTerm.basisOfRecord.qualifiedName(), x[1]);
-              record.getCoreTerms().put(DwcTerm.sex.qualifiedName(), x[2]);
-              record.getCoreTerms().put(DwcTerm.typeStatus.qualifiedName(), x[4]);
-              record.getCoreTerms().put(DwcTerm.individualCount.qualifiedName(), x[5]);
-              record.getCoreTerms().put(DcTerm.references.qualifiedName(), x[6]);
+              record.getCoreTerms().put(DwcTerm.individualCount.qualifiedName(), x[3]);
+              record.getCoreTerms().put(DcTerm.references.qualifiedName(), x[4]);
               return record;
             })
         .collect(Collectors.toList());
@@ -223,10 +217,8 @@ public class BasicRecordTransformTest {
                     .setId(x[0])
                     .setCreated(0L)
                     .setBasisOfRecord(x[1])
-                    .setSex(x[2])
-                    .setTypeStatus(Collections.singletonList(x[4]))
-                    .setIndividualCount(Integer.valueOf(x[5]))
-                    .setReferences(x[6])
+                    .setIndividualCount(Integer.valueOf(x[3]))
+                    .setReferences(x[4])
                     .setIsSequenced(Boolean.FALSE)
                     .setLicense(License.UNSPECIFIED.name())
                     .setGeologicalContext(GeologicalContext.newBuilder().build())

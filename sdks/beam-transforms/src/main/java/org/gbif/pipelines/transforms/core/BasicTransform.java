@@ -103,8 +103,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
             .when(er -> !er.getCoreTerms().isEmpty())
             .via(BasicInterpreter::interpretBasisOfRecord)
             .via(BasicInterpreter::interpretTypifiedName)
-            .via(BasicInterpreter::interpretSex)
-            .via(BasicInterpreter::interpretTypeStatus)
+            .via(VocabularyInterpreter.interpretSex(vocabularyService))
+            .via(VocabularyInterpreter.interpretTypeStatus(vocabularyService))
             .via(BasicInterpreter::interpretIndividualCount)
             .via((e, r) -> CoreInterpreter.interpretReferences(e, r, r::setReferences))
             .via(BasicInterpreter::interpretOrganismQuantity)
@@ -141,7 +141,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
     if (useDynamicPropertiesInterpretation) {
       handler
-          .via(DynamicPropertiesInterpreter::interpretSex)
+          .via(DynamicPropertiesInterpreter.interpretSex(vocabularyService))
           .via(DynamicPropertiesInterpreter.interpretLifeStage(vocabularyService));
     }
 

@@ -9,6 +9,7 @@ import org.gbif.pipelines.core.interpreters.MockVocabularyLookups;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,6 +34,8 @@ public class DynamicPropertiesInterpreterTest {
           .vocabularyLookup(
               DwcTerm.lifeStage.qualifiedName(),
               new MockVocabularyLookups.LifeStageMockVocabularyLookup())
+          .vocabularyLookup(
+              DwcTerm.sex.qualifiedName(), new MockVocabularyLookups.SexMockVocabularyLookup())
           .build();
 
   @Test
@@ -42,10 +45,11 @@ public class DynamicPropertiesInterpreterTest {
     BasicRecord br = brFn.get();
 
     // When
-    DynamicPropertiesInterpreter.interpretSex(er, br);
+    DynamicPropertiesInterpreter.interpretSex(vocabularyService).accept(er, br);
 
     // Should
-    Assert.assertEquals("FEMALE", br.getSex());
+    Assert.assertEquals("female", br.getSex().getConcept());
+    Assert.assertEquals("female", br.getSex().getLineage().get(0));
   }
 
   @Test
@@ -55,7 +59,7 @@ public class DynamicPropertiesInterpreterTest {
     BasicRecord br = brFn.get();
 
     // When
-    DynamicPropertiesInterpreter.interpretSex(er, br);
+    DynamicPropertiesInterpreter.interpretSex(vocabularyService).accept(er, br);
 
     // Should
     Assert.assertNull(br.getSex());
@@ -68,7 +72,7 @@ public class DynamicPropertiesInterpreterTest {
     BasicRecord br = brFn.get();
 
     // When
-    DynamicPropertiesInterpreter.interpretSex(er, br);
+    DynamicPropertiesInterpreter.interpretSex(vocabularyService).accept(er, br);
 
     // Should
     Assert.assertNull(br.getSex());
@@ -79,13 +83,18 @@ public class DynamicPropertiesInterpreterTest {
     // State
     ExtendedRecord er = erDynamicPropertiesFn.apply("");
     BasicRecord br = brFn.get();
-    br.setSex("something");
+    br.setSex(
+        VocabularyConcept.newBuilder()
+            .setConcept("something")
+            .setLineage(Collections.singletonList("something"))
+            .build());
 
     // When
-    DynamicPropertiesInterpreter.interpretSex(er, br);
+    DynamicPropertiesInterpreter.interpretSex(vocabularyService).accept(er, br);
 
     // Should
-    Assert.assertEquals("something", br.getSex());
+    Assert.assertEquals("something", br.getSex().getConcept());
+    Assert.assertEquals("something", br.getSex().getLineage().get(0));
   }
 
   @Test

@@ -451,8 +451,16 @@
           "type": "keyword"
         },
         "sex": {
-          "type": "keyword",
-          "copy_to": "all"
+          "type": "object",
+          "properties": {
+            "concept": {
+              "type": "keyword"
+            },
+            "lineage": {
+              "type": "keyword",
+              "copy_to": "all"
+            }
+          }
         },
         "associatedSequences": {
           "type": "keyword",
@@ -510,8 +518,16 @@
           "type": "integer"
         },
         "typeStatus": {
-          "type": "keyword",
-          "copy_to": "all"
+          "type": "object",
+          "properties": {
+            "concept": {
+              "type": "keyword"
+            },
+            "lineage": {
+              "type": "keyword",
+              "copy_to": "all"
+            }
+          }
         },
         "typifiedName": {
           "type": "keyword",
