@@ -5,9 +5,8 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import lombok.AccessLevel;
@@ -26,8 +25,8 @@ import org.gbif.pipelines.io.avro.VocabularyConcept;
 public class VocabularyInterpreter {
 
   /** Values taken from <a href="https://github.com/gbif/vocabulary/issues/87">here</a> */
-  private static final List<String> SUSPECTED_TYPE_STATUS_VALUES =
-      Arrays.asList("?", "possible", "possibly", "potential", "maybe", "perhaps");
+  private static final Set<String> SUSPECTED_TYPE_STATUS_VALUES =
+      Set.of("?", "possible", "possibly", "potential", "maybe", "perhaps");
 
   /** {@link DwcTerm#lifeStage} interpretation. */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
