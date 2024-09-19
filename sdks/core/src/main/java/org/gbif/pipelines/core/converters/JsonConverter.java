@@ -453,7 +453,7 @@ public class JsonConverter {
         .ifPresent(classificationBuilder::setClassificationPath);
 
     JsonConverter.convertClassificationDepth(taxon)
-            .ifPresent(classificationBuilder::setClassificationDepth);
+        .ifPresent(classificationBuilder::setClassificationDepth);
 
     JsonConverter.convertRankPath(taxon).ifPresent(classificationBuilder::setRankPath);
 
@@ -581,16 +581,16 @@ public class JsonConverter {
    */
   public static Optional<Map<String, String>> convertClassificationDepth(TaxonRecord taxonRecord) {
     if (taxonRecord.getClassification() == null
-            || taxonRecord.getClassification().isEmpty()
-            || taxonRecord.getUsage() == null) {
+        || taxonRecord.getClassification().isEmpty()
+        || taxonRecord.getUsage() == null) {
       return Optional.empty();
     }
 
     Map<String, String> depthMap = new LinkedHashMap<>();
     AtomicInteger idx = new AtomicInteger(0); // Using AtomicInteger to handle index
-    taxonRecord.getClassification().forEach(taxon ->
-            depthMap.put(String.valueOf(idx.getAndIncrement()), taxon.getKey())
-    );
+    taxonRecord
+        .getClassification()
+        .forEach(taxon -> depthMap.put(String.valueOf(idx.getAndIncrement()), taxon.getKey()));
     return Optional.of(depthMap);
   }
 
