@@ -9,6 +9,7 @@ import java.time.ZoneId;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.LongFunction;
 import java.util.stream.Collectors;
@@ -451,6 +452,11 @@ public class JsonConverter {
     JsonConverter.convertClassificationPath(taxon)
         .ifPresent(classificationBuilder::setClassificationPath);
 
+    JsonConverter.convertClassificationDepth(taxon)
+            .ifPresent(classificationBuilder::setClassificationDepth);
+
+    JsonConverter.convertRankPath(taxon).ifPresent(classificationBuilder::setRankPath);
+
     return classificationBuilder.build();
   }
 
@@ -565,6 +571,42 @@ public class JsonConverter {
                 rankedName ->
                     !Objects.equals(taxonRecord.getUsage().getRank(), rankedName.getRank()))
             .map(org.gbif.pipelines.io.avro.RankedName::getKey)
+            .collect(Collectors.joining("_"));
+
+    return Optional.of("_" + pathJoiner);
+  }
+
+  /**
+   * Creates a set of fields" kingdomKey, phylumKey, classKey, etc for convenient aggregation/facets
+   */
+  public static Optional<Map<String, String>> convertClassificationDepth(TaxonRecord taxonRecord) {
+    if (taxonRecord.getClassification() == null
+            || taxonRecord.getClassification().isEmpty()
+            || taxonRecord.getUsage() == null) {
+      return Optional.empty();
+    }
+
+    Map<String, String> depthMap = new LinkedHashMap<>();
+    AtomicInteger idx = new AtomicInteger(0); // Using AtomicInteger to handle index
+    taxonRecord.getClassification().forEach(taxon ->
+            depthMap.put(String.valueOf(idx.getAndIncrement()), taxon.getKey())
+    );
+    return Optional.of(depthMap);
+  }
+
+  /**
+   * Creates a set of fields" kingdomKey, phylumKey, classKey, etc for convenient aggregation/facets
+   */
+  public static Optional<String> convertRankPath(TaxonRecord taxonRecord) {
+    if (taxonRecord.getClassification() == null
+        || taxonRecord.getClassification().isEmpty()
+        || taxonRecord.getUsage() == null) {
+      return Optional.empty();
+    }
+
+    String pathJoiner =
+        taxonRecord.getClassification().stream()
+            .map(org.gbif.pipelines.io.avro.RankedName::getRank)
             .collect(Collectors.joining("_"));
 
     return Optional.of("_" + pathJoiner);

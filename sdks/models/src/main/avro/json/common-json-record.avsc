@@ -217,6 +217,7 @@
     "fields":[
       {"name":"datasetKey","type": "string", "doc":"The GBIF key for the taxonomy dataset"},
       {"name":"classificationPath","type":["null","string"],"default":null,"doc":""},
+      {"name":"rankPath","type":["null","string"],"default":null,"doc":""},
       {"name":"usage","type":["null","RankedName"],"default":null,"doc":""},
       {"name":"acceptedUsage","type":["null","RankedName"],"default":null,"doc":""},
       {"name":"classification",
@@ -224,6 +225,10 @@
         "default": {}
       },
       {"name":"classificationKeys",
+        "type":{ "type":"map","values":"string" },
+        "default": {}
+      },
+      {"name":"classificationDepth",
         "type":{ "type":"map","values":"string" },
         "default": {}
       },
