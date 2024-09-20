@@ -163,41 +163,31 @@ public class GBIFClassification {
           .getClassification()
           .forEach(
               rankedName -> {
-                switch (rankedName.getRank()) {
-                  case KINGDOM:
-                    c.kingdom = rankedName.getName();
-                    c.kingdomKey = rankedName.getKey();
-                    break;
-                  case PHYLUM:
-                    c.phylum = rankedName.getName();
-                    c.phylumKey = rankedName.getKey();
-                    break;
-                  case CLASS:
-                    c.klass = rankedName.getName();
-                    c.classKey = rankedName.getKey();
-                    break;
-                  case ORDER:
-                    c.order = rankedName.getName();
-                    c.orderKey = rankedName.getKey();
-                    break;
-                  case FAMILY:
-                    c.family = rankedName.getName();
-                    c.familyKey = rankedName.getKey();
-                    break;
-                  case GENUS:
-                    c.genus = rankedName.getName();
-                    c.genusKey = rankedName.getKey();
-                    break;
-                  case SUBGENUS:
-                    c.subGenus = rankedName.getName();
-                    c.subGenusKey = rankedName.getKey();
-                    break;
-                  case SPECIES:
-                    c.species = rankedName.getName();
-                    c.speciesKey = rankedName.getKey();
-                    break;
-                  default:
-                    break;
+                String rank = rankedName.getRank();
+                if ("KINGDOM".equalsIgnoreCase(rank)) {
+                  c.kingdom = rankedName.getName();
+                  c.kingdomKey = rankedName.getKey();
+                } else if ("PHYLUM".equalsIgnoreCase(rank)) {
+                  c.phylum = rankedName.getName();
+                  c.phylumKey = rankedName.getKey();
+                } else if ("CLASS".equalsIgnoreCase(rank)) {
+                  c.klass = rankedName.getName();
+                  c.classKey = rankedName.getKey();
+                } else if ("ORDER".equalsIgnoreCase(rank)) {
+                  c.order = rankedName.getName();
+                  c.orderKey = rankedName.getKey();
+                } else if ("FAMILY".equalsIgnoreCase(rank)) {
+                  c.family = rankedName.getName();
+                  c.familyKey = rankedName.getKey();
+                } else if ("GENUS".equalsIgnoreCase(rank)) {
+                  c.genus = rankedName.getName();
+                  c.genusKey = rankedName.getKey();
+                } else if ("SUBGENUS".equalsIgnoreCase(rank)) {
+                  c.subGenus = rankedName.getName();
+                  c.subGenusKey = rankedName.getKey();
+                } else if ("SPECIES".equalsIgnoreCase(rank)) {
+                  c.species = rankedName.getName();
+                  c.speciesKey = rankedName.getKey();
                 }
               });
 

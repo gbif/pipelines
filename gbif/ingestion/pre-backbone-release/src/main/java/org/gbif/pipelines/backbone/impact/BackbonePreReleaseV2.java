@@ -177,9 +177,12 @@ public class BackbonePreReleaseV2 {
           if (skipKeys
               && !existing.classificationEquals(
                   proposed, ignoreWhitespace, ignoreAuthorshipFormatting)) {
-            c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
+            c.output(
+                toTabDelimited(count, matchRequest, existing, proposed, matchRequest, skipKeys));
+
           } else if (!skipKeys && !existing.equals(proposed)) {
-            c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
+            c.output(
+                toTabDelimited(count, matchRequest, existing, proposed, matchRequest, skipKeys));
           }
 
         } catch (Exception e) {
@@ -194,26 +197,37 @@ public class BackbonePreReleaseV2 {
 
     private String toDebugUrl(Identification matchRequest) {
       return baseAPIUrl
-          + "/v2/species/match?"
-          + "kingdom="
-          + matchRequest.getKingdom()
-          + "&phylum="
-          + matchRequest.getPhylum()
-          + "&class="
-          + matchRequest.getClazz()
-          + "&order="
-          + matchRequest.getOrder()
-          + "&family="
-          + matchRequest.getFamily()
-          + "&genus="
-          + matchRequest.getGenus()
-          + "&scientificName="
-          + matchRequest.getScientificName()
-          + "&authorship="
-          + matchRequest.getScientificNameAuthorship()
-          + "&rank="
-          + matchRequest.getRank()
-          + "&verbose=false";
+          + "v2/species/match?"
+          + (matchRequest.getTaxonID() != null ? "&taxonID=" + matchRequest.getTaxonID() : "")
+          + (matchRequest.getTaxonConceptID() != null
+              ? "&taxonConceptID=" + matchRequest.getTaxonConceptID()
+              : "")
+          + (matchRequest.getScientificNameID() != null
+              ? "&scientificNameID=" + matchRequest.getScientificNameID()
+              : "")
+          + (matchRequest.getKingdom() != null ? "&kingdom=" + matchRequest.getKingdom() : "")
+          + (matchRequest.getPhylum() != null ? "&phylum=" + matchRequest.getPhylum() : "")
+          + (matchRequest.getClazz() != null ? "&class=" + matchRequest.getClazz() : "")
+          + (matchRequest.getOrder() != null ? "&order=" + matchRequest.getOrder() : "")
+          + (matchRequest.getFamily() != null ? "&family=" + matchRequest.getFamily() : "")
+          + (matchRequest.getGenus() != null ? "&genus=" + matchRequest.getGenus() : "")
+          + (matchRequest.getScientificName() != null
+              ? "&scientificName=" + matchRequest.getScientificName()
+              : "")
+          + (matchRequest.getScientificNameAuthorship() != null
+              ? "&authorship=" + matchRequest.getScientificNameAuthorship()
+              : "")
+          + (matchRequest.getRank() != null ? "&rank=" + matchRequest.getRank() : "")
+          + (matchRequest.getGenericName() != null
+              ? "&genericName=" + matchRequest.getGenericName()
+              : "")
+          + (matchRequest.getSpecificEpithet() != null
+              ? "&specificEpithet=" + matchRequest.getSpecificEpithet()
+              : "")
+          + (matchRequest.getInfraspecificEpithet() != null
+              ? "&infraspecificEpithet=" + matchRequest.getInfraspecificEpithet()
+              : "")
+          + "&strict=false";
     }
 
     /** Extracts all taxon keys from the record. */
@@ -242,16 +256,20 @@ public class BackbonePreReleaseV2 {
     }
 
     /** Formats the data for the output line in the CSV. */
-    private static String toTabDelimited(
+    private String toTabDelimited(
         long count,
         Identification verbatim,
         GBIFClassification current,
         GBIFClassification proposed,
+        Identification matchRequest,
         boolean skipKeys) {
 
       return String.join(
           "\t",
           String.valueOf(count),
+          verbatim.getTaxonID(),
+          verbatim.getTaxonConceptID(),
+          verbatim.getScientificNameID(),
           verbatim.getKingdom(),
           verbatim.getPhylum(),
           verbatim.getClazz(),
@@ -266,7 +284,8 @@ public class BackbonePreReleaseV2 {
           verbatim.getGenericName(),
           verbatim.getScientificNameAuthorship(),
           current.toString(skipKeys),
-          proposed.toString(skipKeys));
+          proposed.toString(skipKeys),
+          toDebugUrl(matchRequest));
     }
 
     @Teardown
