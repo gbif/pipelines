@@ -8,7 +8,6 @@ import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesHdfsViewMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.airflow.AppName;
 import org.gbif.pipelines.common.process.AirflowSparkLauncher;
@@ -51,7 +50,7 @@ public class DataWarehouseCallback extends AbstractMessageCallback<PipelinesHdfs
 
   @Override
   public String getRouting() {
-    return new PipelinesInterpretedMessage().setRunner(config.processRunner).getRoutingKey();
+    return new PipelinesHdfsViewMessage().setRunner(config.processRunner).getRoutingKey();
   }
 
   /** Main message processing logic, creates a terminal java process, which runs */
