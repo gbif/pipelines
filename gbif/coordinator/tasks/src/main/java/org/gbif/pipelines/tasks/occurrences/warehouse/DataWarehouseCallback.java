@@ -10,6 +10,7 @@ import org.gbif.common.messaging.api.messages.PipelinesHdfsViewMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.airflow.AppName;
+import org.gbif.pipelines.common.messaging.DataWarehouseMessage;
 import org.gbif.pipelines.common.process.AirflowSparkLauncher;
 import org.gbif.pipelines.common.process.BeamParametersBuilder;
 import org.gbif.pipelines.common.process.RecordCountReader;
@@ -26,7 +27,7 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 @Slf4j
 @Builder
 public class DataWarehouseCallback extends AbstractMessageCallback<PipelinesHdfsViewMessage>
-    implements StepHandler<PipelinesHdfsViewMessage, DataWarehouseFinishMessage> {
+    implements StepHandler<PipelinesHdfsViewMessage, DataWarehouseMessage> {
 
   protected final HdfsViewConfiguration config;
   private final MessagePublisher publisher;
@@ -36,7 +37,7 @@ public class DataWarehouseCallback extends AbstractMessageCallback<PipelinesHdfs
 
   @Override
   public void handleMessage(PipelinesHdfsViewMessage message) {
-    PipelinesCallback.<PipelinesHdfsViewMessage, DataWarehouseFinishMessage>builder()
+    PipelinesCallback.<PipelinesHdfsViewMessage, DataWarehouseMessage>builder()
         .historyClient(historyClient)
         .datasetClient(datasetClient)
         .config(config)
@@ -99,8 +100,8 @@ public class DataWarehouseCallback extends AbstractMessageCallback<PipelinesHdfs
   }
 
   @Override
-  public DataWarehouseFinishMessage createOutgoingMessage(PipelinesHdfsViewMessage message) {
-    return new DataWarehouseFinishMessage(
+  public DataWarehouseMessage createOutgoingMessage(PipelinesHdfsViewMessage message) {
+    return new DataWarehouseMessage(
         message.getDatasetUuid(), message.getAttempt(), message.getPipelineSteps(), null, null);
   }
 
