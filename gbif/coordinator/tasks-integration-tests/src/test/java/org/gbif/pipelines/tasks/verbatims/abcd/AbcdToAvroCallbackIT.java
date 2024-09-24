@@ -112,7 +112,7 @@ public class AbcdToAvroCallbackIT {
     assertEquals(1, PUBLISHER.getMessages().size());
 
     Map<StepType, PipelineStep> result = historyClient.getStepMap();
-    Assert.assertEquals(6, result.size());
+    Assert.assertEquals(7, result.size());
 
     Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
     Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
@@ -196,7 +196,7 @@ public class AbcdToAvroCallbackIT {
     assertTrue(PUBLISHER.getMessages().isEmpty());
 
     Map<StepType, PipelineStep> result = historyClient.getStepMap();
-    Assert.assertEquals(6, result.size());
+    Assert.assertEquals(7, result.size());
 
     Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
     Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());

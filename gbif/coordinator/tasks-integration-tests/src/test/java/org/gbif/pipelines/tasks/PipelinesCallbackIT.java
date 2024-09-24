@@ -71,7 +71,7 @@ public class PipelinesCallbackIT {
 
     // Should
     Map<StepType, PipelineStep> result = historyClient.getStepMap();
-    Assert.assertEquals(6, result.size());
+    Assert.assertEquals(7, result.size());
 
     Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
     Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
@@ -138,7 +138,7 @@ public class PipelinesCallbackIT {
 
     // Should
     Map<StepType, PipelineStep> result = historyClient.getStepMap();
-    Assert.assertEquals(4, result.size());
+    Assert.assertEquals(5, result.size());
 
     Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
     Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
@@ -242,7 +242,7 @@ public class PipelinesCallbackIT {
 
     // Should
     Map<StepType, PipelineStep> result = historyClient.getStepMap();
-    Assert.assertEquals(6, result.size());
+    Assert.assertEquals(7, result.size());
 
     Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
     Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
@@ -329,7 +329,7 @@ public class PipelinesCallbackIT {
 
     // Should
     Map<StepType, PipelineStep> result = historyClient.getStepMap();
-    Assert.assertEquals(6, result.size());
+    Assert.assertEquals(7, result.size());
 
     Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
     Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
