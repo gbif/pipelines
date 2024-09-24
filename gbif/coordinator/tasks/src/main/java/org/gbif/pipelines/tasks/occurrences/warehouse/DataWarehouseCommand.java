@@ -1,6 +1,7 @@
 package org.gbif.pipelines.tasks.occurrences.warehouse;
 
 import com.google.common.util.concurrent.Service;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.cli.Command;
 import org.gbif.cli.service.ServiceCommand;
 import org.gbif.pipelines.tasks.common.hdfs.HdfsViewConfiguration;
@@ -17,6 +18,7 @@ public class DataWarehouseCommand extends ServiceCommand {
 
   public DataWarehouseCommand() {
     super("pipelines-warehouse");
+    config.stepType = StepType.DATA_WAREHOUSE;
   }
 
   @Override
