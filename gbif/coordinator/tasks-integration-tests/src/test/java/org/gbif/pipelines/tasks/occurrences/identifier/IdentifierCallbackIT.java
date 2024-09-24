@@ -148,7 +148,7 @@ public class IdentifierCallbackIT {
     assertEquals(0, PUBLISHER.getMessages().size());
 
     Map<StepType, PipelineStep> result = historyClient.getStepMap();
-    Assert.assertEquals(5, result.size());
+    Assert.assertEquals(6, result.size());
 
     Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
     Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
