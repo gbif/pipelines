@@ -6,8 +6,8 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.DataWarehouseMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
-import org.gbif.pipelines.common.messaging.DataWarehouseMessage;
 
 /**
  * Populates and sends the {@link Pipelines} message, the main method is {@link

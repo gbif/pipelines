@@ -6,19 +6,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
-import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
-import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
-import org.gbif.common.messaging.api.messages.PipelinesEventsHdfsViewMessage;
-import org.gbif.common.messaging.api.messages.PipelinesEventsIndexedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesFragmenterMessage;
-import org.gbif.common.messaging.api.messages.PipelinesHdfsViewMessage;
-import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
-import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
-import org.gbif.pipelines.common.messaging.DataWarehouseMessage;
+import org.gbif.common.messaging.api.messages.*;
 import org.gbif.pipelines.tasks.balancer.handler.*;
 
 /**
