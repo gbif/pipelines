@@ -2,9 +2,9 @@ package org.gbif.pipelines.tasks.validators.metrics.collector;
 
 import lombok.Builder;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
+import org.gbif.pipelines.core.utils.DatasetTypePredicate;
 import org.gbif.pipelines.tasks.validators.metrics.MetricsCollectorConfiguration;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -20,7 +20,7 @@ public class MetricsCollectorFactory {
   public MetricsCollector create() {
 
     // DWCA
-    if (EndpointType.DWC_ARCHIVE == message.getEndpointType()) {
+    if (DatasetTypePredicate.isEndpointDwca(message.getEndpointType())) {
       return DwcaMetricsCollector.builder()
           .config(config)
           .publisher(publisher)
@@ -31,7 +31,7 @@ public class MetricsCollectorFactory {
     }
 
     // XML
-    if (EndpointType.DWC_ARCHIVE == message.getEndpointType()) {
+    if (DatasetTypePredicate.isEndpointXml(message.getEndpointType())) {
       return XmlMetricsCollector.builder().build();
     }
 

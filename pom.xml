@@ -92,13 +92,13 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <dwca-io.version>2.14</dwca-io.version>
-    <gbif-api.version>1.16.3</gbif-api.version>
+    <gbif-api.version>1.16.12</gbif-api.version>
     <gbif-common.version>0.56</gbif-common.version>
     <dwc-api.version>1.48</dwc-api.version>
     <kvs.version>1.34</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
-    <gbif-occurrence.version>0.194.0</gbif-occurrence.version>
+    <gbif-occurrence.version>0.195.4</gbif-occurrence.version>
     <vocabulary-lookup.version>1.0.0</vocabulary-lookup.version>
     <registry.version>3.95.3</registry.version>
     <gbif-common-ws.version>1.18</gbif-common-ws.version>

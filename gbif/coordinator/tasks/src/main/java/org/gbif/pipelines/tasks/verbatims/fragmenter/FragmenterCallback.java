@@ -27,6 +27,7 @@ import org.gbif.pipelines.common.process.RecordCountReader;
 import org.gbif.pipelines.common.process.SparkSettings;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
+import org.gbif.pipelines.core.utils.DatasetTypePredicate;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.fragmenter.FragmentPersister;
 import org.gbif.pipelines.fragmenter.strategy.DwcaStrategy;
@@ -93,7 +94,7 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
 
         log.info("Start the process. Message - {}", message);
         if (StepRunner.DISTRIBUTED.name().equalsIgnoreCase(message.getRunner())
-            && message.getEndpointType().equals(EndpointType.DWC_ARCHIVE)
+            && DatasetTypePredicate.isEndpointDwca(message.getEndpointType())
             && config.switchRecordsNumber <= recordsNumber) {
           runDistributed(message, recordsNumber);
         } else {
@@ -144,7 +145,7 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
     Strategy strategy;
     Path pathToArchive;
 
-    if (message.getEndpointType().equals(EndpointType.DWC_ARCHIVE)) {
+    if (DatasetTypePredicate.isEndpointDwca(message.getEndpointType())) {
       strategy = DwcaStrategy.create();
       pathToArchive = buildDwcaInputPath(config.dwcaArchiveRepository, datasetId);
     } else {
