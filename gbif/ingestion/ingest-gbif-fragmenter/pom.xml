@@ -71,6 +71,14 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>dwc-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>dwca-io</artifactId>
+    </dependency>
 
     <!-- HBase -->
     <dependency>
