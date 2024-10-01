@@ -1323,6 +1323,12 @@
     "name" : "identificationremarks",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "checklistKey",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
+  }, {
     "name" : "taxonid",
     "type" : [ "string", "null" ]
   }, {
