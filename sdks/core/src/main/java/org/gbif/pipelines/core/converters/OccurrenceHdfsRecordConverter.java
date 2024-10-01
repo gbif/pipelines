@@ -644,8 +644,8 @@ public class OccurrenceHdfsRecordConverter {
         Optional.ofNullable(gc.getStartAge())
             .ifPresent(
                 s ->
-                    occurrenceHdfsRecord.setRange(
-                        GeologicalRange.newBuilder()
+                    occurrenceHdfsRecord.setGeologicaltime(
+                        GeologicalTime.newBuilder()
                             .setLte(gc.getStartAge())
                             .setGt(gc.getEndAge())
                             .build()));
