@@ -44,6 +44,7 @@ public class OccurrenceHdfsRecordConverter {
   private final BasicRecord basicRecord;
   private final LocationRecord locationRecord;
   private final TaxonRecord taxonRecord;
+  private final MultiTaxonRecord multiTaxonRecord;
   private final GrscicollRecord grscicollRecord;
   private final TemporalRecord temporalRecord;
   private final MetadataRecord metadataRecord;
@@ -67,6 +68,7 @@ public class OccurrenceHdfsRecordConverter {
     mapTemporalRecord(occurrenceHdfsRecord);
     mapLocationRecord(occurrenceHdfsRecord);
     mapTaxonRecord(occurrenceHdfsRecord);
+    mapMultiTaxonRecord(occurrenceHdfsRecord);
     mapGrscicollRecord(occurrenceHdfsRecord);
     mapMultimediaRecord(occurrenceHdfsRecord);
     mapExtendedRecord(occurrenceHdfsRecord);
@@ -261,6 +263,31 @@ public class OccurrenceHdfsRecordConverter {
 
     setCreatedIfGreater(occurrenceHdfsRecord, temporalRecord.getCreated());
     addIssues(temporalRecord.getIssues(), occurrenceHdfsRecord);
+  }
+
+  private void mapMultiTaxonRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (multiTaxonRecord == null) {
+      return;
+    }
+    occurrenceHdfsRecord.setChecklistKey(
+        multiTaxonRecord.getTaxonRecords().stream()
+            .map(TaxonRecord::getDatasetKey)
+            .collect(Collectors.toList()));
+
+    occurrenceHdfsRecord.setClassifications(
+        multiTaxonRecord.getTaxonRecords().stream()
+            .map(taxonRecord -> createFlatClassification(taxonRecord))
+            .collect(Collectors.toList()));
+  }
+
+  private FlatClassification createFlatClassification(TaxonRecord taxonRecord) {
+    FlatClassification flatClassification = new FlatClassification();
+    flatClassification.setDatasetKey(taxonRecord.getDatasetKey());
+    flatClassification.setTaxonKeys(
+        taxonRecord.getClassification().stream()
+            .map(RankedName::getKey)
+            .collect(Collectors.toList()));
+    return flatClassification;
   }
 
   /** Copies the {@link TaxonRecord} data into the {@link OccurrenceHdfsRecord}. */
@@ -624,7 +651,7 @@ public class OccurrenceHdfsRecordConverter {
             .ifPresent(
                 s ->
                     occurrenceHdfsRecord.setRange(
-                        GeologicalRange.newBuilder()
+                        org.gbif.pipelines.io.avro.GeologicalRange.newBuilder()
                             .setLte(gc.getStartAge())
                             .setGt(gc.getEndAge())
                             .build()));

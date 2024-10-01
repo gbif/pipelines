@@ -1,3 +1,17 @@
+[  {
+  "name":"FlatClassification",
+  "namespace":"org.gbif.pipelines.io.avro",
+  "type":"record",
+  "doc":"Taxonomy classification",
+  "fields":[
+    {"name":"datasetKey","type": "string", "doc":"The GBIF key for the taxonomy dataset"},
+    {"name":"taxonKeys",
+      "type":{"type":"array","items":"string"},
+      "default":[]
+    },
+    {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""}
+  ]
+},
 {
   "type" : "record",
   "name" : "OccurrenceHdfsRecord",
@@ -1329,6 +1343,38 @@
       "items" : [ "string", "null" ]
     }, "null" ]
   }, {
+    "name" : "classifications",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "FlatClassification", "null" ]
+    }, "null" ]
+//    "type" : [ {
+//      "type" : "record",
+//      "name" : "FlatClassification",
+//      "fields" : [ {
+//        "name" : "checklistKey",
+//        "type" : "string"
+//      }, {
+//        "name" : "taxonKeys",
+//        "type" : [ {
+//          "type" : "array",
+//          "items" : [ "string", "null" ]
+//        }, "null" ]
+//      }, {
+//        "name" : "names",
+//        "type" : [ {
+//          "type" : "array",
+//          "items" : [ "string", "null" ]
+//        }, "null" ]
+//      }, {
+//        "name" : "ranks",
+//        "type" : [ {
+//          "type" : "array",
+//          "items" : [ "string", "null" ]
+//        }, "null" ]
+//      } ]
+//    }, "null" ]
+  }, {
     "name" : "taxonid",
     "type" : [ "string", "null" ]
   }, {
@@ -1588,3 +1634,4 @@
     "type" : [ "string", "null" ]
   } ]
 }
+]

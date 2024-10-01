@@ -455,8 +455,6 @@ public class JsonConverter {
     JsonConverter.convertClassificationDepth(taxon)
         .ifPresent(classificationBuilder::setClassificationDepth);
 
-    JsonConverter.convertRankPath(taxon).ifPresent(classificationBuilder::setRankPath);
-
     return classificationBuilder.build();
   }
 
