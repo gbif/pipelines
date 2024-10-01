@@ -1251,10 +1251,10 @@
       } ]
     }, "null" ]
   }, {
-     "name" : "range",
+     "name" : "geologicaltime",
      "type" : [ {
         "type" : "record",
-        "name" : "GeologicalRange",
+        "name" : "GeologicalTime",
          "fields":[ {
             "name" : "gt",
             "type" : "string"
