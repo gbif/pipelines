@@ -11,19 +11,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.EventCoreRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 
 @Builder
@@ -43,6 +31,7 @@ public class OccurrenceHdfsRecordConverter {
   @NonNull private final Map<String, ImageRecord> imageMap;
   @NonNull private final Map<String, AudubonRecord> audubonMap;
   private Map<String, EventCoreRecord> eventCoreRecordMap;
+  private final Map<String, MultiTaxonRecord> multiTaxonMap;
 
   public Function<IdentifierRecord, List<OccurrenceHdfsRecord>> getFn() {
     return id -> Collections.singletonList(convert(id));
@@ -56,6 +45,7 @@ public class OccurrenceHdfsRecordConverter {
     TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
     LocationRecord lr = locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
     TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
+    MultiTaxonRecord mtxr = multiTaxonMap.getOrDefault(k, MultiTaxonRecord.newBuilder().setId(k).build());
 
     // Extension
     MultimediaRecord mr =
@@ -76,6 +66,7 @@ public class OccurrenceHdfsRecordConverter {
                 .temporalRecord(tr)
                 .locationRecord(lr)
                 .taxonRecord(txr)
+                .multiTaxonRecord(mtxr)
                 .multimediaRecord(mmr)
                 .extendedRecord(er);
 
