@@ -18,19 +18,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.EventCoreRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.Transform;
 
@@ -85,6 +73,7 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
   @NonNull private final TupleTag<TaxonRecord> taxonRecordTag;
+  @NonNull private final TupleTag<MultiTaxonRecord> multiTaxonRecordTag;
   @NonNull private final TupleTag<GrscicollRecord> grscicollRecordTag;
   @NonNull private final TupleTag<EventCoreRecord> eventCoreRecordTag;
 
@@ -121,6 +110,8 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
             LocationRecord lr =
                 v.getOnly(locationRecordTag, LocationRecord.newBuilder().setId(k).build());
             TaxonRecord txr = v.getOnly(taxonRecordTag, TaxonRecord.newBuilder().setId(k).build());
+            MultiTaxonRecord mtxr =
+                v.getOnly(multiTaxonRecordTag, MultiTaxonRecord.newBuilder().setId(k).build());
             GrscicollRecord gr =
                 v.getOnly(grscicollRecordTag, GrscicollRecord.newBuilder().setId(k).build());
             // Extension
@@ -143,6 +134,7 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
                     .temporalRecord(tr)
                     .locationRecord(lr)
                     .taxonRecord(txr)
+                    .multiTaxonRecord(mtxr)
                     .grscicollRecord(gr)
                     .multimediaRecord(mmr)
                     .extendedRecord(er)
