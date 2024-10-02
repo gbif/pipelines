@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.scala.DefaultScalaModule;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Row;
 import org.gbif.pipelines.core.parsers.clustering.OccurrenceFeatures;
 import scala.collection.JavaConverters;
@@ -22,11 +22,12 @@ import scala.collection.Seq;
  * terms to have a prefix, allowing a Row containing multiple records to be used (e.g. as a result
  * of a SQL select a.*,b.* from a join b).
  */
+@Slf4j
 public class RowOccurrenceFeatures implements OccurrenceFeatures {
 
   // Dataset keys are considered reliable over time
   private static final List<String> SEQUENCE_REPOSITORY_KEYS =
-      Arrays.asList(
+      List.of(
           "d8cd16ba-bb74-4420-821e-083f2bac17c2", // INSDC sequences
           "393b8c26-e4e0-4dd0-a218-93fc074ebf4e", // INSDC host organisms
           "583d91fe-bbc0-4b4a-afe1-801f88263016", // INSDC environmental samples
@@ -78,28 +79,6 @@ public class RowOccurrenceFeatures implements OccurrenceFeatures {
     }
   }
 
-  Long getLong(String field) {
-    return get(field);
-  }
-
-  String getString(String field) {
-    return get(field);
-  }
-
-  List<String> getStrings(String... field) {
-    List<String> vals = new ArrayList<>(field.length);
-    Arrays.stream(field).forEach(s -> vals.add(getString(s)));
-    return vals;
-  }
-
-  private static <T> T assertNotNull(T value, String message) {
-    if (value == null) {
-      throw new IllegalArgumentException(message);
-    } else {
-      return value;
-    }
-  }
-
   /**
    * @return JSON representing all fields that match the prefix, but with the prefix removed (e.g.
    *     t1_day becomes day)
@@ -109,7 +88,7 @@ public class RowOccurrenceFeatures implements OccurrenceFeatures {
     String[] fieldNames = row.schema().fieldNames();
     List<String> filteredFieldNames =
         Arrays.stream(fieldNames)
-            .filter(s -> prefix == null || prefix.length() == 0 || s.startsWith(prefix))
+            .filter(s -> prefix == null || prefix.isEmpty() || s.startsWith(prefix))
             .collect(Collectors.toList());
 
     Map<String, Object> test = new HashMap<>();
@@ -245,13 +224,16 @@ public class RowOccurrenceFeatures implements OccurrenceFeatures {
 
   List<String> listOrNull(String field) {
     Object o = get(field);
+
     // what follows exists only to simply testing (List) and Spark using Hive (Seq) integrations
-    if (o == null) return null;
-    else if (o instanceof Seq) {
+    if (o == null) {
+      return null;
+    } else if (o instanceof Seq) {
       return JavaConverters.seqAsJavaListConverter((Seq<String>) o).asJava();
     } else if (o instanceof List) {
       return (List<String>) o;
     } else {
+      log.error("listOrNull is {}: {}", o.getClass(), o);
       throw new IllegalArgumentException("Expected a Seq or List for " + field);
     }
   }

@@ -2,26 +2,27 @@ package org.gbif.pipelines.clustering;
 
 import static org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships.concatIfEligible;
 import static org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships.hashOrNull;
-import static org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships.isEligibleCode;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.gbif.pipelines.core.parsers.clustering.OccurrenceFeatures;
 import org.gbif.pipelines.core.parsers.clustering.OccurrenceRelationships;
 
 /** Utility functions for hashing records to pre-group. */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 class HashUtilities {
   private static final Set<String> SPECIMEN_BASIS_OF_RECORD_SET =
-      Stream.of(
-              "PRESERVED_SPECIMEN",
-              "MATERIAL_SAMPLE",
-              "LIVING_SPECIMEN",
-              "FOSSIL_SPECIMEN",
-              "MATERIAL_CITATION")
-          .collect(Collectors.toSet());
+      Set.of(
+          "PRESERVED_SPECIMEN",
+          "MATERIAL_SAMPLE",
+          "LIVING_SPECIMEN",
+          "FOSSIL_SPECIMEN",
+          "MATERIAL_CITATION");
 
   static Iterator<Row> recordHashes(OccurrenceFeatures o) {
     Double lat = o.getDecimalLatitude();
@@ -128,7 +129,7 @@ class HashUtilities {
           Stream.concat(
               ids, o.getOtherCatalogNumbers().stream().map(c -> hashOrNull(c, allowNumerics)));
     }
-    return ids.filter(c -> isEligibleCode(c)).collect(Collectors.toSet());
+    return ids.filter(OccurrenceRelationships::isEligibleCode).collect(Collectors.toSet());
   }
 
   /** Return true of no nulls or empty strings provided */

@@ -5,9 +5,14 @@ import java.io.FileReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /** Utility to read the named arguments. */
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 class ArgsParser {
 
   static Cluster.ClusterBuilder parse(String[] args) {
@@ -26,7 +31,7 @@ class ArgsParser {
 
     Cluster.ClusterBuilder builder =
         nextCliOption(new Cluster.ClusterBuilder(), Arrays.asList(args));
-    System.out.println("Clustering started with configuration: " + builder);
+    log.info("Clustering started with configuration: {}", builder);
     return builder;
   }
 
@@ -88,8 +93,7 @@ class ArgsParser {
             .targetDir(properties.getProperty("targetDir"))
             .hashCountThreshold(Integer.parseInt(properties.getProperty("hashCountThreshold")));
 
-    System.out.println(
-        "Clustering started with configuration loaded from properties file: " + builder);
+    log.info("Clustering started with configuration loaded from properties file: {}", builder);
     return builder;
   }
 }
