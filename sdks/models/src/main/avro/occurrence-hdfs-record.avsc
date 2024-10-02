@@ -1286,6 +1286,12 @@
     "name" : "bed",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "geologicaltime",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
+  }, {
     "name" : "lithostratigraphy",
     "type" : [ {
       "type" : "array",
@@ -1632,6 +1638,7 @@
   }, {
     "name" : "ext_multimedia",
     "type" : [ "string", "null" ]
-  } ]
+  }
+  ]
 }
 ]
