@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.*;
 import lombok.Builder;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FsShell;
 import org.apache.hadoop.fs.Path;
@@ -21,7 +22,7 @@ import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.exceptions.IllegalArgumentIOException;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.HFileOutputFormat2;
-import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
+import org.apache.hadoop.hbase.tool.BulkLoadHFilesTool;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.SnappyCodec;
@@ -30,10 +31,10 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.catalyst.encoders.RowEncoder;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
@@ -52,6 +53,7 @@ import scala.Tuple2;
  */
 @Builder
 @Data
+@Slf4j
 public class Cluster implements Serializable {
   private String hiveDB;
   private String sourceTable;
@@ -131,7 +133,7 @@ public class Cluster implements Serializable {
         occurrences
             .flatMap(
                 (FlatMapFunction<Row, Row>) row -> recordHashes(new RowOccurrenceFeatures(row)),
-                RowEncoder.apply(HASH_ROW_SCHEMA))
+                Encoders.row(HASH_ROW_SCHEMA))
             .dropDuplicates();
     spark.sql("DROP TABLE IF EXISTS " + hiveTablePrefix + "_hashes");
     hashes.write().format("parquet").saveAsTable(hiveTablePrefix + "_hashes");
@@ -210,7 +212,7 @@ public class Cluster implements Serializable {
     // Compare all candidate pairs and generate the relationships
     Dataset<Row> relationships =
         pairs.flatMap(
-            (FlatMapFunction<Row, Row>) this::relateRecords, RowEncoder.apply(RELATIONSHIP_SCHEMA));
+            (FlatMapFunction<Row, Row>) this::relateRecords, Encoders.row(RELATIONSHIP_SCHEMA));
     spark.sql("DROP TABLE IF EXISTS " + hiveTablePrefix + "_relationships");
     relationships.write().format("parquet").saveAsTable(hiveTablePrefix + "_relationships");
     return relationships;
@@ -274,30 +276,33 @@ public class Cluster implements Serializable {
     try (Connection connection = ConnectionFactory.createConnection(conf);
         Table table = connection.getTable(TableName.valueOf(hbaseTable));
         Admin admin = connection.getAdmin()) {
-      LoadIncrementalHFiles loader = new LoadIncrementalHFiles(conf);
+
+      BulkLoadHFilesTool loader = new BulkLoadHFilesTool(conf);
 
       // bulkload requires files to be in hbase ownership
       FsShell shell = new FsShell(conf);
       try {
-        System.out.println("Executing chown -R hbase:hbase for " + targetDir);
+        log.info("Executing chown -R hbase:hbase for {}", targetDir);
         shell.run(new String[] {"-chown", "-R", "hbase:hbase", targetDir});
       } catch (Exception e) {
         throw new IOException("Unable to modify FS ownership to hbase", e);
       }
 
-      System.out.println(String.format("Truncating table[%s]", hbaseTable));
+      log.info("Truncating table {}", hbaseTable);
       Instant start = Instant.now();
       admin.disableTable(table.getName());
       admin.truncateTable(table.getName(), true);
-      System.out.printf(
-          "Table[%s] truncated in %d ms%n",
-          hbaseTable, Duration.between(start, Instant.now()).toMillis());
-      System.out.printf("Loading table[%s] from [%s]%n", hbaseTable, targetDir);
-      loader.doBulkLoad(
-          new Path(targetDir), admin, table, connection.getRegionLocator(table.getName()));
-      System.out.printf(
-          "Table [%s] truncated and reloaded in %d ms%n",
-          hbaseTable, Duration.between(start, Instant.now()).toMillis());
+      log.info(
+          "Table {} truncated in {}",
+          hbaseTable,
+          Duration.between(start, Instant.now()).toMillis());
+      log.info("Loading table {} from {}", hbaseTable, targetDir);
+      loader.bulkLoad(table.getName(), new Path(targetDir));
+
+      log.info(
+          "Table {} truncated and reloaded in {}",
+          hbaseTable,
+          Duration.between(start, Instant.now()).toMillis());
       removeTargetDir();
 
     } catch (Exception e) {
@@ -312,10 +317,10 @@ public class Cluster implements Serializable {
     if (targetDir.matches(regex)) {
       FsShell shell = new FsShell(new Configuration());
       try {
-        System.out.println(
-            String.format(
-                "Deleting working directory [%s] which translates to [-rm -r -skipTrash %s ]",
-                targetDir, targetDir));
+        log.info(
+            "Deleting working directory {} which translates to [-rm -r -skipTrash {} ]",
+            targetDir,
+            targetDir);
 
         shell.run(new String[] {"-rm", "-r", "-skipTrash", targetDir});
       } catch (Exception e) {
@@ -379,8 +384,7 @@ public class Cluster implements Serializable {
   static class Tuple2StringComparator implements Comparator<Tuple2<String, String>>, Serializable {
     @Override
     public int compare(Tuple2<String, String> o1, Tuple2<String, String> o2) {
-      if (o1._1.equals(o2._1)) return o1._2.compareTo(o2._2);
-      else return o1._1.compareTo(o2._1);
+      return o1._1.equals(o2._1) ? o1._2.compareTo(o2._2) : o1._1.compareTo(o2._1);
     }
   }
 }
