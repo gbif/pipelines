@@ -54,8 +54,6 @@ import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.utils.HdfsViewUtils;
-import org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils;
-import org.gbif.pipelines.ingest.utils.SharedLockUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.*;
@@ -89,7 +87,6 @@ import org.gbif.pipelines.transforms.table.PreparationTableTransform;
 import org.gbif.pipelines.transforms.table.PreservationTableTransform;
 import org.gbif.pipelines.transforms.table.ReferenceTableTransform;
 import org.gbif.pipelines.transforms.table.ResourceRelationshipTableTransform;
-import org.gbif.wrangler.lock.Mutex;
 import org.slf4j.MDC;
 
 /**
@@ -562,18 +559,18 @@ public class HdfsViewPipeline {
     PipelineResult result = p.run();
 
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
-//      Mutex.Action action = () -> HdfsViewAvroUtils.cleanAndMove(options);
-//      if (options.getTestMode()) {
-//        action.execute();
-//      } else {
-//        SharedLockUtils.doHdfsPrefixLock(options, action);
-//      }
+      //      Mutex.Action action = () -> HdfsViewAvroUtils.cleanAndMove(options);
+      //      if (options.getTestMode()) {
+      //        action.execute();
+      //      } else {
+      //        SharedLockUtils.doHdfsPrefixLock(options, action);
+      //      }
     }
 
     log.info("Save metrics into the file and set files owner");
     // Delete root directory of table records
-//    FsUtils.deleteIfExist(
-//        hdfsConfigs, PathBuilder.buildFilePathViewUsingInputPath(options, recordType));
+    //    FsUtils.deleteIfExist(
+    //        hdfsConfigs, PathBuilder.buildFilePathViewUsingInputPath(options, recordType));
 
     MetricsHandler.saveCountersToInputPathFile(options, result.metrics());
     String metadataPath =
