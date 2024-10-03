@@ -104,6 +104,7 @@ import org.slf4j.MDC;
  *      {@link ImageRecord},
  *      {@link AudubonRecord},
  *      {@link TaxonRecord},
+ *      {@link MultiTaxonRecord},
  *      {@link GrscicollRecord},
  *      {@link LocationRecord},
  *      and etc
@@ -146,7 +147,7 @@ public class HdfsViewPipeline {
   public static void run(
       InterpretationPipelineOptions options,
       Function<InterpretationPipelineOptions, Pipeline> pipelinesFn) {
-
+    System.out.println("Starting HdfsViewPipeline...");
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     String datasetId = options.getDatasetId();
@@ -580,5 +581,6 @@ public class HdfsViewPipeline {
     FsUtils.setOwnerToCrap(hdfsConfigs, metadataPath);
 
     log.info("Pipeline has been finished");
+    System.out.println("Finished HdfsViewPipeline.");
   }
 }
