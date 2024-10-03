@@ -115,10 +115,10 @@ public class GeologicalContextInterpreter {
           .ifPresent(
               r -> {
                 if (r.start != null) {
-                  br.getGeologicalContext().setStartAge(String.valueOf(r.start));
+                  br.getGeologicalContext().setStartAge(r.start);
                 }
                 if (r.end != null) {
-                  br.getGeologicalContext().setEndAge(String.valueOf(r.end));
+                  br.getGeologicalContext().setEndAge(r.end);
                 }
               });
     };
