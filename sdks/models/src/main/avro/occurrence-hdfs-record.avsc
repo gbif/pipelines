@@ -1257,10 +1257,10 @@
         "name" : "GeologicalTime",
          "fields":[ {
             "name" : "gt",
-            "type" : "string"
+            "type" : "float"
           }, {
             "name" : "lte",
-            "type" : "string"
+            "type" : "float"
           }]
          }, "null"]
   },{
