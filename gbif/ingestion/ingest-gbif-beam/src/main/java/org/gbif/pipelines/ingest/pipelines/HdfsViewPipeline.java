@@ -562,18 +562,18 @@ public class HdfsViewPipeline {
     PipelineResult result = p.run();
 
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
-      Mutex.Action action = () -> HdfsViewAvroUtils.cleanAndMove(options);
-      if (options.getTestMode()) {
-        action.execute();
-      } else {
-        SharedLockUtils.doHdfsPrefixLock(options, action);
-      }
+//      Mutex.Action action = () -> HdfsViewAvroUtils.cleanAndMove(options);
+//      if (options.getTestMode()) {
+//        action.execute();
+//      } else {
+//        SharedLockUtils.doHdfsPrefixLock(options, action);
+//      }
     }
 
     log.info("Save metrics into the file and set files owner");
     // Delete root directory of table records
-    FsUtils.deleteIfExist(
-        hdfsConfigs, PathBuilder.buildFilePathViewUsingInputPath(options, recordType));
+//    FsUtils.deleteIfExist(
+//        hdfsConfigs, PathBuilder.buildFilePathViewUsingInputPath(options, recordType));
 
     MetricsHandler.saveCountersToInputPathFile(options, result.metrics());
     String metadataPath =
