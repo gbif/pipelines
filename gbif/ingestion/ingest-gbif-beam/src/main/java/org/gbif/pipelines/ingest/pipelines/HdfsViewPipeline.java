@@ -54,9 +54,29 @@ import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.utils.HdfsViewUtils;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils;
+import org.gbif.pipelines.ingest.utils.SharedLockUtils;
+import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.EventCoreTransform;
+import org.gbif.pipelines.transforms.core.GrscicollTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -87,6 +107,7 @@ import org.gbif.pipelines.transforms.table.PreparationTableTransform;
 import org.gbif.pipelines.transforms.table.PreservationTableTransform;
 import org.gbif.pipelines.transforms.table.ReferenceTableTransform;
 import org.gbif.pipelines.transforms.table.ResourceRelationshipTableTransform;
+import org.gbif.wrangler.lock.Mutex;
 import org.slf4j.MDC;
 
 /**
@@ -101,7 +122,6 @@ import org.slf4j.MDC;
  *      {@link ImageRecord},
  *      {@link AudubonRecord},
  *      {@link TaxonRecord},
- *      {@link MultiTaxonRecord},
  *      {@link GrscicollRecord},
  *      {@link LocationRecord},
  *      and etc
@@ -144,7 +164,7 @@ public class HdfsViewPipeline {
   public static void run(
       InterpretationPipelineOptions options,
       Function<InterpretationPipelineOptions, Pipeline> pipelinesFn) {
-    System.out.println("Starting HdfsViewPipeline...");
+
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig());
     String datasetId = options.getDatasetId();
@@ -184,7 +204,6 @@ public class HdfsViewPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
-    MultiTaxonomyTransform multiTaxonomyTransform = MultiTaxonomyTransform.builder().create();
     GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
     EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
@@ -239,10 +258,6 @@ public class HdfsViewPipeline {
         p.apply("Read Taxon", taxonomyTransform.read(interpretPathFn))
             .apply("Map Taxon to KV", taxonomyTransform.toKv());
 
-    PCollection<KV<String, MultiTaxonRecord>> multiTaxonCollection =
-        p.apply("Read Taxon", multiTaxonomyTransform.read(interpretPathFn))
-            .apply("Map Taxon to KV", multiTaxonomyTransform.toKv());
-
     PCollection<KV<String, GrscicollRecord>> grscicollCollection =
         coreTerm == DwcTerm.Event
             ? p.apply(
@@ -285,7 +300,6 @@ public class HdfsViewPipeline {
             .temporalRecordTag(temporalTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
             .taxonRecordTag(taxonomyTransform.getTag())
-            .multiTaxonRecordTag(multiTaxonomyTransform.getTag())
             .grscicollRecordTag(grscicollTransform.getTag())
             .multimediaRecordTag(multimediaTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
@@ -302,7 +316,6 @@ public class HdfsViewPipeline {
         .and(temporalTransform.getTag(), temporalCollection)
         .and(locationTransform.getTag(), locationCollection)
         .and(taxonomyTransform.getTag(), taxonCollection)
-        .and(multiTaxonomyTransform.getTag(), multiTaxonCollection)
         .and(grscicollTransform.getTag(), grscicollCollection)
         .and(eventCoreTransform.getTag(), eventCoreCollection)
         // Extension
@@ -559,18 +572,18 @@ public class HdfsViewPipeline {
     PipelineResult result = p.run();
 
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
-      //      Mutex.Action action = () -> HdfsViewAvroUtils.cleanAndMove(options);
-      //      if (options.getTestMode()) {
-      //        action.execute();
-      //      } else {
-      //        SharedLockUtils.doHdfsPrefixLock(options, action);
-      //      }
+      Mutex.Action action = () -> HdfsViewAvroUtils.cleanAndMove(options);
+      if (options.getTestMode()) {
+        action.execute();
+      } else {
+        SharedLockUtils.doHdfsPrefixLock(options, action);
+      }
     }
 
     log.info("Save metrics into the file and set files owner");
     // Delete root directory of table records
-    //    FsUtils.deleteIfExist(
-    //        hdfsConfigs, PathBuilder.buildFilePathViewUsingInputPath(options, recordType));
+    FsUtils.deleteIfExist(
+        hdfsConfigs, PathBuilder.buildFilePathViewUsingInputPath(options, recordType));
 
     MetricsHandler.saveCountersToInputPathFile(options, result.metrics());
     String metadataPath =
@@ -578,6 +591,5 @@ public class HdfsViewPipeline {
     FsUtils.setOwnerToCrap(hdfsConfigs, metadataPath);
 
     log.info("Pipeline has been finished");
-    System.out.println("Finished HdfsViewPipeline.");
   }
 }
