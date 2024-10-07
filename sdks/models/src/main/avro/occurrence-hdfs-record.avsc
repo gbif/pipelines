@@ -1,17 +1,18 @@
-[  {
-  "name":"FlatClassification",
-  "namespace":"org.gbif.pipelines.io.avro",
-  "type":"record",
-  "doc":"Taxonomy classification",
-  "fields":[
-    {"name":"datasetKey","type": "string", "doc":"The GBIF key for the taxonomy dataset"},
-    {"name":"taxonKeys",
-      "type":{"type":"array","items":"string"},
-      "default":[]
-    },
-    {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""}
-  ]
-},
+[
+//  {
+//  "name":"FlatClassification",
+//  "namespace":"org.gbif.pipelines.io.avro",
+//  "type":"record",
+//  "doc":"Taxonomy classification",
+//  "fields":[
+//    {"name":"datasetKey","type": "string", "doc":"The GBIF key for the taxonomy dataset"},
+//    {"name":"taxonKeys",
+//      "type":{"type":"array","items":"string"},
+//      "default":[]
+//    },
+//    {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""}
+//  ]
+//},
 {
   "type" : "record",
   "name" : "OccurrenceHdfsRecord",
@@ -1286,12 +1287,12 @@
     "name" : "bed",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "geologicaltime",
-    "type" : [ {
-      "type" : "array",
-      "items" : [ "string", "null" ]
-    }, "null" ]
-  }, {
+//    "name" : "geologicaltime",
+//    "type" : [ {
+//      "type" : "array",
+//      "items" : [ "string", "null" ]
+//    }, "null" ]
+//  }, {
     "name" : "lithostratigraphy",
     "type" : [ {
       "type" : "array",

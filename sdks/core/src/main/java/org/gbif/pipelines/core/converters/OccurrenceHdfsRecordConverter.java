@@ -280,15 +280,16 @@ public class OccurrenceHdfsRecordConverter {
     //            .collect(Collectors.toList()));
   }
 
-  private FlatClassification createFlatClassification(TaxonRecord taxonRecord) {
-    FlatClassification flatClassification = new FlatClassification();
-    flatClassification.setDatasetKey(taxonRecord.getDatasetKey());
-    flatClassification.setTaxonKeys(
-        taxonRecord.getClassification().stream()
-            .map(RankedName::getKey)
-            .collect(Collectors.toList()));
-    return flatClassification;
-  }
+  //
+  //  private FlatClassification createFlatClassification(TaxonRecord taxonRecord) {
+  //    FlatClassification flatClassification = new FlatClassification();
+  //    flatClassification.setDatasetKey(taxonRecord.getDatasetKey());
+  //    flatClassification.setTaxonKeys(
+  //        taxonRecord.getClassification().stream()
+  //            .map(RankedName::getKey)
+  //            .collect(Collectors.toList()));
+  //    return flatClassification;
+  //  }
 
   /** Copies the {@link TaxonRecord} data into the {@link OccurrenceHdfsRecord}. */
   private void mapTaxonRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
