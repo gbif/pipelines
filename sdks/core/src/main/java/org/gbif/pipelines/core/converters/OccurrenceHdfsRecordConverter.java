@@ -269,15 +269,15 @@ public class OccurrenceHdfsRecordConverter {
     if (multiTaxonRecord == null) {
       return;
     }
-    occurrenceHdfsRecord.setChecklistKey(
+    occurrenceHdfsRecord.setChecklistkey(
         multiTaxonRecord.getTaxonRecords().stream()
             .map(TaxonRecord::getDatasetKey)
             .collect(Collectors.toList()));
-
-    occurrenceHdfsRecord.setClassifications(
-        multiTaxonRecord.getTaxonRecords().stream()
-            .map(taxonRecord -> createFlatClassification(taxonRecord))
-            .collect(Collectors.toList()));
+    //
+    //    occurrenceHdfsRecord.setClassifications(
+    //        multiTaxonRecord.getTaxonRecords().stream()
+    //            .map(taxonRecord -> createFlatClassification(taxonRecord))
+    //            .collect(Collectors.toList()));
   }
 
   private FlatClassification createFlatClassification(TaxonRecord taxonRecord) {

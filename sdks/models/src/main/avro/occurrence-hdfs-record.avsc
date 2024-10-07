@@ -1343,17 +1343,18 @@
     "name" : "identificationremarks",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "checklistKey",
+    "name" : "checklistkey",
     "type" : [ {
       "type" : "array",
       "items" : [ "string", "null" ]
     }, "null" ]
-  }, {
-    "name" : "classifications",
-    "type" : [ {
-      "type" : "array",
-      "items" : [ "FlatClassification", "null" ]
-    }, "null" ]
+//  }
+//  , {
+//    "name" : "classifications",
+//    "type" : [ {
+//      "type" : "array",
+//      "items" : [ "FlatClassification", "null" ]
+//    }, "null" ]
 //    "type" : [ {
 //      "type" : "record",
 //      "name" : "FlatClassification",
