@@ -280,8 +280,8 @@
       "namespace":"org.gbif.pipelines.io.avro.json",
       "type":"record",
       "fields":[
-        {"name":"gt","type":["null","string"],"default":null},
-        {"name":"lte","type":["null","string"],"default":null}
+        {"name":"gt","type":["null","float"],"default":null},
+        {"name":"lte","type":["null","float"],"default":null}
       ]
     }
 ]
