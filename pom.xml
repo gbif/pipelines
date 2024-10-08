@@ -107,7 +107,7 @@
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
 
     <!-- Main distributed libraries -->
-    <avro.version>1.11.1</avro.version>
+    <avro.version>1.11.4</avro.version>
     <!-- Beam can duplicate data in the index, before bumping the version please test next issue https://github.com/gbif/pipelines/issues/1042 -->
     <apache.beam.version>2.34.0</apache.beam.version>
 
