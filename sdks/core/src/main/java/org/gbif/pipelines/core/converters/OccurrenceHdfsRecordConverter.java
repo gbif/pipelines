@@ -273,23 +273,17 @@ public class OccurrenceHdfsRecordConverter {
         multiTaxonRecord.getTaxonRecords().stream()
             .map(TaxonRecord::getDatasetKey)
             .collect(Collectors.toList()));
-    //
-    //    occurrenceHdfsRecord.setClassifications(
-    //        multiTaxonRecord.getTaxonRecords().stream()
-    //            .map(taxonRecord -> createFlatClassification(taxonRecord))
-    //            .collect(Collectors.toList()));
-  }
 
-  //
-  //  private FlatClassification createFlatClassification(TaxonRecord taxonRecord) {
-  //    FlatClassification flatClassification = new FlatClassification();
-  //    flatClassification.setDatasetKey(taxonRecord.getDatasetKey());
-  //    flatClassification.setTaxonKeys(
-  //        taxonRecord.getClassification().stream()
-  //            .map(RankedName::getKey)
-  //            .collect(Collectors.toList()));
-  //    return flatClassification;
-  //  }
+    occurrenceHdfsRecord.setClassifications(
+        multiTaxonRecord.getTaxonRecords().stream()
+            .collect(
+                Collectors.toMap(
+                    TaxonRecord::getDatasetKey,
+                    tr ->
+                        tr.getClassification().stream()
+                            .map(RankedName::getKey)
+                            .collect(Collectors.toList()))));
+  }
 
   /** Copies the {@link TaxonRecord} data into the {@link OccurrenceHdfsRecord}. */
   private void mapTaxonRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {

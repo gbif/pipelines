@@ -1349,39 +1349,17 @@
       "type" : "array",
       "items" : [ "string", "null" ]
     }, "null" ]
-//  }
-//  , {
-//    "name" : "classifications",
-//    "type" : [ {
-//      "type" : "array",
-//      "items" : [ "FlatClassification", "null" ]
-//    }, "null" ]
-//    "type" : [ {
-//      "type" : "record",
-//      "name" : "FlatClassification",
-//      "fields" : [ {
-//        "name" : "checklistKey",
-//        "type" : "string"
-//      }, {
-//        "name" : "taxonKeys",
-//        "type" : [ {
-//          "type" : "array",
-//          "items" : [ "string", "null" ]
-//        }, "null" ]
-//      }, {
-//        "name" : "names",
-//        "type" : [ {
-//          "type" : "array",
-//          "items" : [ "string", "null" ]
-//        }, "null" ]
-//      }, {
-//        "name" : "ranks",
-//        "type" : [ {
-//          "type" : "array",
-//          "items" : [ "string", "null" ]
-//        }, "null" ]
-//      } ]
-//    }, "null" ]
+  }, {
+    "name" : "classifications",
+    "type": {
+      "type": "map",
+      "values": {
+        "type": "array",
+        "items": "string"
+      }
+    },
+    "default": {},
+    "doc":""
   }, {
     "name" : "taxonid",
     "type" : [ "string", "null" ]
