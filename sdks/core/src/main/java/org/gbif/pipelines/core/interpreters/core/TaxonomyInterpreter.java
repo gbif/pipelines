@@ -20,8 +20,6 @@ import org.gbif.api.vocabulary.Kingdom;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.NameUsageMatchRequest;
-import org.gbif.nameparser.NameParserGBIF;
-import org.gbif.nameparser.api.NameParser;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.core.utils.IdentificationUtils;
 import org.gbif.pipelines.core.utils.ModelUtils;
@@ -55,7 +53,6 @@ public class TaxonomyInterpreter {
           .setName(Kingdom.INCERTAE_SEDIS.scientificName())
           .setKey(Kingdom.INCERTAE_SEDIS.nubUsageKey())
           .build();
-  private static final NameParser NAME_PARSER = new NameParserGBIF();
 
   /**
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
