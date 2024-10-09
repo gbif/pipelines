@@ -3,7 +3,7 @@ package org.gbif.pipelines.tasks;
 import static org.gbif.common.messaging.api.messages.OccurrenceDeletionReason.NOT_SEEN_IN_LAST_CRAWL;
 
 import com.google.common.annotations.VisibleForTesting;
-import io.github.resilience4j.retry.IntervalFunction;
+import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
@@ -94,7 +94,11 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
               PipelineStep.Status.ABORTED));
 
   private static final Set<PipelineStep.Status> FINISHED_STATE_SET =
-      new HashSet<>(Arrays.asList(PipelineStep.Status.COMPLETED, PipelineStep.Status.ABORTED));
+      new HashSet<>(
+          Arrays.asList(
+              PipelineStep.Status.COMPLETED,
+              PipelineStep.Status.ABORTED,
+              PipelineStep.Status.FAILED));
 
   private static Properties properties;
   private final MessagePublisher publisher;
@@ -146,8 +150,6 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         return;
       }
 
-      O outgoingMessage = handler.createOutgoingMessage(message);
-
       // track the pipeline step
       info = trackPipelineStep();
 
@@ -164,6 +166,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       info.ifPresent(i -> updateTrackingStatus(i, PipelineStep.Status.COMPLETED));
 
       // Send a wrapped outgoing message to Balancer queue
+      O outgoingMessage = handler.createOutgoingMessage(message);
       if (outgoingMessage != null) {
 
         // set the executionId
@@ -272,6 +275,15 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     }
   }
 
+  private boolean containsEvents() {
+    DatasetInfo datasetInfo = message.getDatasetInfo();
+    boolean containsEvents = false;
+    if (config.eventsEnabled() && datasetInfo.getDatasetType() == DatasetType.SAMPLING_EVENT) {
+      containsEvents = datasetInfo.isContainsEvents();
+    }
+    return containsEvents;
+  }
+
   private Optional<TrackingInfo> trackPipelineStep() {
     try {
 
@@ -301,13 +313,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       if (executionId == null) {
         log.info("executionId is empty, create initial pipelines execution");
         // create execution
-        DatasetInfo datasetInfo = message.getDatasetInfo();
-        boolean containsOccurrences = datasetInfo.isContainsOccurrences();
-        boolean containsEvents = false;
-        if (datasetInfo.getDatasetType() == DatasetType.SAMPLING_EVENT) {
-          containsEvents = datasetInfo.isContainsEvents();
-        }
-
+        boolean containsEvents = containsEvents();
+        boolean containsOccurrences = message.getDatasetInfo().isContainsOccurrences();
         Set<StepType> stepTypes =
             PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents)
                 .getAllNodesFor(Collections.singleton(stepType));
@@ -396,29 +403,26 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     if (isValidator) {
       nodeEdges = PipelinesWorkflow.getValidatorWorkflow().getNodeEdges(stepType);
     } else {
-      DatasetInfo datasetInfo = message.getDatasetInfo();
-      boolean containsOccurrences = datasetInfo.isContainsOccurrences();
-      boolean containsEvents = false;
-      if (datasetInfo.getDatasetType() == DatasetType.SAMPLING_EVENT) {
-        containsEvents = datasetInfo.isContainsEvents();
-      }
+      boolean containsEvents = containsEvents();
+      boolean containsOccurrences = message.getDatasetInfo().isContainsOccurrences();
       Graph<StepType> workflow = PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents);
       nodeEdges = workflow.getNodeEdges(stepType);
     }
-    nodeEdges.forEach(
-        e -> {
-          PipelineStep step = info.pipelineStepMap.get(e.getNode());
-          if (step != null) {
-            step.setState(PipelineStep.Status.QUEUED);
-            // Call Registry to update
-            Runnable r =
-                () -> {
-                  log.info("History client: update pipeline step: {}", step);
-                  historyClient.updatePipelineStep(step);
-                };
-            Retry.decorateRunnable(RETRY, r).run();
-          }
-        });
+
+    for (Graph<StepType>.Edge e : nodeEdges) {
+      PipelineStep step = info.pipelineStepMap.get(e.getNode());
+      if (step != null) {
+        step.setState(PipelineStep.Status.QUEUED);
+        // Call Registry to update
+        Function<PipelineStep, Long> pipelineStepFn =
+            s -> {
+              log.info("History client: update pipeline step: {}", s);
+              return historyClient.updatePipelineStep(s);
+            };
+        long stepKey = Retry.decorateFunction(RETRY, pipelineStepFn).apply(step);
+        log.info("Step {} with step key {} as QUEUED", step.getType(), stepKey);
+      }
+    }
   }
 
   private void updateTrackingStatus(TrackingInfo ti, PipelineStep.Status status) {
@@ -453,12 +457,22 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     }
 
     try {
-      Runnable r =
-          () -> {
-            log.info("History client: update pipeline step: {}", pipelineStep);
-            historyClient.updatePipelineStep(pipelineStep);
+      Function<PipelineStep, Long> pipelineStepFn =
+          s -> {
+            log.info("History client: update pipeline step: {}", s);
+            PipelineStep step = historyClient.getPipelineStep(s.getKey());
+            if (FINISHED_STATE_SET.contains(step.getState())) {
+              return step.getKey();
+            }
+            return historyClient.updatePipelineStep(s);
           };
-      Retry.decorateRunnable(RETRY, r).run();
+      long stepKey = Retry.decorateFunction(RETRY, pipelineStepFn).apply(pipelineStep);
+      log.info(
+          "Step key {}, step type {} is {}",
+          stepKey,
+          pipelineStep.getType(),
+          pipelineStep.getState());
+
     } catch (Exception ex) {
       // we don't want to break the crawling if the tracking fails
       log.error(
@@ -500,6 +514,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         log.error("The dataset marked as deleted while was being in the processing");
         throw new PipelinesException("The dataset marked as deleted");
       }
+    } else {
+      log.warn("datasetClient object is null, skip checkIfDatasetIsDeleted");
     }
   }
 

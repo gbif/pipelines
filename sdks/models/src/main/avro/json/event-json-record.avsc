@@ -16,7 +16,7 @@
     "doc":"Additional information",
     "fields":[
       // Internal
-      {"name":"id","type":"string","default":null,"doc":""},
+      {"name":"id","type":["null","string"],"default":null,"doc":""},
       {"name":"created","type":["null","string"],"default":null,"doc":""},
       {"name":"parentsLineage", "type": {"type" : "array", "items" : "Parent"}, "default" : [], "doc":""},
       {"name":"license","type":["null","string"],"default":null,"doc":""},
@@ -25,11 +25,11 @@
       {"name":"eventName","type":["null","string"],"default":null,"doc":""},
       {"name":"references","type":["null","string"],"default":null,"doc":""},
       {"name":"institutionCode","type":["null","string"],"default":null,"doc":""},
-      {"name":"datasetID","type":{"type":"array","items":"string"},"default":null,"doc":""},
-      {"name":"datasetName","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"datasetID","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"datasetName","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"modified","type":["null","string"],"default":null,"doc":""},
       // Event
-      {"name":"samplingProtocol","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"samplingProtocol","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"samplingProtocolJoined","type":["null","string"],"default":null,"doc":""},
       {"name":"eventID","type":["null","string"],"default":null,"doc":""},
       {"name":"parentEventID","type":["null","string"],"default":null,"doc":""},
@@ -72,12 +72,12 @@
       {"name":"distanceFromCentroidInMeters","type":["null","double"],"default":null,"doc":""},
       {"name":"publishingCountry","type":["null","string"],"default":null,"doc":""},
       // Multimedia
-      {"name":"mediaTypes","type":{"type":"array","items":"string"},"default":null,"doc":""},
-      {"name":"mediaLicenses","type":{"type":"array","items":"string"},"default":null,"doc":""},
-      {"name":"multimediaItems","type":{"type":"array","items":"Multimedia"},"default":null,"doc":""},
+      {"name":"mediaTypes","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"mediaLicenses","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"multimediaItems","type":{"type":"array","items":"Multimedia"},"default":[],"doc":""},
       // MeasurementOrFact
-      {"name":"measurementOrFactTypes","type":{"type":"array","items":"string"},"default":null,"doc":""},
-      {"name":"measurementOrFactMethods","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"measurementOrFactTypes","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"measurementOrFactMethods","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"measurementOrFactCount","type":["null","int"],"default":null,"doc":""},
       // Extra
       {"name":"issues","type":{"type":"array","items":"string"},"default":[],"doc":""},

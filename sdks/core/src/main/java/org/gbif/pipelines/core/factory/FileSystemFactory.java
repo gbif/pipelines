@@ -30,8 +30,8 @@ public class FileSystemFactory {
   private FileSystemFactory(HdfsConfigs hdfsConfigs) {
     if (!Strings.isNullOrEmpty(hdfsConfigs.getHdfsSiteConfig())) {
 
-      String hdfsPrefixToUse = getHdfsPrefix(hdfsConfigs.getHdfsSiteConfig());
-      String corePrefixToUse = getHdfsPrefix(hdfsConfigs.getCoreSiteConfig());
+      String hdfsPrefixToUse = getHdfsPrefix(hdfsConfigs);
+      String corePrefixToUse = getHdfsPrefix(hdfsConfigs);
 
       String prefixToUse = null;
       if (!DEFAULT_FS.equals(hdfsPrefixToUse)) {
@@ -44,7 +44,7 @@ public class FileSystemFactory {
 
       if (prefixToUse != null) {
         this.hdfsPrefix = prefixToUse;
-        Configuration config = getHdfsConfiguration(hdfsConfigs.getHdfsSiteConfig());
+        Configuration config = getHdfsConfiguration(hdfsConfigs);
         this.hdfsFs = FileSystem.get(URI.create(prefixToUse), config);
       } else {
         throw new PipelinesException("XML config is provided, but fs name is not found");
@@ -103,28 +103,38 @@ public class FileSystemFactory {
    * @return a {@link Configuration} based on the provided config file
    */
   @SneakyThrows
-  private static Configuration getHdfsConfiguration(String pathToConfig) {
-    Configuration config = new Configuration();
-
+  private static Configuration getHdfsConfiguration(HdfsConfigs hdfsConfigs) {
     // check if the hdfs-site.xml is provided
-    if (!Strings.isNullOrEmpty(pathToConfig)) {
-      File file = new File(pathToConfig);
-      if (file.exists() && file.isFile()) {
-        log.info("Using XML config found at {}", pathToConfig);
-        config.addResource(file.toURI().toURL());
+    if (!Strings.isNullOrEmpty(hdfsConfigs.getHdfsSiteConfig())
+        && !Strings.isNullOrEmpty(hdfsConfigs.getCoreSiteConfig())) {
+      File hdfsSiteFile = new File(hdfsConfigs.getHdfsSiteConfig());
+      File coreSiteFile = new File(hdfsConfigs.getCoreSiteConfig());
+      if (hdfsSiteFile.exists()
+          && hdfsSiteFile.isFile()
+          && coreSiteFile.exists()
+          && coreSiteFile.isFile()) {
+        Configuration config = new Configuration(false);
+        log.info("Using XML config found at {} and {}", hdfsSiteFile, coreSiteFile);
+        config.addResource(hdfsSiteFile.toURI().toURL());
+        config.addResource(coreSiteFile.toURI().toURL());
+        return config;
       } else {
-        log.warn("XML config does not exist - {}", pathToConfig);
+        log.warn(
+            "XML config does not exist - {} or {}",
+            hdfsConfigs.getHdfsSiteConfig(),
+            hdfsConfigs.getCoreSiteConfig());
       }
     } else {
       log.info("XML config not provided");
     }
-    return config;
+    return new Configuration();
   }
 
-  private static String getHdfsPrefix(String pathToConfig) {
+  private static String getHdfsPrefix(HdfsConfigs hdfsConfigs) {
     String hdfsPrefixToUse = null;
-    if (!Strings.isNullOrEmpty(pathToConfig)) {
-      Configuration hdfsSite = getHdfsConfiguration(pathToConfig);
+    if (!Strings.isNullOrEmpty(hdfsConfigs.getHdfsSiteConfig())
+        && !Strings.isNullOrEmpty(hdfsConfigs.getCoreSiteConfig())) {
+      Configuration hdfsSite = getHdfsConfiguration(hdfsConfigs);
       hdfsPrefixToUse = hdfsSite.get("fs.default.name");
       if (hdfsPrefixToUse == null) {
         hdfsPrefixToUse = hdfsSite.get("fs.defaultFS");

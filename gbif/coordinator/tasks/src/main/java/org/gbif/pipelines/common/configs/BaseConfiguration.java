@@ -9,4 +9,6 @@ public interface BaseConfiguration {
   String getRepositoryPath();
 
   String getMetaFileName();
+
+  boolean eventsEnabled();
 }

@@ -6,9 +6,12 @@ import java.util.Optional;
 import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
+import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration.Builder;
 import org.gbif.kvs.geocode.GeocodeKVStoreFactory;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
+import org.gbif.kvs.hbase.LoaderRetryConfig;
+import org.gbif.pipelines.core.config.model.KvConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -62,38 +65,50 @@ public class GeocodeKvStoreFactory {
       return null;
     }
 
+    KvConfig geocodeConfig = config.getGeocode();
+
     String api =
-        Optional.ofNullable(config.getGeocode().getApi())
+        Optional.ofNullable(geocodeConfig.getApi())
             .map(WsConfig::getWsUrl)
             .orElse(config.getGbifApi().getWsUrl());
 
     ClientConfiguration clientConfig =
         ClientConfiguration.builder()
             .withBaseApiUrl(api)
-            .withFileCacheMaxSizeMb(config.getGeocode().getWsCacheSizeMb())
-            .withTimeOut(config.getGeocode().getWsTimeoutSec())
+            .withFileCacheMaxSizeMb(geocodeConfig.getWsCacheSizeMb())
+            .withTimeOut(geocodeConfig.getWsTimeoutSec())
             .build();
 
-    String zk = config.getGeocode().getZkConnectionString();
+    String zk = geocodeConfig.getZkConnectionString();
     zk = zk == null || zk.isEmpty() ? config.getZkConnectionString() : zk;
-    if (zk == null || config.getGeocode().isRestOnly()) {
+    if (zk == null || geocodeConfig.isRestOnly()) {
       return GeocodeKVStoreFactory.simpleGeocodeKVStore(clientConfig);
     }
 
-    CachedHBaseKVStoreConfiguration geocodeKvStoreConfig =
+    Builder configBuilder =
         CachedHBaseKVStoreConfiguration.builder()
             .withValueColumnQualifier("j") // stores JSON data
             .withHBaseKVStoreConfiguration(
                 HBaseKVStoreConfiguration.builder()
-                    .withTableName(config.getGeocode().getTableName())
+                    .withTableName(geocodeConfig.getTableName())
                     .withColumnFamily("v") // Column in which qualifiers are stored
-                    .withNumOfKeyBuckets(config.getGeocode().getNumOfKeyBuckets())
+                    .withNumOfKeyBuckets(geocodeConfig.getNumOfKeyBuckets())
                     .withHBaseZk(zk)
+                    .withHBaseZnode(geocodeConfig.getHbaseZnode())
                     .build())
-            .withCacheCapacity(15_000L)
-            .withCacheExpiryTimeInSeconds(config.getGeocode().getCacheExpiryTimeInSeconds())
-            .build();
+            .withCacheCapacity(25_000L)
+            .withCacheExpiryTimeInSeconds(geocodeConfig.getCacheExpiryTimeInSeconds());
 
-    return GeocodeKVStoreFactory.simpleGeocodeKVStore(geocodeKvStoreConfig, clientConfig);
+    KvConfig.LoaderRetryConfig retryConfig = geocodeConfig.getLoaderRetryConfig();
+    if (retryConfig != null) {
+      configBuilder.withLoaderRetryConfig(
+          new LoaderRetryConfig(
+              retryConfig.getMaxAttempts(),
+              retryConfig.getInitialIntervalMillis(),
+              retryConfig.getMultiplier(),
+              retryConfig.getRandomizationFactor()));
+    }
+
+    return GeocodeKVStoreFactory.simpleGeocodeKVStore(configBuilder.build(), clientConfig);
   }
 }

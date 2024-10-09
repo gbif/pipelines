@@ -139,7 +139,9 @@ public class TermUtils {
     return INTERPRETED_SOURCE_TERMS.contains(term);
   }
 
-  /** @return true if the term is an interpreted value stored as a java property on Occurrence. */
+  /**
+   * @return true if the term is an interpreted value stored as a java property on Occurrence.
+   */
   public static boolean isOccurrenceJavaProperty(Term term) {
     return JAVA_PROPERTY_TERMS.contains(term);
   }

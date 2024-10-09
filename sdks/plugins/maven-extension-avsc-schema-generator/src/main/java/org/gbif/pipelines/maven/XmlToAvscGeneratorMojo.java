@@ -103,8 +103,8 @@ public class XmlToAvscGeneratorMojo extends AbstractMojo {
             });
 
     // Add gbifID and datasetKey fields
-    fields.add(createField("gbifid", Type.STRING, "GBIF internal identifier", false));
-    fields.add(createField("datasetkey", Type.STRING, "GBIF registry dataset identifier", false));
+    fields.add(createField("gbifid", Type.STRING, "GBIF internal identifier", true));
+    fields.add(createField("datasetkey", Type.STRING, "GBIF registry dataset identifier", true));
 
     // Add terms from xml schema
     for (ExtensionProperty ep : ext.getProperties()) {

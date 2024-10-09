@@ -188,6 +188,22 @@ public class EsService {
   }
 
   /**
+   * Counts the number of documents of an index.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param idxName index to get the count from.
+   * @param datasetKey Registry dataset key
+   * @return number of documents of the index.
+   */
+  @SneakyThrows
+  public static long countIndexDocumentsByDatasetKey(
+      @NonNull EsClient esClient, String idxName, String datasetKey) {
+    String endpoint = buildEndpoint(idxName, "_count?q=datasetKey:" + datasetKey);
+    Response response = esClient.performGetRequest(endpoint);
+    return HttpResponseParser.parseIndexCountResponse(response.getEntity());
+  }
+
+  /**
    * Indexes a document in an index.
    *
    * @param esClient client to call ES. It is required.

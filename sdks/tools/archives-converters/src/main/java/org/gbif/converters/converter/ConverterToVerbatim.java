@@ -101,9 +101,9 @@ public abstract class ConverterToVerbatim {
                 .build()
                 .createSyncDataFileWriter()) {
 
-      long numberOfRecords = convert(inputPath, dataFileWriter);
+      Metric metric = convert(inputPath, dataFileWriter);
 
-      createMetafile(fs, metaPath, numberOfRecords);
+      createMetafile(fs, metaPath, metric);
 
     } catch (Exception e) {
       log.error("Failed performing conversion on {}", inputPath, e);
@@ -117,15 +117,22 @@ public abstract class ConverterToVerbatim {
     return !isConverted;
   }
 
-  private void createMetafile(FileSystem fs, Path metaPath, long numberOfRecords)
-      throws IOException {
+  private void createMetafile(FileSystem fs, Path metaPath, Metric metric) throws IOException {
     if (metaPath != null) {
-      String info = Metrics.ARCHIVE_TO_ER_COUNT + ": " + numberOfRecords + "\n";
+      String info =
+          Metrics.ARCHIVE_TO_ER_COUNT
+              + ": "
+              + metric.getNumberOfRecords()
+              + "\n"
+              + Metrics.ARCHIVE_TO_OCC_COUNT
+              + ": "
+              + metric.getNumberOfOccurrenceRecords()
+              + "\n";
       FsUtils.createFile(fs, metaPath, info);
     }
   }
 
-  protected abstract long convert(
+  protected abstract Metric convert(
       java.nio.file.Path inputPath, SyncDataFileWriter<ExtendedRecord> dataFileWriter)
       throws IOException;
 }

@@ -26,6 +26,12 @@ import org.junit.rules.ExternalResource;
 @Getter
 public class ZkServer extends ExternalResource {
 
+  // Disable ZK Admin Server
+  static {
+    System.setProperty("zookeeper.admin.enableServer", "false");
+    System.setProperty("zookeeper.admin.serverPort", "0");
+  }
+
   private static final Object MUTEX = new Object();
   private static volatile ZkServer instance;
   private static final AtomicInteger COUNTER = new AtomicInteger(0);
@@ -48,7 +54,8 @@ public class ZkServer extends ExternalResource {
   @Override
   protected void before() throws Throwable {
     if (COUNTER.get() == 0) {
-      zkServer = new TestingServer(true);
+      zkServer = new TestingServer();
+      zkServer.start();
       updateLockProperties();
     }
     COUNTER.addAndGet(1);

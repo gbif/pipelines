@@ -5,16 +5,15 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>53</version>
+    <version>58</version>
   </parent>
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.18.0-SNAPSHOT</version>
+  <version>2.19.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
-    <module>livingatlas</module>
     <module>gbif</module>
     <module>sdks</module>
   </modules>
@@ -40,27 +39,27 @@
       <url>https://repository.gbif.org/content/repositories/releases</url>
     </repository>
     <snapshotRepository>
-      <id>gbif-snapshot</id>
+      <id>gbif-deploy</id>
       <url>https://repository.gbif.org/content/repositories/snapshots</url>
     </snapshotRepository>
   </distributionManagement>
 
   <repositories>
     <repository>
-      <id>gbif-all</id>
-      <url>https://repository.gbif.org/content/groups/gbif</url>
+      <id>gbif-central</id>
+      <url>https://repository.gbif.org/repository/central/</url>
+    </repository>
+    <repository>
+      <id>gbif-release</id>
+      <url>https://repository.gbif.org/repository/releases/</url>
+    </repository>
+    <repository>
+      <id>gbif-snapshot</id>
+      <url>https://repository.gbif.org/repository/snapshots/</url>
     </repository>
     <repository>
       <id>gbif-thirdparty</id>
-      <url>https://repository.gbif.org/content/repositories/thirdparty/</url>
-    </repository>
-    <repository>
-      <id>ALA</id>
-      <url>https://nexus.ala.org.au/content/repositories/releases</url>
-    </repository>
-    <repository>
-      <id>ALA-snapshots</id>
-      <url>https://nexus.ala.org.au/content/repositories/snapshots</url>
+      <url>https://repository.gbif.org/repository/thirdparty/</url>
     </repository>
     <repository>
       <id>osgeo</id>
@@ -68,68 +67,74 @@
       <url>https://repo.osgeo.org/repository/release/</url>
     </repository>
     <repository>
-      <id>cloudera-release</id>
-      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
+      <id>ala-release</id>
+      <url>https://repository.gbif.org/repository/ala-release/</url>
+    </repository>
+    <repository>
+      <id>typesafe-release</id>
+      <url>https://repository.gbif.org/repository/typesafe/</url>
     </repository>
   </repositories>
 
   <properties>
     <!-- Common variables -->
-    <jdkLevel>1.8</jdkLevel>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <maven.compiler.source>1.8</maven.compiler.source>
+    <jdkLevel>11</jdkLevel>
+    <maven.compiler.source>${jdkLevel}</maven.compiler.source>
+    <maven.compiler.target>${jdkLevel}</maven.compiler.target>
+
     <encoding>UTF-8</encoding>
     <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
     <!-- Tools-->
-    <lombok.version>1.18.20</lombok.version>
+    <lombok.version>1.18.28</lombok.version>
 
     <!-- GBIF libraries -->
-    <gbif-parsers.version>0.63-SNAPSHOT</gbif-parsers.version>
-    <dwca-io.version>2.14</dwca-io.version>
-    <gbif-api.version>1.13.0-SNAPSHOT</gbif-api.version>
-    <gbif-common.version>0.56</gbif-common.version>
-    <dwc-api.version>1.48-SNAPSHOT</dwc-api.version>
-    <kvs.version>1.32</kvs.version>
-    <hbase-utils.version>0.12</hbase-utils.version>
-    <gbif-wrangler.version>0.3</gbif-wrangler.version>
-    <gbif-occurrence.version>0.194.0-SNAPSHOT</gbif-occurrence.version>
-    <vocabulary-lookup.version>1.0.1-SNAPSHOT</vocabulary-lookup.version>
-    <registry.version>3.95.3</registry.version>
-    <gbif-common-ws.version>1.18</gbif-common-ws.version>
-    <gbif-postal-service.version>1.7.0</gbif-postal-service.version>
+    <gbif-parsers.version>0.67</gbif-parsers.version>
+    <dwca-io.version>2.17-H3-SNAPSHOT</dwca-io.version>
+    <gbif-api.version>1.17.0-SNAPSHOT</gbif-api.version>
+    <gbif-common.version>0.59</gbif-common.version>
+    <dwc-api.version>1.49-H3-SNAPSHOT</dwc-api.version>
+    <kvs.version>1.35-H3-SNAPSHOT</kvs.version>
+    <hbase-utils.version>0.14-H3-SNAPSHOT</hbase-utils.version>
+    <gbif-wrangler.version>0.5-SNAPSHOT</gbif-wrangler.version>
+    <gbif-occurrence.version>0.195.0-H3-SNAPSHOT</gbif-occurrence.version>
+    <vocabulary-lookup.version>1.0.10-SNAPSHOT</vocabulary-lookup.version>
+    <registry.version>3.96.6-SNAPSHOT</registry.version>
+    <gbif-common-ws.version>1.26</gbif-common-ws.version>
+    <gbif-postal-service.version>1.9.0-SNAPSHOT</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
 
-    <!-- Common libraries -->
-    <avro.version>1.8.2</avro.version>
-    <apache.beam.version>2.33.0</apache.beam.version>
-    <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
-    <hadoop-core.version>2.6.0-mr1-cdh5.16.2</hadoop-core.version>
-    <hbase.version>1.2.0-cdh5.16.2</hbase.version>
-    <curator.version>2.9.0</curator.version>
+    <!-- Main distributed libraries -->
+    <avro.version>1.11.1</avro.version>
+    <!-- Beam can duplicate data in the index, before bumping the version please test next issue https://github.com/gbif/pipelines/issues/1042 -->
+    <apache.beam.version>2.34.0</apache.beam.version>
+
+    <hadoop.version>3.2.4</hadoop.version>
+    <hbase.version>2.5.3-hadoop3</hbase.version>
+    <curator.version>5.6.0</curator.version>
+    <spark.version>3.5.2</spark.version>
+    <iceberg.version>1.4.3</iceberg.version>
+
+    <scala.version>2.12.17</scala.version>
 
     <!-- Match the version brought in through Tika in the gbif-parsers -->
-    <commons-io.version>2.7</commons-io.version>
+    <commons-io.version>2.11.0</commons-io.version>
     <!-- Match the version from name-parser -->
     <fastutil.version>8.5.9</fastutil.version>
 
     <geotools.version>20.5</geotools.version>
     <commons-lang3.version>3.10</commons-lang3.version>
     <!-- Be carful when change the guava version, it can break XML parsing and etc at runtime -->
-    <guava.version>20.0</guava.version>
-    <!-- Guava version required by HBase libraries -->
-    <guava.hbase.version>12.0.1</guava.hbase.version>
+    <guava.version>27.0.1-jre</guava.version>
+    <amqp-client.version>4.8.0</amqp-client.version>
 
     <!-- Fault tolerance -->
-    <resilience4j.version>1.1.0</resilience4j.version>
+    <resilience4j.version>1.7.0</resilience4j.version>
 
     <!-- Logging -->
-    <slf4j.version>1.7.16</slf4j.version>
+    <slf4j.version>1.7.25</slf4j.version>
     <logback.version>1.2.3</logback.version>
     <log4j.version>1.2.17</log4j.version>
     <logstash-gelf.version>1.11.2</logstash-gelf.version>
@@ -139,7 +144,7 @@
     <pipelines.lucene.version>8.6.2</pipelines.lucene.version>
     <apache.httpcomponents.version>4.4.12</apache.httpcomponents.version>
 
-    <jackson.version>2.12.2</jackson.version>
+    <jackson.version>2.11.3</jackson.version>
 
     <retrofit.version>2.9.0</retrofit.version>
     <okhttp.version>4.9.1</okhttp.version>
@@ -156,9 +161,9 @@
     <commons-beanutils.version>1.9.4</commons-beanutils.version>
     <super-csv.version>2.4.0</super-csv.version>
 
-    <spark.embedded.version>2.4.0</spark.embedded.version>
     <lz4.version>1.3.0</lz4.version>
     <commons-codec.version>1.11</commons-codec.version>
+    <paranamer.version>2.8</paranamer.version>
 
     <freemarker.version>2.3.31</freemarker.version>
 
@@ -167,28 +172,20 @@
     <mockwebserver.version>3.11.0</mockwebserver.version>
     <hamcrest-core.version>1.3</hamcrest-core.version>
     <hamcrest-java.version>2.0.0.0</hamcrest-java.version>
-    <log4j-over-slf4j.version>1.7.16</log4j-over-slf4j.version>
-    <zookeeper-version>3.4.5</zookeeper-version>
+    <log4j-over-slf4j.version>1.7.25</log4j-over-slf4j.version>
+    <log4j-1.2-api.version>2.8.1</log4j-1.2-api.version>
+    <zookeeper.version>3.8.3</zookeeper.version>
     <testcontainers.elasticsearch.version>1.17.5</testcontainers.elasticsearch.version>
 
     <!-- Maven plugin -->
     <maven-plugin-api.version>3.8.6</maven-plugin-api.version>
     <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
     <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
+    <maven-plugin-plugin.version>3.9.0</maven-plugin-plugin.version>
 
     <!-- Plugins -->
-    <build-helper-maven.version>3.3.0</build-helper-maven.version>
-    <maven-shade-plugin.version>3.3.0</maven-shade-plugin.version>
-    <maven-clean-plugin.version>3.2.0</maven-clean-plugin.version>
-    <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
-    <maven-plugin-plugin.version>3.6.4</maven-plugin-plugin.version>
-    <maven-javadoc-plugin.version>3.4.0</maven-javadoc-plugin.version>
-    <spotless-maven-plugin.version>2.22.8</spotless-maven-plugin.version>
     <io.fabric8.version>0.33.0</io.fabric8.version>
-
-    <!-- Checkstyle -->
-    <plexus-compiler-javac-errorprone.version>2.8.3</plexus-compiler-javac-errorprone.version>
-    <error_prone_core.version>2.3.2</error_prone_core.version>
+    <googleJavaFormat.version>1.17.0</googleJavaFormat.version>
 
     <!-- Sonar -->
     <sonar.projectName>GBIF Pipelines</sonar.projectName>
@@ -223,42 +220,12 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>${maven-javadoc-plugin.version}</version>
           <configuration>
             <doclint>none</doclint>
             <includeDependencySources>false</includeDependencySources>
             <dependencySourceIncludes>
               <dependencySourceInclude>org.gbif:*</dependencySourceInclude>
             </dependencySourceIncludes>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>build-helper-maven-plugin</artifactId>
-          <version>${build-helper-maven.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-shade-plugin</artifactId>
-          <version>${maven-shade-plugin.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>${maven-clean-plugin.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-plugin-plugin</artifactId>
-          <version>${maven-plugin-plugin.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <configuration>
-            <compilerArgs>
-              <arg>-XepDisableAllChecks</arg>
-            </compilerArgs>
           </configuration>
         </plugin>
         <plugin>
@@ -272,7 +239,7 @@
           <configuration combine.self="override">
             <java>
               <googleJavaFormat>
-                <version>1.7</version>
+                <version>${googleJavaFormat.version}</version>
                 <style>GOOGLE</style>
               </googleJavaFormat>
             </java>
@@ -282,6 +249,11 @@
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
           <version>${io.fabric8.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-plugin-plugin</artifactId>
+          <version>${maven-plugin-plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -443,7 +415,16 @@
             <groupId>com.beust</groupId>
             <artifactId>jcommander</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>org.gbif.occurrence</groupId>
+            <artifactId>occurrence-persistence</artifactId>
+          </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.occurrence</groupId>
+        <artifactId>occurrence-common</artifactId>
+        <version>${gbif-occurrence.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
@@ -517,6 +498,10 @@
             <artifactId>org.apache.hadoop</artifactId>
             <groupId>hadoop-core</groupId>
           </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -535,17 +520,26 @@
         <artifactId>gbif-common-spreadsheet</artifactId>
         <version>${gbif-common-spreadsheet.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-ws-client</artifactId>
+        <version>${registry.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-persistence</artifactId>
+        <version>${registry.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.crawler</groupId>
+        <artifactId>crawler-coordinator</artifactId>
+        <version>${gbif-crawler.version}</version>
+      </dependency>
 
       <!-- Avro -->
       <dependency>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.xerial.snappy</groupId>
-          <artifactId>snappy-java</artifactId>
-        </exclusion>
-      </exclusions>
         <version>${avro.version}</version>
       </dependency>
 
@@ -562,7 +556,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.beam</groupId>
-        <artifactId>beam-runners-spark</artifactId>
+        <artifactId>beam-runners-spark-3</artifactId>
         <version>${apache.beam.version}</version>
       </dependency>
       <dependency>
@@ -618,6 +612,56 @@
         <artifactId>hadoop-hdfs</artifactId>
         <version>${hadoop.version}</version>
         <scope>provided</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>com.squareup.okhttp</groupId>
+            <artifactId>okhttp</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-client</artifactId>
+        <version>${hadoop.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-reload4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.squareup.okhttp</groupId>
+            <artifactId>okhttp</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-client-api</artifactId>
+        <version>${hadoop.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-reload4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-auth</artifactId>
+        <version>${hadoop.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-hdfs-client</artifactId>
+        <version>${hadoop.version}</version>
       </dependency>
 
       <!-- HBase -->
@@ -662,6 +706,16 @@
             <artifactId>log4j</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-hadoop-compat</artifactId>
+        <version>${hbase.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-hadoop2-compat</artifactId>
+        <version>${hbase.version}</version>
       </dependency>
 
       <!-- Utils -->
@@ -781,6 +835,11 @@
         <version>${elasticsearch.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.elasticsearch</groupId>
+        <artifactId>elasticsearch-core</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.lucene</groupId>
         <artifactId>lucene-core</artifactId>
         <version>${pipelines.lucene.version}</version>
@@ -815,6 +874,11 @@
       <dependency>
         <groupId>com.fasterxml.jackson.dataformat</groupId>
         <artifactId>jackson-dataformat-yaml</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-xml</artifactId>
         <version>${jackson.version}</version>
       </dependency>
 
@@ -896,16 +960,12 @@
       <!-- Mini Pipeline-->
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-core_2.11</artifactId>
-        <version>${spark.embedded.version}</version>
+        <artifactId>spark-core_2.12</artifactId>
+        <version>${spark.version}</version>
         <exclusions>
           <exclusion>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.xerial.snappy</groupId>
-            <artifactId>snappy-java</artifactId>
           </exclusion>
           <exclusion>
             <groupId>org.slf4j</groupId>
@@ -915,14 +975,19 @@
       </dependency>
       <dependency>
         <groupId>org.apache.spark</groupId>
-        <artifactId>spark-streaming_2.11</artifactId>
-        <version>${spark.embedded.version}</version>
+        <artifactId>spark-streaming_2.12</artifactId>
+        <version>${spark.version}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.module</groupId>
-        <artifactId>jackson-module-scala_2.11</artifactId>
+        <artifactId>jackson-module-scala_2.12</artifactId>
         <version>${jackson.version}</version>
         <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.iceberg</groupId>
+        <artifactId>iceberg-spark-runtime-3.4_2.12</artifactId>
+        <version>${iceberg.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-codec</groupId>
@@ -936,6 +1001,13 @@
         <version>${lz4.version}</version>
       </dependency>
 
+      <!--Required by Spark in some jobs and IT tests-->
+      <dependency>
+        <groupId>com.thoughtworks.paranamer</groupId>
+        <artifactId>paranamer</artifactId>
+        <version>${paranamer.version}</version>
+      </dependency>
+
       <!-- Used for indexing locks -->
       <dependency>
         <groupId>org.apache.curator</groupId>
@@ -946,6 +1018,12 @@
         <groupId>org.apache.curator</groupId>
         <artifactId>curator-test</artifactId>
         <version>${curator.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+          </exclusion>
+        </exclusions>
         <scope>test</scope>
       </dependency>
 
@@ -999,16 +1077,6 @@
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-minicluster</artifactId>
         <version>${hadoop.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-        </exclusions>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -1016,24 +1084,6 @@
         <artifactId>hbase-testing-util</artifactId>
         <version>${hbase.version}</version>
         <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-minicluster</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
@@ -1042,9 +1092,15 @@
         <scope>test</scope>
       </dependency>
       <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-1.2-api</artifactId>
+        <version>${log4j-1.2-api.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
         <groupId>org.apache.zookeeper</groupId>
         <artifactId>zookeeper</artifactId>
-        <version>${zookeeper-version}</version>
+        <version>${zookeeper.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>

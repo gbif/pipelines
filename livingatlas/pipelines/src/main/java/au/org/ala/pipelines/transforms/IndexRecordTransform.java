@@ -198,13 +198,14 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         "degreeOfEstablishment"); // GBIF treats it as a JSON, but ALA needs a String which is
     // defined
     skipKeys.add(DwcTerm.typeStatus.simpleName());
-    skipKeys.add(DwcTerm.recordedBy.simpleName());
+    skipKeys.add(DwcTerm.recordedBy.simpleName()); // Do not use processed recordedBy
     skipKeys.add(DwcTerm.identifiedBy.simpleName());
     skipKeys.add(DwcTerm.preparations.simpleName());
     skipKeys.add(DwcTerm.datasetID.simpleName());
     skipKeys.add(DwcTerm.datasetName.simpleName());
     skipKeys.add(DwcTerm.samplingProtocol.simpleName());
     skipKeys.add(DwcTerm.otherCatalogNumbers.simpleName());
+    skipKeys.add(DwcTerm.organismQuantity.simpleName());
 
     IndexRecord.Builder indexRecord = IndexRecord.newBuilder().setId(ur.getUuid());
     indexRecord.setBooleans(new HashMap<>());
@@ -446,31 +447,13 @@ public class IndexRecordTransform implements Serializable, IndexFields {
 
       if (!images.isEmpty()) {
         indexRecord.getStrings().put(IMAGE_ID, isr.getImageItems().get(0).getIdentifier());
-        indexRecord
-            .getMultiValues()
-            .put(
-                IMAGE_IDS,
-                isr.getImageItems().stream()
-                    .map(Image::getIdentifier)
-                    .collect(Collectors.toList()));
+        indexRecord.getMultiValues().put(IMAGE_IDS, images);
       }
       if (!sounds.isEmpty()) {
-        indexRecord
-            .getMultiValues()
-            .put(
-                SOUND_IDS,
-                isr.getImageItems().stream()
-                    .map(Image::getIdentifier)
-                    .collect(Collectors.toList()));
+        indexRecord.getMultiValues().put(SOUND_IDS, sounds);
       }
       if (!videos.isEmpty()) {
-        indexRecord
-            .getMultiValues()
-            .put(
-                VIDEO_IDS,
-                isr.getImageItems().stream()
-                    .map(Image::getIdentifier)
-                    .collect(Collectors.toList()));
+        indexRecord.getMultiValues().put(VIDEO_IDS, videos);
       }
 
       List<MultimediaIndexRecord> mir =
@@ -515,11 +498,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       addIfNotEmpty(indexRecord, COLLECTION_NAME, aar.getCollectionName());
       addIfNotEmpty(indexRecord, PROVENANCE, aar.getProvenance());
       addIfNotEmpty(indexRecord, CONTENT_TYPES, aar.getContentTypes());
-      indexRecord
-          .getBooleans()
-          .put(
-              DEFAULT_VALUES_USED,
-              aar.getHasDefaultValues() != null ? aar.getHasDefaultValues() : false);
+      indexRecord.getBooleans().put(DEFAULT_VALUES_USED, aar.getHasDefaultValues());
 
       // add hub IDs
       if (aar.getHubMembership() != null && !aar.getHubMembership().isEmpty()) {
@@ -628,7 +607,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
       addTermWithAgentsSafely(
           indexRecord, DwcTerm.identifiedByID.simpleName(), br.getIdentifiedByIds());
       addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
-      addMultiValueTermSafely(indexRecord, DwcTerm.recordedBy.simpleName(), br.getRecordedBy());
       addMultiValueTermSafely(indexRecord, DwcTerm.identifiedBy.simpleName(), br.getIdentifiedBy());
       addMultiValueTermSafely(indexRecord, DwcTerm.preparations.simpleName(), br.getPreparations());
       addMultiValueTermSafely(indexRecord, DwcTerm.datasetID.simpleName(), br.getDatasetID());
@@ -868,6 +846,13 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         .addAll(
             BasicRecord.getClassSchema().getFields().stream()
                 .map(Field::name)
+                .filter(
+                    name ->
+                        !DwcTerm.recordedBy.simpleName().equals(name)
+                            && !DwcTerm.organismQuantity
+                                .simpleName()
+                                .equals(
+                                    name)) // Do not use the processed recordedBy or ogansimQuantity
                 .collect(Collectors.toList()))
         .addAll(
             TemporalRecord.getClassSchema().getFields().stream()

@@ -17,16 +17,12 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
-import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.balancer.BalancerConfiguration;
-import org.gbif.pipelines.tasks.occurrences.identifier.IdentifierConfiguration;
-import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
 
 /**
  * Populates and sends the {@link PipelinesInterpretedMessage} message, the main method is {@link
@@ -49,34 +45,27 @@ public class InterpretedMessageHandler {
     PipelinesInterpretedMessage m =
         MAPPER.readValue(message.getPayload(), PipelinesInterpretedMessage.class);
 
-    long recordsNumber = getRecordNumber(config, m);
-
-    String runner = computeRunner(config, m, recordsNumber).name();
-
-    // Update validation result
-    ValidationResult validationResult = m.getValidationResult();
-    validationResult.setNumberOfRecords(recordsNumber);
-
     PipelinesInterpretedMessage outputMessage =
         new PipelinesInterpretedMessage(
             m.getDatasetUuid(),
             m.getAttempt(),
             m.getPipelineSteps(),
-            recordsNumber,
+            m.getNumberOfRecords(),
             m.getNumberOfEventRecords(),
-            runner,
+            computeRunner(config, m).name(),
             m.isRepeatAttempt(),
             m.getResetPrefix(),
             m.getExecutionId(),
             m.getEndpointType(),
-            validationResult,
+            m.getValidationResult(),
             m.getInterpretTypes(),
             DatasetType.OCCURRENCE);
 
     publisher.send(outputMessage);
     log.info("The message has been sent - {}", outputMessage);
 
-    if (config.eventsEnabled
+    // TODO: Remove and control message sending via RabbitMQ routing
+    if (config.stepConfig.eventsEnabled
         && m.getDatasetType() == DatasetType.SAMPLING_EVENT
         && !isValidator(m.getPipelineSteps())) {
       Set<String> interpretationTypes = new HashSet<>(m.getInterpretTypes());
@@ -89,13 +78,13 @@ public class InterpretedMessageHandler {
               m.getAttempt(),
               m.getPipelineSteps(),
               m.getNumberOfEventRecords(),
-              recordsNumber,
+              m.getNumberOfRecords(),
               StepRunner.DISTRIBUTED.name(),
               m.isRepeatAttempt(),
               m.getResetPrefix(),
               m.getExecutionId(),
               m.getEndpointType(),
-              validationResult,
+              m.getValidationResult(),
               interpretationTypes,
               DatasetType.SAMPLING_EVENT);
 
@@ -109,13 +98,13 @@ public class InterpretedMessageHandler {
    * Strategy 2 - Chooses a runner type by calculating verbatim.avro file size
    */
   private static StepRunner computeRunner(
-      BalancerConfiguration config, PipelinesInterpretedMessage message, long recordsNumber)
-      throws IOException {
+      BalancerConfiguration config, PipelinesInterpretedMessage message) throws IOException {
 
     String datasetId = message.getDatasetUuid().toString();
     String attempt = message.getAttempt().toString();
 
     StepRunner runner;
+    long recordsNumber = Optional.ofNullable(message.getNumberOfRecords()).orElse(0L);
 
     // Strategy 1: Chooses a runner type by number of records in a dataset
     if (recordsNumber > 0) {
@@ -149,51 +138,5 @@ public class InterpretedMessageHandler {
     }
 
     throw new IllegalStateException("Runner computation is failed " + datasetId);
-  }
-
-  /**
-   * Reads number of records from an archive-to-avro metadata file, verbatim-to-interpreted contains
-   * attempted records count, which is not accurate enough
-   */
-  private static long getRecordNumber(
-      BalancerConfiguration config, PipelinesInterpretedMessage message) throws IOException {
-
-    String datasetId = message.getDatasetUuid().toString();
-    String attempt = Integer.toString(message.getAttempt());
-    StepConfiguration stepConfig = config.stepConfig;
-
-    String metaFileName;
-    String repositoryPath;
-    if (isValidator(message.getPipelineSteps())) {
-      repositoryPath = config.validatorRepositoryPath;
-      metaFileName = new InterpreterConfiguration().metaFileName;
-    } else {
-      repositoryPath = stepConfig.repositoryPath;
-      metaFileName = new IdentifierConfiguration().metaFileName;
-    }
-
-    String metaPath = String.join("/", repositoryPath, datasetId, attempt, metaFileName);
-
-    Long messageNumber = message.getNumberOfRecords();
-    HdfsConfigs hdfsConfigs =
-        HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
-    Optional<Long> fileNumber =
-        HdfsUtils.getLongByKey(hdfsConfigs, metaPath, Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
-
-    // Fail if fileNumber is null
-    if (!isValidator(message.getPipelineSteps())) {
-      boolean noFileRecords = !fileNumber.isPresent() || fileNumber.get() == 0L;
-      if (message.getInterpretTypes().isEmpty() && noFileRecords) {
-        throw new IllegalArgumentException(
-            "IDs records must be interpreted, but fileNumber is null or 0, please validate the archive!");
-      }
-    }
-
-    if (messageNumber == null && !fileNumber.isPresent()) {
-      throw new IllegalArgumentException(
-          "Please check metadata yaml file or message records number, recordsNumber can't be null or empty!");
-    }
-
-    return fileNumber.orElse(messageNumber);
   }
 }

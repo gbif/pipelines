@@ -117,21 +117,10 @@ public class InterpretationCallbackIT {
     config.stepConfig.coreSiteConfig = "";
     config.stepConfig.hdfsSiteConfig = "";
 
-    config.sparkConfig.recordsPerThread = 100000;
-    config.sparkConfig.parallelismMin = 10;
-    config.sparkConfig.parallelismMax = 100;
-    config.sparkConfig.memoryOverhead = 1280;
     config.sparkConfig.executorMemoryGbMin = 4;
     config.sparkConfig.executorMemoryGbMax = 12;
-    config.sparkConfig.executorCores = 5;
-    config.sparkConfig.executorNumbersMin = 6;
-    config.sparkConfig.executorNumbersMax = 10;
-    config.sparkConfig.driverMemory = "1G";
-
-    config.distributedConfig.deployMode = "cluster";
-    config.distributedConfig.mainClass =
-        "org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline";
-    config.distributedConfig.jarPath = "a://b/a/c/ingest-gbif.jar";
+    config.sparkConfig.executorInstancesMin = 6;
+    config.sparkConfig.executorInstancesMax = 10;
 
     ExecutorService executorService = Executors.newSingleThreadExecutor();
     CloseableHttpClient closeableHttpClient = new CloseableHttpClientStub(200, "[]");

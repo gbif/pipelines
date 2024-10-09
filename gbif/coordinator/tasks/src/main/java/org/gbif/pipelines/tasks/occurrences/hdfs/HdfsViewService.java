@@ -8,9 +8,9 @@ import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
-import org.gbif.pipelines.common.hdfs.CommonHdfsViewCallback;
-import org.gbif.pipelines.common.hdfs.HdfsViewConfiguration;
 import org.gbif.pipelines.tasks.ServiceFactory;
+import org.gbif.pipelines.tasks.common.hdfs.CommonHdfsViewCallback;
+import org.gbif.pipelines.tasks.common.hdfs.HdfsViewConfiguration;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 

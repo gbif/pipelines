@@ -183,7 +183,8 @@ public class EventToEsIndexPipelineIT {
                       .setLineage(Collections.emptyList())
                       .build())
               .setParentEventID(ID)
-              .setParentsLineage(Collections.singletonList(Parent.newBuilder().setId(ID).build()))
+              .setParentsLineage(
+                  Collections.singletonList(Parent.newBuilder().setId(ID).setOrder(0).build()))
               .setLocationID("L1")
               .build();
       writer.append(subEventCoreRecord);
@@ -194,8 +195,12 @@ public class EventToEsIndexPipelineIT {
               .setParentEventID(SUB_EVENT_ID)
               .setParentsLineage(
                   Arrays.asList(
-                      Parent.newBuilder().setId(ID).build(),
-                      Parent.newBuilder().setId(SUB_EVENT_ID).setEventType("survey").build()))
+                      Parent.newBuilder().setId(ID).setOrder(0).build(),
+                      Parent.newBuilder()
+                          .setId(SUB_EVENT_ID)
+                          .setEventType("survey")
+                          .setOrder(1)
+                          .build()))
               .build();
       writer.append(subEventCoreRecord2);
     }

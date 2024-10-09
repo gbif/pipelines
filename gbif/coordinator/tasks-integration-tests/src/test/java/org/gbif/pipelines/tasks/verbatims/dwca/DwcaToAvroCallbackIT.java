@@ -23,7 +23,6 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
-import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
@@ -84,7 +83,7 @@ public class DwcaToAvroCallbackIT {
             reason,
             Collections.emptySet(),
             EndpointType.DWC_ARCHIVE,
-            Platform.PIPELINES,
+            null,
             null);
 
     // When
@@ -127,7 +126,7 @@ public class DwcaToAvroCallbackIT {
             reason,
             Collections.emptySet(),
             EndpointType.DWC_ARCHIVE,
-            Platform.PIPELINES,
+            null,
             null);
 
     // When
@@ -204,7 +203,7 @@ public class DwcaToAvroCallbackIT {
             reason,
             Collections.emptySet(),
             EndpointType.DWC_ARCHIVE,
-            Platform.PIPELINES,
+            null,
             null);
 
     // When
@@ -281,7 +280,7 @@ public class DwcaToAvroCallbackIT {
             reason,
             Collections.emptySet(),
             EndpointType.DWC_ARCHIVE,
-            Platform.PIPELINES,
+            null,
             null);
 
     // When
@@ -359,7 +358,7 @@ public class DwcaToAvroCallbackIT {
             reason,
             Collections.emptySet(),
             EndpointType.DWC_ARCHIVE,
-            Platform.PIPELINES,
+            null,
             null);
 
     // When
@@ -436,7 +435,7 @@ public class DwcaToAvroCallbackIT {
             reason,
             Collections.singleton(DWCA_TO_VERBATIM.name()),
             EndpointType.DWC_ARCHIVE,
-            Platform.PIPELINES,
+            null,
             null);
 
     // When
@@ -513,7 +512,7 @@ public class DwcaToAvroCallbackIT {
             reason,
             Collections.emptySet(),
             EndpointType.DWC_ARCHIVE,
-            Platform.PIPELINES,
+            null,
             null);
 
     // When
@@ -586,7 +585,7 @@ public class DwcaToAvroCallbackIT {
             reason,
             Collections.singleton(DWCA_TO_VERBATIM.name()),
             EndpointType.DWC_ARCHIVE,
-            Platform.PIPELINES,
+            null,
             null);
 
     // When

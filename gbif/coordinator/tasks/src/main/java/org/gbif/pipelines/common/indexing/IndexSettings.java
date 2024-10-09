@@ -100,8 +100,11 @@ public class IndexSettings {
   private int computeNumberOfShards(
       IndexConfiguration indexConfig, String indexName, long recordsNumber) {
     if (indexName.startsWith(indexConfig.defaultPrefixName)) {
-      return (int)
-          Math.ceil((double) indexConfig.defaultSize / (double) indexConfig.recordsPerShard);
+      int s =
+          (int) Math.ceil((double) indexConfig.defaultSize / (double) indexConfig.recordsPerShard);
+
+      // Add extra shard to accumulate deleted documents
+      return indexConfig.defaultExtraShard ? s + 1 : s;
     }
 
     double shards = recordsNumber / (double) indexConfig.recordsPerShard;
@@ -119,8 +122,7 @@ public class IndexSettings {
       throw new IOException("ES _cat API exception " + response.getStatusLine().getReasonPhrase());
     }
     List<EsCatIndex> indices =
-        MAPPER.readValue(
-            response.getEntity().getContent(), new TypeReference<List<EsCatIndex>>() {});
+        MAPPER.readValue(response.getEntity().getContent(), new TypeReference<>() {});
     if (!indices.isEmpty() && indices.get(0).getCount() <= indexConfig.defaultNewIfSize) {
       return Optional.of(indices.get(0).getName());
     }

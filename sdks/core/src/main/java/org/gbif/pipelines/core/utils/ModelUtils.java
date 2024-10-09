@@ -56,6 +56,13 @@ public class ModelUtils {
     return value != null && !value.isEmpty() && !"null".equalsIgnoreCase(value.trim());
   }
 
+  public static Optional<String> extractLengthAwareOptValue(ExtendedRecord er, Term term) {
+    String value = extractNullAwareValue(er, term);
+    // Indexing limit length
+    value = value != null && value.getBytes().length >= 32000 ? null : value;
+    return Optional.ofNullable(value);
+  }
+
   public static Optional<String> extractNullAwareOptValue(ExtendedRecord er, Term term) {
     return Optional.ofNullable(extractNullAwareValue(er, term));
   }

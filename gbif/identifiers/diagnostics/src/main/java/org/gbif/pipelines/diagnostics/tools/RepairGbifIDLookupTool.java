@@ -3,9 +3,11 @@ package org.gbif.pipelines.diagnostics.tools;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.SneakyThrows;
@@ -24,6 +26,11 @@ import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 @Builder
 public class RepairGbifIDLookupTool implements Tool {
 
+  public enum FileType {
+    DWCA,
+    FILE
+  }
+
   private long counter;
 
   @Parameter(names = "--tool")
@@ -36,7 +43,10 @@ public class RepairGbifIDLookupTool implements Tool {
   @Parameter(
       names = "--input-source",
       description = "Use DWCA archive as a lookup keys source, provide full input path")
-  public File dwcaSource;
+  public File source;
+
+  @Parameter(names = "--file-type", description = "Use DWCA or FILE with lookup keys")
+  public FileType fileType;
 
   @Parameter(names = "--triplet-lookup-key", description = "Use single triplet as a lookup key")
   public String tripletLookupKey;
@@ -103,7 +113,7 @@ public class RepairGbifIDLookupTool implements Tool {
   public void check(JCommander jc) {
     boolean useTriple = tripletLookupKey != null && !tripletLookupKey.isEmpty();
     boolean useOccurrenceId = occurrenceIdLookupKey != null && !occurrenceIdLookupKey.isEmpty();
-    boolean useDwcaDirectory = dwcaSource != null && dwcaSource.exists();
+    boolean useDwcaDirectory = source != null && source.exists();
 
     checkArguments(
         jc,
@@ -126,7 +136,7 @@ public class RepairGbifIDLookupTool implements Tool {
   public void run() {
     log.info(
         "Running diagnostic tool for - {}, using deletion strategy - {}",
-        dwcaSource,
+        source,
         deletionStrategyType);
 
     HBaseLockingKeyService keygenService = null;
@@ -143,10 +153,17 @@ public class RepairGbifIDLookupTool implements Tool {
               .build()
               .create();
 
-      if (dwcaSource != null) {
+      if (source != null && fileType == FileType.DWCA) {
         runDwca(keygenService);
-      } else {
+      } else if (source != null
+          && fileType == FileType.FILE
+          && (deletionStrategyType == DeletionStrategyType.OCCURRENCE_ID
+              || deletionStrategyType == DeletionStrategyType.TRIPLET)) {
+        runFile(keygenService);
+      } else if (tripletLookupKey != null || occurrenceIdLookupKey != null) {
         runSingleLookup(keygenService);
+      } else {
+        log.warn("Settings are incorrect. Check all provided keys");
       }
     } finally {
       if (keygenService != null && connection == null) {
@@ -169,11 +186,11 @@ public class RepairGbifIDLookupTool implements Tool {
   private void runDwca(HBaseLockingKeyService keygenService) {
 
     Archive dwca;
-    if (dwcaSource.isDirectory()) {
-      dwca = DwcFiles.fromLocation(dwcaSource.toPath());
+    if (source.isDirectory()) {
+      dwca = DwcFiles.fromLocation(source.toPath());
     } else {
       Path t = tmp.toPath().resolve(datasetKey).resolve(UUID.randomUUID().toString());
-      dwca = DwcFiles.fromCompressed(dwcaSource.toPath(), t);
+      dwca = DwcFiles.fromCompressed(source.toPath(), t);
     }
 
     for (Record r : dwca.getCore()) {
@@ -188,6 +205,18 @@ public class RepairGbifIDLookupTool implements Tool {
     }
   }
 
+  @SneakyThrows
+  private void runFile(HBaseLockingKeyService keygenService) {
+    try (Stream<String> lines = Files.lines(source.toPath())) {
+      lines.forEach(
+          key -> {
+            String occID = deletionStrategyType == DeletionStrategyType.OCCURRENCE_ID ? key : null;
+            String triplet = deletionStrategyType == DeletionStrategyType.TRIPLET ? key : null;
+            deleteKeys(keygenService, triplet, occID);
+          });
+    }
+  }
+
   private void runSingleLookup(HBaseLockingKeyService keygenService) {
     deleteKeys(keygenService, tripletLookupKey, occurrenceIdLookupKey);
   }
@@ -198,7 +227,8 @@ public class RepairGbifIDLookupTool implements Tool {
         deletionStrategyType.getKeysToDelete(keygenService, onlyCollisions, triplet, occurrenceId);
     if (!keysToDelete.isEmpty()) {
       log.info("Use keys to request, triplet: {} and occurrenceId: {}", triplet, occurrenceId);
-      keysToDelete.forEach((k, v) -> log.info("Delete lookup key - {}, gbifID - {}", k, v));
+      String message = dryRun ? "Lookup key" : "Delete lookup key";
+      keysToDelete.forEach((k, v) -> log.info("{} - {}, gbifID - {}", message, k, v));
       counter++;
     }
     if (!dryRun && !keysToDelete.isEmpty()) {

@@ -1,6 +1,5 @@
 package org.gbif.pipelines.tasks.events.interpretation;
 
-import java.io.IOException;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -13,10 +12,12 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.process.BeamSettings;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
-import org.gbif.pipelines.common.process.SparkSettings;
+import org.gbif.pipelines.common.airflow.AppName;
+import org.gbif.pipelines.common.hdfs.HdfsViewSettings;
+import org.gbif.pipelines.common.process.AirflowSparkLauncher;
+import org.gbif.pipelines.common.process.BeamParametersBuilder;
+import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
+import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
@@ -72,28 +73,19 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
   public Runnable createRunnable(PipelinesEventsMessage message) {
     return () -> {
       try {
-        String datasetId = message.getDatasetUuid().toString();
-        String attempt = Integer.toString(message.getAttempt());
-
-        String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
-        String path =
-            String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
-
-        ProcessRunnerBuilderBuilder builder =
-            ProcessRunnerBuilder.builder()
-                .distributedConfig(config.distributedConfig)
-                .sparkConfig(config.sparkConfig)
-                .sparkAppName(TYPE + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-                .beamConfigFn(BeamSettings.eventInterpretation(config, message, path));
-
         log.info("Start the process. Message - {}", message);
-        runDistributed(builder, message);
+        runDistributed(message);
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
         throw new IllegalStateException(
             "Failed interpretation on " + message.getDatasetUuid().toString(), ex);
       }
     };
+  }
+
+  private int computeNumberOfShards(PipelinesEventsMessage message) {
+    Long numberOfRecords = message.getValidationResult().getNumberOfRecords();
+    return HdfsViewSettings.computeNumberOfShards(config.avroConfig, numberOfRecords);
   }
 
   @Override
@@ -113,26 +105,36 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
         message.getRunner());
   }
 
-  private void runDistributed(ProcessRunnerBuilderBuilder builder, PipelinesEventsMessage message)
-      throws IOException, InterruptedException {
+  private void runDistributed(PipelinesEventsMessage message) {
 
+    String datasetId = message.getDatasetUuid().toString();
+    String attempt = Integer.toString(message.getAttempt());
+
+    // Spark dynamic settings
     boolean useMemoryExtraCoef =
         config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
-    SparkSettings sparkSettings =
-        SparkSettings.create(
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(
             config.sparkConfig, message.getNumberOfEventRecords(), useMemoryExtraCoef);
-    builder.sparkSettings(sparkSettings);
 
-    // Assembles a terminal java process and runs it
-    ProcessRunnerBuilder prb = builder.build();
-    int exitValue = prb.get().start().waitFor();
+    String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
+    String path = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
+    int numberOfShards = computeNumberOfShards(message);
+    BeamParameters beamParameters =
+        BeamParametersBuilder.eventInterpretation(config, message, path, numberOfShards);
 
-    if (exitValue != 0) {
-      throw new IllegalStateException(
-          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
-    } else {
-      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
-    }
+    // App name
+    String sparkAppName = AppName.get(TYPE, message.getDatasetUuid(), message.getAttempt());
+
+    // Submit
+    AirflowSparkLauncher.builder()
+        .airflowConfiguration(config.airflowConfig)
+        .sparkStaticConfiguration(config.sparkConfig)
+        .sparkDynamicSettings(sparkSettings)
+        .beamParameters(beamParameters)
+        .sparkAppName(sparkAppName)
+        .build()
+        .submitAwaitVoid();
   }
 
   /** Checks if the directory exists */

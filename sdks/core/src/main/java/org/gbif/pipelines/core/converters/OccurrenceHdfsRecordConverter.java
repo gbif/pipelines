@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
@@ -151,6 +152,10 @@ public class OccurrenceHdfsRecordConverter {
             });
     occurrenceHdfsRecord.setDistancefromcentroidinmeters(
         locationRecord.getDistanceFromCentroidInMeters());
+    occurrenceHdfsRecord.setGbifregion(locationRecord.getGbifRegion());
+    occurrenceHdfsRecord.setPublishedbygbifregion(locationRecord.getPublishedByGbifRegion());
+    occurrenceHdfsRecord.setHighergeography(locationRecord.getHigherGeography());
+    occurrenceHdfsRecord.setGeoreferencedby(locationRecord.getGeoreferencedBy());
 
     setCreatedIfGreater(occurrenceHdfsRecord, locationRecord.getCreated());
     addIssues(locationRecord.getIssues(), occurrenceHdfsRecord);
@@ -204,10 +209,10 @@ public class OccurrenceHdfsRecordConverter {
     }
     Optional.ofNullable(temporalRecord.getDateIdentified())
         .map(StringToDateFunctions.getStringToEarliestEpochSeconds(false))
-        .ifPresent(date -> occurrenceHdfsRecord.setDateidentified(date));
+        .ifPresent(occurrenceHdfsRecord::setDateidentified);
     Optional.ofNullable(temporalRecord.getModified())
         .map(StringToDateFunctions.getStringToEarliestEpochSeconds(false))
-        .ifPresent(date -> occurrenceHdfsRecord.setModified(date));
+        .ifPresent(occurrenceHdfsRecord::setModified);
     occurrenceHdfsRecord.setDay(temporalRecord.getDay());
     occurrenceHdfsRecord.setMonth(temporalRecord.getMonth());
     occurrenceHdfsRecord.setYear(temporalRecord.getYear());
@@ -230,8 +235,7 @@ public class OccurrenceHdfsRecordConverter {
       Optional.ofNullable(temporalRecord.getEventDate())
           .ifPresent(
               eventDate -> {
-                occurrenceHdfsRecord.setEventdate(
-                    TemporalConverter.getEventDateToStringFn().apply(eventDate));
+                occurrenceHdfsRecord.setEventdate(eventDate.getInterval());
                 occurrenceHdfsRecord.setEventdategte(
                     StringToDateFunctions.getStringToEarliestEpochSeconds(true)
                         .apply(eventDate.getGte()));
@@ -422,7 +426,6 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setBasisofrecord(basicRecord.getBasisOfRecord());
     occurrenceHdfsRecord.setIndividualcount(basicRecord.getIndividualCount());
     occurrenceHdfsRecord.setReferences(basicRecord.getReferences());
-    occurrenceHdfsRecord.setSex(basicRecord.getSex());
     occurrenceHdfsRecord.setTypifiedname(basicRecord.getTypifiedName());
     occurrenceHdfsRecord.setOrganismquantity(basicRecord.getOrganismQuantity());
     occurrenceHdfsRecord.setOrganismquantitytype(basicRecord.getOrganismQuantityType());
@@ -437,9 +440,19 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setIdentifiedby(basicRecord.getIdentifiedBy());
     occurrenceHdfsRecord.setPreparations(basicRecord.getPreparations());
     occurrenceHdfsRecord.setSamplingprotocol(basicRecord.getSamplingProtocol());
-    occurrenceHdfsRecord.setTypestatus(basicRecord.getTypeStatus());
+    occurrenceHdfsRecord.setIssequenced(basicRecord.getIsSequenced());
+    occurrenceHdfsRecord.setAssociatedsequences(basicRecord.getAssociatedSequences());
 
     // Vocabulary controlled
+    Optional.ofNullable(basicRecord.getSex())
+        .ifPresent(
+            c ->
+                occurrenceHdfsRecord.setSex(
+                    Sex.newBuilder()
+                        .setConcept(c.getConcept())
+                        .setLineage(c.getLineage())
+                        .build()));
+
     Optional.ofNullable(basicRecord.getEstablishmentMeans())
         .ifPresent(
             c ->
@@ -476,6 +489,21 @@ public class OccurrenceHdfsRecordConverter {
                         .setLineage(c.getLineage())
                         .build()));
 
+    Optional.ofNullable(basicRecord.getTypeStatus())
+        .ifPresent(
+            c -> {
+              List<String> allConcepts =
+                  c.stream()
+                      .map(org.gbif.pipelines.io.avro.VocabularyConcept::getConcept)
+                      .collect(Collectors.toList());
+
+              List<String> allParents =
+                  c.stream().flatMap(c2 -> c2.getLineage().stream()).collect(Collectors.toList());
+
+              occurrenceHdfsRecord.setTypestatus(
+                  TypeStatus.newBuilder().setConcepts(allConcepts).setLineage(allParents).build());
+            });
+
     // Others
     Optional.ofNullable(basicRecord.getRecordedByIds())
         .ifPresent(
@@ -495,8 +523,134 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setLicense(basicRecord.getLicense());
     }
 
+    mapGeologicalContext(occurrenceHdfsRecord);
+
     setCreatedIfGreater(occurrenceHdfsRecord, basicRecord.getCreated());
     addIssues(basicRecord.getIssues(), occurrenceHdfsRecord);
+  }
+
+  private void mapGeologicalContext(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    GeologicalContext gc = basicRecord.getGeologicalContext();
+    if (gc != null) {
+
+      Optional.ofNullable(gc.getEarliestEonOrLowestEonothem())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setEarliesteonorlowesteonothem(
+                      EarliestEonOrLowestEonothem.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getLatestEonOrHighestEonothem())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setLatesteonorhighesteonothem(
+                      LatestEonOrHighestEonothem.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getEarliestEraOrLowestErathem())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setEarliesteraorlowesterathem(
+                      EarliestEraOrLowestErathem.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getLatestEraOrHighestErathem())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setLatesteraorhighesterathem(
+                      LatestEraOrHighestErathem.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getEarliestPeriodOrLowestSystem())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setEarliestperiodorlowestsystem(
+                      EarliestPeriodOrLowestSystem.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getLatestPeriodOrHighestSystem())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setLatestperiodorhighestsystem(
+                      LatestPeriodOrHighestSystem.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getEarliestEpochOrLowestSeries())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setEarliestepochorlowestseries(
+                      EarliestEpochOrLowestSeries.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getLatestEpochOrHighestSeries())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setLatestepochorhighestseries(
+                      LatestEpochOrHighestSeries.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getEarliestAgeOrLowestStage())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setEarliestageorloweststage(
+                      EarliestAgeOrLowestStage.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      Optional.ofNullable(gc.getLatestAgeOrHighestStage())
+          .ifPresent(
+              c ->
+                  occurrenceHdfsRecord.setLatestageorhigheststage(
+                      LatestAgeOrHighestStage.newBuilder()
+                          .setConcept(c.getConcept())
+                          .setLineage(c.getLineage())
+                          .build()));
+
+      occurrenceHdfsRecord.setLowestbiostratigraphiczone(gc.getLowestBiostratigraphicZone());
+      occurrenceHdfsRecord.setHighestbiostratigraphiczone(gc.getHighestBiostratigraphicZone());
+      occurrenceHdfsRecord.setGroup(gc.getGroup());
+      occurrenceHdfsRecord.setFormation(gc.getFormation());
+      occurrenceHdfsRecord.setMember(gc.getMember());
+      occurrenceHdfsRecord.setBed(gc.getBed());
+
+      occurrenceHdfsRecord.setLithostratigraphy(
+          Stream.of(gc.getBed(), gc.getFormation(), gc.getGroup(), gc.getMember())
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList()));
+
+      occurrenceHdfsRecord.setBiostratigraphy(
+          Stream.of(gc.getLowestBiostratigraphicZone(), gc.getHighestBiostratigraphicZone())
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList()));
+
+      if (gc.getStartAge() != null && gc.getEndAge() != null) {
+        Optional.ofNullable(gc.getStartAge())
+            .ifPresent(
+                s ->
+                    occurrenceHdfsRecord.setGeologicaltime(
+                        GeologicalTime.newBuilder()
+                            .setLte(gc.getStartAge())
+                            .setGt(gc.getEndAge())
+                            .build()));
+      }
+    }
   }
 
   /**
@@ -539,7 +693,12 @@ public class OccurrenceHdfsRecordConverter {
           break;
       }
     } catch (Exception ex) {
-      log.error("Ignoring error setting field {}", avroField, ex);
+      log.error(
+          "Ignoring error setting field {}, field name {}, value. Exception: {}",
+          avroField,
+          fieldName,
+          value,
+          ex);
     }
   }
 

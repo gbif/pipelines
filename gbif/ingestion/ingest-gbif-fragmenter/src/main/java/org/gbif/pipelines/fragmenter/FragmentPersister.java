@@ -112,7 +112,8 @@ public class FragmentPersister {
     final Connection connection =
         Optional.ofNullable(hbaseConnection)
             .orElse(
-                HbaseConnectionFactory.getInstance(keygenConfig.getZkConnectionString())
+                HbaseConnectionFactory.getInstance(
+                        keygenConfig.getZkConnectionString(), keygenConfig.getHbaseZnode())
                     .getConnection());
     final HBaseLockingKeyService keygenService =
         new HBaseLockingKeyService(keygenConfig, connection, datasetKey);

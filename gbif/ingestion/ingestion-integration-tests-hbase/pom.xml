@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>ingestion</artifactId>
-    <version>2.18.0-SNAPSHOT</version>
+    <version>2.19.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -64,6 +64,14 @@
       <artifactId>ingest-gbif-java</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>ingest-gbif-fragmenter</artifactId>
+      <classifier>tests</classifier>
+      <type>test-jar</type>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -114,13 +122,24 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-minicluster</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>${guava.hbase.version}</version>
-      <scope>test</scope>
-    </dependency>
 
   </dependencies>
+
+  <profiles>
+    <profile>
+      <id>skip-release-it</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>

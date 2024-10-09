@@ -6,13 +6,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
-import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
-import org.gbif.pipelines.common.configs.BaseConfiguration;
-import org.gbif.pipelines.common.configs.DistributedConfiguration;
-import org.gbif.pipelines.common.configs.ElasticsearchConfiguration;
-import org.gbif.pipelines.common.configs.IndexConfiguration;
-import org.gbif.pipelines.common.configs.SparkConfiguration;
-import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.pipelines.common.configs.*;
 
 /** Configuration required to start Indexing Pipeline on provided dataset */
 @ToString
@@ -22,8 +16,8 @@ public class EventsIndexingConfiguration implements BaseConfiguration {
 
   @ParametersDelegate @Valid public SparkConfiguration sparkConfig = new SparkConfiguration();
 
-  @ParametersDelegate @Valid
-  public DistributedConfiguration distributedConfig = new DistributedConfiguration();
+  @ParametersDelegate @Valid @NotNull
+  public AirflowConfiguration airflowConfig = new AirflowConfiguration();
 
   @ParametersDelegate @Valid @NotNull
   public ElasticsearchConfiguration esConfig = new ElasticsearchConfiguration();
@@ -41,9 +35,6 @@ public class EventsIndexingConfiguration implements BaseConfiguration {
 
   @Parameter(names = "--es-generated-ids")
   public boolean esGeneratedIds = false;
-
-  @Parameter(names = "--use-beam-deprecated-read")
-  public boolean useBeamDeprecatedRead = true;
 
   @ParametersDelegate @Valid @NotNull
   public AvroWriteConfiguration avroConfig = new AvroWriteConfiguration();
@@ -66,5 +57,10 @@ public class EventsIndexingConfiguration implements BaseConfiguration {
   @Override
   public String getMetaFileName() {
     return metaFileName;
+  }
+
+  @Override
+  public boolean eventsEnabled() {
+    return stepConfig.eventsEnabled;
   }
 }

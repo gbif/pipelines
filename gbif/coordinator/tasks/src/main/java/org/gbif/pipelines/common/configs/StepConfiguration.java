@@ -36,4 +36,7 @@ public class StepConfiguration {
   @Parameter(names = "--repository-path")
   @NotNull
   public String repositoryPath;
+
+  @Parameter(names = "--events-enabled")
+  public boolean eventsEnabled = false;
 }

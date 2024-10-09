@@ -29,10 +29,13 @@ import org.gbif.pipelines.common.GbifApi;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.process.BeamSettings;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
+import org.gbif.pipelines.common.airflow.AppName;
+import org.gbif.pipelines.common.hdfs.HdfsViewSettings;
+import org.gbif.pipelines.common.process.AirflowSparkLauncher;
+import org.gbif.pipelines.common.process.BeamParametersBuilder;
+import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
 import org.gbif.pipelines.common.process.RecordCountReader;
-import org.gbif.pipelines.common.process.SparkSettings;
+import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToOccurrencePipeline;
@@ -91,7 +94,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
       routingKey = vm.setRunner(config.processRunner).getRoutingKey();
     }
 
-    log.info("MQ rounting key is {}", routingKey);
+    log.info("MQ routing key is {}", routingKey);
     return routingKey;
   }
 
@@ -137,23 +140,21 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         defaultDateFormat = getDefaultDateFormat(datasetId);
       }
 
-      ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder =
-          ProcessRunnerBuilder.builder()
-              .distributedConfig(config.distributedConfig)
-              .sparkConfig(config.sparkConfig)
-              .sparkAppName(
-                  getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-              .beamConfigFn(
-                  BeamSettings.occurrenceInterpretation(config, message, path, defaultDateFormat));
+      int numberOfShards = computeNumberOfShards(message);
+
+      BeamParameters beamParameters =
+          BeamParametersBuilder.occurrenceInterpretation(
+              config, message, path, defaultDateFormat, numberOfShards);
 
       Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
       log.info("Start the process. Message - {}", message);
       try {
+
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          runDistributed(message, builder);
+          runDistributed(message, beamParameters);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
-          runLocal(builder);
+          runLocal(beamParameters);
         }
 
         log.info("Deleting old attempts directories");
@@ -169,6 +170,11 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
             "Failed interpretation on " + message.getDatasetUuid().toString(), ex);
       }
     };
+  }
+
+  private int computeNumberOfShards(PipelinesVerbatimMessage message) {
+    Long numberOfRecords = message.getValidationResult().getNumberOfRecords();
+    return HdfsViewSettings.computeNumberOfShards(config.avroConfig, numberOfRecords);
   }
 
   @Override
@@ -198,14 +204,14 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         message.getDatasetType());
   }
 
-  private void runLocal(ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder) {
-    VerbatimToOccurrencePipeline.run(builder.build().buildOptions(), executor);
+  private void runLocal(BeamParameters beamParameters) {
+    VerbatimToOccurrencePipeline.run(beamParameters.toArray(), executor);
   }
 
-  private void runDistributed(
-      PipelinesVerbatimMessage message, ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder)
-      throws IOException, InterruptedException {
+  private void runDistributed(PipelinesVerbatimMessage message, BeamParameters beamParameters)
+      throws IOException {
 
+    // Spark dynamic settings
     Long messageNumber =
         message.getValidationResult() != null
                 && message.getValidationResult().getNumberOfRecords() != null
@@ -219,28 +225,29 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
             .attempt(message.getAttempt().toString())
             .messageNumber(messageNumber)
             .metaFileName(new DwcaToAvroConfiguration().metaFileName)
-            .metricName(Metrics.ARCHIVE_TO_ER_COUNT)
+            .metricName(Metrics.ARCHIVE_TO_OCC_COUNT)
             .build()
             .get();
 
     boolean useMemoryExtraCoef =
         config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
 
-    SparkSettings sparkSettings =
-        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
-    builder.sparkSettings(sparkSettings);
+    // App name
+    String sparkAppName =
+        AppName.get(getType(message), message.getDatasetUuid(), message.getAttempt());
 
-    // Assembles a terminal java process and runs it
-    ProcessRunnerBuilder prb = builder.build();
-    int exitValue = prb.get().start().waitFor();
-
-    if (exitValue != 0) {
-      throw new IllegalStateException(
-          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
-    } else {
-      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
-    }
+    // Submit
+    AirflowSparkLauncher.builder()
+        .airflowConfiguration(config.airflowConfig)
+        .sparkStaticConfiguration(config.sparkConfig)
+        .sparkDynamicSettings(sparkSettings)
+        .beamParameters(beamParameters)
+        .sparkAppName(sparkAppName)
+        .build()
+        .submitAwaitVoid();
   }
 
   /** Checks if the directory exists */
@@ -268,7 +275,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         GbifApi.getMachineTagValue(
             httpClient, config.stepConfig.registry, datasetKey, "default_date_format");
 
-    if (!defaultDateFormat.isPresent()) {
+    if (defaultDateFormat.isEmpty()) {
       return null;
     } else if (defaultDateFormat.get().equals("ISO")) {
       return Arrays.stream(ISO_FORMATS)

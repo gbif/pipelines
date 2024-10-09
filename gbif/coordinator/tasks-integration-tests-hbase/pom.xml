@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>coordinator</artifactId>
-    <version>2.18.0-SNAPSHOT</version>
+    <version>2.19.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -14,10 +14,8 @@
   <name>Pipelines :: GBIF :: Coordinator :: Tasks IT HBase</name>
 
   <properties>
-    <curator.version>4.0.1</curator.version>
-    <curator-test.version>2.12.0</curator-test.version>
     <fest.version>2.0M10</fest.version>
-    <mockito.version>2.8.9</mockito.version>
+    <mockito.version>5.5.0</mockito.version>
   </properties>
 
   <build>
@@ -50,12 +48,10 @@
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-test</artifactId>
       <scope>test</scope>
-      <version>${curator-test.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-framework</artifactId>
-      <version>${curator.version}</version>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
@@ -83,6 +79,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>ingest-gbif-fragmenter</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-testing-util</artifactId>
     </dependency>
@@ -90,13 +92,37 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-minicluster</artifactId>
     </dependency>
+
+    <!-- GBIF -->
     <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>${guava.hbase.version}</version>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-api</artifactId>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>validator-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-ws-client</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.gbif.common</groupId>
+          <artifactId>gbif-cli</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>datacite-rest-client</artifactId>
+          <groupId>org.gbif.datacite</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
     <dependency>
       <groupId>org.gbif.crawler</groupId>
       <artifactId>crawler-coordinator</artifactId>
@@ -121,7 +147,6 @@
         </exclusion>
       </exclusions>
     </dependency>
-
   </dependencies>
 
   <profiles>

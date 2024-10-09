@@ -11,12 +11,13 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.common.airflow.AppName;
 import org.gbif.pipelines.common.indexing.IndexSettings;
-import org.gbif.pipelines.common.process.BeamSettings;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
+import org.gbif.pipelines.common.process.AirflowSparkLauncher;
+import org.gbif.pipelines.common.process.BeamParametersBuilder;
+import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
 import org.gbif.pipelines.common.process.RecordCountReader;
-import org.gbif.pipelines.common.process.SparkSettings;
+import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
@@ -75,24 +76,8 @@ public class EventsIndexingCallback
     return () -> {
       try {
         long recordsNumber = getRecordNumber(message);
-
-        IndexSettings indexSettings =
-            IndexSettings.create(
-                config.indexConfig,
-                httpClient,
-                message.getDatasetUuid().toString(),
-                message.getAttempt(),
-                recordsNumber);
-
-        ProcessRunnerBuilderBuilder builder =
-            ProcessRunnerBuilder.builder()
-                .distributedConfig(config.distributedConfig)
-                .sparkConfig(config.sparkConfig)
-                .sparkAppName(TYPE + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-                .beamConfigFn(BeamSettings.eventIndexing(config, message, indexSettings));
-
         log.info("Start the process. Message - {}", message);
-        runDistributed(message, builder, recordsNumber);
+        runDistributed(message, recordsNumber);
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
         throw new IllegalStateException(
@@ -115,29 +100,38 @@ public class EventsIndexingCallback
         message.getRunner());
   }
 
-  private void runDistributed(
-      PipelinesEventsInterpretedMessage message,
-      ProcessRunnerBuilderBuilder builder,
-      long recordsNumber)
-      throws IOException, InterruptedException {
+  private void runDistributed(PipelinesEventsInterpretedMessage message, long recordsNumber)
+      throws IOException {
+
+    // Spark dynamic settings
+    IndexSettings indexSettings =
+        IndexSettings.create(
+            config.indexConfig,
+            httpClient,
+            message.getDatasetUuid().toString(),
+            message.getAttempt(),
+            recordsNumber);
 
     boolean useMemoryExtraCoef =
         config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
-    SparkSettings sparkSettings =
-        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
+    SparkDynamicSettings sparkDynamicSettings =
+        SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
-    builder.sparkSettings(sparkSettings);
+    BeamParameters beamParameters =
+        BeamParametersBuilder.eventIndexing(config, message, indexSettings);
 
-    // Assembles a terminal java process and runs it
-    ProcessRunnerBuilder prb = builder.build();
-    int exitValue = prb.get().start().waitFor();
+    // App name
+    String sparkAppName = AppName.get(TYPE, message.getDatasetUuid(), message.getAttempt());
 
-    if (exitValue != 0) {
-      throw new IllegalStateException(
-          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
-    } else {
-      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
-    }
+    // Submit
+    AirflowSparkLauncher.builder()
+        .airflowConfiguration(config.airflowConfig)
+        .sparkStaticConfiguration(config.sparkConfig)
+        .sparkDynamicSettings(sparkDynamicSettings)
+        .beamParameters(beamParameters)
+        .sparkAppName(sparkAppName)
+        .build()
+        .submitAwaitVoid();
   }
 
   /** Sum of event and occurrence records */

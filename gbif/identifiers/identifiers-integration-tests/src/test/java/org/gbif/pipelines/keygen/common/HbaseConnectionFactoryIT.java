@@ -16,16 +16,22 @@ public class HbaseConnectionFactoryIT {
   private final Supplier<CompletableFuture<Connection>> connectionAsyncSupplier =
       () ->
           CompletableFuture.supplyAsync(
-              HbaseConnectionFactory.getInstance(HBASE_SERVER.getZKString())::getConnection);
+              HbaseConnectionFactory.getInstance(
+                      HBASE_SERVER.getZKString(), HBASE_SERVER.getZNodeParent())
+                  ::getConnection);
 
   @Test
   public void instanceTest() throws IOException {
 
     // When
     Connection conn1 =
-        HbaseConnectionFactory.getInstance(HBASE_SERVER.getZKString()).getConnection();
+        HbaseConnectionFactory.getInstance(
+                HBASE_SERVER.getZKString(), HBASE_SERVER.getZNodeParent())
+            .getConnection();
     Connection conn2 =
-        HbaseConnectionFactory.getInstance(HBASE_SERVER.getZKString()).getConnection();
+        HbaseConnectionFactory.getInstance(
+                HBASE_SERVER.getZKString(), HBASE_SERVER.getZNodeParent())
+            .getConnection();
 
     // Should
     Assert.assertSame(conn1, conn2);
@@ -38,14 +44,20 @@ public class HbaseConnectionFactoryIT {
   public void closeInstanceTest() throws IOException {
     // When
     Connection conn1 =
-        HbaseConnectionFactory.getInstance(HBASE_SERVER.getZKString()).getConnection();
+        HbaseConnectionFactory.getInstance(
+                HBASE_SERVER.getZKString(), HBASE_SERVER.getZNodeParent())
+            .getConnection();
     Connection conn2 =
-        HbaseConnectionFactory.getInstance(HBASE_SERVER.getZKString()).getConnection();
+        HbaseConnectionFactory.getInstance(
+                HBASE_SERVER.getZKString(), HBASE_SERVER.getZNodeParent())
+            .getConnection();
 
     conn1.close();
 
     Connection conn3 =
-        HbaseConnectionFactory.getInstance(HBASE_SERVER.getZKString()).getConnection();
+        HbaseConnectionFactory.getInstance(
+                HBASE_SERVER.getZKString(), HBASE_SERVER.getZNodeParent())
+            .getConnection();
 
     // Should
     Assert.assertTrue(conn1.isClosed());

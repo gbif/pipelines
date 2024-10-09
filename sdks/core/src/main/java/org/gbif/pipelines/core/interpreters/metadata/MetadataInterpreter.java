@@ -1,7 +1,6 @@
 package org.gbif.pipelines.core.interpreters.metadata;
 
 import java.net.URI;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -35,7 +34,6 @@ public class MetadataInterpreter {
 
       // Set required metadata properties
       mdr.setDatasetKey(datasetId);
-      mdr.setNetworkKeys(Collections.emptyList());
 
       if (client != null) {
 

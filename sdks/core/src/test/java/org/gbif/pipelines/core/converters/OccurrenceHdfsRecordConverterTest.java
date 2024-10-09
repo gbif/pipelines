@@ -21,14 +21,10 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MediaType;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
-import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.ThreatStatus;
-import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
-import org.gbif.dwc.terms.Term;
-import org.gbif.occurrence.common.TermUtils;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
@@ -36,6 +32,7 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GeologicalContext;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -63,8 +60,6 @@ public class OccurrenceHdfsRecordConverterTest {
   @Test
   public void extendedRecordMapperTest() {
 
-    List<Term> terms = TermUtils.verbatimTerms();
-
     // State
     final String multiValue1 = "multi 1";
     final String multiValue2 = "multi 2";
@@ -77,7 +72,7 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.class_.simpleName(), "classs");
     coreTerms.put(DcTerm.format.simpleName(), "format");
     coreTerms.put(DwcTerm.order.simpleName(), "order");
-    coreTerms.put(DwcTerm.group.simpleName(), "group");
+    coreTerms.put(DwcTerm.group.simpleName(), "v_group");
     coreTerms.put(DcTerm.date.simpleName(), "26/06/2019");
     coreTerms.put(
         DwcTerm.basisOfRecord.simpleName(), BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase());
@@ -94,14 +89,18 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.datasetID.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.datasetName.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.otherCatalogNumbers.simpleName(), multiValue1 + "|" + multiValue2);
-    coreTerms.put(
-        DwcTerm.typeStatus.simpleName(),
-        TypeStatus.TYPE.name() + "|" + TypeStatus.TYPE_SPECIES.name());
+    coreTerms.put(DwcTerm.typeStatus.simpleName(), "Type|TypeSpecies");
     coreTerms.put(DwcTerm.preparations.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.samplingProtocol.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.identifiedBy.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(DwcTerm.recordedBy.simpleName(), multiValue1 + "|" + multiValue2);
     coreTerms.put(GbifTerm.projectId.simpleName(), multiValue1 + "|" + multiValue2);
+    coreTerms.put(DwcTerm.taxonConceptID.simpleName(), "v_taxonConceptID");
+    coreTerms.put(DwcTerm.associatedSequences.simpleName(), "v_ad");
+    coreTerms.put(DwcTerm.bed.simpleName(), "v_bed");
+    coreTerms.put(DwcTerm.formation.simpleName(), "v_formation");
+    coreTerms.put(DwcTerm.member.simpleName(), "v_member");
+    coreTerms.put(DwcTerm.previousIdentifications.simpleName(), "v_previousIdentifications");
 
     Map<String, List<Map<String, String>>> extensions = new HashMap<>();
     extensions.put(
@@ -150,8 +149,26 @@ public class OccurrenceHdfsRecordConverterTest {
             .setIdentifiedBy(Arrays.asList(multiValue1, multiValue2))
             .setPreparations(Arrays.asList(multiValue1, multiValue2))
             .setSamplingProtocol(Arrays.asList(multiValue1, multiValue2))
-            .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
+            .setTypeStatus(
+                Arrays.asList(
+                    VocabularyConcept.newBuilder()
+                        .setConcept("Type")
+                        .setLineage(Collections.singletonList("Type"))
+                        .build(),
+                    VocabularyConcept.newBuilder()
+                        .setConcept("TypeSpecies")
+                        .setLineage(Collections.singletonList("TypeSpecies"))
+                        .build()))
             .setProjectId(Arrays.asList(multiValue1, multiValue2))
+            .setIsSequenced(true)
+            .setAssociatedSequences(Collections.singletonList("ad"))
+            .setGeologicalContext(
+                GeologicalContext.newBuilder()
+                    .setBed("bed")
+                    .setFormation("formation")
+                    .setGroup("group")
+                    .setMember("member")
+                    .build())
             .build();
 
     List<RankedName> classification = new ArrayList<>();
@@ -171,7 +188,12 @@ public class OccurrenceHdfsRecordConverterTest {
             .setId("1")
             .setDateIdentified("2019-11-12T13:24:56.963591")
             .setModified("2019-04-15T17:17")
-            .setEventDate(EventDate.newBuilder().setGte("2000").setLte("2010").build())
+            .setEventDate(
+                EventDate.newBuilder()
+                    .setGte("2000")
+                    .setLte("2010")
+                    .setInterval("2000/2010")
+                    .build())
             .build();
 
     IdentifierRecord identifierRecord =
@@ -224,20 +246,39 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getPreparations());
     Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVSamplingprotocol());
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getSamplingprotocol());
+    Assert.assertEquals("Type|TypeSpecies", hdfsRecord.getVTypestatus());
     Assert.assertEquals(
-        TypeStatus.TYPE.name() + "|" + TypeStatus.TYPE_SPECIES.name(), hdfsRecord.getVTypestatus());
-    Assert.assertEquals(
-        Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()),
+        org.gbif.pipelines.io.avro.TypeStatus.newBuilder()
+            .setConcepts(Arrays.asList("Type", "TypeSpecies"))
+            .setLineage(Arrays.asList("Type", "TypeSpecies"))
+            .build(),
         hdfsRecord.getTypestatus());
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getProjectid());
 
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());
     Assert.assertEquals("classs", hdfsRecord.getVClass());
+
     Assert.assertEquals("ORDER", hdfsRecord.getOrder());
     Assert.assertEquals("order", hdfsRecord.getVOrder());
+
     Assert.assertEquals("group", hdfsRecord.getGroup());
-    Assert.assertEquals("group", hdfsRecord.getVGroup());
+    Assert.assertEquals("v_group", hdfsRecord.getVGroup());
+
+    Assert.assertEquals("v_taxonConceptID", hdfsRecord.getTaxonconceptid());
+    Assert.assertEquals("v_taxonConceptID", hdfsRecord.getVTaxonconceptid());
+
+    Assert.assertEquals("formation", hdfsRecord.getFormation());
+    Assert.assertEquals("v_formation", hdfsRecord.getVFormation());
+
+    Assert.assertEquals("bed", hdfsRecord.getBed());
+    Assert.assertEquals("v_bed", hdfsRecord.getVBed());
+
+    Assert.assertEquals("member", hdfsRecord.getMember());
+    Assert.assertEquals("v_member", hdfsRecord.getVMember());
+
+    Assert.assertEquals(Collections.singletonList("ad"), hdfsRecord.getAssociatedsequences());
+    Assert.assertEquals("v_ad", hdfsRecord.getVAssociatedsequences());
 
     // Test temporal fields
     Assert.assertNotNull(hdfsRecord.getDateidentified());
@@ -265,6 +306,16 @@ public class OccurrenceHdfsRecordConverterTest {
         hdfsRecord.getEventdatelte().longValue());
     Assert.assertEquals(
         metadataRecord.getHostingOrganizationKey(), hdfsRecord.getHostingorganizationkey());
+    Assert.assertEquals(basicRecord.getIsSequenced(), hdfsRecord.getIssequenced());
+
+    Assert.assertEquals("v_" + basicRecord.getGeologicalContext().getBed(), hdfsRecord.getVBed());
+    Assert.assertEquals(basicRecord.getGeologicalContext().getBed(), hdfsRecord.getBed());
+    Assert.assertEquals(
+        "v_" + basicRecord.getGeologicalContext().getFormation(), hdfsRecord.getVFormation());
+    Assert.assertEquals(
+        basicRecord.getGeologicalContext().getFormation(), hdfsRecord.getFormation());
+    Assert.assertEquals("v_previousIdentifications", hdfsRecord.getPreviousidentifications());
+    Assert.assertEquals("v_previousIdentifications", hdfsRecord.getVPreviousidentifications());
 
     // extensions
     Assert.assertEquals(2, hdfsRecord.getDwcaextension().size());
@@ -351,9 +402,22 @@ public class OccurrenceHdfsRecordConverterTest {
     long now = new Date().getTime();
     BasicRecord basicRecord = new BasicRecord();
     basicRecord.setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name());
-    basicRecord.setSex(Sex.HERMAPHRODITE.name());
+    basicRecord.setSex(
+        VocabularyConcept.newBuilder()
+            .setConcept("Mixed")
+            .setLineage(Collections.singletonList("Mixed"))
+            .build());
     basicRecord.setIndividualCount(99);
-    basicRecord.setTypeStatus(Arrays.asList(TypeStatus.ALLOTYPE.name(), TypeStatus.TYPE.name()));
+    basicRecord.setTypeStatus(
+        Arrays.asList(
+            VocabularyConcept.newBuilder()
+                .setConcept("Type")
+                .setLineage(Collections.singletonList("Type"))
+                .build(),
+            VocabularyConcept.newBuilder()
+                .setConcept("Allotype")
+                .setLineage(Collections.singletonList("Allotype"))
+                .build()));
     basicRecord.setTypifiedName("noName");
     basicRecord.setLifeStage(
         VocabularyConcept.newBuilder()
@@ -390,10 +454,13 @@ public class OccurrenceHdfsRecordConverterTest {
 
     // Should
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
-    Assert.assertEquals(Sex.HERMAPHRODITE.name(), hdfsRecord.getSex());
+    Assert.assertEquals("Mixed", hdfsRecord.getSex().getLineage().get(0));
     Assert.assertEquals(Integer.valueOf(99), hdfsRecord.getIndividualcount());
     Assert.assertEquals(
-        Arrays.asList(TypeStatus.ALLOTYPE.name(), TypeStatus.TYPE.name()),
+        org.gbif.pipelines.io.avro.TypeStatus.newBuilder()
+            .setConcepts(Arrays.asList("Type", "Allotype"))
+            .setLineage(Arrays.asList("Type", "Allotype"))
+            .build(),
         hdfsRecord.getTypestatus());
     Assert.assertEquals("noName", hdfsRecord.getTypifiedname());
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getOrganismquantity());
@@ -534,7 +601,12 @@ public class OccurrenceHdfsRecordConverterTest {
             .setMonth(1)
             .setStartDayOfYear(1)
             .setEndDayOfYear(1)
-            .setEventDate(EventDate.newBuilder().setGte(rawEventDate).setLte(rawEventDate).build())
+            .setEventDate(
+                EventDate.newBuilder()
+                    .setGte(rawEventDate)
+                    .setLte(rawEventDate)
+                    .setInterval("2019-01")
+                    .build())
             .setDateIdentified(rawEventDate)
             .setModified(rawEventDate)
             .build();

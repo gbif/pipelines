@@ -7,7 +7,6 @@ import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
-import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 import org.junit.Test;
 
@@ -40,6 +39,5 @@ public class XmlArchiveValidatorTest {
     assertEquals(message.getExecutionId(), result.getExecutionId());
     assertEquals(FinishReason.NORMAL, result.getReason());
     assertEquals(EndpointType.BIOCASE_XML_ARCHIVE, result.getEndpointType());
-    assertEquals(Platform.PIPELINES, result.getPlatform());
   }
 }

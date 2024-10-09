@@ -16,7 +16,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
 import org.gbif.api.model.crawler.DwcaValidationReport;
-import org.gbif.api.model.crawler.GenericValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.model.pipelines.PipelinesWorkflow;
 import org.gbif.api.model.pipelines.PipelinesWorkflow.Graph;
@@ -27,12 +26,13 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
-import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.converters.DwcaToAvroConverter;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.UnsupportedArchiveException;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.common.process.RecordCountReader;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.DwcaUtils;
@@ -86,10 +86,6 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
   /** Only correct messages can be handled, by now is only OCCURRENCE type messages */
   @Override
   public boolean isMessageCorrect(PipelinesDwcaMessage message) {
-    boolean isPlatformCorrect = Platform.PIPELINES.equivalent(message.getPlatform());
-    if (!isPlatformCorrect) {
-      log.info("Skipping the task, because of the platform {} is incorrect", message.getPlatform());
-    }
     boolean isMessageValid =
         message.getDatasetType() != null && message.getValidationReport().isValid();
     if (!isMessageValid) {
@@ -103,7 +99,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
       log.info(
           "Skipping the task, because of the validation report is missed or there are no records");
     }
-    return isPlatformCorrect && isMessageValid && isReportValid;
+    return isMessageValid && isReportValid;
   }
 
   private boolean isReportValid(PipelinesDwcaMessage message) {
@@ -118,6 +114,12 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         message.getValidationReport().getGenericReport() != null
             && message.getValidationReport().getGenericReport().getCheckedRecords() > 0
             && message.getDatasetType() != DatasetType.CHECKLIST;
+
+    if (!config.stepConfig.eventsEnabled
+        && message.getDatasetType() == DatasetType.SAMPLING_EVENT) {
+      isValidGenericReport = false;
+    }
+
     return isValidOccurrenceReport || isValidGenericReport;
   }
 
@@ -179,14 +181,11 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
           workflow = PipelinesWorkflow.getValidatorWorkflow();
         } else {
           Term coreType = archive.getCore().getRowType();
-          boolean hasOccExt =
+          boolean hasOccurrenceExtension =
               archive.getExtensions().stream().anyMatch(x -> x.getRowType() == DwcTerm.Occurrence);
 
-          // the materialEntity core type is a deliberate hack(see issue
-          // https://github.com/gbif/pipelines/issues/885)
-          boolean hasOccurrences =
-              coreType == DwcTerm.Occurrence || coreType == DwcTerm.MaterialEntity || hasOccExt;
-          boolean hasEvents = coreType == DwcTerm.Event;
+          boolean hasOccurrences = coreType == DwcTerm.Occurrence || hasOccurrenceExtension;
+          boolean hasEvents = coreType == DwcTerm.Event && config.stepConfig.eventsEnabled;
 
           workflow = PipelinesWorkflow.getWorkflow(hasOccurrences, hasEvents);
         }
@@ -220,17 +219,37 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
     // Common variables
     OccurrenceValidationReport report = message.getValidationReport().getOccurrenceReport();
-    Long numberOfRecords = report == null ? null : (long) report.getCheckedRecords();
-    GenericValidationReport genericReport = message.getValidationReport().getGenericReport();
-    Long numberOfEventRecords =
-        genericReport == null ? null : (long) genericReport.getCheckedRecords();
+
+    Long dwcaRecordsNumber = null;
+    if (message.getDatasetType() == DatasetType.SAMPLING_EVENT) {
+      dwcaRecordsNumber =
+          RecordCountReader.builder()
+              .stepConfig(config.stepConfig)
+              .datasetKey(message.getDatasetUuid().toString())
+              .attempt(message.getAttempt().toString())
+              .metaFileName(config.metaFileName)
+              .metricName(Metrics.ARCHIVE_TO_ER_COUNT)
+              .build()
+              .get();
+    }
+
+    long dwcaOccurrenceRecordsNumber =
+        RecordCountReader.builder()
+            .stepConfig(config.stepConfig)
+            .datasetKey(message.getDatasetUuid().toString())
+            .attempt(message.getAttempt().toString())
+            .metaFileName(config.metaFileName)
+            .metricName(Metrics.ARCHIVE_TO_OCC_COUNT)
+            .build()
+            .get();
+
     ValidationResult validationResult =
         new ValidationResult(
             tripletsValid(report),
             occurrenceIdsValid(report),
             null,
-            numberOfRecords,
-            numberOfEventRecords);
+            dwcaOccurrenceRecordsNumber,
+            dwcaRecordsNumber);
 
     // this is a deliberate hack(see issue https://github.com/gbif/pipelines/issues/885)
     DatasetType datasetType = message.getDatasetType();

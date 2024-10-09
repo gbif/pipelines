@@ -22,9 +22,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -49,24 +47,20 @@ public class HdfsUtils {
   }
 
   /**
-   * Returns number of files in the directory
-   *
-   * @param hdfsConfigs path to hdfs-site.xml and core-site.xml config file
-   * @param directoryPath path to some directory
+   * @return list of absolute file path present in given path
    */
-  public static int getFileCount(HdfsConfigs hdfsConfigs, String directoryPath) throws IOException {
-    URI fileUri = URI.create(directoryPath);
-    FileSystem fs = getFileSystem(hdfsConfigs, directoryPath);
-
-    int count = 0;
-    RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(new Path(fileUri), false);
-    while (iterator.hasNext()) {
-      LocatedFileStatus fileStatus = iterator.next();
-      if (fileStatus.isFile()) {
-        count++;
+  public static List<FileStatus> getAllFilesRecursive(Path filePath, FileSystem fs)
+      throws IOException {
+    List<FileStatus> fileList = new ArrayList<>();
+    FileStatus[] fileStatus = fs.listStatus(filePath);
+    for (FileStatus fileStat : fileStatus) {
+      if (fileStat.isDirectory()) {
+        fileList.addAll(getAllFilesRecursive(fileStat.getPath(), fs));
+      } else {
+        fileList.add(fileStat);
       }
     }
-    return count;
+    return fileList;
   }
 
   /**
@@ -200,7 +194,7 @@ public class HdfsUtils {
     return true;
   }
 
-  /** Delete HDFS sub-directories where modification date is older than deleteAfterDays value */
+  /** Delete HDFS subdirectories where modification date is older than deleteAfterDays value */
   public static void deleteSubFolders(
       HdfsConfigs hdfsConfigs, String filePath, long deleteAfterDays, Set<String> exclude)
       throws IOException {

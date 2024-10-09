@@ -1,5 +1,8 @@
 package org.gbif.pipelines.fragmenter.record;
 
+import static com.fasterxml.jackson.databind.MapperFeature.SORT_PROPERTIES_ALPHABETICALLY;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -8,8 +11,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import lombok.extern.slf4j.Slf4j;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.DwcTerm;
@@ -24,7 +25,7 @@ public class DwcaOccurrenceRecord implements OccurrenceRecord {
 
   static {
     // to ensure that identical records are serialized identically
-    MAPPER.configure(SerializationConfig.Feature.SORT_PROPERTIES_ALPHABETICALLY, true);
+    MAPPER.configure(SORT_PROPERTIES_ALPHABETICALLY, true);
   }
 
   public final String triplet;

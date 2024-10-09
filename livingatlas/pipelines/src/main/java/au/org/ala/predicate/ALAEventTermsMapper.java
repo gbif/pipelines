@@ -47,7 +47,7 @@ public class ALAEventTermsMapper implements SQLTermsMapper<ALAEventSearchParamet
           .put(ALAEventSearchParameter.taxonKey, GbifTerm.taxonKey)
           .build();
 
-  private static final Map<SearchParameter, Term> DENORMED_TERMS = Collections.EMPTY_MAP;
+  private static final Map<SearchParameter, Term> DENORMED_TERMS = Collections.emptyMap();
 
   @Override
   public Term term(ALAEventSearchParameter searchParameter) {

@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.factory;
 
-import io.github.resilience4j.retry.IntervalFunction;
+import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -16,7 +16,9 @@ import org.gbif.pipelines.core.config.model.RetryConfig;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RetryFactory {
 
-  /** @return a new {@link Retry} instance using the supplied configuration. */
+  /**
+   * @return a new {@link Retry} instance using the supplied configuration.
+   */
   public static Retry create(@Nullable RetryConfig retryConfig, String name) {
     RetryConfig config = Objects.isNull(retryConfig) ? new RetryConfig() : retryConfig;
     IntervalFunction intervalFn =

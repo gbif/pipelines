@@ -2,9 +2,13 @@ package org.gbif.pipelines.core.converters;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
@@ -68,11 +72,11 @@ public class ParentJsonConverter {
             .setId(verbatim.getId())
             .setInternalId(identifier.getInternalId())
             .setUniqueKey(identifier.getUniqueKey())
-            .setType("event")
+            .setType(ConverterConstants.EVENT)
             .setEventBuilder(convertToEvent())
             .setAll(JsonConverter.convertFieldAll(verbatim, false))
             .setVerbatim(JsonConverter.convertVerbatimEventRecord(verbatim))
-            .setJoinRecordBuilder(JoinRecord.newBuilder().setName("event"));
+            .setJoinRecordBuilder(JoinRecord.newBuilder().setName(ConverterConstants.EVENT));
 
     mapCreated(builder);
     mapDerivedMetadata(builder);
@@ -88,7 +92,7 @@ public class ParentJsonConverter {
   /** Converts to a parent record based on an occurrence record. */
   private ParentJsonRecord convertToParentOccurrence() {
     return convertToParentRecord()
-        .setType("occurrence")
+        .setType(ConverterConstants.OCCURRENCE)
         .setId(occurrenceJsonRecord.getId())
         .setInternalId(
             HashConverter.getSha1(
@@ -97,7 +101,7 @@ public class ParentJsonConverter {
                 occurrenceJsonRecord.getOccurrenceId()))
         .setJoinRecordBuilder(
             JoinRecord.newBuilder()
-                .setName("occurrence")
+                .setName(ConverterConstants.OCCURRENCE)
                 .setParent(
                     HashConverter.getSha1(
                         metadata.getDatasetKey(), occurrenceJsonRecord.getVerbatim().getCoreId())))
@@ -155,6 +159,11 @@ public class ParentJsonConverter {
 
   private void mapEventCoreRecord(EventJsonRecord.Builder builder) {
 
+    if (eventCore.getEventType() != null
+        && eventCore.getEventType().getConcept().equalsIgnoreCase(ConverterConstants.SURVEY)) {
+      builder.setSurveyID(builder.getEventID());
+    }
+
     // Simple
     builder
         .setSampleSizeValue(eventCore.getSampleSizeValue())
@@ -166,6 +175,44 @@ public class ParentJsonConverter {
         .setParentsLineage(convertParents(eventCore.getParentsLineage()))
         .setParentEventID(eventCore.getParentEventID())
         .setLocationID(eventCore.getLocationID());
+
+    if (eventCore.getParentsLineage() != null && !eventCore.getParentsLineage().isEmpty()) {
+      List<String> eventTypes = getParentsLineageEventTypes();
+      List<String> eventIDs = getLineageEventIDs();
+
+      builder
+          .setEventTypeHierarchy(eventTypes)
+          .setEventTypeHierarchyJoined(String.join(ConverterConstants.DELIMITER, eventTypes))
+          .setEventHierarchy(eventIDs)
+          .setEventHierarchyJoined(String.join(ConverterConstants.DELIMITER, eventIDs))
+          .setEventHierarchyLevels(eventIDs.size());
+
+      if (builder.getSurveyID() == null) {
+        List<org.gbif.pipelines.io.avro.Parent> surveys =
+            eventCore.getParentsLineage().stream()
+                .filter(
+                    e ->
+                        e.getEventType() != null
+                            && e.getEventType().equalsIgnoreCase(ConverterConstants.SURVEY))
+                .collect(Collectors.toList());
+        if (!surveys.isEmpty()) {
+          builder.setSurveyID(surveys.get(0).getId());
+        }
+      }
+    } else {
+      // add the eventID and parentEventID to hierarchy for consistency
+      List<String> eventHierarchy = new ArrayList<>();
+      Optional.ofNullable(builder.getParentEventID()).ifPresent(eventHierarchy::add);
+      Optional.ofNullable(builder.getEventID()).ifPresent(eventHierarchy::add);
+      builder.setEventHierarchy(eventHierarchy);
+
+      // add the single type to hierarchy for consistency
+      List<String> eventTypeHierarchy = new ArrayList<>();
+      if (builder.getEventType() != null && builder.getEventType().getConcept() != null) {
+        eventTypeHierarchy.add(builder.getEventType().getConcept());
+      }
+      builder.setEventTypeHierarchy(eventTypeHierarchy);
+    }
 
     // Vocabulary
     JsonConverter.convertVocabularyConcept(eventCore.getEventType())
@@ -232,6 +279,34 @@ public class ParentJsonConverter {
     JsonConverter.convertGadm(location.getGadm()).ifPresent(builder::setGadm);
   }
 
+  private List<String> getParentsLineageEventTypes() {
+    List<String> eventTypes =
+        eventCore.getParentsLineage().stream()
+            .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
+            .map(org.gbif.pipelines.io.avro.Parent::getEventType)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+
+    if (eventCore.getEventType() != null) {
+      eventTypes.add(eventCore.getEventType().getConcept());
+    } else {
+      extractOptValue(verbatim, DwcTerm.eventType).ifPresent(eventTypes::add);
+    }
+
+    return eventTypes;
+  }
+
+  private List<String> getLineageEventIDs() {
+
+    List<String> eventIDs =
+        eventCore.getParentsLineage().stream()
+            .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
+            .map(org.gbif.pipelines.io.avro.Parent::getId)
+            .collect(Collectors.toList());
+    eventIDs.add(eventCore.getId());
+    return eventIDs;
+  }
+
   private void mapMultimediaRecord(EventJsonRecord.Builder builder) {
     builder
         .setMultimediaItems(JsonConverter.convertMultimediaList(multimedia))
@@ -258,6 +333,10 @@ public class ParentJsonConverter {
     extractOptValue(verbatim, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
     extractOptValue(verbatim, DwcTerm.verbatimDepth).ifPresent(builder::setVerbatimDepth);
     extractOptValue(verbatim, DwcTerm.verbatimElevation).ifPresent(builder::setVerbatimElevation);
+
+    // Todo: replce with extractOptValue
+    String eventName = verbatim.getCoreTerms().get(ConverterConstants.EVENT_NAME);
+    Optional.ofNullable(eventName).ifPresent(builder::setEventName);
   }
 
   private void mapIssues(EventJsonRecord.Builder builder) {

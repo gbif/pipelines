@@ -10,7 +10,6 @@ import java.time.YearMonth;
 import java.time.temporal.TemporalAccessor;
 import java.util.Optional;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
-import org.gbif.pipelines.io.avro.EventDate;
 import org.junit.Test;
 
 public class TemporalConverterTest {
@@ -201,14 +200,6 @@ public class TemporalConverterTest {
 
   @Test
   public void before1582Test() {
-    // Note dates before this date need special handling if java.util.Date is used.
-    EventDate ed =
-        EventDate.newBuilder().setGte("1400-01-01T00:00:00").setLte("2023-09-11T14:21:00").build();
-
-    assertEquals(
-        "1400-01-01T00:00:00/2023-09-11T14:21:00",
-        TemporalConverter.getEventDateToStringFn().apply(ed));
-
     assertEquals("1400", StringToDateFunctions.getTemporalToStringFn().apply(Year.of(1400)));
   }
 }

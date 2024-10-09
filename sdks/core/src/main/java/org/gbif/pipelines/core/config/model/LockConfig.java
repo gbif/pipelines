@@ -22,7 +22,7 @@ public class LockConfig implements Serializable {
   /** Zookeeper shared path or space */
   private String namespace;
 
-  /** Base locking path path to use for locking */
+  /** Base locking path to use for locking */
   private String lockingPath;
 
   /** Shared-lock name */

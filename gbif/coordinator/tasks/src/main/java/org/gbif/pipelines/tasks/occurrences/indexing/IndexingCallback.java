@@ -4,7 +4,6 @@ import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
@@ -18,15 +17,18 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.common.airflow.AppName;
 import org.gbif.pipelines.common.indexing.IndexSettings;
-import org.gbif.pipelines.common.process.BeamSettings;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
+import org.gbif.pipelines.common.process.AirflowSparkLauncher;
+import org.gbif.pipelines.common.process.BeamParametersBuilder;
+import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
 import org.gbif.pipelines.common.process.RecordCountReader;
-import org.gbif.pipelines.common.process.SparkSettings;
+import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
+import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -80,7 +82,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
       routingKey = pm.setRunner(config.processRunner).getRoutingKey();
     }
 
-    log.info("MQ rounting key is {}", routingKey);
+    log.info("MQ routing key is {}", routingKey);
     return routingKey;
   }
 
@@ -119,7 +121,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     return () -> {
       try {
 
-        long recordsNumber =
+        long interpretationRecordsNumber =
             RecordCountReader.builder()
                 .stepConfig(config.stepConfig)
                 .datasetKey(message.getDatasetUuid().toString())
@@ -131,6 +133,18 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
                 .build()
                 .get();
 
+        long dwcaRecordsNumber =
+            RecordCountReader.builder()
+                .stepConfig(config.stepConfig)
+                .datasetKey(message.getDatasetUuid().toString())
+                .attempt(message.getAttempt().toString())
+                .metaFileName(new DwcaToAvroConfiguration().metaFileName)
+                .metricName(Metrics.ARCHIVE_TO_OCC_COUNT)
+                .build()
+                .get();
+
+        long recordsNumber = Math.min(dwcaRecordsNumber, interpretationRecordsNumber);
+
         IndexSettings indexSettings =
             IndexSettings.create(
                 config.indexConfig,
@@ -138,22 +152,16 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
                 message.getDatasetUuid().toString(),
                 message.getAttempt(),
                 recordsNumber);
-
-        ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder =
-            ProcessRunnerBuilder.builder()
-                .distributedConfig(config.distributedConfig)
-                .sparkConfig(config.sparkConfig)
-                .sparkAppName(
-                    getType(message) + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-                .beamConfigFn(BeamSettings.occurreceIndexing(config, message, indexSettings));
+        BeamParameters beamParameters =
+            BeamParametersBuilder.occurrenceIndexing(config, message, indexSettings);
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
         log.info("Start the process. Message - {}", message);
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          runDistributed(message, builder, recordsNumber);
+          runDistributed(message, beamParameters, recordsNumber);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
-          runLocal(builder);
+          runLocal(beamParameters);
         }
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
@@ -174,32 +182,32 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         message.getEndpointType());
   }
 
-  private void runLocal(ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder) {
-    InterpretedToEsIndexExtendedPipeline.run(builder.build().buildOptions(), executor);
+  private void runLocal(BeamParameters beamParameters) {
+    InterpretedToEsIndexExtendedPipeline.run(beamParameters.toArray(), executor);
   }
 
   private void runDistributed(
-      PipelinesInterpretedMessage message,
-      ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder,
-      long recordsNumber)
-      throws IOException, InterruptedException {
+      PipelinesInterpretedMessage message, BeamParameters beamParameters, long recordsNumber) {
 
+    // Spark dynamic settings
     boolean useMemoryExtraCoef =
         config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
-    SparkSettings sparkSettings =
-        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
-    builder.sparkSettings(sparkSettings);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
-    // Assembles a terminal java process and runs it
-    ProcessRunnerBuilder prb = builder.build();
-    int exitValue = prb.get().start().waitFor();
+    // App name
+    String sparkAppName =
+        AppName.get(getType(message), message.getDatasetUuid(), message.getAttempt());
 
-    if (exitValue != 0) {
-      throw new IllegalStateException(
-          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
-    } else {
-      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
-    }
+    // Submit
+    AirflowSparkLauncher.builder()
+        .airflowConfiguration(config.airflowConfig)
+        .sparkStaticConfiguration(config.sparkConfig)
+        .sparkDynamicSettings(sparkSettings)
+        .beamParameters(beamParameters)
+        .sparkAppName(sparkAppName)
+        .build()
+        .submitAwaitVoid();
   }
 
   private StepType getType(PipelinesInterpretedMessage message) {

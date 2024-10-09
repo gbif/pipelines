@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>coordinator</artifactId>
-    <version>2.18.0-SNAPSHOT</version>
+    <version>2.19.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -30,12 +30,10 @@
   </build>
 
   <properties>
-    <amqp-client.version>4.8.0</amqp-client.version>
-    <curator.version>4.0.1</curator.version>
 
     <gbif-cli.version>0.14</gbif-cli.version>
     <gbif-httputils.version>0.12</gbif-httputils.version>
-    <gbif-wrangler.version>0.3</gbif-wrangler.version>
+    <gbif-wrangler.version>0.5-SNAPSHOT</gbif-wrangler.version>
 
     <guice.version>4.2.3</guice.version>
     <!-- Match the GBIF http-client! -->
@@ -52,6 +50,7 @@
     <commons-lang.version>2.6</commons-lang.version>
     <commons-configuration.version>1.10</commons-configuration.version>
     <xercesImpl.version>2.12.1</xercesImpl.version>
+    <woodstox-core.version>5.3.0</woodstox-core.version>
   </properties>
 
   <dependencies>
@@ -71,6 +70,10 @@
           <groupId>org.apache.beam</groupId>
           <artifactId>beam-sdks-java-core</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -85,15 +88,31 @@
           <groupId>org.apache.beam</groupId>
           <artifactId>*</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>ingest-gbif-fragmenter</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>validator-core</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId> org.apache.logging.log4j</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
@@ -130,6 +149,12 @@
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common-ws</artifactId>
       <version>${gbif-common-ws.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId> org.apache.logging.log4j</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -144,6 +169,12 @@
       <groupId>org.gbif</groupId>
       <artifactId>gbif-wrangler</artifactId>
       <version>${gbif-wrangler.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.common</groupId>
@@ -191,7 +222,6 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-ws-client</artifactId>
-      <version>${registry.version}</version>
       <exclusions>
         <exclusion>
           <artifactId>commons-logging</artifactId>
@@ -200,6 +230,10 @@
         <exclusion>
           <groupId>org.gbif.common</groupId>
           <artifactId>gbif-cli</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>datacite-rest-client</artifactId>
+          <groupId>org.gbif.datacite</groupId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -215,7 +249,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>
-      <artifactId>beam-runners-spark</artifactId>
+      <artifactId>beam-runners-spark-3</artifactId>
       <exclusions>
         <exclusion>
           <groupId>org.apache.beam</groupId>
@@ -258,17 +292,78 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs</artifactId>
-      <scope>compile</scope>
+      <scope>runtime</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-reload4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>ch.qos.reload4j</groupId>
+          <artifactId>reload4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.squareup.okhttp</groupId>
+          <artifactId>okhttp</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-      <scope>compile</scope>
+      <artifactId>hadoop-client</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.reload4j</groupId>
+          <artifactId>reload4j</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
       <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-reload4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>ch.qos.reload4j</groupId>
+          <artifactId>reload4j</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client-api</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-reload4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>ch.qos.reload4j</groupId>
+          <artifactId>reload4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.squareup.okhttp</groupId>
+          <artifactId>okhttp</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.woodstox</groupId>
+      <artifactId>woodstox-core</artifactId>
+      <version>${woodstox-core.version}</version>
+      <scope>runtime</scope>
     </dependency>
 
     <!-- Main list -->
@@ -304,6 +399,10 @@
       <groupId>org.kohsuke.metainf-services</groupId>
       <artifactId>metainf-services</artifactId>
       <version>${metainf-services.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
@@ -372,14 +471,6 @@
       <version>${httpcore.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-client</artifactId>
       <version>${curator.version}</version>
@@ -387,7 +478,6 @@
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-framework</artifactId>
-      <version>${curator.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.curator</groupId>

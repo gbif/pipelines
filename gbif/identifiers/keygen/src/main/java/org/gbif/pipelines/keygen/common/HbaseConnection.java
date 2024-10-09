@@ -14,17 +14,20 @@ import org.apache.hadoop.hbase.client.ConnectionFactory;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class HbaseConnection {
 
-  public static Connection create(String hbaseZk) throws IOException {
+  public static Connection create(String hbaseZk, String zNodeParent) throws IOException {
     if (Strings.isNullOrEmpty(hbaseZk)) {
       return ConnectionFactory.createConnection(HBaseConfiguration.create());
     }
     Configuration hbaseConfig = HBaseConfiguration.create();
     hbaseConfig.set("hbase.zookeeper.quorum", hbaseZk);
     hbaseConfig.set("zookeeper.session.timeout", "360000");
+    if (!Strings.isNullOrEmpty(zNodeParent)) {
+      hbaseConfig.set("zookeeper.znode.parent", zNodeParent);
+    }
     return ConnectionFactory.createConnection(hbaseConfig);
   }
 
   public static Connection create() throws IOException {
-    return create(null);
+    return create(null, null);
   }
 }

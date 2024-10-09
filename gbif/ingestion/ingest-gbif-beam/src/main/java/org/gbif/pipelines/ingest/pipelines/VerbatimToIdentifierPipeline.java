@@ -55,6 +55,7 @@ public class VerbatimToIdentifierPipeline {
 
     PipelinesConfig config =
         FsUtils.readConfigFile(hdfsConfigs, options.getProperties(), PipelinesConfig.class);
+    log.info("KeyGenConfig {}", config.getKeygen().toString());
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -103,17 +104,18 @@ public class VerbatimToIdentifierPipeline {
 
     idsTuple
         .get(uniqueIdTransform.getTag())
-        .apply("Write GBIF ids to avro", idTransform.write(pathFn));
+        .apply("Write GBIF ids to avro", idTransform.write(pathFn).withoutSharding());
 
     idsTuple
         .get(uniqueIdTransform.getInvalidTag())
-        .apply("Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn));
+        .apply(
+            "Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn).withoutSharding());
 
     idCollection
         .get(tupleTransform.getAbsentTag())
         .apply(
             "Write absent GBIF ids to avro",
-            idTransform.write(pathFn.apply(idTransform.getAbsentName())));
+            idTransform.write(pathFn.apply(idTransform.getAbsentName())).withoutSharding());
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

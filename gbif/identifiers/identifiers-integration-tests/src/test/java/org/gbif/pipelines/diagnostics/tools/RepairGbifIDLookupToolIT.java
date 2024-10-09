@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.gbif.pipelines.diagnostics.MainTool;
 import org.gbif.pipelines.diagnostics.strategy.DeletionStrategy.DeletionStrategyType;
 import org.gbif.pipelines.diagnostics.strategy.LookupKeyUtils;
+import org.gbif.pipelines.diagnostics.tools.RepairGbifIDLookupTool.FileType;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.gbif.pipelines.resources.HbaseServer;
@@ -224,7 +225,8 @@ public class RepairGbifIDLookupToolIT {
     // When
     RepairGbifIDLookupTool.builder()
         .datasetKey(datasetKey)
-        .dwcaSource(dwca)
+        .source(dwca)
+        .fileType(FileType.DWCA)
         .lookupTable(HbaseServer.CFG.getLookupTable())
         .counterTable(HbaseServer.CFG.getCounterTable())
         .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())
@@ -270,7 +272,8 @@ public class RepairGbifIDLookupToolIT {
     // When
     RepairGbifIDLookupTool.builder()
         .datasetKey(datasetKey)
-        .dwcaSource(dwca)
+        .source(dwca)
+        .fileType(FileType.DWCA)
         .lookupTable(HbaseServer.CFG.getLookupTable())
         .counterTable(HbaseServer.CFG.getCounterTable())
         .occurrenceTable(HbaseServer.CFG.getOccurrenceTable())

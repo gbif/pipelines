@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>ingestion</artifactId>
-    <version>2.18.0-SNAPSHOT</version>
+    <version>2.19.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -81,12 +81,17 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>ingest-gbif-java</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-wrangler</artifactId>
-      <version>${gbif-wrangler.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -151,7 +156,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.11</artifactId>
+      <artifactId>spark-core_2.12</artifactId>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -162,7 +167,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-streaming_2.11</artifactId>
+      <artifactId>spark-streaming_2.12</artifactId>
       <scope>test</scope>
     </dependency>
 

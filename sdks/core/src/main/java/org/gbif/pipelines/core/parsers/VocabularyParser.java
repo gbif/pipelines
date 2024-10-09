@@ -16,13 +16,11 @@ import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Sex;
-import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.common.parsers.BasisOfRecordParser;
 import org.gbif.common.parsers.ContinentParser;
 import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.RankParser;
 import org.gbif.common.parsers.SexParser;
-import org.gbif.common.parsers.TypeStatusParser;
 import org.gbif.common.parsers.core.EnumParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
@@ -31,8 +29,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 /** Utility class that parses Enum based terms. */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class VocabularyParser<T extends Enum<T>> {
-
-  private static final TypeStatusParser TYPE_PARSER = TypeStatusParser.getInstance();
   private static final BasisOfRecordParser BOR_PARSER = BasisOfRecordParser.getInstance();
   private static final SexParser SEX_PARSER = SexParser.getInstance();
   private static final CountryParser COUNTRY_PARSER = CountryParser.getInstance();
@@ -45,32 +41,37 @@ public class VocabularyParser<T extends Enum<T>> {
   // Term ot be parsed
   private final DwcTerm term;
 
-  /** @return a basis of record parser. */
+  /**
+   * @return a basis of record parser.
+   */
   public static VocabularyParser<BasisOfRecord> basisOfRecordParser() {
     return new VocabularyParser<>(BOR_PARSER, DwcTerm.basisOfRecord);
   }
 
-  /** @return a sex parser. */
+  /**
+   * @return a sex parser.
+   */
   public static VocabularyParser<Sex> sexParser() {
     return new VocabularyParser<>(SEX_PARSER, DwcTerm.sex);
   }
 
-  /** @return a type status parser. */
-  public static VocabularyParser<TypeStatus> typeStatusParser() {
-    return new VocabularyParser<>(TYPE_PARSER, DwcTerm.typeStatus);
-  }
-
-  /** @return a country parser. */
+  /**
+   * @return a country parser.
+   */
   public static VocabularyParser<Country> countryParser() {
     return new VocabularyParser<>(COUNTRY_PARSER, DwcTerm.country);
   }
 
-  /** @return a country parser. */
+  /**
+   * @return a country parser.
+   */
   public static VocabularyParser<Country> countryCodeParser() {
     return new VocabularyParser<>(COUNTRY_PARSER, DwcTerm.countryCode);
   }
 
-  /** @return a continent parser. */
+  /**
+   * @return a continent parser.
+   */
   public static VocabularyParser<Continent> continentParser() {
     return new VocabularyParser<>(CONTINENT_PARSER, DwcTerm.continent);
   }

@@ -18,11 +18,13 @@ import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.process.BeamSettings;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
+import org.gbif.pipelines.common.airflow.AppName;
+import org.gbif.pipelines.common.hdfs.HdfsViewSettings;
+import org.gbif.pipelines.common.process.AirflowSparkLauncher;
+import org.gbif.pipelines.common.process.BeamParametersBuilder;
+import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
 import org.gbif.pipelines.common.process.RecordCountReader;
-import org.gbif.pipelines.common.process.SparkSettings;
+import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToIdentifierPipeline;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
@@ -85,33 +87,22 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
   @Override
   public Runnable createRunnable(PipelinesVerbatimMessage message) {
     return () -> {
-      String datasetId = message.getDatasetUuid().toString();
-      String attempt = Integer.toString(message.getAttempt());
-
-      String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
-      String path =
-          message.getExtraPath() != null
-              ? message.getExtraPath()
-              : String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
-
-      ProcessRunnerBuilderBuilder builder =
-          ProcessRunnerBuilder.builder()
-              .distributedConfig(config.distributedConfig)
-              .sparkConfig(config.sparkConfig)
-              .sparkAppName(
-                  TYPE.name() + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-              .beamConfigFn(BeamSettings.occurrenceIdentifier(config, message, path));
-
       log.info("Start the process. Message - {}", message);
       try {
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
+        int numberOfShards = computeNumberOfShards(message);
+
+        BeamParameters beamParameters =
+            BeamParametersBuilder.occurrenceIdentifier(
+                config, message, getFilePath(message), numberOfShards);
+
         log.info("Start the process. Message - {}", message);
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
-          runDistributed(message, builder);
+          runDistributed(message, beamParameters);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
-          runLocal(builder);
+          runLocal(beamParameters);
         }
 
         IdentifierValidationResult validationResult =
@@ -145,6 +136,11 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
     };
   }
 
+  private int computeNumberOfShards(PipelinesVerbatimMessage message) {
+    Long numberOfRecords = message.getValidationResult().getNumberOfRecords();
+    return HdfsViewSettings.computeNumberOfShards(config.avroConfig, numberOfRecords);
+  }
+
   @Override
   public PipelinesVerbatimMessage createOutgoingMessage(PipelinesVerbatimMessage message) {
 
@@ -165,9 +161,10 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
         message.getDatasetType());
   }
 
-  private void runDistributed(PipelinesVerbatimMessage message, ProcessRunnerBuilderBuilder builder)
-      throws IOException, InterruptedException {
+  private void runDistributed(PipelinesVerbatimMessage message, BeamParameters beamParameters)
+      throws IOException {
 
+    // Spark dynamic settings
     Long messageNumber =
         message.getValidationResult() != null
                 && message.getValidationResult().getNumberOfRecords() != null
@@ -181,30 +178,40 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
             .attempt(message.getAttempt().toString())
             .messageNumber(messageNumber)
             .metaFileName(new DwcaToAvroConfiguration().metaFileName)
-            .metricName(Metrics.ARCHIVE_TO_ER_COUNT)
+            .metricName(Metrics.ARCHIVE_TO_OCC_COUNT)
             .build()
             .get();
 
     boolean useMemoryExtraCoef =
         config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
-    SparkSettings sparkSettings =
-        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
+    SparkDynamicSettings sparkSettings =
+        SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
-    builder.sparkSettings(sparkSettings);
+    // App name
+    String sparkAppName = AppName.get(TYPE, message.getDatasetUuid(), message.getAttempt());
 
-    // Assembles a terminal java process and runs it
-    ProcessRunnerBuilder prb = builder.build();
-    int exitValue = prb.get().start().waitFor();
-
-    if (exitValue != 0) {
-      throw new IllegalStateException(
-          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
-    } else {
-      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
-    }
+    // Submit
+    AirflowSparkLauncher.builder()
+        .airflowConfiguration(config.airflowConfig)
+        .sparkStaticConfiguration(config.sparkConfig)
+        .sparkDynamicSettings(sparkSettings)
+        .beamParameters(beamParameters)
+        .sparkAppName(sparkAppName)
+        .build()
+        .submitAwaitVoid();
   }
 
-  private void runLocal(ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder) {
-    VerbatimToIdentifierPipeline.run(builder.build().buildOptions(), executor);
+  private void runLocal(BeamParameters beamParameters) {
+    VerbatimToIdentifierPipeline.run(beamParameters.toArray(), executor);
+  }
+
+  private String getFilePath(PipelinesVerbatimMessage message) {
+    String datasetId = message.getDatasetUuid().toString();
+    String attempt = Integer.toString(message.getAttempt());
+
+    String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
+    return message.getExtraPath() != null
+        ? message.getExtraPath()
+        : String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
   }
 }

@@ -21,10 +21,12 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesFragmenterMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
-import org.gbif.pipelines.common.process.BeamSettings;
-import org.gbif.pipelines.common.process.ProcessRunnerBuilder;
+import org.gbif.pipelines.common.airflow.AppName;
+import org.gbif.pipelines.common.process.AirflowSparkLauncher;
+import org.gbif.pipelines.common.process.BeamParametersBuilder;
+import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
 import org.gbif.pipelines.common.process.RecordCountReader;
-import org.gbif.pipelines.common.process.SparkSettings;
+import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
@@ -107,34 +109,27 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
     };
   }
 
-  private void runDistributed(PipelinesInterpretedMessage message, long recordsNumber)
-      throws IOException, InterruptedException {
+  private void runDistributed(PipelinesInterpretedMessage message, long recordsNumber) {
+    BeamParameters beamParameters = BeamParametersBuilder.verbatimFragmenter(config, message);
 
-    ProcessRunnerBuilder.ProcessRunnerBuilderBuilder builder =
-        ProcessRunnerBuilder.builder()
-            .distributedConfig(config.distributedConfig)
-            .sparkConfig(config.sparkConfig)
-            .sparkAppName(
-                StepType.FRAGMENTER + "_" + message.getDatasetUuid() + "_" + message.getAttempt())
-            .beamConfigFn(BeamSettings.verbatimFragmenter(config, message));
-
+    // Spark dynamic settings
     boolean useMemoryExtraCoef =
         config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
-    SparkSettings sparkSettings =
-        SparkSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
+    SparkDynamicSettings sparkDynamicSettings =
+        SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
-    builder.sparkSettings(sparkSettings);
+    // App name
+    String sparkAppName = AppName.get(TYPE, message.getDatasetUuid(), message.getAttempt());
 
-    // Assembles a terminal java process and runs it
-    ProcessRunnerBuilder prb = builder.build();
-    int exitValue = prb.get().start().waitFor();
-
-    if (exitValue != 0) {
-      throw new IllegalStateException(
-          "Process failed in distributed Job. Check yarn logs " + prb.getSparkAppName());
-    } else {
-      log.info("Process has been finished, Spark job name - {}", prb.getSparkAppName());
-    }
+    // Submit
+    AirflowSparkLauncher.builder()
+        .airflowConfiguration(config.airflowConfig)
+        .sparkStaticConfiguration(config.sparkConfig)
+        .sparkDynamicSettings(sparkDynamicSettings)
+        .beamParameters(beamParameters)
+        .sparkAppName(sparkAppName)
+        .build()
+        .submitAwaitVoid();
   }
 
   private void runLocal(PipelinesInterpretedMessage message) {

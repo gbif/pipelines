@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>ingestion</artifactId>
-    <version>2.18.0-SNAPSHOT</version>
+    <version>2.19.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -14,6 +14,11 @@
 
   <name>Pipelines :: GBIF :: Ingestion :: Ingest-GBIF Beam version</name>
   <description>Base Apache Beam pipelines for ingestion biodiversity data</description>
+
+  <properties>
+    <metrics-core.version>4.2.15</metrics-core.version>
+    <jaxws-api.version>2.3.1</jaxws-api.version>
+  </properties>
 
   <dependencies>
 
@@ -24,6 +29,11 @@
     </dependency>
 
     <!-- This project -->
+    <dependency>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro</artifactId>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>models</artifactId>
@@ -110,13 +120,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>
-      <artifactId>beam-runners-spark</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.beam</groupId>
-          <artifactId>beam-sdks-java-extensions-google-cloud-platform-core</artifactId>
-        </exclusion>
-      </exclusions>
+      <artifactId>beam-runners-spark-3</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>
@@ -140,6 +144,7 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
@@ -149,19 +154,46 @@
           <groupId>io.netty</groupId>
           <artifactId>netty-all</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>com.squareup.okhttp</groupId>
+          <artifactId>okhttp</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.squareup.okhttp</groupId>
+          <artifactId>okhttp</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
 
-    <!-- Common -->
+    <!-- Avoid classpath clash -->
     <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.xerial.snappy</groupId>
-          <artifactId>snappy-java</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>javax.xml.ws</groupId>
+      <artifactId>jaxws-api</artifactId>
+      <version>${jaxws-api.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.dropwizard.metrics</groupId>
+      <artifactId>metrics-core</artifactId>
+      <version>${metrics-core.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>${scala.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <!-- Utils -->
@@ -187,7 +219,19 @@
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-xml</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.module</groupId>
+      <artifactId>jackson-module-scala_2.12</artifactId>
     </dependency>
 
     <!-- Test -->
@@ -213,12 +257,12 @@
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.11</artifactId>
+      <artifactId>spark-core_2.12</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-streaming_2.11</artifactId>
+      <artifactId>spark-streaming_2.12</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -259,29 +303,13 @@
                     <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                   </transformers>
                   <relocations>
-                    <!-- Transient from core: conflicts with Beam on Spark -->
+                    <!-- To avoid guava problem in Spark cluster mode -->
                     <relocation>
-                      <pattern>okio</pattern>
-                      <shadedPattern>o113.okio</shadedPattern>
+                      <pattern>org.apache.curator</pattern>
+                      <shadedPattern>relocation.org.apache.curator</shadedPattern>
                     </relocation>
 
-                    <relocation>
-                      <pattern>retrofit2</pattern>
-                      <shadedPattern>r240.retrofit2</shadedPattern>
-                    </relocation>
-
-                    <!-- Transient from elastic search Beam: conflicts with hive-jdbc-1.1.0-cdh5.12.1-standalone.jar -->
-                    <relocation>
-                      <pattern>org.apache.http</pattern>
-                      <shadedPattern>hc45.org.apache.http</shadedPattern>
-                    </relocation>
-
-                    <!-- Transient from core: conflicts with Hadoop on Spark -->
-                    <relocation>
-                      <pattern>org.hsqldb</pattern>
-                      <shadedPattern>h228.org.hsqldb</shadedPattern>
-                    </relocation>
-
+                    <!-- Transient from core: conflicts with Spark -->
                     <relocation>
                       <pattern>com.google.common</pattern>
                       <shadedPattern>g20.com.google.common</shadedPattern>
@@ -292,7 +320,6 @@
                       <pattern>it.unimi.dsi</pattern>
                       <shadedPattern>nameparser.it.unimi.dsi</shadedPattern>
                     </relocation>
-
                   </relocations>
                 </configuration>
               </execution>

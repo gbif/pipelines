@@ -57,7 +57,7 @@ public class VerbatimMessageHandler {
     }
 
     // case of sampling event dataset without occurrences. We only run the events pipelines
-    if (config.eventsEnabled
+    if (config.stepConfig.eventsEnabled
         && m.getDatasetType() == DatasetType.SAMPLING_EVENT
         && (m.getValidationResult().getNumberOfRecords() == null
             || m.getValidationResult().getNumberOfRecords() == 0)
@@ -89,7 +89,7 @@ public class VerbatimMessageHandler {
 
       Optional<Long> erCount =
           getRecordNumber(
-              config, m, new DwcaToAvroConfiguration().metaFileName, Metrics.ARCHIVE_TO_ER_COUNT);
+              config, m, new DwcaToAvroConfiguration().metaFileName, Metrics.ARCHIVE_TO_OCC_COUNT);
       Optional<Long> uniqueIdsCount =
           getRecordNumber(
               config,

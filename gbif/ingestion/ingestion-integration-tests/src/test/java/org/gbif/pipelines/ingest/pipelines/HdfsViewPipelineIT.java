@@ -237,7 +237,7 @@ public class HdfsViewPipelineIT {
     String output = outputFile + "data1/hdfsview";
 
     String[] argsWriter = {
-      "--datasetId=" + datasetKey + "",
+      "--datasetId=" + datasetKey,
       "--attempt=147",
       "--runner=SparkRunner",
       "--metaFileName=occurrence-to-hdfs.yml",
@@ -351,7 +351,7 @@ public class HdfsViewPipelineIT {
 
     // When
     String[] args = {
-      "--datasetId=" + datasetKey + "",
+      "--datasetId=" + datasetKey,
       "--attempt=147",
       "--runner=SparkRunner",
       "--metaFileName=occurrence-to-hdfs.yml",

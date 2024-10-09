@@ -1,8 +1,6 @@
-[![DEV - Build Status](https://builds.gbif.org/job/pipelines/badge/icon?subject=DEV%20-%20Build%20Status&style=flat-square)](https://builds.gbif.org/job/pipelines)
-[![DEV Nightly build - Build Status](https://builds.gbif.org/job/pipelines-nightly-build/badge/icon?subject=DEV%20Nightly%20build%20-%20Build%20Status&style=flat-square)](https://builds.gbif.org/job/pipelines-nightly-build/)
+[![DEV - Build Status](https://builds.gbif.org/job/pipelines-dev/badge/icon?subject=DEV%20-%20Build%20Status&style=flat-square)](https://builds.gbif.org/job/pipelines-dev)
 [![DEV Release - Build Status](https://builds.gbif.org/job/pipelines-master/badge/icon?subject=Release%20-%20Build%20Status&style=flat-square)](https://builds.gbif.org/job/pipelines-master/)
-[![DEV Release - Build Status](https://builds.gbif.org/buildStatus/icon?job=pipelines-dev-smoke-testing&subject=DEV%20-%20Smoking%20tests%20status&style=flat-square)](https://builds.gbif.org/job/pipelines-dev-smoke-testing/)
-[![Coverage](https://sonar.gbif.org/api/project_badges/measure?project=org.gbif.pipelines%3Apipelines-parent&metric=coverage)](https://sonar.gbif.org/dashboard?id=org.gbif.pipelines%3Apipelines-parent)
+[![DEV - Smoking Tests Status](https://builds.gbif.org/buildStatus/icon?job=pipelines-dev2-smoke-testing&subject=DEV%20-%20Smoking%20tests%20status&style=flat-square)](https://builds.gbif.org/job/pipelines-dev2-smoke-testing/)
 
 # Table of Contents
 
@@ -17,7 +15,7 @@
 
 # About the project
 
-**REMEMBER, YOU HAVE TO USE JAVA VERSION 8**
+*SUPPORTED JAVA 11 VERSION*
 
 **Pipelines for data processing and indexing of biodiversity data**
 
@@ -28,9 +26,9 @@ Built to scale from laptop to GBIF volumes. Deployable on JVM, Spark, Google Clo
 
 # Architecture
 
-The project provides vanilla JVM-based parsing and interpretation libraries, and pipelines for indexing into SOLR and ElasticSearch, built using Apache Beam.
+The project provides vanilla JVM-based parsing and interpretation libraries, and pipelines for indexing into SOLR and Elasticsearch, built using Apache Beam.
 
-> Apache Beam provides a high level abstraction framework ideal for this purpose with the ability to deploy across target environments (e.g. Spark, local JVM) and with many built in connectors for e.g. HBase, SOLR, ElasticSearch etc.
+> Apache Beam provides a high level abstraction framework ideal for this purpose with the ability to deploy across target environments (e.g. Spark, local JVM) and with many built in connectors for e.g. HBase, SOLR, Elasticsearch etc.
 
 ## Ingress
 
@@ -63,7 +61,7 @@ Interpretation is depicted below:
 
 ## Indexing
 
-Initial implementations will be available for both SOLR and for ElasticSearch to allow for evaluation of both at GBIF.
+Initial implementations will be available for both SOLR and for Elasticsearch to allow for evaluation of both at GBIF.
 During indexing the categories of interpreted information of use are merged and loaded into the search indexes:
 
 ![Ingress](./docs/images/index.svg)
@@ -74,22 +72,22 @@ During indexing the categories of interpreted information of use are merged and 
 
 The project is structured as:
 
-- [**.buildSrc**](./.buildSrc) - Tools for building the project
+- [**build**](./build) - Shell scripts to build Docker images
 - [**docs**](./docs) - Documents related to the project
 - [**examples**](./examples) - Examples of using project API and base classes
-    - [**dwca-to-elasticsearch**](./examples/dwca-to-elasticsearch) - Example how use pipelines, interprets DWCA into ES index
+    - [**dwca-to-elasticsearch**](./examples/dwca-to-elasticsearch) - An example of using the Pipelines project: it interprets a sample DWCA into an Elasticsearch index.
     - [**transform**](./examples/transform) - Transform example demonstrates how to create Apache Beam pipeline, create the new transformation and use it together with GBIF transforms and core classes
     - [**metrics**](./examples/metrics) - The example demonstrates how to create and send Apache Beam SparkRunner metrics to ELK and use the result for Kibana dashboards
 - [**gbif**](./gbif) - GBIF main module
-    - [**coordinator**](./gbif/coordinator) - The main module which controls the interpretation process, through RabbitMQ
-    - [**identifiers**](./gbif/identifiers) - The main module which controls the interpretation process, through RabbitMQ
+    - [**coordinator**](./gbif/coordinator) - The main controller orchestrates pipeline task workflows, running Airflow Spark jobs and Java-based workflows
+    - [**identifiers**](./gbif/identifiers) - Module responsible for work with GBIF identifiers
       - [**diagnostics**](./gbif/identifiers/diagnostics) - Internal tool to fix GBIF identifiers collisions
       - [**keygen**](./gbif/identifiers/keygen) - The library to generate GBIF identifiers, to support backward compatibility the codebase (with minimum changes) was copied from the occurrence/occurrence-persistence project
-    - [**ingestion**](./gbif/ingestion) - Main pipelines module
+    - [**ingestion**](./gbif/ingestion) - Main pipelines workflow module
       - [**ingest-gbif-beam**](./gbif/ingestion/ingest-gbif-beam) - Main GBIF pipelines for ingestion of biodiversity data
       - [**ingest-gbif-fragmenter**](./gbif/ingestion/ingest-gbif-fragmenter) - Writes raw archive's data to HBase store
-      - [**ingest-gbif-java**](./gbif/ingestion/ingest-gbif-java) - Main GBIF pipelines for ingestion of biodiversity data, Java version
-    - [**validator**](./gbif/validator) - Main validator module
+      - [**ingest-gbif-java**](./gbif/ingestion/ingest-gbif-java) - Implementation of **ingest-gbif-beam** Implementation of the ingest-gbif-beam module in Java-only ensures fast processing of small datasets utulizing only local JVM instance
+    - [**validator**](./gbif/validator) - Backend part for [GBIF Data validator](https://www.gbif.org/tools/data-validator)
 - [**livingatlas**](./livingatlas) - Living atlas main module
 - [**sdks**](./sdks) - Main module contains common classes, such as data models, data format interpretations, parsers, web services clients etc.
     - [**beam-common**](./sdks/beam-common) - Classes and API for using with Apache Beam
@@ -107,19 +105,17 @@ The project is structured as:
 
 # How to build the project
 
-The project uses [Apache Maven](https://maven.apache.org/) for building. The project contains a Maven wrapper script for Linux and MacOS systems, you just can run the **`build.sh`** script:
+The project uses [Apache Maven](https://maven.apache.org/) as a build tool. Additionally, it utilizes a [Jenkins pipeline](Jenkinsfile) as part of its CI/CD continuous deployment process.
 
-```shell
-./build.sh
-```
-
-Maven profiles:
+#### Available Maven profiles:
 - skip-coverage (skips Jacoco coverage file generation)
 - coverage (generates correct Jacoco coverage files)
 - skip-release-it (skips heavy IT tests for rarely changed code)
 - gbif-artifacts (creates main shaded GBIF artifacts)
 - livingatlas-artifacts (creates main shaded Livingatlas artifacts)
 - extra-artifacts (creates shaded artifact for non-ingestion tools and projects)
+
+#### For local build use following:
 
 Building the project without tests and shaded artifacts, suitable for everyday local development (~3 mins on a laptop)
 ```shell

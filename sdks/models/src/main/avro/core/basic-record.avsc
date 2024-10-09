@@ -3,6 +3,32 @@
  */
 [
   {
+    "name":"GeologicalContext",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "doc":"Darwin Core Geological Context terms",
+    "fields":[
+      {"name":"earliestEonOrLowestEonothem","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/earliestEonOrLowestEonothem"},
+      {"name":"latestEonOrHighestEonothem","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/latestEonOrHighestEonothem"},
+      {"name":"earliestEraOrLowestErathem","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/earliestEraOrLowestErathem"},
+      {"name":"latestEraOrHighestErathem","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/latestEraOrHighestErathem"},
+      {"name":"earliestPeriodOrLowestSystem","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/earliestPeriodOrLowestSystem"},
+      {"name":"latestPeriodOrHighestSystem","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/latestPeriodOrHighestSystem"},
+      {"name":"earliestEpochOrLowestSeries","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/earliestEpochOrLowestSeries"},
+      {"name":"latestEpochOrHighestSeries","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/latestEpochOrHighestSeries"},
+      {"name":"earliestAgeOrLowestStage","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/earliestAgeOrLowestStage"},
+      {"name":"latestAgeOrHighestStage","type":["null","VocabularyConcept"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/latestAgeOrHighestStage"},
+      {"name":"lowestBiostratigraphicZone","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/lowestBiostratigraphicZone"},
+      {"name":"highestBiostratigraphicZone","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/highestBiostratigraphicZone"},
+      {"name":"group","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/group"},
+      {"name":"formation","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/formation"},
+      {"name":"member","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/member"},
+      {"name":"bed","type":["null","string"],"default":null,"doc":"http://rs.tdwg.org/dwc/terms/bed"},
+      {"name":"startAge","type":["null","float"],"default":null},
+      {"name":"endAge","type":["null","float"],"default":null}
+    ]
+  },
+  {
     "name": "BasicRecord",
     "namespace": "org.gbif.pipelines.io.avro",
     "type": "record",
@@ -12,13 +38,13 @@
       {"name": "coreId","type":["null","string"],"default":null, "doc":"Id of the core record when this record belongs to an extension"},
       {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
       {"name": "basisOfRecord", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/basisOfRecord"},
-      {"name": "sex", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sex"},
+      {"name": "sex", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sex"},
       {"name": "lifeStage", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/lifeStage"},
       {"name": "establishmentMeans", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/establishmentMeans"},
       {"name": "degreeOfEstablishment", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/degreeOfEstablishment"},
       {"name": "pathway", "type": ["null", "VocabularyConcept"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/pathway"},
       {"name": "individualCount", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/individualCount"},
-      {"name": "typeStatus", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/typeStatus"},
+      {"name": "typeStatus", "type": {"type" : "array", "items" : "VocabularyConcept"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/typeStatus"},
       {"name": "typifiedName", "type": ["null", "string"], "default" : null, "doc": "https://gbif.github.io/dwc-api/apidocs/org/gbif/dwc/terms/GbifTerm.html#typifiedName"},
       {"name": "sampleSizeValue", "type": ["null", "double"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sampleSizeValue"},
       {"name": "sampleSizeUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sampleSizeUnit"},
@@ -38,6 +64,9 @@
       {"name": "preparations", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/preparations"},
       {"name": "samplingProtocol", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/samplingProtocol"},
       {"name": "projectId", "type": {"type" : "array", "items" : "string"}, "default" : []},
+      {"name": "geologicalContext","type":["null","GeologicalContext"],"default":null,"doc":""},
+      {"name": "isSequenced","type":["null","boolean"],"default":null, "doc":""},
+      {"name": "associatedSequences", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/associatedSequences"},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

@@ -20,6 +20,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.spark.api.java.function.FilterFunction;
+import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
 import scala.Tuple3;
 
@@ -83,19 +85,21 @@ public class MigrateUUIDPipeline2 implements Serializable {
 
     Dataset<Tuple3<String, String, Long>> firstLoadedDataset =
         occFirstLoadedDataset
-            .filter(row -> StringUtils.isNotEmpty(row.getString(1)))
+            .filter((FilterFunction<Row>) row -> StringUtils.isNotEmpty(row.getString(1)))
             .map(
-                row -> {
-                  return Tuple3.apply(
-                      row.getString(0), // UUID
-                      row.getString(1), // UUID
-                      row.getString(2) == null
-                              || "firstLoaded".equals(row.getString(2)) // skip header
-                          ? null
-                          : LocalDateTime.parse(row.getString(2), DateTimeFormatter.ISO_DATE_TIME)
-                                  .toEpochSecond(ZoneOffset.UTC)
-                              * 1000); // firstLoaded in milliseconds
-                },
+                (MapFunction<Row, Tuple3<String, String, Long>>)
+                    row -> {
+                      return Tuple3.apply(
+                          row.getString(0), // UUID
+                          row.getString(1), // UUID
+                          row.getString(2) == null
+                                  || "firstLoaded".equals(row.getString(2)) // skip header
+                              ? null
+                              : LocalDateTime.parse(
+                                          row.getString(2), DateTimeFormatter.ISO_DATE_TIME)
+                                      .toEpochSecond(ZoneOffset.UTC)
+                                  * 1000); // firstLoaded in milliseconds
+                    },
                 Encoders.tuple(Encoders.STRING(), Encoders.STRING(), Encoders.LONG()));
 
     firstLoadedDataset

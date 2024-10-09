@@ -10,7 +10,6 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
-import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -36,7 +35,6 @@ public class SingleFileArchiveValidator implements ArchiveValidator {
     m.setExecutionId(message.getExecutionId());
     m.setDatasetType(DatasetType.OCCURRENCE);
     m.setEndpointType(EndpointType.DWC_ARCHIVE);
-    m.setPlatform(Platform.PIPELINES);
     return m;
   }
 }

@@ -28,10 +28,10 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
-import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.converters.XmlToAvroConverter;
 import org.gbif.pipelines.common.GbifApi;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.common.process.RecordCountReader;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
@@ -144,6 +144,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     return createRunnable(datasetId, attempt, message.getTotalRecordCount(), isValidator);
   }
 
+  @SneakyThrows
   @Override
   public PipelinesVerbatimMessage createOutgoingMessage(PipelinesXmlMessage message) {
 
@@ -166,6 +167,16 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
             ? getAllValidatorInterpretationAsString()
             : getAllInterpretationAsString();
 
+    long dwcaOccurrenceRecordsNumber =
+        RecordCountReader.builder()
+            .stepConfig(config.stepConfig)
+            .datasetKey(message.getDatasetUuid().toString())
+            .attempt(message.getAttempt().toString())
+            .metaFileName(config.metaFileName)
+            .metricName(Metrics.ARCHIVE_TO_OCC_COUNT)
+            .build()
+            .get();
+
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
@@ -174,7 +185,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         null,
         message.getEndpointType(),
         null,
-        new ValidationResult(true, true, false, null, null),
+        new ValidationResult(true, true, false, dwcaOccurrenceRecordsNumber, null),
         null,
         message.getExecutionId(),
         DatasetType.OCCURRENCE);
@@ -182,10 +193,6 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
 
   @Override
   public boolean isMessageCorrect(PipelinesXmlMessage message) {
-    boolean isPlatform = Platform.PIPELINES.equivalent(message.getPlatform());
-    if (!isPlatform) {
-      log.info("Skipping, because the platform is incorrect");
-    }
     boolean isTotalCount = message.getTotalRecordCount() != 0;
     if (!isTotalCount) {
       log.info("Skipping, because total count of records is 0");
@@ -194,7 +201,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     if (!isReason) {
       log.info("Skipping, because the reason is {}", message.getReason());
     }
-    return isPlatform && isTotalCount && isReason;
+    return isTotalCount && isReason;
   }
 
   @SneakyThrows
@@ -210,7 +217,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
     Optional<Double> fileNumber =
-        HdfsUtils.getDoubleByKey(hdfsConfigs, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
+        HdfsUtils.getDoubleByKey(hdfsConfigs, metaPath, Metrics.ARCHIVE_TO_OCC_COUNT);
 
     if (!fileNumber.isPresent()) {
       throw new IllegalArgumentException(

@@ -6,8 +6,10 @@ import lombok.SneakyThrows;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
+import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration.Builder;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
+import org.gbif.kvs.hbase.LoaderRetryConfig;
 import org.gbif.kvs.hbase.ReadOnlyHBaseStore;
 import org.gbif.pipelines.core.config.model.KvConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -22,7 +24,7 @@ public class LocationFeatureKvStoreFactory {
 
   @SneakyThrows
   public static KeyValueStore<LatLng, String> create(KvConfig kvConfig) {
-    CachedHBaseKVStoreConfiguration hBaseKVStoreConfiguration =
+    Builder configBuilder =
         CachedHBaseKVStoreConfiguration.builder()
             .withValueColumnQualifier("json") // stores JSON data
             .withHBaseKVStoreConfiguration(
@@ -34,12 +36,22 @@ public class LocationFeatureKvStoreFactory {
                             .getNumOfKeyBuckets()) // Buckets for salted key generations == to # of
                     // region servers
                     .withHBaseZk(kvConfig.getZkConnectionString()) // HBase Zookeeper ensemble
+                    .withHBaseZnode(kvConfig.getHbaseZnode())
                     .build())
-            .withCacheCapacity(15_000L)
-            .build();
+            .withCacheCapacity(25_000L);
+
+    KvConfig.LoaderRetryConfig retryConfig = kvConfig.getLoaderRetryConfig();
+    if (retryConfig != null) {
+      configBuilder.withLoaderRetryConfig(
+          new LoaderRetryConfig(
+              retryConfig.getMaxAttempts(),
+              retryConfig.getInitialIntervalMillis(),
+              retryConfig.getMultiplier(),
+              retryConfig.getRandomizationFactor()));
+    }
 
     return ReadOnlyHBaseStore.<LatLng, String>builder()
-        .withHBaseStoreConfiguration(hBaseKVStoreConfiguration.getHBaseKVStoreConfiguration())
+        .withHBaseStoreConfiguration(configBuilder.build().getHBaseKVStoreConfiguration())
         .withResultMapper(
             result -> Bytes.toString(result.getValue(Bytes.toBytes("v"), Bytes.toBytes("json"))))
         .build();

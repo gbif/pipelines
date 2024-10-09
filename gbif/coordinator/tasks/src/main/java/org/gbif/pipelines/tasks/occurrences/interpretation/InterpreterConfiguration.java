@@ -16,8 +16,8 @@ public class InterpreterConfiguration implements BaseConfiguration {
 
   @ParametersDelegate @Valid public SparkConfiguration sparkConfig = new SparkConfiguration();
 
-  @ParametersDelegate @Valid
-  public DistributedConfiguration distributedConfig = new DistributedConfiguration();
+  @ParametersDelegate @Valid @NotNull
+  public AirflowConfiguration airflowConfig = new AirflowConfiguration();
 
   @ParametersDelegate @Valid @NotNull
   public AvroWriteConfiguration avroConfig = new AvroWriteConfiguration();
@@ -49,9 +49,6 @@ public class InterpreterConfiguration implements BaseConfiguration {
   @Parameter(names = "--delete-after-days")
   public long deleteAfterDays = 7L;
 
-  @Parameter(names = "--use-beam-deprecated-read")
-  public boolean useBeamDeprecatedRead = true;
-
   @Parameter(names = "--fail-if-duplicate-id-percent")
   public int failIfDuplicateIdPercent = 5;
 
@@ -73,5 +70,10 @@ public class InterpreterConfiguration implements BaseConfiguration {
   @Override
   public String getMetaFileName() {
     return metaFileName;
+  }
+
+  @Override
+  public boolean eventsEnabled() {
+    return stepConfig.eventsEnabled;
   }
 }

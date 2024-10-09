@@ -45,21 +45,15 @@ public class MetricsHandler {
     return result;
   }
 
-  /**
-   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to
-   * a yaml file and save it
-   */
-  public static void saveCountersToFile(
-      HdfsConfigs hdfsConfigs, String path, MetricResults results) {
+  /** Method works with String data */
+  public static void saveMetricsToFile(HdfsConfigs hdfsConfigs, String path, String metrics) {
 
     if (path != null && !path.isEmpty()) {
       log.info("Trying to write pipeline's metadata to a file - {}", path);
 
-      String countersInfo = getCountersInfo(results);
-
       FileSystem fs = FsUtils.getFileSystem(hdfsConfigs, path);
       try {
-        FsUtils.createFile(fs, path, countersInfo);
+        FsUtils.createFile(fs, path, metrics);
         log.info("Metadata was written to a file - {}", path);
       } catch (IOException ex) {
         log.warn("Write pipelines metadata file", ex);
@@ -98,6 +92,31 @@ public class MetricsHandler {
     }
   }
 
+  /** Method works with String data */
+  public static void saveMetricsToFile(
+      BasePipelineOptions options, String metrics, boolean isInput) {
+    Optional.ofNullable(options.getMetaFileName())
+        .ifPresent(
+            metadataName -> {
+              String metadataPath = "";
+              if (!metadataName.isEmpty()) {
+                metadataPath = PathBuilder.buildDatasetAttemptPath(options, metadataName, isInput);
+              }
+              String hdfsSiteConfig = "";
+              String coreSiteConfig = "";
+              // FIXME InterpretationPipelineOptions should be refactored
+              // splitting out the HDFS part into a separate interface
+              // which InterpretationPipelineOptions can extend
+              if (options instanceof InterpretationPipelineOptions) {
+                InterpretationPipelineOptions o = (InterpretationPipelineOptions) options;
+                hdfsSiteConfig = o.getHdfsSiteConfig();
+                coreSiteConfig = o.getCoreSiteConfig();
+              }
+              MetricsHandler.saveMetricsToFile(
+                  HdfsConfigs.create(hdfsSiteConfig, coreSiteConfig), metadataPath, metrics);
+            });
+  }
+
   private static FileSystem getFileSystemForOptions(BasePipelineOptions options) {
     String hdfsSiteConfig = "";
     String coreSiteConfig = "";
@@ -120,25 +139,7 @@ public class MetricsHandler {
    */
   private static void saveCountersToFile(
       BasePipelineOptions options, MetricResults results, boolean isInput) {
-    Optional.ofNullable(options.getMetaFileName())
-        .ifPresent(
-            metadataName -> {
-              String metadataPath = "";
-              if (!metadataName.isEmpty()) {
-                metadataPath = PathBuilder.buildDatasetAttemptPath(options, metadataName, isInput);
-              }
-              String hdfsSiteConfig = "";
-              String coreSiteConfig = "";
-              // FIXME InterpretationPipelineOptions should be refactored
-              // splitting out the HDFS part into a separate interface
-              // which InterpretationPipelineOptions can extend
-              if (options instanceof InterpretationPipelineOptions) {
-                InterpretationPipelineOptions o = (InterpretationPipelineOptions) options;
-                hdfsSiteConfig = o.getHdfsSiteConfig();
-                coreSiteConfig = o.getCoreSiteConfig();
-              }
-              MetricsHandler.saveCountersToFile(
-                  HdfsConfigs.create(hdfsSiteConfig, coreSiteConfig), metadataPath, results);
-            });
+    String countersInfo = getCountersInfo(results);
+    saveMetricsToFile(options, countersInfo, isInput);
   }
 }

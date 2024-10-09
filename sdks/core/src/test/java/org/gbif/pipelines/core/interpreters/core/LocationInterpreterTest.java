@@ -396,7 +396,7 @@ public class LocationInterpreterTest {
         LocationRecord.newBuilder()
             .setId("1")
             .setFootprintWKT(
-                "POLYGON ((52.619749292808244 4.575033022857827, 52.66468072273538 4.574203170903047, 52.665162889286556 4.648106265726084, 52.6202308261076 4.648860682668263, 52.619749292808244 4.575033022857827))")
+                "POLYGON ((52.619749292808244 4.575033022857827, 52.66468072273537 4.574203170903049, 52.665162889286556 4.648106265726084, 52.6202308261076 4.648860682668264, 52.619749292808244 4.575033022857827))")
             .build();
 
     // When
@@ -473,5 +473,25 @@ public class LocationInterpreterTest {
 
     // Should
     assertEquals(1110.7, result.getDistanceFromCentroidInMeters(), 0);
+  }
+
+  @Test
+  public void gbifRegionTest() {
+
+    // State
+    LocationRecord record =
+        LocationRecord.newBuilder()
+            .setId("777")
+            .setCountryCode(Country.ANDORRA.getIso2LetterCode())
+            .setPublishingCountry(Country.SPAIN.getIso2LetterCode())
+            .build();
+
+    // When
+    LocationInterpreter.interpretGbifRegion(record);
+    LocationInterpreter.interpretPublishedByGbifRegion(record);
+
+    // Should
+    assertEquals("EUROPE", record.getGbifRegion());
+    assertEquals("EUROPE", record.getPublishedByGbifRegion());
   }
 }

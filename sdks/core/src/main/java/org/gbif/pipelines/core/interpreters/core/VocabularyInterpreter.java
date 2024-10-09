@@ -1,25 +1,32 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
+import org.gbif.pipelines.core.utils.VocabularyConceptFactory;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
-import org.gbif.vocabulary.lookup.LookupConcept;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VocabularyInterpreter {
+
+  /** Values taken from <a href="https://github.com/gbif/vocabulary/issues/87">here</a> */
+  private static final Set<String> SUSPECTED_TYPE_STATUS_VALUES =
+      Set.of("?", "possible", "possibly", "potential", "maybe", "perhaps");
 
   /** {@link DwcTerm#lifeStage} interpretation. */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretLifeStage(
@@ -58,41 +65,74 @@ public class VocabularyInterpreter {
         interpretVocabulary(er, DwcTerm.eventType, vocabularyService).ifPresent(ecr::setEventType);
   }
 
-  /**
-   * Extracts the value of vocabulary concept and set
-   *
-   * @param c to extract the value from
-   */
-  protected static VocabularyConcept getConcept(LookupConcept c) {
-
-    // we sort the parents starting from the top as in taxonomy
-    List<String> parents = new ArrayList<>(c.getParents());
-    Collections.reverse(parents);
-
-    // add the concept itself
-    parents.add(c.getConcept().getName());
-
-    return VocabularyConcept.newBuilder()
-        .setConcept(c.getConcept().getName())
-        .setLineage(parents)
-        .build();
+  /** {@link DwcTerm#typeStatus} interpretation. */
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretTypeStatus(
+      VocabularyService vocabularyService) {
+    return (er, br) ->
+        extractListValue(er, DwcTerm.typeStatus)
+            .forEach(
+                value ->
+                    interpretVocabulary(
+                            DwcTerm.typeStatus,
+                            value,
+                            vocabularyService,
+                            v -> {
+                              if (SUSPECTED_TYPE_STATUS_VALUES.stream()
+                                  .anyMatch(sts -> v.toLowerCase().contains(sts))) {
+                                addIssue(br, OccurrenceIssue.SUSPECTED_TYPE);
+                              } else {
+                                addIssue(br, OccurrenceIssue.TYPE_STATUS_INVALID);
+                              }
+                            })
+                        .ifPresent(
+                            v -> {
+                              if (br.getTypeStatus() == null) {
+                                br.setTypeStatus(new ArrayList<>());
+                              }
+                              br.getTypeStatus().add(v);
+                            }));
   }
 
-  /** {@link DwcTerm#lifeStage} interpretation. */
+  /** {@link DwcTerm#sex} interpretation. */
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretSex(
+      VocabularyService vocabularyService) {
+    return (er, br) ->
+        interpretVocabulary(er, DwcTerm.sex, vocabularyService).ifPresent(br::setSex);
+  }
+
   private static Optional<VocabularyConcept> interpretVocabulary(
       ExtendedRecord er, Term term, VocabularyService vocabularyService) {
-    return interpretVocabulary(term, extractNullAwareValue(er, term), vocabularyService);
+    return interpretVocabulary(term, extractNullAwareValue(er, term), vocabularyService, null);
   }
 
   static Optional<VocabularyConcept> interpretVocabulary(
       Term term, String value, VocabularyService vocabularyService) {
+    return interpretVocabulary(term, value, vocabularyService, null);
+  }
 
-    if (vocabularyService != null) {
-      return vocabularyService
-          .get(term)
-          .flatMap(lookup -> Optional.ofNullable(value).flatMap(lookup::lookup))
-          .map(VocabularyInterpreter::getConcept);
+  private static Optional<VocabularyConcept> interpretVocabulary(
+      ExtendedRecord er, Term term, VocabularyService vocabularyService, Consumer<String> issueFn) {
+    return interpretVocabulary(term, extractNullAwareValue(er, term), vocabularyService, issueFn);
+  }
+
+  static Optional<VocabularyConcept> interpretVocabulary(
+      Term term, String value, VocabularyService vocabularyService, Consumer<String> issueFn) {
+    if (vocabularyService == null) {
+      return Optional.empty();
     }
+
+    if (value != null) {
+      Optional<VocabularyConcept> result =
+          vocabularyService
+              .get(term)
+              .flatMap(lookup -> Optional.of(value).flatMap(lookup::lookup))
+              .map(VocabularyConceptFactory::createConcept);
+      if (result.isEmpty() && issueFn != null) {
+        issueFn.accept(value);
+      }
+      return result;
+    }
+
     return Optional.empty();
   }
 }

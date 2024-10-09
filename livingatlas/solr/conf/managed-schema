@@ -12,12 +12,12 @@
   </fieldType>
   <fieldType name="binary" class="solr.BinaryField"/>
   <fieldType name="boolean" class="solr.BoolField" omitNorms="true" sortMissingLast="true"/>
-  <fieldType name="date" class="solr.DatePointField" omitNorms="true" />
+  <fieldType name="date" class="solr.DatePointField" omitNorms="true" sortMissingLast="true"/>
   <fieldType name="double" class="solr.DoublePointField" omitNorms="true" />
   <fieldType name="float" class="solr.FloatPointField" omitNorms="true" />
   <fieldType name="geohash"
             class="solr.SpatialRecursivePrefixTreeFieldType"
-            datelineRule="ccwRect"
+            datelineRule="none"
             spatialContextFactory="org.locationtech.spatial4j.context.jts.JtsSpatialContextFactory"
             validationRule="none"
             distanceUnits="degrees"
@@ -25,7 +25,7 @@
   />
   <fieldType name="quad"
             class="solr.SpatialRecursivePrefixTreeFieldType"
-            datelineRule="ccwRect"
+            datelineRule="none"
             spatialContextFactory="org.locationtech.spatial4j.context.jts.JtsSpatialContextFactory"
             validationRule="none"
             distanceUnits="degrees"
@@ -34,7 +34,7 @@
   />
   <fieldType name="packedQuad"
             class="solr.SpatialRecursivePrefixTreeFieldType"
-            datelineRule="ccwRect"
+            datelineRule="none"
             spatialContextFactory="org.locationtech.spatial4j.context.jts.JtsSpatialContextFactory"
             validationRule="none"
             distanceUnits="degrees"
@@ -368,7 +368,7 @@
   <field name="preparations"  type="string" docValues="true" indexed="true" multiValued="true"/>
   <field name="previousIdentifications"  type="string" docValues="true" indexed="true"/>
   <field name="recordNumber"  type="string" docValues="true" indexed="true"/>
-  <field name="recordedBy"  type="string" docValues="true" indexed="true" multiValued="true"/>
+  <field name="recordedBy"  type="string" docValues="true" indexed="true"/>
   <field name="relativeOrganismQuantity"  type="double" docValues="true" indexed="true"/>
   <field name="references"  type="string" docValues="true" indexed="true"/>
   <field name="relatedResourceID"  type="string" docValues="true" indexed="true"/>
@@ -539,6 +539,7 @@
   <field name="text_eventID" type="textgen"  indexed="true" stored="false"/>
   <field name="text_parentEventID" type="textgen" indexed="true" stored="false"/>
   <field name="text_fieldNumber" type="textgen" indexed="true" stored="false"/>
+  <field name="text_catalogNumber" type="textgen" indexed="true" stored="false"/>
 
   <!-- occurrenceDetails needs to be remapped on export -->
   <!-- see https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/236 -->
@@ -648,7 +649,6 @@
   <field name="raw_occurrenceStatus"					 type="string"  docValues="true" indexed="true" />
   <field name="raw_order"					             type="string"  docValues="true" indexed="true" />
   <field name="raw_orderID"					             type="string"  docValues="true" indexed="true" />
-  <field name="raw_organismQuantity"					 type="string"  docValues="true" indexed="true" />
   <field name="raw_organismQuantityType"				 type="string"  docValues="true" indexed="true" />
   <field name="raw_original"					         type="string"  docValues="true" indexed="true" />
   <field name="raw_phylum"					             type="string"  docValues="true" indexed="true" />
@@ -660,7 +660,6 @@
   <field name="raw_publishingOrganizationKey"			 type="string"  docValues="true" indexed="true" />
   <field name="raw_taxonRank"					         type="string"  docValues="true" indexed="true" />
   <field name="raw_taxonRankID"					         type="string"  docValues="true" indexed="true" />
-  <field name="raw_recordedBy"					         type="string"  docValues="true" indexed="true" />
   <field name="raw_recordedByID"					     type="string"  docValues="true" indexed="true" />
   <field name="raw_references"					         type="string"  docValues="true" indexed="true" />
   <field name="raw_relativeOrganismQuantity"	         type="string"  docValues="true" indexed="true" />
@@ -714,6 +713,7 @@
   <!-- Do we need this -->
   <copyField source="basisOfRecord" dest="text"/>
   <copyField source="catalogNumber" dest="text"/>
+  <copyField source="catalogNumber" dest="text_catalogNumber"/>
   <copyField source="class" dest="text"/>
   <copyField source="collectionCode" dest="text"/>
   <copyField source="collectionName" dest="text"/>
@@ -749,7 +749,6 @@
   <copyField source="recordedBy" dest="text"/>
   <copyField source="identifiedBy" dest="text_identifiedBy"/>
   <copyField source="recordedBy" dest="text_recordedBy"/>
-  <copyField source="raw_recordedBy" dest="text_recordedBy"/>
   <copyField source="scientificName" dest="matched_name"/>
   <copyField source="scientificName" dest="text"/>
   <copyField source="species" dest="text"/>

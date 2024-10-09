@@ -84,7 +84,8 @@ public class VerbatimToOccurrencePipelineIT {
       "--targetPath=" + outputFile,
       "--interpretationTypes=IDENTIFIER_ABSENT,CLUSTERING,TEMPORAL,LOCATION,GRSCICOLL,MULTIMEDIA,MEASUREMENT_OR_FACT_TABLE,BASIC,TAXONOMY,IMAGE,AMPLIFICATION,OCCURRENCE,VERBATIM,LOCATION_FEATURE,MEASUREMENT_OR_FACT,AUDUBON,METADATA",
       "--properties=" + outputFile + "/pipelines.yaml",
-      "--testMode=true"
+      "--testMode=true",
+      "--numberOfShards=1"
     };
 
     // Write GBIF_IDs
@@ -127,7 +128,8 @@ public class VerbatimToOccurrencePipelineIT {
       "--targetPath=" + outputFile,
       "--interpretationTypes=CLUSTERING,TEMPORAL,LOCATION,GRSCICOLL,MULTIMEDIA,MEASUREMENT_OR_FACT_TABLE,BASIC,TAXONOMY,IMAGE,AMPLIFICATION,OCCURRENCE,VERBATIM,LOCATION_FEATURE,MEASUREMENT_OR_FACT,AUDUBON,METADATA",
       "--properties=" + outputFile + "/pipelines.yaml",
-      "--testMode=true"
+      "--testMode=true",
+      "--numberOfShards=1"
     };
 
     // Write GBIF_IDs
@@ -165,7 +167,8 @@ public class VerbatimToOccurrencePipelineIT {
       "--interpretationTypes=" + ALL,
       "--properties=" + outputFile + "/pipelines.yaml",
       "--syncThreshold=0",
-      "--testMode=true"
+      "--testMode=true",
+      "--numberOfShards=1"
     };
 
     // When, Should
@@ -190,7 +193,8 @@ public class VerbatimToOccurrencePipelineIT {
       "--interpretationTypes=" + CLUSTERING,
       "--properties=" + outputFile + "/pipelines.yaml",
       "--syncThreshold=0",
-      "--testMode=true"
+      "--testMode=true",
+      "--numberOfShards=1"
     };
 
     // When, Should
@@ -214,7 +218,8 @@ public class VerbatimToOccurrencePipelineIT {
       "--targetPath=" + outputFile,
       "--interpretationTypes=" + TAXONOMY,
       "--properties=" + outputFile + "/pipelines.yaml",
-      "--testMode=true"
+      "--testMode=true",
+      "--numberOfShards=1"
     };
 
     // When, Should

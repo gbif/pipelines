@@ -28,6 +28,15 @@
     ]
   },
   {
+    "name":"VocabularyConceptList",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"concepts","type":{"type":"array","items":"string"}},
+      {"name":"lineage","type":{"type":"array","items":"string"} }
+    ]
+  },
+  {
     "name":"GadmFeatures",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
@@ -41,7 +50,7 @@
       {"name":"level1Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level1Name"},
       {"name":"level2Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level2Name"},
       {"name":"level3Name","type":["null","string"],"default":null,"doc":"http://rs.gbif.org/terms/gadm/3.0/level3Name"},
-      {"name":"gids","type":{"type":"array","items":"string"},"default":null,"doc":""}
+      {"name":"gids","type":{"type":"array","items":"string"},"default":[],"doc":""}
     ]
   },
   {
@@ -110,7 +119,7 @@
       {"name":"publishingCountry","type":["null","string"],"default":null,"doc":""},
       {"name":"datasetPublishingCountry","type":["null","string"],"default":null,"doc":""},
       {"name":"publishingOrganizationKey","type":["null","string"],"default":null,"doc":""},
-      {"name":"networkKeys","type":{"type":"array","items":"string"},"default":null,"doc":""},
+      {"name":"networkKeys","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"projectId","type":["null","string"],"default":null,"doc":""},
       {"name":"programmeAcronym","type":["null","string"],"default":null,"doc":""}
     ]
@@ -201,6 +210,7 @@
       {"name":"speciesKey","type":["null","string"],"default":null,"doc":""},
       {"name":"synonym","type":["null","boolean"],"default":null,"doc":""},
       {"name":"taxonID","type":["null","string"],"default":null,"doc":""},
+      {"name":"taxonConceptID","type":["null","string"],"default":null,"doc":""},
       {"name":"taxonKey","type":{"type":"array","items":"string"},"default":[]},
       {"name":"usage","type":["null","RankedName"],"default":null,"doc":""},
       {"name":"usageParsedName","type":["null","ParsedName"],"default":null,"doc":""},
@@ -264,5 +274,14 @@
       {"name": "viabilityPercentage", "type": ["null", "double"], "default": null},
       {"name": "numberNotViable", "type": ["null", "long"], "default": null}
     ]
-  }
+  },
+  {
+      "name":"GeologicalRange",
+      "namespace":"org.gbif.pipelines.io.avro.json",
+      "type":"record",
+      "fields":[
+        {"name":"gt","type":["null","float"],"default":null},
+        {"name":"lte","type":["null","float"],"default":null}
+      ]
+    }
 ]

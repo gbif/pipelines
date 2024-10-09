@@ -7,7 +7,6 @@ import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
-import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.tasks.verbatims.xml.XmlToAvroCallback;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -29,7 +28,6 @@ public class XmlArchiveValidator implements ArchiveValidator {
     m.setPipelineSteps(message.getPipelineSteps());
     m.setEndpointType(EndpointType.BIOCASE_XML_ARCHIVE);
     m.setExecutionId(message.getExecutionId());
-    m.setPlatform(Platform.PIPELINES);
     m.setReason(FinishReason.NORMAL);
     m.setTotalRecordCount(XmlToAvroCallback.SKIP_RECORDS_CHECK);
     return m;

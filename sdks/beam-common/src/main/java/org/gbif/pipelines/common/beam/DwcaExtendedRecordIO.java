@@ -18,7 +18,7 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.display.DisplayData;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.directory.api.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.pipelines.core.io.DwcaExtendedRecordReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -97,7 +97,7 @@ public class DwcaExtendedRecordIO {
     public void populateDisplayData(DisplayData.Builder builder) {
       super.populateDisplayData(builder);
       // path is null in the case of uncompressed archives
-      if (Strings.isNotEmpty(path)) {
+      if (StringUtils.isNotEmpty(path)) {
         builder.add(DisplayData.item("DwC-A Path", path));
       }
     }

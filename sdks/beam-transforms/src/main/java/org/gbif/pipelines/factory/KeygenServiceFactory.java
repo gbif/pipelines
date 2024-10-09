@@ -22,7 +22,7 @@ public class KeygenServiceFactory {
     return () -> {
       String zk = getZk(config);
 
-      Connection c = HbaseConnectionFactory.getInstance(zk).getConnection();
+      Connection c = HbaseConnectionFactory.getInstance(zk, getHBaseZnode(config)).getConnection();
 
       return create(config, c, datasetId);
     };
@@ -35,7 +35,7 @@ public class KeygenServiceFactory {
 
       Connection c;
       try {
-        c = HbaseConnection.create(zk);
+        c = HbaseConnection.create(zk, getHBaseZnode(config));
       } catch (IOException ex) {
         throw new PipelinesException(ex);
       }
@@ -60,5 +60,12 @@ public class KeygenServiceFactory {
         .map(KeygenConfig::getZkConnectionString)
         .filter(x -> !x.isEmpty())
         .orElse(config.getZkConnectionString());
+  }
+
+  private static String getHBaseZnode(PipelinesConfig config) {
+    return Optional.ofNullable(config.getKeygen())
+        .map(KeygenConfig::getHbaseZnode)
+        .filter(x -> !x.isEmpty())
+        .orElse("/hbase");
   }
 }

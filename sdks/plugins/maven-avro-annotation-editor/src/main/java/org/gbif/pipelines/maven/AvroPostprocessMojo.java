@@ -214,7 +214,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
         beforeIdx = x;
       } else if (line.endsWith(INTER)) {
         interIdx = x;
-      } else if (line.endsWith(ISSUE)) {
+      } else if (line.endsWith(ISSUE) && ovrdIdx == -1) {
         ovrdIdx = x;
       } else if (line.endsWith(ID)) {
         idIdx = x;

@@ -154,11 +154,46 @@ public abstract class Transform<R, T extends SpecificRecordBase & Record> extend
    * Writes {@link T} *.avro files to path, data will be split into several files, uses Snappy
    * compression codec by default
    *
+   * @param toPath path with name to output files, like - directory/name
+   * @param numberOfShards Predefined number of shards
+   */
+  public AvroIO.Write<T> write(String toPath, int numberOfShards) {
+    return write(toPath).withNumShards(numberOfShards);
+  }
+
+  /**
+   * Writes {@link T} *.avro files to path, data will be split into several files, uses Snappy
+   * compression codec by default
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link
+   *     Transform#baseName}
+   * @param numberOfShards Predefined number of shards
+   */
+  public AvroIO.Write<T> write(UnaryOperator<String> pathFn, int numberOfShards) {
+    return write(pathFn.apply(baseName), numberOfShards);
+  }
+
+  /**
+   * Writes {@link T} *.avro files to path, data will be split into several files, uses Snappy
+   * compression codec by default
+   *
    * @param pathFn function can return an output path, where in param is fixed - {@link
    *     Transform#baseInvalidName}
    */
   public AvroIO.Write<T> writeInvalid(UnaryOperator<String> pathFn) {
     return write(pathFn.apply(baseInvalidName));
+  }
+
+  /**
+   * Writes {@link T} *.avro files to path, data will be split into several files, uses Snappy
+   * compression codec by default
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link
+   *     Transform#baseInvalidName}
+   * @param numberOfShards Predefined number of shards
+   */
+  public AvroIO.Write<T> writeInvalid(UnaryOperator<String> pathFn, int numberOfShards) {
+    return write(pathFn.apply(baseInvalidName), numberOfShards);
   }
 
   /** Creates an {@link R} for {@link T} */
@@ -191,7 +226,9 @@ public abstract class Transform<R, T extends SpecificRecordBase & Record> extend
     counterFn.accept(counterName);
   }
 
-  /** @return TupleTag required for grouping */
+  /**
+   * @return TupleTag required for grouping
+   */
   public TupleTag<T> getTag() {
     return tag;
   }

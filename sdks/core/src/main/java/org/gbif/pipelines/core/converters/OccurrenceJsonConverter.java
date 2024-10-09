@@ -1,13 +1,16 @@
 package org.gbif.pipelines.core.converters;
 
-import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +27,8 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
+import org.gbif.pipelines.io.avro.json.GeologicalContext;
+import org.gbif.pipelines.io.avro.json.GeologicalRange;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 
 @Slf4j
@@ -118,9 +123,7 @@ public class OccurrenceJsonConverter {
     // Simple
     builder
         .setBasisOfRecord(basic.getBasisOfRecord())
-        .setSex(basic.getSex())
         .setIndividualCount(basic.getIndividualCount())
-        .setTypeStatus(basic.getTypeStatus())
         .setTypifiedName(basic.getTypifiedName())
         .setSampleSizeValue(basic.getSampleSizeValue())
         .setSampleSizeUnit(basic.getSampleSizeUnit())
@@ -135,10 +138,10 @@ public class OccurrenceJsonConverter {
         .setDatasetName(JsonConverter.getEscapedList(basic.getDatasetName()))
         .setOtherCatalogNumbers(JsonConverter.getEscapedList(basic.getOtherCatalogNumbers()))
         .setPreparations(JsonConverter.getEscapedList(basic.getPreparations()))
-        .setSamplingProtocol(JsonConverter.getEscapedList(basic.getSamplingProtocol()));
-
-    // Agent
-    builder
+        .setSamplingProtocol(JsonConverter.getEscapedList(basic.getSamplingProtocol()))
+        .setIsSequenced(basic.getIsSequenced())
+        .setAssociatedSequences(basic.getAssociatedSequences())
+        // Agent
         .setIdentifiedByIds(JsonConverter.convertAgentList(basic.getIdentifiedByIds()))
         .setRecordedByIds(JsonConverter.convertAgentList(basic.getRecordedByIds()));
 
@@ -149,6 +152,9 @@ public class OccurrenceJsonConverter {
     JsonConverter.convertVocabularyConcept(basic.getDegreeOfEstablishment())
         .ifPresent(builder::setDegreeOfEstablishment);
     JsonConverter.convertVocabularyConcept(basic.getPathway()).ifPresent(builder::setPathway);
+    JsonConverter.convertVocabularyConceptList(basic.getTypeStatus())
+        .ifPresent(builder::setTypeStatus);
+    JsonConverter.convertVocabularyConcept(basic.getSex()).ifPresent(builder::setSex);
 
     // License
     JsonConverter.convertLicense(basic.getLicense()).ifPresent(builder::setLicense);
@@ -164,6 +170,58 @@ public class OccurrenceJsonConverter {
         .ifPresent(builder::setSamplingProtocolJoined);
     JsonConverter.convertToMultivalue(basic.getOtherCatalogNumbers())
         .ifPresent(builder::setOtherCatalogNumbersJoined);
+
+    // Geological context
+    org.gbif.pipelines.io.avro.GeologicalContext gx = basic.getGeologicalContext();
+    if (gx != null) {
+
+      GeologicalContext.Builder gcb =
+          GeologicalContext.newBuilder()
+              .setLowestBiostratigraphicZone(gx.getLowestBiostratigraphicZone())
+              .setHighestBiostratigraphicZone(gx.getHighestBiostratigraphicZone())
+              .setGroup(gx.getGroup())
+              .setFormation(gx.getFormation())
+              .setMember(gx.getMember())
+              .setBed(gx.getBed());
+
+      gcb.setLithostratigraphy(
+          Stream.of(gcb.getBed(), gcb.getFormation(), gcb.getGroup(), gcb.getMember())
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList()));
+
+      gcb.setBiostratigraphy(
+          Stream.of(gcb.getLowestBiostratigraphicZone(), gcb.getHighestBiostratigraphicZone())
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList()));
+
+      JsonConverter.convertVocabularyConcept(gx.getEarliestEonOrLowestEonothem())
+          .ifPresent(gcb::setEarliestEonOrLowestEonothem);
+      JsonConverter.convertVocabularyConcept(gx.getLatestEonOrHighestEonothem())
+          .ifPresent(gcb::setLatestEonOrHighestEonothem);
+      JsonConverter.convertVocabularyConcept(gx.getEarliestEraOrLowestErathem())
+          .ifPresent(gcb::setEarliestEraOrLowestErathem);
+      JsonConverter.convertVocabularyConcept(gx.getLatestEraOrHighestErathem())
+          .ifPresent(gcb::setLatestEraOrHighestErathem);
+      JsonConverter.convertVocabularyConcept(gx.getEarliestPeriodOrLowestSystem())
+          .ifPresent(gcb::setEarliestPeriodOrLowestSystem);
+      JsonConverter.convertVocabularyConcept(gx.getLatestPeriodOrHighestSystem())
+          .ifPresent(gcb::setLatestPeriodOrHighestSystem);
+      JsonConverter.convertVocabularyConcept(gx.getEarliestEpochOrLowestSeries())
+          .ifPresent(gcb::setEarliestEpochOrLowestSeries);
+      JsonConverter.convertVocabularyConcept(gx.getLatestEpochOrHighestSeries())
+          .ifPresent(gcb::setLatestEpochOrHighestSeries);
+      JsonConverter.convertVocabularyConcept(gx.getEarliestAgeOrLowestStage())
+          .ifPresent(gcb::setEarliestAgeOrLowestStage);
+      JsonConverter.convertVocabularyConcept(gx.getLatestAgeOrHighestStage())
+          .ifPresent(gcb::setLatestAgeOrHighestStage);
+
+      if (gx.getStartAge() != null && gx.getEndAge() != null) {
+        gcb.setRange(
+            GeologicalRange.newBuilder().setLte(gx.getStartAge()).setGt(gx.getEndAge()).build());
+      }
+
+      builder.setGeologicalContext(gcb.build());
+    }
   }
 
   private void mapTemporalRecord(OccurrenceJsonRecord.Builder builder) {
@@ -208,7 +266,11 @@ public class OccurrenceJsonConverter {
         .setHasGeospatialIssue(location.getHasGeospatialIssue())
         .setLocality(location.getLocality())
         .setFootprintWKT(location.getFootprintWKT())
-        .setDistanceFromCentroidInMeters(location.getDistanceFromCentroidInMeters());
+        .setDistanceFromCentroidInMeters(location.getDistanceFromCentroidInMeters())
+        .setHigherGeography(location.getHigherGeography())
+        .setGeoreferencedBy(location.getGeoreferencedBy())
+        .setGbifRegion(location.getGbifRegion())
+        .setPublishedByGbifRegion(location.getPublishedByGbifRegion());
 
     // Coordinates
     Double decimalLongitude = location.getDecimalLongitude();
@@ -258,14 +320,25 @@ public class OccurrenceJsonConverter {
         .setVerbatim(JsonConverter.convertVerbatimRecord(verbatim));
 
     // Set raw as indexed
-    extractOptValue(verbatim, DwcTerm.recordNumber).ifPresent(builder::setRecordNumber);
-    extractOptValue(verbatim, DwcTerm.organismID).ifPresent(builder::setOrganismId);
-    extractOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventId);
-    extractOptValue(verbatim, DwcTerm.parentEventID).ifPresent(builder::setParentEventId);
-    extractOptValue(verbatim, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
-    extractOptValue(verbatim, DwcTerm.collectionCode).ifPresent(builder::setCollectionCode);
-    extractOptValue(verbatim, DwcTerm.catalogNumber).ifPresent(builder::setCatalogNumber);
-    extractOptValue(verbatim, DwcTerm.occurrenceID).ifPresent(builder::setOccurrenceId);
+    extractLengthAwareOptValue(verbatim, DwcTerm.recordNumber).ifPresent(builder::setRecordNumber);
+    extractLengthAwareOptValue(verbatim, DwcTerm.organismID).ifPresent(builder::setOrganismId);
+    extractLengthAwareOptValue(verbatim, DwcTerm.eventID).ifPresent(builder::setEventId);
+    extractLengthAwareOptValue(verbatim, DwcTerm.parentEventID)
+        .ifPresent(builder::setParentEventId);
+    extractLengthAwareOptValue(verbatim, DwcTerm.institutionCode)
+        .ifPresent(builder::setInstitutionCode);
+    extractLengthAwareOptValue(verbatim, DwcTerm.collectionCode)
+        .ifPresent(builder::setCollectionCode);
+    extractLengthAwareOptValue(verbatim, DwcTerm.catalogNumber)
+        .ifPresent(builder::setCatalogNumber);
+    extractLengthAwareOptValue(verbatim, DwcTerm.occurrenceID).ifPresent(builder::setOccurrenceId);
+    extractLengthAwareOptValue(verbatim, DwcTerm.fieldNumber).ifPresent(builder::setFieldNumber);
+    extractLengthAwareOptValue(verbatim, DwcTerm.island).ifPresent(builder::setIsland);
+    extractLengthAwareOptValue(verbatim, DwcTerm.islandGroup).ifPresent(builder::setIslandGroup);
+    extractLengthAwareOptValue(verbatim, DwcTerm.previousIdentifications)
+        .ifPresent(builder::setPreviousIdentifications);
+    extractLengthAwareOptValue(verbatim, DwcTerm.taxonConceptID)
+        .ifPresent(builder.getGbifClassification()::setTaxonConceptID);
   }
 
   private void mapIssues(OccurrenceJsonRecord.Builder builder) {

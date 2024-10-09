@@ -42,7 +42,9 @@ class GBIFClassification {
   private Integer taxonKey;
   private Integer acceptedTaxonKey;
 
-  /** @return A new classification representing unknown. */
+  /**
+   * @return A new classification representing unknown.
+   */
   static GBIFClassification newIncertaeSedis() {
     GBIFClassification c = new GBIFClassification();
     c.scientificName = "incertae sedis";
@@ -144,13 +146,17 @@ class GBIFClassification {
     return c;
   }
 
-  /** @return classification in tab delimited format */
+  /**
+   * @return classification in tab delimited format
+   */
   @Override
   public String toString() {
     return toString(false);
   }
 
-  /** @return classification in tab delimited format optionally skipping keys */
+  /**
+   * @return classification in tab delimited format optionally skipping keys
+   */
   public String toString(boolean skipKeys) {
     CharSequence[] defaultValues = {
       kingdom,

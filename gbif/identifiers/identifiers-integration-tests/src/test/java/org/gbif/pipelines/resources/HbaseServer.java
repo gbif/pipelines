@@ -6,8 +6,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -29,20 +29,20 @@ public class HbaseServer extends ExternalResource {
           .zkConnectionString(null)
           .create();
 
-  public static final byte[] LOOKUP_TABLE = Bytes.toBytes(CFG.getLookupTable());
+  public static final TableName LOOKUP_TABLE = TableName.valueOf(CFG.getLookupTable());
   public static final byte[] CF = Bytes.toBytes("o");
-  private static final byte[] COUNTER_TABLE = Bytes.toBytes(CFG.getCounterTable());
+  private static final TableName COUNTER_TABLE = TableName.valueOf(CFG.getCounterTable());
   private static final byte[] COUNTER_CF = Bytes.toBytes("o");
-  private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(CFG.getOccurrenceTable());
+  private static final TableName OCCURRENCE_TABLE = TableName.valueOf(CFG.getOccurrenceTable());
 
   private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 
   private static final Object MUTEX = new Object();
   private static volatile HbaseServer instance;
+
   private static final AtomicInteger COUNTER = new AtomicInteger(0);
 
   private HBaseStore<String> lookupTableStore = null;
-  private TestingServer zkServer;
   public Connection connection = null;
   public HBaseLockingKeyService keyService;
 
@@ -58,7 +58,7 @@ public class HbaseServer extends ExternalResource {
   }
 
   public void truncateTable() throws IOException {
-    log.info("Trancate the table");
+    log.info("Truncate the table");
     TEST_UTIL.truncateTable(LOOKUP_TABLE);
     TEST_UTIL.truncateTable(COUNTER_TABLE);
     TEST_UTIL.truncateTable(OCCURRENCE_TABLE);
@@ -69,26 +69,10 @@ public class HbaseServer extends ExternalResource {
   @Override
   protected void before() throws Exception {
     if (COUNTER.get() == 0) {
-      zkServer = new TestingServer(true);
-      CFG.setZkConnectionString(zkServer.getConnectString());
 
       log.info("Create hbase mini-cluster");
-      TEST_UTIL
-          .getConfiguration()
-          .setInt("hbase.master.port", HBaseTestingUtility.randomFreePort());
-      TEST_UTIL
-          .getConfiguration()
-          .setInt("hbase.master.info.port", HBaseTestingUtility.randomFreePort());
-      TEST_UTIL
-          .getConfiguration()
-          .setInt("hbase.regionserver.port", HBaseTestingUtility.randomFreePort());
-      TEST_UTIL
-          .getConfiguration()
-          .setInt("hbase.regionserver.info.port", HBaseTestingUtility.randomFreePort());
-      TEST_UTIL
-          .getConfiguration()
-          .setStrings("hbase.zookeeper.quorum", zkServer.getConnectString());
       TEST_UTIL.startMiniCluster(2);
+      CFG.setZkConnectionString(getZKString());
       TEST_UTIL.createTable(LOOKUP_TABLE, CF);
       TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
       TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
@@ -113,14 +97,14 @@ public class HbaseServer extends ExternalResource {
       if (connection != null) {
         connection.close();
       }
-      if (zkServer != null) {
-        zkServer.stop();
-        zkServer.close();
-      }
     }
   }
 
   public String getZKString() {
-    return zkServer.getConnectString();
+    return TEST_UTIL.getConfiguration().get("hbase.zookeeper.quorum");
+  }
+
+  public String getZNodeParent() {
+    return TEST_UTIL.getConfiguration().get("zookeeper.znode.parent");
   }
 }

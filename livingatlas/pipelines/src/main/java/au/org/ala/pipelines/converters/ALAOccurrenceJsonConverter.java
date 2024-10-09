@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.converters.JsonConverter;
 import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.Parent;
 import org.gbif.pipelines.io.avro.json.*;
 
 /** Converts AVRO occurrence record artefacts to a JSON for indexing. */
@@ -143,7 +144,7 @@ public class ALAOccurrenceJsonConverter {
           eventCore.getParentsLineage().stream()
               .sorted(
                   Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
-              .map(e -> e.getEventType())
+              .map(Parent::getEventType)
               .collect(Collectors.toList());
 
       if (eventCore.getEventType() != null) {

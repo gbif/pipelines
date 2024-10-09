@@ -36,27 +36,37 @@ public class Interpretation<S> {
 
   private final S source;
 
-  /** @param source source data object */
+  /**
+   * @param source source data object
+   */
   public static <S> Interpretation<S> from(S source) {
     return new Interpretation<>(source);
   }
 
-  /** @param func Supplier produces source data object */
+  /**
+   * @param func Supplier produces source data object
+   */
   public static <S> Interpretation<S> from(Supplier<S> func) {
     return new Interpretation<>(func.get());
   }
 
-  /** @param target target data object */
+  /**
+   * @param target target data object
+   */
   public <T> Condition<T> to(T target) {
     return new Condition<>(target);
   }
 
-  /** @param func Function converts source data object to target data object */
+  /**
+   * @param func Function converts source data object to target data object
+   */
   public <T> Condition<T> to(Function<S, T> func) {
     return new Condition<>(func.apply(source));
   }
 
-  /** @param func Supplier produces target data object */
+  /**
+   * @param func Supplier produces target data object
+   */
   public <T> Condition<T> to(Supplier<T> func) {
     return new Condition<>(func.get());
   }
@@ -106,7 +116,9 @@ public class Interpretation<S> {
       return this;
     }
 
-    /** @param func skips the result if the result of predicate is true */
+    /**
+     * @param func skips the result if the result of predicate is true
+     */
     public Handler<T> skipWhen(Predicate<T> func) {
       if (skipPredicate == null) {
         skipPredicate = func;
@@ -116,7 +128,9 @@ public class Interpretation<S> {
       return this;
     }
 
-    /** @return target data object */
+    /**
+     * @return target data object
+     */
     public Optional<T> getOfNullable() {
       if (skipPredicate != null && target != null && skipPredicate.test(target)) {
         return Optional.empty();
@@ -124,7 +138,9 @@ public class Interpretation<S> {
       return Optional.ofNullable(target);
     }
 
-    /** @return target data object */
+    /**
+     * @return target data object
+     */
     public Optional<T> get() {
       if (skipPredicate != null && skipPredicate.test(target)) {
         return Optional.empty();
@@ -132,7 +148,9 @@ public class Interpretation<S> {
       return Optional.of(target);
     }
 
-    /** @param consumer Consumer for consuming target data object */
+    /**
+     * @param consumer Consumer for consuming target data object
+     */
     public void consume(Consumer<T> consumer) {
       Optional.ofNullable(target).ifPresent(consumer);
     }

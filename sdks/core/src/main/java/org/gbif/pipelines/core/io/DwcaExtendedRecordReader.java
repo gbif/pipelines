@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +16,7 @@ import org.gbif.dwc.Archive;
 import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.record.StarRecord;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.utils.file.ClosableIterator;
@@ -29,9 +32,10 @@ public class DwcaExtendedRecordReader implements Closeable {
   private final ClosableIterator<?> iterator;
 
   @Getter private long recordsReturned;
+  @Getter private long occurrenceRecordsReturned;
   private ExtendedRecord current;
 
-  /** Creates a DwcaReader of a expanded archive. */
+  /** Creates a DwcaReader of an expanded archive. */
   public static DwcaExtendedRecordReader fromLocation(String path) throws IOException {
     return new DwcaExtendedRecordReader(DwcFiles.fromLocation(Paths.get(path)));
   }
@@ -78,11 +82,23 @@ public class DwcaExtendedRecordReader implements Closeable {
       return false;
     }
     recordsReturned++;
-    if (recordsReturned % 100_000 == 0) {
-      log.info("Read [{}] records", recordsReturned);
-    }
 
     current = convertFn.apply(iterator.next());
+
+    if (current.getCoreRowType().equals(DwcTerm.Occurrence.qualifiedName())) {
+      occurrenceRecordsReturned++;
+    } else {
+      Integer size =
+          Optional.ofNullable(current.getExtensions().get(DwcTerm.Occurrence.qualifiedName()))
+              .map(List::size)
+              .orElse(0);
+      occurrenceRecordsReturned += size;
+    }
+
+    if (recordsReturned % 100_000 == 0) {
+      log.info(
+          "Read [{}] records, occurrence records [{}]", recordsReturned, occurrenceRecordsReturned);
+    }
 
     return true;
   }
@@ -100,7 +116,10 @@ public class DwcaExtendedRecordReader implements Closeable {
   public void close() throws IOException {
     if (iterator != null) {
       try {
-        log.info("Closing DwC-A reader having read [{}] records", recordsReturned);
+        log.info(
+            "Closing DwC-A reader having read [{}] records and [{}] occurrence records",
+            recordsReturned,
+            occurrenceRecordsReturned);
         iterator.close();
       } catch (Exception e) {
         throw new IOException(e);

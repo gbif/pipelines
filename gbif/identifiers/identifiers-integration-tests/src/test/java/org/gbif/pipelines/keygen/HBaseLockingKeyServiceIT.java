@@ -15,7 +15,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -69,8 +68,7 @@ public class HBaseLockingKeyServiceIT {
     put.addColumn(
         HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_STATUS_COLUMN), Bytes.toBytes("ALLOCATED"));
     put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(2L));
-    try (Table lookupTable =
-        HBASE_SERVER.connection.getTable(TableName.valueOf(HbaseServer.LOOKUP_TABLE))) {
+    try (Table lookupTable = HBASE_SERVER.connection.getTable(HbaseServer.LOOKUP_TABLE)) {
       lookupTable.put(put);
     }
 
@@ -122,8 +120,7 @@ public class HBaseLockingKeyServiceIT {
     Put put = new Put(lookupKey1);
     put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), 0, lock1);
     put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(2L));
-    try (Table lookupTable =
-        HBASE_SERVER.connection.getTable(TableName.valueOf(HbaseServer.LOOKUP_TABLE))) {
+    try (Table lookupTable = HBASE_SERVER.connection.getTable(HbaseServer.LOOKUP_TABLE)) {
       lookupTable.put(put);
       byte[] lock2 = Bytes.toBytes(UUID.randomUUID().toString());
       byte[] lookupKey2 = Bytes.toBytes(datasetKey + "|EFGH");
@@ -151,8 +148,7 @@ public class HBaseLockingKeyServiceIT {
     put.addColumn(
         HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_STATUS_COLUMN), Bytes.toBytes("ALLOCATED"));
     put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(1L));
-    try (Table lookupTable =
-        HBASE_SERVER.connection.getTable(TableName.valueOf(HbaseServer.LOOKUP_TABLE))) {
+    try (Table lookupTable = HBASE_SERVER.connection.getTable(HbaseServer.LOOKUP_TABLE)) {
       lookupTable.put(put);
 
       byte[] lookupKey2 = HBaseStore.saltKey(datasetKey + "|EFGH", NUMBER_OF_BUCKETS);
@@ -162,7 +158,7 @@ public class HBaseLockingKeyServiceIT {
       put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(2L));
       lookupTable.put(put);
     }
-    // test: gen id for one occ with both lookupkeys
+    // test: gen id for one occ with both lookup-keys
     exception.expect(IllegalStateException.class);
     exception.expectMessage(
         "Found inconsistent occurrence keys in looking up unique identifiers:["
@@ -182,8 +178,7 @@ public class HBaseLockingKeyServiceIT {
     byte[] lock = Bytes.toBytes(UUID.randomUUID().toString());
     Put put = new Put(lookupKey);
     put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), 0, lock);
-    try (Table lookupTable =
-        HBASE_SERVER.connection.getTable(TableName.valueOf(HbaseServer.LOOKUP_TABLE))) {
+    try (Table lookupTable = HBASE_SERVER.connection.getTable(HbaseServer.LOOKUP_TABLE)) {
       lookupTable.put(put);
     }
 
@@ -204,8 +199,7 @@ public class HBaseLockingKeyServiceIT {
     byte[] lock = Bytes.toBytes(UUID.randomUUID().toString());
     Put put = new Put(lookupKey);
     put.addColumn(HbaseServer.CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), ts, lock);
-    try (Table lookupTable =
-        HBASE_SERVER.connection.getTable(TableName.valueOf(HbaseServer.LOOKUP_TABLE))) {
+    try (Table lookupTable = HBASE_SERVER.connection.getTable(HbaseServer.LOOKUP_TABLE)) {
       lookupTable.put(put);
     }
 

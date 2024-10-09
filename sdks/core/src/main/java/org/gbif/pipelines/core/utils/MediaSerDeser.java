@@ -12,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.specific.SpecificData;
 import org.gbif.pipelines.io.avro.Multimedia;
 
 /** Utility class to serialize and deserialize MediaObject instances from/to JSON. */
@@ -25,6 +26,11 @@ public class MediaSerDeser {
     // fasterxml or codehaus
     @JsonIgnore
     abstract void getSchema();
+
+    @JsonIgnore
+    abstract void getSpecificData();
+
+    @JsonIgnore private static SpecificData MODEL$;
   }
 
   private static final String SER_ERROR_MSG = "Unable to serialize media objects to JSON";

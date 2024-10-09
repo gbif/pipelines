@@ -4,9 +4,12 @@ import java.util.Optional;
 import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
+import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration.Builder;
 import org.gbif.kvs.grscicoll.GrscicollLookupKVStoreFactory;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
+import org.gbif.kvs.hbase.LoaderRetryConfig;
+import org.gbif.pipelines.core.config.model.KvConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -28,7 +31,6 @@ public class GrscicollLookupKvStoreFactory {
     this.kvStore = create(config);
   }
 
-  /* TODO Comment */
   public static KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse> getInstance(
       PipelinesConfig config) {
     if (instance == null) {
@@ -41,7 +43,6 @@ public class GrscicollLookupKvStoreFactory {
     return instance.kvStore;
   }
 
-  /* TODO Comment */
   @SneakyThrows
   public static KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse> create(
       PipelinesConfig config) {
@@ -49,40 +50,52 @@ public class GrscicollLookupKvStoreFactory {
       return null;
     }
 
+    KvConfig grscicollLookupConfig = config.getGrscicollLookup();
+
     String api =
-        Optional.ofNullable(config.getGrscicollLookup().getApi())
+        Optional.ofNullable(grscicollLookupConfig.getApi())
             .map(WsConfig::getWsUrl)
             .orElse(config.getGbifApi().getWsUrl());
 
     ClientConfiguration clientConfiguration =
         ClientConfiguration.builder()
             .withBaseApiUrl(api)
-            .withFileCacheMaxSizeMb(config.getGrscicollLookup().getWsCacheSizeMb())
-            .withTimeOut(config.getGrscicollLookup().getWsTimeoutSec())
+            .withFileCacheMaxSizeMb(grscicollLookupConfig.getWsCacheSizeMb())
+            .withTimeOut(grscicollLookupConfig.getWsTimeoutSec())
             .build();
 
-    String zk = config.getGrscicollLookup().getZkConnectionString();
+    String zk = grscicollLookupConfig.getZkConnectionString();
     zk = zk == null || zk.isEmpty() ? config.getZkConnectionString() : zk;
-    if (zk == null || config.getGrscicollLookup().isRestOnly()) {
+    if (zk == null || grscicollLookupConfig.isRestOnly()) {
       return GrscicollLookupKVStoreFactory.simpleGrscicollLookupKVStore(clientConfiguration);
     }
 
-    CachedHBaseKVStoreConfiguration lookupConfig =
+    Builder configBuilder =
         CachedHBaseKVStoreConfiguration.builder()
             .withValueColumnQualifier("j") // stores JSON data
             .withHBaseKVStoreConfiguration(
                 HBaseKVStoreConfiguration.builder()
-                    .withTableName(config.getGrscicollLookup().getTableName())
+                    .withTableName(grscicollLookupConfig.getTableName())
                     .withColumnFamily("v") // Column in which qualifiers are stored
-                    .withNumOfKeyBuckets(config.getGrscicollLookup().getNumOfKeyBuckets())
+                    .withNumOfKeyBuckets(grscicollLookupConfig.getNumOfKeyBuckets())
                     .withHBaseZk(zk)
+                    .withHBaseZnode(grscicollLookupConfig.getHbaseZnode())
                     .build())
-            .withCacheCapacity(15_000L)
-            .withCacheExpiryTimeInSeconds(config.getGrscicollLookup().getCacheExpiryTimeInSeconds())
-            .build();
+            .withCacheCapacity(25_000L)
+            .withCacheExpiryTimeInSeconds(grscicollLookupConfig.getCacheExpiryTimeInSeconds());
+
+    KvConfig.LoaderRetryConfig retryConfig = grscicollLookupConfig.getLoaderRetryConfig();
+    if (retryConfig != null) {
+      configBuilder.withLoaderRetryConfig(
+          new LoaderRetryConfig(
+              retryConfig.getMaxAttempts(),
+              retryConfig.getInitialIntervalMillis(),
+              retryConfig.getMultiplier(),
+              retryConfig.getRandomizationFactor()));
+    }
 
     return GrscicollLookupKVStoreFactory.simpleGrscicollLookupKVStore(
-        lookupConfig, clientConfiguration);
+        configBuilder.build(), clientConfiguration);
   }
 
   public static SerializableSupplier<KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse>>

@@ -18,6 +18,7 @@ import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.core.interpreters.core.CoreInterpreter;
 import org.gbif.pipelines.core.interpreters.core.DynamicPropertiesInterpreter;
+import org.gbif.pipelines.core.interpreters.core.GeologicalContextInterpreter;
 import org.gbif.pipelines.core.interpreters.core.VocabularyInterpreter;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -102,8 +103,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
             .when(er -> !er.getCoreTerms().isEmpty())
             .via(BasicInterpreter::interpretBasisOfRecord)
             .via(BasicInterpreter::interpretTypifiedName)
-            .via(BasicInterpreter::interpretSex)
-            .via(BasicInterpreter::interpretTypeStatus)
+            .via(VocabularyInterpreter.interpretSex(vocabularyService))
+            .via(VocabularyInterpreter.interpretTypeStatus(vocabularyService))
             .via(BasicInterpreter::interpretIndividualCount)
             .via((e, r) -> CoreInterpreter.interpretReferences(e, r, r::setReferences))
             .via(BasicInterpreter::interpretOrganismQuantity)
@@ -126,11 +127,21 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
             .via(BasicInterpreter::interpretIdentifiedBy)
             .via(BasicInterpreter::interpretPreparations)
             .via((e, r) -> CoreInterpreter.interpretSamplingProtocol(e, r::setSamplingProtocol))
-            .via(BasicInterpreter::interpretProjectId);
+            .via(BasicInterpreter::interpretProjectId)
+            .via(BasicInterpreter::interpretIsSequenced)
+            .via(BasicInterpreter::interpretAssociatedSequences)
+            // Geological context
+            .via(GeologicalContextInterpreter.interpretChronostratigraphy(vocabularyService))
+            .via(GeologicalContextInterpreter::interpretLowestBiostratigraphicZone)
+            .via(GeologicalContextInterpreter::interpretHighestBiostratigraphicZone)
+            .via(GeologicalContextInterpreter::interpretGroup)
+            .via(GeologicalContextInterpreter::interpretFormation)
+            .via(GeologicalContextInterpreter::interpretMember)
+            .via(GeologicalContextInterpreter::interpretBed);
 
     if (useDynamicPropertiesInterpretation) {
       handler
-          .via(DynamicPropertiesInterpreter::interpretSex)
+          .via(DynamicPropertiesInterpreter.interpretSex(vocabularyService))
           .via(DynamicPropertiesInterpreter.interpretLifeStage(vocabularyService));
     }
 

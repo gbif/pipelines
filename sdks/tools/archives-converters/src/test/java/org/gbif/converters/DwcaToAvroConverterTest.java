@@ -3,6 +3,7 @@ package org.gbif.converters;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
@@ -21,9 +22,14 @@ public class DwcaToAvroConverterTest {
 
     String inpPath = getClass().getResource("/dwca/plants_dwca").getFile();
     String outPath = inpPath + "/verbatim.avro";
+    String metricPath = inpPath + "/metric.yaml";
 
     // When
-    DwcaToAvroConverter.create().inputPath(inpPath).outputPath(outPath).convert();
+    DwcaToAvroConverter.create()
+        .inputPath(inpPath)
+        .outputPath(outPath)
+        .metaPath(metricPath)
+        .convert();
 
     // Should
     File verbatim = new File(outPath);
@@ -40,6 +46,7 @@ public class DwcaToAvroConverterTest {
       }
     }
 
+    Assert.assertTrue(Files.exists(Paths.get(metricPath)));
     Files.deleteIfExists(verbatim.toPath());
   }
 

@@ -22,8 +22,8 @@ public class IndexingConfiguration implements BaseConfiguration {
 
   @ParametersDelegate @Valid public SparkConfiguration sparkConfig = new SparkConfiguration();
 
-  @ParametersDelegate @Valid
-  public DistributedConfiguration distributedConfig = new DistributedConfiguration();
+  @ParametersDelegate @Valid @NotNull
+  public AirflowConfiguration airflowConfig = new AirflowConfiguration();
 
   @Parameter(names = "--meta-file-name")
   public String metaFileName = Pipeline.OCCURRENCE_TO_INDEX + ".yml";
@@ -39,9 +39,6 @@ public class IndexingConfiguration implements BaseConfiguration {
   @Valid
   @NotNull
   public String pipelinesConfig;
-
-  @Parameter(names = "--use-beam-deprecated-read")
-  public boolean useBeamDeprecatedRead = true;
 
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
@@ -73,5 +70,10 @@ public class IndexingConfiguration implements BaseConfiguration {
   @Override
   public String getMetaFileName() {
     return metaFileName;
+  }
+
+  @Override
+  public boolean eventsEnabled() {
+    return stepConfig.eventsEnabled;
   }
 }

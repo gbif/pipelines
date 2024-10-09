@@ -4,9 +4,12 @@ import java.util.Optional;
 import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
+import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration.Builder;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
+import org.gbif.kvs.hbase.LoaderRetryConfig;
 import org.gbif.kvs.species.Identification;
 import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
+import org.gbif.pipelines.core.config.model.KvConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -45,8 +48,10 @@ public class NameUsageMatchStoreFactory {
       return null;
     }
 
+    KvConfig nameUsageMatchConfig = config.getNameUsageMatch();
+
     String api =
-        Optional.ofNullable(config.getNameUsageMatch().getApi())
+        Optional.ofNullable(nameUsageMatchConfig.getApi())
             .map(WsConfig::getWsUrl)
             .orElse(config.getGbifApi().getWsUrl());
 
@@ -55,40 +60,50 @@ public class NameUsageMatchStoreFactory {
             .nameUsageClientConfiguration(
                 ClientConfiguration.builder()
                     .withBaseApiUrl(api)
-                    .withFileCacheMaxSizeMb(config.getNameUsageMatch().getWsCacheSizeMb())
-                    .withTimeOut(config.getNameUsageMatch().getWsTimeoutSec())
+                    .withFileCacheMaxSizeMb(nameUsageMatchConfig.getWsCacheSizeMb())
+                    .withTimeOut(nameUsageMatchConfig.getWsTimeoutSec())
                     .build())
             .checklistbankClientConfiguration(
                 ClientConfiguration.builder()
                     .withBaseApiUrl(api)
-                    .withFileCacheMaxSizeMb(config.getNameUsageMatch().getWsCacheSizeMb())
-                    .withTimeOut(config.getNameUsageMatch().getWsTimeoutSec())
+                    .withFileCacheMaxSizeMb(nameUsageMatchConfig.getWsCacheSizeMb())
+                    .withTimeOut(nameUsageMatchConfig.getWsTimeoutSec())
                     .build())
             .build();
 
-    String zk = config.getNameUsageMatch().getZkConnectionString();
+    String zk = nameUsageMatchConfig.getZkConnectionString();
     zk = zk == null || zk.isEmpty() ? config.getZkConnectionString() : zk;
-    if (zk == null || config.getNameUsageMatch().isRestOnly()) {
+    if (zk == null || nameUsageMatchConfig.isRestOnly()) {
       return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(
           clientConfiguration, config.getNameUsageIdMapping());
     }
 
-    CachedHBaseKVStoreConfiguration matchConfig =
+    Builder configBuilder =
         CachedHBaseKVStoreConfiguration.builder()
             .withValueColumnQualifier("j") // stores JSON data
             .withHBaseKVStoreConfiguration(
                 HBaseKVStoreConfiguration.builder()
-                    .withTableName(config.getNameUsageMatch().getTableName())
+                    .withTableName(nameUsageMatchConfig.getTableName())
                     .withColumnFamily("v") // Column in which qualifiers are stored
-                    .withNumOfKeyBuckets(config.getNameUsageMatch().getNumOfKeyBuckets())
+                    .withNumOfKeyBuckets(nameUsageMatchConfig.getNumOfKeyBuckets())
                     .withHBaseZk(zk)
+                    .withHBaseZnode(nameUsageMatchConfig.getHbaseZnode())
                     .build())
-            .withCacheCapacity(15_000L)
-            .withCacheExpiryTimeInSeconds(config.getNameUsageMatch().getCacheExpiryTimeInSeconds())
-            .build();
+            .withCacheCapacity(25_000L)
+            .withCacheExpiryTimeInSeconds(nameUsageMatchConfig.getCacheExpiryTimeInSeconds());
+
+    KvConfig.LoaderRetryConfig retryConfig = nameUsageMatchConfig.getLoaderRetryConfig();
+    if (retryConfig != null) {
+      configBuilder.withLoaderRetryConfig(
+          new LoaderRetryConfig(
+              retryConfig.getMaxAttempts(),
+              retryConfig.getInitialIntervalMillis(),
+              retryConfig.getMultiplier(),
+              retryConfig.getRandomizationFactor()));
+    }
 
     return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(
-        matchConfig, clientConfiguration, config.getNameUsageIdMapping());
+        configBuilder.build(), clientConfiguration, config.getNameUsageIdMapping());
   }
 
   public static SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>> createSupplier(

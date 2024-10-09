@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.converter.ConverterToVerbatim;
+import org.gbif.converters.converter.Metric;
 import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
 import org.gbif.pipelines.core.io.DwcaExtendedRecordReader;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -47,7 +48,7 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
    * @param dataFileWriter AVRO data writer for {@link ExtendedRecord}
    */
   @Override
-  protected long convert(Path inputPath, SyncDataFileWriter<ExtendedRecord> dataFileWriter)
+  protected Metric convert(Path inputPath, SyncDataFileWriter<ExtendedRecord> dataFileWriter)
       throws IOException {
 
     String realPath =
@@ -82,7 +83,7 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
     }
     reader.close();
 
-    return reader.getRecordsReturned();
+    return Metric.create(reader.getRecordsReturned(), reader.getOccurrenceRecordsReturned());
   }
 
   @SneakyThrows
