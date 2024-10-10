@@ -15,6 +15,10 @@
   <name>Pipelines :: Sdks :: Tools :: Archives converters</name>
   <description>Converters from DwCA/DWC 1.0/DWC 1.4/ABCD 1.2/ABCD 2.06 to *.avro format</description>
 
+  <properties>
+    <com.sun.tools.version>1.7.0</com.sun.tools.version>
+  </properties>
+
   <dependencies>
 
     <!-- Dev tools -->
@@ -115,6 +119,14 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
       <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun</groupId>
+      <artifactId>tools</artifactId>
+      <version>${com.sun.tools.version}</version>
+      <scope>system</scope>
+      <systemPath>${java.home}/../lib/tools.jar</systemPath>
     </dependency>
 
     <!--Test dependencies-->
