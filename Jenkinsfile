@@ -8,8 +8,8 @@ pipeline {
     )
   }
   tools {
-    maven 'Maven3.6'
-    jdk 'OpenJDK11'
+    maven 'Maven3.8.5'
+    jdk 'OpenJDK17'
   }
   options {
     buildDiscarder(logRotator(numToKeepStr: '10'))
