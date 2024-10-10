@@ -263,6 +263,7 @@
       {"name": "primaryCollector", "type": ["null", "string"], "default": null},
       {"name": "primaryStorageSeedBank", "type": ["null", "string"], "default": null},
       {"name": "purityPercentage", "type": ["null", "double"], "default": null},
+      {"name": "populationCode", "type": ["null", "string"], "default": null},
       {"name": "storageRelativeHumidityPercentage", "type": ["null", "double"], "default": null},
       {"name": "quantityCount", "type": ["null", "double"], "default": null},
       {"name": "quantityInGrams", "type": ["null", "double"], "default": null},
