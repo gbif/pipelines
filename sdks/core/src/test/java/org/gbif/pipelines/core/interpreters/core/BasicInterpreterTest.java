@@ -14,7 +14,6 @@ import java.util.stream.Stream;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
@@ -432,124 +431,6 @@ public class BasicInterpreterTest {
     Assert.assertTrue(br.getPreparations().contains(prep1));
     Assert.assertTrue(br.getPreparations().contains(prep2));
     assertIssueSize(br, 0);
-  }
-
-  @Test
-  public void interpretTypeStatusTest() {
-    final String tp1 = TypeStatus.TYPE.name();
-    final String tp2 = TypeStatus.ALLOTYPE.name();
-
-    // State
-    Map<String, String> coreMap = new HashMap<>(1);
-    coreMap.put(DwcTerm.typeStatus.qualifiedName(), tp1 + " | " + tp2 + " | ");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretTypeStatus(er, br);
-
-    // Should
-    Assert.assertEquals(2, br.getTypeStatus().size());
-    Assert.assertTrue(br.getTypeStatus().contains(tp1));
-    Assert.assertTrue(br.getTypeStatus().contains(tp2));
-    assertIssueSize(br, 0);
-  }
-
-  @Test
-  public void interpretTypeStatusFromIdentificationExtensionTest() {
-    final String tp1 = TypeStatus.TYPE.name();
-    final String tp2 = TypeStatus.ALLOTYPE.name();
-
-    // State
-    Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
-    Map<String, String> identification = new HashMap<>(1);
-    identification.put(DwcTerm.typeStatus.qualifiedName(), tp1 + " | " + tp2 + " | ");
-    ext.put(Extension.IDENTIFICATION.getRowType(), Collections.singletonList(identification));
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setExtensions(ext).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretTypeStatus(er, br);
-
-    // Should
-    Assert.assertEquals(2, br.getTypeStatus().size());
-    Assert.assertTrue(br.getTypeStatus().contains(tp1));
-    Assert.assertTrue(br.getTypeStatus().contains(tp2));
-    assertIssueSize(br, 0);
-  }
-
-  @Test
-  public void interpretTypeStatusCorePreferenceOverExtensionTest() {
-    final String tp1 = TypeStatus.TYPE.name();
-    final String tp2 = TypeStatus.ALLOTYPE.name();
-
-    // State
-    Map<String, String> coreMap = new HashMap<>(1);
-    coreMap.put(DwcTerm.typeStatus.qualifiedName(), tp1);
-    Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
-    Map<String, String> identification = new HashMap<>(1);
-    identification.put(DwcTerm.typeStatus.qualifiedName(), tp2);
-    ext.put(Extension.IDENTIFICATION.getRowType(), Collections.singletonList(identification));
-    ExtendedRecord er =
-        ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).setExtensions(ext).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretTypeStatus(er, br);
-
-    // Should
-    Assert.assertEquals(1, br.getTypeStatus().size());
-    Assert.assertEquals(tp1, br.getTypeStatus().get(0));
-    assertIssueSize(br, 0);
-  }
-
-  @Test
-  public void interpretTypeStatusIgnoreIdentificationExtensionTest() {
-    final String tp1 = TypeStatus.TYPE.name();
-
-    // State
-    Map<String, String> coreMap = new HashMap<>(1);
-    // we set another identification term and the extension should be ignored
-    coreMap.put(DwcTerm.kingdom.qualifiedName(), "Animalia");
-    Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
-    Map<String, String> identification = new HashMap<>(1);
-    identification.put(DwcTerm.typeStatus.qualifiedName(), tp1);
-    ext.put(Extension.IDENTIFICATION.getRowType(), Collections.singletonList(identification));
-    ExtendedRecord er =
-        ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).setExtensions(ext).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretTypeStatus(er, br);
-
-    // Should
-    Assert.assertEquals(0, br.getTypeStatus().size());
-    assertIssueSize(br, 0);
-  }
-
-  @Test
-  public void interpretTypeStatusPartiallyInvalidTest() {
-    final String tp1 = TypeStatus.TYPE.name();
-    final String tp2 = "foo";
-
-    // State
-    Map<String, String> coreMap = new HashMap<>(1);
-    coreMap.put(DwcTerm.typeStatus.qualifiedName(), tp1 + " | " + tp2 + " | ");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    BasicInterpreter.interpretTypeStatus(er, br);
-
-    // Should
-    Assert.assertEquals(1, br.getTypeStatus().size());
-    Assert.assertEquals(tp1, br.getTypeStatus().get(0));
-    assertIssueSize(br, 1);
   }
 
   @Test

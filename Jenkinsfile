@@ -58,17 +58,6 @@ pipeline {
       }
     }
 
-    stage('Build and push Docker images: Clustering') {
-      when {
-        expression {
-          params.TYPE == 'FULL'
-        }
-      }
-      steps {
-        sh 'build/clustering-docker-build.sh'
-      }
-    }
-
   }
 
     post {

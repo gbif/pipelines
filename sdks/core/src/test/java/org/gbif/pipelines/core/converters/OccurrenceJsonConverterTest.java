@@ -19,7 +19,6 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MediaType;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
-import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
@@ -161,7 +160,11 @@ public class OccurrenceJsonConverterTest {
             .setRelativeOrganismQuantity(0.001d)
             .setLicense(License.CC_BY_NC_4_0.name())
             .setOccurrenceStatus(OccurrenceStatus.PRESENT.name())
-            .setSex("sex")
+            .setSex(
+                VocabularyConcept.newBuilder()
+                    .setConcept("sex")
+                    .setLineage(Collections.singletonList("sex"))
+                    .build())
             .setReferences("setReferences")
             .setTypifiedName("setTypifiedName")
             .setIndividualCount(10)
@@ -205,7 +208,7 @@ public class OccurrenceJsonConverterTest {
             .setIdentifiedBy(Arrays.asList(multivalue1, multivalue2))
             .setPreparations(Arrays.asList(multivalue1, "\u001E" + multivalue2))
             .setSamplingProtocol(Arrays.asList(multivalue1, multivalue2))
-            .setTypeStatus(Arrays.asList(TypeStatus.TYPE.name(), TypeStatus.TYPE_SPECIES.name()))
+            .setTypeStatus(Arrays.asList(vcFn.apply("Type"), vcFn.apply("TypeSpecies")))
             .setProjectId(Arrays.asList(multivalue1, multivalue2))
             .setGeologicalContext(
                 GeologicalContext.newBuilder()
@@ -225,8 +228,8 @@ public class OccurrenceJsonConverterTest {
                     .setFormation("test14")
                     .setMember("test15")
                     .setBed("test16")
-                    .setStartAge("350")
-                    .setEndAge("300")
+                    .setStartAge(350f)
+                    .setEndAge(300f)
                     .build())
             .build();
 
@@ -535,7 +538,7 @@ public class OccurrenceJsonConverterTest {
         "\"" + expectedMultivalue1 + "|" + multivalue2 + "\"",
         result.path(Indexing.SAMPLING_PROTOCOL_JOINED).toString());
     assertEquals(
-        "[\"" + TypeStatus.TYPE.name() + "\",\"" + TypeStatus.TYPE_SPECIES.name() + "\"]",
+        "{\"concepts\":[\"Type\",\"TypeSpecies\"],\"lineage\":[\"Type\",\"TypeSpecies\"]}",
         result.path(Indexing.TYPE_STATUS).toString());
 
     ArrayNode projectIdArray = (ArrayNode) result.path(Indexing.PROJECT_ID);
@@ -677,7 +680,7 @@ public class OccurrenceJsonConverterTest {
             + "\"latestAgeOrHighestStage\":{\"concept\":\"test10\",\"lineage\":[\"test10\"]},"
             + "\"lowestBiostratigraphicZone\":\"test11\",\"highestBiostratigraphicZone\":\"test12\","
             + "\"group\":\"test13\",\"formation\":\"test14\",\"member\":\"test15\",\"bed\":\"test16\","
-            + "\"range\":{\"gt\":\"300\",\"lte\":\"350\"},"
+            + "\"range\":{\"gt\":300.0,\"lte\":350.0},"
             + "\"lithostratigraphy\":[\"test16\",\"test14\",\"test13\",\"test15\"],"
             + "\"biostratigraphy\":[\"test11\",\"test12\"]}";
     assertEquals(geologicalContextExpected, result.path("geologicalContext").toString());
