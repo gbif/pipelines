@@ -59,7 +59,7 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
         message.getAttempt(),
         message.getPipelineSteps(),
         message.getRunner(),
-        message.getExecutionId());
+        null);
   }
 
   /**
