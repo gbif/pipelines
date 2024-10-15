@@ -51,7 +51,7 @@ public class DataWarehouseCallback extends AbstractMessageCallback<PipelinesHdfs
 
   @Override
   public String getRouting() {
-    return new PipelinesHdfsViewMessage().getRoutingKey();
+    return new PipelinesHdfsViewMessage().setRunner(config.processRunner).getRoutingKey();
   }
 
   /** Main message processing logic, creates a terminal java process, which runs */
