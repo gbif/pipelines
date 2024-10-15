@@ -195,11 +195,11 @@ public class BeamParametersBuilder {
       HdfsViewConfiguration config, PipelinesHdfsViewMessage message) {
 
     return BeamParameters.create()
-        .putRequireNonNull("--datasetId", message.getDatasetUuid())
-        .putRequireNonNull("--crawlAttempt", message.getAttempt())
-        .putRequireNonNull("--action", "CREATE")
-        .putRequireNonNull("--options", "ALL")
-        .putRequireNonNull("--configFile", config.pipelinesConfig)
+        .putRequireNonNull("datasetId", message.getDatasetUuid())
+        .putRequireNonNull("crawlAttempt", message.getAttempt())
+        .putRequireNonNull("action", "CREATE")
+        .putRequireNonNull("options", "ALL")
+        .putRequireNonNull("configFile", config.pipelinesConfig)
         .putRequireNonNull("runner", "SparkRunner")
         .putRequireNonNull("metaFileName", config.metaFileName)
         .putRequireNonNull("inputPath", config.stepConfig.repositoryPath)
