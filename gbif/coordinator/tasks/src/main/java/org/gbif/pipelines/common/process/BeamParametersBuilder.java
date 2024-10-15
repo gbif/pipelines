@@ -196,8 +196,10 @@ public class BeamParametersBuilder {
 
     return BeamParameters.create()
         .putRequireNonNull("datasetId", message.getDatasetUuid())
-        .put("attempt", message.getAttempt())
+        .put("crawlAttempt", message.getAttempt())
         .put("runner", "SparkRunner")
+        .put("action", "CREATE")
+        .put("options", "ALL")
         .putRequireNonNull("metaFileName", config.metaFileName)
         .putRequireNonNull("inputPath", config.stepConfig.repositoryPath)
         .putRequireNonNull("targetPath", config.repositoryTargetPath)
