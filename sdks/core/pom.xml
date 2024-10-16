@@ -319,10 +319,7 @@
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-core</artifactId>
     </dependency>
-      <dependency>
-          <groupId>org.gbif.kvs</groupId>
-          <artifactId>kvs-common</artifactId>
-      </dependency>
+
 
   </dependencies>
 

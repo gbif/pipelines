@@ -6,7 +6,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.gbif.kvs.species.*;
 import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.MatchType;
 import org.gbif.pipelines.io.avro.RankedName;

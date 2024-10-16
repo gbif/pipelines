@@ -293,6 +293,7 @@
       {"name": "primaryCollector", "type": ["null", "string"], "default": null},
       {"name": "primaryStorageSeedBank", "type": ["null", "string"], "default": null},
       {"name": "purityPercentage", "type": ["null", "double"], "default": null},
+      {"name": "populationCode", "type": ["null", "string"], "default": null},
       {"name": "storageRelativeHumidityPercentage", "type": ["null", "double"], "default": null},
       {"name": "quantityCount", "type": ["null", "double"], "default": null},
       {"name": "quantityInGrams", "type": ["null", "double"], "default": null},
@@ -310,8 +311,8 @@
       "namespace":"org.gbif.pipelines.io.avro.json",
       "type":"record",
       "fields":[
-        {"name":"gt","type":["null","string"],"default":null},
-        {"name":"lte","type":["null","string"],"default":null}
+        {"name":"gt","type":["null","float"],"default":null},
+        {"name":"lte","type":["null","float"],"default":null}
       ]
     }
 ]

@@ -1251,16 +1251,16 @@
       } ]
     }, "null" ]
   }, {
-     "name" : "range",
+     "name" : "geologicaltime",
      "type" : [ {
         "type" : "record",
-        "name" : "GeologicalRange",
+        "name" : "GeologicalTime",
          "fields":[ {
             "name" : "gt",
-            "type" : "string"
+            "type" : "float"
           }, {
             "name" : "lte",
-            "type" : "string"
+            "type" : "float"
           }]
          }, "null"]
   },{
@@ -1284,12 +1284,6 @@
   }, {
     "name" : "bed",
     "type" : [ "string", "null" ]
-  }, {
-    "name" : "geologicaltime",
-    "type" : [ {
-      "type" : "array",
-      "items" : [ "string", "null" ]
-    }, "null" ]
   }, {
     "name" : "lithostratigraphy",
     "type" : [ {
