@@ -449,7 +449,6 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setBasisofrecord(basicRecord.getBasisOfRecord());
     occurrenceHdfsRecord.setIndividualcount(basicRecord.getIndividualCount());
     occurrenceHdfsRecord.setReferences(basicRecord.getReferences());
-    occurrenceHdfsRecord.setSex(basicRecord.getSex());
     occurrenceHdfsRecord.setTypifiedname(basicRecord.getTypifiedName());
     occurrenceHdfsRecord.setOrganismquantity(basicRecord.getOrganismQuantity());
     occurrenceHdfsRecord.setOrganismquantitytype(basicRecord.getOrganismQuantityType());
@@ -464,11 +463,19 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setIdentifiedby(basicRecord.getIdentifiedBy());
     occurrenceHdfsRecord.setPreparations(basicRecord.getPreparations());
     occurrenceHdfsRecord.setSamplingprotocol(basicRecord.getSamplingProtocol());
-    occurrenceHdfsRecord.setTypestatus(basicRecord.getTypeStatus());
     occurrenceHdfsRecord.setIssequenced(basicRecord.getIsSequenced());
     occurrenceHdfsRecord.setAssociatedsequences(basicRecord.getAssociatedSequences());
 
     // Vocabulary controlled
+    Optional.ofNullable(basicRecord.getSex())
+        .ifPresent(
+            c ->
+                occurrenceHdfsRecord.setSex(
+                    Sex.newBuilder()
+                        .setConcept(c.getConcept())
+                        .setLineage(c.getLineage())
+                        .build()));
+
     Optional.ofNullable(basicRecord.getEstablishmentMeans())
         .ifPresent(
             c ->
@@ -504,6 +511,21 @@ public class OccurrenceHdfsRecordConverter {
                         .setConcept(c.getConcept())
                         .setLineage(c.getLineage())
                         .build()));
+
+    Optional.ofNullable(basicRecord.getTypeStatus())
+        .ifPresent(
+            c -> {
+              List<String> allConcepts =
+                  c.stream()
+                      .map(org.gbif.pipelines.io.avro.VocabularyConcept::getConcept)
+                      .collect(Collectors.toList());
+
+              List<String> allParents =
+                  c.stream().flatMap(c2 -> c2.getLineage().stream()).collect(Collectors.toList());
+
+              occurrenceHdfsRecord.setTypestatus(
+                  TypeStatus.newBuilder().setConcepts(allConcepts).setLineage(allParents).build());
+            });
 
     // Others
     Optional.ofNullable(basicRecord.getRecordedByIds())
@@ -646,7 +668,7 @@ public class OccurrenceHdfsRecordConverter {
             .ifPresent(
                 s ->
                     occurrenceHdfsRecord.setRange(
-                        org.gbif.pipelines.io.avro.GeologicalRange.newBuilder()
+                        GeologicalRange.newBuilder()
                             .setLte(gc.getStartAge())
                             .setGt(gc.getEndAge())
                             .build()));

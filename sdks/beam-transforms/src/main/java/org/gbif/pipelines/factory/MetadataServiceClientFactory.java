@@ -16,7 +16,6 @@ public class MetadataServiceClientFactory {
     this.client = MetadataServiceClient.create(config.getGbifApi(), config.getContent());
   }
 
-  /* TODO Comment */
   public static MetadataServiceClient getInstance(PipelinesConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
@@ -28,12 +27,10 @@ public class MetadataServiceClientFactory {
     return instance.client;
   }
 
-  /* TODO Comment */
   public static SerializableSupplier<MetadataServiceClient> createSupplier(PipelinesConfig config) {
     return () -> new MetadataServiceClientFactory(config).client;
   }
 
-  /* TODO Comment */
   public static SerializableSupplier<MetadataServiceClient> getInstanceSupplier(
       PipelinesConfig config) {
     return () -> getInstance(config);

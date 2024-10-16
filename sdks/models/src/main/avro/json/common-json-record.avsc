@@ -28,6 +28,15 @@
     ]
   },
   {
+    "name":"VocabularyConceptList",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"concepts","type":{"type":"array","items":"string"}},
+      {"name":"lineage","type":{"type":"array","items":"string"} }
+    ]
+  },
+  {
     "name":"GadmFeatures",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",

@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.interpreters;
 
+import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +28,61 @@ public class MockVocabularyLookups {
 
         return Optional.of(lookupConcept);
       }
+      return Optional.empty();
+    }
+
+    @Override
+    public void close() {}
+  }
+
+  public static class SexMockVocabularyLookup implements VocabularyLookup {
+
+    @Override
+    public Optional<LookupConcept> lookup(String s) {
+      return lookup(s, null);
+    }
+
+    @Override
+    public Optional<LookupConcept> lookup(String s, LanguageRegion languageRegion) {
+      if ("unknown".equalsIgnoreCase(s)) {
+        return Optional.empty();
+      }
+
+      Concept concept = new Concept();
+      concept.setName(s);
+      LookupConcept lookupConcept = LookupConcept.of(concept, new ArrayList<>(1), null);
+      return Optional.of(lookupConcept);
+    }
+
+    @Override
+    public void close() {}
+  }
+
+  public static class TypeStatusMockVocabularyLookup implements VocabularyLookup {
+
+    @Override
+    public Optional<LookupConcept> lookup(String s) {
+      return lookup(s, null);
+    }
+
+    @Override
+    public Optional<LookupConcept> lookup(String s, LanguageRegion languageRegion) {
+      if ("invalid".equalsIgnoreCase(s)) {
+        return Optional.empty();
+      }
+
+      if ("possible".equalsIgnoreCase(s)) {
+        return Optional.empty();
+      }
+
+      if (!Strings.isNullOrEmpty(s)) {
+        Concept concept = new Concept();
+        concept.setName(s);
+        LookupConcept lookupConcept = LookupConcept.of(concept, new ArrayList<>(1), null);
+
+        return Optional.of(lookupConcept);
+      }
+
       return Optional.empty();
     }
 

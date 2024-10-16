@@ -54,3 +54,4 @@ extensionsAllowedForVerbatimSet:
 vocabularyConfig:
   vocabulariesNames:
     http://rs.tdwg.org/dwc/terms/degreeOfEstablishment: degreeOfEstablishment
+    http://rs.tdwg.org/dwc/terms/Sex: Sex

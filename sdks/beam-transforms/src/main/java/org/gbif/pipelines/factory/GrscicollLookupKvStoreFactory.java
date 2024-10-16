@@ -28,7 +28,6 @@ public class GrscicollLookupKvStoreFactory {
     this.kvStore = create(config);
   }
 
-  /* TODO Comment */
   public static KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse> getInstance(
       PipelinesConfig config) {
     if (instance == null) {
@@ -41,7 +40,6 @@ public class GrscicollLookupKvStoreFactory {
     return instance.kvStore;
   }
 
-  /* TODO Comment */
   @SneakyThrows
   public static KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse> create(
       PipelinesConfig config) {

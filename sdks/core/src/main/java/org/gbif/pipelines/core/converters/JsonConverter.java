@@ -31,13 +31,17 @@ import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.json.*;
 import org.gbif.pipelines.io.avro.json.AgentIdentifier;
 import org.gbif.pipelines.io.avro.json.Authorship;
+import org.gbif.pipelines.io.avro.json.Coordinates;
 import org.gbif.pipelines.io.avro.json.Diagnostic;
 import org.gbif.pipelines.io.avro.json.EventDate;
 import org.gbif.pipelines.io.avro.json.GadmFeatures;
+import org.gbif.pipelines.io.avro.json.GbifClassification;
 import org.gbif.pipelines.io.avro.json.ParsedName;
 import org.gbif.pipelines.io.avro.json.ParsedName.Builder;
 import org.gbif.pipelines.io.avro.json.RankedName;
+import org.gbif.pipelines.io.avro.json.VerbatimRecord;
 import org.gbif.pipelines.io.avro.json.VocabularyConcept;
+import org.gbif.pipelines.io.avro.json.VocabularyConceptList;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class JsonConverter {
@@ -54,8 +58,6 @@ public class JsonConverter {
               Extension.MULTIMEDIA.getRowType(),
               Extension.AUDUBON.getRowType(),
               Extension.IMAGE.getRowType()));
-
-  private static final String OCCURRENCE_EXT = "http://rs.tdwg.org/dwc/terms/Occurrence";
 
   private static final Map<Character, Character> CHAR_MAP = new HashMap<>(2);
 
@@ -189,6 +191,24 @@ public class JsonConverter {
             .setConcept(concepts.getConcept())
             .setLineage(concepts.getLineage())
             .build());
+  }
+
+  public static Optional<VocabularyConceptList> convertVocabularyConceptList(
+      List<org.gbif.pipelines.io.avro.VocabularyConcept> concepts) {
+    if (concepts == null || concepts.isEmpty()) {
+      return Optional.empty();
+    }
+
+    List<String> allConcepts =
+        concepts.stream()
+            .map(org.gbif.pipelines.io.avro.VocabularyConcept::getConcept)
+            .collect(Collectors.toList());
+
+    List<String> allParents =
+        concepts.stream().flatMap(c -> c.getLineage().stream()).collect(Collectors.toList());
+
+    return Optional.of(
+        VocabularyConceptList.newBuilder().setConcepts(allConcepts).setLineage(allParents).build());
   }
 
   protected static void mapIssues(

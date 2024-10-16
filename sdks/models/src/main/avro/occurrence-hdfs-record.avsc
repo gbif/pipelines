@@ -1,18 +1,3 @@
-[
-//  {
-//  "name":"FlatClassification",
-//  "namespace":"org.gbif.pipelines.io.avro",
-//  "type":"record",
-//  "doc":"Taxonomy classification",
-//  "fields":[
-//    {"name":"datasetKey","type": "string", "doc":"The GBIF key for the taxonomy dataset"},
-//    {"name":"taxonKeys",
-//      "type":{"type":"array","items":"string"},
-//      "default":[]
-//    },
-//    {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""}
-//  ]
-//},
 {
   "type" : "record",
   "name" : "OccurrenceHdfsRecord",
@@ -757,9 +742,22 @@
   }, {
     "name" : "organismquantitytype",
     "type" : [ "string", "null" ]
-  }, {
+   }, {
     "name" : "sex",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "record",
+      "name" : "Sex",
+      "fields" : [ {
+        "name" : "concept",
+        "type" : "string"
+      }, {
+        "name" : "lineage",
+        "type" : [ {
+          "type" : "array",
+          "items" : [ "string", "null" ]
+        }, "null" ]
+      } ]
+    }, "null" ]
   }, {
     "name" : "lifestage",
     "type" : [ {
@@ -1316,8 +1314,21 @@
   }, {
     "name" : "typestatus",
     "type" : [ {
-      "type" : "array",
-      "items" : [ "string", "null" ]
+       "type" : "record",
+       "name" : "TypeStatus",
+       "fields" : [ {
+         "name" : "concepts",
+         "type" : [ {
+           "type" : "array",
+           "items" : [ "string", "null" ]
+         }, "null" ]
+       }, {
+         "name" : "lineage",
+         "type" : [ {
+           "type" : "array",
+           "items" : [ "string", "null" ]
+         }, "null" ]
+       } ]
     }, "null" ]
   }, {
     "name" : "identifiedby",
@@ -1618,7 +1629,5 @@
   }, {
     "name" : "ext_multimedia",
     "type" : [ "string", "null" ]
-  }
-  ]
+  } ]
 }
-]

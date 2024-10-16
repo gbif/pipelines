@@ -131,7 +131,7 @@ public class MetadataServiceClient {
             retry,
             (Call<T> call) -> {
               try {
-                Response<T> execute = call.execute();
+                Response<T> execute = call.clone().execute();
                 if (execute.isSuccessful()) {
                   return execute.body();
                 } else {

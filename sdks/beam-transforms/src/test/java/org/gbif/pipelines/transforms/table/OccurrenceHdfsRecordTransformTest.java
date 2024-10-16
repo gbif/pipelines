@@ -30,6 +30,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.TypeStatus;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.gbif.pipelines.transforms.core.BasicTransform;
@@ -223,7 +224,11 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setPreparations(Collections.emptyList());
     expected.setOthercatalognumbers(Collections.emptyList());
     expected.setParenteventgbifid(Collections.emptyList());
-    expected.setTypestatus(Collections.emptyList());
+    expected.setTypestatus(
+        TypeStatus.newBuilder()
+            .setConcepts(Collections.emptyList())
+            .setLineage(Collections.emptyList())
+            .build());
     expected.setSamplingprotocol(Collections.emptyList());
     expected.setHighergeography(Collections.emptyList());
     expected.setGeoreferencedby(Collections.emptyList());
