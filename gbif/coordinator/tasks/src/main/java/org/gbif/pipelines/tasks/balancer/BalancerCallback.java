@@ -6,29 +6,8 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
-import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
-import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
-import org.gbif.common.messaging.api.messages.PipelinesEventsHdfsViewMessage;
-import org.gbif.common.messaging.api.messages.PipelinesEventsIndexedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesFragmenterMessage;
-import org.gbif.common.messaging.api.messages.PipelinesHdfsViewMessage;
-import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
-import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
-import org.gbif.pipelines.tasks.balancer.handler.EventsIndexedMessageHandler;
-import org.gbif.pipelines.tasks.balancer.handler.EventsInterpretedMessageHandler;
-import org.gbif.pipelines.tasks.balancer.handler.InterpretedMessageHandler;
-import org.gbif.pipelines.tasks.balancer.handler.PipelinesAbcdMessageHandler;
-import org.gbif.pipelines.tasks.balancer.handler.PipelinesDwcaMessageHandler;
-import org.gbif.pipelines.tasks.balancer.handler.PipelinesEventsHdfsViewMessageHandler;
-import org.gbif.pipelines.tasks.balancer.handler.PipelinesFragmenterMessageHandler;
-import org.gbif.pipelines.tasks.balancer.handler.PipelinesHdfsViewMessageHandler;
-import org.gbif.pipelines.tasks.balancer.handler.PipelinesIndexedMessageHandler;
-import org.gbif.pipelines.tasks.balancer.handler.PipelinesXmlMessageHandler;
-import org.gbif.pipelines.tasks.balancer.handler.VerbatimMessageHandler;
+import org.gbif.common.messaging.api.messages.*;
+import org.gbif.pipelines.tasks.balancer.handler.*;
 
 /**
  * Callback which is called when the {@link PipelinesBalancerMessage} is received.
@@ -76,6 +55,8 @@ public class BalancerCallback extends AbstractMessageCallback<PipelinesBalancerM
         EventsIndexedMessageHandler.handle(publisher, message);
       } else if (PipelinesEventsHdfsViewMessage.class.getSimpleName().equals(className)) {
         PipelinesEventsHdfsViewMessageHandler.handle(publisher, message);
+      } else if (DataWarehouseMessage.class.getSimpleName().equals(className)) {
+        PipelinesWarehouseMessageHandler.handle(publisher, message);
       } else {
         log.error("Handler for {} wasn't found!", className);
       }

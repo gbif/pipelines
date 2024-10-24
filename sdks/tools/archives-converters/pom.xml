@@ -53,6 +53,12 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common-spreadsheet</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>tools</artifactId>
+          <groupId>com.sun</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Common -->
