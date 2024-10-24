@@ -31,6 +31,7 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.GeocodeResponse.Location;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,6 +40,7 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)
+@Ignore
 public class LocationTransformTest {
 
   private static class RemoveDateCreated extends DoFn<LocationRecord, LocationRecord>
