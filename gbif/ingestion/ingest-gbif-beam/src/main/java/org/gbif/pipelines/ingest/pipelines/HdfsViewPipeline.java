@@ -262,8 +262,8 @@ public class HdfsViewPipeline {
             .apply("Map Taxon to KV", taxonomyTransform.toKv());
 
     PCollection<KV<String, MultiTaxonRecord>> multiTaxonCollection =
-        p.apply("Read Taxon", multiTaxonomyTransform.read(interpretPathFn))
-            .apply("Map Taxon to KV", multiTaxonomyTransform.toKv());
+        p.apply("Read Multi Taxon", multiTaxonomyTransform.read(interpretPathFn))
+            .apply("Map Multi Taxon to KV", multiTaxonomyTransform.toKv());
 
     PCollection<KV<String, GrscicollRecord>> grscicollCollection =
         coreTerm == DwcTerm.Event
