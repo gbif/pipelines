@@ -78,7 +78,7 @@
 
   <properties>
     <!-- Common variables -->
-    <jdkLevel>11</jdkLevel>
+    <jdkLevel>17</jdkLevel>
     <maven.compiler.source>${jdkLevel}</maven.compiler.source>
     <maven.compiler.target>${jdkLevel}</maven.compiler.target>
 
