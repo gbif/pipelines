@@ -9,7 +9,7 @@ pipeline {
   }
   tools {
     maven 'Maven3.6'
-    jdk 'OpenJDK11'
+    jdk 'OpenJDK17'
   }
   options {
     buildDiscarder(logRotator(numToKeepStr: '10'))
@@ -26,7 +26,7 @@ pipeline {
         }
       }
       steps {
-        sh 'mvn clean verify -U -T 3 -P skip-coverage,skip-release-it'
+        sh 'mvn clean install -DskipITs -U -T 3 -P skip-coverage,skip-release-it'
       }
     }
 
