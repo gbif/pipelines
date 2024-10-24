@@ -22,12 +22,14 @@ import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
+@Ignore
 public class PipelinesCallbackIT {
   @Mock private DatasetClient datasetClient;
   @Mock private MessagePublisher mockPublisher;

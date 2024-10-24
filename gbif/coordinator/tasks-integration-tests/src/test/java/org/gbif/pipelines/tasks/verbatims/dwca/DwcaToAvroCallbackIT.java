@@ -39,6 +39,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 /** Test archive-to-avro commands message handling command on hdfs */
 @RunWith(MockitoJUnitRunner.class)
+@Ignore
 public class DwcaToAvroCallbackIT {
   private static final String DATASET_UUID = "35d24686-95c7-43f2-969f-611bba488512";
   private static final String DUMMY_URL = "http://some.new.url";

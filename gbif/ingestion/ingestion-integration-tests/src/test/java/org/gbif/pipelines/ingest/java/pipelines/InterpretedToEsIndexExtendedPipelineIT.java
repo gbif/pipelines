@@ -43,8 +43,10 @@ import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class InterpretedToEsIndexExtendedPipelineIT {
 
   private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;

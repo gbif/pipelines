@@ -22,28 +22,10 @@ import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.core.utils.HdfsViewUtils;
 import org.gbif.pipelines.ingest.resources.ZkServer;
 import org.gbif.pipelines.ingest.utils.InterpretedAvroWriter;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.EventCoreRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.EventCoreTransform;
-import org.gbif.pipelines.transforms.core.GrscicollTransform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
-import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -159,6 +141,12 @@ public class HdfsViewPipelineIT {
             optionsWriter, TaxonomyTransform.builder().create(), coreTerm, postfix)) {
       TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
       writer.append(taxonRecord);
+    }
+    try (SyncDataFileWriter<MultiTaxonRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, MultiTaxonomyTransform.builder().create(), coreTerm, postfix)) {
+      MultiTaxonRecord multiTaxonRecord = MultiTaxonRecord.newBuilder().setId(ID).build();
+      writer.append(multiTaxonRecord);
     }
     try (SyncDataFileWriter<GrscicollRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
@@ -317,6 +305,12 @@ public class HdfsViewPipelineIT {
             optionsWriter, TaxonomyTransform.builder().create(), coreTerm, postfix)) {
       TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
       writer.append(taxonRecord);
+    }
+    try (SyncDataFileWriter<MultiTaxonRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, MultiTaxonomyTransform.builder().create(), coreTerm, postfix)) {
+      MultiTaxonRecord multiTaxonRecord = MultiTaxonRecord.newBuilder().setId(ID).build();
+      writer.append(multiTaxonRecord);
     }
     try (SyncDataFileWriter<GrscicollRecord> writer =
         InterpretedAvroWriter.createAvroWriter(

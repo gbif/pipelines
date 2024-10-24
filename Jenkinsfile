@@ -29,7 +29,7 @@ pipeline {
         }
       }
       steps {
-        sh 'mvn clean verify -DskipITs -U -T 3 -P skip-coverage,skip-release-it'
+        sh 'mvn clean verify -DskipITs -U -T 1 -P skip-coverage,skip-release-it'
       }
     }
 

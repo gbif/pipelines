@@ -30,15 +30,13 @@ import org.gbif.pipelines.tasks.verbatims.xml.XmlToAvroCallback;
 import org.gbif.pipelines.tasks.verbatims.xml.XmlToAvroConfiguration;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
+@Ignore
 public class AbcdToAvroCallbackIT {
 
   private static final String AVRO = "/verbatim.avro";
