@@ -20,6 +20,9 @@ pipeline {
   stages {
 
     stage('Quick build') {
+      tools {
+        jdk 'OpenJDK17'
+      }
       when {
         expression {
           params.TYPE == 'QUICK'
@@ -31,6 +34,9 @@ pipeline {
     }
 
     stage('Full build') {
+      tools {
+        jdk 'OpenJDK17'
+      }
       when {
         expression {
           params.TYPE == 'FULL'
