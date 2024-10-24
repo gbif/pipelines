@@ -79,7 +79,7 @@ public class HdfsViewCallbackIT {
     assertTrue(path.toFile().exists());
 
     Map<StepType, PipelineStep> result = historyClient.getStepMap();
-    Assert.assertEquals(1, result.size());
+    Assert.assertEquals(2, result.size());
 
     Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
     Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());

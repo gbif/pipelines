@@ -39,7 +39,13 @@ import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
-import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.GrscicollTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -353,21 +359,21 @@ public class VerbatimToOccurrencePipeline {
     log.info("Pipeline has been finished");
   }
 
-  private static boolean useGbifIdReadIO(Set<String> types) {
+  public static boolean useGbifIdReadIO(Set<String> types) {
     return types.contains(RecordType.VERBATIM.name())
         || types.contains(RecordType.CLUSTERING.name())
         || types.contains(IDENTIFIER_ABSENT.name());
   }
 
-  private static boolean useExtendedRecordWriteIO(Set<String> types) {
+  public static boolean useExtendedRecordWriteIO(Set<String> types) {
     return types.contains(RecordType.VERBATIM.name()) || types.contains(RecordType.ALL.name());
   }
 
-  private static boolean useGbifIdRecordWriteIO(Set<String> types) {
+  public static boolean useGbifIdRecordWriteIO(Set<String> types) {
     return types.contains(RecordType.IDENTIFIER.name()) || types.contains(RecordType.ALL.name());
   }
 
-  private static boolean useMetadataRecordWriteIO(Set<String> types) {
+  public static boolean useMetadataRecordWriteIO(Set<String> types) {
     return types.contains(RecordType.METADATA.name()) || types.contains(RecordType.ALL.name());
   }
 }

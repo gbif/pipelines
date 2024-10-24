@@ -27,42 +27,10 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
-import org.gbif.pipelines.io.avro.AgentIdentifier;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.Authorship;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.Diagnostic;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GadmFeatures;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MachineTag;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.NamePart;
-import org.gbif.pipelines.io.avro.NameRank;
-import org.gbif.pipelines.io.avro.NameType;
-import org.gbif.pipelines.io.avro.NomCode;
-import org.gbif.pipelines.io.avro.ParsedName;
-import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.State;
-import org.gbif.pipelines.io.avro.Status;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.VocabularyConcept;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
-import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.GrscicollTransform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
-import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -404,6 +372,9 @@ public class OccurrenceJsonTransformTest {
             .setDiagnostics(diagnostic)
             .build();
 
+    // TODO: MultiTaxonRecord
+    MultiTaxonRecord mtr = MultiTaxonRecord.newBuilder().setId("777").build();
+
     // grscicoll
     Match institutionMatch =
         Match.newBuilder()
@@ -473,6 +444,7 @@ public class OccurrenceJsonTransformTest {
     ClusteringTransform clusteringTransform = ClusteringTransform.builder().create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+    MultiTaxonomyTransform multiTaxonomyTransform = MultiTaxonomyTransform.builder().create();
     GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
 
@@ -510,6 +482,10 @@ public class OccurrenceJsonTransformTest {
     PCollection<KV<String, TaxonRecord>> taxonCollection =
         p.apply("Read Taxon", Create.of(tr)).apply("Map Taxon to KV", taxonomyTransform.toKv());
 
+    PCollection<KV<String, MultiTaxonRecord>> multiTaxonCollection =
+        p.apply("Read Multi Taxon", Create.of(mtr))
+            .apply("Map Multi Taxon to KV", multiTaxonomyTransform.toKv());
+
     PCollection<KV<String, GrscicollRecord>> grscicollCollection =
         p.apply("Read Grscicoll", Create.of(gr))
             .apply("Map Grscicoll to KV", grscicollTransform.toKv());
@@ -535,6 +511,7 @@ public class OccurrenceJsonTransformTest {
             .temporalRecordTag(temporalTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
             .taxonRecordTag(taxonomyTransform.getTag())
+            .multiTaxonRecordTag(multiTaxonomyTransform.getTag())
             .grscicollRecordTag(grscicollTransform.getTag())
             .multimediaRecordTag(multimediaTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
@@ -552,6 +529,7 @@ public class OccurrenceJsonTransformTest {
             .and(temporalTransform.getTag(), temporalCollection)
             .and(locationTransform.getTag(), locationCollection)
             .and(taxonomyTransform.getTag(), taxonCollection)
+            .and(multiTaxonomyTransform.getTag(), multiTaxonCollection)
             .and(grscicollTransform.getTag(), grscicollCollection)
             // Extension
             .and(multimediaTransform.getTag(), multimediaCollection)
@@ -574,6 +552,7 @@ public class OccurrenceJsonTransformTest {
             .temporal(tmr)
             .location(lr)
             .taxon(tr)
+            .multiTaxon(mtr)
             .grscicoll(gr)
             .multimedia(mmr)
             .build()

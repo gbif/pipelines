@@ -251,7 +251,7 @@ public class VerbatimToEventPipeline {
     return resultTypes;
   }
 
-  private static boolean useMetadataRecordWriteIO(Set<String> types) {
+  public static boolean useMetadataRecordWriteIO(Set<String> types) {
     return types.contains(RecordType.METADATA.name()) || types.contains(RecordType.ALL.name());
   }
 }

@@ -4,13 +4,8 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Builder;
@@ -266,7 +261,10 @@ public class OccurrenceHdfsRecordConverter {
   }
 
   private void mapMultiTaxonRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
-    if (multiTaxonRecord == null) {
+    if (multiTaxonRecord == null
+        || multiTaxonRecord.getTaxonRecords() == null
+        || multiTaxonRecord.getTaxonRecords().isEmpty()) {
+      occurrenceHdfsRecord.setClassifications(new HashMap<>());
       return;
     }
     occurrenceHdfsRecord.setChecklistkey(

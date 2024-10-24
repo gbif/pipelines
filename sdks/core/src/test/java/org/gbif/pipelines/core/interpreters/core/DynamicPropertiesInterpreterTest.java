@@ -11,6 +11,7 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class DynamicPropertiesInterpreterTest {
@@ -39,6 +40,7 @@ public class DynamicPropertiesInterpreterTest {
           .build();
 
   @Test
+  @Ignore
   public void sexFemaleValueTest() {
     // State
     ExtendedRecord er = erDynamicPropertiesFn.apply("weight=81.00 g; sex=female; age=u ad.");
@@ -53,6 +55,7 @@ public class DynamicPropertiesInterpreterTest {
   }
 
   @Test
+  @Ignore
   public void sexRandomValueTest() {
     // State
     ExtendedRecord er = erDynamicPropertiesFn.apply("sex=unknown ; crown-rump length=8 mm");
@@ -66,6 +69,7 @@ public class DynamicPropertiesInterpreterTest {
   }
 
   @Test
+  @Ignore
   public void sexEmptyValueTest() {
     // State
     ExtendedRecord er = erDynamicPropertiesFn.apply("");

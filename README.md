@@ -84,7 +84,6 @@ The project is structured as:
       - [**diagnostics**](./gbif/identifiers/diagnostics) - Internal tool to fix GBIF identifiers collisions
       - [**keygen**](./gbif/identifiers/keygen) - The library to generate GBIF identifiers, to support backward compatibility the codebase (with minimum changes) was copied from the occurrence/occurrence-persistence project
     - [**ingestion**](./gbif/ingestion) - Main pipelines workflow module
-      - [**clustering-gbif**](./gbif/ingestion/clustering-gbif) - Workflow to process occurrence data and establishes links between similar records
       - [**ingest-gbif-beam**](./gbif/ingestion/ingest-gbif-beam) - Main GBIF pipelines for ingestion of biodiversity data
       - [**ingest-gbif-fragmenter**](./gbif/ingestion/ingest-gbif-fragmenter) - Writes raw archive's data to HBase store
       - [**ingest-gbif-java**](./gbif/ingestion/ingest-gbif-java) - Implementation of **ingest-gbif-beam** Implementation of the ingest-gbif-beam module in Java-only ensures fast processing of small datasets utulizing only local JVM instance

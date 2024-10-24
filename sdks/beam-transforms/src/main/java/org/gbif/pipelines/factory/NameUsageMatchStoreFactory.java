@@ -7,7 +7,9 @@ import java.util.Optional;
 import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
+import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration.Builder;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
+import org.gbif.kvs.hbase.LoaderRetryConfig;
 import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
 import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.pipelines.core.config.model.KvConfig;
@@ -99,7 +101,7 @@ public class NameUsageMatchStoreFactory {
       return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(clientConfiguration);
     }
 
-    CachedHBaseKVStoreConfiguration matchConfig =
+    Builder matchConfigBuilder =
         CachedHBaseKVStoreConfiguration.builder()
             .withValueColumnQualifier("j") // stores JSON data
             .withHBaseKVStoreConfiguration(
@@ -110,12 +112,22 @@ public class NameUsageMatchStoreFactory {
                     .withHBaseZk(zk)
                     .withHBaseZnode(kvConfig.getHbaseZnode())
                     .build())
-            .withCacheCapacity(15_000L)
-            .withCacheExpiryTimeInSeconds(kvConfig.getCacheExpiryTimeInSeconds())
-            .build();
+            .withCacheCapacity(25_000L)
+            .withCacheExpiryTimeInSeconds(kvConfig.getCacheExpiryTimeInSeconds());
+
+    KvConfig.LoaderRetryConfig retryConfig = kvConfig.getLoaderRetryConfig();
+    if (retryConfig != null) {
+      matchConfigBuilder.withLoaderRetryConfig(
+          new LoaderRetryConfig(
+              retryConfig.getMaxAttempts(),
+              retryConfig.getInitialIntervalMillis(),
+              retryConfig.getMultiplier(),
+              retryConfig.getRandomizationFactor()));
+    }
 
     try {
-      return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, clientConfiguration);
+      return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(
+          matchConfigBuilder.build(), clientConfiguration);
     } catch (IOException ex) {
       throw new IllegalStateException(ex);
     }
