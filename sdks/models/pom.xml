@@ -17,12 +17,36 @@
 
   <properties>
     <avro-generated-path>${project.basedir}/src/main/java-generated/</avro-generated-path>
-    <schema-generated-path>${project.basedir}/src/main/avro/table/</schema-generated-path>
+    <schema-generated-path>${project.basedir}/src/main/avro</schema-generated-path>
+
+    <schema-generated-table-path>${schema-generated-path}/table/</schema-generated-table-path>
+
+    <occurrence-avsc-schema-name>occurrence-hdfs-record.avsc</occurrence-avsc-schema-name>
+    <schema-generated-occurrence-path>${schema-generated-path}/${occurrence-avsc-schema-name}</schema-generated-occurrence-path>
+
     <sonar.skip>true</sonar.skip>
   </properties>
 
   <build>
     <plugins>
+      <!-- Generate occurrence-hdfs-record.avsc avro schema-->
+      <plugin>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>maven-occurrence-avsc-schema-generator</artifactId>
+        <version>${project.version}</version>
+        <executions>
+          <execution>
+            <id>avroschemageneration</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>avroschemageneration</goal>
+            </goals>
+            <configuration>
+              <pathToWrite>${schema-generated-occurrence-path}</pathToWrite>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <!-- Generate avro schemas from XML extensions-->
       <plugin>
         <groupId>org.gbif.pipelines</groupId>
@@ -36,7 +60,7 @@
               <goal>avroschemageneration</goal>
             </goals>
             <configuration>
-              <pathToWrite>${schema-generated-path}</pathToWrite>
+              <pathToWrite>${schema-generated-table-path}</pathToWrite>
               <namespace>${namespace}.extension</namespace>
             </configuration>
           </execution>
@@ -126,7 +150,13 @@
               <directory>${avro-generated-path}</directory>
             </fileset>
             <fileset>
+              <directory>${schema-generated-table-path}</directory>
+            </fileset>
+            <fileset>
               <directory>${schema-generated-path}</directory>
+              <includes>
+                <include>**/${occurrence-avsc-schema-name}</include>
+              </includes>
             </fileset>
           </filesets>
         </configuration>
