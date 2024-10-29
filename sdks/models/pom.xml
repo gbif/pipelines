@@ -49,9 +49,9 @@
       </plugin>
       <!-- Generate avro schemas from XML extensions-->
       <plugin>
-        <groupId>org.gbif.pipelines</groupId>
+        <groupId>org.gbif.occurrence</groupId>
         <artifactId>maven-extension-avsc-schema-generator</artifactId>
-        <version>${project.version}</version>
+        <version>${gbif-occurrence.version}</version>
         <executions>
           <execution>
             <id>avroschemageneration</id>
