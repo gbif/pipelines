@@ -172,6 +172,11 @@ public class VerbatimToOccurrencePipeline {
     ExtensionFilterTransform extensionFilterTr = transformsFactory.createExtensionFilterTransform();
     DefaultValuesTransform defaultValuesTr = transformsFactory.createDefaultValuesTransform();
 
+    // if the config is available, then run the single taxonomy transform
+    boolean singleTaxonomy = transformsFactory.getConfig().getNameUsageMatch() != null
+            && transformsFactory.getConfig().getNameUsageMatch().getApi() != null;
+
+    // if the config is available, then run the multi taxonomy transform
     boolean useMultiTaxonomy =
         transformsFactory.getConfig().getNameUsageMatchServices() != null
             && !transformsFactory.getConfig().getNameUsageMatchServices().isEmpty();
@@ -270,7 +275,7 @@ public class VerbatimToOccurrencePipeline {
           var imageWriter = createAvroWriter(options, imageTr, CORE_TERM, postfix);
           var audubonWriter = createAvroWriter(options, audubonTr, CORE_TERM, postfix);
           var taxonWriter =
-              !useMultiTaxonomy ? createAvroWriter(options, taxonomyTr, CORE_TERM, postfix) : null;
+              singleTaxonomy ? createAvroWriter(options, taxonomyTr, CORE_TERM, postfix) : null;
           var multiTaxonWriter =
               useMultiTaxonomy
                   ? createAvroWriter(options, multiTaxonomyTr, CORE_TERM, postfix)
@@ -320,10 +325,11 @@ public class VerbatimToOccurrencePipeline {
                   audubonTr.processElement(er).ifPresent(audubonWriter::append);
                 }
                 if (taxonomyTr.checkType(types)) {
+                  if (singleTaxonomy){
+                    taxonomyTr.processElement(er).ifPresent(taxonWriter::append);
+                  }
                   if (useMultiTaxonomy) {
                     multiTaxonomyTr.processElement(er).ifPresent(multiTaxonWriter::append);
-                  } else {
-                    taxonomyTr.processElement(er).ifPresent(taxonWriter::append);
                   }
                 }
                 if (grscicollTr.checkType(types)) {
