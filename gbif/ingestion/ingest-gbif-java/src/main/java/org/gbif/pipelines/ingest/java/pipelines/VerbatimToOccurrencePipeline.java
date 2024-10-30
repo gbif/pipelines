@@ -173,7 +173,8 @@ public class VerbatimToOccurrencePipeline {
     DefaultValuesTransform defaultValuesTr = transformsFactory.createDefaultValuesTransform();
 
     // if the config is available, then run the single taxonomy transform
-    boolean singleTaxonomy = transformsFactory.getConfig().getNameUsageMatch() != null
+    boolean singleTaxonomy =
+        transformsFactory.getConfig().getNameUsageMatch() != null
             && transformsFactory.getConfig().getNameUsageMatch().getApi() != null;
 
     // if the config is available, then run the multi taxonomy transform
@@ -325,7 +326,7 @@ public class VerbatimToOccurrencePipeline {
                   audubonTr.processElement(er).ifPresent(audubonWriter::append);
                 }
                 if (taxonomyTr.checkType(types)) {
-                  if (singleTaxonomy){
+                  if (singleTaxonomy) {
                     taxonomyTr.processElement(er).ifPresent(taxonWriter::append);
                   }
                   if (useMultiTaxonomy) {
