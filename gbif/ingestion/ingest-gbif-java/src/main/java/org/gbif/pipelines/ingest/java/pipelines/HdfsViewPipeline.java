@@ -82,20 +82,7 @@ import org.gbif.pipelines.ingest.java.transforms.TableConverter;
 import org.gbif.pipelines.ingest.java.transforms.TableRecordWriter;
 import org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.EventCoreRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.extension.ac.AudubonTable;
 import org.gbif.pipelines.io.avro.extension.dwc.ChronometricAgeTable;
 import org.gbif.pipelines.io.avro.extension.dwc.IdentificationTable;
@@ -120,13 +107,7 @@ import org.gbif.pipelines.io.avro.extension.ggbn.PreparationTable;
 import org.gbif.pipelines.io.avro.extension.ggbn.PreservationTable;
 import org.gbif.pipelines.io.avro.extension.obis.ExtendedMeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.EventCoreTransform;
-import org.gbif.pipelines.transforms.core.GrscicollTransform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
-import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -270,6 +251,9 @@ public class HdfsViewPipeline {
     CompletableFuture<Map<String, TaxonRecord>> taxonMapFeature =
         readAvroAsFuture(options, coreTerm, executor, TaxonomyTransform.builder().create());
 
+    CompletableFuture<Map<String, MultiTaxonRecord>> multiTaxonMapFeature =
+        readAvroAsFuture(options, coreTerm, executor, MultiTaxonomyTransform.builder().create());
+
     CompletableFuture<Map<String, GrscicollRecord>> grscicollMapFeature =
         readAvroAsFuture(options, coreTerm, executor, GrscicollTransform.builder().create());
 
@@ -293,6 +277,7 @@ public class HdfsViewPipeline {
             .temporalMap(temporalMapFeature.get())
             .locationMap(locationMapFeature.get())
             .taxonMap(taxonMapFeature.get())
+            .multiTaxonMap(multiTaxonMapFeature.get())
             .multimediaMap(multimediaMapFeature.get())
             .imageMap(imageMapFeature.get())
             .audubonMap(audubonMapFeature.get());
