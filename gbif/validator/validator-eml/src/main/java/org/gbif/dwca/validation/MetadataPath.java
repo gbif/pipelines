@@ -14,25 +14,28 @@ public class MetadataPath {
 
   private static final String DEFAULT_NAME = "eml.xml";
   private static final String DEFAULT_NAME_UPPER = "metadata.xml";
-  private static final Pattern PATTERN = Pattern.compile("(metadata=[\"'])([^\"']+)([\"'])", Pattern.CASE_INSENSITIVE);
+  private static final Pattern PATTERN =
+      Pattern.compile("(metadata=[\"'])([^\"']+)([\"'])", Pattern.CASE_INSENSITIVE);
 
-  /** Attempt to read the DWCA meta.xml file for the metadata location, but otherwise try the two
-   * defaults used by the dwca-io library. */
+  /**
+   * Attempt to read the DWCA meta.xml file for the metadata location, but otherwise try the two
+   * defaults used by the dwca-io library.
+   */
   public static Optional<Path> parsePath(Path rootDirectory) throws IOException {
     // Look for metadata at the location specified in meta.xml, and at eml.xml and metadata.xml.
     Path metaXml = rootDirectory.resolve("meta.xml");
     if (Files.exists(metaXml)) {
 
       Optional<Path> fromMetaXml =
-        Files.readAllLines(metaXml).stream()
-          .filter(lines -> PATTERN.matcher(lines).find())
-          .findFirst()
-          .map(
-            str -> {
-              Matcher matcher = PATTERN.matcher(str);
-              return matcher.find() ? matcher.group(2) : "";
-            })
-          .map(rootDirectory::resolve);
+          Files.readAllLines(metaXml).stream()
+              .filter(lines -> PATTERN.matcher(lines).find())
+              .findFirst()
+              .map(
+                  str -> {
+                    Matcher matcher = PATTERN.matcher(str);
+                    return matcher.find() ? matcher.group(2) : "";
+                  })
+              .map(rootDirectory::resolve);
 
       if (fromMetaXml.isPresent()) {
         return fromMetaXml;
