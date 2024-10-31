@@ -199,7 +199,6 @@ public class BeamParametersBuilder {
         .putRequireNonNull("crawlAttempt", message.getAttempt())
         .putRequireNonNull("action", "CREATE")
         .putRequireNonNull("options", "ALL")
-        .putRequireNonNull("configFile", config.pipelinesConfig)
         .putRequireNonNull("runner", "SparkRunner")
         .putRequireNonNull("metaFileName", config.metaFileName)
         .putRequireNonNull("inputPath", config.stepConfig.repositoryPath)
