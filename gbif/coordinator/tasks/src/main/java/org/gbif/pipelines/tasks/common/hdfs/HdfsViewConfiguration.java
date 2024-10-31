@@ -46,6 +46,11 @@ public class HdfsViewConfiguration implements BaseConfiguration {
   @NotNull
   public String pipelinesConfig;
 
+  @Parameter(names = "--config-file")
+  @Valid
+  @NotNull
+  public String configFile;
+
   @Parameter(names = "--step-type")
   public StepType stepType = StepType.HDFS_VIEW;
 
