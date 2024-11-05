@@ -15,18 +15,18 @@
 
 # About the project
 
-*SUPPORTED JAVA 11 VERSION*
+*SUPPORTED JAVA 11+ VERSION*
 
 **Pipelines for data processing and indexing of biodiversity data**
 
 _Status: IN PRODUCTION_
 
 Vision: Consistent data processing pipelines (parsing, interpretation and quality flagging) for use in GBIF, the Living Atlases project and beyond.
-Built to scale from laptop to GBIF volumes. Deployable on JVM, Spark, Google Cloud, <insert your favourite cloud provider here>.
+Built to scale from laptop to GBIF volumes. Avalaible 2 version sharing the same core: Java for small size data (fits local memory) and Apache Beam for Spark engine (Google Cloud, Databricks, Kubernetes, etc.).
 
 # Architecture
 
-The project provides vanilla JVM-based parsing and interpretation libraries, and pipelines for indexing into SOLR and Elasticsearch, built using Apache Beam.
+The project provides vanilla JVM-based parsing and interpretation libraries, and tasks for data interpreataion and indexing into Elasticsearch.
 
 > Apache Beam provides a high level abstraction framework ideal for this purpose with the ability to deploy across target environments (e.g. Spark, local JVM) and with many built in connectors for e.g. HBase, SOLR, Elasticsearch etc.
 
@@ -53,7 +53,7 @@ Separating categories allows for extensibility for custom deployments in a reaso
 
 Interpretation is depicted below:
 
-![Ingress](./docs/images/interpret.svg)
+![Interpretation](./docs/images/interpret.svg)
 
 > Note that all pipelines are designed and tested to run with the `DirectRunner` and the `SparkRunner` at a minimum.  This allows the decision to be taken at runtime to e.g. opt to interpret a small dataset in the local JVM without needing to use cluster resources for small tasks.
 
@@ -61,12 +61,15 @@ Interpretation is depicted below:
 
 ## Indexing
 
-Initial implementations will be available for both SOLR and for Elasticsearch to allow for evaluation of both at GBIF.
+Current implementation available for Elasticsearch to allow for evaluation of both at GBIF.
 During indexing the categories of interpreted information of use are merged and loaded into the search indexes:
 
-![Ingress](./docs/images/index.svg)
+![Indexing](./docs/images/index.svg)
 
 > Note that GBIF target 10,000 records/sec per node indexing speed (i.e. 100,000 records/sec on current production cluster).  This will allow simplified disaster recovery and rapid deployment and of new features.
+
+## Simplified workflow
+![Simplified workflow](./docs/images/workflow.png)
 
 # Structure
 
@@ -96,8 +99,8 @@ The project is structured as:
     - [**models**](./sdks/models) - Data models represented in Avro binary format, generated from [Avro](https://avro.apache.org/docs/current/) schemas
     - [**plugins**](./sdks/plugins) - Maven plugins
       - [**maven-avro-annotation-editor**](./sdks/plugins/maven-avro-annotation-editor) - Maven plugin adds new annotations and interface to [avro](https://avro.apache.org/docs/current/) generated classes
-      - [**maven-extension-avsc-schema-generator**](./sdks/plugins/maven-extension-avsc-schema-generator) - AVRO schema generator plugin for DWC extensions
       - [**maven-extension-java-code-generator**](./sdks/plugins/maven-extension-java-code-generator) - Java code generator plugin for DWC extensions
+      - [**maven-occurrence-avsc-schema-generator**](./sdks/plugins/maven-occurrence-avsc-schema-generator) - AVRO schema generator plugin to generate occurrence schema
     - [**tools**](./sdks/tools) - SDKs tools
       - [**archives-converters**](./sdks/tools/archives-converters) - Converters from [DwCA/DWC 1.0/DWC 1.4](https://www.tdwg.org/standards/dwc/)/ABCD 1.2/ABCD 2.06 to *.[avro](https://avro.apache.org/docs/current/) format
       - [**elasticsearch-tools**](./sdks/tools/elasticsearch-tools) - Tool for creating/deleting/swapping Elasticsearch indexes
