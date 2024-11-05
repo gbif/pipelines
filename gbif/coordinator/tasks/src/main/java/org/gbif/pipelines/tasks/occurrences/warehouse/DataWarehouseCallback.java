@@ -1,6 +1,5 @@
 package org.gbif.pipelines.tasks.occurrences.warehouse;
 
-import com.google.common.base.Strings;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -111,14 +110,6 @@ public class DataWarehouseCallback extends AbstractMessageCallback<PipelinesHdfs
    */
   @Override
   public boolean isMessageCorrect(PipelinesHdfsViewMessage message) {
-    if (Strings.isNullOrEmpty(message.getRunner())) {
-      throw new IllegalArgumentException("Runner can't be null or empty " + message);
-    }
-
-    if (!config.processRunner.equals(message.getRunner())) {
-      log.warn("Skipping, because runner is incorrect");
-      return false;
-    }
     return true;
   }
 }
