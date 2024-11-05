@@ -373,7 +373,7 @@ function copy () {
     logStepStart "Copy" $dr
     SECONDS=0
 
-    DR_URL=${COLLECTORY_WS_URL}dataResource/$dr\?api_key\=$COLLECTORY_WS_API_KEY
+    DR_URL="${COLLECTORY_WS_URL}dataResource/$dr -H 'Authorization: $COLLECTORY_WS_API_KEY'"
     DR_CONN_URL=`curl -s -o - ${DR_URL} | yq -P e '.connectionParameters.url' -`
     DR_DEST="$COPY_DEST/$dr"
     if [[ ! -d "$DR_DEST" ]] ; then $_D mkdir -p $DR_DEST; fi
