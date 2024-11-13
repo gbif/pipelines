@@ -101,8 +101,8 @@
     <gbif-wrangler.version>0.5-SNAPSHOT</gbif-wrangler.version>
     <gbif-occurrence.version>0.195.7-H3-SNAPSHOT</gbif-occurrence.version>
     <vocabulary-lookup.version>1.0.10-SNAPSHOT</vocabulary-lookup.version>
-    <registry.version>3.96.6-SNAPSHOT</registry.version>
-    <gbif-common-ws.version>1.26</gbif-common-ws.version>
+    <registry.version>3.97.0-SNAPSHOT</registry.version>
+    <gbif-common-ws.version>1.28-SNAPSHOT</gbif-common-ws.version>
     <gbif-postal-service.version>1.9.0-SNAPSHOT</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
 
