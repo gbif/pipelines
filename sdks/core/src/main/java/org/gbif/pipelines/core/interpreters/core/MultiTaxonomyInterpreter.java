@@ -31,24 +31,22 @@ public class MultiTaxonomyInterpreter {
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
    */
   public static BiConsumer<ExtendedRecord, MultiTaxonRecord> taxonomyInterpreter(
-      Map<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>> kvStores) {
+      KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore,
+      List<String> checklistKeys) {
     return (er, mtr) -> {
-      if (kvStores == null || kvStores.isEmpty()) {
+      if (kvStore == null) {
         return;
       }
 
       ModelUtils.checkNullOrEmpty(er);
-
-      final NameUsageMatchRequest nameUsageMatchRequest = createNameUsageMatchRequest(er);
       final List<TaxonRecord> trs = new ArrayList<>();
 
-      for (Map.Entry<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
-          kvStoreEntry : kvStores.entrySet()) {
-
-        String datasetKey = kvStoreEntry.getKey();
+      for (String checklistKey : checklistKeys) {
+        final NameUsageMatchRequest nameUsageMatchRequest =
+            createNameUsageMatchRequest(er, checklistKey);
         TaxonRecord taxonRecord =
-            TaxonRecord.newBuilder().setId(er.getId()).setDatasetKey(datasetKey).build();
-        createTaxonRecord(nameUsageMatchRequest, kvStoreEntry.getValue(), taxonRecord);
+            TaxonRecord.newBuilder().setId(er.getId()).setDatasetKey(checklistKey).build();
+        createTaxonRecord(nameUsageMatchRequest, kvStore, taxonRecord);
         trs.add(taxonRecord);
       }
 

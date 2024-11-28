@@ -65,19 +65,21 @@ public class TaxonomyInterpreter {
       }
 
       ModelUtils.checkNullOrEmpty(er);
-      NameUsageMatchRequest nameUsageMatchRequest = createNameUsageMatchRequest(er);
+      NameUsageMatchRequest nameUsageMatchRequest = createNameUsageMatchRequest(er, null);
       createTaxonRecord(nameUsageMatchRequest, kvStore, tr);
       tr.setId(er.getId());
     };
   }
 
-  protected static NameUsageMatchRequest createNameUsageMatchRequest(ExtendedRecord er) {
+  protected static NameUsageMatchRequest createNameUsageMatchRequest(
+      ExtendedRecord er, String checklistKey) {
     Map<String, String> termsSource = IdentificationUtils.getIdentificationFieldTermsSource(er);
     // https://github.com/gbif/portal-feedback/issues/4231
     String scientificName =
         extractNullAwareOptValue(termsSource, DwcTerm.scientificName)
             .orElse(extractValue(termsSource, DwcTerm.verbatimIdentification));
     return NameUsageMatchRequest.builder()
+        .withChecklistKey(checklistKey)
         .withKingdom(extractValue(termsSource, DwcTerm.kingdom))
         .withPhylum(extractValue(termsSource, DwcTerm.phylum))
         .withClazz(extractValue(termsSource, DwcTerm.class_))

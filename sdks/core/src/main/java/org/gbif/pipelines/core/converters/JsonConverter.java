@@ -442,7 +442,7 @@ public class JsonConverter {
 
     Classification.Builder classificationBuilder =
         Classification.newBuilder()
-            .setDatasetKey(taxon.getDatasetKey())
+            .setChecklistKey(taxon.getDatasetKey())
             .setClassification(
                 taxon.getClassification().stream()
                     .collect(

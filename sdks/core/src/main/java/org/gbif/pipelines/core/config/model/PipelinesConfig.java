@@ -24,7 +24,7 @@ public class PipelinesConfig implements Serializable {
 
   private KvConfig nameUsageMatch;
 
-  private List<DatasetKvConfig> nameUsageMatchServices;
+  private ChecklistKvConfig nameUsageMatchService;
 
   private KvConfig grscicollLookup;
 

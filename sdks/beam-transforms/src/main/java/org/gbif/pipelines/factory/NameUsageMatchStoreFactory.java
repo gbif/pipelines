@@ -1,8 +1,6 @@
 package org.gbif.pipelines.factory;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Optional;
 import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
@@ -42,30 +40,6 @@ public class NameUsageMatchStoreFactory {
       }
     }
     return instance.kvStore;
-  }
-
-  @SneakyThrows
-  public static Map<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
-      createMultipleServices(PipelinesConfig config) {
-    if (config == null) {
-      return null;
-    }
-
-    if (config.getNameUsageMatchServices() == null
-        || config.getNameUsageMatchServices().isEmpty()) {
-      return null;
-    }
-
-    // preserve order of the services
-    return config.getNameUsageMatchServices().stream()
-        .collect(
-            LinkedHashMap::new,
-            (map, item) -> {
-              KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore =
-                  constructKV(item.getWs(), config.getGbifApi().getWsUrl());
-              map.put(item.getDatasetKey(), kvStore);
-            },
-            Map::putAll);
   }
 
   @SneakyThrows
@@ -136,12 +110,6 @@ public class NameUsageMatchStoreFactory {
   public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
       createSupplier(PipelinesConfig config) {
     return () -> create(config);
-  }
-
-  public static SerializableSupplier<
-          Map<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
-      createMultiServiceSupplier(PipelinesConfig config) {
-    return () -> createMultipleServices(config);
   }
 
   public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>

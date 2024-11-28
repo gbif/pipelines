@@ -5,7 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -35,22 +35,23 @@ import org.gbif.rest.client.species.NameUsageMatchResponse;
 @Slf4j
 public class MultiTaxonomyTransform extends Transform<ExtendedRecord, MultiTaxonRecord> {
 
-  private final SerializableSupplier<
-          Map<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
-      kvStoresSupplier;
-  private Map<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>> kvStores;
+  private final SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
+      kvStoreSupplier;
+  private KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore;
+  private final List<String> checklistKeys;
 
   @Builder(buildMethodName = "create")
   private MultiTaxonomyTransform(
-      SerializableSupplier<
-              Map<String, KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>>
-          kvStoresSupplier) {
+      SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
+          kvStoresSupplier,
+      List<String> checklistKeys) {
     super(
         MultiTaxonRecord.class,
         MULTI_TAXONOMY,
         MultiTaxonomyTransform.class.getName(),
         TAXON_RECORDS_COUNT);
-    this.kvStoresSupplier = kvStoresSupplier;
+    this.kvStoreSupplier = kvStoresSupplier;
+    this.checklistKeys = checklistKeys;
   }
 
   /** Maps {@link MultiTaxonRecord} to key value, where key is {@link MultiTaxonRecord#getId} */
@@ -72,9 +73,9 @@ public class MultiTaxonomyTransform extends Transform<ExtendedRecord, MultiTaxon
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
-    if (kvStores == null && kvStoresSupplier != null) {
+    if (kvStore == null && kvStoreSupplier != null) {
       log.info("Initialize NameUsageMatchKvStore");
-      kvStores = kvStoresSupplier.get();
+      kvStore = kvStoreSupplier.get();
     }
   }
 
@@ -87,18 +88,13 @@ public class MultiTaxonomyTransform extends Transform<ExtendedRecord, MultiTaxon
   /** Beam @Teardown closes initialized resources */
   @Teardown
   public void tearDown() {
-    if (kvStores != null && !kvStores.isEmpty()) {
+    if (kvStore != null) {
       log.info("Close NameUsageMatchKvStores");
-      kvStores
-          .values()
-          .forEach(
-              kvStore -> {
-                try {
-                  kvStore.close();
-                } catch (IOException ex) {
-                  log.error("Error closing KV Store", ex);
-                }
-              });
+      try {
+        kvStore.close();
+      } catch (IOException ex) {
+        log.error("Error closing KV Store", ex);
+      }
     }
   }
 
@@ -107,7 +103,7 @@ public class MultiTaxonomyTransform extends Transform<ExtendedRecord, MultiTaxon
     return Interpretation.from(source)
         .to(MultiTaxonRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(MultiTaxonomyInterpreter.taxonomyInterpreter(kvStores))
+        .via(MultiTaxonomyInterpreter.taxonomyInterpreter(kvStore, checklistKeys))
         .via(MultiTaxonomyInterpreter::setCoreId)
         .via(MultiTaxonomyInterpreter::setParentEventId)
         .skipWhen(tr -> tr.getId() == null)

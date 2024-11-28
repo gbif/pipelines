@@ -300,8 +300,9 @@ public class VerbatimToOccurrencePipeline {
         .apply("Write audubon to avro", audubonTransform.write(pathFn).withoutSharding());
 
     // if the config is available, then run the taxonomy transform
-    if (transformsFactory.getConfig().getNameUsageMatchServices() != null
-        && !transformsFactory.getConfig().getNameUsageMatchServices().isEmpty()) {
+    if (transformsFactory.getConfig().getNameUsageMatchService() != null
+        && transformsFactory.getConfig().getNameUsageMatchService().getChecklistKeys() != null
+        && !transformsFactory.getConfig().getNameUsageMatchService().getChecklistKeys().isEmpty()) {
       filteredUniqueRecords
           .apply("Check multi-taxonomy transform condition", multiTaxonomyTransform.check(types))
           .apply("Interpret multi-taxonomy", multiTaxonomyTransform.interpret())

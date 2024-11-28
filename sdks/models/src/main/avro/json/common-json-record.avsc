@@ -224,7 +224,7 @@
     "type":"record",
     "doc":"Taxonomy classification",
     "fields":[
-      {"name":"datasetKey","type": "string", "doc":"The GBIF key for the taxonomy dataset"},
+      {"name":"checklistKey","type": "string", "doc":"The GBIF key for the checklistbank dataset"},
       {"name":"classificationPath","type":["null","string"],"default":null,"doc":""},
       {"name":"usage","type":["null","RankedName"],"default":null,"doc":""},
       {"name":"acceptedUsage","type":["null","RankedName"],"default":null,"doc":""},
