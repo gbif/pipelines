@@ -308,6 +308,8 @@ public class VerbatimToOccurrencePipeline {
           .apply("Interpret multi-taxonomy", multiTaxonomyTransform.interpret())
           .apply(
               "Write multi-taxon to avro", multiTaxonomyTransform.write(pathFn).withoutSharding());
+    } else {
+      log.info("The multi-taxonomy transform is not configured");
     }
 
     // if the config is available, then run the taxonomy transform
@@ -317,6 +319,8 @@ public class VerbatimToOccurrencePipeline {
           .apply("Check taxonomy transform condition", taxonomyTransform.check(types))
           .apply("Interpret taxonomy", taxonomyTransform.interpret())
           .apply("Write taxon to avro", taxonomyTransform.write(pathFn).withoutSharding());
+    } else {
+      log.info("The taxonomy transform is not configured");
     }
 
     filteredUniqueRecords
