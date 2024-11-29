@@ -92,18 +92,18 @@
 
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.67</gbif-parsers.version>
-    <dwca-io.version>2.17-H3-SNAPSHOT</dwca-io.version>
-    <gbif-api.version>1.17.0-SNAPSHOT</gbif-api.version>
-    <gbif-common.version>0.59</gbif-common.version>
-    <dwc-api.version>1.49-H3-SNAPSHOT</dwc-api.version>
-    <kvs.version>1.35-H3-SNAPSHOT</kvs.version>
-    <hbase-utils.version>0.14-H3-SNAPSHOT</hbase-utils.version>
-    <gbif-wrangler.version>0.5-SNAPSHOT</gbif-wrangler.version>
+    <dwca-io.version>3.0.0</dwca-io.version>
+    <gbif-api.version>2.0.0</gbif-api.version>
+    <gbif-common.version>0.60</gbif-common.version>
+    <dwc-api.version>2.0.0</dwc-api.version>
+    <kvs.version>2.0.0</kvs.version>
+    <hbase-utils.version>1.0.0</hbase-utils.version>
+    <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
     <gbif-occurrence.version>0.195.7-H3-SNAPSHOT</gbif-occurrence.version>
-    <vocabulary-lookup.version>1.0.10-SNAPSHOT</vocabulary-lookup.version>
-    <registry.version>3.97.0-SNAPSHOT</registry.version>
-    <gbif-common-ws.version>1.28-SNAPSHOT</gbif-common-ws.version>
-    <gbif-postal-service.version>1.9.0-SNAPSHOT</gbif-postal-service.version>
+    <vocabulary-lookup.version>2.0.2</vocabulary-lookup.version>
+    <registry.version>3.96.29</registry.version>
+    <gbif-common-ws.version>2.0.3</gbif-common-ws.version>
+    <gbif-postal-service.version>2.0.1</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
 
     <!-- Main distributed libraries -->
