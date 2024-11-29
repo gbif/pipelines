@@ -10,6 +10,7 @@ import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.kvs.hbase.LoaderRetryConfig;
 import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
 import org.gbif.kvs.species.NameUsageMatchRequest;
+import org.gbif.pipelines.core.config.model.ChecklistKvConfig;
 import org.gbif.pipelines.core.config.model.KvConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.WsConfig;
@@ -40,6 +41,23 @@ public class NameUsageMatchStoreFactory {
       }
     }
     return instance.kvStore;
+  }
+
+  @SneakyThrows
+  public static KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> createMultipleService(
+      PipelinesConfig config) {
+    if (config == null) {
+      return null;
+    }
+
+    if (config.getNameUsageMatchService() == null
+        || config.getNameUsageMatchService().getChecklistKeys() == null
+        || config.getNameUsageMatchService().getChecklistKeys().isEmpty()) {
+      return null;
+    }
+
+    ChecklistKvConfig kvConfig = config.getNameUsageMatchService();
+    return constructKV(kvConfig.getWs(), kvConfig.getWs().getApi().getWsUrl());
   }
 
   @SneakyThrows
@@ -110,6 +128,11 @@ public class NameUsageMatchStoreFactory {
   public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
       createSupplier(PipelinesConfig config) {
     return () -> create(config);
+  }
+
+  public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
+      createMultiServiceSupplier(PipelinesConfig config) {
+    return () -> createMultipleService(config);
   }
 
   public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>

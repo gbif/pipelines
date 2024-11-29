@@ -178,7 +178,7 @@ public class TransformsFactory {
     SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
         nameUsageMatchServiceSupplier = null;
     if (!options.getTestMode()) {
-      nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createSupplier(config);
+      nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createMultiServiceSupplier(config);
     }
     return MultiTaxonomyTransform.builder()
         .kvStoresSupplier(nameUsageMatchServiceSupplier)
