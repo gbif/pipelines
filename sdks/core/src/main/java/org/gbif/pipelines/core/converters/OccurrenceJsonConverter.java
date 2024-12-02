@@ -287,7 +287,24 @@ public class OccurrenceJsonConverter {
   }
 
   private void mapTaxonRecord(OccurrenceJsonRecord.Builder builder) {
-    builder.setGbifClassification(JsonConverter.convertToGbifClassification(verbatim, taxon));
+    if (multiTaxon != null
+        && multiTaxon.getTaxonRecords() != null
+        && !multiTaxon.getTaxonRecords().isEmpty()) {
+      // FIXME move uuid out to config or drop the separate indexing
+      // and rely on mapping in gbif/occurrence code
+      Optional<TaxonRecord> gbifRecord =
+          multiTaxon.getTaxonRecords().stream()
+              .filter(
+                  tr ->
+                      tr.getDatasetKey() != null
+                          && Objects.equals(
+                              tr.getDatasetKey(), "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c"))
+              .findFirst();
+      gbifRecord.ifPresent(
+          tr ->
+              builder.setGbifClassification(
+                  JsonConverter.convertToGbifClassification(verbatim, tr)));
+    }
   }
 
   private void mapMultiTaxonRecord(OccurrenceJsonRecord.Builder builder) {
