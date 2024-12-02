@@ -31,6 +31,8 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 @Builder
 public class OccurrenceJsonConverter {
 
+  private static final String GBIF_BACKBONE_DATASET_KEY = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c";
+
   private final MetadataRecord metadata;
   private final IdentifierRecord identifier;
   private final ClusteringRecord clustering;
@@ -287,23 +289,24 @@ public class OccurrenceJsonConverter {
   }
 
   private void mapTaxonRecord(OccurrenceJsonRecord.Builder builder) {
+
+    // FIXME move uuid out to config or drop the separate indexing
+    // and rely on mapping in gbif/occurrence code to new structure
     if (multiTaxon != null
-        && multiTaxon.getTaxonRecords() != null
-        && !multiTaxon.getTaxonRecords().isEmpty()) {
-      // FIXME move uuid out to config or drop the separate indexing
-      // and rely on mapping in gbif/occurrence code
+            && multiTaxon.getTaxonRecords() != null
+            && !multiTaxon.getTaxonRecords().isEmpty()) {
       Optional<TaxonRecord> gbifRecord =
-          multiTaxon.getTaxonRecords().stream()
-              .filter(
-                  tr ->
-                      tr.getDatasetKey() != null
-                          && Objects.equals(
-                              tr.getDatasetKey(), "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c"))
-              .findFirst();
-      gbifRecord.ifPresent(
-          tr ->
-              builder.setGbifClassification(
-                  JsonConverter.convertToGbifClassification(verbatim, tr)));
+              multiTaxon.getTaxonRecords().stream()
+                      .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
+                      .findFirst();
+
+      gbifRecord.ifPresent(tr -> {
+        try {
+          builder.setGbifClassification(JsonConverter.convertToGbifClassification(verbatim, tr));
+        } catch (Exception e) {
+          log.error("Error converting to GBIF classification", e);
+        }
+      });
     }
   }
 
