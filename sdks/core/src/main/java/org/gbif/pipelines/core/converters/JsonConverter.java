@@ -423,13 +423,18 @@ public class JsonConverter {
 
   public static Optional<String> convertGenericName(TaxonRecord taxonRecord) {
     // only set generic name for genus or more specific
-    if (Objects.nonNull(taxonRecord.getUsage())
-        && Rank.GENUS.compareTo(Rank.valueOf(taxonRecord.getUsage().getRank())) <= 0) {
-      return Optional.ofNullable(taxonRecord.getUsageParsedName())
-          .map(upn -> upn.getGenus() != null ? upn.getGenus() : upn.getUninomial());
-    } else {
-      return Optional.empty();
+    if (Objects.nonNull(taxonRecord.getUsage())) {
+      try {
+        if (Rank.GENUS.compareTo(Rank.valueOf(taxonRecord.getUsage().getRank())) <= 0) {
+          return Optional.ofNullable(taxonRecord.getUsageParsedName())
+              .map(upn -> upn.getGenus() != null ? upn.getGenus() : upn.getUninomial());
+        }
+      } catch (java.lang.IllegalArgumentException ex) {
+        // throw if rank unrecognised - more common now with xcol
+        return Optional.empty();
+      }
     }
+    return Optional.empty();
   }
 
   public static Map<String, Classification> convertToClassifications(MultiTaxonRecord taxon) {
