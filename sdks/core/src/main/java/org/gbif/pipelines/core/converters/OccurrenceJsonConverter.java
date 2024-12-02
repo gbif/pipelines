@@ -31,7 +31,7 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 @Builder
 public class OccurrenceJsonConverter {
 
-  private static final String GBIF_BACKBONE_DATASET_KEY = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c";
+  public static final String GBIF_BACKBONE_DATASET_KEY = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c";
 
   private final MetadataRecord metadata;
   private final IdentifierRecord identifier;
@@ -293,20 +293,22 @@ public class OccurrenceJsonConverter {
     // FIXME move uuid out to config or drop the separate indexing
     // and rely on mapping in gbif/occurrence code to new structure
     if (multiTaxon != null
-            && multiTaxon.getTaxonRecords() != null
-            && !multiTaxon.getTaxonRecords().isEmpty()) {
+        && multiTaxon.getTaxonRecords() != null
+        && !multiTaxon.getTaxonRecords().isEmpty()) {
       Optional<TaxonRecord> gbifRecord =
-              multiTaxon.getTaxonRecords().stream()
-                      .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
-                      .findFirst();
+          multiTaxon.getTaxonRecords().stream()
+              .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
+              .findFirst();
 
-      gbifRecord.ifPresent(tr -> {
-        try {
-          builder.setGbifClassification(JsonConverter.convertToGbifClassification(verbatim, tr));
-        } catch (Exception e) {
-          log.error("Error converting to GBIF classification", e);
-        }
-      });
+      gbifRecord.ifPresent(
+          tr -> {
+            try {
+              builder.setGbifClassification(
+                  JsonConverter.convertToGbifClassification(verbatim, tr));
+            } catch (Exception e) {
+              log.error("Error converting to GBIF classification", e);
+            }
+          });
     }
   }
 
@@ -365,8 +367,11 @@ public class OccurrenceJsonConverter {
     extractLengthAwareOptValue(verbatim, DwcTerm.islandGroup).ifPresent(builder::setIslandGroup);
     extractLengthAwareOptValue(verbatim, DwcTerm.previousIdentifications)
         .ifPresent(builder::setPreviousIdentifications);
-    extractLengthAwareOptValue(verbatim, DwcTerm.taxonConceptID)
-        .ifPresent(builder.getGbifClassification()::setTaxonConceptID);
+
+    if (builder.getGbifClassification() != null) {
+      extractLengthAwareOptValue(verbatim, DwcTerm.taxonConceptID)
+          .ifPresent(builder.getGbifClassification()::setTaxonConceptID);
+    }
   }
 
   private void mapIssues(OccurrenceJsonRecord.Builder builder) {

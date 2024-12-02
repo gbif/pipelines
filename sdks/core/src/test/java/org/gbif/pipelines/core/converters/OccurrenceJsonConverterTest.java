@@ -22,33 +22,7 @@ import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
-import org.gbif.pipelines.io.avro.AgentIdentifier;
-import org.gbif.pipelines.io.avro.Authorship;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.Diagnostic;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GadmFeatures;
-import org.gbif.pipelines.io.avro.GeologicalContext;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MachineTag;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.NamePart;
-import org.gbif.pipelines.io.avro.NameRank;
-import org.gbif.pipelines.io.avro.NameType;
-import org.gbif.pipelines.io.avro.NomCode;
-import org.gbif.pipelines.io.avro.ParsedName;
-import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.State;
-import org.gbif.pipelines.io.avro.Status;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.VocabularyConcept;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Test;
@@ -384,6 +358,7 @@ public class OccurrenceJsonConverterTest {
     TaxonRecord tr =
         TaxonRecord.newBuilder()
             .setId("777")
+            .setDatasetKey(OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY)
             .setAcceptedUsage(au)
             .setClassification(rankedNameList)
             .setUsage(synonym)
@@ -500,6 +475,7 @@ public class OccurrenceJsonConverterTest {
             .temporal(tmr)
             .location(lr)
             .taxon(tr)
+            .multiTaxon(MultiTaxonRecord.newBuilder().setTaxonRecords(List.of(tr)).build())
             .grscicoll(gr)
             .multimedia(mmr)
             .build()
@@ -710,7 +686,11 @@ public class OccurrenceJsonConverterTest {
     BasicRecord br = BasicRecord.newBuilder().setId("777").build();
     TemporalRecord tmr = TemporalRecord.newBuilder().setId("777").build();
     LocationRecord lr = LocationRecord.newBuilder().setId("777").build();
-    TaxonRecord tr = TaxonRecord.newBuilder().setId("777").build();
+    TaxonRecord tr =
+        TaxonRecord.newBuilder()
+            .setId("777")
+            .setDatasetKey(OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY)
+            .build();
     GrscicollRecord gr = GrscicollRecord.newBuilder().setId("777").build();
     MultimediaRecord mmr = MultimediaRecord.newBuilder().setId("777").build();
 
@@ -725,6 +705,7 @@ public class OccurrenceJsonConverterTest {
             .temporal(tmr)
             .location(lr)
             .taxon(tr)
+            .multiTaxon(MultiTaxonRecord.newBuilder().setTaxonRecords(List.of(tr)).build())
             .grscicoll(gr)
             .multimedia(mmr)
             .build()
