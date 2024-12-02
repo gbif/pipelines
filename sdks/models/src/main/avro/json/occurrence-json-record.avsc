@@ -168,7 +168,7 @@
         "default": {},
         "doc":""
       },
-      {"name":"associatedClassifications","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"checklistKey","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"mediaTypes","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"mediaLicenses","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"multimediaItems","type":{"type":"array","items":"Multimedia"},"default":[],"doc":""},

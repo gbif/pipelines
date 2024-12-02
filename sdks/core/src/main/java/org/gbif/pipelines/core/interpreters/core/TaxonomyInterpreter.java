@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.vocabulary.Kingdom;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.NameUsageMatchRequest;
@@ -30,7 +29,6 @@ import org.gbif.pipelines.io.avro.NameRank;
 import org.gbif.pipelines.io.avro.NameType;
 import org.gbif.pipelines.io.avro.NomCode;
 import org.gbif.pipelines.io.avro.ParsedName;
-import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.State;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -47,11 +45,15 @@ import org.gbif.rest.client.species.NameUsageMatchResponse;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TaxonomyInterpreter {
 
+  public static final String KINGDOM_RANK = "KINGDOM";
+  public static final String INCERTAE_SEDIS_NAME = "incertae sedis";
+  public static final String INCERTAE_SEDIS_KEY = "0";
+
   private static final RankedName INCERTAE_SEDIS =
       RankedName.newBuilder()
-          .setRank(Rank.KINGDOM.toString())
-          .setName(Kingdom.INCERTAE_SEDIS.scientificName())
-          .setKey(Kingdom.INCERTAE_SEDIS.nubUsageKey())
+          .setRank(KINGDOM_RANK)
+          .setName(INCERTAE_SEDIS_NAME)
+          .setKey(INCERTAE_SEDIS_KEY)
           .build();
 
   /**

@@ -10,6 +10,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
+import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -319,7 +320,16 @@ public class OccurrenceJsonConverter {
       Map<String, Classification> classifications =
           JsonConverter.convertToClassifications(multiTaxon);
       builder.setClassifications(classifications);
-      builder.setAssociatedClassifications(new ArrayList<>(classifications.keySet()));
+      List<String> checklistKeys =
+          multiTaxon.getTaxonRecords().stream()
+              .filter(
+                  tr ->
+                      tr.getUsage() != null
+                          && !TaxonomyInterpreter.INCERTAE_SEDIS_KEY.equals(tr.getUsage().getKey()))
+              .map(TaxonRecord::getDatasetKey)
+              .collect(Collectors.toList());
+
+      builder.setChecklistKey(checklistKeys);
     }
   }
 
