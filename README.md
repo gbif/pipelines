@@ -1,4 +1,4 @@
-[![DEV - Build Status](https://builds.gbif.org/job/pipelines-dev/badge/icon?subject=DEV%20-%20Build%20Status&style=flat-square)](https://builds.gbif.org/job/pipelines-dev)
+[![DEV - Build Status](https://builds.gbif.org/view/Stackable/job/pipelines-multibranch/job/dev/badge/icon)](https://builds.gbif.org/view/Stackable/job/pipelines-multibranch/job/dev/)
 [![DEV Release - Build Status](https://builds.gbif.org/job/pipelines-master/badge/icon?subject=Release%20-%20Build%20Status&style=flat-square)](https://builds.gbif.org/job/pipelines-master/)
 [![DEV - Smoking Tests Status](https://builds.gbif.org/buildStatus/icon?job=pipelines-dev2-smoke-testing&subject=DEV%20-%20Smoking%20tests%20status&style=flat-square)](https://builds.gbif.org/job/pipelines-dev2-smoke-testing/)
 
