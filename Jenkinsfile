@@ -41,7 +41,7 @@ pipeline {
           if (params.RELEASE) {
             env.BUILD_TYPE = 'FULL'
           } else {
-            env.BUILD_TYPE = '${params.TYPE}'
+            env.BUILD_TYPE = params.TYPE
           }
         }
       }
