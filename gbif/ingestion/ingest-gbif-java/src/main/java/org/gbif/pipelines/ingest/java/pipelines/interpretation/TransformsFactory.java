@@ -159,7 +159,7 @@ public class TransformsFactory {
     }
     return MultiTaxonomyTransform.builder()
         .kvStoresSupplier(nameUsageMatchServiceSupplier)
-        .checklistKeys(config.getNameUsageMatchService().getChecklistKeys())
+        .checklistKeys(config.getNameUsageMatchingService().getChecklistKeys())
         .create()
         .counterFn(incMetricFn)
         .init();

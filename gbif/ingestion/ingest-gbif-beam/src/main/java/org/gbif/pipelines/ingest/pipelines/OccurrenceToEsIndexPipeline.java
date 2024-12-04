@@ -135,9 +135,9 @@ public class OccurrenceToEsIndexPipeline {
     PipelinesConfig config = transformsFactory.getConfig();
     boolean isTaxonomyEnabled = config.getNameUsageMatch() != null;
     boolean isMultiTaxonomyEnabled =
-        config.getNameUsageMatchService() != null
-            && config.getNameUsageMatchService().getChecklistKeys() != null
-            && !config.getNameUsageMatchService().getChecklistKeys().isEmpty();
+        config.getNameUsageMatchingService() != null
+            && config.getNameUsageMatchingService().getChecklistKeys() != null
+            && !config.getNameUsageMatchingService().getChecklistKeys().isEmpty();
 
     Pipeline p = pipelinesFn.apply(options);
 
