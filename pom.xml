@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.19.0-SNAPSHOT</version>
+  <version>3.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -99,9 +99,9 @@
     <kvs.version>2.0.0</kvs.version>
     <hbase-utils.version>1.0.0</hbase-utils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
-    <gbif-occurrence.version>0.195.7-H3-SNAPSHOT</gbif-occurrence.version>
+    <gbif-occurrence.version>1.0.5</gbif-occurrence.version>
     <vocabulary-lookup.version>2.0.2</vocabulary-lookup.version>
-    <registry.version>3.96.29</registry.version>
+    <registry.version>4.0.0</registry.version>
     <gbif-common-ws.version>2.0.3</gbif-common-ws.version>
     <gbif-postal-service.version>2.0.1</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
