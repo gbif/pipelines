@@ -50,13 +50,13 @@ public class NameUsageMatchStoreFactory {
       return null;
     }
 
-    if (config.getNameUsageMatchService() == null
-        || config.getNameUsageMatchService().getChecklistKeys() == null
-        || config.getNameUsageMatchService().getChecklistKeys().isEmpty()) {
+    if (config.getNameUsageMatchingService() == null
+        || config.getNameUsageMatchingService().getChecklistKeys() == null
+        || config.getNameUsageMatchingService().getChecklistKeys().isEmpty()) {
       return null;
     }
 
-    ChecklistKvConfig kvConfig = config.getNameUsageMatchService();
+    ChecklistKvConfig kvConfig = config.getNameUsageMatchingService();
     return constructKV(kvConfig.getWs(), kvConfig.getWs().getApi().getWsUrl());
   }
 
