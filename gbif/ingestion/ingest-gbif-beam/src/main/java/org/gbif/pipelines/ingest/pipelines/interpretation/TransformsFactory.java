@@ -182,7 +182,7 @@ public class TransformsFactory {
     }
     return MultiTaxonomyTransform.builder()
         .kvStoresSupplier(nameUsageMatchServiceSupplier)
-          .checklistKeys(config.getNameUsageMatchingService().getChecklistKeys())
+        .checklistKeys(config.getNameUsageMatchingService().getChecklistKeys())
         .create();
   }
 

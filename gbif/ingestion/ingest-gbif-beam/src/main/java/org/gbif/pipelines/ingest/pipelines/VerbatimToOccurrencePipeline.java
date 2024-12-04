@@ -302,7 +302,11 @@ public class VerbatimToOccurrencePipeline {
     // if the config is available, then run the taxonomy transform
     if (transformsFactory.getConfig().getNameUsageMatchingService() != null
         && transformsFactory.getConfig().getNameUsageMatchingService().getChecklistKeys() != null
-        && !transformsFactory.getConfig().getNameUsageMatchingService().getChecklistKeys().isEmpty()) {
+        && !transformsFactory
+            .getConfig()
+            .getNameUsageMatchingService()
+            .getChecklistKeys()
+            .isEmpty()) {
       filteredUniqueRecords
           .apply("Check multi-taxonomy transform condition", multiTaxonomyTransform.check(types))
           .apply("Interpret multi-taxonomy", multiTaxonomyTransform.interpret())

@@ -180,7 +180,8 @@ public class VerbatimToOccurrencePipeline {
     // if the config is available, then run the multi taxonomy transform
     boolean useMultiTaxonomy =
         transformsFactory.getConfig().getNameUsageMatchingService() != null
-            && transformsFactory.getConfig().getNameUsageMatchingService().getChecklistKeys() != null
+            && transformsFactory.getConfig().getNameUsageMatchingService().getChecklistKeys()
+                != null
             && !transformsFactory
                 .getConfig()
                 .getNameUsageMatchingService()
