@@ -7,6 +7,7 @@ pipeline {
       description: 'Build types:<p>QUICK: Compile, Build, Deploy artifacts, Skip integration tests and extra artifacts, Multithread build<p>FULL: Compile, Build, Deploy artifacts, Run integration tests and extra artifacts, Singlethread build\n'
     )
     booleanParam(name: 'RELEASE', defaultValue: false, description: 'Make a Maven release')
+    booleanParam(name: 'DRY_RUN', defaultValue: false, description: 'Test run before release')
   }
   tools {
     maven 'Maven 3.8.5'
@@ -59,7 +60,7 @@ pipeline {
     stage('Full build') {
       when {
         expression {
-          env.BUILD_TYPE == 'FULL'
+          env.BUILD_TYPE == 'FULL' && env.DRY_RUN == 'false'
         }
       }
       steps {
@@ -70,9 +71,14 @@ pipeline {
       environment {
         PROFILES = getProfiles()
       }
+      when {
+        expression {
+          env.DRY_RUN == 'false'
+        }
+      }
       steps {
         configFileProvider([configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS')]) {
-          sh 'mvn -s $MAVEN_SETTINGS deploy -B -P ${PROFILES} -DskipTests'
+          sh 'mvn -s $MAVEN_SETTINGS deploy -B -DskipTests -P ${PROFILES}'
         }
       }
     }
@@ -89,11 +95,16 @@ pipeline {
       steps {
         configFileProvider([configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS')]) {
           git 'https://github.com/gbif/pipelines.git'
-          sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -Denforcer.skip=true -DskipTests -P ${PROFILES}'
+          sh 'mvn -s $MAVEN_SETTINGS release:prepare release:perform -Denforcer.skip=true -Dmaven.test.skip=true -P ${PROFILES}'
         }
       }
     }
     stage('Build and publish Docker image') {
+      when {
+        expression {
+          env.DRY_RUN == 'false'
+        }
+      }
       steps {
         sh 'build/ingestion-docker-build.sh ${RELEASE} ${VERSION}'
       }
@@ -113,6 +124,9 @@ def getProfiles() {
   def profiles = "skip-coverage,skip-release-it,gbif-artifacts"
   if (env.BUILD_TYPE == 'FULL') {
       profiles += ",extra-artifacts"
+  }
+  if (env.DRY_RUN) {
+      profiles += " -DdryRun"
   }
   return profiles
 }
