@@ -73,7 +73,7 @@ pipeline {
       }
       when {
         expression {
-          env.DRY_RUN == 'false'
+          env.RELEASE == 'false'
         }
       }
       steps {
