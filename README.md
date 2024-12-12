@@ -111,8 +111,6 @@ The project is structured as:
 The project uses [Apache Maven](https://maven.apache.org/) as a build tool. Additionally, it utilizes a [Jenkins pipeline](Jenkinsfile) as part of its CI/CD continuous deployment process.
 
 #### Available Maven profiles:
-- skip-coverage (skips Jacoco coverage file generation)
-- coverage (generates correct Jacoco coverage files)
 - skip-release-it (skips heavy IT tests for rarely changed code)
 - gbif-artifacts (creates main shaded GBIF artifacts)
 - livingatlas-artifacts (creates main shaded Livingatlas artifacts)
@@ -122,17 +120,17 @@ The project uses [Apache Maven](https://maven.apache.org/) as a build tool. Addi
 
 Building the project without tests and shaded artifacts, suitable for everyday local development (~3 mins on a laptop)
 ```shell
-mvn spotless:apply clean package -P skip-coverage -T 1C -DskipTests -nsu
+mvn spotless:apply clean package -T 1C -DskipTests -nsu
 ```
 
 Building the project with unit tests and main IT tests, assemble main GBIF artifacts, suitable for CI development builds (~15 mins on a laptop)
 ```shell
-mvn clean install verify -U -T 3 -P skip-coverage,skip-release-it,gbif-artifacts
+mvn clean install verify -U -T 3 -P skip-release-it,gbif-artifacts
 ```
 
 Building the project with all tests, coverage, assemble all artifacts, suitable for project releases 
 ```shell
-mvn clean install verify -U -P coverage,gbif-artifacts,livingatlas-artifacts,extra-artifacts
+mvn clean install verify -U -P gbif-artifacts,livingatlas-artifacts,extra-artifacts
 ```
 
 Please read the [Apache Maven how-to](https://maven.apache.org/run.html).

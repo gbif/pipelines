@@ -24,7 +24,6 @@
     <occurrence-avsc-schema-name>occurrence-hdfs-record.avsc</occurrence-avsc-schema-name>
     <schema-generated-occurrence-path>${schema-generated-path}/${occurrence-avsc-schema-name}</schema-generated-occurrence-path>
 
-    <sonar.skip>true</sonar.skip>
   </properties>
 
   <build>

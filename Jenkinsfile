@@ -54,7 +54,7 @@ pipeline {
         }
       }
       steps {
-        sh 'mvn clean verify -U -T 3 -P skip-coverage,skip-release-it'
+        sh 'mvn clean verify -U -T 3 -P skip-release-it'
       }
     }
     stage('Full build') {
@@ -64,7 +64,7 @@ pipeline {
         }
       }
       steps {
-        sh 'mvn clean verify -U -P coverage'
+        sh 'mvn clean verify -U'
       }
     }
     stage('Snapshots to nexus') {
@@ -121,7 +121,7 @@ pipeline {
 }
 
 def getProfiles() {
-  def profiles = "skip-coverage,skip-release-it,gbif-artifacts"
+  def profiles = "skip-release-it,gbif-artifacts"
   if (env.BUILD_TYPE == 'FULL') {
       profiles += ",extra-artifacts"
   }

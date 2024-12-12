@@ -15,9 +15,6 @@
   <name>Pipelines :: Examples :: Metrics</name>
   <description>The example demonstrates how to send Apache Beam SparkRunner metrics to ELK</description>
 
-  <properties>
-    <sonar.skip>true</sonar.skip>
-  </properties>
 
   <dependencies>
 

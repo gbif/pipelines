@@ -20,7 +20,6 @@
 
   <properties>
     <avro-generated-path>${project.basedir}/src/main/java-generated/</avro-generated-path>
-    <sonar.skip>true</sonar.skip>
   </properties>
 
   <build>

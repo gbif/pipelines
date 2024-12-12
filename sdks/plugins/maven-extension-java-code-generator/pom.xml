@@ -15,10 +15,6 @@
   <name>Pipelines :: Sdks :: Plugins :: Maven Java code generator</name>
   <description>Maven plugin generates java classes for raw extensions conveters</description>
 
-  <properties>
-    <sonar.coverage.exclusions>**/Templates.java</sonar.coverage.exclusions>
-  </properties>
-
   <build>
     <plugins>
       <plugin>
