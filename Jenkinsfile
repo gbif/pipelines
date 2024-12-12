@@ -125,7 +125,7 @@ def getProfiles() {
   if (env.BUILD_TYPE == 'FULL') {
       profiles += ",extra-artifacts"
   }
-  if (env.DRY_RUN) {
+  if (env.DRY_RUN == 'true') {
       profiles += " -DdryRun"
   }
   return profiles
