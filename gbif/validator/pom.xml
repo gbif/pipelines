@@ -44,13 +44,13 @@
     <spring-cloud-openfeign.version>2.2.10.RELEASE</spring-cloud-openfeign.version>
     <spring-cloud-zookeeper.version>2.2.5.RELEASE</spring-cloud-zookeeper.version>
     <mybatis-spring-boot-starter.version>2.3.2</mybatis-spring-boot-starter.version>
+    <springdoc-openapi-ui.version>1.5.8</springdoc-openapi-ui.version>
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
     <spring.version>5.2.12.RELEASE</spring.version>
     <spring-security.version>5.3.6.RELEASE</spring-security.version>
     <mybatis-spring.version>2.0.1</mybatis-spring.version>
     <feign.version>10.12</feign.version>
-    <swagger-annotations.version>2.2.3</swagger-annotations.version>
 
     <!-- Tests -->
     <junit-jupiter.version>5.7.2</junit-jupiter.version>
@@ -216,6 +216,11 @@
         <version>${spring-cloud-sleuth.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-ui</artifactId>
+        <version>${springdoc-openapi-ui.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-actuator-autoconfigure</artifactId>
         <version>${spring-boot.version}</version>
@@ -283,14 +288,6 @@
         <artifactId>feign-jackson</artifactId>
         <version>${feign.version}</version>
       </dependency>
-
-      <!-- Open API docs-->
-      <dependency>
-        <groupId>io.swagger.core.v3</groupId>
-        <artifactId>swagger-annotations</artifactId>
-        <version>${swagger-annotations.version}</version>
-      </dependency>
-
       <!-- Special media type handling -->
       <dependency>
         <groupId>org.apache.poi</groupId>
