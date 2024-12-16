@@ -117,6 +117,9 @@ pipeline {
     failure {
       echo 'Pipeline execution failed!'
     }
+    cleanup {
+      deleteDir()
+    }
   }
 }
 
