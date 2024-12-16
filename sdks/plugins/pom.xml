@@ -5,7 +5,7 @@
   <parent>
     <artifactId>sdks</artifactId>
     <groupId>org.gbif.pipelines</groupId>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>3.0.2-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
