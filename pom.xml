@@ -195,9 +195,9 @@
     <maven-plugin-api.version>3.8.6</maven-plugin-api.version>
     <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
     <maven-plugin-plugin.version>3.9.0</maven-plugin-plugin.version>
+    <build-helper-maven.version>3.6.0</build-helper-maven.version>
 
     <!-- Plugins -->
-    <io.fabric8.version>0.33.0</io.fabric8.version>
     <googleJavaFormat.version>1.17.0</googleJavaFormat.version>
 
     <!-- Other -->
@@ -224,6 +224,11 @@
           </configuration>
         </plugin>
         <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>${build-helper-maven.version}</version>
+        </plugin>
+        <plugin>
           <groupId>com.diffplug.spotless</groupId>
           <artifactId>spotless-maven-plugin</artifactId>
           <version>${spotless-maven-plugin.version}</version>
@@ -235,11 +240,6 @@
               </googleJavaFormat>
             </java>
           </configuration>
-        </plugin>
-        <plugin>
-          <groupId>io.fabric8</groupId>
-          <artifactId>docker-maven-plugin</artifactId>
-          <version>${io.fabric8.version}</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -263,7 +263,6 @@
           </execution>
         </executions>
       </plugin>
-
     </plugins>
   </build>
 
