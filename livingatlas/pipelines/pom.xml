@@ -908,6 +908,10 @@
                       <pattern>com.google.common</pattern>
                       <shadedPattern>g20.com.google.common</shadedPattern>
                     </relocation>
+                    <relocation>
+                      <pattern>org.yaml.snakeyaml</pattern>
+                      <shadedPattern>s125.org.yaml.snakeyaml</shadedPattern>
+                    </relocation>
                   </relocations>
                 </configuration>
               </execution>
