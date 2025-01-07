@@ -65,7 +65,7 @@ public class FileVocabularyFactory implements Serializable {
                   if (term.equals(DwcTerm.lifeStage.qualifiedName())) {
                     builder.withPrefilter(PreFilters.REMOVE_NUMERIC_PREFIX);
                   } else if (term.equals(DwcTerm.sex.qualifiedName())) {
-                    builder.withPrefilter(PreFilters.REMOVE_NUMERIC);
+                    builder.withPrefilter(PreFilters.REMOVE_POSITIVE_NUMERIC);
                   }
 
                   serviceBuilder.vocabularyLookup(term, builder.build());
