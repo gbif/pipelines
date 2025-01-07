@@ -114,7 +114,7 @@
     <hbase-utils.version>1.0.0</hbase-utils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
     <gbif-occurrence.version>1.0.9</gbif-occurrence.version>
-    <vocabulary-lookup.version>2.0.2</vocabulary-lookup.version>
+    <vocabulary-lookup.version>2.0.3</vocabulary-lookup.version>
     <registry.version>4.0.1</registry.version>
     <gbif-common-ws.version>2.0.3</gbif-common-ws.version>
     <gbif-postal-service.version>2.0.1</gbif-postal-service.version>
