@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.parsers.vocabulary;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
 import lombok.Builder;
@@ -11,7 +12,7 @@ import org.gbif.vocabulary.lookup.VocabularyLookup;
 
 @SuppressWarnings("FallThrough")
 @Builder
-public class VocabularyService {
+public class VocabularyService implements Serializable {
 
   @Singular private final Map<String, VocabularyLookup> vocabularyLookups;
 
