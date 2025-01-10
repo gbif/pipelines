@@ -48,7 +48,7 @@
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
     <spring.version>5.2.12.RELEASE</spring.version>
-    <spring-security.version>5.3.6.RELEASE</spring-security.version>
+    <spring-security.version>5.7.14</spring-security.version>
     <mybatis-spring.version>2.0.1</mybatis-spring.version>
     <feign.version>10.12</feign.version>
 
