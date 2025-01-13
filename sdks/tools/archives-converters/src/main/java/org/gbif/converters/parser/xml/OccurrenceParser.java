@@ -112,7 +112,7 @@ public class OccurrenceParser {
       log.info("Parsing XML file: {}", file);
       return parseStream(inputStream);
     } catch (IOException ex) {
-      log.error(ex);
+      log.error("Parsing failed", ex);
       throw new ParsingException("Parsing failed", ex);
     }
   }
