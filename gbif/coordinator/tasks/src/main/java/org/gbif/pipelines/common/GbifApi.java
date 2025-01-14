@@ -2,6 +2,7 @@ package org.gbif.pipelines.common;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.core.IntervalFunction;
@@ -13,6 +14,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -33,6 +35,8 @@ public class GbifApi {
           "apiCall",
           RetryConfig.custom()
               .maxAttempts(7)
+              .waitDuration(Duration.ofMillis(500))
+              .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
               .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
               .build());
 

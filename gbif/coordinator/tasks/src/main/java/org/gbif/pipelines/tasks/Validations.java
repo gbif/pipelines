@@ -1,13 +1,16 @@
 package org.gbif.pipelines.tasks;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +32,8 @@ public class Validations {
           "validatorCall",
           RetryConfig.custom()
               .maxAttempts(7)
+              .waitDuration(Duration.ofMillis(500))
+              .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
               .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
               .build());
 

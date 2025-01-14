@@ -2,6 +2,7 @@ package org.gbif.pipelines.tasks;
 
 import static org.gbif.common.messaging.api.messages.OccurrenceDeletionReason.NOT_SEEN_IN_LAST_CRAWL;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.google.common.annotations.VisibleForTesting;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
@@ -19,6 +20,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -73,6 +75,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
           "registryCall",
           RetryConfig.custom()
               .maxAttempts(7)
+              .waitDuration(Duration.ofMillis(500))
+              .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
               .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
               .build());
 
@@ -81,6 +85,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
           "runningExecutionCall",
           RetryConfig.custom()
               .maxAttempts(7)
+              .waitDuration(Duration.ofMillis(500))
+              .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
               .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
               .retryOnResult(Objects::isNull)
               .build());
