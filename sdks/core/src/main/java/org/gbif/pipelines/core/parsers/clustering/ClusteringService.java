@@ -32,7 +32,6 @@ public class ClusteringService implements Serializable {
             "clusteringCall",
             RetryConfig.custom()
                 .maxAttempts(config.getRetryMaxAttempts())
-                .waitDuration(Duration.ofMillis(500))
                 .retryExceptions(
                     JsonParseException.class, IOException.class, TimeoutException.class)
                 .intervalFunction(

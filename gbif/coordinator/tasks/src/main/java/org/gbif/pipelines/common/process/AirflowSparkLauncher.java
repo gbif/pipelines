@@ -28,7 +28,6 @@ public class AirflowSparkLauncher {
           "airflowApiCall",
           RetryConfig.custom()
               .maxAttempts(7)
-              .waitDuration(Duration.ofMillis(500))
               .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
               .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
               .build());

@@ -75,7 +75,6 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
           "registryCall",
           RetryConfig.custom()
               .maxAttempts(7)
-              .waitDuration(Duration.ofMillis(500))
               .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
               .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
               .build());
@@ -85,7 +84,6 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
           "runningExecutionCall",
           RetryConfig.custom()
               .maxAttempts(7)
-              .waitDuration(Duration.ofMillis(500))
               .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
               .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
               .retryOnResult(Objects::isNull)
