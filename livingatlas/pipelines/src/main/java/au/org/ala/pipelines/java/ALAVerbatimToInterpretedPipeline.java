@@ -413,7 +413,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
   /** Create an AVRO file writer */
   @SneakyThrows
-  private static <T> SyncDataFileWriter<T> createWriter(
+  public static <T> SyncDataFileWriter<T> createWriter(
       InterpretationPipelineOptions options,
       Schema schema,
       Transform transform,
