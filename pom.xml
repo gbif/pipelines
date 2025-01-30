@@ -221,6 +221,7 @@
             <dependencySourceIncludes>
               <dependencySourceInclude>org.gbif:*</dependencySourceInclude>
             </dependencySourceIncludes>
+            <failOnError>false</failOnError>
           </configuration>
         </plugin>
         <plugin>
