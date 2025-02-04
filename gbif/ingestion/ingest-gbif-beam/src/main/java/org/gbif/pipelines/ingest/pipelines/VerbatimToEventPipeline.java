@@ -167,55 +167,51 @@ public class VerbatimToEventPipeline {
 
     uniqueRawRecords
         .apply("Interpret event identifiers", identifierTransform.interpret())
-        .apply(
-            "Write event identifiers to avro", identifierTransform.write(pathFn).withoutSharding());
+        .apply("Write event identifiers to avro", identifierTransform.write(pathFn));
 
     uniqueRawRecords
         .apply("Check event core transform", eventCoreTransform.check(types))
         .apply("Interpret event core", eventCoreTransform.interpret())
-        .apply("Write event core to avro", eventCoreTransform.write(pathFn).withoutSharding());
+        .apply("Write event core to avro", eventCoreTransform.write(pathFn));
 
     uniqueRawRecords
         .apply("Check event temporal transform", temporalTransform.check(types))
         .apply("Interpret event temporal", temporalTransform.interpret())
-        .apply("Write event temporal to avro", temporalTransform.write(pathFn).withoutSharding());
+        .apply("Write event temporal to avro", temporalTransform.write(pathFn));
 
     uniqueRawRecords
         .apply("Check event taxonomy transform", taxonomyTransform.check(types))
         .apply("Interpret event taxonomy", taxonomyTransform.interpret())
-        .apply("Write event taxon to avro", taxonomyTransform.write(pathFn).withoutSharding());
+        .apply("Write event taxon to avro", taxonomyTransform.write(pathFn));
 
     uniqueRawRecords
         .apply("Check event multimedia transform", multimediaTransform.check(types))
         .apply("Interpret event multimedia", multimediaTransform.interpret())
-        .apply(
-            "Write event multimedia to avro", multimediaTransform.write(pathFn).withoutSharding());
+        .apply("Write event multimedia to avro", multimediaTransform.write(pathFn));
 
     uniqueRawRecords
         .apply("Check event audubon transform", audubonTransform.check(types))
         .apply("Interpret event audubon", audubonTransform.interpret())
-        .apply("Write event audubon to avro", audubonTransform.write(pathFn).withoutSharding());
+        .apply("Write event audubon to avro", audubonTransform.write(pathFn));
 
     uniqueRawRecords
         .apply("Check event image transform", imageTransform.check(types))
         .apply("Interpret event image", imageTransform.interpret())
-        .apply("Write event image to avro", imageTransform.write(pathFn).withoutSharding());
+        .apply("Write event image to avro", imageTransform.write(pathFn));
 
     uniqueRawRecords
         .apply("Check location transform", locationTransform.check(types))
         .apply("Interpret event location", locationTransform.interpret(metadataView))
-        .apply("Write event location to avro", locationTransform.write(pathFn).withoutSharding());
+        .apply("Write event location to avro", locationTransform.write(pathFn));
 
     uniqueRawRecords
         .apply("Check event measurementOrFact", measurementOrFactTransform.check(types))
         .apply("Interpret event measurementOrFact", measurementOrFactTransform.interpret())
-        .apply(
-            "Write event measurementOrFact to avro",
-            measurementOrFactTransform.write(pathFn).withoutSharding());
+        .apply("Write event measurementOrFact to avro", measurementOrFactTransform.write(pathFn));
 
     uniqueRawRecords
         .apply("Check event verbatim transform", verbatimTransform.check(types))
-        .apply("Write event verbatim to avro", verbatimTransform.write(pathFn).withoutSharding());
+        .apply("Write event verbatim to avro", verbatimTransform.write(pathFn));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
