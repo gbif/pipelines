@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>gbif</artifactId>
-    <version>2.19.0-SNAPSHOT</version>
+    <version>3.0.6-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -30,7 +30,7 @@
 
     <!-- GBIF -->
     <gbif-common-mybatis.version>1.1</gbif-common-mybatis.version>
-    <gbif-metadata-profile-eml.version>2.2.1-SNAPSHOT</gbif-metadata-profile-eml.version>
+    <gbif-metadata-profile-eml.version>2.6</gbif-metadata-profile-eml.version>
 
     <!-- Checklists validation-->
     <gbif-checklistbank.version>2.126</gbif-checklistbank.version>
@@ -44,6 +44,7 @@
     <spring-cloud-openfeign.version>2.2.10.RELEASE</spring-cloud-openfeign.version>
     <spring-cloud-zookeeper.version>2.2.5.RELEASE</spring-cloud-zookeeper.version>
     <mybatis-spring-boot-starter.version>2.3.2</mybatis-spring-boot-starter.version>
+    <springdoc-openapi-ui.version>1.5.8</springdoc-openapi-ui.version>
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
     <spring.version>5.2.12.RELEASE</spring.version>
@@ -215,6 +216,11 @@
         <version>${spring-cloud-sleuth.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-ui</artifactId>
+        <version>${springdoc-openapi-ui.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-actuator-autoconfigure</artifactId>
         <version>${spring-boot.version}</version>
@@ -282,7 +288,6 @@
         <artifactId>feign-jackson</artifactId>
         <version>${feign.version}</version>
       </dependency>
-
       <!-- Special media type handling -->
       <dependency>
         <groupId>org.apache.poi</groupId>

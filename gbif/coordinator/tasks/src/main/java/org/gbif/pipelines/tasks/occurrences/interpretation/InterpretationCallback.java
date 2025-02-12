@@ -226,6 +226,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
             .messageNumber(messageNumber)
             .metaFileName(new DwcaToAvroConfiguration().metaFileName)
             .metricName(Metrics.ARCHIVE_TO_OCC_COUNT)
+            .alternativeMetricName(Metrics.ARCHIVE_TO_ER_COUNT)
             .build()
             .get();
 

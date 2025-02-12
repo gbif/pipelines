@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>validator</artifactId>
-    <version>2.19.0-SNAPSHOT</version>
+    <version>3.0.6-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -19,6 +19,7 @@
     <start-class>org.gbif.validator.ws.ValidatorWsApplication</start-class>
     <zookeeper.version>3.8.1</zookeeper.version>
     <curator.version>5.5.0</curator.version>
+    <curator-framework.version>5.5.0-disable-connectstr-updates</curator-framework.version>
   </properties>
 
   <build>
@@ -264,6 +265,11 @@
       <artifactId>spring-boot-admin-starter-client</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-ui</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-openfeign-core</artifactId>
     </dependency>
@@ -286,7 +292,7 @@
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-framework</artifactId>
-      <version>${curator.version}</version>
+      <version>${curator-framework.version}</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>

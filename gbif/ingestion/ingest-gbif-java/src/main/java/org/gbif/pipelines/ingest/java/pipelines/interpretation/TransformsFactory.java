@@ -126,12 +126,7 @@ public class TransformsFactory {
     return BasicTransform.builder()
         .useDynamicPropertiesInterpretation(true)
         .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.getInstanceSupplier(config))
-        .vocabularyServiceSupplier(
-            FileVocabularyFactory.builder()
-                .config(config)
-                .hdfsConfigs(hdfsConfigs)
-                .build()
-                .getInstanceSupplier())
+        .vocabularyServiceSupplier(FileVocabularyFactory.getInstanceSupplier(hdfsConfigs, config))
         .create()
         .counterFn(incMetricFn)
         .init();

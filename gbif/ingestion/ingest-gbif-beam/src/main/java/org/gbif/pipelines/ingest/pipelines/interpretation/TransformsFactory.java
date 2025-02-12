@@ -123,12 +123,7 @@ public class TransformsFactory {
     return BasicTransform.builder()
         .useDynamicPropertiesInterpretation(true)
         .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.createSupplier(config))
-        .vocabularyServiceSupplier(
-            FileVocabularyFactory.builder()
-                .config(config)
-                .hdfsConfigs(hdfsConfigs)
-                .build()
-                .getInstanceSupplier())
+        .vocabularyServiceSupplier(FileVocabularyFactory.createSupplier(hdfsConfigs, config))
         .create();
   }
 
@@ -191,12 +186,7 @@ public class TransformsFactory {
 
   public EventCoreTransform createEventCoreTransform() {
     return EventCoreTransform.builder()
-        .vocabularyServiceSupplier(
-            FileVocabularyFactory.builder()
-                .config(config)
-                .hdfsConfigs(hdfsConfigs)
-                .build()
-                .getInstanceSupplier())
+        .vocabularyServiceSupplier(FileVocabularyFactory.createSupplier(hdfsConfigs, config))
         .create();
   }
 

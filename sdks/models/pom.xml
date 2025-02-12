@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>sdks</artifactId>
-    <version>2.19.0-SNAPSHOT</version>
+    <version>3.0.6-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -24,7 +24,6 @@
     <occurrence-avsc-schema-name>occurrence-hdfs-record.avsc</occurrence-avsc-schema-name>
     <schema-generated-occurrence-path>${schema-generated-path}/${occurrence-avsc-schema-name}</schema-generated-occurrence-path>
 
-    <sonar.skip>true</sonar.skip>
   </properties>
 
   <build>
