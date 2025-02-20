@@ -916,6 +916,7 @@
         },
         "occurrenceStatus": {
           "type": "keyword",
+          "normalizer": "lowercase_normalizer",
           "copy_to": "all"
         },
         "organismQuantity": {

@@ -255,7 +255,7 @@
       },
       "otherCatalogNumbersJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
 
-      "occurrenceStatus": {"type": "keyword", "copy_to": "all"},
+      "occurrenceStatus": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
 
       "isSequenced": {"type": "boolean"},
       "associatedSequences": {"type": "keyword", "copy_to": "all"},
