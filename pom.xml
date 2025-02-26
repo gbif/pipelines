@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.20.0-multitaxonomy-SNAPSHOT</version>
+  <version>3.1.0-multitaxonomy-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
