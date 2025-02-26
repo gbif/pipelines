@@ -1,9 +1,8 @@
 package org.gbif.pipelines.backbone.impact;
 
+import com.google.common.base.Strings;
 import java.io.File;
 import java.util.*;
-
-import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +57,6 @@ public class BackbonePreRelease {
       conf.addResource(new Path(corePath));
       options.setHdfsConfiguration(Collections.singletonList(conf));
     }
-
 
     final HCatSchema schema = readSchema(options);
 
