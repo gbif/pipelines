@@ -142,7 +142,7 @@ public class BackbonePreRelease {
 
       // apply the filter to only check records within scope (e.g. limit to Lepidoptera) and above
       // the limit
-      long count = source.getLong("occurrenceCount", schema);
+      long count = source.getLong("occurrencecount", schema);
       if (count > minCount && (scope == null || taxaKeys(source, schema).contains(scope))) {
 
         // We use the request to ensure we apply the same "clean" operations as the production
