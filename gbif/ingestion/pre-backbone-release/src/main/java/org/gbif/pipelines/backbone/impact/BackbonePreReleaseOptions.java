@@ -50,8 +50,46 @@ public interface BackbonePreReleaseOptions extends HadoopFileSystemOptions {
   void setSkipKeys(boolean skipKeys);
 
   @Description("Controls if whitespace should be ignored or not")
-  @Default.Boolean(false)
+  @Default.Boolean(true)
   boolean getIgnoreWhitespace();
 
   void setIgnoreWhitespace(boolean ignoreWhitespace);
+
+  @Description("Controls if whitespace should be ignored or not")
+  @Default.Boolean(true)
+  boolean getIgnoreAuthorshipFormatting();
+
+  void setIgnoreAuthorshipFormatting(boolean ignoreAuthorshipFormatting);
+
+  @Description(
+      "Match against the checklistbank API and use the specified dataset key for name usage mapping")
+  @Default.String("")
+  String getClbDatasetKey();
+
+  void setClbDatasetKey(String clbDatasetKey);
+
+  @Description("CLB user to use for basic auth requests")
+  @Default.String("")
+  String getClbUsername();
+
+  void setClbUsername(String clbUsername);
+
+  @Description("CLB password to use for basic auth requests")
+  @Default.String("")
+  String getClbPassword();
+
+  void setClbPassword(String clbPassword);
+
+  @Description(
+      "Output infrageneric markers in the scientific name (CLB v2 includes these in the scientific name)")
+  @Default.Boolean(false)
+  boolean getOutputInfragenericEpithet();
+
+  void setOutputInfragenericEpithet(boolean outputInfragenericEpithet);
+
+  @Description("Whether to include the rank in the CLB lookup (CLB matching only)")
+  @Default.Boolean(true)
+  boolean getIgnoreSuppliedRank();
+
+  void setIgnoreSuppliedRank(boolean ignoreSuppliedRank);
 }

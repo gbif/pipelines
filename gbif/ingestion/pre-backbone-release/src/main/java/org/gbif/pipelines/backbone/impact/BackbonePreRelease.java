@@ -63,7 +63,8 @@ public class BackbonePreRelease {
                     options.getScope(),
                     options.getMinimumOccurrenceCount(),
                     options.getSkipKeys(),
-                    options.getIgnoreWhitespace())));
+                    options.getIgnoreWhitespace(),
+                    options.getIgnoreAuthorshipFormatting())));
 
     matched.apply(TextIO.write().to(options.getTargetDir()));
 
@@ -88,6 +89,7 @@ public class BackbonePreRelease {
     private final int minCount;
     private final boolean skipKeys;
     private final boolean ignoreWhitespace;
+    private final boolean ignoreAuthorshipFormatting;
     private NameUsageMatchingService service; // direct service, no cache
 
     MatchTransform(
@@ -96,13 +98,15 @@ public class BackbonePreRelease {
         Integer scope,
         int minCount,
         boolean skipKeys,
-        boolean ignoreWhitespace) {
+        boolean ignoreWhitespace,
+        boolean ignoreAuthorshipFormatting) {
       this.baseAPIUrl = baseAPIUrl;
       this.schema = schema;
       this.scope = scope;
       this.minCount = minCount;
       this.skipKeys = skipKeys;
       this.ignoreWhitespace = ignoreWhitespace;
+      this.ignoreAuthorshipFormatting = ignoreAuthorshipFormatting;
     }
 
     @Setup
@@ -139,7 +143,9 @@ public class BackbonePreRelease {
                 .withGenericName(source.getString("v_genericName", schema))
                 .withSpecificEpithet(source.getString("v_specificEpithet", schema))
                 .withInfraspecificEpithet(source.getString("v_infraSpecificEpithet", schema))
-                .withAuthorship(source.getString("v_scientificNameAuthorship", schema))
+                //
+                // .withScientificNameAuthorship(source.getString("v_scientificNameAuthorship",
+                // schema))
                 .withRank(source.getString("v_taxonRank", schema))
                 .withVerbatimRank(source.getString("v_verbatimTaxonRank", schema))
                 .withScientificNameID(source.getString("v_scientificNameID", schema))
@@ -150,10 +156,11 @@ public class BackbonePreRelease {
         try {
           // short circuit the cache, but replicate same logic of the NameUsageMatchKVStoreFactory
           NameUsageMatchResponse usageMatch = service.match(matchRequest);
-
           GBIFClassification existing = GBIFClassification.buildFromHive(source, schema);
           GBIFClassification proposed;
-          if (usageMatch == null || isEmpty(usageMatch)) {
+          if (usageMatch == null) {
+            proposed = GBIFClassification.error();
+          } else if (isEmpty(usageMatch)) {
             proposed = GBIFClassification.newIncertaeSedis();
           } else {
             proposed = GBIFClassification.buildFromNameUsageMatch(usageMatch);
@@ -161,14 +168,16 @@ public class BackbonePreRelease {
 
           // copy pipelines to put unknown content into incertae sedis kingdom
           if (proposed.getKingdom() == null) {
+            System.out.println("##### Failed request: " + toDebugUrl(matchRequest));
             proposed.setKingdom("incertae sedis");
             proposed.setKingdomKey("0");
           }
 
           // emit classifications that differ, optionally considering the keys
-          if (skipKeys && !existing.classificationEquals(proposed, ignoreWhitespace)) {
+          if (skipKeys
+              && !existing.classificationEquals(
+                  proposed, ignoreWhitespace, ignoreAuthorshipFormatting)) {
             c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
-
           } else if (!skipKeys && !existing.equals(proposed)) {
             c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
           }
@@ -181,6 +190,28 @@ public class BackbonePreRelease {
           throw e; // fail the job
         }
       }
+    }
+
+    private String toDebugUrl(NameUsageMatchRequest matchRequest) {
+      return baseAPIUrl
+          + "/v2/species/match?"
+          + "kingdom="
+          + matchRequest.getKingdom()
+          + "&phylum="
+          + matchRequest.getPhylum()
+          + "&class="
+          + matchRequest.getClazz()
+          + "&order="
+          + matchRequest.getOrder()
+          + "&family="
+          + matchRequest.getFamily()
+          + "&genus="
+          + matchRequest.getGenus()
+          + "&scientificName="
+          + matchRequest.getScientificName()
+          + "&rank="
+          + matchRequest.getRank()
+          + "&verbose=false";
     }
 
     /** Extracts all taxon keys from the record. */
@@ -231,16 +262,15 @@ public class BackbonePreRelease {
           verbatim.getRank(), // avoid breaking the API (verbatimTaxonRank)
           verbatim.getScientificName(),
           verbatim.getGenericName(),
-          verbatim.getAuthorship(),
+          "", // verbatim.getScientificNameAuthorship(),
           current.toString(skipKeys),
           proposed.toString(skipKeys));
     }
 
     private static boolean isEmpty(NameUsageMatchResponse response) {
-      return response == null
-          || response.getUsage() == null
-          || (response.getClassification() == null || response.getClassification().isEmpty())
-          || response.getDiagnostics() == null;
+      return response.getUsage() == null
+          || (response.getClassification() == null || response.getClassification().isEmpty());
+      //          || response.getDiagnostics() == null;
     }
   }
 }

@@ -19,7 +19,7 @@ import org.gbif.rest.client.species.NameUsageMatchResponse;
 @Getter
 @Setter
 @EqualsAndHashCode
-class GBIFClassification {
+public class GBIFClassification {
 
   private String kingdom;
   private String phylum;
@@ -41,6 +41,18 @@ class GBIFClassification {
   private String speciesKey;
   private String taxonKey;
   private String acceptedTaxonKey;
+
+  /**
+   * @return A new classification representing unknown.
+   */
+  static GBIFClassification error() {
+    GBIFClassification c = new GBIFClassification();
+    c.scientificName = "ERROR";
+    c.kingdom = "ERROR";
+    c.setKingdomKey("-1");
+    c.taxonKey = "-1";
+    return c;
+  }
 
   /**
    * @return A new classification representing unknown.
@@ -69,59 +81,60 @@ class GBIFClassification {
     c.species = source.getString("species", schema);
     c.scientificName = source.getString("scientificName", schema);
     c.acceptedScientificName = source.getString("acceptedScientificName", schema);
-    c.kingdomKey = source.getString("kingdomKey", schema);
-    c.phylumKey = source.getString("phylumKey", schema);
-    c.classKey = source.getString("classKey", schema);
-    c.orderKey = source.getString("orderKey", schema);
-    c.familyKey = source.getString("familyKey", schema);
-    c.genusKey = source.getString("genusKey", schema);
-    c.subGenusKey = source.getString("subGenusKey", schema);
-    c.speciesKey = source.getString("speciesKey", schema);
-    c.taxonKey = source.getString("taxonKey", schema);
-    c.acceptedTaxonKey = source.getString("acceptedTaxonKey", schema);
+    c.kingdomKey = source.getInteger("kingdomKey", schema) + "";
+    c.phylumKey = source.getInteger("phylumKey", schema) + "";
+    c.classKey = source.getInteger("classKey", schema) + "";
+    c.orderKey = source.getInteger("orderKey", schema) + "";
+    c.familyKey = source.getInteger("familyKey", schema) + "";
+    c.genusKey = source.getInteger("genusKey", schema) + "";
+    c.subGenusKey = source.getInteger("subGenusKey", schema) + "";
+    c.speciesKey = source.getInteger("speciesKey", schema) + "";
+    c.taxonKey = source.getInteger("taxonKey", schema) + "";
+    c.acceptedTaxonKey = source.getInteger("acceptedTaxonKey", schema) + "";
+    ;
     return c;
   }
 
   /** Builder from a lookup web service response. */
-  static GBIFClassification buildFromNameUsageMatch(NameUsageMatchResponse usageMatch) {
+  public static GBIFClassification buildFromNameUsageMatch(NameUsageMatchResponse usageMatch) {
     GBIFClassification c = new GBIFClassification();
     if (Objects.nonNull(usageMatch.getClassification())) {
       usageMatch
           .getClassification()
           .forEach(
               rankedName -> {
-                switch (org.gbif.nameparser.api.Rank.valueOf(rankedName.getRank())) {
-                  case KINGDOM:
+                switch (rankedName.getRank()) {
+                  case "KINGDOM":
                     c.kingdom = rankedName.getName();
-                    c.kingdomKey = rankedName.getKey();
+                    c.kingdomKey = rankedName.getKey() + "";
                     break;
-                  case PHYLUM:
+                  case "PHYLUM":
                     c.phylum = rankedName.getName();
-                    c.phylumKey = rankedName.getKey();
+                    c.phylumKey = rankedName.getKey() + "";
                     break;
-                  case CLASS:
+                  case "CLASS":
                     c.klass = rankedName.getName();
-                    c.classKey = rankedName.getKey();
+                    c.classKey = rankedName.getKey() + "";
                     break;
-                  case ORDER:
+                  case "ORDER":
                     c.order = rankedName.getName();
-                    c.orderKey = rankedName.getKey();
+                    c.orderKey = rankedName.getKey() + "";
                     break;
-                  case FAMILY:
+                  case "FAMILY":
                     c.family = rankedName.getName();
-                    c.familyKey = rankedName.getKey();
+                    c.familyKey = rankedName.getKey() + "";
                     break;
-                  case GENUS:
+                  case "GENUS":
                     c.genus = rankedName.getName();
-                    c.genusKey = rankedName.getKey();
+                    c.genusKey = rankedName.getKey() + "";
                     break;
-                  case SUBGENUS:
+                  case "SUBGENUS":
                     c.subGenus = rankedName.getName();
-                    c.subGenusKey = rankedName.getKey();
+                    c.subGenusKey = rankedName.getKey() + "";
                     break;
-                  case SPECIES:
+                  case "SPECIES":
                     c.species = rankedName.getName();
-                    c.speciesKey = rankedName.getKey();
+                    c.speciesKey = rankedName.getKey() + "";
                     break;
                   default:
                     break;
@@ -130,16 +143,15 @@ class GBIFClassification {
 
       if (usageMatch.getUsage() != null) {
         c.scientificName = usageMatch.getUsage().getName();
-        c.taxonKey = usageMatch.getUsage().getKey();
+        c.taxonKey = usageMatch.getUsage().getKey() + "";
       }
 
       if (usageMatch.getAcceptedUsage() != null) {
         c.acceptedScientificName = usageMatch.getAcceptedUsage().getName();
-        c.acceptedTaxonKey = usageMatch.getAcceptedUsage().getKey();
-
+        c.acceptedTaxonKey = usageMatch.getAcceptedUsage().getKey() + "";
       } else if (usageMatch.getUsage() != null) {
         c.acceptedScientificName = usageMatch.getUsage().getName();
-        c.acceptedTaxonKey = usageMatch.getUsage().getKey();
+        c.acceptedTaxonKey = usageMatch.getUsage().getKey() + "";
       }
     }
 
@@ -197,7 +209,8 @@ class GBIFClassification {
   /**
    * An equals implementation that uses all fields except the keys, optionally ignoring whitespace.
    */
-  public boolean classificationEquals(Object o, boolean ignoreWhitespace) {
+  public boolean classificationEquals(
+      Object o, boolean ignoreWhitespace, boolean ignoreAuthorshipFormatting) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     GBIFClassification that = (GBIFClassification) o;
@@ -214,25 +227,32 @@ class GBIFClassification {
           && Objects.equals(scientificName, that.scientificName)
           && Objects.equals(acceptedScientificName, that.acceptedScientificName);
     } else {
-      return lenientEquals(kingdom, that.kingdom)
-          && lenientEquals(phylum, that.phylum)
-          && lenientEquals(klass, that.klass)
-          && lenientEquals(order, that.order)
-          && lenientEquals(family, that.family)
-          && lenientEquals(genus, that.genus)
-          && lenientEquals(subGenus, that.subGenus)
-          && lenientEquals(species, that.species)
-          && lenientEquals(scientificName, that.scientificName)
-          && lenientEquals(acceptedScientificName, that.acceptedScientificName);
+      return lenientEquals(ignoreAuthorshipFormatting, kingdom, that.kingdom)
+          && lenientEquals(ignoreAuthorshipFormatting, phylum, that.phylum)
+          && lenientEquals(ignoreAuthorshipFormatting, klass, that.klass)
+          && lenientEquals(ignoreAuthorshipFormatting, order, that.order)
+          && lenientEquals(ignoreAuthorshipFormatting, family, that.family)
+          && lenientEquals(ignoreAuthorshipFormatting, genus, that.genus)
+          && lenientEquals(ignoreAuthorshipFormatting, subGenus, that.subGenus)
+          && lenientEquals(ignoreAuthorshipFormatting, species, that.species)
+          && lenientEquals(ignoreAuthorshipFormatting, scientificName, that.scientificName)
+          && lenientEquals(
+              ignoreAuthorshipFormatting, acceptedScientificName, that.acceptedScientificName);
     }
   }
 
   /** returns true if both are null or they are the same without whitespace, ignoring case. */
-  private static boolean lenientEquals(String s1, String s2) {
+  public static boolean lenientEquals(boolean ignoreAuthorshipFormatting, String s1, String s2) {
     if (s1 == null || s2 == null) {
       return s1 == null && s2 == null;
     } else {
-      return s1.replaceAll(" ", "").equalsIgnoreCase(s2.replaceAll(" ", ""));
+      String s1c = s1.replaceAll(" ", "");
+      String s2c = s2.replaceAll(" ", "");
+      if (ignoreAuthorshipFormatting) {
+        s1c = s1c.replaceAll("[\\s(),\"']", "");
+        s2c = s2c.replaceAll("[\\s(),\"']", "");
+      }
+      return s1c.equalsIgnoreCase(s2c);
     }
   }
 }

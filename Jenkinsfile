@@ -64,6 +64,11 @@ pipeline {
       }
     }
 
+    stage('Build and push Docker images: GBIF Impact') {
+      steps {
+        sh 'build/gbif-impact-docker-build.sh'
+      }
+    }
   }
 
     post {
