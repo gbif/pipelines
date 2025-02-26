@@ -69,6 +69,7 @@ pipeline {
         sh 'build/gbif-impact-docker-build.sh'
       }
     }
+  }
 
     post {
       success {
