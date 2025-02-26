@@ -155,18 +155,18 @@ public class BackbonePreRelease {
                 .withOrder(source.getString("v_order", schema))
                 .withFamily(source.getString("v_family", schema))
                 .withGenus(source.getString("v_genus", schema))
-                .withScientificName(source.getString("v_scientificName", schema))
-                .withGenericName(source.getString("v_genericName", schema))
-                .withSpecificEpithet(source.getString("v_specificEpithet", schema))
-                .withInfraspecificEpithet(source.getString("v_infraSpecificEpithet", schema))
+                .withScientificName(source.getString("v_scientificname", schema))
+                .withGenericName(source.getString("v_genericname", schema))
+                .withSpecificEpithet(source.getString("v_specificepithet", schema))
+                .withInfraspecificEpithet(source.getString("v_infraspecificepithet", schema))
                 //
                 // .withScientificNameAuthorship(source.getString("v_scientificNameAuthorship",
                 // schema))
-                .withRank(source.getString("v_taxonRank", schema))
-                .withVerbatimRank(source.getString("v_verbatimTaxonRank", schema))
-                .withScientificNameID(source.getString("v_scientificNameID", schema))
-                .withTaxonID(source.getString("v_taxonID", schema))
-                .withTaxonConceptID(source.getString("v_taxonConceptID", schema))
+                .withRank(source.getString("v_taxonrank", schema))
+                .withVerbatimRank(source.getString("v_verbatimtaxonRank", schema))
+                .withScientificNameID(source.getString("v_scientificnameid", schema))
+                .withTaxonID(source.getString("v_taxonid", schema))
+                .withTaxonConceptID(source.getString("v_taxonconceptid", schema))
                 .build();
 
         try {
