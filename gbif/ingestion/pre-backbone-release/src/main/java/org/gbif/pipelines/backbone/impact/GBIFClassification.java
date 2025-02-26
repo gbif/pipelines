@@ -68,9 +68,11 @@ public class GBIFClassification {
    * Builder for content represented in Hive sourced data using GBIF occurrence_hdfs naming
    * convention.
    */
-  static GBIFClassification buildFromHive(HCatRecord source, HCatSchema schema)
+  static GBIFClassification buildFromHiveSource(HCatRecord source, HCatSchema schema)
       throws HCatException {
+
     GBIFClassification c = new GBIFClassification();
+
     c.kingdom = source.getString("kingdom", schema);
     c.phylum = source.getString("phylum", schema);
     c.klass = source.getString("class", schema);
@@ -91,7 +93,6 @@ public class GBIFClassification {
     c.speciesKey = source.getInteger("specieskey", schema) + "";
     c.taxonKey = source.getInteger("taxonkey", schema) + "";
     c.acceptedTaxonKey = source.getInteger("acceptedtaxonkey", schema) + "";
-    ;
     return c;
   }
 

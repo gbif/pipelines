@@ -172,7 +172,7 @@ public class BackbonePreRelease {
         try {
           // short circuit the cache, but replicate same logic of the NameUsageMatchKVStoreFactory
           NameUsageMatchResponse usageMatch = service.match(matchRequest);
-          GBIFClassification existing = GBIFClassification.buildFromHive(source, schema);
+          GBIFClassification existing = GBIFClassification.buildFromHiveSource(source, schema);
           GBIFClassification proposed;
           if (usageMatch == null) {
             proposed = GBIFClassification.error();
