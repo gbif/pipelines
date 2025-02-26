@@ -93,7 +93,7 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <dwca-io.version>2.17-H3-SNAPSHOT</dwca-io.version>
-    <gbif-api.version>1.18.0-multitaxonomy-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>2.0.3-multitaxonomy-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.59</gbif-common.version>
     <dwc-api.version>1.49-H3-multitaxonomy-SNAPSHOT</dwc-api.version>
     <kvs.version>2.0-multitaxonomy-SNAPSHOT</kvs.version>
