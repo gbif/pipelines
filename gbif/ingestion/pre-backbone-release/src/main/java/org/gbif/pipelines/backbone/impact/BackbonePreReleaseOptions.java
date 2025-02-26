@@ -61,24 +61,15 @@ public interface BackbonePreReleaseOptions extends HadoopFileSystemOptions {
 
   void setIgnoreAuthorshipFormatting(boolean ignoreAuthorshipFormatting);
 
-  @Description(
-      "Match against the checklistbank API and use the specified dataset key for name usage mapping")
-  @Default.String("")
-  String getClbDatasetKey();
+  @Description("Path to hdfs-site-config.xml")
+  String getHdfsSiteConfig();
 
-  void setClbDatasetKey(String clbDatasetKey);
+  void setHdfsSiteConfig(String path);
 
-  @Description("CLB user to use for basic auth requests")
-  @Default.String("")
-  String getClbUsername();
+  @Description("Path to core-site-config.xml")
+  String getCoreSiteConfig();
 
-  void setClbUsername(String clbUsername);
-
-  @Description("CLB password to use for basic auth requests")
-  @Default.String("")
-  String getClbPassword();
-
-  void setClbPassword(String clbPassword);
+  void setCoreSiteConfig(String path);
 
   @Description(
       "Output infrageneric markers in the scientific name (CLB v2 includes these in the scientific name)")
