@@ -127,7 +127,7 @@
 
   <profiles>
     <profile>
-      <id>extra-artifacts</id>
+      <id>pre-backbone-release-artifact</id>
       <build>
         <plugins>
           <plugin>

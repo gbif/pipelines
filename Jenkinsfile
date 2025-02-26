@@ -29,7 +29,7 @@ pipeline {
         }
       }
       steps {
-        sh 'mvn clean verify -DskipITs -U -T 1 -P skip-coverage,skip-release-it'
+        sh 'mvn clean verify -DskipITs -U -T 1 -P skip-coverage,skip-release-it,pre-backbone-release-artifact'
       }
     }
 
@@ -82,7 +82,7 @@ pipeline {
 }
 
 def getProfiles() {
-  def profiles = "skip-coverage,skip-release-it,gbif-artifacts"
+  def profiles = "skip-coverage,skip-release-it,gbif-artifacts,pre-backbone-release-artifact"
   if (params.TYPE == 'FULL') {
       profiles += ",extra-artifacts"
   }
