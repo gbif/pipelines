@@ -1,7 +1,5 @@
 package org.gbif.pipelines.backbone.impact.v2;
 
-import static org.gbif.rest.client.retrofit.SyncCall.syncCall;
-
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +11,9 @@ import java.util.stream.Stream;
 import okhttp3.*;
 import org.gbif.kvs.species.Identification;
 import org.gbif.rest.client.configuration.ClientConfiguration;
+import org.gbif.rest.client.retrofit.RestClientException;
+import retrofit2.HttpException;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
@@ -41,12 +42,6 @@ public class NameUsageMatchV2SyncClient implements NameUsageMatchV2Service, Clos
             .validateEagerly(true)
             .build()
             .create(NameUsageMatchV2RetrofitService.class);
-    //
-    //    this.nameUsageMatchV2RetrofitService =
-    //        RetrofitClientFactory.createRetrofitClient(
-    //            this.clbOkHttpClient,
-    //            clientConfiguration.getBaseApiUrl(),
-    //            NameUsageMatchV2RetrofitService.class);
   }
 
   @Override
@@ -67,6 +62,20 @@ public class NameUsageMatchV2SyncClient implements NameUsageMatchV2Service, Clos
           files.forEach(File::delete);
         }
       }
+    }
+  }
+
+  public static <T> T syncCall(retrofit2.Call<T> call) {
+    try {
+      Response<T> response = call.execute();
+      if (response.isSuccessful() && response.body() != null) {
+        return (T) response.body();
+      } else {
+        System.err.println("Service responded with an error " + response);
+        throw new HttpException(response);
+      }
+    } catch (IOException ex) {
+      throw new RestClientException("Error executing call", ex);
     }
   }
 
