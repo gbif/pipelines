@@ -168,35 +168,35 @@ public class GBIFClassification {
           .forEach(
               rankedName -> {
                 switch (rankedName.getRank()) {
-                  case KINGDOM:
+                  case "KINGDOM":
                     c.kingdom = rankedName.getName();
                     c.kingdomKey = rankedName.getKey();
                     break;
-                  case PHYLUM:
+                  case "PHYLUM":
                     c.phylum = rankedName.getName();
                     c.phylumKey = rankedName.getKey();
                     break;
-                  case CLASS:
+                  case "CLASS":
                     c.klass = rankedName.getName();
                     c.classKey = rankedName.getKey();
                     break;
-                  case ORDER:
+                  case "ORDER":
                     c.order = rankedName.getName();
                     c.orderKey = rankedName.getKey();
                     break;
-                  case FAMILY:
+                  case "FAMILY":
                     c.family = rankedName.getName();
                     c.familyKey = rankedName.getKey();
                     break;
-                  case GENUS:
+                  case "GENUS":
                     c.genus = rankedName.getName();
                     c.genusKey = rankedName.getKey();
                     break;
-                  case SUBGENUS:
+                  case "SUBGENUS":
                     c.subGenus = rankedName.getName();
                     c.subGenusKey = rankedName.getKey();
                     break;
-                  case SPECIES:
+                  case "SPECIES":
                     c.species = rankedName.getName();
                     c.speciesKey = rankedName.getKey();
                     break;

@@ -14,6 +14,8 @@ import okhttp3.*;
 import org.gbif.kvs.species.Identification;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.retrofit.RetrofitClientFactory;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 public class NameUsageMatchV2SyncClient implements NameUsageMatchV2Service, Closeable {
 
@@ -31,11 +33,17 @@ public class NameUsageMatchV2SyncClient implements NameUsageMatchV2Service, Clos
 
   public NameUsageMatchV2SyncClient(ClientConfiguration clientConfiguration) {
     this.clbOkHttpClient = createClient(clientConfiguration);
+
+
     this.nameUsageMatchV2RetrofitService =
-        RetrofitClientFactory.createRetrofitClient(
-            this.clbOkHttpClient,
-            clientConfiguration.getBaseApiUrl(),
-            NameUsageMatchV2RetrofitService.class);
+            (new Retrofit.Builder()).client(clbOkHttpClient).baseUrl(clientConfiguration.getBaseApiUrl())
+                    .addConverterFactory(JacksonConverterFactory.create()).validateEagerly(true).build().create(NameUsageMatchV2RetrofitService.class);
+//
+//    this.nameUsageMatchV2RetrofitService =
+//        RetrofitClientFactory.createRetrofitClient(
+//            this.clbOkHttpClient,
+//            clientConfiguration.getBaseApiUrl(),
+//            NameUsageMatchV2RetrofitService.class);
   }
 
   @Override

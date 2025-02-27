@@ -116,7 +116,7 @@ public class NameUsageMatchV2 implements Serializable {
     private String key;
     private String name;
     private String code;
-    private Rank rank;
+    private String rank;
   }
 
   public enum MatchType {
