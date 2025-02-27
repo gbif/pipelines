@@ -1,12 +1,11 @@
 package org.gbif.pipelines.backbone.impact.v2;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -55,14 +54,19 @@ public class NameUsageMatchV2 implements Serializable {
   public static class Usage {
     @Schema(description = "The identifier for the name usage")
     private String key;
+
     @Schema(description = "The name usage")
     private String name;
+
     private String canonicalName;
     private String authorship;
+
     @Schema(description = "The taxonomic rank for the name usage")
     private Rank rank;
+
     @Schema(description = "The nomenclatural code for the name usage")
     private NomCode code;
+
     private String uninomial;
     private String genus;
     private String infragenericEpithet;
@@ -90,7 +94,7 @@ public class NameUsageMatchV2 implements Serializable {
     private String state;
     private java.util.Set<String> warnings;
 
-    //additional flags
+    // additional flags
     private boolean isAbbreviated;
     private boolean isAutonym;
     private boolean isBinomial;
