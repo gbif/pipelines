@@ -75,6 +75,10 @@ public class GBIFClassification {
     c.phylum = source.getString("phylum", schema);
     c.klass = source.getString("class", schema);
     c.order = ""; // source.getString("order", schema);
+    int orderIndex = schema.getPosition("order"); // Get the index of the field
+    if (orderIndex >= 0) {
+      c.order = (String) source.get(orderIndex);
+    }
     c.family = source.getString("family", schema);
     c.genus = source.getString("genus", schema);
     c.subGenus = source.getString("subgenus", schema);
@@ -220,7 +224,7 @@ public class GBIFClassification {
       return Objects.equals(kingdom, that.kingdom)
           && Objects.equals(phylum, that.phylum)
           && Objects.equals(klass, that.klass)
-//          && Objects.equals(order, that.order)
+          && Objects.equals(order, that.order)
           && Objects.equals(family, that.family)
           && Objects.equals(genus, that.genus)
           && Objects.equals(subGenus, that.subGenus)
@@ -231,7 +235,7 @@ public class GBIFClassification {
       return lenientEquals(ignoreAuthorshipFormatting, kingdom, that.kingdom)
           && lenientEquals(ignoreAuthorshipFormatting, phylum, that.phylum)
           && lenientEquals(ignoreAuthorshipFormatting, klass, that.klass)
-//          && lenientEquals(ignoreAuthorshipFormatting, order, that.order)
+          && lenientEquals(ignoreAuthorshipFormatting, order, that.order)
           && lenientEquals(ignoreAuthorshipFormatting, family, that.family)
           && lenientEquals(ignoreAuthorshipFormatting, genus, that.genus)
           && lenientEquals(ignoreAuthorshipFormatting, subGenus, that.subGenus)
