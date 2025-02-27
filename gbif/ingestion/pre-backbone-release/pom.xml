@@ -28,8 +28,23 @@
     </dependency>
 
     <dependency>
+      <groupId>com.squareup.okio</groupId>
+      <artifactId>okio</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.gbif.kvs</groupId>
       <artifactId>kvs-gbif</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>com.squareup.okio</groupId>
+          <artifactId>okio</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.squareup.okhttp</groupId>
+          <artifactId>okhttp</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Beam -->
