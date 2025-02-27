@@ -121,7 +121,7 @@
 
   <profiles>
     <profile>
-      <id>extra-artifacts</id>
+      <id>gbif-artifacts</id>
       <build>
         <plugins>
           <plugin>
