@@ -1,7 +1,6 @@
 package org.gbif.pipelines.backbone.impact.v2;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,8 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.gbif.nameparser.api.NomCode;
-import org.gbif.nameparser.api.Rank;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -52,20 +49,16 @@ public class NameUsageMatchV2 implements Serializable {
 
   @Data
   public static class Usage {
-    @Schema(description = "The identifier for the name usage")
     private String key;
 
-    @Schema(description = "The name usage")
     private String name;
 
     private String canonicalName;
     private String authorship;
 
-    @Schema(description = "The taxonomic rank for the name usage")
-    private Rank rank;
+    private String rank;
 
-    @Schema(description = "The nomenclatural code for the name usage")
-    private NomCode code;
+    private String code;
 
     private String uninomial;
     private String genus;

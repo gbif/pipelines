@@ -190,10 +190,10 @@
                       <shadedPattern>g282.com.google.gson</shadedPattern>
                     </relocation>
                     <!-- Transient from core: conflicts with Beam on Spark -->
-                    <relocation>
-                      <pattern>okio</pattern>
-                      <shadedPattern>o113.okio</shadedPattern>
-                    </relocation>
+<!--                    <relocation>-->
+<!--                      <pattern>okio</pattern>-->
+<!--                      <shadedPattern>o113.okio</shadedPattern>-->
+<!--                    </relocation>-->
 
                     <relocation>
                       <pattern>retrofit2</pattern>

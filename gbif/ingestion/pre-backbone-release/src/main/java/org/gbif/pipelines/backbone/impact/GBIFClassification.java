@@ -10,7 +10,6 @@ import org.apache.hive.hcatalog.common.HCatException;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.gbif.pipelines.backbone.impact.v2.NameUsageMatchV2;
-import org.gbif.rest.client.species.NameUsageMatch;
 
 /**
  * A classification container intended for use when classifications are to be compared for equality;
@@ -95,69 +94,69 @@ public class GBIFClassification {
     ;
     return c;
   }
-
-  /** Builder from a lookup web service response. */
-  public static GBIFClassification buildFromNameUsageMatch(NameUsageMatch usageMatch) {
-    GBIFClassification c = new GBIFClassification();
-    if (Objects.nonNull(usageMatch.getClassification())) {
-      usageMatch
-          .getClassification()
-          .forEach(
-              rankedName -> {
-                switch (rankedName.getRank()) {
-                  case KINGDOM:
-                    c.kingdom = rankedName.getName();
-                    c.kingdomKey = rankedName.getKey() + "";
-                    break;
-                  case PHYLUM:
-                    c.phylum = rankedName.getName();
-                    c.phylumKey = rankedName.getKey() + "";
-                    break;
-                  case CLASS:
-                    c.klass = rankedName.getName();
-                    c.classKey = rankedName.getKey() + "";
-                    break;
-                  case ORDER:
-                    c.order = rankedName.getName();
-                    c.orderKey = rankedName.getKey() + "";
-                    break;
-                  case FAMILY:
-                    c.family = rankedName.getName();
-                    c.familyKey = rankedName.getKey() + "";
-                    break;
-                  case GENUS:
-                    c.genus = rankedName.getName();
-                    c.genusKey = rankedName.getKey() + "";
-                    break;
-                  case SUBGENUS:
-                    c.subGenus = rankedName.getName();
-                    c.subGenusKey = rankedName.getKey() + "";
-                    break;
-                  case SPECIES:
-                    c.species = rankedName.getName();
-                    c.speciesKey = rankedName.getKey() + "";
-                    break;
-                  default:
-                    break;
-                }
-              });
-
-      if (usageMatch.getUsage() != null) {
-        c.scientificName = usageMatch.getUsage().getName();
-        c.taxonKey = usageMatch.getUsage().getKey() + "";
-      }
-
-      if (usageMatch.getAcceptedUsage() != null) {
-        c.acceptedScientificName = usageMatch.getAcceptedUsage().getName();
-        c.acceptedTaxonKey = usageMatch.getAcceptedUsage().getKey() + "";
-      } else if (usageMatch.getUsage() != null) {
-        c.acceptedScientificName = usageMatch.getUsage().getName();
-        c.acceptedTaxonKey = usageMatch.getUsage().getKey() + "";
-      }
-    }
-
-    return c;
-  }
+//
+//  /** Builder from a lookup web service response. */
+//  public static GBIFClassification buildFromNameUsageMatch(NameUsageMatch usageMatch) {
+//    GBIFClassification c = new GBIFClassification();
+//    if (Objects.nonNull(usageMatch.getClassification())) {
+//      usageMatch
+//          .getClassification()
+//          .forEach(
+//              rankedName -> {
+//                switch (rankedName.getRank()) {
+//                  case KINGDOM:
+//                    c.kingdom = rankedName.getName();
+//                    c.kingdomKey = rankedName.getKey() + "";
+//                    break;
+//                  case PHYLUM:
+//                    c.phylum = rankedName.getName();
+//                    c.phylumKey = rankedName.getKey() + "";
+//                    break;
+//                  case CLASS:
+//                    c.klass = rankedName.getName();
+//                    c.classKey = rankedName.getKey() + "";
+//                    break;
+//                  case ORDER:
+//                    c.order = rankedName.getName();
+//                    c.orderKey = rankedName.getKey() + "";
+//                    break;
+//                  case FAMILY:
+//                    c.family = rankedName.getName();
+//                    c.familyKey = rankedName.getKey() + "";
+//                    break;
+//                  case GENUS:
+//                    c.genus = rankedName.getName();
+//                    c.genusKey = rankedName.getKey() + "";
+//                    break;
+//                  case SUBGENUS:
+//                    c.subGenus = rankedName.getName();
+//                    c.subGenusKey = rankedName.getKey() + "";
+//                    break;
+//                  case SPECIES:
+//                    c.species = rankedName.getName();
+//                    c.speciesKey = rankedName.getKey() + "";
+//                    break;
+//                  default:
+//                    break;
+//                }
+//              });
+//
+//      if (usageMatch.getUsage() != null) {
+//        c.scientificName = usageMatch.getUsage().getName();
+//        c.taxonKey = usageMatch.getUsage().getKey() + "";
+//      }
+//
+//      if (usageMatch.getAcceptedUsage() != null) {
+//        c.acceptedScientificName = usageMatch.getAcceptedUsage().getName();
+//        c.acceptedTaxonKey = usageMatch.getAcceptedUsage().getKey() + "";
+//      } else if (usageMatch.getUsage() != null) {
+//        c.acceptedScientificName = usageMatch.getUsage().getName();
+//        c.acceptedTaxonKey = usageMatch.getUsage().getKey() + "";
+//      }
+//    }
+//
+//    return c;
+//  }
 
   /** Builder from a lookup web service response. */
   public static GBIFClassification buildFromNameUsageMatch(NameUsageMatchV2 usageMatch) {
