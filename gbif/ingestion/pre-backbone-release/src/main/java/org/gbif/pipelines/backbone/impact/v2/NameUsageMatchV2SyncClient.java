@@ -20,10 +20,13 @@ public class NameUsageMatchV2SyncClient implements NameUsageMatchV2Service, Clos
   private final OkHttpClient clbOkHttpClient;
 
   public NameUsageMatchV2SyncClient(String baseUrl) {
-    this.clbOkHttpClient = (new OkHttpClient.Builder())
+    this.clbOkHttpClient =
+        (new OkHttpClient.Builder())
             .connectTimeout(60000, TimeUnit.SECONDS)
             .readTimeout(60000, TimeUnit.SECONDS)
-            .callTimeout(60000, TimeUnit.SECONDS).build();;
+            .callTimeout(60000, TimeUnit.SECONDS)
+            .build();
+    ;
 
     this.nameUsageMatchV2RetrofitService =
         (new retrofit2.Retrofit.Builder())

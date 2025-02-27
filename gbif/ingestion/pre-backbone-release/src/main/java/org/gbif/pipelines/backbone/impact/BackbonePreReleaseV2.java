@@ -125,8 +125,7 @@ public class BackbonePreReleaseV2 {
 
     @Setup
     public void setup() {
-      service =
-          new NameUsageMatchV2SyncClient(baseAPIUrl);
+      service = new NameUsageMatchV2SyncClient(baseAPIUrl);
     }
 
     @ProcessElement
