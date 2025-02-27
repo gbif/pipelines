@@ -109,6 +109,16 @@ pipeline {
         sh 'build/ingestion-docker-build.sh ${RELEASE} ${VERSION}'
       }
     }
+    stage('Build and publish Docker image for gbif impact') {
+      when {
+        expression {
+          env.DRY_RUN == 'false'
+        }
+      }
+      steps {
+        sh 'build/gbif-impact-docker-build.sh ${RELEASE} ${VERSION}'
+      }
+    }
   }
   post {
     success {
