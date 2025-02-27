@@ -140,17 +140,17 @@ public class BackbonePreReleaseV2 {
                 .withOrder(source.getString("v_order", schema))
                 .withFamily(source.getString("v_family", schema))
                 .withGenus(source.getString("v_genus", schema))
-                .withScientificName(source.getString("v_scientificName", schema))
-                .withGenericName(source.getString("v_genericName", schema))
-                .withSpecificEpithet(source.getString("v_specificEpithet", schema))
-                .withInfraspecificEpithet(source.getString("v_infraSpecificEpithet", schema))
+                .withScientificName(source.getString("v_scientificname", schema))
+                .withGenericName(source.getString("v_genericname", schema))
+                .withSpecificEpithet(source.getString("v_specificepithet", schema))
+                .withInfraspecificEpithet(source.getString("v_infraspecificepithet", schema))
                 .withScientificNameAuthorship(
-                    source.getString("v_scientificNameAuthorship", schema))
-                .withRank(source.getString("v_taxonRank", schema))
-                .withVerbatimRank(source.getString("v_verbatimTaxonRank", schema))
-                .withScientificNameID(source.getString("v_scientificNameID", schema))
-                .withTaxonID(source.getString("v_taxonID", schema))
-                .withTaxonConceptID(source.getString("v_taxonConceptID", schema))
+                    source.getString("v_scientificnameauthorship", schema))
+                .withRank(source.getString("v_taxonrank", schema))
+                .withVerbatimRank(source.getString("v_verbatimtaxonrank", schema))
+                .withScientificNameID(source.getString("v_scientificnameid", schema))
+                .withTaxonID(source.getString("v_taxonid", schema))
+                .withTaxonConceptID(source.getString("v_taxonconceptid", schema))
                 .build();
 
         try {
@@ -220,24 +220,24 @@ public class BackbonePreReleaseV2 {
     private static Set<Integer> taxaKeys(HCatRecord record, HCatSchema schema)
         throws HCatException {
       HashSet<Integer> keys = new HashSet<>();
-      if (record.getInteger("kingdomKey", schema) != null)
-        keys.add(record.getInteger("kingdomKey", schema));
-      if (record.getInteger("phylumKey", schema) != null)
-        keys.add(record.getInteger("phylumKey", schema));
-      if (record.getInteger("classKey", schema) != null)
-        keys.add(record.getInteger("classKey", schema));
-      if (record.getInteger("orderKey", schema) != null)
-        keys.add(record.getInteger("orderKey", schema));
-      if (record.getInteger("familyKey", schema) != null)
-        keys.add(record.getInteger("familyKey", schema));
-      if (record.getInteger("genusKey", schema) != null)
-        keys.add(record.getInteger("genusKey", schema));
-      if (record.getInteger("subGenusKey", schema) != null)
-        keys.add(record.getInteger("subGenusKey", schema));
-      if (record.getInteger("speciesKey", schema) != null)
-        keys.add(record.getInteger("speciesKey", schema));
-      if (record.getInteger("taxonKey", schema) != null)
-        keys.add(record.getInteger("taxonKey", schema));
+      if (record.getInteger("kingdomkey", schema) != null)
+        keys.add(record.getInteger("kingdomkey", schema));
+      if (record.getInteger("phylumkey", schema) != null)
+        keys.add(record.getInteger("phylumkey", schema));
+      if (record.getInteger("classkey", schema) != null)
+        keys.add(record.getInteger("classkey", schema));
+      if (record.getInteger("orderkey", schema) != null)
+        keys.add(record.getInteger("orderkey", schema));
+      if (record.getInteger("familykey", schema) != null)
+        keys.add(record.getInteger("familykey", schema));
+      if (record.getInteger("genuskey", schema) != null)
+        keys.add(record.getInteger("genuskey", schema));
+      if (record.getInteger("subgenuskey", schema) != null)
+        keys.add(record.getInteger("subgenuskey", schema));
+      if (record.getInteger("specieskey", schema) != null)
+        keys.add(record.getInteger("specieskey", schema));
+      if (record.getInteger("taxonkey", schema) != null)
+        keys.add(record.getInteger("taxonkey", schema));
       return keys;
     }
 
