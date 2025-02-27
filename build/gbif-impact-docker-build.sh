@@ -8,7 +8,7 @@ MODULE="pre-backbone-release"
 IMAGE=docker.gbif.org/${MODULE}:${POM_VERSION}
 IMAGE_LATEST=docker.gbif.org/${MODULE}:latest
 
-echo "Building Docker image: ${IMAGE}"
+echo "Building Docker image: ${IMAGE} with version ${POM_VERSION}"
 docker build -f ./gbif/ingestion/${MODULE}/docker/Dockerfile ./gbif/ingestion/${MODULE} --build-arg JAR_FILE=${MODULE}-${POM_VERSION}-shaded.jar -t ${IMAGE}
 
 echo "Pushing Docker image to the repository"
