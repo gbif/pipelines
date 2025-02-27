@@ -92,4 +92,14 @@ public interface BackbonePreReleaseOptions extends HadoopFileSystemOptions {
   boolean getIgnoreSuppliedRank();
 
   void setIgnoreSuppliedRank(boolean ignoreSuppliedRank);
+
+  @Description("Path to hdfs-site-config.xml")
+  String getHdfsSiteConfig();
+
+  void setHdfsSiteConfig(String path);
+
+  @Description("Path to core-site-config.xml")
+  String getCoreSiteConfig();
+
+  void setCoreSiteConfig(String path);
 }

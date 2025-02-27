@@ -1,5 +1,7 @@
 package org.gbif.pipelines.backbone.impact;
 
+import com.google.common.base.Strings;
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import lombok.AccessLevel;
@@ -13,7 +15,9 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -44,6 +48,19 @@ public class BackbonePreRelease {
     BackbonePreReleaseOptions options =
         PipelineOptionsFactory.fromArgs(args).as(BackbonePreReleaseOptions.class);
     options.setRunner(SparkRunner.class);
+
+    // register hdfs configs
+    String hdfsPath = options.getHdfsSiteConfig();
+    String corePath = options.getCoreSiteConfig();
+    boolean isHdfsExist = !Strings.isNullOrEmpty(hdfsPath) && new File(hdfsPath).exists();
+    boolean isCoreExist = !Strings.isNullOrEmpty(corePath) && new File(corePath).exists();
+    if (isHdfsExist && isCoreExist) {
+      Configuration conf = new Configuration(false);
+      conf.addResource(new Path(hdfsPath));
+      conf.addResource(new Path(corePath));
+      options.setHdfsConfiguration(Collections.singletonList(conf));
+    }
+
     Pipeline p = Pipeline.create(options);
 
     final HCatSchema schema = readSchema(options);
