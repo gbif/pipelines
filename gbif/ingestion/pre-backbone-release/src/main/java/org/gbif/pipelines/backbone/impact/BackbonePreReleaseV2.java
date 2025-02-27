@@ -175,7 +175,7 @@ public class BackbonePreReleaseV2 {
 
           // copy pipelines to put unknown content into incertae sedis kingdom
           if (proposed.getKingdom() == null) {
-            System.out.println("##### Failed request: " + toDebugUrl(matchRequest));
+            System.out.println("##### Failed request: " + toDebugUrl(baseAPIUrl, matchRequest));
             proposed.setKingdom("incertae sedis");
             proposed.setKingdomKey("0");
           }
@@ -184,9 +184,9 @@ public class BackbonePreReleaseV2 {
           if (skipKeys
               && !existing.classificationEquals(
                   proposed, ignoreWhitespace, ignoreAuthorshipFormatting)) {
-            c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
+            c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys, baseAPIUrl));
           } else if (!skipKeys && !existing.equals(proposed)) {
-            c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
+            c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys, baseAPIUrl));
           }
 
         } catch (Exception e) {
@@ -199,7 +199,7 @@ public class BackbonePreReleaseV2 {
       }
     }
 
-    private String toDebugUrl(Identification matchRequest) {
+    private static String toDebugUrl(String baseAPIUrl, Identification matchRequest) {
       return baseAPIUrl
           + "/v2/species/match?"
           + "kingdom="
@@ -254,11 +254,15 @@ public class BackbonePreReleaseV2 {
         Identification verbatim,
         GBIFClassification current,
         GBIFClassification proposed,
-        boolean skipKeys) {
+        boolean skipKeys,
+        String baseUrl) {
 
       return String.join(
           "\t",
           String.valueOf(count),
+          verbatim.getTaxonID(),
+          verbatim.getTaxonConceptID(),
+          verbatim.getScientificNameID(),
           verbatim.getKingdom(),
           verbatim.getPhylum(),
           verbatim.getClazz(),
@@ -273,7 +277,8 @@ public class BackbonePreReleaseV2 {
           verbatim.getGenericName(),
           verbatim.getScientificNameAuthorship(),
           current.toString(skipKeys),
-          proposed.toString(skipKeys));
+          proposed.toString(skipKeys),
+          toDebugUrl(baseUrl, verbatim));
     }
 
     @Teardown
