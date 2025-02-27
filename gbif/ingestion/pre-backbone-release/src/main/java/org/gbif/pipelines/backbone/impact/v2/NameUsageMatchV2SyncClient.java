@@ -9,12 +9,9 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import okhttp3.*;
-import org.gbif.kvs.species.Identification;
-import org.gbif.rest.client.configuration.ClientConfiguration;
-import org.gbif.rest.client.retrofit.RestClientException;
+import org.gbif.pipelines.backbone.impact.Identification;
 import retrofit2.HttpException;
 import retrofit2.Response;
-import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 public class NameUsageMatchV2SyncClient implements NameUsageMatchV2Service, Closeable {
@@ -22,22 +19,16 @@ public class NameUsageMatchV2SyncClient implements NameUsageMatchV2Service, Clos
   private final NameUsageMatchV2RetrofitService nameUsageMatchV2RetrofitService;
   private final OkHttpClient clbOkHttpClient;
 
-  public static OkHttpClient createClient(ClientConfiguration config) {
-    OkHttpClient.Builder clientBuilder =
-        (new OkHttpClient.Builder())
-            .connectTimeout(config.getTimeOut(), TimeUnit.SECONDS)
-            .readTimeout(config.getTimeOut(), TimeUnit.SECONDS)
-            .callTimeout(config.getTimeOut(), TimeUnit.SECONDS);
-    return clientBuilder.build();
-  }
-
-  public NameUsageMatchV2SyncClient(ClientConfiguration clientConfiguration) {
-    this.clbOkHttpClient = createClient(clientConfiguration);
+  public NameUsageMatchV2SyncClient(String baseUrl) {
+    this.clbOkHttpClient = (new OkHttpClient.Builder())
+            .connectTimeout(60000, TimeUnit.SECONDS)
+            .readTimeout(60000, TimeUnit.SECONDS)
+            .callTimeout(60000, TimeUnit.SECONDS).build();;
 
     this.nameUsageMatchV2RetrofitService =
-        (new Retrofit.Builder())
+        (new retrofit2.Retrofit.Builder())
             .client(clbOkHttpClient)
-            .baseUrl(clientConfiguration.getBaseApiUrl())
+            .baseUrl(baseUrl)
             .addConverterFactory(JacksonConverterFactory.create())
             .validateEagerly(true)
             .build()
@@ -75,7 +66,7 @@ public class NameUsageMatchV2SyncClient implements NameUsageMatchV2Service, Clos
         throw new HttpException(response);
       }
     } catch (IOException ex) {
-      throw new RestClientException("Error executing call", ex);
+      throw new RuntimeException("Error executing call", ex);
     }
   }
 

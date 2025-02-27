@@ -25,11 +25,9 @@ import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchemaUtils;
 import org.apache.thrift.TException;
-import org.gbif.kvs.species.Identification;
 import org.gbif.pipelines.backbone.impact.v2.NameUsageMatchV2;
 import org.gbif.pipelines.backbone.impact.v2.NameUsageMatchV2Service;
 import org.gbif.pipelines.backbone.impact.v2.NameUsageMatchV2SyncClient;
-import org.gbif.rest.client.configuration.ClientConfiguration;
 
 /**
  * Takes the classification from verbatim data and runs it against a species lookup service
@@ -128,12 +126,7 @@ public class BackbonePreReleaseV2 {
     @Setup
     public void setup() {
       service =
-          new NameUsageMatchV2SyncClient(
-              ClientConfiguration.builder()
-                  .withBaseApiUrl(baseAPIUrl)
-                  .withFileCacheMaxSizeMb(1L)
-                  .withTimeOut(120L)
-                  .build());
+          new NameUsageMatchV2SyncClient(baseAPIUrl);
     }
 
     @ProcessElement
