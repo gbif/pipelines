@@ -47,6 +47,7 @@
       {"name":"id","type":["null","string"],"default":null,"doc":""},
       {"name":"gbifId","type":"long",",doc":""},
       {"name":"lastCrawled","type":["null","string"],"default":null,"doc":""},
+      {"name":"yearMonthGbifIdSort","type":"long","doc":""},
       {"name":"created","type":["null","string"],"default":null,"doc":""},
       {"name":"datasetKey","type":["null","string"],"default":null,"doc":""},
       {"name":"crawlId","type":["null","int"],"default":null,"doc":""},

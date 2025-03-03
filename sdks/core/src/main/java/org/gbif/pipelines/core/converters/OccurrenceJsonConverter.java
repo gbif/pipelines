@@ -16,6 +16,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
+import org.gbif.pipelines.core.utils.SortUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -64,6 +65,7 @@ public class OccurrenceJsonConverter {
     mapGrscicollRecord(builder);
     mapMultimediaRecord(builder);
     mapExtendedRecord(builder);
+    mapSortField(builder);
 
     return builder.build();
   }
@@ -369,5 +371,11 @@ public class OccurrenceJsonConverter {
             grscicoll,
             multimedia)
         .ifPresent(builder::setCreated);
+  }
+
+  private void mapSortField(OccurrenceJsonRecord.Builder builder) {
+    builder.setYearMonthGbifIdSort(
+        SortUtils.yearDescMonthAscGbifIdAscSortKey(
+            builder.getYear(), builder.getMonth(), builder.getGbifId()));
   }
 }
