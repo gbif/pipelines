@@ -8,6 +8,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import lombok.SneakyThrows;
@@ -19,11 +20,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class DownloadFileManager {
 
+  private static final Set<String> SUPPORTED_CONTENT_TYPES =
+      Set.of("application/zip", "application/xml", "text/csv");
+
   public static boolean isAvailable(String url) {
     try {
       HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
       con.setRequestMethod("HEAD");
-      return (con.getResponseCode() == HttpURLConnection.HTTP_OK);
+
+      int responseCode = con.getResponseCode();
+      String content = con.getHeaderField("Content-Type");
+
+      return responseCode == HttpURLConnection.HTTP_OK
+          && SUPPORTED_CONTENT_TYPES.stream().anyMatch(content::contains);
     } catch (Exception e) {
       log.warn("Error getting file information", e);
       return false;
