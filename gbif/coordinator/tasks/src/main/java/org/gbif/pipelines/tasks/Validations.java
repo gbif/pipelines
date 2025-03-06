@@ -40,6 +40,15 @@ public class Validations {
 
   public static void updateStatus(
       ValidationWsClient validationClient, UUID key, StepType stepType, Status status) {
+    updateStatus(validationClient, key, stepType, status, null);
+  }
+
+  public static void updateStatus(
+      ValidationWsClient validationClient,
+      UUID key,
+      StepType stepType,
+      Status status,
+      String message) {
 
     Validation validation = Retry.decorateFunction(RETRY, validationClient::get).apply(key);
     if (validation == null) {
@@ -49,11 +58,9 @@ public class Validations {
 
     Graph<StepType> validatorWorkflow = PipelinesWorkflow.getValidatorWorkflow();
     // Mark all previous steps as FINISHED
-    for (ValidationStep step : validation.getMetrics().getStepTypes()) {
-      if (validatorWorkflow.getLevel(stepType) > step.getExecutionOrder()) {
-        step.setStatus(Status.FINISHED);
-      }
-    }
+    validation.getMetrics().getStepTypes().stream()
+        .filter(step -> validatorWorkflow.getLevel(stepType) > step.getExecutionOrder())
+        .forEach(step -> step.setStatus(Status.FINISHED));
 
     Status newStatus = status;
     if (validation.hasFinished()) {
@@ -92,6 +99,7 @@ public class Validations {
           ValidationStep.builder()
               .stepType(stepType.name())
               .status(newStatus)
+              .message(message)
               .executionOrder(validatorWorkflow.getLevel(stepType))
               .build();
       metrics.getStepTypes().add(step);

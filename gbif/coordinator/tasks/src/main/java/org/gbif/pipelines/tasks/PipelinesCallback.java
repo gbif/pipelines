@@ -203,7 +203,11 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       info.ifPresent(i -> updateTrackingStatus(i, PipelineStep.Status.FAILED));
 
       // update validator info
-      updateValidatorInfoStatus(Status.FAILED);
+      String errorMessage = null;
+      if (ex instanceof PipelinesException) {
+        errorMessage = ex.getMessage();
+      }
+      updateValidatorInfoStatus(Status.FAILED, errorMessage);
     } finally {
       if (message.getExecutionId() != null) {
         log.info("Mark execution as FINISHED if all steps are FINISHED");
@@ -278,8 +282,12 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   }
 
   private void updateValidatorInfoStatus(Status status) {
+    updateValidatorInfoStatus(status, null);
+  }
+
+  private void updateValidatorInfoStatus(Status status, String text) {
     if (isValidator) {
-      Validations.updateStatus(validationClient, message.getDatasetUuid(), stepType, status);
+      Validations.updateStatus(validationClient, message.getDatasetUuid(), stepType, status, text);
     }
   }
 
