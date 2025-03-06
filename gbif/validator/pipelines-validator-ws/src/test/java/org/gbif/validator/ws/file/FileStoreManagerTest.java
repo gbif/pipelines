@@ -12,7 +12,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import lombok.SneakyThrows;
 import org.gbif.validator.api.FileFormat;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
