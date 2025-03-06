@@ -89,6 +89,7 @@ public class Validations {
       // Required to keep validation api separate to gbif-api
       if (step.getStepType().equals(stepType.name())) {
         step.setStatus(newStatus);
+        step.setMessage(message);
         addValidationType = false;
         break;
       }
@@ -107,7 +108,12 @@ public class Validations {
 
     validation.setMetrics(metrics);
 
-    log.info("Validaton {} main state to {} and step state to {}", stepType, mainStatus, newStatus);
+    log.info(
+        "Validaton {} main state to {} and step state to {} with message {}",
+        stepType,
+        mainStatus,
+        newStatus,
+        message);
     Retry.decorateRunnable(RETRY, () -> validationClient.update(key, validation)).run();
   }
 }

@@ -204,8 +204,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       // update validator info
       String errorMessage = null;
-      if (ex instanceof PipelinesException) {
-        errorMessage = ex.getMessage();
+      if (ex.getCause() instanceof PipelinesException) {
+        errorMessage = ((PipelinesException) ex.getCause()).getShortMessage();
       }
       updateValidatorInfoStatus(Status.FAILED, errorMessage);
     } finally {
