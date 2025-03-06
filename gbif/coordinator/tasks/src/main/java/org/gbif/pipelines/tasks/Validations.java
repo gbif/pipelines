@@ -33,7 +33,9 @@ public class Validations {
           RetryConfig.custom()
               .maxAttempts(7)
               .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
-              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
+              .intervalFunction(
+                  IntervalFunction.ofExponentialBackoff(
+                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(15)))
               .build());
 
   public static void updateStatus(
