@@ -48,6 +48,7 @@ public class OccurrenceHdfsRecordConverter {
   private final TemporalRecord temporalRecord;
   private final MetadataRecord metadataRecord;
   private final MultimediaRecord multimediaRecord;
+  private final DnaDerivedDataRecord dnaDerivedDataRecord;
   private final EventCoreRecord eventCoreRecord;
 
   /**
@@ -72,6 +73,7 @@ public class OccurrenceHdfsRecordConverter {
     mapExtendedRecord(occurrenceHdfsRecord);
     mapEventCoreRecord(occurrenceHdfsRecord);
     mapProjectIds(occurrenceHdfsRecord);
+    mapDnaDerivedDataRecord(occurrenceHdfsRecord);
 
     return occurrenceHdfsRecord;
   }
@@ -218,13 +220,13 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setYear(temporalRecord.getYear());
 
     if (Objects.nonNull(temporalRecord.getStartDayOfYear())) {
-      occurrenceHdfsRecord.setStartdayofyear(temporalRecord.getStartDayOfYear().toString());
+      occurrenceHdfsRecord.setStartdayofyear(temporalRecord.getStartDayOfYear());
     } else {
       occurrenceHdfsRecord.setStartdayofyear(null);
     }
 
     if (Objects.nonNull(temporalRecord.getEndDayOfYear())) {
-      occurrenceHdfsRecord.setEnddayofyear(temporalRecord.getEndDayOfYear().toString());
+      occurrenceHdfsRecord.setEnddayofyear(temporalRecord.getEndDayOfYear());
     } else {
       occurrenceHdfsRecord.setEnddayofyear(null);
     }
@@ -808,6 +810,21 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setMediatype(mediaTypes);
 
     addIssues(multimediaRecord.getIssues(), occurrenceHdfsRecord);
+  }
+
+  private void mapDnaDerivedDataRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (dnaDerivedDataRecord == null) {
+      return;
+    }
+
+    if (dnaDerivedDataRecord.getDnaDerivedDataItems() != null
+        && !dnaDerivedDataRecord.getDnaDerivedDataItems().isEmpty()) {
+      occurrenceHdfsRecord.setDnasequenceid(
+          new ArrayList<>(
+              dnaDerivedDataRecord.getDnaDerivedDataItems().stream()
+                  .map(DnaDerivedData::getDnaSequenceID)
+                  .collect(Collectors.toSet())));
+    }
   }
 
   /** Gets the {@link Schema.Field} associated to a verbatim term. */

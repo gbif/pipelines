@@ -43,6 +43,7 @@ import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -204,6 +205,10 @@ public class TransformsFactory {
 
   public ImageTransform createImageTransform() {
     return ImageTransform.builder().orderings(dateComponentOrdering).create();
+  }
+
+  public DnaDerivedDataTransform createDnaDerivedTransform() {
+    return DnaDerivedDataTransform.builder().create();
   }
 
   public UniqueGbifIdTransform createUniqueGbifIdTransform() {

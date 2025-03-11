@@ -46,6 +46,7 @@ import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -65,6 +66,7 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
  *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
  *      {@link org.gbif.pipelines.io.avro.ImageRecord},
+ *      {@link org.gbif.pipelines.io.avro.DnaDerivedDataRecord},
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord},
@@ -154,6 +156,7 @@ public class VerbatimToOccurrencePipeline {
     MultimediaTransform multimediaTransform = transformsFactory.createMultimediaTransform();
     AudubonTransform audubonTransform = transformsFactory.createAudubonTransform();
     ImageTransform imageTransform = transformsFactory.createImageTransform();
+    DnaDerivedDataTransform dnaTransform = transformsFactory.createDnaDerivedTransform();
 
     log.info("Creating beam pipeline");
     Pipeline p = pipelinesFn.apply(options);
@@ -287,6 +290,11 @@ public class VerbatimToOccurrencePipeline {
         .apply("Check image transform condition", imageTransform.check(types))
         .apply("Interpret image", imageTransform.interpret())
         .apply("Write image to avro", imageTransform.write(pathFn));
+
+    filteredUniqueRecords
+      .apply("Check dna transform condition", dnaTransform.check(types))
+      .apply("Interpret dna", dnaTransform.interpret())
+      .apply("Write dna to avro", dnaTransform.write(pathFn));
 
     filteredUniqueRecords
         .apply("Check audubon transform condition", audubonTransform.check(types))

@@ -27,6 +27,8 @@ import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.Diagnostic;
+import org.gbif.pipelines.io.avro.DnaDerivedData;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GadmFeatures;
@@ -453,6 +455,15 @@ public class OccurrenceJsonConverterTest {
             .setMultimediaItems(Arrays.asList(stillImage, movingImage))
             .build();
 
+    DnaDerivedDataRecord dnar =
+        DnaDerivedDataRecord.newBuilder()
+            .setId("777")
+            .setDnaDerivedDataItems(
+                Arrays.asList(
+                    DnaDerivedData.newBuilder().setDnaSequenceID("foo1").build(),
+                    DnaDerivedData.newBuilder().setDnaSequenceID("foo2").build()))
+            .build();
+
     // When
     String json =
         OccurrenceJsonConverter.builder()
@@ -466,6 +477,7 @@ public class OccurrenceJsonConverterTest {
             .taxon(tr)
             .grscicoll(gr)
             .multimedia(mmr)
+            .dnaDerivedData(dnar)
             .build()
             .toJsonWithNulls();
 
@@ -684,6 +696,9 @@ public class OccurrenceJsonConverterTest {
             + "\"lithostratigraphy\":[\"test16\",\"test14\",\"test13\",\"test15\"],"
             + "\"biostratigraphy\":[\"test11\",\"test12\"]}";
     assertEquals(geologicalContextExpected, result.path("geologicalContext").toString());
+
+    assertEquals(2, result.withArray("dnaSequenceID").size());
+    assertEquals("[\"foo1\",\"foo2\"]", result.withArray("dnaSequenceID").toString());
   }
 
   @Test
