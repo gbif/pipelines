@@ -345,8 +345,8 @@ public class HdfsViewPipelineIT {
       writer.append(imageRecord);
     }
     try (SyncDataFileWriter<DnaDerivedDataRecord> writer =
-           InterpretedAvroWriter.createAvroWriter(
-             optionsWriter, DnaDerivedDataTransform.builder().create(), coreTerm, postfix)) {
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, DnaDerivedDataTransform.builder().create(), coreTerm, postfix)) {
       DnaDerivedDataRecord dnaRecord = DnaDerivedDataRecord.newBuilder().setId(ID).build();
       writer.append(dnaRecord);
     }
