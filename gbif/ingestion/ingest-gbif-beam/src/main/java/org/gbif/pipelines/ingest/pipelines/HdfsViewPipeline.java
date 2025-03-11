@@ -280,8 +280,8 @@ public class HdfsViewPipeline {
             .apply("Map Image to KV", imageTransform.toKv());
 
     PCollection<KV<String, DnaDerivedDataRecord>> dnaCollection =
-      p.apply("Read DNA", dnaTransform.read(interpretPathFn))
-        .apply("Map DNA to KV", dnaTransform.toKv());
+        p.apply("Read DNA", dnaTransform.read(interpretPathFn))
+            .apply("Map DNA to KV", dnaTransform.toKv());
 
     PCollection<KV<String, AudubonRecord>> audubonCollection =
         p.apply("Read Audubon", audubonTransform.read(interpretPathFn))

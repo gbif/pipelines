@@ -63,7 +63,8 @@ public class OccurrenceHdfsRecordConverter {
     MultimediaRecord mr =
         multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
     ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
-    DnaDerivedDataRecord dnar = dnaMap.getOrDefault(k, DnaDerivedDataRecord.newBuilder().setId(k).build());
+    DnaDerivedDataRecord dnar =
+        dnaMap.getOrDefault(k, DnaDerivedDataRecord.newBuilder().setId(k).build());
     AudubonRecord ar = audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
 
     MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);

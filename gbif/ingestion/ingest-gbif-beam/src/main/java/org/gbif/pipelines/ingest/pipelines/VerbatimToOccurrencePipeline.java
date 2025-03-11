@@ -292,9 +292,9 @@ public class VerbatimToOccurrencePipeline {
         .apply("Write image to avro", imageTransform.write(pathFn));
 
     filteredUniqueRecords
-      .apply("Check dna transform condition", dnaTransform.check(types))
-      .apply("Interpret dna", dnaTransform.interpret())
-      .apply("Write dna to avro", dnaTransform.write(pathFn));
+        .apply("Check dna transform condition", dnaTransform.check(types))
+        .apply("Interpret dna", dnaTransform.interpret())
+        .apply("Write dna to avro", dnaTransform.write(pathFn));
 
     filteredUniqueRecords
         .apply("Check audubon transform condition", audubonTransform.check(types))
