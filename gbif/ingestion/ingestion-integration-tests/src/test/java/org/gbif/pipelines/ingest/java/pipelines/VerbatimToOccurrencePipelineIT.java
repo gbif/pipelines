@@ -30,6 +30,7 @@ import org.gbif.pipelines.ingest.resources.ZkServer;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -252,7 +253,7 @@ public class VerbatimToOccurrencePipelineIT {
     assertFile(IdentifierRecord.class, interpretedOutput + "/identifier_invalid");
     assertFile(GrscicollRecord.class, interpretedOutput + "/grscicoll");
     assertFile(ImageRecord.class, interpretedOutput + "/image");
-    assertFile(ImageRecord.class, interpretedOutput + "/dna_derived_data");
+    assertFile(DnaDerivedDataRecord.class, interpretedOutput + "/dna_derived_data");
     assertFile(LocationRecord.class, interpretedOutput + "/location");
     assertFile(MultimediaRecord.class, interpretedOutput + "/multimedia");
     assertFile(TaxonRecord.class, interpretedOutput + "/taxonomy");
