@@ -125,7 +125,10 @@ public class FileStoreManager {
       throws IOException {
 
     if (!isAvailable(url)) {
-      throw new IllegalArgumentException("Url " + url + " is not reachable");
+      throw new IllegalArgumentException(
+          "Failed to download file from "
+              + url
+              + ". The resource is not reachable. Please check that the URL is correct");
     }
 
     String fileName = getFileName(url);

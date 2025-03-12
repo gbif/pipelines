@@ -76,7 +76,9 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
           RetryConfig.custom()
               .maxAttempts(7)
               .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
-              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
+              .intervalFunction(
+                  IntervalFunction.ofExponentialBackoff(
+                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(15)))
               .build());
 
   private static final Retry RUNNING_EXECUTION_CALL =
@@ -85,7 +87,9 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
           RetryConfig.custom()
               .maxAttempts(7)
               .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
-              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
+              .intervalFunction(
+                  IntervalFunction.ofExponentialBackoff(
+                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(15)))
               .retryOnResult(Objects::isNull)
               .build());
 
@@ -199,7 +203,11 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       info.ifPresent(i -> updateTrackingStatus(i, PipelineStep.Status.FAILED));
 
       // update validator info
-      updateValidatorInfoStatus(Status.FAILED);
+      String errorMessage = null;
+      if (ex.getCause() instanceof PipelinesException) {
+        errorMessage = ((PipelinesException) ex.getCause()).getShortMessage();
+      }
+      updateValidatorInfoStatus(Status.FAILED, errorMessage);
     } finally {
       if (message.getExecutionId() != null) {
         log.info("Mark execution as FINISHED if all steps are FINISHED");
@@ -274,8 +282,12 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   }
 
   private void updateValidatorInfoStatus(Status status) {
+    updateValidatorInfoStatus(status, null);
+  }
+
+  private void updateValidatorInfoStatus(Status status, String text) {
     if (isValidator) {
-      Validations.updateStatus(validationClient, message.getDatasetUuid(), stepType, status);
+      Validations.updateStatus(validationClient, message.getDatasetUuid(), stepType, status, text);
     }
   }
 
