@@ -29,7 +29,7 @@
     "created": {"type": "date"},
     "uniqueKey": {"type": "keyword"},
     "firstLoaded": {"type": "date"},
-    "dnaSequenceID": {"type": "keyword"},
+    "dnaSequenceID": {"type": "keyword", "copy_to": "all"},
 
     "metadata": {
       "type": "object",
