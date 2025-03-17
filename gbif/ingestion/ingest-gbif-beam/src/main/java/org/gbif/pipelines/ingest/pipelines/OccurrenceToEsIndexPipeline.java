@@ -276,6 +276,7 @@ public class OccurrenceToEsIndexPipeline {
               .grscicollRecordTag(grscicollTransform.getTag())
               .multimediaRecordTag(multimediaTransform.getTag())
               .imageRecordTag(imageTransform.getTag())
+              .dnaRecordTag(dnaTransform.getTag())
               .audubonRecordTag(audubonTransform.getTag())
               .metadataView(metadataView)
               .asParentChildRecord(asParentChildRecord)
