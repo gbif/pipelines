@@ -41,6 +41,7 @@ import org.gbif.pipelines.core.pojo.Edge;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -72,6 +73,7 @@ import org.gbif.pipelines.transforms.core.TemporalInheritedFieldsFn;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -169,6 +171,7 @@ public class EventToEsIndexPipeline {
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
+    DnaDerivedDataTransform dnaTransform = DnaDerivedDataTransform.builder().create();
 
     log.info("Adding step 3: Creating beam pipeline");
     PCollectionView<MetadataRecord> metadataView =
@@ -254,6 +257,10 @@ public class EventToEsIndexPipeline {
         p.apply("Read event measurementOrFact records", measurementOrFactTransform.read(pathFn))
             .apply("Map event measurementOrFact records to KV", measurementOrFactTransform.toKv());
 
+    PCollection<KV<String, DnaDerivedDataRecord>> dnaCollection =
+      p.apply("Read Event DNA Derived Data", dnaTransform.read(pathFn))
+        .apply("Map DNA Derived Data to KV", dnaTransform.toKv());
+
     log.info("Adding step 3: Converting into a json object");
     SingleOutput<KV<String, CoGbkResult>, String> eventJsonDoFn =
         ParentJsonTransform.builder()
@@ -285,6 +292,7 @@ public class EventToEsIndexPipeline {
             .and(imageTransform.getTag(), imageCollection)
             .and(audubonTransform.getTag(), audubonCollection)
             .and(measurementOrFactTransform.getTag(), measurementOrFactCollection)
+            .and(dnaTransform.getTag(), dnaCollection)
             // Internal
             .and(identifierTransform.getTag(), identifierCollection)
             // Raw
