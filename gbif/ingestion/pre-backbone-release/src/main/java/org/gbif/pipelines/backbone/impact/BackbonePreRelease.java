@@ -36,7 +36,7 @@ import org.gbif.pipelines.backbone.impact.v2.NameUsageMatchV2SyncClient;
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class BackbonePreReleaseV2 {
+public class BackbonePreRelease {
 
   public static void main(String[] args) throws Exception {
     PipelineOptionsFactory.register(BackbonePreReleaseOptions.class);
