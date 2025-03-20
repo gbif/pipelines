@@ -631,8 +631,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getDay());
     Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getMonth());
     Assert.assertEquals(Integer.valueOf(2019), hdfsRecord.getYear());
-    Assert.assertEquals("1", hdfsRecord.getStartdayofyear());
-    Assert.assertEquals("1", hdfsRecord.getEnddayofyear());
+    Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getStartdayofyear());
+    Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getEnddayofyear());
     Assert.assertEquals("2019-01", hdfsRecord.getEventdate());
     Assert.assertEquals(eventDate, hdfsRecord.getDateidentified());
     Assert.assertEquals(eventDate, hdfsRecord.getModified());

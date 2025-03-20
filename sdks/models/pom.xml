@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>sdks</artifactId>
-   <version>3.1.0-multitaxonomy-SNAPSHOT</version>
+    <version>3.1.0-multitaxonomy-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -17,8 +17,13 @@
 
   <properties>
     <avro-generated-path>${project.basedir}/src/main/java-generated/</avro-generated-path>
-    <schema-generated-path>${project.basedir}/src/main/avro/table/</schema-generated-path>
-    <sonar.skip>true</sonar.skip>
+    <schema-generated-path>${project.basedir}/src/main/avro</schema-generated-path>
+
+    <schema-generated-table-path>${schema-generated-path}/table/</schema-generated-table-path>
+
+    <occurrence-avsc-schema-name>occurrence-hdfs-record.avsc</occurrence-avsc-schema-name>
+    <schema-generated-occurrence-path>${schema-generated-path}/${occurrence-avsc-schema-name}</schema-generated-occurrence-path>
+
   </properties>
 
   <build>
@@ -26,7 +31,7 @@
       <!-- Generate avro schemas from XML extensions-->
       <plugin>
         <groupId>org.gbif.pipelines</groupId>
-        <artifactId>maven-extension-avsc-schema-generator</artifactId>
+        <artifactId>maven-occurrence-avsc-schema-generator</artifactId>
         <version>${project.version}</version>
         <executions>
           <execution>
@@ -36,7 +41,25 @@
               <goal>avroschemageneration</goal>
             </goals>
             <configuration>
-              <pathToWrite>${schema-generated-path}</pathToWrite>
+              <pathToWrite>${schema-generated-occurrence-path}</pathToWrite>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Generate avro schemas from XML extensions-->
+      <plugin>
+        <groupId>org.gbif.occurrence</groupId>
+        <artifactId>maven-extension-avsc-schema-generator</artifactId>
+        <version>${gbif-occurrence.version}</version>
+        <executions>
+          <execution>
+            <id>avroschemageneration</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>avroschemageneration</goal>
+            </goals>
+            <configuration>
+              <pathToWrite>${schema-generated-table-path}</pathToWrite>
               <namespace>${namespace}.extension</namespace>
             </configuration>
           </execution>
@@ -126,7 +149,13 @@
               <directory>${avro-generated-path}</directory>
             </fileset>
             <fileset>
+              <directory>${schema-generated-table-path}</directory>
+            </fileset>
+            <fileset>
               <directory>${schema-generated-path}</directory>
+              <includes>
+                <include>**/${occurrence-avsc-schema-name}</include>
+              </includes>
             </fileset>
           </filesets>
         </configuration>

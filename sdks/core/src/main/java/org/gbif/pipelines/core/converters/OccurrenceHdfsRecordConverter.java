@@ -215,13 +215,13 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setYear(temporalRecord.getYear());
 
     if (Objects.nonNull(temporalRecord.getStartDayOfYear())) {
-      occurrenceHdfsRecord.setStartdayofyear(temporalRecord.getStartDayOfYear().toString());
+      occurrenceHdfsRecord.setStartdayofyear(temporalRecord.getStartDayOfYear());
     } else {
       occurrenceHdfsRecord.setStartdayofyear(null);
     }
 
     if (Objects.nonNull(temporalRecord.getEndDayOfYear())) {
-      occurrenceHdfsRecord.setEnddayofyear(temporalRecord.getEndDayOfYear().toString());
+      occurrenceHdfsRecord.setEnddayofyear(temporalRecord.getEndDayOfYear());
     } else {
       occurrenceHdfsRecord.setEnddayofyear(null);
     }
