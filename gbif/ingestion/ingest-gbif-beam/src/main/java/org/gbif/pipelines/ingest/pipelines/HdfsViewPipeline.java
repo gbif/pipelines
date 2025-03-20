@@ -581,7 +581,7 @@ public class HdfsViewPipeline {
     PipelineResult result = p.run();
 
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
-      Mutex.Action action = () -> HdfsViewAvroUtils.copyAndOverwrite(options);
+      Mutex.Action action = () -> HdfsViewAvroUtils.cleanAndMove(options);
       if (options.getTestMode()) {
         action.execute();
       } else {
@@ -590,6 +590,10 @@ public class HdfsViewPipeline {
     }
 
     log.info("Save metrics into the file and set files owner");
+    // Delete root directory of table records
+    FsUtils.deleteIfExist(
+        hdfsConfigs, PathBuilder.buildFilePathViewUsingInputPath(options, recordType));
+
     MetricsHandler.saveCountersToInputPathFile(options, result.metrics());
     String metadataPath =
         PathBuilder.buildDatasetAttemptPath(options, options.getMetaFileName(), true);

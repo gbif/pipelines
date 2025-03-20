@@ -15,7 +15,6 @@ import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class VocabularyInterpreterTest {
@@ -35,7 +34,6 @@ public class VocabularyInterpreterTest {
           .build();
 
   @Test
-  @Ignore
   public void sexTest() {
     // State
     Map<String, String> coreMap = new HashMap<>(1);
@@ -118,7 +116,6 @@ public class VocabularyInterpreterTest {
   }
 
   @Test
-  @Ignore
   public void typeStatusTest() {
     final String tp1 = "Type";
     final String tp2 = "Allotype";
@@ -141,7 +138,6 @@ public class VocabularyInterpreterTest {
   }
 
   @Test
-  @Ignore
   public void interpretTypeStatusFromIdentificationExtensionTest() {
     final String tp1 = "Type";
     final String tp2 = "Allotype";
@@ -166,7 +162,6 @@ public class VocabularyInterpreterTest {
   }
 
   @Test
-  @Ignore
   public void interpretTypeStatusCorePreferenceOverExtensionTest() {
     final String tp1 = "Type";
     final String tp2 = "Allotype";
@@ -218,7 +213,6 @@ public class VocabularyInterpreterTest {
   }
 
   @Test
-  @Ignore
   public void interpretTypeStatusPartiallyInvalidTest() {
     final String tp1 = "Type";
     final String tp2 = "invalid";
@@ -241,7 +235,6 @@ public class VocabularyInterpreterTest {
   }
 
   @Test
-  @Ignore
   public void interpretTypeStatusSuspectedTypeTest() {
     final String tp1 = "possible";
 

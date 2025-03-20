@@ -25,10 +25,13 @@ public class GeocodeKvStore
       String kvStoreType,
       boolean missEqualsFail) {
     this.kvStore = kvStore;
-    this.bitmapCache =
-        image == null
-            ? null
-            : GeocodeBitmapCache.create(image, kvStore::get, kvStoreType, missEqualsFail);
+    if (image != null) {
+      this.bitmapCache =
+          GeocodeBitmapCache.create(image, kvStore::get, kvStoreType, missEqualsFail);
+    } else {
+      this.bitmapCache = null;
+      log.info("Image cache path is empty, skipping bitmapCache initialisation");
+    }
   }
 
   public static GeocodeKvStore create(

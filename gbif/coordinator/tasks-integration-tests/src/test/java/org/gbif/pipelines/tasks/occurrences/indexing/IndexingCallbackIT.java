@@ -28,13 +28,15 @@ import org.gbif.pipelines.tasks.PipelinesHistoryClientTestStub;
 import org.gbif.pipelines.tasks.resources.EsServer;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-@Ignore
 public class IndexingCallbackIT {
   @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";

@@ -109,8 +109,10 @@ public class OccurrenceParser {
    */
   public List<RawXmlOccurrence> parseFile(File file) {
     try (InputStream inputStream = Files.newInputStream(file.toPath())) {
+      log.info("Parsing XML file: {}", file);
       return parseStream(inputStream);
     } catch (IOException ex) {
+      log.error("Parsing failed", ex);
       throw new ParsingException("Parsing failed", ex);
     }
   }

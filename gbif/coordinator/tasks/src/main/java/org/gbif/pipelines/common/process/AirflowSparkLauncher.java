@@ -1,12 +1,15 @@
 package org.gbif.pipelines.common.process;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +28,10 @@ public class AirflowSparkLauncher {
           "airflowApiCall",
           RetryConfig.custom()
               .maxAttempts(7)
-              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
+              .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
+              .intervalFunction(
+                  IntervalFunction.ofExponentialBackoff(
+                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(15)))
               .build());
 
   private final SparkConfiguration sparkStaticConfiguration;

@@ -14,7 +14,11 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import org.gbif.api.model.pipelines.InterpretationType.RecordType;
-import org.gbif.common.messaging.api.messages.*;
+import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
+import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
+import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
 import org.gbif.pipelines.common.configs.ElasticsearchConfiguration;
 import org.gbif.pipelines.common.configs.IndexConfiguration;
@@ -187,26 +191,6 @@ public class BeamParametersBuilder {
         .putRequireNonNull("properties", config.pipelinesConfig)
         .put("numberOfShards", numberOfShards)
         .putRequireNonNull("interpretationTypes", String.join(",", message.getInterpretTypes()))
-        .put("experiments", "use_deprecated_read")
-        .putCondition(config.recordType == RecordType.EVENT, "coreRecordType", "EVENT");
-  }
-
-  public static BeamParameters occurrenceWarehouse(
-      HdfsViewConfiguration config, PipelinesHdfsViewMessage message) {
-
-    return BeamParameters.create()
-        .putRequireNonNull("datasetId", message.getDatasetUuid())
-        .putRequireNonNull("crawlAttempt", message.getAttempt())
-        .putRequireNonNull("action", "CREATE")
-        .putRequireNonNull("options", "ALL")
-        .putRequireNonNull("configFile", config.configFile)
-        .putRequireNonNull("runner", "SparkRunner")
-        .putRequireNonNull("metaFileName", config.metaFileName)
-        .putRequireNonNull("inputPath", config.stepConfig.repositoryPath)
-        .putRequireNonNull("targetPath", config.repositoryTargetPath)
-        .putRequireNonNull("hdfsSiteConfig", config.stepConfig.hdfsSiteConfig)
-        .putRequireNonNull("coreSiteConfig", config.stepConfig.coreSiteConfig)
-        .putRequireNonNull("properties", config.pipelinesConfig)
         .put("experiments", "use_deprecated_read")
         .putCondition(config.recordType == RecordType.EVENT, "coreRecordType", "EVENT");
   }

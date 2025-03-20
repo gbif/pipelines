@@ -203,25 +203,23 @@ public final class FsUtils {
   }
 
   /**
-   * Copies a list files that match against a glob filter into a target directory.
+   * Moves a list files that match against a glob filter into a target directory.
    *
    * @param hdfsConfigs path to hdfs-site.xml config file
    * @param globFilter filter used to filter files and paths
    * @param targetPath target directory
    */
-  public static void copyToDirectory(
-      HdfsConfigs hdfsConfigs, String targetPath, String globFilter) {
+  public static void moveDirectory(HdfsConfigs hdfsConfigs, String targetPath, String globFilter) {
     FileSystem fs = getFileSystem(hdfsConfigs, targetPath);
     try {
       FileStatus[] status = fs.globStatus(new Path(globFilter));
       Path[] paths = FileUtil.stat2Paths(status);
       for (Path path : paths) {
-        boolean copied =
-            FileUtil.copy(fs, path, fs, new Path(targetPath, path.getName()), false, fs.getConf());
-        log.debug("File {} moved status - {}", path, copied);
+        boolean rename = fs.rename(path, new Path(targetPath, path.getName()));
+        log.info("File {} moved status - {}", path, rename);
       }
     } catch (IOException e) {
-      log.warn("Can't copy files using filter - {}, into path - {}", globFilter, targetPath);
+      log.warn("Can't move files using filter - {}, into path - {}", globFilter, targetPath);
     }
   }
 

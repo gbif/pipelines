@@ -15,6 +15,7 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.airflow.AppName;
 import org.gbif.pipelines.common.process.AirflowSparkLauncher;
@@ -113,6 +114,7 @@ public class CommonHdfsViewCallback {
             .metaFileName(metaFileName)
             .metricName(Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED)
             .alternativeMetricName(Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED)
+            .skipIf(true)
             .build()
             .get();
 
@@ -123,10 +125,22 @@ public class CommonHdfsViewCallback {
             .attempt(message.getAttempt().toString())
             .metaFileName(new DwcaToAvroConfiguration().metaFileName)
             .metricName(Metrics.ARCHIVE_TO_OCC_COUNT)
+            .alternativeMetricName(Metrics.ARCHIVE_TO_ER_COUNT)
+            .skipIf(true)
             .build()
             .get();
 
+    if (interpretationRecordsNumber == 0 && dwcaRecordsNumber == 0) {
+      throw new PipelinesException(
+          "No data to index. Both interpretationRecordsNumber and dwcaRecordsNumber have 0 records, check metadata yaml files");
+    }
+
     long recordsNumber = Math.min(dwcaRecordsNumber, interpretationRecordsNumber);
+    if (interpretationRecordsNumber == 0) {
+      recordsNumber = dwcaRecordsNumber;
+    } else if (dwcaRecordsNumber == 0) {
+      recordsNumber = interpretationRecordsNumber;
+    }
 
     log.info("Calculate job's settings based on {} records", recordsNumber);
     boolean useMemoryExtraCoef =

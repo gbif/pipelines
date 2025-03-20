@@ -17,7 +17,7 @@ public class EncodingUtil {
   /** Encodes an URL, specially URLs with blank spaces can be problematics. */
   static String encode(String rawUrl) {
     try {
-      String decodedURL = URLDecoder.decode(rawUrl, StandardCharsets.UTF_8.name());
+      String decodedURL = URLDecoder.decode(rawUrl, StandardCharsets.UTF_8);
       URL url = new URL(decodedURL);
       URI uri =
           new URI(

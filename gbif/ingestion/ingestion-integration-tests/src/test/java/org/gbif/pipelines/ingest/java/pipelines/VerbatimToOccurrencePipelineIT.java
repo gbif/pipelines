@@ -43,11 +43,9 @@ import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.Assert;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 
 @SuppressWarnings("all")
-@Ignore
 public class VerbatimToOccurrencePipelineIT {
 
   private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;

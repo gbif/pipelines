@@ -55,11 +55,7 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   @Override
   public PipelinesHdfsViewMessage createOutgoingMessage(PipelinesInterpretedMessage message) {
     return new PipelinesHdfsViewMessage(
-        message.getDatasetUuid(),
-        message.getAttempt(),
-        message.getPipelineSteps(),
-        message.getRunner(),
-        null);
+        message.getDatasetUuid(), message.getAttempt(), message.getPipelineSteps(), null, null);
   }
 
   /**

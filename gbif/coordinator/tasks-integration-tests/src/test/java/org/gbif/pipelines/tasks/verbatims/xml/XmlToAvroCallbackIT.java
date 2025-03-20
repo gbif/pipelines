@@ -31,13 +31,15 @@ import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.PipelinesHistoryClientTestStub;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-@Ignore
 public class XmlToAvroCallbackIT {
   private static final String AVRO = "/verbatim.avro";
   private static final String STRING_UUID = "7ef15372-1387-11e2-bb2e-00145eb45e9a";
@@ -106,7 +108,7 @@ public class XmlToAvroCallbackIT {
     assertEquals(1, PUBLISHER.getMessages().size());
 
     Map<StepType, PipelineStep> result = historyClient.getStepMap();
-    Assert.assertEquals(7, result.size());
+    Assert.assertEquals(6, result.size());
 
     Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
     Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
@@ -182,7 +184,7 @@ public class XmlToAvroCallbackIT {
     assertTrue(PUBLISHER.getMessages().isEmpty());
 
     Map<StepType, PipelineStep> result = historyClient.getStepMap();
-    Assert.assertEquals(7, result.size());
+    Assert.assertEquals(6, result.size());
 
     Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
     Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());

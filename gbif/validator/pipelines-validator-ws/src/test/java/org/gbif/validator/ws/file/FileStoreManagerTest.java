@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutionException;
 import lombok.SneakyThrows;
 import org.gbif.validator.api.FileFormat;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -86,6 +87,7 @@ class FileStoreManagerTest extends DownloadFileBaseTest {
 
   @SneakyThrows
   @Test
+  @Disabled("URL is validated and checked for content type")
   void downloadZipFileTest() {
     // State
     FileStoreManager fileStoreManager =

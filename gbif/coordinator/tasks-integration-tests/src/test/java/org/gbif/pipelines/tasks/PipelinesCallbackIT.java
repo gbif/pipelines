@@ -22,14 +22,12 @@ import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-@Ignore
 public class PipelinesCallbackIT {
   @Mock private DatasetClient datasetClient;
   @Mock private MessagePublisher mockPublisher;
@@ -73,7 +71,7 @@ public class PipelinesCallbackIT {
 
     // Should
     Map<StepType, PipelineStep> result = historyClient.getStepMap();
-    Assert.assertEquals(7, result.size());
+    Assert.assertEquals(6, result.size());
 
     Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
     Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
@@ -140,7 +138,7 @@ public class PipelinesCallbackIT {
 
     // Should
     Map<StepType, PipelineStep> result = historyClient.getStepMap();
-    Assert.assertEquals(5, result.size());
+    Assert.assertEquals(4, result.size());
 
     Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
     Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
@@ -244,7 +242,7 @@ public class PipelinesCallbackIT {
 
     // Should
     Map<StepType, PipelineStep> result = historyClient.getStepMap();
-    Assert.assertEquals(7, result.size());
+    Assert.assertEquals(6, result.size());
 
     Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
     Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());
@@ -331,7 +329,7 @@ public class PipelinesCallbackIT {
 
     // Should
     Map<StepType, PipelineStep> result = historyClient.getStepMap();
-    Assert.assertEquals(7, result.size());
+    Assert.assertEquals(6, result.size());
 
     Assert.assertEquals(1, historyClient.getPipelineExecutionMap().size());
     Assert.assertEquals(1, historyClient.getPipelineProcessMap().size());

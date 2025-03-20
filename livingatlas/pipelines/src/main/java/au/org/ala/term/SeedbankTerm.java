@@ -29,6 +29,7 @@ public enum SeedbankTerm implements Term {
   primaryStorageSeedBank,
   purityDebrisPercentage,
   purityPercentage,
+  populationCode,
   storageRelativeHumidityPercentage,
   quantityCount,
   quantityInGrams,

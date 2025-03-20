@@ -13,14 +13,12 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /** Unit tests related to {@link org.gbif.pipelines.validator.checklists.ChecklistValidator}. */
 public class ChecklistValidatorTest {
 
   @Test
-  @Ignore
   public void testChecklistValidator() {
 
     Path temp = Paths.get(getClass().getResource("/").getFile());
