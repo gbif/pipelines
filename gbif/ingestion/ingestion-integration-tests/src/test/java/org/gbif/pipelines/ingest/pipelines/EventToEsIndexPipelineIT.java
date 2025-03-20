@@ -37,6 +37,7 @@ import org.gbif.pipelines.ingest.utils.InterpretedAvroWriter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -62,6 +63,7 @@ import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -327,6 +329,12 @@ public class EventToEsIndexPipelineIT {
       MeasurementOrFactRecord mofRecord = MeasurementOrFactRecord.newBuilder().setId(ID).build();
       writer.append(mofRecord);
     }
+    try (SyncDataFileWriter<DnaDerivedDataRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, DnaDerivedDataTransform.builder().create(), EVENT_TERM, postfix)) {
+      DnaDerivedDataRecord dnaRecord = DnaDerivedDataRecord.newBuilder().setId(ID).build();
+      writer.append(dnaRecord);
+    }
 
     optionsWriter.setDwcCore(DwcTerm.Occurrence);
 
@@ -435,6 +443,13 @@ public class EventToEsIndexPipelineIT {
       AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
       writer.append(audubonRecord);
     }
+    try (SyncDataFileWriter<DnaDerivedDataRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, DnaDerivedDataTransform.builder().create(), OCCURRENCE_TERM, postfix)) {
+      DnaDerivedDataRecord dnaDerivedDataRecord =
+          DnaDerivedDataRecord.newBuilder().setId(ID).build();
+      writer.append(dnaDerivedDataRecord);
+    }
 
     // When
     String[] args = {
@@ -468,8 +483,8 @@ public class EventToEsIndexPipelineIT {
     ParentJsonRecord eventRecordSub2 = getResult(idxName, SUB_EVENT_ID_2, "event");
     assertEquals("DK", eventRecordSub2.getLocationInherited().getCountryCode());
     assertEquals(SUB_EVENT_ID_2, eventRecordSub2.getTemporalInherited().getId());
-    assertEquals(new Integer(10), eventRecordSub2.getTemporalInherited().getMonth());
-    assertEquals(new Integer(2017), eventRecordSub2.getTemporalInherited().getYear());
+    assertEquals(Integer.valueOf(10), eventRecordSub2.getTemporalInherited().getMonth());
+    assertEquals(Integer.valueOf(2017), eventRecordSub2.getTemporalInherited().getYear());
     assertEquals(
         Collections.singletonList("survey"), eventRecordSub2.getEventInherited().getEventType());
     assertEquals("L1", eventRecordSub2.getEventInherited().getLocationID());

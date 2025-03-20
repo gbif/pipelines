@@ -2,7 +2,14 @@ package org.gbif.pipelines.core.converters;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValue;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Builder;
@@ -13,6 +20,8 @@ import org.gbif.pipelines.core.factory.SerDeFactory;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedData;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -44,6 +53,7 @@ public class OccurrenceJsonConverter {
   private final MultiTaxonRecord multiTaxon;
   private final GrscicollRecord grscicoll;
   private final MultimediaRecord multimedia;
+  private final DnaDerivedDataRecord dnaDerivedData;
   private final ExtendedRecord verbatim;
 
   public OccurrenceJsonRecord convert() {
@@ -64,6 +74,7 @@ public class OccurrenceJsonConverter {
     mapMultiTaxonRecord(builder);
     mapGrscicollRecord(builder);
     mapMultimediaRecord(builder);
+    mapDnaDerivedDataRecord(builder);
     mapExtendedRecord(builder);
 
     return builder.build();
@@ -351,6 +362,18 @@ public class OccurrenceJsonConverter {
         .setMediaLicenses(JsonConverter.convertMultimediaLicense(multimedia));
   }
 
+  private void mapDnaDerivedDataRecord(OccurrenceJsonRecord.Builder builder) {
+    if (dnaDerivedData != null
+        && dnaDerivedData.getDnaDerivedDataItems() != null
+        && !dnaDerivedData.getDnaDerivedDataItems().isEmpty()) {
+      builder.setDnaSequenceID(
+          new ArrayList<>(
+              dnaDerivedData.getDnaDerivedDataItems().stream()
+                  .map(DnaDerivedData::getDnaSequenceID)
+                  .collect(Collectors.toSet())));
+    }
+  }
+
   private void mapExtendedRecord(OccurrenceJsonRecord.Builder builder) {
 
     builder
@@ -410,6 +433,7 @@ public class OccurrenceJsonConverter {
             location,
             taxon,
             grscicoll,
+            dnaDerivedData,
             multimedia)
         .ifPresent(builder::setCreated);
   }

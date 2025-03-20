@@ -21,6 +21,7 @@ import org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
@@ -93,6 +94,7 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
   // Extension
   @NonNull private final TupleTag<MultimediaRecord> multimediaRecordTag;
   @NonNull private final TupleTag<ImageRecord> imageRecordTag;
+  @NonNull private final TupleTag<DnaDerivedDataRecord> dnaRecordTag;
   @NonNull private final TupleTag<AudubonRecord> audubonRecordTag;
 
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
@@ -131,6 +133,8 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
             MultimediaRecord mr =
                 v.getOnly(multimediaRecordTag, MultimediaRecord.newBuilder().setId(k).build());
             ImageRecord ir = v.getOnly(imageRecordTag, ImageRecord.newBuilder().setId(k).build());
+            DnaDerivedDataRecord dnar =
+                v.getOnly(dnaRecordTag, DnaDerivedDataRecord.newBuilder().setId(k).build());
             AudubonRecord ar =
                 v.getOnly(audubonRecordTag, AudubonRecord.newBuilder().setId(k).build());
 
@@ -150,6 +154,7 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
                     .multiTaxonRecord(mtxr)
                     .grscicollRecord(gr)
                     .multimediaRecord(mmr)
+                    .dnaDerivedDataRecord(dnar)
                     .extendedRecord(er)
                     .eventCoreRecord(eventCoreRecord)
                     .build()

@@ -46,6 +46,7 @@ import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.java.DefaultValuesTransform;
@@ -167,6 +168,7 @@ public class VerbatimToOccurrencePipeline {
     MultimediaTransform multimediaTr = transformsFactory.createMultimediaTransform();
     AudubonTransform audubonTr = transformsFactory.createAudubonTransform();
     ImageTransform imageTr = transformsFactory.createImageTransform();
+    DnaDerivedDataTransform dnaTr = transformsFactory.createDnaDerivedDataTransform();
     OccurrenceExtensionTransform occExtensionTr =
         transformsFactory.createOccurrenceExtensionTransform();
     ExtensionFilterTransform extensionFilterTr = transformsFactory.createExtensionFilterTransform();
@@ -280,6 +282,7 @@ public class VerbatimToOccurrencePipeline {
           var temporalWriter = createAvroWriter(options, temporalTr, CORE_TERM, postfix);
           var multimediaWriter = createAvroWriter(options, multimediaTr, CORE_TERM, postfix);
           var imageWriter = createAvroWriter(options, imageTr, CORE_TERM, postfix);
+          var dnaWriter = createAvroWriter(options, dnaTr, CORE_TERM, postfix);
           var audubonWriter = createAvroWriter(options, audubonTr, CORE_TERM, postfix);
           var taxonWriter =
               singleTaxonomy ? createAvroWriter(options, taxonomyTr, CORE_TERM, postfix) : null;
@@ -327,6 +330,9 @@ public class VerbatimToOccurrencePipeline {
                 }
                 if (imageTr.checkType(types)) {
                   imageTr.processElement(er).ifPresent(imageWriter::append);
+                }
+                if (dnaTr.checkType(types)) {
+                  dnaTr.processElement(er).ifPresent(dnaWriter::append);
                 }
                 if (audubonTr.checkType(types)) {
                   audubonTr.processElement(er).ifPresent(audubonWriter::append);

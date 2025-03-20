@@ -30,6 +30,7 @@ import org.gbif.pipelines.ingest.resources.ZkServer;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -252,12 +253,13 @@ public class VerbatimToOccurrencePipelineIT {
     assertFile(IdentifierRecord.class, interpretedOutput + "/identifier_invalid");
     assertFile(GrscicollRecord.class, interpretedOutput + "/grscicoll");
     assertFile(ImageRecord.class, interpretedOutput + "/image");
+    assertFile(DnaDerivedDataRecord.class, interpretedOutput + "/dna_derived_data");
     assertFile(LocationRecord.class, interpretedOutput + "/location");
     assertFile(MultimediaRecord.class, interpretedOutput + "/multimedia");
     assertFile(TaxonRecord.class, interpretedOutput + "/taxonomy");
     assertFile(TemporalRecord.class, interpretedOutput + "/temporal");
     assertFile(ExtendedRecord.class, interpretedOutput + "/verbatim");
-    int expected = 12;
+    int expected = 13;
     if (options.getInterpretationTypes().contains(METADATA.name())
         || options.getInterpretationTypes().contains(ALL.name())) {
       assertFile(MetadataRecord.class, interpretedOutput + "/metadata");

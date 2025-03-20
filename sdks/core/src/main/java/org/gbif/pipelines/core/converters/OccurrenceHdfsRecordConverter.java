@@ -4,8 +4,14 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Builder;
@@ -44,6 +50,7 @@ public class OccurrenceHdfsRecordConverter {
   private final TemporalRecord temporalRecord;
   private final MetadataRecord metadataRecord;
   private final MultimediaRecord multimediaRecord;
+  private final DnaDerivedDataRecord dnaDerivedDataRecord;
   private final EventCoreRecord eventCoreRecord;
 
   /**
@@ -69,6 +76,7 @@ public class OccurrenceHdfsRecordConverter {
     mapExtendedRecord(occurrenceHdfsRecord);
     mapEventCoreRecord(occurrenceHdfsRecord);
     mapProjectIds(occurrenceHdfsRecord);
+    mapDnaDerivedDataRecord(occurrenceHdfsRecord);
 
     return occurrenceHdfsRecord;
   }
@@ -829,6 +837,21 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setMediatype(mediaTypes);
 
     addIssues(multimediaRecord.getIssues(), occurrenceHdfsRecord);
+  }
+
+  private void mapDnaDerivedDataRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (dnaDerivedDataRecord == null) {
+      return;
+    }
+
+    if (dnaDerivedDataRecord.getDnaDerivedDataItems() != null
+        && !dnaDerivedDataRecord.getDnaDerivedDataItems().isEmpty()) {
+      occurrenceHdfsRecord.setDnasequenceid(
+          new ArrayList<>(
+              dnaDerivedDataRecord.getDnaDerivedDataItems().stream()
+                  .map(DnaDerivedData::getDnaSequenceID)
+                  .collect(Collectors.toSet())));
+    }
   }
 
   /** Gets the {@link Schema.Field} associated to a verbatim term. */

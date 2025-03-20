@@ -25,6 +25,7 @@ import org.gbif.pipelines.ingest.java.transforms.IndexRequestConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -43,6 +44,7 @@ import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -171,6 +173,9 @@ public class OccurrenceToEsIndexPipeline {
     CompletableFuture<Map<String, ImageRecord>> imageMapFeature =
         readAvroAsFuture(options, CORE_TERM, executor, ImageTransform.builder().create());
 
+    CompletableFuture<Map<String, DnaDerivedDataRecord>> dnaMapFeature =
+        readAvroAsFuture(options, CORE_TERM, executor, DnaDerivedDataTransform.builder().create());
+
     CompletableFuture<Map<String, AudubonRecord>> audubonMapFeature =
         readAvroAsFuture(options, CORE_TERM, executor, AudubonTransform.builder().create());
 
@@ -190,6 +195,7 @@ public class OccurrenceToEsIndexPipeline {
             .grscicollMap(grscicollMapFeature.get())
             .multimediaMap(multimediaMapFeature.get())
             .imageMap(imageMapFeature.get())
+            .dnaMap(dnaMapFeature.get())
             .audubonMap(audubonMapFeature.get())
             .build()
             .getFn();

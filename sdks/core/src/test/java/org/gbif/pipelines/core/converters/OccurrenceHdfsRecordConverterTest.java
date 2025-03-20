@@ -30,6 +30,8 @@ import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedData;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GeologicalContext;
@@ -201,6 +203,15 @@ public class OccurrenceHdfsRecordConverterTest {
     IdentifierRecord identifierRecord =
         IdentifierRecord.newBuilder().setId("1").setInternalId("777").build();
 
+    DnaDerivedDataRecord dnaDerivedDataRecord =
+        DnaDerivedDataRecord.newBuilder()
+            .setId("1")
+            .setDnaDerivedDataItems(
+                Arrays.asList(
+                    DnaDerivedData.newBuilder().setDnaSequenceID("foo1").build(),
+                    DnaDerivedData.newBuilder().setDnaSequenceID("foo2").build()))
+            .build();
+
     // When
     OccurrenceHdfsRecord hdfsRecord =
         OccurrenceHdfsRecordConverter.builder()
@@ -209,6 +220,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .taxonRecord(taxonRecord)
             .identifierRecord(identifierRecord)
             .temporalRecord(temporalRecord)
+            .dnaDerivedDataRecord(dnaDerivedDataRecord)
             .extendedRecord(extendedRecord)
             .build()
             .convert();
@@ -327,6 +339,11 @@ public class OccurrenceHdfsRecordConverterTest {
         hdfsRecord
             .getDwcaextension()
             .contains("http://data.ggbn.org/schemas/ggbn/terms/Amplification"));
+
+    // DNA
+    Assert.assertEquals(2, hdfsRecord.getDnasequenceid().size());
+    Assert.assertTrue(hdfsRecord.getDnasequenceid().contains("foo1"));
+    Assert.assertTrue(hdfsRecord.getDnasequenceid().contains("foo2"));
   }
 
   @Test
