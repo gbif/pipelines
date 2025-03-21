@@ -19,6 +19,7 @@
       "gbifId": {"type": "long"},
       "lastCrawled": {"type": "date"},
       "created": {"type": "date"},
+      "yearMonthGbifIdSort": {"type":  "long"},
 
       "datasetKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "crawlId": {"type": "integer"},
