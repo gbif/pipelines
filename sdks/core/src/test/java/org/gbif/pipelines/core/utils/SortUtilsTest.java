@@ -20,6 +20,8 @@ public class SortUtilsTest {
     assertFirstValueLowerThanSecond(2025, 12, 1146411502, null, 4, 1146411521);
     assertFirstValueLowerThanSecond(2025, 12, 1146411502, null, 12, 1146411521);
     assertFirstValueLowerThanSecond(2025, 12, 1146411502, null, null, 1146411521);
+    assertFirstValueLowerThanSecond(2025, 12, 1146411502, 1800, null, 1146411521);
+    assertFirstValueLowerThanSecond(2030, 12, 1146411502, 2020, null, 1146411521);
 
     assertEquals(
         yearDescMonthAscGbifIdAscSortKey(2025, 1, 1146411502),
