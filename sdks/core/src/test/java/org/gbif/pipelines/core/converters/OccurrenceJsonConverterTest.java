@@ -659,6 +659,9 @@ public class OccurrenceJsonConverterTest {
 
     assertTrue(result.path("isSequenced").asBoolean());
 
+    // sort
+    assertTrue(result.path("yearMonthGbifIdSort").asLong() > 0);
+
     String expectedIssues =
         "[\"BASIS_OF_RECORD_INVALID\",\"INSTITUTION_MATCH_FUZZY\",\"ZERO_COORDINATE\"]";
     assertEquals(expectedIssues, result.path(Indexing.ISSUES).toString());
