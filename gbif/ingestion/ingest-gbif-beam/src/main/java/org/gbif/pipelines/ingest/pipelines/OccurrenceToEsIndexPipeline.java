@@ -30,6 +30,7 @@ import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -47,6 +48,7 @@ import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -192,6 +194,7 @@ public class OccurrenceToEsIndexPipeline {
     private final MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     private final AudubonTransform audubonTransform = AudubonTransform.builder().create();
     private final ImageTransform imageTransform = ImageTransform.builder().create();
+    private final DnaDerivedDataTransform dnaTransform = DnaDerivedDataTransform.builder().create();
 
     PCollection<String> apply() {
 
@@ -250,6 +253,11 @@ public class OccurrenceToEsIndexPipeline {
               .apply("Read occurrence Image", imageTransform.read(pathFn))
               .apply("Map occurrence Image to KV", imageTransform.toKv());
 
+      PCollection<KV<String, DnaDerivedDataRecord>> dnaCollection =
+          pipeline
+              .apply("Read occurrence DNA Derived Data", dnaTransform.read(pathFn))
+              .apply("Map occurrence DNA Derived Data to KV", dnaTransform.toKv());
+
       PCollection<KV<String, AudubonRecord>> audubonCollection =
           pipeline
               .apply("Read occurrence Audubon", audubonTransform.read(pathFn))
@@ -268,6 +276,7 @@ public class OccurrenceToEsIndexPipeline {
               .grscicollRecordTag(grscicollTransform.getTag())
               .multimediaRecordTag(multimediaTransform.getTag())
               .imageRecordTag(imageTransform.getTag())
+              .dnaRecordTag(dnaTransform.getTag())
               .audubonRecordTag(audubonTransform.getTag())
               .metadataView(metadataView)
               .asParentChildRecord(asParentChildRecord)
@@ -286,6 +295,7 @@ public class OccurrenceToEsIndexPipeline {
           // Extension
           .and(multimediaTransform.getTag(), multimediaCollection)
           .and(imageTransform.getTag(), imageCollection)
+          .and(dnaTransform.getTag(), dnaCollection)
           .and(audubonTransform.getTag(), audubonCollection)
           // Raw
           .and(verbatimTransform.getTag(), verbatimCollection)

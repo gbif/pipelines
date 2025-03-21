@@ -20,6 +20,8 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedData;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
@@ -41,6 +43,7 @@ import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
@@ -111,6 +114,13 @@ public class OccurrenceHdfsRecordTransformTest {
     MultimediaRecord mmr = MultimediaRecord.newBuilder().setId("777").build();
     AudubonRecord aur = AudubonRecord.newBuilder().setId("777").build();
     ImageRecord imr = ImageRecord.newBuilder().setId("777").build();
+    DnaDerivedDataRecord dnar =
+        DnaDerivedDataRecord.newBuilder()
+            .setId("777")
+            .setDnaDerivedDataItems(
+                Collections.singletonList(
+                    DnaDerivedData.newBuilder().setDnaSequenceID("foo1").build()))
+            .build();
 
     BasicTransform basicTransform = BasicTransform.builder().create();
     GbifIdTransform idTransform = GbifIdTransform.builder().create();
@@ -126,6 +136,7 @@ public class OccurrenceHdfsRecordTransformTest {
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
+    DnaDerivedDataTransform dnaDerivedDataTransform = DnaDerivedDataTransform.builder().create();
 
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Read Metadata", Create.of(mr)).apply("Convert to view", View.asSingleton());
@@ -144,6 +155,7 @@ public class OccurrenceHdfsRecordTransformTest {
             .multimediaRecordTag(multimediaTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
+            .dnaRecordTag(dnaDerivedDataTransform.getTag())
             .metadataView(metadataView)
             .build();
 
@@ -184,6 +196,9 @@ public class OccurrenceHdfsRecordTransformTest {
     PCollection<KV<String, ImageRecord>> imageCollection =
         p.apply("Create image", Create.of(imr)).apply("KV image", imageTransform.toKv());
 
+    PCollection<KV<String, DnaDerivedDataRecord>> dnaCollection =
+        p.apply("Create DNA", Create.of(dnar)).apply("KV DNA", dnaDerivedDataTransform.toKv());
+
     PCollection<KV<String, AudubonRecord>> audubonCollection =
         p.apply("Create audubon", Create.of(aur)).apply("KV audubon", audubonTransform.toKv());
 
@@ -201,6 +216,7 @@ public class OccurrenceHdfsRecordTransformTest {
             .and(eventCoreTransform.getTag(), eventCoreCollection)
             .and(multimediaTransform.getTag(), multimediaCollection)
             .and(imageTransform.getTag(), imageCollection)
+            .and(dnaDerivedDataTransform.getTag(), dnaCollection)
             .and(audubonTransform.getTag(), audubonCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
@@ -237,6 +253,7 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setProjectid(Collections.singletonList("setProjectId"));
     expected.setAssociatedsequences(Collections.emptyList());
     expected.setDay(25);
+    expected.setDnasequenceid(Collections.singletonList("foo1"));
 
     PAssert.that(result).containsInAnyOrder(expected);
     p.run();

@@ -1,0 +1,26 @@
+/**
+ * Represents the interpreted fields of terms related to the DNA derived data extension.
+ * http://rs.gbif.org/extension/gbif/1.0/dna_derived_data_2024-07-11.xml
+ */
+[
+  {
+    "name":"DnaDerivedData",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "fields":[
+      {"name": "dnaSequenceID", "type": ["null", "string"], "default" : null}
+    ]
+  },
+  {
+    "name": "DnaDerivedDataRecord",
+    "namespace": "org.gbif.pipelines.io.avro",
+    "type": "record",
+    "doc": "A container for interpreted DNA derived data fields.",
+    "fields": [
+        {"name": "id", "type": "string", "doc":"Pipelines identifier"},
+        {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
+        {"name": "dnaDerivedDataItems", "type": {"type" : "array", "items" : "DnaDerivedData"}, "default" : []},
+        {"name": "issues", "type": "IssueRecord", "default":{}}
+    ]
+  }
+]

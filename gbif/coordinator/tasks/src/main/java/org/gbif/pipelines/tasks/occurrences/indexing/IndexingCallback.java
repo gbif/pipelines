@@ -149,7 +149,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
 
         if (interpretationRecordsNumber == 0 && dwcaRecordsNumber == 0) {
           throw new PipelinesException(
-              "interpretationRecordsNumber and dwcaRecordsNumber are 0, check meta yaml files");
+              "No data to index. Both interpretationRecordsNumber and dwcaRecordsNumber have 0 records, check ingestion metadata yaml files");
         }
 
         long recordsNumber = Math.min(dwcaRecordsNumber, interpretationRecordsNumber);

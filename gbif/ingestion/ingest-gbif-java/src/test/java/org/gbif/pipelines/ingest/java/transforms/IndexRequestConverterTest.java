@@ -12,6 +12,7 @@ import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -44,6 +45,7 @@ public class IndexRequestConverterTest {
     GrscicollRecord grscicollRecord = GrscicollRecord.newBuilder().setId(ID).build();
     MultimediaRecord multimediaRecord = MultimediaRecord.newBuilder().setId(ID).build();
     ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
+    DnaDerivedDataRecord dnaRecord = DnaDerivedDataRecord.newBuilder().setId(ID).build();
     AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
 
     // When
@@ -62,6 +64,7 @@ public class IndexRequestConverterTest {
             .grscicollMap(Collections.singletonMap(ID, grscicollRecord))
             .multimediaMap(Collections.singletonMap(ID, multimediaRecord))
             .imageMap(Collections.singletonMap(ID, imageRecord))
+            .dnaMap(Collections.singletonMap(ID, dnaRecord))
             .audubonMap(Collections.singletonMap(ID, audubonRecord))
             .build()
             .getFn()
@@ -98,6 +101,7 @@ public class IndexRequestConverterTest {
     GrscicollRecord grscicollRecord = GrscicollRecord.newBuilder().setId(ID).build();
     MultimediaRecord multimediaRecord = MultimediaRecord.newBuilder().setId(ID).build();
     ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
+    DnaDerivedDataRecord dnaRecord = DnaDerivedDataRecord.newBuilder().setId(ID).build();
     AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
 
     // When
@@ -115,6 +119,7 @@ public class IndexRequestConverterTest {
             .grscicollMap(Collections.singletonMap(ID, grscicollRecord))
             .multimediaMap(Collections.singletonMap(ID, multimediaRecord))
             .imageMap(Collections.singletonMap(ID, imageRecord))
+            .dnaMap(Collections.singletonMap(ID, dnaRecord))
             .audubonMap(Collections.singletonMap(ID, audubonRecord))
             .build()
             .getFn()

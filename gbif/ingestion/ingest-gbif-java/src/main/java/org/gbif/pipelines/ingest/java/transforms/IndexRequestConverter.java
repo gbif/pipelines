@@ -15,6 +15,7 @@ import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -44,6 +45,7 @@ public class IndexRequestConverter {
   @NonNull private final Map<String, GrscicollRecord> grscicollMap;
   @NonNull private final Map<String, MultimediaRecord> multimediaMap;
   @NonNull private final Map<String, ImageRecord> imageMap;
+  @NonNull private final Map<String, DnaDerivedDataRecord> dnaMap;
   @NonNull private final Map<String, AudubonRecord> audubonMap;
 
   /** Join all records, convert into string json and IndexRequest for ES */
@@ -64,6 +66,8 @@ public class IndexRequestConverter {
       MultimediaRecord mr =
           multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
       ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
+      DnaDerivedDataRecord dnar =
+          dnaMap.getOrDefault(k, DnaDerivedDataRecord.newBuilder().setId(k).build());
       AudubonRecord ar = audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
 
       MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
@@ -78,6 +82,7 @@ public class IndexRequestConverter {
               .taxon(txr)
               .grscicoll(gr)
               .multimedia(mmr)
+              .dnaDerivedData(dnar)
               .verbatim(er)
               .build()
               .convert();

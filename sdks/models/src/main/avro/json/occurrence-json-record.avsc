@@ -175,7 +175,9 @@
       {"name":"measurementOrFactMethods","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"measurementOrFactCount","type":["null","int"],"default":null,"doc":""},
       {"name":"measurementOrFacts","type":{"type":"array","items":"org.gbif.pipelines.io.avro.json.MeasurementOrFactJsonRecord"},"default":[],"doc":""},
-      {"name":"taxonomy","type":{"type":"array","items":"org.gbif.pipelines.io.avro.json.Taxonomy"},"default":[],"doc":""}
+      {"name":"taxonomy","type":{"type":"array","items":"org.gbif.pipelines.io.avro.json.Taxonomy"},"default":[],"doc":""},
+      // DNA
+      {"name":"dnaSequenceID","type":{"type":"array","items":"string"},"default":[],"doc":""}
     ]
   }
 ]

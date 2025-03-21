@@ -19,6 +19,8 @@ import org.gbif.pipelines.core.factory.SerDeFactory;
 import org.gbif.pipelines.core.utils.SortUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedData;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -45,6 +47,7 @@ public class OccurrenceJsonConverter {
   private final TaxonRecord taxon;
   private final GrscicollRecord grscicoll;
   private final MultimediaRecord multimedia;
+  private final DnaDerivedDataRecord dnaDerivedData;
   private final ExtendedRecord verbatim;
 
   public OccurrenceJsonRecord convert() {
@@ -64,6 +67,7 @@ public class OccurrenceJsonConverter {
     mapTaxonRecord(builder);
     mapGrscicollRecord(builder);
     mapMultimediaRecord(builder);
+    mapDnaDerivedDataRecord(builder);
     mapExtendedRecord(builder);
     mapSortField(builder);
 
@@ -313,6 +317,18 @@ public class OccurrenceJsonConverter {
         .setMediaLicenses(JsonConverter.convertMultimediaLicense(multimedia));
   }
 
+  private void mapDnaDerivedDataRecord(OccurrenceJsonRecord.Builder builder) {
+    if (dnaDerivedData != null
+        && dnaDerivedData.getDnaDerivedDataItems() != null
+        && !dnaDerivedData.getDnaDerivedDataItems().isEmpty()) {
+      builder.setDnaSequenceID(
+          new ArrayList<>(
+              dnaDerivedData.getDnaDerivedDataItems().stream()
+                  .map(DnaDerivedData::getDnaSequenceID)
+                  .collect(Collectors.toSet())));
+    }
+  }
+
   private void mapExtendedRecord(OccurrenceJsonRecord.Builder builder) {
 
     builder
@@ -369,6 +385,7 @@ public class OccurrenceJsonConverter {
             location,
             taxon,
             grscicoll,
+            dnaDerivedData,
             multimedia)
         .ifPresent(builder::setCreated);
   }

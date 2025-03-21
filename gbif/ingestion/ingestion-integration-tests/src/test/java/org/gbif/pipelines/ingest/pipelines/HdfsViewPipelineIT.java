@@ -25,6 +25,7 @@ import org.gbif.pipelines.ingest.utils.InterpretedAvroWriter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
@@ -45,6 +46,7 @@ import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -177,6 +179,12 @@ public class HdfsViewPipelineIT {
             optionsWriter, ImageTransform.builder().create(), coreTerm, postfix)) {
       ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
       writer.append(imageRecord);
+    }
+    try (SyncDataFileWriter<DnaDerivedDataRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, DnaDerivedDataTransform.builder().create(), coreTerm, postfix)) {
+      DnaDerivedDataRecord dnaRecord = DnaDerivedDataRecord.newBuilder().setId(ID).build();
+      writer.append(dnaRecord);
     }
     try (SyncDataFileWriter<AudubonRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
@@ -335,6 +343,12 @@ public class HdfsViewPipelineIT {
             optionsWriter, ImageTransform.builder().create(), coreTerm, postfix)) {
       ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
       writer.append(imageRecord);
+    }
+    try (SyncDataFileWriter<DnaDerivedDataRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, DnaDerivedDataTransform.builder().create(), coreTerm, postfix)) {
+      DnaDerivedDataRecord dnaRecord = DnaDerivedDataRecord.newBuilder().setId(ID).build();
+      writer.append(dnaRecord);
     }
     try (SyncDataFileWriter<AudubonRecord> writer =
         InterpretedAvroWriter.createAvroWriter(

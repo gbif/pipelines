@@ -20,6 +20,7 @@ import org.gbif.pipelines.core.converters.ParentJsonConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -102,6 +103,7 @@ public class OccurrenceJsonTransform implements Serializable {
   @NonNull private final TupleTag<MultimediaRecord> multimediaRecordTag;
   @NonNull private final TupleTag<ImageRecord> imageRecordTag;
   @NonNull private final TupleTag<AudubonRecord> audubonRecordTag;
+  @NonNull private final TupleTag<DnaDerivedDataRecord> dnaRecordTag;
 
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
 
@@ -143,6 +145,8 @@ public class OccurrenceJsonTransform implements Serializable {
             ImageRecord ir = v.getOnly(imageRecordTag, ImageRecord.newBuilder().setId(k).build());
             AudubonRecord ar =
                 v.getOnly(audubonRecordTag, AudubonRecord.newBuilder().setId(k).build());
+            DnaDerivedDataRecord dnar =
+                v.getOnly(dnaRecordTag, DnaDerivedDataRecord.newBuilder().setId(k).build());
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
             OccurrenceJsonConverter occurrenceJsonConverter =
@@ -156,6 +160,7 @@ public class OccurrenceJsonTransform implements Serializable {
                     .taxon(txr)
                     .grscicoll(gr)
                     .multimedia(mmr)
+                    .dnaDerivedData(dnar)
                     .verbatim(er)
                     .build();
             if (asParentChildRecord) {
