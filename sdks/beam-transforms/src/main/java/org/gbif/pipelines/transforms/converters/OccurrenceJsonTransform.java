@@ -45,7 +45,6 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
  * final TupleTag<TemporalRecord> trTag = new TupleTag<TemporalRecord>() {};
  * final TupleTag<LocationRecord> lrTag = new TupleTag<LocationRecord>() {};
  * final TupleTag<TaxonRecord> txrTag = new TupleTag<TaxonRecord>() {};
- * final TupleTag<GrscicollRecord> grTag = new TupleTag<GrscicollRecord>() {};
  * final TupleTag<MultimediaRecord> mrTag = new TupleTag<MultimediaRecord>() {};
  * final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
  * final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
