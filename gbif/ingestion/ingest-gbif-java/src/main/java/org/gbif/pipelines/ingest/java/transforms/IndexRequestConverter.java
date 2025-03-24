@@ -83,7 +83,6 @@ public class IndexRequestConverter {
               .basic(br)
               .temporal(tr)
               .location(lr)
-              .taxon(txr)
               .multiTaxon(mtxr)
               .grscicoll(gr)
               .multimedia(mmr)

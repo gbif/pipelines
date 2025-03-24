@@ -551,7 +551,6 @@ public class OccurrenceJsonTransformTest {
             .verbatim(er)
             .temporal(tmr)
             .location(lr)
-            .taxon(tr)
             .multiTaxon(mtr)
             .grscicoll(gr)
             .multimedia(mmr)

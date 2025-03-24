@@ -50,7 +50,6 @@ public class OccurrenceJsonConverter {
   private final BasicRecord basic;
   private final TemporalRecord temporal;
   private final LocationRecord location;
-  private final TaxonRecord taxon;
   private final MultiTaxonRecord multiTaxon;
   private final GrscicollRecord grscicoll;
   private final MultimediaRecord multimedia;
@@ -309,6 +308,7 @@ public class OccurrenceJsonConverter {
     if (multiTaxon != null
         && multiTaxon.getTaxonRecords() != null
         && !multiTaxon.getTaxonRecords().isEmpty()) {
+
       Optional<TaxonRecord> gbifRecord =
           multiTaxon.getTaxonRecords().stream()
               .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
@@ -410,6 +410,12 @@ public class OccurrenceJsonConverter {
   }
 
   private void mapIssues(OccurrenceJsonRecord.Builder builder) {
+
+    Optional<TaxonRecord> gbifRecord =
+        multiTaxon.getTaxonRecords().stream()
+            .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
+            .findFirst();
+
     JsonConverter.mapIssues(
         Arrays.asList(
             metadata,
@@ -418,7 +424,7 @@ public class OccurrenceJsonConverter {
             basic,
             temporal,
             location,
-            taxon,
+            gbifRecord.orElse(TaxonRecord.newBuilder().build()),
             grscicoll,
             multimedia),
         builder::setIssues,
@@ -433,7 +439,7 @@ public class OccurrenceJsonConverter {
             basic,
             temporal,
             location,
-            taxon,
+            multiTaxon,
             grscicoll,
             dnaDerivedData,
             multimedia)

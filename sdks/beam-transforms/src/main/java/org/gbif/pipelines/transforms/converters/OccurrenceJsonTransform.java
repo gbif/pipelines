@@ -157,7 +157,6 @@ public class OccurrenceJsonTransform implements Serializable {
                     .basic(br)
                     .temporal(tr)
                     .location(lr)
-                    .taxon(txr)
                     .multiTaxon(mtxr)
                     .grscicoll(gr)
                     .multimedia(mmr)
