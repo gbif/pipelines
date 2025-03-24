@@ -820,7 +820,7 @@ public class OccurrenceHdfsRecordConverter {
     if (dnaDerivedDataRecord.getDnaDerivedDataItems() != null
         && !dnaDerivedDataRecord.getDnaDerivedDataItems().isEmpty()) {
       occurrenceHdfsRecord.setDnasequenceid(
-          new ArrayList<>(
+          new ArrayList<String>(
               dnaDerivedDataRecord.getDnaDerivedDataItems().stream()
                   .map(DnaDerivedData::getDnaSequenceID)
                   .collect(Collectors.toSet())));
