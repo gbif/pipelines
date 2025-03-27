@@ -117,6 +117,16 @@ public abstract class Transform<R, T extends SpecificRecordBase & Record> extend
   }
 
   /**
+   * Reads avro files from path if they exist, which contains {@link T}
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link
+   *     Transform#baseName}
+   */
+  public AvroIO.Read<T> readIfExists(UnaryOperator<String> pathFn) {
+    return read(pathFn.apply(baseName)).withEmptyMatchTreatment(EmptyMatchTreatment.ALLOW);
+  }
+
+  /**
    * Reads avro files from path, which contains {@link T}
    *
    * @param pathFn function can return an output path, where in param is fixed - {@link

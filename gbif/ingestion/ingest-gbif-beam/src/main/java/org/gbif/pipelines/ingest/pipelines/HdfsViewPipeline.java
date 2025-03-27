@@ -279,8 +279,9 @@ public class HdfsViewPipeline {
         p.apply("Read Image", imageTransform.read(interpretPathFn))
             .apply("Map Image to KV", imageTransform.toKv());
 
+    // only reads them if they exist not to reinterpret the DNA extension for all the datasets
     PCollection<KV<String, DnaDerivedDataRecord>> dnaCollection =
-        p.apply("Read DNA", dnaTransform.read(interpretPathFn))
+        p.apply("Read DNA", dnaTransform.readIfExists(interpretPathFn))
             .apply("Map DNA to KV", dnaTransform.toKv());
 
     PCollection<KV<String, AudubonRecord>> audubonCollection =
