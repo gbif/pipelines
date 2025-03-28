@@ -436,13 +436,15 @@ public final class FsUtils {
 
   @SneakyThrows
   public static List<Path> getFilesByExt(FileSystem fs, Path path, String filterExt) {
-    RemoteIterator<LocatedFileStatus> files = fs.listFiles(path, false);
     List<Path> paths = new ArrayList<>();
-    while (files.hasNext()) {
-      LocatedFileStatus next = files.next();
-      Path np = next.getPath();
-      if (next.isFile() && np.getName().endsWith(filterExt)) {
-        paths.add(np);
+    if (fs.exists(path)) {
+      RemoteIterator<LocatedFileStatus> files = fs.listFiles(path, false);
+      while (files.hasNext()) {
+        LocatedFileStatus next = files.next();
+        Path np = next.getPath();
+        if (next.isFile() && np.getName().endsWith(filterExt)) {
+          paths.add(np);
+        }
       }
     }
     return paths;

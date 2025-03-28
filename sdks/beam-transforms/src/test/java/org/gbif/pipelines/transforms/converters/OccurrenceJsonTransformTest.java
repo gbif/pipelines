@@ -32,6 +32,7 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
@@ -396,6 +397,8 @@ public class OccurrenceJsonTransformTest {
             .build();
     gr.getIssues().getIssueList().add(OccurrenceIssue.INSTITUTION_MATCH_FUZZY.name());
 
+    DnaDerivedDataRecord dnar = DnaDerivedDataRecord.newBuilder().setId("777").build();
+
     // State
     Multimedia stillImage = new Multimedia();
     stillImage.setType(MediaType.StillImage.name());
@@ -452,6 +455,7 @@ public class OccurrenceJsonTransformTest {
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
+    DnaDerivedDataTransform dnaTransform = DnaDerivedDataTransform.builder().create();
 
     // When
     PCollectionView<MetadataRecord> metadataView =
@@ -502,6 +506,10 @@ public class OccurrenceJsonTransformTest {
         p.apply("Read Audubon", Create.empty(new TypeDescriptor<AudubonRecord>() {}))
             .apply("Map Audubon to KV", audubonTransform.toKv());
 
+    PCollection<KV<String, DnaDerivedDataRecord>> dnaCollection =
+        p.apply("Read DNA", Create.empty(new TypeDescriptor<DnaDerivedDataRecord>() {}))
+            .apply("Map DNA to KV", dnaTransform.toKv());
+
     SingleOutput<KV<String, CoGbkResult>, String> occurrenceJsonDoFn =
         OccurrenceJsonTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
@@ -516,6 +524,7 @@ public class OccurrenceJsonTransformTest {
             .multimediaRecordTag(multimediaTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
+            .dnaRecordTag(dnaTransform.getTag())
             .metadataView(metadataView)
             .build()
             .converter();
@@ -535,6 +544,7 @@ public class OccurrenceJsonTransformTest {
             .and(multimediaTransform.getTag(), multimediaCollection)
             .and(imageTransform.getTag(), imageCollection)
             .and(audubonTransform.getTag(), audubonCollection)
+            .and(dnaTransform.getTag(), dnaCollection)
             // Raw
             .and(verbatimTransform.getTag(), verbatimCollection)
             // Apply
@@ -554,6 +564,7 @@ public class OccurrenceJsonTransformTest {
             .multiTaxon(mtr)
             .grscicoll(gr)
             .multimedia(mmr)
+            .dnaDerivedData(dnar)
             .build()
             .toJsonWithNulls();
 

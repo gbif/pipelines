@@ -27,6 +27,8 @@ import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.Diagnostic;
+import org.gbif.pipelines.io.avro.DnaDerivedData;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GadmFeatures;
@@ -491,6 +493,15 @@ public class OccurrenceJsonConverterTest {
             .setMultimediaItems(Arrays.asList(stillImage, movingImage))
             .build();
 
+    DnaDerivedDataRecord dnar =
+        DnaDerivedDataRecord.newBuilder()
+            .setId("777")
+            .setDnaDerivedDataItems(
+                Arrays.asList(
+                    DnaDerivedData.newBuilder().setDnaSequenceID("foo1").build(),
+                    DnaDerivedData.newBuilder().setDnaSequenceID("foo2").build()))
+            .build();
+
     // When
     String json =
         OccurrenceJsonConverter.builder()
@@ -504,6 +515,7 @@ public class OccurrenceJsonConverterTest {
             .multiTaxon(MultiTaxonRecord.newBuilder().setTaxonRecords(List.of(tr)).build())
             .grscicoll(gr)
             .multimedia(mmr)
+            .dnaDerivedData(dnar)
             .build()
             .toJsonWithNulls();
 

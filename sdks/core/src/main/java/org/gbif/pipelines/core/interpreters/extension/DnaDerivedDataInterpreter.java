@@ -1,11 +1,10 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
 import java.util.Objects;
-import java.util.regex.Pattern;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.elasticsearch.common.Strings;
+import org.gbif.api.util.DnaUtils;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.GbifDnaTerm;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
@@ -16,8 +15,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 @Builder(buildMethodName = "create")
 @Slf4j
 public class DnaDerivedDataInterpreter {
-
-  private static final Pattern NON_IUPAC = Pattern.compile("[^ACGTURYSWKMBDHVN]");
 
   /**
    * Interprets audubon of a {@link ExtendedRecord} and populates a {@link DnaDerivedDataRecord}
@@ -38,9 +35,7 @@ public class DnaDerivedDataInterpreter {
 
   private static void interpretDnaSequence(DnaDerivedData dnaDerivedData, String rawValue) {
     if (!Strings.isNullOrEmpty(rawValue)) {
-      String interpretedSequence =
-          DigestUtils.md5Hex(NON_IUPAC.matcher(rawValue.toUpperCase()).replaceAll(""));
-      dnaDerivedData.setDnaSequenceID(interpretedSequence);
+      dnaDerivedData.setDnaSequenceID(DnaUtils.convertDnaSequenceToID(rawValue));
     }
   }
 }

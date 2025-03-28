@@ -25,6 +25,7 @@ import org.gbif.pipelines.ingest.utils.InterpretedAvroWriter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
@@ -47,6 +48,7 @@ import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -186,6 +188,12 @@ public class HdfsViewPipelineIT {
       ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
       writer.append(imageRecord);
     }
+    try (SyncDataFileWriter<DnaDerivedDataRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, DnaDerivedDataTransform.builder().create(), coreTerm, postfix)) {
+      DnaDerivedDataRecord dnaRecord = DnaDerivedDataRecord.newBuilder().setId(ID).build();
+      writer.append(dnaRecord);
+    }
     try (SyncDataFileWriter<AudubonRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, AudubonTransform.builder().create(), coreTerm, postfix)) {
@@ -214,14 +222,11 @@ public class HdfsViewPipelineIT {
     assertFile(OccurrenceHdfsRecord.class, outputFn.apply("occurrence"));
     assertFile(MeasurementOrFactTable.class, outputFn.apply("measurementorfacttable"));
 
-    assertFileExists(outputFn.apply("germplasmmeasurementtrialtable"));
-    assertFileExists(outputFn.apply("audubontable"));
-    assertFileExists(outputFn.apply("extendedmeasurementorfacttable"));
-
-    // Next two interpretations were not in the list of interpretation types param,
-    // --interpretationTypes
-    assertFileNotExists(outputFn.apply("permittable"));
-    assertFileNotExists(outputFn.apply("loantable"));
+    assertFileExistFalse(outputFn.apply("germplasmmeasurementtrialtable"));
+    assertFileExistFalse(outputFn.apply("audubontable"));
+    assertFileExistFalse(outputFn.apply("extendedmeasurementorfacttable"));
+    assertFileExistFalse(outputFn.apply("permittable"));
+    assertFileExistFalse(outputFn.apply("loantable"));
   }
 
   @Test
@@ -353,6 +358,12 @@ public class HdfsViewPipelineIT {
       ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
       writer.append(imageRecord);
     }
+    try (SyncDataFileWriter<DnaDerivedDataRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, DnaDerivedDataTransform.builder().create(), coreTerm, postfix)) {
+      DnaDerivedDataRecord dnaRecord = DnaDerivedDataRecord.newBuilder().setId(ID).build();
+      writer.append(dnaRecord);
+    }
     try (SyncDataFileWriter<AudubonRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, AudubonTransform.builder().create(), coreTerm, postfix)) {
@@ -396,18 +407,14 @@ public class HdfsViewPipelineIT {
                 + "_147-00000-of-00001.avro";
 
     assertFile(OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
-    assertFileNotExists(outputFn.apply("measurementorfacttable"));
-    assertFileNotExists(outputFn.apply("extendedmeasurementorfacttable"));
-    assertFileNotExists(outputFn.apply("germplasmmeasurementtrialtable"));
-    assertFileNotExists(outputFn.apply("permittable"));
-    assertFileNotExists(outputFn.apply("loantable"));
+    assertFileExistFalse(outputFn.apply("measurementorfacttable"));
+    assertFileExistFalse(outputFn.apply("extendedmeasurementorfacttable"));
+    assertFileExistFalse(outputFn.apply("germplasmmeasurementtrialtable"));
+    assertFileExistFalse(outputFn.apply("permittable"));
+    assertFileExistFalse(outputFn.apply("loantable"));
   }
 
-  private void assertFileExists(String output) {
-    Assert.assertTrue(new File(output).exists());
-  }
-
-  private void assertFileNotExists(String output) {
+  private void assertFileExistFalse(String output) {
     Assert.assertFalse(new File(output).exists());
   }
 

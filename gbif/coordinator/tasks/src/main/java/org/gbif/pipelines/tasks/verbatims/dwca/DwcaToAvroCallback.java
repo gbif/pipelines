@@ -251,6 +251,13 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
             dwcaOccurrenceRecordsNumber,
             dwcaRecordsNumber);
 
+    // this is a deliberate hack(see issue https://github.com/gbif/pipelines/issues/885)
+    DatasetType datasetType = message.getDatasetType();
+    // TODO: can we remove this??
+    //    if (message.getDatasetType() == DatasetType.MATERIAL_ENTITY) {
+    //      datasetType = DatasetType.OCCURRENCE;
+    //    }
+
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
@@ -262,7 +269,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         validationResult,
         null,
         null,
-        message.getDatasetType());
+        datasetType);
   }
 
   /**

@@ -59,6 +59,7 @@ import org.gbif.pipelines.ingest.utils.SharedLockUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
@@ -80,6 +81,7 @@ import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -215,6 +217,7 @@ public class HdfsViewPipeline {
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
+    DnaDerivedDataTransform dnaTransform = DnaDerivedDataTransform.builder().create();
 
     log.info("Adding step 3: Creating beam pipeline");
     PCollectionView<MetadataRecord> metadataView =
@@ -283,6 +286,11 @@ public class HdfsViewPipeline {
         p.apply("Read Image", imageTransform.read(interpretPathFn))
             .apply("Map Image to KV", imageTransform.toKv());
 
+    // only reads them if they exist not to reinterpret the DNA extension for all the datasets
+    PCollection<KV<String, DnaDerivedDataRecord>> dnaCollection =
+        p.apply("Read DNA", dnaTransform.readIfExists(interpretPathFn))
+            .apply("Map DNA to KV", dnaTransform.toKv());
+
     PCollection<KV<String, AudubonRecord>> audubonCollection =
         p.apply("Read Audubon", audubonTransform.read(interpretPathFn))
             .apply("Map Audubon to KV", audubonTransform.toKv());
@@ -330,6 +338,7 @@ public class HdfsViewPipeline {
         // Extension
         .and(multimediaTransform.getTag(), multimediaCollection)
         .and(imageTransform.getTag(), imageCollection)
+        .and(dnaTransform.getTag(), dnaCollection)
         .and(audubonTransform.getTag(), audubonCollection)
         // Raw
         .and(verbatimTransform.getTag(), verbatimCollection)
