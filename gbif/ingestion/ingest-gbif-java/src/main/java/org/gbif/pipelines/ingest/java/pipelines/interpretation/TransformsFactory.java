@@ -134,19 +134,6 @@ public class TransformsFactory {
         .init();
   }
 
-  public TaxonomyTransform createTaxonomyTransform() {
-    SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
-        nameUsageMatchServiceSupplier = null;
-    if (!options.getTestMode()) {
-      nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.getInstanceSupplier(config);
-    }
-    return TaxonomyTransform.builder()
-        .kvStoreSupplier(nameUsageMatchServiceSupplier)
-        .create()
-        .counterFn(incMetricFn)
-        .init();
-  }
-
   public MultiTaxonomyTransform createMultiTaxonomyTransform() {
     SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
         nameUsageMatchServiceSupplier = null;

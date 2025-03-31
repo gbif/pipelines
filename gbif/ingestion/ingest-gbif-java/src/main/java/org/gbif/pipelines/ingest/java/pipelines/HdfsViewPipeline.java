@@ -127,7 +127,6 @@ import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -271,9 +270,6 @@ public class HdfsViewPipeline {
     CompletableFuture<Map<String, LocationRecord>> locationMapFeature =
         readAvroAsFuture(options, coreTerm, executor, LocationTransform.builder().create());
 
-    CompletableFuture<Map<String, TaxonRecord>> taxonMapFeature =
-        readAvroAsFuture(options, coreTerm, executor, TaxonomyTransform.builder().create());
-
     CompletableFuture<Map<String, MultiTaxonRecord>> multiTaxonMapFeature =
         readAvroAsFuture(options, coreTerm, executor, MultiTaxonomyTransform.builder().create());
 
@@ -302,7 +298,6 @@ public class HdfsViewPipeline {
             .verbatimMap(verbatimMapFeature.get())
             .temporalMap(temporalMapFeature.get())
             .locationMap(locationMapFeature.get())
-            .taxonMap(taxonMapFeature.get())
             .multiTaxonMap(multiTaxonMapFeature.get())
             .multimediaMap(multimediaMapFeature.get())
             .imageMap(imageMapFeature.get())
