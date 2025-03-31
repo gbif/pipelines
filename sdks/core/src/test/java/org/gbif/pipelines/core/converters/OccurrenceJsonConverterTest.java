@@ -22,36 +22,7 @@ import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
-import org.gbif.pipelines.io.avro.AgentIdentifier;
-import org.gbif.pipelines.io.avro.Authorship;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.Diagnostic;
-import org.gbif.pipelines.io.avro.DnaDerivedData;
-import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GadmFeatures;
-import org.gbif.pipelines.io.avro.GeologicalContext;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MachineTag;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultiTaxonRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.NamePart;
-import org.gbif.pipelines.io.avro.NameRank;
-import org.gbif.pipelines.io.avro.NameType;
-import org.gbif.pipelines.io.avro.NomCode;
-import org.gbif.pipelines.io.avro.ParsedName;
-import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.State;
-import org.gbif.pipelines.io.avro.Status;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.VocabularyConcept;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Test;
@@ -301,14 +272,14 @@ public class OccurrenceJsonConverterTest {
 
     List<RankedName> rankedNameList = new ArrayList<>();
 
-    RankedName synonym =
-        RankedName.newBuilder()
+    RankedNameWithAuthorship synonym =
+        RankedNameWithAuthorship.newBuilder()
             .setKey(String.valueOf(10))
             .setName("synonym")
             .setRank(Rank.SPECIES.toString())
             .build();
-    RankedName au =
-        RankedName.newBuilder()
+    RankedNameWithAuthorship au =
+        RankedNameWithAuthorship.newBuilder()
             .setKey(String.valueOf(11))
             .setName("accepted usage")
             .setRank(Rank.SPECIES.toString())

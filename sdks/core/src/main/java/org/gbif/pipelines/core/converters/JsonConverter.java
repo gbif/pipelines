@@ -39,6 +39,7 @@ import org.gbif.pipelines.io.avro.json.GbifClassification;
 import org.gbif.pipelines.io.avro.json.ParsedName;
 import org.gbif.pipelines.io.avro.json.ParsedName.Builder;
 import org.gbif.pipelines.io.avro.json.RankedName;
+import org.gbif.pipelines.io.avro.json.RankedNameWithAuthorship;
 import org.gbif.pipelines.io.avro.json.VerbatimRecord;
 import org.gbif.pipelines.io.avro.json.VocabularyConcept;
 import org.gbif.pipelines.io.avro.json.VocabularyConceptList;
@@ -340,6 +341,18 @@ public class JsonConverter {
         .map(
             rn ->
                 RankedName.newBuilder()
+                    .setName(rn.getName())
+                    .setRank(rn.getRank())
+                    .setKey(rn.getKey())
+                    .build());
+  }
+
+  public static Optional<RankedNameWithAuthorship> convertRankedName(
+      org.gbif.pipelines.io.avro.RankedNameWithAuthorship rankedName) {
+    return Optional.ofNullable(rankedName)
+        .map(
+            rn ->
+                RankedNameWithAuthorship.newBuilder()
                     .setName(rn.getName())
                     .setRank(rn.getRank())
                     .setKey(rn.getKey())

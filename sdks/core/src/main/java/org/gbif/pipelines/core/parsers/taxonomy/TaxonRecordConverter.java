@@ -6,11 +6,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.gbif.pipelines.io.avro.Diagnostic;
-import org.gbif.pipelines.io.avro.MatchType;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.Status;
-import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 /** Adapts a {@link NameUsageMatchResponse} into a {@link TaxonRecord} */
@@ -57,12 +53,12 @@ public class TaxonRecordConverter {
     return taxonRecord;
   }
 
-  private static RankedName convertUsage(NameUsageMatchResponse.Usage rankedNameApi) {
+  private static RankedNameWithAuthorship convertUsage(NameUsageMatchResponse.Usage rankedNameApi) {
     if (rankedNameApi == null) {
       return null;
     }
 
-    return RankedName.newBuilder()
+    return RankedNameWithAuthorship.newBuilder()
         .setKey(rankedNameApi.getKey())
         .setName(rankedNameApi.getName())
         .setRank(rankedNameApi.getRank())

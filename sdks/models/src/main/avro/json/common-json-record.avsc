@@ -131,6 +131,16 @@
     "fields":[
       {"name":"key","type":["null","string"],"default":null,"doc":""},
       {"name":"name","type":["null","string"],"default":null,"doc":""},
+      {"name":"rank","type":["null","string"],"default":null}
+    ]
+  },
+  {
+    "name":"RankedNameWithAuthorship",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"key","type":["null","string"],"default":null,"doc":""},
+      {"name":"name","type":["null","string"],"default":null,"doc":""},
       {"name":"rank","type":["null","string"],"default":null},
       {"name":"authorship","type":["null","string"],"default":null}
     ]
@@ -190,7 +200,7 @@
     "type":"record",
     "doc":"GBIF taxonomy classification",
     "fields":[
-      {"name":"acceptedUsage","type":["null","RankedName"],"default":null,"doc":""},
+      {"name":"acceptedUsage","type":["null","RankedNameWithAuthorship"],"default":null,"doc":""},
       {"name":"classification","type":{ "type":"array","items":"RankedName" },"default":[]},
       {"name":"classificationPath","type":["null","string"],"default":null,"doc":""},
       {"name":"diagnostics","type":["null","Diagnostic"],"default":null,"doc":""},
@@ -212,7 +222,7 @@
       {"name":"taxonID","type":["null","string"],"default":null,"doc":""},
       {"name":"taxonConceptID","type":["null","string"],"default":null,"doc":""},
       {"name":"taxonKey","type":{"type":"array","items":"string"},"default":[]},
-      {"name":"usage","type":["null","RankedName"],"default":null,"doc":""},
+      {"name":"usage","type":["null","RankedNameWithAuthorship"],"default":null,"doc":""},
       {"name":"usageParsedName","type":["null","ParsedName"],"default":null,"doc":""},
       {"name":"verbatimScientificName","type":["null","string"],"default":null,"doc":""},
       {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""}
@@ -226,8 +236,8 @@
     "fields":[
       {"name":"checklistKey","type": "string", "doc":"The GBIF key for the checklistbank dataset"},
       {"name":"classificationPath","type":["null","string"],"default":null,"doc":""},
-      {"name":"usage","type":["null","RankedName"],"default":null,"doc":""},
-      {"name":"acceptedUsage","type":["null","RankedName"],"default":null,"doc":""},
+      {"name":"usage","type":["null","RankedNameWithAuthorship"],"default":null,"doc":""},
+      {"name":"acceptedUsage","type":["null","RankedNameWithAuthorship"],"default":null,"doc":""},
       {"name":"classification",
         "type":{ "type":"map","values":"string" },
         "default": {}

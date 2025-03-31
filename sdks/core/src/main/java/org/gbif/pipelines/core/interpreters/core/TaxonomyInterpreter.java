@@ -22,16 +22,7 @@ import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.core.utils.IdentificationUtils;
 import org.gbif.pipelines.core.utils.ModelUtils;
-import org.gbif.pipelines.io.avro.Authorship;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.NamePart;
-import org.gbif.pipelines.io.avro.NameRank;
-import org.gbif.pipelines.io.avro.NameType;
-import org.gbif.pipelines.io.avro.NomCode;
-import org.gbif.pipelines.io.avro.ParsedName;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.State;
-import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 /**
@@ -48,6 +39,13 @@ public class TaxonomyInterpreter {
   public static final String KINGDOM_RANK = "KINGDOM";
   public static final String INCERTAE_SEDIS_NAME = "incertae sedis";
   public static final String INCERTAE_SEDIS_KEY = "0";
+
+  private static final RankedNameWithAuthorship INCERTAE_SEDIS_WITH_AUTHORSHIP =
+      RankedNameWithAuthorship.newBuilder()
+          .setRank(KINGDOM_RANK)
+          .setName(INCERTAE_SEDIS_NAME)
+          .setKey(INCERTAE_SEDIS_KEY)
+          .build();
 
   private static final RankedName INCERTAE_SEDIS =
       RankedName.newBuilder()
@@ -119,7 +117,7 @@ public class TaxonomyInterpreter {
       // "NO_MATCHING_RESULTS". This
       // happens when we get an empty response from the WS
       addIssue(tr, TAXON_MATCH_NONE);
-      tr.setUsage(INCERTAE_SEDIS);
+      tr.setUsage(INCERTAE_SEDIS_WITH_AUTHORSHIP);
       tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
     } else {
 

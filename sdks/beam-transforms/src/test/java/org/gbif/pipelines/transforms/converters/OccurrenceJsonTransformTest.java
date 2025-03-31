@@ -244,14 +244,14 @@ public class OccurrenceJsonTransformTest {
 
     List<RankedName> rankedNameList = new ArrayList<>();
 
-    RankedName synonym =
-        RankedName.newBuilder()
+    RankedNameWithAuthorship synonym =
+        RankedNameWithAuthorship.newBuilder()
             .setKey(String.valueOf(10))
             .setName("synonym")
             .setRank(Rank.SPECIES.toString())
             .build();
-    RankedName au =
-        RankedName.newBuilder()
+    RankedNameWithAuthorship au =
+        RankedNameWithAuthorship.newBuilder()
             .setKey(String.valueOf(11))
             .setName("accepted usage")
             .setRank(Rank.SPECIES.toString())
