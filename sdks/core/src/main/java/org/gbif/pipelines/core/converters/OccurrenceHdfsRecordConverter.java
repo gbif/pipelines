@@ -44,7 +44,6 @@ public class OccurrenceHdfsRecordConverter {
   private final ClusteringRecord clusteringRecord;
   private final BasicRecord basicRecord;
   private final LocationRecord locationRecord;
-  private final TaxonRecord taxonRecord;
   private final MultiTaxonRecord multiTaxonRecord;
   private final GrscicollRecord grscicollRecord;
   private final TemporalRecord temporalRecord;
@@ -69,7 +68,6 @@ public class OccurrenceHdfsRecordConverter {
     mapMetadataRecord(occurrenceHdfsRecord);
     mapTemporalRecord(occurrenceHdfsRecord);
     mapLocationRecord(occurrenceHdfsRecord);
-    mapTaxonRecord(occurrenceHdfsRecord);
     mapMultiTaxonRecord(occurrenceHdfsRecord);
     mapGrscicollRecord(occurrenceHdfsRecord);
     mapMultimediaRecord(occurrenceHdfsRecord);
@@ -289,10 +287,20 @@ public class OccurrenceHdfsRecordConverter {
                         tr.getClassification().stream()
                             .map(RankedName::getKey)
                             .collect(Collectors.toList()))));
+
+    // find the GBIF taxonomy
+    Optional<TaxonRecord> gbifRecord =
+        multiTaxonRecord.getTaxonRecords().stream()
+            .filter(
+                tr -> OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
+            .findFirst();
+
+    gbifRecord.ifPresent(tr -> mapLegacyGbifTaxonRecord(occurrenceHdfsRecord, tr));
   }
 
   /** Copies the {@link TaxonRecord} data into the {@link OccurrenceHdfsRecord}. */
-  private void mapTaxonRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+  private void mapLegacyGbifTaxonRecord(
+      OccurrenceHdfsRecord occurrenceHdfsRecord, TaxonRecord taxonRecord) {
     if (taxonRecord == null) {
       return;
     }

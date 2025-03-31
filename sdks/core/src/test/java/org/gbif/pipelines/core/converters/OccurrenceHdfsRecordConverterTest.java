@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.converters.OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -155,6 +157,7 @@ public class OccurrenceHdfsRecordConverterTest {
         RankedName.newBuilder().setName("ORDER").setRank(Rank.ORDER.toString()).build());
     TaxonRecord taxonRecord =
         TaxonRecord.newBuilder()
+            .setDatasetKey(GBIF_BACKBONE_DATASET_KEY)
             .setCreated(
                 2L) // This value for lastParsed and lastInterpreted since is greater that the Basic
             // record created date
@@ -192,7 +195,8 @@ public class OccurrenceHdfsRecordConverterTest {
         OccurrenceHdfsRecordConverter.builder()
             .basicRecord(basicRecord)
             .metadataRecord(metadataRecord)
-            .taxonRecord(taxonRecord)
+            .multiTaxonRecord(
+                MultiTaxonRecord.newBuilder().setTaxonRecords(List.of(taxonRecord)).build())
             .identifierRecord(identifierRecord)
             .temporalRecord(temporalRecord)
             .dnaDerivedDataRecord(dnaDerivedDataRecord)
@@ -549,6 +553,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setName("Caldisphaera lagunensis Itoh & al., 2003")
             .build();
 
+    taxonRecord.setDatasetKey(GBIF_BACKBONE_DATASET_KEY);
     taxonRecord.setUsage(rankedName);
     taxonRecord.setUsage(rankedName);
     taxonRecord.setAcceptedUsage(rankedName);
@@ -559,7 +564,11 @@ public class OccurrenceHdfsRecordConverterTest {
 
     // When
     OccurrenceHdfsRecord hdfsRecord =
-        OccurrenceHdfsRecordConverter.builder().taxonRecord(taxonRecord).build().convert();
+        OccurrenceHdfsRecordConverter.builder()
+            .multiTaxonRecord(
+                MultiTaxonRecord.newBuilder().setTaxonRecords(List.of(taxonRecord)).build())
+            .build()
+            .convert();
 
     // Should
     Assert.assertEquals("Archaea", hdfsRecord.getKingdom());

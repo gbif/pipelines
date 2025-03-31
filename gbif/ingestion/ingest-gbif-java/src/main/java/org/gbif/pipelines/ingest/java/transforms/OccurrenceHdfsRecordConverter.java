@@ -83,7 +83,6 @@ public class OccurrenceHdfsRecordConverter {
                 .metadataRecord(metadata)
                 .temporalRecord(tr)
                 .locationRecord(lr)
-                .taxonRecord(txr)
                 .multiTaxonRecord(mtxr)
                 .multimediaRecord(mmr)
                 .dnaDerivedDataRecord(dnar)

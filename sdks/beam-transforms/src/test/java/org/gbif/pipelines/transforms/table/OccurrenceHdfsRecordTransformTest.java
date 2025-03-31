@@ -42,7 +42,6 @@ import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -136,7 +135,6 @@ public class OccurrenceHdfsRecordTransformTest {
     ClusteringTransform clusteringTransform = ClusteringTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
     MultiTaxonomyTransform multiTaxonomyTransform = MultiTaxonomyTransform.builder().create();
     GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
@@ -158,7 +156,7 @@ public class OccurrenceHdfsRecordTransformTest {
             .basicRecordTag(basicTransform.getTag())
             .clusteringRecordTag(clusteringTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
-            .taxonRecordTag(taxonomyTransform.getTag())
+            .multiTaxonRecordTag(multiTaxonomyTransform.getTag())
             .multiTaxonRecordTag(multiTaxonomyTransform.getTag())
             .grscicollRecordTag(grscicollTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
@@ -189,9 +187,6 @@ public class OccurrenceHdfsRecordTransformTest {
 
     PCollection<KV<String, LocationRecord>> locationCollection =
         p.apply("Create location", Create.of(lr)).apply("KV location", locationTransform.toKv());
-
-    PCollection<KV<String, TaxonRecord>> taxonomyCollection =
-        p.apply("Create taxon", Create.of(txr)).apply("KV taxon", taxonomyTransform.toKv());
 
     PCollection<KV<String, MultiTaxonRecord>> multiTaxonomyCollection =
         p.apply("Create multi taxon", Create.of(mtxr))
@@ -226,7 +221,6 @@ public class OccurrenceHdfsRecordTransformTest {
             .and(basicTransform.getTag(), basicCollection)
             .and(temporalTransform.getTag(), temporalCollection)
             .and(locationTransform.getTag(), locationCollection)
-            .and(taxonomyTransform.getTag(), taxonomyCollection)
             .and(multiTaxonomyTransform.getTag(), multiTaxonomyCollection)
             .and(grscicollTransform.getTag(), grscicollCollection)
             .and(eventCoreTransform.getTag(), eventCoreCollection)
