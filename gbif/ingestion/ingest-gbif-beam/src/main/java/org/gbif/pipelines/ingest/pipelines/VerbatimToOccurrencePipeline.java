@@ -43,7 +43,6 @@ import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -151,7 +150,6 @@ public class VerbatimToOccurrencePipeline {
     ClusteringTransform clusteringTransform = transformsFactory.createClusteringTransform();
     BasicTransform basicTransform = transformsFactory.createBasicTransform();
     TemporalTransform temporalTransform = transformsFactory.createTemporalTransform();
-    TaxonomyTransform taxonomyTransform = transformsFactory.createTaxonomyTransform();
     MultiTaxonomyTransform multiTaxonomyTransform =
         transformsFactory.createMultiTaxonomyTransform();
     GrscicollTransform grscicollTransform = transformsFactory.createGrscicollTransform();
@@ -308,32 +306,10 @@ public class VerbatimToOccurrencePipeline {
         .apply("Write audubon to avro", audubonTransform.write(pathFn).withoutSharding());
 
     // if the config is available, then run the taxonomy transform
-    if (transformsFactory.getConfig().getNameUsageMatchingService() != null
-        && transformsFactory.getConfig().getNameUsageMatchingService().getChecklistKeys() != null
-        && !transformsFactory
-            .getConfig()
-            .getNameUsageMatchingService()
-            .getChecklistKeys()
-            .isEmpty()) {
-      filteredUniqueRecords
-          .apply("Check multi-taxonomy transform condition", multiTaxonomyTransform.check(types))
-          .apply("Interpret multi-taxonomy", multiTaxonomyTransform.interpret())
-          .apply(
-              "Write multi-taxon to avro", multiTaxonomyTransform.write(pathFn).withoutSharding());
-    } else {
-      log.info("The multi-taxonomy transform is not configured");
-    }
-
-    // if the config is available, then run the taxonomy transform
-    if (transformsFactory.getConfig().getNameUsageMatch() != null
-        && transformsFactory.getConfig().getNameUsageMatch().getApi() != null) {
-      filteredUniqueRecords
-          .apply("Check taxonomy transform condition", taxonomyTransform.check(types))
-          .apply("Interpret taxonomy", taxonomyTransform.interpret())
-          .apply("Write taxon to avro", taxonomyTransform.write(pathFn).withoutSharding());
-    } else {
-      log.info("The taxonomy transform is not configured");
-    }
+    filteredUniqueRecords
+        .apply("Check multi-taxonomy transform condition", multiTaxonomyTransform.check(types))
+        .apply("Interpret multi-taxonomy", multiTaxonomyTransform.interpret())
+        .apply("Write multi-taxon to avro", multiTaxonomyTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check grscicoll transform condition", grscicollTransform.check(types))
