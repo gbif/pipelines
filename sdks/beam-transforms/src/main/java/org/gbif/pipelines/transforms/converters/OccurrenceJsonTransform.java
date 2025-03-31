@@ -28,7 +28,6 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 
@@ -98,7 +97,6 @@ public class OccurrenceJsonTransform implements Serializable {
   @NonNull private final TupleTag<BasicRecord> basicRecordTag;
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
-  @NonNull private final TupleTag<TaxonRecord> taxonRecordTag;
   @NonNull private final TupleTag<MultiTaxonRecord> multiTaxonRecordTag;
   @NonNull private final TupleTag<GrscicollRecord> grscicollRecordTag;
   // Extension
@@ -137,7 +135,6 @@ public class OccurrenceJsonTransform implements Serializable {
                 v.getOnly(temporalRecordTag, TemporalRecord.newBuilder().setId(k).build());
             LocationRecord lr =
                 v.getOnly(locationRecordTag, LocationRecord.newBuilder().setId(k).build());
-            TaxonRecord txr = v.getOnly(taxonRecordTag, TaxonRecord.newBuilder().setId(k).build());
             MultiTaxonRecord mtxr =
                 v.getOnly(multiTaxonRecordTag, MultiTaxonRecord.newBuilder().setId(k).build());
             GrscicollRecord gr =

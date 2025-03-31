@@ -1,5 +1,7 @@
 package org.gbif.pipelines.transforms.converters;
 
+import static org.gbif.pipelines.core.converters.OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -330,6 +332,7 @@ public class OccurrenceJsonTransformTest {
     TaxonRecord tr =
         TaxonRecord.newBuilder()
             .setId("777")
+            .setDatasetKey(GBIF_BACKBONE_DATASET_KEY)
             .setAcceptedUsage(au)
             .setClassification(rankedNameList)
             .setUsage(synonym)
@@ -373,8 +376,8 @@ public class OccurrenceJsonTransformTest {
             .setDiagnostics(diagnostic)
             .build();
 
-    // TODO: MultiTaxonRecord
-    MultiTaxonRecord mtr = MultiTaxonRecord.newBuilder().setId("777").build();
+    MultiTaxonRecord mtr =
+        MultiTaxonRecord.newBuilder().setId("777").setTaxonRecords(List.of(tr)).build();
 
     // grscicoll
     Match institutionMatch =
@@ -446,7 +449,6 @@ public class OccurrenceJsonTransformTest {
     GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
     ClusteringTransform clusteringTransform = ClusteringTransform.builder().create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
     MultiTaxonomyTransform multiTaxonomyTransform = MultiTaxonomyTransform.builder().create();
     GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
@@ -483,9 +485,6 @@ public class OccurrenceJsonTransformTest {
         p.apply("Read clustering", Create.of(cr))
             .apply("Map clustering to KV", clusteringTransform.toKv());
 
-    PCollection<KV<String, TaxonRecord>> taxonCollection =
-        p.apply("Read Taxon", Create.of(tr)).apply("Map Taxon to KV", taxonomyTransform.toKv());
-
     PCollection<KV<String, MultiTaxonRecord>> multiTaxonCollection =
         p.apply("Read Multi Taxon", Create.of(mtr))
             .apply("Map Multi Taxon to KV", multiTaxonomyTransform.toKv());
@@ -518,7 +517,6 @@ public class OccurrenceJsonTransformTest {
             .clusteringRecordTag(clusteringTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
-            .taxonRecordTag(taxonomyTransform.getTag())
             .multiTaxonRecordTag(multiTaxonomyTransform.getTag())
             .grscicollRecordTag(grscicollTransform.getTag())
             .multimediaRecordTag(multimediaTransform.getTag())
@@ -537,7 +535,6 @@ public class OccurrenceJsonTransformTest {
             .and(clusteringTransform.getTag(), clusteringCollection)
             .and(temporalTransform.getTag(), temporalCollection)
             .and(locationTransform.getTag(), locationCollection)
-            .and(taxonomyTransform.getTag(), taxonCollection)
             .and(multiTaxonomyTransform.getTag(), multiTaxonCollection)
             .and(grscicollTransform.getTag(), grscicollCollection)
             // Extension
