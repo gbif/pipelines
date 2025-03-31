@@ -319,6 +319,7 @@ public class HdfsViewPipeline {
             .grscicollRecordTag(grscicollTransform.getTag())
             .multimediaRecordTag(multimediaTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
+            .dnaRecordTag(dnaTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
             .eventCoreRecordTag(eventCoreTransform.getTag())
             .metadataView(metadataView)
