@@ -15,7 +15,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
@@ -38,14 +38,15 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 @Slf4j
 public class LocationTransform extends Transform<ExtendedRecord, LocationRecord> {
 
-  private final SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier;
-  private KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore;
+  private final SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>>
+      geocodeKvStoreSupplier;
+  private KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore;
 
   private PCollectionView<MetadataRecord> metadataView;
 
   @Builder(buildMethodName = "create")
   protected LocationTransform(
-      SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier,
+      SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> geocodeKvStoreSupplier,
       PCollectionView<MetadataRecord> metadataView) {
     super(
         LocationRecord.class, LOCATION, LocationTransform.class.getName(), LOCATION_RECORDS_COUNT);

@@ -270,9 +270,9 @@ public class EventToEsIndexPipelineIT {
               .setClassification(
                   Collections.singletonList(
                       RankedName.newBuilder()
-                          .setRank(Rank.SPECIES)
+                          .setRank(Rank.SPECIES.toString())
                           .setName("Puma concolor subsp. coryi (Bangs, 1899)")
-                          .setKey(6164600)
+                          .setKey("6164600")
                           .build()))
               .build();
       writer.append(taxonRecord);
@@ -284,9 +284,9 @@ public class EventToEsIndexPipelineIT {
               .setClassification(
                   Collections.singletonList(
                       RankedName.newBuilder()
-                          .setRank(Rank.SPECIES)
+                          .setRank(Rank.SPECIES.toString())
                           .setName("Puma concolor subsp. concolor")
-                          .setKey(7193927)
+                          .setKey("7193927")
                           .build()))
               .build();
       writer.append(taxonRecordSubEvent);
@@ -298,9 +298,9 @@ public class EventToEsIndexPipelineIT {
               .setClassification(
                   Collections.singletonList(
                       RankedName.newBuilder()
-                          .setRank(Rank.SPECIES)
+                          .setRank(Rank.SPECIES.toString())
                           .setName("Puma concolor (Linnaeus, 1771)")
-                          .setKey(2435099)
+                          .setKey("2435099")
                           .build()))
               .build();
       writer.append(taxonRecordSubEvent2);
@@ -483,8 +483,8 @@ public class EventToEsIndexPipelineIT {
     ParentJsonRecord eventRecordSub2 = getResult(idxName, SUB_EVENT_ID_2, "event");
     assertEquals("DK", eventRecordSub2.getLocationInherited().getCountryCode());
     assertEquals(SUB_EVENT_ID_2, eventRecordSub2.getTemporalInherited().getId());
-    assertEquals(new Integer(10), eventRecordSub2.getTemporalInherited().getMonth());
-    assertEquals(new Integer(2017), eventRecordSub2.getTemporalInherited().getYear());
+    assertEquals(Integer.valueOf(10), eventRecordSub2.getTemporalInherited().getMonth());
+    assertEquals(Integer.valueOf(2017), eventRecordSub2.getTemporalInherited().getYear());
     assertEquals(
         Collections.singletonList("survey"), eventRecordSub2.getEventInherited().getEventType());
     assertEquals("L1", eventRecordSub2.getEventInherited().getLocationID());

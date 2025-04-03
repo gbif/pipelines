@@ -23,15 +23,14 @@ public class GrscicollRecordConverter {
     return builder.build();
   }
 
-  private static List<String> convertReasons(
-      Set<org.gbif.api.model.collections.lookup.Match.Reason> reasons) {
+  private static List<String> convertReasons(Set<GrscicollLookupResponse.Reason> reasons) {
     if (reasons == null || reasons.isEmpty()) {
       return Collections.emptyList();
     }
     return reasons.stream().map(Enum::name).collect(Collectors.toList());
   }
 
-  private static String convertStatus(org.gbif.api.model.collections.lookup.Match.Status status) {
+  private static String convertStatus(GrscicollLookupResponse.Status status) {
     return status == null ? null : status.name();
   }
 }

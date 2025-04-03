@@ -13,6 +13,8 @@
  */
 package org.gbif.pipelines.common.airflow;
 
+import static org.gbif.pipelines.common.utils.HttpUtils.*;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
@@ -57,7 +59,7 @@ public class AirflowClient {
             "dag_run_id {} exists. Deleting the run to avoid caching issues", body.getDagRunId());
         HttpDelete delete = new HttpDelete(getUri(configuration, body.getDagRunId()));
         delete.setHeaders(configuration.getHeaders());
-        client.execute(delete);
+        checkUnavailableService(client.execute(delete));
       }
 
       log.info("Submit dag_run_id {}", body.getDagRunId());
@@ -66,7 +68,8 @@ public class AirflowClient {
       input.setContentType(ContentType.APPLICATION_JSON.toString());
       post.setEntity(input);
       post.setHeaders(configuration.getHeaders());
-      return MAPPER.readTree(client.execute(post).getEntity().getContent());
+      return MAPPER.readTree(
+          checkUnavailableService(client.execute(post)).getEntity().getContent());
     }
   }
 
@@ -75,7 +78,7 @@ public class AirflowClient {
     try (CloseableHttpClient client = HttpClients.createDefault()) {
       HttpGet get = new HttpGet(getUri(configuration, dagRunId));
       get.setHeaders(configuration.getHeaders());
-      return MAPPER.readTree(client.execute(get).getEntity().getContent());
+      return MAPPER.readTree(checkUnavailableService(client.execute(get)).getEntity().getContent());
     }
   }
 }

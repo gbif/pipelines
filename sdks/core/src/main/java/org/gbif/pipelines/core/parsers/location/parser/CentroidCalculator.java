@@ -6,10 +6,9 @@ import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CentroidCalculator {
@@ -19,20 +18,20 @@ public class CentroidCalculator {
   public static final double MAXIMUM_DISTANCE_FROM_CENTROID_METRES = 5000;
 
   public static Optional<Double> calculateCentroidDistance(
-      LocationRecord lr, KeyValueStore<LatLng, GeocodeResponse> kvStore) {
+      LocationRecord lr, KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
     Objects.requireNonNull(lr, "LocationRecord is required");
     Objects.requireNonNull(kvStore, "GeocodeService kvStore is required");
 
     // Take parsed values. Uncertainty isn't needed, but included anyway so we hit the cache.
-    LatLng latLng =
-        LatLng.create(
+    GeocodeRequest latLng =
+        GeocodeRequest.create(
             lr.getDecimalLatitude(),
             lr.getDecimalLongitude(),
             lr.getCoordinateUncertaintyInMeters());
     // Use these to retrieve the centroid distances.
     // Check parameters
     Objects.requireNonNull(latLng);
-    if (latLng.getLatitude() == null || latLng.getLongitude() == null) {
+    if (latLng.getLat() == null || latLng.getLng() == null) {
       throw new IllegalArgumentException("Empty coordinates");
     }
 
@@ -40,7 +39,7 @@ public class CentroidCalculator {
   }
 
   private static Optional<Double> getDistanceToNearestCentroid(
-      LatLng latLng, KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
+      GeocodeRequest latLng, KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore) {
     if (latLng.isValid()) {
       GeocodeResponse geocodeResponse = geocodeKvStore.get(latLng);
       if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
@@ -51,9 +50,9 @@ public class CentroidCalculator {
                         "Centroids".equals(l.getType())
                             && l.getDistanceMeters() != null
                             && l.getDistanceMeters() <= MAXIMUM_DISTANCE_FROM_CENTROID_METRES)
-                .sorted(Comparator.comparingDouble(Location::getDistanceMeters))
+                .sorted(Comparator.comparingDouble(GeocodeResponse.Location::getDistanceMeters))
                 .findFirst()
-                .map(Location::getDistanceMeters);
+                .map(GeocodeResponse.Location::getDistanceMeters);
         return centroidDistance;
       }
     }

@@ -12,7 +12,7 @@ import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.location.parser.CoordinateParseUtils;
 import org.gbif.pipelines.core.parsers.location.parser.Wgs84Projection;
@@ -32,27 +32,27 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 public class CoordinatesParser {
 
   // parses decimal latitude and longitude fields
-  private static final Function<ExtendedRecord, ParsedField<LatLng>> DECIMAL_LAT_LNG_FN =
+  private static final Function<ExtendedRecord, ParsedField<GeocodeRequest>> DECIMAL_LAT_LNG_FN =
       (er ->
           CoordinateParseUtils.parseLatLng(
               extractValue(er, DwcTerm.decimalLatitude),
               extractValue(er, DwcTerm.decimalLongitude)));
 
   // parses verbatim latitude and longitude fields
-  private static final Function<ExtendedRecord, ParsedField<LatLng>> VERBATIM_LAT_LNG_FN =
+  private static final Function<ExtendedRecord, ParsedField<GeocodeRequest>> VERBATIM_LAT_LNG_FN =
       (er ->
           CoordinateParseUtils.parseLatLng(
               extractValue(er, DwcTerm.verbatimLatitude),
               extractValue(er, DwcTerm.verbatimLongitude)));
 
   // parses verbatim coordinates fields
-  private static final Function<ExtendedRecord, ParsedField<LatLng>> VERBATIM_COORDS_FN =
+  private static final Function<ExtendedRecord, ParsedField<GeocodeRequest>> VERBATIM_COORDS_FN =
       (er ->
           CoordinateParseUtils.parseVerbatimCoordinates(
               extractValue(er, DwcTerm.verbatimCoordinates)));
 
   // list with all the parsing functions
-  private static final List<Function<ExtendedRecord, ParsedField<LatLng>>> PARSING_FUNCTIONS =
+  private static final List<Function<ExtendedRecord, ParsedField<GeocodeRequest>>> PARSING_FUNCTIONS =
       Arrays.asList(DECIMAL_LAT_LNG_FN, VERBATIM_LAT_LNG_FN, VERBATIM_COORDS_FN);
 
   /**
@@ -73,12 +73,12 @@ public class CoordinatesParser {
    * Coordinates will try to reproject WGS84. Always return coordinates with success or fail status
    *
    * @param extendedRecord {@link ExtendedRecord} with the fields to parse.
-   * @return {@link ParsedField<LatLng>} for the coordinates parsed.
+   * @return {@link ParsedField<  GeocodeRequest  >} for the coordinates parsed.
    */
-  public static ParsedField<LatLng> parseCoords(ExtendedRecord extendedRecord) {
+  public static ParsedField<GeocodeRequest> parseCoords(ExtendedRecord extendedRecord) {
     Set<String> issues = new TreeSet<>();
-    for (Function<ExtendedRecord, ParsedField<LatLng>> parsingFunction : PARSING_FUNCTIONS) {
-      ParsedField<LatLng> result = parsingFunction.apply(extendedRecord);
+    for (Function<ExtendedRecord, ParsedField<GeocodeRequest>> parsingFunction : PARSING_FUNCTIONS) {
+      ParsedField<GeocodeRequest> result = parsingFunction.apply(extendedRecord);
       if (result.isSuccessful()) {
         // return the first successful result
         // Try to reproject, always returns lat/lng
@@ -87,7 +87,7 @@ public class CoordinatesParser {
           result.getIssues().add(ALAOccurrenceIssue.MISSING_GEODETICDATUM.name());
         }
 
-        ParsedField<LatLng> projectedLatLng =
+        ParsedField<GeocodeRequest> projectedLatLng =
             Wgs84Projection.reproject(
                 result.getResult().getLatitude(), result.getResult().getLongitude(), geodeticDatum);
 

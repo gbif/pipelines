@@ -21,7 +21,7 @@ import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.common.parsers.date.MultiinputTemporalParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
@@ -138,11 +138,11 @@ public class ImageInterpreter {
       String lat = Optional.ofNullable(i.getLatitude()).map(Object::toString).orElse(null);
       String lng = Optional.ofNullable(i.getLongitude()).map(Object::toString).orElse(null);
 
-      ParsedField<LatLng> latLng = CoordinateParseUtils.parseLatLng(lat, lng);
+      ParsedField<GeocodeRequest> latLng = CoordinateParseUtils.parseLatLng(lat, lng);
       if (latLng.isSuccessful()) {
-        LatLng result = latLng.getResult();
-        i.setLatitude(result.getLatitude());
-        i.setLongitude(result.getLongitude());
+        GeocodeRequest result = latLng.getResult();
+        i.setLatitude(result.getLat());
+        i.setLongitude(result.getLng());
       }
     }
   }
