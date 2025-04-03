@@ -1,5 +1,6 @@
 package org.gbif.pipelines.factory;
 
+import java.io.IOException;
 import java.util.Optional;
 import lombok.SneakyThrows;
 import org.gbif.kvs.KeyValueStore;
@@ -7,20 +8,20 @@ import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration.Builder;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.kvs.hbase.LoaderRetryConfig;
-import org.gbif.kvs.species.Identification;
 import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
+import org.gbif.kvs.species.NameUsageMatchRequest;
+import org.gbif.pipelines.core.config.model.ChecklistKvConfig;
 import org.gbif.pipelines.core.config.model.KvConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.WsConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
-import org.gbif.rest.client.configuration.ChecklistbankClientsConfiguration;
 import org.gbif.rest.client.configuration.ClientConfiguration;
-import org.gbif.rest.client.species.NameUsageMatch;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 /** Factory to get singleton instance of KV store {@link KeyValueStore} */
 public class NameUsageMatchStoreFactory {
 
-  private final KeyValueStore<Identification, NameUsageMatch> kvStore;
+  private final KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore;
   private static volatile NameUsageMatchStoreFactory instance;
   private static final Object MUTEX = new Object();
 
@@ -30,7 +31,8 @@ public class NameUsageMatchStoreFactory {
   }
 
   /* TODO Comment */
-  public static KeyValueStore<Identification, NameUsageMatch> getInstance(PipelinesConfig config) {
+  public static KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> getInstance(
+      PipelinesConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
@@ -41,60 +43,73 @@ public class NameUsageMatchStoreFactory {
     return instance.kvStore;
   }
 
-  /* TODO Comment */
   @SneakyThrows
-  public static KeyValueStore<Identification, NameUsageMatch> create(PipelinesConfig config) {
+  public static KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> createMultipleService(
+      PipelinesConfig config) {
     if (config == null) {
       return null;
     }
 
-    KvConfig nameUsageMatchConfig = config.getNameUsageMatch();
-
-    String api =
-        Optional.ofNullable(nameUsageMatchConfig.getApi())
-            .map(WsConfig::getWsUrl)
-            .orElse(config.getGbifApi().getWsUrl());
-
-    ChecklistbankClientsConfiguration clientConfiguration =
-        ChecklistbankClientsConfiguration.builder()
-            .nameUsageClientConfiguration(
-                ClientConfiguration.builder()
-                    .withBaseApiUrl(api)
-                    .withFileCacheMaxSizeMb(nameUsageMatchConfig.getWsCacheSizeMb())
-                    .withTimeOut(nameUsageMatchConfig.getWsTimeoutSec())
-                    .build())
-            .checklistbankClientConfiguration(
-                ClientConfiguration.builder()
-                    .withBaseApiUrl(api)
-                    .withFileCacheMaxSizeMb(nameUsageMatchConfig.getWsCacheSizeMb())
-                    .withTimeOut(nameUsageMatchConfig.getWsTimeoutSec())
-                    .build())
-            .build();
-
-    String zk = nameUsageMatchConfig.getZkConnectionString();
-    zk = zk == null || zk.isEmpty() ? config.getZkConnectionString() : zk;
-    if (zk == null || nameUsageMatchConfig.isRestOnly()) {
-      return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(
-          clientConfiguration, config.getNameUsageIdMapping());
+    if (config.getNameUsageMatchingService() == null
+        || config.getNameUsageMatchingService().getChecklistKeys() == null
+        || config.getNameUsageMatchingService().getChecklistKeys().isEmpty()) {
+      return null;
     }
 
-    Builder configBuilder =
+    ChecklistKvConfig kvConfig = config.getNameUsageMatchingService();
+    return constructKV(kvConfig.getWs(), kvConfig.getWs().getApi().getWsUrl());
+  }
+
+  @SneakyThrows
+  public static KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> create(
+      PipelinesConfig config) {
+    if (config == null) {
+      return null;
+    }
+
+    if (config.getNameUsageMatch() == null) {
+      return null;
+    }
+
+    KvConfig kvConfig = config.getNameUsageMatch();
+    String gbifApi = config.getGbifApi().getWsUrl();
+    return constructKV(kvConfig, gbifApi);
+  }
+
+  private static KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> constructKV(
+      KvConfig kvConfig, String gbifApi) {
+    String api = Optional.ofNullable(kvConfig.getApi()).map(WsConfig::getWsUrl).orElse(gbifApi);
+
+    ClientConfiguration clientConfiguration =
+        ClientConfiguration.builder()
+            .withBaseApiUrl(api)
+            .withFileCacheMaxSizeMb(kvConfig.getWsCacheSizeMb())
+            .withTimeOut(kvConfig.getWsTimeoutSec() * 1000)
+            .build();
+
+    String zk = kvConfig.getZkConnectionString();
+    zk = zk == null || zk.isEmpty() ? kvConfig.getZkConnectionString() : zk;
+    if (zk == null || kvConfig.isRestOnly()) {
+      return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(clientConfiguration);
+    }
+
+    Builder matchConfigBuilder =
         CachedHBaseKVStoreConfiguration.builder()
             .withValueColumnQualifier("j") // stores JSON data
             .withHBaseKVStoreConfiguration(
                 HBaseKVStoreConfiguration.builder()
-                    .withTableName(nameUsageMatchConfig.getTableName())
+                    .withTableName(kvConfig.getTableName())
                     .withColumnFamily("v") // Column in which qualifiers are stored
-                    .withNumOfKeyBuckets(nameUsageMatchConfig.getNumOfKeyBuckets())
+                    .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets())
                     .withHBaseZk(zk)
-                    .withHBaseZnode(nameUsageMatchConfig.getHbaseZnode())
+                    .withHBaseZnode(kvConfig.getHbaseZnode())
                     .build())
             .withCacheCapacity(25_000L)
-            .withCacheExpiryTimeInSeconds(nameUsageMatchConfig.getCacheExpiryTimeInSeconds());
+            .withCacheExpiryTimeInSeconds(kvConfig.getCacheExpiryTimeInSeconds());
 
-    KvConfig.LoaderRetryConfig retryConfig = nameUsageMatchConfig.getLoaderRetryConfig();
+    KvConfig.LoaderRetryConfig retryConfig = kvConfig.getLoaderRetryConfig();
     if (retryConfig != null) {
-      configBuilder.withLoaderRetryConfig(
+      matchConfigBuilder.withLoaderRetryConfig(
           new LoaderRetryConfig(
               retryConfig.getMaxAttempts(),
               retryConfig.getInitialIntervalMillis(),
@@ -102,17 +117,26 @@ public class NameUsageMatchStoreFactory {
               retryConfig.getRandomizationFactor()));
     }
 
-    return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(
-        configBuilder.build(), clientConfiguration, config.getNameUsageIdMapping());
+    try {
+      return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(
+          matchConfigBuilder.build(), clientConfiguration);
+    } catch (IOException ex) {
+      throw new IllegalStateException(ex);
+    }
   }
 
-  public static SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>> createSupplier(
-      PipelinesConfig config) {
-    return () -> NameUsageMatchStoreFactory.create(config);
+  public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
+      createSupplier(PipelinesConfig config) {
+    return () -> create(config);
   }
 
-  public static SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>>
+  public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
+      createMultiServiceSupplier(PipelinesConfig config) {
+    return () -> createMultipleService(config);
+  }
+
+  public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
       getInstanceSupplier(PipelinesConfig config) {
-    return () -> NameUsageMatchStoreFactory.getInstance(config);
+    return () -> getInstance(config);
   }
 }

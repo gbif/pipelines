@@ -50,8 +50,37 @@ public interface BackbonePreReleaseOptions extends HadoopFileSystemOptions {
   void setSkipKeys(boolean skipKeys);
 
   @Description("Controls if whitespace should be ignored or not")
-  @Default.Boolean(false)
+  @Default.Boolean(true)
   boolean getIgnoreWhitespace();
 
   void setIgnoreWhitespace(boolean ignoreWhitespace);
+
+  @Description("Controls if whitespace should be ignored or not")
+  @Default.Boolean(true)
+  boolean getIgnoreAuthorshipFormatting();
+
+  void setIgnoreAuthorshipFormatting(boolean ignoreAuthorshipFormatting);
+
+  @Description("Path to hdfs-site-config.xml")
+  String getHdfsSiteConfig();
+
+  void setHdfsSiteConfig(String path);
+
+  @Description("Path to core-site-config.xml")
+  String getCoreSiteConfig();
+
+  void setCoreSiteConfig(String path);
+
+  @Description(
+      "Output infrageneric markers in the scientific name (CLB v2 includes these in the scientific name)")
+  @Default.Boolean(false)
+  boolean getOutputInfragenericEpithet();
+
+  void setOutputInfragenericEpithet(boolean outputInfragenericEpithet);
+
+  @Description("Whether to include the rank in the CLB lookup (CLB matching only)")
+  @Default.Boolean(true)
+  boolean getIgnoreSuppliedRank();
+
+  void setIgnoreSuppliedRank(boolean ignoreSuppliedRank);
 }
