@@ -163,9 +163,11 @@ public class TransformsFactory {
   public TaxonomyTransform createTaxonomyTransform() {
     SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
         nameUsageMatchServiceSupplier = null;
+
     if (!options.getTestMode()) {
       nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createSupplier(config);
     }
+
     return TaxonomyTransform.builder().kvStoreSupplier(nameUsageMatchServiceSupplier).create();
   }
 
@@ -173,9 +175,11 @@ public class TransformsFactory {
 
     SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
         nameUsageMatchServiceSupplier = null;
+
     if (!options.getTestMode()) {
       nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createMultiServiceSupplier(config);
     }
+
     return MultiTaxonomyTransform.builder()
         .kvStoresSupplier(nameUsageMatchServiceSupplier)
         .checklistKeys(config.getNameUsageMatchingService().getChecklistKeys())

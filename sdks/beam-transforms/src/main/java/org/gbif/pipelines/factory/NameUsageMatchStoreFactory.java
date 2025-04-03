@@ -3,6 +3,7 @@ package org.gbif.pipelines.factory;
 import java.io.IOException;
 import java.util.Optional;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration.Builder;
@@ -19,6 +20,7 @@ import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 /** Factory to get singleton instance of KV store {@link KeyValueStore} */
+@Slf4j
 public class NameUsageMatchStoreFactory {
 
   private final KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore;
@@ -46,13 +48,16 @@ public class NameUsageMatchStoreFactory {
   @SneakyThrows
   public static KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> createMultipleService(
       PipelinesConfig config) {
+
     if (config == null) {
+      log.error("PipelinesConfig is null - unable to create KV store for NameUsageMatch");
       return null;
     }
 
     if (config.getNameUsageMatchingService() == null
         || config.getNameUsageMatchingService().getChecklistKeys() == null
         || config.getNameUsageMatchingService().getChecklistKeys().isEmpty()) {
+      log.error("No checklist keys specified - unable to create KV store for NameUsageMatch");
       return null;
     }
 
@@ -90,6 +95,7 @@ public class NameUsageMatchStoreFactory {
     String zk = kvConfig.getZkConnectionString();
     zk = zk == null || zk.isEmpty() ? kvConfig.getZkConnectionString() : zk;
     if (zk == null || kvConfig.isRestOnly()) {
+      log.error("ZK config is null - wont use HBase, only REST API");
       return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(clientConfiguration);
     }
 
