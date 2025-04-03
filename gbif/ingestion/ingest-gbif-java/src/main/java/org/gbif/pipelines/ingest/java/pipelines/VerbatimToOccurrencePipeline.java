@@ -70,7 +70,7 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.ImageRecord},
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
  *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
- *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.MultiTaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    3) Writes data to independent files
@@ -315,7 +315,10 @@ public class VerbatimToOccurrencePipeline {
                   audubonTr.processElement(er).ifPresent(audubonWriter::append);
                 }
                 if (multiTaxonomyTr.checkType(types)) {
+                  log.info("Processing multiTaxon");
                   multiTaxonomyTr.processElement(er).ifPresent(multiTaxonWriter::append);
+                } else {
+                  log.info("Skip multiTaxon");
                 }
                 if (grscicollTr.checkType(types)) {
                   grscicollTr.processElement(er, mdr).ifPresent(grscicollWriter::append);

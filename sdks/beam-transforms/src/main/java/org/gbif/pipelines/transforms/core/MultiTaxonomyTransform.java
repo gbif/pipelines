@@ -74,7 +74,7 @@ public class MultiTaxonomyTransform extends Transform<ExtendedRecord, MultiTaxon
   @Setup
   public void setup() {
     if (kvStore == null && kvStoreSupplier != null) {
-      log.info("Initialize NameUsageMatchKvStore");
+      log.info("Initialize NameUsageMatchKvStores");
       kvStore = kvStoreSupplier.get();
     }
   }
@@ -100,6 +100,9 @@ public class MultiTaxonomyTransform extends Transform<ExtendedRecord, MultiTaxon
 
   @Override
   public Optional<MultiTaxonRecord> convert(ExtendedRecord source) {
+
+    log.info("Convert ExtendedRecord to MultiTaxonRecord");
+
     return Interpretation.from(source)
         .to(MultiTaxonRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> !er.getCoreTerms().isEmpty())

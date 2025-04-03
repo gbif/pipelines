@@ -99,7 +99,6 @@ public class IndexRequestConverterTest {
     ExtendedRecord extendedRecord = ExtendedRecord.newBuilder().setId(ID).build();
     TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(ID).build();
     LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
-    TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
     MultiTaxonRecord multiTaxonRecord = MultiTaxonRecord.newBuilder().setId(ID).build();
     GrscicollRecord grscicollRecord = GrscicollRecord.newBuilder().setId(ID).build();
     MultimediaRecord multimediaRecord = MultimediaRecord.newBuilder().setId(ID).build();
