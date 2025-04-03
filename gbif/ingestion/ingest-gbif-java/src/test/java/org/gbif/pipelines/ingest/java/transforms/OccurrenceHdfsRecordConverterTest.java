@@ -62,7 +62,6 @@ public class OccurrenceHdfsRecordConverterTest {
             .basicMap(Collections.singletonMap(ID, basicRecord))
             .clusteringMap(Collections.singletonMap(ID, clusteringRecord))
             .locationMap(Collections.singletonMap(ID, locationRecord))
-            .taxonMap(Collections.singletonMap(ID, taxonRecord))
             .multiTaxonMap(Collections.singletonMap(ID, multiTaxonRecord))
             .grscicollMap(Collections.singletonMap(ID, grscicollRecord))
             .multimediaMap(Collections.singletonMap(ID, multimediaRecord))
