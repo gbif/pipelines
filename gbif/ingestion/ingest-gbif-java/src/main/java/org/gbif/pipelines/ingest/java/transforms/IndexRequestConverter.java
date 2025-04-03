@@ -42,7 +42,6 @@ public class IndexRequestConverter {
   @NonNull private final Map<String, ClusteringRecord> clusteringMap;
   @NonNull private final Map<String, TemporalRecord> temporalMap;
   @NonNull private final Map<String, LocationRecord> locationMap;
-  @NonNull private final Map<String, TaxonRecord> taxonMap;
   @NonNull private final Map<String, MultiTaxonRecord> multiTaxonMap;
   @NonNull private final Map<String, GrscicollRecord> grscicollMap;
   @NonNull private final Map<String, MultimediaRecord> multimediaMap;
