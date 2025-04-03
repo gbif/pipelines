@@ -140,9 +140,4 @@ public class NameUsageMatchStoreFactory {
       createMultiServiceSupplier(PipelinesConfig config) {
     return () -> createMultipleService(config);
   }
-
-  public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
-      getInstanceSupplier(PipelinesConfig config) {
-    return () -> getInstance(config);
-  }
 }

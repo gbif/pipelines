@@ -100,12 +100,6 @@ public class MultiTaxonomyTransform extends Transform<ExtendedRecord, MultiTaxon
 
   @Override
   public Optional<MultiTaxonRecord> convert(ExtendedRecord source) {
-
-    log.info(
-        "Convert ExtendedRecord to MultiTaxonRecord, core terms empty {}, key store empty {}",
-        source.getCoreTerms().isEmpty(),
-        kvStore == null);
-
     return Interpretation.from(source)
         .to(MultiTaxonRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> !er.getCoreTerms().isEmpty())

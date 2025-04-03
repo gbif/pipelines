@@ -139,7 +139,7 @@ public class TransformsFactory {
     SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
         nameUsageMatchServiceSupplier = null;
     if (!options.getTestMode()) {
-      nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.getInstanceSupplier(config);
+      nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createMultiServiceSupplier(config);
     }
     log.info(
         "Initialize NameUsageMatchKvStores with checklist keys {}",
