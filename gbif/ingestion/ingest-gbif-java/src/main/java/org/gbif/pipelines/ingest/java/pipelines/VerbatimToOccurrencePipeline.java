@@ -172,22 +172,6 @@ public class VerbatimToOccurrencePipeline {
     ExtensionFilterTransform extensionFilterTr = transformsFactory.createExtensionFilterTransform();
     DefaultValuesTransform defaultValuesTr = transformsFactory.createDefaultValuesTransform();
 
-    // if the config is available, then run the single taxonomy transform
-    boolean singleTaxonomy =
-        transformsFactory.getConfig().getNameUsageMatch() != null
-            && transformsFactory.getConfig().getNameUsageMatch().getApi() != null;
-
-    // if the config is available, then run the multi taxonomy transform
-    boolean useMultiTaxonomy =
-        transformsFactory.getConfig().getNameUsageMatchingService() != null
-            && transformsFactory.getConfig().getNameUsageMatchingService().getChecklistKeys()
-                != null
-            && !transformsFactory
-                .getConfig()
-                .getNameUsageMatchingService()
-                .getChecklistKeys()
-                .isEmpty();
-
     try {
 
       // Create or read MetadataRecord
@@ -330,7 +314,7 @@ public class VerbatimToOccurrencePipeline {
                 if (audubonTr.checkType(types)) {
                   audubonTr.processElement(er).ifPresent(audubonWriter::append);
                 }
-                if (useMultiTaxonomy) {
+                if (multiTaxonomyTr.checkType(types)) {
                   multiTaxonomyTr.processElement(er).ifPresent(multiTaxonWriter::append);
                 }
                 if (grscicollTr.checkType(types)) {

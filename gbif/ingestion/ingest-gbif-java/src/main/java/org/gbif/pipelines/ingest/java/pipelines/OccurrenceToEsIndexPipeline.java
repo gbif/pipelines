@@ -158,9 +158,6 @@ public class OccurrenceToEsIndexPipeline {
     CompletableFuture<Map<String, LocationRecord>> locationMapFeature =
         readAvroAsFuture(options, CORE_TERM, executor, LocationTransform.builder().create());
 
-    CompletableFuture<Map<String, TaxonRecord>> taxonMapFeature =
-        readAvroAsFuture(options, CORE_TERM, executor, TaxonomyTransform.builder().create());
-
     CompletableFuture<Map<String, MultiTaxonRecord>> multiTaxonMapFeature =
         readAvroAsFuture(options, CORE_TERM, executor, MultiTaxonomyTransform.builder().create());
 
@@ -190,7 +187,6 @@ public class OccurrenceToEsIndexPipeline {
             .basicMap(basicMapFeature.get())
             .temporalMap(temporalMapFeature.get())
             .locationMap(locationMapFeature.get())
-            .taxonMap(taxonMapFeature.get())
             .multiTaxonMap(multiTaxonMapFeature.get())
             .grscicollMap(grscicollMapFeature.get())
             .multimediaMap(multimediaMapFeature.get())
