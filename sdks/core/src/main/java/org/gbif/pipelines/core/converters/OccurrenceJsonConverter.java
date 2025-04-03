@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -16,6 +17,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
+import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.core.utils.SortUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
@@ -25,11 +27,13 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
+import org.gbif.pipelines.io.avro.json.Classification;
 import org.gbif.pipelines.io.avro.json.GeologicalContext;
 import org.gbif.pipelines.io.avro.json.GeologicalRange;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
@@ -38,13 +42,15 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 @Builder
 public class OccurrenceJsonConverter {
 
+  public static final String GBIF_BACKBONE_DATASET_KEY = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c";
+
   private final MetadataRecord metadata;
   private final IdentifierRecord identifier;
   private final ClusteringRecord clustering;
   private final BasicRecord basic;
   private final TemporalRecord temporal;
   private final LocationRecord location;
-  private final TaxonRecord taxon;
+  private final MultiTaxonRecord multiTaxon;
   private final GrscicollRecord grscicoll;
   private final MultimediaRecord multimedia;
   private final DnaDerivedDataRecord dnaDerivedData;
@@ -65,6 +71,7 @@ public class OccurrenceJsonConverter {
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
     mapTaxonRecord(builder);
+    mapMultiTaxonRecord(builder);
     mapGrscicollRecord(builder);
     mapMultimediaRecord(builder);
     mapDnaDerivedDataRecord(builder);
@@ -295,8 +302,48 @@ public class OccurrenceJsonConverter {
   }
 
   private void mapTaxonRecord(OccurrenceJsonRecord.Builder builder) {
-    // Set  GbifClassification
-    builder.setGbifClassification(JsonConverter.convertClassification(verbatim, taxon));
+
+    // FIXME move uuid out to config or drop the separate indexing
+    // and rely on mapping in gbif/occurrence code to new structure
+    if (multiTaxon != null
+        && multiTaxon.getTaxonRecords() != null
+        && !multiTaxon.getTaxonRecords().isEmpty()) {
+
+      Optional<TaxonRecord> gbifRecord =
+          multiTaxon.getTaxonRecords().stream()
+              .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
+              .findFirst();
+
+      gbifRecord.ifPresent(
+          tr -> {
+            try {
+              builder.setGbifClassification(
+                  JsonConverter.convertToGbifClassification(verbatim, tr));
+            } catch (Exception e) {
+              log.error("Error converting to GBIF classification", e);
+            }
+          });
+    }
+  }
+
+  private void mapMultiTaxonRecord(OccurrenceJsonRecord.Builder builder) {
+    if (multiTaxon != null
+        && multiTaxon.getTaxonRecords() != null
+        && !multiTaxon.getTaxonRecords().isEmpty()) {
+      Map<String, Classification> classifications =
+          JsonConverter.convertToClassifications(multiTaxon);
+      builder.setClassifications(classifications);
+      List<String> checklistKeys =
+          multiTaxon.getTaxonRecords().stream()
+              .filter(
+                  tr ->
+                      tr.getUsage() != null
+                          && !TaxonomyInterpreter.INCERTAE_SEDIS_KEY.equals(tr.getUsage().getKey()))
+              .map(TaxonRecord::getDatasetKey)
+              .collect(Collectors.toList());
+
+      builder.setChecklistKey(checklistKeys);
+    }
   }
 
   private void mapGrscicollRecord(OccurrenceJsonRecord.Builder builder) {
@@ -355,11 +402,20 @@ public class OccurrenceJsonConverter {
     extractLengthAwareOptValue(verbatim, DwcTerm.islandGroup).ifPresent(builder::setIslandGroup);
     extractLengthAwareOptValue(verbatim, DwcTerm.previousIdentifications)
         .ifPresent(builder::setPreviousIdentifications);
-    extractLengthAwareOptValue(verbatim, DwcTerm.taxonConceptID)
-        .ifPresent(builder.getGbifClassification()::setTaxonConceptID);
+
+    if (builder.getGbifClassification() != null) {
+      extractLengthAwareOptValue(verbatim, DwcTerm.taxonConceptID)
+          .ifPresent(builder.getGbifClassification()::setTaxonConceptID);
+    }
   }
 
   private void mapIssues(OccurrenceJsonRecord.Builder builder) {
+
+    Optional<TaxonRecord> gbifRecord =
+        multiTaxon.getTaxonRecords().stream()
+            .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
+            .findFirst();
+
     JsonConverter.mapIssues(
         Arrays.asList(
             metadata,
@@ -368,7 +424,7 @@ public class OccurrenceJsonConverter {
             basic,
             temporal,
             location,
-            taxon,
+            gbifRecord.orElse(TaxonRecord.newBuilder().build()),
             grscicoll,
             multimedia),
         builder::setIssues,
@@ -383,7 +439,7 @@ public class OccurrenceJsonConverter {
             basic,
             temporal,
             location,
-            taxon,
+            multiTaxon,
             grscicoll,
             dnaDerivedData,
             multimedia)

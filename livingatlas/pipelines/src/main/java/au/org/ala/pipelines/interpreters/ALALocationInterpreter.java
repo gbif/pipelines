@@ -27,7 +27,7 @@ import org.gbif.common.parsers.date.MultiinputTemporalParser;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
@@ -58,14 +58,14 @@ public class ALALocationInterpreter {
    * @param biomeLookupService Provided by GBIF GADM
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretBiome(
-      KeyValueStore<LatLng, GeocodeResponse> biomeLookupService) {
+      KeyValueStore<GeocodeRequest, GeocodeResponse> biomeLookupService) {
     return (er, lr) -> {
-      ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
+      ParsedField<GeocodeRequest> parsedLatLon = CoordinatesParser.parseCoords(er);
       addIssue(lr, parsedLatLon.getIssues());
 
       if (parsedLatLon.isSuccessful()) {
 
-        LatLng latlng = parsedLatLon.getResult();
+        GeocodeRequest latlng = parsedLatLon.getResult();
         lr.setDecimalLatitude(latlng.getLatitude());
         lr.setDecimalLongitude(latlng.getLongitude());
         lr.setHasCoordinate(true);
@@ -84,14 +84,14 @@ public class ALALocationInterpreter {
    * @param stateProvinceLookupService Provided by ALA country/state SHP file
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretStateProvince(
-      KeyValueStore<LatLng, GeocodeResponse> stateProvinceLookupService) {
+      KeyValueStore<GeocodeRequest, GeocodeResponse> stateProvinceLookupService) {
     return (er, lr) -> {
-      ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
+      ParsedField<GeocodeRequest> parsedLatLon = CoordinatesParser.parseCoords(er);
       addIssue(lr, parsedLatLon.getIssues());
 
       if (parsedLatLon.isSuccessful()) {
 
-        LatLng latlng = parsedLatLon.getResult();
+        GeocodeRequest latlng = parsedLatLon.getResult();
         lr.setDecimalLatitude(latlng.getLatitude());
         lr.setDecimalLongitude(latlng.getLongitude());
         lr.setHasCoordinate(true);

@@ -65,7 +65,6 @@
       "institutionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "collectionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "isClustered": {"type": "boolean"},
-      "dnaSequenceID": {"type": "keyword", "copy_to": "all"},
 
       "basisOfRecord": {"type": "keyword"},
 

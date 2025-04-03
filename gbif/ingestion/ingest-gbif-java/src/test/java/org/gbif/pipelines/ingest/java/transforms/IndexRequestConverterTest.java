@@ -18,6 +18,7 @@ import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -42,6 +43,7 @@ public class IndexRequestConverterTest {
     TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(ID).build();
     LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
     TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
+    MultiTaxonRecord multiTaxonRecord = MultiTaxonRecord.newBuilder().setId(ID).build();
     GrscicollRecord grscicollRecord = GrscicollRecord.newBuilder().setId(ID).build();
     MultimediaRecord multimediaRecord = MultimediaRecord.newBuilder().setId(ID).build();
     ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
@@ -61,6 +63,7 @@ public class IndexRequestConverterTest {
             .basicMap(Collections.singletonMap(ID, basicRecord))
             .locationMap(Collections.singletonMap(ID, locationRecord))
             .taxonMap(Collections.singletonMap(ID, taxonRecord))
+            .multiTaxonMap(Collections.singletonMap(ID, multiTaxonRecord))
             .grscicollMap(Collections.singletonMap(ID, grscicollRecord))
             .multimediaMap(Collections.singletonMap(ID, multimediaRecord))
             .imageMap(Collections.singletonMap(ID, imageRecord))
@@ -98,6 +101,7 @@ public class IndexRequestConverterTest {
     TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(ID).build();
     LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
     TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
+    MultiTaxonRecord multiTaxonRecord = MultiTaxonRecord.newBuilder().setId(ID).build();
     GrscicollRecord grscicollRecord = GrscicollRecord.newBuilder().setId(ID).build();
     MultimediaRecord multimediaRecord = MultimediaRecord.newBuilder().setId(ID).build();
     ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
@@ -116,6 +120,7 @@ public class IndexRequestConverterTest {
             .locationMap(Collections.singletonMap(ID, locationRecord))
             .basicMap(Collections.singletonMap(ID, basicRecord))
             .taxonMap(Collections.singletonMap(ID, taxonRecord))
+            .multiTaxonMap(Collections.singletonMap(ID, multiTaxonRecord))
             .grscicollMap(Collections.singletonMap(ID, grscicollRecord))
             .multimediaMap(Collections.singletonMap(ID, multimediaRecord))
             .imageMap(Collections.singletonMap(ID, imageRecord))

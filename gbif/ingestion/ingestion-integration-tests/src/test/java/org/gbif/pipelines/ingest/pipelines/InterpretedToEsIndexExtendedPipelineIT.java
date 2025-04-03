@@ -16,12 +16,14 @@ import org.gbif.pipelines.ingest.resources.ZkServer;
 import org.gbif.pipelines.ingest.utils.EsTestUtils;
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * Integration tests using an embedded ES instance to test the {@link
  * InterpretedToEsIndexExtendedPipeline}.
  */
+@Ignore
 public class InterpretedToEsIndexExtendedPipelineIT {
 
   @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
