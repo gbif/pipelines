@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.java.pipelines.interpretation;
 
 import java.util.List;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.GeocodeRequest;
@@ -46,6 +47,7 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 
+@Slf4j
 public class TransformsFactory {
 
   @Getter
@@ -139,6 +141,9 @@ public class TransformsFactory {
     if (!options.getTestMode()) {
       nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.getInstanceSupplier(config);
     }
+    log.info(
+        "Initialize NameUsageMatchKvStores with checklist keys {}",
+        config.getNameUsageMatchingService().getChecklistKeys());
     return MultiTaxonomyTransform.builder()
         .kvStoresSupplier(nameUsageMatchServiceSupplier)
         .checklistKeys(config.getNameUsageMatchingService().getChecklistKeys())
