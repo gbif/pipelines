@@ -132,7 +132,7 @@ public class BackbonePreRelease {
               ClientConfiguration.builder()
                   .withBaseApiUrl(baseAPIUrl)
                   .withFileCacheMaxSizeMb(1L)
-                  .withTimeOut(120L)
+                  .withTimeOutSec(120L)
                   .build());
     }
 

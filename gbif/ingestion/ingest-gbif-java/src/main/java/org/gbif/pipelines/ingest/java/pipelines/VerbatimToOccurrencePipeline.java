@@ -315,10 +315,7 @@ public class VerbatimToOccurrencePipeline {
                   audubonTr.processElement(er).ifPresent(audubonWriter::append);
                 }
                 if (multiTaxonomyTr.checkType(types)) {
-                  log.info("Processing multiTaxon");
                   multiTaxonomyTr.processElement(er).ifPresent(multiTaxonWriter::append);
-                } else {
-                  log.info("Skip multiTaxon");
                 }
                 if (grscicollTr.checkType(types)) {
                   grscicollTr.processElement(er, mdr).ifPresent(grscicollWriter::append);
