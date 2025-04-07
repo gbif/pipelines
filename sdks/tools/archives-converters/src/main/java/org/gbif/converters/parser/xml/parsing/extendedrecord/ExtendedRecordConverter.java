@@ -77,6 +77,14 @@ public class ExtendedRecordConverter {
     setter.accept(GbifTerm.depthAccuracy, rawRecord.getDepthPrecision());
     setter.accept(DwcTerm.recordNumber, rawRecord.getCollectorsFieldNumber());
     setter.accept(DwcTerm.footprintWKT, rawRecord.getFootprintWKT());
+    setter.accept(DwcTerm.occurrenceRemarks, rawRecord.getOccurrenceRemarks());
+    setter.accept(DcTerm.modified, rawRecord.getModified());
+    setter.accept(DwcTerm.preparations, rawRecord.getPreparations());
+
+    // Delimited fields
+    setter.accept(DwcTerm.recordedByID, rawRecord.getRecordedByID());
+    setter.accept(DwcTerm.identifiedByID, rawRecord.getIdentifiedByID());
+    setter.accept(DwcTerm.scientificNameID, rawRecord.getScientificNameID());
 
     if (rawRecord.getCollectors() != null) {
       String recordedBy =

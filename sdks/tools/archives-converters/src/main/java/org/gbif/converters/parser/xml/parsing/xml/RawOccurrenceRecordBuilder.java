@@ -85,6 +85,12 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   private String basisOfRecord;
   private String identifierName;
   private String unitQualifier;
+  private String occurrenceRemarks;
+  private String modified;
+  private String preparations;
+  private String recordedByID;
+  private String identifiedByID;
+  private String scientificNameID;
 
   // year month and day may be set during parsing, but they will be reconciled into an
   // occurrenceDate
@@ -229,6 +235,12 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     bareBones.setSubspecies(subspecies);
     bareBones.setTypificationRecords(typificationRecords);
     bareBones.setUnitQualifier(unitQualifier);
+    bareBones.setModified(modified);
+    bareBones.setOccurrenceRemarks(occurrenceRemarks);
+    bareBones.setPreparations(preparations);
+    bareBones.setRecordedByID(recordedByID);
+    bareBones.setIdentifiedByID(identifiedByID);
+    bareBones.setScientificNameID(scientificNameID);
 
     return bareBones;
   }
@@ -765,5 +777,53 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
 
   public void setFootprintWKT(String footprintWKT) {
     this.footprintWKT = footprintWKT;
+  }
+
+  public String getOccurrenceRemarks() {
+    return occurrenceRemarks;
+  }
+
+  public void setOccurrenceRemarks(String occurrenceRemarks) {
+    this.occurrenceRemarks = occurrenceRemarks;
+  }
+
+  public String getModified() {
+    return modified;
+  }
+
+  public void setModified(String modified) {
+    this.modified = modified;
+  }
+
+  public String getPreparations() {
+    return preparations;
+  }
+
+  public void setPreparations(String preparations) {
+    this.preparations = preparations;
+  }
+
+  public String getRecordedByID() {
+    return recordedByID;
+  }
+
+  public void setRecordedByID(String recordedByID) {
+    this.recordedByID = recordedByID;
+  }
+
+  public String getIdentifiedByID() {
+    return identifiedByID;
+  }
+
+  public void setIdentifiedByID(String identifiedByID) {
+    this.identifiedByID = identifiedByID;
+  }
+
+  public String getScientificNameID() {
+    return scientificNameID;
+  }
+
+  public void setScientificNameID(String scientificNameID) {
+    this.scientificNameID = scientificNameID;
   }
 }

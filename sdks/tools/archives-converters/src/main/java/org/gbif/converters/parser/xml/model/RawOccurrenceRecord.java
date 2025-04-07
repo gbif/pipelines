@@ -24,6 +24,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.gbif.dwc.record.Record;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 
 /**
@@ -89,7 +90,14 @@ public class RawOccurrenceRecord implements Serializable {
   private String dateIdentified;
   private String unitQualifier;
   private long created;
-  private long modified;
+  private String modified;
+  private String occurrenceRemarks;
+  private String preparations;
+
+  // Delimited fields
+  private String recordedByID;
+  private String identifiedByID;
+  private String scientificNameID;
 
   private Set<Collector> collectors = new HashSet<>();
   private List<IdentifierRecord> identifierRecords = new ArrayList<>();
@@ -129,5 +137,13 @@ public class RawOccurrenceRecord implements Serializable {
         dwcr.value(DwcTerm.year) + '-' + dwcr.value(DwcTerm.month) + '-' + dwcr.value(DwcTerm.day);
     this.collectorsFieldNumber = dwcr.value(DwcTerm.recordNumber);
     this.footprintWKT = dwcr.value(DwcTerm.footprintWKT);
+    this.modified = dwcr.value(DcTerm.modified);
+    this.occurrenceRemarks = dwcr.value(DwcTerm.occurrenceRemarks);
+    this.preparations = dwcr.value(DwcTerm.preparations);
+
+    // Delimited fields
+    this.recordedByID = dwcr.value(DwcTerm.recordedByID);
+    this.identifiedByID = dwcr.value(DwcTerm.identifiedByID);
+    this.scientificNameID = dwcr.value(DwcTerm.scientificNameID);
   }
 }
