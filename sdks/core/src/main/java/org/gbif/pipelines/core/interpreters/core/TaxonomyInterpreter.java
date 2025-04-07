@@ -58,14 +58,14 @@ public class TaxonomyInterpreter {
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
    */
   public static BiConsumer<ExtendedRecord, TaxonRecord> taxonomyInterpreter(
-      KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore) {
+      KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore, String checklistKey) {
     return (er, tr) -> {
       if (kvStore == null) {
         return;
       }
 
       ModelUtils.checkNullOrEmpty(er);
-      NameUsageMatchRequest nameUsageMatchRequest = createNameUsageMatchRequest(er, null);
+      NameUsageMatchRequest nameUsageMatchRequest = createNameUsageMatchRequest(er, checklistKey);
       createTaxonRecord(nameUsageMatchRequest, kvStore, tr);
       tr.setId(er.getId());
     };

@@ -165,10 +165,16 @@ public class TransformsFactory {
         nameUsageMatchServiceSupplier = null;
 
     if (!options.getTestMode()) {
-      nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createSupplier(config);
+      nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createMultiServiceSupplier(config);
     }
 
-    return TaxonomyTransform.builder().kvStoreSupplier(nameUsageMatchServiceSupplier).create();
+    String firstConfiguredChecklistKey =
+        config.getNameUsageMatchingService().getChecklistKeys().get(0);
+
+    return TaxonomyTransform.builder()
+        .kvStoreSupplier(nameUsageMatchServiceSupplier)
+        .checklistKey(firstConfiguredChecklistKey)
+        .create();
   }
 
   public MultiTaxonomyTransform createMultiTaxonomyTransform() {

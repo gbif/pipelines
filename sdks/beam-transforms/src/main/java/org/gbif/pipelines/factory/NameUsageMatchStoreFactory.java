@@ -29,7 +29,7 @@ public class NameUsageMatchStoreFactory {
 
   @SneakyThrows
   private NameUsageMatchStoreFactory(PipelinesConfig config) {
-    this.kvStore = create(config);
+    this.kvStore = createMultipleService(config);
   }
 
   /* TODO Comment */
@@ -61,24 +61,8 @@ public class NameUsageMatchStoreFactory {
       return null;
     }
 
-    ChecklistKvConfig kvConfig = config.getNameUsageMatchingService();
-    return constructKV(kvConfig.getWs(), kvConfig.getWs().getApi().getWsUrl());
-  }
-
-  @SneakyThrows
-  public static KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> create(
-      PipelinesConfig config) {
-    if (config == null) {
-      return null;
-    }
-
-    if (config.getNameUsageMatch() == null) {
-      return null;
-    }
-
-    KvConfig kvConfig = config.getNameUsageMatch();
-    String gbifApi = config.getGbifApi().getWsUrl();
-    return constructKV(kvConfig, gbifApi);
+    ChecklistKvConfig checklistKvConfig = config.getNameUsageMatchingService();
+    return constructKV(checklistKvConfig.getWs(), checklistKvConfig.getWs().getApi().getWsUrl());
   }
 
   private static KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> constructKV(
@@ -129,11 +113,6 @@ public class NameUsageMatchStoreFactory {
     } catch (IOException ex) {
       throw new IllegalStateException(ex);
     }
-  }
-
-  public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
-      createSupplier(PipelinesConfig config) {
-    return () -> create(config);
   }
 
   public static SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>

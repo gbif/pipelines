@@ -38,12 +38,16 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
       kvStoreSupplier;
   private KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore;
 
+  private final String checklistKey;
+
   @Builder(buildMethodName = "create")
   private TaxonomyTransform(
       SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
-          kvStoreSupplier) {
+          kvStoreSupplier,
+      String checklistKey) {
     super(TaxonRecord.class, TAXONOMY, TaxonomyTransform.class.getName(), TAXON_RECORDS_COUNT);
     this.kvStoreSupplier = kvStoreSupplier;
+    this.checklistKey = checklistKey;
   }
 
   /** Maps {@link TaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
@@ -100,7 +104,7 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
     return Interpretation.from(source)
         .to(TaxonRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(TaxonomyInterpreter.taxonomyInterpreter(kvStore))
+        .via(TaxonomyInterpreter.taxonomyInterpreter(kvStore, checklistKey))
         .via(TaxonomyInterpreter::setCoreId)
         .via(TaxonomyInterpreter::setParentEventId)
         .skipWhen(tr -> tr.getId() == null)
