@@ -93,8 +93,6 @@ public class RawOccurrenceRecord implements Serializable {
   private String modified;
   private String occurrenceRemarks;
   private String preparations;
-
-  // Delimited fields
   private String recordedByID;
   private String identifiedByID;
   private String scientificNameID;
@@ -140,8 +138,6 @@ public class RawOccurrenceRecord implements Serializable {
     this.modified = dwcr.value(DcTerm.modified);
     this.occurrenceRemarks = dwcr.value(DwcTerm.occurrenceRemarks);
     this.preparations = dwcr.value(DwcTerm.preparations);
-
-    // Delimited fields
     this.recordedByID = dwcr.value(DwcTerm.recordedByID);
     this.identifiedByID = dwcr.value(DwcTerm.identifiedByID);
     this.scientificNameID = dwcr.value(DwcTerm.scientificNameID);

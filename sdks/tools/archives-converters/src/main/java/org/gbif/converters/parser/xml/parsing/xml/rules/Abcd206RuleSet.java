@@ -58,8 +58,6 @@ public class Abcd206RuleSet extends AbstractRuleSet {
 
     // Arrays fields parsed by delimiter
     addFn.accept("recordedByID", "setRecordedByID");
-    addFn.accept("identifiedByID", "setIdentifiedByID");
-    addFn.accept("scientificNameID", "setScientificNameID");
 
     addNonNullPrioritizedProperty(digester, "country", COUNTRY, 2);
     addNonNullPrioritizedProperty(digester, "geodeticDatum", GEODETIC_DATUM, 2);
@@ -75,6 +73,8 @@ public class Abcd206RuleSet extends AbstractRuleSet {
       addFn.accept("idPreferred", "setPreferredAsString");
       addFn.accept("idGenus", "setGenus");
       addFn.accept("idScientificName", "setScientificName");
+      addFn.accept("scientificNameID", "setScientificNameID");
+      addFn.accept("identifiedByID", "setIdentifiedByID");
 
       addNonNullPrioritizedProperty(digester, "idDateIdentified", ID_DATE_IDENTIFIED, 2);
       addNonNullPrioritizedProperty(digester, "idIdentifierName", ID_IDENTIFIER_NAME, 2);

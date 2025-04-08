@@ -36,6 +36,12 @@ public class Abcd206RecordParserTest extends ParserTestCase {
     assertEquals("GDA94", ror.getGeodeticDatum());
     assertEquals("0123456789ABCD", ror.getId());
     assertEquals("19870413whk1", ror.getCollectorsFieldNumber());
+    assertEquals("SEE REMARKS REF W45501", ror.getOccurrenceRemarks());
+    assertEquals("length measurement", ror.getPreparations());
+    assertEquals("06/06/1978", ror.getModified());
+    assertEquals("https://www.bgbm.org/contact/collector?id=I", ror.getRecordedByID());
+    assertEquals("https://www.bgbm.org/catalogue/name?id=N", ror.getScientificNameID());
+    assertEquals("https://www.bgbm.org/curator/name?id=C", ror.getIdentifiedByID());
   }
 
   @Test

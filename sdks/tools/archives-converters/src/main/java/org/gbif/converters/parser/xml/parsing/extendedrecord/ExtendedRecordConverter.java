@@ -80,8 +80,6 @@ public class ExtendedRecordConverter {
     setter.accept(DwcTerm.occurrenceRemarks, rawRecord.getOccurrenceRemarks());
     setter.accept(DcTerm.modified, rawRecord.getModified());
     setter.accept(DwcTerm.preparations, rawRecord.getPreparations());
-
-    // Delimited fields
     setter.accept(DwcTerm.recordedByID, rawRecord.getRecordedByID());
     setter.accept(DwcTerm.identifiedByID, rawRecord.getIdentifiedByID());
     setter.accept(DwcTerm.scientificNameID, rawRecord.getScientificNameID());
