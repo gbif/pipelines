@@ -60,7 +60,7 @@ pipeline {
 
     stage('Build and push Docker images: Ingestion') {
       steps {
-        sh 'build/ingestion-docker-build.sh false 3.1.0-multitaxonomy-SNAPSHOT'
+        sh 'build/ingestion-docker-build.sh false 3.2.0-SNAPSHOT'
       }
     }
 
