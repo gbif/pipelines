@@ -50,7 +50,9 @@ public class XmlIOTest {
     coreMap1.put(DwcTerm.locality.qualifiedName(), "Algeria, Tunisia, Sweden, other countries");
     coreMap1.put(DwcTerm.occurrenceID.qualifiedName(), "ZFMK/Ob/223903199/909708/169734");
     coreMap1.put(DwcTerm.preparations.qualifiedName(), "preserved specimen");
-    coreMap1.put(DwcTerm.occurrenceRemarks.qualifiedName(), "de Vauloger 1890 (= Marcel de Vauloger de Beaupré?); Projects: Oberthuer");
+    coreMap1.put(
+        DwcTerm.occurrenceRemarks.qualifiedName(),
+        "de Vauloger 1890 (= Marcel de Vauloger de Beaupré?); Projects: Oberthuer");
     coreMap1.put(DcTerm.modified.qualifiedName(), "2015-08-19T10:14:46");
 
     final List<Map<String, String>> multimediaExtension2 = new ArrayList<>();
@@ -104,7 +106,9 @@ public class XmlIOTest {
     coreMap1.put(DwcTerm.recordedBy.qualifiedName(), "de Vauloger");
     coreMap1.put(DwcTerm.locality.qualifiedName(), "Algeria, Tunisia, Sweden, other countries");
     coreMap1.put(DwcTerm.occurrenceID.qualifiedName(), "ZFMK/Ob/223903199/909708/169734");
-    coreMap1.put(DwcTerm.occurrenceRemarks.qualifiedName(), "de Vauloger 1890 (= Marcel de Vauloger de Beaupré?); Projects: Oberthuer");
+    coreMap1.put(
+        DwcTerm.occurrenceRemarks.qualifiedName(),
+        "de Vauloger 1890 (= Marcel de Vauloger de Beaupré?); Projects: Oberthuer");
     coreMap1.put(DcTerm.modified.qualifiedName(), "2015-08-19T10:14:46");
     coreMap1.put(DwcTerm.preparations.qualifiedName(), "preserved specimen");
 
