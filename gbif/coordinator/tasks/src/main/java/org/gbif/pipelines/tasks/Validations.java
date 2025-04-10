@@ -31,11 +31,11 @@ public class Validations {
       Retry.of(
           "validatorCall",
           RetryConfig.custom()
-              .maxAttempts(7)
+              .maxAttempts(15)
               .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
               .intervalFunction(
                   IntervalFunction.ofExponentialBackoff(
-                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(15)))
+                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(30)))
               .build());
 
   public static void updateStatus(

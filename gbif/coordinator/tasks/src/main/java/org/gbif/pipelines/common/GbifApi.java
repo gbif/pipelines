@@ -34,11 +34,15 @@ public class GbifApi {
       Retry.of(
           "apiCall",
           RetryConfig.custom()
-              .maxAttempts(7)
-              .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
+              .maxAttempts(20)
+              .retryExceptions(
+                  JsonParseException.class,
+                  IOException.class,
+                  TimeoutException.class,
+                  PipelinesException.class)
               .intervalFunction(
                   IntervalFunction.ofExponentialBackoff(
-                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(15)))
+                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(30)))
               .build());
 
   private static final ObjectMapper MAPPER = new ObjectMapper();

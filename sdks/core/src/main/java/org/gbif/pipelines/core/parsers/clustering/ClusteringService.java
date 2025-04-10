@@ -33,7 +33,10 @@ public class ClusteringService implements Serializable {
             RetryConfig.custom()
                 .maxAttempts(config.getRetryMaxAttempts())
                 .retryExceptions(
-                    JsonParseException.class, IOException.class, TimeoutException.class)
+                    JsonParseException.class,
+                    IOException.class,
+                    TimeoutException.class,
+                    PipelinesException.class)
                 .intervalFunction(
                     IntervalFunction.ofExponentialBackoff(
                         Duration.ofSeconds(config.getRetryDuration())))
