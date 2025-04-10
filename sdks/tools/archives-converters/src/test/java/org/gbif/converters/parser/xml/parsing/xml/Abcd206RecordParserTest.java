@@ -40,7 +40,9 @@ public class Abcd206RecordParserTest extends ParserTestCase {
     assertEquals("length measurement", ror.getPreparations());
     assertEquals("06/06/1978", ror.getModified());
     assertEquals("http://www.wikidata.org/entity/Q1612245", ror.getRecordedByID());
-    assertEquals("https://www.europlusmed.org/cdm_dataportal/taxon/F8D1EADB-7D91-4E3B-BF96-FD15A0BD888B", ror.getScientificNameID());
+    assertEquals(
+        "https://www.europlusmed.org/cdm_dataportal/taxon/F8D1EADB-7D91-4E3B-BF96-FD15A0BD888B",
+        ror.getScientificNameID());
     assertEquals("http://www.wikidata.org/entity/Q78738", ror.getIdentifiedByID());
   }
 
