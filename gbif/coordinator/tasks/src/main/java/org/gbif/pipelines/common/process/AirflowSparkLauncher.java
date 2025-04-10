@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.PipelineStep.Status;
+import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.airflow.AirflowBody;
 import org.gbif.pipelines.common.airflow.AirflowClient;
 import org.gbif.pipelines.common.configs.AirflowConfiguration;
@@ -28,7 +29,11 @@ public class AirflowSparkLauncher {
           "airflowApiCall",
           RetryConfig.custom()
               .maxAttempts(20)
-              .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
+              .retryExceptions(
+                  JsonParseException.class,
+                  IOException.class,
+                  TimeoutException.class,
+                  PipelinesException.class)
               .intervalFunction(
                   IntervalFunction.ofExponentialBackoff(
                       Duration.ofSeconds(1), 2d, Duration.ofSeconds(40)))
