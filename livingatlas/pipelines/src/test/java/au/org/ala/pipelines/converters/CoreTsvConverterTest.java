@@ -468,7 +468,11 @@ public class CoreTsvConverterTest {
             .setId(DwcTerm.occurrenceID.simpleName())
             .setCreated(2L)
             .setBasisOfRecord("br_basisOfRecord")
-            .setSex("br_sex")
+            .setSex(
+                VocabularyConcept.newBuilder()
+                     .setConcept("sex")
+                     .setLineage(Collections.singletonList("br_sex"))
+                     .build())
             .setLifeStage(
                 VocabularyConcept.newBuilder()
                     .setConcept("br_lifeStage")
@@ -485,7 +489,12 @@ public class CoreTsvConverterTest {
                     .setLineage(Collections.singletonList("br_degreeOfEstablishment"))
                     .build())
             .setIndividualCount(222)
-            .setTypeStatus(Collections.singletonList("br_typeStatus"))
+            .setTypeStatus(
+                Collections.singletonList(
+                    VocabularyConcept.newBuilder()
+                        .setConcept("Type")
+                        .setLineage(Collections.singletonList("br_typeStatus"))
+                        .build()))
             .setTypifiedName("br_typifiedName")
             .setSampleSizeValue(222d)
             .setSampleSizeUnit("br_sampleSizeUnit")
