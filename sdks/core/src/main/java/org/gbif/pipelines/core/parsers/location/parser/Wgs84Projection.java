@@ -13,7 +13,7 @@ import java.util.TreeSet;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
@@ -38,7 +38,7 @@ public class Wgs84Projection {
    * @param datum the original geodetic datum the location are in
    * @return the reprojected location or the original ones in case transformation failed
    */
-  public static ParsedField<LatLng> reproject(double lat, double lon, String datum) {
+  public static ParsedField<GeocodeRequest> reproject(double lat, double lon, String datum) {
     Preconditions.checkArgument(lat >= -90d && lat <= 90d);
     Preconditions.checkArgument(lon >= -180d && lon <= 180d);
 
@@ -46,7 +46,7 @@ public class Wgs84Projection {
 
     if (Strings.isNullOrEmpty(datum)) {
       issues.add(GEODETIC_DATUM_ASSUMED_WGS84.name());
-      return ParsedField.success(LatLng.create(lat, lon), issues);
+      return ParsedField.success(GeocodeRequest.create(lat, lon), issues);
     }
 
     try {
@@ -77,13 +77,13 @@ public class Wgs84Projection {
         // verify the datum shift is reasonable
         if (Math.abs(lat - lat2) > SUSPICIOUS_SHIFT || Math.abs(lon - lon2) > SUSPICIOUS_SHIFT) {
           issues.add(COORDINATE_REPROJECTION_SUSPICIOUS.name());
-          return ParsedField.fail(LatLng.create(lat, lon), issues);
+          return ParsedField.fail(GeocodeRequest.create(lat, lon), issues);
         }
         // flag the record if coords actually changed
         if (lat != lat2 || lon != lon2) {
           issues.add(COORDINATE_REPROJECTED.name());
         }
-        return ParsedField.success(LatLng.create(lat2, lon2), issues);
+        return ParsedField.success(GeocodeRequest.create(lat2, lon2), issues);
       }
     } catch (Exception ex) {
       log.warn(
@@ -96,7 +96,7 @@ public class Wgs84Projection {
       issues.add(COORDINATE_REPROJECTION_FAILED.name());
     }
 
-    return ParsedField.fail(LatLng.create(lat, lon), issues);
+    return ParsedField.fail(GeocodeRequest.create(lat, lon), issues);
   }
 
   // Round to 7 decimals (~1m precision) since no way we're getting anything legitimately more

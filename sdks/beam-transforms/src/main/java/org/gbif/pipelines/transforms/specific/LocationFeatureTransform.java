@@ -13,7 +13,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
@@ -32,12 +32,12 @@ import org.gbif.pipelines.transforms.Transform;
 @Slf4j
 public class LocationFeatureTransform extends Transform<LocationRecord, LocationFeatureRecord> {
 
-  private final SerializableSupplier<KeyValueStore<LatLng, String>> kvStoreSupplier;
-  private KeyValueStore<LatLng, String> kvStore;
+  private final SerializableSupplier<KeyValueStore<GeocodeRequest, String>> kvStoreSupplier;
+  private KeyValueStore<GeocodeRequest, String> kvStore;
 
   @Builder(buildMethodName = "create")
   private LocationFeatureTransform(
-      SerializableSupplier<KeyValueStore<LatLng, String>> kvStoreSupplier) {
+      SerializableSupplier<KeyValueStore<GeocodeRequest, String>> kvStoreSupplier) {
     super(
         LocationFeatureRecord.class,
         LOCATION_FEATURE,
@@ -93,7 +93,7 @@ public class LocationFeatureTransform extends Transform<LocationRecord, Location
                     .filter(c -> c.equals(Country.AUSTRALIA.getIso2LetterCode()))
                     .filter(
                         c ->
-                            LatLng.create(lr.getDecimalLatitude(), lr.getDecimalLongitude())
+                            GeocodeRequest.create(lr.getDecimalLatitude(), lr.getDecimalLongitude())
                                 .isValid())
                     .isPresent())
         .via(LocationFeatureInterpreter.interpret(kvStore))

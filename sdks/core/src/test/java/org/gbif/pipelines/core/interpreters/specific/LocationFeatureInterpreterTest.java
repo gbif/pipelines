@@ -3,7 +3,7 @@ package org.gbif.pipelines.core.interpreters.specific;
 import java.util.HashMap;
 import java.util.Map;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.junit.Assert;
@@ -19,10 +19,10 @@ public class LocationFeatureInterpreterTest {
 
     LocationFeatureRecord record = LocationFeatureRecord.newBuilder().setId("777").build();
 
-    KeyValueStore<LatLng, String> kvStore =
-        new KeyValueStore<LatLng, String>() {
+    KeyValueStore<GeocodeRequest, String> kvStore =
+        new KeyValueStore<GeocodeRequest, String>() {
           @Override
-          public String get(LatLng latLng) {
+          public String get(GeocodeRequest latLng) {
             return "{\"layers: \"{\"cb1\":\"1\",\"cb2\":\"2\",\"cb3\":\"3\"}}";
           }
 

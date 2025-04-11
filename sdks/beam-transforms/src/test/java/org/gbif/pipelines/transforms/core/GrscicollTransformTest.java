@@ -16,7 +16,6 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DwcTerm;
@@ -182,36 +181,40 @@ public class GrscicollTransformTest {
   private static SerializableSupplier<
           KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse>>
       createKvStore() {
-    GrscicollLookupRequest request1 = new GrscicollLookupRequest();
-    request1.setInstitutionCode(INSTITUTION_CODE);
-    request1.setCollectionCode(COLLECTION_CODE);
-    request1.setDatasetKey(DATASET_KEY.toString());
-    request1.setCountry(COUNTRY.getIso2LetterCode());
+    GrscicollLookupRequest request1 =
+        GrscicollLookupRequest.builder()
+            .withInstitutionCode(INSTITUTION_CODE)
+            .withCollectionCode(COLLECTION_CODE)
+            .withDatasetKey(DATASET_KEY.toString())
+            .withCountry(COUNTRY.getIso2LetterCode())
+            .build();
 
     GrscicollLookupResponse response1 = new GrscicollLookupResponse();
     Match institutionMatch = new Match();
-    institutionMatch.setMatchType(MatchType.EXACT);
+    institutionMatch.setMatchType(GrscicollLookupResponse.MatchType.EXACT);
     EntityMatchedResponse instMatchResponse1 = new EntityMatchedResponse();
     instMatchResponse1.setKey(INSTITUTION_KEY);
     institutionMatch.setEntityMatched(instMatchResponse1);
     response1.setInstitutionMatch(institutionMatch);
 
     Match collectionMatch = new Match();
-    collectionMatch.setMatchType(MatchType.FUZZY);
+    collectionMatch.setMatchType(GrscicollLookupResponse.MatchType.FUZZY);
     EntityMatchedResponse collMatchResponse1 = new EntityMatchedResponse();
     collMatchResponse1.setKey(COLLECTION_KEY);
     collectionMatch.setEntityMatched(collMatchResponse1);
     response1.setCollectionMatch(collectionMatch);
 
-    GrscicollLookupRequest request2 = new GrscicollLookupRequest();
-    request2.setInstitutionCode(FAKE_INSTITUTION_CODE);
-    request2.setCollectionCode(COLLECTION_CODE);
-    request2.setDatasetKey(DATASET_KEY.toString());
-    request2.setCountry(COUNTRY.getIso2LetterCode());
+    GrscicollLookupRequest request2 =
+        GrscicollLookupRequest.builder()
+            .withInstitutionCode(FAKE_INSTITUTION_CODE)
+            .withCollectionCode(COLLECTION_CODE)
+            .withDatasetKey(DATASET_KEY.toString())
+            .withCountry(COUNTRY.getIso2LetterCode())
+            .build();
 
     GrscicollLookupResponse response2 = new GrscicollLookupResponse();
     Match institutionMatch2 = new Match();
-    institutionMatch2.setMatchType(MatchType.NONE);
+    institutionMatch2.setMatchType(GrscicollLookupResponse.MatchType.NONE);
     response2.setInstitutionMatch(institutionMatch2);
 
     KeyValueTestStoreStub<GrscicollLookupRequest, GrscicollLookupResponse> kvStore =

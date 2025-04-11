@@ -1,38 +1,13 @@
 {
     "dynamic_templates": [
       {
-        "verbatim_string": {
+        "verbatim": {
           "path_match": "verbatim.*",
-          "match_mapping_type": "string",
-          "mapping": {  "type": "keyword" }
+          "mapping": {
+            "type": "keyword",
+            "normalizer": "lowercase_normalizer",
+            "copy_to": "all"
         }
-      },
-      {
-        "verbatim_boolean": {
-          "path_match": "verbatim.*",
-          "match_mapping_type": "boolean",
-          "mapping": { "type": "keyword" }
-        }
-      },
-      {
-        "verbatim_date": {
-          "path_match": "verbatim.*",
-          "match_mapping_type": "date",
-          "mapping": { "type": "keyword" }
-        }
-      },
-      {
-        "verbatim_double": {
-          "path_match": "verbatim.*",
-          "match_mapping_type": "double",
-          "mapping": { "type": "keyword" }
-        }
-      },
-      {
-        "verbatim_long": {
-          "path_match": "verbatim.*",
-          "match_mapping_type": "long",
-          "mapping": { "type": "keyword" }
         }
       }
     ],
@@ -44,6 +19,7 @@
       "gbifId": {"type": "long"},
       "lastCrawled": {"type": "date"},
       "created": {"type": "date"},
+      "yearMonthGbifIdSort": {"type":  "long"},
 
       "datasetKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "crawlId": {"type": "integer"},
@@ -65,7 +41,6 @@
       "institutionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "collectionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "isClustered": {"type": "boolean"},
-      "dnaSequenceID": {"type": "keyword", "copy_to": "all"},
 
       "basisOfRecord": {"type": "keyword"},
 
@@ -181,6 +156,7 @@
         }
       },
       "samplingProtocolJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+      "previousIdentifications": {"type": "keyword"},
       "eventId": {
         "type": "text",
         "fields": {
@@ -302,6 +278,7 @@
       "scoordinates": {"type": "geo_shape"},
       "decimalLatitude": {"type": "double"},
       "decimalLongitude": {"type": "double"},
+      "distanceFromCentroidInMeters": {"type": "double"},
       "higherGeography": {"type":"keyword"},
       "island": {"type":"keyword"},
       "islandGroup": {"type":"keyword"},
@@ -463,25 +440,26 @@
             }
           },
           "kingdom": {"type": "text"},
-          "kingdomKey": {"type": "long"},
+          "kingdomKey": {"type": "keyword"},
           "phylum": {"type": "text"},
-          "phylumKey": {"type": "long"},
+          "phylumKey": {"type": "keyword"},
           "class": {"type": "text"},
-          "classKey": {"type": "long"},
+          "classKey": {"type": "keyword"},
           "order": {"type": "text"},
-          "orderKey": {"type": "long"},
+          "orderKey": {"type": "keyword"},
           "family": {"type": "text"},
-          "familyKey": {"type": "long"},
+          "familyKey": {"type": "keyword"},
           "genus": {"type": "text"},
-          "genusKey": {"type": "long"},
+          "genusKey": {"type": "keyword"},
           "species": {"type": "text"},
-          "speciesKey": {"type": "long"},
+          "speciesKey": {"type": "keyword"},
           "synonym": {"type": "boolean"},
           "taxonID": {"type": "keyword"},
-          "taxonKey": {"type": "long"},
+          "taxonConceptID": {"type": "keyword"},
+          "taxonKey": {"type": "keyword"},
           "usage": {
             "properties": {
-              "key": {"type": "long"},
+              "key": {"type": "keyword" },
               "name": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
               "rank": {"type": "keyword"}
             }
@@ -531,7 +509,7 @@
           "iucnRedListCategoryCode": {"type": "keyword"}
         }
       },
-
+      "checklistKey": {"type": "keyword"},
       "mediaTypes": {"type": "keyword", "copy_to": "all"},
       "mediaLicenses": {"type": "keyword", "copy_to": "all"},
       "multimediaItems": {"type": "nested", "enabled": false,
@@ -540,12 +518,6 @@
         }
       },
 
-      "verbatim": {
-        "type": "object",
-        "properties": {
-          "core": { "type": "object" },
-          "extensions": { "type": "object" }
-        }
-      }
+      "verbatim": {"type": "object", "enabled": false}
     }
 }
