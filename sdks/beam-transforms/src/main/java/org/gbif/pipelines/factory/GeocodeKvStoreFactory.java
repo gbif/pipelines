@@ -77,6 +77,7 @@ public class GeocodeKvStoreFactory {
             .withBaseApiUrl(api)
             .withFileCacheMaxSizeMb(geocodeConfig.getWsCacheSizeMb())
             .withTimeOutMillisec(geocodeConfig.getWsTimeoutSec() * 1000)
+            //            .withMaxConnections(geocodeConfig.getMaxConnections())
             .build();
 
     String zk = geocodeConfig.getZkConnectionString();

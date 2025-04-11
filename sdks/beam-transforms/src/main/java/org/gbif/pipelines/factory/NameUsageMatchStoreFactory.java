@@ -74,6 +74,7 @@ public class NameUsageMatchStoreFactory {
             .withBaseApiUrl(api)
             .withFileCacheMaxSizeMb(kvConfig.getWsCacheSizeMb())
             .withTimeOutMillisec(kvConfig.getWsTimeoutSec() * 1000)
+            //            .withMaxConnections(kvConfig.getMaxConnections())
             .build();
 
     String zk = kvConfig.getZkConnectionString();

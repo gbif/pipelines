@@ -17,7 +17,9 @@ public class KvConfig implements Serializable {
 
   private String hbaseZnode;
 
-  private long wsTimeoutSec = 60L;
+  private int maxConnections = 5;
+
+  private long wsTimeoutSec = 60;
 
   private long wsCacheSizeMb = 64L;
 

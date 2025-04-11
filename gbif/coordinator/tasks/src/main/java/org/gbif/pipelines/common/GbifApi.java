@@ -25,6 +25,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.gbif.pipelines.common.configs.RegistryConfiguration;
+import org.gbif.pipelines.common.utils.HttpUtils;
 import org.gbif.pipelines.tasks.MachineTag;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -34,11 +35,15 @@ public class GbifApi {
       Retry.of(
           "apiCall",
           RetryConfig.custom()
-              .maxAttempts(7)
-              .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
+              .maxAttempts(20)
+              .retryExceptions(
+                  JsonParseException.class,
+                  IOException.class,
+                  TimeoutException.class,
+                  PipelinesException.class)
               .intervalFunction(
                   IntervalFunction.ofExponentialBackoff(
-                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(15)))
+                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(30)))
               .build());
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -96,7 +101,7 @@ public class GbifApi {
     Supplier<HttpResponse> s =
         () -> {
           try {
-            return httpClient.execute(new HttpGet(url));
+            return HttpUtils.checkUnavailableService(httpClient.execute(new HttpGet(url)));
           } catch (IOException ex) {
             throw new PipelinesException(ex);
           }
