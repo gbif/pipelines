@@ -18,6 +18,7 @@ import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.core.interpreters.core.CoreInterpreter;
+import org.gbif.pipelines.core.interpreters.core.DynamicPropertiesInterpreter;
 import org.gbif.pipelines.core.interpreters.core.VocabularyInterpreter;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -97,8 +98,8 @@ public class ALABasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(BasicInterpreter::interpretBasisOfRecord)
         .via(BasicInterpreter::interpretTypifiedName)
-        .via(BasicInterpreter::interpretSex)
-        .via(BasicInterpreter::interpretTypeStatus)
+        .via(VocabularyInterpreter.interpretSex(vocabularyService))
+        .via(VocabularyInterpreter.interpretTypeStatus(vocabularyService))
         .via(BasicInterpreter::interpretIndividualCount)
         .via((e, r) -> CoreInterpreter.interpretReferences(e, r, r::setReferences))
         .via(BasicInterpreter::interpretOrganismQuantity)
