@@ -187,9 +187,7 @@ public class ALAOccurrenceJsonConverter {
     // Simple
     builder
         .setBasisOfRecord(basic.getBasisOfRecord())
-        .setSex(basic.getSex())
         .setIndividualCount(basic.getIndividualCount())
-        .setTypeStatus(basic.getTypeStatus())
         .setTypifiedName(basic.getTypifiedName())
         .setSampleSizeValue(basic.getSampleSizeValue())
         .setSampleSizeUnit(basic.getSampleSizeUnit())
@@ -218,6 +216,8 @@ public class ALAOccurrenceJsonConverter {
     JsonConverter.convertVocabularyConcept(basic.getDegreeOfEstablishment())
         .ifPresent(builder::setDegreeOfEstablishment);
     JsonConverter.convertVocabularyConcept(basic.getPathway()).ifPresent(builder::setPathway);
+    JsonConverter.convertVocabularyConcept(basic.getSex()).ifPresent(builder::setSex);
+    JsonConverter.convertVocabularyConceptList(basic.getTypeStatus()).ifPresent(builder::setTypeStatus);
 
     // License
     JsonConverter.convertLicense(basic.getLicense()).ifPresent(builder::setLicense);

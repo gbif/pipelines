@@ -90,7 +90,7 @@ public class ALAOccurrenceToSearchTransform implements Serializable {
 
               // copy basic fields
               builder.setBasisOfRecord(br.getBasisOfRecord());
-              builder.setSex(br.getSex());
+              builder.setSex(br.getSex() != null ? br.getSex().getConcept() : null);
               builder.setLifeStage(
                   br.getLifeStage() != null ? br.getLifeStage().getConcept() : null);
               builder.setEstablishmentMeans(
