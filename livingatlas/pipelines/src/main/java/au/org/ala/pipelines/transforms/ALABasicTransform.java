@@ -18,7 +18,6 @@ import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.core.interpreters.core.CoreInterpreter;
-import org.gbif.pipelines.core.interpreters.core.DynamicPropertiesInterpreter;
 import org.gbif.pipelines.core.interpreters.core.VocabularyInterpreter;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;

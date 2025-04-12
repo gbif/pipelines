@@ -217,7 +217,8 @@ public class ALAOccurrenceJsonConverter {
         .ifPresent(builder::setDegreeOfEstablishment);
     JsonConverter.convertVocabularyConcept(basic.getPathway()).ifPresent(builder::setPathway);
     JsonConverter.convertVocabularyConcept(basic.getSex()).ifPresent(builder::setSex);
-    JsonConverter.convertVocabularyConceptList(basic.getTypeStatus()).ifPresent(builder::setTypeStatus);
+    JsonConverter.convertVocabularyConceptList(basic.getTypeStatus())
+        .ifPresent(builder::setTypeStatus);
 
     // License
     JsonConverter.convertLicense(basic.getLicense()).ifPresent(builder::setLicense);
