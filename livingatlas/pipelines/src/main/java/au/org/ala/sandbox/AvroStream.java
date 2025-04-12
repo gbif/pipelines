@@ -12,10 +12,10 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.SeekableInput;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.hadoop.fs.AvroFSInput;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
+import org.gbif.pipelines.core.utils.AvroFSInput;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.Record;
 
