@@ -317,7 +317,7 @@ public class DwcaToSolrPipeline {
         ALABasicTransform.builder()
             .vocabularyServiceSupplier(
                 config.getGbifConfig().getVocabularyConfig() != null
-                    ?  FileVocabularyFactory.getInstanceSupplier(hdfsConfigs, config.getGbifConfig())
+                    ? FileVocabularyFactory.getInstanceSupplier(hdfsConfigs, config.getGbifConfig())
                     : null)
             .recordedByKvStoreSupplier(RecordedByKVStoreFactory.getInstanceSupplier(config))
             .occStatusKvStoreSupplier(

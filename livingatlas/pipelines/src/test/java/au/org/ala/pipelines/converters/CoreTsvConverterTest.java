@@ -470,9 +470,9 @@ public class CoreTsvConverterTest {
             .setBasisOfRecord("br_basisOfRecord")
             .setSex(
                 VocabularyConcept.newBuilder()
-                     .setConcept("sex")
-                     .setLineage(Collections.singletonList("br_sex"))
-                     .build())
+                    .setConcept("sex")
+                    .setLineage(Collections.singletonList("br_sex"))
+                    .build())
             .setLifeStage(
                 VocabularyConcept.newBuilder()
                     .setConcept("br_lifeStage")
