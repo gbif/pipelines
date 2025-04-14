@@ -19,7 +19,7 @@ public class KvConfig implements Serializable {
 
   private int maxConnections = 5;
 
-  private long wsTimeoutSec = 60;
+  private int wsTimeoutSec = 60;
 
   private long wsCacheSizeMb = 64L;
 
