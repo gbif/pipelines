@@ -135,7 +135,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_institutionID\"", // DwcTerm.institutionID
       "\"raw_er_island\"", // DwcTerm.island
       "\"raw_er_islandGroup\"", // DwcTerm.islandGroup
-      "\"{concept: br_lifeStage, lineage: [br_lifeStageLineage]}\"", // DwcTerm.lifeStage
+      "\"{concept: br_lifeStage, lineage: [br_lifeStageLineage], tags: []}\"", // DwcTerm.lifeStage
       "\"raw_er_locationAccordingTo\"", // DwcTerm.locationAccordingTo
       "\"raw_er_locationID\"", // DwcTerm.locationID
       "\"3.3333333333E10\"", // DwcTerm.maximumDistanceAboveSurfaceInMeters
@@ -180,7 +180,7 @@ public class CoreTsvConverterTest {
       "\"br_samplingProtocol\"", // DwcTerm.samplingProtocol
       "\"atxr_ScientificNameAuthorship\"", // DwcTerm.scientificNameAuthorship
       "\"raw_er_scientificNameID\"", // DwcTerm.scientificNameID
-      "\"br_sex\"", // DwcTerm.sex
+      "\"{concept: sex, lineage: [br_sex], tags: []}\"", // DwcTerm.sex
       "\"raw_er_specificEpithet\"", // DwcTerm.specificEpithet
       "\"111111\"", // DwcTerm.startDayOfYear
       "\"raw_er_subgenus\"", // DwcTerm.subgenus
