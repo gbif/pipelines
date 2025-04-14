@@ -187,7 +187,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_taxonID\"", // DwcTerm.taxonID
       "\"raw_er_taxonomicStatus\"", // DwcTerm.taxonomicStatus
       "\"raw_er_taxonRemarks\"", // DwcTerm.taxonRemarks
-      "\"br_typeStatus\"", // DwcTerm.typeStatus
+      "\"Type A|Type B\"", // DwcTerm.typeStatus
       "\"raw_er_verbatimCoordinates\"", // DwcTerm.verbatimCoordinates
       "\"raw_er_verbatimCoordinateSystem\"", // DwcTerm.verbatimCoordinateSystem
       "\"raw_er_verbatimDepth\"", // DwcTerm.verbatimDepth
@@ -490,9 +490,13 @@ public class CoreTsvConverterTest {
                     .build())
             .setIndividualCount(222)
             .setTypeStatus(
-                Collections.singletonList(
+                Arrays.asList(
                     VocabularyConcept.newBuilder()
-                        .setConcept("Type")
+                        .setConcept("Type A")
+                        .setLineage(Collections.singletonList("br_typeStatus"))
+                        .build(),
+                    VocabularyConcept.newBuilder()
+                        .setConcept("Type B")
                         .setLineage(Collections.singletonList("br_typeStatus"))
                         .build()))
             .setTypifiedName("br_typifiedName")
