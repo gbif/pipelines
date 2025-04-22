@@ -38,7 +38,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
-import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -51,8 +50,6 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
-import org.gbif.pipelines.transforms.specific.GbifIdAbsentTransform;
-import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.slf4j.MDC;
 
 /**
@@ -144,9 +141,9 @@ public class VerbatimToOccurrencePipeline {
     log.info("Creating pipeline transforms");
     MetadataTransform metadataTransform = transformsFactory.createMetadataTransform();
     VerbatimTransform verbatimTransform = transformsFactory.createVerbatimTransform();
-//    GbifIdAbsentTransform idAbsentTransform = transformsFactory.createGbifIdAbsentTransform();
-//    GbifIdTransform idTransform = transformsFactory.createGbifIdTransform();
-//    UniqueGbifIdTransform uniqueIdTransform = transformsFactory.createUniqueGbifIdTransform();
+    //    GbifIdAbsentTransform idAbsentTransform = transformsFactory.createGbifIdAbsentTransform();
+    //    GbifIdTransform idTransform = transformsFactory.createGbifIdTransform();
+    //    UniqueGbifIdTransform uniqueIdTransform = transformsFactory.createUniqueGbifIdTransform();
     ClusteringTransform clusteringTransform = transformsFactory.createClusteringTransform();
     BasicTransform basicTransform = transformsFactory.createBasicTransform();
     TemporalTransform temporalTransform = transformsFactory.createTemporalTransform();
