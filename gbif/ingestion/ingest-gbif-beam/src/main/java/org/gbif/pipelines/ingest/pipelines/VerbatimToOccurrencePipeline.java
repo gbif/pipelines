@@ -38,6 +38,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
+import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -50,6 +51,8 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdAbsentTransform;
+import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.slf4j.MDC;
 
 /**
@@ -141,9 +144,9 @@ public class VerbatimToOccurrencePipeline {
     log.info("Creating pipeline transforms");
     MetadataTransform metadataTransform = transformsFactory.createMetadataTransform();
     VerbatimTransform verbatimTransform = transformsFactory.createVerbatimTransform();
-    //    GbifIdAbsentTransform idAbsentTransform = transformsFactory.createGbifIdAbsentTransform();
-    //    GbifIdTransform idTransform = transformsFactory.createGbifIdTransform();
-    //    UniqueGbifIdTransform uniqueIdTransform = transformsFactory.createUniqueGbifIdTransform();
+    GbifIdAbsentTransform idAbsentTransform = transformsFactory.createGbifIdAbsentTransform();
+    GbifIdTransform idTransform = transformsFactory.createGbifIdTransform();
+    UniqueGbifIdTransform uniqueIdTransform = transformsFactory.createUniqueGbifIdTransform();
     ClusteringTransform clusteringTransform = transformsFactory.createClusteringTransform();
     BasicTransform basicTransform = transformsFactory.createBasicTransform();
     TemporalTransform temporalTransform = transformsFactory.createTemporalTransform();
@@ -240,11 +243,9 @@ public class VerbatimToOccurrencePipeline {
 
     PCollection<ExtendedRecord> filteredUniqueRecords = uniqueRecords;
     if (useExtendedRecordWriteIO(types)) {
-
       // Filter record with identical identifiers
       PCollection<KV<String, IdentifierRecord>> uniqueGbifIdRecordsKv =
           uniqueGbifId.apply("Map to GBIF ids record KV", idTransform.toKv());
-
       PCollection<KV<String, ExtendedRecord>> uniqueRecordsKv =
           uniqueRecords.apply("Map verbatim to KV", verbatimTransform.toKv());
 
@@ -347,21 +348,21 @@ public class VerbatimToOccurrencePipeline {
     log.info("Pipeline has been finished");
   }
 
-  public static boolean useGbifIdReadIO(Set<String> types) {
+  private static boolean useGbifIdReadIO(Set<String> types) {
     return types.contains(RecordType.VERBATIM.name())
         || types.contains(RecordType.CLUSTERING.name())
         || types.contains(IDENTIFIER_ABSENT.name());
   }
 
-  public static boolean useExtendedRecordWriteIO(Set<String> types) {
+  private static boolean useExtendedRecordWriteIO(Set<String> types) {
     return types.contains(RecordType.VERBATIM.name()) || types.contains(RecordType.ALL.name());
   }
 
-  public static boolean useGbifIdRecordWriteIO(Set<String> types) {
+  private static boolean useGbifIdRecordWriteIO(Set<String> types) {
     return types.contains(RecordType.IDENTIFIER.name()) || types.contains(RecordType.ALL.name());
   }
 
-  public static boolean useMetadataRecordWriteIO(Set<String> types) {
+  private static boolean useMetadataRecordWriteIO(Set<String> types) {
     return types.contains(RecordType.METADATA.name()) || types.contains(RecordType.ALL.name());
   }
 }
