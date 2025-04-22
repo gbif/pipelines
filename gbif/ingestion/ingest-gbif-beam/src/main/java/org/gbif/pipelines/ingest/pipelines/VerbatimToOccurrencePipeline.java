@@ -144,9 +144,9 @@ public class VerbatimToOccurrencePipeline {
     log.info("Creating pipeline transforms");
     MetadataTransform metadataTransform = transformsFactory.createMetadataTransform();
     VerbatimTransform verbatimTransform = transformsFactory.createVerbatimTransform();
-    GbifIdAbsentTransform idAbsentTransform = transformsFactory.createGbifIdAbsentTransform();
-    GbifIdTransform idTransform = transformsFactory.createGbifIdTransform();
-    UniqueGbifIdTransform uniqueIdTransform = transformsFactory.createUniqueGbifIdTransform();
+//    GbifIdAbsentTransform idAbsentTransform = transformsFactory.createGbifIdAbsentTransform();
+//    GbifIdTransform idTransform = transformsFactory.createGbifIdTransform();
+//    UniqueGbifIdTransform uniqueIdTransform = transformsFactory.createUniqueGbifIdTransform();
     ClusteringTransform clusteringTransform = transformsFactory.createClusteringTransform();
     BasicTransform basicTransform = transformsFactory.createBasicTransform();
     TemporalTransform temporalTransform = transformsFactory.createTemporalTransform();
@@ -243,9 +243,11 @@ public class VerbatimToOccurrencePipeline {
 
     PCollection<ExtendedRecord> filteredUniqueRecords = uniqueRecords;
     if (useExtendedRecordWriteIO(types)) {
+
       // Filter record with identical identifiers
       PCollection<KV<String, IdentifierRecord>> uniqueGbifIdRecordsKv =
           uniqueGbifId.apply("Map to GBIF ids record KV", idTransform.toKv());
+
       PCollection<KV<String, ExtendedRecord>> uniqueRecordsKv =
           uniqueRecords.apply("Map verbatim to KV", verbatimTransform.toKv());
 

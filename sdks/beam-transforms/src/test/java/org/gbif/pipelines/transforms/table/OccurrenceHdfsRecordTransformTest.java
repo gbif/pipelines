@@ -157,7 +157,6 @@ public class OccurrenceHdfsRecordTransformTest {
             .clusteringRecordTag(clusteringTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
             .multiTaxonRecordTag(multiTaxonomyTransform.getTag())
-            .multiTaxonRecordTag(multiTaxonomyTransform.getTag())
             .grscicollRecordTag(grscicollTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
             .eventCoreRecordTag(eventCoreTransform.getTag())
@@ -250,11 +249,7 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setPreparations(Collections.emptyList());
     expected.setOthercatalognumbers(Collections.emptyList());
     expected.setParenteventgbifid(Collections.emptyList());
-    expected.setTypestatus(
-        TypeStatus.newBuilder()
-            .setConcepts(Collections.emptyList())
-            .setLineage(Collections.emptyList())
-            .build());
+    expected.setTypestatus(null);
     expected.setSamplingprotocol(Collections.emptyList());
     expected.setHighergeography(Collections.emptyList());
     expected.setGeoreferencedby(Collections.emptyList());

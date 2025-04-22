@@ -427,7 +427,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
     for (Graph<StepType>.Edge e : nodeEdges) {
       PipelineStep step = info.pipelineStepMap.get(e.getNode());
-      if (step != null) {
+      if (step != null && !PROCESSED_STATE_SET.contains(step.getState())) {
         step.setState(PipelineStep.Status.QUEUED);
         // Call Registry to update
         Function<PipelineStep, Long> pipelineStepFn =

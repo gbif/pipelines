@@ -527,6 +527,7 @@ public class OccurrenceHdfsRecordConverter {
                         .build()));
 
     Optional.ofNullable(basicRecord.getTypeStatus())
+        .filter(ts -> !ts.isEmpty())
         .ifPresent(
             c -> {
               List<String> allConcepts =
