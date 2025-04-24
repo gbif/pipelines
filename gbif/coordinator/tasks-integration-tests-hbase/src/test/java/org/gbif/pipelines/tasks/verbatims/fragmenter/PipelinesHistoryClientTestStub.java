@@ -119,7 +119,12 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
 
   @Override
   public long updatePipelineStep(PipelineStep pipelineStep) {
-    pipelineStepMap.put(pipelineStep.getKey(), pipelineStep);
+    return updatePipelineStep(pipelineStep.getKey(), pipelineStep);
+  }
+
+  @Override
+  public long updatePipelineStep(long key, PipelineStep pipelineStep) {
+    pipelineStepMap.put(key, pipelineStep);
     return pipelineStep.getKey();
   }
 
@@ -164,6 +169,11 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
   @Override
   public void notifyAbsentIdentifiers(UUID uuid, int i, long l, String s) {
     throw new UnsupportedOperationException("The method is not implemented!");
+  }
+
+  @Override
+  public void setSubmittedPipelineStepToQueued(long key) {
+    pipelineStepMap.get(key).setState(Status.QUEUED);
   }
 
   public Map<StepType, PipelineStep> getStepMap() {
