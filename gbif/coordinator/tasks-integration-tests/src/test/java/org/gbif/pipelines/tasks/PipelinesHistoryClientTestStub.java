@@ -172,8 +172,8 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
   }
 
   @Override
-  public void setSubmittedPipelineStepToQueued(long l) {
-    // do nothing
+  public void setSubmittedPipelineStepToQueued(long key) {
+    pipelineStepMap.get(key).setState(Status.QUEUED);
   }
 
   public Map<StepType, PipelineStep> getStepMap() {
