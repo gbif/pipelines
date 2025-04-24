@@ -21,6 +21,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -428,15 +429,12 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     for (Graph<StepType>.Edge e : nodeEdges) {
       PipelineStep step = info.pipelineStepMap.get(e.getNode());
       if (step != null && !PROCESSED_STATE_SET.contains(step.getState())) {
-        step.setState(PipelineStep.Status.QUEUED);
-        // Call Registry to update
-        Function<PipelineStep, Long> pipelineStepFn =
-            s -> {
-              log.info("History client: update pipeline step: {}", s);
-              return historyClient.updatePipelineStep(s);
-            };
-        long stepKey = Retry.decorateFunction(RETRY, pipelineStepFn).apply(step);
-        log.info("Step {} with step key {} as QUEUED", step.getType(), stepKey);
+        // Call Registry to change the state to queued
+        log.info("History client: set pipeline step to QUEUED: {}", step);
+        Retry.decorateRunnable(
+                RETRY, () -> historyClient.setSubmittedPipelineStepToQueued(step.getKey()))
+            .run();
+        log.info("Step {} with step key {} as QUEUED", step.getType(), step.getKey());
       }
     }
   }
