@@ -460,7 +460,6 @@ public class JsonConverter {
 
     Classification.Builder classificationBuilder =
         Classification.newBuilder()
-            .setChecklistKey(taxon.getDatasetKey())
             .setClassification(
                 taxon.getClassification().stream()
                     .collect(
@@ -484,11 +483,7 @@ public class JsonConverter {
     JsonConverter.convertRankedName(taxon.getAcceptedUsage())
         .ifPresent(classificationBuilder::setAcceptedUsage);
 
-    JsonConverter.convertDiagnostic(taxon.getDiagnostics())
-        .ifPresent(classificationBuilder::setDiagnostics);
-
-    JsonConverter.convertClassificationPath(taxon)
-        .ifPresent(classificationBuilder::setClassificationPath);
+    classificationBuilder.setIssues(taxon.getIssues().getIssueList());
 
     JsonConverter.convertClassificationDepth(taxon)
         .ifPresent(classificationBuilder::setClassificationDepth);

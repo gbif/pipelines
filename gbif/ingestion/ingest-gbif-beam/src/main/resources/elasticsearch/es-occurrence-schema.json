@@ -9,6 +9,95 @@
             "copy_to": "all"
           }
         }
+      },
+      {
+        "classifications_usage_key": {
+          "path_match": "classifications.*.usage.key",
+          "mapping": {
+            "type": "keyword",
+            "normalizer": "lowercase_normalizer"
+          }
+        }
+      },
+      {
+        "classifications_usage_rank": {
+          "path_match": "classifications.*.usage.rank",
+          "mapping": {
+            "type": "keyword",
+            "normalizer": "lowercase_normalizer"
+          }
+        }
+      },
+      {
+        "classifications_acceptedUsage_key": {
+          "path_match": "classifications.*.acceptedUsage.key",
+          "mapping": {
+            "type": "keyword",
+            "normalizer": "lowercase_normalizer"
+          }
+        }
+      },
+      {
+        "classifications_acceptedUsage_rank": {
+          "path_match": "classifications.*.acceptedUsage.rank",
+          "mapping": {
+            "type": "keyword",
+            "normalizer": "lowercase_normalizer"
+          }
+        }
+      },
+      {
+        "classifications_classification_rank": {
+          "path_match": "classifications.*.classification.*",
+          "mapping": {
+            "type": "keyword",
+            "normalizer": "lowercase_normalizer"
+          }
+        }
+      },
+      {
+        "classifications_classification_name": {
+          "path_match": "classifications.*.classification.*.*",
+          "mapping": {
+            "type": "text"
+          }
+        }
+      },
+      {
+        "classifications_classificationKeys_rank": {
+          "path_match": "classifications.*.classificationKeys.*",
+          "mapping": {
+            "type": "keyword",
+            "normalizer": "lowercase_normalizer"
+          }
+        }
+      },
+      {
+        "classifications_classificationKeys_key": {
+          "path_match": "classifications.*.classificationKeys.*.*",
+          "mapping": {
+            "type": "keyword",
+            "normalizer": "lowercase_normalizer"
+          }
+        }
+      },
+      {
+        "classifications_taxonKeys": {
+          "path_match": "classifications.*.taxonKeys",
+          "mapping": {
+            "type": "keyword",
+            "normalizer": "lowercase_normalizer"
+          }
+        }
+      },
+      {
+        "classifications_issues": {
+          "path_match": "classifications.*.issues",
+          "mapping": {
+            "type": "keyword",
+            "normalizer": "lowercase_normalizer"
+          }
+        }
       }
     ],
     "properties": {

@@ -234,8 +234,6 @@
     "type":"record",
     "doc":"Taxonomy classification",
     "fields":[
-      {"name":"checklistKey","type": "string", "doc":"The GBIF key for the checklistbank dataset"},
-      {"name":"classificationPath","type":["null","string"],"default":null,"doc":""},
       {"name":"usage","type":["null","RankedNameWithAuthorship"],"default":null,"doc":""},
       {"name":"acceptedUsage","type":["null","RankedNameWithAuthorship"],"default":null,"doc":""},
       {"name":"classification",
@@ -255,7 +253,10 @@
         "default":[]
       },
       {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""},
-      {"name":"diagnostics","type":["null","Diagnostic"],"default":null,"doc":""}
+      {"name":"issues",
+        "type":{"type":"array","items":"string"},
+        "default":[]
+      }
     ]
   },
   {
