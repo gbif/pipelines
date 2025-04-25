@@ -117,8 +117,7 @@
         "classifications_classificationDepth_idx": {
           "path_match": "classifications.*.classificationDepth.*",
           "mapping": {
-            "type": "integer",
-            "normalizer": "lowercase_normalizer"
+            "type": "integer"
           }
         }
       },
