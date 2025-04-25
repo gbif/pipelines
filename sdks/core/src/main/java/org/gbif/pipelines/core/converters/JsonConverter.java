@@ -483,7 +483,13 @@ public class JsonConverter {
     JsonConverter.convertRankedName(taxon.getAcceptedUsage())
         .ifPresent(classificationBuilder::setAcceptedUsage);
 
-    classificationBuilder.setIssues(taxon.getIssues().getIssueList());
+    if (taxon.getIssues() != null
+        && taxon.getIssues().getIssueList() != null
+        && !taxon.getIssues().getIssueList().isEmpty()) {
+      classificationBuilder.setIssues(taxon.getIssues().getIssueList());
+    } else {
+      classificationBuilder.setIssues(Collections.emptyList());
+    }
 
     JsonConverter.convertClassificationDepth(taxon)
         .ifPresent(classificationBuilder::setClassificationDepth);
