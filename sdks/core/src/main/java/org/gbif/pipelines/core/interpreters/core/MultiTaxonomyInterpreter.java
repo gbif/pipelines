@@ -18,10 +18,12 @@ import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 /**
  * Interpreter for taxonomic fields present in an {@link ExtendedRecord} avro file. These fields
- * should be based in the Darwin Core specification (http://rs.tdwg.org/dwc/terms/).
+ * should be based on the Darwin Core specification (http://rs.tdwg.org/dwc/terms/).
  *
  * <p>The interpretation uses the species match kv store to match the taxonomic fields to an
- * existing specie.
+ * existing species.
+ *
+ * <p>The interpretation will match against each of the configured taxonomies.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -30,7 +32,7 @@ public class MultiTaxonomyInterpreter {
   /**
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
    */
-  public static BiConsumer<ExtendedRecord, MultiTaxonRecord> taxonomyInterpreter(
+  public static BiConsumer<ExtendedRecord, MultiTaxonRecord> interpretMultiTaxonomy(
       KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore,
       List<String> checklistKeys) {
     return (er, mtr) -> {
@@ -52,6 +54,8 @@ public class MultiTaxonomyInterpreter {
 
       mtr.setId(er.getId());
       mtr.setTaxonRecords(trs);
+      setCoreId(er, mtr);
+      setParentEventId(er, mtr);
     };
   }
 

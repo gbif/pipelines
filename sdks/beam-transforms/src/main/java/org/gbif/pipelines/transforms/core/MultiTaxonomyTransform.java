@@ -103,9 +103,7 @@ public class MultiTaxonomyTransform extends Transform<ExtendedRecord, MultiTaxon
     return Interpretation.from(source)
         .to(MultiTaxonRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(MultiTaxonomyInterpreter.taxonomyInterpreter(kvStore, checklistKeys))
-        .via(MultiTaxonomyInterpreter::setCoreId)
-        .via(MultiTaxonomyInterpreter::setParentEventId)
+        .via(MultiTaxonomyInterpreter.interpretMultiTaxonomy(kvStore, checklistKeys))
         .skipWhen(tr -> tr.getId() == null)
         .getOfNullable();
   }

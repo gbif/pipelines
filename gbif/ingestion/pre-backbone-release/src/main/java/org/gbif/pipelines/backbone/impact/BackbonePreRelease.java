@@ -159,9 +159,6 @@ public class BackbonePreRelease {
                 .withGenericName(source.getString("v_genericname", schema))
                 .withSpecificEpithet(source.getString("v_specificepithet", schema))
                 .withInfraspecificEpithet(source.getString("v_infraspecificepithet", schema))
-                //
-                // .withScientificNameAuthorship(source.getString("v_scientificNameAuthorship",
-                // schema))
                 .withRank(source.getString("v_taxonrank", schema))
                 .withVerbatimRank(source.getString("v_verbatimtaxonRank", schema))
                 .withScientificNameID(source.getString("v_scientificnameid", schema))
@@ -278,7 +275,7 @@ public class BackbonePreRelease {
           verbatim.getRank(), // avoid breaking the API (verbatimTaxonRank)
           verbatim.getScientificName(),
           verbatim.getGenericName(),
-          "", // verbatim.getScientificNameAuthorship(),
+          "",
           current.toString(skipKeys),
           proposed.toString(skipKeys));
     }
@@ -286,7 +283,6 @@ public class BackbonePreRelease {
     private static boolean isEmpty(NameUsageMatchResponse response) {
       return response.getUsage() == null
           || (response.getClassification() == null || response.getClassification().isEmpty());
-      //          || response.getDiagnostics() == null;
     }
   }
 }
