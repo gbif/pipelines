@@ -304,8 +304,6 @@ public class OccurrenceJsonConverter {
 
   private void mapTaxonRecord(OccurrenceJsonRecord.Builder builder) {
 
-    // FIXME move uuid out to config or drop the separate indexing
-    // and rely on mapping in gbif/occurrence code to new structure
     if (multiTaxon != null
         && multiTaxon.getTaxonRecords() != null
         && !multiTaxon.getTaxonRecords().isEmpty()) {
@@ -349,7 +347,7 @@ public class OccurrenceJsonConverter {
       if (verbatim != null) {
         extractOptValue(verbatim, DwcTerm.taxonID).ifPresent(builder::setTaxonID);
         extractOptValue(verbatim, DwcTerm.scientificName)
-                .ifPresent(builder::setVerbatimScientificName);
+            .ifPresent(builder::setVerbatimScientificName);
       }
     }
   }
