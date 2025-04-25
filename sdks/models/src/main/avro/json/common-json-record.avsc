@@ -198,7 +198,7 @@
     "name":"GbifClassification",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
-    "doc":"GBIF taxonomy classification",
+    "doc":"GBIF taxonomy classification (deprecated)",
     "fields":[
       {"name":"acceptedUsage","type":["null","RankedNameWithAuthorship"],"default":null,"doc":""},
       {"name":"classification","type":{ "type":"array","items":"RankedName" },"default":[]},

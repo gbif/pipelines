@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.converters;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -343,6 +344,13 @@ public class OccurrenceJsonConverter {
               .collect(Collectors.toList());
 
       builder.setChecklistKey(checklistKeys);
+
+      // Raw to index classification
+      if (verbatim != null) {
+        extractOptValue(verbatim, DwcTerm.taxonID).ifPresent(builder::setTaxonID);
+        extractOptValue(verbatim, DwcTerm.scientificName)
+                .ifPresent(builder::setVerbatimScientificName);
+      }
     }
   }
 
