@@ -12,8 +12,6 @@ import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.model.collections.lookup.Match.MatchType;
-import org.gbif.api.model.collections.lookup.Match.Status;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.ParseResult;
@@ -27,6 +25,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.Match;
+import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.Status;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -84,7 +83,7 @@ public class GrscicollInterpreter {
 
       // institution match
       Match institutionMatchResponse = lookupResponse.getInstitutionMatch();
-      if (institutionMatchResponse.getMatchType() == MatchType.NONE) {
+      if (institutionMatchResponse.getMatchType() == GrscicollLookupResponse.MatchType.NONE) {
         addIssue(gr, getInstitutionMatchNoneIssue(institutionMatchResponse.getStatus()));
 
         // we skip the collections when there is no institution match
@@ -93,7 +92,7 @@ public class GrscicollInterpreter {
 
       gr.setInstitutionMatch(GrscicollRecordConverter.convertMatch(institutionMatchResponse));
 
-      if (institutionMatchResponse.getMatchType() == MatchType.FUZZY) {
+      if (institutionMatchResponse.getMatchType() == GrscicollLookupResponse.MatchType.FUZZY) {
         addIssue(gr, OccurrenceIssue.INSTITUTION_MATCH_FUZZY);
       }
 
@@ -106,12 +105,12 @@ public class GrscicollInterpreter {
 
       // collection match
       Match collectionMatchResponse = lookupResponse.getCollectionMatch();
-      if (collectionMatchResponse.getMatchType() == MatchType.NONE) {
+      if (collectionMatchResponse.getMatchType() == GrscicollLookupResponse.MatchType.NONE) {
         addIssue(gr, getCollectionMatchNoneIssue(collectionMatchResponse.getStatus()));
       } else {
         gr.setCollectionMatch(GrscicollRecordConverter.convertMatch(collectionMatchResponse));
 
-        if (collectionMatchResponse.getMatchType() == MatchType.FUZZY) {
+        if (collectionMatchResponse.getMatchType() == GrscicollLookupResponse.MatchType.FUZZY) {
           addIssue(gr, OccurrenceIssue.COLLECTION_MATCH_FUZZY);
         }
       }

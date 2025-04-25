@@ -1,6 +1,7 @@
 package org.gbif.pipelines.backbone.impact;
 
-import java.io.IOException;
+import com.google.common.base.Strings;
+import java.io.File;
 import java.util.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,8 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -21,11 +24,11 @@ import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchemaUtils;
 import org.apache.thrift.TException;
-import org.gbif.kvs.species.Identification;
-import org.gbif.rest.client.configuration.ChecklistbankClientsConfiguration;
+import org.gbif.kvs.species.NameUsageMatchRequest;
+import org.gbif.rest.client.RestClientFactory;
 import org.gbif.rest.client.configuration.ClientConfiguration;
-import org.gbif.rest.client.species.NameUsageMatch;
-import org.gbif.rest.client.species.retrofit.ChecklistbankServiceSyncClient;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
+import org.gbif.rest.client.species.NameUsageMatchingService;
 
 /**
  * Takes the classification from verbatim data and runs it against a species lookup service
@@ -41,6 +44,17 @@ public class BackbonePreRelease {
     BackbonePreReleaseOptions options =
         PipelineOptionsFactory.fromArgs(args).as(BackbonePreReleaseOptions.class);
     options.setRunner(SparkRunner.class);
+    String hdfsPath = options.getHdfsSiteConfig();
+    String corePath = options.getCoreSiteConfig();
+    boolean isHdfsExist = !Strings.isNullOrEmpty(hdfsPath) && new File(hdfsPath).exists();
+    boolean isCoreExist = !Strings.isNullOrEmpty(corePath) && new File(corePath).exists();
+    if (isHdfsExist && isCoreExist) {
+      Configuration conf = new Configuration(false);
+      conf.addResource(new Path(hdfsPath));
+      conf.addResource(new Path(corePath));
+      options.setHdfsConfiguration(Collections.singletonList(conf));
+    }
+
     Pipeline p = Pipeline.create(options);
 
     final HCatSchema schema = readSchema(options);
@@ -64,7 +78,8 @@ public class BackbonePreRelease {
                     options.getScope(),
                     options.getMinimumOccurrenceCount(),
                     options.getSkipKeys(),
-                    options.getIgnoreWhitespace())));
+                    options.getIgnoreWhitespace(),
+                    options.getIgnoreAuthorshipFormatting())));
 
     matched.apply(TextIO.write().to(options.getTargetDir()));
 
@@ -89,7 +104,8 @@ public class BackbonePreRelease {
     private final int minCount;
     private final boolean skipKeys;
     private final boolean ignoreWhitespace;
-    private ChecklistbankServiceSyncClient service; // direct service, no cache
+    private final boolean ignoreAuthorshipFormatting;
+    private NameUsageMatchingService service; // direct service, no cache
 
     MatchTransform(
         String baseAPIUrl,
@@ -97,32 +113,25 @@ public class BackbonePreRelease {
         Integer scope,
         int minCount,
         boolean skipKeys,
-        boolean ignoreWhitespace) {
+        boolean ignoreWhitespace,
+        boolean ignoreAuthorshipFormatting) {
       this.baseAPIUrl = baseAPIUrl;
       this.schema = schema;
       this.scope = scope;
       this.minCount = minCount;
       this.skipKeys = skipKeys;
       this.ignoreWhitespace = ignoreWhitespace;
+      this.ignoreAuthorshipFormatting = ignoreAuthorshipFormatting;
     }
 
     @Setup
     public void setup() {
       service =
-          new ChecklistbankServiceSyncClient(
-              ChecklistbankClientsConfiguration.builder()
-                  .nameUsageClientConfiguration(
-                      ClientConfiguration.builder()
-                          .withBaseApiUrl(baseAPIUrl)
-                          .withFileCacheMaxSizeMb(1L)
-                          .withTimeOut(120L)
-                          .build())
-                  .checklistbankClientConfiguration( // required but not used
-                      ClientConfiguration.builder()
-                          .withBaseApiUrl(baseAPIUrl)
-                          .withFileCacheMaxSizeMb(1L)
-                          .withTimeOut(120L)
-                          .build())
+          RestClientFactory.createNameMatchService(
+              ClientConfiguration.builder()
+                  .withBaseApiUrl(baseAPIUrl)
+                  .withFileCacheMaxSizeMb(1L)
+                  .withTimeOutMillisec(120_1000)
                   .build());
     }
 
@@ -132,55 +141,38 @@ public class BackbonePreRelease {
 
       // apply the filter to only check records within scope (e.g. limit to Lepidoptera) and above
       // the limit
-      long count = source.getLong("occurrenceCount", schema);
+      long count = source.getLong("occurrencecount", schema);
       if (count > minCount && (scope == null || taxaKeys(source, schema).contains(scope))) {
 
         // We use the request to ensure we apply the same "clean" operations as the production
         // pipelines, even though we short circuit the cache and use the lookup service directly.
-        Identification matchRequest =
-            Identification.builder()
+        NameUsageMatchRequest matchRequest =
+            NameUsageMatchRequest.builder()
                 .withKingdom(source.getString("v_kingdom", schema))
                 .withPhylum(source.getString("v_phylum", schema))
                 .withClazz(source.getString("v_class", schema))
                 .withOrder(source.getString("v_order", schema))
                 .withFamily(source.getString("v_family", schema))
                 .withGenus(source.getString("v_genus", schema))
-                .withScientificName(source.getString("v_scientificName", schema))
-                .withGenericName(source.getString("v_genericName", schema))
-                .withSpecificEpithet(source.getString("v_specificEpithet", schema))
-                .withInfraspecificEpithet(source.getString("v_infraSpecificEpithet", schema))
-                .withScientificNameAuthorship(
-                    source.getString("v_scientificNameAuthorship", schema))
-                .withRank(source.getString("v_taxonRank", schema))
-                .withVerbatimRank(source.getString("v_verbatimTaxonRank", schema))
-                .withScientificNameID(source.getString("v_scientificNameID", schema))
-                .withTaxonID(source.getString("v_taxonID", schema))
-                .withTaxonConceptID(source.getString("v_taxonConceptID", schema))
+                .withScientificName(source.getString("v_scientificname", schema))
+                .withGenericName(source.getString("v_genericname", schema))
+                .withSpecificEpithet(source.getString("v_specificepithet", schema))
+                .withInfraspecificEpithet(source.getString("v_infraspecificepithet", schema))
+                .withRank(source.getString("v_taxonrank", schema))
+                .withVerbatimRank(source.getString("v_verbatimtaxonrank", schema))
+                .withScientificNameID(source.getString("v_scientificnameid", schema))
+                .withTaxonID(source.getString("v_taxonid", schema))
+                .withTaxonConceptID(source.getString("v_taxonconceptid", schema))
                 .build();
 
         try {
           // short circuit the cache, but replicate same logic of the NameUsageMatchKVStoreFactory
-          NameUsageMatch usageMatch =
-              service.match(
-                  null, // rely only on names
-                  matchRequest.getKingdom(),
-                  matchRequest.getPhylum(),
-                  matchRequest.getClazz(),
-                  matchRequest.getOrder(),
-                  matchRequest.getFamily(),
-                  matchRequest.getGenus(),
-                  matchRequest.getScientificName(),
-                  matchRequest.getGenericName(),
-                  matchRequest.getSpecificEpithet(),
-                  matchRequest.getInfraspecificEpithet(),
-                  matchRequest.getScientificNameAuthorship(),
-                  matchRequest.getRank(),
-                  false,
-                  false);
-
-          GBIFClassification existing = GBIFClassification.buildFromHive(source, schema);
+          NameUsageMatchResponse usageMatch = service.match(matchRequest);
+          GBIFClassification existing = GBIFClassification.buildFromHiveSource(source, schema);
           GBIFClassification proposed;
-          if (usageMatch == null || isEmpty(usageMatch)) {
+          if (usageMatch == null) {
+            proposed = GBIFClassification.error();
+          } else if (isEmpty(usageMatch)) {
             proposed = GBIFClassification.newIncertaeSedis();
           } else {
             proposed = GBIFClassification.buildFromNameUsageMatch(usageMatch);
@@ -188,14 +180,16 @@ public class BackbonePreRelease {
 
           // copy pipelines to put unknown content into incertae sedis kingdom
           if (proposed.getKingdom() == null) {
+            System.out.println("##### Failed request: " + toDebugUrl(matchRequest));
             proposed.setKingdom("incertae sedis");
-            proposed.setKingdomKey(0);
+            proposed.setKingdomKey("0");
           }
 
           // emit classifications that differ, optionally considering the keys
-          if (skipKeys && !existing.classificationEquals(proposed, ignoreWhitespace)) {
+          if (skipKeys
+              && !existing.classificationEquals(
+                  proposed, ignoreWhitespace, ignoreAuthorshipFormatting)) {
             c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
-
           } else if (!skipKeys && !existing.equals(proposed)) {
             c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
           }
@@ -208,6 +202,28 @@ public class BackbonePreRelease {
           throw e; // fail the job
         }
       }
+    }
+
+    private String toDebugUrl(NameUsageMatchRequest matchRequest) {
+      return baseAPIUrl
+          + "/v2/species/match?"
+          + "kingdom="
+          + matchRequest.getKingdom()
+          + "&phylum="
+          + matchRequest.getPhylum()
+          + "&class="
+          + matchRequest.getClazz()
+          + "&order="
+          + matchRequest.getOrder()
+          + "&family="
+          + matchRequest.getFamily()
+          + "&genus="
+          + matchRequest.getGenus()
+          + "&scientificName="
+          + matchRequest.getScientificName()
+          + "&rank="
+          + matchRequest.getRank()
+          + "&verbose=false";
     }
 
     /** Extracts all taxon keys from the record. */
@@ -238,7 +254,7 @@ public class BackbonePreRelease {
     /** Formats the data for the output line in the CSV. */
     private static String toTabDelimited(
         long count,
-        Identification verbatim,
+        NameUsageMatchRequest verbatim,
         GBIFClassification current,
         GBIFClassification proposed,
         boolean skipKeys) {
@@ -246,6 +262,9 @@ public class BackbonePreRelease {
       return String.join(
           "\t",
           String.valueOf(count),
+          verbatim.getTaxonID(),
+          verbatim.getTaxonConceptID(),
+          verbatim.getScientificNameID(),
           verbatim.getKingdom(),
           verbatim.getPhylum(),
           verbatim.getClazz(),
@@ -258,27 +277,14 @@ public class BackbonePreRelease {
           verbatim.getRank(), // avoid breaking the API (verbatimTaxonRank)
           verbatim.getScientificName(),
           verbatim.getGenericName(),
-          verbatim.getScientificNameAuthorship(),
+          "",
           current.toString(skipKeys),
           proposed.toString(skipKeys));
     }
 
-    @Teardown
-    public void tearDown() {
-      if (Objects.nonNull(service)) {
-        try {
-          service.close();
-        } catch (IOException ex) {
-          log.error("Error closing lookup service", ex);
-        }
-      }
-    }
-
-    private static boolean isEmpty(NameUsageMatch response) {
-      return response == null
-          || response.getUsage() == null
-          || (response.getClassification() == null || response.getClassification().isEmpty())
-          || response.getDiagnostics() == null;
+    private static boolean isEmpty(NameUsageMatchResponse response) {
+      return response.getUsage() == null
+          || (response.getClassification() == null || response.getClassification().isEmpty());
     }
   }
 }

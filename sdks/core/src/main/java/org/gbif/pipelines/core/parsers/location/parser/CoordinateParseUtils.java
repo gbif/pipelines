@@ -15,7 +15,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.common.parsers.NumberParser;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 
 /** Utilities for assisting in the parsing of latitude and longitude strings into Decimals. */
@@ -80,7 +80,8 @@ public class CoordinateParseUtils {
    * @param longitude The decimal longitude
    * @return The parse result
    */
-  public static ParsedField<LatLng> parseLatLng(final String latitude, final String longitude) {
+  public static ParsedField<GeocodeRequest> parseLatLng(
+      final String latitude, final String longitude) {
     if (Strings.isNullOrEmpty(latitude) || Strings.isNullOrEmpty(longitude)) {
       return ParsedField.fail();
     }
@@ -115,7 +116,7 @@ public class CoordinateParseUtils {
   }
 
   // 02° 49' 52" N	131° 47' 03" E
-  public static ParsedField<LatLng> parseVerbatimCoordinates(final String coordinates) {
+  public static ParsedField<GeocodeRequest> parseVerbatimCoordinates(final String coordinates) {
     if (Strings.isNullOrEmpty(coordinates)) {
       return ParsedField.fail();
     }
@@ -158,7 +159,7 @@ public class CoordinateParseUtils {
    * this field can contain lines, polygons and coordinates in different projections.
    */
   // POINT(30.29 -23.2)
-  public static ParsedField<LatLng> parsePointFootprintWKT(final String footprint) {
+  public static ParsedField<GeocodeRequest> parsePointFootprintWKT(final String footprint) {
     if (Strings.isNullOrEmpty(footprint)) {
       return ParsedField.fail();
     }
@@ -167,7 +168,7 @@ public class CoordinateParseUtils {
       // assume WKT order (longitude, latitude)
       Double lng = NumberParser.parseDouble(m.group(1));
       Double lat = NumberParser.parseDouble(m.group(2));
-      ParsedField<LatLng> result = validateAndRound(lat, lng);
+      ParsedField<GeocodeRequest> result = validateAndRound(lat, lng);
       if (result.isSuccessful()) {
         return result;
       }
@@ -176,7 +177,7 @@ public class CoordinateParseUtils {
     return ParsedField.fail();
   }
 
-  private static ParsedField<LatLng> validateAndRound(double lat, double lon) {
+  private static ParsedField<GeocodeRequest> validateAndRound(double lat, double lon) {
     // collecting issues for result
     Set<String> issues = new TreeSet<>();
 
@@ -195,12 +196,12 @@ public class CoordinateParseUtils {
     // 0,0 is too suspicious
     if (Double.compare(lat, 0) == 0 && Double.compare(lon, 0) == 0) {
       issues.add(ZERO_COORDINATE.name());
-      return ParsedField.success(LatLng.create(0.0d, 0.0d), issues);
+      return ParsedField.success(GeocodeRequest.create(0.0d, 0.0d), issues);
     }
 
     // if everything falls in range
     if (inRange(lat, lon)) {
-      return ParsedField.success(LatLng.create(lat, lon), issues);
+      return ParsedField.success(GeocodeRequest.create(lat, lon), issues);
     }
 
     // if lat is out of range, but in range of the lng,
@@ -212,7 +213,7 @@ public class CoordinateParseUtils {
     // capabilities of this method
     if ((Double.compare(lat, 90) > 0 || Double.compare(lat, -90) < 0) && inRange(lon, lat)) {
       issues.add(PRESUMED_SWAPPED_COORDINATE.name());
-      return ParsedField.success(LatLng.create(lon, lat), issues);
+      return ParsedField.success(GeocodeRequest.create(lon, lat), issues);
     }
 
     // then something is out of range

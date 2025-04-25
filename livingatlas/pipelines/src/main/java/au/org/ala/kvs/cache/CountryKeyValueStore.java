@@ -4,11 +4,11 @@ import au.org.ala.kvs.GeocodeShpConfig;
 import au.org.ala.kvs.client.GeocodeShpIntersectService;
 import java.util.List;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 
-public class CountryKeyValueStore implements KeyValueStore<LatLng, GeocodeResponse> {
+public class CountryKeyValueStore implements KeyValueStore<GeocodeRequest, GeocodeResponse> {
 
   private final GeocodeShpIntersectService service;
   private GeocodeShpConfig config;
@@ -28,7 +28,7 @@ public class CountryKeyValueStore implements KeyValueStore<LatLng, GeocodeRespon
   }
 
   @Override
-  public GeocodeResponse get(LatLng latLng) {
+  public GeocodeResponse get(GeocodeRequest latLng) {
     List<Location> locations = service.lookupCountry(latLng.getLatitude(), latLng.getLongitude());
     if (locations != null && !locations.isEmpty()) {
       for (Location location : locations) {
