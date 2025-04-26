@@ -141,6 +141,15 @@
         }
       },
       {
+        "classifications_iucnRedListCategoryCode": {
+          "path_match": "classifications.*.iucnRedListCategoryCode",
+          "mapping": {
+            "type": "keyword",
+            "normalizer": "lowercase_normalizer"
+          }
+        }
+      },
+      {
         "classifications_issues": {
           "path_match": "classifications.*.issues",
           "mapping": {
