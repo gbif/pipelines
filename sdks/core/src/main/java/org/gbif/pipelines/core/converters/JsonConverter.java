@@ -347,6 +347,21 @@ public class JsonConverter {
                     .build());
   }
 
+  public static Optional<Usage> convertToUsage(org.gbif.pipelines.io.avro.TaxonRecord taxonRecord) {
+    return Optional.ofNullable(taxonRecord)
+        .map(
+            taxon ->
+                Usage.newBuilder()
+                    .setName(taxon.getUsage().getName())
+                    .setRank(taxon.getUsage().getRank())
+                    .setKey(taxon.getUsage().getKey())
+                    .setAuthorship(taxon.getUsage().getAuthorship())
+                    .setGenericName(convertGenericName(taxon).orElse(null))
+                    .setInfraspecificEpithet(taxon.getUsageParsedName().getInfraspecificEpithet())
+                    .setSpecificEpithet(taxon.getUsageParsedName().getSpecificEpithet())
+                    .build());
+  }
+
   public static Optional<RankedNameWithAuthorship> convertRankedName(
       org.gbif.pipelines.io.avro.RankedNameWithAuthorship rankedName) {
     return Optional.ofNullable(rankedName)
@@ -477,9 +492,8 @@ public class JsonConverter {
                             (existing, replacement) -> existing,
                             LinkedHashMap::new)))
             .setTaxonKeys(JsonConverter.convertTaxonKey(taxon))
-            .setIucnRedListCategoryCode(taxon.getIucnRedListCategoryCode());
-
-    JsonConverter.convertRankedName(taxon.getUsage()).ifPresent(classificationBuilder::setUsage);
+            .setIucnRedListCategoryCode(taxon.getIucnRedListCategoryCode())
+            .setUsage(JsonConverter.convertToUsage(taxon).orElse(null));
 
     JsonConverter.convertRankedName(taxon.getAcceptedUsage())
         .ifPresent(classificationBuilder::setAcceptedUsage);
@@ -490,6 +504,10 @@ public class JsonConverter {
       classificationBuilder.setIssues(taxon.getIssues().getIssueList());
     } else {
       classificationBuilder.setIssues(Collections.emptyList());
+    }
+
+    if (taxon.getDiagnostics() != null && taxon.getDiagnostics().getStatus() != null) {
+      classificationBuilder.setStatus(taxon.getDiagnostics().getStatus().name());
     }
 
     JsonConverter.convertClassificationDepth(taxon)

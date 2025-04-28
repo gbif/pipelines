@@ -346,6 +346,7 @@ public class OccurrenceJsonConverter {
       // Raw to index classification
       if (verbatim != null) {
         extractOptValue(verbatim, DwcTerm.taxonID).ifPresent(builder::setTaxonID);
+        extractOptValue(verbatim, DwcTerm.taxonConceptID).ifPresent(builder::setTaxonConceptID);
         extractOptValue(verbatim, DwcTerm.scientificName)
             .ifPresent(builder::setVerbatimScientificName);
       }

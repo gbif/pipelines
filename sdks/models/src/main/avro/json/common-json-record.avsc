@@ -135,6 +135,20 @@
     ]
   },
   {
+    "name":"Usage",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"key","type":["null","string"],"default":null,"doc":""},
+      {"name":"name","type":["null","string"],"default":null,"doc":""},
+      {"name":"rank","type":["null","string"],"default":null},
+      {"name":"authorship","type":["null","string"],"default":null},
+      {"name":"specificEpithet","type":["null","string"],"default":null},
+      {"name":"infraspecificEpithet","type":["null","string"],"default":null},
+      {"name":"genericName","type":["null","string"],"default":null}
+    ]
+  },
+  {
     "name":"RankedNameWithAuthorship",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
@@ -234,8 +248,9 @@
     "type":"record",
     "doc":"Taxonomy classification",
     "fields":[
-      {"name":"usage","type":["null","RankedNameWithAuthorship"],"default":null,"doc":""},
+      {"name":"usage","type":["null","Usage"],"default":null,"doc":""},
       {"name":"acceptedUsage","type":["null","RankedNameWithAuthorship"],"default":null,"doc":""},
+      {"name":"status","type":["null","string"],"default":null,"doc":""},
       {"name":"classification",
         "type":{ "type":"map","values":"string" },
         "default": {}
