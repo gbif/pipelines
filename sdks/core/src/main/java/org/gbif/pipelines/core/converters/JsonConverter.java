@@ -491,6 +491,8 @@ public class JsonConverter {
       classificationBuilder.setIssues(Collections.emptyList());
     }
 
+    classificationBuilder.setIucnRedListCategoryCode(taxon.getIucnRedListCategoryCode());
+
     JsonConverter.convertClassificationDepth(taxon)
         .ifPresent(classificationBuilder::setClassificationDepth);
 

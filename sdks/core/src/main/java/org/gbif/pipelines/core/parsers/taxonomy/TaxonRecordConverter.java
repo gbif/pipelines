@@ -13,6 +13,8 @@ import org.gbif.rest.client.species.NameUsageMatchResponse;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TaxonRecordConverter {
 
+  public static final String IUCN_REDLIST_GBIF_KEY = "19491596-35ae-4a91-9a98-85cf505f1bd3";
+
   /**
    * I modify the parameter instead of creating a new one and returning it because the lambda
    * parameters are final used in Interpreter.
@@ -39,13 +41,11 @@ public class TaxonRecordConverter {
         Optional.ofNullable(convertUsage(source.getAcceptedUsage()))
             .orElse(taxonRecord.getUsage()));
 
-    // nom code doesnt seem to be set...
-    //    taxonRecord.setNomenclature(convertNomenclature(source.getNomenclature()));
     taxonRecord.setDiagnostics(convertDiagnostics(source.getDiagnostics()));
 
     // IUCN Red List Category
     Optional.ofNullable(source.getAdditionalStatus()).orElseGet(List::of).stream()
-        .filter(status -> status.getGbifKey().equals("19491596-35ae-4a91-9a98-85cf505f1bd3"))
+        .filter(status -> status.getGbifKey().equals(IUCN_REDLIST_GBIF_KEY))
         .findFirst()
         .map(status -> status.getStatusCode())
         .ifPresent(taxonRecord::setIucnRedListCategoryCode);
