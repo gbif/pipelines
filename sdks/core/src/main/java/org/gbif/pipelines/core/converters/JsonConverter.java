@@ -348,18 +348,32 @@ public class JsonConverter {
   }
 
   public static Optional<Usage> convertToUsage(org.gbif.pipelines.io.avro.TaxonRecord taxonRecord) {
-    return Optional.ofNullable(taxonRecord)
-        .map(
-            taxon ->
-                Usage.newBuilder()
-                    .setName(taxon.getUsage().getName())
-                    .setRank(taxon.getUsage().getRank())
-                    .setKey(taxon.getUsage().getKey())
-                    .setAuthorship(taxon.getUsage().getAuthorship())
-                    .setGenericName(convertGenericName(taxon).orElse(null))
-                    .setInfraspecificEpithet(taxon.getUsageParsedName().getInfraspecificEpithet())
-                    .setSpecificEpithet(taxon.getUsageParsedName().getSpecificEpithet())
-                    .build());
+    if (taxonRecord == null) {
+      return Optional.empty();
+    }
+
+    var usage = taxonRecord.getUsage();
+    var parsed = taxonRecord.getUsageParsedName();
+
+    Usage.Builder builder = Usage.newBuilder();
+
+    if (usage != null) {
+      builder
+          .setName(usage.getName())
+          .setRank(usage.getRank())
+          .setKey(usage.getKey())
+          .setAuthorship(usage.getAuthorship());
+    }
+
+    builder.setGenericName(convertGenericName(taxonRecord).orElse(null));
+
+    if (parsed != null) {
+      builder
+          .setInfraspecificEpithet(parsed.getInfraspecificEpithet())
+          .setSpecificEpithet(parsed.getSpecificEpithet());
+    }
+
+    return Optional.of(builder.build());
   }
 
   public static Optional<RankedNameWithAuthorship> convertRankedName(
