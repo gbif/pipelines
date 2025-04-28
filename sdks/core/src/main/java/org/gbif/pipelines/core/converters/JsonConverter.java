@@ -476,7 +476,8 @@ public class JsonConverter {
                             org.gbif.pipelines.io.avro.RankedName::getKey,
                             (existing, replacement) -> existing,
                             LinkedHashMap::new)))
-            .setTaxonKeys(JsonConverter.convertTaxonKey(taxon));
+            .setTaxonKeys(JsonConverter.convertTaxonKey(taxon))
+            .setIucnRedListCategoryCode(taxon.getIucnRedListCategoryCode());
 
     JsonConverter.convertRankedName(taxon.getUsage()).ifPresent(classificationBuilder::setUsage);
 
@@ -490,8 +491,6 @@ public class JsonConverter {
     } else {
       classificationBuilder.setIssues(Collections.emptyList());
     }
-
-    classificationBuilder.setIucnRedListCategoryCode(taxon.getIucnRedListCategoryCode());
 
     JsonConverter.convertClassificationDepth(taxon)
         .ifPresent(classificationBuilder::setClassificationDepth);
