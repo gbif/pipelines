@@ -14,8 +14,7 @@
         "classifications_usage_key": {
           "path_match": "classifications.*.usage.key",
           "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer"
+            "type": "keyword"
           }
         }
       },
@@ -23,8 +22,7 @@
         "classifications_usage_rank": {
           "path_match": "classifications.*.usage.rank",
           "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer"
+            "type": "keyword"
           }
         }
       },
@@ -48,8 +46,7 @@
         "classifications_acceptedUsage_key": {
           "path_match": "classifications.*.acceptedUsage.key",
           "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer"
+            "type": "keyword"
           }
         }
       },
@@ -57,8 +54,7 @@
         "classifications_acceptedUsage_rank": {
           "path_match": "classifications.*.acceptedUsage.rank",
           "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer"
+            "type": "keyword"
           }
         }
       },
@@ -82,8 +78,7 @@
         "classifications_classification_rank": {
           "path_match": "classifications.*.classification.*",
           "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer"
+            "type": "keyword"
           }
         }
       },
@@ -99,8 +94,7 @@
         "classifications_classificationKeys_rank": {
           "path_match": "classifications.*.classificationKeys.*",
           "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer"
+            "type": "keyword"
           }
         }
       },
@@ -126,8 +120,7 @@
         "classifications_classificationDepth_key": {
           "path_match": "classifications.*.classificationDepth.*.*",
           "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer"
+            "type": "keyword"
           }
         }
       },
@@ -144,8 +137,7 @@
         "classifications_iucnRedListCategoryCode": {
           "path_match": "classifications.*.iucnRedListCategoryCode",
           "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer"
+            "type": "keyword"
           }
         }
       },
