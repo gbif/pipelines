@@ -11,7 +11,7 @@
         }
       },
       {
-        "classifications_usage_rank": {
+        "classifications_id": {
           "path_match": "classifications.*",
           "mapping": {
             "type": "keyword"
@@ -19,7 +19,7 @@
         }
       },
       {
-        "classifications_usage_rank": {
+        "classifications_l1": {
           "path_match": "classifications.*.*",
           "mapping": {
             "type": "keyword"
@@ -27,7 +27,15 @@
         }
       },
       {
-        "classifications_usage_rank": {
+        "classifications_l2": {
+          "path_match": "classifications.*.*.*",
+          "mapping": {
+            "type": "keyword"
+          }
+        }
+      },
+      {
+        "classifications_l3": {
           "path_match": "classifications.*.*.*",
           "mapping": {
             "type": "keyword"
