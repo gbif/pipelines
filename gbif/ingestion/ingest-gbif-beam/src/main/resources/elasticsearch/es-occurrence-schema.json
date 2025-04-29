@@ -134,8 +134,7 @@
         "classifications_classificationKeys_key": {
           "path_match": "classifications.*.classificationKeys.*.*",
           "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer"
+            "type": "keyword"
           }
         }
       },
@@ -143,8 +142,7 @@
         "classifications_classificationDepth_idx": {
           "path_match": "classifications.*.classificationDepth.*",
           "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer"
+            "type": "keyword"
           }
         }
       },
@@ -160,8 +158,7 @@
         "classifications_taxonKeys": {
           "path_match": "classifications.*.taxonKeys",
           "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer"
+            "type": "keyword"
           }
         }
       },
@@ -177,8 +174,7 @@
         "classifications_issues": {
           "path_match": "classifications.*.issues",
           "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer"
+            "type": "keyword"
           }
         }
       }
