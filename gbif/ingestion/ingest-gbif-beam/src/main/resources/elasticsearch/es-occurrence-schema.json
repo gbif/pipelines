@@ -11,8 +11,24 @@
         }
       },
       {
-        "classifications": {
+        "classifications_usage_rank": {
           "path_match": "classifications.*",
+          "mapping": {
+            "type": "keyword"
+          }
+        }
+      },
+      {
+        "classifications_usage_rank": {
+          "path_match": "classifications.*.*",
+          "mapping": {
+            "type": "keyword"
+          }
+        }
+      },
+      {
+        "classifications_usage_rank": {
+          "path_match": "classifications.*.*.*",
           "mapping": {
             "type": "keyword"
           }
