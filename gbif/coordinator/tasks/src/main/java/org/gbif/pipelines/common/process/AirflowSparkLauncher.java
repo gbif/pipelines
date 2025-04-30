@@ -59,6 +59,9 @@ public class AirflowSparkLauncher {
     this.beamParameters = beamParameters;
     this.sparkAppName = sparkAppName;
     this.airflowClient = AirflowClient.builder().configuration(airflowConfiguration).build();
+
+    // add the app name to the beam params
+    beamParameters.put("appName", sparkAppName);
   }
 
   private AirflowBody getAirflowBody(String dagId) {
