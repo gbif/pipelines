@@ -581,6 +581,7 @@
 
     "issues": {"type": "keyword"},
     "notIssues": {"type": "keyword"},
+    "nonTaxonomicIssues": {"type": "keyword"},
     "extensions": {"type": "keyword"},
 
     "gbifClassification": {

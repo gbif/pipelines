@@ -436,6 +436,13 @@ public class OccurrenceJsonConverter {
             multimedia),
         builder::setIssues,
         builder::setNotIssues);
+
+    // populate the non-taxonomic issues field
+    JsonConverter.mapIssues(
+        Arrays.asList(
+            metadata, identifier, clustering, basic, temporal, location, grscicoll, multimedia),
+        builder::setNonTaxonomicIssues,
+        v -> {});
   }
 
   private void mapCreated(OccurrenceJsonRecord.Builder builder) {
