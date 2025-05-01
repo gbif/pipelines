@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.LongFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -485,26 +486,36 @@ public class JsonConverter {
             Collectors.toMap(TaxonRecord::getDatasetKey, JsonConverter::convertToClassification));
   }
 
+  private static LinkedHashMap<String, String> convertToMap(
+      List<org.gbif.pipelines.io.avro.RankedName> names,
+      Function<org.gbif.pipelines.io.avro.RankedName, String> valueExtractor) {
+
+    LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
+    Set<String> ranks = new LinkedHashSet<>();
+    int depth = 0;
+    for (org.gbif.pipelines.io.avro.RankedName rankedName : names) {
+      String rankToUse = rankedName.getRank();
+      if (ranks.contains(rankedName.getRank())) {
+        rankToUse = rankedName.getRank() + "_" + depth;
+      } else {
+        ranks.add(rankedName.getRank());
+      }
+      map.put(rankToUse, valueExtractor.apply(rankedName));
+      depth++;
+    }
+    return map;
+  }
+
   public static Classification convertToClassification(TaxonRecord taxon) {
 
     Classification.Builder classificationBuilder =
         Classification.newBuilder()
             .setClassification(
-                taxon.getClassification().stream()
-                    .collect(
-                        Collectors.toMap(
-                            org.gbif.pipelines.io.avro.RankedName::getRank,
-                            org.gbif.pipelines.io.avro.RankedName::getName,
-                            (existing, replacement) -> existing,
-                            LinkedHashMap::new)))
+                convertToMap(
+                    taxon.getClassification(), org.gbif.pipelines.io.avro.RankedName::getName))
             .setClassificationKeys(
-                taxon.getClassification().stream()
-                    .collect(
-                        Collectors.toMap(
-                            org.gbif.pipelines.io.avro.RankedName::getRank,
-                            org.gbif.pipelines.io.avro.RankedName::getKey,
-                            (existing, replacement) -> existing,
-                            LinkedHashMap::new)))
+                convertToMap(
+                    taxon.getClassification(), org.gbif.pipelines.io.avro.RankedName::getKey))
             .setTaxonKeys(JsonConverter.convertTaxonKey(taxon))
             .setIucnRedListCategoryCode(taxon.getIucnRedListCategoryCode())
             .setUsage(JsonConverter.convertToUsage(taxon).orElse(null));
