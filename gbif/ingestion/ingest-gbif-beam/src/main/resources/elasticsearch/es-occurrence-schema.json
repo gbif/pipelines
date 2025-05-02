@@ -35,26 +35,29 @@
       }
     },
     {
-      "classifications_usage_name": {
+      "classifications_usage_genericName": {
         "path_match": "classifications.*.usage.genericName",
         "mapping": {
-          "type": "text"
+          "type": "keyword",
+          "index": false
         }
       }
     },
     {
-      "classifications_usage_name": {
+      "classifications_usage_infraspecificEpithet": {
         "path_match": "classifications.*.usage.infraspecificEpithet",
         "mapping": {
-          "type": "text"
+          "type": "keyword",
+          "index": false
         }
       }
     },
     {
-      "classifications_usage_name": {
+      "classifications_usage_specificEpithet": {
         "path_match": "classifications.*.usage.specificEpithet",
         "mapping": {
-          "type": "text"
+          "type": "keyword",
+          "index": false
         }
       }
     },
@@ -62,7 +65,8 @@
       "classifications_usage_authorship": {
         "path_match": "classifications.*.usage.authorship",
         "mapping": {
-          "type": "text"
+          "type": "keyword",
+          "index": false
         }
       }
     },
@@ -94,7 +98,8 @@
       "classifications_acceptedUsage_authorship": {
         "path_match": "classifications.*.acceptedUsage.authorship",
         "mapping": {
-          "type": "text"
+          "type": "keyword",
+          "index": false
         }
       }
     },
