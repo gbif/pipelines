@@ -72,36 +72,36 @@
       "sex": {
         "type": "object",
         "properties": {
-          "concept": {"type": "keyword"},
-          "lineage": {"type": "keyword", "copy_to": "all"}
+          "concept": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+          "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
         }
       },
       "lifeStage": {
         "type": "object",
         "properties": {
-          "concept": {"type": "keyword"},
-          "lineage": {"type": "keyword", "copy_to": "all"}
+          "concept": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+          "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
         }
       },
       "establishmentMeans": {
         "type": "object",
         "properties": {
-          "concept": {"type": "keyword"},
-          "lineage": {"type": "keyword", "copy_to": "all"}
+          "concept": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+          "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
         }
       },
       "pathway": {
         "type": "object",
         "properties": {
-          "concept": {"type": "keyword"},
-          "lineage": {"type": "keyword", "copy_to": "all"}
+          "concept": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+          "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
         }
       },
       "degreeOfEstablishment": {
         "type": "object",
         "properties": {
-          "concept": {"type": "keyword"},
-          "lineage": {"type": "keyword", "copy_to": "all"}
+          "concept": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+          "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
         }
       },
 
@@ -109,8 +109,8 @@
       "typeStatus": {
         "type": "object",
         "properties": {
-          "concepts": {"type": "keyword"},
-          "lineage": {"type": "keyword", "copy_to": "all"}
+          "concepts": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+          "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
         }
       },
       "typifiedName": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
@@ -256,7 +256,7 @@
       },
       "otherCatalogNumbersJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
 
-      "occurrenceStatus": {"type": "keyword", "copy_to": "all"},
+      "occurrenceStatus": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
 
       "isSequenced": {"type": "boolean"},
       "associatedSequences": {"type": "keyword", "copy_to": "all"},
@@ -341,71 +341,71 @@
           "earliestEonOrLowestEonothem": {
             "type": "object",
             "properties": {
-              "concept": {"type": "keyword"},
-              "lineage": {"type": "keyword", "copy_to": "all"}
+              "concept": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+              "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
             }
           },
           "latestEonOrHighestEonothem": {
             "type": "object",
             "properties": {
-              "concept": {"type": "keyword"},
-              "lineage": {"type": "keyword", "copy_to": "all"}
+              "concept": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+              "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
             }
           },
           "earliestEraOrLowestErathem": {
             "type": "object",
             "properties": {
-              "concept": {"type": "keyword"},
-              "lineage": {"type": "keyword", "copy_to": "all"}
+              "concept": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+              "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
             }
           },
           "latestEraOrHighestErathem": {
             "type": "object",
             "properties": {
-              "concept": {"type": "keyword"},
-              "lineage": {"type": "keyword", "copy_to": "all"}
+              "concept": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+              "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
             }
           },
           "earliestPeriodOrLowestSystem": {
             "type": "object",
             "properties": {
-              "concept": {"type": "keyword"},
-              "lineage": {"type": "keyword", "copy_to": "all"}
+              "concept": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+              "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
             }
           },
           "latestPeriodOrHighestSystem": {
             "type": "object",
             "properties": {
-              "concept": {"type": "keyword"},
-              "lineage": {"type": "keyword", "copy_to": "all"}
+              "concept": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+              "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
             }
           },
           "earliestEpochOrLowestSeries": {
             "type": "object",
             "properties": {
-              "concept": {"type": "keyword"},
-              "lineage": {"type": "keyword", "copy_to": "all"}
+              "concept": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+              "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
             }
           },
           "latestEpochOrHighestSeries": {
             "type": "object",
             "properties": {
-              "concept": {"type": "keyword"},
-              "lineage": {"type": "keyword", "copy_to": "all"}
+              "concept": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+              "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
             }
           },
           "earliestAgeOrLowestStage": {
             "type": "object",
             "properties": {
-              "concept": {"type": "keyword"},
-              "lineage": {"type": "keyword", "copy_to": "all"}
+              "concept": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+              "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
             }
           },
           "latestAgeOrHighestStage": {
             "type": "object",
             "properties": {
-              "concept": {"type": "keyword"},
-              "lineage": {"type": "keyword", "copy_to": "all"}
+              "concept": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+              "lineage": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
             }
           },
           "lowestBiostratigraphicZone": {"type": "keyword", "copy_to": "all"},

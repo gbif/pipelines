@@ -456,10 +456,12 @@
           "type": "object",
           "properties": {
             "concept": {
-              "type": "keyword"
+              "type": "keyword",
+              "normalizer": "lowercase_normalizer"
             },
             "lineage": {
               "type": "keyword",
+              "normalizer": "lowercase_normalizer",
               "copy_to": "all"
             }
           }
@@ -472,10 +474,12 @@
           "type": "object",
           "properties": {
             "concept": {
-              "type": "keyword"
+              "type": "keyword",
+              "normalizer": "lowercase_normalizer"
             },
             "lineage": {
               "type": "keyword",
+              "normalizer": "lowercase_normalizer",
               "copy_to": "all"
             }
           }
@@ -484,10 +488,12 @@
           "type": "object",
           "properties": {
             "concept": {
-              "type": "keyword"
+              "type": "keyword",
+              "normalizer": "lowercase_normalizer"
             },
             "lineage": {
               "type": "keyword",
+              "normalizer": "lowercase_normalizer",
               "copy_to": "all"
             }
           }
@@ -496,10 +502,12 @@
           "type": "object",
           "properties": {
             "concept": {
-              "type": "keyword"
+              "type": "keyword",
+              "normalizer": "lowercase_normalizer"
             },
             "lineage": {
               "type": "keyword",
+              "normalizer": "lowercase_normalizer",
               "copy_to": "all"
             }
           }
@@ -508,10 +516,12 @@
           "type": "object",
           "properties": {
             "concept": {
-              "type": "keyword"
+              "type": "keyword",
+              "normalizer": "lowercase_normalizer"
             },
             "lineage": {
               "type": "keyword",
+              "normalizer": "lowercase_normalizer",
               "copy_to": "all"
             }
           }
@@ -523,10 +533,12 @@
           "type": "object",
           "properties": {
             "concept": {
-              "type": "keyword"
+              "type": "keyword",
+              "normalizer": "lowercase_normalizer"
             },
             "lineage": {
               "type": "keyword",
+              "normalizer": "lowercase_normalizer",
               "copy_to": "all"
             }
           }
@@ -906,6 +918,7 @@
         },
         "occurrenceStatus": {
           "type": "keyword",
+          "normalizer": "lowercase_normalizer",
           "copy_to": "all"
         },
         "organismQuantity": {
