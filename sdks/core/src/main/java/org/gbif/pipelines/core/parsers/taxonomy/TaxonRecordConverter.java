@@ -63,6 +63,11 @@ public class TaxonRecordConverter {
         .setName(rankedNameApi.getName())
         .setRank(rankedNameApi.getRank())
         .setAuthorship(rankedNameApi.getAuthorship())
+        .setCode(rankedNameApi.getCode())
+        .setInfragenericEpithet(rankedNameApi.getInfragenericEpithet())
+        .setInfraspecificEpithet(rankedNameApi.getInfraspecificEpithet())
+        .setSpecificEpithet(rankedNameApi.getSpecificEpithet())
+        .setFormattedName(rankedNameApi.getFormattedName())
         .build();
   }
 

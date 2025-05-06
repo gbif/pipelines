@@ -71,6 +71,15 @@
       }
     },
     {
+      "classifications_usage_formattedName": {
+        "path_match": "classifications.*.usage.formattedName",
+        "mapping": {
+          "type": "keyword",
+          "index": false
+        }
+      }
+    },
+    {
       "classifications_acceptedUsage_key": {
         "path_match": "classifications.*.acceptedUsage.key",
         "mapping": {

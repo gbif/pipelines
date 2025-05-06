@@ -354,7 +354,6 @@ public class JsonConverter {
     }
 
     var usage = taxonRecord.getUsage();
-    var parsed = taxonRecord.getUsageParsedName();
 
     Usage.Builder builder = Usage.newBuilder();
 
@@ -363,17 +362,14 @@ public class JsonConverter {
           .setName(usage.getName())
           .setRank(usage.getRank())
           .setKey(usage.getKey())
-          .setAuthorship(usage.getAuthorship());
+          .setAuthorship(usage.getAuthorship())
+          .setCode(usage.getCode())
+          .setSpecificEpithet(usage.getSpecificEpithet())
+          .setInfragenericEpithet(usage.getInfragenericEpithet())
+          .setInfraspecificEpithet(usage.getInfraspecificEpithet())
+          .setFormattedName(usage.getFormattedName());
     }
-
     builder.setGenericName(convertGenericName(taxonRecord).orElse(null));
-
-    if (parsed != null) {
-      builder
-          .setInfraspecificEpithet(parsed.getInfraspecificEpithet())
-          .setSpecificEpithet(parsed.getSpecificEpithet());
-    }
-
     return Optional.of(builder.build());
   }
 

@@ -142,10 +142,13 @@
       {"name":"key","type":["null","string"],"default":null,"doc":""},
       {"name":"name","type":["null","string"],"default":null,"doc":""},
       {"name":"rank","type":["null","string"],"default":null},
+      {"name":"code","type":["null","string"],"default":null},
+      {"name":"genericName","type":["null","string"],"default":null},
       {"name":"authorship","type":["null","string"],"default":null},
+      {"name":"infragenericEpithet","type":["null","string"],"default":null},
       {"name":"specificEpithet","type":["null","string"],"default":null},
       {"name":"infraspecificEpithet","type":["null","string"],"default":null},
-      {"name":"genericName","type":["null","string"],"default":null}
+      {"name":"formattedName","type":["null","string"],"default":null}
     ]
   },
   {
