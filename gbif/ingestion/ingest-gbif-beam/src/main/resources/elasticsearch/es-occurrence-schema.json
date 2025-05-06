@@ -71,6 +71,15 @@
       }
     },
     {
+      "classifications_usage_code": {
+        "path_match": "classifications.*.usage.code",
+        "mapping": {
+          "type": "keyword",
+          "index": false
+        }
+      }
+    },
+    {
       "classifications_usage_formattedName": {
         "path_match": "classifications.*.usage.formattedName",
         "mapping": {
@@ -113,7 +122,52 @@
       }
     },
     {
-      "classifications_acceptedUsage_authorship": {
+      "classifications_acceptedUsage_code": {
+        "path_match": "classifications.*.acceptedUsage.code",
+        "mapping": {
+          "type": "keyword",
+          "index": false
+        }
+      }
+    },
+    {
+      "classifications_acceptedUsage_genericName": {
+        "path_match": "classifications.*.acceptedUsage.genericName",
+        "mapping": {
+          "type": "keyword",
+          "index": false
+        }
+      }
+    },
+    {
+      "classifications_acceptedUsage_infraspecificEpithet": {
+        "path_match": "classifications.*.acceptedUsage.infraspecificEpithet",
+        "mapping": {
+          "type": "keyword",
+          "index": false
+        }
+      }
+    },
+    {
+      "classifications_acceptedUsage_specificEpithet": {
+        "path_match": "classifications.*.acceptedUsage.specificEpithet",
+        "mapping": {
+          "type": "keyword",
+          "index": false
+        }
+      }
+    },
+    {
+      "classifications_acceptedUsage_formattedName": {
+        "path_match": "classifications.*.acceptedUsage.formattedName",
+        "mapping": {
+          "type": "keyword",
+          "index": false
+        }
+      }
+    },
+    {
+      "classifications_status": {
         "path_match": "classifications.*.status",
         "mapping": {
           "type": "keyword"

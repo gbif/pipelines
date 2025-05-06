@@ -252,7 +252,7 @@
     "doc":"Taxonomy classification",
     "fields":[
       {"name":"usage","type":["null","Usage"],"default":null,"doc":""},
-      {"name":"acceptedUsage","type":["null","RankedNameWithAuthorship"],"default":null,"doc":""},
+      {"name":"acceptedUsage","type":["null","Usage"],"default":null,"doc":""},
       {"name":"status","type":["null","string"],"default":null,"doc":""},
       {"name":"classification",
         "type":{ "type":"map","values":"string" },

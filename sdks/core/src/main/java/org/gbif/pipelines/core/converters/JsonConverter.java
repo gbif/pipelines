@@ -348,28 +348,39 @@ public class JsonConverter {
                     .build());
   }
 
+  public static Optional<Usage> convertToAcceptedUsage(
+      org.gbif.pipelines.io.avro.TaxonRecord taxonRecord) {
+    return buildUsage(taxonRecord, true);
+  }
+
   public static Optional<Usage> convertToUsage(org.gbif.pipelines.io.avro.TaxonRecord taxonRecord) {
+    Optional<Usage> usage = buildUsage(taxonRecord, false);
+    usage.ifPresent(u -> u.setGenericName(convertGenericName(taxonRecord).orElse(null)));
+    return usage;
+  }
+
+  private static Optional<Usage> buildUsage(
+      org.gbif.pipelines.io.avro.TaxonRecord taxonRecord, boolean accepted) {
     if (taxonRecord == null) {
       return Optional.empty();
     }
 
-    var usage = taxonRecord.getUsage();
-
+    var usageData = accepted ? taxonRecord.getAcceptedUsage() : taxonRecord.getUsage();
     Usage.Builder builder = Usage.newBuilder();
 
-    if (usage != null) {
+    if (usageData != null) {
       builder
-          .setName(usage.getName())
-          .setRank(usage.getRank())
-          .setKey(usage.getKey())
-          .setAuthorship(usage.getAuthorship())
-          .setCode(usage.getCode())
-          .setSpecificEpithet(usage.getSpecificEpithet())
-          .setInfragenericEpithet(usage.getInfragenericEpithet())
-          .setInfraspecificEpithet(usage.getInfraspecificEpithet())
-          .setFormattedName(usage.getFormattedName());
+          .setName(usageData.getName())
+          .setRank(usageData.getRank())
+          .setKey(usageData.getKey())
+          .setAuthorship(usageData.getAuthorship())
+          .setCode(usageData.getCode())
+          .setSpecificEpithet(usageData.getSpecificEpithet())
+          .setInfragenericEpithet(usageData.getInfragenericEpithet())
+          .setInfraspecificEpithet(usageData.getInfraspecificEpithet())
+          .setFormattedName(usageData.getFormattedName());
     }
-    builder.setGenericName(convertGenericName(taxonRecord).orElse(null));
+
     return Optional.of(builder.build());
   }
 
@@ -514,10 +525,8 @@ public class JsonConverter {
                     taxon.getClassification(), org.gbif.pipelines.io.avro.RankedName::getKey))
             .setTaxonKeys(JsonConverter.convertTaxonKey(taxon))
             .setIucnRedListCategoryCode(taxon.getIucnRedListCategoryCode())
-            .setUsage(JsonConverter.convertToUsage(taxon).orElse(null));
-
-    JsonConverter.convertRankedName(taxon.getAcceptedUsage())
-        .ifPresent(classificationBuilder::setAcceptedUsage);
+            .setUsage(JsonConverter.convertToUsage(taxon).orElse(null))
+            .setAcceptedUsage(JsonConverter.convertToAcceptedUsage(taxon).orElse(null));
 
     if (taxon.getIssues() != null
         && taxon.getIssues().getIssueList() != null
