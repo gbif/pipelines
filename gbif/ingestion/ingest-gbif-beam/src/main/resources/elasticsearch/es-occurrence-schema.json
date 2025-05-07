@@ -178,7 +178,8 @@
       "classifications_classification_rank": {
         "path_match": "classifications.*.classification.*",
         "mapping": {
-          "type": "keyword"
+          "type": "keyword",
+          "index": false
         }
       }
     },
@@ -186,7 +187,8 @@
       "classifications_classification_name": {
         "path_match": "classifications.*.classification.*.*",
         "mapping": {
-          "type": "text"
+          "type": "text",
+          "index": false
         }
       }
     },
