@@ -83,16 +83,16 @@ public class GBIFClassification {
     c.species = source.getString("species", schema);
     c.scientificName = source.getString("scientificname", schema);
     c.acceptedScientificName = source.getString("acceptedscientificname", schema);
-    c.kingdomKey = source.getInteger("kingdomkey", schema) + "";
-    c.phylumKey = source.getInteger("phylumkey", schema) + "";
-    c.classKey = source.getInteger("classkey", schema) + "";
-    c.orderKey = source.getInteger("orderkey", schema) + "";
-    c.familyKey = source.getInteger("familykey", schema) + "";
-    c.genusKey = source.getInteger("genuskey", schema) + "";
-    c.subGenusKey = source.getInteger("subgenuskey", schema) + "";
-    c.speciesKey = source.getInteger("specieskey", schema) + "";
-    c.taxonKey = source.getInteger("taxonkey", schema) + "";
-    c.acceptedTaxonKey = source.getInteger("acceptedtaxonkey", schema) + "";
+    c.kingdomKey = source.getString("kingdomkey", schema) + "";
+    c.phylumKey = source.getString("phylumkey", schema) + "";
+    c.classKey = source.getString("classkey", schema) + "";
+    c.orderKey = source.getString("orderkey", schema) + "";
+    c.familyKey = source.getString("familykey", schema) + "";
+    c.genusKey = source.getString("genuskey", schema) + "";
+    c.subGenusKey = source.getString("subgenuskey", schema) + "";
+    c.speciesKey = source.getString("specieskey", schema) + "";
+    c.taxonKey = source.getString("taxonkey", schema) + "";
+    c.acceptedTaxonKey = source.getString("acceptedtaxonkey", schema) + "";
     return c;
   }
 
