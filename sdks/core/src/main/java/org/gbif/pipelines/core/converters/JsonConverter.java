@@ -350,12 +350,16 @@ public class JsonConverter {
 
   public static Optional<Usage> convertToAcceptedUsage(
       org.gbif.pipelines.io.avro.TaxonRecord taxonRecord) {
-    return buildUsage(taxonRecord, true);
+    Optional<Usage> usage = buildUsage(taxonRecord, true);
+    usage.ifPresent(
+        u -> u.setGenericName(convertGenericNameFromClassification(taxonRecord).orElse(null)));
+    return usage;
   }
 
   public static Optional<Usage> convertToUsage(org.gbif.pipelines.io.avro.TaxonRecord taxonRecord) {
     Optional<Usage> usage = buildUsage(taxonRecord, false);
-    usage.ifPresent(u -> u.setGenericName(convertGenericName(taxonRecord).orElse(null)));
+    usage.ifPresent(
+        u -> u.setGenericName(convertGenericNameFromParsedName(taxonRecord).orElse(null)));
     return usage;
   }
 
@@ -471,7 +475,7 @@ public class JsonConverter {
     return Optional.of(build);
   }
 
-  public static Optional<String> convertGenericName(TaxonRecord taxonRecord) {
+  public static Optional<String> convertGenericNameFromParsedName(TaxonRecord taxonRecord) {
     // only set generic name for genus or more specific
     if (Objects.nonNull(taxonRecord.getUsage())) {
       try {
@@ -479,6 +483,26 @@ public class JsonConverter {
           return Optional.ofNullable(taxonRecord.getUsageParsedName())
               .map(upn -> upn.getGenus() != null ? upn.getGenus() : upn.getUninomial());
         }
+      } catch (java.lang.IllegalArgumentException ex) {
+        // throw if rank unrecognised - more common now with xcol
+        return Optional.empty();
+      }
+    }
+    return Optional.empty();
+  }
+
+  public static Optional<String> convertGenericNameFromClassification(TaxonRecord taxonRecord) {
+    // only set generic name for genus or more specific
+    if (Objects.nonNull(taxonRecord.getClassification())) {
+      try {
+        Optional<org.gbif.pipelines.io.avro.RankedName> genus =
+            taxonRecord.getClassification().stream()
+                .filter(rn -> Rank.GENUS.name().equalsIgnoreCase(rn.getRank()))
+                .findFirst();
+        if (genus.isPresent()) {
+          return Optional.of(genus.get().getName());
+        }
+
       } catch (java.lang.IllegalArgumentException ex) {
         // throw if rank unrecognised - more common now with xcol
         return Optional.empty();
@@ -567,7 +591,7 @@ public class JsonConverter {
     JsonConverter.convertParsedName(taxon.getUsageParsedName())
         .ifPresent(classificationBuilder::setUsageParsedName);
 
-    JsonConverter.convertGenericName(taxon)
+    JsonConverter.convertGenericNameFromParsedName(taxon)
         .ifPresent(
             genericName -> {
               if (classificationBuilder.getUsageParsedName() != null) {
