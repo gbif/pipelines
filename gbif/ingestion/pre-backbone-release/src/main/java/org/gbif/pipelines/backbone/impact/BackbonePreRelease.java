@@ -44,9 +44,6 @@ public class BackbonePreRelease {
     BackbonePreReleaseOptions options =
         PipelineOptionsFactory.fromArgs(args).as(BackbonePreReleaseOptions.class);
     options.setRunner(SparkRunner.class);
-    Pipeline p = Pipeline.create(options);
-
-    // register hdfs configs
     String hdfsPath = options.getHdfsSiteConfig();
     String corePath = options.getCoreSiteConfig();
     boolean isHdfsExist = !Strings.isNullOrEmpty(hdfsPath) && new File(hdfsPath).exists();
@@ -57,6 +54,8 @@ public class BackbonePreRelease {
       conf.addResource(new Path(corePath));
       options.setHdfsConfiguration(Collections.singletonList(conf));
     }
+
+    Pipeline p = Pipeline.create(options);
 
     final HCatSchema schema = readSchema(options);
 
@@ -160,7 +159,7 @@ public class BackbonePreRelease {
                 .withSpecificEpithet(source.getString("v_specificepithet", schema))
                 .withInfraspecificEpithet(source.getString("v_infraspecificepithet", schema))
                 .withRank(source.getString("v_taxonrank", schema))
-                .withVerbatimRank(source.getString("v_verbatimtaxonRank", schema))
+                .withVerbatimRank(source.getString("v_verbatimtaxonrank", schema))
                 .withScientificNameID(source.getString("v_scientificnameid", schema))
                 .withTaxonID(source.getString("v_taxonid", schema))
                 .withTaxonConceptID(source.getString("v_taxonconceptid", schema))
@@ -263,6 +262,9 @@ public class BackbonePreRelease {
       return String.join(
           "\t",
           String.valueOf(count),
+          verbatim.getTaxonID(),
+          verbatim.getTaxonConceptID(),
+          verbatim.getScientificNameID(),
           verbatim.getKingdom(),
           verbatim.getPhylum(),
           verbatim.getClazz(),
