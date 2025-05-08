@@ -22,7 +22,8 @@
       "classifications_usage_rank": {
         "path_match": "classifications.*.usage.rank",
         "mapping": {
-          "type": "keyword"
+          "type": "keyword",
+          "index": false
         }
       }
     },
@@ -100,7 +101,8 @@
       "classifications_acceptedUsage_rank": {
         "path_match": "classifications.*.acceptedUsage.rank",
         "mapping": {
-          "type": "keyword"
+          "type": "keyword",
+          "index": false
         }
       }
     },
@@ -187,7 +189,7 @@
       "classifications_classification_name": {
         "path_match": "classifications.*.classification.*.*",
         "mapping": {
-          "type": "text",
+          "type": "keyword",
           "index": false
         }
       }
