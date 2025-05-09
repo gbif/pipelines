@@ -7,14 +7,14 @@ import java.util.Collections;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.location.parser.ContinentParser;
 import org.gbif.pipelines.core.utils.ExtendedRecordBuilder;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
+import org.gbif.rest.client.geocode.GeocodeResponse.Location;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -22,13 +22,15 @@ public class ContinentParserTest {
 
   private static final String TEST_ID = "1";
 
-  private static final KeyValueStore<LatLng, GeocodeResponse> GEOCODE_KV_STORE;
+  private static final KeyValueStore<GeocodeRequest, GeocodeResponse> GEOCODE_KV_STORE;
 
   static {
     KeyValueTestStore testStore = new KeyValueTestStore();
-    testStore.put(LatLng.create(38.7, 29.6), toGeocodeResponse(Continent.ASIA, Country.TURKEY));
-    testStore.put(LatLng.create(30.0, -20.0), toGeocodeResponse(Country.SPAIN));
-    testStore.put(LatLng.create(10.3, -1.8961), toGeocodeResponse(Continent.AFRICA, Country.GHANA));
+    testStore.put(
+        GeocodeRequest.create(38.7, 29.6), toGeocodeResponse(Continent.ASIA, Country.TURKEY));
+    testStore.put(GeocodeRequest.create(30.0, -20.0), toGeocodeResponse(Country.SPAIN));
+    testStore.put(
+        GeocodeRequest.create(10.3, -1.8961), toGeocodeResponse(Continent.AFRICA, Country.GHANA));
 
     GEOCODE_KV_STORE = GeocodeKvStore.create(testStore);
   }
@@ -54,7 +56,7 @@ public class ContinentParserTest {
     return new GeocodeResponse(Collections.singletonList(location));
   }
 
-  private KeyValueStore<LatLng, GeocodeResponse> getGeocodeKvStore() {
+  private KeyValueStore<GeocodeRequest, GeocodeResponse> getGeocodeKvStore() {
     return GEOCODE_KV_STORE;
   }
 

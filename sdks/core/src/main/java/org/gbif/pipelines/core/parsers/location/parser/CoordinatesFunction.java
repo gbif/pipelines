@@ -11,31 +11,29 @@ import java.util.TreeSet;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 
 /** Models a function that can be applied to a coordinates. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CoordinatesFunction {
 
-  public static final UnaryOperator<LatLng> NEGATED_LAT_FN =
+  public static final UnaryOperator<GeocodeRequest> NEGATED_LAT_FN =
       latLng ->
-          LatLng.create(
-              -1d * latLng.getLatitude(), latLng.getLongitude(), latLng.getUncertaintyMeters());
-  public static final UnaryOperator<LatLng> NEGATED_LNG_FN =
+          GeocodeRequest.create(
+              -1d * latLng.getLat(), latLng.getLng(), latLng.getUncertaintyMeters());
+  public static final UnaryOperator<GeocodeRequest> NEGATED_LNG_FN =
       latLng ->
-          LatLng.create(
-              latLng.getLatitude(), -1d * latLng.getLongitude(), latLng.getUncertaintyMeters());
-  public static final UnaryOperator<LatLng> NEGATED_COORDS_FN =
+          GeocodeRequest.create(
+              latLng.getLat(), -1d * latLng.getLng(), latLng.getUncertaintyMeters());
+  public static final UnaryOperator<GeocodeRequest> NEGATED_COORDS_FN =
       latLng ->
-          LatLng.create(
-              -1d * latLng.getLatitude(),
-              -1d * latLng.getLongitude(),
-              latLng.getUncertaintyMeters());
-  public static final UnaryOperator<LatLng> SWAPPED_COORDS_FN =
+          GeocodeRequest.create(
+              -1d * latLng.getLat(), -1d * latLng.getLng(), latLng.getUncertaintyMeters());
+  public static final UnaryOperator<GeocodeRequest> SWAPPED_COORDS_FN =
       latLng ->
-          LatLng.create(latLng.getLongitude(), latLng.getLatitude(), latLng.getUncertaintyMeters());
+          GeocodeRequest.create(latLng.getLng(), latLng.getLat(), latLng.getUncertaintyMeters());
 
-  public static Set<String> getIssueTypes(UnaryOperator<LatLng> transformation) {
+  public static Set<String> getIssueTypes(UnaryOperator<GeocodeRequest> transformation) {
     if (transformation == NEGATED_LAT_FN) {
       return Collections.singleton(PRESUMED_NEGATED_LATITUDE.name());
     }

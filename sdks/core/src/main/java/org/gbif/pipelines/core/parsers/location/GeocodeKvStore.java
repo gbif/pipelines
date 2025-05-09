@@ -6,20 +6,21 @@ import java.io.Serializable;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.parsers.location.cache.GeocodeBitmapCache;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
 @Slf4j
-public class GeocodeKvStore implements KeyValueStore<LatLng, GeocodeResponse>, Serializable {
+public class GeocodeKvStore
+    implements KeyValueStore<GeocodeRequest, GeocodeResponse>, Serializable {
 
   private static final long serialVersionUID = -2090636199984570712L;
 
-  private final KeyValueStore<LatLng, GeocodeResponse> kvStore;
+  private final KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore;
   private final GeocodeBitmapCache bitmapCache;
 
   private GeocodeKvStore(
-      @NonNull KeyValueStore<LatLng, GeocodeResponse> kvStore,
+      @NonNull KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore,
       BufferedImage image,
       String kvStoreType,
       boolean missEqualsFail) {
@@ -34,16 +35,16 @@ public class GeocodeKvStore implements KeyValueStore<LatLng, GeocodeResponse>, S
   }
 
   public static GeocodeKvStore create(
-      KeyValueStore<LatLng, GeocodeResponse> kvStore, BufferedImage image) {
+      KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore, BufferedImage image) {
     return new GeocodeKvStore(kvStore, image, GeocodeBitmapCache.DEFAULT_KV_STORE, true);
   }
 
-  public static GeocodeKvStore create(KeyValueStore<LatLng, GeocodeResponse> kvStore) {
+  public static GeocodeKvStore create(KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
     return new GeocodeKvStore(kvStore, null, GeocodeBitmapCache.DEFAULT_KV_STORE, true);
   }
 
   public static GeocodeKvStore create(
-      KeyValueStore<LatLng, GeocodeResponse> kvStore,
+      KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore,
       BufferedImage image,
       String kvStoreType,
       boolean missEqualsFail) {
@@ -51,13 +52,15 @@ public class GeocodeKvStore implements KeyValueStore<LatLng, GeocodeResponse>, S
   }
 
   public static GeocodeKvStore create(
-      KeyValueStore<LatLng, GeocodeResponse> kvStore, String kvStoreType, boolean missEqualsFail) {
+      KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore,
+      String kvStoreType,
+      boolean missEqualsFail) {
     return new GeocodeKvStore(kvStore, null, kvStoreType, missEqualsFail);
   }
 
   /** Simple get candidates by point. */
   @Override
-  public GeocodeResponse get(LatLng latLng) {
+  public GeocodeResponse get(GeocodeRequest latLng) {
     GeocodeResponse locations = null;
 
     // Check the image map for a sure location.

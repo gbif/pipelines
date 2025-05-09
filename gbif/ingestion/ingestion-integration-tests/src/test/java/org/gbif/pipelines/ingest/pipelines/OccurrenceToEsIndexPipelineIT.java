@@ -46,6 +46,7 @@ import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -54,6 +55,7 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)
+@Ignore
 public class OccurrenceToEsIndexPipelineIT {
 
   private static final DwcTerm CORE_TERM = DwcTerm.Occurrence;

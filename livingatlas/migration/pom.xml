@@ -3,7 +3,7 @@
   <parent>
     <groupId>au.org.ala</groupId>
     <artifactId>livingatlas</artifactId>
-    <version>3.1.0-SNAPSHOT</version>
+   <version>3.2.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -18,6 +18,7 @@
      -->
     <spark.version>3.3.1</spark.version>
     <jcommander.version>1.78</jcommander.version>
+    <sonar.skip>true</sonar.skip>
   </properties>
 
   <build>

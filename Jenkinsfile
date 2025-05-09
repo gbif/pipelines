@@ -11,7 +11,7 @@ pipeline {
   }
   tools {
     maven 'Maven 3.8.5'
-    jdk 'OpenJDK11'
+    jdk 'OpenJDK17'
   }
   options {
     buildDiscarder(logRotator(numToKeepStr: '10'))
@@ -48,16 +48,23 @@ pipeline {
       }
     }
     stage('Quick build') {
+      tools {
+        jdk 'OpenJDK17'
+      }
       when {
         expression {
           env.BUILD_TYPE == 'QUICK'
         }
       }
       steps {
-        sh 'mvn clean verify -U -T 3 -P skip-release-it'
+          sh 'mvn clean verify -U -T 3 -P skip-release-it,pre-backbone-release-artifact'
       }
     }
+
     stage('Full build') {
+      tools {
+        jdk 'OpenJDK17'
+      }
       when {
         expression {
           env.BUILD_TYPE == 'FULL' && env.DRY_RUN == 'false'
@@ -85,7 +92,7 @@ pipeline {
     stage('Release version to nexus') {
       environment {
         PROFILES = getProfiles()
-      }
+    }
       when {
         allOf {
           expression { params.RELEASE }
@@ -109,13 +116,19 @@ pipeline {
         sh 'build/ingestion-docker-build.sh ${RELEASE} ${VERSION}'
       }
     }
-  }
-  post {
-    success {
-      echo 'Pipeline executed successfully!'
+
+    stage('Build and push Docker images: GBIF Impact') {
+      steps {
+        sh 'build/ingestion-docker-build.sh ${RELEASE} ${VERSION}'
+      }
     }
-    failure {
-      echo 'Pipeline execution failed!'
+  }
+    post {
+      success {
+        echo 'Pipeline executed successfully!'
+      }
+      failure {
+        echo 'Pipeline execution failed!'
     }
     cleanup {
       deleteDir()
@@ -124,7 +137,7 @@ pipeline {
 }
 
 def getProfiles() {
-  def profiles = "skip-release-it,gbif-artifacts"
+  def profiles = "skip-release-it,gbif-artifacts,pre-backbone-release-artifact"
   if (env.BUILD_TYPE == 'FULL') {
       profiles += ",extra-artifacts"
   }

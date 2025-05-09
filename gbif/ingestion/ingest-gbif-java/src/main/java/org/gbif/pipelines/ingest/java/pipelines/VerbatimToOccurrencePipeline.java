@@ -41,7 +41,7 @@ import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -68,10 +68,9 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
  *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
  *      {@link org.gbif.pipelines.io.avro.ImageRecord},
- *      {@link org.gbif.pipelines.io.avro.DnaDerivedDataRecord},
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
  *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
- *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.MultiTaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    3) Writes data to independent files
@@ -159,7 +158,7 @@ public class VerbatimToOccurrencePipeline {
     GbifIdAbsentTransform gbifIdAbsentTr = transformsFactory.createGbifIdAbsentTransform();
     ClusteringTransform clusteringTr = transformsFactory.createClusteringTransform();
     BasicTransform basicTr = transformsFactory.createBasicTransform();
-    TaxonomyTransform taxonomyTr = transformsFactory.createTaxonomyTransform();
+    MultiTaxonomyTransform multiTaxonomyTr = transformsFactory.createMultiTaxonomyTransform();
     VerbatimTransform verbatimTr = transformsFactory.createVerbatimTransform();
     GrscicollTransform grscicollTr = transformsFactory.createGrscicollTransform();
     LocationTransform locationTr = transformsFactory.createLocationTransform();
@@ -267,7 +266,7 @@ public class VerbatimToOccurrencePipeline {
           var imageWriter = createAvroWriter(options, imageTr, CORE_TERM, postfix);
           var dnaWriter = createAvroWriter(options, dnaTr, CORE_TERM, postfix);
           var audubonWriter = createAvroWriter(options, audubonTr, CORE_TERM, postfix);
-          var taxonWriter = createAvroWriter(options, taxonomyTr, CORE_TERM, postfix);
+          var multiTaxonWriter = createAvroWriter(options, multiTaxonomyTr, CORE_TERM, postfix);
           var grscicollWriter = createAvroWriter(options, grscicollTr, CORE_TERM, postfix);
           var locationWriter = createAvroWriter(options, locationTr, CORE_TERM, postfix);
           var gbifIdInvalidWriter =
@@ -315,8 +314,8 @@ public class VerbatimToOccurrencePipeline {
                 if (audubonTr.checkType(types)) {
                   audubonTr.processElement(er).ifPresent(audubonWriter::append);
                 }
-                if (taxonomyTr.checkType(types)) {
-                  taxonomyTr.processElement(er).ifPresent(taxonWriter::append);
+                if (multiTaxonomyTr.checkType(types)) {
+                  multiTaxonomyTr.processElement(er).ifPresent(multiTaxonWriter::append);
                 }
                 if (grscicollTr.checkType(types)) {
                   grscicollTr.processElement(er, mdr).ifPresent(grscicollWriter::append);
@@ -368,7 +367,7 @@ public class VerbatimToOccurrencePipeline {
       log.error("Failed performing conversion on {}", e.getMessage());
       throw new IllegalStateException("Failed performing conversion on ", e);
     } finally {
-      Shutdown.doOnExit(basicTr, locationTr, taxonomyTr, grscicollTr, gbifIdTr);
+      Shutdown.doOnExit(basicTr, locationTr, grscicollTr, gbifIdTr);
     }
 
     log.info("Save metrics into the file and set files owner");

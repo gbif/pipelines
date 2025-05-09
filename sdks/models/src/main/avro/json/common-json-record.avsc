@@ -129,10 +129,37 @@
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
     "fields":[
-      {"name":"key","type":["null","int"],"default":null,"doc":""},
-      {"name":"guid","type":["null","string"],"default":null,"doc":""},
+      {"name":"key","type":["null","string"],"default":null,"doc":""},
       {"name":"name","type":["null","string"],"default":null,"doc":""},
       {"name":"rank","type":["null","string"],"default":null}
+    ]
+  },
+  {
+    "name":"Usage",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"key","type":["null","string"],"default":null,"doc":""},
+      {"name":"name","type":["null","string"],"default":null,"doc":""},
+      {"name":"rank","type":["null","string"],"default":null},
+      {"name":"code","type":["null","string"],"default":null},
+      {"name":"genericName","type":["null","string"],"default":null},
+      {"name":"authorship","type":["null","string"],"default":null},
+      {"name":"infragenericEpithet","type":["null","string"],"default":null},
+      {"name":"specificEpithet","type":["null","string"],"default":null},
+      {"name":"infraspecificEpithet","type":["null","string"],"default":null},
+      {"name":"formattedName","type":["null","string"],"default":null}
+    ]
+  },
+  {
+    "name":"RankedNameWithAuthorship",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name":"key","type":["null","string"],"default":null,"doc":""},
+      {"name":"name","type":["null","string"],"default":null,"doc":""},
+      {"name":"rank","type":["null","string"],"default":null},
+      {"name":"authorship","type":["null","string"],"default":null}
     ]
   },
   {
@@ -188,9 +215,9 @@
     "name":"GbifClassification",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
-    "doc":"GBIF taxonomy classification",
+    "doc":"GBIF taxonomy classification (deprecated)",
     "fields":[
-      {"name":"acceptedUsage","type":["null","RankedName"],"default":null,"doc":""},
+      {"name":"acceptedUsage","type":["null","RankedNameWithAuthorship"],"default":null,"doc":""},
       {"name":"classification","type":{ "type":"array","items":"RankedName" },"default":[]},
       {"name":"classificationPath","type":["null","string"],"default":null,"doc":""},
       {"name":"diagnostics","type":["null","Diagnostic"],"default":null,"doc":""},
@@ -212,10 +239,42 @@
       {"name":"taxonID","type":["null","string"],"default":null,"doc":""},
       {"name":"taxonConceptID","type":["null","string"],"default":null,"doc":""},
       {"name":"taxonKey","type":{"type":"array","items":"string"},"default":[]},
-      {"name":"usage","type":["null","RankedName"],"default":null,"doc":""},
+      {"name":"usage","type":["null","RankedNameWithAuthorship"],"default":null,"doc":""},
       {"name":"usageParsedName","type":["null","ParsedName"],"default":null,"doc":""},
       {"name":"verbatimScientificName","type":["null","string"],"default":null,"doc":""},
       {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""}
+    ]
+  },
+  {
+    "name":"Classification",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"Taxonomy classification",
+    "fields":[
+      {"name":"usage","type":["null","Usage"],"default":null,"doc":""},
+      {"name":"acceptedUsage","type":["null","Usage"],"default":null,"doc":""},
+      {"name":"status","type":["null","string"],"default":null,"doc":""},
+      {"name":"classification",
+        "type":{ "type":"map","values":"string" },
+        "default": {}
+      },
+      {"name":"classificationKeys",
+        "type":{ "type":"map","values":"string" },
+        "default": {}
+      },
+      {"name":"classificationDepth",
+        "type":{ "type":"map","values":"string" },
+        "default": {}
+      },
+      {"name":"taxonKeys",
+        "type":{"type":"array","items":"string"},
+        "default":[]
+      },
+      {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""},
+      {"name":"issues",
+        "type":{"type":"array","items":"string"},
+        "default":[]
+      }
     ]
   },
   {
