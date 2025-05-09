@@ -18,11 +18,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.PipelinesException;
@@ -31,6 +30,7 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
+import org.spark_project.guava.collect.Iterables;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -206,73 +206,81 @@ public class LayerCrawler {
     InputStream inputStream = ALAFsUtils.openInputStream(fs, inputFilePath);
     Collection<List<String>> partitioned;
     try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-      partitioned = partition(reader.lines(), config.getSamplingService().getBatchSize());
+      Iterables.partition(reader.lines()::iterator, config.getSamplingService().getBatchSize())
+          .forEach(
+              (partition) -> {
+                processPartition(fs, layers, inputFilePath, outputDirectoryPath, partition);
+              });
+    }
+  }
+
+  @SneakyThrows
+  private void processPartition(
+      FileSystem fs,
+      String layers,
+      String inputFilePath,
+      String outputDirectoryPath,
+      List<String> partition) {
+    log.info("Partition size (no of coordinates) : {}", partition.size());
+    String coords = String.join(",", partition);
+
+    Instant batchStart = Instant.now();
+
+    // Submit a job to generate a join
+    Response<SamplingService.Batch> submit = service.submitIntersectBatch(layers, coords).execute();
+    String batchId = submit.body().getBatchId();
+
+    String state = UNKNOWN_STATUS;
+    while (!state.equalsIgnoreCase(FINISHED_STATUS) && !state.equalsIgnoreCase(ERROR_STATUS)) {
+      Response<SamplingService.BatchStatus> status = service.getBatchStatus(batchId).execute();
+      SamplingService.BatchStatus batchStatus = status.body();
+      state = batchStatus.getStatus();
+
+      Instant batchCurrentTime = Instant.now();
+
+      log.info(
+          "batch ID {} - status: {} - time elapses {} seconds",
+          batchId,
+          state,
+          Duration.between(batchStart, batchCurrentTime).getSeconds());
+
+      if (!state.equals(FINISHED_STATUS)) {
+        TimeUnit.MILLISECONDS.sleep(config.getSamplingService().getBatchStatusSleepTime());
+      } else {
+        log.info("Downloading sampling batch {}", batchId);
+
+        downloadFile(fs, outputDirectoryPath, batchId, batchStatus);
+
+        String zipFilePath = outputDirectoryPath + "/" + batchId + ".zip";
+        ReadableByteChannel readableByteChannel = ALAFsUtils.openByteChannel(fs, zipFilePath);
+        InputStream zipInput = Channels.newInputStream(readableByteChannel);
+
+        try (ZipInputStream zipInputStream = new ZipInputStream(zipInput)) {
+          ZipEntry entry = zipInputStream.getNextEntry();
+          while (entry != null) {
+            log.info("Unzipping {}", entry.getName());
+
+            String unzippedOutputFilePath = outputDirectoryPath + "/" + batchId + ".csv";
+            if (!entry.isDirectory()) {
+              unzipFiles(fs, zipInputStream, unzippedOutputFilePath);
+            }
+
+            zipInputStream.closeEntry();
+            entry = zipInputStream.getNextEntry();
+          }
+        }
+
+        // delete zip file
+        ALAFsUtils.deleteIfExist(fs, zipFilePath);
+
+        log.info("Sampling done for file {}", inputFilePath);
+      }
     }
 
-    for (List<String> partition : partitioned) {
-
-      log.info("Partition size (no of coordinates) : {}", partition.size());
-      String coords = String.join(",", partition);
-
-      Instant batchStart = Instant.now();
-
-      // Submit a job to generate a join
-      Response<SamplingService.Batch> submit =
-          service.submitIntersectBatch(layers, coords).execute();
-      String batchId = submit.body().getBatchId();
-
-      String state = UNKNOWN_STATUS;
-      while (!state.equalsIgnoreCase(FINISHED_STATUS) && !state.equalsIgnoreCase(ERROR_STATUS)) {
-        Response<SamplingService.BatchStatus> status = service.getBatchStatus(batchId).execute();
-        SamplingService.BatchStatus batchStatus = status.body();
-        state = batchStatus.getStatus();
-
-        Instant batchCurrentTime = Instant.now();
-
-        log.info(
-            "batch ID {} - status: {} - time elapses {} seconds",
-            batchId,
-            state,
-            Duration.between(batchStart, batchCurrentTime).getSeconds());
-
-        if (!state.equals(FINISHED_STATUS)) {
-          TimeUnit.MILLISECONDS.sleep(config.getSamplingService().getBatchStatusSleepTime());
-        } else {
-          log.info("Downloading sampling batch {}", batchId);
-
-          downloadFile(fs, outputDirectoryPath, batchId, batchStatus);
-
-          String zipFilePath = outputDirectoryPath + "/" + batchId + ".zip";
-          ReadableByteChannel readableByteChannel = ALAFsUtils.openByteChannel(fs, zipFilePath);
-          InputStream zipInput = Channels.newInputStream(readableByteChannel);
-
-          try (ZipInputStream zipInputStream = new ZipInputStream(zipInput)) {
-            ZipEntry entry = zipInputStream.getNextEntry();
-            while (entry != null) {
-              log.info("Unzipping {}", entry.getName());
-
-              String unzippedOutputFilePath = outputDirectoryPath + "/" + batchId + ".csv";
-              if (!entry.isDirectory()) {
-                unzipFiles(fs, zipInputStream, unzippedOutputFilePath);
-              }
-
-              zipInputStream.closeEntry();
-              entry = zipInputStream.getNextEntry();
-            }
-          }
-
-          // delete zip file
-          ALAFsUtils.deleteIfExist(fs, zipFilePath);
-
-          log.info("Sampling done for file {}", inputFilePath);
-        }
-      }
-
-      if (state.equals(ERROR_STATUS)) {
-        log.error("Unable to download batch ID {}", batchId);
-        throw new PipelinesException(
-            "Unable to complete sampling for dataset. Check the status of sampling service for more details");
-      }
+    if (state.equals(ERROR_STATUS)) {
+      log.error("Unable to download batch ID {}", batchId);
+      throw new PipelinesException(
+          "Unable to complete sampling for dataset. Check the status of sampling service for more details");
     }
   }
 
@@ -304,15 +312,6 @@ public class LayerCrawler {
       }
     }
     return false;
-  }
-
-  /**
-   * Util to partition a stream into fixed size windows. See
-   * https://e.printstacktrace.blog/divide-a-list-to-lists-of-n-size-in-Java-8/
-   */
-  private static <T> Collection<List<T>> partition(Stream<T> stream, int size) {
-    final AtomicInteger counter = new AtomicInteger(0);
-    return stream.collect(Collectors.groupingBy(it -> counter.getAndIncrement() / size)).values();
   }
 
   /** Unzip the file to the path. */
