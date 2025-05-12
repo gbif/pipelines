@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.Constants;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
@@ -43,7 +44,7 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 @Builder
 public class OccurrenceJsonConverter {
 
-  public static final String GBIF_BACKBONE_DATASET_KEY = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c";
+  public static final String GBIF_BACKBONE_DATASET_KEY = Constants.NUB_DATASET_KEY.toString();
 
   private final MetadataRecord metadata;
   private final IdentifierRecord identifier;
@@ -56,6 +57,9 @@ public class OccurrenceJsonConverter {
   private final MultimediaRecord multimedia;
   private final DnaDerivedDataRecord dnaDerivedData;
   private final ExtendedRecord verbatim;
+
+  private final boolean indexLegacyTaxonomy;
+  private final boolean indexMultiTaxonomy;
 
   public OccurrenceJsonRecord convert() {
 
@@ -71,8 +75,12 @@ public class OccurrenceJsonConverter {
     mapBasicRecord(builder);
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
-    mapTaxonRecord(builder);
-    mapMultiTaxonRecord(builder);
+    if (indexLegacyTaxonomy) {
+      mapTaxonRecord(builder);
+    }
+    if (indexMultiTaxonomy) {
+      mapMultiTaxonRecord(builder);
+    }
     mapGrscicollRecord(builder);
     mapMultimediaRecord(builder);
     mapDnaDerivedDataRecord(builder);

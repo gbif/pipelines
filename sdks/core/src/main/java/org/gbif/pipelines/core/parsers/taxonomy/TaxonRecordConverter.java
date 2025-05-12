@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.gbif.api.model.Constants;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 
@@ -13,7 +14,7 @@ import org.gbif.rest.client.species.NameUsageMatchResponse;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TaxonRecordConverter {
 
-  public static final String IUCN_REDLIST_GBIF_KEY = "19491596-35ae-4a91-9a98-85cf505f1bd3";
+  public static final String IUCN_REDLIST_GBIF_KEY = Constants.IUCN_DATASET_KEY.toString();
 
   /**
    * I modify the parameter instead of creating a new one and returning it because the lambda
