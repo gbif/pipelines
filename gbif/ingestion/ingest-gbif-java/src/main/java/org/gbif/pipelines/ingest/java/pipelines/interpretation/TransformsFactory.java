@@ -141,12 +141,16 @@ public class TransformsFactory {
     if (!options.getTestMode()) {
       nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createMultiServiceSupplier(config);
     }
-    log.info(
-        "Initialize NameUsageMatchKvStores with checklist keys {}",
-        config.getNameUsageMatchingService().getChecklistKeys());
+
+    List<String> checklistKeys =
+        config.getNameUsageMatchingService() != null
+            ? config.getNameUsageMatchingService().getChecklistKeys()
+            : List.of();
+
+    log.info("Initialize NameUsageMatchKvStores with checklist keys {}", checklistKeys);
     return MultiTaxonomyTransform.builder()
         .kvStoresSupplier(nameUsageMatchServiceSupplier)
-        .checklistKeys(config.getNameUsageMatchingService().getChecklistKeys())
+        .checklistKeys(checklistKeys)
         .create()
         .counterFn(incMetricFn)
         .init();
