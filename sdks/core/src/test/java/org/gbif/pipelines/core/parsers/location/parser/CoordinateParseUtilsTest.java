@@ -4,7 +4,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.*;
 import static org.junit.Assert.*;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.junit.Test;
 
@@ -13,49 +13,54 @@ public class CoordinateParseUtilsTest {
   @Test
   public void testParseLatLng() {
     assertExpected(
-        CoordinateParseUtils.parseLatLng("-46,33", "51,8717"), LatLng.create(-46.33, 51.8717));
-    assertExpected(CoordinateParseUtils.parseLatLng("10.3", "99.99"), LatLng.create(10.3, 99.99));
-    assertExpected(CoordinateParseUtils.parseLatLng("10", "10"), LatLng.create(10d, 10d));
-    assertExpected(CoordinateParseUtils.parseLatLng("90", "180"), LatLng.create(90d, 180d));
-    assertExpected(CoordinateParseUtils.parseLatLng("-90", "180"), LatLng.create(-90d, 180d));
-    assertExpected(CoordinateParseUtils.parseLatLng("90", "-180"), LatLng.create(90d, -180d));
-    assertExpected(CoordinateParseUtils.parseLatLng("-90", "-180"), LatLng.create(-90d, -180d));
+        CoordinateParseUtils.parseLatLng("-46,33", "51,8717"),
+        GeocodeRequest.create(-46.33, 51.8717));
     assertExpected(
-        CoordinateParseUtils.parseLatLng("0", "0"), LatLng.create(0d, 0d), ZERO_COORDINATE);
+        CoordinateParseUtils.parseLatLng("10.3", "99.99"), GeocodeRequest.create(10.3, 99.99));
+    assertExpected(CoordinateParseUtils.parseLatLng("10", "10"), GeocodeRequest.create(10d, 10d));
+    assertExpected(CoordinateParseUtils.parseLatLng("90", "180"), GeocodeRequest.create(90d, 180d));
+    assertExpected(
+        CoordinateParseUtils.parseLatLng("-90", "180"), GeocodeRequest.create(-90d, 180d));
+    assertExpected(
+        CoordinateParseUtils.parseLatLng("90", "-180"), GeocodeRequest.create(90d, -180d));
+    assertExpected(
+        CoordinateParseUtils.parseLatLng("-90", "-180"), GeocodeRequest.create(-90d, -180d));
+    assertExpected(
+        CoordinateParseUtils.parseLatLng("0", "0"), GeocodeRequest.create(0d, 0d), ZERO_COORDINATE);
 
     // rounding
     assertExpected(
         CoordinateParseUtils.parseLatLng("2.123450678", "-8.123450678"),
-        LatLng.create(2.123451, -8.123451),
+        GeocodeRequest.create(2.123451, -8.123451),
         COORDINATE_ROUNDED);
     assertExpected(
         CoordinateParseUtils.parseLatLng("2.123451", "-8.123450678"),
-        LatLng.create(2.123451, -8.123451),
+        GeocodeRequest.create(2.123451, -8.123451),
         COORDINATE_ROUNDED);
     assertExpected(
         CoordinateParseUtils.parseLatLng("2.123451", "-8.123451"),
-        LatLng.create(2.123451, -8.123451));
+        GeocodeRequest.create(2.123451, -8.123451));
     assertExpected(
         CoordinateParseUtils.parseLatLng("2.12345100", "-8.1234510"),
-        LatLng.create(2.123451, -8.123451));
+        GeocodeRequest.create(2.123451, -8.123451));
     assertExpected(
         CoordinateParseUtils.parseLatLng("2.123", "-8.1234506"),
-        LatLng.create(2.123, -8.123451),
+        GeocodeRequest.create(2.123, -8.123451),
         COORDINATE_ROUNDED);
 
     // degree minutes seconds
     assertExpected(
         CoordinateParseUtils.parseLatLng("02° 49' 52\" N", "131° 47' 03\" E"),
-        LatLng.create(2.831111d, 131.784167d));
+        GeocodeRequest.create(2.831111d, 131.784167d));
 
     // check swapped coordinates
     assertExpected(
         CoordinateParseUtils.parseLatLng("100", "40"),
-        LatLng.create(40d, 100d),
+        GeocodeRequest.create(40d, 100d),
         PRESUMED_SWAPPED_COORDINATE);
     assertExpected(
         CoordinateParseUtils.parseLatLng("-100", "90"),
-        LatLng.create(90d, -100d),
+        GeocodeRequest.create(90d, -100d),
         PRESUMED_SWAPPED_COORDINATE);
 
     // check errors
@@ -126,9 +131,9 @@ public class CoordinateParseUtilsTest {
   }
 
   private void assertDMS(String lat, String lon, double eLat, double eLon) {
-    ParsedField<LatLng> result = CoordinateParseUtils.parseLatLng(lat, lon);
-    assertEquals(eLat, result.getResult().getLatitude(), 0.000001);
-    assertEquals(eLon, result.getResult().getLongitude(), 0.000001);
+    ParsedField<GeocodeRequest> result = CoordinateParseUtils.parseLatLng(lat, lon);
+    assertEquals(eLat, result.getResult().getLat(), 0.000001);
+    assertEquals(eLon, result.getResult().getLng(), 0.000001);
   }
 
   private void assertIllegalArg(String coord) {
@@ -136,10 +141,10 @@ public class CoordinateParseUtilsTest {
   }
 
   private void assertFootprint(String footprint, double eLat, double eLon) {
-    ParsedField<LatLng> result = CoordinateParseUtils.parsePointFootprintWKT(footprint);
+    ParsedField<GeocodeRequest> result = CoordinateParseUtils.parsePointFootprintWKT(footprint);
     System.out.println(result.getResult());
-    assertEquals(eLat, result.getResult().getLatitude(), 0.000001);
-    assertEquals(eLon, result.getResult().getLongitude(), 0.000001);
+    assertEquals(eLat, result.getResult().getLat(), 0.000001);
+    assertEquals(eLon, result.getResult().getLng(), 0.000001);
   }
 
   private void assertBadFootprint(String footprint) {
@@ -150,43 +155,43 @@ public class CoordinateParseUtilsTest {
   public void testParseVerbatimCoordinates() {
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("02° 49' 52\" N 131° 47' 03\" E"),
-        LatLng.create(2.831111d, 131.784167d));
+        GeocodeRequest.create(2.831111d, 131.784167d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("02° 49' 52\" N, 131° 47' 03\" E"),
-        LatLng.create(2.831111d, 131.784167d));
+        GeocodeRequest.create(2.831111d, 131.784167d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("02°49'52\"N; 131°47'03\"O"),
-        LatLng.create(2.831111d, 131.784167d));
+        GeocodeRequest.create(2.831111d, 131.784167d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("17d 33m 5s N/99d 30m 3s W"),
-        LatLng.create(17.551389d, -99.500833d));
+        GeocodeRequest.create(17.551389d, -99.500833d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("14.93333/-91.9"),
-        LatLng.create(14.93333d, -91.9d));
+        GeocodeRequest.create(14.93333d, -91.9d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("63d 41m 39s N 170d 28m 44s W"),
-        LatLng.create(63.694167d, -170.478889d));
+        GeocodeRequest.create(63.694167d, -170.478889d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("37° 28' N, 122° 6' W"),
-        LatLng.create(37.466667d, -122.1d));
+        GeocodeRequest.create(37.466667d, -122.1d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("2°49'52\"N, 131°47'03\""),
-        LatLng.create(2.831111d, 131.784167d));
+        GeocodeRequest.create(2.831111d, 131.784167d));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("10°07'06\"N 20°48'23\"W"),
-        LatLng.create(10.118333, -20.806389));
+        GeocodeRequest.create(10.118333, -20.806389));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("10º07'06\"N 20º48'23\"W"),
-        LatLng.create(10.118333, -20.806389));
+        GeocodeRequest.create(10.118333, -20.806389));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("10°07'N 20°48'W"),
-        LatLng.create(10.116667, -20.8));
+        GeocodeRequest.create(10.116667, -20.8));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("10°07.55'N 20°48.55'W"),
-        LatLng.create(10.125833, -20.809167));
+        GeocodeRequest.create(10.125833, -20.809167));
     assertExpected(
         CoordinateParseUtils.parseVerbatimCoordinates("100º23'05\"N 20º35'25\"W"),
-        LatLng.create(-20.590278, 100.384722),
+        GeocodeRequest.create(-20.590278, 100.384722),
         PRESUMED_SWAPPED_COORDINATE);
 
     // failed
@@ -201,7 +206,8 @@ public class CoordinateParseUtilsTest {
         COORDINATE_OUT_OF_RANGE);
   }
 
-  private void assertExpected(ParsedField<LatLng> pr, Object expected, OccurrenceIssue... issue) {
+  private void assertExpected(
+      ParsedField<GeocodeRequest> pr, Object expected, OccurrenceIssue... issue) {
     assertNotNull(pr);
     assertTrue(pr.isSuccessful());
     assertNotNull(pr.getResult());
@@ -216,12 +222,12 @@ public class CoordinateParseUtilsTest {
     }
   }
 
-  private void assertFailed(ParsedField<LatLng> pr) {
+  private void assertFailed(ParsedField<GeocodeRequest> pr) {
     assertNotNull(pr);
     assertFalse(pr.isSuccessful());
   }
 
-  private void assertFailedWithIssues(ParsedField<LatLng> pr, OccurrenceIssue... issue) {
+  private void assertFailedWithIssues(ParsedField<GeocodeRequest> pr, OccurrenceIssue... issue) {
     assertFailed(pr);
     assertEquals(issue.length, pr.getIssues().size());
     System.out.println(pr.getIssues());

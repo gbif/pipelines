@@ -86,7 +86,7 @@ public class DerivedMetadataTransform implements Serializable {
                     .map(
                         tr ->
                             Optional.ofNullable(getAssociatedVerbatim(tr, verbatimRecords))
-                                .map(vr -> JsonConverter.convertClassification(vr, tr)))
+                                .map(vr -> JsonConverter.convertToGbifClassification(vr, tr)))
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .collect(Collectors.toList()));

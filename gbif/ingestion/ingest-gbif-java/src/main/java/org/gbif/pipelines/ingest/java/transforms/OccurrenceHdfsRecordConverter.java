@@ -21,9 +21,9 @@ import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 
@@ -38,13 +38,13 @@ public class OccurrenceHdfsRecordConverter {
   private Map<String, BasicRecord> basicMap;
   @NonNull private final Map<String, TemporalRecord> temporalMap;
   @NonNull private final Map<String, LocationRecord> locationMap;
-  @NonNull private final Map<String, TaxonRecord> taxonMap;
   private Map<String, GrscicollRecord> grscicollMap;
   @NonNull private final Map<String, MultimediaRecord> multimediaMap;
   @NonNull private final Map<String, ImageRecord> imageMap;
   @NonNull private final Map<String, DnaDerivedDataRecord> dnaMap;
   @NonNull private final Map<String, AudubonRecord> audubonMap;
   private Map<String, EventCoreRecord> eventCoreRecordMap;
+  private final Map<String, MultiTaxonRecord> multiTaxonMap;
 
   public Function<IdentifierRecord, List<OccurrenceHdfsRecord>> getFn() {
     return id -> Collections.singletonList(convert(id));
@@ -57,7 +57,8 @@ public class OccurrenceHdfsRecordConverter {
     ExtendedRecord er = verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
     TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
     LocationRecord lr = locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
-    TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
+    MultiTaxonRecord mtxr =
+        multiTaxonMap.getOrDefault(k, MultiTaxonRecord.newBuilder().setId(k).build());
 
     // Extension
     MultimediaRecord mr =
@@ -79,7 +80,7 @@ public class OccurrenceHdfsRecordConverter {
                 .metadataRecord(metadata)
                 .temporalRecord(tr)
                 .locationRecord(lr)
-                .taxonRecord(txr)
+                .multiTaxonRecord(mtxr)
                 .multimediaRecord(mmr)
                 .dnaDerivedDataRecord(dnar)
                 .extendedRecord(er);

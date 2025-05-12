@@ -8,7 +8,7 @@
      "SUPERCLASS", "CLASS", "SUBCLASS", "INFRACLASS", "PARVCLASS", "SUPERLEGION", "LEGION", "SUBLEGION", "INFRALEGION",
      "SUPERCOHORT", "COHORT", "SUBCOHORT", "INFRACOHORT", "MAGNORDER", "SUPERORDER", "GRANDORDER", "ORDER", "SUBORDER",
      "INFRAORDER", "PARVORDER", "SUPERFAMILY", "FAMILY", "SUBFAMILY", "INFRAFAMILY", "SUPERTRIBE", "TRIBE", "SUBTRIBE",
-     "INFRATRIBE", "SUPRAGENERIC_NAME", "GENUS", "SUBGENUS", "INFRAGENUS", "SECTION", "SUBSECTION", "SERIES", "SUBSERIES",
+     "INFRATRIBE", "SUPRAGENERIC_NAME", "GENUS", "SUBGENUS", "INFRAGENUS", "SECTION", "SECTION_BOTANY", "SUBSECTION", "SERIES", "SUBSERIES",
      "INFRAGENERIC_NAME", "SPECIES_AGGREGATE", "SPECIES", "INFRASPECIFIC_NAME", "GREX", "SUBSPECIES", "CULTIVAR_GROUP",
      "CONVARIETY", "INFRASUBSPECIFIC_NAME", "PROLES", "RACE", "NATIO", "ABERRATION", "MORPH", "VARIETY", "SUBVARIETY",
      "FORM", "SUBFORM", "PATHOVAR", "BIOVAR", "CHEMOVAR", "MORPHOVAR", "PHAGOVAR", "SEROVAR", "CHEMOFORM", "FORMA_SPECIALIS",
@@ -20,8 +20,7 @@
     "namespace" : "org.gbif.pipelines.io.avro",
     "type" : "enum",
     "symbols" : [
-      "ACCEPTED", "DOUBTFUL", "SYNONYM", "HETEROTYPIC_SYNONYM", "HOMOTYPIC_SYNONYM", "PROPARTE_SYNONYM", "MISAPPLIED",
-      "INTERMEDIATE_RANK_SYNONYM", "DETERMINATION_SYNONYM"
+      "ACCEPTED", "PROVISIONALLY_ACCEPTED", "SYNONYM", "AMBIGUOUS_SYNONYM", "MISAPPLIED", "BARE_NAME"
     ]
   },
   {
@@ -29,7 +28,7 @@
     "namespace" : "org.gbif.pipelines.io.avro",
     "type" : "enum",
     "symbols" : [
-      "EXACT", "FUZZY", "HIGHERRANK", "NONE"
+      "EXACT", "FUZZY", "HIGHERRANK", "NONE", "VARIANT", "AMBIGUOUS", "UNSUPPORTED"
     ]
   },
   {
@@ -46,9 +45,26 @@
     "namespace" : "org.gbif.pipelines.io.avro",
     "type" : "record",
     "fields" : [
-      {"name" : "key", "type" : ["null", "int"], "default" : null},
+      {"name" : "key", "type" : ["null", "string"], "default" : null},
       {"name" : "name", "type" : ["null", "string"], "default" : null},
-      {"name" : "rank", "type" : ["null", "Rank"], "default" : null}
+      {"name" : "rank", "type" : ["null", "string"], "default" : null}
+    ]
+  },
+  {
+    "name" : "RankedNameWithAuthorship",
+    "namespace" : "org.gbif.pipelines.io.avro",
+    "type" : "record",
+    "fields" : [
+      {"name" : "key", "type" : ["null", "string"], "default" : null},
+      {"name" : "name", "type" : ["null", "string"], "default" : null},
+      {"name" : "canonicalName", "type" : ["null", "string"], "default" : null},
+      {"name" : "rank", "type" : ["null", "string"], "default" : null},
+      {"name" : "authorship", "type" : ["null", "string"], "default" : null},
+      {"name" : "code", "type" : ["null", "string"], "default" : null},
+      {"name" : "infragenericEpithet", "type" : ["null", "string"], "default" : null},
+      {"name" : "specificEpithet", "type" : ["null", "string"], "default" : null},
+      {"name" : "infraspecificEpithet", "type" : ["null", "string"], "default" : null},
+      {"name" : "formattedName", "type" : ["null", "string"], "default" : null}
     ]
   },
   {
@@ -109,13 +125,14 @@
     "doc" : "A taxonomic record",
     "fields" : [
       {"name" : "id", "type" : ["null", "string"], "default" : null, "doc":"Pipelines identifier"},
-      {"name": "coreId","type":["null","string"],"default":null, "doc":"Id of the core record when this record belongs to an extension"},
-      {"name": "parentId","type":["null","string"],"default":null, "doc":"Id of the parent record if applies"},
-      {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
+      {"name" : "coreId","type":["null","string"],"default":null, "doc":"Id of the core record when this record belongs to an extension"},
+      {"name" : "parentId","type":["null","string"],"default":null, "doc":"Id of the parent record if applies"},
+      {"name" : "datasetKey", "type" : ["null", "string"], "default" : null, "doc":"The taxonomy dataset identifier"},
+      {"name" : "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
       {"name" : "synonym", "type" : ["null", "boolean"], "default" : null},
-      {"name" : "usage", "type" : ["null", "RankedName"], "default" : null},
+      {"name" : "usage", "type" : ["null", "RankedNameWithAuthorship"], "default" : null},
       {"name" : "classification", "type" : { "type" : "array", "items" : "RankedName" }, "default": [] },
-      {"name" : "acceptedUsage", "type" : ["null", "RankedName"], "default" : null},
+      {"name" : "acceptedUsage", "type" : ["null", "RankedNameWithAuthorship"], "default" : null},
       {"name" : "nomenclature", "type" : ["null", "Nomenclature"], "default" : null},
       {"name" : "diagnostics", "default" : null, "type" : ["null",
           {
@@ -135,6 +152,19 @@
       {"name" : "usageParsedName", "type" : ["null", "ParsedName"], "default" : null},
       {"name" : "issues", "type": "IssueRecord", "default":{}},
       {"name" : "iucnRedListCategoryCode", "type" : ["null", "string"], "default" : null, "doc":"The IUCN Red List Category or conservation status"}
+    ]
+  },
+  {
+    "name" : "MultiTaxonRecord",
+    "namespace" : "org.gbif.pipelines.io.avro",
+    "type" : "record",
+    "doc" : "A collection of taxonomic records",
+    "fields" : [
+      {"name" : "id", "type" : ["null", "string"], "default" : null, "doc":"Pipelines identifier"},
+      {"name" : "coreId","type":["null","string"],"default":null, "doc":"Id of the core record when this record belongs to an extension"},
+      {"name" : "parentId","type":["null","string"],"default":null, "doc":"Id of the parent record if applies"},
+      {"name" : "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
+      {"name" : "taxonRecords", "type" : { "type" : "array", "items" : "TaxonRecord" }, "default": [] }
     ]
   }
 ]

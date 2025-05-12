@@ -3,10 +3,10 @@ package au.org.ala.kvs.cache;
 import au.org.ala.kvs.GeocodeShpConfig;
 import au.org.ala.kvs.client.GeocodeShpIntersectService;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
-public class StateProvinceKeyValueStore implements KeyValueStore<LatLng, GeocodeResponse> {
+public class StateProvinceKeyValueStore implements KeyValueStore<GeocodeRequest, GeocodeResponse> {
 
   private final GeocodeShpIntersectService service;
 
@@ -24,7 +24,7 @@ public class StateProvinceKeyValueStore implements KeyValueStore<LatLng, Geocode
   }
 
   @Override
-  public GeocodeResponse get(LatLng latLng) {
+  public GeocodeResponse get(GeocodeRequest latLng) {
     return new GeocodeResponse(
         service.lookupStateProvince(latLng.getLatitude(), latLng.getLongitude()));
   }
