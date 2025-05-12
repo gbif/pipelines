@@ -1,7 +1,5 @@
 package org.gbif.pipelines.core.converters;
 
-import static org.gbif.pipelines.core.converters.OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -13,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.gbif.api.model.Constants;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.BasisOfRecord;
@@ -157,7 +156,7 @@ public class OccurrenceHdfsRecordConverterTest {
         RankedName.newBuilder().setName("ORDER").setRank(Rank.ORDER.toString()).build());
     TaxonRecord taxonRecord =
         TaxonRecord.newBuilder()
-            .setDatasetKey(GBIF_BACKBONE_DATASET_KEY)
+            .setDatasetKey(Constants.NUB_DATASET_KEY.toString())
             .setCreated(
                 2L) // This value for lastParsed and lastInterpreted since is greater that the Basic
             // record created date
@@ -553,7 +552,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setName("Caldisphaera lagunensis Itoh & al., 2003")
             .build();
 
-    taxonRecord.setDatasetKey(GBIF_BACKBONE_DATASET_KEY);
+    taxonRecord.setDatasetKey(Constants.NUB_DATASET_KEY.toString());
     taxonRecord.setUsage(rankedName);
     taxonRecord.setUsage(rankedName);
     taxonRecord.setAcceptedUsage(rankedName);

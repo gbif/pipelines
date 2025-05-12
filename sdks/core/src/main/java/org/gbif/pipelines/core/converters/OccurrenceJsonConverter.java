@@ -58,6 +58,9 @@ public class OccurrenceJsonConverter {
   private final DnaDerivedDataRecord dnaDerivedData;
   private final ExtendedRecord verbatim;
 
+  private final boolean indexLegacyTaxonomy;
+  private final boolean indexMultiTaxonomy;
+
   public OccurrenceJsonRecord convert() {
 
     OccurrenceJsonRecord.Builder builder = OccurrenceJsonRecord.newBuilder();
@@ -72,8 +75,12 @@ public class OccurrenceJsonConverter {
     mapBasicRecord(builder);
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
-    mapTaxonRecord(builder);
-    mapMultiTaxonRecord(builder);
+    if (indexLegacyTaxonomy) {
+      mapTaxonRecord(builder);
+    }
+    if (indexMultiTaxonomy) {
+      mapMultiTaxonRecord(builder);
+    }
     mapGrscicollRecord(builder);
     mapMultimediaRecord(builder);
     mapDnaDerivedDataRecord(builder);

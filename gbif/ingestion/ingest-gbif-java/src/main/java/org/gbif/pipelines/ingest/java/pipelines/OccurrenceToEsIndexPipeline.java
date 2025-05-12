@@ -191,6 +191,8 @@ public class OccurrenceToEsIndexPipeline {
             .imageMap(imageMapFeature.get())
             .dnaMap(dnaMapFeature.get())
             .audubonMap(audubonMapFeature.get())
+            .indexLegacyTaxonomy(options.isIndexLegacyTaxonomy())
+            .indexMultiTaxonomy(options.isIndexMultiTaxonomy())
             .build()
             .getFn();
 

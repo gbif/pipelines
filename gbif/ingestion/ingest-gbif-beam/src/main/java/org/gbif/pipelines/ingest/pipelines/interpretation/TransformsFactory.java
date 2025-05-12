@@ -7,6 +7,7 @@ import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.hadoop.hbase.client.Table;
+import org.gbif.api.model.Constants;
 import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.kvs.KeyValueStore;
@@ -169,7 +170,9 @@ public class TransformsFactory {
     }
 
     String firstConfiguredChecklistKey =
-        config.getNameUsageMatchingService().getChecklistKeys().get(0);
+        config.getNameUsageMatchingService() != null
+            ? config.getNameUsageMatchingService().getChecklistKeys().get(0)
+            : Constants.NUB_DATASET_KEY.toString();
 
     return TaxonomyTransform.builder()
         .kvStoreSupplier(nameUsageMatchServiceSupplier)
@@ -188,7 +191,10 @@ public class TransformsFactory {
 
     return MultiTaxonomyTransform.builder()
         .kvStoresSupplier(nameUsageMatchServiceSupplier)
-        .checklistKeys(config.getNameUsageMatchingService().getChecklistKeys())
+        .checklistKeys(
+            config.getNameUsageMatchingService() != null
+                ? config.getNameUsageMatchingService().getChecklistKeys()
+                : List.of())
         .create();
   }
 
