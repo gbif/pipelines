@@ -240,7 +240,7 @@ public class OccurrenceToEsIndexPipeline {
 
       PCollection<KV<String, MultiTaxonRecord>> multiTaxonCollection =
           pipeline
-              .apply("Read occurrence Multi Taxon", multiTaxonomyTransform.read(pathFn))
+              .apply("Read occurrence Multi Taxon", multiTaxonomyTransform.readIfExists(pathFn))
               .apply("Map occurrence Multi Taxon to KV", multiTaxonomyTransform.toKv());
 
       PCollection<KV<String, GrscicollRecord>> grscicollCollection =
