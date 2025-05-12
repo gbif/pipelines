@@ -109,6 +109,8 @@ public class OccurrenceJsonTransform implements Serializable {
 
   // Determines if the output record is a parent-child record
   @Builder.Default private final boolean asParentChildRecord = false;
+  @Builder.Default private final boolean indexLegacyTaxonomy = true;
+  @Builder.Default private final boolean indexMultiTaxonomy = true;
 
   public SingleOutput<KV<String, CoGbkResult>, String> converter() {
 
@@ -163,6 +165,8 @@ public class OccurrenceJsonTransform implements Serializable {
                     .multimedia(mmr)
                     .dnaDerivedData(dnar)
                     .verbatim(er)
+                    .indexLegacyTaxonomy(indexLegacyTaxonomy)
+                    .indexMultiTaxonomy(indexMultiTaxonomy)
                     .build();
             if (asParentChildRecord) {
               c.output(

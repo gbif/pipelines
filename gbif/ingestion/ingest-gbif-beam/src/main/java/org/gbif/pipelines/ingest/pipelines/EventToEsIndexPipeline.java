@@ -199,7 +199,7 @@ public class EventToEsIndexPipeline {
             .apply("Map Location to KV", locationTransform.toKv());
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
-        p.apply("Read event taxon records", taxonomyTransform.read(pathFn))
+        p.apply("Read event taxon records", taxonomyTransform.readIfExists(pathFn))
             .apply("Map event taxon records to KV", taxonomyTransform.toKv());
 
     InheritedFields inheritedFields =

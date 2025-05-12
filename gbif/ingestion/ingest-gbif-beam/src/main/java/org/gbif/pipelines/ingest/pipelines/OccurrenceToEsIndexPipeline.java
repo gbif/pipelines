@@ -136,6 +136,8 @@ public class OccurrenceToEsIndexPipeline {
             .pipeline(p)
             .pathFn(pathFn)
             .asParentChildRecord(false)
+            .indexMultiTaxonomy(options.isIndexMultiTaxonomy())
+            .indexLegacyTaxonomy(options.isIndexLegacyTaxonomy())
             .build()
             .apply();
 
@@ -180,6 +182,8 @@ public class OccurrenceToEsIndexPipeline {
     private final Pipeline pipeline;
     private final UnaryOperator<String> pathFn;
     private final boolean asParentChildRecord;
+    private final boolean indexMultiTaxonomy;
+    private final boolean indexLegacyTaxonomy;
 
     // Init transforms
     private final BasicTransform basicTransform = BasicTransform.builder().create();
@@ -236,7 +240,7 @@ public class OccurrenceToEsIndexPipeline {
 
       PCollection<KV<String, MultiTaxonRecord>> multiTaxonCollection =
           pipeline
-              .apply("Read occurrence Multi Taxon", multiTaxonomyTransform.read(pathFn))
+              .apply("Read occurrence Multi Taxon", multiTaxonomyTransform.readIfExists(pathFn))
               .apply("Map occurrence Multi Taxon to KV", multiTaxonomyTransform.toKv());
 
       PCollection<KV<String, GrscicollRecord>> grscicollCollection =
@@ -281,6 +285,8 @@ public class OccurrenceToEsIndexPipeline {
               .audubonRecordTag(audubonTransform.getTag())
               .metadataView(metadataView)
               .asParentChildRecord(asParentChildRecord)
+              .indexMultiTaxonomy(indexMultiTaxonomy)
+              .indexLegacyTaxonomy(indexLegacyTaxonomy)
               .build()
               .converter();
 

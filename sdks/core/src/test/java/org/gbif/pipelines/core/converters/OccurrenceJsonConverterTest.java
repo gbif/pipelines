@@ -487,6 +487,8 @@ public class OccurrenceJsonConverterTest {
             .grscicoll(gr)
             .multimedia(mmr)
             .dnaDerivedData(dnar)
+            .indexLegacyTaxonomy(true)
+            .indexMultiTaxonomy(true)
             .build()
             .toJsonWithNulls();
 
@@ -719,6 +721,8 @@ public class OccurrenceJsonConverterTest {
             .multiTaxon(MultiTaxonRecord.newBuilder().setTaxonRecords(List.of(tr)).build())
             .grscicoll(gr)
             .multimedia(mmr)
+            .indexLegacyTaxonomy(true)
+            .indexMultiTaxonomy(true)
             .build()
             .toJsonWithNulls();
 

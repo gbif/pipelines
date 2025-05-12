@@ -47,6 +47,8 @@ public class IndexRequestConverter {
   @NonNull private final Map<String, ImageRecord> imageMap;
   @NonNull private final Map<String, DnaDerivedDataRecord> dnaMap;
   @NonNull private final Map<String, AudubonRecord> audubonMap;
+  @Builder.Default private boolean indexMultiTaxonomy = true;
+  @Builder.Default private boolean indexLegacyTaxonomy = true;
 
   /** Join all records, convert into string json and IndexRequest for ES */
   public Function<IdentifierRecord, IndexRequest> getFn() {
@@ -84,6 +86,8 @@ public class IndexRequestConverter {
               .grscicoll(gr)
               .multimedia(mmr)
               .dnaDerivedData(dnar)
+              .indexMultiTaxonomy(indexMultiTaxonomy)
+              .indexLegacyTaxonomy(indexLegacyTaxonomy)
               .verbatim(er)
               .build()
               .convert();
