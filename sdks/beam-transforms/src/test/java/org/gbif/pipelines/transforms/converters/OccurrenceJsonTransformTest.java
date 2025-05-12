@@ -524,6 +524,8 @@ public class OccurrenceJsonTransformTest {
             .audubonRecordTag(audubonTransform.getTag())
             .dnaRecordTag(dnaTransform.getTag())
             .metadataView(metadataView)
+            .indexMultiTaxonomy(true)
+            .indexLegacyTaxonomy(true)
             .build()
             .converter();
 
@@ -562,6 +564,8 @@ public class OccurrenceJsonTransformTest {
             .grscicoll(gr)
             .multimedia(mmr)
             .dnaDerivedData(dnar)
+            .indexMultiTaxonomy(true)
+            .indexLegacyTaxonomy(true)
             .build()
             .toJsonWithNulls();
 
