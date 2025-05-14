@@ -2,6 +2,7 @@ package org.gbif.pipelines.backbone.impact;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -165,6 +166,33 @@ public class GBIFClassification {
   @Override
   public String toString() {
     return toString(false);
+  }
+
+  /**
+   * Generates a tab-delimited list of classification headers.
+   *
+   * @param prefix Prefix to apply to each header field.
+   * @param skipKeys If true, key-based headers are skipped.
+   * @return Tab-delimited string of classification headers.
+   */
+  public static String toHeader(String prefix, boolean skipKeys) {
+    String[] fields = {
+      "kingdom", "phylum", "klass", "order", "family",
+      "genus", "subGenus", "species", "scientificName", "acceptedScientificName"
+    };
+
+    String[] keys = {
+      "kingdomKey", "phylumKey", "classKey", "orderKey", "familyKey",
+      "genusKey", "subGenusKey", "speciesKey", "taxonKey", "acceptedTaxonKey"
+    };
+
+    Stream<String> headerStream = Arrays.stream(fields).map(f -> prefix + f);
+
+    if (!skipKeys) {
+      headerStream = Stream.concat(headerStream, Arrays.stream(keys).map(k -> prefix + k));
+    }
+
+    return headerStream.collect(Collectors.joining("\t"));
   }
 
   /**

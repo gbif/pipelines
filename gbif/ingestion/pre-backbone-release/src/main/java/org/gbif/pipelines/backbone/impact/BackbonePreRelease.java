@@ -1,7 +1,6 @@
 package org.gbif.pipelines.backbone.impact;
 
-import com.google.common.base.Strings;
-import java.io.File;
+import java.io.*;
 import java.util.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -15,7 +14,7 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -46,13 +45,16 @@ public class BackbonePreRelease {
     options.setRunner(SparkRunner.class);
     String hdfsPath = options.getHdfsSiteConfig();
     String corePath = options.getCoreSiteConfig();
-    boolean isHdfsExist = !Strings.isNullOrEmpty(hdfsPath) && new File(hdfsPath).exists();
-    boolean isCoreExist = !Strings.isNullOrEmpty(corePath) && new File(corePath).exists();
-    if (isHdfsExist && isCoreExist) {
-      Configuration conf = new Configuration(false);
-      conf.addResource(new Path(hdfsPath));
-      conf.addResource(new Path(corePath));
-      options.setHdfsConfiguration(Collections.singletonList(conf));
+    Configuration conf = new Configuration(false);
+    conf.addResource(new Path(hdfsPath));
+    conf.addResource(new Path(corePath));
+    options.setHdfsConfiguration(Collections.singletonList(conf));
+
+    // delete previous runs
+    FileSystem hdfs = FileSystem.get(conf);
+    if (hdfs.exists(new Path(options.getTargetDir()))) {
+      log.info("Deleting previous run: " + options.getTargetDir());
+      hdfs.delete(new Path(options.getTargetDir()), true);
     }
 
     Pipeline p = Pipeline.create(options);
@@ -84,6 +86,59 @@ public class BackbonePreRelease {
     matched.apply(TextIO.write().to(options.getTargetDir()));
 
     p.run().waitUntilFinish();
+
+    // Merge all the files into a single CSV file and append header
+    buildCSVFile(options, FileSystem.get(conf));
+  }
+
+  /** Formats the data for the output line in the CSV. */
+  private static String toHeader(boolean skipKeys) {
+    return String.join(
+        "\t",
+        "count",
+        "verbatim_taxonID",
+        "verbatim_taxonConceptID",
+        "verbatim_scientificNameID",
+        "verbatim_kingdom",
+        "verbatim_phylum",
+        "verbatim_class",
+        "verbatim_order",
+        "verbatim_family",
+        "verbatim_genus",
+        "verbatim_specificEpithet",
+        "verbatim_infraspecificEpithet",
+        "verbatim_rank",
+        "verbatim_verbatimRank",
+        "verbatim_scientificName",
+        "verbatim_genericName",
+        "verbatim_author",
+        GBIFClassification.toHeader("current_", skipKeys),
+        GBIFClassification.toHeader("proposed_", skipKeys));
+  }
+
+  private static void buildCSVFile(BackbonePreReleaseOptions options, FileSystem hdfs)
+      throws IOException {
+
+    Path hdfsDir = new Path(options.getTargetDir());
+    FileStatus[] files = hdfs.listStatus(hdfsDir);
+    FSDataOutputStream out =
+        hdfs.create(new Path(options.getTargetDir() + "/" + options.getReportFileName()), true);
+
+    // write the header
+    out.write((toHeader(options.getSkipKeys()) + "\n").getBytes());
+
+    for (FileStatus file : files) {
+      if (!file.isFile()) continue; // Skip subdirectories
+      try (FSDataInputStream in = hdfs.open(file.getPath())) {
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = in.read(buffer)) > 0) {
+          out.write(buffer, 0, bytesRead);
+        }
+      }
+    }
+
+    out.close();
   }
 
   private static HCatSchema readSchema(BackbonePreReleaseOptions options)
