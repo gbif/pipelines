@@ -84,7 +84,8 @@ public class BackbonePreRelease {
                     options.getIgnoreAuthorshipFormatting())));
 
     matched.apply(
-        TextIO.write().to(options.getTargetDir() + "/impact").withSuffix(".csv").withNumShards(1));
+        TextIO.write()
+                .to(options.getTargetDir() + "/impact").withSuffix(".csv"));
 
     p.run().waitUntilFinish();
 
