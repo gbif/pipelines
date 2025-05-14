@@ -106,7 +106,7 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
 
   @Override
   public PagingResponse<PipelineProcess> getRunningPipelineProcess(StepType stepType, StepRunner stepRunner, Pageable pageable) {
-    return null;
+    throw new UnsupportedOperationException("The method is not implemented!");
   }
 
   @Override
