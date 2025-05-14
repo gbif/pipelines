@@ -83,7 +83,11 @@ public class BackbonePreRelease {
                     options.getIgnoreWhitespace(),
                     options.getIgnoreAuthorshipFormatting())));
 
-    matched.apply(TextIO.write().to(options.getTargetDir() + "/impact").withSuffix(".csv"));
+    matched.apply(TextIO.write()
+            .to(options.getTargetDir() + "/impact")
+            .withSuffix(".csv")
+            .withNumShards(1)
+    );
 
     p.run().waitUntilFinish();
 
@@ -128,8 +132,10 @@ public class BackbonePreRelease {
     out.write((toHeader(options.getSkipKeys()) + "\n").getBytes());
 
     for (FileStatus file : files) {
-      if (!file.isFile()) continue; // Skip subdirectories
+      if (!file.isFile())
+        continue; // Skip subdirectories
       try (FSDataInputStream in = hdfs.open(file.getPath())) {
+        log.info("Merging file: " + file.getPath());
         byte[] buffer = new byte[4096];
         int bytesRead;
         while ((bytesRead = in.read(buffer)) > 0) {
