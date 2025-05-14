@@ -119,7 +119,7 @@ pipeline {
 
     stage('Build and push Docker images: GBIF Impact') {
       steps {
-        sh 'build/ingestion-docker-build.sh ${RELEASE} ${VERSION}'
+        sh 'build/gbif-impact-docker-build.sh ${RELEASE} ${VERSION}'
       }
     }
   }
