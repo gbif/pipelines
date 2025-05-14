@@ -83,7 +83,7 @@ public class BackbonePreRelease {
                     options.getIgnoreWhitespace(),
                     options.getIgnoreAuthorshipFormatting())));
 
-    matched.apply(TextIO.write().to(options.getTargetDir()));
+    matched.apply(TextIO.write().to(options.getTargetDir() + "/impact").withSuffix(".csv"));
 
     p.run().waitUntilFinish();
 
@@ -139,6 +139,7 @@ public class BackbonePreRelease {
     }
 
     out.close();
+    log.info("Merged files into: " + options.getTargetDir() + "/" + options.getReportFileName());
   }
 
   private static HCatSchema readSchema(BackbonePreReleaseOptions options)
