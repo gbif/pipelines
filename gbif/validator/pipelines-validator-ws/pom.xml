@@ -377,6 +377,13 @@
       <artifactId>logback-core</artifactId>
     </dependency>
 
+    <!-- enable swagger -->
+    <dependency>
+      <groupId>io.springfox</groupId>
+      <artifactId>springfox-boot-starter</artifactId>
+      <version>3.0.0</version>
+    </dependency>
+
     <!-- Tests -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
