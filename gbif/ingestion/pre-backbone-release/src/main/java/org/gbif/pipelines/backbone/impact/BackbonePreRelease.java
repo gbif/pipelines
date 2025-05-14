@@ -83,9 +83,7 @@ public class BackbonePreRelease {
                     options.getIgnoreWhitespace(),
                     options.getIgnoreAuthorshipFormatting())));
 
-    matched.apply(
-        TextIO.write()
-                .to(options.getTargetDir() + "/impact").withSuffix(".csv"));
+    matched.apply(TextIO.write().to(options.getTargetDir() + "/impact").withSuffix(".csv"));
 
     p.run().waitUntilFinish();
 
@@ -115,7 +113,8 @@ public class BackbonePreRelease {
         "verbatim_genericName",
         "verbatim_author",
         GBIFClassification.toHeader("current_", skipKeys),
-        GBIFClassification.toHeader("proposed_", skipKeys));
+        GBIFClassification.toHeader("proposed_", skipKeys),
+        "debug_url");
   }
 
   private static void buildCSVFile(BackbonePreReleaseOptions options, FileSystem hdfs)
@@ -239,7 +238,7 @@ public class BackbonePreRelease {
 
           // copy pipelines to put unknown content into incertae sedis kingdom
           if (proposed.getKingdom() == null) {
-            System.out.println("##### Failed request: " + toDebugUrl(matchRequest));
+            System.out.println("##### Failed request: " + toDebugUrl(baseAPIUrl, matchRequest));
             proposed.setKingdom("incertae sedis");
             proposed.setKingdomKey("0");
           }
@@ -248,9 +247,13 @@ public class BackbonePreRelease {
           if (skipKeys
               && !existing.classificationEquals(
                   proposed, ignoreWhitespace, ignoreAuthorshipFormatting)) {
-            c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
+            c.output(
+                toTabDelimited(
+                    baseAPIUrl, count, matchRequest, existing, proposed, skipKeys, matchRequest));
           } else if (!skipKeys && !existing.equals(proposed)) {
-            c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
+            c.output(
+                toTabDelimited(
+                    baseAPIUrl, count, matchRequest, existing, proposed, skipKeys, matchRequest));
           }
 
         } catch (Exception e) {
@@ -263,8 +266,8 @@ public class BackbonePreRelease {
       }
     }
 
-    private String toDebugUrl(NameUsageMatchRequest matchRequest) {
-      return baseAPIUrl
+    public static String toDebugUrl(String apiUrl, NameUsageMatchRequest matchRequest) {
+      return apiUrl
           + "/v2/species/match?"
           + "kingdom="
           + matchRequest.getKingdom()
@@ -312,11 +315,13 @@ public class BackbonePreRelease {
 
     /** Formats the data for the output line in the CSV. */
     private static String toTabDelimited(
+        String baseAPIUrl,
         long count,
         NameUsageMatchRequest verbatim,
         GBIFClassification current,
         GBIFClassification proposed,
-        boolean skipKeys) {
+        boolean skipKeys,
+        NameUsageMatchRequest matchRequest) {
 
       return String.join(
           "\t",
@@ -336,9 +341,10 @@ public class BackbonePreRelease {
           verbatim.getRank(), // avoid breaking the API (verbatimTaxonRank)
           verbatim.getScientificName(),
           verbatim.getGenericName(),
-          "",
+          verbatim.getAuthorship(),
           current.toString(skipKeys),
-          proposed.toString(skipKeys));
+          proposed.toString(skipKeys),
+          toDebugUrl(baseAPIUrl, matchRequest));
     }
 
     private static boolean isEmpty(NameUsageMatchResponse response) {
