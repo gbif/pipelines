@@ -331,6 +331,9 @@ public class BackbonePreRelease {
               .append(URLEncoder.encode(matchRequest.getRank(), "UTF-8"))
               .append("&");
         }
+        url.append("checklistKey=")
+            .append(URLEncoder.encode(matchRequest.getChecklistKey(), "UTF-8"))
+            .append("&");
         url.append("verbose=true");
 
       } catch (UnsupportedEncodingException e) {
