@@ -77,7 +77,7 @@ public class GBIFClassification {
     c.kingdom = source.getString("kingdom", schema);
     c.phylum = source.getString("phylum", schema);
     c.klass = source.getString("class", schema);
-    c.order = source.getString("`order`", schema);
+    c.order = source.getString("order", schema);
     c.family = source.getString("family", schema);
     c.genus = source.getString("genus", schema);
     c.subGenus = source.getString("subGenus", schema);
