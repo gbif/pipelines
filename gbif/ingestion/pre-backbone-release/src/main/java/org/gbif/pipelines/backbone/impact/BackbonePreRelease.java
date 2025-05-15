@@ -76,6 +76,7 @@ public class BackbonePreRelease {
             ParDo.of(
                 new MatchTransform(
                     options.getAPIBaseURI(),
+                    options.getChecklistKey(),
                     schema,
                     options.getScope(),
                     options.getMinimumOccurrenceCount(),
@@ -157,6 +158,7 @@ public class BackbonePreRelease {
   /** Performs the lookup. */
   static class MatchTransform extends DoFn<HCatRecord, String> {
     private final String baseAPIUrl;
+    private final String checklistKey;
     private final HCatSchema schema;
     private final Integer scope;
     private final int minCount;
@@ -167,6 +169,7 @@ public class BackbonePreRelease {
 
     MatchTransform(
         String baseAPIUrl,
+        String checklistKey,
         HCatSchema schema,
         Integer scope,
         int minCount,
@@ -174,6 +177,7 @@ public class BackbonePreRelease {
         boolean ignoreWhitespace,
         boolean ignoreAuthorshipFormatting) {
       this.baseAPIUrl = baseAPIUrl;
+      this.checklistKey = checklistKey;
       this.schema = schema;
       this.scope = scope;
       this.minCount = minCount;
@@ -221,6 +225,7 @@ public class BackbonePreRelease {
                 .withScientificNameID(source.getString("v_scientificnameid", schema))
                 .withTaxonID(source.getString("v_taxonid", schema))
                 .withTaxonConceptID(source.getString("v_taxonconceptid", schema))
+                .withChecklistKey(checklistKey)
                 .build();
 
         try {
