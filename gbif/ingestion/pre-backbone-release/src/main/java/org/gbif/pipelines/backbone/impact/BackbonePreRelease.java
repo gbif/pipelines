@@ -1,6 +1,7 @@
 package org.gbif.pipelines.backbone.impact;
 
 import java.io.*;
+import java.net.URLEncoder;
 import java.util.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -274,41 +275,68 @@ public class BackbonePreRelease {
     public static String toDebugUrl(String apiUrl, NameUsageMatchRequest matchRequest) {
       StringBuilder url = new StringBuilder(apiUrl + "/v2/species/match?");
 
-      if (matchRequest.getTaxonID() != null) {
-        url.append("taxonID=").append(matchRequest.getTaxonID()).append("&");
-      }
-      if (matchRequest.getTaxonConceptID() != null) {
-        url.append("taxonConceptID=").append(matchRequest.getTaxonConceptID()).append("&");
-      }
-      if (matchRequest.getScientificNameID() != null) {
-        url.append("scientificNameID=").append(matchRequest.getScientificNameID()).append("&");
-      }
-      if (matchRequest.getKingdom() != null) {
-        url.append("kingdom=").append(matchRequest.getKingdom()).append("&");
-      }
-      if (matchRequest.getPhylum() != null) {
-        url.append("phylum=").append(matchRequest.getPhylum()).append("&");
-      }
-      if (matchRequest.getClazz() != null) {
-        url.append("class=").append(matchRequest.getClazz()).append("&");
-      }
-      if (matchRequest.getOrder() != null) {
-        url.append("order=").append(matchRequest.getOrder()).append("&");
-      }
-      if (matchRequest.getFamily() != null) {
-        url.append("family=").append(matchRequest.getFamily()).append("&");
-      }
-      if (matchRequest.getGenus() != null) {
-        url.append("genus=").append(matchRequest.getGenus()).append("&");
-      }
-      if (matchRequest.getScientificName() != null) {
-        url.append("scientificName=").append(matchRequest.getScientificName()).append("&");
-      }
-      if (matchRequest.getRank() != null) {
-        url.append("rank=").append(matchRequest.getRank()).append("&");
-      }
+      try {
+        if (matchRequest.getTaxonID() != null) {
+          url.append("taxonID=")
+              .append(URLEncoder.encode(matchRequest.getTaxonID(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getTaxonConceptID() != null) {
+          url.append("taxonConceptID=")
+              .append(URLEncoder.encode(matchRequest.getTaxonConceptID(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getScientificNameID() != null) {
+          url.append("scientificNameID=")
+              .append(URLEncoder.encode(matchRequest.getScientificNameID(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getKingdom() != null) {
+          url.append("kingdom=")
+              .append(URLEncoder.encode(matchRequest.getKingdom(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getPhylum() != null) {
+          url.append("phylum=")
+              .append(URLEncoder.encode(matchRequest.getPhylum(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getClazz() != null) {
+          url.append("class=")
+              .append(URLEncoder.encode(matchRequest.getClazz(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getOrder() != null) {
+          url.append("order=")
+              .append(URLEncoder.encode(matchRequest.getOrder(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getFamily() != null) {
+          url.append("family=")
+              .append(URLEncoder.encode(matchRequest.getFamily(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getGenus() != null) {
+          url.append("genus=")
+              .append(URLEncoder.encode(matchRequest.getGenus(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getScientificName() != null) {
+          url.append("scientificName=")
+              .append(URLEncoder.encode(matchRequest.getScientificName(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getRank() != null) {
+          url.append("rank=")
+              .append(URLEncoder.encode(matchRequest.getRank(), "UTF-8"))
+              .append("&");
+        }
+        url.append("verbose=true");
 
-      url.append("verbose=false");
+      } catch (UnsupportedEncodingException e) {
+        // UTF-8 is guaranteed to be supported, so this shouldn't happen.
+        throw new RuntimeException("UTF-8 encoding not supported", e);
+      }
 
       return url.toString();
     }
