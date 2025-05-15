@@ -313,7 +313,6 @@ public class BackbonePreRelease {
       return url.toString();
     }
 
-
     /** Extracts all taxon keys from the record. */
     private static Set<Integer> taxaKeys(HCatRecord record, HCatSchema schema)
         throws HCatException {
@@ -341,36 +340,36 @@ public class BackbonePreRelease {
 
     /** Formats the data for the output line in the CSV. */
     private static String toTabDelimited(
-            String baseAPIUrl,
-            long count,
-            NameUsageMatchRequest verbatim,
-            GBIFClassification current,
-            GBIFClassification proposed,
-            boolean skipKeys,
-            NameUsageMatchRequest matchRequest) {
+        String baseAPIUrl,
+        long count,
+        NameUsageMatchRequest verbatim,
+        GBIFClassification current,
+        GBIFClassification proposed,
+        boolean skipKeys,
+        NameUsageMatchRequest matchRequest) {
 
       return String.join(
-              "\t",
-              String.valueOf(count),
-              safe(verbatim.getTaxonID()),
-              safe(verbatim.getTaxonConceptID()),
-              safe(verbatim.getScientificNameID()),
-              safe(verbatim.getKingdom()),
-              safe(verbatim.getPhylum()),
-              safe(verbatim.getClazz()),
-              safe(verbatim.getOrder()),
-              safe(verbatim.getFamily()),
-              safe(verbatim.getGenus()),
-              safe(verbatim.getSpecificEpithet()),
-              safe(verbatim.getInfraspecificEpithet()),
-              safe(verbatim.getRank()),
-              safe(verbatim.getRank()), // avoid breaking the API (verbatimTaxonRank)
-              safe(verbatim.getScientificName()),
-              safe(verbatim.getGenericName()),
-              safe(verbatim.getAuthorship()),
-              current.toString(skipKeys),
-              proposed.toString(skipKeys),
-              safe(toDebugUrl(baseAPIUrl, matchRequest)));
+          "\t",
+          String.valueOf(count),
+          safe(verbatim.getTaxonID()),
+          safe(verbatim.getTaxonConceptID()),
+          safe(verbatim.getScientificNameID()),
+          safe(verbatim.getKingdom()),
+          safe(verbatim.getPhylum()),
+          safe(verbatim.getClazz()),
+          safe(verbatim.getOrder()),
+          safe(verbatim.getFamily()),
+          safe(verbatim.getGenus()),
+          safe(verbatim.getSpecificEpithet()),
+          safe(verbatim.getInfraspecificEpithet()),
+          safe(verbatim.getRank()),
+          safe(verbatim.getRank()), // avoid breaking the API (verbatimTaxonRank)
+          safe(verbatim.getScientificName()),
+          safe(verbatim.getGenericName()),
+          safe(verbatim.getAuthorship()),
+          current.toString(skipKeys),
+          proposed.toString(skipKeys),
+          safe(toDebugUrl(baseAPIUrl, matchRequest)));
     }
 
     /** Returns the string or an empty string if null. */
