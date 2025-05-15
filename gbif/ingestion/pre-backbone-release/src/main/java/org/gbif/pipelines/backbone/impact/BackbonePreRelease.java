@@ -272,26 +272,47 @@ public class BackbonePreRelease {
     }
 
     public static String toDebugUrl(String apiUrl, NameUsageMatchRequest matchRequest) {
-      return apiUrl
-          + "/v2/species/match?"
-          + "kingdom="
-          + matchRequest.getKingdom()
-          + "&phylum="
-          + matchRequest.getPhylum()
-          + "&class="
-          + matchRequest.getClazz()
-          + "&order="
-          + matchRequest.getOrder()
-          + "&family="
-          + matchRequest.getFamily()
-          + "&genus="
-          + matchRequest.getGenus()
-          + "&scientificName="
-          + matchRequest.getScientificName()
-          + "&rank="
-          + matchRequest.getRank()
-          + "&verbose=false";
+      StringBuilder url = new StringBuilder(apiUrl + "/v2/species/match?");
+
+      if (matchRequest.getTaxonID() != null) {
+        url.append("taxonID=").append(matchRequest.getTaxonID()).append("&");
+      }
+      if (matchRequest.getTaxonConceptID() != null) {
+        url.append("taxonConceptID=").append(matchRequest.getTaxonConceptID()).append("&");
+      }
+      if (matchRequest.getScientificNameID() != null) {
+        url.append("scientificNameID=").append(matchRequest.getScientificNameID()).append("&");
+      }
+      if (matchRequest.getKingdom() != null) {
+        url.append("kingdom=").append(matchRequest.getKingdom()).append("&");
+      }
+      if (matchRequest.getPhylum() != null) {
+        url.append("phylum=").append(matchRequest.getPhylum()).append("&");
+      }
+      if (matchRequest.getClazz() != null) {
+        url.append("class=").append(matchRequest.getClazz()).append("&");
+      }
+      if (matchRequest.getOrder() != null) {
+        url.append("order=").append(matchRequest.getOrder()).append("&");
+      }
+      if (matchRequest.getFamily() != null) {
+        url.append("family=").append(matchRequest.getFamily()).append("&");
+      }
+      if (matchRequest.getGenus() != null) {
+        url.append("genus=").append(matchRequest.getGenus()).append("&");
+      }
+      if (matchRequest.getScientificName() != null) {
+        url.append("scientificName=").append(matchRequest.getScientificName()).append("&");
+      }
+      if (matchRequest.getRank() != null) {
+        url.append("rank=").append(matchRequest.getRank()).append("&");
+      }
+
+      url.append("verbose=false");
+
+      return url.toString();
     }
+
 
     /** Extracts all taxon keys from the record. */
     private static Set<Integer> taxaKeys(HCatRecord record, HCatSchema schema)
@@ -320,36 +341,41 @@ public class BackbonePreRelease {
 
     /** Formats the data for the output line in the CSV. */
     private static String toTabDelimited(
-        String baseAPIUrl,
-        long count,
-        NameUsageMatchRequest verbatim,
-        GBIFClassification current,
-        GBIFClassification proposed,
-        boolean skipKeys,
-        NameUsageMatchRequest matchRequest) {
+            String baseAPIUrl,
+            long count,
+            NameUsageMatchRequest verbatim,
+            GBIFClassification current,
+            GBIFClassification proposed,
+            boolean skipKeys,
+            NameUsageMatchRequest matchRequest) {
 
       return String.join(
-          "\t",
-          String.valueOf(count),
-          verbatim.getTaxonID(),
-          verbatim.getTaxonConceptID(),
-          verbatim.getScientificNameID(),
-          verbatim.getKingdom(),
-          verbatim.getPhylum(),
-          verbatim.getClazz(),
-          verbatim.getOrder(),
-          verbatim.getFamily(),
-          verbatim.getGenus(),
-          verbatim.getSpecificEpithet(),
-          verbatim.getInfraspecificEpithet(),
-          verbatim.getRank(),
-          verbatim.getRank(), // avoid breaking the API (verbatimTaxonRank)
-          verbatim.getScientificName(),
-          verbatim.getGenericName(),
-          verbatim.getAuthorship(),
-          current.toString(skipKeys),
-          proposed.toString(skipKeys),
-          toDebugUrl(baseAPIUrl, matchRequest));
+              "\t",
+              String.valueOf(count),
+              safe(verbatim.getTaxonID()),
+              safe(verbatim.getTaxonConceptID()),
+              safe(verbatim.getScientificNameID()),
+              safe(verbatim.getKingdom()),
+              safe(verbatim.getPhylum()),
+              safe(verbatim.getClazz()),
+              safe(verbatim.getOrder()),
+              safe(verbatim.getFamily()),
+              safe(verbatim.getGenus()),
+              safe(verbatim.getSpecificEpithet()),
+              safe(verbatim.getInfraspecificEpithet()),
+              safe(verbatim.getRank()),
+              safe(verbatim.getRank()), // avoid breaking the API (verbatimTaxonRank)
+              safe(verbatim.getScientificName()),
+              safe(verbatim.getGenericName()),
+              safe(verbatim.getAuthorship()),
+              current.toString(skipKeys),
+              proposed.toString(skipKeys),
+              safe(toDebugUrl(baseAPIUrl, matchRequest)));
+    }
+
+    /** Returns the string or an empty string if null. */
+    private static String safe(String value) {
+      return value != null && !value.equalsIgnoreCase("null") ? value : "";
     }
 
     private static boolean isEmpty(NameUsageMatchResponse response) {

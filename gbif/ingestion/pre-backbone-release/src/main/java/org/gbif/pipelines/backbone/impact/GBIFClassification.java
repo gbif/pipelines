@@ -215,24 +215,28 @@ public class GBIFClassification {
     if (skipKeys) return String.join("\t", defaultValues);
     else {
       CharSequence[] keyVals = {
-        String.valueOf(kingdomKey),
-        String.valueOf(phylumKey),
-        String.valueOf(classKey),
-        String.valueOf(orderKey),
-        String.valueOf(familyKey),
-        String.valueOf(genusKey),
-        String.valueOf(subGenusKey),
-        String.valueOf(speciesKey),
-        String.valueOf(taxonKey),
-        String.valueOf(acceptedTaxonKey)
+        safe(kingdomKey),
+        safe(phylumKey),
+        safe(classKey),
+        safe(orderKey),
+        safe(familyKey),
+        safe(genusKey),
+        safe(subGenusKey),
+        safe(speciesKey),
+        safe(taxonKey),
+        safe(acceptedTaxonKey)
       };
-
       CharSequence[] allVals =
           Stream.concat(Arrays.stream(defaultValues), Arrays.stream(keyVals))
               .toArray(CharSequence[]::new);
 
       return String.join("\t", allVals);
     }
+  }
+
+  /** Returns the string or an empty string if null. */
+  private static String safe(String value) {
+    return value != null && !value.equalsIgnoreCase("null") ? value : "";
   }
 
   /**
