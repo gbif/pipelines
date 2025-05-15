@@ -374,7 +374,7 @@ public class BackbonePreRelease {
 
     /** Returns the string or an empty string if null. */
     private static String safe(String value) {
-//      return value != null && !value.equalsIgnoreCase("null") ? value : "";
+      //      return value != null && !value.equalsIgnoreCase("null") ? value : "";
       return value;
     }
 
