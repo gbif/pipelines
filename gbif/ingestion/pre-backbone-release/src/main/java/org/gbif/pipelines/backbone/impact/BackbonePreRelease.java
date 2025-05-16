@@ -1,5 +1,6 @@
 package org.gbif.pipelines.backbone.impact;
 
+import feign.FeignException;
 import java.io.*;
 import java.net.URLEncoder;
 import java.util.*;
@@ -231,7 +232,14 @@ public class BackbonePreRelease {
 
         try {
           // short circuit the cache, but replicate same logic of the NameUsageMatchKVStoreFactory
-          NameUsageMatchResponse usageMatch = service.match(matchRequest);
+          NameUsageMatchResponse usageMatch = null;
+          try {
+            usageMatch = service.match(matchRequest);
+          } catch (FeignException.InternalServerError e) {
+            // Handle 500 Internal Server Error
+            System.out.println("Caught 500 Internal Server Error: " + e.getMessage());
+          }
+
           GBIFClassification existing = GBIFClassification.buildFromHiveSource(source, schema);
           GBIFClassification proposed;
           if (usageMatch == null) {
