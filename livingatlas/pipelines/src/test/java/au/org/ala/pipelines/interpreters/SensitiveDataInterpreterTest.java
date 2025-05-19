@@ -271,9 +271,9 @@ public class SensitiveDataInterpreterTest {
             .setId("1")
             .setNomenclature(nomenclature)
             .setAcceptedUsage(
-                RankedName.newBuilder()
-                    .setKey(26)
-                    .setRank(Rank.SPECIES)
+                RankedNameWithAuthorship.newBuilder()
+                    .setKey("26")
+                    .setRank(Rank.SPECIES.toString())
                     .setName("Acacia dealbata")
                     .build())
             .build();
@@ -401,9 +401,9 @@ public class SensitiveDataInterpreterTest {
             .setId("1")
             .setNomenclature(nomenclature)
             .setAcceptedUsage(
-                RankedName.newBuilder()
-                    .setKey(26)
-                    .setRank(Rank.SPECIES)
+                RankedNameWithAuthorship.newBuilder()
+                    .setKey("26")
+                    .setRank(Rank.SPECIES.toString())
                     .setName("Acacia dealbata")
                     .build())
             .build();

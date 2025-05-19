@@ -322,7 +322,7 @@ public class ALAOccurrenceJsonConverter {
               .setTaxonKey(
                   gc.getAcceptedUsage().getGuid() != null
                       ? gc.getAcceptedUsage().getGuid()
-                      : gc.getAcceptedUsage().getKey().toString())
+                      : gc.getAcceptedUsage().getKey())
               .build());
     }
 
@@ -343,7 +343,7 @@ public class ALAOccurrenceJsonConverter {
 
     classificationBuilder.setAcceptedUsage(
         org.gbif.pipelines.io.avro.json.RankedName.newBuilder()
-            .setKey(taxon.getLft())
+            .setKey(taxon.getLft().toString())
             .setGuid(taxon.getTaxonConceptID())
             .setName(taxon.getScientificName())
             .setRank(taxon.getTaxonRank())

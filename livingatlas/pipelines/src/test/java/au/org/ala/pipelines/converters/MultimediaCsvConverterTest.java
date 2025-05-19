@@ -239,28 +239,28 @@ public class MultimediaCsvConverterTest {
             .setId(DwcTerm.occurrenceID.simpleName())
             .setSynonym(false)
             .setUsage(
-                RankedName.newBuilder()
-                    .setRank(Rank.SPECIES)
+                RankedNameWithAuthorship.newBuilder()
+                    .setRank(Rank.SPECIES.toString())
                     .setName("txr_Usage_name")
-                    .setKey(4)
+                    .setKey("4")
                     .build())
             .setClassification(
                 Arrays.asList(
                     RankedName.newBuilder()
-                        .setRank(Rank.SPECIES)
+                        .setRank(Rank.SPECIES.toString())
                         .setName("txr_Classification_SPECIES_name")
-                        .setKey(44)
+                        .setKey("44")
                         .build(),
                     RankedName.newBuilder()
-                        .setRank(Rank.CLASS)
+                        .setRank(Rank.CLASS.toString())
                         .setName("txr_Classification_CLASS_name")
-                        .setKey(444)
+                        .setKey("444")
                         .build()))
             .setAcceptedUsage(
-                RankedName.newBuilder()
-                    .setRank(Rank.SPECIES)
+                RankedNameWithAuthorship.newBuilder()
+                    .setRank(Rank.SPECIES.toString())
                     .setName("txr_Usage_name")
-                    .setKey(4444)
+                    .setKey("4444")
                     .build())
             .setNomenclature(
                 Nomenclature.newBuilder()
