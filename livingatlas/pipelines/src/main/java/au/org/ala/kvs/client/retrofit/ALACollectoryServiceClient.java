@@ -1,6 +1,6 @@
 package au.org.ala.kvs.client.retrofit;
 
-import static org.gbif.rest.client.retrofit.SyncCall.syncCall;
+import static  au.org.ala.kvs.client.retrofit.SyncCall.syncCall;
 
 import au.org.ala.kvs.client.*;
 import au.org.ala.utils.WsUtils;
