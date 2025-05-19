@@ -958,7 +958,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     for (RankedName entry : taxonomy) {
       indexRecord
           .getInts()
-          .put("gbif_s_" + entry.getRank().toString().toLowerCase() + "_id", Integer.parseInt(entry.getKey()));
+          .put(
+              "gbif_s_" + entry.getRank().toString().toLowerCase() + "_id",
+              Integer.parseInt(entry.getKey()));
       indexRecord
           .getStrings()
           .put("gbif_s_" + entry.getRank().toString().toLowerCase(), entry.getName());
