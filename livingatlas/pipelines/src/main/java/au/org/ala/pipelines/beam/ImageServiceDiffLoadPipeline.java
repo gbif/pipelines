@@ -58,7 +58,7 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import  au.org.ala.kvs.client.retrofit.SyncCall;
+import au.org.ala.kvs.client.retrofit.SyncCall;
 import org.slf4j.MDC;
 import retrofit2.Call;
 
