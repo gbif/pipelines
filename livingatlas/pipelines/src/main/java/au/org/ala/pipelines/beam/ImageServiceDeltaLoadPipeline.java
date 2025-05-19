@@ -53,7 +53,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.rest.client.retrofit.SyncCall;
+import  au.org.ala.kvs.client.retrofit.SyncCall;
 import org.slf4j.MDC;
 import retrofit2.Call;
 
