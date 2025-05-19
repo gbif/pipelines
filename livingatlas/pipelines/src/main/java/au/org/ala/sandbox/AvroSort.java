@@ -19,7 +19,7 @@ import org.apache.hadoop.fs.Path;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.AvroFSInput;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.Record;
 
 /** A class to sort class Record Avro files by the id field, and a reader for the sorted file. */
 @Slf4j
