@@ -34,7 +34,7 @@ import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
+import org.gbif.rest.client.geocode.GeocodeResponse.Location;
 
 /** Extensions to GBIF's {@link LocationInterpreter} */
 @Slf4j
@@ -66,8 +66,8 @@ public class ALALocationInterpreter {
       if (parsedLatLon.isSuccessful()) {
 
         GeocodeRequest latlng = parsedLatLon.getResult();
-        lr.setDecimalLatitude(latlng.getLatitude());
-        lr.setDecimalLongitude(latlng.getLongitude());
+        lr.setDecimalLatitude(latlng.getLat());
+        lr.setDecimalLongitude(latlng.getLng());
         lr.setHasCoordinate(true);
 
         // do the lookup by coordinates
@@ -92,8 +92,8 @@ public class ALALocationInterpreter {
       if (parsedLatLon.isSuccessful()) {
 
         GeocodeRequest latlng = parsedLatLon.getResult();
-        lr.setDecimalLatitude(latlng.getLatitude());
-        lr.setDecimalLongitude(latlng.getLongitude());
+        lr.setDecimalLatitude(latlng.getLat());
+        lr.setDecimalLongitude(latlng.getLng());
         lr.setHasCoordinate(true);
 
         // do the lookup by coordinates

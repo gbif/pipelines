@@ -89,7 +89,7 @@ public class CoordinatesParser {
 
         ParsedField<GeocodeRequest> projectedLatLng =
             Wgs84Projection.reproject(
-                result.getResult().getLatitude(), result.getResult().getLongitude(), geodeticDatum);
+                result.getResult().getLat(), result.getResult().getLng(), geodeticDatum);
 
         // Convert failure to success status with valid lat/lng
         // Add existing issues.
