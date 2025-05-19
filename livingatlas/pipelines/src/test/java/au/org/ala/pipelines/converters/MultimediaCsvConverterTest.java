@@ -34,6 +34,7 @@ import org.gbif.pipelines.io.avro.TaxonProfile;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
+import org.gbif.pipelines.io.avro.RankedNameWithAuthorship;
 import org.junit.Assert;
 import org.junit.Test;
 
