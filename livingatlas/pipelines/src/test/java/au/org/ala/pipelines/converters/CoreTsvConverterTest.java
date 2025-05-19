@@ -32,6 +32,7 @@ import org.gbif.pipelines.io.avro.Nomenclature;
 import org.gbif.pipelines.io.avro.ParsedName;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.RankedNameWithAuthorship;
 import org.gbif.pipelines.io.avro.Status;
 import org.gbif.pipelines.io.avro.TaxonProfile;
 import org.gbif.pipelines.io.avro.TaxonRecord;
