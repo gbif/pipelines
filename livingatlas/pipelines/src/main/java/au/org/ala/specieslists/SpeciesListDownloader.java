@@ -27,7 +27,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.SpeciesListRecord;
-import  au.org.ala.kvs.client.retrofit.SyncCall;
+import au.org.ala.kvs.client.retrofit.SyncCall;
 import org.slf4j.MDC;
 import retrofit2.Call;
 
