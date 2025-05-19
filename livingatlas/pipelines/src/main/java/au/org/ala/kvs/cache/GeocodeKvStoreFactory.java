@@ -12,7 +12,7 @@ import org.gbif.pipelines.core.parsers.location.cache.BinaryBitmapLookup;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.factory.BufferedImageFactory;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
+import org.gbif.rest.client.geocode.GeocodeResponse.Location;
 
 /** Factory to get singleton instance of {@link GeocodeKvStore} */
 public class GeocodeKvStoreFactory {

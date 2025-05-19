@@ -112,8 +112,8 @@ public class CentrePoints {
       int longDecPlaces = noOfDecimalPlace(decimalLongitude);
 
       // approximate the centre points appropriately
-      double approximatedLat = round(supposedCentre.getLatitude(), latDecPlaces);
-      double approximatedLong = round(supposedCentre.getLongitude(), longDecPlaces);
+      double approximatedLat = round(supposedCentre.getLat(), latDecPlaces);
+      double approximatedLong = round(supposedCentre.getLng(), longDecPlaces);
 
       // compare approximated centre point with supplied coordinates
       if (log.isDebugEnabled()) {
@@ -226,7 +226,7 @@ public class CentrePoints {
     }
 
     public void add(GeocodeRequest c) {
-      add(c.getLongitude(), c.getLatitude());
+      add(c.getLng(), c.getLat());
     }
 
     /** Extends this bbox to include the point (x, y) */
