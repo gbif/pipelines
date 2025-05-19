@@ -75,7 +75,8 @@ public class CentrePoints {
               String[] ss = l.split("\t");
               int length = ss.length;
               String name = ss[0].toUpperCase().replace("\"", ""); // Remove possible string quotes
-              GeocodeRequest centre = GeocodeRequest.create(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
+              GeocodeRequest centre =
+                  GeocodeRequest.create(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
               // country code
               if (length == 4) {
                 String code = ss[3].toUpperCase();

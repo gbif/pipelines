@@ -98,8 +98,8 @@ public class GeocodeKvStoreFactory {
     return instance;
   }
 
-  public static SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> createCountrySupplier(
-      ALAPipelinesConfig config) {
+  public static SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>>
+      createCountrySupplier(ALAPipelinesConfig config) {
     return () -> getInstance(config).countryKvStore;
   }
 
@@ -108,8 +108,8 @@ public class GeocodeKvStoreFactory {
     return () -> getInstance(config).stateProvinceKvStore;
   }
 
-  public static SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> createBiomeSupplier(
-      ALAPipelinesConfig config) {
+  public static SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>>
+      createBiomeSupplier(ALAPipelinesConfig config) {
     return () -> getInstance(config).biomeKvStore;
   }
 }

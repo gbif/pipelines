@@ -92,7 +92,8 @@ public class SensitiveDataInterpreter {
     if (name == null) {
       return;
     }
-    constructField(name, DwcTerm.scientificName, sensitive, properties, RankedNameWithAuthorship::getName);
+    constructField(
+        name, DwcTerm.scientificName, sensitive, properties, RankedNameWithAuthorship::getName);
     constructField(name, DwcTerm.taxonConceptID, sensitive, properties, n -> n.getKey());
     constructField(name, DwcTerm.taxonRank, sensitive, properties, n -> n.getRank());
 
@@ -245,11 +246,11 @@ public class SensitiveDataInterpreter {
     if (altered.containsKey(scientificName) || altered.containsKey(taxonRank)) {
       Optional<RankedNameWithAuthorship> name = Optional.ofNullable(record.getAcceptedUsage());
       String newScientificName =
-          altered.getOrDefault(scientificName, name.map(RankedNameWithAuthorship::getName).orElse(null));
+          altered.getOrDefault(
+              scientificName, name.map(RankedNameWithAuthorship::getName).orElse(null));
       String newTaxonRank =
           altered.getOrDefault(
-              taxonRank,
-              name.map(RankedNameWithAuthorship::getRank).orElse(Rank.UNRANKED.name()));
+              taxonRank, name.map(RankedNameWithAuthorship::getRank).orElse(Rank.UNRANKED.name()));
       record.setAcceptedUsage(
           RankedNameWithAuthorship.newBuilder()
               .setName(newScientificName)

@@ -314,13 +314,11 @@ public class ALAOccurrenceJsonConverter {
         Taxonomy.newBuilder().setName(gc.getGenus()).setTaxonKey(gc.getGenusKey()).build());
     taxonomy.add(
         Taxonomy.newBuilder().setName(gc.getSpecies()).setTaxonKey(gc.getSpeciesKey()).build());
-    if (gc.getAcceptedUsage() != null
-        && (gc.getAcceptedUsage().getKey() != null)) {
+    if (gc.getAcceptedUsage() != null && (gc.getAcceptedUsage().getKey() != null)) {
       taxonomy.add(
           Taxonomy.newBuilder()
               .setName(gc.getAcceptedUsage().getName())
-              .setTaxonKey(
-                      gc.getAcceptedUsage().getKey())
+              .setTaxonKey(gc.getAcceptedUsage().getKey())
               .build());
     }
 

@@ -250,8 +250,7 @@ public class GeocodeServiceTestIT {
         GeocodeKvStoreFactory.createStateProvinceSupplier(TestUtils.getConfig()).get();
 
     GeocodeResponse resp =
-        geoService.get(
-            GeocodeRequest.builder().withLng(-145.077283).withLat(-38.188337).build());
+        geoService.get(GeocodeRequest.builder().withLng(-145.077283).withLat(-38.188337).build());
     assertTrue(resp.getLocations().isEmpty());
   }
 
@@ -296,8 +295,7 @@ public class GeocodeServiceTestIT {
         GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
 
     GeocodeResponse resp =
-        geoService.get(
-            GeocodeRequest.builder().withLng(-145.077283).withLat(-38.188337).build());
+        geoService.get(GeocodeRequest.builder().withLng(-145.077283).withLat(-38.188337).build());
     assertTrue(resp.getLocations().isEmpty());
   }
 
@@ -322,13 +320,11 @@ public class GeocodeServiceTestIT {
     assertEquals("Queensland", resp.getLocations().iterator().next().getName());
 
     resp =
-        stateProvinceKvStore.get(
-            GeocodeRequest.builder().withLng(146.921).withLat(-31.25).build());
+        stateProvinceKvStore.get(GeocodeRequest.builder().withLng(146.921).withLat(-31.25).build());
     assertEquals(1, resp.getLocations().size());
 
     resp =
-        stateProvinceKvStore.get(
-            GeocodeRequest.builder().withLng(146.923).withLat(-31.2).build());
+        stateProvinceKvStore.get(GeocodeRequest.builder().withLng(146.923).withLat(-31.2).build());
     assertEquals(1, resp.getLocations().size());
     assertEquals("New South Wales", resp.getLocations().iterator().next().getName());
   }
