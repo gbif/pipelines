@@ -340,7 +340,7 @@ public class ALAOccurrenceJsonConverter {
         GbifClassification.newBuilder().setTaxonID(taxon.getTaxonConceptID());
 
     classificationBuilder.setAcceptedUsage(
-        org.gbif.pipelines.io.avro.json.RankedName.newBuilder()
+        org.gbif.pipelines.io.avro.json.RankedNameWithAuthorship.newBuilder()
             .setKey(taxon.getLft().toString())
             .setName(taxon.getScientificName())
             .setRank(taxon.getTaxonRank())
