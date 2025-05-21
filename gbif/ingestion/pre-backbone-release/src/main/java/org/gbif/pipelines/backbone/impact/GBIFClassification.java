@@ -2,6 +2,7 @@ package org.gbif.pipelines.backbone.impact;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -76,7 +77,7 @@ public class GBIFClassification {
     c.kingdom = source.getString("kingdom", schema);
     c.phylum = source.getString("phylum", schema);
     c.klass = source.getString("class", schema);
-    c.order = ""; // source.getString("order", schema);
+    c.order = source.getString("order", schema);
     c.family = source.getString("family", schema);
     c.genus = source.getString("genus", schema);
     c.subGenus = source.getString("subGenus", schema);
@@ -168,6 +169,33 @@ public class GBIFClassification {
   }
 
   /**
+   * Generates a tab-delimited list of classification headers.
+   *
+   * @param prefix Prefix to apply to each header field.
+   * @param skipKeys If true, key-based headers are skipped.
+   * @return Tab-delimited string of classification headers.
+   */
+  public static String toHeader(String prefix, boolean skipKeys) {
+    String[] fields = {
+      "kingdom", "phylum", "klass", "order", "family",
+      "genus", "subGenus", "species", "scientificName", "acceptedScientificName"
+    };
+
+    String[] keys = {
+      "kingdomKey", "phylumKey", "classKey", "orderKey", "familyKey",
+      "genusKey", "subGenusKey", "speciesKey", "taxonKey", "acceptedTaxonKey"
+    };
+
+    Stream<String> headerStream = Arrays.stream(fields).map(f -> prefix + f);
+
+    if (!skipKeys) {
+      headerStream = Stream.concat(headerStream, Arrays.stream(keys).map(k -> prefix + k));
+    }
+
+    return headerStream.collect(Collectors.joining("\t"));
+  }
+
+  /**
    * @return classification in tab delimited format optionally skipping keys
    */
   public String toString(boolean skipKeys) {
@@ -187,24 +215,29 @@ public class GBIFClassification {
     if (skipKeys) return String.join("\t", defaultValues);
     else {
       CharSequence[] keyVals = {
-        String.valueOf(kingdomKey),
-        String.valueOf(phylumKey),
-        String.valueOf(classKey),
-        String.valueOf(orderKey),
-        String.valueOf(familyKey),
-        String.valueOf(genusKey),
-        String.valueOf(subGenusKey),
-        String.valueOf(speciesKey),
-        String.valueOf(taxonKey),
-        String.valueOf(acceptedTaxonKey)
+        safe(kingdomKey),
+        safe(phylumKey),
+        safe(classKey),
+        safe(orderKey),
+        safe(familyKey),
+        safe(genusKey),
+        safe(subGenusKey),
+        safe(speciesKey),
+        safe(taxonKey),
+        safe(acceptedTaxonKey)
       };
-
       CharSequence[] allVals =
           Stream.concat(Arrays.stream(defaultValues), Arrays.stream(keyVals))
               .toArray(CharSequence[]::new);
 
       return String.join("\t", allVals);
     }
+  }
+
+  /** Returns the string or an empty string if null. */
+  private static String safe(String value) {
+    //    return value != null && !value.equalsIgnoreCase("null") ? value : "";
+    return value;
   }
 
   /**
