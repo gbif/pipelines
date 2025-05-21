@@ -16,12 +16,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.pipelines.PipelineExecution;
-import org.gbif.api.model.pipelines.PipelineProcess;
-import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.*;
 import org.gbif.api.model.pipelines.PipelineStep.Status;
-import org.gbif.api.model.pipelines.RunPipelineResponse;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.api.model.pipelines.ws.RunAllParams;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -53,6 +49,12 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
 
   @Override
   public PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable) {
+    throw new UnsupportedOperationException("The method is not implemented!");
+  }
+
+  @Override
+  public PagingResponse<PipelineProcess> getRunningPipelineProcess(
+      StepType stepType, StepRunner stepRunner, Pageable pageable) {
     throw new UnsupportedOperationException("The method is not implemented!");
   }
 

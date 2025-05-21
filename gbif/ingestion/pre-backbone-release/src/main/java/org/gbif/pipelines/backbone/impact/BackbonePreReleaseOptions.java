@@ -32,6 +32,17 @@ public interface BackbonePreReleaseOptions extends HadoopFileSystemOptions {
 
   void setAPIBaseURI(String baseUri);
 
+  @Description("The file name for final report")
+  @Default.String("report.csv")
+  String getReportFileName();
+
+  void setReportFileName(String reportFileName);
+
+  @Description("The checklist key to use")
+  String getChecklistKey();
+
+  void setChecklistKey(String checklistKey);
+
   @Description("A taxon key to limit to using the existing GBIF.org keys (e.g. 1 for Animals")
   Integer getScope();
 

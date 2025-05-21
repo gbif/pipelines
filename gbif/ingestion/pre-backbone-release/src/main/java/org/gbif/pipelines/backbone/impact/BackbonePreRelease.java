@@ -1,7 +1,8 @@
 package org.gbif.pipelines.backbone.impact;
 
-import com.google.common.base.Strings;
-import java.io.File;
+import feign.FeignException;
+import java.io.*;
+import java.net.URLEncoder;
 import java.util.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -15,7 +16,7 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -46,13 +47,16 @@ public class BackbonePreRelease {
     options.setRunner(SparkRunner.class);
     String hdfsPath = options.getHdfsSiteConfig();
     String corePath = options.getCoreSiteConfig();
-    boolean isHdfsExist = !Strings.isNullOrEmpty(hdfsPath) && new File(hdfsPath).exists();
-    boolean isCoreExist = !Strings.isNullOrEmpty(corePath) && new File(corePath).exists();
-    if (isHdfsExist && isCoreExist) {
-      Configuration conf = new Configuration(false);
-      conf.addResource(new Path(hdfsPath));
-      conf.addResource(new Path(corePath));
-      options.setHdfsConfiguration(Collections.singletonList(conf));
+    Configuration conf = new Configuration(false);
+    conf.addResource(new Path(hdfsPath));
+    conf.addResource(new Path(corePath));
+    options.setHdfsConfiguration(Collections.singletonList(conf));
+
+    // delete previous runs
+    FileSystem hdfs = FileSystem.get(conf);
+    if (hdfs.exists(new Path(options.getTargetDir()))) {
+      log.info("Deleting previous run: " + options.getTargetDir());
+      hdfs.delete(new Path(options.getTargetDir()), true);
     }
 
     Pipeline p = Pipeline.create(options);
@@ -74,6 +78,7 @@ public class BackbonePreRelease {
             ParDo.of(
                 new MatchTransform(
                     options.getAPIBaseURI(),
+                    options.getChecklistKey(),
                     schema,
                     options.getScope(),
                     options.getMinimumOccurrenceCount(),
@@ -81,9 +86,65 @@ public class BackbonePreRelease {
                     options.getIgnoreWhitespace(),
                     options.getIgnoreAuthorshipFormatting())));
 
-    matched.apply(TextIO.write().to(options.getTargetDir()));
+    matched.apply(TextIO.write().to(options.getTargetDir() + "/impact").withSuffix(".csv"));
 
     p.run().waitUntilFinish();
+
+    // Merge all the files into a single CSV file and append header
+    buildCSVFile(options, FileSystem.get(conf));
+  }
+
+  /** Formats the data for the output line in the CSV. */
+  private static String toHeader(boolean skipKeys) {
+    return String.join(
+        "\t",
+        "count",
+        "verbatim_taxonID",
+        "verbatim_taxonConceptID",
+        "verbatim_scientificNameID",
+        "verbatim_kingdom",
+        "verbatim_phylum",
+        "verbatim_class",
+        "verbatim_order",
+        "verbatim_family",
+        "verbatim_genus",
+        "verbatim_specificEpithet",
+        "verbatim_infraspecificEpithet",
+        "verbatim_rank",
+        "verbatim_verbatimRank",
+        "verbatim_scientificName",
+        "verbatim_genericName",
+        "verbatim_author",
+        GBIFClassification.toHeader("current_", skipKeys),
+        GBIFClassification.toHeader("proposed_", skipKeys),
+        "debug_url");
+  }
+
+  private static void buildCSVFile(BackbonePreReleaseOptions options, FileSystem hdfs)
+      throws IOException {
+
+    Path hdfsDir = new Path(options.getTargetDir());
+    FileStatus[] files = hdfs.listStatus(hdfsDir);
+    FSDataOutputStream out =
+        hdfs.create(new Path(options.getTargetDir() + "/" + options.getReportFileName()), true);
+
+    // write the header
+    out.write((toHeader(options.getSkipKeys()) + "\n").getBytes());
+
+    for (FileStatus file : files) {
+      if (!file.isFile()) continue; // Skip subdirectories
+      try (FSDataInputStream in = hdfs.open(file.getPath())) {
+        log.info("Merging file: " + file.getPath());
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = in.read(buffer)) > 0) {
+          out.write(buffer, 0, bytesRead);
+        }
+      }
+    }
+
+    out.close();
+    log.info("Merged files into: " + options.getTargetDir() + "/" + options.getReportFileName());
   }
 
   private static HCatSchema readSchema(BackbonePreReleaseOptions options)
@@ -99,6 +160,7 @@ public class BackbonePreRelease {
   /** Performs the lookup. */
   static class MatchTransform extends DoFn<HCatRecord, String> {
     private final String baseAPIUrl;
+    private final String checklistKey;
     private final HCatSchema schema;
     private final Integer scope;
     private final int minCount;
@@ -109,6 +171,7 @@ public class BackbonePreRelease {
 
     MatchTransform(
         String baseAPIUrl,
+        String checklistKey,
         HCatSchema schema,
         Integer scope,
         int minCount,
@@ -116,6 +179,7 @@ public class BackbonePreRelease {
         boolean ignoreWhitespace,
         boolean ignoreAuthorshipFormatting) {
       this.baseAPIUrl = baseAPIUrl;
+      this.checklistKey = checklistKey;
       this.schema = schema;
       this.scope = scope;
       this.minCount = minCount;
@@ -163,11 +227,19 @@ public class BackbonePreRelease {
                 .withScientificNameID(source.getString("v_scientificnameid", schema))
                 .withTaxonID(source.getString("v_taxonid", schema))
                 .withTaxonConceptID(source.getString("v_taxonconceptid", schema))
+                .withChecklistKey(checklistKey)
                 .build();
 
         try {
           // short circuit the cache, but replicate same logic of the NameUsageMatchKVStoreFactory
-          NameUsageMatchResponse usageMatch = service.match(matchRequest);
+          NameUsageMatchResponse usageMatch = null;
+          try {
+            usageMatch = service.match(matchRequest);
+          } catch (FeignException.InternalServerError e) {
+            // Handle 500 Internal Server Error
+            System.out.println("Caught 500 Internal Server Error: " + e.getMessage());
+          }
+
           GBIFClassification existing = GBIFClassification.buildFromHiveSource(source, schema);
           GBIFClassification proposed;
           if (usageMatch == null) {
@@ -180,7 +252,7 @@ public class BackbonePreRelease {
 
           // copy pipelines to put unknown content into incertae sedis kingdom
           if (proposed.getKingdom() == null) {
-            System.out.println("##### Failed request: " + toDebugUrl(matchRequest));
+            System.out.println("##### Failed request: " + toDebugUrl(baseAPIUrl, matchRequest));
             proposed.setKingdom("incertae sedis");
             proposed.setKingdomKey("0");
           }
@@ -189,9 +261,13 @@ public class BackbonePreRelease {
           if (skipKeys
               && !existing.classificationEquals(
                   proposed, ignoreWhitespace, ignoreAuthorshipFormatting)) {
-            c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
+            c.output(
+                toTabDelimited(
+                    baseAPIUrl, count, matchRequest, existing, proposed, skipKeys, matchRequest));
           } else if (!skipKeys && !existing.equals(proposed)) {
-            c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
+            c.output(
+                toTabDelimited(
+                    baseAPIUrl, count, matchRequest, existing, proposed, skipKeys, matchRequest));
           }
 
         } catch (Exception e) {
@@ -204,26 +280,76 @@ public class BackbonePreRelease {
       }
     }
 
-    private String toDebugUrl(NameUsageMatchRequest matchRequest) {
-      return baseAPIUrl
-          + "/v2/species/match?"
-          + "kingdom="
-          + matchRequest.getKingdom()
-          + "&phylum="
-          + matchRequest.getPhylum()
-          + "&class="
-          + matchRequest.getClazz()
-          + "&order="
-          + matchRequest.getOrder()
-          + "&family="
-          + matchRequest.getFamily()
-          + "&genus="
-          + matchRequest.getGenus()
-          + "&scientificName="
-          + matchRequest.getScientificName()
-          + "&rank="
-          + matchRequest.getRank()
-          + "&verbose=false";
+    public static String toDebugUrl(String apiUrl, NameUsageMatchRequest matchRequest) {
+      StringBuilder url = new StringBuilder(apiUrl + "/v2/species/match?");
+
+      try {
+        if (matchRequest.getTaxonID() != null) {
+          url.append("taxonID=")
+              .append(URLEncoder.encode(matchRequest.getTaxonID(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getTaxonConceptID() != null) {
+          url.append("taxonConceptID=")
+              .append(URLEncoder.encode(matchRequest.getTaxonConceptID(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getScientificNameID() != null) {
+          url.append("scientificNameID=")
+              .append(URLEncoder.encode(matchRequest.getScientificNameID(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getKingdom() != null) {
+          url.append("kingdom=")
+              .append(URLEncoder.encode(matchRequest.getKingdom(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getPhylum() != null) {
+          url.append("phylum=")
+              .append(URLEncoder.encode(matchRequest.getPhylum(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getClazz() != null) {
+          url.append("class=")
+              .append(URLEncoder.encode(matchRequest.getClazz(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getOrder() != null) {
+          url.append("order=")
+              .append(URLEncoder.encode(matchRequest.getOrder(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getFamily() != null) {
+          url.append("family=")
+              .append(URLEncoder.encode(matchRequest.getFamily(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getGenus() != null) {
+          url.append("genus=")
+              .append(URLEncoder.encode(matchRequest.getGenus(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getScientificName() != null) {
+          url.append("scientificName=")
+              .append(URLEncoder.encode(matchRequest.getScientificName(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getRank() != null) {
+          url.append("rank=")
+              .append(URLEncoder.encode(matchRequest.getRank(), "UTF-8"))
+              .append("&");
+        }
+        url.append("checklistKey=")
+            .append(URLEncoder.encode(matchRequest.getChecklistKey(), "UTF-8"))
+            .append("&");
+        url.append("verbose=true");
+
+      } catch (UnsupportedEncodingException e) {
+        // UTF-8 is guaranteed to be supported, so this shouldn't happen.
+        throw new RuntimeException("UTF-8 encoding not supported", e);
+      }
+
+      return url.toString();
     }
 
     /** Extracts all taxon keys from the record. */
@@ -253,33 +379,42 @@ public class BackbonePreRelease {
 
     /** Formats the data for the output line in the CSV. */
     private static String toTabDelimited(
+        String baseAPIUrl,
         long count,
         NameUsageMatchRequest verbatim,
         GBIFClassification current,
         GBIFClassification proposed,
-        boolean skipKeys) {
+        boolean skipKeys,
+        NameUsageMatchRequest matchRequest) {
 
       return String.join(
           "\t",
           String.valueOf(count),
-          verbatim.getTaxonID(),
-          verbatim.getTaxonConceptID(),
-          verbatim.getScientificNameID(),
-          verbatim.getKingdom(),
-          verbatim.getPhylum(),
-          verbatim.getClazz(),
-          verbatim.getOrder(),
-          verbatim.getFamily(),
-          verbatim.getGenus(),
-          verbatim.getSpecificEpithet(),
-          verbatim.getInfraspecificEpithet(),
-          verbatim.getRank(),
-          verbatim.getRank(), // avoid breaking the API (verbatimTaxonRank)
-          verbatim.getScientificName(),
-          verbatim.getGenericName(),
-          "",
+          safe(verbatim.getTaxonID()),
+          safe(verbatim.getTaxonConceptID()),
+          safe(verbatim.getScientificNameID()),
+          safe(verbatim.getKingdom()),
+          safe(verbatim.getPhylum()),
+          safe(verbatim.getClazz()),
+          safe(verbatim.getOrder()),
+          safe(verbatim.getFamily()),
+          safe(verbatim.getGenus()),
+          safe(verbatim.getSpecificEpithet()),
+          safe(verbatim.getInfraspecificEpithet()),
+          safe(verbatim.getRank()),
+          safe(verbatim.getRank()), // avoid breaking the API (verbatimTaxonRank)
+          safe(verbatim.getScientificName()),
+          safe(verbatim.getGenericName()),
+          safe(verbatim.getAuthorship()),
           current.toString(skipKeys),
-          proposed.toString(skipKeys));
+          proposed.toString(skipKeys),
+          safe(toDebugUrl(baseAPIUrl, matchRequest)));
+    }
+
+    /** Returns the string or an empty string if null. */
+    private static String safe(String value) {
+      //      return value != null && !value.equalsIgnoreCase("null") ? value : "";
+      return value;
     }
 
     private static boolean isEmpty(NameUsageMatchResponse response) {
