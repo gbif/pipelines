@@ -1,6 +1,5 @@
-[![DEV - Build Status](https://builds.gbif.org/job/pipelines-dev/badge/icon?subject=DEV%20-%20Build%20Status&style=flat-square)](https://builds.gbif.org/job/pipelines-dev)
-[![DEV Release - Build Status](https://builds.gbif.org/job/pipelines-master/badge/icon?subject=Release%20-%20Build%20Status&style=flat-square)](https://builds.gbif.org/job/pipelines-master/)
-[![DEV - Smoking Tests Status](https://builds.gbif.org/buildStatus/icon?job=pipelines-dev2-smoke-testing&subject=DEV%20-%20Smoking%20tests%20status&style=flat-square)](https://builds.gbif.org/job/pipelines-dev2-smoke-testing/)
+[![DEV - Build Status](https://builds.gbif.org/job/pipelines-multibranch/job/dev/badge/icon?subject=dev%20-%20branch%20status&style=flat-square)](https://builds.gbif.org/job/pipelines-multibranch/job/dev)
+[![DEV Release - Build Status](https://builds.gbif.org/job/pipelines-multibranch/job/master/badge/icon?subject=master%20-%20branch%20status&style=flat-square)](https://builds.gbif.org/job/pipelines-multibranch/job/master)
 
 # Table of Contents
 
@@ -15,7 +14,7 @@
 
 # About the project
 
-*SUPPORTED JAVA 11 VERSION*
+*SUPPORTED JAVA 17 VERSION*
 
 **Pipelines for data processing and indexing of biodiversity data**
 
