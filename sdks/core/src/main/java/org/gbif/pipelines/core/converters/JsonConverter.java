@@ -25,6 +25,7 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
+import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.core.utils.TemporalConverter;
@@ -514,6 +515,10 @@ public class JsonConverter {
 
   public static Map<String, Classification> convertToClassifications(MultiTaxonRecord taxon) {
     return taxon.getTaxonRecords().stream()
+        .filter(
+            tr ->
+                tr.getUsage() != null
+                    && !TaxonomyInterpreter.INCERTAE_SEDIS_KEY.equals(tr.getUsage().getKey()))
         .collect(
             Collectors.toMap(TaxonRecord::getDatasetKey, JsonConverter::convertToClassification));
   }
@@ -721,24 +726,6 @@ public class JsonConverter {
         .getClassification()
         .forEach(taxon -> depthMap.put(String.valueOf(idx.getAndIncrement()), taxon.getKey()));
     return Optional.of(depthMap);
-  }
-
-  /**
-   * Creates a set of fields" kingdomKey, phylumKey, classKey, etc for convenient aggregation/facets
-   */
-  public static Optional<String> convertRankPath(TaxonRecord taxonRecord) {
-    if (taxonRecord.getClassification() == null
-        || taxonRecord.getClassification().isEmpty()
-        || taxonRecord.getUsage() == null) {
-      return Optional.empty();
-    }
-
-    String pathJoiner =
-        taxonRecord.getClassification().stream()
-            .map(org.gbif.pipelines.io.avro.RankedName::getRank)
-            .collect(Collectors.joining("_"));
-
-    return Optional.of("_" + pathJoiner);
   }
 
   public static List<String> convertTaxonKey(TaxonRecord taxonRecord) {
