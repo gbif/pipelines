@@ -21,6 +21,7 @@ import org.gbif.api.model.pipelines.PipelineStep.Status;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.api.model.pipelines.ws.RunAllParams;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
+import org.jetbrains.annotations.Nullable;
 
 @Getter
 @NoArgsConstructor(staticName = "create")
@@ -48,9 +49,15 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
   }
 
   @Override
-  public PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable) {
+  public PagingResponse<PipelineProcess> getRunningPipelineProcess(
+      @Nullable StepType stepType, @Nullable StepRunner stepRunner, Pageable pageable) {
     throw new UnsupportedOperationException("The method is not implemented!");
   }
+
+  //  @Override
+  //  public PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable) {
+  //    throw new UnsupportedOperationException("The method is not implemented!");
+  //  }
 
   @Override
   public long createPipelineProcess(PipelineProcessParameters pp) {
@@ -102,12 +109,6 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
   @Override
   public List<PipelineStep> getPipelineStepsByExecutionKey(long l) {
     return new ArrayList<>(pipelineExecutionMap.get(l).getSteps());
-  }
-
-  @Override
-  public PagingResponse<PipelineProcess> getRunningPipelineProcess(
-      StepType stepType, StepRunner stepRunner, Pageable pageable) {
-    throw new UnsupportedOperationException("The method is not implemented!");
   }
 
   @Override
