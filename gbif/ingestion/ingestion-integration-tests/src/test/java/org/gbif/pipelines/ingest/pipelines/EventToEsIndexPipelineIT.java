@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.core.converters.OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -279,6 +280,7 @@ public class EventToEsIndexPipelineIT {
                                       .setName("Puma concolor subsp. coryi (Bangs, 1899)")
                                       .setKey("6164600")
                                       .build()))
+                          .setDatasetKey(GBIF_BACKBONE_DATASET_KEY)
                           .build()))
               .build();
       writer.append(multiTaxonRecord);
@@ -298,6 +300,7 @@ public class EventToEsIndexPipelineIT {
                                       .setName("Puma concolor subsp. concolor")
                                       .setKey("7193927")
                                       .build()))
+                          .setDatasetKey(GBIF_BACKBONE_DATASET_KEY)
                           .build()))
               .build();
       writer.append(multiTaxonRecordSubEvent);
@@ -317,6 +320,7 @@ public class EventToEsIndexPipelineIT {
                                       .setName("Puma concolor (Linnaeus, 1771)")
                                       .setKey("2435099")
                                       .build()))
+                          .setDatasetKey(GBIF_BACKBONE_DATASET_KEY)
                           .build()))
               .build();
       writer.append(multiTaxonRecordSubEvent2);
