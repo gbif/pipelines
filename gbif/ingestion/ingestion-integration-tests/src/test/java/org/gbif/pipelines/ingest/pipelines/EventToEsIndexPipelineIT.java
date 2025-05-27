@@ -46,6 +46,7 @@ import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.Parent;
 import org.gbif.pipelines.io.avro.Rank;
@@ -59,6 +60,7 @@ import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -261,49 +263,64 @@ public class EventToEsIndexPipelineIT {
           LocationRecord.newBuilder().setId(SUB_EVENT_ID_2).setParentId(SUB_EVENT_ID).build();
       writer.append(locationRecordSubEvent2);
     }
-    try (SyncDataFileWriter<TaxonRecord> writer =
+    try (SyncDataFileWriter<MultiTaxonRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, TaxonomyTransform.builder().create(), EVENT_TERM, postfix)) {
-      TaxonRecord taxonRecord =
-          TaxonRecord.newBuilder()
+            optionsWriter, MultiTaxonomyTransform.builder().create(), EVENT_TERM, postfix)) {
+      MultiTaxonRecord multiTaxonRecord =
+          MultiTaxonRecord.newBuilder()
               .setId(ID)
-              .setClassification(
+              .setTaxonRecords(
                   Collections.singletonList(
-                      RankedName.newBuilder()
-                          .setRank(Rank.SPECIES.toString())
-                          .setName("Puma concolor subsp. coryi (Bangs, 1899)")
-                          .setKey("6164600")
+                      TaxonRecord.newBuilder()
+                          .setId("1")
+                          .setClassification(
+                              Collections.singletonList(
+                                  RankedName.newBuilder()
+                                      .setRank(Rank.SPECIES.toString())
+                                      .setName("Puma concolor subsp. coryi (Bangs, 1899)")
+                                      .setKey("6164600")
+                                      .build()))
                           .build()))
               .build();
-      writer.append(taxonRecord);
+      writer.append(multiTaxonRecord);
 
-      TaxonRecord taxonRecordSubEvent =
-          TaxonRecord.newBuilder()
+      MultiTaxonRecord multiTaxonRecordSubEvent =
+          MultiTaxonRecord.newBuilder()
               .setId(SUB_EVENT_ID)
               .setParentId(ID)
-              .setClassification(
+              .setTaxonRecords(
                   Collections.singletonList(
-                      RankedName.newBuilder()
-                          .setRank(Rank.SPECIES.toString())
-                          .setName("Puma concolor subsp. concolor")
-                          .setKey("7193927")
+                      TaxonRecord.newBuilder()
+                          .setId("1")
+                          .setClassification(
+                              Collections.singletonList(
+                                  RankedName.newBuilder()
+                                      .setRank(Rank.SPECIES.toString())
+                                      .setName("Puma concolor subsp. concolor")
+                                      .setKey("7193927")
+                                      .build()))
                           .build()))
               .build();
-      writer.append(taxonRecordSubEvent);
+      writer.append(multiTaxonRecordSubEvent);
 
-      TaxonRecord taxonRecordSubEvent2 =
-          TaxonRecord.newBuilder()
+      MultiTaxonRecord multiTaxonRecordSubEvent2 =
+          MultiTaxonRecord.newBuilder()
               .setId(SUB_EVENT_ID_2)
               .setParentId(SUB_EVENT_ID)
-              .setClassification(
+              .setTaxonRecords(
                   Collections.singletonList(
-                      RankedName.newBuilder()
-                          .setRank(Rank.SPECIES.toString())
-                          .setName("Puma concolor (Linnaeus, 1771)")
-                          .setKey("2435099")
+                      TaxonRecord.newBuilder()
+                          .setId("1")
+                          .setClassification(
+                              Collections.singletonList(
+                                  RankedName.newBuilder()
+                                      .setRank(Rank.SPECIES.toString())
+                                      .setName("Puma concolor (Linnaeus, 1771)")
+                                      .setKey("2435099")
+                                      .build()))
                           .build()))
               .build();
-      writer.append(taxonRecordSubEvent2);
+      writer.append(multiTaxonRecordSubEvent2);
     }
     try (SyncDataFileWriter<MultimediaRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
