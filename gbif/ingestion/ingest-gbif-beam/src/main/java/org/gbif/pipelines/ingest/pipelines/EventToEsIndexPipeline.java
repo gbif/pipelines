@@ -258,7 +258,7 @@ public class EventToEsIndexPipeline {
             .apply("Map event measurementOrFact records to KV", measurementOrFactTransform.toKv());
 
     PCollection<KV<String, DnaDerivedDataRecord>> dnaCollection =
-        p.apply("Read Event DNA Derived Data", dnaTransform.read(pathFn))
+        p.apply("Read Event DNA Derived Data", dnaTransform.readIfExists(pathFn))
             .apply("Map DNA Derived Data to KV", dnaTransform.toKv());
 
     log.info("Adding step 3: Converting into a json object");
