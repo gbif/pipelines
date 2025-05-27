@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.converters.OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import com.google.common.base.Strings;
@@ -568,6 +569,24 @@ public class JsonConverter {
         .ifPresent(classificationBuilder::setClassificationDepth);
 
     return classificationBuilder.build();
+  }
+
+  public static GbifClassification convertToGbifClassificationFromMultiTaxon(
+      ExtendedRecord verbatim, MultiTaxonRecord multiTaxon) {
+    if (multiTaxon != null
+        && multiTaxon.getTaxonRecords() != null
+        && !multiTaxon.getTaxonRecords().isEmpty()) {
+
+      Optional<TaxonRecord> gbifRecord =
+          multiTaxon.getTaxonRecords().stream()
+              .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
+              .findFirst();
+
+      return gbifRecord
+          .map(tr -> JsonConverter.convertToGbifClassification(verbatim, tr))
+          .orElse(null);
+    }
+    return null;
   }
 
   public static GbifClassification convertToGbifClassification(

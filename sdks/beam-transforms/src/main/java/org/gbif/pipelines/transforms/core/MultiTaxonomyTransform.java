@@ -20,6 +20,7 @@ import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.MultiTaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MultiTaxonRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 
@@ -63,6 +64,10 @@ public class MultiTaxonomyTransform extends Transform<ExtendedRecord, MultiTaxon
   /** Maps {@link MultiTaxonRecord} to key value, where key is {@link MultiTaxonRecord#getId} */
   public MapElements<MultiTaxonRecord, KV<String, MultiTaxonRecord>> toKv() {
     return asKv(false);
+  }
+
+  public MapElements<MultiTaxonRecord, KV<String, MultiTaxonRecord>> toCoreIdKv() {
+    return asKv(true);
   }
 
   public MultiTaxonomyTransform counterFn(SerializableConsumer<String> counterFn) {

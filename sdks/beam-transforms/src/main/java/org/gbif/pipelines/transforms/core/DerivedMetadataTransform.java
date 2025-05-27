@@ -18,7 +18,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.pipelines.core.converters.JsonConverter;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
 
 @Builder
@@ -27,8 +27,8 @@ public class DerivedMetadataTransform implements Serializable {
   private static final TupleTag<DerivedMetadataRecord> TAG =
       new TupleTag<DerivedMetadataRecord>() {};
 
-  private static final TupleTag<Iterable<TaxonRecord>> ITERABLE_TAXON_TAG =
-      new TupleTag<Iterable<TaxonRecord>>() {};
+  private static final TupleTag<Iterable<MultiTaxonRecord>> ITERABLE_MULTI_TAXON_TAG =
+      new TupleTag<Iterable<MultiTaxonRecord>>() {};
 
   @NonNull private final TupleTag<ExtendedRecord> extendedRecordTag;
 
@@ -43,9 +43,9 @@ public class DerivedMetadataTransform implements Serializable {
         new DoFn<KV<String, CoGbkResult>, KV<String, DerivedMetadataRecord>>() {
 
           private ExtendedRecord getAssociatedVerbatim(
-              TaxonRecord taxonRecord, List<ExtendedRecord> verbatimRecords) {
+              MultiTaxonRecord multiTaxonRecord, List<ExtendedRecord> verbatimRecords) {
             return verbatimRecords.stream()
-                .filter(er -> er.getId().equals(taxonRecord.getId()))
+                .filter(er -> er.getId().equals(multiTaxonRecord.getId()))
                 .findFirst()
                 .orElse(null);
           }
@@ -59,9 +59,11 @@ public class DerivedMetadataTransform implements Serializable {
             EventDate temporalCoverage =
                 result.getOnly(temporalCoverageTag, EventDate.newBuilder().build());
 
-            List<TaxonRecord> classifications =
+            List<MultiTaxonRecord> classifications =
                 StreamSupport.stream(
-                        result.getOnly(ITERABLE_TAXON_TAG, Collections.emptyList()).spliterator(),
+                        result
+                            .getOnly(ITERABLE_MULTI_TAXON_TAG, Collections.emptyList())
+                            .spliterator(),
                         false)
                     .collect(Collectors.toList());
 
@@ -86,7 +88,10 @@ public class DerivedMetadataTransform implements Serializable {
                     .map(
                         tr ->
                             Optional.ofNullable(getAssociatedVerbatim(tr, verbatimRecords))
-                                .map(vr -> JsonConverter.convertToGbifClassification(vr, tr)))
+                                .map(
+                                    vr ->
+                                        JsonConverter.convertToGbifClassificationFromMultiTaxon(
+                                            vr, tr)))
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .collect(Collectors.toList()));
@@ -100,8 +105,8 @@ public class DerivedMetadataTransform implements Serializable {
     return TAG;
   }
 
-  public static TupleTag<Iterable<TaxonRecord>> iterableTaxonTupleTag() {
-    return ITERABLE_TAXON_TAG;
+  public static TupleTag<Iterable<MultiTaxonRecord>> iterableMultiTaxonTupleTag() {
+    return ITERABLE_MULTI_TAXON_TAG;
   }
 
   /**

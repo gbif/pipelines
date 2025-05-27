@@ -50,8 +50,8 @@ import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
 import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
@@ -67,7 +67,7 @@ import org.gbif.pipelines.transforms.core.EventInheritedFieldsFn;
 import org.gbif.pipelines.transforms.core.InheritedFieldsTransform;
 import org.gbif.pipelines.transforms.core.LocationInheritedFieldsFn;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalCoverageFn;
 import org.gbif.pipelines.transforms.core.TemporalInheritedFieldsFn;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
@@ -163,7 +163,7 @@ public class EventToEsIndexPipeline {
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
     LocationTransform parentLocationTransform = LocationTransform.builder().create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+    MultiTaxonomyTransform multiTaxonomyTransform = MultiTaxonomyTransform.builder().create();
     MeasurementOrFactTransform measurementOrFactTransform =
         MeasurementOrFactTransform.builder().create();
 
@@ -198,9 +198,9 @@ public class EventToEsIndexPipeline {
         p.apply("Read Event Location", locationTransform.read(pathFn))
             .apply("Map Location to KV", locationTransform.toKv());
 
-    PCollection<KV<String, TaxonRecord>> taxonCollection =
-        p.apply("Read event taxon records", taxonomyTransform.readIfExists(pathFn))
-            .apply("Map event taxon records to KV", taxonomyTransform.toKv());
+    PCollection<KV<String, MultiTaxonRecord>> taxonCollection =
+        p.apply("Read event multi-taxon records", multiTaxonomyTransform.readIfExists(pathFn))
+            .apply("Map event multi-taxon records to KV", multiTaxonomyTransform.toKv());
 
     InheritedFields inheritedFields =
         InheritedFields.builder()
@@ -228,13 +228,13 @@ public class EventToEsIndexPipeline {
             .verbatimTransform(verbatimTransform)
             .temporalTransform(temporalTransform)
             .parentLocationTransform(parentLocationTransform)
-            .taxonomyTransform(taxonomyTransform)
+            .multiTaxonomyTransform(multiTaxonomyTransform)
             .locationTransform(locationTransform)
             .eventCoreTransform(eventCoreTransform)
             .verbatimCollection(verbatimCollection)
             .temporalCollection(temporalCollection)
             .locationCollection(locationCollection)
-            .taxonCollection(taxonCollection)
+            .multiTaxonCollection(taxonCollection)
             .eventCoreCollection(eventCoreCollection)
             .occurrencesPathFn(occurrencesPathFn)
             .datasetHasOccurrences(datasetHasOccurrences)
@@ -369,13 +369,13 @@ public class EventToEsIndexPipeline {
     private final VerbatimTransform verbatimTransform;
     private final TemporalTransform temporalTransform;
     private final LocationTransform parentLocationTransform;
-    private final TaxonomyTransform taxonomyTransform;
+    private final MultiTaxonomyTransform multiTaxonomyTransform;
     private final EventCoreTransform eventCoreTransform;
     private final LocationTransform locationTransform;
     private final PCollection<KV<String, ExtendedRecord>> verbatimCollection;
     private final PCollection<KV<String, TemporalRecord>> temporalCollection;
     private final PCollection<KV<String, LocationRecord>> locationCollection;
-    private final PCollection<KV<String, TaxonRecord>> taxonCollection;
+    private final PCollection<KV<String, MultiTaxonRecord>> multiTaxonCollection;
     private final PCollection<KV<String, EventCoreRecord>> eventCoreCollection;
     private final UnaryOperator<String> occurrencesPathFn;
     private final boolean datasetHasOccurrences;
@@ -444,31 +444,31 @@ public class EventToEsIndexPipeline {
               "Calculate the WKT Convex Hull of all records", Combine.perKey(new ConvexHullFn()));
     }
 
-    private PCollection<KV<String, Iterable<TaxonRecord>>> taxonomicCoverage() {
-      PCollection<KV<String, TaxonRecord>> eventOccurrencesTaxonCollection =
+    private PCollection<KV<String, Iterable<MultiTaxonRecord>>> taxonomicCoverage() {
+      PCollection<KV<String, MultiTaxonRecord>> eventOccurrencesTaxonCollection =
           datasetHasOccurrences
               ? pipeline
                   .apply(
-                      "Read event occurrences taxon records",
-                      taxonomyTransform.read(occurrencesPathFn))
+                      "Read event occurrences multi-taxon records",
+                      multiTaxonomyTransform.read(occurrencesPathFn))
                   .apply(
-                      "Remove taxon records with null core ids",
-                      Filter.by(NotNullOrEmptyFilter.of(TaxonRecord::getCoreId)))
-                  .apply("Map event occurrences taxon to KV", taxonomyTransform.toCoreIdKv())
+                      "Remove multi-taxon records with null core ids",
+                      Filter.by(NotNullOrEmptyFilter.of(MultiTaxonRecord::getCoreId)))
+                  .apply("Map event occurrences multi-taxon to KV", multiTaxonomyTransform.toCoreIdKv())
               : pipeline.apply(
-                  "Create empty eventOccurrencesTaxonCollection",
-                  Create.empty(new TypeDescriptor<KV<String, TaxonRecord>>() {}));
+                  "Create empty eventOccurrencesMultiTaxonCollection",
+                  Create.empty(new TypeDescriptor<KV<String, MultiTaxonRecord>>() {}));
 
-      PCollection<KV<String, TaxonRecord>> taxonRecordsOfSubEvents =
+      PCollection<KV<String, MultiTaxonRecord>> multiTaxonRecordsOfSubEvents =
           ParentEventExpandTransform.createTaxonTransform(
-                  taxonomyTransform.getTag(),
+                  multiTaxonomyTransform.getTag(),
                   eventCoreTransform.getTag(),
-                  taxonomyTransform.getEdgeTag())
-              .toSubEventsRecords("Taxon", taxonCollection, eventCoreCollection);
+                  multiTaxonomyTransform.getEdgeTag())
+              .toSubEventsRecords("MultiTaxon", multiTaxonCollection, eventCoreCollection);
 
-      return PCollectionList.of(taxonCollection)
+      return PCollectionList.of(multiTaxonCollection)
           .and(eventOccurrencesTaxonCollection)
-          .and(taxonRecordsOfSubEvents)
+          .and(multiTaxonRecordsOfSubEvents)
           .apply("Join event and occurrence taxon records", Flatten.pCollections())
           .apply("Select a sample of taxon records", Sample.fixedSizePerKey(MAX_TAXON_PER_EVENTS));
     }
@@ -490,7 +490,7 @@ public class EventToEsIndexPipeline {
 
       return KeyedPCollectionTuple.of(ConvexHullFn.tag(), convexHull())
           .and(TemporalCoverageFn.tag(), temporalCoverage())
-          .and(DerivedMetadataTransform.iterableTaxonTupleTag(), taxonomicCoverage())
+          .and(DerivedMetadataTransform.iterableMultiTaxonTupleTag(), taxonomicCoverage())
           .and(
               verbatimTransform.getTag(),
               PCollectionList.of(eventOccurrenceVerbatimCollection)
