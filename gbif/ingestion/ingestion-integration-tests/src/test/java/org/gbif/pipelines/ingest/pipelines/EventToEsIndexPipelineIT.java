@@ -61,7 +61,6 @@ import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -430,10 +429,10 @@ public class EventToEsIndexPipelineIT {
       LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
       writer.append(locationRecord);
     }
-    try (SyncDataFileWriter<TaxonRecord> writer =
+    try (SyncDataFileWriter<MultiTaxonRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, TaxonomyTransform.builder().create(), OCCURRENCE_TERM, postfix)) {
-      TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
+            optionsWriter, MultiTaxonomyTransform.builder().create(), OCCURRENCE_TERM, postfix)) {
+      MultiTaxonRecord taxonRecord = MultiTaxonRecord.newBuilder().setId(ID).build();
       writer.append(taxonRecord);
     }
     try (SyncDataFileWriter<GrscicollRecord> writer =
