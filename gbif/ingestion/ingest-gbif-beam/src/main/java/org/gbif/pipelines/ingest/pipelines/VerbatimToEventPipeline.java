@@ -38,7 +38,6 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -126,7 +125,7 @@ public class VerbatimToEventPipeline {
     VerbatimTransform verbatimTransform = transformsFactory.createVerbatimTransform();
     TemporalTransform temporalTransform = transformsFactory.createTemporalTransform();
     MultiTaxonomyTransform multiTaxonomyTransform =
-      transformsFactory.createMultiTaxonomyTransform();
+        transformsFactory.createMultiTaxonomyTransform();
     MultimediaTransform multimediaTransform = transformsFactory.createMultimediaTransform();
     AudubonTransform audubonTransform = transformsFactory.createAudubonTransform();
     ImageTransform imageTransform = transformsFactory.createImageTransform();

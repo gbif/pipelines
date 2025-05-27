@@ -454,7 +454,9 @@ public class EventToEsIndexPipeline {
                   .apply(
                       "Remove multi-taxon records with null core ids",
                       Filter.by(NotNullOrEmptyFilter.of(MultiTaxonRecord::getCoreId)))
-                  .apply("Map event occurrences multi-taxon to KV", multiTaxonomyTransform.toCoreIdKv())
+                  .apply(
+                      "Map event occurrences multi-taxon to KV",
+                      multiTaxonomyTransform.toCoreIdKv())
               : pipeline.apply(
                   "Create empty eventOccurrencesMultiTaxonCollection",
                   Create.empty(new TypeDescriptor<KV<String, MultiTaxonRecord>>() {}));
