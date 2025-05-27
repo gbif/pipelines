@@ -5,7 +5,7 @@
         "path_match": "verbatim.*",
         "mapping": {
           "type": "keyword",
-          "normalizer": "lowercase_normalizer",
+          "index": false,
           "copy_to": "all"
         }
       }
@@ -331,10 +331,11 @@
     "typifiedName": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
     "references": {"type":"text", "copy_to": "all"},
     "preparations": {
-      "type": "text",
+      "type": "keyword",
+      "ignore_above": 1024,
+      "normalizer": "lowercase_normalizer",
       "fields": {
         "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
         "verbatim": {"type": "keyword", "ignore_above": 1024}
       }
     },
@@ -372,68 +373,76 @@
     },
     "identifiedByJoined": {"type": "keyword", "normalizer": "lowercase_ascii_folding_normalizer"},
     "recordNumber": {
-      "type": "text",
+      "type": "keyword",
+      "ignore_above": 1024,
+      "normalizer": "lowercase_normalizer",
       "fields": {
         "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
         "verbatim": {"type": "keyword", "ignore_above": 1024}
       }
     },
     "organismId": {
-      "type": "text",
+      "type": "keyword",
+      "ignore_above": 1024,
+      "normalizer": "lowercase_normalizer",
       "fields": {
         "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
         "verbatim": {"type": "keyword", "ignore_above": 1024}
       }
     },
     "samplingProtocol":  {
-      "type": "text",
+      "type": "keyword",
+      "ignore_above": 1024,
+      "normalizer": "lowercase_normalizer",
       "fields": {
         "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024},
         "verbatim": {"type": "keyword", "ignore_above": 1024}
       }
     },
     "samplingProtocolJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
     "previousIdentifications": {"type": "keyword"},
     "eventId": {
-      "type": "text",
+      "type": "keyword",
+      "ignore_above": 1024,
+      "normalizer": "lowercase_normalizer",
       "fields": {
         "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
         "verbatim": {"type": "keyword", "ignore_above": 1024}
       }
     },
     "parentEventId": {
-      "type": "text",
+      "type": "keyword",
+      "ignore_above": 1024,
+      "normalizer": "lowercase_normalizer",
       "fields": {
         "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
         "verbatim": {"type": "keyword", "ignore_above": 1024}
       }
     },
     "institutionCode":  {
-      "type": "text",
+      "type": "keyword",
+      "ignore_above": 1024,
+      "normalizer": "lowercase_normalizer",
       "fields": {
         "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
         "verbatim": {"type": "keyword", "ignore_above": 1024}
       }
     },
     "collectionCode":  {
-      "type": "text",
+      "type": "keyword",
+      "ignore_above": 1024,
+      "normalizer": "lowercase_normalizer",
       "fields": {
         "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024},
         "verbatim": {"type": "keyword", "ignore_above": 1024}
       }
     },
     "catalogNumber": {
-      "type": "text",
+      "type": "keyword",
+      "ignore_above": 1024,
+      "normalizer": "lowercase_normalizer",
       "fields": {
         "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024},
         "verbatim": {"type": "keyword", "ignore_above": 1024}
       }
     },
@@ -446,10 +455,11 @@
       }
     },
     "occurrenceId":  {
-      "type": "text",
+      "type": "keyword",
+      "ignore_above": 1024,
+      "normalizer": "lowercase_normalizer",
       "fields": {
         "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024},
         "verbatim": {"type": "keyword", "ignore_above": 1024}
       }
     },
@@ -463,10 +473,11 @@
       }
     },
     "otherCatalogNumbers": {
-      "type": "text",
+      "type": "keyword",
+      "ignore_above": 1024,
+      "normalizer": "lowercase_normalizer",
       "fields": {
         "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
         "verbatim": {"type": "keyword", "ignore_above": 1024}
       }
     },
@@ -484,10 +495,11 @@
 
     "continent": {"type":"keyword", "copy_to": "all"},
     "waterBody": {
-      "type": "text",
+      "type": "keyword",
+      "ignore_above": 1024,
+      "normalizer": "lowercase_normalizer",
       "fields": {
         "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024},
         "verbatim": {"type": "keyword", "ignore_above": 1024}
       }
     },
@@ -680,19 +692,19 @@
             "status": {"type": "keyword"}
           }
         },
-        "kingdom": {"type": "text"},
+        "kingdom": {"type": "keyword", "index": false},
         "kingdomKey": {"type": "keyword"},
-        "phylum": {"type": "text"},
+        "phylum": {"type": "keyword", "index": false},
         "phylumKey": {"type": "keyword"},
-        "class": {"type": "text"},
+        "class": {"type": "keyword", "index": false},
         "classKey": {"type": "keyword"},
-        "order": {"type": "text"},
+        "order": {"type": "keyword", "index": false},
         "orderKey": {"type": "keyword"},
-        "family": {"type": "text"},
+        "family": {"type": "keyword", "index": false},
         "familyKey": {"type": "keyword"},
-        "genus": {"type": "text"},
+        "genus": {"type": "keyword", "index": false},
         "genusKey": {"type": "keyword"},
-        "species": {"type": "text"},
+        "species": {"type": "keyword", "index": false},
         "speciesKey": {"type": "keyword"},
         "synonym": {"type": "boolean"},
         "taxonID": {"type": "keyword"},
@@ -712,9 +724,9 @@
             "basionymAuthorship": {
               "enabled": false,
               "properties": {
-                "authors": {"type": "text"},
+                "authors": {"type": "keyword", "index": false},
                 "empty": {"type": "boolean"},
-                "exAuthors": {"type": "text"},
+                "exAuthors": {"type": "keyword", "index": false},
                 "year": {"type": "keyword"}
               }
             },
@@ -724,26 +736,26 @@
             "combinationAuthorship": {
               "enabled": false,
               "properties": {
-                "authors": {"type": "text"},
+                "authors": {"type": "keyword", "index": false},
                 "empty": {"type": "boolean"},
-                "exAuthors": {"type": "text"},
-                "year": {"type": "keyword"}
+                "exAuthors": {"type": "keyword", "index": false},
+                "year": {"type": "keyword", "index": false}
               }
             },
             "doubtful": {"type": "boolean", "index":  false},
-            "genericName": {"type": "text"},
-            "genus": {"type": "text", "index":  false},
+            "genericName": {"type": "keyword", "index": false},
+            "genus": {"type": "keyword", "index": false},
             "incomplete": {"type": "boolean", "index":  false},
             "indetermined": {"type": "boolean", "index":  false},
-            "infraspecificEpithet": {"type": "text"},
+            "infraspecificEpithet": {"type": "keyword", "index": false},
             "notho": {"type": "keyword", "index":  false},
             "rank": {"type": "keyword", "index":  false},
-            "specificEpithet": {"type": "text"},
+            "specificEpithet": {"type": "keyword", "index": false},
             "state": {"type": "keyword", "index":  false},
-            "terminalEpithet": {"type": "text", "index":  false},
+            "terminalEpithet": {"type": "keyword", "index":  false},
             "trinomial": {"type": "boolean", "index":  false},
             "type": {"type": "keyword", "index":  false},
-            "uninomial": {"type": "text", "index":  false}
+            "uninomial": {"type": "keyword", "index":  false}
           }
         },
         "verbatimScientificName": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
