@@ -66,7 +66,7 @@
           "path_match": "classifications.*.usage.rank",
           "mapping": {
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -76,7 +76,7 @@
           "mapping": {
             "copy_to": "all",
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -85,7 +85,7 @@
           "path_match": "classifications.*.usage.genericName",
           "mapping": {
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -94,7 +94,7 @@
           "path_match": "classifications.*.usage.infraspecificEpithet",
           "mapping": {
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -103,7 +103,7 @@
           "path_match": "classifications.*.usage.specificEpithet",
           "mapping": {
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -112,7 +112,7 @@
           "path_match": "classifications.*.usage.authorship",
           "mapping": {
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -121,7 +121,7 @@
           "path_match": "classifications.*.usage.code",
           "mapping": {
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -130,7 +130,7 @@
           "path_match": "classifications.*.usage.formattedName",
           "mapping": {
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -146,8 +146,7 @@
         "classifications_acceptedUsage_rank": {
           "path_match": "classifications.*.acceptedUsage.rank",
           "mapping": {
-            "type": "keyword",
-            "index": false
+            "type": "keyword", "index": false, "doc_values": false
           }
         }
       },
@@ -156,8 +155,7 @@
           "path_match": "classifications.*.acceptedUsage.name",
           "mapping": {
             "copy_to": "all",
-            "type": "keyword",
-            "index": false
+            "type": "keyword", "index": false, "doc_values": false
           }
         }
       },
@@ -166,7 +164,7 @@
           "path_match": "classifications.*.acceptedUsage.authorship",
           "mapping": {
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -175,7 +173,7 @@
           "path_match": "classifications.*.acceptedUsage.code",
           "mapping": {
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -184,7 +182,7 @@
           "path_match": "classifications.*.acceptedUsage.genericName",
           "mapping": {
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -193,7 +191,7 @@
           "path_match": "classifications.*.acceptedUsage.infraspecificEpithet",
           "mapping": {
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -202,7 +200,7 @@
           "path_match": "classifications.*.acceptedUsage.specificEpithet",
           "mapping": {
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -211,7 +209,7 @@
           "path_match": "classifications.*.acceptedUsage.formattedName",
           "mapping": {
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -228,7 +226,7 @@
           "path_match": "classifications.*.classification.*",
           "mapping": {
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -237,7 +235,7 @@
           "path_match": "classifications.*.classification.*.*",
           "mapping": {
             "type": "keyword",
-            "index": false
+            "index": false, "doc_values": false
           }
         }
       },
@@ -376,7 +374,7 @@
       }
     },
     "typifiedName": {"type": "keyword", "index":  false, "copy_to": "all"},
-    "references": {"type":"keyword", "index": false},
+    "references": {"type":"keyword", "index": false, "doc_values": false},
     "preparations": {
       "type": "keyword",
       "ignore_above": 1024,
@@ -541,7 +539,7 @@
       }
     },
     "countryCode": {"type":"keyword", "copy_to": "all"},
-    "country": {"type":"keyword", "copy_to": "all", "index": false},
+    "country": {"type":"keyword", "copy_to": "all", "index": false, "doc_values": false},
     "gbifRegion": {"type":"keyword", "copy_to": "all"},
     "stateProvince": {
       "type": "keyword",
@@ -728,19 +726,19 @@
           "status": {"type": "keyword","index":  false, "store": false}
           }
         },
-        "kingdom": {"type": "keyword", "index": false},
+        "kingdom": {"type": "keyword", "index": false, "doc_values": false},
         "kingdomKey": {"type": "keyword"},
-        "phylum": {"type": "keyword", "index": false},
+        "phylum": {"type": "keyword", "index": false, "doc_values": false},
         "phylumKey": {"type": "keyword"},
-        "class": {"type": "keyword", "index": false},
+        "class": {"type": "keyword", "index": false, "doc_values": false},
         "classKey": {"type": "keyword"},
-        "order": {"type": "keyword", "index": false},
+        "order": {"type": "keyword", "index": false, "doc_values": false},
         "orderKey": {"type": "keyword"},
-        "family": {"type": "keyword", "index": false},
+        "family": {"type": "keyword", "index": false, "doc_values": false},
         "familyKey": {"type": "keyword"},
-        "genus": {"type": "keyword", "index": false},
+        "genus": {"type": "keyword", "index": false, "doc_values": false},
         "genusKey": {"type": "keyword"},
-        "species": {"type": "keyword", "index": false},
+        "species": {"type": "keyword", "index": false, "doc_values": false},
         "speciesKey": {"type": "keyword"},
         "synonym": {"type": "boolean"},
         "taxonID": {"type": "keyword"},
@@ -760,10 +758,10 @@
             "basionymAuthorship": {
               "enabled": false,
               "properties": {
-                "authors": {"type": "keyword", "index": false, "store": false},
-                "empty": {"type": "boolean", "index": false, "store": false},
-                "exAuthors": {"type": "keyword", "index": false, "store": false},
-                "year": {"type": "keyword", "index": false, "store": false}
+                "authors": {"type": "keyword", "index": false, "doc_values": false, "store": false},
+                "empty": {"type": "boolean", "index": false, "doc_values": false, "store": false},
+                "exAuthors": {"type": "keyword", "index": false, "doc_values": false, "store": false},
+                "year": {"type": "keyword", "index": false, "doc_values": false, "store": false}
               }
             },
             "binomial": {"type": "boolean", "index":  false, "store": false},
@@ -772,21 +770,21 @@
             "combinationAuthorship": {
               "enabled": false,
               "properties": {
-                "authors": {"type": "keyword", "index": false, "store": false},
-                "empty": {"type": "boolean", "index": false, "store": false},
-                "exAuthors": {"type": "keyword", "index": false, "store": false},
-                "year": {"type": "keyword", "index": false, "store": false}
+                "authors": {"type": "keyword", "index": false, "doc_values": false, "store": false},
+                "empty": {"type": "boolean", "index": false, "doc_values": false, "store": false},
+                "exAuthors": {"type": "keyword", "index": false, "doc_values": false, "store": false},
+                "year": {"type": "keyword", "index": false, "doc_values": false, "store": false}
               }
             },
             "doubtful": {"type": "boolean", "index":  false, "store": false},
-            "genericName": {"type": "keyword", "index": false},
-            "genus": {"type": "keyword", "index": false},
+            "genericName": {"type": "keyword", "index": false, "doc_values": false},
+            "genus": {"type": "keyword", "index": false, "doc_values": false},
             "incomplete": {"type": "boolean", "index":  false, "store": false},
             "indetermined": {"type": "boolean", "index":  false, "store": false},
-            "infraspecificEpithet": {"type": "keyword", "index": false},
+            "infraspecificEpithet": {"type": "keyword", "index": false, "doc_values": false},
             "notho": {"type": "keyword", "index":  false, "store": false},
             "rank": {"type": "keyword", "index":  false},
-            "specificEpithet": {"type": "keyword", "index": false},
+            "specificEpithet": {"type": "keyword", "index": false, "doc_values": false},
             "state": {"type": "keyword", "index":  false, "store": false},
             "terminalEpithet": {"type": "keyword", "index":  false, "store": false},
             "trinomial": {"type": "boolean", "index":  false, "store": false},
