@@ -11,6 +11,7 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -44,11 +45,6 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
 
   @Override
   public PipelineProcess getPipelineProcess(UUID uuid, int i) {
-    throw new UnsupportedOperationException("The method is not implemented!");
-  }
-
-  @Override
-  public PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable) {
     throw new UnsupportedOperationException("The method is not implemented!");
   }
 
@@ -106,7 +102,7 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
 
   @Override
   public PagingResponse<PipelineProcess> getRunningPipelineProcess(
-      StepType stepType, StepRunner stepRunner, Pageable pageable) {
+      @Nullable StepType stepType, @Nullable StepRunner stepRunner, Pageable pageable) {
     throw new UnsupportedOperationException("The method is not implemented!");
   }
 
