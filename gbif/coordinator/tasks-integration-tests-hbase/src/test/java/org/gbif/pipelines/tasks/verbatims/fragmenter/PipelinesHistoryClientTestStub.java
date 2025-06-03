@@ -169,12 +169,6 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
   }
 
   @Override
-  public PagingResponse<PipelineProcess> getRunningPipelineProcess(
-      StepType stepType, StepRunner stepRunner, Pageable pageable) {
-    throw new UnsupportedOperationException("The method is not implemented!");
-  }
-
-  @Override
   public void setSubmittedPipelineStepToQueued(long key) {
     pipelineStepMap.get(key).setState(Status.QUEUED);
   }
