@@ -219,11 +219,12 @@ public class BackbonePreRelease {
                 .withFamily(source.getString("v_family", schema))
                 .withGenus(source.getString("v_genus", schema))
                 .withScientificName(source.getString("v_scientificname", schema))
+                .withScientificNameAuthorship(source.getString("v_scientificnameauthorship", schema))
                 .withGenericName(source.getString("v_genericname", schema))
                 .withSpecificEpithet(source.getString("v_specificepithet", schema))
                 .withInfraspecificEpithet(source.getString("v_infraspecificepithet", schema))
-                .withRank(source.getString("v_taxonrank", schema))
-                .withVerbatimRank(source.getString("v_verbatimtaxonrank", schema))
+                .withTaxonRank(source.getString("v_taxonrank", schema))
+                .withVerbatimTaxonRank(source.getString("v_verbatimtaxonrank", schema))
                 .withScientificNameID(source.getString("v_scientificnameid", schema))
                 .withTaxonID(source.getString("v_taxonid", schema))
                 .withTaxonConceptID(source.getString("v_taxonconceptid", schema))
@@ -334,9 +335,9 @@ public class BackbonePreRelease {
               .append(URLEncoder.encode(matchRequest.getScientificName(), "UTF-8"))
               .append("&");
         }
-        if (matchRequest.getRank() != null) {
+        if (matchRequest.getTaxonRank() != null) {
           url.append("rank=")
-              .append(URLEncoder.encode(matchRequest.getRank(), "UTF-8"))
+              .append(URLEncoder.encode(matchRequest.getTaxonRank(), "UTF-8"))
               .append("&");
         }
         url.append("checklistKey=")
@@ -401,11 +402,11 @@ public class BackbonePreRelease {
           safe(verbatim.getGenus()),
           safe(verbatim.getSpecificEpithet()),
           safe(verbatim.getInfraspecificEpithet()),
-          safe(verbatim.getRank()),
-          safe(verbatim.getRank()), // avoid breaking the API (verbatimTaxonRank)
+          safe(verbatim.getTaxonRank()),
+          safe(verbatim.getTaxonRank()), // avoid breaking the API (verbatimTaxonRank)
           safe(verbatim.getScientificName()),
           safe(verbatim.getGenericName()),
-          safe(verbatim.getAuthorship()),
+          safe(verbatim.getScientificNameAuthorship()),
           current.toString(skipKeys),
           proposed.toString(skipKeys),
           safe(toDebugUrl(baseAPIUrl, matchRequest)));

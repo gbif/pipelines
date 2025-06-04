@@ -7,7 +7,6 @@ import static org.gbif.pipelines.core.utils.ModelUtils.*;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -30,7 +29,7 @@ import org.gbif.rest.client.species.NameUsageMatchResponse;
  * should be based in the Darwin Core specification (http://rs.tdwg.org/dwc/terms/).
  *
  * <p>The interpretation uses the species match kv store to match the taxonomic fields to an
- * existing specie.
+ * existing species.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -77,7 +76,8 @@ public class TaxonomyInterpreter {
     // https://github.com/gbif/portal-feedback/issues/4231
     String scientificName =
         extractNullAwareOptValue(termsSource, DwcTerm.scientificName)
-            .orElse(extractValue(termsSource, DwcTerm.verbatimIdentification));
+            .orElse(extractValue(termsSource, DwcTerm.verbatimIdentification)
+            );
     return NameUsageMatchRequest.builder()
         .withChecklistKey(checklistKey)
         .withKingdom(extractValue(termsSource, DwcTerm.kingdom))
@@ -87,12 +87,13 @@ public class TaxonomyInterpreter {
         .withFamily(extractValue(termsSource, DwcTerm.family))
         .withGenus(extractValue(termsSource, DwcTerm.genus))
         .withScientificName(scientificName)
+        .withScientificNameAuthorship(extractValue(termsSource, DwcTerm.scientificNameAuthorship))
         .withGenericName(extractValue(termsSource, DwcTerm.genericName))
         .withSpecificEpithet(extractValue(termsSource, DwcTerm.specificEpithet))
         .withInfraspecificEpithet(extractValue(termsSource, DwcTerm.infraspecificEpithet))
-        .withAuthorship(extractValue(termsSource, DwcTerm.scientificNameAuthorship))
-        .withRank(extractValue(termsSource, DwcTerm.taxonRank))
-        .withVerbatimRank(extractValue(termsSource, DwcTerm.verbatimTaxonRank))
+        .withScientificNameAuthorship(extractValue(termsSource, DwcTerm.scientificNameAuthorship))
+        .withTaxonRank(extractValue(termsSource, DwcTerm.taxonRank))
+        .withVerbatimTaxonRank(extractValue(termsSource, DwcTerm.verbatimTaxonRank))
         .withScientificNameID(extractValue(termsSource, DwcTerm.scientificNameID))
         .withTaxonID(extractValue(termsSource, DwcTerm.taxonID))
         .withTaxonConceptID(extractValue(termsSource, DwcTerm.taxonConceptID))
@@ -182,54 +183,18 @@ public class TaxonomyInterpreter {
   private static ParsedName toParsedNameAvro(NameUsageMatchResponse.Usage pn) {
     ParsedName.Builder builder =
         ParsedName.newBuilder()
-            .setAbbreviated(pn.isAbbreviated())
-            .setAutonym(pn.isAutonym())
-            .setBinomial(pn.isBinomial())
-            .setCandidatus(pn.isCandidatus())
-            .setCultivarEpithet(pn.getCultivarEpithet())
-            .setDoubtful(pn.isDoubtful())
             .setGenus(pn.getGenus())
-            .setUninomial(pn.getUninomial())
-            .setUnparsed(pn.getUnparsed())
-            .setTrinomial(pn.isTrinomial())
-            .setIncomplete(pn.isIncomplete())
-            .setIndetermined(pn.isIndetermined())
-            .setTerminalEpithet(pn.getTerminalEpithet())
             .setInfragenericEpithet(pn.getInfragenericEpithet())
             .setInfraspecificEpithet(pn.getInfraspecificEpithet())
-            .setExtinct(pn.isExtinct())
-            .setPublishedIn(pn.getPublishedIn())
-            .setSanctioningAuthor(pn.getSanctioningAuthor())
-            .setSpecificEpithet(pn.getSpecificEpithet())
-            .setPhrase(pn.getPhrase())
-            .setPhraseName(pn.isPhraseName())
-            .setVoucher(pn.getVoucher())
-            .setNominatingParty(pn.getNominatingParty())
-            .setNomenclaturalNote(pn.getNomenclaturalNote());
+            .setSpecificEpithet(pn.getSpecificEpithet());
 
     // Nullable fields
-    Optional.ofNullable(pn.getWarnings())
-        .ifPresent(w -> builder.setWarnings(new ArrayList<>(pn.getWarnings())));
-    Optional.ofNullable(pn.getBasionymAuthorship())
-        .ifPresent(authorship -> builder.setBasionymAuthorship(toAuthorshipAvro(authorship)));
-    Optional.ofNullable(pn.getCombinationAuthorship())
-        .ifPresent(authorship -> builder.setCombinationAuthorship(toAuthorshipAvro(authorship)));
     Optional.ofNullable(pn.getCode())
         .ifPresent(code -> builder.setCode(convertToEnum(NomCode.class, code)));
     Optional.ofNullable(pn.getType())
         .ifPresent(type -> builder.setType(convertToEnum(NameType.class, type)));
-    Optional.ofNullable(pn.getNotho())
-        .ifPresent(notho -> builder.setNotho(convertToEnum(NamePart.class, notho)));
     Optional.ofNullable(pn.getRank())
         .ifPresent(rank -> builder.setRank(convertToEnum(NameRank.class, rank)));
-    Optional.ofNullable(pn.getState())
-        .ifPresent(state -> builder.setState(convertToEnum(State.class, state)));
-    Optional.ofNullable(pn.getEpithetQualifier())
-        .map(
-            eq ->
-                eq.entrySet().stream()
-                    .collect(Collectors.toMap(e -> e.getKey(), Map.Entry::getValue)))
-        .ifPresent(builder::setEpithetQualifier);
     return builder.build();
   }
 
@@ -239,19 +204,6 @@ public class TaxonomyInterpreter {
     } catch (IllegalArgumentException | NullPointerException e) {
       return null; // Return null if conversion fails
     }
-  }
-
-  /**
-   * Converts a {@link org.gbif.nameparser.api.Authorship} into {@link
-   * org.gbif.pipelines.io.avro.Authorship}.
-   */
-  private static Authorship toAuthorshipAvro(NameUsageMatchResponse.Authorship authorship) {
-    return Authorship.newBuilder()
-        .setEmpty(authorship.getAuthors().isEmpty() && authorship.getExAuthors().isEmpty())
-        .setYear(authorship.getYear())
-        .setAuthors(authorship.getAuthors())
-        .setExAuthors(authorship.getExAuthors())
-        .build();
   }
 
   private static boolean isEmpty(NameUsageMatchResponse response) {
