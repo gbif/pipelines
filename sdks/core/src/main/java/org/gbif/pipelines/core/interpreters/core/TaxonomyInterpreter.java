@@ -76,8 +76,7 @@ public class TaxonomyInterpreter {
     // https://github.com/gbif/portal-feedback/issues/4231
     String scientificName =
         extractNullAwareOptValue(termsSource, DwcTerm.scientificName)
-            .orElse(extractValue(termsSource, DwcTerm.verbatimIdentification)
-            );
+            .orElse(extractValue(termsSource, DwcTerm.verbatimIdentification));
     return NameUsageMatchRequest.builder()
         .withChecklistKey(checklistKey)
         .withKingdom(extractValue(termsSource, DwcTerm.kingdom))

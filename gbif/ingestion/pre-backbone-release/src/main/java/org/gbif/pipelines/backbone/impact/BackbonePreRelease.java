@@ -219,7 +219,8 @@ public class BackbonePreRelease {
                 .withFamily(source.getString("v_family", schema))
                 .withGenus(source.getString("v_genus", schema))
                 .withScientificName(source.getString("v_scientificname", schema))
-                .withScientificNameAuthorship(source.getString("v_scientificnameauthorship", schema))
+                .withScientificNameAuthorship(
+                    source.getString("v_scientificnameauthorship", schema))
                 .withGenericName(source.getString("v_genericname", schema))
                 .withSpecificEpithet(source.getString("v_specificepithet", schema))
                 .withInfraspecificEpithet(source.getString("v_infraspecificepithet", schema))
