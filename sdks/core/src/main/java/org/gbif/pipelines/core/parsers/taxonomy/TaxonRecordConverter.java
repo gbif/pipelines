@@ -69,6 +69,7 @@ public class TaxonRecordConverter {
         .setInfraspecificEpithet(rankedNameApi.getInfraspecificEpithet())
         .setSpecificEpithet(rankedNameApi.getSpecificEpithet())
         .setFormattedName(rankedNameApi.getFormattedName())
+        .setStatus(rankedNameApi.getStatus())
         .build();
   }
 
@@ -102,11 +103,6 @@ public class TaxonRecordConverter {
             .setMatchType(MatchType.valueOf(diagnosticsApi.getMatchType().name()))
             .setNote(diagnosticsApi.getNote())
             .setLineage(List.of());
-
-    // status. A bit of defensive programming...
-    if (diagnosticsApi.getStatus() != null) {
-      builder.setStatus(Status.valueOf(diagnosticsApi.getStatus()));
-    }
 
     return builder.build();
   }
