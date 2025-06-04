@@ -17,7 +17,7 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.Optional;
 import lombok.Builder;
-import org.gbif.pipelines.core.interpreters.Interpretation;
+import org.gbif.pipelines.core.interpreters.*;
 import org.gbif.pipelines.core.interpreters.core.*;
 import org.gbif.pipelines.interpretation.transform.utils.VocabularyServiceFactory;
 import org.gbif.pipelines.io.avro.*;

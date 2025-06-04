@@ -27,22 +27,18 @@ public class Interpretation implements Serializable {
 
     SparkSession.Builder sb = SparkSession.builder();
 
-    /*
-      This doesn't work for me (Tim), but I think/hope it is what is required for the Encoders.kryo below
-      to work.
-        Exception in thread "main" java.lang.NoSuchFieldError: JAVA_21
-    */
-    // SparkConf sparkConf = new SparkConf();
-    // sparkConf.registerKryoClasses(new Class[] {ExtendedRecord.class, BasicRecord.class});
-    // sb.config(sparkConf);
-
-    if (config.getSparkRemote() != null) sb.remote(config.getSparkRemote()).connect();
+    if (config.getSparkRemote() != null) sb.remote(config.getSparkRemote());
     SparkSession spark = sb.getOrCreate();
+
     if (config.getJarPath() != null) spark.addArtifact(config.getJarPath());
 
     // Read the verbatim input
     Dataset<ExtendedRecord> records =
-        spark.read().format("avro").load(config.getInput()).as(Encoders.kryo(ExtendedRecord.class));
+        spark
+            .read()
+            .format("avro")
+            .load(config.getInput())
+            .as(Encoders.javaSerialization(ExtendedRecord.class));
 
     // Run the interpretations
     Dataset<BasicRecord> basic = basicTransform(config, records);
@@ -64,6 +60,6 @@ public class Interpretation implements Serializable {
                     .build()
                     .convert(er)
                     .get(),
-        Encoders.kryo(BasicRecord.class));
+        Encoders.javaSerialization(BasicRecord.class));
   }
 }

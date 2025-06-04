@@ -1,5 +1,6 @@
 # The source verbatim file (may use hdfs://... if the environment supports it)
-input: "/Users/tsj442/dev/data/svampeatlas.verbatim.avro"
+#input: "/Users/tsj442/dev/data/svampeatlas.verbatim.avro"
+input: "/Users/tim/dev/data/svampeatlas.verbatim.avro"
 #input: "/Users/tsj442/dev/data/inaturalist.verbatim.avro"
 
 # The target directory file (may use hdfs://... if the environment supports it)
@@ -10,7 +11,7 @@ output: "/tmp/svampeatlas-interpreted"
 sparkRemote: "sc://localhost"
 
 # The location of the Jar file, required when using Spark Connect
-jarPath: "./gbif/ingestion/ingest-gbif-spark/target/ingest-gbif-spark-3.1.0-SNAPSHOT.jar"
+jarPath: "./gbif/ingestion/ingest-gbif-spark/target/ingest-gbif-spark-3.2.0-SNAPSHOT-4.0.0.jar"
 
 # The Vocabulary server from which to pull full vocabularies on executor startup
 vocabularyApiUrl: "https://api.gbif.org/v1/"

@@ -69,7 +69,7 @@ public class ExtensionPojo {
       } else {
         String clearedName = name;
         if (Character.isDigit(name.charAt(0))) {
-          clearedName = name + "$1";
+          clearedName = name; // + "$1"; // LATE NIGHT HACK (TODO... investigate)
         }
         if (clearedName.contains(":")) {
           int i = clearedName.indexOf(":");

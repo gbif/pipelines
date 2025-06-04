@@ -92,7 +92,7 @@ public class Interpretation<S> {
     }
   }
 
-  @AllArgsConstructor(access = AccessLevel.PRIVATE)
+  @AllArgsConstructor(access = AccessLevel.PUBLIC)
   public class Handler<T> {
 
     private final T target;

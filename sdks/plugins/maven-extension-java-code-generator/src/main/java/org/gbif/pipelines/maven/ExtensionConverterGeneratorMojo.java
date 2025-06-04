@@ -113,6 +113,7 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
 
     List<Setter> setters =
         dwcExt.getProperties().stream()
+            .filter(e -> !e.getName().toLowerCase().contains("recoversoftware")) // late night hack
             .map(
                 e -> {
                   String eName = e.getName();
