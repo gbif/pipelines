@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.gbif.pipelines</groupId>
+    <artifactId>sdks</artifactId>
+    <version>3.2.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>models-pojo</artifactId>
+  <packaging>jar</packaging>
+
+  <name>Pipelines :: Sdks :: Models (POJO)</name>
+  <description>Data models represented in POJOs, generated from Avro schemas</description>
+
+  <properties>
+    <jackson.version>2.17.2</jackson.version>
+
+    <!-- Reuse schemas from the normal location -->
+    <schemas-path>${project.basedir}/../models/src/main/avro</schemas-path>
+    <generated-path>${project.basedir}/src/main/java-generated/</generated-path>
+    <package-name>org.gbif.pipelines.io.avro</package-name>
+
+    <!--
+    TODO - needed?
+    schema-generated-table-path>${schema-generated-path}/table/</schema-generated-table-path>
+    <occurrence-avsc-schema-name>occurrence-hdfs-record.avsc</occurrence-avsc-schema-name>
+    <schema-generated-occurrence-path>${schema-generated-path}/${occurrence-avsc-schema-name}</schema-generated-occurrence-path>
+    -->
+
+  </properties>
+
+  <build>
+    <plugins>
+      <!-- Generate POJOs from avro schemas -->
+      <plugin>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>maven-avro-pojo-generator</artifactId>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>generate-pojos</goal>
+            </goals>
+            <configuration>
+              <inputDir>${schemas-path}</inputDir>
+              <outputDir>${generated-path}</outputDir>
+            </configuration>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+      <!-- Add the generated sources to the classpath for IDEs -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${generated-path}</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Clean avro generated path -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>${generated-path}</directory>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <configuration>
+          <java>
+            <includes>
+              <include>**/*.java</include>
+            </includes>
+            <googleJavaFormat>
+              <version>1.10.0</version>
+            </googleJavaFormat>
+            <removeUnusedImports />
+          </java>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>apply</goal>
+            </goals>
+            <phase>generate-sources</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+    </dependency>
+  </dependencies>
+
+</project>
