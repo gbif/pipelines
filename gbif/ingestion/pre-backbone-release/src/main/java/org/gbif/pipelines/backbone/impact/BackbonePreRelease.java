@@ -106,7 +106,11 @@ public class BackbonePreRelease {
         "verbatim_phylum",
         "verbatim_class",
         "verbatim_order",
+        "verbatim_superfamily",
         "verbatim_family",
+        "verbatim_subfamily",
+        "verbatim_tribe",
+        "verbatim_subtribe",
         "verbatim_genus",
         "verbatim_specificEpithet",
         "verbatim_infraspecificEpithet",
@@ -216,7 +220,11 @@ public class BackbonePreRelease {
                 .withPhylum(source.getString("v_phylum", schema))
                 .withClazz(source.getString("v_class", schema))
                 .withOrder(source.getString("v_order", schema))
+                .withSuperfamily(source.getString("v_superfamily", schema))
                 .withFamily(source.getString("v_family", schema))
+                .withSubfamily(source.getString("v_subfamily", schema))
+                .withTribe(source.getString("v_tribe", schema))
+                .withSubtribe(source.getString("v_subtribe", schema))
                 .withGenus(source.getString("v_genus", schema))
                 .withScientificName(source.getString("v_scientificname", schema))
                 .withScientificNameAuthorship(
@@ -399,7 +407,11 @@ public class BackbonePreRelease {
           safe(verbatim.getPhylum()),
           safe(verbatim.getClazz()),
           safe(verbatim.getOrder()),
+          safe(verbatim.getSuperfamily()),
           safe(verbatim.getFamily()),
+          safe(verbatim.getSubfamily()),
+          safe(verbatim.getTribe()),
+          safe(verbatim.getSubtribe()),
           safe(verbatim.getGenus()),
           safe(verbatim.getSpecificEpithet()),
           safe(verbatim.getInfraspecificEpithet()),
