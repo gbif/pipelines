@@ -186,7 +186,7 @@ public class TaxonomyInterpreter {
   private static ParsedName toParsedNameAvro(NameUsageMatchResponse.Usage pn) {
     ParsedName.Builder builder =
         ParsedName.newBuilder()
-            .setGenus(pn.getGenus())
+            .setGenus(pn.getGenericName())
             .setInfragenericEpithet(pn.getInfragenericEpithet())
             .setInfraspecificEpithet(pn.getInfraspecificEpithet())
             .setSpecificEpithet(pn.getSpecificEpithet());
