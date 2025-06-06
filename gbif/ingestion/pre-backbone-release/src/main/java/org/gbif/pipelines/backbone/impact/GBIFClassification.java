@@ -26,7 +26,11 @@ public class GBIFClassification {
   private String phylum;
   private String klass;
   private String order;
+  private String superFamily;
   private String family;
+  private String subFamily;
+  private String tribe;
+  private String subTribe;
   private String genus;
   private String subGenus;
   private String species;
@@ -78,7 +82,11 @@ public class GBIFClassification {
     c.phylum = source.getString("phylum", schema);
     c.klass = source.getString("class", schema);
     c.order = source.getString("order", schema);
+    c.superFamily = source.getString("superfamily", schema);
     c.family = source.getString("family", schema);
+    c.subFamily = source.getString("subfamily", schema);
+    c.tribe = source.getString("tribe", schema);
+    c.subTribe = source.getString("subtribe", schema);
     c.genus = source.getString("genus", schema);
     c.subGenus = source.getString("subGenus", schema);
     c.species = source.getString("species", schema);
@@ -122,9 +130,25 @@ public class GBIFClassification {
                     c.order = rankedName.getName();
                     c.orderKey = rankedName.getKey() + "";
                     break;
+                  case "SUPERFAMILY":
+                    c.superFamily = rankedName.getName();
+                    // superFamilyKey is not used in GBIFClassification
+                    break;
                   case "FAMILY":
                     c.family = rankedName.getName();
                     c.familyKey = rankedName.getKey() + "";
+                    break;
+                  case "SUBFAMILY":
+                    c.subFamily = rankedName.getName();
+                    // subFamilyKey is not used in GBIFClassification
+                    break;
+                  case "TRIBE":
+                    c.tribe = rankedName.getName();
+                    // tribeKey is not used in GBIFClassification
+                    break;
+                  case "SUBTRIBE":
+                    c.subTribe = rankedName.getName();
+                    // subTribeKey is not used in GBIFClassification
                     break;
                   case "GENUS":
                     c.genus = rankedName.getName();
@@ -177,8 +201,20 @@ public class GBIFClassification {
    */
   public static String toHeader(String prefix, boolean skipKeys) {
     String[] fields = {
-      "kingdom", "phylum", "klass", "order", "family",
-      "genus", "subGenus", "species", "scientificName", "acceptedScientificName"
+      "kingdom",
+      "phylum",
+      "klass",
+      "order",
+      "superFamily",
+      "family",
+      "subFamily",
+      "tribe",
+      "subTribe",
+      "genus",
+      "subGenus",
+      "species",
+      "scientificName",
+      "acceptedScientificName"
     };
 
     String[] keys = {
@@ -204,7 +240,11 @@ public class GBIFClassification {
       phylum,
       klass,
       order,
+      superFamily,
       family,
+      subFamily,
+      tribe,
+      subTribe,
       genus,
       subGenus,
       species,
@@ -254,7 +294,11 @@ public class GBIFClassification {
           && Objects.equals(phylum, that.phylum)
           && Objects.equals(klass, that.klass)
           && Objects.equals(order, that.order)
+          //            && Objects.equals(superFamily, that.superFamily)
           && Objects.equals(family, that.family)
+          //            && Objects.equals(subFamily, that.subFamily)
+          //            && Objects.equals(tribe, that.tribe)
+          //            && Objects.equals(subTribe, that.subTribe)
           && Objects.equals(genus, that.genus)
           && Objects.equals(subGenus, that.subGenus)
           && Objects.equals(species, that.species)

@@ -106,10 +106,16 @@ public class AvroPojoGenerator extends AbstractMojo {
           List.of(
               "lombok.Data",
               "lombok.Builder",
+              "lombok.Getter",
               "lombok.NoArgsConstructor",
               "lombok.AllArgsConstructor"));
     } else {
-      imports.addAll(List.of("lombok.experimental.SuperBuilder", "lombok.Data"));
+      imports.addAll(
+          List.of(
+              "lombok.Getter",
+              "lombok.experimental.SuperBuilder",
+              "lombok.Data",
+              "lombok.NoArgsConstructor"));
     }
 
     StringBuilder sb = new StringBuilder();
@@ -121,34 +127,59 @@ public class AvroPojoGenerator extends AbstractMojo {
     StringBuilder body = new StringBuilder();
     for (JsonNode field : fields) {
       String name = field.get("name").asText();
+      name = normalizeName(name);
       String type = resolveType(field.get("type"), namespace, imports);
-      if ("class".equals(name)) name = name + "_";
-      body.append("    private ").append(type).append(" ").append(name).append(";\n");
+      if ("class".equals(name) || "v_class".equals(name) || "v_class".equals(name))
+        name = name + "$";
+      body.append("    private ").append(type).append(" ").append(name);
+      if (type.startsWith("List")) body.append("= new ArrayList<>()");
+      body.append(";\n");
     }
 
-    if (body.toString().contains("List<")) {
-      imports.add("java.util.List");
-    }
+    if (body.toString().contains("List<")) imports.add("java.util.List");
+    if (body.toString().contains("List<")) imports.add("java.util.ArrayList");
+    if (body.toString().contains("Map<")) imports.add("java.util.Map");
+    if (body.toString().contains("Set<")) imports.add("java.util.Set");
+
+    imports.add("org.gbif.pipelines.io.avro.Record");
+    imports.add("org.gbif.pipelines.io.avro.Issues");
+    imports.add("org.gbif.pipelines.io.avro.Created");
 
     for (String imp : imports) {
       sb.append("import ").append(imp).append(";\n");
     }
 
     if (fields.size() < 255) {
-      sb.append("""
+      sb.append(
+          """
     @Data
-    @Builder
-    @NoArgsConstructor
     @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder(builderClassName = "Builder", builderMethodName = "newBuilder", setterPrefix = "set")
     """);
     } else { // use SuperBuilder to avoid constructor issues with too many parameters
       sb.append("""
     @Data
+    @Getter
+    @NoArgsConstructor
     @SuperBuilder
     """);
     }
 
-    sb.append("public class ").append(className).append(" {\n");
+    sb.append("public class ").append(className);
+
+    // custom interfaces
+    Set interfaces = new HashSet();
+    if (body.toString().contains("String id;")) interfaces.add("Record");
+    if (body.toString().contains("IssueRecord issues;")) interfaces.add("Issues");
+    if (body.toString().contains("Long created;")) interfaces.add("Created");
+
+    if (!interfaces.isEmpty()) {
+      sb.append(" implements ");
+      sb.append(String.join(", ", interfaces));
+    }
+
+    sb.append(" {\n");
     sb.append(body);
     sb.append("}\n");
 
@@ -184,14 +215,22 @@ public class AvroPojoGenerator extends AbstractMojo {
 
   private String resolveType(JsonNode typeNode, String currentNamespace, Set<String> imports) {
     if (typeNode.isTextual()) {
-      return PRIMITIVE_MAP.getOrDefault(typeNode.asText(), typeNode.asText());
-    } else if (typeNode.isObject()) {
+      String rawType = typeNode.asText();
+      return PRIMITIVE_MAP.getOrDefault(rawType, rawType);
+    }
+
+    if (typeNode.isObject()) {
       String type = typeNode.get("type").asText();
+
       switch (type) {
         case "array":
           imports.add("java.util.List");
-          String itemsType = resolveType(typeNode.get("items"), currentNamespace, imports);
-          return "List<" + itemsType + ">";
+          String itemType = resolveType(typeNode.get("items"), currentNamespace, imports);
+          return "List<" + boxIfPrimitive(itemType) + ">";
+        case "map":
+          imports.add("java.util.Map");
+          String valueType = resolveType(typeNode.get("values"), currentNamespace, imports);
+          return "Map<String, " + boxIfPrimitive(valueType) + ">";
         case "record":
         case "enum":
           try {
@@ -207,19 +246,68 @@ public class AvroPojoGenerator extends AbstractMojo {
         default:
           return PRIMITIVE_MAP.getOrDefault(type, "Object");
       }
-    } else if (typeNode.isArray()) {
+    }
+
+    if (typeNode.isArray()) {
+      // handle ["null", "primitive"] → boxed primitive
+      JsonNode nonNullType = null;
       for (JsonNode subType : typeNode) {
         if (!subType.isTextual() || !"null".equals(subType.asText())) {
-          return resolveType(subType, currentNamespace, imports);
+          nonNullType = subType;
+          break;
         }
       }
-    } else if (typeNode.isArray()) {
-      for (JsonNode subType : typeNode) {
-        if (!subType.isTextual() || !"null".equals(subType.asText())) {
-          return resolveType(subType, currentNamespace, imports);
-        }
+      if (nonNullType != null) {
+        String resolved = resolveType(nonNullType, currentNamespace, imports);
+        return boxIfPrimitive(resolved); // box because nullable
       }
     }
+
     return "Object";
+  }
+
+  private static final Map<String, String> BOXED_MAP =
+      Map.of(
+          "int", "Integer",
+          "long", "Long",
+          "boolean", "Boolean",
+          "float", "Float",
+          "double", "Double",
+          "byte[]", "byte[]", // leave as is
+          "string", "String");
+
+  private String boxIfPrimitive(String type) {
+    return BOXED_MAP.getOrDefault(type, type);
+  }
+
+  protected String normalizeName2(String name) {
+    if (name.startsWith("v_")) {
+      return "v" + name.substring(2, 3).toUpperCase() + name.substring(3);
+    } else return name;
+  }
+
+  // e.g. vDc_type -> vDcType
+  public static String normalizeName(String input) {
+    if (input.startsWith("v_")) {
+      input = "v" + input.substring(2, 3).toUpperCase() + input.substring(3);
+    }
+
+    // hack (DnaDerivedDataTable)
+    boolean startsWithUnderscore = input.startsWith("_"); // _16srecover become _16srecover
+
+    while (input.contains("_")) {
+      int idx = input.indexOf('_');
+      if (idx < input.length() - 1) {
+        String replacement = input.substring(idx + 1, idx + 2).toUpperCase();
+        input = input.substring(0, idx) + replacement + input.substring(idx + 2);
+      } else {
+        input = input.substring(0, idx);
+      }
+    }
+    if (input.equals("vClass")) {
+      return "vClass$";
+    } else {
+      return startsWithUnderscore ? "_" + input : input;
+    }
   }
 }

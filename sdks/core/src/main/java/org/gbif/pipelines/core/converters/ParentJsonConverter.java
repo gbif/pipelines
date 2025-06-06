@@ -59,10 +59,10 @@ public class ParentJsonConverter {
             .setInternalId(identifier.getInternalId())
             .setUniqueKey(identifier.getUniqueKey())
             .setType(ConverterConstants.EVENT)
-            .setEventBuilder(convertToEvent())
+            .setEvent(convertToEvent().build())
             .setAll(JsonConverter.convertFieldAll(verbatim, false))
             .setVerbatim(JsonConverter.convertVerbatimEventRecord(verbatim))
-            .setJoinRecordBuilder(JoinRecord.newBuilder().setName(ConverterConstants.EVENT));
+            .setJoinRecord(JoinRecord.newBuilder().setName(ConverterConstants.EVENT).build());
 
     mapCreated(builder);
     mapDerivedMetadata(builder);
@@ -85,12 +85,13 @@ public class ParentJsonConverter {
                 metadata.getDatasetKey(),
                 occurrenceJsonRecord.getEventId(),
                 occurrenceJsonRecord.getOccurrenceId()))
-        .setJoinRecordBuilder(
+        .setJoinRecord(
             JoinRecord.newBuilder()
                 .setName(ConverterConstants.OCCURRENCE)
                 .setParent(
                     HashConverter.getSha1(
-                        metadata.getDatasetKey(), occurrenceJsonRecord.getEventId())))
+                        metadata.getDatasetKey(), occurrenceJsonRecord.getEventId()))
+                .build())
         .setOccurrence(occurrenceJsonRecord)
         .setAll(occurrenceJsonRecord.getAll())
         .setVerbatim(occurrenceJsonRecord.getVerbatim())
@@ -103,7 +104,7 @@ public class ParentJsonConverter {
     ParentJsonRecord.Builder builder =
         ParentJsonRecord.newBuilder()
             .setCrawlId(metadata.getCrawlId())
-            .setMetadataBuilder(mapMetadataJsonRecord());
+            .setMetadata(mapMetadataJsonRecord().build());
 
     JsonConverter.convertToDate(metadata.getLastCrawled()).ifPresent(builder::setLastCrawled);
 
@@ -147,7 +148,7 @@ public class ParentJsonConverter {
 
     if (eventCore.getEventType() != null
         && eventCore.getEventType().getConcept().equalsIgnoreCase(ConverterConstants.SURVEY)) {
-      builder.setSurveyID(builder.getEventID());
+      builder.setSurveyID(builder.build().getEventID());
     }
 
     // Simple
@@ -173,7 +174,7 @@ public class ParentJsonConverter {
           .setEventHierarchyJoined(String.join(ConverterConstants.DELIMITER, eventIDs))
           .setEventHierarchyLevels(eventIDs.size());
 
-      if (builder.getSurveyID() == null) {
+      if (builder.build().getSurveyID() == null) {
         List<org.gbif.pipelines.io.avro.Parent> surveys =
             eventCore.getParentsLineage().stream()
                 .filter(
@@ -188,14 +189,15 @@ public class ParentJsonConverter {
     } else {
       // add the eventID and parentEventID to hierarchy for consistency
       List<String> eventHierarchy = new ArrayList<>();
-      Optional.ofNullable(builder.getParentEventID()).ifPresent(eventHierarchy::add);
-      Optional.ofNullable(builder.getEventID()).ifPresent(eventHierarchy::add);
+      Optional.ofNullable(builder.build().getParentEventID()).ifPresent(eventHierarchy::add);
+      Optional.ofNullable(builder.build().getEventID()).ifPresent(eventHierarchy::add);
       builder.setEventHierarchy(eventHierarchy);
 
       // add the single type to hierarchy for consistency
       List<String> eventTypeHierarchy = new ArrayList<>();
-      if (builder.getEventType() != null && builder.getEventType().getConcept() != null) {
-        eventTypeHierarchy.add(builder.getEventType().getConcept());
+      if (builder.build().getEventType() != null
+          && builder.build().getEventType().getConcept() != null) {
+        eventTypeHierarchy.add(builder.build().getEventType().getConcept());
       }
       builder.setEventTypeHierarchy(eventTypeHierarchy);
     }

@@ -83,11 +83,11 @@ public class TaxonomyInterpreter {
         .withPhylum(extractValue(termsSource, DwcTerm.phylum))
         .withClazz(extractValue(termsSource, DwcTerm.class_))
         .withOrder(extractValue(termsSource, DwcTerm.order))
-        .withSuperfamily(extractValue(termsSource, DwcTerm.superfamily))
+        // .withSuperfamily(extractValue(termsSource, DwcTerm.superfamily))
         .withFamily(extractValue(termsSource, DwcTerm.family))
-        .withSubfamily(extractValue(termsSource, DwcTerm.subfamily))
-        .withTribe(extractValue(termsSource, DwcTerm.tribe))
-        .withSubtribe(extractValue(termsSource, DwcTerm.subtribe))
+        // .withSubfamily(extractValue(termsSource, DwcTerm.subfamily))
+        // .withTribe(extractValue(termsSource, DwcTerm.tribe))
+        // .withSubtribe(extractValue(termsSource, DwcTerm.subtribe))
         .withGenus(extractValue(termsSource, DwcTerm.genus))
         .withScientificName(scientificName)
         .withScientificNameAuthorship(extractValue(termsSource, DwcTerm.scientificNameAuthorship))
@@ -184,9 +184,10 @@ public class TaxonomyInterpreter {
    * org.gbif.pipelines.io.avro.ParsedName}.
    */
   private static ParsedName toParsedNameAvro(NameUsageMatchResponse.Usage pn) {
+
     ParsedName.Builder builder =
         ParsedName.newBuilder()
-            .setGenus(pn.getGenus())
+            .setGenus(pn.getGenericName())
             .setInfragenericEpithet(pn.getInfragenericEpithet())
             .setInfraspecificEpithet(pn.getInfraspecificEpithet())
             .setSpecificEpithet(pn.getSpecificEpithet());

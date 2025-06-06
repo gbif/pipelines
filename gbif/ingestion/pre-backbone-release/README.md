@@ -1,22 +1,27 @@
 # Pre-backbone Release
 
 This diagnostic pipeline is used by data managers to assess the impact
-of a proposed backbone taxonomy release. The verbatim occurrence
+of a proposed taxonomy release. The verbatim occurrence
 classifications are looked up against the proposed new
 backbone. All records that change from their current organisation
-are logged so they can be reviewed before the backbone is deployed.
+are logged so they can be reviewed before the taxonomy is deployed.
 
 To set up, prepare a table in Hive:
-```
+
+```sql
 CREATE DATABASE IF NOT EXISTS gbif_impact;
-DROP TABLE gbif_impact.classifications;
-CREATE TABLE gbif_impact.classifications STORED AS PARQUET 
+DROP TABLE gbif_impact.alltaxa;
+CREATE TABLE gbif_impact.alltaxa STORED AS PARQUET 
    AS SELECT
    v_kingdom,
    v_phylum,
    v_class,
    v_order,
+   v_superfamily,
    v_family,
+   v_subfamily,
+   v_tribe,
+   v_subtribe,
    v_genus,
    v_subGenus,
    v_scientificName,
@@ -26,14 +31,19 @@ CREATE TABLE gbif_impact.classifications STORED AS PARQUET
    v_genericName,
    v_specificEpithet,
    v_infraSpecificEpithet,
+   v_cultivarEpithet,
    v_scientificNameID,
    v_taxonID,
-   v_taxonConceptID,    
+   v_taxonConceptID,
    kingdom,
    phylum,
    class,
    `order`,
+   superfamily,
    family,
+   subfamily,
+   tribe,
+   subtribe,
    genus,
    subGenus,
    species,
@@ -50,13 +60,17 @@ CREATE TABLE gbif_impact.classifications STORED AS PARQUET
    taxonKey,
    acceptedTaxonKey,
    count(*) as occurrenceCount
-   FROM uat.occurrence
+   FROM uat2.occurrence
    GROUP BY
    v_kingdom,
    v_phylum,
    v_class,
    v_order,
+   v_superfamily,
    v_family,
+   v_subfamily,
+   v_tribe,
+   v_subtribe,
    v_genus,
    v_subGenus,
    v_scientificName,
@@ -66,6 +80,7 @@ CREATE TABLE gbif_impact.classifications STORED AS PARQUET
    v_genericName,
    v_specificEpithet,
    v_infraSpecificEpithet,
+   v_cultivarEpithet,
    v_scientificNameID,
    v_taxonID,
    v_taxonConceptID,  
@@ -73,7 +88,11 @@ CREATE TABLE gbif_impact.classifications STORED AS PARQUET
    phylum,
    class,
    `order`,
+   superfamily,
    family,
+   subfamily,
+   tribe,
+   subtribe,
    genus,
    subGenus,
    species,
@@ -90,6 +109,120 @@ CREATE TABLE gbif_impact.classifications STORED AS PARQUET
    taxonKey,
    acceptedTaxonKey;
 ```
+
+Additional report tables:
+
+```sql
+create table gbif_impact.coleoptera as select * from gbif_impact.alltaxa where `order` = 'Coleoptera';
+create table gbif_impact.fabaceae as select * from gbif_impact.alltaxa where family = 'Fabaceae';
+create table gbif_impact.fungi as select * from gbif_impact.alltaxa where kingdom = 'Fungi';
+create table gbif_impact.aves as select * from gbif_impact.alltaxa where class = 'Aves';
+create table gbif_impact.plantae as select * from gbif_impact.alltaxa where kingdom = 'Plantae';
+```
+
+For fossils:
+```sql
+DROP TABLE gbif_impact.fossils;
+CREATE TABLE gbif_impact.fossils STORED AS PARQUET
+    AS SELECT
+    v_kingdom,
+    v_phylum,
+    v_class,
+    v_order,
+    v_superfamily,
+    v_family,
+    v_subfamily,
+    v_tribe,
+    v_subtribe,
+    v_genus,
+    v_subGenus,
+    v_scientificName,
+    v_scientificNameAuthorship,
+    v_taxonRank,
+    v_verbatimTaxonRank,
+    v_genericName,
+    v_specificEpithet,
+    v_infraSpecificEpithet,
+    v_cultivarEpithet,
+    v_scientificNameID,
+    v_taxonID,
+    v_taxonConceptID,
+    kingdom,
+    phylum,
+    class,
+    `order`,
+    superfamily,
+    family,
+    subfamily,
+    tribe,
+    subtribe,
+    genus,
+    subGenus,
+    species,
+    scientificName,
+    acceptedScientificName,
+    kingdomKey,
+    phylumKey,
+    classKey,
+    orderKey,
+    familyKey,
+    genusKey,
+    subGenusKey,
+    speciesKey,
+    taxonKey,
+    acceptedTaxonKey,
+   count(*) as occurrenceCount
+   FROM uat2.occurrence
+   WHERE basisOfRecord = 'FOSSIL_SPECIMEN'
+   GROUP BY
+   v_kingdom,
+   v_phylum,
+   v_class,
+   v_order,
+   v_superfamily,
+   v_family,
+   v_subfamily,
+   v_tribe,
+   v_subtribe,
+   v_genus,
+   v_subGenus,
+   v_scientificName,
+   v_scientificNameAuthorship,
+   v_taxonRank,
+   v_verbatimTaxonRank,
+   v_genericName,
+   v_specificEpithet,
+   v_infraSpecificEpithet,
+   v_cultivarEpithet,
+   v_scientificNameID,
+   v_taxonID,
+   v_taxonConceptID,  
+   kingdom,
+   phylum,
+   class,
+   `order`,
+   superfamily,
+   family,
+   subfamily,
+   tribe,
+   subtribe,
+   genus,
+   subGenus,
+   species,
+   scientificName,
+   acceptedScientificName,
+   kingdomKey,
+   phylumKey,
+   classKey,
+   orderKey,
+   familyKey,
+   genusKey,
+   subGenusKey,
+   speciesKey,
+   taxonKey,
+   acceptedTaxonKey;
+```
+
 
 Execute the pipeline using e.g. (not --skipKeys=false can be added to omit taxa keys in the result):
 ```

@@ -97,7 +97,7 @@
               <include>**/*.java</include>
             </includes>
             <googleJavaFormat>
-              <version>1.10.0</version>
+              <version>1.17.0</version>
             </googleJavaFormat>
             <removeUnusedImports />
           </java>
