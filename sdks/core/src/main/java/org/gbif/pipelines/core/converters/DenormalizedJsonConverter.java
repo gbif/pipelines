@@ -59,8 +59,8 @@ public class DenormalizedJsonConverter {
   private ParentJsonRecord convertToParentEvent() {
     return convertToParent()
         .setType(ConverterConstants.EVENT)
-        .setJoinRecordBuilder(JoinRecord.newBuilder().setName(ConverterConstants.EVENT))
-        .setEventBuilder(convertToEvent())
+        .setJoinRecord(JoinRecord.newBuilder().setName(ConverterConstants.EVENT).build())
+        .setEvent(convertToEvent().build())
         .build();
   }
 
@@ -70,11 +70,12 @@ public class DenormalizedJsonConverter {
         .setInternalId(
             HashConverter.getSha1(
                 metadata.getDatasetKey(), verbatim.getId(), occurrenceJsonRecord.getOccurrenceId()))
-        .setJoinRecordBuilder(
+        .setJoinRecord(
             JoinRecord.newBuilder()
                 .setName(ConverterConstants.OCCURRENCE)
-                .setParent(identifier.getInternalId()))
-        .setEventBuilder(convertToEvent())
+                .setParent(identifier.getInternalId())
+                .build())
+        .setEvent(convertToEvent().build())
         .setOccurrence(occurrenceJsonRecord)
         .build();
   }
@@ -86,7 +87,7 @@ public class DenormalizedJsonConverter {
             .setCrawlId(metadata.getCrawlId())
             .setInternalId(identifier.getInternalId())
             .setUniqueKey(identifier.getUniqueKey())
-            .setMetadataBuilder(mapMetadataJsonRecord());
+            .setMetadata(mapMetadataJsonRecord().build());
 
     mapCreated(builder);
 

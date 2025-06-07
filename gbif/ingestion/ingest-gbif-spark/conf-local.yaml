@@ -1,0 +1,29 @@
+# The source verbatim file (may use hdfs://... if the environment supports it)
+#input: "/Users/tim/dev/data/svampeatlas.verbatim.avro"
+#input: "../pontaurus.verbatim.avro"
+#input: "../fmnh-lc.verbatim.avro"
+input: "../bell.verbatim.avro"
+#input: "../berry.verbatim.avro"
+
+#input: "/Users/tsj442/dev/data/inaturalist.verbatim.avro"
+
+# The target directory file (may use hdfs://... if the environment supports it)
+output: "/tmp/interpreted"
+
+# The Spark Connect URL which may be omitted for use with spark-submit
+sparkRemote: "sc://localhost"
+
+# The location of the Jar file, required when using Spark Connect
+jarPath: "./gbif/ingestion/ingest-gbif-spark/target/ingest-gbif-spark-3.2.0-SNAPSHOT-3.5.6.jar"
+
+# The Vocabulary server from which to pull full vocabularies on executor startup
+vocabularyApiUrl: "https://api.gbif.org/v1/"
+
+# Species match service
+speciesMatchAPI: "https://api.gbif-uat.org/v1/"
+
+# Threads to hit the species match with
+speciesMatchParallelism: 12
+
+# Geocode lookup
+geocodeAPI: "https://api.gbif.org/v1/"

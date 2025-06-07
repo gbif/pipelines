@@ -249,7 +249,7 @@ public class OccurrenceHdfsRecordConverterTest {
 
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());
-    Assert.assertEquals("classs", hdfsRecord.getVClass());
+    Assert.assertEquals("classs", hdfsRecord.getVClass$());
 
     Assert.assertEquals("ORDER", hdfsRecord.getOrder());
     Assert.assertEquals("order", hdfsRecord.getVOrder());
