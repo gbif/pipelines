@@ -25,7 +25,6 @@
     <dwca-io.version>3.0.0</dwca-io.version>
     <dwc-api.version>2.0.1-SNAPSHOT</dwc-api.version>
     <gbif-parsers.version>0.67</gbif-parsers.version>
-    <kvs-gbif.version>2.0.0</kvs-gbif.version>
     <commons-io.version>2.14.0</commons-io.version>
     <fastutil.version>8.5.15</fastutil.version>
     <gbif-api.version>2.0.6</gbif-api.version>
@@ -81,7 +80,6 @@
     <dependency>
       <groupId>org.gbif.kvs</groupId>
       <artifactId>kvs-gbif</artifactId>
-      <version>${kvs-gbif.version}</version>
       <exclusions>
         <!-- TODO: Review this - was just a guess! -->
         <exclusion>

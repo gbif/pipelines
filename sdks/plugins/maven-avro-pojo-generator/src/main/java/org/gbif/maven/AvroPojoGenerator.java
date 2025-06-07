@@ -11,6 +11,14 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
+/**
+ * This generates a set of POJOs from Avro schema files (.avsc) found in the specified input
+ * directory. The POJOs are as aligned as possible to the same structure as the Avro code
+ * generation.
+ *
+ * <p>This class is expected to be removed when Avro is removed from the project and the POJOs can
+ * be maintained directly in src/main/java. Code quality reflects this temporary nature.
+ */
 @Mojo(name = "generate-pojos")
 public class AvroPojoGenerator extends AbstractMojo {
 
@@ -101,21 +109,16 @@ public class AvroPojoGenerator extends AbstractMojo {
 
     Set<String> imports = new HashSet<>();
 
+    imports.addAll(
+        List.of(
+            "lombok.Data",
+            "lombok.Builder",
+            "lombok.Getter",
+            "lombok.NoArgsConstructor",
+            "lombok.experimental.SuperBuilder",
+            "lombok.NoArgsConstructor"));
     if (fields.size() < 255) {
-      imports.addAll(
-          List.of(
-              "lombok.Data",
-              "lombok.Builder",
-              "lombok.Getter",
-              "lombok.NoArgsConstructor",
-              "lombok.AllArgsConstructor"));
-    } else {
-      imports.addAll(
-          List.of(
-              "lombok.Getter",
-              "lombok.experimental.SuperBuilder",
-              "lombok.Data",
-              "lombok.NoArgsConstructor"));
+      imports.add("lombok.AllArgsConstructor");
     }
 
     StringBuilder sb = new StringBuilder();
@@ -131,8 +134,12 @@ public class AvroPojoGenerator extends AbstractMojo {
       String type = resolveType(field.get("type"), namespace, imports);
       if ("class".equals(name) || "v_class".equals(name) || "v_class".equals(name))
         name = name + "$";
+      if (type.equals("IssueRecord")) body.append("    @Builder.Default\n");
+      if (type.startsWith("List")) body.append("    @Builder.Default\n");
       body.append("    private ").append(type).append(" ").append(name);
       if (type.startsWith("List")) body.append("= new ArrayList<>()");
+      if (type.equals("IssueRecord")) body.append("= IssueRecord.newBuilder().build()");
+
       body.append(";\n");
     }
 
@@ -171,7 +178,7 @@ public class AvroPojoGenerator extends AbstractMojo {
     // custom interfaces
     Set interfaces = new HashSet();
     if (body.toString().contains("String id;")) interfaces.add("Record");
-    if (body.toString().contains("IssueRecord issues;")) interfaces.add("Issues");
+    if (body.toString().contains("IssueRecord issues")) interfaces.add("Issues");
     if (body.toString().contains("Long created;")) interfaces.add("Created");
 
     if (!interfaces.isEmpty()) {

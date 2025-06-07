@@ -13,13 +13,15 @@
  */
 package org.gbif.pipelines.interpretation.spark;
 
+import static org.gbif.pipelines.interpretation.spark.LocationInterpretation.locationTransform;
+import static org.gbif.pipelines.interpretation.spark.TemporalInterpretation.temporalTransform;
+
 import java.io.IOException;
 import java.io.Serializable;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
 import org.gbif.pipelines.interpretation.transform.BasicTransform;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.*;
 
 public class Interpretation implements Serializable {
   public static void main(String[] args) throws IOException {
@@ -37,10 +39,15 @@ public class Interpretation implements Serializable {
 
     // Run the interpretations
     Dataset<BasicRecord> basic = basicTransform(config, records);
+    Dataset<LocationRecord> location = locationTransform(config, spark, records);
+    Dataset<TemporalRecord> temporal = temporalTransform(records);
 
     // Write the intermediate output (useful for debugging)
     basic.write().mode("overwrite").parquet(config.getOutput() + "/basic");
+    location.write().mode("overwrite").parquet(config.getOutput() + "/location");
+    temporal.write().mode("overwrite").parquet(config.getOutput() + "/temporal");
 
+    // TODO: read and join all the intermediate outputs to the HDFS and JSON views
     spark.close();
   }
 
