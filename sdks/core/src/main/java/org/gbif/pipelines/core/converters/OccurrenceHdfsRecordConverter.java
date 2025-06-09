@@ -4,6 +4,8 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -18,7 +20,6 @@ import org.apache.commons.beanutils.PropertyUtils;
 import org.gbif.api.vocabulary.License;
 import org.gbif.dwc.terms.*;
 import org.gbif.occurrence.common.TermUtils;
-import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.core.utils.ModelUtils;
@@ -880,22 +881,35 @@ public class OccurrenceHdfsRecordConverter {
           .ifPresent(
               field -> {
                 // Fields that were set by other mappers are ignored
-                if (Objects.isNull(occurrenceHdfsRecord.get(field.name()))) {
-                  String interpretedFieldname = field.name();
-                  if (DcTerm.abstract_ == term) {
-                    interpretedFieldname = "abstract$";
-                  } else if (DwcTerm.class_ == term) {
-                    interpretedFieldname = "class$";
-                  } else if (DwcTerm.group == term) {
-                    interpretedFieldname = "group";
-                  } else if (DwcTerm.order == term) {
-                    interpretedFieldname = "order";
-                  } else if (DcTerm.date == term) {
-                    interpretedFieldname = "date";
-                  } else if (DcTerm.format == term) {
-                    interpretedFieldname = "format";
+
+                // Use reflection to get the value (previously used names from Avro schema)
+                String methodName =
+                    "get"
+                        + Character.toUpperCase(field.name().charAt(0))
+                        + field.name().substring(1);
+                try {
+                  Method method = occurrenceHdfsRecord.getClass().getMethod(methodName);
+                  if (Objects.isNull(method.invoke(occurrenceHdfsRecord))) {
+                    String interpretedFieldname = field.name();
+                    if (DcTerm.abstract_ == term) {
+                      interpretedFieldname = "abstract$";
+                    } else if (DwcTerm.class_ == term) {
+                      interpretedFieldname = "class$";
+                    } else if (DwcTerm.group == term) {
+                      interpretedFieldname = "group";
+                    } else if (DwcTerm.order == term) {
+                      interpretedFieldname = "order";
+                    } else if (DcTerm.date == term) {
+                      interpretedFieldname = "date";
+                    } else if (DcTerm.format == term) {
+                      interpretedFieldname = "format";
+                    }
+                    setHdfsRecordField(occurrenceHdfsRecord, field, interpretedFieldname, v);
                   }
-                  setHdfsRecordField(occurrenceHdfsRecord, field, interpretedFieldname, v);
+                } catch (IllegalAccessException
+                    | InvocationTargetException
+                    | NoSuchMethodException ex) {
+                  throw new RuntimeException(ex);
                 }
               });
     }
@@ -943,11 +957,13 @@ public class OccurrenceHdfsRecordConverter {
 
   /** Gets the {@link Schema.Field} associated to a verbatim term. */
   private static Schema.Field verbatimSchemaField(Term term) {
-    return OccurrenceHdfsRecord.SCHEMA$.getField("v_" + term.simpleName().toLowerCase());
+    // return OccurrenceHdfsRecord.SCHEMA$.getField("v_" + term.simpleName().toLowerCase());
+    throw new RuntimeException("This functionality removed when we moved to Beans from Avro");
   }
 
   /** Gets the {@link Schema.Field} associated to a interpreted term. */
   private static Schema.Field interpretedSchemaField(Term term) {
-    return OccurrenceHdfsRecord.SCHEMA$.getField(HiveColumns.columnFor(term));
+    // return OccurrenceHdfsRecord.SCHEMA$.getField(HiveColumns.columnFor(term));
+    throw new RuntimeException("This functionality removed when we moved to Beans from Avro");
   }
 }

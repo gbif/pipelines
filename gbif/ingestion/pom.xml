@@ -17,6 +17,7 @@
 
   <modules>
     <module>ingest-gbif-beam</module>
+    <module>ingest-gbif-spark</module>
     <module>ingest-gbif-fragmenter</module>
     <module>ingest-gbif-java</module>
     <module>ingestion-integration-tests</module>

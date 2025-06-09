@@ -350,7 +350,6 @@ public class TemporalInterpreterTest {
     assertEquals(11, tr.getDay().intValue());
     assertEquals(315, tr.getStartDayOfYear().intValue());
     assertEquals(315, tr.getEndDayOfYear().intValue());
-    System.out.println(tr.getIssues().get(0));
     assertEquals(0, tr.getIssues().getIssueList().size());
   }
 

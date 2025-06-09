@@ -203,6 +203,7 @@ public class TaxonomyInterpreter {
    * org.gbif.pipelines.io.avro.ParsedName}.
    */
   private static ParsedName toParsedNameAvro(NameUsageMatchResponse.Usage pn) {
+
     ParsedName.Builder builder =
         ParsedName.newBuilder()
             .setGenus(pn.getGenericName())
