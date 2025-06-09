@@ -18,13 +18,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.apache.avro.specific.SpecificRecordBase;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.core.utils.TemporalConverter;
@@ -81,13 +79,11 @@ public class JsonConverter {
   }
 
   /** Gets the maximum/latest created date of all the records. */
-  public static Optional<String> getMaxCreationDate(SpecificRecordBase... recordBases) {
-    return Arrays.stream(recordBases)
+  public static Optional<String> getMaxCreationDate(Created... records) {
+    return Arrays.stream(records)
         .filter(Objects::nonNull)
-        .filter(r -> Objects.nonNull(r.getSchema().getField(Indexing.CREATED)))
-        .map(r -> r.get(Indexing.CREATED))
+        .map(r -> r.getCreated())
         .filter(Objects::nonNull)
-        .map(Long.class::cast)
         .max(Long::compareTo)
         .flatMap(JsonConverter::convertToDate);
   }
@@ -613,8 +609,11 @@ public class JsonConverter {
     JsonConverter.convertGenericNameFromParsedName(taxon)
         .ifPresent(
             genericName -> {
-              if (classificationBuilder.getUsageParsedName() != null) {
-                classificationBuilder.getUsageParsedName().setGenericName(genericName);
+              GbifClassification partial = classificationBuilder.build();
+              ParsedName existing = partial.getUsageParsedName();
+              if (existing != null) {
+                existing.setGenericName(genericName);
+                classificationBuilder.setUsageParsedName(existing);
               }
             });
 

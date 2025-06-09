@@ -132,7 +132,7 @@ public class CoreInterpreter {
 
         // allow the raw event type value through if not matched to vocab
         // this is useful as vocab is a WIP
-        if (parentBuilder.getEventType() == null) {
+        if (parentBuilder.build().getEventType() == null) {
           parentBuilder.setEventType(parentValues.get(DwcTerm.eventType.name()));
         }
 

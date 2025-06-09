@@ -97,7 +97,7 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>models</artifactId>
+      <artifactId>models-pojo</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
