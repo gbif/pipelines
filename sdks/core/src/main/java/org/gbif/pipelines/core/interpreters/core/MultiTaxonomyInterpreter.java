@@ -35,6 +35,7 @@ public class MultiTaxonomyInterpreter {
   public static BiConsumer<ExtendedRecord, MultiTaxonRecord> interpretMultiTaxonomy(
       KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore,
       List<String> checklistKeys) {
+
     return (er, mtr) -> {
       if (kvStore == null) {
         return;
