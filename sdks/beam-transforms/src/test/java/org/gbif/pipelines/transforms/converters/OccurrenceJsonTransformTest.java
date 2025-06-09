@@ -317,16 +317,16 @@ public class OccurrenceJsonTransformTest {
             .setMatchType(org.gbif.pipelines.io.avro.MatchType.EXACT)
             .setNote("note")
             .setLineage(Collections.singletonList("setLineage"))
-            .setAlternatives(
-                Collections.singletonList(
-                    TaxonRecord.newBuilder()
-                        .setId("777")
-                        .setAcceptedUsage(au)
-                        .setClassification(rankedNameList)
-                        .setUsage(synonym)
-                        .setSynonym(true)
-                        .setIucnRedListCategoryCode("setIucnRedListCategoryCode")
-                        .build()))
+            //            .setAlternatives(
+            //                Collections.singletonList(
+            //                    TaxonRecord.newBuilder()
+            //                        .setId("777")
+            //                        .setAcceptedUsage(au)
+            //                        .setClassification(rankedNameList)
+            //                        .setUsage(synonym)
+            //                        .setSynonym(true)
+            //                        .setIucnRedListCategoryCode("setIucnRedListCategoryCode")
+            //                        .build()))
             .build();
 
     TaxonRecord tr =

@@ -20,7 +20,12 @@ jarPath: "./gbif/ingestion/ingest-gbif-spark/target/ingest-gbif-spark-3.2.0-SNAP
 vocabularyApiUrl: "https://api.gbif.org/v1/"
 
 # Species match service
-speciesMatchAPI: "https://api.gbif-uat.org/v1/"
+speciesMatchAPI: "https://api.gbif-uat.org/"
+
+checklistKeys:
+  - d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
+  - 2d59e5db-57ad-41ff-97d6-11f5fb264527
+  - 7ddf754f-d193-4cc9-b351-99906754a03b
 
 # Threads to hit the species match with
 speciesMatchParallelism: 12

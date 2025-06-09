@@ -144,7 +144,6 @@
               {"name" : "confidence", "type" : ["null", "int"], "default" : null},
               {"name" : "status", "type" : ["null", "Status"], "default" : null},
               {"name" : "lineage", "type" : ["null", {"type" : "array", "items" : "string"}], "default" : null},
-              {"name" : "alternatives", "type" : ["null", { "type" : "array", "items" : "TaxonRecord"}], "default" : null},
               {"name" : "note", "type" : ["null", "string"], "default" : null}
             ]
           }

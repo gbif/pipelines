@@ -14,6 +14,7 @@
 package org.gbif.pipelines.interpretation.spark;
 
 import static org.gbif.pipelines.interpretation.spark.LocationInterpretation.locationTransform;
+import static org.gbif.pipelines.interpretation.spark.TaxonomyInterpretation.taxonomyTransform;
 import static org.gbif.pipelines.interpretation.spark.TemporalInterpretation.temporalTransform;
 
 import java.io.IOException;
@@ -41,11 +42,13 @@ public class Interpretation implements Serializable {
     Dataset<BasicRecord> basic = basicTransform(config, records);
     Dataset<LocationRecord> location = locationTransform(config, spark, records);
     Dataset<TemporalRecord> temporal = temporalTransform(records);
+    Dataset<MultiTaxonRecord> taxonomy = taxonomyTransform(config, spark, records);
 
     // Write the intermediate output (useful for debugging)
     basic.write().mode("overwrite").parquet(config.getOutput() + "/basic");
     location.write().mode("overwrite").parquet(config.getOutput() + "/location");
     temporal.write().mode("overwrite").parquet(config.getOutput() + "/temporal");
+    taxonomy.write().mode("overwrite").parquet(config.getOutput() + "/taxonomy");
 
     // TODO: read and join all the intermediate outputs to the HDFS and JSON views
     spark.close();
