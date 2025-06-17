@@ -8,6 +8,9 @@ import org.gbif.api.util.DnaUtils;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.GbifDnaTerm;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
+import org.gbif.pipelines.io.avro.DnaDerivedData;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 @Builder(buildMethodName = "create")
 @Slf4j

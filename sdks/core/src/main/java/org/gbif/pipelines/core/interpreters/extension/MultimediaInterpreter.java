@@ -30,6 +30,9 @@ import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
 
 /**
  * Interpreter for the multimedia extension, Interprets form {@link ExtendedRecord} to {@link

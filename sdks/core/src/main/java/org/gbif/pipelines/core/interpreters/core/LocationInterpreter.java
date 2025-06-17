@@ -5,8 +5,10 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_MET
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_SRS_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_WKT_MISMATCH;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import com.google.common.base.Strings;
 import java.util.List;
@@ -15,7 +17,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -34,13 +35,12 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.GeocodeRequest;
-import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
-import org.gbif.pipelines.core.interpreters.model.GadmFeatures;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.location.parser.*;
-import org.gbif.pipelines.core.interpreters.model.LocationRecord;
-import org.gbif.pipelines.core.interpreters.model.MetadataRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -104,7 +104,7 @@ public class LocationInterpreter {
         }
 
         // set the issues to the interpretation
-        lr.addIssue(parsedResult.getIssues());
+        addIssue(lr, parsedResult.getIssues());
 
         // Has geo-spatial issues
         lr.setHasGeospatialIssue(hasGeospatialIssues(lr));
@@ -128,12 +128,10 @@ public class LocationInterpreter {
    * to populate GADM administrative area GIDs.
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretGadm(
-      KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore,
-      Function<Void, GadmFeatures> createGadm
-  ) {
+      KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore) {
     return (er, lr) -> {
       if (geocodeKvStore != null && lr.getHasCoordinate()) {
-        GadmParser.parseGadm(lr, geocodeKvStore, createGadm).ifPresent(lr::setGadm);
+        GadmParser.parseGadm(lr, geocodeKvStore).ifPresent(lr::setGadm);
       }
     };
   }
@@ -143,15 +141,15 @@ public class LocationInterpreter {
    * populate the footprintWKT in WGS84 projection.
    */
   public static void interpretFootprintWKT(ExtendedRecord er, LocationRecord lr) {
-    Optional<String> verbatimFootprintSRS = er.extractNullAwareOptValue(DwcTerm.footprintSRS);
+    Optional<String> verbatimFootprintSRS = extractNullAwareOptValue(er, DwcTerm.footprintSRS);
     CoordinateReferenceSystem footprintSRS =
         verbatimFootprintSRS.map(SpatialReferenceSystemParser::parseCRS).orElse(null);
 
     if (verbatimFootprintSRS.isPresent() && footprintSRS == null) {
-      lr.addIssue(FOOTPRINT_SRS_INVALID);
+      addIssue(lr, FOOTPRINT_SRS_INVALID);
     } else {
 
-      Optional<String> verbatimFootprintWKT = er.extractNullAwareOptValue(DwcTerm.footprintWKT);
+      Optional<String> verbatimFootprintWKT = extractNullAwareOptValue(er, DwcTerm.footprintWKT);
       if (verbatimFootprintWKT.isPresent()) {
         // If the footprint is a POINT(lng lat), it was already used by the LocationParser.
         ParsedField<GeocodeRequest> parsedFootprint =
@@ -166,7 +164,7 @@ public class LocationInterpreter {
             // duplicates the coordinate.
             log.debug("duplicates the coordinate.");
           } else {
-            lr.addIssue(FOOTPRINT_WKT_MISMATCH);
+            addIssue(lr, FOOTPRINT_WKT_MISMATCH);
           }
 
         } else {
@@ -178,7 +176,7 @@ public class LocationInterpreter {
                     if (result.isSuccessful()) {
                       lr.setFootprintWKT(result.getResult());
                     } else {
-                      lr.addIssue(result.getIssues());
+                      addIssue(lr, result.getIssues());
                     }
                   });
         }
@@ -190,7 +188,7 @@ public class LocationInterpreter {
   private static Optional<String> interpretPublishingCountry(ExtendedRecord er, MetadataRecord mr) {
 
     Optional<String> verbatimPublishingCountryCode =
-            er.extractNullAwareOptValue(GbifTerm.publishingCountry);
+        extractNullAwareOptValue(er, GbifTerm.publishingCountry);
     if (verbatimPublishingCountryCode.isPresent()) {
       OccurrenceParseResult<Country> result =
           new OccurrenceParseResult<>(COUNTRY_PARSER.parse(verbatimPublishingCountryCode.get()));
@@ -222,7 +220,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#waterBody} interpretation. */
   public static void interpretWaterBody(ExtendedRecord er, LocationRecord lr) {
-    String value = er.extractNullAwareValue(DwcTerm.waterBody);
+    String value = extractNullAwareValue(er, DwcTerm.waterBody);
     if (!Strings.isNullOrEmpty(value)) {
       lr.setWaterBody(cleanName(value));
     }
@@ -230,7 +228,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#stateProvince} interpretation. */
   public static void interpretStateProvince(ExtendedRecord er, LocationRecord lr) {
-    String value = er.extractNullAwareValue(DwcTerm.stateProvince);
+    String value = extractNullAwareValue(er, DwcTerm.stateProvince);
     if (!Strings.isNullOrEmpty(value)) {
       lr.setStateProvince(cleanName(value));
     }
@@ -238,7 +236,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#minimumElevationInMeters} interpretation. */
   public static void interpretMinimumElevationInMeters(ExtendedRecord er, LocationRecord lr) {
-    String value = er.extractNullAwareValue(DwcTerm.minimumElevationInMeters);
+    String value = extractNullAwareValue(er, DwcTerm.minimumElevationInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
@@ -249,7 +247,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#maximumElevationInMeters} interpretation. */
   public static void interpretMaximumElevationInMeters(ExtendedRecord er, LocationRecord lr) {
-    String value = er.extractNullAwareValue(DwcTerm.maximumElevationInMeters);
+    String value = extractNullAwareValue(er, DwcTerm.maximumElevationInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
@@ -260,20 +258,20 @@ public class LocationInterpreter {
 
   /** {@link GbifTerm#elevation} and {@link GbifTerm#elevationAccuracy} interpretation. */
   public static void interpretElevation(ExtendedRecord er, LocationRecord lr) {
-    String minElevation = er.extractNullAwareValue(DwcTerm.minimumElevationInMeters);
-    String maxElevation = er.extractNullAwareValue(DwcTerm.maximumElevationInMeters);
+    String minElevation = extractNullAwareValue(er, DwcTerm.minimumElevationInMeters);
+    String maxElevation = extractNullAwareValue(er, DwcTerm.maximumElevationInMeters);
     OccurrenceParseResult<DoubleAccuracy> occurrenceParseResult =
         MeterRangeParser.parseElevation(minElevation, maxElevation, null);
     if (occurrenceParseResult.isSuccessful()) {
       lr.setElevation(occurrenceParseResult.getPayload().getValue());
       lr.setElevationAccuracy(occurrenceParseResult.getPayload().getAccuracy());
-      occurrenceParseResult.getIssues().forEach(i -> lr.addIssue(i));
+      occurrenceParseResult.getIssues().forEach(i -> addIssue(lr, i));
     }
   }
 
   /** {@link DwcTerm#minimumDepthInMeters} interpretation. */
   public static void interpretMinimumDepthInMeters(ExtendedRecord er, LocationRecord lr) {
-    String value = er.extractNullAwareValue(DwcTerm.minimumDepthInMeters);
+    String value = extractNullAwareValue(er, DwcTerm.minimumDepthInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
@@ -284,7 +282,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#maximumDepthInMeters} interpretation. */
   public static void interpretMaximumDepthInMeters(ExtendedRecord er, LocationRecord lr) {
-    String value = er.extractNullAwareValue(DwcTerm.maximumDepthInMeters);
+    String value = extractNullAwareValue(er, DwcTerm.maximumDepthInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
@@ -298,21 +296,21 @@ public class LocationInterpreter {
    * interpretation.
    */
   public static void interpretDepth(ExtendedRecord er, LocationRecord lr) {
-    String minDepth = er.extractNullAwareValue(DwcTerm.minimumDepthInMeters);
-    String maxDepth = er.extractNullAwareValue(DwcTerm.maximumDepthInMeters);
+    String minDepth = extractNullAwareValue(er, DwcTerm.minimumDepthInMeters);
+    String maxDepth = extractNullAwareValue(er, DwcTerm.maximumDepthInMeters);
     OccurrenceParseResult<DoubleAccuracy> occurrenceParseResult =
         MeterRangeParser.parseDepth(minDepth, maxDepth, null);
     if (occurrenceParseResult.isSuccessful()) {
       lr.setDepth(occurrenceParseResult.getPayload().getValue());
       lr.setDepthAccuracy(occurrenceParseResult.getPayload().getAccuracy());
-      occurrenceParseResult.getIssues().forEach(i -> lr.addIssue(i));
+      occurrenceParseResult.getIssues().forEach(i -> addIssue(lr, i));
     }
   }
 
   /** {@link DwcTerm#minimumDistanceAboveSurfaceInMeters} interpretation. */
   public static void interpretMinimumDistanceAboveSurfaceInMeters(
-          ExtendedRecord er, LocationRecord lr) {
-    String value = er.extractNullAwareValue(DwcTerm.minimumDistanceAboveSurfaceInMeters);
+      ExtendedRecord er, LocationRecord lr) {
+    String value = extractNullAwareValue(er, DwcTerm.minimumDistanceAboveSurfaceInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
@@ -323,8 +321,8 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#maximumDistanceAboveSurfaceInMeters} interpretation. */
   public static void interpretMaximumDistanceAboveSurfaceInMeters(
-          ExtendedRecord er, LocationRecord lr) {
-    String value = er.extractNullAwareValue(DwcTerm.maximumDistanceAboveSurfaceInMeters);
+      ExtendedRecord er, LocationRecord lr) {
+    String value = extractNullAwareValue(er, DwcTerm.maximumDistanceAboveSurfaceInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
@@ -335,7 +333,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#coordinateUncertaintyInMeters} interpretation. */
   public static void interpretCoordinateUncertaintyInMeters(ExtendedRecord er, LocationRecord lr) {
-    String value = er.extractNullAwareValue(DwcTerm.coordinateUncertaintyInMeters);
+    String value = extractNullAwareValue(er, DwcTerm.coordinateUncertaintyInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       Double result = parseResult.isSuccessful() ? Math.abs(parseResult.getPayload()) : null;
@@ -344,7 +342,7 @@ public class LocationInterpreter {
           && result < COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND) {
         lr.setCoordinateUncertaintyInMeters(result);
       } else {
-        lr.addIssue(COORDINATE_UNCERTAINTY_METERS_INVALID);
+        addIssue(lr, COORDINATE_UNCERTAINTY_METERS_INVALID);
       }
     }
   }
@@ -371,7 +369,7 @@ public class LocationInterpreter {
               && result <= COORDINATE_PRECISION_UPPER_BOUND) {
             lr.setCoordinatePrecision(result);
           } else {
-            lr.addIssue(COORDINATE_PRECISION_INVALID);
+            addIssue(lr, COORDINATE_PRECISION_INVALID);
           }
         };
 
@@ -380,7 +378,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#locality} interpretation. */
   public static void interpretLocality(ExtendedRecord er, LocationRecord lr) {
-    String value = er.extractNullAwareValue(DwcTerm.locality);
+    String value = extractNullAwareValue(er, DwcTerm.locality);
     if (!Strings.isNullOrEmpty(value)) {
       lr.setLocality(cleanName(value));
     }
@@ -388,7 +386,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#higherGeography} interpretation. */
   public static void interpretHigherGeography(ExtendedRecord er, LocationRecord lr) {
-    List<String> list = er.extractListValue(DwcTerm.higherGeography);
+    List<String> list = extractListValue(er, DwcTerm.higherGeography);
     if (!list.isEmpty()) {
       lr.setHigherGeography(list);
     }
@@ -396,7 +394,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#locality} interpretation. */
   public static void interpretGeoreferencedBy(ExtendedRecord er, LocationRecord lr) {
-    List<String> list = er.extractListValue(DwcTerm.georeferencedBy);
+    List<String> list = extractListValue(er, DwcTerm.georeferencedBy);
     if (!list.isEmpty()) {
       lr.setGeoreferencedBy(list);
     }
@@ -412,15 +410,15 @@ public class LocationInterpreter {
     setGbifRegion(lr.getPublishingCountry(), lr::setPublishedByGbifRegion);
   }
 
-//  /** Sets the coreId field. */
-//  public static void setCoreId(ExtendedRecord er, LocationRecord lr) {
-//    Optional.ofNullable(er.getCoreId()).ifPresent(lr::setCoreId);
-//  }
-//
-//  /** Sets the parentEventId field. */
-//  public static void setParentEventId(ExtendedRecord er, LocationRecord lr) {
-//    extractOptValue(er, DwcTerm.parentEventID).ifPresent(lr::setParentId);
-//  }
+  /** Sets the coreId field. */
+  public static void setCoreId(ExtendedRecord er, LocationRecord lr) {
+    Optional.ofNullable(er.getCoreId()).ifPresent(lr::setCoreId);
+  }
+
+  /** Sets the parentEventId field. */
+  public static void setParentEventId(ExtendedRecord er, LocationRecord lr) {
+    extractOptValue(er, DwcTerm.parentEventID).ifPresent(lr::setParentId);
+  }
 
   private static void setGbifRegion(String countryIsoCode, Consumer<String> fn) {
     Optional.ofNullable(countryIsoCode)

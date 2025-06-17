@@ -4,22 +4,18 @@ import com.google.common.base.Strings;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
-import org.gbif.pipelines.core.interpreters.model.Amplification;
-import org.gbif.pipelines.core.interpreters.model.AmplificationRecord;
-import org.gbif.pipelines.core.interpreters.model.BlastResult;
-import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
 import org.gbif.pipelines.core.ws.blast.BlastServiceClient;
 import org.gbif.pipelines.core.ws.blast.request.Sequence;
 import org.gbif.pipelines.core.ws.blast.response.Blast;
-
-import static org.apache.hadoop.io.WritableName.setName;
+import org.gbif.pipelines.io.avro.Amplification;
+import org.gbif.pipelines.io.avro.AmplificationRecord;
+import org.gbif.pipelines.io.avro.BlastResult;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /**
  * Interpreter for the Amplification extension, Interprets form {@link ExtendedRecord} to {@link
@@ -104,10 +100,7 @@ public class AmplificationInterpreter {
 
   /** Calls BLAST REST service and populate the {@link BlastResult} in {@link Amplification} */
   private static void parseAndSetBlast(
-      List<Amplification> amplifications,
-      BlastServiceClient client,
-      Supplier<BlastResult> blastResultSupplier
-      ) {
+      List<Amplification> amplifications, BlastServiceClient client) {
     for (Amplification a : amplifications) {
       String seq =
           Strings.isNullOrEmpty(a.getConsensusSequence())
@@ -117,22 +110,23 @@ public class AmplificationInterpreter {
       if (!Strings.isNullOrEmpty(seq) && !Strings.isNullOrEmpty(marker)) {
         Sequence sequence = new Sequence(marker, seq);
         Blast blast = client.getBlast(sequence);
-        BlastResult b = blastResultSupplier.get();
-        b.setName(blast.getName());
-        b.setIdentity(blast.getIdentity());
-        b.setAppliedScientificName(blast.getAppliedScientificName());
-        b.setMatchType(blast.getMatchType());
-        b.setBitScore(blast.getBitScore());
-        b.setExpectValue(blast.getExpectValue());
-        b.setQuerySequence(blast.getQuerySequence());
-        b.setSubjectSequence(blast.getSubjectSequence());
-        b.setQstart(blast.getQstart());
-        b.setQend(blast.getQend());
-        b.setSstart(blast.getSstart());
-        b.setSend(blast.getSend());
-        b.setDistanceToBestMatch(blast.getDistanceToBestMatch());
-        b.setSequenceLength(blast.getSequenceLength());
-        a.setBlastResult(b);
+        a.setBlastResult(
+            BlastResult.newBuilder()
+                .setName(blast.getName())
+                .setIdentity(blast.getIdentity())
+                .setAppliedScientificName(blast.getAppliedScientificName())
+                .setMatchType(blast.getMatchType())
+                .setBitScore(blast.getBitScore())
+                .setExpectValue(blast.getExpectValue())
+                .setQuerySequence(blast.getQuerySequence())
+                .setSubjectSequence(blast.getSubjectSequence())
+                .setQstart(blast.getQstart())
+                .setQend(blast.getQend())
+                .setSstart(blast.getSstart())
+                .setSend(blast.getSend())
+                .setDistanceToBestMatch(blast.getDistanceToBestMatch())
+                .setSequenceLength(blast.getSequenceLength())
+                .build());
       }
     }
   }

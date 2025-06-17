@@ -8,33 +8,28 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.elasticsearch.common.TriFunction;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.util.comparators.EndpointPriorityComparator;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.common.parsers.LicenseParser;
-import org.gbif.pipelines.core.interpreters.model.MetadataRecord;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.core.ws.metadata.response.Dataset;
 import org.gbif.pipelines.core.ws.metadata.response.Installation;
 import org.gbif.pipelines.core.ws.metadata.response.Network;
 import org.gbif.pipelines.core.ws.metadata.response.Organization;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 
 /** Interprets GBIF metadata by datasetId */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MetadataInterpreter {
 
   /** Gets information from GBIF API by datasetId */
-  public static BiConsumer<String, MetadataRecord> interpret(
-          MetadataServiceClient client,
-          TriFunction<String, String, String, MachineTag> createMachineTagFn
-          ) {
+  public static BiConsumer<String, MetadataRecord> interpret(MetadataServiceClient client) {
     return (datasetId, mdr) -> {
 
       // Set required metadata properties
@@ -88,7 +83,7 @@ public class MetadataInterpreter {
         Installation installation = client.getInstallation(dataset.getInstallationKey());
         mdr.setHostingOrganizationKey(installation.getOrganizationKey());
 
-        copyMachineTags(dataset.getMachineTags(), mdr, createMachineTagFn);
+        copyMachineTags(dataset.getMachineTags(), mdr);
       }
     };
   }
@@ -144,16 +139,17 @@ public class MetadataInterpreter {
   }
 
   /** Copy MachineTags into the Avro Metadata record. */
-  private static void copyMachineTags(List<MachineTag> machineTags,
-                                      MetadataRecord mdr,
-                                      TriFunction<String, String, String, MachineTag> createMachineTagFn) {
+  private static void copyMachineTags(List<MachineTag> machineTags, MetadataRecord mdr) {
     if (Objects.nonNull(machineTags) && !machineTags.isEmpty()) {
       mdr.setMachineTags(
           machineTags.stream()
               .map(
                   machineTag ->
-                          createMachineTagFn.apply(machineTag.getNamespace(),
-                                  machineTag.getName(), machineTag.getValue()))
+                      org.gbif.pipelines.io.avro.MachineTag.newBuilder()
+                          .setNamespace(machineTag.getNamespace())
+                          .setName(machineTag.getName())
+                          .setValue(machineTag.getValue())
+                          .build())
               .collect(Collectors.toList()));
     }
   }

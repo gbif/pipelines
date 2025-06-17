@@ -2,24 +2,19 @@ package org.gbif.pipelines.core.parsers.location.parser;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.GeocodeRequest;
-import org.gbif.pipelines.core.interpreters.model.GadmFeatures;
-import org.gbif.pipelines.core.interpreters.model.LocationRecord;
+import org.gbif.pipelines.io.avro.GadmFeatures;
+import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class GadmParser {
 
   public static Optional<GadmFeatures> parseGadm(
-          LocationRecord lr,
-          KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore,
-          Function<Void, GadmFeatures> createFn
-          ) {
+      LocationRecord lr, KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
     Objects.requireNonNull(lr, "LocationRecord is required");
     Objects.requireNonNull(kvStore, "GeocodeService kvStore is required");
 
@@ -38,19 +33,16 @@ public class GadmParser {
     }
 
     // Match to GADM administrative regions
-    return getGadmFromCoordinates(latLng, kvStore, createFn);
+    return getGadmFromCoordinates(latLng, kvStore);
   }
 
   private static Optional<GadmFeatures> getGadmFromCoordinates(
-      GeocodeRequest latLng,
-      KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore,
-      Function<Void, GadmFeatures> createFn) {
-
+      GeocodeRequest latLng, KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
     if (latLng.isValid()) {
       GeocodeResponse geocodeResponse = kvStore.get(latLng);
 
       if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
-        GadmFeatures gf = createFn.apply(null);
+        GadmFeatures gf = GadmFeatures.newBuilder().build();
         geocodeResponse.getLocations().forEach(l -> accept(l, gf));
         return Optional.of(gf);
       }

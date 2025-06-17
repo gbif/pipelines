@@ -9,21 +9,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.core.utils.VocabularyConceptFactory;
-import org.gbif.pipelines.core.interpreters.model.BasicRecord;
-import org.gbif.pipelines.core.interpreters.model.GeologicalContext;
-import org.gbif.pipelines.core.interpreters.model.VocabularyConcept;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GeologicalContext;
+import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.gbif.vocabulary.lookup.LookupConcept;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,7 +51,7 @@ public class GeologicalContextInterpreter {
     return (er, br) -> {
       GeologicalContext gx = br.getGeologicalContext();
       if (gx == null) {
-        gx = br.createGeologicalContext();
+        gx = new GeologicalContext();
         br.setGeologicalContext(gx);
       }
 
@@ -168,14 +166,13 @@ public class GeologicalContextInterpreter {
       ExtendedRecord er,
       BasicRecord br,
       DwcTerm term,
-      BiConsumer<GeologicalContext, String> setFn
-      ) {
-    er.extractNullAwareOptValue(term)
+      BiConsumer<GeologicalContext, String> setFn) {
+    ModelUtils.extractNullAwareOptValue(er, term)
         .ifPresent(
             v -> {
               GeologicalContext gx = br.getGeologicalContext();
               if (gx == null) {
-                gx = br.createGeologicalContext();
+                gx = new GeologicalContext();
                 br.setGeologicalContext(gx);
               }
               setFn.accept(gx, v);
@@ -192,14 +189,14 @@ public class GeologicalContextInterpreter {
   }
 
   private static Range interpretTermPair(
-          ExtendedRecord er, BasicRecord br, TermPair termPair, VocabularyService vocabularyService) {
+      ExtendedRecord er, BasicRecord br, TermPair termPair, VocabularyService vocabularyService) {
     Optional<VocabularyConcept> earliestVocabularyConceptOpt =
-            er.extractNullAwareOptValue(termPair.earliestTerm)
+        ModelUtils.extractNullAwareOptValue(er, termPair.earliestTerm)
             .flatMap(v -> vocabularyService.get(termPair.earliestTerm).flatMap(l -> l.lookup(v)))
             .flatMap(l -> getVocabularyConcept(l, termPair.earliestTerm, br));
 
     Optional<VocabularyConcept> latestVocabularyConceptOpt =
-            er.extractNullAwareOptValue(termPair.latestTerm)
+        ModelUtils.extractNullAwareOptValue(er, termPair.latestTerm)
             .flatMap(v -> vocabularyService.get(termPair.latestTerm).flatMap(l -> l.lookup(v)))
             .flatMap(l -> getVocabularyConcept(l, termPair.earliestTerm, br));
 
@@ -224,7 +221,7 @@ public class GeologicalContextInterpreter {
     if ((latestStartAge != null && earliestStartAge != null && latestStartAge > earliestStartAge)
         || (latestEndAge != null && earliestEndAge != null && latestEndAge > earliestEndAge)) {
       Optional.ofNullable(getTermData(termPair.earliestTerm).invalidRange)
-          .ifPresent(i -> br.addIssue(i));
+          .ifPresent(i -> addIssue(br, i));
       return Range.empty();
     }
 
@@ -243,7 +240,7 @@ public class GeologicalContextInterpreter {
       if ((termPair.parentRange.start != null && termRange.start > termPair.parentRange.start)
           || (termPair.parentRange.end != null && termRange.end < termPair.parentRange.end)) {
         Optional.ofNullable(getTermData(termPair.earliestTerm).parentMismatch)
-            .ifPresent(i -> br.addIssue(i));
+            .ifPresent(i -> addIssue(br, i));
       }
     }
 
@@ -274,7 +271,7 @@ public class GeologicalContextInterpreter {
                 .findFirst();
 
         if (parentOpt.isPresent()) {
-          Optional.ofNullable(getTermData(term).inferredFromParent).ifPresent(br::addIssue);
+          Optional.ofNullable(getTermData(term).inferredFromParent).ifPresent(i -> addIssue(br, i));
 
           LookupConcept.Parent parent = parentOpt.get();
           List<LookupConcept.Parent> allParents = lookupConcept.getParents();
@@ -285,7 +282,7 @@ public class GeologicalContextInterpreter {
                   parent.getName(), filteredParents, getTagsMap(parent.getTags())));
         }
       } else {
-        Optional.ofNullable(getTermData(term).rankMismatch).ifPresent(br::addIssue);
+        Optional.ofNullable(getTermData(term).rankMismatch).ifPresent(i -> addIssue(br, i));
       }
     }
     return Optional.empty();

@@ -1,5 +1,9 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
+
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
@@ -12,10 +16,10 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.core.utils.VocabularyConceptFactory;
-import org.gbif.pipelines.core.interpreters.model.BasicRecord;
-import org.gbif.pipelines.core.interpreters.model.EventCoreRecord;
-import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
-import org.gbif.pipelines.core.interpreters.model.VocabularyConcept;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.EventCoreRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.VocabularyConcept;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VocabularyInterpreter {
@@ -65,7 +69,7 @@ public class VocabularyInterpreter {
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretTypeStatus(
       VocabularyService vocabularyService) {
     return (er, br) ->
-            er.extractListValue(DwcTerm.typeStatus)
+        extractListValue(er, DwcTerm.typeStatus)
             .forEach(
                 value ->
                     interpretVocabulary(
@@ -75,9 +79,9 @@ public class VocabularyInterpreter {
                             v -> {
                               if (SUSPECTED_TYPE_STATUS_VALUES.stream()
                                   .anyMatch(sts -> v.toLowerCase().contains(sts))) {
-                                br.addIssue(OccurrenceIssue.SUSPECTED_TYPE);
+                                addIssue(br, OccurrenceIssue.SUSPECTED_TYPE);
                               } else {
-                                br.addIssue(OccurrenceIssue.TYPE_STATUS_INVALID);
+                                addIssue(br, OccurrenceIssue.TYPE_STATUS_INVALID);
                               }
                             })
                         .ifPresent(
@@ -97,8 +101,8 @@ public class VocabularyInterpreter {
   }
 
   private static Optional<VocabularyConcept> interpretVocabulary(
-          ExtendedRecord er, Term term, VocabularyService vocabularyService) {
-    return interpretVocabulary(term, er.extractNullAwareValue(term), vocabularyService, null);
+      ExtendedRecord er, Term term, VocabularyService vocabularyService) {
+    return interpretVocabulary(term, extractNullAwareValue(er, term), vocabularyService, null);
   }
 
   static Optional<VocabularyConcept> interpretVocabulary(
@@ -107,8 +111,8 @@ public class VocabularyInterpreter {
   }
 
   private static Optional<VocabularyConcept> interpretVocabulary(
-          ExtendedRecord er, Term term, VocabularyService vocabularyService, Consumer<String> issueFn) {
-    return interpretVocabulary(term, er.extractNullAwareValue(term), vocabularyService, issueFn);
+      ExtendedRecord er, Term term, VocabularyService vocabularyService, Consumer<String> issueFn) {
+    return interpretVocabulary(term, extractNullAwareValue(er, term), vocabularyService, issueFn);
   }
 
   static Optional<VocabularyConcept> interpretVocabulary(

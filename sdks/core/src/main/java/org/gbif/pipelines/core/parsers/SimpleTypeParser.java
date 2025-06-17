@@ -10,7 +10,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /** Utility class that parses basic data types. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -22,7 +22,7 @@ public class SimpleTypeParser {
   /** Parses an integer value and consumes its response (if any). */
   public static void parseInt(
       ExtendedRecord er, DwcTerm term, Consumer<Optional<Integer>> consumer) {
-      er.extractNullAwareOptValue(term)
+    extractNullAwareOptValue(er, term)
         .ifPresent(
             termValue -> {
               boolean matches = INT_PATTERN.matcher(termValue).matches();
@@ -37,7 +37,7 @@ public class SimpleTypeParser {
   /** Parses a positive integer value and consumes its response (if any). */
   public static void parsePositiveInt(
       ExtendedRecord er, DwcTerm term, Consumer<Optional<Integer>> consumer) {
-      er.extractNullAwareOptValue(term)
+    extractNullAwareOptValue(er, term)
         .ifPresent(termValue -> consumer.accept(parsePositiveIntOpt(termValue)));
   }
 
@@ -53,7 +53,7 @@ public class SimpleTypeParser {
   /** Parses a double value and consumes its response (if any). */
   public static void parseDouble(
       ExtendedRecord er, DwcTerm term, Consumer<Optional<Double>> consumer) {
-      parseDouble(er.extractNullAwareValue(term), consumer);
+    parseDouble(extractNullAwareValue(er, term), consumer);
   }
 
   /** Parses a double value and consumes its response (if any). */

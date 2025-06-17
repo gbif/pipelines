@@ -21,8 +21,8 @@ import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.functions.SerializableFunction;
-//import org.gbif.pipelines.io.avro.ExtendedRecord;
-//import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.junit.Test;
 
 public class TemporalInterpreterTest {
