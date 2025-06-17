@@ -4,9 +4,7 @@
       "verbatim": {
         "path_match": "verbatim.*",
         "mapping": {
-          "type": "keyword",
-          "normalizer": "lowercase_normalizer",
-          "copy_to": "all"
+          "type": "keyword"
         }
       }
     },
@@ -23,7 +21,7 @@
         "path_match": "classifications.*.usage.rank",
         "mapping": {
           "type": "keyword",
-          "index": false
+          "index": false, "doc_values": false
         }
       }
     },
@@ -31,7 +29,9 @@
       "classifications_usage_name": {
         "path_match": "classifications.*.usage.name",
         "mapping": {
-          "type": "text"
+          "copy_to": "all",
+          "type": "keyword",
+          "index": false, "doc_values": false
         }
       }
     },
@@ -40,7 +40,7 @@
         "path_match": "classifications.*.usage.genericName",
         "mapping": {
           "type": "keyword",
-          "index": false
+          "index": false, "doc_values": false
         }
       }
     },
@@ -49,7 +49,7 @@
         "path_match": "classifications.*.usage.infraspecificEpithet",
         "mapping": {
           "type": "keyword",
-          "index": false
+          "index": false, "doc_values": false
         }
       }
     },
@@ -58,7 +58,7 @@
         "path_match": "classifications.*.usage.specificEpithet",
         "mapping": {
           "type": "keyword",
-          "index": false
+          "index": false, "doc_values": false
         }
       }
     },
@@ -67,7 +67,7 @@
         "path_match": "classifications.*.usage.authorship",
         "mapping": {
           "type": "keyword",
-          "index": false
+          "index": false, "doc_values": false
         }
       }
     },
@@ -76,7 +76,7 @@
         "path_match": "classifications.*.usage.code",
         "mapping": {
           "type": "keyword",
-          "index": false
+          "index": false, "doc_values": false
         }
       }
     },
@@ -85,7 +85,7 @@
         "path_match": "classifications.*.usage.formattedName",
         "mapping": {
           "type": "keyword",
-          "index": false
+          "index": false, "doc_values": false
         }
       }
     },
@@ -101,8 +101,7 @@
       "classifications_acceptedUsage_rank": {
         "path_match": "classifications.*.acceptedUsage.rank",
         "mapping": {
-          "type": "keyword",
-          "index": false
+          "type": "keyword", "index": false, "doc_values": false
         }
       }
     },
@@ -110,7 +109,8 @@
       "classifications_acceptedUsage_name": {
         "path_match": "classifications.*.acceptedUsage.name",
         "mapping": {
-          "type": "text"
+          "copy_to": "all",
+          "type": "keyword", "index": false, "doc_values": false
         }
       }
     },
@@ -119,7 +119,7 @@
         "path_match": "classifications.*.acceptedUsage.authorship",
         "mapping": {
           "type": "keyword",
-          "index": false
+          "index": false, "doc_values": false
         }
       }
     },
@@ -128,7 +128,7 @@
         "path_match": "classifications.*.acceptedUsage.code",
         "mapping": {
           "type": "keyword",
-          "index": false
+          "index": false, "doc_values": false
         }
       }
     },
@@ -137,7 +137,7 @@
         "path_match": "classifications.*.acceptedUsage.genericName",
         "mapping": {
           "type": "keyword",
-          "index": false
+          "index": false, "doc_values": false
         }
       }
     },
@@ -146,7 +146,7 @@
         "path_match": "classifications.*.acceptedUsage.infraspecificEpithet",
         "mapping": {
           "type": "keyword",
-          "index": false
+          "index": false, "doc_values": false
         }
       }
     },
@@ -155,7 +155,7 @@
         "path_match": "classifications.*.acceptedUsage.specificEpithet",
         "mapping": {
           "type": "keyword",
-          "index": false
+          "index": false, "doc_values": false
         }
       }
     },
@@ -164,7 +164,7 @@
         "path_match": "classifications.*.acceptedUsage.formattedName",
         "mapping": {
           "type": "keyword",
-          "index": false
+          "index": false, "doc_values": false
         }
       }
     },
@@ -181,7 +181,7 @@
         "path_match": "classifications.*.classification.*",
         "mapping": {
           "type": "keyword",
-          "index": false
+          "index": false, "doc_values": false
         }
       }
     },
@@ -190,7 +190,7 @@
         "path_match": "classifications.*.classification.*.*",
         "mapping": {
           "type": "keyword",
-          "index": false
+          "index": false, "doc_values": false
         }
       }
     },
@@ -251,412 +251,424 @@
       }
     }
   ],
+  "_source": {
+    "excludes": ["all"]
+  },
   "properties": {
 
-    "all": {"type": "text", "index": true, "store":false},
+  "all": {"type": "text", "index": true, "store":false},
 
-    "id": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-    "gbifId": {"type": "long"},
-    "lastCrawled": {"type": "date"},
-    "created": {"type": "date"},
-    "yearMonthGbifIdSort": {"type":  "long"},
+  "id": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+  "gbifId": {"type": "long"},
+  "lastCrawled": {"type": "date"},
+  "created": {"type": "date"},
+  "yearMonthGbifIdSort": {"type":  "long"},
 
-    "datasetKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-    "crawlId": {"type": "integer"},
-    "datasetTitle": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-    "installationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-    "hostingOrganizationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-    "endorsingNodeKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-    "publisherTitle": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-    "license": {"type": "keyword", "copy_to": "all"},
-    "protocol": {"type": "keyword", "copy_to": "all"},
-    "publishingCountry": {"type": "keyword", "copy_to": "all"},
-    "publishedByGbifRegion": {"type": "keyword", "copy_to": "all"},
-    "datasetPublishingCountry": {"type": "keyword", "copy_to": "all"},
-    "publishingOrganizationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-    "networkKeys": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-    "projectId": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-    "projectIdJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-    "programmeAcronym": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-    "institutionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-    "collectionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-    "isClustered": {"type": "boolean"},
+  "datasetKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+  "crawlId": {"type": "integer"},
+  "datasetTitle": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+  "installationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+  "hostingOrganizationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+  "endorsingNodeKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+  "publisherTitle": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+  "license": {"type": "keyword", "copy_to": "all"},
+  "protocol": {"type": "keyword", "copy_to": "all"},
+  "publishingCountry": {"type": "keyword", "copy_to": "all"},
+  "publishedByGbifRegion": {"type": "keyword", "copy_to": "all"},
+  "datasetPublishingCountry": {"type": "keyword", "copy_to": "all"},
+  "publishingOrganizationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+  "networkKeys": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+  "projectId": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+  "projectIdJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+  "programmeAcronym": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+  "institutionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+  "collectionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+  "isClustered": {"type": "boolean"},
 
-    "basisOfRecord": {"type": "keyword"},
+  "basisOfRecord": {"type": "keyword"},
 
-    "sex": {
-      "type": "object",
-      "properties": {
-        "concept": {"type": "keyword"},
-        "lineage": {"type": "keyword", "copy_to": "all"}
-      }
-    },
-    "lifeStage": {
-      "type": "object",
-      "properties": {
-        "concept": {"type": "keyword"},
-        "lineage": {"type": "keyword", "copy_to": "all"}
-      }
-    },
-    "establishmentMeans": {
-      "type": "object",
-      "properties": {
-        "concept": {"type": "keyword"},
-        "lineage": {"type": "keyword", "copy_to": "all"}
-      }
-    },
-    "pathway": {
-      "type": "object",
-      "properties": {
-        "concept": {"type": "keyword"},
-        "lineage": {"type": "keyword", "copy_to": "all"}
-      }
-    },
-    "degreeOfEstablishment": {
-      "type": "object",
-      "properties": {
-        "concept": {"type": "keyword"},
-        "lineage": {"type": "keyword", "copy_to": "all"}
-      }
-    },
+  "sex": {
+    "type": "object",
+    "properties": {
+      "concept": {"type": "keyword"},
+      "lineage": {"type": "keyword", "copy_to": "all"}
+    }
+  },
+  "lifeStage": {
+    "type": "object",
+    "properties": {
+      "concept": {"type": "keyword"},
+      "lineage": {"type": "keyword", "copy_to": "all"}
+    }
+  },
+  "establishmentMeans": {
+    "type": "object",
+    "properties": {
+      "concept": {"type": "keyword"},
+      "lineage": {"type": "keyword", "copy_to": "all"}
+    }
+  },
+  "pathway": {
+    "type": "object",
+    "properties": {
+      "concept": {"type": "keyword"},
+      "lineage": {"type": "keyword", "copy_to": "all"}
+    }
+  },
+  "degreeOfEstablishment": {
+    "type": "object",
+    "properties": {
+      "concept": {"type": "keyword"},
+      "lineage": {"type": "keyword", "copy_to": "all"}
+    }
+  },
 
-    "individualCount": {"type": "integer"},
-    "typeStatus": {
-      "type": "object",
-      "properties": {
-        "concepts": {"type": "keyword"},
-        "lineage": {"type": "keyword", "copy_to": "all"}
+  "individualCount": {"type": "integer"},
+  "typeStatus": {
+    "type": "object",
+    "properties": {
+      "concepts": {"type": "keyword"},
+      "lineage": {"type": "keyword", "copy_to": "all"}
+    }
+  },
+  "typifiedName": {"type": "keyword", "index":  false, "copy_to": "all"},
+  "references": {"type":"keyword", "index": false, "doc_values": false},
+  "preparations": {
+    "type": "keyword",
+    "ignore_above": 1024,
+    "normalizer": "lowercase_normalizer",
+    "fields": {
+    "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+    "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "preparationsJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+  "recordedByIds": {
+    "type": "object",
+    "properties": {
+      "type": {"type": "keyword"},
+      "value": {"type": "keyword", "copy_to": "all"}
+    }
+  },
+  "identifiedByIds": {
+    "type": "object",
+    "properties": {
+      "type": {"type": "keyword"},
+      "value": {"type": "keyword", "copy_to": "all"}
+    }
+  },
+  "recordedBy": {
+    "type": "keyword",
+    "fields": {
+    "suggest": {"type": "completion", "analyzer": "lowercase_ascii_folding_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+    "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "recordedByJoined": {"type": "keyword", "normalizer": "lowercase_ascii_folding_normalizer"},
+  "identifiedBy": {
+    "type": "keyword",
+    "fields": {
+    "suggest": {"type": "completion", "analyzer": "lowercase_ascii_folding_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+    "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "identifiedByJoined": {"type": "keyword", "normalizer": "lowercase_ascii_folding_normalizer"},
+  "recordNumber": {
+    "type": "keyword",
+    "ignore_above": 1024,
+    "normalizer": "lowercase_normalizer",
+    "fields": {
+    "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+    "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "organismId": {
+    "type": "keyword",
+    "ignore_above": 1024,
+    "normalizer": "lowercase_normalizer",
+    "fields": {
+    "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+    "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "samplingProtocol": {
+    "type": "keyword",
+    "ignore_above": 1024,
+    "normalizer": "lowercase_normalizer",
+    "fields": {
+    "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+    "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "samplingProtocolJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+  "previousIdentifications": {"type": "keyword"},
+  "eventId": {
+    "type": "keyword",
+    "ignore_above": 1024,
+    "normalizer": "lowercase_normalizer",
+    "fields": {
+    "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+    "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "parentEventId": {
+    "type": "keyword",
+    "ignore_above": 1024,
+    "normalizer": "lowercase_normalizer",
+    "fields": {
+    "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+    "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "institutionCode": {
+    "type": "keyword",
+    "ignore_above": 1024,
+    "normalizer": "lowercase_normalizer",
+    "fields": {
+    "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+    "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "collectionCode": {
+    "type": "keyword",
+    "ignore_above": 1024,
+    "normalizer": "lowercase_normalizer",
+    "fields": {
+    "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+    "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "catalogNumber": {
+    "type": "keyword",
+    "ignore_above": 1024,
+    "normalizer": "lowercase_normalizer",
+    "fields": {
+    "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+    "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "locality": {
+    "type": "keyword",
+    "fields": {
+    "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+    "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "occurrenceId": {
+    "type": "keyword",
+    "ignore_above": 1024,
+    "normalizer": "lowercase_normalizer",
+    "fields": {
+    "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+    "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "datasetID": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+  "datasetName": {"type": "keyword", "copy_to": "all"},
+  "otherCatalogNumbers": {
+    "type": "keyword",
+    "ignore_above": 1024,
+    "normalizer": "lowercase_normalizer",
+    "fields": {
+    "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+    "verbatim": {"type": "keyword", "ignore_above": 1024}
       }
-    },
-    "typifiedName": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-    "references": {"type":"text", "copy_to": "all"},
-    "preparations": {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "preparationsJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-    "recordedByIds": {
-      "type": "object",
-      "properties": {
-        "type": {"type": "keyword"},
-        "value": {"type": "keyword", "copy_to": "all"}
-      }
-    },
-    "identifiedByIds": {
-      "type": "object",
-      "properties": {
-        "type": {"type": "keyword"},
-        "value": {"type": "keyword", "copy_to": "all"}
-      }
-    },
-    "recordedBy": {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_ascii_folding_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_ascii_folding_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "recordedByJoined": {"type": "keyword", "normalizer": "lowercase_ascii_folding_normalizer"},
-    "identifiedBy": {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_ascii_folding_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_ascii_folding_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "identifiedByJoined": {"type": "keyword", "normalizer": "lowercase_ascii_folding_normalizer"},
-    "recordNumber": {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "organismId": {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "samplingProtocol":  {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "samplingProtocolJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-    "previousIdentifications": {"type": "keyword"},
-    "eventId": {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "parentEventId": {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "institutionCode":  {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "collectionCode":  {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "catalogNumber": {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "locality":  {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "occurrenceId":  {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "datasetID": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-    "datasetName": {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "otherCatalogNumbers": {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "otherCatalogNumbersJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+  },
+  "otherCatalogNumbersJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
 
-    "occurrenceStatus": {"type": "keyword", "copy_to": "all"},
+  "occurrenceStatus": {"type": "keyword", "copy_to": "all"},
 
-    "isSequenced": {"type": "boolean"},
-    "associatedSequences": {"type": "keyword", "copy_to": "all"},
-    "organismQuantity": {"type": "double"},
-    "organismQuantityType": {"type": "keyword", "copy_to": "all"},
-    "sampleSizeUnit": {"type": "keyword", "copy_to": "all"},
-    "sampleSizeValue": {"type": "double"},
-    "relativeOrganismQuantity": {"type": "double"},
+  "isSequenced": {"type": "boolean"},
+  "associatedSequences": {"type": "keyword", "copy_to": "all"},
+  "organismQuantity": {"type": "double"},
+  "organismQuantityType": {
+    "type": "keyword",
+    "ignore_above": 1024,
+    "normalizer": "lowercase_normalizer",
+    "fields": {
+      "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+      "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "sampleSizeUnit": {"type": "keyword", "copy_to": "all"},
+  "sampleSizeValue": {"type": "double"},
+  "relativeOrganismQuantity": {"type": "double"},
 
-    "continent": {"type":"keyword", "copy_to": "all"},
-    "waterBody": {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
+  "continent": {"type":"keyword", "copy_to": "all"},
+  "waterBody": {
+    "type": "keyword",
+    "ignore_above": 1024,
+    "normalizer": "lowercase_normalizer",
+    "fields": {
+      "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+      "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "countryCode": {"type":"keyword", "copy_to": "all"},
+  "country": {"type":"keyword", "copy_to": "all", "index": false, "doc_values": false},
+  "gbifRegion": {"type":"keyword", "copy_to": "all"},
+  "stateProvince": {
+    "type": "keyword",
+    "fields": {
+      "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+      "verbatim": {"type": "keyword", "ignore_above": 1024}
+    }
+  },
+  "minimumElevationInMeters": {"type": "double"},
+  "maximumElevationInMeters": {"type": "double"},
+  "elevation": {"type": "double"},
+  "elevationAccuracy": {"type": "double"},
+  "minimumDepthInMeters": {"type": "double"},
+  "maximumDepthInMeters": {"type": "double"},
+  "depth": {"type": "double"},
+  "depthAccuracy": {"type": "double"},
+  "minimumDistanceAboveSurfaceInMeters": {"type": "double"},
+  "maximumDistanceAboveSurfaceInMeters": {"type": "double"},
+  "coordinateUncertaintyInMeters": {"type": "double"},
+  "coordinatePrecision": {"type": "double"},
+  "coordinates": {"type": "geo_point"},
+  "scoordinates": {"type": "geo_shape"},
+  "decimalLatitude": {"type": "double"},
+  "decimalLongitude": {"type": "double"},
+  "distanceFromCentroidInMeters": {"type": "double"},
+  "higherGeography": {"type":"keyword"},
+  "island": {"type":"keyword"},
+  "islandGroup": {"type":"keyword"},
+  "georeferencedBy": {"type":"keyword"},
+
+  "gadm": {
+    "type": "object",
+    "properties": {
+    "gids": {"type": "keyword"},
+    "level0Gid": {"type": "keyword"},
+    "level1Gid": {"type": "keyword"},
+    "level2Gid": {"type": "keyword"},
+    "level3Gid": {"type": "keyword"},
+    "level0Name": {"type": "keyword", "copy_to": "all"},
+    "level1Name": {"type": "keyword", "copy_to": "all"},
+    "level2Name": {"type": "keyword", "copy_to": "all"},
+    "level3Name": {"type": "keyword", "copy_to": "all"}
       }
-    },
-    "countryCode": {"type":"keyword", "copy_to": "all"},
-    "country": {"type":"text", "copy_to": "all"},
-    "gbifRegion": {"type":"keyword", "copy_to": "all"},
-    "stateProvince": {
-      "type": "text",
-      "fields": {
-        "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-        "keyword": {"type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024},
-        "verbatim": {"type": "keyword", "ignore_above": 1024}
-      }
-    },
-    "minimumElevationInMeters": {"type": "double"},
-    "maximumElevationInMeters": {"type": "double"},
-    "elevation": {"type": "double"},
-    "elevationAccuracy": {"type": "double"},
-    "minimumDepthInMeters": {"type": "double"},
-    "maximumDepthInMeters": {"type": "double"},
-    "depth": {"type": "double"},
-    "depthAccuracy": {"type": "double"},
-    "minimumDistanceAboveSurfaceInMeters": {"type": "double"},
-    "maximumDistanceAboveSurfaceInMeters": {"type": "double"},
-    "coordinateUncertaintyInMeters": {"type": "double"},
-    "coordinatePrecision": {"type": "double"},
-    "coordinates": {"type": "geo_point"},
-    "scoordinates": {"type": "geo_shape"},
-    "decimalLatitude": {"type": "double"},
-    "decimalLongitude": {"type": "double"},
-    "distanceFromCentroidInMeters": {"type": "double"},
-    "higherGeography": {"type":"keyword"},
-    "island": {"type":"keyword"},
-    "islandGroup": {"type":"keyword"},
-    "georeferencedBy": {"type":"keyword"},
+  },
 
-    "gadm": {
-      "type": "object",
-      "properties": {
-        "gids": {"type": "keyword"},
-        "level0Gid": {"type": "keyword"},
-        "level1Gid": {"type": "keyword"},
-        "level2Gid": {"type": "keyword"},
-        "level3Gid": {"type": "keyword"},
-        "level0Name": {"type": "keyword", "copy_to": "all"},
-        "level1Name": {"type": "keyword", "copy_to": "all"},
-        "level2Name": {"type": "keyword", "copy_to": "all"},
-        "level3Name": {"type": "keyword", "copy_to": "all"}
-      }
-    },
+  "year": {"type": "short"},
+  "month": {"type": "short"},
+  "day": {"type": "short"},
+  "eventDate": {"type": "date_range", "format": "yyyy-MM-dd'T'HH:mm:ss.SSSXXX||yyyy-MM-dd'T'HH:mm:ssXXX||yyyy-MM-dd'T'HH:mmXXX||yyyy-MM-dd'T'HH:mm:ss.SSS||yyyy-MM-dd'T'HH:mm:ss.SS||yyyy-MM-dd'T'HH:mm:ss.S||yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm||yyyy-MM-dd||yyyy-MM||yyyy"},
+  "eventDateInterval": {"type": "keyword"},
+  "eventDateSingle": {"type": "date"},
+  "startDayOfYear": {"type": "short"},
+  "endDayOfYear": {"type": "short"},
+  "modified": {"type": "date"},
+  "dateIdentified": {"type": "date"},
 
-    "year": {"type": "short"},
-    "month": {"type": "short"},
-    "day": {"type": "short"},
-    "eventDate": {"type": "date_range", "format": "yyyy-MM-dd'T'HH:mm:ss.SSSXXX||yyyy-MM-dd'T'HH:mm:ssXXX||yyyy-MM-dd'T'HH:mmXXX||yyyy-MM-dd'T'HH:mm:ss.SSS||yyyy-MM-dd'T'HH:mm:ss.SS||yyyy-MM-dd'T'HH:mm:ss.S||yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm||yyyy-MM-dd||yyyy-MM||yyyy"},
-    "eventDateInterval": {"type": "keyword"},
-    "eventDateSingle": {"type": "date"},
-    "startDayOfYear": {"type": "short"},
-    "endDayOfYear": {"type": "short"},
-    "modified": {"type": "date"},
-    "dateIdentified": {"type": "date"},
+  "fieldNumber": {"type": "keyword", "copy_to": "all"},
 
-    "fieldNumber": {"type": "keyword", "copy_to": "all"},
-
-    "geologicalContext": {
+  "geologicalContext": {
       "type": "object",
       "properties": {
         "earliestEonOrLowestEonothem": {
           "type": "object",
           "properties": {
-            "concept": {"type": "keyword"},
-            "lineage": {"type": "keyword", "copy_to": "all"}
+          "concept": {"type": "keyword"},
+          "lineage": {"type": "keyword", "copy_to": "all"}
           }
         },
         "latestEonOrHighestEonothem": {
           "type": "object",
           "properties": {
-            "concept": {"type": "keyword"},
-            "lineage": {"type": "keyword", "copy_to": "all"}
+          "concept": {"type": "keyword"},
+          "lineage": {"type": "keyword", "copy_to": "all"}
           }
         },
         "earliestEraOrLowestErathem": {
           "type": "object",
           "properties": {
-            "concept": {"type": "keyword"},
-            "lineage": {"type": "keyword", "copy_to": "all"}
+          "concept": {"type": "keyword"},
+          "lineage": {"type": "keyword", "copy_to": "all"}
           }
         },
         "latestEraOrHighestErathem": {
           "type": "object",
           "properties": {
-            "concept": {"type": "keyword"},
-            "lineage": {"type": "keyword", "copy_to": "all"}
+          "concept": {"type": "keyword"},
+          "lineage": {"type": "keyword", "copy_to": "all"}
           }
         },
         "earliestPeriodOrLowestSystem": {
           "type": "object",
           "properties": {
-            "concept": {"type": "keyword"},
-            "lineage": {"type": "keyword", "copy_to": "all"}
+          "concept": {"type": "keyword"},
+          "lineage": {"type": "keyword", "copy_to": "all"}
           }
         },
         "latestPeriodOrHighestSystem": {
           "type": "object",
           "properties": {
-            "concept": {"type": "keyword"},
-            "lineage": {"type": "keyword", "copy_to": "all"}
+          "concept": {"type": "keyword"},
+          "lineage": {"type": "keyword", "copy_to": "all"}
           }
         },
         "earliestEpochOrLowestSeries": {
           "type": "object",
           "properties": {
-            "concept": {"type": "keyword"},
-            "lineage": {"type": "keyword", "copy_to": "all"}
+          "concept": {"type": "keyword"},
+          "lineage": {"type": "keyword", "copy_to": "all"}
           }
         },
         "latestEpochOrHighestSeries": {
           "type": "object",
           "properties": {
-            "concept": {"type": "keyword"},
-            "lineage": {"type": "keyword", "copy_to": "all"}
+          "concept": {"type": "keyword"},
+          "lineage": {"type": "keyword", "copy_to": "all"}
           }
         },
         "earliestAgeOrLowestStage": {
           "type": "object",
           "properties": {
-            "concept": {"type": "keyword"},
-            "lineage": {"type": "keyword", "copy_to": "all"}
+          "concept": {"type": "keyword"},
+          "lineage": {"type": "keyword", "copy_to": "all"}
           }
         },
         "latestAgeOrHighestStage": {
           "type": "object",
           "properties": {
-            "concept": {"type": "keyword"},
-            "lineage": {"type": "keyword", "copy_to": "all"}
+          "concept": {"type": "keyword"},
+          "lineage": {"type": "keyword", "copy_to": "all"}
           }
         },
-        "lowestBiostratigraphicZone": {"type": "keyword", "copy_to": "all"},
-        "highestBiostratigraphicZone": {"type": "keyword", "copy_to": "all"},
-        "group": {"type": "keyword", "copy_to": "all"},
-        "formation": {"type": "keyword", "copy_to": "all"},
-        "member": {"type": "keyword", "copy_to": "all"},
-        "bed": {"type": "keyword", "copy_to": "all"},
-        "range": {"type": "float_range"},
+      "lowestBiostratigraphicZone": {"type": "keyword", "copy_to": "all"},
+      "highestBiostratigraphicZone": {"type": "keyword", "copy_to": "all"},
+      "group": {"type": "keyword", "copy_to": "all"},
+      "formation": {"type": "keyword", "copy_to": "all"},
+      "member": {"type": "keyword", "copy_to": "all"},
+      "bed": {"type": "keyword", "copy_to": "all"},
+      "range": {"type": "float_range"},
         "lithostratigraphy": {
           "type": "text",
           "fields": {
-            "suggest": {"type": "completion", "analyzer": "lowercase_ascii_folding_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-            "keyword": {"type": "keyword", "normalizer": "lowercase_ascii_folding_normalizer", "ignore_above": 1024},
-            "verbatim": {"type": "keyword", "ignore_above": 1024}
+          "suggest": {"type": "completion", "analyzer": "lowercase_ascii_folding_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+          "keyword": {"type": "keyword", "normalizer": "lowercase_ascii_folding_normalizer", "ignore_above": 1024},
+          "verbatim": {"type": "keyword", "ignore_above": 1024}
           }
         },
         "biostratigraphy": {
           "type": "text",
           "fields": {
-            "suggest": {"type": "completion", "analyzer": "lowercase_ascii_folding_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
-            "keyword": {"type": "keyword", "normalizer": "lowercase_ascii_folding_normalizer", "ignore_above": 1024},
-            "verbatim": {"type": "keyword", "ignore_above": 1024}
+          "suggest": {"type": "completion", "analyzer": "lowercase_ascii_folding_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+          "keyword": {"type": "keyword", "normalizer": "lowercase_ascii_folding_normalizer", "ignore_above": 1024},
+          "verbatim": {"type": "keyword", "ignore_above": 1024}
           }
         }
       }
     },
 
-    "issues": {"type": "keyword"},
-    "notIssues": {"type": "keyword"},
-    "nonTaxonomicIssues": {"type": "keyword"},
-    "extensions": {"type": "keyword"},
+  "issues": {"type": "keyword"},
+  "notIssues": {"type": "keyword"},
+  "nonTaxonomicIssues": {"type": "keyword"},
+  "extensions": {"type": "keyword"},
 
-    "gbifClassification": {
+  "gbifClassification": {
       "properties": {
         "acceptedUsage": {
           "properties": {
@@ -672,96 +684,99 @@
             "rank": {"type": "keyword"}
           }
         },
-        "classificationPath": {"type": "keyword"},
-        "diagnostics": {
-          "properties": {
-            "matchType": {"type": "keyword"},
-            "note": {"type": "text","index":  false},
-            "status": {"type": "keyword"}
-          }
-        },
-        "kingdom": {"type": "text"},
-        "kingdomKey": {"type": "keyword"},
-        "phylum": {"type": "text"},
-        "phylumKey": {"type": "keyword"},
-        "class": {"type": "text"},
-        "classKey": {"type": "keyword"},
-        "order": {"type": "text"},
-        "orderKey": {"type": "keyword"},
-        "family": {"type": "text"},
-        "familyKey": {"type": "keyword"},
-        "genus": {"type": "text"},
-        "genusKey": {"type": "keyword"},
-        "species": {"type": "text"},
-        "speciesKey": {"type": "keyword"},
-        "synonym": {"type": "boolean"},
-        "taxonID": {"type": "keyword"},
-        "taxonConceptID": {"type": "keyword"},
-        "taxonKey": {"type": "keyword"},
-        "usage": {
-          "properties": {
-            "key": {"type": "keyword" },
-            "name": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
-            "rank": {"type": "keyword"}
-          }
-        },
-        "usageParsedName": {
-          "properties": {
-            "abbreviated": {"type": "boolean", "index":  false},
-            "autonym": {"type": "boolean", "index":  false},
-            "basionymAuthorship": {
-              "enabled": false,
-              "properties": {
-                "authors": {"type": "text"},
-                "empty": {"type": "boolean"},
-                "exAuthors": {"type": "text"},
-                "year": {"type": "keyword"}
-              }
-            },
-            "binomial": {"type": "boolean", "index":  false},
-            "candidatus": {"type": "boolean", "index":  false},
-            "code": {"type": "text", "index":  false},
-            "combinationAuthorship": {
-              "enabled": false,
-              "properties": {
-                "authors": {"type": "text"},
-                "empty": {"type": "boolean"},
-                "exAuthors": {"type": "text"},
-                "year": {"type": "keyword"}
-              }
-            },
-            "doubtful": {"type": "boolean", "index":  false},
-            "genericName": {"type": "text"},
-            "genus": {"type": "text", "index":  false},
-            "incomplete": {"type": "boolean", "index":  false},
-            "indetermined": {"type": "boolean", "index":  false},
-            "infraspecificEpithet": {"type": "text"},
-            "notho": {"type": "keyword", "index":  false},
-            "rank": {"type": "keyword", "index":  false},
-            "specificEpithet": {"type": "text"},
-            "state": {"type": "keyword", "index":  false},
-            "terminalEpithet": {"type": "text", "index":  false},
-            "trinomial": {"type": "boolean", "index":  false},
-            "type": {"type": "keyword", "index":  false},
-            "uninomial": {"type": "text", "index":  false}
-          }
-        },
-        "verbatimScientificName": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
-        "iucnRedListCategoryCode": {"type": "keyword"}
+      "classificationPath": {"type": "keyword"},
+      "diagnostics": {
+        "properties": {
+        "matchType": {"type": "keyword", "index":  false, "store": false},
+        "note": {"type": "text","index":  false, "store": false},
+        "status": {"type": "keyword","index":  false, "store": false}
+        }
+      },
+      "kingdom": {"type": "keyword", "index": false, "doc_values": false},
+      "kingdomKey": {"type": "keyword"},
+      "phylum": {"type": "keyword", "index": false, "doc_values": false},
+      "phylumKey": {"type": "keyword"},
+      "class": {"type": "keyword", "index": false, "doc_values": false},
+      "classKey": {"type": "keyword"},
+      "order": {"type": "keyword", "index": false, "doc_values": false},
+      "orderKey": {"type": "keyword"},
+      "family": {"type": "keyword", "index": false, "doc_values": false},
+      "familyKey": {"type": "keyword"},
+      "genus": {"type": "keyword", "index": false, "doc_values": false},
+      "genusKey": {"type": "keyword"},
+      "species": {"type": "keyword", "index": false, "doc_values": false},
+      "speciesKey": {"type": "keyword"},
+      "synonym": {"type": "boolean"},
+      "taxonID": {"type": "keyword"},
+      "taxonConceptID": {"type": "keyword"},
+      "taxonKey": {"type": "keyword"},
+      "usage": {
+        "properties": {
+        "key": {"type": "keyword" },
+        "name": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
+        "rank": {"type": "keyword"}
+        }
+      },
+      "usageParsedName": {
+        "properties": {
+          "abbreviated": {"type": "boolean", "index":  false, "store": false},
+          "autonym": {"type": "boolean", "index":  false, "store": false},
+          "basionymAuthorship": {
+            "enabled": false,
+            "properties": {
+              "authors": {"type": "keyword", "index": false, "doc_values": false, "store": false},
+              "empty": {"type": "boolean", "index": false, "doc_values": false, "store": false},
+              "exAuthors": {"type": "keyword", "index": false, "doc_values": false, "store": false},
+              "year": {"type": "keyword", "index": false, "doc_values": false, "store": false}
+            }
+          },
+          "binomial": {"type": "boolean", "index":  false, "store": false},
+          "candidatus": {"type": "boolean", "index":  false, "store": false},
+          "code": {"type": "text", "index":  false, "store": false},
+          "combinationAuthorship": {
+            "enabled": false,
+            "properties": {
+              "authors": {"type": "keyword", "index": false, "doc_values": false, "store": false},
+              "empty": {"type": "boolean", "index": false, "doc_values": false, "store": false},
+              "exAuthors": {"type": "keyword", "index": false, "doc_values": false, "store": false},
+              "year": {"type": "keyword", "index": false, "doc_values": false, "store": false}
+            }
+          },
+          "doubtful": {"type": "boolean", "index":  false, "store": false},
+          "genericName": {"type": "keyword", "index": false, "doc_values": false},
+          "genus": {"type": "keyword", "index": false, "doc_values": false},
+          "incomplete": {"type": "boolean", "index":  false, "store": false},
+          "indetermined": {"type": "boolean", "index":  false, "store": false},
+          "infraspecificEpithet": {"type": "keyword", "index": false, "doc_values": false},
+          "notho": {"type": "keyword", "index":  false, "store": false},
+          "rank": {"type": "keyword", "index":  false},
+          "specificEpithet": {"type": "keyword", "index": false, "doc_values": false},
+          "state": {"type": "keyword", "index":  false, "store": false},
+          "terminalEpithet": {"type": "keyword", "index":  false, "store": false},
+          "trinomial": {"type": "boolean", "index":  false, "store": false},
+          "type": {"type": "keyword", "index":  false, "store": false},
+          "uninomial": {"type": "keyword", "index":  false, "store": false}
+        }
+      },
+      "verbatimScientificName": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
+      "iucnRedListCategoryCode": {"type": "keyword"}
       }
     },
-    "checklistKey": {"type": "keyword"},
-    "mediaTypes": {"type": "keyword", "copy_to": "all"},
-    "mediaLicenses": {"type": "keyword", "copy_to": "all"},
-    "multimediaItems": {"type": "nested", "enabled": false,
-      "properties": {
-        "license": {"type": "keyword"}
-      }
-    },
-    "taxonID": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
-    "taxonConceptID": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
-    "verbatimScientificName": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
+  "checklistKey": {"type": "keyword"},
+  "mediaTypes": {"type": "keyword", "copy_to": "all"},
+  "mediaLicenses": {"type": "keyword", "copy_to": "all"},
+  "multimediaItems": {
+    "type": "nested", "enabled": false,
+    "properties": {
+      "license": {"type": "keyword"}
+    }
+  },
+  "taxonID": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
+  "taxonConceptID": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
+  "verbatimScientificName": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
+  "dnaSequenceID":  {"type": "keyword"},
+  "footprintWKT":  {"type": "keyword"},
 
-    "verbatim": {"type": "object", "enabled": false}
+  "verbatim": {"type": "object", "enabled": false}
   }
 }
