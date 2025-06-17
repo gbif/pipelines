@@ -11,7 +11,7 @@ import org.gbif.api.util.validators.identifierschemes.OrcidValidator;
 import org.gbif.api.util.validators.identifierschemes.OtherValidator;
 import org.gbif.api.util.validators.identifierschemes.WikidataValidator;
 import org.gbif.api.vocabulary.AgentIdentifierType;
-import org.gbif.pipelines.io.avro.AgentIdentifier;
+import org.gbif.pipelines.core.interpreters.model.AgentIdentifier;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AgentIdentifierParser {
@@ -35,20 +35,20 @@ public class AgentIdentifierParser {
 
   private static AgentIdentifier parseValue(String raw) {
     if (ORCID_VALIDATOR.isValid(raw)) {
-      return AgentIdentifier.newBuilder()
-          .setType(AgentIdentifierType.ORCID.name())
-          .setValue(ORCID_VALIDATOR.normalize(raw))
+      return AgentIdentifier.builder()
+          .type(AgentIdentifierType.ORCID.name())
+          .value(ORCID_VALIDATOR.normalize(raw))
           .build();
     }
     if (WIKIDATA_VALIDATOR.isValid(raw)) {
-      return AgentIdentifier.newBuilder()
-          .setType(AgentIdentifierType.WIKIDATA.name())
-          .setValue(WIKIDATA_VALIDATOR.normalize(raw))
+      return AgentIdentifier.builder()
+          .type(AgentIdentifierType.WIKIDATA.name())
+          .value(WIKIDATA_VALIDATOR.normalize(raw))
           .build();
     }
-    return AgentIdentifier.newBuilder()
-        .setType(AgentIdentifierType.OTHER.name())
-        .setValue(OTHER_VALIDATOR.normalize(raw))
+    return AgentIdentifier.builder()
+        .type(AgentIdentifierType.OTHER.name())
+        .value(OTHER_VALIDATOR.normalize(raw))
         .build();
   }
 }

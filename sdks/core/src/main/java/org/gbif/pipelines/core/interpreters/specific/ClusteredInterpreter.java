@@ -4,9 +4,9 @@ import java.util.function.BiConsumer;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.pipelines.core.interpreters.model.ClusteringRecord;
+import org.gbif.pipelines.core.interpreters.model.IdentifierRecord;
 import org.gbif.pipelines.core.parsers.clustering.ClusteringService;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
 
 /**
  * Interpreting function that receives a ExtendedRecord instance and applies an interpretation to

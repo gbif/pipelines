@@ -10,8 +10,8 @@ import org.gbif.pipelines.core.parsers.vertnet.LifeStageParser;
 import org.gbif.pipelines.core.parsers.vertnet.SexParser;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.core.utils.VocabularyConceptFactory;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.core.interpreters.model.BasicRecord;
+import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DynamicPropertiesInterpreter {
@@ -24,7 +24,7 @@ public class DynamicPropertiesInterpreter {
             .get(DwcTerm.sex)
             .flatMap(
                 lookup ->
-                    extractNullAwareOptValue(er, DwcTerm.dynamicProperties)
+                        er.extractNullAwareOptValue(DwcTerm.dynamicProperties)
                         .flatMap(v -> SexParser.parse(v).flatMap(lookup::lookup)))
             .map(VocabularyConceptFactory::createConcept)
             .ifPresent(br::setSex);
@@ -40,7 +40,7 @@ public class DynamicPropertiesInterpreter {
             .get(DwcTerm.lifeStage)
             .flatMap(
                 lookup ->
-                    extractNullAwareOptValue(er, DwcTerm.dynamicProperties)
+                        er.extractNullAwareOptValue(DwcTerm.dynamicProperties)
                         .flatMap(v -> LifeStageParser.parse(v).flatMap(lookup::lookup)))
             .map(VocabularyConceptFactory::createConcept)
             .ifPresent(br::setLifeStage);

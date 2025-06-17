@@ -11,10 +11,10 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.GeocodeRequest;
+import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
+import org.gbif.pipelines.core.interpreters.model.LocationRecord;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

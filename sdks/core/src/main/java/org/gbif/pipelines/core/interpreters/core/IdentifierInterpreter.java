@@ -4,9 +4,9 @@ import java.util.function.BiConsumer;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
 import org.gbif.pipelines.core.utils.HashConverter;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.core.interpreters.model.IdentifierRecord;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

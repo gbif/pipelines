@@ -21,7 +21,8 @@ import org.gbif.common.parsers.date.DateParsers;
 import org.gbif.common.parsers.date.TemporalParser;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
+
 
 /** Utility class to help with the extraction of the identification fields. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -45,7 +46,7 @@ public class IdentificationUtils {
 
   public static String extractFromIdentificationExtension(ExtendedRecord er, Term term) {
     if (IDENTIFICATION_FIELDS.contains(term)
-        && ModelUtils.hasExtension(er, Extension.IDENTIFICATION)
+        && er.hasExtension(Extension.IDENTIFICATION)
         && areAllIdentificationFieldsNull(er)) {
       return getLatestIdentificationExtension(er)
           .map(ext -> ext.get(term.qualifiedName()))
@@ -55,7 +56,7 @@ public class IdentificationUtils {
   }
 
   private static Optional<Map<String, String>> getLatestIdentificationExtension(ExtendedRecord er) {
-    if (!ModelUtils.hasExtension(er, Extension.IDENTIFICATION)) {
+    if (!er.hasExtension(Extension.IDENTIFICATION)) {
       return Optional.empty();
     }
 

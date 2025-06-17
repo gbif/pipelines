@@ -7,7 +7,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.GeocodeRequest;
-import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.core.interpreters.model.LocationRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -18,7 +18,7 @@ public class CentroidCalculator {
   public static final double MAXIMUM_DISTANCE_FROM_CENTROID_METRES = 5000;
 
   public static Optional<Double> calculateCentroidDistance(
-      LocationRecord lr, KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
+          LocationRecord lr, KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
     Objects.requireNonNull(lr, "LocationRecord is required");
     Objects.requireNonNull(kvStore, "GeocodeService kvStore is required");
 

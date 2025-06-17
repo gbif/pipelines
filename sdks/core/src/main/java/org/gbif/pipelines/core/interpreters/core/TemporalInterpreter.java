@@ -1,10 +1,5 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import static org.gbif.pipelines.core.utils.ModelUtils.addIssueSet;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.hasValue;
-
 import com.google.common.collect.Range;
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -13,6 +8,9 @@ import java.time.temporal.TemporalAccessor;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.util.IsoDateInterval;
@@ -26,10 +24,10 @@ import org.gbif.common.parsers.date.TemporalRangeParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.functions.SerializableFunction;
+import org.gbif.pipelines.core.interpreters.model.EventDate;
+import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
+import org.gbif.pipelines.core.interpreters.model.TemporalRecord;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
 
 /** Interprets date representations into Dates and EventDate (ranges) to support API v1 */
 @Slf4j
@@ -64,13 +62,16 @@ public class TemporalInterpreter implements Serializable {
     this.explicitRangeEnd = explicitRangeEnd == null;
   }
 
-  public void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
-    String year = extractValue(er, DwcTerm.year);
-    String month = extractValue(er, DwcTerm.month);
-    String day = extractValue(er, DwcTerm.day);
-    String startDayOfYear = extractValue(er, DwcTerm.startDayOfYear);
-    String endDayOfYear = extractValue(er, DwcTerm.endDayOfYear);
-    String eventDate = extractValue(er, DwcTerm.eventDate);
+  public void interpretTemporal(
+          ExtendedRecord er,
+          TemporalRecord tr,
+          Supplier<EventDate> createEventDateFn) {
+    String year = er.extractValue(DwcTerm.year);
+    String month = er.extractValue(DwcTerm.month);
+    String day = er.extractValue(DwcTerm.day);
+    String startDayOfYear = er.extractValue(DwcTerm.startDayOfYear);
+    String endDayOfYear = er.extractValue(DwcTerm.endDayOfYear);
+    String eventDate = er.extractValue(DwcTerm.eventDate);
 
     String normalizedEventDate =
         Optional.ofNullable(preprocessDateFn).map(x -> x.apply(eventDate)).orElse(eventDate);
@@ -109,7 +110,7 @@ public class TemporalInterpreter implements Serializable {
     toTa.filter(t -> t.isSupported(ChronoField.DAY_OF_YEAR))
         .ifPresent(t -> tr.setEndDayOfYear(t.get(ChronoField.DAY_OF_YEAR)));
 
-    EventDate ed = new EventDate();
+    EventDate ed = createEventDateFn.get();
 
     if (explicitRangeEnd) {
       fromTa
@@ -141,12 +142,12 @@ public class TemporalInterpreter implements Serializable {
     }
 
     tr.setEventDate(ed);
-    addIssueSet(tr, parseResult.getIssues());
+    tr.addIssueSet(parseResult.getIssues());
   }
 
   public void interpretModified(ExtendedRecord er, TemporalRecord tr) {
-    if (hasValue(er, DcTerm.modified)) {
-      String value = extractValue(er, DcTerm.modified);
+    if (er.hasValue(DcTerm.modified)) {
+      String value = er.extractValue(DcTerm.modified);
       String normalizedValue =
           Optional.ofNullable(preprocessDateFn).map(x -> x.apply(value)).orElse(value);
 
@@ -164,13 +165,13 @@ public class TemporalInterpreter implements Serializable {
             .ifPresent(tr::setModified);
       }
 
-      addIssueSet(tr, parsed.getIssues());
+      tr.addIssueSet(parsed.getIssues());
     }
   }
 
   public void interpretDateIdentified(ExtendedRecord er, TemporalRecord tr) {
-    if (hasValue(er, DwcTerm.dateIdentified)) {
-      String value = extractValue(er, DwcTerm.dateIdentified);
+    if (er.hasValue(DwcTerm.dateIdentified)) {
+      String value = er.extractValue(DwcTerm.dateIdentified);
       String normalizedValue =
           Optional.ofNullable(preprocessDateFn).map(x -> x.apply(value)).orElse(value);
 
@@ -188,17 +189,12 @@ public class TemporalInterpreter implements Serializable {
             .ifPresent(tr::setDateIdentified);
       }
 
-      addIssueSet(tr, parsed.getIssues());
+      tr.addIssueSet(parsed.getIssues());
     }
-  }
-
-  /** Sets the coreId field. */
-  public static void setCoreId(ExtendedRecord er, TemporalRecord tr) {
-    Optional.ofNullable(er.getCoreId()).ifPresent(tr::setCoreId);
   }
 
   /** Sets the parentEventId field. */
   public static void setParentEventId(ExtendedRecord er, TemporalRecord tr) {
-    extractOptValue(er, DwcTerm.parentEventID).ifPresent(tr::setParentId);
+    er.extractOptValue(DwcTerm.parentEventID).ifPresent(tr::setParentId);
   }
 }

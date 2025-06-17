@@ -19,7 +19,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
 
 /**
  * The class is designed to simplify extension interpretation process:

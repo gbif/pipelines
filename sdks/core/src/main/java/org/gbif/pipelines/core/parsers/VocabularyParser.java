@@ -24,7 +24,7 @@ import org.gbif.common.parsers.SexParser;
 import org.gbif.common.parsers.core.EnumParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
 
 /** Utility class that parses Enum based terms. */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

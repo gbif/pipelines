@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.api.model.Constants;
+import org.gbif.pipelines.core.interpreters.model.RankedName;
+import org.gbif.pipelines.core.interpreters.model.TaxonRecord;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 
@@ -98,7 +100,7 @@ public class TaxonRecordConverter {
 
     Diagnostic.Builder builder =
         Diagnostic.newBuilder()
-            .setAlternatives(alternatives)
+            //            .setAlternatives(alternatives)
             .setConfidence(diagnosticsApi.getConfidence())
             .setMatchType(MatchType.valueOf(diagnosticsApi.getMatchType().name()))
             .setNote(diagnosticsApi.getNote())

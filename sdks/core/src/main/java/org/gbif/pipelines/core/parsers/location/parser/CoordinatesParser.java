@@ -11,8 +11,8 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.geocode.GeocodeRequest;
+import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /** Parser for the Dwc Terms related to the coordinates. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -22,25 +22,25 @@ class CoordinatesParser {
   private static final Function<ExtendedRecord, ParsedField<GeocodeRequest>> DECIMAL_LAT_LNG_FN =
       (er ->
           CoordinateParseUtils.parseLatLng(
-              extractValue(er, DwcTerm.decimalLatitude),
-              extractValue(er, DwcTerm.decimalLongitude)));
+                  er.extractValue(DwcTerm.decimalLatitude),
+                  er.extractValue(DwcTerm.decimalLongitude)));
 
   // parses footprint WKT field (if it contains only a single point)
   private static final Function<ExtendedRecord, ParsedField<GeocodeRequest>> FOOTPRINT_WKT_FN =
-      (er -> CoordinateParseUtils.parsePointFootprintWKT(extractValue(er, DwcTerm.footprintWKT)));
+      (er -> CoordinateParseUtils.parsePointFootprintWKT(er.extractValue(DwcTerm.footprintWKT)));
 
   // parses verbatim latitude and longitude fields
   private static final Function<ExtendedRecord, ParsedField<GeocodeRequest>> VERBATIM_LAT_LNG_FN =
       (er ->
           CoordinateParseUtils.parseLatLng(
-              extractValue(er, DwcTerm.verbatimLatitude),
-              extractValue(er, DwcTerm.verbatimLongitude)));
+              er.extractValue(DwcTerm.verbatimLatitude),
+                  er.extractValue(DwcTerm.verbatimLongitude)));
 
   // parses verbatim coordinates fields
   private static final Function<ExtendedRecord, ParsedField<GeocodeRequest>> VERBATIM_COORDS_FN =
       (er ->
           CoordinateParseUtils.parseVerbatimCoordinates(
-              extractValue(er, DwcTerm.verbatimCoordinates)));
+                  er.extractValue(DwcTerm.verbatimCoordinates)));
 
   // list with all the parsing functions
   private static final List<Function<ExtendedRecord, ParsedField<GeocodeRequest>>>

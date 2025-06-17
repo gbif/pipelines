@@ -19,10 +19,10 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
 import org.gbif.pipelines.core.converters.GrscicollRecordConverter;
+import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
+import org.gbif.pipelines.core.interpreters.model.GrscicollRecord;
+import org.gbif.pipelines.core.interpreters.model.MetadataRecord;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.Match;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.Status;
@@ -38,7 +38,10 @@ public class GrscicollInterpreter {
         return;
       }
 
-      checkNullOrEmpty(er);
+      if (er == null){
+        throw new IllegalArgumentException("Grscicoll interpreter can't be null");
+      }
+      er.checkEmpty();
 
       if (!isSpecimenRecord(er)) {
         log.debug(
@@ -49,11 +52,11 @@ public class GrscicollInterpreter {
 
       GrscicollLookupRequest lookupRequest =
           GrscicollLookupRequest.builder()
-              .withInstitutionId(extractNullAwareValue(er, DwcTerm.institutionID))
-              .withInstitutionCode(extractNullAwareValue(er, DwcTerm.institutionCode))
-              .withOwnerInstitutionCode(extractNullAwareValue(er, DwcTerm.ownerInstitutionCode))
-              .withCollectionId(extractNullAwareValue(er, DwcTerm.collectionID))
-              .withCollectionCode(extractNullAwareValue(er, DwcTerm.collectionCode))
+              .withInstitutionId(er.extractNullAwareValue(DwcTerm.institutionID))
+              .withInstitutionCode(er.extractNullAwareValue(DwcTerm.institutionCode))
+              .withOwnerInstitutionCode(er.extractNullAwareValue(DwcTerm.ownerInstitutionCode))
+              .withCollectionId(er.extractNullAwareValue(DwcTerm.collectionID))
+              .withCollectionCode(er.extractNullAwareValue(DwcTerm.collectionCode))
               .withDatasetKey(mdr.getDatasetKey())
               .withCountry(mdr.getDatasetPublishingCountry())
               .build();
@@ -84,7 +87,7 @@ public class GrscicollInterpreter {
       // institution match
       Match institutionMatchResponse = lookupResponse.getInstitutionMatch();
       if (institutionMatchResponse.getMatchType() == GrscicollLookupResponse.MatchType.NONE) {
-        addIssue(gr, getInstitutionMatchNoneIssue(institutionMatchResponse.getStatus()));
+        gr.addIssue(getInstitutionMatchNoneIssue(institutionMatchResponse.getStatus()));
 
         // we skip the collections when there is no institution match
         return;
@@ -93,25 +96,25 @@ public class GrscicollInterpreter {
       gr.setInstitutionMatch(GrscicollRecordConverter.convertMatch(institutionMatchResponse));
 
       if (institutionMatchResponse.getMatchType() == GrscicollLookupResponse.MatchType.FUZZY) {
-        addIssue(gr, OccurrenceIssue.INSTITUTION_MATCH_FUZZY);
+        gr.addIssue(OccurrenceIssue.INSTITUTION_MATCH_FUZZY);
       }
 
       // https://github.com/gbif/registry/issues/496 we accept matches that have different owner,
       // but we flag them
       if (institutionMatchResponse.getReasons() != null
           && institutionMatchResponse.getReasons().contains(DIFFERENT_OWNER)) {
-        addIssue(gr, OccurrenceIssue.DIFFERENT_OWNER_INSTITUTION);
+        gr.addIssue(OccurrenceIssue.DIFFERENT_OWNER_INSTITUTION);
       }
 
       // collection match
       Match collectionMatchResponse = lookupResponse.getCollectionMatch();
       if (collectionMatchResponse.getMatchType() == GrscicollLookupResponse.MatchType.NONE) {
-        addIssue(gr, getCollectionMatchNoneIssue(collectionMatchResponse.getStatus()));
+        gr.addIssue(getCollectionMatchNoneIssue(collectionMatchResponse.getStatus()));
       } else {
         gr.setCollectionMatch(GrscicollRecordConverter.convertMatch(collectionMatchResponse));
 
         if (collectionMatchResponse.getMatchType() == GrscicollLookupResponse.MatchType.FUZZY) {
-          addIssue(gr, OccurrenceIssue.COLLECTION_MATCH_FUZZY);
+          gr.addIssue(OccurrenceIssue.COLLECTION_MATCH_FUZZY);
         }
       }
     };

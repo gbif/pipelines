@@ -2,8 +2,6 @@ package org.gbif.pipelines.core.interpreters.specific;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_ABSENT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_INVALID;
-import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import com.google.common.base.Strings;
 import java.util.Collections;
@@ -15,8 +13,8 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
+import org.gbif.pipelines.core.interpreters.model.IdentifierRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.keygen.Keygen;
 import org.gbif.pipelines.keygen.SimpleOccurrenceRecord;
@@ -51,7 +49,7 @@ public class GbifIdInterpreter {
 
       // Adds occurrenceId
       if (isOccurrenceIdValid) {
-        String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
+        String occurrenceId = er.extractValue(DwcTerm.occurrenceID);
         if (!Strings.isNullOrEmpty(occurrenceId)) {
           occRecords.setOccurrenceId(occurrenceId);
           ir.setUniqueKey(occurrenceId);
@@ -60,9 +58,9 @@ public class GbifIdInterpreter {
 
       // Adds triplet
       if (isTripletValid) {
-        String ic = extractValue(er, DwcTerm.institutionCode);
-        String cc = extractValue(er, DwcTerm.collectionCode);
-        String cn = extractValue(er, DwcTerm.catalogNumber);
+        String ic = er.extractValue(DwcTerm.institutionCode);
+        String cc = er.extractValue(DwcTerm.collectionCode);
+        String cn = er.extractValue(DwcTerm.catalogNumber);
         OccurrenceKeyBuilder.buildKey(ic, cc, cn)
             .ifPresent(
                 tr -> {
@@ -77,9 +75,9 @@ public class GbifIdInterpreter {
       if (gbifId.isPresent() && !Keygen.getErrorKey().equals(gbifId.get())) {
         ir.setInternalId(gbifId.get().toString());
       } else if (!generateIdIfAbsent) {
-        addIssue(ir, GBIF_ID_ABSENT);
+        ir.addIssue(GBIF_ID_ABSENT);
       } else {
-        addIssue(ir, GBIF_ID_INVALID);
+        ir.addIssue(GBIF_ID_INVALID);
       }
     };
   }

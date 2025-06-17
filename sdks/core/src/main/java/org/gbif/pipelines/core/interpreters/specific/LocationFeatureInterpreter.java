@@ -13,8 +13,8 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.GeocodeRequest;
-import org.gbif.pipelines.io.avro.LocationFeatureRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.core.interpreters.model.LocationFeatureRecord;
+import org.gbif.pipelines.core.interpreters.model.LocationRecord;
 
 /** Interprets the location of a {@link LocationFeatureRecord}. */
 @Slf4j

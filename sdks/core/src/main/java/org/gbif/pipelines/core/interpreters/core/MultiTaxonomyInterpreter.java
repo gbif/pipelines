@@ -2,18 +2,21 @@ package org.gbif.pipelines.core.interpreters.core;
 
 import static org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter.createNameUsageMatchRequest;
 import static org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter.createTaxonRecord;
-import static org.gbif.pipelines.core.utils.ModelUtils.*;
 
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.NameUsageMatchRequest;
-import org.gbif.pipelines.core.utils.ModelUtils;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.core.interpreters.model.ExtendedRecord;
+import org.gbif.pipelines.core.interpreters.model.MultiTaxonRecord;
+import org.gbif.pipelines.core.interpreters.model.TaxonRecord;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 /**
@@ -34,20 +37,28 @@ public class MultiTaxonomyInterpreter {
    */
   public static BiConsumer<ExtendedRecord, MultiTaxonRecord> interpretMultiTaxonomy(
       KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore,
-      List<String> checklistKeys) {
+      List<String> checklistKeys,
+      Supplier<TaxonRecord> createTaxonRecordFn
+  ) {
+
     return (er, mtr) -> {
       if (kvStore == null) {
         return;
       }
 
-      ModelUtils.checkNullOrEmpty(er);
+      if (er == null){
+        throw new IllegalArgumentException("er is null");
+      }
+      er.checkEmpty();
+
       final List<TaxonRecord> trs = new ArrayList<>();
 
       for (String checklistKey : checklistKeys) {
         final NameUsageMatchRequest nameUsageMatchRequest =
             createNameUsageMatchRequest(er, checklistKey);
-        TaxonRecord taxonRecord =
-            TaxonRecord.newBuilder().setId(er.getId()).setDatasetKey(checklistKey).build();
+        TaxonRecord taxonRecord = createTaxonRecordFn.get();
+        taxonRecord.setId(er.getId());
+        taxonRecord.setDatasetKey(checklistKey);
         createTaxonRecord(nameUsageMatchRequest, kvStore, taxonRecord);
         trs.add(taxonRecord);
       }
@@ -66,6 +77,6 @@ public class MultiTaxonomyInterpreter {
 
   /** Sets the parentEventId field. */
   public static void setParentEventId(ExtendedRecord er, MultiTaxonRecord mtr) {
-    extractOptValue(er, DwcTerm.parentEventID).ifPresent(mtr::setParentId);
+    er.extractOptValue(DwcTerm.parentEventID).ifPresent(mtr::setParentId);
   }
 }
