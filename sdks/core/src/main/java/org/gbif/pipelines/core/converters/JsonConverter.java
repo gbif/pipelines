@@ -513,11 +513,9 @@ public class JsonConverter {
   }
 
   public static Map<String, Classification> convertToClassifications(MultiTaxonRecord taxon) {
-    return Map.of();
-    //    return taxon.getTaxonRecords().stream()
-    //        .collect(
-    //            Collectors.toMap(TaxonRecord::getDatasetKey,
-    // JsonConverter::convertToClassification));
+    return taxon.getTaxonRecords().stream()
+        .collect(
+            Collectors.toMap(TaxonRecord::getDatasetKey, JsonConverter::convertToClassification));
   }
 
   private static LinkedHashMap<String, String> convertToMap(
@@ -554,9 +552,11 @@ public class JsonConverter {
 
     Classification.Builder classificationBuilder =
         Classification.newBuilder()
-            .setClassification(
-                convertToMap(
-                    taxon.getClassification(), org.gbif.pipelines.io.avro.RankedName::getName))
+            //            .setClassification(
+            //                convertToMap(
+            //                    taxon.getClassification(),
+            // org.gbif.pipelines.io.avro.RankedName::getName))
+            .setClassification(Map.of())
             .setClassificationKeys(
                 convertToMap(
                     taxon.getClassification(), org.gbif.pipelines.io.avro.RankedName::getKey))
