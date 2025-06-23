@@ -514,9 +514,10 @@ public class JsonConverter {
 
   public static Map<String, Classification> convertToClassifications(MultiTaxonRecord taxon) {
     return Map.of();
-//    return taxon.getTaxonRecords().stream()
-//        .collect(
-//            Collectors.toMap(TaxonRecord::getDatasetKey, JsonConverter::convertToClassification));
+    //    return taxon.getTaxonRecords().stream()
+    //        .collect(
+    //            Collectors.toMap(TaxonRecord::getDatasetKey,
+    // JsonConverter::convertToClassification));
   }
 
   private static LinkedHashMap<String, String> convertToMap(
