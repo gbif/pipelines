@@ -532,7 +532,17 @@ public class JsonConverter {
       } else {
         ranks.add(rankedName.getRank());
       }
-      map.put(rankToUse, valueExtractor.apply(rankedName));
+      if (List.of(
+              org.gbif.nameparser.api.Rank.KINGDOM.name(),
+              org.gbif.nameparser.api.Rank.PHYLUM.name(),
+              org.gbif.nameparser.api.Rank.CLASS.name(),
+              org.gbif.nameparser.api.Rank.ORDER.name(),
+              org.gbif.nameparser.api.Rank.FAMILY.name(),
+              org.gbif.nameparser.api.Rank.GENUS.name(),
+              org.gbif.nameparser.api.Rank.SPECIES.name()
+      ).contains(rankToUse)) {
+        map.put(rankToUse, valueExtractor.apply(rankedName));
+      }
       depth++;
     }
     return map;
