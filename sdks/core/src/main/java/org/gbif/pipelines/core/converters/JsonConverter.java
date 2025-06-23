@@ -539,8 +539,8 @@ public class JsonConverter {
               org.gbif.nameparser.api.Rank.ORDER.name(),
               org.gbif.nameparser.api.Rank.FAMILY.name(),
               org.gbif.nameparser.api.Rank.GENUS.name(),
-              org.gbif.nameparser.api.Rank.SPECIES.name()
-      ).contains(rankToUse)) {
+              org.gbif.nameparser.api.Rank.SPECIES.name())
+          .contains(rankToUse)) {
         map.put(rankToUse, valueExtractor.apply(rankedName));
       }
       depth++;
