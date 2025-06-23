@@ -254,10 +254,7 @@
       {"name":"usage","type":["null","Usage"],"default":null,"doc":""},
       {"name":"acceptedUsage","type":["null","Usage"],"default":null,"doc":""},
       {"name":"status","type":["null","string"],"default":null,"doc":""},
-      {"name":"classification",
-        "type":{ "type":"map","values":"string" },
-        "default": {}
-      },
+      {"name":"classification","type":{ "type":"array","items":"org.gbif.pipelines.io.avro.json.RankedName" },"default":[]},
       {"name":"classificationKeys",
         "type":{ "type":"map","values":"string" },
         "default": {}

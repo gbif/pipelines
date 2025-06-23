@@ -552,11 +552,7 @@ public class JsonConverter {
 
     Classification.Builder classificationBuilder =
         Classification.newBuilder()
-            //            .setClassification(
-            //                convertToMap(
-            //                    taxon.getClassification(),
-            // org.gbif.pipelines.io.avro.RankedName::getName))
-            .setClassification(Map.of())
+            .setClassification(JsonConverter.convertRankedNames(taxon.getClassification()))
             .setClassificationKeys(
                 convertToMap(
                     taxon.getClassification(), org.gbif.pipelines.io.avro.RankedName::getKey))

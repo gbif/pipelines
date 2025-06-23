@@ -675,43 +675,8 @@
               }
             },
             "classification": {
-              "properties": {
-                "KINGDOM": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "PHYLUM": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "CLASS": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "ORDER": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "FAMILY": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "GENUS": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "SPECIES": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                }
-              }
+              "type": "object",
+              "enabled" : false
             },
             "classificationDepth": {
               "properties": {
@@ -948,43 +913,8 @@
               }
             },
             "classification": {
-              "properties": {
-                "KINGDOM": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "PHYLUM": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "CLASS": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "ORDER": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "FAMILY": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "GENUS": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "SPECIES": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                }
-              }
+              "type": "object",
+              "enabled" : false
             },
             "classificationDepth": {
               "properties": {
@@ -1221,43 +1151,8 @@
               }
             },
             "classification": {
-              "properties": {
-                "KINGDOM": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "PHYLUM": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "CLASS": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "ORDER": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "FAMILY": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "GENUS": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                },
-                "SPECIES": {
-                  "type": "keyword",
-                  "index": "false",
-                  "doc_values": "false"
-                }
-              }
+              "type": "object",
+              "enabled" : false
             },
             "classificationDepth": {
               "properties": {
