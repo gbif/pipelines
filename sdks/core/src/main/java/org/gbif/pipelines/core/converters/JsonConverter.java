@@ -537,7 +537,11 @@ public class JsonConverter {
               org.gbif.nameparser.api.Rank.PHYLUM.name(),
               org.gbif.nameparser.api.Rank.CLASS.name(),
               org.gbif.nameparser.api.Rank.ORDER.name(),
+              org.gbif.nameparser.api.Rank.SUPERFAMILY.name(),
               org.gbif.nameparser.api.Rank.FAMILY.name(),
+              org.gbif.nameparser.api.Rank.SUBFAMILY.name(),
+              org.gbif.nameparser.api.Rank.TRIBE.name(),
+              org.gbif.nameparser.api.Rank.SUBTRIBE.name(),
               org.gbif.nameparser.api.Rank.GENUS.name(),
               org.gbif.nameparser.api.Rank.SPECIES.name())
           .contains(rankToUse)) {

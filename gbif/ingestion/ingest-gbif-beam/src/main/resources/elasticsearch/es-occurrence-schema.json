@@ -663,7 +663,19 @@
                 "ORDER": {
                   "type": "keyword"
                 },
+                "SUPERFAMILY": {
+                  "type": "keyword"
+                },
                 "FAMILY": {
+                  "type": "keyword"
+                },
+                "SUBFAMILY": {
+                  "type": "keyword"
+                },
+                "TRIBE": {
+                  "type": "keyword"
+                },
+                "SUBTRIBE": {
                   "type": "keyword"
                 },
                 "GENUS": {
@@ -726,51 +738,6 @@
                   "type": "keyword"
                 },
                 "15": {
-                  "type": "keyword"
-                },
-                "16": {
-                  "type": "keyword"
-                },
-                "17": {
-                  "type": "keyword"
-                },
-                "18": {
-                  "type": "keyword"
-                },
-                "19": {
-                  "type": "keyword"
-                },
-                "20": {
-                  "type": "keyword"
-                },
-                "21": {
-                  "type": "keyword"
-                },
-                "22": {
-                  "type": "keyword"
-                },
-                "23": {
-                  "type": "keyword"
-                },
-                "24": {
-                  "type": "keyword"
-                },
-                "25": {
-                  "type": "keyword"
-                },
-                "26": {
-                  "type": "keyword"
-                },
-                "27": {
-                  "type": "keyword"
-                },
-                "28": {
-                  "type": "keyword"
-                },
-                "29": {
-                  "type": "keyword"
-                },
-                "30": {
                   "type": "keyword"
                 }
               }
@@ -901,7 +868,19 @@
                 "ORDER": {
                   "type": "keyword"
                 },
+                "SUPERFAMILY": {
+                  "type": "keyword"
+                },
                 "FAMILY": {
+                  "type": "keyword"
+                },
+                "SUBFAMILY": {
+                  "type": "keyword"
+                },
+                "TRIBE": {
+                  "type": "keyword"
+                },
+                "SUBTRIBE": {
                   "type": "keyword"
                 },
                 "GENUS": {
@@ -964,51 +943,6 @@
                   "type": "keyword"
                 },
                 "15": {
-                  "type": "keyword"
-                },
-                "16": {
-                  "type": "keyword"
-                },
-                "17": {
-                  "type": "keyword"
-                },
-                "18": {
-                  "type": "keyword"
-                },
-                "19": {
-                  "type": "keyword"
-                },
-                "20": {
-                  "type": "keyword"
-                },
-                "21": {
-                  "type": "keyword"
-                },
-                "22": {
-                  "type": "keyword"
-                },
-                "23": {
-                  "type": "keyword"
-                },
-                "24": {
-                  "type": "keyword"
-                },
-                "25": {
-                  "type": "keyword"
-                },
-                "26": {
-                  "type": "keyword"
-                },
-                "27": {
-                  "type": "keyword"
-                },
-                "28": {
-                  "type": "keyword"
-                },
-                "29": {
-                  "type": "keyword"
-                },
-                "30": {
                   "type": "keyword"
                 }
               }
@@ -1139,7 +1073,19 @@
                 "ORDER": {
                   "type": "keyword"
                 },
+                "SUPERFAMILY": {
+                  "type": "keyword"
+                },
                 "FAMILY": {
+                  "type": "keyword"
+                },
+                "SUBFAMILY": {
+                  "type": "keyword"
+                },
+                "TRIBE": {
+                  "type": "keyword"
+                },
+                "SUBTRIBE": {
                   "type": "keyword"
                 },
                 "GENUS": {
@@ -1202,51 +1148,6 @@
                   "type": "keyword"
                 },
                 "15": {
-                  "type": "keyword"
-                },
-                "16": {
-                  "type": "keyword"
-                },
-                "17": {
-                  "type": "keyword"
-                },
-                "18": {
-                  "type": "keyword"
-                },
-                "19": {
-                  "type": "keyword"
-                },
-                "20": {
-                  "type": "keyword"
-                },
-                "21": {
-                  "type": "keyword"
-                },
-                "22": {
-                  "type": "keyword"
-                },
-                "23": {
-                  "type": "keyword"
-                },
-                "24": {
-                  "type": "keyword"
-                },
-                "25": {
-                  "type": "keyword"
-                },
-                "26": {
-                  "type": "keyword"
-                },
-                "27": {
-                  "type": "keyword"
-                },
-                "28": {
-                  "type": "keyword"
-                },
-                "29": {
-                  "type": "keyword"
-                },
-                "30": {
                   "type": "keyword"
                 }
               }
