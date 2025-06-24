@@ -3,7 +3,7 @@
   <parent>
     <artifactId>pipelines-parent</artifactId>
     <groupId>org.gbif.pipelines</groupId>
-   <version>3.2.0-esmapping-SNAPSHOT</version>
+   <version>3.2.0-noeventdate-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
