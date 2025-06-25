@@ -19,6 +19,9 @@ pipeline {
     timestamps()
     disableConcurrentBuilds()
   }
+  triggers {
+    snapshotDependencies()
+  }
   stages {
     stage('Validate') {
       when {
