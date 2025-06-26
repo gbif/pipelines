@@ -60,7 +60,9 @@ pipeline {
         }
       }
       steps {
+        withMaven () {
           sh 'mvn clean verify -U -T 3 -P skip-release-it,pre-backbone-release-artifact'
+        }
       }
     }
 
