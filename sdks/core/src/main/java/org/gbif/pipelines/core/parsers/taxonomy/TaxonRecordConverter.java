@@ -46,7 +46,7 @@ public class TaxonRecordConverter {
 
     // IUCN Red List Category
     Optional.ofNullable(source.getAdditionalStatus()).orElseGet(List::of).stream()
-        .filter(status -> status.getGbifKey().equals(IUCN_REDLIST_GBIF_KEY))
+        .filter(status -> status.getDatasetKey().equals(IUCN_REDLIST_GBIF_KEY))
         .findFirst()
         .map(status -> status.getStatusCode())
         .ifPresent(taxonRecord::setIucnRedListCategoryCode);
