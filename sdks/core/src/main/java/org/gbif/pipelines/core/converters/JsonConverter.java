@@ -33,14 +33,11 @@ import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.json.*;
 import org.gbif.pipelines.io.avro.json.AgentIdentifier;
-import org.gbif.pipelines.io.avro.json.Authorship;
 import org.gbif.pipelines.io.avro.json.Coordinates;
-import org.gbif.pipelines.io.avro.json.Diagnostic;
 import org.gbif.pipelines.io.avro.json.EventDate;
 import org.gbif.pipelines.io.avro.json.GadmFeatures;
 import org.gbif.pipelines.io.avro.json.GbifClassification;
 import org.gbif.pipelines.io.avro.json.ParsedName;
-import org.gbif.pipelines.io.avro.json.ParsedName.Builder;
 import org.gbif.pipelines.io.avro.json.RankedName;
 import org.gbif.pipelines.io.avro.json.RankedNameWithAuthorship;
 import org.gbif.pipelines.io.avro.json.VerbatimRecord;
@@ -414,67 +411,13 @@ public class JsonConverter {
 
   public static Optional<ParsedName> convertParsedName(
       org.gbif.pipelines.io.avro.ParsedName parsedName) {
-
-    if (parsedName == null) {
-      return Optional.empty();
-    }
-
-    Builder builder =
-        ParsedName.newBuilder()
-            .setAbbreviated(parsedName.getAbbreviated())
-            .setAutonym(parsedName.getAutonym())
-            .setBinomial(parsedName.getBinomial())
-            .setCandidatus(parsedName.getCandidatus())
-            .setCode(parsedName.getCode() != null ? parsedName.getCode().name() : null)
-            .setDoubtful(parsedName.getDoubtful())
-            .setGenus(parsedName.getGenus())
-            .setIncomplete(parsedName.getIncomplete())
-            .setIndetermined(parsedName.getIndetermined())
-            .setInfraspecificEpithet(parsedName.getInfraspecificEpithet())
-            .setNotho(parsedName.getNotho() != null ? parsedName.getNotho().name() : null)
-            .setRank(parsedName.getRank() != null ? parsedName.getRank().name() : null)
-            .setSpecificEpithet(parsedName.getSpecificEpithet())
-            .setState(parsedName.getState() != null ? parsedName.getState().name() : null)
-            .setTerminalEpithet(parsedName.getTerminalEpithet())
-            .setTrinomial(parsedName.getTrinomial())
-            .setType(parsedName.getType() != null ? parsedName.getType().name() : null)
-            .setUninomial(parsedName.getUninomial());
-
-    convertAuthorship(parsedName.getBasionymAuthorship()).ifPresent(builder::setBasionymAuthorship);
-    convertAuthorship(parsedName.getCombinationAuthorship())
-        .ifPresent(builder::setCombinationAuthorship);
-
-    return Optional.of(builder.build());
-  }
-
-  public static Optional<Authorship> convertAuthorship(
-      org.gbif.pipelines.io.avro.Authorship authorship) {
-    return Optional.ofNullable(authorship)
+    return Optional.ofNullable(parsedName)
         .map(
-            a ->
-                Authorship.newBuilder()
-                    .setAuthors(a.getAuthors())
-                    .setExAuthors(a.getAuthors())
-                    .setEmpty(a.getEmpty())
-                    .setYear(a.getYear())
+            pn ->
+                ParsedName.newBuilder()
+                    .setInfraspecificEpithet(pn.getInfraspecificEpithet())
+                    .setSpecificEpithet(pn.getSpecificEpithet())
                     .build());
-  }
-
-  public static Optional<Diagnostic> convertDiagnostic(
-      org.gbif.pipelines.io.avro.Diagnostic diagnostic) {
-    if (diagnostic == null) {
-      return Optional.empty();
-    }
-
-    Diagnostic build =
-        Diagnostic.newBuilder()
-            .setMatchType(
-                diagnostic.getMatchType() != null ? diagnostic.getMatchType().name() : null)
-            .setNote(diagnostic.getNote())
-            .setStatus(diagnostic.getStatus() != null ? diagnostic.getStatus().name() : null)
-            .build();
-
-    return Optional.of(build);
   }
 
   public static Optional<String> convertGenericNameFromParsedName(TaxonRecord taxonRecord) {
@@ -595,6 +538,7 @@ public class JsonConverter {
     return null;
   }
 
+  @Deprecated
   public static GbifClassification convertToGbifClassification(
       ExtendedRecord verbatim, TaxonRecord taxon) {
 
@@ -609,9 +553,6 @@ public class JsonConverter {
 
     JsonConverter.convertRankedName(taxon.getAcceptedUsage())
         .ifPresent(classificationBuilder::setAcceptedUsage);
-
-    JsonConverter.convertDiagnostic(taxon.getDiagnostics())
-        .ifPresent(classificationBuilder::setDiagnostics);
 
     JsonConverter.convertParsedName(taxon.getUsageParsedName())
         .ifPresent(classificationBuilder::setUsageParsedName);

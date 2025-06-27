@@ -188,27 +188,9 @@
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
     "fields":[
-      {"name":"abbreviated","type":["null","boolean"],"default":null,"doc":""},
-      {"name":"autonym","type":["null","boolean"],"default":null,"doc":""},
-      {"name":"basionymAuthorship","type":[ "null","Authorship"],"default":null,"doc":""},
-      {"name":"binomial","type":["null","boolean"],"default":null,"doc":""},
-      {"name":"candidatus","type":["null","boolean"],"default":null,"doc":""},
-      {"name":"code","type":["null","string"],"default":null,"doc":""},
-      {"name":"combinationAuthorship","type":[ "null","Authorship" ],"default":null,"doc":""},
-      {"name":"doubtful","type":["null","boolean"],"default":null,"doc":""},
       {"name":"genericName","type":["null","string"],"default":null,"doc":""},
-      {"name":"genus","type":[ "null","string" ],"default":null,"doc":""},
-      {"name":"incomplete","type":["null","boolean"],"default":null,"doc":""},
-      {"name":"indetermined","type":["null","boolean"],"default":null,"doc":""},
       {"name":"infraspecificEpithet","type":[ "null","string" ],"default":null,"doc":""},
-      {"name":"notho","type":[ "null","string" ],"default":null,"doc":""},
-      {"name":"rank","type":[ "null","string" ],"default":null,"doc":""},
-      {"name":"specificEpithet","type":[ "null","string" ],"default":null,"doc":""},
-      {"name":"state","type":[ "null","string" ],"default":null,"doc":""},
-      {"name":"terminalEpithet","type":[ "null","string" ],"default":null,"doc":""},
-      {"name":"trinomial","type":["null","boolean"],"default":null,"doc":""},
-      {"name":"type","type":[ "null","string" ],"default":null,"doc":""},
-      {"name":"uninomial","type":[ "null","string" ],"default":null}
+      {"name":"specificEpithet","type":[ "null","string" ],"default":null,"doc":""}
     ]
   },
   {
@@ -220,7 +202,6 @@
       {"name":"acceptedUsage","type":["null","RankedNameWithAuthorship"],"default":null,"doc":""},
       {"name":"classification","type":{ "type":"array","items":"RankedName" },"default":[]},
       {"name":"classificationPath","type":["null","string"],"default":null,"doc":""},
-      {"name":"diagnostics","type":["null","Diagnostic"],"default":null,"doc":""},
       {"name":"kingdom","type":["null","string"],"default":null,"doc":""},
       {"name":"kingdomKey","type":["null","string"],"default":null,"doc":""},
       {"name":"phylum","type":["null","string"],"default":null,"doc":""},
