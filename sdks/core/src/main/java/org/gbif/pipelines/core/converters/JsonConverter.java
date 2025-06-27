@@ -510,10 +510,6 @@ public class JsonConverter {
       classificationBuilder.setIssues(Collections.emptyList());
     }
 
-    if (taxon.getDiagnostics() != null && taxon.getDiagnostics().getStatus() != null) {
-      classificationBuilder.setStatus(taxon.getDiagnostics().getStatus().name());
-    }
-
     JsonConverter.convertClassificationDepth(taxon)
         .ifPresent(classificationBuilder::setClassificationDepth);
 
