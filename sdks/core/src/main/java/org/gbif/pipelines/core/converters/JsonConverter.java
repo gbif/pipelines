@@ -556,6 +556,7 @@ public class JsonConverter {
             .setTaxonKeys(JsonConverter.convertTaxonKey(taxon))
             .setIucnRedListCategoryCode(taxon.getIucnRedListCategoryCode())
             .setUsage(JsonConverter.convertToUsage(taxon).orElse(null))
+            .setStatus(taxon.getUsage() != null ? taxon.getUsage().getStatus() : null)
             .setAcceptedUsage(JsonConverter.convertToAcceptedUsage(taxon).orElse(null));
 
     if (taxon.getIssues() != null
