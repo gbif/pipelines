@@ -70,6 +70,7 @@ public class TaxonRecordConverter {
         .setSpecificEpithet(rankedNameApi.getSpecificEpithet())
         .setFormattedName(rankedNameApi.getFormattedName())
         .setStatus(rankedNameApi.getStatus())
+        .setGenericName(rankedNameApi.getGenericName())
         .build();
   }
 

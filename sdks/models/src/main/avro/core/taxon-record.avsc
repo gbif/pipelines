@@ -65,6 +65,7 @@
       {"name" : "infragenericEpithet", "type" : ["null", "string"], "default" : null},
       {"name" : "specificEpithet", "type" : ["null", "string"], "default" : null},
       {"name" : "infraspecificEpithet", "type" : ["null", "string"], "default" : null},
+      {"name" : "genericName", "type" : ["null", "string"], "default" : null},
       {"name" : "formattedName", "type" : ["null", "string"], "default" : null}
     ]
   },

@@ -347,21 +347,6 @@ public class JsonConverter {
                     .build());
   }
 
-  public static Optional<Usage> convertToAcceptedUsage(
-      org.gbif.pipelines.io.avro.TaxonRecord taxonRecord) {
-    Optional<Usage> usage = buildUsage(taxonRecord, true);
-    usage.ifPresent(
-        u -> u.setGenericName(convertGenericNameFromClassification(taxonRecord).orElse(null)));
-    return usage;
-  }
-
-  public static Optional<Usage> convertToUsage(org.gbif.pipelines.io.avro.TaxonRecord taxonRecord) {
-    Optional<Usage> usage = buildUsage(taxonRecord, false);
-    usage.ifPresent(
-        u -> u.setGenericName(convertGenericNameFromParsedName(taxonRecord).orElse(null)));
-    return usage;
-  }
-
   private static Optional<Usage> buildUsage(
       org.gbif.pipelines.io.avro.TaxonRecord taxonRecord, boolean accepted) {
     if (taxonRecord == null) {
@@ -381,6 +366,7 @@ public class JsonConverter {
           .setSpecificEpithet(usageData.getSpecificEpithet())
           .setInfragenericEpithet(usageData.getInfragenericEpithet())
           .setInfraspecificEpithet(usageData.getInfraspecificEpithet())
+          .setGenericName(usageData.getGenericName())
           .setFormattedName(usageData.getFormattedName());
     }
 
@@ -436,26 +422,6 @@ public class JsonConverter {
     return Optional.empty();
   }
 
-  public static Optional<String> convertGenericNameFromClassification(TaxonRecord taxonRecord) {
-    // only set generic name for genus or more specific
-    if (Objects.nonNull(taxonRecord.getClassification())) {
-      try {
-        Optional<org.gbif.pipelines.io.avro.RankedName> genus =
-            taxonRecord.getClassification().stream()
-                .filter(rn -> Rank.GENUS.name().equalsIgnoreCase(rn.getRank()))
-                .findFirst();
-        if (genus.isPresent()) {
-          return Optional.of(genus.get().getName());
-        }
-
-      } catch (java.lang.IllegalArgumentException ex) {
-        // throw if rank unrecognised - more common now with xcol
-        return Optional.empty();
-      }
-    }
-    return Optional.empty();
-  }
-
   public static Map<String, Classification> convertToClassifications(MultiTaxonRecord taxon) {
     return taxon.getTaxonRecords().stream()
         .filter(
@@ -498,9 +464,9 @@ public class JsonConverter {
                     taxon.getClassification(), org.gbif.pipelines.io.avro.RankedName::getKey))
             .setTaxonKeys(JsonConverter.convertTaxonKey(taxon))
             .setIucnRedListCategoryCode(taxon.getIucnRedListCategoryCode())
-            .setUsage(JsonConverter.convertToUsage(taxon).orElse(null))
+            .setUsage(JsonConverter.buildUsage(taxon, false).orElse(null))
             .setStatus(taxon.getUsage() != null ? taxon.getUsage().getStatus() : null)
-            .setAcceptedUsage(JsonConverter.convertToAcceptedUsage(taxon).orElse(null));
+            .setAcceptedUsage(JsonConverter.buildUsage(taxon, true).orElse(null));
 
     if (taxon.getIssues() != null
         && taxon.getIssues().getIssueList() != null
