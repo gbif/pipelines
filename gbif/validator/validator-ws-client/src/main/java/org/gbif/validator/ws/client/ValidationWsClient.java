@@ -4,6 +4,7 @@ import java.io.File;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
@@ -30,7 +31,7 @@ public interface ValidationWsClient extends ValidationService<File> {
 
   /** Uploads a file and starts the validation process. */
   default Validation submitFile(@RequestPart("file") File file) {
-    return validateFile(file,  ValidationRequest.builder().build());
+    return validateFile(file, ValidationRequest.builder().build());
   }
 
   /** Uploads a file and starts the validation process. */
