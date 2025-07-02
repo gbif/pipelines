@@ -76,7 +76,7 @@ public class FileStoreManager {
       // from here we can decide to change the content type (e.g. zipped excel file)
       return fromMediaTypeAndFormat(dataFilePath, fileName, detectedMediaType, destinationFolder);
     } catch (Exception ex) {
-      log.warn("Deleting temporary content of {} after IOException.", fileName);
+      log.error("Deleting temporary content of {} after IOException.", fileName, ex);
       FileUtils.deleteDirectory(destinationFolder.toFile());
       throw ex;
     }

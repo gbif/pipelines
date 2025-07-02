@@ -7,158 +7,148 @@ import static org.gbif.pipelines.core.utils.ModelUtils.*;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
-import org.gbif.api.vocabulary.Kingdom;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.species.Identification;
-import org.gbif.nameparser.NameParserGBIF;
-import org.gbif.nameparser.NameParserGbifV1;
-import org.gbif.nameparser.api.NameParser;
-import org.gbif.nameparser.api.UnparsableNameException;
+import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.core.utils.IdentificationUtils;
 import org.gbif.pipelines.core.utils.ModelUtils;
-import org.gbif.pipelines.io.avro.Authorship;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.NamePart;
-import org.gbif.pipelines.io.avro.NameRank;
-import org.gbif.pipelines.io.avro.NameType;
-import org.gbif.pipelines.io.avro.NomCode;
-import org.gbif.pipelines.io.avro.ParsedName;
-import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.State;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.rest.client.species.NameUsageMatch;
+import org.gbif.pipelines.io.avro.*;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 /**
  * Interpreter for taxonomic fields present in an {@link ExtendedRecord} avro file. These fields
  * should be based in the Darwin Core specification (http://rs.tdwg.org/dwc/terms/).
  *
  * <p>The interpretation uses the species match kv store to match the taxonomic fields to an
- * existing specie.
+ * existing species.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TaxonomyInterpreter {
 
+  public static final String KINGDOM_RANK = "KINGDOM";
+  public static final String INCERTAE_SEDIS_NAME = "incertae sedis";
+  public static final String INCERTAE_SEDIS_KEY = "0";
+
+  private static final RankedNameWithAuthorship INCERTAE_SEDIS_WITH_AUTHORSHIP =
+      RankedNameWithAuthorship.newBuilder()
+          .setRank(KINGDOM_RANK)
+          .setName(INCERTAE_SEDIS_NAME)
+          .setKey(INCERTAE_SEDIS_KEY)
+          .build();
+
   private static final RankedName INCERTAE_SEDIS =
       RankedName.newBuilder()
-          .setRank(Rank.KINGDOM)
-          .setName(Kingdom.INCERTAE_SEDIS.scientificName())
-          .setKey(Kingdom.INCERTAE_SEDIS.nubUsageKey())
+          .setRank(KINGDOM_RANK)
+          .setName(INCERTAE_SEDIS_NAME)
+          .setKey(INCERTAE_SEDIS_KEY)
           .build();
-  private static final NameParser NAME_PARSER = new NameParserGBIF();
 
   /**
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
    */
   public static BiConsumer<ExtendedRecord, TaxonRecord> taxonomyInterpreter(
-      KeyValueStore<Identification, NameUsageMatch> kvStore) {
+      KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore, String checklistKey) {
     return (er, tr) -> {
       if (kvStore == null) {
         return;
       }
 
       ModelUtils.checkNullOrEmpty(er);
-
-      Map<String, String> termsSource = IdentificationUtils.getIdentificationFieldTermsSource(er);
-
-      // https://github.com/gbif/portal-feedback/issues/4231
-      String scientificName =
-          extractNullAwareOptValue(termsSource, DwcTerm.scientificName)
-              .orElse(extractValue(termsSource, DwcTerm.verbatimIdentification));
-
-      Identification identification =
-          Identification.builder()
-              .withKingdom(extractValue(termsSource, DwcTerm.kingdom))
-              .withPhylum(extractValue(termsSource, DwcTerm.phylum))
-              .withClazz(extractValue(termsSource, DwcTerm.class_))
-              .withOrder(extractValue(termsSource, DwcTerm.order))
-              .withFamily(extractValue(termsSource, DwcTerm.family))
-              .withGenus(extractValue(termsSource, DwcTerm.genus))
-              .withScientificName(scientificName)
-              .withGenericName(extractValue(termsSource, DwcTerm.genericName))
-              .withSpecificEpithet(extractValue(termsSource, DwcTerm.specificEpithet))
-              .withInfraspecificEpithet(extractValue(termsSource, DwcTerm.infraspecificEpithet))
-              .withScientificNameAuthorship(
-                  extractValue(termsSource, DwcTerm.scientificNameAuthorship))
-              .withRank(extractValue(termsSource, DwcTerm.taxonRank))
-              .withVerbatimRank(extractValue(termsSource, DwcTerm.verbatimTaxonRank))
-              .withScientificNameID(extractValue(termsSource, DwcTerm.scientificNameID))
-              .withTaxonID(extractValue(termsSource, DwcTerm.taxonID))
-              .withTaxonConceptID(extractValue(termsSource, DwcTerm.taxonConceptID))
-              .build();
-
-      NameUsageMatch usageMatch = null;
-      try {
-        usageMatch = kvStore.get(identification);
-      } catch (Exception ex) {
-        log.error(ex.getMessage(), ex);
-      }
-
-      if (usageMatch == null || isEmpty(usageMatch) || checkFuzzy(usageMatch, identification)) {
-        // "NO_MATCHING_RESULTS". This
-        // happens when we get an empty response from the WS
-        addIssue(tr, TAXON_MATCH_NONE);
-        tr.setUsage(INCERTAE_SEDIS);
-        tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
-      } else {
-
-        MatchType matchType = usageMatch.getDiagnostics().getMatchType();
-
-        // copy any issues asserted by the lookup itself
-        if (usageMatch.getIssues() != null) {
-          addIssueSet(tr, usageMatch.getIssues());
-        }
-
-        if (MatchType.NONE == matchType) {
-          addIssue(tr, TAXON_MATCH_NONE);
-        } else if (MatchType.FUZZY == matchType) {
-          addIssue(tr, TAXON_MATCH_FUZZY);
-        } else if (MatchType.HIGHERRANK == matchType) {
-          addIssue(tr, TAXON_MATCH_HIGHERRANK);
-        }
-
-        // parse name into pieces - we don't get them from the nub lookup
-        try {
-          if (Objects.nonNull(usageMatch.getUsage())) {
-            org.gbif.nameparser.api.ParsedName pn =
-                NAME_PARSER.parse(
-                    usageMatch.getUsage().getName(),
-                    NameParserGbifV1.fromGbif(usageMatch.getUsage().getRank()),
-                    null);
-            tr.setUsageParsedName(toParsedNameAvro(pn));
-          }
-        } catch (UnparsableNameException e) {
-          if (e.getType().isParsable()) {
-            log.warn(
-                "Fail to parse backbone {} name for occurrence {}: {}",
-                e.getType(),
-                er.getId(),
-                e.getName());
-          }
-        } catch (InterruptedException e) {
-          log.warn("Parsing backbone name failed with interruption for occurrence {}", er.getId());
-        }
-
-        // convert taxon record
-        TaxonRecordConverter.convert(usageMatch, tr);
-      }
-
+      NameUsageMatchRequest nameUsageMatchRequest = createNameUsageMatchRequest(er, checklistKey);
+      createTaxonRecord(nameUsageMatchRequest, kvStore, tr);
       tr.setId(er.getId());
     };
+  }
+
+  protected static NameUsageMatchRequest createNameUsageMatchRequest(
+      ExtendedRecord er, String checklistKey) {
+    Map<String, String> termsSource = IdentificationUtils.getIdentificationFieldTermsSource(er);
+    // https://github.com/gbif/portal-feedback/issues/4231
+    String scientificName =
+        extractNullAwareOptValue(termsSource, DwcTerm.scientificName)
+            .orElse(extractValue(termsSource, DwcTerm.verbatimIdentification));
+    return NameUsageMatchRequest.builder()
+        .withChecklistKey(checklistKey)
+        .withKingdom(extractValue(termsSource, DwcTerm.kingdom))
+        .withPhylum(extractValue(termsSource, DwcTerm.phylum))
+        .withClazz(extractValue(termsSource, DwcTerm.class_))
+        .withOrder(extractValue(termsSource, DwcTerm.order))
+        .withSuperfamily(extractValue(termsSource, DwcTerm.superfamily))
+        .withFamily(extractValue(termsSource, DwcTerm.family))
+        .withSubfamily(extractValue(termsSource, DwcTerm.subfamily))
+        .withTribe(extractValue(termsSource, DwcTerm.tribe))
+        .withSubtribe(extractValue(termsSource, DwcTerm.subtribe))
+        .withGenus(extractValue(termsSource, DwcTerm.genus))
+        .withScientificName(scientificName)
+        .withScientificNameAuthorship(extractValue(termsSource, DwcTerm.scientificNameAuthorship))
+        .withGenericName(extractValue(termsSource, DwcTerm.genericName))
+        .withSpecificEpithet(extractValue(termsSource, DwcTerm.specificEpithet))
+        .withInfraspecificEpithet(extractValue(termsSource, DwcTerm.infraspecificEpithet))
+        .withScientificNameAuthorship(extractValue(termsSource, DwcTerm.scientificNameAuthorship))
+        .withTaxonRank(extractValue(termsSource, DwcTerm.taxonRank))
+        .withVerbatimTaxonRank(extractValue(termsSource, DwcTerm.verbatimTaxonRank))
+        .withScientificNameID(extractValue(termsSource, DwcTerm.scientificNameID))
+        .withTaxonID(extractValue(termsSource, DwcTerm.taxonID))
+        .withTaxonConceptID(extractValue(termsSource, DwcTerm.taxonConceptID))
+        .build();
+  }
+
+  protected static void createTaxonRecord(
+      NameUsageMatchRequest nameUsageMatchRequest,
+      KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore,
+      TaxonRecord tr) {
+
+    NameUsageMatchResponse usageMatch = null;
+    try {
+      usageMatch = kvStore.get(nameUsageMatchRequest);
+    } catch (Exception ex) {
+      log.error(ex.getMessage(), ex);
+    }
+
+    if (usageMatch == null
+        || isEmpty(usageMatch)
+        || checkFuzzy(usageMatch, nameUsageMatchRequest)) {
+      // "NO_MATCHING_RESULTS". This
+      // happens when we get an empty response from the WS
+      addIssue(tr, TAXON_MATCH_NONE);
+      tr.setUsage(INCERTAE_SEDIS_WITH_AUTHORSHIP);
+      tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
+    } else {
+
+      NameUsageMatchResponse.MatchType matchType = usageMatch.getDiagnostics().getMatchType();
+
+      // copy any issues asserted by the lookup itself
+      if (usageMatch.getDiagnostics().getIssues() != null) {
+        addIssueSet(
+            tr,
+            usageMatch.getDiagnostics().getIssues().stream()
+                .map(org.gbif.api.vocabulary.OccurrenceIssue::valueOf)
+                .collect(Collectors.toSet()));
+      }
+
+      if (NameUsageMatchResponse.MatchType.NONE == matchType) {
+        addIssue(tr, TAXON_MATCH_NONE);
+      } else if (NameUsageMatchResponse.MatchType.VARIANT == matchType) {
+        addIssue(tr, TAXON_MATCH_FUZZY);
+      } else if (NameUsageMatchResponse.MatchType.HIGHERRANK == matchType) {
+        addIssue(tr, TAXON_MATCH_HIGHERRANK);
+      }
+
+      tr.setUsageParsedName(toParsedNameAvro(usageMatch.getUsage()));
+
+      // convert taxon record
+      TaxonRecordConverter.convert(usageMatch, tr);
+    }
   }
 
   /** Sets the coreId field. */
@@ -176,8 +166,10 @@ public class TaxonomyInterpreter {
    * https://github.com/gbif/pipelines/issues/254
    */
   @VisibleForTesting
-  protected static boolean checkFuzzy(NameUsageMatch usageMatch, Identification identification) {
-    boolean isFuzzy = MatchType.FUZZY == usageMatch.getDiagnostics().getMatchType();
+  protected static boolean checkFuzzy(
+      NameUsageMatchResponse usageMatch, NameUsageMatchRequest identification) {
+    boolean isFuzzy =
+        NameUsageMatchResponse.MatchType.VARIANT == usageMatch.getDiagnostics().getMatchType();
     boolean isEmptyTaxa =
         Strings.isNullOrEmpty(identification.getKingdom())
             && Strings.isNullOrEmpty(identification.getPhylum())
@@ -191,74 +183,33 @@ public class TaxonomyInterpreter {
    * Converts a {@link org.gbif.nameparser.api.ParsedName} into {@link
    * org.gbif.pipelines.io.avro.ParsedName}.
    */
-  private static ParsedName toParsedNameAvro(org.gbif.nameparser.api.ParsedName pn) {
+  private static ParsedName toParsedNameAvro(NameUsageMatchResponse.Usage pn) {
     ParsedName.Builder builder =
         ParsedName.newBuilder()
-            .setAbbreviated(pn.isAbbreviated())
-            .setAutonym(pn.isAutonym())
-            .setBinomial(pn.isBinomial())
-            .setCandidatus(pn.isCandidatus())
-            .setCultivarEpithet(pn.getCultivarEpithet())
-            .setDoubtful(pn.isDoubtful())
-            .setGenus(pn.getGenus())
-            .setUninomial(pn.getUninomial())
-            .setUnparsed(pn.getUnparsed())
-            .setTrinomial(pn.isTrinomial())
-            .setIncomplete(pn.isIncomplete())
-            .setIndetermined(pn.isIndetermined())
-            .setTerminalEpithet(pn.getTerminalEpithet())
+            .setGenus(pn.getGenericName())
             .setInfragenericEpithet(pn.getInfragenericEpithet())
             .setInfraspecificEpithet(pn.getInfraspecificEpithet())
-            .setExtinct(pn.isExtinct())
-            .setPublishedIn(pn.getPublishedIn())
-            .setSanctioningAuthor(pn.getSanctioningAuthor())
-            .setSpecificEpithet(pn.getSpecificEpithet())
-            .setPhrase(pn.getPhrase())
-            .setPhraseName(pn.isPhraseName())
-            .setVoucher(pn.getVoucher())
-            .setNominatingParty(pn.getNominatingParty())
-            .setNomenclaturalNote(pn.getNomenclaturalNote());
+            .setSpecificEpithet(pn.getSpecificEpithet());
 
     // Nullable fields
-    Optional.ofNullable(pn.getWarnings())
-        .ifPresent(w -> builder.setWarnings(new ArrayList<>(pn.getWarnings())));
-    Optional.ofNullable(pn.getBasionymAuthorship())
-        .ifPresent(authorship -> builder.setBasionymAuthorship(toAuthorshipAvro(authorship)));
-    Optional.ofNullable(pn.getCombinationAuthorship())
-        .ifPresent(authorship -> builder.setCombinationAuthorship(toAuthorshipAvro(authorship)));
     Optional.ofNullable(pn.getCode())
-        .ifPresent(code -> builder.setCode(NomCode.valueOf(code.name())));
+        .ifPresent(code -> builder.setCode(convertToEnum(NomCode.class, code)));
     Optional.ofNullable(pn.getType())
-        .ifPresent(type -> builder.setType(NameType.valueOf(type.name())));
-    Optional.ofNullable(pn.getNotho())
-        .ifPresent(notho -> builder.setNotho(NamePart.valueOf(notho.name())));
+        .ifPresent(type -> builder.setType(convertToEnum(NameType.class, type)));
     Optional.ofNullable(pn.getRank())
-        .ifPresent(rank -> builder.setRank(NameRank.valueOf(rank.name())));
-    Optional.ofNullable(pn.getState())
-        .ifPresent(state -> builder.setState(State.valueOf(state.name())));
-    Optional.ofNullable(pn.getEpithetQualifier())
-        .map(
-            eq ->
-                eq.entrySet().stream()
-                    .collect(Collectors.toMap(e -> e.getKey().name(), Map.Entry::getValue)))
-        .ifPresent(builder::setEpithetQualifier);
+        .ifPresent(rank -> builder.setRank(convertToEnum(NameRank.class, rank)));
     return builder.build();
   }
 
-  /**
-   * Converts a {@link org.gbif.nameparser.api.Authorship} into {@link
-   * org.gbif.pipelines.io.avro.Authorship}.
-   */
-  private static Authorship toAuthorshipAvro(org.gbif.nameparser.api.Authorship authorship) {
-    return Authorship.newBuilder()
-        .setEmpty(authorship.isEmpty())
-        .setYear(authorship.getYear())
-        .setAuthors(authorship.getAuthors())
-        .setExAuthors(authorship.getExAuthors())
-        .build();
+  public static <T extends Enum<T>> T convertToEnum(Class<T> enumClass, String value) {
+    try {
+      return Enum.valueOf(enumClass, value.toUpperCase());
+    } catch (IllegalArgumentException | NullPointerException e) {
+      return null; // Return null if conversion fails
+    }
   }
 
-  private static boolean isEmpty(NameUsageMatch response) {
+  private static boolean isEmpty(NameUsageMatchResponse response) {
     return response == null
         || response.getUsage() == null
         || (response.getClassification() == null || response.getClassification().isEmpty())

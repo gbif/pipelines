@@ -2,11 +2,12 @@ package org.gbif.pipelines.ingest.java.pipelines.interpretation;
 
 import java.util.List;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
-import org.gbif.kvs.species.Identification;
+import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -29,7 +30,7 @@ import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -44,8 +45,9 @@ import org.gbif.pipelines.transforms.specific.GbifIdAbsentTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
-import org.gbif.rest.client.species.NameUsageMatch;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
 
+@Slf4j
 public class TransformsFactory {
 
   @Getter
@@ -54,7 +56,7 @@ public class TransformsFactory {
   @Getter private final SerializableConsumer<String> incMetricFn = metrics::incMetric;
   private final InterpretationPipelineOptions options;
   private final HdfsConfigs hdfsConfigs;
-  private final PipelinesConfig config;
+  @Getter private final PipelinesConfig config;
   private final List<DateComponentOrdering> dateComponentOrdering;
 
   private TransformsFactory(InterpretationPipelineOptions options) {
@@ -133,14 +135,22 @@ public class TransformsFactory {
         .init();
   }
 
-  public TaxonomyTransform createTaxonomyTransform() {
-    SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>>
+  public MultiTaxonomyTransform createMultiTaxonomyTransform() {
+    SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
         nameUsageMatchServiceSupplier = null;
     if (!options.getTestMode()) {
-      nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.getInstanceSupplier(config);
+      nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createMultiServiceSupplier(config);
     }
-    return TaxonomyTransform.builder()
-        .kvStoreSupplier(nameUsageMatchServiceSupplier)
+
+    List<String> checklistKeys =
+        config.getNameUsageMatchingService() != null
+            ? config.getNameUsageMatchingService().getChecklistKeys()
+            : List.of();
+
+    log.info("Initialize NameUsageMatchKvStores with checklist keys {}", checklistKeys);
+    return MultiTaxonomyTransform.builder()
+        .kvStoresSupplier(nameUsageMatchServiceSupplier)
+        .checklistKeys(checklistKeys)
         .create()
         .counterFn(incMetricFn)
         .init();
@@ -164,7 +174,8 @@ public class TransformsFactory {
   }
 
   public LocationTransform createLocationTransform() {
-    SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeServiceSupplier = null;
+    SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> geocodeServiceSupplier =
+        null;
     if (!options.getTestMode()) {
       geocodeServiceSupplier = GeocodeKvStoreFactory.getInstanceSupplier(hdfsConfigs, config);
     }

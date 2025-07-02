@@ -24,4 +24,16 @@ public interface EsIndexingPipelineOptions
   DatasetType getDatasetType();
 
   void setDatasetType(DatasetType datasetType);
+
+  @Description("Whether to index legacy taxonomy")
+  @Default.Boolean(true)
+  Boolean isIndexLegacyTaxonomy();
+
+  void setIndexLegacyTaxonomy(Boolean indexLegacyTaxonomy);
+
+  @Description("Whether to index legacy taxonomy")
+  @Default.Boolean(true)
+  Boolean isIndexMultiTaxonomy();
+
+  void setIndexMultiTaxonomy(Boolean indexMultiTaxonomy);
 }

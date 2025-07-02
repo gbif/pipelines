@@ -18,8 +18,8 @@ import org.gbif.pipelines.common.beam.coders.EdgeCoder;
 import org.gbif.pipelines.core.pojo.Edge;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.Record;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
 /**
@@ -54,22 +54,22 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
   }
 
   /** Taxon parent transform. */
-  public static class TaxonParentEventExpandTransform
-      extends ParentEventExpandTransform<TaxonRecord> {
+  public static class MultiTaxonParentEventExpandTransform
+      extends ParentEventExpandTransform<MultiTaxonRecord> {
 
-    public TaxonParentEventExpandTransform(
-        TupleTag<TaxonRecord> recordTupleTag,
+    public MultiTaxonParentEventExpandTransform(
+        TupleTag<MultiTaxonRecord> recordTupleTag,
         TupleTag<EventCoreRecord> eventCoreRecordTupleTag,
-        TupleTag<Edge<TaxonRecord>> edgeTupleTag) {
-      super(recordTupleTag, eventCoreRecordTupleTag, edgeTupleTag, TaxonRecord.class);
+        TupleTag<Edge<MultiTaxonRecord>> edgeTupleTag) {
+      super(recordTupleTag, eventCoreRecordTupleTag, edgeTupleTag, MultiTaxonRecord.class);
     }
   }
 
-  public static TaxonParentEventExpandTransform createTaxonTransform(
-      TupleTag<TaxonRecord> recordTupleTag,
+  public static MultiTaxonParentEventExpandTransform createTaxonTransform(
+      TupleTag<MultiTaxonRecord> recordTupleTag,
       TupleTag<EventCoreRecord> eventCoreRecordTupleTag,
-      TupleTag<Edge<TaxonRecord>> edgeTupleTag) {
-    return new TaxonParentEventExpandTransform(
+      TupleTag<Edge<MultiTaxonRecord>> edgeTupleTag) {
+    return new MultiTaxonParentEventExpandTransform(
         recordTupleTag, eventCoreRecordTupleTag, edgeTupleTag);
   }
 

@@ -37,7 +37,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -124,7 +124,8 @@ public class VerbatimToEventPipeline {
     LocationTransform locationTransform = transformsFactory.createLocationTransform();
     VerbatimTransform verbatimTransform = transformsFactory.createVerbatimTransform();
     TemporalTransform temporalTransform = transformsFactory.createTemporalTransform();
-    TaxonomyTransform taxonomyTransform = transformsFactory.createTaxonomyTransform();
+    MultiTaxonomyTransform multiTaxonomyTransform =
+        transformsFactory.createMultiTaxonomyTransform();
     MultimediaTransform multimediaTransform = transformsFactory.createMultimediaTransform();
     AudubonTransform audubonTransform = transformsFactory.createAudubonTransform();
     ImageTransform imageTransform = transformsFactory.createImageTransform();
@@ -180,9 +181,9 @@ public class VerbatimToEventPipeline {
         .apply("Write event temporal to avro", temporalTransform.write(pathFn));
 
     uniqueRawRecords
-        .apply("Check event taxonomy transform", taxonomyTransform.check(types))
-        .apply("Interpret event taxonomy", taxonomyTransform.interpret())
-        .apply("Write event taxon to avro", taxonomyTransform.write(pathFn));
+        .apply("Check event multi-taxonomy transform", multiTaxonomyTransform.check(types))
+        .apply("Interpret event multi-taxonomy", multiTaxonomyTransform.interpret())
+        .apply("Write event multi-taxon to avro", multiTaxonomyTransform.write(pathFn));
 
     uniqueRawRecords
         .apply("Check event multimedia transform", multimediaTransform.check(types))

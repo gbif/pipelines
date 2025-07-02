@@ -1,6 +1,8 @@
 package org.gbif.pipelines.backbone.impact;
 
-import java.io.IOException;
+import feign.FeignException;
+import java.io.*;
+import java.net.URLEncoder;
 import java.util.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -13,6 +15,8 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -21,11 +25,11 @@ import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchemaUtils;
 import org.apache.thrift.TException;
-import org.gbif.kvs.species.Identification;
-import org.gbif.rest.client.configuration.ChecklistbankClientsConfiguration;
+import org.gbif.kvs.species.NameUsageMatchRequest;
+import org.gbif.rest.client.RestClientFactory;
 import org.gbif.rest.client.configuration.ClientConfiguration;
-import org.gbif.rest.client.species.NameUsageMatch;
-import org.gbif.rest.client.species.retrofit.ChecklistbankServiceSyncClient;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
+import org.gbif.rest.client.species.NameUsageMatchingService;
 
 /**
  * Takes the classification from verbatim data and runs it against a species lookup service
@@ -41,6 +45,20 @@ public class BackbonePreRelease {
     BackbonePreReleaseOptions options =
         PipelineOptionsFactory.fromArgs(args).as(BackbonePreReleaseOptions.class);
     options.setRunner(SparkRunner.class);
+    String hdfsPath = options.getHdfsSiteConfig();
+    String corePath = options.getCoreSiteConfig();
+    Configuration conf = new Configuration(false);
+    conf.addResource(new Path(hdfsPath));
+    conf.addResource(new Path(corePath));
+    options.setHdfsConfiguration(Collections.singletonList(conf));
+
+    // delete previous runs
+    FileSystem hdfs = FileSystem.get(conf);
+    if (hdfs.exists(new Path(options.getTargetDir()))) {
+      log.info("Deleting previous run: " + options.getTargetDir());
+      hdfs.delete(new Path(options.getTargetDir()), true);
+    }
+
     Pipeline p = Pipeline.create(options);
 
     final HCatSchema schema = readSchema(options);
@@ -60,15 +78,77 @@ public class BackbonePreRelease {
             ParDo.of(
                 new MatchTransform(
                     options.getAPIBaseURI(),
+                    options.getChecklistKey(),
                     schema,
                     options.getScope(),
                     options.getMinimumOccurrenceCount(),
                     options.getSkipKeys(),
-                    options.getIgnoreWhitespace())));
+                    options.getIgnoreWhitespace(),
+                    options.getIgnoreAuthorshipFormatting())));
 
-    matched.apply(TextIO.write().to(options.getTargetDir()));
+    matched.apply(TextIO.write().to(options.getTargetDir() + "/impact").withSuffix(".csv"));
 
     p.run().waitUntilFinish();
+
+    // Merge all the files into a single CSV file and append header
+    buildCSVFile(options, FileSystem.get(conf));
+  }
+
+  /** Formats the data for the output line in the CSV. */
+  private static String toHeader(boolean skipKeys) {
+    return String.join(
+        "\t",
+        "count",
+        "verbatim_taxonID",
+        "verbatim_taxonConceptID",
+        "verbatim_scientificNameID",
+        "verbatim_kingdom",
+        "verbatim_phylum",
+        "verbatim_class",
+        "verbatim_order",
+        "verbatim_superfamily",
+        "verbatim_family",
+        "verbatim_subfamily",
+        "verbatim_tribe",
+        "verbatim_subtribe",
+        "verbatim_genus",
+        "verbatim_specificEpithet",
+        "verbatim_infraspecificEpithet",
+        "verbatim_rank",
+        "verbatim_verbatimRank",
+        "verbatim_scientificName",
+        "verbatim_genericName",
+        "verbatim_author",
+        GBIFClassification.toHeader("current_", skipKeys),
+        GBIFClassification.toHeader("proposed_", skipKeys),
+        "debug_url");
+  }
+
+  private static void buildCSVFile(BackbonePreReleaseOptions options, FileSystem hdfs)
+      throws IOException {
+
+    Path hdfsDir = new Path(options.getTargetDir());
+    FileStatus[] files = hdfs.listStatus(hdfsDir);
+    FSDataOutputStream out =
+        hdfs.create(new Path(options.getTargetDir() + "/" + options.getReportFileName()), true);
+
+    // write the header
+    out.write((toHeader(options.getSkipKeys()) + "\n").getBytes());
+
+    for (FileStatus file : files) {
+      if (!file.isFile()) continue; // Skip subdirectories
+      try (FSDataInputStream in = hdfs.open(file.getPath())) {
+        log.info("Merging file: " + file.getPath());
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = in.read(buffer)) > 0) {
+          out.write(buffer, 0, bytesRead);
+        }
+      }
+    }
+
+    out.close();
+    log.info("Merged files into: " + options.getTargetDir() + "/" + options.getReportFileName());
   }
 
   private static HCatSchema readSchema(BackbonePreReleaseOptions options)
@@ -84,45 +164,42 @@ public class BackbonePreRelease {
   /** Performs the lookup. */
   static class MatchTransform extends DoFn<HCatRecord, String> {
     private final String baseAPIUrl;
+    private final String checklistKey;
     private final HCatSchema schema;
     private final Integer scope;
     private final int minCount;
     private final boolean skipKeys;
     private final boolean ignoreWhitespace;
-    private ChecklistbankServiceSyncClient service; // direct service, no cache
+    private final boolean ignoreAuthorshipFormatting;
+    private NameUsageMatchingService service; // direct service, no cache
 
     MatchTransform(
         String baseAPIUrl,
+        String checklistKey,
         HCatSchema schema,
         Integer scope,
         int minCount,
         boolean skipKeys,
-        boolean ignoreWhitespace) {
+        boolean ignoreWhitespace,
+        boolean ignoreAuthorshipFormatting) {
       this.baseAPIUrl = baseAPIUrl;
+      this.checklistKey = checklistKey;
       this.schema = schema;
       this.scope = scope;
       this.minCount = minCount;
       this.skipKeys = skipKeys;
       this.ignoreWhitespace = ignoreWhitespace;
+      this.ignoreAuthorshipFormatting = ignoreAuthorshipFormatting;
     }
 
     @Setup
     public void setup() {
       service =
-          new ChecklistbankServiceSyncClient(
-              ChecklistbankClientsConfiguration.builder()
-                  .nameUsageClientConfiguration(
-                      ClientConfiguration.builder()
-                          .withBaseApiUrl(baseAPIUrl)
-                          .withFileCacheMaxSizeMb(1L)
-                          .withTimeOut(120L)
-                          .build())
-                  .checklistbankClientConfiguration( // required but not used
-                      ClientConfiguration.builder()
-                          .withBaseApiUrl(baseAPIUrl)
-                          .withFileCacheMaxSizeMb(1L)
-                          .withTimeOut(120L)
-                          .build())
+          RestClientFactory.createNameMatchService(
+              ClientConfiguration.builder()
+                  .withBaseApiUrl(baseAPIUrl)
+                  .withFileCacheMaxSizeMb(1L)
+                  .withTimeOutMillisec(120_1000)
                   .build());
     }
 
@@ -132,55 +209,52 @@ public class BackbonePreRelease {
 
       // apply the filter to only check records within scope (e.g. limit to Lepidoptera) and above
       // the limit
-      long count = source.getLong("occurrenceCount", schema);
+      long count = source.getLong("occurrencecount", schema);
       if (count > minCount && (scope == null || taxaKeys(source, schema).contains(scope))) {
 
         // We use the request to ensure we apply the same "clean" operations as the production
         // pipelines, even though we short circuit the cache and use the lookup service directly.
-        Identification matchRequest =
-            Identification.builder()
+        NameUsageMatchRequest matchRequest =
+            NameUsageMatchRequest.builder()
                 .withKingdom(source.getString("v_kingdom", schema))
                 .withPhylum(source.getString("v_phylum", schema))
                 .withClazz(source.getString("v_class", schema))
                 .withOrder(source.getString("v_order", schema))
+                .withSuperfamily(source.getString("v_superfamily", schema))
                 .withFamily(source.getString("v_family", schema))
+                .withSubfamily(source.getString("v_subfamily", schema))
+                .withTribe(source.getString("v_tribe", schema))
+                .withSubtribe(source.getString("v_subtribe", schema))
                 .withGenus(source.getString("v_genus", schema))
-                .withScientificName(source.getString("v_scientificName", schema))
-                .withGenericName(source.getString("v_genericName", schema))
-                .withSpecificEpithet(source.getString("v_specificEpithet", schema))
-                .withInfraspecificEpithet(source.getString("v_infraSpecificEpithet", schema))
+                .withScientificName(source.getString("v_scientificname", schema))
                 .withScientificNameAuthorship(
-                    source.getString("v_scientificNameAuthorship", schema))
-                .withRank(source.getString("v_taxonRank", schema))
-                .withVerbatimRank(source.getString("v_verbatimTaxonRank", schema))
-                .withScientificNameID(source.getString("v_scientificNameID", schema))
-                .withTaxonID(source.getString("v_taxonID", schema))
-                .withTaxonConceptID(source.getString("v_taxonConceptID", schema))
+                    source.getString("v_scientificnameauthorship", schema))
+                .withGenericName(source.getString("v_genericname", schema))
+                .withSpecificEpithet(source.getString("v_specificepithet", schema))
+                .withInfraspecificEpithet(source.getString("v_infraspecificepithet", schema))
+                .withTaxonRank(source.getString("v_taxonrank", schema))
+                .withVerbatimTaxonRank(source.getString("v_verbatimtaxonrank", schema))
+                .withScientificNameID(source.getString("v_scientificnameid", schema))
+                .withTaxonID(source.getString("v_taxonid", schema))
+                .withTaxonConceptID(source.getString("v_taxonconceptid", schema))
+                .withChecklistKey(checklistKey)
                 .build();
 
         try {
           // short circuit the cache, but replicate same logic of the NameUsageMatchKVStoreFactory
-          NameUsageMatch usageMatch =
-              service.match(
-                  null, // rely only on names
-                  matchRequest.getKingdom(),
-                  matchRequest.getPhylum(),
-                  matchRequest.getClazz(),
-                  matchRequest.getOrder(),
-                  matchRequest.getFamily(),
-                  matchRequest.getGenus(),
-                  matchRequest.getScientificName(),
-                  matchRequest.getGenericName(),
-                  matchRequest.getSpecificEpithet(),
-                  matchRequest.getInfraspecificEpithet(),
-                  matchRequest.getScientificNameAuthorship(),
-                  matchRequest.getRank(),
-                  false,
-                  false);
+          NameUsageMatchResponse usageMatch = null;
+          try {
+            usageMatch = service.match(matchRequest);
+          } catch (FeignException.InternalServerError e) {
+            // Handle 500 Internal Server Error
+            System.out.println("Caught 500 Internal Server Error: " + e.getMessage());
+          }
 
-          GBIFClassification existing = GBIFClassification.buildFromHive(source, schema);
+          GBIFClassification existing = GBIFClassification.buildFromHiveSource(source, schema);
           GBIFClassification proposed;
-          if (usageMatch == null || isEmpty(usageMatch)) {
+          if (usageMatch == null) {
+            proposed = GBIFClassification.error();
+          } else if (isEmpty(usageMatch)) {
             proposed = GBIFClassification.newIncertaeSedis();
           } else {
             proposed = GBIFClassification.buildFromNameUsageMatch(usageMatch);
@@ -188,16 +262,22 @@ public class BackbonePreRelease {
 
           // copy pipelines to put unknown content into incertae sedis kingdom
           if (proposed.getKingdom() == null) {
+            System.out.println("##### Failed request: " + toDebugUrl(baseAPIUrl, matchRequest));
             proposed.setKingdom("incertae sedis");
-            proposed.setKingdomKey(0);
+            proposed.setKingdomKey("0");
           }
 
           // emit classifications that differ, optionally considering the keys
-          if (skipKeys && !existing.classificationEquals(proposed, ignoreWhitespace)) {
-            c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
-
+          if (skipKeys
+              && !existing.classificationEquals(
+                  proposed, ignoreWhitespace, ignoreAuthorshipFormatting)) {
+            c.output(
+                toTabDelimited(
+                    baseAPIUrl, count, matchRequest, existing, proposed, skipKeys, matchRequest));
           } else if (!skipKeys && !existing.equals(proposed)) {
-            c.output(toTabDelimited(count, matchRequest, existing, proposed, skipKeys));
+            c.output(
+                toTabDelimited(
+                    baseAPIUrl, count, matchRequest, existing, proposed, skipKeys, matchRequest));
           }
 
         } catch (Exception e) {
@@ -208,6 +288,78 @@ public class BackbonePreRelease {
           throw e; // fail the job
         }
       }
+    }
+
+    public static String toDebugUrl(String apiUrl, NameUsageMatchRequest matchRequest) {
+      StringBuilder url = new StringBuilder(apiUrl + "/v2/species/match?");
+
+      try {
+        if (matchRequest.getTaxonID() != null) {
+          url.append("taxonID=")
+              .append(URLEncoder.encode(matchRequest.getTaxonID(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getTaxonConceptID() != null) {
+          url.append("taxonConceptID=")
+              .append(URLEncoder.encode(matchRequest.getTaxonConceptID(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getScientificNameID() != null) {
+          url.append("scientificNameID=")
+              .append(URLEncoder.encode(matchRequest.getScientificNameID(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getKingdom() != null) {
+          url.append("kingdom=")
+              .append(URLEncoder.encode(matchRequest.getKingdom(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getPhylum() != null) {
+          url.append("phylum=")
+              .append(URLEncoder.encode(matchRequest.getPhylum(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getClazz() != null) {
+          url.append("class=")
+              .append(URLEncoder.encode(matchRequest.getClazz(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getOrder() != null) {
+          url.append("order=")
+              .append(URLEncoder.encode(matchRequest.getOrder(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getFamily() != null) {
+          url.append("family=")
+              .append(URLEncoder.encode(matchRequest.getFamily(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getGenus() != null) {
+          url.append("genus=")
+              .append(URLEncoder.encode(matchRequest.getGenus(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getScientificName() != null) {
+          url.append("scientificName=")
+              .append(URLEncoder.encode(matchRequest.getScientificName(), "UTF-8"))
+              .append("&");
+        }
+        if (matchRequest.getTaxonRank() != null) {
+          url.append("rank=")
+              .append(URLEncoder.encode(matchRequest.getTaxonRank(), "UTF-8"))
+              .append("&");
+        }
+        url.append("checklistKey=")
+            .append(URLEncoder.encode(matchRequest.getChecklistKey(), "UTF-8"))
+            .append("&");
+        url.append("verbose=true");
+
+      } catch (UnsupportedEncodingException e) {
+        // UTF-8 is guaranteed to be supported, so this shouldn't happen.
+        throw new RuntimeException("UTF-8 encoding not supported", e);
+      }
+
+      return url.toString();
     }
 
     /** Extracts all taxon keys from the record. */
@@ -237,48 +389,51 @@ public class BackbonePreRelease {
 
     /** Formats the data for the output line in the CSV. */
     private static String toTabDelimited(
+        String baseAPIUrl,
         long count,
-        Identification verbatim,
+        NameUsageMatchRequest verbatim,
         GBIFClassification current,
         GBIFClassification proposed,
-        boolean skipKeys) {
+        boolean skipKeys,
+        NameUsageMatchRequest matchRequest) {
 
       return String.join(
           "\t",
           String.valueOf(count),
-          verbatim.getKingdom(),
-          verbatim.getPhylum(),
-          verbatim.getClazz(),
-          verbatim.getOrder(),
-          verbatim.getFamily(),
-          verbatim.getGenus(),
-          verbatim.getSpecificEpithet(),
-          verbatim.getInfraspecificEpithet(),
-          verbatim.getRank(),
-          verbatim.getRank(), // avoid breaking the API (verbatimTaxonRank)
-          verbatim.getScientificName(),
-          verbatim.getGenericName(),
-          verbatim.getScientificNameAuthorship(),
+          safe(verbatim.getTaxonID()),
+          safe(verbatim.getTaxonConceptID()),
+          safe(verbatim.getScientificNameID()),
+          safe(verbatim.getKingdom()),
+          safe(verbatim.getPhylum()),
+          safe(verbatim.getClazz()),
+          safe(verbatim.getOrder()),
+          safe(verbatim.getSuperfamily()),
+          safe(verbatim.getFamily()),
+          safe(verbatim.getSubfamily()),
+          safe(verbatim.getTribe()),
+          safe(verbatim.getSubtribe()),
+          safe(verbatim.getGenus()),
+          safe(verbatim.getSpecificEpithet()),
+          safe(verbatim.getInfraspecificEpithet()),
+          safe(verbatim.getTaxonRank()),
+          safe(verbatim.getTaxonRank()), // avoid breaking the API (verbatimTaxonRank)
+          safe(verbatim.getScientificName()),
+          safe(verbatim.getGenericName()),
+          safe(verbatim.getScientificNameAuthorship()),
           current.toString(skipKeys),
-          proposed.toString(skipKeys));
+          proposed.toString(skipKeys),
+          safe(toDebugUrl(baseAPIUrl, matchRequest)));
     }
 
-    @Teardown
-    public void tearDown() {
-      if (Objects.nonNull(service)) {
-        try {
-          service.close();
-        } catch (IOException ex) {
-          log.error("Error closing lookup service", ex);
-        }
-      }
+    /** Returns the string or an empty string if null. */
+    private static String safe(String value) {
+      //      return value != null && !value.equalsIgnoreCase("null") ? value : "";
+      return value;
     }
 
-    private static boolean isEmpty(NameUsageMatch response) {
-      return response == null
-          || response.getUsage() == null
-          || (response.getClassification() == null || response.getClassification().isEmpty())
-          || response.getDiagnostics() == null;
+    private static boolean isEmpty(NameUsageMatchResponse response) {
+      return response.getUsage() == null
+          || (response.getClassification() == null || response.getClassification().isEmpty());
     }
   }
 }

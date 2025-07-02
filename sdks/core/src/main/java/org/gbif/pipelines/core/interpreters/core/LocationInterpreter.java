@@ -4,7 +4,6 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVAL
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_SRS_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_WKT_MISMATCH;
-import static org.gbif.dwc.terms.DwcTerm.country;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
@@ -35,7 +34,7 @@ import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.location.parser.*;
@@ -79,7 +78,7 @@ public class LocationInterpreter {
    * DwcTerm#decimalLatitude} and the {@link DwcTerm#decimalLongitude} terms.
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
-      KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore, MetadataRecord mdr) {
+      KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore, MetadataRecord mdr) {
     return (er, lr) -> {
       if (geocodeKvStore != null) {
         // parse the terms
@@ -95,10 +94,10 @@ public class LocationInterpreter {
                   lr.setCountryCode(country.getIso2LetterCode());
                 });
 
-        LatLng latLng = parsedLocation.getLatLng();
+        GeocodeRequest latLng = parsedLocation.getLatLng();
         if (Objects.nonNull(latLng)) {
-          lr.setDecimalLatitude(latLng.getLatitude());
-          lr.setDecimalLongitude(latLng.getLongitude());
+          lr.setDecimalLatitude(latLng.getLat());
+          lr.setDecimalLongitude(latLng.getLng());
           lr.setHasCoordinate(Boolean.TRUE);
         } else {
           lr.setHasCoordinate(Boolean.FALSE);
@@ -129,7 +128,7 @@ public class LocationInterpreter {
    * to populate GADM administrative area GIDs.
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretGadm(
-      KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
+      KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore) {
     return (er, lr) -> {
       if (geocodeKvStore != null && lr.getHasCoordinate()) {
         GadmParser.parseGadm(lr, geocodeKvStore).ifPresent(lr::setGadm);
@@ -153,14 +152,14 @@ public class LocationInterpreter {
       Optional<String> verbatimFootprintWKT = extractNullAwareOptValue(er, DwcTerm.footprintWKT);
       if (verbatimFootprintWKT.isPresent()) {
         // If the footprint is a POINT(lng lat), it was already used by the LocationParser.
-        ParsedField<LatLng> parsedFootprint =
+        ParsedField<GeocodeRequest> parsedFootprint =
             CoordinateParseUtils.parsePointFootprintWKT(verbatimFootprintWKT.get());
 
         if (parsedFootprint.isSuccessful()) {
           // Check for conflict with the interpreted coordinates
-          LatLng latLng = parsedFootprint.getResult();
-          if (Math.abs(lr.getDecimalLatitude() - latLng.getLatitude()) <= 0.000001
-              && Math.abs(lr.getDecimalLongitude() - latLng.getLongitude()) <= 0.000001) {
+          GeocodeRequest latLng = parsedFootprint.getResult();
+          if (Math.abs(lr.getDecimalLatitude() - latLng.getLat()) <= 0.000001
+              && Math.abs(lr.getDecimalLongitude() - latLng.getLng()) <= 0.000001) {
             // No conflict, but don't set the footprintWKT in the LocationRecord as it just
             // duplicates the coordinate.
             log.debug("duplicates the coordinate.");
@@ -203,7 +202,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#continent} interpretation. */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretContinent(
-      KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
+      KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore) {
     return (er, lr) -> {
       if (geocodeKvStore != null) {
         ParsedField<Continent> c = ContinentParser.parseContinent(er, lr, geocodeKvStore);
@@ -350,7 +349,7 @@ public class LocationInterpreter {
 
   /** {@link GbifTerm#distanceFromCentroidInMeters} interpretation. */
   public static BiConsumer<ExtendedRecord, LocationRecord> calculateCentroidDistance(
-      KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
+      KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore) {
     return (er, lr) -> {
       if (geocodeKvStore != null && lr.getHasCoordinate()) {
         CentroidCalculator.calculateCentroidDistance(lr, geocodeKvStore)

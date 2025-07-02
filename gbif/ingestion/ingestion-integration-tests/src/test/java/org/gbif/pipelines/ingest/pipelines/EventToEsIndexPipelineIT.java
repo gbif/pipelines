@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import static org.gbif.pipelines.core.converters.OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -46,6 +47,7 @@ import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.Parent;
 import org.gbif.pipelines.io.avro.Rank;
@@ -59,7 +61,7 @@ import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
@@ -261,49 +263,67 @@ public class EventToEsIndexPipelineIT {
           LocationRecord.newBuilder().setId(SUB_EVENT_ID_2).setParentId(SUB_EVENT_ID).build();
       writer.append(locationRecordSubEvent2);
     }
-    try (SyncDataFileWriter<TaxonRecord> writer =
+    try (SyncDataFileWriter<MultiTaxonRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, TaxonomyTransform.builder().create(), EVENT_TERM, postfix)) {
-      TaxonRecord taxonRecord =
-          TaxonRecord.newBuilder()
+            optionsWriter, MultiTaxonomyTransform.builder().create(), EVENT_TERM, postfix)) {
+      MultiTaxonRecord multiTaxonRecord =
+          MultiTaxonRecord.newBuilder()
               .setId(ID)
-              .setClassification(
+              .setTaxonRecords(
                   Collections.singletonList(
-                      RankedName.newBuilder()
-                          .setRank(Rank.SPECIES)
-                          .setName("Puma concolor subsp. coryi (Bangs, 1899)")
-                          .setKey(6164600)
+                      TaxonRecord.newBuilder()
+                          .setId("1")
+                          .setClassification(
+                              Collections.singletonList(
+                                  RankedName.newBuilder()
+                                      .setRank(Rank.SPECIES.toString())
+                                      .setName("Puma concolor subsp. coryi (Bangs, 1899)")
+                                      .setKey("6164600")
+                                      .build()))
+                          .setDatasetKey(GBIF_BACKBONE_DATASET_KEY)
                           .build()))
               .build();
-      writer.append(taxonRecord);
+      writer.append(multiTaxonRecord);
 
-      TaxonRecord taxonRecordSubEvent =
-          TaxonRecord.newBuilder()
+      MultiTaxonRecord multiTaxonRecordSubEvent =
+          MultiTaxonRecord.newBuilder()
               .setId(SUB_EVENT_ID)
               .setParentId(ID)
-              .setClassification(
+              .setTaxonRecords(
                   Collections.singletonList(
-                      RankedName.newBuilder()
-                          .setRank(Rank.SPECIES)
-                          .setName("Puma concolor subsp. concolor")
-                          .setKey(7193927)
+                      TaxonRecord.newBuilder()
+                          .setId("1")
+                          .setClassification(
+                              Collections.singletonList(
+                                  RankedName.newBuilder()
+                                      .setRank(Rank.SPECIES.toString())
+                                      .setName("Puma concolor subsp. concolor")
+                                      .setKey("7193927")
+                                      .build()))
+                          .setDatasetKey(GBIF_BACKBONE_DATASET_KEY)
                           .build()))
               .build();
-      writer.append(taxonRecordSubEvent);
+      writer.append(multiTaxonRecordSubEvent);
 
-      TaxonRecord taxonRecordSubEvent2 =
-          TaxonRecord.newBuilder()
+      MultiTaxonRecord multiTaxonRecordSubEvent2 =
+          MultiTaxonRecord.newBuilder()
               .setId(SUB_EVENT_ID_2)
               .setParentId(SUB_EVENT_ID)
-              .setClassification(
+              .setTaxonRecords(
                   Collections.singletonList(
-                      RankedName.newBuilder()
-                          .setRank(Rank.SPECIES)
-                          .setName("Puma concolor (Linnaeus, 1771)")
-                          .setKey(2435099)
+                      TaxonRecord.newBuilder()
+                          .setId("1")
+                          .setClassification(
+                              Collections.singletonList(
+                                  RankedName.newBuilder()
+                                      .setRank(Rank.SPECIES.toString())
+                                      .setName("Puma concolor (Linnaeus, 1771)")
+                                      .setKey("2435099")
+                                      .build()))
+                          .setDatasetKey(GBIF_BACKBONE_DATASET_KEY)
                           .build()))
               .build();
-      writer.append(taxonRecordSubEvent2);
+      writer.append(multiTaxonRecordSubEvent2);
     }
     try (SyncDataFileWriter<MultimediaRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
@@ -413,10 +433,10 @@ public class EventToEsIndexPipelineIT {
       LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
       writer.append(locationRecord);
     }
-    try (SyncDataFileWriter<TaxonRecord> writer =
+    try (SyncDataFileWriter<MultiTaxonRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
-            optionsWriter, TaxonomyTransform.builder().create(), OCCURRENCE_TERM, postfix)) {
-      TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
+            optionsWriter, MultiTaxonomyTransform.builder().create(), OCCURRENCE_TERM, postfix)) {
+      MultiTaxonRecord taxonRecord = MultiTaxonRecord.newBuilder().setId(ID).build();
       writer.append(taxonRecord);
     }
     try (SyncDataFileWriter<GrscicollRecord> writer =
@@ -483,8 +503,8 @@ public class EventToEsIndexPipelineIT {
     ParentJsonRecord eventRecordSub2 = getResult(idxName, SUB_EVENT_ID_2, "event");
     assertEquals("DK", eventRecordSub2.getLocationInherited().getCountryCode());
     assertEquals(SUB_EVENT_ID_2, eventRecordSub2.getTemporalInherited().getId());
-    assertEquals(new Integer(10), eventRecordSub2.getTemporalInherited().getMonth());
-    assertEquals(new Integer(2017), eventRecordSub2.getTemporalInherited().getYear());
+    assertEquals(Integer.valueOf(10), eventRecordSub2.getTemporalInherited().getMonth());
+    assertEquals(Integer.valueOf(2017), eventRecordSub2.getTemporalInherited().getYear());
     assertEquals(
         Collections.singletonList("survey"), eventRecordSub2.getEventInherited().getEventType());
     assertEquals("L1", eventRecordSub2.getEventInherited().getLocationID());
