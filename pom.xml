@@ -107,17 +107,17 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <dwca-io.version>3.0.0</dwca-io.version>
-    <gbif-api.version>2.1.9-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>2.1.9</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
-    <dwc-api.version>2.1.0-SNAPSHOT</dwc-api.version>
-    <kvs.version>3.0-SNAPSHOT</kvs.version>
+    <dwc-api.version>2.1.1</dwc-api.version>
+    <kvs.version>3.0</kvs.version>
     <hbase-utils.version>1.0.0</hbase-utils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
-    <gbif-occurrence.version>1.1.0-SNAPSHOT</gbif-occurrence.version>
+    <gbif-occurrence.version>1.1.0</gbif-occurrence.version>
     <vocabulary-lookup.version>2.0.3</vocabulary-lookup.version>
-    <registry.version>4.1.0-SNAPSHOT</registry.version>
-    <gbif-common-ws.version>2.0.10-SNAPSHOT</gbif-common-ws.version>
-    <gbif-postal-service.version>2.1.0-SNAPSHOT</gbif-postal-service.version>
+    <registry.version>4.1.0</registry.version>
+    <gbif-common-ws.version>2.0.10-java11</gbif-common-ws.version>
+    <gbif-postal-service.version>2.1.3</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
 
     <!-- Main distributed libraries -->
