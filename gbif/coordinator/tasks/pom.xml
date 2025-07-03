@@ -238,6 +238,11 @@
       </exclusions>
     </dependency>
 
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>beam-common</artifactId>
+    </dependency>
+
     <!-- Beam -->
     <dependency>
       <groupId>org.apache.beam</groupId>
