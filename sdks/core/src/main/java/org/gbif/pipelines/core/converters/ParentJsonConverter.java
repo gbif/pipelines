@@ -190,14 +190,20 @@ public class ParentJsonConverter {
       List<String> eventHierarchy = new ArrayList<>();
       Optional.ofNullable(builder.getParentEventID()).ifPresent(eventHierarchy::add);
       Optional.ofNullable(builder.getEventID()).ifPresent(eventHierarchy::add);
-      builder.setEventHierarchy(eventHierarchy);
+      builder
+          .setEventHierarchy(eventHierarchy)
+          .setEventHierarchyJoined(String.join(ConverterConstants.DELIMITER, eventHierarchy))
+          .setEventHierarchyLevels(eventHierarchy.size());
 
       // add the single type to hierarchy for consistency
       List<String> eventTypeHierarchy = new ArrayList<>();
       if (builder.getEventType() != null && builder.getEventType().getConcept() != null) {
         eventTypeHierarchy.add(builder.getEventType().getConcept());
       }
-      builder.setEventTypeHierarchy(eventTypeHierarchy);
+      builder
+          .setEventTypeHierarchy(eventTypeHierarchy)
+          .setEventTypeHierarchyJoined(
+              String.join(ConverterConstants.DELIMITER, eventTypeHierarchy));
     }
 
     // Vocabulary
