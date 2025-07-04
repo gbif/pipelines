@@ -10,7 +10,7 @@ pipeline {
     booleanParam(name: 'DRY_RUN', defaultValue: false, description: 'Test run before release')
   }
   tools {
-    maven 'Maven 3.9.9'
+    maven 'Maven 3.8.5'
     jdk 'OpenJDK17'
   }
   options {
