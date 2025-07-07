@@ -190,6 +190,7 @@ public class ParentJsonConverter {
       List<String> eventHierarchy = new ArrayList<>();
       Optional.ofNullable(builder.getParentEventID()).ifPresent(eventHierarchy::add);
       Optional.ofNullable(builder.getEventID()).ifPresent(eventHierarchy::add);
+
       builder
           .setEventHierarchy(eventHierarchy)
           .setEventHierarchyJoined(String.join(ConverterConstants.DELIMITER, eventHierarchy))
@@ -309,14 +310,14 @@ public class ParentJsonConverter {
   private void mapMeasurementOrFactRecord(EventJsonRecord.Builder builder) {
     builder.setMeasurementOrFactMethods(
         measurementOrFactRecord.getMeasurementOrFactItems().stream()
-            .filter(Objects::nonNull)
             .map(MeasurementOrFact::getMeasurementMethod)
+            .filter(Objects::nonNull)
             .distinct()
             .collect(Collectors.toList()));
     builder.setMeasurementOrFactTypes(
         measurementOrFactRecord.getMeasurementOrFactItems().stream()
-            .filter(Objects::nonNull)
             .map(MeasurementOrFact::getMeasurementType)
+            .filter(Objects::nonNull)
             .distinct()
             .collect(Collectors.toList()));
   }
