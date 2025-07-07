@@ -309,11 +309,15 @@ public class ParentJsonConverter {
   private void mapMeasurementOrFactRecord(EventJsonRecord.Builder builder) {
     builder.setMeasurementOrFactMethods(
         measurementOrFactRecord.getMeasurementOrFactItems().stream()
+            .filter(Objects::nonNull)
             .map(MeasurementOrFact::getMeasurementMethod)
+            .distinct()
             .collect(Collectors.toList()));
     builder.setMeasurementOrFactTypes(
         measurementOrFactRecord.getMeasurementOrFactItems().stream()
+            .filter(Objects::nonNull)
             .map(MeasurementOrFact::getMeasurementType)
+            .distinct()
             .collect(Collectors.toList()));
   }
 
