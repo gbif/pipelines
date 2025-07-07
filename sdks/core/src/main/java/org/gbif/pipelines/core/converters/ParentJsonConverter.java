@@ -117,11 +117,11 @@ public class ParentJsonConverter {
     builder.setId(verbatim.getId());
     mapIssues(builder);
 
+    mapExtendedRecord(builder);
     mapEventCoreRecord(builder);
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
     mapMultimediaRecord(builder);
-    mapExtendedRecord(builder);
     mapMeasurementOrFactRecord(builder);
 
     return builder;
