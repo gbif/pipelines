@@ -191,9 +191,6 @@ public class ParentJsonConverter {
       Optional.ofNullable(builder.getParentEventID()).ifPresent(eventHierarchy::add);
       Optional.ofNullable(builder.getEventID()).ifPresent(eventHierarchy::add);
 
-      log.info("eventHierarchy - parent: {}", builder.getParentEventID());
-      log.info("eventHierarchy - event: {}", builder.getEventID());
-
       builder
           .setEventHierarchy(eventHierarchy)
           .setEventHierarchyJoined(String.join(ConverterConstants.DELIMITER, eventHierarchy))
