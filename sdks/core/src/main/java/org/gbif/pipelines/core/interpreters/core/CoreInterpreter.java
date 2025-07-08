@@ -133,7 +133,8 @@ public class CoreInterpreter {
         // allow the raw event type value through if not matched to vocab
         // this is useful as vocab is a WIP
         if (parentBuilder.getEventType() == null) {
-          // FIXME: temp hack, it should be the top-level concept of the vocab retrieved from the lookup library
+          // FIXME: temp hack, it should be the top-level concept of the vocab retrieved from the
+          // lookup library
           parentBuilder.setEventType("Event");
           //          parentBuilder.setEventType(parentValues.get(DwcTerm.eventType.name()));
         }

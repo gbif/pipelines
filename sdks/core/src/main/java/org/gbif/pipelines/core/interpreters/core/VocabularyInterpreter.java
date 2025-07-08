@@ -67,7 +67,8 @@ public class VocabularyInterpreter {
   /** {@link DwcTerm#pathway} interpretation. */
   public static BiConsumer<ExtendedRecord, EventCoreRecord> interpretEventType(
       VocabularyService vocabularyService) {
-    // FIXME: temp hack, it should be the top-level concept of the vocab retrieved from the lookup library
+    // FIXME: temp hack, it should be the top-level concept of the vocab retrieved from the lookup
+    // library
     return (er, ecr) ->
         ecr.setEventType(
             interpretVocabulary(er, DwcTerm.eventType, vocabularyService)

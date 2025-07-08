@@ -286,7 +286,8 @@ public class ParentJsonConverter {
     if (eventCore.getEventType() != null) {
       eventTypes.add(eventCore.getEventType().getConcept());
     } else {
-      // FIXME: temp hack, it should be the top-level concept of the vocab retrieved from the lookup library
+      // FIXME: temp hack, it should be the top-level concept of the vocab retrieved from the lookup
+      // library
       eventTypes.add("Event");
       // extractOptValue(verbatim, DwcTerm.eventType).ifPresent(eventTypes::add);
     }
