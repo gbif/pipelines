@@ -201,6 +201,7 @@
             "concept": {"type": "keyword"}
           }
         },
+        "verbatimEventType": { "type": "keyword" },
         "eventHierarchy": {
           "type": "text",
           "fields": {

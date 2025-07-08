@@ -211,6 +211,9 @@ public class ParentJsonConverter {
     JsonConverter.convertVocabularyConcept(eventCore.getEventType())
         .ifPresent(builder::setEventType);
 
+    // FIXME: adding verbatim event type temporarily
+    extractOptValue(verbatim, DwcTerm.eventType).ifPresent(builder::setVerbatimEventType);
+
     // License
     JsonConverter.convertLicense(eventCore.getLicense()).ifPresent(builder::setLicense);
 
@@ -283,7 +286,9 @@ public class ParentJsonConverter {
     if (eventCore.getEventType() != null) {
       eventTypes.add(eventCore.getEventType().getConcept());
     } else {
-      extractOptValue(verbatim, DwcTerm.eventType).ifPresent(eventTypes::add);
+      // FIXME: temp hack, it should be the top-level concept of the vocab retrieved from the lookup library
+      eventTypes.add("Event");
+      // extractOptValue(verbatim, DwcTerm.eventType).ifPresent(eventTypes::add);
     }
 
     return eventTypes;

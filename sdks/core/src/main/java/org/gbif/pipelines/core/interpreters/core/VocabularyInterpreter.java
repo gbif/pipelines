@@ -5,6 +5,7 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -66,8 +67,15 @@ public class VocabularyInterpreter {
   /** {@link DwcTerm#pathway} interpretation. */
   public static BiConsumer<ExtendedRecord, EventCoreRecord> interpretEventType(
       VocabularyService vocabularyService) {
+    // FIXME: temp hack, it should be the top-level concept of the vocab retrieved from the lookup library
     return (er, ecr) ->
-        interpretVocabulary(er, DwcTerm.eventType, vocabularyService).ifPresent(ecr::setEventType);
+        ecr.setEventType(
+            interpretVocabulary(er, DwcTerm.eventType, vocabularyService)
+                .orElse(
+                    VocabularyConcept.newBuilder()
+                        .setConcept("Event")
+                        .setLineage(Collections.emptyList())
+                        .build()));
   }
 
   /** {@link DwcTerm#typeStatus} interpretation. */
