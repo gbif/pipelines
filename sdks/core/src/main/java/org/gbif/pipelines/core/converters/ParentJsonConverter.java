@@ -162,6 +162,13 @@ public class ParentJsonConverter {
         .setParentEventID(eventCore.getParentEventID())
         .setLocationID(eventCore.getLocationID());
 
+    // Vocabulary
+    JsonConverter.convertVocabularyConcept(eventCore.getEventType())
+        .ifPresent(builder::setEventType);
+
+    // FIXME: adding verbatim event type temporarily
+    extractOptValue(verbatim, DwcTerm.eventType).ifPresent(builder::setVerbatimEventType);
+
     if (eventCore.getParentsLineage() != null && !eventCore.getParentsLineage().isEmpty()) {
       List<String> eventTypes = getParentsLineageEventTypes();
       List<String> eventIDs = getLineageEventIDs();
@@ -206,13 +213,6 @@ public class ParentJsonConverter {
           .setEventTypeHierarchyJoined(
               String.join(ConverterConstants.DELIMITER, eventTypeHierarchy));
     }
-
-    // Vocabulary
-    JsonConverter.convertVocabularyConcept(eventCore.getEventType())
-        .ifPresent(builder::setEventType);
-
-    // FIXME: adding verbatim event type temporarily
-    extractOptValue(verbatim, DwcTerm.eventType).ifPresent(builder::setVerbatimEventType);
 
     // License
     JsonConverter.convertLicense(eventCore.getLicense()).ifPresent(builder::setLicense);
