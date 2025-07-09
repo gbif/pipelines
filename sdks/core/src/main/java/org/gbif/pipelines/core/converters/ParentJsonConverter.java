@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.util.*;
@@ -166,16 +167,19 @@ public class ParentJsonConverter {
     JsonConverter.convertVocabularyConcept(eventCore.getEventType())
         .ifPresent(builder::setEventType);
 
-    // FIXME: adding verbatim event type temporarily
-    extractOptValue(verbatim, DwcTerm.eventType).ifPresent(builder::setVerbatimEventType);
+    builder.setVerbatimEventType(extractOptValue(verbatim, DwcTerm.eventType).orElse("Event"));
 
     if (eventCore.getParentsLineage() != null && !eventCore.getParentsLineage().isEmpty()) {
       List<String> eventTypes = getParentsLineageEventTypes();
+      List<String> verbatimEventTypes = getParentsLineageVerbatimEventTypes();
       List<String> eventIDs = getLineageEventIDs();
 
       builder
           .setEventTypeHierarchy(eventTypes)
           .setEventTypeHierarchyJoined(String.join(ConverterConstants.DELIMITER, eventTypes))
+          .setVerbatimEventTypeHierarchy(verbatimEventTypes)
+          .setVerbatimEventTypeHierarchyJoined(
+              String.join(ConverterConstants.DELIMITER, verbatimEventTypes))
           .setEventHierarchy(eventIDs)
           .setEventHierarchyJoined(String.join(ConverterConstants.DELIMITER, eventIDs))
           .setEventHierarchyLevels(eventIDs.size());
@@ -208,10 +212,21 @@ public class ParentJsonConverter {
       if (builder.getEventType() != null && builder.getEventType().getConcept() != null) {
         eventTypeHierarchy.add(builder.getEventType().getConcept());
       }
+
       builder
           .setEventTypeHierarchy(eventTypeHierarchy)
           .setEventTypeHierarchyJoined(
               String.join(ConverterConstants.DELIMITER, eventTypeHierarchy));
+
+      List<String> verbatimEventTypeHierarchy = new ArrayList<>();
+      if (builder.getVerbatimEventType() != null) {
+        verbatimEventTypeHierarchy.add(builder.getVerbatimEventType());
+      }
+
+      builder
+          .setVerbatimEventTypeHierarchy(verbatimEventTypeHierarchy)
+          .setVerbatimEventTypeHierarchyJoined(
+              String.join(ConverterConstants.DELIMITER, verbatimEventTypeHierarchy));
     }
 
     // License
@@ -295,6 +310,19 @@ public class ParentJsonConverter {
     return eventTypes;
   }
 
+  private List<String> getParentsLineageVerbatimEventTypes() {
+    List<String> verbatimEventTypes =
+        eventCore.getParentsLineage().stream()
+            .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
+            .map(org.gbif.pipelines.io.avro.Parent::getVerbatimEventType)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+
+    verbatimEventTypes.add(extractOptValue(verbatim, DwcTerm.eventType).orElse("Event"));
+
+    return verbatimEventTypes;
+  }
+
   private List<String> getLineageEventIDs() {
 
     List<String> eventIDs =
@@ -336,6 +364,7 @@ public class ParentJsonConverter {
     extractOptValue(verbatim, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
     extractOptValue(verbatim, DwcTerm.verbatimDepth).ifPresent(builder::setVerbatimDepth);
     extractOptValue(verbatim, DwcTerm.verbatimElevation).ifPresent(builder::setVerbatimElevation);
+    extractLengthAwareOptValue(verbatim, DwcTerm.fieldNumber).ifPresent(builder::setFieldNumber);
 
     // Todo: replce with extractOptValue
     String eventName = verbatim.getCoreTerms().get(ConverterConstants.EVENT_NAME);

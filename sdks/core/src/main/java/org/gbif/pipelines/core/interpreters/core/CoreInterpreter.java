@@ -129,6 +129,7 @@ public class CoreInterpreter {
         VocabularyInterpreter.interpretVocabulary(
                 DwcTerm.eventType, parentValues.get(DwcTerm.eventType.name()), vocabularyService)
             .ifPresent(c -> parentBuilder.setEventType(c.getConcept()));
+        parentBuilder.setVerbatimEventType(parentValues.get(DwcTerm.eventType.name()));
 
         // allow the raw event type value through if not matched to vocab
         // this is useful as vocab is a WIP

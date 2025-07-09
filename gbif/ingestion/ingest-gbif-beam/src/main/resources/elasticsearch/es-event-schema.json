@@ -230,6 +230,20 @@
             "keyword": {"type": "keyword", "ignore_above": 1024}
           }
         },
+        "verbatimEventTypeHierarchy": {
+          "type": "text",
+          "fields": {
+            "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+            "keyword": {"type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024},
+            "verbatim": {"type": "keyword", "ignore_above": 1024}
+          }
+        },
+        "verbatimEventTypeHierarchyJoined": {
+          "type": "text",
+          "fields": {
+            "keyword": {"type": "keyword", "ignore_above": 1024}
+          }
+        },
         "eventName": {
           "type": "text",
           "fields": {
@@ -357,6 +371,8 @@
         "startDayOfYear": {"type": "short"},
         "endDayOfYear": {"type": "short"},
         "modified": {"type": "date"},
+
+        "fieldNumber": {"type": "keyword", "copy_to": "all"},
 
         "issues": {"type": "keyword"},
         "notIssues": {"type": "keyword"},
