@@ -251,6 +251,7 @@ public class ParentJsonConverter {
 
     JsonConverter.convertEventDate(temporal.getEventDate()).ifPresent(builder::setEventDate);
     JsonConverter.convertEventDateSingle(temporal).ifPresent(builder::setEventDateSingle);
+    JsonConverter.convertEventDateInterval(temporal).ifPresent(builder::setEventDateInterval);
   }
 
   private void mapLocationRecord(EventJsonRecord.Builder builder) {
