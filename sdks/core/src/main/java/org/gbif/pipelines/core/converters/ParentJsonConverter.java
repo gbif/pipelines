@@ -301,14 +301,8 @@ public class ParentJsonConverter {
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
 
-    if (eventCore.getEventType() != null) {
-      eventTypes.add(eventCore.getEventType().getConcept());
-    } else {
-      // FIXME: temp hack, it should be the top-level concept of the vocab retrieved from the lookup
-      // library
-      eventTypes.add(DEFAULT_EVENT_TYPE);
-      // extractOptValue(verbatim, DwcTerm.eventType).ifPresent(eventTypes::add);
-    }
+    // eventType can't be null, the interpretation uses a fallback
+    eventTypes.add(eventCore.getEventType().getConcept());
 
     return eventTypes;
   }

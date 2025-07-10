@@ -11,6 +11,7 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 import com.google.common.base.Strings;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import org.gbif.common.parsers.UrlParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
+import org.gbif.pipelines.core.utils.VocabularyConceptFactory;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
@@ -127,21 +129,27 @@ public class CoreInterpreter {
         }
 
         Parent.Builder parentBuilder = Parent.newBuilder().setId(parentEventID);
-        VocabularyInterpreter.interpretVocabulary(
-                DwcTerm.eventType, parentValues.get(DwcTerm.eventType.name()), vocabularyService)
-            .ifPresent(c -> parentBuilder.setEventType(c.getConcept()));
+        parentBuilder.setEventType(
+            VocabularyInterpreter.interpretVocabulary(
+                    DwcTerm.eventType,
+                    parentValues.get(DwcTerm.eventType.name()),
+                    vocabularyService)
+                .orElseGet(
+                    // allow the raw event type value through if not matched to vocab
+                    // this is useful as vocab is a WIP
+                    () ->
+                        VocabularyInterpreter.interpretVocabulary(
+                                DwcTerm.eventType, DEFAULT_EVENT_TYPE, vocabularyService)
+                            .orElse(
+                                VocabularyConceptFactory.createConcept(
+                                    DEFAULT_EVENT_TYPE,
+                                    Collections.emptyList(),
+                                    Collections.emptyMap())))
+                .getConcept());
+
         parentBuilder.setVerbatimEventType(
             Optional.ofNullable(parentValues.get(DwcTerm.eventType.name()))
                 .orElse(DEFAULT_EVENT_TYPE));
-
-        // allow the raw event type value through if not matched to vocab
-        // this is useful as vocab is a WIP
-        if (parentBuilder.getEventType() == null) {
-          // FIXME: temp hack, it should be the top-level concept of the vocab retrieved from the
-          // lookup library
-          parentBuilder.setEventType(DEFAULT_EVENT_TYPE);
-          //          parentBuilder.setEventType(parentValues.get(DwcTerm.eventType.name()));
-        }
 
         parentBuilder.setOrder(order++);
         parents.add(parentBuilder.build());
