@@ -33,8 +33,10 @@
 
     <!-- Tools-->
     <commons-configuration.version>1.6</commons-configuration.version>
-<!--    <netty.version>3.9.9.Final</netty.version>-->
+    <!--    <netty.version>3.9.9.Final</netty.version>-->
     <netty-all.version>4.1.100.Final</netty-all.version>
+    <!-- snakeyaml 2.1 require jackson 2.14.3 -->
+    <!--snakeyaml.version>2.1</snakeyaml.version-->
     <snakeyaml.version>1.25</snakeyaml.version>
     <streamex.version>0.7.2</streamex.version>
     <jcommander.version>1.78</jcommander.version>
@@ -269,11 +271,11 @@
       <artifactId>commons-configuration</artifactId>
       <version>${commons-configuration.version}</version>
     </dependency>
-<!--    <dependency>-->
-<!--      <groupId>io.netty</groupId>-->
-<!--      <artifactId>netty</artifactId>-->
-<!--      <version>${netty.version}</version>-->
-<!--    </dependency>-->
+    <!--    <dependency>-->
+    <!--      <groupId>io.netty</groupId>-->
+    <!--      <artifactId>netty</artifactId>-->
+    <!--      <version>${netty.version}</version>-->
+    <!--    </dependency>-->
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
@@ -307,10 +309,10 @@
         <!-- DO NOT REMOVE -->
         <!-- This is required for integration tests in some envronments. -->
         <!-- The integration test error is an java.lang.UnsatisfiedLinkError for a JNA path -->
-                <exclusion>
-                  <groupId>org.elasticsearch</groupId>
-                  <artifactId>jna</artifactId>
-                </exclusion>
+        <exclusion>
+          <groupId>org.elasticsearch</groupId>
+          <artifactId>jna</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -778,10 +780,6 @@
           <artifactId>xercesImpl</artifactId>
           <groupId>xerces</groupId>
         </exclusion>
-        <exclusion>
-          <artifactId>xercesImpl</artifactId>
-          <groupId>xerces</groupId>
-        </exclusion>
         <!-- Brings in old versions which conflict with the GBIF crawler dependencies -->
         <exclusion>
           <groupId>org.codehaus.jackson</groupId>
@@ -794,6 +792,12 @@
         <exclusion>
           <groupId>commons-io</groupId>
           <artifactId>commons-io</artifactId>
+        </exclusion>
+        <!-- causes error with org.apache.xalan.processor.TransformerFactoryImpl does not define or inherit an implementation of the resolved method
+         setFeature(java.lang.String, boolean)' of abstract class javax.xml.transform.TransformerFactory for Java 17 -->
+        <exclusion>
+          <groupId>xalan</groupId>
+          <artifactId>xalan</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -926,6 +930,10 @@
                     <relocation>
                       <pattern>com.google.common</pattern>
                       <shadedPattern>g20.com.google.common</shadedPattern>
+                    </relocation>
+                    <relocation>
+                      <pattern>org.yaml.snakeyaml</pattern>
+                      <shadedPattern>s125.org.yaml.snakeyaml</shadedPattern>
                     </relocation>
                   </relocations>
                 </configuration>
