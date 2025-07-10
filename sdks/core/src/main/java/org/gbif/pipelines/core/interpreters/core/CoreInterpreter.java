@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.interpreters.core;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
+import static org.gbif.pipelines.core.utils.EventsUtils.*;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
@@ -129,14 +130,16 @@ public class CoreInterpreter {
         VocabularyInterpreter.interpretVocabulary(
                 DwcTerm.eventType, parentValues.get(DwcTerm.eventType.name()), vocabularyService)
             .ifPresent(c -> parentBuilder.setEventType(c.getConcept()));
-        parentBuilder.setVerbatimEventType(parentValues.get(DwcTerm.eventType.name()));
+        parentBuilder.setVerbatimEventType(
+            Optional.ofNullable(parentValues.get(DwcTerm.eventType.name()))
+                .orElse(DEFAULT_EVENT_TYPE));
 
         // allow the raw event type value through if not matched to vocab
         // this is useful as vocab is a WIP
         if (parentBuilder.getEventType() == null) {
           // FIXME: temp hack, it should be the top-level concept of the vocab retrieved from the
           // lookup library
-          parentBuilder.setEventType("Event");
+          parentBuilder.setEventType(DEFAULT_EVENT_TYPE);
           //          parentBuilder.setEventType(parentValues.get(DwcTerm.eventType.name()));
         }
 

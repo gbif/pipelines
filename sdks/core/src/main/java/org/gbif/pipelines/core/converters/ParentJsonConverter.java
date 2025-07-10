@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.utils.EventsUtils.*;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
@@ -167,7 +168,8 @@ public class ParentJsonConverter {
     JsonConverter.convertVocabularyConcept(eventCore.getEventType())
         .ifPresent(builder::setEventType);
 
-    builder.setVerbatimEventType(extractOptValue(verbatim, DwcTerm.eventType).orElse("Event"));
+    builder.setVerbatimEventType(
+        extractOptValue(verbatim, DwcTerm.eventType).orElse(DEFAULT_EVENT_TYPE));
 
     if (eventCore.getParentsLineage() != null && !eventCore.getParentsLineage().isEmpty()) {
       List<String> eventTypes = getParentsLineageEventTypes();
@@ -303,7 +305,7 @@ public class ParentJsonConverter {
     } else {
       // FIXME: temp hack, it should be the top-level concept of the vocab retrieved from the lookup
       // library
-      eventTypes.add("Event");
+      eventTypes.add(DEFAULT_EVENT_TYPE);
       // extractOptValue(verbatim, DwcTerm.eventType).ifPresent(eventTypes::add);
     }
 
@@ -318,7 +320,7 @@ public class ParentJsonConverter {
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
 
-    verbatimEventTypes.add(extractOptValue(verbatim, DwcTerm.eventType).orElse("Event"));
+    verbatimEventTypes.add(extractOptValue(verbatim, DwcTerm.eventType).orElse(DEFAULT_EVENT_TYPE));
 
     return verbatimEventTypes;
   }
