@@ -43,6 +43,7 @@
       {"name":"day","type":["null","int"],"default":null,"doc":""},
       {"name":"eventDate","type":["null","EventDate"],"default":null,"doc":""},
       {"name":"eventDateSingle","type":["null","string"],"default":null,"doc":""},
+      {"name":"eventDateInterval","type":["null","string"],"default":null,"doc":""},
       {"name":"startDayOfYear","type":["null","int"],"default":null,"doc":""},
       {"name":"endDayOfYear","type":["null","int"],"default":null,"doc":""},
       {"name":"locationID", "type": ["null", "string"], "default" : null, "doc": ""},

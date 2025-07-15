@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.pipelines.core.utils.EventsUtils.*;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
@@ -67,16 +68,18 @@ public class VocabularyInterpreter {
   /** {@link DwcTerm#pathway} interpretation. */
   public static BiConsumer<ExtendedRecord, EventCoreRecord> interpretEventType(
       VocabularyService vocabularyService) {
-    // FIXME: temp hack, it should be the top-level concept of the vocab retrieved from the lookup
-    // library
     return (er, ecr) ->
         ecr.setEventType(
             interpretVocabulary(er, DwcTerm.eventType, vocabularyService)
-                .orElse(
-                    VocabularyConcept.newBuilder()
-                        .setConcept("Event")
-                        .setLineage(Collections.emptyList())
-                        .build()));
+                .orElseGet(
+                    () ->
+                        interpretVocabulary(
+                                DwcTerm.eventType, DEFAULT_EVENT_TYPE, vocabularyService)
+                            .orElse(
+                                VocabularyConceptFactory.createConcept(
+                                    DEFAULT_EVENT_TYPE,
+                                    Collections.emptyList(),
+                                    Collections.emptyMap()))));
   }
 
   /** {@link DwcTerm#typeStatus} interpretation. */
