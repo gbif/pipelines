@@ -1,17 +1,13 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
+
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Builder;
@@ -20,10 +16,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.gbif.api.vocabulary.License;
-import org.gbif.dwc.terms.DcTerm;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.Term;
-import org.gbif.dwc.terms.TermFactory;
+import org.gbif.dwc.terms.*;
 import org.gbif.occurrence.common.TermUtils;
 import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
@@ -288,6 +281,14 @@ public class OccurrenceHdfsRecordConverter {
                             .map(RankedName::getKey)
                             .collect(Collectors.toList()))));
 
+    occurrenceHdfsRecord.setClassificationdetails(
+        multiTaxonRecord.getTaxonRecords().stream()
+            .filter(tr -> tr.getDatasetKey() != null)
+            .filter(tr -> tr.getUsage() != null)
+            .collect(
+                Collectors.toMap(
+                    TaxonRecord::getDatasetKey, tr -> classificationToMap(extendedRecord, tr))));
+
     // find the GBIF taxonomy
     Optional<TaxonRecord> gbifRecord =
         multiTaxonRecord.getTaxonRecords().stream()
@@ -296,6 +297,74 @@ public class OccurrenceHdfsRecordConverter {
             .findFirst();
 
     gbifRecord.ifPresent(tr -> mapLegacyGbifTaxonRecord(occurrenceHdfsRecord, tr));
+  }
+
+  private static Map<String, String> classificationToMap(
+      ExtendedRecord verbatim, TaxonRecord taxonRecord) {
+    Map<String, String> map = new HashMap<>();
+
+    map.put(GbifTerm.taxonKey.simpleName(), taxonRecord.getUsage().getKey());
+    map.put(
+        GbifTerm.acceptedTaxonKey.simpleName(),
+        taxonRecord.getAcceptedUsage() != null
+            ? taxonRecord.getAcceptedUsage().getKey()
+            : taxonRecord.getUsage().getKey());
+
+    map.put(
+        DwcTerm.scientificName.simpleName(),
+        taxonRecord.getUsage() != null ? taxonRecord.getUsage().getName() : "");
+
+    map.put(
+        GbifTerm.acceptedScientificName.simpleName(),
+        taxonRecord.getAcceptedUsage() != null ? taxonRecord.getAcceptedUsage().getName() : "");
+
+    map.put(
+        GbifTerm.verbatimScientificName.simpleName(),
+        extractOptValue(verbatim, DwcTerm.scientificName).orElse(""));
+
+    map.put(DwcTerm.genericName.simpleName(), taxonRecord.getUsage().getGenericName());
+    map.put(DwcTerm.specificEpithet.simpleName(), taxonRecord.getUsage().getSpecificEpithet());
+    map.put(
+        DwcTerm.infraspecificEpithet.simpleName(),
+        taxonRecord.getUsage().getInfraspecificEpithet());
+    map.put(DwcTerm.taxonRank.simpleName(), taxonRecord.getUsage().getRank());
+
+    map.put(
+        DwcTerm.taxonomicStatus.simpleName(),
+        taxonRecord.getDiagnostics() != null
+            ? taxonRecord.getDiagnostics().getStatus().name()
+            : "");
+
+    // Empty strings for not-yet-filled terms
+    map.put(DwcTerm.kingdom.simpleName(), getHigherRankName(taxonRecord, Rank.KINGDOM));
+    map.put(DwcTerm.phylum.simpleName(), getHigherRankName(taxonRecord, Rank.PHYLUM));
+    map.put(DwcTerm.class_.simpleName(), getHigherRankName(taxonRecord, Rank.CLASS));
+    map.put(DwcTerm.order.simpleName(), getHigherRankName(taxonRecord, Rank.ORDER));
+    map.put(DwcTerm.superfamily.simpleName(), getHigherRankName(taxonRecord, Rank.SUPERFAMILY));
+    map.put(DwcTerm.family.simpleName(), getHigherRankName(taxonRecord, Rank.FAMILY));
+    map.put(DwcTerm.subfamily.simpleName(), getHigherRankName(taxonRecord, Rank.SUBFAMILY));
+    map.put(DwcTerm.tribe.simpleName(), getHigherRankName(taxonRecord, Rank.TRIBE));
+    map.put(DwcTerm.subtribe.simpleName(), getHigherRankName(taxonRecord, Rank.SUBTRIBE));
+    map.put(DwcTerm.genus.simpleName(), getHigherRankName(taxonRecord, Rank.GENUS));
+    map.put(DwcTerm.subgenus.simpleName(), getHigherRankName(taxonRecord, Rank.SUBGENUS));
+    map.put(GbifTerm.species.simpleName(), getHigherRankName(taxonRecord, Rank.SPECIES));
+
+    map.put(DwcTerm.scientificName.simpleName(), taxonRecord.getUsage().getName());
+    map.put(IucnTerm.iucnRedListCategory.simpleName(), taxonRecord.getIucnRedListCategoryCode());
+
+    return map;
+  }
+
+  private static String getHigherRankName(TaxonRecord taxonRecord, Rank rank) {
+
+    Optional<RankedName> nameForRank =
+        taxonRecord.getClassification().stream()
+            .filter(rankedName -> rank.name().equalsIgnoreCase(rankedName.getRank()))
+            .findFirst();
+    if (nameForRank.isPresent()) {
+      return nameForRank.get().getName();
+    }
+    return "";
   }
 
   /** Copies the {@link TaxonRecord} data into the {@link OccurrenceHdfsRecord}. */
