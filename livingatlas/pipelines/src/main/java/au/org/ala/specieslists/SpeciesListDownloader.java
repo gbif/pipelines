@@ -3,6 +3,7 @@ package au.org.ala.specieslists;
 import au.com.bytecode.opencsv.CSVReader;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
+import au.org.ala.kvs.client.retrofit.SyncCall;
 import au.org.ala.pipelines.options.SpeciesLevelPipelineOptions;
 import au.org.ala.pipelines.util.VersionInfo;
 import au.org.ala.pipelines.vocabulary.StateProvinceParser;
@@ -27,7 +28,6 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.SpeciesListRecord;
-import org.gbif.rest.client.retrofit.SyncCall;
 import org.slf4j.MDC;
 import retrofit2.Call;
 
