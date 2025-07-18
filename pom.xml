@@ -109,7 +109,7 @@
     <dwca-io.version>3.0.0</dwca-io.version>
     <gbif-api.version>2.1.13-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
-    <dwc-api.version>2.1.1</dwc-api.version>
+    <dwc-api.version>2.1.5-SNAPSHOT</dwc-api.version>
     <kvs.version>3.0</kvs.version>
     <hbase-utils.version>1.0.0</hbase-utils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
