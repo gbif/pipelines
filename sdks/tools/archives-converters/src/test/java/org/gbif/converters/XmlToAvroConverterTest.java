@@ -51,7 +51,7 @@ public class XmlToAvroConverterTest {
 
         Assert.assertNotNull(record);
         Assert.assertNotNull(record.getId());
-        Assert.assertEquals(17, record.getCoreTerms().size());
+        Assert.assertEquals(18, record.getCoreTerms().size());
         Assert.assertTrue(record.getId().contains("catalog"));
 
         Assert.assertEquals("PreservedSpecimen", fn.apply(DwcTerm.basisOfRecord));
