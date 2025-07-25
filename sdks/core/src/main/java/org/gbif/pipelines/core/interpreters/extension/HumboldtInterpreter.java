@@ -221,7 +221,9 @@ public class HumboldtInterpreter {
             .convert(er);
 
     hr.setHumboldtItems(result.getList());
-    hr.getIssues().setIssueList(result.getIssuesAsList());
+    if (result.getIssues() != null) {
+      hr.getIssues().getIssueList().addAll(result.getIssuesAsList());
+    }
   }
 
   private static Function<Humboldt, List<String>> checkAreas() {
@@ -367,7 +369,7 @@ public class HumboldtInterpreter {
                       },
                       response -> {
                         if (response.getUsage() != null) {
-                          thr.setUsageKey(response.getUsage().getName());
+                          thr.setUsageName(response.getUsage().getName());
                           thr.setUsageKey(String.valueOf(response.getUsage().getKey()));
                           thr.setUsageRank(response.getUsage().getRank());
                         }

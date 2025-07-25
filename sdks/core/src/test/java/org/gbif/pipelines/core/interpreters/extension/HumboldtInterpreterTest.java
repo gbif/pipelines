@@ -5,9 +5,12 @@ import static org.junit.Assert.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.interpreters.MockVocabularyLookups;
+import org.gbif.pipelines.core.interpreters.NameUsageMatchKeyValueTestStore;
+import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.core.parsers.humboldt.DurationUnit;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -16,6 +19,8 @@ import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.junit.Test;
 
 public class HumboldtInterpreterTest {
+
+  private static final String DEFAULT_CHECKLIST_KEY = UUID.randomUUID().toString();
 
   @Test
   public void humboldtTest() {
@@ -35,6 +40,7 @@ public class HumboldtInterpreterTest {
     humboldtData.put("http://rs.tdwg.org/eco/terms/hasNonTargetTaxa", "True in some cases");
     humboldtData.put("http://rs.tdwg.org/eco/terms/targetLifeStageScope", "ADUlt");
     humboldtData.put("http://rs.tdwg.org/eco/terms/targetDegreeOfEstablishmentScope", "td1| td2");
+    humboldtData.put("http://rs.tdwg.org/eco/terms/targetTaxonomicScope", "none | aves");
 
     ext.put("http://rs.tdwg.org/eco/terms/Event", List.of(humboldtData));
 
@@ -43,7 +49,6 @@ public class HumboldtInterpreterTest {
     HumboldtRecord hr = HumboldtRecord.newBuilder().setId("id").build();
 
     // When
-    // TODO: use kv
     HumboldtInterpreter.builder()
         .vocabularyService(
             VocabularyService.builder()
@@ -54,6 +59,8 @@ public class HumboldtInterpreterTest {
                     DwcTerm.degreeOfEstablishment.qualifiedName(),
                     new MockVocabularyLookups.GenericMockVocabularyLookup())
                 .build())
+        .kvStore(new NameUsageMatchKeyValueTestStore())
+        .checklistKeys(List.of(DEFAULT_CHECKLIST_KEY))
         .create()
         .interpret(er, hr);
 
@@ -76,6 +83,32 @@ public class HumboldtInterpreterTest {
     assertEquals(1, humboldt.getTargetLifeStageScope().size());
     assertEquals("Adult", humboldt.getTargetLifeStageScope().get(0).getConcept());
     assertEquals(2, humboldt.getTargetDegreeOfEstablishmentScope().size());
+    assertEquals(2, humboldt.getTargetTaxonomicScope().size());
+    assertEquals(
+        2,
+        humboldt.getTargetTaxonomicScope().stream()
+            .filter(ts -> ts.getChecklistKey().equals(DEFAULT_CHECKLIST_KEY))
+            .count());
+    assertEquals(
+        1,
+        humboldt.getTargetTaxonomicScope().stream()
+            .filter(
+                ts ->
+                    ts.getClassification().size() == 2
+                        && ts.getUsageName().equalsIgnoreCase("Aves")
+                        && ts.getUsageRank() != null
+                        && ts.getUsageKey() != null)
+            .count());
+    assertEquals(
+        1,
+        humboldt.getTargetTaxonomicScope().stream()
+            .filter(
+                ts ->
+                    ts.getClassification().size() == 1
+                        && ts.getUsageName().equals(TaxonomyInterpreter.INCERTAE_SEDIS_NAME)
+                        && ts.getUsageKey().equals(TaxonomyInterpreter.INCERTAE_SEDIS_KEY)
+                        && ts.getUsageRank().equals(TaxonomyInterpreter.KINGDOM_RANK))
+            .count());
 
     assertTrue(
         hr.getIssues()
@@ -89,6 +122,7 @@ public class HumboldtInterpreterTest {
             .contains(OccurrenceIssue.SAMPLING_EFFORT_UNIT_MISSING.name()));
     assertTrue(
         hr.getIssues().getIssueList().contains(OccurrenceIssue.HAS_NON_TARGET_TAXA_INVALID.name()));
+    assertTrue(hr.getIssues().getIssueList().contains(OccurrenceIssue.TAXON_MATCH_NONE.name()));
   }
 
   @Test
