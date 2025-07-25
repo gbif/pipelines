@@ -230,7 +230,8 @@ public class VerbatimToOccurrencePipeline {
       PCollection<IdentifierRecord> absentCreatedGbifIds =
           absentTyple.get(uniqueIdTransform.getTag());
 
-      absentCreatedGbifIds.apply("Write GBIF ids to avro", idTransform.write(pathFn).withoutSharding());
+      absentCreatedGbifIds.apply(
+          "Write GBIF ids to avro", idTransform.write(pathFn).withoutSharding());
 
       absentTyple
           .get(uniqueIdTransform.getInvalidTag())
