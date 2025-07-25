@@ -6,49 +6,85 @@ import static org.gbif.pipelines.core.utils.ModelUtils.hasExtension;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.Builder;
+import lombok.SneakyThrows;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.common.parsers.date.DateComponentOrdering;
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
-import org.gbif.pipelines.core.functions.SerializableFunction;
+import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.HumboldtInterpreter;
-import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
+import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.transforms.Transform;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 /**
  * Beam level transformations for the Humboldt extension, reads an avro, writes an avro, maps from
  * value to keyValue and transforms form {@link ExtendedRecord} to {@link HumboldtRecord}.
  *
  * <p>ParDo runs sequence of interpretations for {@link HumboldtRecord} using {@link ExtendedRecord}
- * as a source and TODO {@link HumboldtInterpreter} as interpretation steps
+ * as a source and {@link HumboldtInterpreter} as interpretation steps
  *
- * @see <a href="https://rs.gbif.org/extension/eco/Humboldt_2024-04-16.xml>Humboldt extension
- *     definition</a>
+ * @see <a href="http://rs.tdwg.org/eco/terms/Event">Extension definition</a>
  */
 public class HumboldtTransform extends Transform<ExtendedRecord, HumboldtRecord> {
+
+  private final SerializableSupplier<VocabularyService> vocabularyServiceSupplier;
+  private final SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
+      nameUsageMatchKvStoreSupplier;
+  private final List<String> checklistKeys;
+
+  private KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> nameUsageMatchKvStore;
+  private VocabularyService vocabularyService;
 
   private HumboldtInterpreter humboldtInterpreter;
 
   @Builder(buildMethodName = "create")
   private HumboldtTransform(
-      List<DateComponentOrdering> orderings,
-      SerializableFunction<String, String> preprocessDateFn) {
+      SerializableSupplier<VocabularyService> vocabularyServiceSupplier,
+      SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
+          nameUsageMatchKvStoreSupplier,
+      List<String> checklistKeys) {
     super(
         HumboldtRecord.class, HUMBOLDT, HumboldtTransform.class.getName(), HUMBOLDT_RECORDS_COUNT);
+    this.vocabularyServiceSupplier = Objects.requireNonNull(vocabularyServiceSupplier);
+    this.nameUsageMatchKvStoreSupplier = Objects.requireNonNull(nameUsageMatchKvStoreSupplier);
+    this.checklistKeys = checklistKeys;
   }
 
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
     if (humboldtInterpreter == null) {
-      humboldtInterpreter = HumboldtInterpreter.builder().create();
+      nameUsageMatchKvStore = nameUsageMatchKvStoreSupplier.get();
+      vocabularyService = vocabularyServiceSupplier.get();
+
+      humboldtInterpreter =
+          HumboldtInterpreter.builder()
+              .kvStore(nameUsageMatchKvStore)
+              .checklistKeys(checklistKeys)
+              .vocabularyService(vocabularyService)
+              .create();
+    }
+  }
+
+  /** Beam @Teardown closes initialized resources */
+  @SneakyThrows
+  @Teardown
+  public void tearDown() {
+    if (vocabularyService != null) {
+      vocabularyService.close();
+    }
+    if (nameUsageMatchKvStore != null) {
+      nameUsageMatchKvStore.close();
     }
   }
 
@@ -58,12 +94,10 @@ public class HumboldtTransform extends Transform<ExtendedRecord, HumboldtRecord>
     return this;
   }
 
-  /**
-   * Maps {@link DnaDerivedDataRecord} to key value, where key is {@link DnaDerivedDataRecord#getId}
-   */
-  public MapElements<DnaDerivedDataRecord, KV<String, DnaDerivedDataRecord>> toKv() {
-    return MapElements.into(new TypeDescriptor<KV<String, DnaDerivedDataRecord>>() {})
-        .via((DnaDerivedDataRecord dr) -> KV.of(dr.getId(), dr));
+  /** Maps {@link HumboldtRecord} to key value, where key is {@link HumboldtRecord#getId} */
+  public MapElements<HumboldtRecord, KV<String, HumboldtRecord>> toKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, HumboldtRecord>>() {})
+        .via((HumboldtRecord hr) -> KV.of(hr.getId(), hr));
   }
 
   public HumboldtTransform counterFn(SerializableConsumer<String> counterFn) {

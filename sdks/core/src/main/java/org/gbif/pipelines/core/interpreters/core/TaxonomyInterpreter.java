@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -39,14 +40,14 @@ public class TaxonomyInterpreter {
   public static final String INCERTAE_SEDIS_NAME = "incertae sedis";
   public static final String INCERTAE_SEDIS_KEY = "0";
 
-  private static final RankedNameWithAuthorship INCERTAE_SEDIS_WITH_AUTHORSHIP =
+  public static final RankedNameWithAuthorship INCERTAE_SEDIS_WITH_AUTHORSHIP =
       RankedNameWithAuthorship.newBuilder()
           .setRank(KINGDOM_RANK)
           .setName(INCERTAE_SEDIS_NAME)
           .setKey(INCERTAE_SEDIS_KEY)
           .build();
 
-  private static final RankedName INCERTAE_SEDIS =
+  public static final RankedName INCERTAE_SEDIS =
       RankedName.newBuilder()
           .setRank(KINGDOM_RANK)
           .setName(INCERTAE_SEDIS_NAME)
@@ -107,6 +108,28 @@ public class TaxonomyInterpreter {
       NameUsageMatchRequest nameUsageMatchRequest,
       KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore,
       TaxonRecord tr) {
+    matchTaxon(
+        nameUsageMatchRequest,
+        kvStore,
+        tr,
+        r -> {
+          tr.setUsage(INCERTAE_SEDIS_WITH_AUTHORSHIP);
+          tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
+        },
+        r -> {
+          tr.setUsageParsedName(toParsedNameAvro(r.getUsage()));
+
+          // convert taxon record
+          TaxonRecordConverter.convert(r, tr);
+        });
+  }
+
+  public static void matchTaxon(
+      NameUsageMatchRequest nameUsageMatchRequest,
+      KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore,
+      Issues issuesModel,
+      Consumer<NameUsageMatchResponse> noMatchConsumer,
+      Consumer<NameUsageMatchResponse> matchConsumer) {
 
     NameUsageMatchResponse usageMatch = null;
     try {
@@ -120,9 +143,8 @@ public class TaxonomyInterpreter {
         || checkFuzzy(usageMatch, nameUsageMatchRequest)) {
       // "NO_MATCHING_RESULTS". This
       // happens when we get an empty response from the WS
-      addIssue(tr, TAXON_MATCH_NONE);
-      tr.setUsage(INCERTAE_SEDIS_WITH_AUTHORSHIP);
-      tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
+      addIssue(issuesModel, TAXON_MATCH_NONE);
+      noMatchConsumer.accept(usageMatch);
     } else {
 
       NameUsageMatchResponse.MatchType matchType = usageMatch.getDiagnostics().getMatchType();
@@ -130,24 +152,21 @@ public class TaxonomyInterpreter {
       // copy any issues asserted by the lookup itself
       if (usageMatch.getDiagnostics().getIssues() != null) {
         addIssueSet(
-            tr,
+            issuesModel,
             usageMatch.getDiagnostics().getIssues().stream()
                 .map(org.gbif.api.vocabulary.OccurrenceIssue::valueOf)
                 .collect(Collectors.toSet()));
       }
 
       if (NameUsageMatchResponse.MatchType.NONE == matchType) {
-        addIssue(tr, TAXON_MATCH_NONE);
+        addIssue(issuesModel, TAXON_MATCH_NONE);
       } else if (NameUsageMatchResponse.MatchType.VARIANT == matchType) {
-        addIssue(tr, TAXON_MATCH_FUZZY);
+        addIssue(issuesModel, TAXON_MATCH_FUZZY);
       } else if (NameUsageMatchResponse.MatchType.HIGHERRANK == matchType) {
-        addIssue(tr, TAXON_MATCH_HIGHERRANK);
+        addIssue(issuesModel, TAXON_MATCH_HIGHERRANK);
       }
 
-      tr.setUsageParsedName(toParsedNameAvro(usageMatch.getUsage()));
-
-      // convert taxon record
-      TaxonRecordConverter.convert(usageMatch, tr);
+      matchConsumer.accept(usageMatch);
     }
   }
 

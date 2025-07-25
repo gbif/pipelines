@@ -3,23 +3,37 @@
  * https://rs.gbif.org/extension/eco/Humboldt_2024-04-16.xml
  */
 [
+ {
+    "name": "TaxonHumboldtRecord",
+    "namespace": "org.gbif.pipelines.io.avro",
+    "type": "record",
+    "doc": "A container for interpreted Humboldt taxon fields.",
+    "fields": [
+        {"name": "checklistKey", "type" : ["null", "string"], "default" : null, "doc":"The taxonomy dataset identifier"},
+        {"name": "usageKey", "type": ["null", "string"], "default" : null},
+        {"name": "usageName", "type": ["null", "string"], "default" : null},
+        {"name": "usageRank", "type": ["null", "string"], "default" : null},
+        {"name": "classification", "type" : { "type" : "array", "items" : "org.gbif.pipelines.io.avro.RankedName" }, "default": []}
+    ]
+  },
   {
     "name":"Humboldt",
     "namespace":"org.gbif.pipelines.io.avro",
     "type":"record",
     "fields":[
+      {"name": "siteCount", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/siteCount"},
       {"name": "verbatimSiteDescriptions", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/verbatimSiteDescriptions"},
       {"name": "verbatimSiteNames", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/verbatimSiteNames"},
-      {"name": "geospatialScopeAreaValue", "type": ["null", "float"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/geospatialScopeAreaValue"},
+      {"name": "geospatialScopeAreaValue", "type": ["null", "double"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/geospatialScopeAreaValue"},
       {"name": "geospatialScopeAreaUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/geospatialScopeAreaUnit"},
-      {"name": "totalAreaSampledValue", "type": ["null", "float"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/totalAreaSampledValue"},
+      {"name": "totalAreaSampledValue", "type": ["null", "double"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/totalAreaSampledValue"},
       {"name": "totalAreaSampledUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/totalAreaSampledUnit"},
       {"name": "targetHabitatScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/targetHabitatScope"},
       {"name": "excludedHabitatScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/excludedHabitatScope"},
-      {"name": "eventDurationValue", "type": ["null", "float"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/eventDurationValue"},
+      {"name": "eventDurationValue", "type": ["null", "double"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/eventDurationValue"},
       {"name": "eventDurationUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/eventDurationUnit"},
-      {"name": "targetTaxonomicScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/targetTaxonomicScope"},
-      {"name": "excludedTaxonomicScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/excludedTaxonomicScope"},
+      {"name": "targetTaxonomicScope", "type": {"type" : "array", "items" : "TaxonHumboldtRecord"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/targetTaxonomicScope"},
+      {"name": "excludedTaxonomicScope", "type": {"type" : "array", "items" : "TaxonHumboldtRecord"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/excludedTaxonomicScope"},
       {"name": "taxonCompletenessProtocols", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/taxonCompletenessProtocols"},
       {"name": "isTaxonomicScopeFullyReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/isTaxonomicScopeFullyReported"},
       {"name": "isAbsenceReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/isAbsenceReported"},
@@ -54,7 +68,7 @@
       {"name": "materialSampleTypes", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/materialSampleTypes"},
       {"name": "samplingPerformedBy", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/samplingPerformedBy"},
       {"name": "isSamplingEffortReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/isSamplingEffortReported"},
-      {"name": "samplingEffortValue", "type": ["null", "float"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/samplingEffortValue"},
+      {"name": "samplingEffortValue", "type": ["null", "double"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/samplingEffortValue"},
       {"name": "samplingEffortUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/samplingEffortUnit"}
     ]
   },

@@ -74,7 +74,7 @@ public class TaxonRecordConverter {
         .build();
   }
 
-  private static RankedName convertRankedName(NameUsageMatchResponse.RankedName rankedNameApi) {
+  public static RankedName convertRankedName(NameUsageMatchResponse.RankedName rankedNameApi) {
     if (rankedNameApi == null) {
       return null;
     }
