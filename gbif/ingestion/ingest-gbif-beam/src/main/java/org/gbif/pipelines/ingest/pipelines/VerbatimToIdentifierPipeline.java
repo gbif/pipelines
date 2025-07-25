@@ -104,11 +104,12 @@ public class VerbatimToIdentifierPipeline {
 
     idsTuple
         .get(uniqueIdTransform.getTag())
-        .apply("Write GBIF ids to avro", idTransform.write(pathFn));
+        .apply("Write GBIF ids to avro", idTransform.write(pathFn).withoutSharding());
 
     idsTuple
         .get(uniqueIdTransform.getInvalidTag())
-        .apply("Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn));
+        .apply(
+            "Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn).withoutSharding());
 
     idCollection
         .get(tupleTransform.getAbsentTag())
