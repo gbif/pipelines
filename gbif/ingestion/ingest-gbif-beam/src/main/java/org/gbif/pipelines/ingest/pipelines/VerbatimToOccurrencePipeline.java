@@ -204,7 +204,7 @@ public class VerbatimToOccurrencePipeline {
               .apply("Lookup GBIF IDs records", idTransform.interpret())
               .apply("Filter unique GBIF ids", uniqueIdTransform);
       uniqueGbifId = idsTuple.get(uniqueIdTransform.getTag());
-      uniqueGbifId.apply("Write GBIF IDs to avro", idTransform.write(pathFn));
+      uniqueGbifId.apply("Write GBIF IDs to avro", idTransform.write(pathFn).withoutSharding());
       idsTuple
           .get(uniqueIdTransform.getInvalidTag())
           .apply("Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn));
@@ -230,7 +230,7 @@ public class VerbatimToOccurrencePipeline {
       PCollection<IdentifierRecord> absentCreatedGbifIds =
           absentTyple.get(uniqueIdTransform.getTag());
 
-      absentCreatedGbifIds.apply("Write GBIF ids to avro", idTransform.write(pathFn));
+      absentCreatedGbifIds.apply("Write GBIF ids to avro", idTransform.write(pathFn).withoutSharding());
 
       absentTyple
           .get(uniqueIdTransform.getInvalidTag())
@@ -270,52 +270,52 @@ public class VerbatimToOccurrencePipeline {
             "Check clustering transform condition",
             clusteringTransform.check(types, IdentifierRecord.class))
         .apply("Interpret clustering", clusteringTransform.interpret())
-        .apply("Write clustering to avro", clusteringTransform.write(pathFn));
+        .apply("Write clustering to avro", clusteringTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check basic transform condition", basicTransform.check(types))
         .apply("Interpret basic", basicTransform.interpret())
-        .apply("Write basic to avro", basicTransform.write(pathFn));
+        .apply("Write basic to avro", basicTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check temporal transform condition", temporalTransform.check(types))
         .apply("Interpret temporal", temporalTransform.interpret())
-        .apply("Write temporal to avro", temporalTransform.write(pathFn));
+        .apply("Write temporal to avro", temporalTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check multimedia transform condition", multimediaTransform.check(types))
         .apply("Interpret multimedia", multimediaTransform.interpret())
-        .apply("Write multimedia to avro", multimediaTransform.write(pathFn));
+        .apply("Write multimedia to avro", multimediaTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check image transform condition", imageTransform.check(types))
         .apply("Interpret image", imageTransform.interpret())
-        .apply("Write image to avro", imageTransform.write(pathFn));
+        .apply("Write image to avro", imageTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check dna transform condition", dnaTransform.check(types))
         .apply("Interpret dna", dnaTransform.interpret())
-        .apply("Write dna to avro", dnaTransform.write(pathFn));
+        .apply("Write dna to avro", dnaTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check audubon transform condition", audubonTransform.check(types))
         .apply("Interpret audubon", audubonTransform.interpret())
-        .apply("Write audubon to avro", audubonTransform.write(pathFn));
+        .apply("Write audubon to avro", audubonTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check multi-taxonomy transform condition", multiTaxonomyTransform.check(types))
         .apply("Interpret multi-taxonomy", multiTaxonomyTransform.interpret())
-        .apply("Write multi-taxon to avro", multiTaxonomyTransform.write(pathFn));
+        .apply("Write multi-taxon to avro", multiTaxonomyTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check grscicoll transform condition", grscicollTransform.check(types))
         .apply("Interpret grscicoll", grscicollTransform.interpret(metadataView))
-        .apply("Write grscicoll to avro", grscicollTransform.write(pathFn));
+        .apply("Write grscicoll to avro", grscicollTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
         .apply("Check location transform condition", locationTransform.check(types))
         .apply("Interpret location", locationTransform.interpret(metadataView))
-        .apply("Write location to avro", locationTransform.write(pathFn));
+        .apply("Write location to avro", locationTransform.write(pathFn).withoutSharding());
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
