@@ -237,7 +237,8 @@ public class TransformsFactory {
 
   public HumboldtTransform createHumboldtTransform() {
     return HumboldtTransform.builder()
-        .nameUsageMatchKvStoreSupplier(NameUsageMatchStoreFactory.createMultiServiceSupplier(config))
+        .nameUsageMatchKvStoreSupplier(
+            NameUsageMatchStoreFactory.createMultiServiceSupplier(config))
         .vocabularyServiceSupplier(FileVocabularyFactory.createSupplier(hdfsConfigs, config))
         .checklistKeys(
             config.getNameUsageMatchingService() != null
