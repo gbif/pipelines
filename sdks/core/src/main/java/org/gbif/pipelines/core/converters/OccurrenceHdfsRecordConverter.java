@@ -362,8 +362,12 @@ public class OccurrenceHdfsRecordConverter {
     map.put(DwcTerm.subgenus.simpleName(), getHigherRankName(taxonRecord, Rank.SUBGENUS));
     map.put(GbifTerm.species.simpleName(), getHigherRankName(taxonRecord, Rank.SPECIES));
 
-    map.put(DwcTerm.scientificName.simpleName(), taxonRecord.getUsage().getName());
-    map.put(IucnTerm.iucnRedListCategory.simpleName(), taxonRecord.getIucnRedListCategoryCode());
+    if (taxonRecord.getUsage() != null) {
+      map.put(DwcTerm.scientificName.simpleName(), taxonRecord.getUsage().getName());
+    }
+    if (taxonRecord.getIucnRedListCategoryCode() != null) {
+      map.put(IucnTerm.iucnRedListCategory.simpleName(), taxonRecord.getIucnRedListCategoryCode());
+    }
 
     return map;
   }
