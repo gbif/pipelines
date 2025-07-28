@@ -342,8 +342,6 @@ public class OccurrenceHdfsRecordConverter {
           TERM_FACTORY.findTerm(taxonRecord.getUsage().getRank()).simpleName());
     }
 
-    map.put(DwcTerm.taxonRank.simpleName(), taxonRecord.getUsage().getRank());
-
     map.put(
         DwcTerm.taxonomicStatus.simpleName(),
         taxonRecord.getDiagnostics() != null && taxonRecord.getDiagnostics().getStatus() != null
