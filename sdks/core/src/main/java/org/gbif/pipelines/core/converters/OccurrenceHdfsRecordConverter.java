@@ -322,11 +322,26 @@ public class OccurrenceHdfsRecordConverter {
         GbifTerm.verbatimScientificName.simpleName(),
         extractOptValue(verbatim, DwcTerm.scientificName).orElse(""));
 
-    map.put(DwcTerm.genericName.simpleName(), taxonRecord.getUsage().getGenericName());
-    map.put(DwcTerm.specificEpithet.simpleName(), taxonRecord.getUsage().getSpecificEpithet());
-    map.put(
-        DwcTerm.infraspecificEpithet.simpleName(),
-        taxonRecord.getUsage().getInfraspecificEpithet());
+    if (taxonRecord.getUsage().getGenericName() != null) {
+      map.put(DwcTerm.genericName.simpleName(), taxonRecord.getUsage().getGenericName());
+    }
+
+    if (taxonRecord.getUsage().getSpecificEpithet() != null) {
+      map.put(DwcTerm.specificEpithet.simpleName(), taxonRecord.getUsage().getSpecificEpithet());
+    }
+
+    if (taxonRecord.getUsage().getInfraspecificEpithet() != null) {
+      map.put(
+          DwcTerm.infraspecificEpithet.simpleName(),
+          taxonRecord.getUsage().getInfraspecificEpithet());
+    }
+
+    if (taxonRecord.getUsage().getRank() != null) {
+      map.put(
+          DwcTerm.taxonRank.simpleName(),
+          TERM_FACTORY.findTerm(taxonRecord.getUsage().getRank()).simpleName());
+    }
+
     map.put(DwcTerm.taxonRank.simpleName(), taxonRecord.getUsage().getRank());
 
     map.put(
