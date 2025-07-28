@@ -331,7 +331,7 @@ public class OccurrenceHdfsRecordConverter {
 
     map.put(
         DwcTerm.taxonomicStatus.simpleName(),
-        taxonRecord.getDiagnostics() != null
+        taxonRecord.getDiagnostics() != null && taxonRecord.getDiagnostics().getStatus() != null
             ? taxonRecord.getDiagnostics().getStatus().name()
             : "");
 
