@@ -301,6 +301,7 @@ public class OccurrenceHdfsRecordConverter {
 
   private static Map<String, String> classificationToMap(
       ExtendedRecord verbatim, TaxonRecord taxonRecord) {
+
     Map<String, String> map = new HashMap<>();
 
     // Get usage and accepted usage
@@ -356,18 +357,6 @@ public class OccurrenceHdfsRecordConverter {
     }
 
     return map;
-  }
-
-  private static String getHigherRankName(TaxonRecord taxonRecord, Rank rank) {
-
-    Optional<RankedName> nameForRank =
-        taxonRecord.getClassification().stream()
-            .filter(rankedName -> rank.name().equalsIgnoreCase(rankedName.getRank()))
-            .findFirst();
-    if (nameForRank.isPresent()) {
-      return nameForRank.get().getName();
-    }
-    return "";
   }
 
   /** Copies the {@link TaxonRecord} data into the {@link OccurrenceHdfsRecord}. */
