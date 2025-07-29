@@ -5,18 +5,24 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValu
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.elasticsearch.common.Strings;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
+import org.gbif.pipelines.core.parsers.humboldt.DurationUnit;
 import org.gbif.pipelines.core.utils.HashConverter;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
 import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
 import org.gbif.pipelines.io.avro.json.EventJsonRecord;
+import org.gbif.pipelines.io.avro.json.Humboldt;
+import org.gbif.pipelines.io.avro.json.HumboldtTaxonClassification;
 import org.gbif.pipelines.io.avro.json.JoinRecord;
 import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 import org.gbif.pipelines.io.avro.json.MetadataJsonRecord;
@@ -24,6 +30,8 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.io.avro.json.Parent;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
+import org.gbif.pipelines.io.avro.json.ValueAndUnit;
+import org.gbif.pipelines.io.avro.json.VocabularyConcept;
 
 @Slf4j
 @Builder
@@ -43,6 +51,7 @@ public class ParentJsonConverter {
   protected final EventInheritedRecord eventInheritedRecord;
   protected OccurrenceJsonRecord occurrenceJsonRecord;
   protected MeasurementOrFactRecord measurementOrFactRecord;
+  protected final HumboldtRecord humboldtRecord;
 
   public ParentJsonRecord convertToParent() {
     return (occurrenceJsonRecord != null) ? convertToParentOccurrence() : convertToParentEvent();
@@ -125,6 +134,7 @@ public class ParentJsonConverter {
     mapLocationRecord(builder);
     mapMultimediaRecord(builder);
     mapMeasurementOrFactRecord(builder);
+    mapHumboldtRecord(builder);
 
     return builder;
   }
@@ -353,6 +363,147 @@ public class ParentJsonConverter {
             .collect(Collectors.toList()));
   }
 
+  private void mapHumboldtRecord(EventJsonRecord.Builder builder) {
+    builder.setHumboldt(
+        humboldtRecord.getHumboldtItems().stream()
+            .map(
+                h -> {
+                  Humboldt.Builder humboldtBuilder =
+                      Humboldt.newBuilder()
+                          .setSiteCount(h.getSiteCount())
+                          .setVerbatimSiteDescriptions(h.getVerbatimSiteDescriptions())
+                          .setVerbatimSiteNames(h.getVerbatimSiteNames())
+                          .setGeospatialScopeArea(
+                              getValueAndUnit(
+                                  h.getGeospatialScopeAreaValue(), h.getGeospatialScopeAreaUnit()))
+                          .setTotalAreaSampled(
+                              getValueAndUnit(
+                                  h.getTotalAreaSampledValue(), h.getTotalAreaSampledUnit()))
+                          .setTaxonCompletenessProtocols(h.getTaxonCompletenessProtocols())
+                          .setIsTaxonomicScopeFullyReported(h.getIsTaxonomicScopeFullyReported())
+                          .setIsAbsenceReported(h.getIsAbsenceReported())
+                          .setAbsentTaxa(h.getAbsentTaxa())
+                          .setHasNonTargetTaxa(h.getHasNonTargetTaxa())
+                          .setNonTargetTaxa(h.getNonTargetTaxa())
+                          .setAreNonTargetTaxaFullyReported(h.getAreNonTargetTaxaFullyReported())
+                          .setIsLifeStageScopeFullyReported(h.getIsLifeStageScopeFullyReported())
+                          .setIsDegreeOfEstablishmentScopeFullyReported(
+                              h.getIsDegreeOfEstablishmentScopeFullyReported())
+                          .setIsGrowthFormScopeFullyReported(h.getIsGrowthFormScopeFullyReported())
+                          .setHasNonTargetOrganisms(h.getHasNonTargetOrganisms())
+                          .setCompilationTypes(h.getCompilationTypes())
+                          .setCompilationSourceTypes(h.getCompilationSourceTypes())
+                          .setInventoryTypes(h.getInventoryTypes())
+                          .setProtocolNames(h.getProtocolNames())
+                          .setProtocolDescriptions(h.getProtocolDescriptions())
+                          .setProtocolReferences(h.getProtocolReferences())
+                          .setIsAbundanceReported(h.getIsAbundanceReported())
+                          .setIsAbundanceCapReported(h.getIsAbundanceCapReported())
+                          .setAbundanceCap(h.getAbundanceCap())
+                          .setIsVegetationCoverReported(h.getIsVegetationCoverReported())
+                          .setIsLeastSpecificTargetCategoryQuantityInclusive(
+                              h.getIsLeastSpecificTargetCategoryQuantityInclusive())
+                          .setHasVouchers(h.getHasVouchers())
+                          .setVoucherInstitutions(h.getVoucherInstitutions())
+                          .setHasMaterialSamples(h.getHasMaterialSamples())
+                          .setMaterialSampleTypes(h.getMaterialSampleTypes())
+                          .setSamplingPerformedBy(h.getSamplingPerformedBy())
+                          .setIsSamplingEffortReported(h.getIsSamplingEffortReported())
+                          .setSamplingEffort(
+                              getValueAndUnit(
+                                  h.getSamplingEffortValue(), h.getSamplingEffortUnit()));
+
+                  humboldtBuilder.setHabitatScope(
+                      new ArrayList<>(
+                          CollectionUtils.subtract(
+                              h.getTargetHabitatScope(), h.getExcludedHabitatScope())));
+                  humboldtBuilder.setGrowthFormScope(
+                      new ArrayList<>(
+                          CollectionUtils.subtract(
+                              h.getTargetGrowthFormScope(), h.getExcludedGrowthFormScope())));
+
+                  BiFunction<
+                          List<org.gbif.pipelines.io.avro.VocabularyConcept>,
+                          List<org.gbif.pipelines.io.avro.VocabularyConcept>,
+                          List<VocabularyConcept>>
+                      subtractVocabularyLists =
+                          (target, excluded) ->
+                              target.stream()
+                                  .map(
+                                      tlf -> {
+                                        if (!excluded.contains(tlf)) {
+                                          return VocabularyConcept.newBuilder()
+                                              .setConcept(tlf.getConcept())
+                                              .setLineage(tlf.getLineage())
+                                              .build();
+                                        }
+                                        return null;
+                                      })
+                                  .filter(Objects::nonNull)
+                                  .collect(Collectors.toList());
+
+                  humboldtBuilder.setLifeStageScope(
+                      subtractVocabularyLists.apply(
+                          h.getTargetLifeStageScope(), h.getExcludedLifeStageScope()));
+
+                  humboldtBuilder.setDegreeOfEstablishmentScope(
+                      subtractVocabularyLists.apply(
+                          h.getTargetDegreeOfEstablishmentScope(),
+                          h.getExcludedDegreeOfEstablishmentScope()));
+
+                  if (h.getEventDurationValue() != null && h.getEventDurationUnit() != null) {
+                    DurationUnit eventDurationUnit = DurationUnit.valueOf(h.getEventDurationUnit());
+                    humboldtBuilder.setEventDurationValueInMinutes(
+                        h.getEventDurationValue() * eventDurationUnit.getDurationInMinutes());
+                  }
+
+                  // taxon
+                  Map<String, List<HumboldtTaxonClassification>> classifications = new HashMap<>();
+                  List<TaxonHumboldtRecord> taxons =
+                      new ArrayList<>(
+                          CollectionUtils.subtract(
+                              h.getTargetTaxonomicScope(), h.getExcludedTaxonomicScope()));
+                  taxons.forEach(
+                      t -> {
+                        HumboldtTaxonClassification.Builder taxonBuilder =
+                            HumboldtTaxonClassification.newBuilder()
+                                .setUsageKey(t.getUsageKey())
+                                .setUsageName(t.getUsageName())
+                                .setUsageRank(t.getUsageRank());
+
+                        Map<String, String> classification = new HashMap<>();
+                        Map<String, String> classificationKeys = new HashMap<>();
+                        List<String> taxonKeys = new ArrayList<>();
+                        t.getClassification()
+                            .forEach(
+                                c -> {
+                                  classification.put(c.getRank(), c.getName());
+                                  classificationKeys.put(c.getRank(), c.getKey());
+                                  taxonKeys.add(c.getKey());
+                                });
+
+                        taxonBuilder.setClassification(classification);
+                        taxonBuilder.setClassificationKeys(classificationKeys);
+                        taxonBuilder.setTaxonKeys(taxonKeys);
+                        classifications
+                            .computeIfAbsent(t.getChecklistKey(), k -> new ArrayList<>())
+                            .add(taxonBuilder.build());
+                      });
+
+                  humboldtBuilder.setTaxonomicScope(classifications);
+
+                  return humboldtBuilder.build();
+                })
+            .collect(Collectors.toList()));
+  }
+
+  private static ValueAndUnit getValueAndUnit(Double value, String unit) {
+    if (value != null && !Strings.isNullOrEmpty(unit)) {
+      return ValueAndUnit.newBuilder().setValue(value).setUnit(unit).build();
+    }
+    return null;
+  }
+
   private void mapExtendedRecord(EventJsonRecord.Builder builder) {
     builder.setExtensions(JsonConverter.convertExtensions(verbatim));
 
@@ -370,13 +521,14 @@ public class ParentJsonConverter {
 
   private void mapIssues(EventJsonRecord.Builder builder) {
     JsonConverter.mapIssues(
-        Arrays.asList(metadata, eventCore, temporal, location, multimedia),
+        Arrays.asList(metadata, eventCore, temporal, location, multimedia, humboldtRecord),
         builder::setIssues,
         builder::setNotIssues);
   }
 
   private void mapCreated(ParentJsonRecord.Builder builder) {
-    JsonConverter.getMaxCreationDate(metadata, eventCore, temporal, location, multimedia)
+    JsonConverter.getMaxCreationDate(
+            metadata, eventCore, temporal, location, multimedia, humboldtRecord)
         .ifPresent(builder::setCreated);
   }
 

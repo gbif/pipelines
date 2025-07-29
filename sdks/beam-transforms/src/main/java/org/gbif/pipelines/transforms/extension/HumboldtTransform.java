@@ -55,14 +55,16 @@ public class HumboldtTransform extends Transform<ExtendedRecord, HumboldtRecord>
       List<String> checklistKeys) {
     super(
         HumboldtRecord.class, HUMBOLDT, HumboldtTransform.class.getName(), HUMBOLDT_RECORDS_COUNT);
-    this.vocabularyServiceSupplier = Objects.requireNonNull(vocabularyServiceSupplier);
-    this.nameUsageMatchKvStoreSupplier = Objects.requireNonNull(nameUsageMatchKvStoreSupplier);
+    this.vocabularyServiceSupplier = vocabularyServiceSupplier;
+    this.nameUsageMatchKvStoreSupplier = nameUsageMatchKvStoreSupplier;
     this.checklistKeys = checklistKeys;
   }
 
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
+    Objects.requireNonNull(nameUsageMatchKvStoreSupplier);
+    Objects.requireNonNull(vocabularyServiceSupplier);
     if (humboldtInterpreter == null) {
       nameUsageMatchKvStore = nameUsageMatchKvStoreSupplier.get();
       vocabularyService = vocabularyServiceSupplier.get();

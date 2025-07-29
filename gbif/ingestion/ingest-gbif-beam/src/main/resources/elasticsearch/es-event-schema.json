@@ -15,6 +15,54 @@
           "copy_to": "all"
         }
       }
+    },
+    {
+      "humboldt_usage_key": {
+        "path_match": "event.humboldt.taxonomicScope.*.usageKey",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "humboldt_usage_name": {
+        "path_match": "event.humboldt.taxonomicScope.*.usageName",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "humboldt_usage_rank": {
+        "path_match": "event.humboldt.taxonomicScope.*.usageRank",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "humboldt_classification": {
+        "path_match": "event.humboldt.taxonomicScope.*.classification.*.*",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "humboldt_classification_keys": {
+        "path_match": "event.humboldt.taxonomicScope.*.classificationKeys.*.*",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "humboldt_classification_taxon_keys": {
+        "path_match": "event.humboldt.taxonomicScope.*.taxonKeys",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
     }
   ],
   "properties": {
@@ -355,6 +403,87 @@
         "multimediaItems": {"type": "nested", "enabled": false,
           "properties": {
             "license": {"type": "keyword"}
+          }
+        },
+
+        "humboldt": {
+          "type": "object",
+          "properties": {
+            "siteCount": {"type": "integer"},
+            "verbatimSiteNames": {"type": "keyword"},
+            "geospatialScopeArea":
+              { "type": "nested",
+                "properties": {
+                  "value": {"type": "double"},
+                  "unit": {"type": "keyword"}
+                }
+              },
+            "totalAreaSampled":
+            { "type": "nested",
+              "properties": {
+                "value": {"type": "double"},
+                "unit": {"type": "keyword"}
+              }
+            },
+            "habitatScope": {"type": "keyword"},
+            "eventDurationValueInMinutes": {"type": "double"},
+            "taxonCompletenessProtocols": {"type": "keyword"},
+            "isTaxonomicScopeFullyReported": {"type": "boolean"},
+            "isAbsenceReported": {"type": "boolean"},
+            "absentTaxa": {"type": "keyword"},
+            "hasNonTargetTaxa": {"type": "boolean"},
+            "nonTargetTaxa": {"type": "keyword"},
+            "areNonTargetTaxaFullyReported": {"type": "boolean"},
+            "lifeStageScope": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "keyword"
+                },
+                "lineage": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "isLifeStageScopeFullyReported": {"type": "boolean"},
+            "degreeOfEstablishmentScope": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "keyword"
+                },
+                "lineage": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "isDegreeOfEstablishmentScopeFullyReported": {"type": "boolean"},
+            "growthFormScope": {"type": "keyword"},
+            "isGrowthFormScopeFullyReported": {"type": "boolean"},
+            "hasNonTargetOrganisms": {"type": "boolean"},
+            "compilationTypes": {"type": "keyword"},
+            "compilationSourceTypes": {"type": "keyword"},
+            "inventoryTypes": {"type": "keyword"},
+            "protocolNames": {"type": "keyword"},
+            "protocolReferences": {"type": "keyword"},
+            "isAbundanceReported": {"type": "boolean"},
+            "isAbundanceCapReported": {"type": "boolean"},
+            "abundanceCap": {"type": "integer"},
+            "isVegetationCoverReported": {"type": "boolean"},
+            "isLeastSpecificTargetCategoryQuantityInclusive": {"type": "boolean"},
+            "hasVouchers": {"type": "boolean"},
+            "voucherInstitutions": {"type": "keyword"},
+            "hasMaterialSamples": {"type": "boolean"},
+            "materialSampleTypes": {"type": "keyword"},
+            "samplingPerformedBy": {"type": "keyword"},
+            "isSamplingEffortReported": {"type": "boolean"},
+            "samplingEffort":
+            { "type": "nested",
+              "properties": {
+                "value": {"type": "double"},
+                "unit": {"type": "keyword"}
+              }
+            }
           }
         }
       }

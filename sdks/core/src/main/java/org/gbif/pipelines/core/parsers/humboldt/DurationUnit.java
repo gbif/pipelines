@@ -15,7 +15,7 @@ public enum DurationUnit {
 
   public static final DurationUnit DEFAULT = minutes;
 
-  private double durationInMinutes;
+  @Getter private double durationInMinutes;
   @Getter private final String[] alternativeNames;
 
   DurationUnit(double durationInMinutes, String... alternativeNames) {
