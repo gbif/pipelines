@@ -299,78 +299,56 @@ public class OccurrenceHdfsRecordConverter {
     gbifRecord.ifPresent(tr -> mapLegacyGbifTaxonRecord(occurrenceHdfsRecord, tr));
   }
 
-  private static Map<String, String> classificationToMap(
-      ExtendedRecord verbatim, TaxonRecord taxonRecord) {
+  private static Map<String, String> classificationToMap(ExtendedRecord verbatim, TaxonRecord taxonRecord) {
     Map<String, String> map = new HashMap<>();
 
-    map.put(GbifTerm.taxonKey.simpleName(), taxonRecord.getUsage().getKey());
-    map.put(
-        GbifTerm.acceptedTaxonKey.simpleName(),
-        taxonRecord.getAcceptedUsage() != null
-            ? taxonRecord.getAcceptedUsage().getKey()
-            : taxonRecord.getUsage().getKey());
+    // Get usage and accepted usage
+    RankedNameWithAuthorship usage = taxonRecord.getUsage();
+    RankedNameWithAuthorship acceptedUsage = taxonRecord.getAcceptedUsage();
 
-    map.put(
-        DwcTerm.scientificName.simpleName(),
-        taxonRecord.getUsage() != null ? taxonRecord.getUsage().getName() : "");
+    // Required taxon keys and names
+    map.put(GbifTerm.taxonKey.simpleName(), usage.getKey());
+    map.put(GbifTerm.acceptedTaxonKey.simpleName(), acceptedUsage != null ? acceptedUsage.getKey() : usage.getKey());
+    map.put(DwcTerm.scientificName.simpleName(), usage.getName());
+    map.put(GbifTerm.acceptedScientificName.simpleName(), acceptedUsage != null ? acceptedUsage.getName() : "");
 
-    map.put(
-        GbifTerm.acceptedScientificName.simpleName(),
-        taxonRecord.getAcceptedUsage() != null ? taxonRecord.getAcceptedUsage().getName() : "");
+    extractOptValue(verbatim, DwcTerm.scientificName)
+            .ifPresent(s -> map.put(GbifTerm.verbatimScientificName.simpleName(), s));
 
-    map.put(
-        GbifTerm.verbatimScientificName.simpleName(),
-        extractOptValue(verbatim, DwcTerm.scientificName).orElse(""));
-
-    if (taxonRecord.getUsage().getGenericName() != null) {
-      map.put(DwcTerm.genericName.simpleName(), taxonRecord.getUsage().getGenericName());
+    // Optional taxonomic fields
+    if (usage.getGenericName() != null) {
+      map.put(DwcTerm.genericName.simpleName(), usage.getGenericName());
+    }
+    if (usage.getSpecificEpithet() != null) {
+      map.put(DwcTerm.specificEpithet.simpleName(), usage.getSpecificEpithet());
+    }
+    if (usage.getInfraspecificEpithet() != null) {
+      map.put(DwcTerm.infraspecificEpithet.simpleName(), usage.getInfraspecificEpithet());
+    }
+    if (usage.getRank() != null) {
+      map.put(DwcTerm.taxonRank.simpleName(), TERM_FACTORY.findTerm(usage.getRank()).simpleName());
     }
 
-    if (taxonRecord.getUsage().getSpecificEpithet() != null) {
-      map.put(DwcTerm.specificEpithet.simpleName(), taxonRecord.getUsage().getSpecificEpithet());
-    }
+    // Taxonomic status
+    var diagnostics = taxonRecord.getDiagnostics();
+    map.put(DwcTerm.taxonomicStatus.simpleName(),
+            diagnostics != null && diagnostics.getStatus() != null
+                    ? diagnostics.getStatus().name()
+                    : "");
 
-    if (taxonRecord.getUsage().getInfraspecificEpithet() != null) {
-      map.put(
-          DwcTerm.infraspecificEpithet.simpleName(),
-          taxonRecord.getUsage().getInfraspecificEpithet());
-    }
+    // Classification hierarchy
+    taxonRecord.getClassification().forEach(rankedName -> {
+      map.put(rankedName.getRank().toLowerCase(), rankedName.getName());
+    });
 
-    if (taxonRecord.getUsage().getRank() != null) {
-      map.put(
-          DwcTerm.taxonRank.simpleName(),
-          TERM_FACTORY.findTerm(taxonRecord.getUsage().getRank()).simpleName());
-    }
-
-    map.put(
-        DwcTerm.taxonomicStatus.simpleName(),
-        taxonRecord.getDiagnostics() != null && taxonRecord.getDiagnostics().getStatus() != null
-            ? taxonRecord.getDiagnostics().getStatus().name()
-            : "");
-
-    // Empty strings for not-yet-filled terms
-    map.put(DwcTerm.kingdom.simpleName(), getHigherRankName(taxonRecord, Rank.KINGDOM));
-    map.put(DwcTerm.phylum.simpleName(), getHigherRankName(taxonRecord, Rank.PHYLUM));
-    map.put(DwcTerm.class_.simpleName(), getHigherRankName(taxonRecord, Rank.CLASS));
-    map.put(DwcTerm.order.simpleName(), getHigherRankName(taxonRecord, Rank.ORDER));
-    map.put(DwcTerm.superfamily.simpleName(), getHigherRankName(taxonRecord, Rank.SUPERFAMILY));
-    map.put(DwcTerm.family.simpleName(), getHigherRankName(taxonRecord, Rank.FAMILY));
-    map.put(DwcTerm.subfamily.simpleName(), getHigherRankName(taxonRecord, Rank.SUBFAMILY));
-    map.put(DwcTerm.tribe.simpleName(), getHigherRankName(taxonRecord, Rank.TRIBE));
-    map.put(DwcTerm.subtribe.simpleName(), getHigherRankName(taxonRecord, Rank.SUBTRIBE));
-    map.put(DwcTerm.genus.simpleName(), getHigherRankName(taxonRecord, Rank.GENUS));
-    map.put(DwcTerm.subgenus.simpleName(), getHigherRankName(taxonRecord, Rank.SUBGENUS));
-    map.put(GbifTerm.species.simpleName(), getHigherRankName(taxonRecord, Rank.SPECIES));
-
-    if (taxonRecord.getUsage() != null) {
-      map.put(DwcTerm.scientificName.simpleName(), taxonRecord.getUsage().getName());
-    }
+    // Optional IUCN field
     if (taxonRecord.getIucnRedListCategoryCode() != null) {
       map.put(IucnTerm.iucnRedListCategory.simpleName(), taxonRecord.getIucnRedListCategoryCode());
     }
 
     return map;
   }
+
 
   private static String getHigherRankName(TaxonRecord taxonRecord, Rank rank) {
 
