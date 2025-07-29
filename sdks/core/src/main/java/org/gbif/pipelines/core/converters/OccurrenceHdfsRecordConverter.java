@@ -299,7 +299,8 @@ public class OccurrenceHdfsRecordConverter {
     gbifRecord.ifPresent(tr -> mapLegacyGbifTaxonRecord(occurrenceHdfsRecord, tr));
   }
 
-  private static Map<String, String> classificationToMap(ExtendedRecord verbatim, TaxonRecord taxonRecord) {
+  private static Map<String, String> classificationToMap(
+      ExtendedRecord verbatim, TaxonRecord taxonRecord) {
     Map<String, String> map = new HashMap<>();
 
     // Get usage and accepted usage
@@ -308,12 +309,16 @@ public class OccurrenceHdfsRecordConverter {
 
     // Required taxon keys and names
     map.put(GbifTerm.taxonKey.simpleName(), usage.getKey());
-    map.put(GbifTerm.acceptedTaxonKey.simpleName(), acceptedUsage != null ? acceptedUsage.getKey() : usage.getKey());
+    map.put(
+        GbifTerm.acceptedTaxonKey.simpleName(),
+        acceptedUsage != null ? acceptedUsage.getKey() : usage.getKey());
     map.put(DwcTerm.scientificName.simpleName(), usage.getName());
-    map.put(GbifTerm.acceptedScientificName.simpleName(), acceptedUsage != null ? acceptedUsage.getName() : "");
+    map.put(
+        GbifTerm.acceptedScientificName.simpleName(),
+        acceptedUsage != null ? acceptedUsage.getName() : "");
 
     extractOptValue(verbatim, DwcTerm.scientificName)
-            .ifPresent(s -> map.put(GbifTerm.verbatimScientificName.simpleName(), s));
+        .ifPresent(s -> map.put(GbifTerm.verbatimScientificName.simpleName(), s));
 
     // Optional taxonomic fields
     if (usage.getGenericName() != null) {
@@ -331,15 +336,19 @@ public class OccurrenceHdfsRecordConverter {
 
     // Taxonomic status
     var diagnostics = taxonRecord.getDiagnostics();
-    map.put(DwcTerm.taxonomicStatus.simpleName(),
-            diagnostics != null && diagnostics.getStatus() != null
-                    ? diagnostics.getStatus().name()
-                    : "");
+    map.put(
+        DwcTerm.taxonomicStatus.simpleName(),
+        diagnostics != null && diagnostics.getStatus() != null
+            ? diagnostics.getStatus().name()
+            : "");
 
     // Classification hierarchy
-    taxonRecord.getClassification().forEach(rankedName -> {
-      map.put(rankedName.getRank().toLowerCase(), rankedName.getName());
-    });
+    taxonRecord
+        .getClassification()
+        .forEach(
+            rankedName -> {
+              map.put(rankedName.getRank().toLowerCase(), rankedName.getName());
+            });
 
     // Optional IUCN field
     if (taxonRecord.getIucnRedListCategoryCode() != null) {
@@ -348,7 +357,6 @@ public class OccurrenceHdfsRecordConverter {
 
     return map;
   }
-
 
   private static String getHigherRankName(TaxonRecord taxonRecord, Rank rank) {
 
