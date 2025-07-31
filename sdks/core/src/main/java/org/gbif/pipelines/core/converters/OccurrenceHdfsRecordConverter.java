@@ -354,6 +354,7 @@ public class OccurrenceHdfsRecordConverter {
         .forEach(
             rankedName -> {
               map.put(rankedName.getRank().toLowerCase(), rankedName.getName());
+              map.put(rankedName.getRank().toLowerCase() + "Key", rankedName.getKey());
             });
 
     // Optional IUCN field
