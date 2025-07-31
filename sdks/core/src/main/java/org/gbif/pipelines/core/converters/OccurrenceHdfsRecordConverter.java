@@ -310,13 +310,18 @@ public class OccurrenceHdfsRecordConverter {
 
     // Required taxon keys and names
     map.put(GbifTerm.taxonKey.simpleName(), usage.getKey());
+
     map.put(
         GbifTerm.acceptedTaxonKey.simpleName(),
         acceptedUsage != null ? acceptedUsage.getKey() : usage.getKey());
-    map.put(DwcTerm.scientificName.simpleName(), usage.getName());
+    map.put(
+        DwcTerm.acceptedNameUsageID.simpleName(),
+        acceptedUsage != null ? acceptedUsage.getKey() : usage.getKey());
     map.put(
         GbifTerm.acceptedScientificName.simpleName(),
         acceptedUsage != null ? acceptedUsage.getName() : "");
+
+    map.put(DwcTerm.scientificName.simpleName(), usage.getName());
 
     extractOptValue(verbatim, DwcTerm.scientificName)
         .ifPresent(s -> map.put(GbifTerm.verbatimScientificName.simpleName(), s));
@@ -354,6 +359,15 @@ public class OccurrenceHdfsRecordConverter {
     // Optional IUCN field
     if (taxonRecord.getIucnRedListCategoryCode() != null) {
       map.put(IucnTerm.iucnRedListCategory.simpleName(), taxonRecord.getIucnRedListCategoryCode());
+    }
+
+    // Add taxonomic issues
+    if (taxonRecord.getIssues() != null
+        && taxonRecord.getIssues().getIssueList() != null
+        && !taxonRecord.getIssues().getIssueList().isEmpty()) {
+      map.put(
+          GbifTerm.taxonomicIssue.simpleName(),
+          taxonRecord.getIssues().getIssueList().stream().collect(Collectors.joining(";")));
     }
 
     return map;
@@ -413,8 +427,7 @@ public class OccurrenceHdfsRecordConverter {
 
     if (Objects.nonNull(taxonRecord.getAcceptedUsage())) {
       occurrenceHdfsRecord.setAcceptedscientificname(taxonRecord.getAcceptedUsage().getName());
-      occurrenceHdfsRecord.setAcceptednameusageid(
-          taxonRecord.getAcceptedUsage().getKey().toString());
+      occurrenceHdfsRecord.setAcceptednameusageid(taxonRecord.getAcceptedUsage().getKey());
       if (Objects.nonNull(taxonRecord.getAcceptedUsage().getKey())) {
         occurrenceHdfsRecord.setAcceptedtaxonkey(taxonRecord.getAcceptedUsage().getKey());
       }
@@ -423,10 +436,10 @@ public class OccurrenceHdfsRecordConverter {
     } else if (Objects.nonNull(taxonRecord.getUsage())
         && !taxonRecord.getUsage().getKey().equals("0")) {
       // if the acceptedUsage is null we use the usage as the accepted as longs as it's not
-      // incertidae sedis
+      // incertae sedis
       occurrenceHdfsRecord.setAcceptedtaxonkey(taxonRecord.getUsage().getKey());
       occurrenceHdfsRecord.setAcceptedscientificname(taxonRecord.getUsage().getName());
-      occurrenceHdfsRecord.setAcceptednameusageid(taxonRecord.getUsage().getKey().toString());
+      occurrenceHdfsRecord.setAcceptednameusageid(taxonRecord.getUsage().getKey());
     }
 
     if (Objects.nonNull(taxonRecord.getUsage())) {
