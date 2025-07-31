@@ -5,12 +5,11 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValu
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.util.*;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.elasticsearch.common.Strings;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
@@ -382,9 +381,7 @@ public class ParentJsonConverter {
                           .setTaxonCompletenessProtocols(h.getTaxonCompletenessProtocols())
                           .setIsTaxonomicScopeFullyReported(h.getIsTaxonomicScopeFullyReported())
                           .setIsAbsenceReported(h.getIsAbsenceReported())
-                          .setAbsentTaxa(h.getAbsentTaxa())
                           .setHasNonTargetTaxa(h.getHasNonTargetTaxa())
-                          .setNonTargetTaxa(h.getNonTargetTaxa())
                           .setAreNonTargetTaxaFullyReported(h.getAreNonTargetTaxaFullyReported())
                           .setIsLifeStageScopeFullyReported(h.getIsLifeStageScopeFullyReported())
                           .setIsDegreeOfEstablishmentScopeFullyReported(
@@ -413,43 +410,32 @@ public class ParentJsonConverter {
                               getValueAndUnit(
                                   h.getSamplingEffortValue(), h.getSamplingEffortUnit()));
 
-                  humboldtBuilder.setHabitatScope(
-                      new ArrayList<>(
-                          CollectionUtils.subtract(
-                              h.getTargetHabitatScope(), h.getExcludedHabitatScope())));
-                  humboldtBuilder.setGrowthFormScope(
-                      new ArrayList<>(
-                          CollectionUtils.subtract(
-                              h.getTargetGrowthFormScope(), h.getExcludedGrowthFormScope())));
-
-                  BiFunction<
-                          List<org.gbif.pipelines.io.avro.VocabularyConcept>,
+                  Function<
                           List<org.gbif.pipelines.io.avro.VocabularyConcept>,
                           List<VocabularyConcept>>
-                      subtractVocabularyLists =
-                          (target, excluded) ->
-                              target.stream()
+                      vocabConverter =
+                          vocabs ->
+                              vocabs.stream()
                                   .map(
-                                      tlf -> {
-                                        if (!excluded.contains(tlf)) {
-                                          return VocabularyConcept.newBuilder()
-                                              .setConcept(tlf.getConcept())
-                                              .setLineage(tlf.getLineage())
-                                              .build();
-                                        }
-                                        return null;
-                                      })
-                                  .filter(Objects::nonNull)
+                                      v ->
+                                          VocabularyConcept.newBuilder()
+                                              .setConcept(v.getConcept())
+                                              .setLineage(v.getLineage())
+                                              .build())
                                   .collect(Collectors.toList());
 
-                  humboldtBuilder.setLifeStageScope(
-                      subtractVocabularyLists.apply(
-                          h.getTargetLifeStageScope(), h.getExcludedLifeStageScope()));
-
-                  humboldtBuilder.setDegreeOfEstablishmentScope(
-                      subtractVocabularyLists.apply(
-                          h.getTargetDegreeOfEstablishmentScope(),
-                          h.getExcludedDegreeOfEstablishmentScope()));
+                  humboldtBuilder.setTargetHabitatScope(h.getTargetHabitatScope());
+                  humboldtBuilder.setExcludedHabitatScope(h.getExcludedHabitatScope());
+                  humboldtBuilder.setTargetGrowthFormScope(h.getTargetGrowthFormScope());
+                  humboldtBuilder.setExcludedGrowthFormScope(h.getExcludedGrowthFormScope());
+                  humboldtBuilder.setTargetLifeStageScope(
+                      vocabConverter.apply(h.getTargetLifeStageScope()));
+                  humboldtBuilder.setExcludedLifeStageScope(
+                      vocabConverter.apply(h.getExcludedLifeStageScope()));
+                  humboldtBuilder.setTargetDegreeOfEstablishmentScope(
+                      vocabConverter.apply(h.getTargetDegreeOfEstablishmentScope()));
+                  humboldtBuilder.setExcludedDegreeOfEstablishmentScope(
+                      vocabConverter.apply(h.getExcludedDegreeOfEstablishmentScope()));
 
                   if (h.getEventDurationValue() != null && h.getEventDurationUnit() != null) {
                     DurationUnit eventDurationUnit = DurationUnit.valueOf(h.getEventDurationUnit());
@@ -458,39 +444,48 @@ public class ParentJsonConverter {
                   }
 
                   // taxon
-                  Map<String, List<HumboldtTaxonClassification>> classifications = new HashMap<>();
-                  List<TaxonHumboldtRecord> taxons =
-                      new ArrayList<>(
-                          CollectionUtils.subtract(
-                              h.getTargetTaxonomicScope(), h.getExcludedTaxonomicScope()));
-                  taxons.forEach(
-                      t -> {
-                        HumboldtTaxonClassification.Builder taxonBuilder =
-                            HumboldtTaxonClassification.newBuilder()
-                                .setUsageKey(t.getUsageKey())
-                                .setUsageName(t.getUsageName())
-                                .setUsageRank(t.getUsageRank());
+                  Function<
+                          List<TaxonHumboldtRecord>, Map<String, List<HumboldtTaxonClassification>>>
+                      taxonFn =
+                          taxonRecords -> {
+                            Map<String, List<HumboldtTaxonClassification>> classifications =
+                                new HashMap<>();
+                            taxonRecords.forEach(
+                                t -> {
+                                  HumboldtTaxonClassification.Builder taxonBuilder =
+                                      HumboldtTaxonClassification.newBuilder()
+                                          .setUsageKey(t.getUsageKey())
+                                          .setUsageName(t.getUsageName())
+                                          .setUsageRank(t.getUsageRank());
 
-                        Map<String, String> classification = new HashMap<>();
-                        Map<String, String> classificationKeys = new HashMap<>();
-                        List<String> taxonKeys = new ArrayList<>();
-                        t.getClassification()
-                            .forEach(
-                                c -> {
-                                  classification.put(c.getRank(), c.getName());
-                                  classificationKeys.put(c.getRank(), c.getKey());
-                                  taxonKeys.add(c.getKey());
+                                  Map<String, String> classification = new HashMap<>();
+                                  Map<String, String> classificationKeys = new HashMap<>();
+                                  List<String> taxonKeys = new ArrayList<>();
+                                  t.getClassification()
+                                      .forEach(
+                                          c -> {
+                                            classification.put(c.getRank(), c.getName());
+                                            classificationKeys.put(c.getRank(), c.getKey());
+                                            taxonKeys.add(c.getKey());
+                                          });
+
+                                  taxonBuilder.setClassification(classification);
+                                  taxonBuilder.setClassificationKeys(classificationKeys);
+                                  taxonBuilder.setTaxonKeys(taxonKeys);
+                                  taxonBuilder.setIssues(t.getIssues().getIssueList());
+                                  classifications
+                                      .computeIfAbsent(t.getChecklistKey(), k -> new ArrayList<>())
+                                      .add(taxonBuilder.build());
                                 });
+                            return classifications;
+                          };
 
-                        taxonBuilder.setClassification(classification);
-                        taxonBuilder.setClassificationKeys(classificationKeys);
-                        taxonBuilder.setTaxonKeys(taxonKeys);
-                        classifications
-                            .computeIfAbsent(t.getChecklistKey(), k -> new ArrayList<>())
-                            .add(taxonBuilder.build());
-                      });
-
-                  humboldtBuilder.setTaxonomicScope(classifications);
+                  humboldtBuilder.setTargetTaxonomicScope(
+                      taxonFn.apply(h.getTargetTaxonomicScope()));
+                  humboldtBuilder.setExcludedTaxonomicScope(
+                      taxonFn.apply(h.getExcludedTaxonomicScope()));
+                  humboldtBuilder.setAbsentTaxa(taxonFn.apply(h.getAbsentTaxa()));
+                  humboldtBuilder.setNonTargetTaxa(taxonFn.apply(h.getNonTargetTaxa()));
 
                   return humboldtBuilder.build();
                 })

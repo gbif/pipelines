@@ -18,7 +18,7 @@
     },
     {
       "humboldt_usage_key": {
-        "path_match": "event.humboldt.taxonomicScope.*.usageKey",
+        "path_match": "event.humboldt.*.*.usageKey",
         "mapping": {
           "type": "keyword"
         }
@@ -26,7 +26,7 @@
     },
     {
       "humboldt_usage_name": {
-        "path_match": "event.humboldt.taxonomicScope.*.usageName",
+        "path_match": "event.humboldt.*.*.usageName",
         "mapping": {
           "type": "keyword"
         }
@@ -34,7 +34,7 @@
     },
     {
       "humboldt_usage_rank": {
-        "path_match": "event.humboldt.taxonomicScope.*.usageRank",
+        "path_match": "event.humboldt.*.*.usageRank",
         "mapping": {
           "type": "keyword"
         }
@@ -42,7 +42,7 @@
     },
     {
       "humboldt_classification": {
-        "path_match": "event.humboldt.taxonomicScope.*.classification.*.*",
+        "path_match": "event.humboldt.*.*.classification.*.*",
         "mapping": {
           "type": "keyword"
         }
@@ -50,7 +50,7 @@
     },
     {
       "humboldt_classification_keys": {
-        "path_match": "event.humboldt.taxonomicScope.*.classificationKeys.*.*",
+        "path_match": "event.humboldt.*.*.classificationKeys.*.*",
         "mapping": {
           "type": "keyword"
         }
@@ -58,7 +58,15 @@
     },
     {
       "humboldt_classification_taxon_keys": {
-        "path_match": "event.humboldt.taxonomicScope.*.taxonKeys",
+        "path_match": "event.humboldt.*.*.taxonKeys",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "humboldt_classification_issues": {
+        "path_match": "event.humboldt.*.*.issues",
         "mapping": {
           "type": "keyword"
         }
@@ -425,16 +433,26 @@
                 "unit": {"type": "keyword"}
               }
             },
-            "habitatScope": {"type": "keyword"},
+            "targetHabitatScope": {"type": "keyword"},
+            "excludedHabitatScope": {"type": "keyword"},
             "eventDurationValueInMinutes": {"type": "double"},
             "taxonCompletenessProtocols": {"type": "keyword"},
             "isTaxonomicScopeFullyReported": {"type": "boolean"},
             "isAbsenceReported": {"type": "boolean"},
-            "absentTaxa": {"type": "keyword"},
             "hasNonTargetTaxa": {"type": "boolean"},
-            "nonTargetTaxa": {"type": "keyword"},
             "areNonTargetTaxaFullyReported": {"type": "boolean"},
-            "lifeStageScope": {
+            "targetLifeStageScope": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "keyword"
+                },
+                "lineage": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "excludedLifeStageScope": {
               "type": "object",
               "properties": {
                 "concept": {
@@ -446,7 +464,18 @@
               }
             },
             "isLifeStageScopeFullyReported": {"type": "boolean"},
-            "degreeOfEstablishmentScope": {
+            "targetDegreeOfEstablishmentScope": {
+              "type": "object",
+              "properties": {
+                "concept": {
+                  "type": "keyword"
+                },
+                "lineage": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "excludedDegreeOfEstablishmentScope": {
               "type": "object",
               "properties": {
                 "concept": {
@@ -458,7 +487,8 @@
               }
             },
             "isDegreeOfEstablishmentScopeFullyReported": {"type": "boolean"},
-            "growthFormScope": {"type": "keyword"},
+            "targetGrowthFormScope": {"type": "keyword"},
+            "excludedGrowthFormScope": {"type": "keyword"},
             "isGrowthFormScopeFullyReported": {"type": "boolean"},
             "hasNonTargetOrganisms": {"type": "boolean"},
             "compilationTypes": {"type": "keyword"},

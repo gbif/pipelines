@@ -37,9 +37,13 @@ public class HumboldtInterpreterTest {
     humboldtData.put("http://rs.tdwg.org/eco/terms/eventDurationValue", "3");
     humboldtData.put("http://rs.tdwg.org/eco/terms/eventDurationUnit", "Minutes");
     humboldtData.put("http://rs.tdwg.org/eco/terms/isAbsenceReported", "True");
-    humboldtData.put("http://rs.tdwg.org/eco/terms/hasNonTargetTaxa", "True in some cases");
+    humboldtData.put("http://rs.tdwg.org/eco/terms/hasNonTargetTaxa", "False");
+    humboldtData.put("http://rs.tdwg.org/eco/terms/nonTargetTaxa", "aves");
+    humboldtData.put(
+        "http://rs.tdwg.org/eco/terms/isTaxonomicScopeFullyReported", "True in some cases");
     humboldtData.put("http://rs.tdwg.org/eco/terms/targetLifeStageScope", "ADUlt");
     humboldtData.put("http://rs.tdwg.org/eco/terms/targetDegreeOfEstablishmentScope", "td1| td2");
+    humboldtData.put("http://rs.tdwg.org/eco/terms/excludedDegreeOfEstablishmentScope", "td1");
     humboldtData.put("http://rs.tdwg.org/eco/terms/targetTaxonomicScope", "none | aves");
 
     ext.put("http://rs.tdwg.org/eco/terms/Event", List.of(humboldtData));
@@ -78,11 +82,14 @@ public class HumboldtInterpreterTest {
     assertEquals(20.0, humboldt.getSamplingEffortValue(), 0.0001);
     assertEquals(3.0, humboldt.getEventDurationValue(), 0.0001);
     assertEquals(DurationUnit.minutes.name(), humboldt.getEventDurationUnit());
-    assertTrue(humboldt.getIsAbsenceReported());
-    assertNull(humboldt.getHasNonTargetTaxa());
+    assertNull(humboldt.getIsTaxonomicScopeFullyReported());
     assertEquals(1, humboldt.getTargetLifeStageScope().size());
     assertEquals("Adult", humboldt.getTargetLifeStageScope().get(0).getConcept());
     assertEquals(2, humboldt.getTargetDegreeOfEstablishmentScope().size());
+    assertTrue(
+        humboldt.getTargetDegreeOfEstablishmentScope().stream()
+            .anyMatch(c -> c.getConcept().equals("td1")));
+    assertEquals(1, humboldt.getExcludedDegreeOfEstablishmentScope().size());
     assertEquals(2, humboldt.getTargetTaxonomicScope().size());
     assertEquals(
         2,
@@ -107,22 +114,34 @@ public class HumboldtInterpreterTest {
                     ts.getClassification().size() == 1
                         && ts.getUsageName().equals(TaxonomyInterpreter.INCERTAE_SEDIS_NAME)
                         && ts.getUsageKey().equals(TaxonomyInterpreter.INCERTAE_SEDIS_KEY)
-                        && ts.getUsageRank().equals(TaxonomyInterpreter.KINGDOM_RANK))
+                        && ts.getUsageRank().equals(TaxonomyInterpreter.KINGDOM_RANK)
+                        && ts.getIssues()
+                            .getIssueList()
+                            .contains(OccurrenceIssue.TAXON_MATCH_NONE.name()))
             .count());
+    assertFalse(hr.getIssues().getIssueList().contains(OccurrenceIssue.TAXON_MATCH_NONE.name()));
 
     assertTrue(
         hr.getIssues()
             .getIssueList()
-            .contains(
-                OccurrenceIssue.GEOSPATIAL_SCOPE_AREA_LOWER_THAN_TOTAL_TOTAL_AREA_SAMPLED.name()));
+            .contains(OccurrenceIssue.GEOSPATIAL_SCOPE_AREA_LOWER_THAN_TOTAL_AREA_SAMPLED.name()));
     assertTrue(hr.getIssues().getIssueList().contains(OccurrenceIssue.SITE_COUNT_INVALID.name()));
     assertTrue(
         hr.getIssues()
             .getIssueList()
             .contains(OccurrenceIssue.SAMPLING_EFFORT_UNIT_MISSING.name()));
     assertTrue(
-        hr.getIssues().getIssueList().contains(OccurrenceIssue.HAS_NON_TARGET_TAXA_INVALID.name()));
-    assertTrue(hr.getIssues().getIssueList().contains(OccurrenceIssue.TAXON_MATCH_NONE.name()));
+        hr.getIssues()
+            .getIssueList()
+            .contains(OccurrenceIssue.IS_TAXONOMIC_SCOPE_FULLY_REPORTED_INVALID.name()));
+    assertTrue(
+        hr.getIssues()
+            .getIssueList()
+            .contains(OccurrenceIssue.TARGET_DEGREE_OF_ESTABLISHMENT_EXCLUDED.name()));
+    assertTrue(
+        hr.getIssues()
+            .getIssueList()
+            .contains(OccurrenceIssue.HAS_NON_TARGET_TAXA_MISMATCH.name()));
   }
 
   @Test

@@ -111,12 +111,12 @@ public class HumboldtInterpreter {
                 EcoTerm.isAbsenceReported,
                 interpretBoolean(
                     Humboldt::setIsAbsenceReported, OccurrenceIssue.IS_ABSENCE_REPORTED_INVALID))
-            .map(EcoTerm.absentTaxa, interpretStringList(Humboldt::setAbsentTaxa))
+            .map(EcoTerm.absentTaxa, interpretTaxon(hr, Humboldt::setAbsentTaxa))
             .map(
                 EcoTerm.hasNonTargetTaxa,
                 interpretBoolean(
                     Humboldt::setHasNonTargetTaxa, OccurrenceIssue.HAS_NON_TARGET_TAXA_INVALID))
-            .map(EcoTerm.nonTargetTaxa, interpretStringList(Humboldt::setNonTargetTaxa))
+            .map(EcoTerm.nonTargetTaxa, interpretTaxon(hr, Humboldt::setNonTargetTaxa))
             .map(
                 EcoTerm.areNonTargetTaxaFullyReported,
                 interpretBoolean(
@@ -218,12 +218,68 @@ public class HumboldtInterpreter {
             .map(EcoTerm.samplingEffortUnit, interpretString(Humboldt::setSamplingEffortUnit))
             .postMap(checkAreas())
             .postMap(checkMissingUnits())
+            .postMap(checkTargetExclusions())
+            .postMap(checkBooleanMismatches())
             .convert(er);
 
     hr.setHumboldtItems(result.getList());
     if (result.getIssues() != null) {
       hr.getIssues().getIssueList().addAll(result.getIssuesAsList());
     }
+  }
+
+  private static Function<Humboldt, List<String>> checkBooleanMismatches() {
+    return humboldt -> {
+      List<String> issues = new ArrayList<>();
+      if (humboldt.getNonTargetTaxa() != null
+          && !humboldt.getNonTargetTaxa().isEmpty()
+          && Boolean.FALSE.equals(humboldt.getHasNonTargetTaxa())) {
+        return List.of(OccurrenceIssue.HAS_NON_TARGET_TAXA_MISMATCH.name());
+      }
+      if (humboldt.getMaterialSampleTypes() != null
+          && !humboldt.getMaterialSampleTypes().isEmpty()
+          && Boolean.FALSE.equals(humboldt.getHasMaterialSamples())) {
+        return List.of(OccurrenceIssue.HAS_MATERIAL_SAMPLES_MISMATCH.name());
+      }
+      return issues;
+    };
+  }
+
+  private static Function<Humboldt, List<String>> checkTargetExclusions() {
+    return humboldt -> {
+      List<String> issues = new ArrayList<>();
+
+      BiFunction<List<?>, List<?>, Boolean> existExclusion =
+          (target, excluded) ->
+              target != null
+                  && !target.isEmpty()
+                  && excluded != null
+                  && !excluded.isEmpty()
+                  && target.stream().anyMatch(excluded::contains);
+
+      if (existExclusion.apply(
+          humboldt.getTargetTaxonomicScope(), humboldt.getExcludedTaxonomicScope())) {
+        return List.of(OccurrenceIssue.TARGET_TAXONOMIC_SCOPE_EXCLUDED.name());
+      }
+      if (existExclusion.apply(
+          humboldt.getTargetLifeStageScope(), humboldt.getExcludedLifeStageScope())) {
+        return List.of(OccurrenceIssue.TARGET_LIFE_STAGE_SCOPE_EXCLUDED.name());
+      }
+      if (existExclusion.apply(
+          humboldt.getTargetDegreeOfEstablishmentScope(),
+          humboldt.getExcludedDegreeOfEstablishmentScope())) {
+        return List.of(OccurrenceIssue.TARGET_DEGREE_OF_ESTABLISHMENT_EXCLUDED.name());
+      }
+      if (existExclusion.apply(
+          humboldt.getTargetGrowthFormScope(), humboldt.getExcludedGrowthFormScope())) {
+        return List.of(OccurrenceIssue.TARGET_GROWTH_FORM_EXCLUDED.name());
+      }
+      if (existExclusion.apply(
+          humboldt.getTargetHabitatScope(), humboldt.getExcludedHabitatScope())) {
+        return List.of(OccurrenceIssue.TARGET_HABITAT_SCOPE_EXCLUDED.name());
+      }
+      return issues;
+    };
   }
 
   private static Function<Humboldt, List<String>> checkAreas() {
@@ -236,8 +292,7 @@ public class HumboldtInterpreter {
               .getGeospatialScopeAreaUnit()
               .equalsIgnoreCase(humboldt.getTotalAreaSampledUnit())
           && humboldt.getGeospatialScopeAreaValue() < humboldt.getTotalAreaSampledValue()) {
-        return List.of(
-            OccurrenceIssue.GEOSPATIAL_SCOPE_AREA_LOWER_THAN_TOTAL_TOTAL_AREA_SAMPLED.name());
+        return List.of(OccurrenceIssue.GEOSPATIAL_SCOPE_AREA_LOWER_THAN_TOTAL_AREA_SAMPLED.name());
       }
       return List.of();
     };
@@ -360,7 +415,7 @@ public class HumboldtInterpreter {
                   TaxonomyInterpreter.matchTaxon(
                       nameUsageMatchRequest,
                       kvStore,
-                      humboldtRecord,
+                      thr,
                       response -> {
                         thr.setUsageRank(KINGDOM_RANK);
                         thr.setUsageName(INCERTAE_SEDIS_NAME);
@@ -394,7 +449,7 @@ public class HumboldtInterpreter {
       extractListValue(rawValue)
           .forEach(
               v ->
-                  VocabularyInterpreter.interpretVocabulary(term, rawValue, vocabularyService, null)
+                  VocabularyInterpreter.interpretVocabulary(term, v, vocabularyService, null)
                       .ifPresent(concepts::add));
       if (!concepts.isEmpty()) {
         setter.accept(humboldt, concepts);

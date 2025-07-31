@@ -13,7 +13,8 @@
         {"name": "usageKey", "type": ["null", "string"], "default" : null},
         {"name": "usageName", "type": ["null", "string"], "default" : null},
         {"name": "usageRank", "type": ["null", "string"], "default" : null},
-        {"name": "classification", "type" : { "type" : "array", "items" : "org.gbif.pipelines.io.avro.RankedName" }, "default": []}
+        {"name": "classification", "type" : { "type" : "array", "items" : "org.gbif.pipelines.io.avro.RankedName" }, "default": []},
+        {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   },
   {
@@ -37,9 +38,9 @@
       {"name": "taxonCompletenessProtocols", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/taxonCompletenessProtocols"},
       {"name": "isTaxonomicScopeFullyReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/isTaxonomicScopeFullyReported"},
       {"name": "isAbsenceReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/isAbsenceReported"},
-      {"name": "absentTaxa", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/absentTaxa"},
+      {"name": "absentTaxa", "type": {"type" : "array", "items" : "TaxonHumboldtRecord"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/absentTaxa"},
       {"name": "hasNonTargetTaxa", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/hasNonTargetTaxa"},
-      {"name": "nonTargetTaxa", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/nonTargetTaxa"},
+      {"name": "nonTargetTaxa", "type": {"type" : "array", "items" : "TaxonHumboldtRecord"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/nonTargetTaxa"},
       {"name": "areNonTargetTaxaFullyReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/areNonTargetTaxaFullyReported"},
       {"name": "targetLifeStageScope", "type": {"type" : "array", "items" : "VocabularyConcept"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/targetLifeStageScope"},
       {"name": "excludedLifeStageScope", "type": {"type" : "array", "items" : "VocabularyConcept"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/excludedLifeStageScope"},

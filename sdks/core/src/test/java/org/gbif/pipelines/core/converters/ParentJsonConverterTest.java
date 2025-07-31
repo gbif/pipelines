@@ -7,12 +7,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.pipelines.core.parsers.humboldt.DurationUnit;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Humboldt;
 import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -53,22 +55,6 @@ public class ParentJsonConverterTest {
                                     .setConcept("lf1")
                                     .setLineage(Collections.singletonList("lf1"))
                                     .build()))
-                        .setTargetDegreeOfEstablishmentScope(
-                            Arrays.asList(
-                                VocabularyConcept.newBuilder()
-                                    .setConcept("doe1")
-                                    .setLineage(Collections.singletonList("doe1"))
-                                    .build(),
-                                VocabularyConcept.newBuilder()
-                                    .setConcept("doe2")
-                                    .setLineage(Arrays.asList("doe2", "doe1"))
-                                    .build()))
-                        .setExcludedDegreeOfEstablishmentScope(
-                            Collections.singletonList(
-                                VocabularyConcept.newBuilder()
-                                    .setConcept("doe1")
-                                    .setLineage(Collections.singletonList("doe1"))
-                                    .build()))
                         .setTargetTaxonomicScope(
                             Collections.singletonList(
                                 TaxonHumboldtRecord.newBuilder()
@@ -88,8 +74,20 @@ public class ParentJsonConverterTest {
                                                 .setName("n2")
                                                 .setRank("r2")
                                                 .build()))
+                                    .setIssues(
+                                        IssueRecord.newBuilder()
+                                            .setIssueList(
+                                                List.of(OccurrenceIssue.TAXON_MATCH_NONE.name()))
+                                            .build())
                                     .build()))
                         .build()))
+            .setIssues(
+                IssueRecord.newBuilder()
+                    .setIssueList(
+                        List.of(
+                            OccurrenceIssue.TARGET_DEGREE_OF_ESTABLISHMENT_EXCLUDED.name(),
+                            OccurrenceIssue.HAS_MATERIAL_SAMPLES_MISMATCH.name()))
+                    .build())
             .build();
 
     ParentJsonRecord parentJsonRecord =
@@ -99,18 +97,17 @@ public class ParentJsonConverterTest {
         parentJsonRecord.getEvent().getHumboldt();
     assertEquals(1, humboldtJsonList.size());
 
+    assertEquals(2, parentJsonRecord.getEvent().getIssues().size());
     org.gbif.pipelines.io.avro.json.Humboldt first = humboldtJsonList.get(0);
     assertEquals(2, first.getSiteCount().intValue());
-    assertEquals(1, first.getHabitatScope().size());
-    assertEquals("hs2", first.getHabitatScope().get(0));
+    assertEquals(2, first.getTargetHabitatScope().size());
+    assertEquals(1, first.getExcludedHabitatScope().size());
     assertEquals(120.0, first.getEventDurationValueInMinutes(), 0.0001);
-    assertEquals(1, first.getLifeStageScope().size());
-    assertEquals("lf1", first.getLifeStageScope().get(0).getConcept());
-    assertEquals(1, first.getDegreeOfEstablishmentScope().size());
-    assertEquals("doe2", first.getDegreeOfEstablishmentScope().get(0).getConcept());
+    assertEquals(1, first.getTargetLifeStageScope().size());
+    assertTrue(first.getExcludedLifeStageScope().isEmpty());
     assertNull(first.getGeospatialScopeArea());
 
-    Map<String, List<HumboldtTaxonClassification>> taxonScope = first.getTaxonomicScope();
+    Map<String, List<HumboldtTaxonClassification>> taxonScope = first.getTargetTaxonomicScope();
     assertEquals(1, taxonScope.size());
     assertTrue(taxonScope.containsKey(CHECKLIST_KEY));
     List<HumboldtTaxonClassification> classification = taxonScope.get(CHECKLIST_KEY);
@@ -124,6 +121,7 @@ public class ParentJsonConverterTest {
     assertEquals(2, humboldtTaxonClassification.getTaxonKeys().size());
     assertTrue(humboldtTaxonClassification.getTaxonKeys().contains("k1"));
     assertTrue(humboldtTaxonClassification.getTaxonKeys().contains("k2"));
+    assertEquals(1, humboldtTaxonClassification.getIssues().size());
   }
 
   @Test
@@ -159,14 +157,8 @@ public class ParentJsonConverterTest {
                             Arrays.asList(
                                 taxonHumboldtRecord(CHECKLIST_KEY, "1", "2"),
                                 taxonHumboldtRecord(CHECKLIST_KEY2, "11", "22"),
-                                taxonHumboldtRecord(CHECKLIST_KEY, "10", "20"),
-                                taxonHumboldtRecord(CHECKLIST_KEY2, "101", "201"),
                                 taxonHumboldtRecord(CHECKLIST_KEY, "30", "20"),
                                 taxonHumboldtRecord(CHECKLIST_KEY2, "301", "201")))
-                        .setExcludedTaxonomicScope(
-                            Arrays.asList(
-                                taxonHumboldtRecord(CHECKLIST_KEY, "10", "20"),
-                                taxonHumboldtRecord(CHECKLIST_KEY2, "101", "201")))
                         .build()))
             .build();
 
@@ -177,7 +169,7 @@ public class ParentJsonConverterTest {
         parentJsonRecord.getEvent().getHumboldt();
     assertEquals(1, humboldtJsonList.size());
     Map<String, List<HumboldtTaxonClassification>> taxon =
-        humboldtJsonList.get(0).getTaxonomicScope();
+        humboldtJsonList.get(0).getTargetTaxonomicScope();
     assertEquals(2, taxon.size());
     assertEquals(2, taxon.get(CHECKLIST_KEY).size());
     assertEquals(2, taxon.get(CHECKLIST_KEY2).size());
