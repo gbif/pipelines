@@ -337,9 +337,7 @@ public class OccurrenceHdfsRecordConverter {
             usage.getInfraspecificEpithet());
       }
       if (usage.getRank() != null) {
-        map.put(
-            DwcTerm.taxonRank.simpleName().toLowerCase(),
-            TERM_FACTORY.findTerm(usage.getRank()).simpleName());
+        map.put(DwcTerm.taxonRank.simpleName().toLowerCase(), usage.getRank());
       }
     }
 
