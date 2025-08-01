@@ -308,40 +308,43 @@ public class OccurrenceHdfsRecordConverter {
     RankedNameWithAuthorship usage = taxonRecord.getUsage();
     RankedNameWithAuthorship acceptedUsage = taxonRecord.getAcceptedUsage();
 
-    // Required taxon keys and names
-    map.put(GbifTerm.taxonKey.simpleName().toLowerCase(), usage.getKey());
+    if (usage != null) {
 
-    map.put(
-        GbifTerm.acceptedTaxonKey.simpleName().toLowerCase(),
-        acceptedUsage != null ? acceptedUsage.getKey() : usage.getKey());
-    map.put(
-        DwcTerm.acceptedNameUsageID.simpleName().toLowerCase(),
-        acceptedUsage != null ? acceptedUsage.getKey() : usage.getKey());
-    map.put(
-        GbifTerm.acceptedScientificName.simpleName().toLowerCase(),
-        acceptedUsage != null ? acceptedUsage.getName() : "");
+      // Required taxon keys and names
+      map.put(GbifTerm.taxonKey.simpleName().toLowerCase(), usage.getKey());
+      map.put(DwcTerm.scientificName.simpleName().toLowerCase(), usage.getName());
 
-    map.put(DwcTerm.scientificName.simpleName(), usage.getName());
+      map.put(
+          GbifTerm.acceptedTaxonKey.simpleName().toLowerCase(),
+          acceptedUsage != null ? acceptedUsage.getKey() : usage.getKey());
+      map.put(
+          DwcTerm.acceptedNameUsageID.simpleName().toLowerCase(),
+          acceptedUsage != null ? acceptedUsage.getKey() : usage.getKey());
+      map.put(
+          GbifTerm.acceptedScientificName.simpleName().toLowerCase(),
+          acceptedUsage != null ? acceptedUsage.getName() : "");
+
+      // Optional taxonomic fields
+      if (usage.getGenericName() != null) {
+        map.put(DwcTerm.genericName.simpleName().toLowerCase(), usage.getGenericName());
+      }
+      if (usage.getSpecificEpithet() != null) {
+        map.put(DwcTerm.specificEpithet.simpleName().toLowerCase(), usage.getSpecificEpithet());
+      }
+      if (usage.getInfraspecificEpithet() != null) {
+        map.put(
+            DwcTerm.infraspecificEpithet.simpleName().toLowerCase(),
+            usage.getInfraspecificEpithet());
+      }
+      if (usage.getRank() != null) {
+        map.put(
+            DwcTerm.taxonRank.simpleName().toLowerCase(),
+            TERM_FACTORY.findTerm(usage.getRank()).simpleName());
+      }
+    }
 
     extractOptValue(verbatim, DwcTerm.scientificName)
         .ifPresent(s -> map.put(GbifTerm.verbatimScientificName.simpleName().toLowerCase(), s));
-
-    // Optional taxonomic fields
-    if (usage.getGenericName() != null) {
-      map.put(DwcTerm.genericName.simpleName().toLowerCase(), usage.getGenericName());
-    }
-    if (usage.getSpecificEpithet() != null) {
-      map.put(DwcTerm.specificEpithet.simpleName().toLowerCase(), usage.getSpecificEpithet());
-    }
-    if (usage.getInfraspecificEpithet() != null) {
-      map.put(
-          DwcTerm.infraspecificEpithet.simpleName().toLowerCase(), usage.getInfraspecificEpithet());
-    }
-    if (usage.getRank() != null) {
-      map.put(
-          DwcTerm.taxonRank.simpleName().toLowerCase(),
-          TERM_FACTORY.findTerm(usage.getRank()).simpleName());
-    }
 
     // Taxonomic status
     var diagnostics = taxonRecord.getDiagnostics();
