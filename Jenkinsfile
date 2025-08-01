@@ -10,7 +10,7 @@ pipeline {
     booleanParam(name: 'DRY_RUN', defaultValue: false, description: 'Test run before release')
   }
   tools {
-    maven 'Maven 3.8.5'
+    maven 'Maven 3.9.9'
     jdk 'OpenJDK17'
   }
   options {
@@ -107,7 +107,7 @@ pipeline {
       steps {
         configFileProvider([configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS')]) {
           git 'https://github.com/gbif/pipelines.git'
-          sh 'mvn -s $MAVEN_SETTINGS -B release:prepare release:perform -Darguments="-Denforcer.skip=true -Dmaven.test.skip=true" -P ${PROFILES}'
+          sh 'mvn -s $MAVEN_SETTINGS -B release:prepare release:perform -Denforcer.skip=true -Dmaven.test.skip=true -P ${PROFILES}'
         }
       }
     }

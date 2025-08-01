@@ -25,9 +25,6 @@ public class ModelUtils {
   public static final String DEFAULT_SEPARATOR = "\\|";
 
   public static String extractValue(ExtendedRecord er, Term term) {
-    if (er == null || term == null) {
-      return null;
-    }
     String value = er.getCoreTerms().get(term.qualifiedName());
     return value != null ? value.trim() : extractFromIdentificationExtension(er, term);
   }

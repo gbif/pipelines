@@ -50,6 +50,10 @@ public class EventInheritedFieldsFn
       allRecords.removeAll(recordsWithChildren);
       EventInheritedFields leaf = recordsMap.get(allRecords.peek());
 
+      if (leaf == null) {
+        return EventInheritedRecord.newBuilder().build();
+      }
+
       EventInheritedRecord eventInheritedRecord =
           setParentValues(
                   EventInheritedRecord.newBuilder()

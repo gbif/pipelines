@@ -1,10 +1,12 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.pipelines.core.utils.EventsUtils.*;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -67,7 +69,17 @@ public class VocabularyInterpreter {
   public static BiConsumer<ExtendedRecord, EventCoreRecord> interpretEventType(
       VocabularyService vocabularyService) {
     return (er, ecr) ->
-        interpretVocabulary(er, DwcTerm.eventType, vocabularyService).ifPresent(ecr::setEventType);
+        ecr.setEventType(
+            interpretVocabulary(er, DwcTerm.eventType, vocabularyService)
+                .orElseGet(
+                    () ->
+                        interpretVocabulary(
+                                DwcTerm.eventType, DEFAULT_EVENT_TYPE, vocabularyService)
+                            .orElse(
+                                VocabularyConceptFactory.createConcept(
+                                    DEFAULT_EVENT_TYPE,
+                                    Collections.emptyList(),
+                                    Collections.emptyMap()))));
   }
 
   /** {@link DwcTerm#typeStatus} interpretation. */
