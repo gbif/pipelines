@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>coordinator</artifactId>
-   <version>3.2.5-SNAPSHOT</version>
+   <version>3.2.5</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
