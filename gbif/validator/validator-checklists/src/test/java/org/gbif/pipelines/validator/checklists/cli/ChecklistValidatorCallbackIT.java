@@ -19,11 +19,10 @@ import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.TermInfo;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
-import org.junit.Test;
 
 public class ChecklistValidatorCallbackIT {
 
-//  @Test
+  //  @Test
   public void checklistTest() {
     // Temp dir
     Path temp = Paths.get(getClass().getResource("/").getFile());
