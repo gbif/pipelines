@@ -115,7 +115,7 @@ public class VerbatimToIdentifierPipeline {
         .get(tupleTransform.getAbsentTag())
         .apply(
             "Write absent GBIF ids to avro",
-            idTransform.write(pathFn.apply(idTransform.getAbsentName())));
+            idTransform.write(pathFn.apply(idTransform.getAbsentName())).withoutSharding());
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
