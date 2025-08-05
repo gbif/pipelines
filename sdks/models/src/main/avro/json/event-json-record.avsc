@@ -6,7 +6,8 @@
     "type" : "record",
     "fields" : [
       {"name": "id", "type": ["null", "string"], "default" : null, "doc":""},
-      {"name": "eventType", "type": ["null", "string"], "default" : null, "doc": ""}
+      {"name": "eventType", "type": ["null", "string"], "default" : null, "doc": ""},
+      {"name": "verbatimEventType", "type": ["null", "string"], "default" : null, "doc": ""}
     ]
   },
   {
@@ -22,12 +23,14 @@
       {"name":"license","type":["null","string"],"default":null,"doc":""},
       // Record-level
       {"name":"eventType","type":["null","VocabularyConcept"],"default":null,"doc":""},
+      {"name":"verbatimEventType","type":["null","string"],"default":null,"doc":""},
       {"name":"eventName","type":["null","string"],"default":null,"doc":""},
       {"name":"references","type":["null","string"],"default":null,"doc":""},
       {"name":"institutionCode","type":["null","string"],"default":null,"doc":""},
       {"name":"datasetID","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"datasetName","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"modified","type":["null","string"],"default":null,"doc":""},
+      {"name":"fieldNumber","type":["null","string"],"default":null,"doc":""},
       // Event
       {"name":"samplingProtocol","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"samplingProtocolJoined","type":["null","string"],"default":null,"doc":""},
@@ -40,6 +43,7 @@
       {"name":"day","type":["null","int"],"default":null,"doc":""},
       {"name":"eventDate","type":["null","EventDate"],"default":null,"doc":""},
       {"name":"eventDateSingle","type":["null","string"],"default":null,"doc":""},
+      {"name":"eventDateInterval","type":["null","string"],"default":null,"doc":""},
       {"name":"startDayOfYear","type":["null","int"],"default":null,"doc":""},
       {"name":"endDayOfYear","type":["null","int"],"default":null,"doc":""},
       {"name":"locationID", "type": ["null", "string"], "default" : null, "doc": ""},
@@ -90,8 +94,10 @@
       {"name":"surveyID","type":["null","string"],"default":null,"doc":""},
       {"name":"eventHierarchy","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"eventTypeHierarchy","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"verbatimEventTypeHierarchy","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"eventHierarchyJoined","type":["null","string"],"default":null,"doc":""},
       {"name":"eventTypeHierarchyJoined","type":["null","string"],"default":null,"doc":""},
+      {"name":"verbatimEventTypeHierarchyJoined","type":["null","string"],"default":null,"doc":""},
       {"name":"eventHierarchyLevels","type":["null","int"],"default":null,"doc":""},
       {"name":"measurementOrFacts","type":{"type":"array","items":"org.gbif.pipelines.io.avro.json.MeasurementOrFactJsonRecord"},"default":[],"doc":""},
       // Extensions

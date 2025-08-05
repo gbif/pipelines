@@ -175,7 +175,15 @@ public class EventToEsIndexPipelineIT {
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, EventCoreTransform.builder().create(), EVENT_TERM, postfix)) {
       EventCoreRecord eventCoreRecord =
-          EventCoreRecord.newBuilder().setId(ID).setLocationID("L0").build();
+          EventCoreRecord.newBuilder()
+              .setId(ID)
+              .setLocationID("L0")
+              .setEventType(
+                  VocabularyConcept.newBuilder()
+                      .setConcept("Survey")
+                      .setLineage(Collections.singletonList("Survey"))
+                      .build())
+              .build();
       writer.append(eventCoreRecord);
 
       EventCoreRecord subEventCoreRecord =
@@ -183,8 +191,8 @@ public class EventToEsIndexPipelineIT {
               .setId(SUB_EVENT_ID)
               .setEventType(
                   VocabularyConcept.newBuilder()
-                      .setConcept("survey")
-                      .setLineage(Collections.emptyList())
+                      .setConcept("Survey")
+                      .setLineage(Collections.singletonList("Survey"))
                       .build())
               .setParentEventID(ID)
               .setParentsLineage(
@@ -197,6 +205,11 @@ public class EventToEsIndexPipelineIT {
           EventCoreRecord.newBuilder()
               .setId(SUB_EVENT_ID_2)
               .setParentEventID(SUB_EVENT_ID)
+              .setEventType(
+                  VocabularyConcept.newBuilder()
+                      .setConcept("Survey")
+                      .setLineage(Collections.singletonList("Survey"))
+                      .build())
               .setParentsLineage(
                   Arrays.asList(
                       Parent.newBuilder().setId(ID).setOrder(0).build(),

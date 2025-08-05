@@ -56,7 +56,7 @@ public class TemporalInheritedFieldsFn
     private TemporalInheritedRecord inheritFields(TemporalInheritedFields leaf) {
       TemporalInheritedRecord.Builder builder = TemporalInheritedRecord.newBuilder();
 
-      if (leaf.allFieldsNull()) {
+      if (leaf != null && leaf.allFieldsNull()) {
         boolean assignedInheritedFields = setParentValues(builder, leaf.getParentId(), false);
 
         if (assignedInheritedFields) {
