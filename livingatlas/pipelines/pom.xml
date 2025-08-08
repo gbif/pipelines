@@ -5,7 +5,7 @@
   <parent>
     <groupId>au.org.ala</groupId>
     <artifactId>livingatlas</artifactId>
-    <version>3.2.2-SNAPSHOT</version>
+    <version>3.2.6-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -56,6 +56,7 @@
     <mockwebserver.version>4.2.2</mockwebserver.version>
     <checker-qual.version>3.9.1</checker-qual.version>
     <snappy-java.version>1.1.8.4</snappy-java.version>
+    <junit-jupiter.version>5.7.2</junit-jupiter.version>
 
     <hadoop.version>3.4.0</hadoop.version>
     <maven-scala-plugin.version>4.8.0</maven-scala-plugin.version>
@@ -765,6 +766,12 @@
       </exclusions>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
 
     <!-- ALA's layers store -->
     <dependency>
@@ -854,6 +861,12 @@
       <artifactId>log4j-api</artifactId>
       <version>2.23.1</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
 
