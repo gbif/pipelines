@@ -6,12 +6,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import org.gbif.api.vocabulary.DurationUnit;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.interpreters.MockVocabularyLookups;
 import org.gbif.pipelines.core.interpreters.NameUsageMatchKeyValueTestStore;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
-import org.gbif.pipelines.core.parsers.humboldt.DurationUnit;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Humboldt;
