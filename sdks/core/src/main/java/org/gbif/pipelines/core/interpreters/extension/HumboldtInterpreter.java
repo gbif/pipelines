@@ -33,7 +33,6 @@ import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.core.interpreters.core.VocabularyInterpreter;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
-import org.gbif.pipelines.core.parsers.humboldt.DurationUnit;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.core.utils.ModelUtils;
