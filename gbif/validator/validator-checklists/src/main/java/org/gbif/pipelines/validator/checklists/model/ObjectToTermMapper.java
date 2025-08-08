@@ -331,10 +331,10 @@ public class ObjectToTermMapper {
         .ifPresent(v -> termsMap.put(GbifTerm.ageInDays, v.toString()));
 
     Optional.ofNullable(speciesProfile.getSizeInMillimeter())
-        .ifPresent(v -> termsMap.put(GbifTerm.sizeInMillimeter, v.toString()));
+        .ifPresent(v -> termsMap.put(GbifTerm.sizeInMillimeters, v.toString()));
 
     Optional.ofNullable(speciesProfile.getMassInGram())
-        .ifPresent(v -> termsMap.put(GbifTerm.massInGram, v.toString()));
+        .ifPresent(v -> termsMap.put(GbifTerm.massInGrams, v.toString()));
 
     Optional.ofNullable(speciesProfile.getHabitat())
         .ifPresent(v -> termsMap.put(DwcTerm.habitat, v));

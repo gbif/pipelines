@@ -1,17 +1,13 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
+
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Builder;
@@ -20,14 +16,12 @@ import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.gbif.api.vocabulary.License;
-import org.gbif.dwc.terms.DcTerm;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.Term;
-import org.gbif.dwc.terms.TermFactory;
+import org.gbif.dwc.terms.*;
 import org.gbif.occurrence.common.TermUtils;
 import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
+import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
@@ -288,6 +282,14 @@ public class OccurrenceHdfsRecordConverter {
                             .map(RankedName::getKey)
                             .collect(Collectors.toList()))));
 
+    occurrenceHdfsRecord.setClassificationdetails(
+        multiTaxonRecord.getTaxonRecords().stream()
+            .filter(tr -> tr.getDatasetKey() != null)
+            .filter(tr -> tr.getUsage() != null)
+            .collect(
+                Collectors.toMap(
+                    TaxonRecord::getDatasetKey, tr -> classificationToMap(extendedRecord, tr))));
+
     // find the GBIF taxonomy
     Optional<TaxonRecord> gbifRecord =
         multiTaxonRecord.getTaxonRecords().stream()
@@ -296,6 +298,88 @@ public class OccurrenceHdfsRecordConverter {
             .findFirst();
 
     gbifRecord.ifPresent(tr -> mapLegacyGbifTaxonRecord(occurrenceHdfsRecord, tr));
+  }
+
+  private static Map<String, String> classificationToMap(
+      ExtendedRecord verbatim, TaxonRecord taxonRecord) {
+
+    Map<String, String> map = new HashMap<>();
+
+    // Get usage and accepted usage
+    RankedNameWithAuthorship usage = taxonRecord.getUsage();
+    RankedNameWithAuthorship acceptedUsage = taxonRecord.getAcceptedUsage();
+
+    if (usage != null) {
+
+      // Required taxon keys and names
+      map.put(GbifTerm.taxonKey.simpleName().toLowerCase(), usage.getKey());
+      map.put(DwcTerm.scientificName.simpleName().toLowerCase(), usage.getName());
+
+      map.put(
+          GbifTerm.acceptedTaxonKey.simpleName().toLowerCase(),
+          acceptedUsage != null ? acceptedUsage.getKey() : usage.getKey());
+      map.put(
+          DwcTerm.acceptedNameUsageID.simpleName().toLowerCase(),
+          acceptedUsage != null ? acceptedUsage.getKey() : usage.getKey());
+      map.put(
+          GbifTerm.acceptedScientificName.simpleName().toLowerCase(),
+          acceptedUsage != null ? acceptedUsage.getName() : usage.getName());
+
+      // Optional taxonomic fields
+      if (usage.getGenericName() != null) {
+        map.put(DwcTerm.genericName.simpleName().toLowerCase(), usage.getGenericName());
+      }
+      if (usage.getSpecificEpithet() != null) {
+        map.put(DwcTerm.specificEpithet.simpleName().toLowerCase(), usage.getSpecificEpithet());
+      }
+      if (usage.getInfraspecificEpithet() != null) {
+        map.put(
+            DwcTerm.infraspecificEpithet.simpleName().toLowerCase(),
+            usage.getInfraspecificEpithet());
+      }
+      if (usage.getRank() != null) {
+        map.put(DwcTerm.taxonRank.simpleName().toLowerCase(), usage.getRank());
+      }
+    }
+
+    extractOptValue(verbatim, DwcTerm.scientificName)
+        .ifPresent(s -> map.put(GbifTerm.verbatimScientificName.simpleName().toLowerCase(), s));
+
+    // Taxonomic status
+    var diagnostics = taxonRecord.getDiagnostics();
+    map.put(
+        DwcTerm.taxonomicStatus.simpleName().toLowerCase(),
+        diagnostics != null && diagnostics.getStatus() != null
+            ? diagnostics.getStatus().name()
+            : "");
+
+    // Classification hierarchy
+    taxonRecord
+        .getClassification()
+        .forEach(
+            rankedName -> {
+              map.put(rankedName.getRank().toLowerCase(), rankedName.getName());
+              map.put(rankedName.getRank().toLowerCase() + "key", rankedName.getKey());
+            });
+
+    // Optional IUCN field
+    if (taxonRecord.getIucnRedListCategoryCode() != null) {
+      map.put(
+          IucnTerm.iucnRedListCategory.simpleName().toLowerCase(),
+          taxonRecord.getIucnRedListCategoryCode());
+    }
+
+    // Add taxonomic issues
+    if (taxonRecord.getIssues() != null
+        && taxonRecord.getIssues().getIssueList() != null
+        && !taxonRecord.getIssues().getIssueList().isEmpty()) {
+      map.put(
+          GbifTerm.taxonomicIssue.simpleName().toLowerCase(),
+          taxonRecord.getIssues().getIssueList().stream()
+              .collect(Collectors.joining(ModelUtils.DEFAULT_SEPARATOR)));
+    }
+
+    return map;
   }
 
   /** Copies the {@link TaxonRecord} data into the {@link OccurrenceHdfsRecord}. */
@@ -352,8 +436,7 @@ public class OccurrenceHdfsRecordConverter {
 
     if (Objects.nonNull(taxonRecord.getAcceptedUsage())) {
       occurrenceHdfsRecord.setAcceptedscientificname(taxonRecord.getAcceptedUsage().getName());
-      occurrenceHdfsRecord.setAcceptednameusageid(
-          taxonRecord.getAcceptedUsage().getKey().toString());
+      occurrenceHdfsRecord.setAcceptednameusageid(taxonRecord.getAcceptedUsage().getKey());
       if (Objects.nonNull(taxonRecord.getAcceptedUsage().getKey())) {
         occurrenceHdfsRecord.setAcceptedtaxonkey(taxonRecord.getAcceptedUsage().getKey());
       }
@@ -362,10 +445,10 @@ public class OccurrenceHdfsRecordConverter {
     } else if (Objects.nonNull(taxonRecord.getUsage())
         && !taxonRecord.getUsage().getKey().equals("0")) {
       // if the acceptedUsage is null we use the usage as the accepted as longs as it's not
-      // incertidae sedis
+      // incertae sedis
       occurrenceHdfsRecord.setAcceptedtaxonkey(taxonRecord.getUsage().getKey());
       occurrenceHdfsRecord.setAcceptedscientificname(taxonRecord.getUsage().getName());
-      occurrenceHdfsRecord.setAcceptednameusageid(taxonRecord.getUsage().getKey().toString());
+      occurrenceHdfsRecord.setAcceptednameusageid(taxonRecord.getUsage().getKey());
     }
 
     if (Objects.nonNull(taxonRecord.getUsage())) {
