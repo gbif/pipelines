@@ -419,6 +419,7 @@
           "properties": {
             "siteCount": {"type": "integer"},
             "verbatimSiteNames": {"type": "keyword"},
+            "verbatimSiteDescriptions": {"type": "text", "index":  false, "doc_values": false},
             "geospatialScopeArea":
               { "type": "nested",
                 "properties": {
@@ -495,7 +496,8 @@
             "compilationSourceTypes": {"type": "keyword"},
             "inventoryTypes": {"type": "keyword"},
             "protocolNames": {"type": "keyword"},
-            "protocolReferences": {"type": "keyword"},
+            "protocolDescriptions": {"type": "text", "index":  false, "doc_values": false},
+            "protocolReferences": {"type": "text", "index":  false, "doc_values": false},
             "isAbundanceReported": {"type": "boolean"},
             "isAbundanceCapReported": {"type": "boolean"},
             "abundanceCap": {"type": "integer"},

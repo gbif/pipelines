@@ -56,6 +56,7 @@
       {"name": "targetHabitatScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
       {"name": "excludedHabitatScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
       {"name": "eventDurationValueInMinutes", "type": ["null", "double"], "default" : null, "doc": ""},
+      {"name": "eventDuration", "type": ["null", "ValueAndUnit"], "default" : null, "doc": ""},
       {"name": "targetTaxonomicScope", "type": { "type":"map", "values": { "type": "array", "items": "HumboldtTaxonClassification" }},"default": {}, "doc":""},
       {"name": "excludedTaxonomicScope", "type": { "type":"map", "values": { "type": "array", "items": "HumboldtTaxonClassification" }},"default": {}, "doc":""},
       {"name": "taxonCompletenessProtocols", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},

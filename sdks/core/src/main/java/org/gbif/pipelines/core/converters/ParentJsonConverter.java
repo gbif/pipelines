@@ -11,9 +11,9 @@ import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.Strings;
+import org.gbif.api.vocabulary.DurationUnit;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
-import org.gbif.pipelines.core.parsers.humboldt.DurationUnit;
 import org.gbif.pipelines.core.utils.HashConverter;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
@@ -441,6 +441,8 @@ public class ParentJsonConverter {
                     DurationUnit eventDurationUnit = DurationUnit.valueOf(h.getEventDurationUnit());
                     humboldtBuilder.setEventDurationValueInMinutes(
                         h.getEventDurationValue() * eventDurationUnit.getDurationInMinutes());
+                    humboldtBuilder.setEventDuration(
+                        getValueAndUnit(h.getEventDurationValue(), h.getEventDurationUnit()));
                   }
 
                   // taxon
