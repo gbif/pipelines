@@ -454,7 +454,7 @@
             "excludedHabitatScope": {"type": "keyword"},
             "eventDurationValueInMinutes": {"type": "double"},
             "eventDuration":
-            { "type": "properties",
+            { "type": "nested",
               "properties": {
                 "value": {"type": "double", "index":  false, "doc_values": false},
                 "unit": {"type": "keyword", "index":  false, "doc_values": false}
