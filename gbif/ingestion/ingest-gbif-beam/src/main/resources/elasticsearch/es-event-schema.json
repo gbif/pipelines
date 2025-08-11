@@ -41,8 +41,24 @@
       }
     },
     {
+      "humboldt_classification_rank": {
+        "path_match": "event.humboldt.*.*.classification.*",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
       "humboldt_classification": {
         "path_match": "event.humboldt.*.*.classification.*.*",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "humboldt_classification_keys_rank": {
+        "path_match": "event.humboldt.*.*.classificationKeys.*",
         "mapping": {
           "type": "keyword"
         }
