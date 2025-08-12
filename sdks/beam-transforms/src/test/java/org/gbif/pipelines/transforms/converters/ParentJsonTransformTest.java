@@ -30,6 +30,8 @@ import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.GadmFeatures;
+import org.gbif.pipelines.io.avro.Humboldt;
+import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -53,6 +55,7 @@ import org.gbif.pipelines.transforms.core.TemporalCoverageFn;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -258,6 +261,18 @@ public class ParentJsonTransformTest {
                         .build()))
             .build();
 
+    HumboldtRecord hr =
+        HumboldtRecord.newBuilder()
+            .setId("777")
+            .setHumboldtItems(
+                Collections.singletonList(
+                    Humboldt.newBuilder()
+                        .setSiteCount(2)
+                        .setTargetHabitatScope(Arrays.asList("hs1", "hs2"))
+                        .setExcludedHabitatScope(Collections.singletonList("hs1"))
+                        .build()))
+            .build();
+
     // Core
     EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
     IdentifierTransform identifierTransform = IdentifierTransform.builder().create();
@@ -271,6 +286,11 @@ public class ParentJsonTransformTest {
     ImageTransform imageTransform = ImageTransform.builder().create();
     MeasurementOrFactTransform measurementOrFactTransform =
         MeasurementOrFactTransform.builder().create();
+    HumboldtTransform humboldtTransform =
+        HumboldtTransform.builder()
+            .vocabularyServiceSupplier(() -> null)
+            .nameUsageMatchKvStoreSupplier(() -> null)
+            .create();
 
     // Derived metadata
     DerivedMetadataTransform derivedMetadataTransform =
@@ -339,6 +359,10 @@ public class ParentJsonTransformTest {
         p.apply("Read MeasurementOrFactRecord", Create.of(mofr))
             .apply("Map MeasurementOrFactRecord to KV", measurementOrFactTransform.toKv());
 
+    PCollection<KV<String, HumboldtRecord>> humboldtCollection =
+        p.apply("Read HumboldtRecord", Create.of(hr))
+            .apply("Map HumboldtRecord to KV", humboldtTransform.toKv());
+
     SingleOutput<KV<String, CoGbkResult>, String> eventJsonDoFn =
         ParentJsonTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
@@ -351,6 +375,7 @@ public class ParentJsonTransformTest {
             .audubonRecordTag(audubonTransform.getTag())
             .derivedMetadataRecordTag(DerivedMetadataTransform.tag())
             .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
+            .humboldtRecordTag(humboldtTransform.getTag())
             .locationInheritedRecordTag(InheritedFieldsTransform.LIR_TAG)
             .temporalInheritedRecordTag(InheritedFieldsTransform.TIR_TAG)
             .eventInheritedRecordTag(InheritedFieldsTransform.EIR_TAG)
@@ -369,6 +394,7 @@ public class ParentJsonTransformTest {
             .and(imageTransform.getTag(), imageCollection)
             .and(audubonTransform.getTag(), audubonCollection)
             .and(measurementOrFactTransform.getTag(), measurementOrFactCollection)
+            .and(humboldtTransform.getTag(), humboldtCollection)
             // Internal
             .and(identifierTransform.getTag(), identifierCollection)
             // Raw
@@ -394,6 +420,7 @@ public class ParentJsonTransformTest {
             .verbatim(er)
             .derivedMetadata(dmr)
             .measurementOrFactRecord(mofr)
+            .humboldtRecord(hr)
             .locationInheritedRecord(lir)
             .temporalInheritedRecord(tir)
             .eventInheritedRecord(eir)

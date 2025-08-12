@@ -1,6 +1,13 @@
 nameUsageMatchingService:
   checklistKeys:
     - d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
+  ws:
+    numOfKeyBuckets: 5
+    zkConnectionString: c5n7.gbif-test.org:31706,c5n9.gbif-test.org:31706,c6n8.gbif-test.org:31706
+    tableName: dev_name_usage_matching_kv
+    api:
+      wsUrl: https://api.gbif-dev.org/
+    hbaseZnode: /znode-93f9cdb5-d146-46da-9f80-e8546468b0fe/hbase
 zkConnectionString: ToFill
 gbifApi:
   wsUrl:

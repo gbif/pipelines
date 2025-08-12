@@ -84,7 +84,15 @@ public class ModelUtils {
   }
 
   public static List<String> extractListValue(String separatorRegex, ExtendedRecord er, Term term) {
-    return extractOptValue(er, term)
+    return extractListValue(extractValue(er, term), separatorRegex);
+  }
+
+  public static List<String> extractListValue(String rawValue) {
+    return extractListValue(rawValue, DEFAULT_SEPARATOR);
+  }
+
+  public static List<String> extractListValue(String rawValue, String separatorRegex) {
+    return Optional.ofNullable(rawValue)
         .filter(x -> !x.isEmpty())
         .map(
             x ->

@@ -1,0 +1,88 @@
+/**
+ * Represents the interpreted fields of terms related to the Humboldt extension.
+ * https://rs.gbif.org/extension/eco/Humboldt_2024-04-16.xml
+ */
+[
+ {
+    "name": "TaxonHumboldtRecord",
+    "namespace": "org.gbif.pipelines.io.avro",
+    "type": "record",
+    "doc": "A container for interpreted Humboldt taxon fields.",
+    "fields": [
+        {"name": "checklistKey", "type" : ["null", "string"], "default" : null, "doc":"The taxonomy dataset identifier"},
+        {"name": "usageKey", "type": ["null", "string"], "default" : null},
+        {"name": "usageName", "type": ["null", "string"], "default" : null},
+        {"name": "usageRank", "type": ["null", "string"], "default" : null},
+        {"name": "classification", "type" : { "type" : "array", "items" : "org.gbif.pipelines.io.avro.RankedName" }, "default": []},
+        {"name": "issues", "type": "IssueRecord", "default":{}}
+    ]
+  },
+  {
+    "name":"Humboldt",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "fields":[
+      {"name": "siteCount", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/siteCount"},
+      {"name": "verbatimSiteDescriptions", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/verbatimSiteDescriptions"},
+      {"name": "verbatimSiteNames", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/verbatimSiteNames"},
+      {"name": "geospatialScopeAreaValue", "type": ["null", "double"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/geospatialScopeAreaValue"},
+      {"name": "geospatialScopeAreaUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/geospatialScopeAreaUnit"},
+      {"name": "totalAreaSampledValue", "type": ["null", "double"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/totalAreaSampledValue"},
+      {"name": "totalAreaSampledUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/totalAreaSampledUnit"},
+      {"name": "targetHabitatScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/targetHabitatScope"},
+      {"name": "excludedHabitatScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/excludedHabitatScope"},
+      {"name": "eventDurationValue", "type": ["null", "double"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/eventDurationValue"},
+      {"name": "eventDurationUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/eventDurationUnit"},
+      {"name": "targetTaxonomicScope", "type": {"type" : "array", "items" : "TaxonHumboldtRecord"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/targetTaxonomicScope"},
+      {"name": "excludedTaxonomicScope", "type": {"type" : "array", "items" : "TaxonHumboldtRecord"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/excludedTaxonomicScope"},
+      {"name": "taxonCompletenessProtocols", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/taxonCompletenessProtocols"},
+      {"name": "isTaxonomicScopeFullyReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/isTaxonomicScopeFullyReported"},
+      {"name": "isAbsenceReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/isAbsenceReported"},
+      {"name": "absentTaxa", "type": {"type" : "array", "items" : "TaxonHumboldtRecord"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/absentTaxa"},
+      {"name": "hasNonTargetTaxa", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/hasNonTargetTaxa"},
+      {"name": "nonTargetTaxa", "type": {"type" : "array", "items" : "TaxonHumboldtRecord"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/nonTargetTaxa"},
+      {"name": "areNonTargetTaxaFullyReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/areNonTargetTaxaFullyReported"},
+      {"name": "targetLifeStageScope", "type": {"type" : "array", "items" : "VocabularyConcept"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/targetLifeStageScope"},
+      {"name": "excludedLifeStageScope", "type": {"type" : "array", "items" : "VocabularyConcept"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/excludedLifeStageScope"},
+      {"name": "isLifeStageScopeFullyReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/isLifeStageScopeFullyReported"},
+      {"name": "targetDegreeOfEstablishmentScope", "type": {"type" : "array", "items" : "VocabularyConcept"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/targetDegreeOfEstablishmentScope"},
+      {"name": "excludedDegreeOfEstablishmentScope", "type": {"type" : "array", "items" : "VocabularyConcept"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/excludedDegreeOfEstablishmentScope"},
+      {"name": "isDegreeOfEstablishmentScopeFullyReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/isDegreeOfEstablishmentScopeFullyReported"},
+      {"name": "targetGrowthFormScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/targetGrowthFormScope"},
+      {"name": "excludedGrowthFormScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/excludedGrowthFormScope"},
+      {"name": "isGrowthFormScopeFullyReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/isGrowthFormScopeFullyReported"},
+      {"name": "hasNonTargetOrganisms", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/hasNonTargetOrganisms"},
+      {"name": "compilationTypes", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/compilationTypes"},
+      {"name": "compilationSourceTypes", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/compilationSourceTypes"},
+      {"name": "inventoryTypes", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/inventoryTypes"},
+      {"name": "protocolNames", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/protocolNames"},
+      {"name": "protocolDescriptions", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/protocolDescriptions"},
+      {"name": "protocolReferences", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/protocolReferences"},
+      {"name": "isAbundanceReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/isAbundanceReported"},
+      {"name": "isAbundanceCapReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/isAbundanceCapReported"},
+      {"name": "abundanceCap", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/abundanceCap"},
+      {"name": "isVegetationCoverReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/isVegetationCoverReported"},
+      {"name": "isLeastSpecificTargetCategoryQuantityInclusive", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/isLeastSpecificTargetCategoryQuantityInclusive"},
+      {"name": "hasVouchers", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/hasVouchers"},
+      {"name": "voucherInstitutions", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/voucherInstitutions"},
+      {"name": "hasMaterialSamples", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/hasMaterialSamples"},
+      {"name": "materialSampleTypes", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/materialSampleTypes"},
+      {"name": "samplingPerformedBy", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/eco/terms/samplingPerformedBy"},
+      {"name": "isSamplingEffortReported", "type": ["null", "boolean"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/isSamplingEffortReported"},
+      {"name": "samplingEffortValue", "type": ["null", "double"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/samplingEffortValue"},
+      {"name": "samplingEffortUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/eco/terms/samplingEffortUnit"}
+    ]
+  },
+  {
+    "name": "HumboldtRecord",
+    "namespace": "org.gbif.pipelines.io.avro",
+    "type": "record",
+    "doc": "A container for interpreted Humboldt data fields.",
+    "fields": [
+        {"name": "id", "type": "string", "doc":"Pipelines identifier"},
+        {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
+        {"name": "humboldtItems", "type": {"type" : "array", "items" : "Humboldt"}, "default" : []},
+        {"name": "issues", "type": "IssueRecord", "default":{}}
+    ]
+  }
+]
