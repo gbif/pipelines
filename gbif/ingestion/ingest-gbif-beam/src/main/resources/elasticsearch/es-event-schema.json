@@ -456,8 +456,8 @@
             "eventDuration":
             { "type": "nested",
               "properties": {
-                "value": {"type": "double", "index":  false, "doc_values": false},
-                "unit": {"type": "keyword", "index":  false, "doc_values": false}
+                "value": {"type": "double"},
+                "unit": {"type": "keyword"}
               }
             },
             "taxonCompletenessProtocols": {"type": "keyword"},
