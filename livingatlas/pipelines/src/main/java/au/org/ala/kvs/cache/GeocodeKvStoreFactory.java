@@ -12,7 +12,7 @@ import org.gbif.pipelines.core.parsers.location.cache.BinaryBitmapLookup;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.factory.BufferedImageFactory;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
+import org.gbif.rest.client.geocode.GeocodeResponse.Location;
 
 /** Factory to get singleton instance of {@link GeocodeKvStore} */
 public class GeocodeKvStoreFactory {
@@ -98,8 +98,8 @@ public class GeocodeKvStoreFactory {
     return instance;
   }
 
-  public static SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> createCountrySupplier(
-      ALAPipelinesConfig config) {
+  public static SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>>
+      createCountrySupplier(ALAPipelinesConfig config) {
     return () -> getInstance(config).countryKvStore;
   }
 
@@ -108,8 +108,8 @@ public class GeocodeKvStoreFactory {
     return () -> getInstance(config).stateProvinceKvStore;
   }
 
-  public static SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> createBiomeSupplier(
-      ALAPipelinesConfig config) {
+  public static SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>>
+      createBiomeSupplier(ALAPipelinesConfig config) {
     return () -> getInstance(config).biomeKvStore;
   }
 }

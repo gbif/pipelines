@@ -41,6 +41,7 @@ public class IntegrationTestUtils extends ExternalResource {
   MockWebServer speciesListServer;
   MockWebServer samplingServer;
   String propertiesFilePath;
+  String sandboxPropertiesFilePath;
   ALAPipelinesConfig config;
 
   private IntegrationTestUtils() {}
@@ -106,6 +107,7 @@ public class IntegrationTestUtils extends ExternalResource {
       samplingServer = TestUtils.startMockSpatialServer();
 
       propertiesFilePath = TestUtils.getPipelinesConfigFile();
+      sandboxPropertiesFilePath = TestUtils.getSandboxPipelineConfigFile();
 
       config = ALAFsUtils.readConfigFile(HdfsConfigs.nullConfig(), propertiesFilePath);
 
@@ -153,6 +155,13 @@ public class IntegrationTestUtils extends ExternalResource {
       throw new RuntimeException("Run setup first !");
     }
     return propertiesFilePath;
+  }
+
+  public String getSandboxPropertiesFilePath() {
+    if (sandboxPropertiesFilePath == null) {
+      throw new RuntimeException("Run setup first !");
+    }
+    return sandboxPropertiesFilePath;
   }
 
   public ALAPipelinesConfig getConfig() {

@@ -6,6 +6,7 @@ import au.org.ala.images.BatchUploadResponse;
 import au.org.ala.images.ImageService;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
+import au.org.ala.kvs.client.retrofit.SyncCall;
 import au.org.ala.pipelines.options.ImageServicePipelineOptions;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
@@ -53,7 +54,6 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.rest.client.retrofit.SyncCall;
 import org.slf4j.MDC;
 import retrofit2.Call;
 
