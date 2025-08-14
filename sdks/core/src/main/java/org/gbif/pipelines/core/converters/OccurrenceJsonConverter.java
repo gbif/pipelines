@@ -75,12 +75,7 @@ public class OccurrenceJsonConverter {
     mapBasicRecord(builder);
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
-    if (indexLegacyTaxonomy) {
-      mapTaxonRecord(builder);
-    }
-    if (indexMultiTaxonomy) {
-      mapMultiTaxonRecord(builder);
-    }
+    mapMultiTaxonRecord(builder);
     mapGrscicollRecord(builder);
     mapMultimediaRecord(builder);
     mapDnaDerivedDataRecord(builder);
@@ -308,29 +303,6 @@ public class OccurrenceJsonConverter {
     }
 
     JsonConverter.convertGadm(location.getGadm()).ifPresent(builder::setGadm);
-  }
-
-  private void mapTaxonRecord(OccurrenceJsonRecord.Builder builder) {
-
-    if (multiTaxon != null
-        && multiTaxon.getTaxonRecords() != null
-        && !multiTaxon.getTaxonRecords().isEmpty()) {
-
-      Optional<TaxonRecord> gbifRecord =
-          multiTaxon.getTaxonRecords().stream()
-              .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
-              .findFirst();
-
-      gbifRecord.ifPresent(
-          tr -> {
-            try {
-              builder.setGbifClassification(
-                  JsonConverter.convertToGbifClassification(verbatim, tr));
-            } catch (Exception e) {
-              log.error("Error converting to GBIF classification", e);
-            }
-          });
-    }
   }
 
   private void mapMultiTaxonRecord(OccurrenceJsonRecord.Builder builder) {

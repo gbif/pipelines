@@ -134,8 +134,8 @@ public class AvroPojoGenerator extends AbstractMojo {
       String type = resolveType(field.get("type"), namespace, imports);
       if ("class".equals(name) || "v_class".equals(name) || "v_class".equals(name))
         name = name + "$";
-      if (type.equals("IssueRecord")) body.append("    @Builder.Default\n");
-      if (type.startsWith("List")) body.append("    @Builder.Default\n");
+      if (type.equals("IssueRecord")) body.append("    @lombok.Builder.Default\n");
+      if (type.startsWith("List")) body.append("    @lombok.Builder.Default\n");
       body.append("    private ").append(type).append(" ").append(name);
       if (type.startsWith("List")) body.append("= new ArrayList<>()");
       if (type.equals("IssueRecord")) body.append("= IssueRecord.newBuilder().build()");

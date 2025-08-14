@@ -69,10 +69,10 @@ public class ParentJsonConverter {
             .setInternalId(identifier.getInternalId())
             .setUniqueKey(identifier.getUniqueKey())
             .setType(ConverterConstants.EVENT)
-            .setEventBuilder(convertToEvent())
+            .setEvent(convertToEvent().build())
             .setAll(JsonConverter.convertFieldAll(verbatim, false))
             .setVerbatim(JsonConverter.convertVerbatimEventRecord(verbatim))
-            .setJoinRecordBuilder(JoinRecord.newBuilder().setName(ConverterConstants.EVENT));
+            .setJoinRecord(JoinRecord.newBuilder().setName(ConverterConstants.EVENT).build());
 
     mapCreated(builder);
     mapDerivedMetadata(builder);
@@ -95,12 +95,13 @@ public class ParentJsonConverter {
                 metadata.getDatasetKey(),
                 occurrenceJsonRecord.getEventId(),
                 occurrenceJsonRecord.getOccurrenceId()))
-        .setJoinRecordBuilder(
+        .setJoinRecord(
             JoinRecord.newBuilder()
                 .setName(ConverterConstants.OCCURRENCE)
                 .setParent(
                     HashConverter.getSha1(
-                        metadata.getDatasetKey(), occurrenceJsonRecord.getEventId())))
+                        metadata.getDatasetKey(), occurrenceJsonRecord.getEventId()))
+                .build())
         .setOccurrence(occurrenceJsonRecord)
         .setAll(occurrenceJsonRecord.getAll())
         .setVerbatim(occurrenceJsonRecord.getVerbatim())
@@ -113,7 +114,7 @@ public class ParentJsonConverter {
     ParentJsonRecord.Builder builder =
         ParentJsonRecord.newBuilder()
             .setCrawlId(metadata.getCrawlId())
-            .setMetadataBuilder(mapMetadataJsonRecord());
+            .setMetadata(mapMetadataJsonRecord().build());
 
     JsonConverter.convertToDate(metadata.getLastCrawled()).ifPresent(builder::setLastCrawled);
 
@@ -156,9 +157,11 @@ public class ParentJsonConverter {
 
   private void mapEventCoreRecord(EventJsonRecord.Builder builder) {
 
+    String surveyID = null;
     if (eventCore.getEventType() != null
         && eventCore.getEventType().getConcept().equalsIgnoreCase(ConverterConstants.SURVEY)) {
-      builder.setSurveyID(builder.getEventID());
+      surveyID = eventCore.getId();
+      builder.setSurveyID(surveyID);
     }
 
     // Simple
@@ -195,7 +198,7 @@ public class ParentJsonConverter {
           .setEventHierarchyJoined(String.join(ConverterConstants.DELIMITER, eventIDs))
           .setEventHierarchyLevels(eventIDs.size());
 
-      if (builder.getSurveyID() == null) {
+      if (surveyID == null) {
         List<org.gbif.pipelines.io.avro.Parent> surveys =
             eventCore.getParentsLineage().stream()
                 .filter(
@@ -210,8 +213,8 @@ public class ParentJsonConverter {
     } else {
       // add the eventID and parentEventID to hierarchy for consistency
       List<String> eventHierarchy = new ArrayList<>();
-      Optional.ofNullable(builder.getParentEventID()).ifPresent(eventHierarchy::add);
-      Optional.ofNullable(builder.getEventID()).ifPresent(eventHierarchy::add);
+      Optional.ofNullable(eventCore.getParentEventID()).ifPresent(eventHierarchy::add);
+      Optional.ofNullable(eventCore.getId()).ifPresent(eventHierarchy::add);
 
       builder
           .setEventHierarchy(eventHierarchy)
@@ -220,8 +223,8 @@ public class ParentJsonConverter {
 
       // add the single type to hierarchy for consistency
       List<String> eventTypeHierarchy = new ArrayList<>();
-      if (builder.getEventType() != null && builder.getEventType().getConcept() != null) {
-        eventTypeHierarchy.add(builder.getEventType().getConcept());
+      if (eventCore.getEventType() != null && eventCore.getEventType().getConcept() != null) {
+        eventTypeHierarchy.add(eventCore.getEventType().getConcept());
       }
 
       builder
@@ -230,9 +233,8 @@ public class ParentJsonConverter {
               String.join(ConverterConstants.DELIMITER, eventTypeHierarchy));
 
       List<String> verbatimEventTypeHierarchy = new ArrayList<>();
-      if (builder.getVerbatimEventType() != null) {
-        verbatimEventTypeHierarchy.add(builder.getVerbatimEventType());
-      }
+
+      extractOptValue(verbatim, DwcTerm.eventType).ifPresent(builder::setVerbatimEventType);
 
       builder
           .setVerbatimEventTypeHierarchy(verbatimEventTypeHierarchy)
