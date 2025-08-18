@@ -340,18 +340,15 @@ public class OccurrenceHdfsRecordConverter {
       if (usage.getRank() != null) {
         map.put(DwcTerm.taxonRank.simpleName().toLowerCase(), usage.getRank());
       }
+
+      // Taxonomic status
+      map.put(
+          DwcTerm.taxonomicStatus.simpleName().toLowerCase(),
+          usage.getStatus() != null ? usage.getStatus() : "");
     }
 
     extractOptValue(verbatim, DwcTerm.scientificName)
         .ifPresent(s -> map.put(GbifTerm.verbatimScientificName.simpleName().toLowerCase(), s));
-
-    // Taxonomic status
-    var diagnostics = taxonRecord.getDiagnostics();
-    map.put(
-        DwcTerm.taxonomicStatus.simpleName().toLowerCase(),
-        diagnostics != null && diagnostics.getStatus() != null
-            ? diagnostics.getStatus().name()
-            : "");
 
     // Classification hierarchy
     taxonRecord
@@ -456,6 +453,8 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setScientificname(taxonRecord.getUsage().getName());
       Optional.ofNullable(taxonRecord.getUsage().getRank())
           .ifPresent(occurrenceHdfsRecord::setTaxonrank);
+      occurrenceHdfsRecord.setTaxonomicstatus(
+          taxonRecord.getUsage().getStatus() != null ? taxonRecord.getUsage().getStatus() : "");
     }
 
     if (Objects.nonNull(taxonRecord.getUsageParsedName())
@@ -478,10 +477,6 @@ public class OccurrenceHdfsRecordConverter {
             taxonRecord.getUsageParsedName().getInfraspecificEpithet());
       }
     }
-
-    Optional.ofNullable(taxonRecord.getDiagnostics())
-        .map(Diagnostic::getStatus)
-        .ifPresent(d -> occurrenceHdfsRecord.setTaxonomicstatus(d.name()));
 
     setCreatedIfGreater(occurrenceHdfsRecord, taxonRecord.getCreated());
 
