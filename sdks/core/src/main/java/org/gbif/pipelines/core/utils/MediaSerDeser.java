@@ -13,8 +13,8 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificData;
-import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.Humboldt;
+import org.gbif.pipelines.io.avro.Multimedia;
 
 /** Utility class to serialize and deserialize MediaObject instances from/to JSON. */
 @Slf4j

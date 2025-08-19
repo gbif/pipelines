@@ -318,7 +318,7 @@ public class HdfsViewPipeline {
           readAvroAsFuture(options, coreTerm, executor, EventCoreTransform.builder().create());
       occurrenceBuilder.eventCoreRecordMap(eventCoreMapFeature.get());
       CompletableFuture<Map<String, HumboldtRecord>> humboldtMapFeature =
-        readAvroAsFuture(options, coreTerm, executor, HumboldtTransform.builder().create());
+          readAvroAsFuture(options, coreTerm, executor, HumboldtTransform.builder().create());
       occurrenceBuilder.humboldtMap(humboldtMapFeature.get());
     }
 
