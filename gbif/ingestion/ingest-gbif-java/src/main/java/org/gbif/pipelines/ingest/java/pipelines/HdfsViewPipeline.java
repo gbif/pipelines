@@ -88,6 +88,7 @@ import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -131,6 +132,7 @@ import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
+import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -315,6 +317,9 @@ public class HdfsViewPipeline {
       CompletableFuture<Map<String, EventCoreRecord>> eventCoreMapFeature =
           readAvroAsFuture(options, coreTerm, executor, EventCoreTransform.builder().create());
       occurrenceBuilder.eventCoreRecordMap(eventCoreMapFeature.get());
+      CompletableFuture<Map<String, HumboldtRecord>> humboldtMapFeature =
+        readAvroAsFuture(options, coreTerm, executor, HumboldtTransform.builder().create());
+      occurrenceBuilder.humboldtMap(humboldtMapFeature.get());
     }
 
     // OccurrenceHdfsRecord

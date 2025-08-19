@@ -45,6 +45,7 @@ public class OccurrenceHdfsRecordConverter {
   private final MultimediaRecord multimediaRecord;
   private final DnaDerivedDataRecord dnaDerivedDataRecord;
   private final EventCoreRecord eventCoreRecord;
+  private final HumboldtRecord humboldtRecord;
 
   /**
    * Collects data from {@link SpecificRecordBase} instances into a {@link OccurrenceHdfsRecord}.
@@ -69,6 +70,7 @@ public class OccurrenceHdfsRecordConverter {
     mapEventCoreRecord(occurrenceHdfsRecord);
     mapProjectIds(occurrenceHdfsRecord);
     mapDnaDerivedDataRecord(occurrenceHdfsRecord);
+    mapHumboldtRecord(occurrenceHdfsRecord);
 
     return occurrenceHdfsRecord;
   }
@@ -918,7 +920,7 @@ public class OccurrenceHdfsRecordConverter {
             .map(TextNode::asText)
             .collect(Collectors.toList());
     occurrenceHdfsRecord.setExtMultimedia(
-        MediaSerDeser.toJson(multimediaRecord.getMultimediaItems()));
+        MediaSerDeser.multimediaToJson(multimediaRecord.getMultimediaItems()));
 
     setCreatedIfGreater(occurrenceHdfsRecord, multimediaRecord.getCreated());
     occurrenceHdfsRecord.setMediatype(mediaTypes);
@@ -938,6 +940,64 @@ public class OccurrenceHdfsRecordConverter {
               dnaDerivedDataRecord.getDnaDerivedDataItems().stream()
                   .map(DnaDerivedData::getDnaSequenceID)
                   .collect(Collectors.toSet())));
+    }
+  }
+
+  private void mapHumboldtRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (humboldtRecord == null || humboldtRecord.getCreated() == null) {
+      return;
+    }
+
+    occurrenceHdfsRecord.setExtHumboldt(
+        MediaSerDeser.humboldtToJson(humboldtRecord.getHumboldtItems()));
+
+    humboldtRecord
+        .getHumboldtItems()
+        .forEach(
+            h -> {
+              addToList(occurrenceHdfsRecord.getHumboldtsitecount(), h.getSiteCount());
+              addToList(
+                  occurrenceHdfsRecord.getHumboldtverbatimsitenames(), h.getVerbatimSiteNames());
+              // TODO: rest of the fields
+            });
+
+    addIssues(humboldtRecord.getIssues(), occurrenceHdfsRecord);
+
+    // Add taxonomic issues
+    String taxonIssues =
+        humboldtRecord.getHumboldtItems().stream()
+            .map(
+                h ->
+                    h.getTargetTaxonomicScope().stream()
+                        .flatMap(t -> t.getIssues().getIssueList().stream())
+                        .collect(Collectors.joining(ModelUtils.DEFAULT_SEPARATOR)))
+            .collect(Collectors.joining(ModelUtils.DEFAULT_SEPARATOR));
+
+    if (taxonIssues != null) {
+      String existing =
+          occurrenceHdfsRecord.getTaxonomicissue() != null
+              ? occurrenceHdfsRecord.getTaxonomicissue()
+              : "";
+      occurrenceHdfsRecord.setTaxonomicissue(
+          String.join(ModelUtils.DEFAULT_SEPARATOR, existing, taxonIssues));
+    }
+  }
+
+  private <T> void addToList(List<T> existingList, T value) {
+    if (value != null) {
+      if (existingList == null) {
+        existingList = new ArrayList<>();
+      }
+      existingList.add(value);
+    }
+  }
+
+  private <T> void addToList(List<T> existingList, List<T> values) {
+    if (values != null && !values.isEmpty()) {
+      if (existingList == null) {
+        existingList = new ArrayList<>();
+      }
+      existingList.addAll(values);
     }
   }
 

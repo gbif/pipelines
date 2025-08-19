@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.common.Strings;
 import org.gbif.api.vocabulary.DurationUnit;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
@@ -29,7 +28,6 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.io.avro.json.Parent;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
-import org.gbif.pipelines.io.avro.json.ValueAndUnit;
 import org.gbif.pipelines.io.avro.json.VocabularyConcept;
 
 @Slf4j
@@ -372,12 +370,13 @@ public class ParentJsonConverter {
                           .setSiteCount(h.getSiteCount())
                           .setVerbatimSiteDescriptions(h.getVerbatimSiteDescriptions())
                           .setVerbatimSiteNames(h.getVerbatimSiteNames())
-                          .setGeospatialScopeArea(
-                              getValueAndUnit(
-                                  h.getGeospatialScopeAreaValue(), h.getGeospatialScopeAreaUnit()))
-                          .setTotalAreaSampled(
-                              getValueAndUnit(
-                                  h.getTotalAreaSampledValue(), h.getTotalAreaSampledUnit()))
+                          .setGeospatialScopeAreaValue(h.getGeospatialScopeAreaValue())
+                          .setGeospatialScopeAreaUnit(h.getGeospatialScopeAreaUnit())
+                          .setTotalAreaSampledValue(h.getTotalAreaSampledValue())
+                          .setTotalAreaSampledUnit(h.getTotalAreaSampledUnit())
+                          .setEventDurationValue(h.getEventDurationValue())
+                          .setEventDurationUnit(h.getEventDurationUnit())
+                          .setGeospatialScopeAreaUnit(h.getGeospatialScopeAreaUnit())
                           .setTaxonCompletenessProtocols(h.getTaxonCompletenessProtocols())
                           .setIsTaxonomicScopeFullyReported(h.getIsTaxonomicScopeFullyReported())
                           .setIsAbsenceReported(h.getIsAbsenceReported())
@@ -406,9 +405,8 @@ public class ParentJsonConverter {
                           .setMaterialSampleTypes(h.getMaterialSampleTypes())
                           .setSamplingPerformedBy(h.getSamplingPerformedBy())
                           .setIsSamplingEffortReported(h.getIsSamplingEffortReported())
-                          .setSamplingEffort(
-                              getValueAndUnit(
-                                  h.getSamplingEffortValue(), h.getSamplingEffortUnit()));
+                          .setSamplingEffortValue(h.getSamplingEffortValue())
+                          .setSamplingEffortUnit(h.getSamplingEffortUnit());
 
                   Function<
                           List<org.gbif.pipelines.io.avro.VocabularyConcept>,
@@ -441,8 +439,6 @@ public class ParentJsonConverter {
                     DurationUnit eventDurationUnit = DurationUnit.valueOf(h.getEventDurationUnit());
                     humboldtBuilder.setEventDurationValueInMinutes(
                         h.getEventDurationValue() * eventDurationUnit.getDurationInMinutes());
-                    humboldtBuilder.setEventDuration(
-                        getValueAndUnit(h.getEventDurationValue(), h.getEventDurationUnit()));
                   }
 
                   // taxon
@@ -492,13 +488,6 @@ public class ParentJsonConverter {
                   return humboldtBuilder.build();
                 })
             .collect(Collectors.toList()));
-  }
-
-  private static ValueAndUnit getValueAndUnit(Double value, String unit) {
-    if (value != null && !Strings.isNullOrEmpty(unit)) {
-      return ValueAndUnit.newBuilder().setValue(value).setUnit(unit).build();
-    }
-    return null;
   }
 
   private void mapExtendedRecord(EventJsonRecord.Builder builder) {

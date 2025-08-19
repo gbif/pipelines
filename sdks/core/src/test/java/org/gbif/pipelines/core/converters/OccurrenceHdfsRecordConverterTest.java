@@ -348,7 +348,7 @@ public class OccurrenceHdfsRecordConverterTest {
 
     // Should
     // Testing de-serialization
-    List<Multimedia> media = MediaSerDeser.fromJson(hdfsRecord.getExtMultimedia());
+    List<Multimedia> media = MediaSerDeser.multimediaFromJson(hdfsRecord.getExtMultimedia());
     Assert.assertEquals(media.get(0), multimedia);
     Assert.assertTrue(hdfsRecord.getMediatype().contains(MediaType.StillImage.name()));
     Assert.assertTrue(
