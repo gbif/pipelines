@@ -439,7 +439,7 @@
             "geospatialScopeAreaValue": {"type": "double"},
             "geospatialScopeAreaUnit": {"type": "keyword"},
             "totalAreaSampledValue": {"type": "double"},
-            "totalAreaSampledValueUnit": {"type": "keyword"},
+            "totalAreaSampledUnit": {"type": "keyword"},
             "targetHabitatScope": {"type": "keyword"},
             "excludedHabitatScope": {"type": "keyword"},
             "eventDurationValueInMinutes": {"type": "double"},
