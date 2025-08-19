@@ -105,7 +105,7 @@ public class ParentJsonConverterTest {
     assertEquals(120.0, first.getEventDurationValueInMinutes(), 0.0001);
     assertEquals(1, first.getTargetLifeStageScope().size());
     assertTrue(first.getExcludedLifeStageScope().isEmpty());
-    assertEquals(2.0, first.getGeospatialScopeAreaValue(), 0.0001);
+    assertEquals(12.0, first.getGeospatialScopeAreaValue(), 0.0001);
     assertNull(first.getGeospatialScopeAreaUnit());
 
     Map<String, List<HumboldtTaxonClassification>> taxonScope = first.getTargetTaxonomicScope();
