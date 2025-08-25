@@ -299,6 +299,7 @@ public class HdfsViewPipeline {
             ? p.apply("Read EventCoreRecord", eventCoreTransform.read(interpretPathFn))
                 .apply("Map EventCoreRecord to KV", eventCoreTransform.toKv())
             : p.apply(
+                "Empty event core",
                 Create.empty(
                     TypeDescriptors.kvs(
                         TypeDescriptors.strings(), eventCoreTransform.getOutputTypeDescriptor())));
@@ -308,6 +309,7 @@ public class HdfsViewPipeline {
             ? p.apply("Read HumboldtRecord", humboldtTransform.read(interpretPathFn))
                 .apply("Map HumboldtRecord to KV", humboldtTransform.toKv())
             : p.apply(
+                "Empty humboldt",
                 Create.empty(
                     TypeDescriptors.kvs(
                         TypeDescriptors.strings(), humboldtTransform.getOutputTypeDescriptor())));
