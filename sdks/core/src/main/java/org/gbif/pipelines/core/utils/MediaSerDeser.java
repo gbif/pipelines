@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificData;
 import org.gbif.pipelines.io.avro.Humboldt;
 import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.TaxonHumboldtRecord;
+import org.gbif.pipelines.io.avro.VocabularyConcept;
 
 /** Utility class to serialize and deserialize MediaObject instances from/to JSON. */
 @Slf4j
@@ -47,6 +49,8 @@ public class MediaSerDeser {
     MAPPER.setSerializationInclusion(JsonInclude.Include.ALWAYS);
     MAPPER.addMixIn(Multimedia.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(Humboldt.class, IgnoreSchemaProperty.class);
+    MAPPER.addMixIn(TaxonHumboldtRecord.class, IgnoreSchemaProperty.class);
+    MAPPER.addMixIn(VocabularyConcept.class, IgnoreSchemaProperty.class);
   }
 
   private static final CollectionType LIST_MEDIA_TYPE =
