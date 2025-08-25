@@ -46,6 +46,7 @@ public class MediaSerDeser {
     MAPPER.configure(SerializationFeature.INDENT_OUTPUT, true);
     MAPPER.setSerializationInclusion(JsonInclude.Include.ALWAYS);
     MAPPER.addMixIn(Multimedia.class, IgnoreSchemaProperty.class);
+    MAPPER.addMixIn(Humboldt.class, IgnoreSchemaProperty.class);
   }
 
   private static final CollectionType LIST_MEDIA_TYPE =
