@@ -203,8 +203,8 @@ public class HdfsViewPipelineIT {
       writer.append(audubonRecord);
     }
     try (SyncDataFileWriter<HumboldtRecord> writer =
-           InterpretedAvroWriter.createAvroWriter(
-             optionsWriter, HumboldtTransform.builder().create(), coreTerm, postfix)) {
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, HumboldtTransform.builder().create(), coreTerm, postfix)) {
       HumboldtRecord humboldtRecord = HumboldtRecord.newBuilder().setId(ID).build();
       writer.append(humboldtRecord);
     }
