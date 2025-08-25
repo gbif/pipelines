@@ -54,6 +54,7 @@ public class MediaSerDeser {
     MAPPER.addMixIn(VocabularyConcept.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(RankedName.class, IgnoreSchemaProperty.class);
   }
+
   // TODO: Add test
 
   private static final CollectionType LIST_MEDIA_TYPE =
