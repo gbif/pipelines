@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificData;
 import org.gbif.pipelines.io.avro.Humboldt;
 import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonHumboldtRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
 
@@ -51,7 +52,9 @@ public class MediaSerDeser {
     MAPPER.addMixIn(Humboldt.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(TaxonHumboldtRecord.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(VocabularyConcept.class, IgnoreSchemaProperty.class);
+    MAPPER.addMixIn(RankedName.class, IgnoreSchemaProperty.class);
   }
+  // TODO: Add test
 
   private static final CollectionType LIST_MEDIA_TYPE =
       MAPPER.getTypeFactory().constructCollectionType(List.class, Multimedia.class);
