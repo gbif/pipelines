@@ -11,6 +11,7 @@ import static org.gbif.api.model.pipelines.InterpretationType.RecordType.GERMPLA
 import static org.gbif.api.model.pipelines.InterpretationType.RecordType.GERMPLASM_MEASUREMENT_SCORE_TABLE;
 import static org.gbif.api.model.pipelines.InterpretationType.RecordType.GERMPLASM_MEASUREMENT_TRAIT_TABLE;
 import static org.gbif.api.model.pipelines.InterpretationType.RecordType.GERMPLASM_MEASUREMENT_TRIAL_TABLE;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.HUMBOLDT_TABLE;
 import static org.gbif.api.model.pipelines.InterpretationType.RecordType.IDENTIFICATION_TABLE;
 import static org.gbif.api.model.pipelines.InterpretationType.RecordType.IDENTIFIER_TABLE;
 import static org.gbif.api.model.pipelines.InterpretationType.RecordType.IMAGE_TABLE;
@@ -62,6 +63,7 @@ import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -71,6 +73,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.extension.eco.HumboldtTable;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
@@ -81,6 +84,7 @@ import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
+import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -97,6 +101,7 @@ import org.gbif.pipelines.transforms.table.GermplasmAccessionTableTransform;
 import org.gbif.pipelines.transforms.table.GermplasmMeasurementScoreTableTransform;
 import org.gbif.pipelines.transforms.table.GermplasmMeasurementTraitTableTransform;
 import org.gbif.pipelines.transforms.table.GermplasmMeasurementTrialTableTransform;
+import org.gbif.pipelines.transforms.table.HumboldtTableTransform;
 import org.gbif.pipelines.transforms.table.IdentificationTableTransform;
 import org.gbif.pipelines.transforms.table.IdentifierTableTransform;
 import org.gbif.pipelines.transforms.table.ImageTableTransform;
@@ -216,6 +221,7 @@ public class HdfsViewPipeline {
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
     DnaDerivedDataTransform dnaTransform = DnaDerivedDataTransform.builder().create();
+    HumboldtTransform humboldtTransform = HumboldtTransform.builder().create();
 
     log.info("Adding step 3: Creating beam pipeline");
     PCollectionView<MetadataRecord> metadataView =
@@ -298,6 +304,15 @@ public class HdfsViewPipeline {
                     TypeDescriptors.kvs(
                         TypeDescriptors.strings(), eventCoreTransform.getOutputTypeDescriptor())));
 
+    PCollection<KV<String, HumboldtRecord>> humboldtCollection =
+        DwcTerm.Event == coreTerm
+            ? p.apply("Read HumboldtRecord", humboldtTransform.read(interpretPathFn))
+                .apply("Map HumboldtRecord to KV", humboldtTransform.toKv())
+            : p.apply(
+                Create.empty(
+                    TypeDescriptors.kvs(
+                        TypeDescriptors.strings(), humboldtTransform.getOutputTypeDescriptor())));
+
     // OccurrenceHdfsRecord
     log.info("Adding step 3: Converting into a OccurrenceHdfsRecord object");
     OccurrenceHdfsRecordTransform hdfsRecordTransform =
@@ -315,6 +330,7 @@ public class HdfsViewPipeline {
             .dnaRecordTag(dnaTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
             .eventCoreRecordTag(eventCoreTransform.getTag())
+            .humboldtRecordTag(humboldtTransform.getTag())
             .metadataView(metadataView)
             .build();
 
@@ -333,6 +349,7 @@ public class HdfsViewPipeline {
         .and(imageTransform.getTag(), imageCollection)
         .and(dnaTransform.getTag(), dnaCollection)
         .and(audubonTransform.getTag(), audubonCollection)
+        .and(humboldtTransform.getTag(), humboldtCollection)
         // Raw
         .and(verbatimTransform.getTag(), verbatimCollection)
         // Apply
@@ -578,6 +595,16 @@ public class HdfsViewPipeline {
         .types(types)
         .build()
         .write(tableCollection);
+
+    HumboldtTableTransform.builder()
+      .extendedRecordTag(verbatimTransform.getTag())
+      .identifierRecordTag(idTransform.getTag())
+      .metadataView(metadataView)
+      .numShards(numberOfShards)
+      .path(pathFn.apply(HUMBOLDT_TABLE))
+      .types(types)
+      .build()
+      .write(tableCollection);
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
