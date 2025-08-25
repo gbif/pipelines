@@ -65,7 +65,7 @@ public class MediaSerDeser {
   }
 
   @SneakyThrows
-  private static String objectToJson(Object obj) {
+  private static <T> String objectToJson(T obj) {
     try {
       if (obj != null) {
         return MAPPER.writeValueAsString(obj);
