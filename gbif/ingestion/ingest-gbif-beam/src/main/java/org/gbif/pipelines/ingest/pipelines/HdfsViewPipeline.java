@@ -73,7 +73,6 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.extension.eco.HumboldtTable;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
@@ -597,14 +596,14 @@ public class HdfsViewPipeline {
         .write(tableCollection);
 
     HumboldtTableTransform.builder()
-      .extendedRecordTag(verbatimTransform.getTag())
-      .identifierRecordTag(idTransform.getTag())
-      .metadataView(metadataView)
-      .numShards(numberOfShards)
-      .path(pathFn.apply(HUMBOLDT_TABLE))
-      .types(types)
-      .build()
-      .write(tableCollection);
+        .extendedRecordTag(verbatimTransform.getTag())
+        .identifierRecordTag(idTransform.getTag())
+        .metadataView(metadataView)
+        .numShards(numberOfShards)
+        .path(pathFn.apply(HUMBOLDT_TABLE))
+        .types(types)
+        .build()
+        .write(tableCollection);
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
