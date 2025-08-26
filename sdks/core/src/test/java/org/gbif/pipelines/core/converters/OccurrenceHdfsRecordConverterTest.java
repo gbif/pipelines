@@ -189,6 +189,33 @@ public class OccurrenceHdfsRecordConverterTest {
                     DnaDerivedData.newBuilder().setDnaSequenceID("foo2").build()))
             .build();
 
+    Humboldt humboldt =
+        Humboldt.newBuilder()
+            .setTargetTaxonomicScope(
+                List.of(
+                    TaxonHumboldtRecord.newBuilder()
+                        .setClassification(
+                            List.of(
+                                RankedName.newBuilder().setRank("rank").setName("name").build()))
+                        .build()))
+            .setTargetLifeStageScope(
+                List.of(
+                    VocabularyConcept.newBuilder()
+                        .setConcept("c1")
+                        .setLineage(List.of("c0", "c1"))
+                        .build(),
+                    VocabularyConcept.newBuilder()
+                        .setConcept("c11")
+                        .setLineage(List.of("c00", "c11"))
+                        .build()))
+            .build();
+    HumboldtRecord humboldtRecord =
+        HumboldtRecord.newBuilder()
+            .setId("1")
+            .setCreated(13214L)
+            .setHumboldtItems(List.of(humboldt))
+            .build();
+
     // When
     OccurrenceHdfsRecord hdfsRecord =
         OccurrenceHdfsRecordConverter.builder()
@@ -200,6 +227,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .temporalRecord(temporalRecord)
             .dnaDerivedDataRecord(dnaDerivedDataRecord)
             .extendedRecord(extendedRecord)
+            .humboldtRecord(humboldtRecord)
             .build()
             .convert();
 
@@ -322,6 +350,11 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(2, hdfsRecord.getDnasequenceid().size());
     Assert.assertTrue(hdfsRecord.getDnasequenceid().contains("foo1"));
     Assert.assertTrue(hdfsRecord.getDnasequenceid().contains("foo2"));
+
+    // Humboldt
+    Assert.assertTrue(hdfsRecord.getExtHumboldt().contains("targetLifeStageScopeVocabList"));
+    Assert.assertTrue(
+        hdfsRecord.getExtHumboldt().contains("targetDegreeOfEstablishmentScopeVocabList"));
   }
 
   @Test

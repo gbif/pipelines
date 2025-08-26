@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificData;
+import org.gbif.pipelines.core.pojo.HumboldtJsonView;
 import org.gbif.pipelines.io.avro.Humboldt;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
@@ -38,7 +39,16 @@ public class MediaSerDeser {
     @JsonIgnore private static SpecificData MODEL$;
   }
 
-  private static final String SER_ERROR_MSG = "Unable to serialize media objects to JSON";
+  public abstract static class IgnoreVocabs extends IgnoreSchemaProperty {
+    @JsonIgnore
+    abstract java.util.List<org.gbif.pipelines.io.avro.VocabularyConcept> getTargetLifeStageScope();
+
+    @JsonIgnore
+    abstract java.util.List<org.gbif.pipelines.io.avro.VocabularyConcept>
+        getTargetDegreeOfEstablishmentScope();
+  }
+
+  private static final String SER_ERROR_MSG = "Unable to serialize %s objects to JSON";
   private static final String DESER_ERROR_MSG = "Unable to deserialize String into media objects";
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -50,7 +60,7 @@ public class MediaSerDeser {
     MAPPER.configure(SerializationFeature.INDENT_OUTPUT, true);
     MAPPER.setSerializationInclusion(JsonInclude.Include.ALWAYS);
     MAPPER.addMixIn(Multimedia.class, IgnoreSchemaProperty.class);
-    MAPPER.addMixIn(Humboldt.class, IgnoreSchemaProperty.class);
+    MAPPER.addMixIn(Humboldt.class, IgnoreVocabs.class);
     MAPPER.addMixIn(TaxonHumboldtRecord.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(VocabularyConcept.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(RankedName.class, IgnoreSchemaProperty.class);
@@ -68,8 +78,10 @@ public class MediaSerDeser {
 
   /** Converts the list of humboldt objects into a JSON string. */
   @SneakyThrows
-  public static String humboldtToJson(List<Humboldt> humboldt) {
-    return humboldt != null && !humboldt.isEmpty() ? objectToJson(humboldt) : null;
+  public static String humboldtToJson(List<HumboldtJsonView> humboldtJsonViews) {
+    return humboldtJsonViews != null && !humboldtJsonViews.isEmpty()
+        ? objectToJson(humboldtJsonViews)
+        : null;
   }
 
   @SneakyThrows
@@ -79,7 +91,7 @@ public class MediaSerDeser {
         return MAPPER.writeValueAsString(obj);
       }
     } catch (IOException ex) {
-      log.error(SER_ERROR_MSG, ex);
+      log.error(String.format(SER_ERROR_MSG, obj.getClass().getSimpleName()), ex);
       throw ex;
     }
     return null;

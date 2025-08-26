@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Builder;
@@ -20,6 +21,7 @@ import org.gbif.dwc.terms.*;
 import org.gbif.occurrence.common.TermUtils;
 import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
+import org.gbif.pipelines.core.pojo.HumboldtJsonView;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.core.utils.TemporalConverter;
@@ -948,8 +950,46 @@ public class OccurrenceHdfsRecordConverter {
       return;
     }
 
-    occurrenceHdfsRecord.setExtHumboldt(
-        MediaSerDeser.humboldtToJson(humboldtRecord.getHumboldtItems()));
+    if (humboldtRecord.getHumboldtItems() != null) {
+
+      Function<List<VocabularyConcept>, HumboldtJsonView.VocabularyList> convertVocabList =
+          list -> {
+            List<String> allConcepts =
+                list.stream()
+                    .map(org.gbif.pipelines.io.avro.VocabularyConcept::getConcept)
+                    .collect(Collectors.toList());
+
+            List<String> allParents =
+                list.stream().flatMap(c -> c.getLineage().stream()).collect(Collectors.toList());
+
+            HumboldtJsonView.VocabularyList vl = new HumboldtJsonView.VocabularyList();
+            vl.setConcepts(allConcepts);
+            vl.setLineage(allParents);
+            return vl;
+          };
+
+      List<HumboldtJsonView> jsonViews =
+          humboldtRecord.getHumboldtItems().stream()
+              .map(
+                  h -> {
+                    HumboldtJsonView jsonView = new HumboldtJsonView();
+                    jsonView.setHumboldt(h);
+
+                    if (h.getTargetLifeStageScope() != null) {
+                      jsonView.setTargetLifeStageScopeVocabList(
+                          convertVocabList.apply(h.getTargetLifeStageScope()));
+                    }
+                    if (h.getTargetDegreeOfEstablishmentScope() != null) {
+                      jsonView.setTargetDegreeOfEstablishmentScopeVocabList(
+                          convertVocabList.apply(h.getTargetDegreeOfEstablishmentScope()));
+                    }
+
+                    return jsonView;
+                  })
+              .collect(Collectors.toList());
+
+      occurrenceHdfsRecord.setExtHumboldt(MediaSerDeser.humboldtToJson(jsonViews));
+    }
 
     addIssues(humboldtRecord.getIssues(), occurrenceHdfsRecord);
 
