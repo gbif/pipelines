@@ -976,11 +976,11 @@ public class OccurrenceHdfsRecordConverter {
                     jsonView.setHumboldt(h);
 
                     if (h.getTargetLifeStageScope() != null) {
-                      jsonView.setTargetLifeStageScopeVocabList(
+                      jsonView.setTargetLifeStageScope(
                           convertVocabList.apply(h.getTargetLifeStageScope()));
                     }
                     if (h.getTargetDegreeOfEstablishmentScope() != null) {
-                      jsonView.setTargetDegreeOfEstablishmentScopeVocabList(
+                      jsonView.setTargetDegreeOfEstablishmentScope(
                           convertVocabList.apply(h.getTargetDegreeOfEstablishmentScope()));
                     }
 

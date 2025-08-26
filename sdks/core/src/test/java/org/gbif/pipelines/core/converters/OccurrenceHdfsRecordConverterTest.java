@@ -352,9 +352,14 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertTrue(hdfsRecord.getDnasequenceid().contains("foo2"));
 
     // Humboldt
-    Assert.assertTrue(hdfsRecord.getExtHumboldt().contains("targetLifeStageScopeVocabList"));
     Assert.assertTrue(
-        hdfsRecord.getExtHumboldt().contains("targetDegreeOfEstablishmentScopeVocabList"));
+        hdfsRecord
+            .getExtHumboldt()
+            .contains(
+                "\"targetLifeStageScope\" : {\n"
+                    + "    \"concepts\" : [ \"c1\", \"c11\" ],\n"
+                    + "    \"lineage\" : [ \"c0\", \"c1\", \"c00\", \"c11\" ]\n"
+                    + "  }"));
   }
 
   @Test

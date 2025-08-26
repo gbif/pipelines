@@ -6,7 +6,6 @@ import org.gbif.pipelines.io.avro.Humboldt;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonHumboldtRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class MediaSerDeserTest {
@@ -37,10 +36,11 @@ public class MediaSerDeserTest {
     HumboldtJsonView jsonView = new HumboldtJsonView();
     jsonView.setHumboldt(humboldt);
 
-    Assert.assertFalse(
-        MediaSerDeser.humboldtToJson(List.of(jsonView)).contains("targetLifeStageScope\""));
-    Assert.assertFalse(
-        MediaSerDeser.humboldtToJson(List.of(jsonView))
-            .contains("targetDegreeOfEstablishmentScope\""));
+    HumboldtJsonView.VocabularyList lifeStage = new HumboldtJsonView.VocabularyList();
+    lifeStage.setLineage(List.of("c1", "c2"));
+    lifeStage.setConcepts(List.of("c1", "c2"));
+    jsonView.setTargetLifeStageScope(lifeStage);
+
+    MediaSerDeser.humboldtToJson(List.of(jsonView));
   }
 }
