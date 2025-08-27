@@ -9,6 +9,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DNA_DERIVED_D
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GEL_IMAGE_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.HUMBOLDT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFICATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFIER_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IMAGE_TABLE_RECORDS_COUNT;
@@ -61,6 +62,7 @@ import org.gbif.pipelines.core.converters.GermplasmAccessionTableConverter;
 import org.gbif.pipelines.core.converters.GermplasmMeasurementScoreTableConverter;
 import org.gbif.pipelines.core.converters.GermplasmMeasurementTraitTableConverter;
 import org.gbif.pipelines.core.converters.GermplasmMeasurementTrialTableConverter;
+import org.gbif.pipelines.core.converters.HumboldtTableConverter;
 import org.gbif.pipelines.core.converters.IdentificationTableConverter;
 import org.gbif.pipelines.core.converters.IdentifierTableConverter;
 import org.gbif.pipelines.core.converters.ImageTableConverter;
@@ -104,6 +106,7 @@ import org.gbif.pipelines.io.avro.extension.dwc.ChronometricAgeTable;
 import org.gbif.pipelines.io.avro.extension.dwc.IdentificationTable;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.extension.dwc.ResourceRelationshipTable;
+import org.gbif.pipelines.io.avro.extension.eco.HumboldtTable;
 import org.gbif.pipelines.io.avro.extension.gbif.DnaDerivedDataTable;
 import org.gbif.pipelines.io.avro.extension.gbif.IdentifierTable;
 import org.gbif.pipelines.io.avro.extension.gbif.ImageTable;
@@ -860,6 +863,29 @@ public class HdfsViewPipeline {
         .executor(executor)
         .options(options)
         .recordType(MULTIMEDIA_TABLE)
+        .types(types)
+        .build()
+        .write();
+
+    // HumboldtTable
+    Function<IdentifierRecord, List<HumboldtTable>> humboldtFn =
+        TableConverter.<HumboldtTable>builder()
+            .metrics(metrics)
+            .converterFn(HumboldtTableConverter::convert)
+            .metadataRecord(metadataRecord)
+            .counterName(HUMBOLDT_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<HumboldtTable>builder()
+        .recordFunction(humboldtFn)
+        .identifierRecords(idRecordMap.values())
+        .targetPathFn(pathFn)
+        .schema(HumboldtTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .recordType(HUMBOLDT_TABLE)
         .types(types)
         .build()
         .write();
