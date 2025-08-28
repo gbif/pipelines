@@ -41,6 +41,6 @@ public class MediaSerDeserTest {
     lifeStage.setConcepts(List.of("c1", "c2"));
     jsonView.setTargetLifeStageScope(lifeStage);
 
-    MediaSerDeser.humboldtToJson(List.of(jsonView));
+    System.out.println(MediaSerDeser.humboldtToJson(List.of(jsonView)));
   }
 }

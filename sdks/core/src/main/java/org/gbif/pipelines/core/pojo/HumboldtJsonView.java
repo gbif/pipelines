@@ -11,7 +11,9 @@ public class HumboldtJsonView {
   @JsonUnwrapped private Humboldt humboldt;
 
   private VocabularyList targetLifeStageScope;
+  private VocabularyList excludedLifeStageScope;
   private VocabularyList targetDegreeOfEstablishmentScope;
+  private VocabularyList excludedDegreeOfEstablishmentScope;
 
   @Data
   public static final class VocabularyList {

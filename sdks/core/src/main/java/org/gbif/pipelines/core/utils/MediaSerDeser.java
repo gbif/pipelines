@@ -45,7 +45,15 @@ public class MediaSerDeser {
 
     @JsonIgnore
     abstract java.util.List<org.gbif.pipelines.io.avro.VocabularyConcept>
+        getExcludedLifeStageScope();
+
+    @JsonIgnore
+    abstract java.util.List<org.gbif.pipelines.io.avro.VocabularyConcept>
         getTargetDegreeOfEstablishmentScope();
+
+    @JsonIgnore
+    abstract java.util.List<org.gbif.pipelines.io.avro.VocabularyConcept>
+        getExcludedDegreeOfEstablishmentScope();
   }
 
   private static final String SER_ERROR_MSG = "Unable to serialize %s objects to JSON";

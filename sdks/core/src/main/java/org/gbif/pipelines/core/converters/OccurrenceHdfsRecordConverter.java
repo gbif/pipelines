@@ -979,9 +979,17 @@ public class OccurrenceHdfsRecordConverter {
                       jsonView.setTargetLifeStageScope(
                           convertVocabList.apply(h.getTargetLifeStageScope()));
                     }
+                    if (h.getExcludedLifeStageScope() != null) {
+                      jsonView.setExcludedLifeStageScope(
+                          convertVocabList.apply(h.getExcludedLifeStageScope()));
+                    }
                     if (h.getTargetDegreeOfEstablishmentScope() != null) {
                       jsonView.setTargetDegreeOfEstablishmentScope(
                           convertVocabList.apply(h.getTargetDegreeOfEstablishmentScope()));
+                    }
+                    if (h.getExcludedDegreeOfEstablishmentScope() != null) {
+                      jsonView.setExcludedDegreeOfEstablishmentScope(
+                          convertVocabList.apply(h.getExcludedDegreeOfEstablishmentScope()));
                     }
 
                     return jsonView;
