@@ -18,7 +18,6 @@ import org.gbif.pipelines.io.avro.Humboldt;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaxonHumboldtRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
 
 /** Utility class to serialize and deserialize MediaObject instances from/to JSON. */
@@ -54,6 +53,20 @@ public class MediaSerDeser {
     @JsonIgnore
     abstract java.util.List<org.gbif.pipelines.io.avro.VocabularyConcept>
         getExcludedDegreeOfEstablishmentScope();
+
+    @JsonIgnore
+    abstract java.util.List<org.gbif.pipelines.io.avro.TaxonHumboldtRecord>
+        getTargetTaxonomicScope();
+
+    @JsonIgnore
+    abstract java.util.List<org.gbif.pipelines.io.avro.TaxonHumboldtRecord>
+        getExcludedTaxonomicScope();
+
+    @JsonIgnore
+    abstract java.util.List<org.gbif.pipelines.io.avro.TaxonHumboldtRecord> getAbsentTaxa();
+
+    @JsonIgnore
+    abstract java.util.List<org.gbif.pipelines.io.avro.TaxonHumboldtRecord> getNonTargetTaxa();
   }
 
   private static final String SER_ERROR_MSG = "Unable to serialize %s objects to JSON";
@@ -69,7 +82,6 @@ public class MediaSerDeser {
     MAPPER.setSerializationInclusion(JsonInclude.Include.ALWAYS);
     MAPPER.addMixIn(Multimedia.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(Humboldt.class, IgnoreVocabs.class);
-    MAPPER.addMixIn(TaxonHumboldtRecord.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(VocabularyConcept.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(RankedName.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(IssueRecord.class, IgnoreSchemaProperty.class);

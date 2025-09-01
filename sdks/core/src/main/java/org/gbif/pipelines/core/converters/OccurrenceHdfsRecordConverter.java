@@ -968,6 +968,29 @@ public class OccurrenceHdfsRecordConverter {
             return vl;
           };
 
+      Function<List<TaxonHumboldtRecord>, Map<String, List<HumboldtJsonView.Taxa>>>
+          convertToTaxonMap =
+              r -> {
+                Map<String, List<HumboldtJsonView.Taxa>> taxonMap = new HashMap<>();
+                r.stream()
+                    .filter(v -> v.getChecklistKey() != null)
+                    .forEach(
+                        t -> {
+                          HumboldtJsonView.Taxa taxa = new HumboldtJsonView.Taxa();
+                          taxa.setUsageKey(t.getUsageKey());
+                          taxa.setUsageName(t.getUsageName());
+                          taxa.setUsageRank(t.getUsageRank());
+                          taxa.setTaxonKeys(
+                              t.getClassification().stream()
+                                  .map(RankedName::getKey)
+                                  .collect(Collectors.toList()));
+                          taxonMap
+                              .computeIfAbsent(t.getChecklistKey(), k -> new ArrayList<>())
+                              .add(taxa);
+                        });
+                return taxonMap;
+              };
+
       List<HumboldtJsonView> jsonViews =
           humboldtRecord.getHumboldtItems().stream()
               .map(
@@ -990,6 +1013,21 @@ public class OccurrenceHdfsRecordConverter {
                     if (h.getExcludedDegreeOfEstablishmentScope() != null) {
                       jsonView.setExcludedDegreeOfEstablishmentScope(
                           convertVocabList.apply(h.getExcludedDegreeOfEstablishmentScope()));
+                    }
+
+                    if (h.getTargetTaxonomicScope() != null) {
+                      jsonView.setTargetTaxonomicScope(
+                          convertToTaxonMap.apply(h.getTargetTaxonomicScope()));
+                    }
+                    if (h.getExcludedTaxonomicScope() != null) {
+                      jsonView.setExcludedTaxonomicScope(
+                          convertToTaxonMap.apply(h.getExcludedTaxonomicScope()));
+                    }
+                    if (h.getAbsentTaxa() != null) {
+                      jsonView.setAbsentTaxa(convertToTaxonMap.apply(h.getAbsentTaxa()));
+                    }
+                    if (h.getNonTargetTaxa() != null) {
+                      jsonView.setNonTargetTaxa(convertToTaxonMap.apply(h.getNonTargetTaxa()));
                     }
 
                     return jsonView;
