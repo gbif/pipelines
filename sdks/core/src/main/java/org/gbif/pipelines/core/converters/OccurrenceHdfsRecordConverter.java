@@ -968,27 +968,26 @@ public class OccurrenceHdfsRecordConverter {
             return vl;
           };
 
-      Function<List<TaxonHumboldtRecord>, Map<String, List<HumboldtJsonView.Taxa>>>
+      Function<List<TaxonHumboldtRecord>, Map<String, List<HumboldtJsonView.Classification>>>
           convertToTaxonMap =
               r -> {
-                Map<String, List<HumboldtJsonView.Taxa>> taxonMap = new HashMap<>();
+                Map<String, List<HumboldtJsonView.Classification>> classificationMap =
+                    new HashMap<>();
                 r.stream()
                     .filter(v -> v.getChecklistKey() != null)
                     .forEach(
                         t -> {
-                          HumboldtJsonView.Taxa taxa = new HumboldtJsonView.Taxa();
-                          taxa.setUsageKey(t.getUsageKey());
-                          taxa.setUsageName(t.getUsageName());
-                          taxa.setUsageRank(t.getUsageRank());
-                          taxa.setTaxonKeys(
-                              t.getClassification().stream()
-                                  .map(RankedName::getKey)
-                                  .collect(Collectors.toList()));
-                          taxonMap
+                          HumboldtJsonView.Classification classification =
+                              new HumboldtJsonView.Classification();
+                          classification.setUsageKey(t.getUsageKey());
+                          classification.setUsageName(t.getUsageName());
+                          classification.setUsageRank(t.getUsageRank());
+                          classification.setRankedNames(t.getClassification());
+                          classificationMap
                               .computeIfAbsent(t.getChecklistKey(), k -> new ArrayList<>())
-                              .add(taxa);
+                              .add(classification);
                         });
-                return taxonMap;
+                return classificationMap;
               };
 
       List<HumboldtJsonView> jsonViews =
@@ -1018,6 +1017,35 @@ public class OccurrenceHdfsRecordConverter {
                     if (h.getTargetTaxonomicScope() != null) {
                       jsonView.setTargetTaxonomicScope(
                           convertToTaxonMap.apply(h.getTargetTaxonomicScope()));
+
+                      Map<String, Map<String, Set<String>>> humboldtTargetTaxonClassifications =
+                          new HashMap<>();
+                      h.getTargetTaxonomicScope().stream()
+                          .filter(v -> v.getChecklistKey() != null)
+                          .forEach(
+                              t -> {
+                                Map<String, Set<String>> classifications =
+                                    humboldtTargetTaxonClassifications.computeIfAbsent(
+                                        t.getChecklistKey(), k -> new HashMap<>());
+
+                                classifications
+                                    .computeIfAbsent("usageKey", k -> new HashSet<>())
+                                    .add(t.getUsageKey());
+                                classifications
+                                    .computeIfAbsent("usageName", k -> new HashSet<>())
+                                    .add(t.getUsageName());
+                                classifications
+                                    .computeIfAbsent("taxonKeys", k -> new HashSet<>())
+                                    .addAll(
+                                        t.getClassification().stream()
+                                            .map(RankedName::getKey)
+                                            .collect(Collectors.toSet()));
+
+                                humboldtTargetTaxonClassifications.put(
+                                    t.getChecklistKey(), classifications);
+                              });
+                      jsonView.setHumboldtTargetTaxonClassifications(
+                          humboldtTargetTaxonClassifications);
                     }
                     if (h.getExcludedTaxonomicScope() != null) {
                       jsonView.setExcludedTaxonomicScope(
