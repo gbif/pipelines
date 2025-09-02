@@ -5,7 +5,7 @@
   <parent>
     <groupId>au.org.ala</groupId>
     <artifactId>livingatlas</artifactId>
-    <version>3.2.6-SNAPSHOT</version>
+    <version>3.2.7-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -138,6 +138,13 @@
           <systemPropertyVariables>
             <pipelinesTestYamlConfigFile>src/test/resources/pipelines.yaml</pipelinesTestYamlConfigFile>
           </systemPropertyVariables>
+          <argLine>
+            --add-opens=java.base/java.lang=ALL-UNNAMED
+            --add-opens=java.base/java.util=ALL-UNNAMED
+            --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+            --add-exports=java.base/sun.nio.ch=ALL-UNNAMED
+            --add-opens=java.base/java.util=ALL-UNNAMED
+          </argLine>
         </configuration>
       </plugin>
       <plugin>
