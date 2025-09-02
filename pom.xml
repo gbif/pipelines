@@ -113,7 +113,7 @@
     <kvs.version>3.0</kvs.version>
     <hbase-utils.version>1.0.0</hbase-utils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
-    <gbif-occurrence.version>1.1.5-SNAPSHOT</gbif-occurrence.version>
+    <gbif-occurrence.version>1.1.6-SNAPSHOT</gbif-occurrence.version>
     <vocabulary-lookup.version>2.0.3</vocabulary-lookup.version>
     <registry.version>4.1.0</registry.version>
     <gbif-common-ws.version>2.0.10-java11</gbif-common-ws.version>
