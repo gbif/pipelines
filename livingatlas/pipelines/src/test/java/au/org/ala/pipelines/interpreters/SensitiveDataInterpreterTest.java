@@ -34,6 +34,7 @@ public class SensitiveDataInterpreterTest {
 
   @Before
   public void setUp() throws Exception {
+    Locale.setDefault(Locale.US);
     this.dataResource =
         ALACollectoryMetadata.builder().name("Test data resource").uid(DATARESOURCE_UID).build();
     this.generalisations =
