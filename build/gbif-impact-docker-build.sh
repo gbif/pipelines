@@ -1,7 +1,10 @@
-#Simple script for pushing a image containing the named modules build artifact
+#!/bin/bash -e
+
+IS_M2RELEASEBUILD=$1
+POM_VERSION=$2
+
 MODULE="pre-backbone-release"
 
-POM_VERSION=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
 IMAGE=docker.gbif.org/${MODULE}:${POM_VERSION}
 IMAGE_LATEST=docker.gbif.org/${MODULE}:latest
 

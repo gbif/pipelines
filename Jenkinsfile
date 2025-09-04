@@ -123,6 +123,11 @@ pipeline {
     }
 
     stage('Build and push Docker images: GBIF Impact') {
+      when {
+        expression {
+          env.DRY_RUN == 'false'
+        }
+      }
       steps {
         sh 'build/gbif-impact-docker-build.sh ${RELEASE} ${VERSION}'
       }
