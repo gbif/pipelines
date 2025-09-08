@@ -6,6 +6,7 @@ import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
+import java.util.Locale;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
@@ -14,6 +15,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.ALASensitivityRecord;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -24,6 +26,11 @@ import org.junit.Test;
 public class SensitiveDataPipelineTestIT {
 
   @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
+
+  @Before
+  public void setUp() throws Exception {
+    Locale.setDefault(Locale.US);
+  }
 
   /** Tests for SOLR index creation. */
   @Test
