@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.converters.JsonConverter;
+import org.gbif.pipelines.core.utils.SortUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.Parent;
 import org.gbif.pipelines.io.avro.json.*;
@@ -65,6 +66,10 @@ public class ALAOccurrenceJsonConverter {
               + Math.abs(location.getDecimalLongitude())
               + (location.getDecimalLongitude() > 0 ? "E" : "W"));
     }
+
+    builder.setYearMonthGbifIdSort(
+        SortUtils.yearDescMonthAscGbifIdAscSortKey(
+            builder.getYear(), builder.getMonth(), builder.getGbifId()));
 
     return builder.build();
   }
