@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.beam;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -26,7 +27,7 @@ public class EBirdCompleteEventPipelineTestIT {
   public static final String INDEX_NAME = "ebird_complete_event_it";
 
   // Safety net to prevent indefinite hangs in CI
-  @Rule public Timeout globalTimeout = Timeout.seconds(600);
+  @Rule public final Timeout globalTimeout = new Timeout(10, MINUTES);
 
   /** Tests for SOLR index creation. */
   @Test

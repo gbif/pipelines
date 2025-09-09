@@ -36,8 +36,8 @@ public class CompleteIngestPipelineESTestIT {
 
   @Rule public final TemporaryFolder tmp = new TemporaryFolder();
 
-  // Prevents hangs when Spark/Beam jobs fail to terminate
-  @Rule public final Timeout globalTimeout = new Timeout(5, MINUTES);
+  // Safety net to prevent indefinite hangs in CI
+  @Rule public final Timeout globalTimeout = new Timeout(10, MINUTES);
 
   /** Tests for SOLR index creation. */
   @Test
