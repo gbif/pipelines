@@ -465,7 +465,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       pipelineStep.setNumberRecords(-1L);
     }
 
-    if (FINISHED_STATE_SET.contains(status)) {
+    if (status == PipelineStep.Status.COMPLETED || status == PipelineStep.Status.ABORTED) {
       pipelineStep.setFinished(LocalDateTime.now());
     }
 
