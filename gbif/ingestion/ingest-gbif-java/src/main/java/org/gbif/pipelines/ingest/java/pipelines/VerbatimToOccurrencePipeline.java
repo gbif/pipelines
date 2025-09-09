@@ -151,7 +151,6 @@ public class VerbatimToOccurrencePipeline {
 
     String postfix = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-
     // FIXME: Remove!!
     if (true) {
       throw new IllegalStateException("TEST!");
