@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.java;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertNull;
 
@@ -17,7 +18,9 @@ import org.apache.solr.common.SolrDocument;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 /**
  * Sandbox pipeline tests that use the java variant of the pipeline where possible.
@@ -29,6 +32,9 @@ public class SandboxJavaPipelineTestIT {
   @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
 
   public static final String INDEX_NAME = "sandbox_java_pipeline";
+
+  // Safety net to prevent indefinite hangs in CI
+  @Rule public final Timeout globalTimeout = new Timeout(10, MINUTES);
 
   /** Tests for SOLR index creation. */
   @Test

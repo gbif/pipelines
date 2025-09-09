@@ -1,5 +1,7 @@
 package au.org.ala.pipelines.beam;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
@@ -12,12 +14,17 @@ import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 /** End to end default values test. */
 public class DefaultValuesTestIT {
 
   @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
+
+  // Safety net to prevent indefinite hangs in CI
+  @Rule public final Timeout globalTimeout = new Timeout(10, MINUTES);
 
   @Test
   public void testDwCaPipeline() {

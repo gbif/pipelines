@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.beam;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -22,11 +23,16 @@ import org.gbif.pipelines.core.io.AvroReader;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.io.avro.IndexRecord;
 import org.gbif.pipelines.io.avro.Relationships;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 public class ClusteringPipelineIT {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+
+  // Safety net to prevent indefinite hangs in CI
+  @Rule public final Timeout globalTimeout = new Timeout(10, MINUTES);
 
   /** Tests for SOLR index creation. */
   @Test
