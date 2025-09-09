@@ -151,6 +151,12 @@ public class VerbatimToOccurrencePipeline {
 
     String postfix = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
+
+    // FIXME: Remove!!
+    if (true) {
+      throw new IllegalStateException("TEST!");
+    }
+
     log.info("Creating pipelines transforms");
     // Core
     MetadataTransform metadataTr = transformsFactory.createMetadataTransform();
