@@ -117,7 +117,7 @@
     <vocabulary-lookup.version>2.0.3</vocabulary-lookup.version>
     <registry.version>4.1.0</registry.version>
     <gbif-common-ws.version>2.0.10-java11</gbif-common-ws.version>
-    <gbif-postal-service.version>2.1.3</gbif-postal-service.version>
+    <gbif-postal-service.version>2.1.4-SNAPSHOT</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
 
     <!-- Main distributed libraries -->
