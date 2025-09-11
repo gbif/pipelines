@@ -14,17 +14,14 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import org.gbif.api.model.pipelines.InterpretationType.RecordType;
-import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.common.messaging.api.messages.*;
 import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
 import org.gbif.pipelines.common.configs.ElasticsearchConfiguration;
 import org.gbif.pipelines.common.configs.IndexConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.indexing.IndexSettings;
 import org.gbif.pipelines.tasks.common.hdfs.HdfsViewConfiguration;
+import org.gbif.pipelines.tasks.dwcdp.DwcDpConfiguration;
 import org.gbif.pipelines.tasks.events.indexing.EventsIndexingConfiguration;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
 import org.gbif.pipelines.tasks.occurrences.identifier.IdentifierConfiguration;
@@ -141,6 +138,25 @@ public class BeamParametersBuilder {
         // Extra
         .putIfPresent("backPressure", config.backPressure)
         .putCondition(config.esGeneratedIds, "esDocumentId", "");
+  }
+
+  public static BeamParameters dwcDpIndexing(
+      DwcDpConfiguration config,
+      DwcDpDownloadFinishedMessage message,
+      IndexSettings indexSettings) {
+
+    return IndexingCommon.builder()
+        .datasetUuid(message.getDatasetUuid())
+        .attempt(message.getAttempt())
+        .stepConfig(config.stepConfig)
+        .esConfig(config.esConfig)
+        .indexConfig(config.indexConfig)
+        .metaFileName("")
+        .pipelinesConfigPath("")
+        .esIndexName(indexSettings.getIndexName())
+        .esShardsNumber(indexSettings.getNumberOfShards())
+        .build()
+        .create();
   }
 
   public static BeamParameters occurrenceIdentifier(
