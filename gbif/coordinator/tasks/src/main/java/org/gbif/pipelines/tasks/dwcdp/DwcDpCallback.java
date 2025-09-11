@@ -60,6 +60,9 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
     File dwcaFile =
         new File(config.archiveRepository, datasetKey + "/" + datasetKey + DWC_DP_SUFFIX);
     File destinationDir = new File(config.archiveUnpackedRepository, datasetKey);
+    if (!destinationDir.exists() && destinationDir.mkdirs()) {
+      log.info("Created directory {}", destinationDir.getAbsolutePath());
+    }
     CompressionUtil.decompressFile(dwcaFile, destinationDir, true);
     log.info("Finished uncompressing dwc-a file from message {}", message);
   }
