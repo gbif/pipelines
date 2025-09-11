@@ -10,7 +10,6 @@ import org.apache.http.client.HttpClient;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.DwcDpDownloadFinishedMessage;
-import org.gbif.pipelines.common.indexing.IndexSettings;
 import org.gbif.pipelines.common.process.AirflowSparkLauncher;
 import org.gbif.pipelines.common.process.BeamParametersBuilder;
 import org.gbif.pipelines.common.process.SparkDynamicSettings;
@@ -38,7 +37,7 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
 
     // Copies all the DP files to HDFS
     copyToHdfs(message);
-  /*
+    /*
     IndexSettings indexSettings =
         IndexSettings.create(
             config.indexConfig,
