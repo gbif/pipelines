@@ -70,19 +70,21 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
   @SneakyThrows
   private void copyToHdfs(DwcDpDownloadFinishedMessage message) {
     log.info("Copying DP files to HDFS from message {}", message);
+    String datasetKey = message.getDatasetUuid().toString();
     // Copies all the DP files to HDFS
     Path outputPath =
         HdfsUtils.buildOutputPath(
             config.getRepositoryPath(),
-            message.getDatasetUuid().toString(),
+            datasetKey,
             String.valueOf(message.getAttempt()));
 
     FileSystem fs =
         FileSystemFactory.getInstance(
                 HdfsConfigs.create(config.getHdfsSiteConfig(), config.getCoreSiteConfig()))
             .getFs(config.getRepositoryPath());
-    fs.copyFromLocalFile(false, true, new Path(config.archiveRepository), outputPath);
-    log.info("Finished copying DP files to HDFS from message {}", message);
+    Path sourcePath = new Path(config.archiveUnpackedRepository, datasetKey);
+    fs.copyFromLocalFile(false, true, sourcePath, outputPath);
+    log.info("Finished copying DP files to HDFS from {} to ", sourcePath, outputPath);
   }
 
   private void runDag(
