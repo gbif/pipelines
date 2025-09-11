@@ -81,7 +81,7 @@ public class HumboldtInterpreterTest {
     assertEquals("km²", humboldt.getTotalAreaSampledUnit());
     assertEquals(20.0, humboldt.getSamplingEffortValue(), 0.0001);
     assertEquals(3.0, humboldt.getEventDurationValue(), 0.0001);
-    assertEquals(DurationUnit.minutes.name(), humboldt.getEventDurationUnit());
+    assertEquals(DurationUnit.MINUTES.name(), humboldt.getEventDurationUnit());
     assertNull(humboldt.getIsTaxonomicScopeFullyReported());
     assertEquals(1, humboldt.getTargetLifeStageScope().size());
     assertEquals("Adult", humboldt.getTargetLifeStageScope().get(0).getConcept());

@@ -46,7 +46,7 @@ public class ParentJsonConverterTest {
                         .setSiteCount(2)
                         .setTargetHabitatScope(Arrays.asList("hs1", "hs2"))
                         .setExcludedHabitatScope(Collections.singletonList("hs1"))
-                        .setEventDurationUnit(DurationUnit.hours.name())
+                        .setEventDurationUnit(DurationUnit.HOURS.name())
                         .setEventDurationValue(2.0)
                         .setGeospatialScopeAreaValue(12.0)
                         .setTargetLifeStageScope(
