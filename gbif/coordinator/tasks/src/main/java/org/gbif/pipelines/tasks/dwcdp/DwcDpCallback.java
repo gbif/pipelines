@@ -84,7 +84,7 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
             .getFs(config.getRepositoryPath());
     Path sourcePath = new Path(config.archiveUnpackedRepository, datasetKey);
     fs.copyFromLocalFile(false, true, sourcePath, outputPath);
-    log.info("Finished copying DP files to HDFS from {} to ", sourcePath, outputPath);
+    log.info("Finished copying DP files to HDFS from {} to {}", sourcePath, outputPath);
   }
 
   private void runDag(
