@@ -74,9 +74,7 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
     // Copies all the DP files to HDFS
     Path outputPath =
         HdfsUtils.buildOutputPath(
-            config.getRepositoryPath(),
-            datasetKey,
-            String.valueOf(message.getAttempt()));
+            config.getRepositoryPath(), datasetKey, String.valueOf(message.getAttempt()));
 
     FileSystem fs =
         FileSystemFactory.getInstance(
