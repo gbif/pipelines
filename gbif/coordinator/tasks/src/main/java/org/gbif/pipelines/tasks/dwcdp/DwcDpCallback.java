@@ -63,7 +63,7 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
     if (!destinationDir.exists() && destinationDir.mkdirs()) {
       log.info("Created directory {}", destinationDir.getAbsolutePath());
     }
-    CompressionUtil.decompressFile(dwcaFile, destinationDir, true);
+    CompressionUtil.decompressFile(destinationDir, dwcaFile, true);
     log.info("Finished uncompressing dwc-a file from message {}", message);
   }
 
