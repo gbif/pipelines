@@ -993,10 +993,12 @@ public class OccurrenceHdfsRecordConverter {
                           .forEach(
                               rn -> {
                                 values
-                                    .computeIfAbsent(rn.getRank(), k -> new ArrayList<>())
+                                    .computeIfAbsent(
+                                        rn.getRank().toLowerCase(), k -> new ArrayList<>())
                                     .add(rn.getName());
                                 values
-                                    .computeIfAbsent(rn.getRank() + "key", k -> new ArrayList<>())
+                                    .computeIfAbsent(
+                                        rn.getRank().toLowerCase() + "key", k -> new ArrayList<>())
                                     .add(rn.getKey());
                               });
                     });
