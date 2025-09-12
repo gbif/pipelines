@@ -32,8 +32,8 @@ public class BeamParametersBuilder {
 
     private final List<String> simpleArgs = new ArrayList<>();
 
-    public void addSingleArg(String...args) {
-        simpleArgs.addAll(Arrays.asList(args));
+    public void addSingleArg(String... args) {
+      simpleArgs.addAll(Arrays.asList(args));
     }
 
     public BeamParameters put(String key, Object value) {
@@ -59,9 +59,10 @@ public class BeamParametersBuilder {
 
     public List<String> toList() {
       List<String> args = new ArrayList<>(simpleArgs);
-      args.addAll(map.entrySet().stream()
-          .map(es -> "--" + es.getKey() + "=" + es.getValue())
-          .collect(Collectors.toList()));
+      args.addAll(
+          map.entrySet().stream()
+              .map(es -> "--" + es.getKey() + "=" + es.getValue())
+              .collect(Collectors.toList()));
       return args;
     }
 

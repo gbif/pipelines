@@ -2,7 +2,6 @@ package org.gbif.pipelines.tasks.dwcdp;
 
 import java.io.File;
 import java.nio.file.Paths;
-
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -43,16 +42,18 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
     String datasetKey = message.getDatasetUuid().toString();
     IndexSettings indexSettings =
         IndexSettings.create(
-            config.indexConfig,
-            httpClient,
-            datasetKey,
-            message.getAttempt(),
-            1_000_000);
+            config.indexConfig, httpClient, datasetKey, message.getAttempt(), 1_000_000);
 
     BeamParametersBuilder.BeamParameters beamParameters =
         BeamParametersBuilder.dwcDpIndexing(config, message, indexSettings);
 
-    String dpPath = String.valueOf(Paths.get(config.getRepositoryPath(), datasetKey, String.valueOf(message.getAttempt()), "datapackage.json"));
+    String dpPath =
+        String.valueOf(
+            Paths.get(
+                config.getRepositoryPath(),
+                datasetKey,
+                String.valueOf(message.getAttempt()),
+                "datapackage.json"));
 
     beamParameters.addSingleArg(datasetKey, dpPath);
 
