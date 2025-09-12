@@ -968,27 +968,51 @@ public class OccurrenceHdfsRecordConverter {
             return vl;
           };
 
-      Function<List<TaxonHumboldtRecord>, Map<String, List<HumboldtJsonView.Classification>>>
-          convertToTaxonMap =
-              r -> {
-                Map<String, List<HumboldtJsonView.Classification>> classificationMap =
-                    new HashMap<>();
-                r.stream()
-                    .filter(v -> v.getChecklistKey() != null)
-                    .forEach(
-                        t -> {
-                          HumboldtJsonView.Classification classification =
-                              new HumboldtJsonView.Classification();
-                          classification.setUsageKey(t.getUsageKey());
-                          classification.setUsageName(t.getUsageName());
-                          classification.setUsageRank(t.getUsageRank());
-                          classification.setRankedNames(t.getClassification());
-                          classificationMap
-                              .computeIfAbsent(t.getChecklistKey(), k -> new ArrayList<>())
-                              .add(classification);
-                        });
-                return classificationMap;
-              };
+      Function<List<TaxonHumboldtRecord>, Map<String, Map<String, String>>> convertToTaxonMap =
+          r -> {
+            Map<String, Map<String, List<String>>> valuesAsList = new HashMap<>();
+
+            r.stream()
+                .filter(v -> v.getChecklistKey() != null)
+                .forEach(
+                    t -> {
+                      Map<String, List<String>> values =
+                          valuesAsList.computeIfAbsent(t.getChecklistKey(), k -> new HashMap<>());
+
+                      values
+                          .computeIfAbsent("usageKey", k -> new ArrayList<>())
+                          .add(t.getUsageKey());
+                      values
+                          .computeIfAbsent("usageName", k -> new ArrayList<>())
+                          .add(t.getUsageName());
+                      values
+                          .computeIfAbsent("usageRank", k -> new ArrayList<>())
+                          .add(t.getUsageRank());
+
+                      t.getClassification()
+                          .forEach(
+                              rn -> {
+                                values
+                                    .computeIfAbsent(rn.getRank(), k -> new ArrayList<>())
+                                    .add(rn.getName());
+                                values
+                                    .computeIfAbsent(rn.getRank() + "key", k -> new ArrayList<>())
+                                    .add(rn.getKey());
+                              });
+                    });
+
+            Map<String, Map<String, String>> classificationMap = new HashMap<>();
+            valuesAsList.forEach(
+                (checklistKey, propertyValues) -> {
+                  Map<String, String> valuesConcatenated = new HashMap<>();
+                  propertyValues.forEach(
+                      (property, values) ->
+                          valuesConcatenated.put(
+                              property, String.join(ModelUtils.DEFAULT_SEPARATOR, values)));
+                  classificationMap.put(checklistKey, valuesConcatenated);
+                });
+            return classificationMap;
+          };
 
       List<HumboldtJsonView> jsonViews =
           humboldtRecord.getHumboldtItems().stream()
@@ -1034,6 +1058,9 @@ public class OccurrenceHdfsRecordConverter {
                                 classifications
                                     .computeIfAbsent("usageName", k -> new HashSet<>())
                                     .add(t.getUsageName());
+                                classifications
+                                    .computeIfAbsent("usageRank", k -> new HashSet<>())
+                                    .add(t.getUsageRank());
                                 classifications
                                     .computeIfAbsent("taxonKeys", k -> new HashSet<>())
                                     .addAll(
