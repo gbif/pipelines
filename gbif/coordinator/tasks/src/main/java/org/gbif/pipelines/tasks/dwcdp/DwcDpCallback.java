@@ -1,6 +1,7 @@
 package org.gbif.pipelines.tasks.dwcdp;
 
 import java.io.File;
+import java.nio.file.Paths;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -38,20 +39,26 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
 
     // Copies all the DP files to HDFS
     copyToHdfs(message);
-  /*
+    String datasetKey = message.getDatasetUuid().toString();
     IndexSettings indexSettings =
         IndexSettings.create(
-            config.indexConfig,
-            httpClient,
-            message.getDatasetUuid().toString(),
-            message.getAttempt(),
-            1_000_000);
+            config.indexConfig, httpClient, datasetKey, message.getAttempt(), 1_000_000);
 
     BeamParametersBuilder.BeamParameters beamParameters =
         BeamParametersBuilder.dwcDpIndexing(config, message, indexSettings);
 
+    String dpPath =
+        String.valueOf(
+            Paths.get(
+                config.getRepositoryPath(),
+                datasetKey,
+                String.valueOf(message.getAttempt()),
+                "datapackage.json"));
+
+    beamParameters.addSingleArg(datasetKey, dpPath);
+
     // Run the Airflow DAG
-    runDag(message, beamParameters);*/
+    runDag(message, beamParameters);
   }
 
   @SneakyThrows
@@ -61,26 +68,29 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
     File dwcaFile =
         new File(config.archiveRepository, datasetKey + "/" + datasetKey + DWC_DP_SUFFIX);
     File destinationDir = new File(config.archiveUnpackedRepository, datasetKey);
-    CompressionUtil.decompressFile(dwcaFile, destinationDir, true);
+    if (!destinationDir.exists() && destinationDir.mkdirs()) {
+      log.info("Created directory {}", destinationDir.getAbsolutePath());
+    }
+    CompressionUtil.decompressFile(destinationDir, dwcaFile, true);
     log.info("Finished uncompressing dwc-a file from message {}", message);
   }
 
   @SneakyThrows
   private void copyToHdfs(DwcDpDownloadFinishedMessage message) {
     log.info("Copying DP files to HDFS from message {}", message);
+    String datasetKey = message.getDatasetUuid().toString();
     // Copies all the DP files to HDFS
     Path outputPath =
         HdfsUtils.buildOutputPath(
-            config.getRepositoryPath(),
-            message.getDatasetUuid().toString(),
-            String.valueOf(message.getAttempt()));
+            config.getRepositoryPath(), datasetKey, String.valueOf(message.getAttempt()));
 
     FileSystem fs =
         FileSystemFactory.getInstance(
                 HdfsConfigs.create(config.getHdfsSiteConfig(), config.getCoreSiteConfig()))
             .getFs(config.getRepositoryPath());
-    fs.copyFromLocalFile(false, true, new Path(config.archiveRepository), outputPath);
-    log.info("Finished copying DP files to HDFS from message {}", message);
+    Path sourcePath = new Path(config.archiveUnpackedRepository, datasetKey);
+    fs.copyFromLocalFile(false, true, sourcePath, outputPath);
+    log.info("Finished copying DP files to HDFS from {} to {}", sourcePath, outputPath);
   }
 
   private void runDag(

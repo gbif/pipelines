@@ -6,6 +6,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -21,6 +23,7 @@ import org.gbif.pipelines.core.interpreters.core.MultiTaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.transforms.Transform;
+import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 /**
@@ -38,20 +41,30 @@ public class MultiTaxonomyTransform extends Transform<ExtendedRecord, MultiTaxon
   private final SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
       kvStoreSupplier;
   private KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore;
+
+  private final SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>>
+      geoKvStoreSupplier;
+  private KeyValueStore<GeocodeRequest, GeocodeResponse> geoKvStore;
+
   private final List<String> checklistKeys;
+  private final Map<String, String> countryCheckistKeyMap;
 
   @Builder(buildMethodName = "create")
   private MultiTaxonomyTransform(
       SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
           kvStoresSupplier,
-      List<String> checklistKeys) {
+      SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> geoKvStoreSupplier,
+      List<String> checklistKeys,
+      Map<String, String> countryCheckistKeyMap) {
     super(
         MultiTaxonRecord.class,
         MULTI_TAXONOMY,
         MultiTaxonomyTransform.class.getName(),
         TAXON_RECORDS_COUNT);
     this.kvStoreSupplier = kvStoresSupplier;
+    this.geoKvStoreSupplier = geoKvStoreSupplier;
     this.checklistKeys = checklistKeys;
+    this.countryCheckistKeyMap = countryCheckistKeyMap;
   }
 
   /** Maps {@link MultiTaxonRecord} to key value, where key is {@link MultiTaxonRecord#getId} */
@@ -80,6 +93,7 @@ public class MultiTaxonomyTransform extends Transform<ExtendedRecord, MultiTaxon
     if (kvStore == null && kvStoreSupplier != null) {
       log.info("Initialize NameUsageMatchKvStores");
       kvStore = kvStoreSupplier.get();
+      geoKvStore = geoKvStoreSupplier.get();
     }
   }
 
@@ -107,7 +121,9 @@ public class MultiTaxonomyTransform extends Transform<ExtendedRecord, MultiTaxon
     return Interpretation.from(source)
         .to(MultiTaxonRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(MultiTaxonomyInterpreter.interpretMultiTaxonomy(kvStore, checklistKeys))
+        .via(
+            MultiTaxonomyInterpreter.interpretMultiTaxonomy(
+                kvStore, geoKvStore, checklistKeys, countryCheckistKeyMap))
         .skipWhen(tr -> tr.getId() == null)
         .getOfNullable();
   }
