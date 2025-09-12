@@ -52,7 +52,7 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
     BeamParametersBuilder.BeamParameters beamParameters =
         BeamParametersBuilder.dwcDpIndexing(config, message, indexSettings);
 
-    String dpPath = String.valueOf(Paths.get(config.getRepositoryPath(), datasetKey, String.valueOf(message.getAttempt())));
+    String dpPath = String.valueOf(Paths.get(config.getRepositoryPath(), datasetKey, String.valueOf(message.getAttempt()), "datapackage.json"));
 
     beamParameters.addSingleArg(datasetKey, dpPath);
 
