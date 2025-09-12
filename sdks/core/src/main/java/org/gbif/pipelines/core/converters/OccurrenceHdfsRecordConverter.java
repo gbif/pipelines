@@ -980,14 +980,17 @@ public class OccurrenceHdfsRecordConverter {
                           valuesAsList.computeIfAbsent(t.getChecklistKey(), k -> new HashMap<>());
 
                       values
-                          .computeIfAbsent("usageKey", k -> new ArrayList<>())
+                          .computeIfAbsent("usagekey", k -> new ArrayList<>())
                           .add(t.getUsageKey());
                       values
-                          .computeIfAbsent("usageName", k -> new ArrayList<>())
+                          .computeIfAbsent("usagename", k -> new ArrayList<>())
                           .add(t.getUsageName());
                       values
-                          .computeIfAbsent("usageRank", k -> new ArrayList<>())
+                          .computeIfAbsent("usagerank", k -> new ArrayList<>())
                           .add(t.getUsageRank());
+                      values
+                          .computeIfAbsent("taxonomicissue", k -> new ArrayList<>())
+                          .addAll(t.getIssues().getIssueList());
 
                       t.getClassification()
                           .forEach(
@@ -1055,16 +1058,16 @@ public class OccurrenceHdfsRecordConverter {
                                         t.getChecklistKey(), k -> new HashMap<>());
 
                                 classifications
-                                    .computeIfAbsent("usageKey", k -> new HashSet<>())
+                                    .computeIfAbsent("usagekey", k -> new HashSet<>())
                                     .add(t.getUsageKey());
                                 classifications
-                                    .computeIfAbsent("usageName", k -> new HashSet<>())
+                                    .computeIfAbsent("usagename", k -> new HashSet<>())
                                     .add(t.getUsageName());
                                 classifications
-                                    .computeIfAbsent("usageRank", k -> new HashSet<>())
+                                    .computeIfAbsent("usagerank", k -> new HashSet<>())
                                     .add(t.getUsageRank());
                                 classifications
-                                    .computeIfAbsent("taxonKeys", k -> new HashSet<>())
+                                    .computeIfAbsent("taxonkeys", k -> new HashSet<>())
                                     .addAll(
                                         t.getClassification().stream()
                                             .map(RankedName::getKey)
