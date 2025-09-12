@@ -1,6 +1,7 @@
 package org.gbif.pipelines.ingest.pipelines.interpretation;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
@@ -185,16 +186,25 @@ public class TransformsFactory {
     SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
         nameUsageMatchServiceSupplier = null;
 
+    SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> geocodeServiceSupplier =
+        null;
+
     if (!options.getTestMode()) {
       nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createMultiServiceSupplier(config);
+      geocodeServiceSupplier = GeocodeKvStoreFactory.createSupplier(hdfsConfigs, config);
     }
 
     return MultiTaxonomyTransform.builder()
         .kvStoresSupplier(nameUsageMatchServiceSupplier)
+        .geoKvStoreSupplier(geocodeServiceSupplier)
         .checklistKeys(
             config.getNameUsageMatchingService() != null
                 ? config.getNameUsageMatchingService().getChecklistKeys()
                 : List.of())
+        .countryCheckistKeyMap(
+            config.getNameUsageMatchingService() != null
+                ? config.getNameUsageMatchingService().getCountryChecklistKeyMap()
+                : Map.of())
         .create();
   }
 

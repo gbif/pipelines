@@ -101,7 +101,7 @@ public class LocationParser {
         .build();
   }
 
-  private static ParsedField<Country> parseCountry(
+  public static ParsedField<Country> parseCountry(
       ExtendedRecord er, VocabularyParser<Country> parser, String issue) {
     Optional<ParseResult<Country>> parseResultOpt = parser.map(er, parseRes -> parseRes);
 
