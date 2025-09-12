@@ -160,11 +160,7 @@ public class ALAVerbatimToEventPipeline {
     EventCoreTransform eventCoreTransform =
         EventCoreTransform.builder()
             .vocabularyServiceSupplier(
-                FileVocabularyFactory.builder()
-                    .config(config.getGbifConfig())
-                    .hdfsConfigs(hdfsConfigs)
-                    .build()
-                    .getInstanceSupplier())
+                FileVocabularyFactory.getInstanceSupplier(hdfsConfigs, config.getGbifConfig()))
             .create();
     IdentifierTransform identifierTransform = transformsFactory.createIdentifierTransform();
     MeasurementOrFactTransform measurementOrFactTransform =

@@ -606,7 +606,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
           indexRecord, DwcTerm.recordedByID.simpleName(), br.getRecordedByIds());
       addTermWithAgentsSafely(
           indexRecord, DwcTerm.identifiedByID.simpleName(), br.getIdentifiedByIds());
-      addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
+      addMultiValueTermSafelyVocabularyList(
+          indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
       addMultiValueTermSafely(indexRecord, DwcTerm.identifiedBy.simpleName(), br.getIdentifiedBy());
       addMultiValueTermSafely(indexRecord, DwcTerm.preparations.simpleName(), br.getPreparations());
       addMultiValueTermSafely(indexRecord, DwcTerm.datasetID.simpleName(), br.getDatasetID());
@@ -784,6 +785,21 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
   }
 
+  private static void addMultiValueTermSafelyVocabularyList(
+      IndexRecord.Builder indexRecord, String indexField, List<VocabularyConcept> values) {
+    if (values != null && !values.isEmpty()) {
+      List<String> stringValues =
+          values.stream()
+              .map(VocabularyConcept::getConcept)
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList());
+      List<String> multiValuedField =
+          indexRecord.getMultiValues().getOrDefault(indexField, new ArrayList<>());
+      multiValuedField.addAll(stringValues);
+      indexRecord.getMultiValues().put(indexField, multiValuedField);
+    }
+  }
+
   private static void addEstablishmentValueSafely(
       IndexRecord.Builder indexRecord, String field, VocabularyConcept establishmentMeans) {
     if (establishmentMeans != null) {
@@ -942,7 +958,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     for (RankedName entry : taxonomy) {
       indexRecord
           .getInts()
-          .put("gbif_s_" + entry.getRank().toString().toLowerCase() + "_id", entry.getKey());
+          .put(
+              "gbif_s_" + entry.getRank().toString().toLowerCase() + "_id",
+              Integer.parseInt(entry.getKey()));
       indexRecord
           .getStrings()
           .put("gbif_s_" + entry.getRank().toString().toLowerCase(), entry.getName());

@@ -25,6 +25,7 @@ import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.*;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileSystem;
 import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -296,10 +297,17 @@ public class ALAReverseJackKnifePipeline {
     PipelineResult result = pipeline.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToFile(
-        HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()),
-        jackknifePath + "/metrics.yaml",
-        result.metrics());
+    String path = jackknifePath + "/metrics.yaml";
+    String countersInfo = MetricsHandler.getCountersInfo(result.metrics());
+    FileSystem fs =
+        FsUtils.getFileSystem(
+            HdfsConfigs.create(options.getHdfsSiteConfig(), options.getCoreSiteConfig()), path);
+    try {
+      FsUtils.createFile(fs, path, countersInfo);
+      log.info("Metadata was written to a file - {}", path);
+    } catch (IOException ex) {
+      log.warn("Write pipelines metadata file", ex);
+    }
 
     log.info("3. Pipeline has been finished");
   }

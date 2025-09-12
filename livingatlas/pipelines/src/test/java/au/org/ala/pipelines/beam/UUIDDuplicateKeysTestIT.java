@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.beam;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -10,11 +11,16 @@ import java.io.File;
 import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 public class UUIDDuplicateKeysTestIT {
 
   @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
+
+  // Safety net to prevent indefinite hangs in CI
+  @Rule public final Timeout globalTimeout = new Timeout(10, MINUTES);
 
   /** Test the generation of UUIDs for datasets that are use non-DwC terms for unique key terms */
   @Test

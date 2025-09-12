@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.beam;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -11,12 +12,17 @@ import au.org.ala.util.ElasticUtils;
 import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.utils.ValidationUtils;
 import java.io.File;
-import org.apache.commons.io.FileUtils;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.rules.Timeout;
 
 /**
  * Complete pipeline tests that start with DwCAs and finish with the SOLR index. Includes all
@@ -28,25 +34,38 @@ public class CompleteIngestPipelineESTestIT {
 
   public static final String INDEX_NAME = "complete_occ_es_it";
 
+  @Rule public final TemporaryFolder tmp = new TemporaryFolder();
+
+  // Safety net to prevent indefinite hangs in CI
+  @Rule public final Timeout globalTimeout = new Timeout(10, MINUTES);
+
   /** Tests for SOLR index creation. */
   @Test
   public void testIngestPipeline() throws Exception {
 
     // clear up previous test runs
-    FileUtils.deleteQuietly(new File("/tmp/la-pipelines-test/complete-pipeline-es"));
+    // (use isolated temp workspace instead of hardcoded /tmp path)
+    final Path workDir = tmp.newFolder("complete-pipeline-es").toPath().toAbsolutePath();
+    final String targetPath = workDir.toString();
+    Files.createDirectories(workDir.resolve("all-datasets"));
 
     String absolutePath = new File("src/test/resources").getAbsolutePath();
 
+    // Make Spark runner more predictable in CI
+    System.setProperty("spark.ui.enabled", "false");
+
     // Step 1: load a dataset and verify all records have a UUID associated
-    loadTestDataset("dr893", absolutePath + "/complete-pipeline/dr893");
+    final String datasetID = "dr893";
+    loadTestDataset(datasetID, absolutePath + "/complete-pipeline/" + datasetID, targetPath);
 
     // clear SOLR index
-    ElasticUtils.refreshIndex(INDEX_NAME + "_dr893");
+    ElasticUtils.refreshIndex(INDEX_NAME + "_" + datasetID);
 
     System.out.println("Finished");
   }
 
-  public void loadTestDataset(String datasetID, String inputPath) throws Exception {
+  public void loadTestDataset(String datasetID, String inputPath, String targetPath)
+      throws Exception {
 
     DwcaPipelineOptions dwcaOptions =
         PipelinesOptionsFactory.create(
@@ -56,7 +75,7 @@ public class CompleteIngestPipelineESTestIT {
               "--attempt=1",
               "--runner=DirectRunner",
               "--metaFileName=" + ValidationUtils.VERBATIM_METRICS,
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-es",
+              "--targetPath=" + targetPath,
               "--inputPath=" + inputPath
             });
     DwcaToVerbatimPipeline.run(dwcaOptions);
@@ -73,8 +92,9 @@ public class CompleteIngestPipelineESTestIT {
               "--runner=DirectRunner",
               "--interpretationTypes=ALL",
               "--metaFileName=" + ValidationUtils.INTERPRETATION_METRICS,
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-es",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-es/dr893/1/verbatim.avro",
+              "--targetPath=" + targetPath,
+              // read verbatim from the dataset-specific folder
+              "--inputPath=" + targetPath + "/" + datasetID + "/1/verbatim.avro",
               "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });
@@ -91,8 +111,8 @@ public class CompleteIngestPipelineESTestIT {
               "--attempt=1",
               "--runner=DirectRunner",
               "--metaFileName=" + ValidationUtils.UUID_METRICS,
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-es",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-es",
+              "--targetPath=" + targetPath,
+              "--inputPath=" + targetPath,
               "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });
@@ -109,8 +129,8 @@ public class CompleteIngestPipelineESTestIT {
               "--attempt=1",
               "--runner=DirectRunner",
               "--metaFileName=" + ValidationUtils.SENSITIVE_METRICS,
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-es",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-es",
+              "--targetPath=" + targetPath,
+              "--inputPath=" + targetPath,
               "--properties=" + itUtils.getPropertiesFilePath(),
               "--useExtendedRecordId=true"
             });
@@ -125,9 +145,9 @@ public class CompleteIngestPipelineESTestIT {
               "--attempt=1",
               "--runner=SparkRunner",
               "--metaFileName=" + ValidationUtils.INDEXING_METRICS,
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-es",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-es",
-              "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline-es/all-datasets",
+              "--targetPath=" + targetPath,
+              "--inputPath=" + targetPath,
+              "--allDatasetsInputPath=" + targetPath + "/all-datasets",
               "--properties=" + itUtils.getPropertiesFilePath(),
               "--includeSensitiveDataChecks=true",
               "--includeImages=false"
@@ -146,9 +166,9 @@ public class CompleteIngestPipelineESTestIT {
               "--datasetId=" + datasetID,
               "--attempt=1",
               "--runner=DirectRunner",
-              "--targetPath=/tmp/la-pipelines-test/complete-pipeline-es",
-              "--inputPath=/tmp/la-pipelines-test/complete-pipeline-es",
-              "--allDatasetsInputPath=/tmp/la-pipelines-test/complete-pipeline-es/all-datasets",
+              "--targetPath=" + targetPath,
+              "--inputPath=" + targetPath,
+              "--allDatasetsInputPath=" + targetPath + "/all-datasets",
               "--properties=" + itUtils.getPropertiesFilePath()
             });
     SamplingPipeline.run(samplingOptions);
@@ -158,8 +178,9 @@ public class CompleteIngestPipelineESTestIT {
     lc.run(samplingOptions);
 
     String esSchemaPath =
-        new File("src/test/resources/complete-event-pipeline/es-event-core-schema.json")
-            .getAbsolutePath();
+        Paths.get("src/test/resources/complete-event-pipeline/es-event-core-schema.json")
+            .toAbsolutePath()
+            .toString();
 
     // run event to occurrence ES pipeline
     ALAOccurrenceToEsIndexPipeline.main(
@@ -167,9 +188,9 @@ public class CompleteIngestPipelineESTestIT {
           "--datasetId=" + datasetID,
           "--attempt=1",
           "--runner=SparkRunner",
-          "--targetPath=/tmp/la-pipelines-test/complete-pipeline-es",
-          "--inputPath=/tmp/la-pipelines-test/complete-pipeline-es",
-          "--metaFileName=/tmp/la-pipelines-test/complete-pipeline-es/es-meta.yml",
+          "--targetPath=" + targetPath,
+          "--inputPath=" + targetPath,
+          "--metaFileName=" + targetPath + "/es-meta.yml",
           "--esSchemaPath=" + esSchemaPath,
           "--esAlias=" + INDEX_NAME,
           "--esIndexName=" + INDEX_NAME + "_" + datasetID,
