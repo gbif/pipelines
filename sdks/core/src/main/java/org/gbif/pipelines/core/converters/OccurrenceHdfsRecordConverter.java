@@ -968,56 +968,48 @@ public class OccurrenceHdfsRecordConverter {
             return vl;
           };
 
-      Function<List<TaxonHumboldtRecord>, Map<String, Map<String, String>>> convertToTaxonMap =
-          r -> {
-            Map<String, Map<String, List<String>>> valuesAsList = new HashMap<>();
+      Function<List<TaxonHumboldtRecord>, Map<String, Map<String, List<String>>>>
+          convertToTaxonMap =
+              r -> {
+                Map<String, Map<String, List<String>>> valuesAsList = new HashMap<>();
 
-            r.stream()
-                .filter(v -> v.getChecklistKey() != null)
-                .forEach(
-                    t -> {
-                      Map<String, List<String>> values =
-                          valuesAsList.computeIfAbsent(t.getChecklistKey(), k -> new HashMap<>());
+                r.stream()
+                    .filter(v -> v.getChecklistKey() != null)
+                    .forEach(
+                        t -> {
+                          Map<String, List<String>> values =
+                              valuesAsList.computeIfAbsent(
+                                  t.getChecklistKey(), k -> new HashMap<>());
 
-                      values
-                          .computeIfAbsent("usagekey", k -> new ArrayList<>())
-                          .add(t.getUsageKey());
-                      values
-                          .computeIfAbsent("usagename", k -> new ArrayList<>())
-                          .add(t.getUsageName());
-                      values
-                          .computeIfAbsent("usagerank", k -> new ArrayList<>())
-                          .add(t.getUsageRank());
-                      values
-                          .computeIfAbsent("taxonomicissue", k -> new ArrayList<>())
-                          .addAll(t.getIssues().getIssueList());
+                          values
+                              .computeIfAbsent("usagekey", k -> new ArrayList<>())
+                              .add(t.getUsageKey());
+                          values
+                              .computeIfAbsent("usagename", k -> new ArrayList<>())
+                              .add(t.getUsageName());
+                          values
+                              .computeIfAbsent("usagerank", k -> new ArrayList<>())
+                              .add(t.getUsageRank());
+                          values
+                              .computeIfAbsent("taxonomicissue", k -> new ArrayList<>())
+                              .addAll(t.getIssues().getIssueList());
 
-                      t.getClassification()
-                          .forEach(
-                              rn -> {
-                                values
-                                    .computeIfAbsent(
-                                        rn.getRank().toLowerCase(), k -> new ArrayList<>())
-                                    .add(rn.getName());
-                                values
-                                    .computeIfAbsent(
-                                        rn.getRank().toLowerCase() + "key", k -> new ArrayList<>())
-                                    .add(rn.getKey());
-                              });
-                    });
-
-            Map<String, Map<String, String>> classificationMap = new HashMap<>();
-            valuesAsList.forEach(
-                (checklistKey, propertyValues) -> {
-                  Map<String, String> valuesConcatenated = new HashMap<>();
-                  propertyValues.forEach(
-                      (property, values) ->
-                          valuesConcatenated.put(
-                              property, String.join(ModelUtils.DEFAULT_SEPARATOR, values)));
-                  classificationMap.put(checklistKey, valuesConcatenated);
-                });
-            return classificationMap;
-          };
+                          t.getClassification()
+                              .forEach(
+                                  rn -> {
+                                    values
+                                        .computeIfAbsent(
+                                            rn.getRank().toLowerCase(), k -> new ArrayList<>())
+                                        .add(rn.getName());
+                                    values
+                                        .computeIfAbsent(
+                                            rn.getRank().toLowerCase() + "key",
+                                            k -> new ArrayList<>())
+                                        .add(rn.getKey());
+                                  });
+                        });
+                return valuesAsList;
+              };
 
       List<HumboldtJsonView> jsonViews =
           humboldtRecord.getHumboldtItems().stream()

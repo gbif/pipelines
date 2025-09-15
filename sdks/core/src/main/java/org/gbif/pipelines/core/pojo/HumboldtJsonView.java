@@ -17,12 +17,12 @@ public class HumboldtJsonView {
   private VocabularyList excludedLifeStageScope;
   private VocabularyList targetDegreeOfEstablishmentScope;
   private VocabularyList excludedDegreeOfEstablishmentScope;
-  private Map<String, Map<String, String>> targetTaxonomicScope = new HashMap<>();
+  private Map<String, Map<String, List<String>>> targetTaxonomicScope = new HashMap<>();
   private Map<String, Map<String, Set<String>>> humboldtTargetTaxonClassifications =
       new HashMap<>();
-  private Map<String, Map<String, String>> excludedTaxonomicScope = new HashMap<>();
-  private Map<String, Map<String, String>> absentTaxa = new HashMap<>();
-  private Map<String, Map<String, String>> nonTargetTaxa = new HashMap<>();
+  private Map<String, Map<String, List<String>>> excludedTaxonomicScope = new HashMap<>();
+  private Map<String, Map<String, List<String>>> absentTaxa = new HashMap<>();
+  private Map<String, Map<String, List<String>>> nonTargetTaxa = new HashMap<>();
 
   @Data
   public static final class VocabularyList {
