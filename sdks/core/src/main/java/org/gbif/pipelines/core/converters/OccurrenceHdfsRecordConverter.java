@@ -991,6 +991,12 @@ public class OccurrenceHdfsRecordConverter {
                               .computeIfAbsent("usagerank", k -> new ArrayList<>())
                               .add(t.getUsageRank());
                           values
+                              .computeIfAbsent("taxonkeys", k -> new ArrayList<>())
+                              .addAll(
+                                  t.getClassification().stream()
+                                      .map(RankedName::getKey)
+                                      .collect(Collectors.toSet()));
+                          values
                               .computeIfAbsent("taxonomicissue", k -> new ArrayList<>())
                               .addAll(t.getIssues().getIssueList());
 
@@ -1038,38 +1044,6 @@ public class OccurrenceHdfsRecordConverter {
                     if (h.getTargetTaxonomicScope() != null) {
                       jsonView.setTargetTaxonomicScope(
                           convertToTaxonMap.apply(h.getTargetTaxonomicScope()));
-
-                      Map<String, Map<String, Set<String>>> humboldtTargetTaxonClassifications =
-                          new HashMap<>();
-                      h.getTargetTaxonomicScope().stream()
-                          .filter(v -> v.getChecklistKey() != null)
-                          .forEach(
-                              t -> {
-                                Map<String, Set<String>> classifications =
-                                    humboldtTargetTaxonClassifications.computeIfAbsent(
-                                        t.getChecklistKey(), k -> new HashMap<>());
-
-                                classifications
-                                    .computeIfAbsent("usagekey", k -> new HashSet<>())
-                                    .add(t.getUsageKey());
-                                classifications
-                                    .computeIfAbsent("usagename", k -> new HashSet<>())
-                                    .add(t.getUsageName());
-                                classifications
-                                    .computeIfAbsent("usagerank", k -> new HashSet<>())
-                                    .add(t.getUsageRank());
-                                classifications
-                                    .computeIfAbsent("taxonkeys", k -> new HashSet<>())
-                                    .addAll(
-                                        t.getClassification().stream()
-                                            .map(RankedName::getKey)
-                                            .collect(Collectors.toSet()));
-
-                                humboldtTargetTaxonClassifications.put(
-                                    t.getChecklistKey(), classifications);
-                              });
-                      jsonView.setHumboldtTargetTaxonClassifications(
-                          humboldtTargetTaxonClassifications);
                     }
                     if (h.getExcludedTaxonomicScope() != null) {
                       jsonView.setExcludedTaxonomicScope(

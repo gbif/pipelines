@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.Data;
 import org.gbif.pipelines.io.avro.Humboldt;
 
@@ -18,8 +17,6 @@ public class HumboldtJsonView {
   private VocabularyList targetDegreeOfEstablishmentScope;
   private VocabularyList excludedDegreeOfEstablishmentScope;
   private Map<String, Map<String, List<String>>> targetTaxonomicScope = new HashMap<>();
-  private Map<String, Map<String, Set<String>>> humboldtTargetTaxonClassifications =
-      new HashMap<>();
   private Map<String, Map<String, List<String>>> excludedTaxonomicScope = new HashMap<>();
   private Map<String, Map<String, List<String>>> absentTaxa = new HashMap<>();
   private Map<String, Map<String, List<String>>> nonTargetTaxa = new HashMap<>();
