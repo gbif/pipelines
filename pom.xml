@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>3.2.8-SNAPSHOT</version>
+  <version>3.2.9-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -107,7 +107,7 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <dwca-io.version>3.0.1-SNAPSHOT</dwca-io.version>
-    <gbif-api.version>2.1.16-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>2.1.17-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
     <dwc-api.version>2.1.7-SNAPSHOT</dwc-api.version>
     <kvs.version>3.0</kvs.version>
