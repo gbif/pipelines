@@ -1,6 +1,7 @@
 package org.gbif.pipelines.ingest.java.pipelines.interpretation;
 
 import java.util.List;
+import java.util.Map;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.parsers.date.DateComponentOrdering;
@@ -136,10 +137,16 @@ public class TransformsFactory {
   }
 
   public MultiTaxonomyTransform createMultiTaxonomyTransform() {
+
     SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
         nameUsageMatchServiceSupplier = null;
+
+    SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> geocodeServiceSupplier =
+        null;
+
     if (!options.getTestMode()) {
       nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createMultiServiceSupplier(config);
+      geocodeServiceSupplier = GeocodeKvStoreFactory.createSupplier(hdfsConfigs, config);
     }
 
     List<String> checklistKeys =
@@ -151,6 +158,11 @@ public class TransformsFactory {
     return MultiTaxonomyTransform.builder()
         .kvStoresSupplier(nameUsageMatchServiceSupplier)
         .checklistKeys(checklistKeys)
+        .geoKvStoreSupplier(geocodeServiceSupplier)
+        .countryCheckistKeyMap(
+            config.getNameUsageMatchingService() != null
+                ? config.getNameUsageMatchingService().getCountryChecklistKeyMap()
+                : Map.of())
         .create()
         .counterFn(incMetricFn)
         .init();

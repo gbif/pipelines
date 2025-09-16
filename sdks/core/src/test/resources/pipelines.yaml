@@ -7,6 +7,19 @@ nameUsageMatch:
   wsCacheSizeMb: 65
   numOfKeyBuckets: 6
   tableName: test_name_usage_kv
+nameUsageMatchingService:
+  checklistKeys:
+    - d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
+    - 2d59e5db-57ad-41ff-97d6-11f5fb264527
+    - 7ddf754f-d193-4cc9-b351-99906754a03b
+  countryChecklistKeyMap:
+    ZA: d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
+  ws:
+    numOfKeyBuckets: 5
+    zkConnectionString: test11.gbif-test.org,test2.gbif-test.org,test3.gbif-test.org
+    tableName: test_name_usage_kv
+    api:
+      wsUrl: http://test.test-mt
 geocode:
   zkConnectionString: test12.gbif-test.org,test2.gbif-test.org,test3.gbif-test.org
   wsTimeoutSec: 62
