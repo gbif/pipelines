@@ -431,35 +431,20 @@
         },
 
         "humboldt": {
-          "type": "object",
+          "type": "nested",
           "properties": {
             "siteCount": {"type": "integer"},
             "verbatimSiteNames": {"type": "keyword"},
             "verbatimSiteDescriptions": {"type": "text", "index":  false, "doc_values": false},
-            "geospatialScopeArea":
-              { "type": "nested",
-                "properties": {
-                  "value": {"type": "double"},
-                  "unit": {"type": "keyword"}
-                }
-              },
-            "totalAreaSampled":
-            { "type": "nested",
-              "properties": {
-                "value": {"type": "double"},
-                "unit": {"type": "keyword"}
-              }
-            },
+            "geospatialScopeAreaValue": {"type": "double"},
+            "geospatialScopeAreaUnit": {"type": "keyword"},
+            "totalAreaSampledValue": {"type": "double"},
+            "totalAreaSampledUnit": {"type": "keyword"},
             "targetHabitatScope": {"type": "keyword"},
             "excludedHabitatScope": {"type": "keyword"},
             "eventDurationValueInMinutes": {"type": "double"},
-            "eventDuration":
-            { "type": "nested",
-              "properties": {
-                "value": {"type": "double"},
-                "unit": {"type": "keyword"}
-              }
-            },
+            "eventDurationValue": {"type": "double"},
+            "eventDurationUnit": {"type": "keyword"},
             "taxonCompletenessProtocols": {"type": "keyword"},
             "isTaxonomicScopeFullyReported": {"type": "boolean"},
             "isAbsenceReported": {"type": "boolean"},
@@ -532,13 +517,8 @@
             "materialSampleTypes": {"type": "keyword"},
             "samplingPerformedBy": {"type": "keyword"},
             "isSamplingEffortReported": {"type": "boolean"},
-            "samplingEffort":
-            { "type": "nested",
-              "properties": {
-                "value": {"type": "double"},
-                "unit": {"type": "keyword"}
-              }
-            }
+            "samplingEffortValue": {"type": "double"},
+            "samplingEffortUnit": {"type": "keyword"}
           }
         }
       }

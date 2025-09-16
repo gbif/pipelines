@@ -46,7 +46,7 @@ public class ParentJsonConverterTest {
                         .setSiteCount(2)
                         .setTargetHabitatScope(Arrays.asList("hs1", "hs2"))
                         .setExcludedHabitatScope(Collections.singletonList("hs1"))
-                        .setEventDurationUnit(DurationUnit.hours.name())
+                        .setEventDurationUnit(DurationUnit.HOURS.name())
                         .setEventDurationValue(2.0)
                         .setGeospatialScopeAreaValue(12.0)
                         .setTargetLifeStageScope(
@@ -105,7 +105,8 @@ public class ParentJsonConverterTest {
     assertEquals(120.0, first.getEventDurationValueInMinutes(), 0.0001);
     assertEquals(1, first.getTargetLifeStageScope().size());
     assertTrue(first.getExcludedLifeStageScope().isEmpty());
-    assertNull(first.getGeospatialScopeArea());
+    assertEquals(12.0, first.getGeospatialScopeAreaValue(), 0.0001);
+    assertNull(first.getGeospatialScopeAreaUnit());
 
     Map<String, List<HumboldtTaxonClassification>> taxonScope = first.getTargetTaxonomicScope();
     assertEquals(1, taxonScope.size());

@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Builder;
@@ -20,6 +21,7 @@ import org.gbif.dwc.terms.*;
 import org.gbif.occurrence.common.TermUtils;
 import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
+import org.gbif.pipelines.core.pojo.HumboldtJsonView;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.core.utils.TemporalConverter;
@@ -45,6 +47,7 @@ public class OccurrenceHdfsRecordConverter {
   private final MultimediaRecord multimediaRecord;
   private final DnaDerivedDataRecord dnaDerivedDataRecord;
   private final EventCoreRecord eventCoreRecord;
+  private final HumboldtRecord humboldtRecord;
 
   /**
    * Collects data from {@link SpecificRecordBase} instances into a {@link OccurrenceHdfsRecord}.
@@ -69,6 +72,7 @@ public class OccurrenceHdfsRecordConverter {
     mapEventCoreRecord(occurrenceHdfsRecord);
     mapProjectIds(occurrenceHdfsRecord);
     mapDnaDerivedDataRecord(occurrenceHdfsRecord);
+    mapHumboldtRecord(occurrenceHdfsRecord);
 
     return occurrenceHdfsRecord;
   }
@@ -918,7 +922,7 @@ public class OccurrenceHdfsRecordConverter {
             .map(TextNode::asText)
             .collect(Collectors.toList());
     occurrenceHdfsRecord.setExtMultimedia(
-        MediaSerDeser.toJson(multimediaRecord.getMultimediaItems()));
+        MediaSerDeser.multimediaToJson(multimediaRecord.getMultimediaItems()));
 
     setCreatedIfGreater(occurrenceHdfsRecord, multimediaRecord.getCreated());
     occurrenceHdfsRecord.setMediatype(mediaTypes);
@@ -938,6 +942,164 @@ public class OccurrenceHdfsRecordConverter {
               dnaDerivedDataRecord.getDnaDerivedDataItems().stream()
                   .map(DnaDerivedData::getDnaSequenceID)
                   .collect(Collectors.toSet())));
+    }
+  }
+
+  private void mapHumboldtRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (humboldtRecord == null || humboldtRecord.getCreated() == null) {
+      return;
+    }
+
+    if (humboldtRecord.getHumboldtItems() != null) {
+
+      Function<List<VocabularyConcept>, HumboldtJsonView.VocabularyList> convertVocabList =
+          list -> {
+            List<String> allConcepts =
+                list.stream()
+                    .map(org.gbif.pipelines.io.avro.VocabularyConcept::getConcept)
+                    .collect(Collectors.toList());
+
+            List<String> allParents =
+                list.stream().flatMap(c -> c.getLineage().stream()).collect(Collectors.toList());
+
+            HumboldtJsonView.VocabularyList vl = new HumboldtJsonView.VocabularyList();
+            vl.setConcepts(allConcepts);
+            vl.setLineage(allParents);
+            return vl;
+          };
+
+      Function<List<TaxonHumboldtRecord>, Map<String, Map<String, List<String>>>>
+          convertToTaxonMap =
+              r -> {
+                Map<String, Map<String, List<String>>> valuesAsList = new HashMap<>();
+
+                r.stream()
+                    .filter(v -> v.getChecklistKey() != null)
+                    .forEach(
+                        t -> {
+                          Map<String, List<String>> values =
+                              valuesAsList.computeIfAbsent(
+                                  t.getChecklistKey(), k -> new HashMap<>());
+
+                          values
+                              .computeIfAbsent("usagekey", k -> new ArrayList<>())
+                              .add(t.getUsageKey());
+                          values
+                              .computeIfAbsent("usagename", k -> new ArrayList<>())
+                              .add(t.getUsageName());
+                          values
+                              .computeIfAbsent("usagerank", k -> new ArrayList<>())
+                              .add(t.getUsageRank());
+                          values
+                              .computeIfAbsent("taxonkeys", k -> new ArrayList<>())
+                              .addAll(
+                                  t.getClassification().stream()
+                                      .map(RankedName::getKey)
+                                      .collect(Collectors.toSet()));
+                          values
+                              .computeIfAbsent("taxonomicissue", k -> new ArrayList<>())
+                              .addAll(t.getIssues().getIssueList());
+
+                          t.getClassification()
+                              .forEach(
+                                  rn -> {
+                                    values
+                                        .computeIfAbsent(
+                                            rn.getRank().toLowerCase(), k -> new ArrayList<>())
+                                        .add(rn.getName());
+                                    values
+                                        .computeIfAbsent(
+                                            rn.getRank().toLowerCase() + "key",
+                                            k -> new ArrayList<>())
+                                        .add(rn.getKey());
+                                  });
+                        });
+                return valuesAsList;
+              };
+
+      List<HumboldtJsonView> jsonViews =
+          humboldtRecord.getHumboldtItems().stream()
+              .map(
+                  h -> {
+                    HumboldtJsonView jsonView = new HumboldtJsonView();
+                    jsonView.setHumboldt(h);
+
+                    if (h.getTargetLifeStageScope() != null) {
+                      jsonView.setTargetLifeStageScope(
+                          convertVocabList.apply(h.getTargetLifeStageScope()));
+                    }
+                    if (h.getExcludedLifeStageScope() != null) {
+                      jsonView.setExcludedLifeStageScope(
+                          convertVocabList.apply(h.getExcludedLifeStageScope()));
+                    }
+                    if (h.getTargetDegreeOfEstablishmentScope() != null) {
+                      jsonView.setTargetDegreeOfEstablishmentScope(
+                          convertVocabList.apply(h.getTargetDegreeOfEstablishmentScope()));
+                    }
+                    if (h.getExcludedDegreeOfEstablishmentScope() != null) {
+                      jsonView.setExcludedDegreeOfEstablishmentScope(
+                          convertVocabList.apply(h.getExcludedDegreeOfEstablishmentScope()));
+                    }
+
+                    if (h.getTargetTaxonomicScope() != null) {
+                      jsonView.setTargetTaxonomicScope(
+                          convertToTaxonMap.apply(h.getTargetTaxonomicScope()));
+                    }
+                    if (h.getExcludedTaxonomicScope() != null) {
+                      jsonView.setExcludedTaxonomicScope(
+                          convertToTaxonMap.apply(h.getExcludedTaxonomicScope()));
+                    }
+                    if (h.getAbsentTaxa() != null) {
+                      jsonView.setAbsentTaxa(convertToTaxonMap.apply(h.getAbsentTaxa()));
+                    }
+                    if (h.getNonTargetTaxa() != null) {
+                      jsonView.setNonTargetTaxa(convertToTaxonMap.apply(h.getNonTargetTaxa()));
+                    }
+
+                    return jsonView;
+                  })
+              .collect(Collectors.toList());
+
+      occurrenceHdfsRecord.setExtHumboldt(MediaSerDeser.humboldtToJson(jsonViews));
+    }
+
+    addIssues(humboldtRecord.getIssues(), occurrenceHdfsRecord);
+
+    // Add taxonomic issues
+    String taxonIssues =
+        humboldtRecord.getHumboldtItems().stream()
+            .map(
+                h ->
+                    h.getTargetTaxonomicScope().stream()
+                        .flatMap(t -> t.getIssues().getIssueList().stream())
+                        .collect(Collectors.joining(ModelUtils.DEFAULT_SEPARATOR)))
+            .collect(Collectors.joining(ModelUtils.DEFAULT_SEPARATOR));
+
+    if (taxonIssues != null) {
+      String existing =
+          occurrenceHdfsRecord.getTaxonomicissue() != null
+              ? occurrenceHdfsRecord.getTaxonomicissue()
+              : "";
+      occurrenceHdfsRecord.setTaxonomicissue(
+          String.join(ModelUtils.DEFAULT_SEPARATOR, existing, taxonIssues));
+    }
+  }
+
+  private <T> void addToList(List<T> existingList, T value) {
+    if (value != null) {
+      if (existingList == null) {
+        existingList = new ArrayList<>();
+      }
+      existingList.add(value);
+    }
+  }
+
+  private <T> void addToList(List<T> existingList, List<T> values) {
+    if (values != null && !values.isEmpty()) {
+      if (existingList == null) {
+        existingList = new ArrayList<>();
+      }
+      existingList.addAll(values);
     }
   }
 

@@ -28,6 +28,7 @@ import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -49,6 +50,7 @@ import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
+import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -93,7 +95,7 @@ public class HdfsViewPipelineIT {
       "--inputPath=" + output,
       "--targetPath=" + input,
       "--numberOfShards=1",
-      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE,AUDUBON_TABLE",
+      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE,AUDUBON_TABLE,HUMBOLDT_TABLE",
       "--properties=" + outputFile + "/data7/ingest/pipelines.yaml"
     };
     InterpretationPipelineOptions optionsWriter =
@@ -199,6 +201,12 @@ public class HdfsViewPipelineIT {
             optionsWriter, AudubonTransform.builder().create(), coreTerm, postfix)) {
       AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
       writer.append(audubonRecord);
+    }
+    try (SyncDataFileWriter<HumboldtRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, HumboldtTransform.builder().create(), coreTerm, postfix)) {
+      HumboldtRecord humboldtRecord = HumboldtRecord.newBuilder().setId(ID).build();
+      writer.append(humboldtRecord);
     }
 
     // When
@@ -376,6 +384,14 @@ public class HdfsViewPipelineIT {
       EventCoreRecord eventCoreRecord = EventCoreRecord.newBuilder().setId(ID).build();
       writer.append(eventCoreRecord);
     }
+    if (recordType == InterpretationType.RecordType.EVENT) {
+      try (SyncDataFileWriter<HumboldtRecord> writer =
+          InterpretedAvroWriter.createAvroWriter(
+              optionsWriter, HumboldtTransform.builder().create(), coreTerm, postfix)) {
+        HumboldtRecord humboldtRecord = HumboldtRecord.newBuilder().setId(ID).build();
+        writer.append(humboldtRecord);
+      }
+    }
 
     // When
     String[] args = {
@@ -412,6 +428,10 @@ public class HdfsViewPipelineIT {
     assertFileExistFalse(outputFn.apply("germplasmmeasurementtrialtable"));
     assertFileExistFalse(outputFn.apply("permittable"));
     assertFileExistFalse(outputFn.apply("loantable"));
+
+    if (recordType == InterpretationType.RecordType.EVENT) {
+      assertFileExistFalse(outputFn.apply("humboldttable"));
+    }
   }
 
   private void assertFileExistFalse(String output) {

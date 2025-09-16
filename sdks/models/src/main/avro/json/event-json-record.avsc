@@ -11,15 +11,6 @@
     ]
   },
   {
-    "name" : "ValueAndUnit",
-    "namespace" : "org.gbif.pipelines.io.avro.json",
-    "type" : "record",
-    "fields" : [
-      {"name": "value", "type": ["null", "double"], "default" : null, "doc":""},
-      {"name": "unit", "type": ["null", "string"], "default" : null, "doc": ""}
-    ]
-  },
-  {
     "name":"HumboldtTaxonClassification",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
@@ -51,12 +42,15 @@
       {"name": "siteCount", "type": ["null", "int"], "default" : null, "doc": ""},
       {"name": "verbatimSiteDescriptions", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
       {"name": "verbatimSiteNames", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
-      {"name": "geospatialScopeArea", "type": ["null", "ValueAndUnit"], "default" : null, "doc": ""},
-      {"name": "totalAreaSampled", "type": ["null", "ValueAndUnit"], "default" : null, "doc": ""},
+      {"name": "geospatialScopeAreaValue", "type": ["null", "double"], "default" : null, "doc": ""},
+      {"name": "geospatialScopeAreaUnit", "type": ["null", "string"], "default" : null, "doc": ""},
+      {"name": "totalAreaSampledValue", "type": ["null", "double"], "default" : null, "doc": ""},
+      {"name": "totalAreaSampledUnit", "type": ["null", "string"], "default" : null, "doc": ""},
       {"name": "targetHabitatScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
       {"name": "excludedHabitatScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
       {"name": "eventDurationValueInMinutes", "type": ["null", "double"], "default" : null, "doc": ""},
-      {"name": "eventDuration", "type": ["null", "ValueAndUnit"], "default" : null, "doc": ""},
+      {"name": "eventDurationValue", "type": ["null", "double"], "default" : null, "doc": ""},
+      {"name": "eventDurationUnit", "type": ["null", "string"], "default" : null, "doc": ""},
       {"name": "targetTaxonomicScope", "type": { "type":"map", "values": { "type": "array", "items": "HumboldtTaxonClassification" }},"default": {}, "doc":""},
       {"name": "excludedTaxonomicScope", "type": { "type":"map", "values": { "type": "array", "items": "HumboldtTaxonClassification" }},"default": {}, "doc":""},
       {"name": "taxonCompletenessProtocols", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
@@ -93,7 +87,8 @@
       {"name": "materialSampleTypes", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
       {"name": "samplingPerformedBy", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
       {"name": "isSamplingEffortReported", "type": ["null", "boolean"], "default" : null, "doc": ""},
-      {"name": "samplingEffort", "type": ["null", "ValueAndUnit"], "default" : null, "doc": ""}
+      {"name": "samplingEffortValue", "type": ["null", "double"], "default" : null, "doc": ""},
+      {"name": "samplingEffortUnit", "type": ["null", "string"], "default" : null, "doc": ""}
     ]
   },
   {
