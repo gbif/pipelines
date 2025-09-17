@@ -235,6 +235,10 @@
           <artifactId>datacite-rest-client</artifactId>
           <groupId>org.gbif.datacite</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+          <groupId>com.fasterxml.jackson.module</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
 
@@ -291,10 +295,6 @@
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-avro</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
     </dependency>
 
     <!-- Hadoop -->
