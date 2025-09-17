@@ -1,14 +1,18 @@
 package org.gbif.pipelines.tasks.dwcdp;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.http.client.HttpClient;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.service.registry.DatasetDataPackageService;
 import org.gbif.common.messaging.AbstractMessageCallback;
-import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.DwcDpDownloadFinishedMessage;
 import org.gbif.pipelines.common.indexing.IndexSettings;
 import org.gbif.pipelines.common.process.AirflowSparkLauncher;
@@ -24,11 +28,11 @@ import org.gbif.utils.file.CompressionUtil;
 @Builder
 public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinishedMessage> {
 
+  private static final ObjectMapper MAPPER = new ObjectMapper();
   public static final String DWC_DP_SUFFIX = ".dwcdp";
 
   private final DwcDpConfiguration config;
-  private final MessagePublisher publisher;
-  private final HttpClient httpClient;
+  private final DatasetDataPackageService datasetDataPackageService;
 
   @Override
   @SneakyThrows
@@ -38,10 +42,15 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
 
     // Copies all the DP files to HDFS
     copyToHdfs(message);
+
+    // Update or create the DataPackage metadata in the registry
+    updateOrCreateDatasetMetadata(message);
+
+    // Prepare the indexing
     String datasetKey = message.getDatasetUuid().toString();
     IndexSettings indexSettings =
         IndexSettings.create(
-            config.indexConfig, httpClient, datasetKey, message.getAttempt(), 1_000_000);
+            config.indexConfig, null, datasetKey, message.getAttempt(), 1_000_000);
 
     BeamParametersBuilder.BeamParameters beamParameters =
         BeamParametersBuilder.dwcDpIndexing(config, message, indexSettings);
@@ -59,6 +68,40 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
     runDag(message, beamParameters);
   }
 
+  /**
+   * Updates or creates the DataPackage metadata in the registry. If the datapackage.json file is
+   * missing or cannot be read, it logs an error and skips the update.
+   */
+  private void updateOrCreateDatasetMetadata(DwcDpDownloadFinishedMessage message) {
+    Dataset.DataPackage dataPackage = datasetDataPackageService.getDataPackageData(message.getDatasetUuid());
+      String dpJson = readDataPackageJson(message.getDatasetUuid().toString());
+    if (dataPackage == null) {
+      dataPackage = new Dataset.DataPackage();
+      dataPackage.setMetadata(dpJson);
+      datasetDataPackageService.createDataPackageData(message.getDatasetUuid(), dataPackage);
+      log.info("Created datapackage metadata for dataset {}", message.getDatasetUuid());
+    } else {
+      dataPackage.setMetadata(dpJson);
+      datasetDataPackageService.updateDataPackageData(message.getDatasetUuid(), dataPackage);
+      log.info("Updated metadata for dataset {}", message.getDatasetUuid());
+    }
+  }
+
+  /**
+   * Reads the content of the datapackage.json file from the unpacked directory.
+   *
+   * @param datasetKey the dataset key
+   * @return the content of the datapackage.json file as a String
+   */
+  @SneakyThrows
+  private String readDataPackageJson(String datasetKey) {
+    java.nio.file.Path dataPackageJsonFile = Paths.get(config.archiveUnpackedRepository, datasetKey, "datapackage.json");
+    return Files.readString(dataPackageJsonFile);
+  }
+
+  /**
+   * Uncompresses the dwc-a file from the archive repository to the unpacked repository.
+   */
   @SneakyThrows
   private void unCompress(DwcDpDownloadFinishedMessage message) {
     log.info("Uncompressing dwc-a file from message {}", message);
@@ -73,6 +116,10 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
     log.info("Finished uncompressing dwc-a file from message {}", message);
   }
 
+  /**
+   * Copies all the DP files to HDFS under the path
+   * {config.repositoryPath}/{datasetKey}/{attempt}/
+   */
   @SneakyThrows
   private void copyToHdfs(DwcDpDownloadFinishedMessage message) {
     log.info("Copying DP files to HDFS from message {}", message);
@@ -91,6 +138,9 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
     log.info("Finished copying DP files to HDFS from {} to {}", sourcePath, outputPath);
   }
 
+  /**
+   * Runs the Airflow DAG to process the DwcDP files using the provided Beam parameters.
+   */
   private void runDag(
       DwcDpDownloadFinishedMessage message, BeamParametersBuilder.BeamParameters beamParameters) {
 

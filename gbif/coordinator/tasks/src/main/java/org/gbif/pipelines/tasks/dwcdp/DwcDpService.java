@@ -2,9 +2,11 @@ package org.gbif.pipelines.tasks.dwcdp;
 
 import com.google.common.util.concurrent.AbstractIdleService;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.service.registry.DatasetDataPackageService;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.messages.DwcDpDownloadFinishedMessage;
 import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.ws.client.ClientBuilder;
 
 /**
  * A service which listens to the {@link
@@ -28,7 +30,8 @@ public class DwcDpService extends AbstractIdleService {
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
 
-    DwcDpCallback callback = DwcDpCallback.builder().config(config).build();
+    DatasetDataPackageService datasetDataPackageService = config.registryConfig.newClientBuilder().build(DatasetDataPackageService.class);
+    DwcDpCallback callback = DwcDpCallback.builder().config(config).datasetDataPackageService(datasetDataPackageService).build();
 
     listener.listen(c.queueName, DwcDpDownloadFinishedMessage.ROUTING_KEY, c.poolSize, callback);
   }
