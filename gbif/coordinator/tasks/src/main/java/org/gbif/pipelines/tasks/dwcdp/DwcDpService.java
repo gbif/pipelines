@@ -34,7 +34,7 @@ public class DwcDpService extends AbstractIdleService {
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
 
     DatasetDataPackageService datasetDataPackageService =
-        newClientBuilder(config.registryConfig).build(DatasetDataPackageService.class);
+        newClientBuilder(config.stepConfig.registry).build(DatasetDataPackageService.class);
     DwcDpCallback callback =
         DwcDpCallback.builder()
             .config(config)

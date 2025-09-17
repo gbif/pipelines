@@ -6,7 +6,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.pipelines.common.configs.*;
-import org.gbif.pipelines.common.configs.RegistryConfiguration;
 
 /** Configuration required to trigger the Airflow DAG to process DwcDP. */
 @ToString
@@ -24,9 +23,6 @@ public class DwcDpConfiguration {
 
   @ParametersDelegate @Valid @NotNull
   public AirflowConfiguration airflowConfig = new AirflowConfiguration();
-
-  @ParametersDelegate @Valid @NotNull
-  public RegistryConfiguration registryConfig = new RegistryConfiguration();
 
   @Parameter(names = "--archive-repository")
   @NotNull
