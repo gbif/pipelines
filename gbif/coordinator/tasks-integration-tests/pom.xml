@@ -156,6 +156,10 @@
           <artifactId>datacite-rest-client</artifactId>
           <groupId>org.gbif.datacite</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+          <groupId>com.fasterxml.jackson.module</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -245,6 +249,10 @@
         <exclusion>
           <artifactId>datacite-rest-client</artifactId>
           <groupId>org.gbif.datacite</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+          <groupId>com.fasterxml.jackson.module</groupId>
         </exclusion>
       </exclusions>
     </dependency>
