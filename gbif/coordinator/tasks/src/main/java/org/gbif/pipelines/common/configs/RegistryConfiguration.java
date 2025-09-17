@@ -1,12 +1,11 @@
 package org.gbif.pipelines.common.configs;
 
 import com.beust.jcommander.Parameter;
+import java.time.Duration;
 import lombok.ToString;
 import org.gbif.cli.PropertyName;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
-
-import java.time.Duration;
 
 /**
  * A configuration class which can be used to get all the details needed to create a writable
@@ -34,10 +33,11 @@ public class RegistryConfiguration {
   public ClientBuilder newClientBuilder() {
     // setup writable registry client
     return new ClientBuilder()
-            .withUrl(wsUrl)
-            .withCredentials(user, password)
-            .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
-            // This will give up to 40 tries, from 2 to 75 seconds apart, over at most 13 minutes (approx)
-            .withExponentialBackoffRetry(Duration.ofSeconds(2), 1.1, 40);
+        .withUrl(wsUrl)
+        .withCredentials(user, password)
+        .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
+        // This will give up to 40 tries, from 2 to 75 seconds apart, over at most 13 minutes
+        // (approx)
+        .withExponentialBackoffRetry(Duration.ofSeconds(2), 1.1, 40);
   }
 }
