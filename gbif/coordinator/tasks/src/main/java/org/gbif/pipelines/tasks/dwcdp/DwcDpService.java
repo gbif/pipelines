@@ -8,9 +8,9 @@ import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.messages.DwcDpDownloadFinishedMessage;
 import org.gbif.pipelines.common.configs.RegistryConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.registry.ws.client.DatasetDataPackageClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
-import org.gbif.registry.ws.client.DatasetDataPackageClient;
 
 /**
  * A service which listens to the {@link
