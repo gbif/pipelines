@@ -100,7 +100,7 @@
       // Internal
       {"name":"id","type":["null","string"],"default":null,"doc":""},
       {"name":"created","type":["null","string"],"default":null,"doc":""},
-      {"name":"parentsLineage", "type": {"type" : "array", "items" : "Parent"}, "default" : [], "doc":""},
+      {"name":"parentsLineage", "type": {"type" : "array", "items" : "org.gbif.pipelines.io.avro.json.Parent"}, "default" : [], "doc":""},
       {"name":"license","type":["null","string"],"default":null,"doc":""},
       // Record-level
       {"name":"eventType","type":["null","VocabularyConcept"],"default":null,"doc":""},
