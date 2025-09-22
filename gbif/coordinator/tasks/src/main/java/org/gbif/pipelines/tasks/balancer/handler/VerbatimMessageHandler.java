@@ -103,11 +103,15 @@ public class VerbatimMessageHandler {
               new IdentifierConfiguration().metaFileName,
               Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
 
+      log.info("The record numbers - occ: {}, er: {}, ids: {}", occCount, erCount, uniqueIdsCount);
+
       Optional<Long> recordNumberOpt =
           Stream.of(occCount, erCount, uniqueIdsCount)
               .filter(Optional::isPresent)
               .map(Optional::get)
               .max(Long::compareTo);
+
+      log.info("Used record number - {}", recordNumberOpt);
 
       if (recordNumberOpt.isEmpty()) {
         throw new IllegalArgumentException(
