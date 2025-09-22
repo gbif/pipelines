@@ -71,17 +71,16 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
    * missing or cannot be read, it logs an error and skips the update.
    */
   private void updateOrCreateDatasetMetadata(DwcDpDownloadFinishedMessage message) {
-    Dataset.DataPackage dataPackage =
-        datasetDataPackageService.getDataPackageData(message.getDatasetUuid());
+    Dataset.DataPackage dataPackage = datasetDataPackageService.get(message.getDatasetUuid());
     String dpJson = readDataPackageJson(message.getDatasetUuid().toString());
     if (dataPackage == null) {
       dataPackage = new Dataset.DataPackage();
       dataPackage.setMetadata(dpJson);
-      datasetDataPackageService.createDataPackageData(message.getDatasetUuid(), dataPackage);
+      datasetDataPackageService.create(message.getDatasetUuid(), dataPackage);
       log.info("Created datapackage metadata for dataset {}", message.getDatasetUuid());
     } else {
       dataPackage.setMetadata(dpJson);
-      datasetDataPackageService.updateDataPackageData(message.getDatasetUuid(), dataPackage);
+      datasetDataPackageService.update(message.getDatasetUuid(), dataPackage);
       log.info("Updated metadata for dataset {}", message.getDatasetUuid());
     }
   }
