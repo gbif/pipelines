@@ -76,10 +76,14 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
     if (dataPackage == null) {
       dataPackage = new Dataset.DataPackage();
       dataPackage.setMetadata(dpJson);
+      dataPackage.setEndpointKey(message.getEndpointKey());
       datasetDataPackageService.create(message.getDatasetUuid(), dataPackage);
       log.info("Created datapackage metadata for dataset {}", message.getDatasetUuid());
     } else {
       dataPackage.setMetadata(dpJson);
+      if (message.getEndpointKey() != null) {
+        dataPackage.setEndpointKey(message.getEndpointKey());
+      }
       datasetDataPackageService.update(message.getDatasetUuid(), dataPackage);
       log.info("Updated metadata for dataset {}", message.getDatasetUuid());
     }
