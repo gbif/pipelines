@@ -1,5 +1,7 @@
 package au.org.ala.pipelines.beam;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 import au.org.ala.pipelines.options.ImageServicePipelineOptions;
 import au.org.ala.util.IntegrationTestUtils;
 import au.org.ala.util.TestUtils;
@@ -11,11 +13,16 @@ import org.gbif.pipelines.common.beam.options.DwcaPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 public class ImageServicePipelineTestIT {
 
   @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
+
+  // Safety net to prevent indefinite hangs in CI
+  @Rule public final Timeout globalTimeout = new Timeout(10, MINUTES);
 
   @Before
   public void setup() throws Exception {

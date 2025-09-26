@@ -15,6 +15,7 @@ import org.junit.Test;
 public class NameCheckKVStoreTestIT {
 
   @ClassRule public static IntegrationTestUtils itUtils = IntegrationTestUtils.getInstance();
+
   /**
    * Tests the Get operation on {@link KeyValueCache} that wraps a simple KV store backed by a
    * HashMap.

@@ -210,11 +210,7 @@ public class ALAVerbatimToInterpretedPipeline {
         ALABasicTransform.builder()
             .vocabularyServiceSupplier(
                 config.getGbifConfig().getVocabularyConfig() != null
-                    ? FileVocabularyFactory.builder()
-                        .config(config.getGbifConfig())
-                        .hdfsConfigs(hdfsConfigs)
-                        .build()
-                        .getInstanceSupplier()
+                    ? FileVocabularyFactory.getInstanceSupplier(hdfsConfigs, config.getGbifConfig())
                     : null)
             .recordedByKvStoreSupplier(RecordedByKVStoreFactory.getInstanceSupplier(config))
             .occStatusKvStoreSupplier(
@@ -413,7 +409,7 @@ public class ALAVerbatimToInterpretedPipeline {
 
   /** Create an AVRO file writer */
   @SneakyThrows
-  private static <T> SyncDataFileWriter<T> createWriter(
+  public static <T> SyncDataFileWriter<T> createWriter(
       InterpretationPipelineOptions options,
       Schema schema,
       Transform transform,

@@ -33,10 +33,12 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 public class LocationTransform extends Transform<ExtendedRecord, LocationRecord> {
 
   private final ALAPipelinesConfig alaConfig;
-  private final SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> countryKvStoreSupplier;
+  private final SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>>
+      countryKvStoreSupplier;
   private final SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>>
       stateProvinceKvStoreSupplier;
-  private final SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> biomeKvStoreSupplier;
+  private final SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>>
+      biomeKvStoreSupplier;
   private final List<DateComponentOrdering> orderings;
   private final SerializableFunction<String, String> preprocessDateFn;
 
@@ -53,7 +55,8 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   private LocationTransform(
       ALAPipelinesConfig alaConfig,
       SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> countryKvStoreSupplier,
-      SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> stateProvinceKvStoreSupplier,
+      SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>>
+          stateProvinceKvStoreSupplier,
       SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> biomeKvStoreSupplier,
       List<DateComponentOrdering> orderings,
       SerializableFunction<String, String> preprocessDateFn) {

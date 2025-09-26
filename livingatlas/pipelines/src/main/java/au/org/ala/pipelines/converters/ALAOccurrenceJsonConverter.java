@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.converters.JsonConverter;
+import org.gbif.pipelines.core.utils.SortUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.Parent;
 import org.gbif.pipelines.io.avro.json.*;
@@ -65,6 +66,10 @@ public class ALAOccurrenceJsonConverter {
               + Math.abs(location.getDecimalLongitude())
               + (location.getDecimalLongitude() > 0 ? "E" : "W"));
     }
+
+    builder.setYearMonthGbifIdSort(
+        SortUtils.yearDescMonthAscGbifIdAscSortKey(
+            builder.getYear(), builder.getMonth(), builder.getGbifId()));
 
     return builder.build();
   }
@@ -187,9 +192,7 @@ public class ALAOccurrenceJsonConverter {
     // Simple
     builder
         .setBasisOfRecord(basic.getBasisOfRecord())
-        .setSex(basic.getSex())
         .setIndividualCount(basic.getIndividualCount())
-        .setTypeStatus(basic.getTypeStatus())
         .setTypifiedName(basic.getTypifiedName())
         .setSampleSizeValue(basic.getSampleSizeValue())
         .setSampleSizeUnit(basic.getSampleSizeUnit())
@@ -218,6 +221,9 @@ public class ALAOccurrenceJsonConverter {
     JsonConverter.convertVocabularyConcept(basic.getDegreeOfEstablishment())
         .ifPresent(builder::setDegreeOfEstablishment);
     JsonConverter.convertVocabularyConcept(basic.getPathway()).ifPresent(builder::setPathway);
+    JsonConverter.convertVocabularyConcept(basic.getSex()).ifPresent(builder::setSex);
+    JsonConverter.convertVocabularyConceptList(basic.getTypeStatus())
+        .ifPresent(builder::setTypeStatus);
 
     // License
     JsonConverter.convertLicense(basic.getLicense()).ifPresent(builder::setLicense);
@@ -313,15 +319,11 @@ public class ALAOccurrenceJsonConverter {
         Taxonomy.newBuilder().setName(gc.getGenus()).setTaxonKey(gc.getGenusKey()).build());
     taxonomy.add(
         Taxonomy.newBuilder().setName(gc.getSpecies()).setTaxonKey(gc.getSpeciesKey()).build());
-    if (gc.getAcceptedUsage() != null
-        && (gc.getAcceptedUsage().getGuid() != null || gc.getAcceptedUsage().getKey() != null)) {
+    if (gc.getAcceptedUsage() != null && (gc.getAcceptedUsage().getKey() != null)) {
       taxonomy.add(
           Taxonomy.newBuilder()
               .setName(gc.getAcceptedUsage().getName())
-              .setTaxonKey(
-                  gc.getAcceptedUsage().getGuid() != null
-                      ? gc.getAcceptedUsage().getGuid()
-                      : gc.getAcceptedUsage().getKey().toString())
+              .setTaxonKey(gc.getAcceptedUsage().getKey())
               .build());
     }
 
@@ -341,9 +343,8 @@ public class ALAOccurrenceJsonConverter {
         GbifClassification.newBuilder().setTaxonID(taxon.getTaxonConceptID());
 
     classificationBuilder.setAcceptedUsage(
-        org.gbif.pipelines.io.avro.json.RankedName.newBuilder()
-            .setKey(taxon.getLft())
-            .setGuid(taxon.getTaxonConceptID())
+        org.gbif.pipelines.io.avro.json.RankedNameWithAuthorship.newBuilder()
+            .setKey(taxon.getLft().toString())
             .setName(taxon.getScientificName())
             .setRank(taxon.getTaxonRank())
             .build());
