@@ -44,7 +44,9 @@ public class Identification extends PropertyPrioritizer {
   private String genus;
   private String dateIdentified;
   private String scientificName;
+  private String scientificNameID;
   private String identifierName;
+  private String identifiedByID;
   private Set<Taxon> higherTaxons = new HashSet<>();
 
   /**
@@ -83,6 +85,8 @@ public class Identification extends PropertyPrioritizer {
     record.setDateIdentified(this.dateIdentified);
     record.setScientificName(this.scientificName);
     record.setIdentifierName(this.identifierName);
+    record.setScientificNameID(this.scientificNameID);
+    record.setIdentifiedByID(this.identifiedByID);
     if (setUnitQualifier) {
       record.setUnitQualifier(this.scientificName);
     }

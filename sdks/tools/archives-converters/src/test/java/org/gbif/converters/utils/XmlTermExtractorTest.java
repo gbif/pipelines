@@ -41,7 +41,7 @@ public class XmlTermExtractorTest {
     assertTrue(coreOpr.isPresent());
 
     Set<Term> core = coreOpr.get();
-    assertEquals(17, core.size());
+    assertEquals(18, core.size());
     assertTrue(core.contains(DwcTerm.collectionCode));
 
     Map<FileNameTerm, Set<Term>> extenstionsTerms = extractor.getExtenstionsTerms();
