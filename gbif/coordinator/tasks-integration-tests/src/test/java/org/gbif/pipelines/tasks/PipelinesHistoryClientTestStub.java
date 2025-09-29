@@ -11,17 +11,14 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.pipelines.PipelineExecution;
-import org.gbif.api.model.pipelines.PipelineProcess;
-import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.*;
 import org.gbif.api.model.pipelines.PipelineStep.Status;
-import org.gbif.api.model.pipelines.RunPipelineResponse;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.api.model.pipelines.ws.RunAllParams;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -48,11 +45,6 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
 
   @Override
   public PipelineProcess getPipelineProcess(UUID uuid, int i) {
-    throw new UnsupportedOperationException("The method is not implemented!");
-  }
-
-  @Override
-  public PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable) {
     throw new UnsupportedOperationException("The method is not implemented!");
   }
 
@@ -109,6 +101,12 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
   }
 
   @Override
+  public PagingResponse<PipelineProcess> getRunningPipelineProcess(
+      @Nullable StepType stepType, @Nullable StepRunner stepRunner, Pageable pageable) {
+    throw new UnsupportedOperationException("The method is not implemented!");
+  }
+
+  @Override
   public void markAllPipelineExecutionAsFinished() {}
 
   @Override
@@ -119,7 +117,12 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
 
   @Override
   public long updatePipelineStep(PipelineStep pipelineStep) {
-    pipelineStepMap.put(pipelineStep.getKey(), pipelineStep);
+    return updatePipelineStep(pipelineStep.getKey(), pipelineStep);
+  }
+
+  @Override
+  public long updatePipelineStep(long key, PipelineStep pipelineStep) {
+    pipelineStepMap.put(key, pipelineStep);
     return pipelineStep.getKey();
   }
 
@@ -164,6 +167,11 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
   @Override
   public void notifyAbsentIdentifiers(UUID uuid, int i, long l, String s) {
     throw new UnsupportedOperationException("The method is not implemented!");
+  }
+
+  @Override
+  public void setSubmittedPipelineStepToQueued(long key) {
+    pipelineStepMap.get(key).setState(Status.QUEUED);
   }
 
   public Map<StepType, PipelineStep> getStepMap() {

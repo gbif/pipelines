@@ -6,13 +6,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.location.parser.CoordinatesFunction;
 import org.gbif.pipelines.core.parsers.location.parser.LocationMatcher;
 import org.gbif.pipelines.core.parsers.location.parser.ParsedLocation;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
+import org.gbif.rest.client.geocode.GeocodeResponse.Location;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -20,19 +20,20 @@ public class LocationMatcherTest {
 
   private static final Double LATITUDE_CANADA = 60.4;
   private static final Double LONGITUDE_CANADA = -131.3;
-  private static final KeyValueStore<LatLng, GeocodeResponse> GEOCODE_KV_STORE;
+  private static final KeyValueStore<GeocodeRequest, GeocodeResponse> GEOCODE_KV_STORE;
 
   static {
     KeyValueTestStore store = new KeyValueTestStore();
-    store.put(LatLng.create(60.4d, -131.3d), toGeocodeResponse(Country.CANADA));
-    store.put(LatLng.create(30.2d, 100.2344349d), toGeocodeResponse(Country.CHINA));
-    store.put(LatLng.create(30.2d, 100.234435d), toGeocodeResponse(Country.CHINA));
-    store.put(LatLng.create(71.7d, -42.6d), toGeocodeResponse(Country.GREENLAND));
-    store.put(LatLng.create(-17.65, -149.46), toGeocodeResponse(Country.FRENCH_POLYNESIA));
-    store.put(LatLng.create(27.15, -13.20), toGeocodeResponse(Country.MOROCCO));
+    store.put(GeocodeRequest.create(60.4d, -131.3d), toGeocodeResponse(Country.CANADA));
+    store.put(GeocodeRequest.create(30.2d, 100.2344349d), toGeocodeResponse(Country.CHINA));
+    store.put(GeocodeRequest.create(30.2d, 100.234435d), toGeocodeResponse(Country.CHINA));
+    store.put(GeocodeRequest.create(71.7d, -42.6d), toGeocodeResponse(Country.GREENLAND));
+    store.put(GeocodeRequest.create(-17.65, -149.46), toGeocodeResponse(Country.FRENCH_POLYNESIA));
+    store.put(GeocodeRequest.create(27.15, -13.20), toGeocodeResponse(Country.MOROCCO));
     store.put(
-        LatLng.create(8.6, -82.9, 30_000d), toGeocodeResponse(Country.COSTA_RICA, Country.PANAMA));
-    store.put(LatLng.create(-61d, -130d), toGeocodeNonISOResponse("Southern Ocean"));
+        GeocodeRequest.create(8.6, -82.9, 30_000d),
+        toGeocodeResponse(Country.COSTA_RICA, Country.PANAMA));
+    store.put(GeocodeRequest.create(-61d, -130d), toGeocodeNonISOResponse("Southern Ocean"));
     GEOCODE_KV_STORE = GeocodeKvStore.create(store);
   }
 
@@ -69,7 +70,7 @@ public class LocationMatcherTest {
 
     // State
     Country canada = Country.CANADA;
-    LatLng coordsCanada = LatLng.create(LATITUDE_CANADA, LONGITUDE_CANADA);
+    GeocodeRequest coordsCanada = GeocodeRequest.create(LATITUDE_CANADA, LONGITUDE_CANADA);
 
     // When
     ParsedField<ParsedLocation> result =
@@ -87,7 +88,7 @@ public class LocationMatcherTest {
 
     // State
     Country panama = Country.PANAMA;
-    LatLng coordsPanama = LatLng.create(8.60, -82.9, 30_000d);
+    GeocodeRequest coordsPanama = GeocodeRequest.create(8.60, -82.9, 30_000d);
 
     // When
     ParsedField<ParsedLocation> result =
@@ -105,7 +106,7 @@ public class LocationMatcherTest {
 
     // State
     Country canada = Country.CANADA;
-    LatLng coordsCanada = LatLng.create(LATITUDE_CANADA, LONGITUDE_CANADA);
+    GeocodeRequest coordsCanada = GeocodeRequest.create(LATITUDE_CANADA, LONGITUDE_CANADA);
 
     // When
     ParsedField<ParsedLocation> result =
@@ -127,7 +128,7 @@ public class LocationMatcherTest {
   public void coordsIdentityCountryFoundTest() {
 
     // State
-    LatLng coordsCanada = LatLng.create(LATITUDE_CANADA, LONGITUDE_CANADA);
+    GeocodeRequest coordsCanada = GeocodeRequest.create(LATITUDE_CANADA, LONGITUDE_CANADA);
 
     // When
     ParsedField<ParsedLocation> result =
@@ -144,7 +145,7 @@ public class LocationMatcherTest {
   public void wrongCoordsWhenMatchWithAlternativesCountryNotFoundTest() {
 
     // State
-    LatLng wrongCoords = LatLng.create(-50d, 100d);
+    GeocodeRequest wrongCoords = GeocodeRequest.create(-50d, 100d);
 
     // When
     ParsedField<ParsedLocation> result =
@@ -164,7 +165,7 @@ public class LocationMatcherTest {
   public void coordsAntarcticaFoundEmptyTest() {
 
     // State
-    LatLng antarcticaEdgeCoords = LatLng.create(-61d, -130d);
+    GeocodeRequest antarcticaEdgeCoords = GeocodeRequest.create(-61d, -130d);
 
     // When
     ParsedField<ParsedLocation> result =
@@ -180,7 +181,7 @@ public class LocationMatcherTest {
 
     // State
     Country canada = Country.CANADA;
-    LatLng negatedLatCoords = LatLng.create(-LATITUDE_CANADA, LONGITUDE_CANADA);
+    GeocodeRequest negatedLatCoords = GeocodeRequest.create(-LATITUDE_CANADA, LONGITUDE_CANADA);
 
     // When
     ParsedField<ParsedLocation> result =
@@ -196,8 +197,8 @@ public class LocationMatcherTest {
     // State
 
     Country canada = Country.CANADA;
-    LatLng coordsCanada = LatLng.create(LATITUDE_CANADA, LONGITUDE_CANADA);
-    LatLng negatedLatCoords = LatLng.create(-LATITUDE_CANADA, LONGITUDE_CANADA);
+    GeocodeRequest coordsCanada = GeocodeRequest.create(LATITUDE_CANADA, LONGITUDE_CANADA);
+    GeocodeRequest negatedLatCoords = GeocodeRequest.create(-LATITUDE_CANADA, LONGITUDE_CANADA);
 
     // When
     ParsedField<ParsedLocation> result =
@@ -220,8 +221,8 @@ public class LocationMatcherTest {
 
     // State
     Country canada = Country.CANADA;
-    LatLng coordsCanada = LatLng.create(LATITUDE_CANADA, LONGITUDE_CANADA);
-    LatLng negatedLngCoords = LatLng.create(LATITUDE_CANADA, -LONGITUDE_CANADA);
+    GeocodeRequest coordsCanada = GeocodeRequest.create(LATITUDE_CANADA, LONGITUDE_CANADA);
+    GeocodeRequest negatedLngCoords = GeocodeRequest.create(LATITUDE_CANADA, -LONGITUDE_CANADA);
 
     // When
     ParsedField<ParsedLocation> result =
@@ -244,8 +245,8 @@ public class LocationMatcherTest {
 
     // State
     Country canada = Country.CANADA;
-    LatLng coordsCanada = LatLng.create(LATITUDE_CANADA, LONGITUDE_CANADA);
-    LatLng negatedCoords = LatLng.create(-LATITUDE_CANADA, -LONGITUDE_CANADA);
+    GeocodeRequest coordsCanada = GeocodeRequest.create(LATITUDE_CANADA, LONGITUDE_CANADA);
+    GeocodeRequest negatedCoords = GeocodeRequest.create(-LATITUDE_CANADA, -LONGITUDE_CANADA);
 
     // When
     ParsedField<ParsedLocation> result =
@@ -268,8 +269,8 @@ public class LocationMatcherTest {
 
     // State
     Country canada = Country.CANADA;
-    LatLng coordsCanada = LatLng.create(LATITUDE_CANADA, LONGITUDE_CANADA);
-    LatLng swappedCoords = LatLng.create(LONGITUDE_CANADA, LATITUDE_CANADA);
+    GeocodeRequest coordsCanada = GeocodeRequest.create(LATITUDE_CANADA, LONGITUDE_CANADA);
+    GeocodeRequest swappedCoords = GeocodeRequest.create(LONGITUDE_CANADA, LATITUDE_CANADA);
 
     // When
     ParsedField<ParsedLocation> result =
@@ -291,7 +292,7 @@ public class LocationMatcherTest {
   public void matchReturnEquivalentTest() {
 
     // State
-    LatLng coords = LatLng.create(27.15, -13.20);
+    GeocodeRequest coords = GeocodeRequest.create(27.15, -13.20);
 
     // When
     ParsedField<ParsedLocation> result =
@@ -308,7 +309,7 @@ public class LocationMatcherTest {
   public void matchConfusedEquivalentTest() {
 
     // State
-    LatLng coords = LatLng.create(-17.65, -149.46);
+    GeocodeRequest coords = GeocodeRequest.create(-17.65, -149.46);
 
     // When
     ParsedField<ParsedLocation> result =
@@ -325,7 +326,7 @@ public class LocationMatcherTest {
   public void matchConfusedReturnConfusedTest() {
 
     // State
-    LatLng coords = LatLng.create(71.7d, -42.6d);
+    GeocodeRequest coords = GeocodeRequest.create(71.7d, -42.6d);
 
     // When
     ParsedField<ParsedLocation> match =
@@ -348,7 +349,7 @@ public class LocationMatcherTest {
   public void outOfRangeCoordinatesTest() {
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(LatLng.create(200d, 200d), null, GEOCODE_KV_STORE).apply();
+        LocationMatcher.create(GeocodeRequest.create(200d, 200d), null, GEOCODE_KV_STORE).apply();
 
     // Should
     Assert.assertFalse(result.isSuccessful());

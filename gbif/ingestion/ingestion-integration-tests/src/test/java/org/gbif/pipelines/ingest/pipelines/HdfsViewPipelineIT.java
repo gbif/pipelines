@@ -28,10 +28,12 @@ import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -42,11 +44,13 @@ import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
+import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -91,7 +95,7 @@ public class HdfsViewPipelineIT {
       "--inputPath=" + output,
       "--targetPath=" + input,
       "--numberOfShards=1",
-      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE,AUDUBON_TABLE",
+      "--interpretationTypes=OCCURRENCE,MEASUREMENT_OR_FACT_TABLE,EXTENDED_MEASUREMENT_OR_FACT_TABLE,GERMPLASM_MEASUREMENT_TRIAL_TABLE,AUDUBON_TABLE,HUMBOLDT_TABLE",
       "--properties=" + outputFile + "/data7/ingest/pipelines.yaml"
     };
     InterpretationPipelineOptions optionsWriter =
@@ -162,6 +166,12 @@ public class HdfsViewPipelineIT {
       TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
       writer.append(taxonRecord);
     }
+    try (SyncDataFileWriter<MultiTaxonRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, MultiTaxonomyTransform.builder().create(), coreTerm, postfix)) {
+      MultiTaxonRecord multiTaxonRecord = MultiTaxonRecord.newBuilder().setId(ID).build();
+      writer.append(multiTaxonRecord);
+    }
     try (SyncDataFileWriter<GrscicollRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, GrscicollTransform.builder().create(), coreTerm, postfix)) {
@@ -191,6 +201,12 @@ public class HdfsViewPipelineIT {
             optionsWriter, AudubonTransform.builder().create(), coreTerm, postfix)) {
       AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
       writer.append(audubonRecord);
+    }
+    try (SyncDataFileWriter<HumboldtRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, HumboldtTransform.builder().create(), coreTerm, postfix)) {
+      HumboldtRecord humboldtRecord = HumboldtRecord.newBuilder().setId(ID).build();
+      writer.append(humboldtRecord);
     }
 
     // When
@@ -326,6 +342,12 @@ public class HdfsViewPipelineIT {
       TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
       writer.append(taxonRecord);
     }
+    try (SyncDataFileWriter<MultiTaxonRecord> writer =
+        InterpretedAvroWriter.createAvroWriter(
+            optionsWriter, MultiTaxonomyTransform.builder().create(), coreTerm, postfix)) {
+      MultiTaxonRecord multiTaxonRecord = MultiTaxonRecord.newBuilder().setId(ID).build();
+      writer.append(multiTaxonRecord);
+    }
     try (SyncDataFileWriter<GrscicollRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, GrscicollTransform.builder().create(), coreTerm, postfix)) {
@@ -361,6 +383,14 @@ public class HdfsViewPipelineIT {
             optionsWriter, EventCoreTransform.builder().create(), coreTerm, postfix)) {
       EventCoreRecord eventCoreRecord = EventCoreRecord.newBuilder().setId(ID).build();
       writer.append(eventCoreRecord);
+    }
+    if (recordType == InterpretationType.RecordType.EVENT) {
+      try (SyncDataFileWriter<HumboldtRecord> writer =
+          InterpretedAvroWriter.createAvroWriter(
+              optionsWriter, HumboldtTransform.builder().create(), coreTerm, postfix)) {
+        HumboldtRecord humboldtRecord = HumboldtRecord.newBuilder().setId(ID).build();
+        writer.append(humboldtRecord);
+      }
     }
 
     // When
@@ -398,6 +428,10 @@ public class HdfsViewPipelineIT {
     assertFileExistFalse(outputFn.apply("germplasmmeasurementtrialtable"));
     assertFileExistFalse(outputFn.apply("permittable"));
     assertFileExistFalse(outputFn.apply("loantable"));
+
+    if (recordType == InterpretationType.RecordType.EVENT) {
+      assertFileExistFalse(outputFn.apply("humboldttable"));
+    }
   }
 
   private void assertFileExistFalse(String output) {

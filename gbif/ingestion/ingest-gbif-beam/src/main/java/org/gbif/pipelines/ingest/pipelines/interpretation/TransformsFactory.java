@@ -1,18 +1,20 @@
 package org.gbif.pipelines.ingest.pipelines.interpretation;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.hadoop.hbase.client.Table;
+import org.gbif.api.model.Constants;
 import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
-import org.gbif.kvs.species.Identification;
+import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -39,11 +41,13 @@ import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
+import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -56,7 +60,7 @@ import org.gbif.pipelines.transforms.specific.GbifIdTransform.GbifIdTransformBui
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
-import org.gbif.rest.client.species.NameUsageMatch;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 @Getter
 public class TransformsFactory {
@@ -160,12 +164,49 @@ public class TransformsFactory {
   }
 
   public TaxonomyTransform createTaxonomyTransform() {
-    SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>>
+    SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
         nameUsageMatchServiceSupplier = null;
+
     if (!options.getTestMode()) {
-      nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createSupplier(config);
+      nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createMultiServiceSupplier(config);
     }
-    return TaxonomyTransform.builder().kvStoreSupplier(nameUsageMatchServiceSupplier).create();
+
+    String firstConfiguredChecklistKey =
+        config.getNameUsageMatchingService() != null
+            ? config.getNameUsageMatchingService().getChecklistKeys().get(0)
+            : Constants.NUB_DATASET_KEY.toString();
+
+    return TaxonomyTransform.builder()
+        .kvStoreSupplier(nameUsageMatchServiceSupplier)
+        .checklistKey(firstConfiguredChecklistKey)
+        .create();
+  }
+
+  public MultiTaxonomyTransform createMultiTaxonomyTransform() {
+
+    SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
+        nameUsageMatchServiceSupplier = null;
+
+    SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> geocodeServiceSupplier =
+        null;
+
+    if (!options.getTestMode()) {
+      nameUsageMatchServiceSupplier = NameUsageMatchStoreFactory.createMultiServiceSupplier(config);
+      geocodeServiceSupplier = GeocodeKvStoreFactory.createSupplier(hdfsConfigs, config);
+    }
+
+    return MultiTaxonomyTransform.builder()
+        .kvStoresSupplier(nameUsageMatchServiceSupplier)
+        .geoKvStoreSupplier(geocodeServiceSupplier)
+        .checklistKeys(
+            config.getNameUsageMatchingService() != null
+                ? config.getNameUsageMatchingService().getChecklistKeys()
+                : List.of())
+        .countryCheckistKeyMap(
+            config.getNameUsageMatchingService() != null
+                ? config.getNameUsageMatchingService().getCountryChecklistKeyMap()
+                : Map.of())
+        .create();
   }
 
   public GrscicollTransform createGrscicollTransform() {
@@ -178,7 +219,8 @@ public class TransformsFactory {
   }
 
   public LocationTransform createLocationTransform() {
-    SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeServiceSupplier = null;
+    SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> geocodeServiceSupplier =
+        null;
     if (!options.getTestMode()) {
       geocodeServiceSupplier = GeocodeKvStoreFactory.createSupplier(hdfsConfigs, config);
     }
@@ -201,6 +243,18 @@ public class TransformsFactory {
 
   public AudubonTransform createAudubonTransform() {
     return AudubonTransform.builder().orderings(dateComponentOrdering).create();
+  }
+
+  public HumboldtTransform createHumboldtTransform() {
+    return HumboldtTransform.builder()
+        .nameUsageMatchKvStoreSupplier(
+            NameUsageMatchStoreFactory.createMultiServiceSupplier(config))
+        .vocabularyServiceSupplier(FileVocabularyFactory.createSupplier(hdfsConfigs, config))
+        .checklistKeys(
+            config.getNameUsageMatchingService() != null
+                ? config.getNameUsageMatchingService().getChecklistKeys()
+                : List.of())
+        .create();
   }
 
   public ImageTransform createImageTransform() {

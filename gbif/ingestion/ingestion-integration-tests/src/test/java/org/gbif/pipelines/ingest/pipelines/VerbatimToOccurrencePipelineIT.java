@@ -28,18 +28,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.ingest.resources.ZkServer;
 import org.gbif.pipelines.ingest.utils.InterpretedAvroWriter;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
@@ -296,7 +285,7 @@ public class VerbatimToOccurrencePipelineIT {
     assertFile(LocationRecord.class, interpretedOutput + "/location");
     assertFile(MetadataRecord.class, interpretedOutput + "/metadata");
     assertFile(MultimediaRecord.class, interpretedOutput + "/multimedia");
-    assertFile(TaxonRecord.class, interpretedOutput + "/taxonomy");
+    assertFile(MultiTaxonRecord.class, interpretedOutput + "/multi_taxonomy");
     assertFile(TemporalRecord.class, interpretedOutput + "/temporal");
     assertFile(ExtendedRecord.class, interpretedOutput + "/verbatim");
   }

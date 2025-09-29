@@ -118,9 +118,9 @@ public class ElasticsearchWriter<T> {
   private void checkBackpressure(boolean useSyncMode, Phaser phaser) {
     if (!useSyncMode && backPressure != null && backPressure > 0) {
       while (phaser.getUnarrivedParties() > backPressure) {
-        log.info("Back pressure barrier: too many rows wainting...");
+        log.info("Back pressure barrier: too many rows waiting...");
         try {
-          TimeUnit.MILLISECONDS.sleep(100L);
+          TimeUnit.MILLISECONDS.sleep(10000L);
         } catch (InterruptedException ex) {
           log.warn("Back pressure barrier", ex);
           Thread.currentThread().interrupt();

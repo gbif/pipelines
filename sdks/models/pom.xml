@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>sdks</artifactId>
-    <version>3.1.1-SNAPSHOT</version>
+    <version>3.2.11-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -28,7 +28,7 @@
 
   <build>
     <plugins>
-      <!-- Generate occurrence-hdfs-record.avsc avro schema-->
+      <!-- Generate avro schemas from XML extensions-->
       <plugin>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>maven-occurrence-avsc-schema-generator</artifactId>

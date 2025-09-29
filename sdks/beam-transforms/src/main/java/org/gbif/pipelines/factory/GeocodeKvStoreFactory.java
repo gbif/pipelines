@@ -8,7 +8,7 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration.Builder;
 import org.gbif.kvs.geocode.GeocodeKVStoreFactory;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.kvs.hbase.LoaderRetryConfig;
 import org.gbif.pipelines.core.config.model.KvConfig;
@@ -23,7 +23,7 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 /** Factory to get singleton instance of {@link KeyValueStore} */
 public class GeocodeKvStoreFactory {
 
-  private final KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore;
+  private final KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore;
   private static volatile GeocodeKvStoreFactory instance;
   private static final Object MUTEX = new Object();
 
@@ -33,11 +33,11 @@ public class GeocodeKvStoreFactory {
         Optional.ofNullable(config.getImageCachePath())
             .map(ip -> BufferedImageFactory.getInstance(hdfsConfigs, ip))
             .orElse(null);
-    KeyValueStore<LatLng, GeocodeResponse> kvStore = creatKvStore(config);
+    KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore = creatKvStore(config);
     geocodeKvStore = GeocodeKvStore.create(kvStore, image);
   }
 
-  public static KeyValueStore<LatLng, GeocodeResponse> getInstance(
+  public static KeyValueStore<GeocodeRequest, GeocodeResponse> getInstance(
       HdfsConfigs hdfsConfigs, PipelinesConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
@@ -49,17 +49,17 @@ public class GeocodeKvStoreFactory {
     return instance.geocodeKvStore;
   }
 
-  public static SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> createSupplier(
+  public static SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> createSupplier(
       HdfsConfigs hdfsConfigs, PipelinesConfig config) {
     return () -> new GeocodeKvStoreFactory(hdfsConfigs, config).geocodeKvStore;
   }
 
-  public static SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> getInstanceSupplier(
-      HdfsConfigs hdfsConfigs, PipelinesConfig config) {
+  public static SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>>
+      getInstanceSupplier(HdfsConfigs hdfsConfigs, PipelinesConfig config) {
     return () -> GeocodeKvStoreFactory.getInstance(hdfsConfigs, config);
   }
 
-  private static KeyValueStore<LatLng, GeocodeResponse> creatKvStore(PipelinesConfig config)
+  private static KeyValueStore<GeocodeRequest, GeocodeResponse> creatKvStore(PipelinesConfig config)
       throws IOException {
     if (config == null) {
       return null;
@@ -76,7 +76,8 @@ public class GeocodeKvStoreFactory {
         ClientConfiguration.builder()
             .withBaseApiUrl(api)
             .withFileCacheMaxSizeMb(geocodeConfig.getWsCacheSizeMb())
-            .withTimeOut(geocodeConfig.getWsTimeoutSec())
+            .withTimeOutMillisec(geocodeConfig.getWsTimeoutSec() * 1000)
+            .withMaxConnections(geocodeConfig.getMaxConnections())
             .build();
 
     String zk = geocodeConfig.getZkConnectionString();

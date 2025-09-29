@@ -9,15 +9,15 @@ import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
+import org.gbif.rest.client.geocode.GeocodeResponse.Location;
 
 /** A cache which uses a bitmap to cache coordinate lookups. */
 @Slf4j
 public class GeocodeBitmapCache {
 
-  private final Function<LatLng, GeocodeResponse> loadFn;
+  private final Function<GeocodeRequest, GeocodeResponse> loadFn;
 
   // World map image lookup
   private final BufferedImage img;
@@ -33,7 +33,7 @@ public class GeocodeBitmapCache {
   @SneakyThrows
   private GeocodeBitmapCache(
       BufferedImage img,
-      Function<LatLng, GeocodeResponse> loadFn,
+      Function<GeocodeRequest, GeocodeResponse> loadFn,
       String kvStoreType,
       boolean missEqualsFail) {
     this.loadFn = loadFn;
@@ -45,13 +45,13 @@ public class GeocodeBitmapCache {
   }
 
   public static GeocodeBitmapCache create(
-      @NonNull BufferedImage img, @NonNull Function<LatLng, GeocodeResponse> loadFn) {
+      @NonNull BufferedImage img, @NonNull Function<GeocodeRequest, GeocodeResponse> loadFn) {
     return new GeocodeBitmapCache(img, loadFn, DEFAULT_KV_STORE, false);
   }
 
   public static GeocodeBitmapCache create(
       @NonNull BufferedImage img,
-      @NonNull Function<LatLng, GeocodeResponse> loadFn,
+      @NonNull Function<GeocodeRequest, GeocodeResponse> loadFn,
       String kvStoreType,
       boolean missEqualsFail) {
     return new GeocodeBitmapCache(img, loadFn, kvStoreType, missEqualsFail);
@@ -64,9 +64,9 @@ public class GeocodeBitmapCache {
    *
    * @return Locations or null if the bitmap can't answer.
    */
-  public GeocodeResponse getFromBitmap(LatLng latLng) {
-    double lat = latLng.getLatitude();
-    double lng = latLng.getLongitude();
+  public GeocodeResponse getFromBitmap(GeocodeRequest latLng) {
+    double lat = latLng.getLat();
+    double lng = latLng.getLng();
     // Convert the latitude and longitude to x,y coordinates on the image.
     // The axes are swapped, and the image's origin is the top left.
     int x = (int) Math.round((lng + 180d) / 360d * (imgWidth - 1));
@@ -100,7 +100,7 @@ public class GeocodeBitmapCache {
       return locations;
     }
 
-    locations = loadFn.apply(LatLng.builder().withLatitude(lat).withLongitude(lng).build());
+    locations = loadFn.apply(GeocodeRequest.builder().withLat(lat).withLng(lng).build());
     // Don't store this if there aren't any locations.
     if (locations.getLocations().isEmpty()) {
       if (missEqualsFail) {

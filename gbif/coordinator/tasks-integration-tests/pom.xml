@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>coordinator</artifactId>
-    <version>3.1.1-SNAPSHOT</version>
+   <version>3.2.11-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -21,6 +21,12 @@
         <configuration>
           <forkCount>2</forkCount>
           <reuseForks>true</reuseForks>
+          <argLine>
+            --add-opens java.base/java.lang=ALL-UNNAMED
+            --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+            --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+            -Dillegal-access=permit
+          </argLine>
         </configuration>
       </plugin>
     </plugins>
@@ -126,26 +132,39 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-auth</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.apache.beam</groupId>
-      <artifactId>beam-sdks-java-io-hadoop-file-system</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.beam</groupId>
-      <artifactId>beam-runners-spark-3</artifactId>
-      <scope>test</scope>
-    </dependency>
 
     <!-- GBIF Test Dependencies -->
     <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>tasks-coordinator-cli</artifactId>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-api</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-ws-client</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.gbif.common</groupId>
+          <artifactId>gbif-cli</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>datacite-rest-client</artifactId>
+          <groupId>org.gbif.datacite</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+          <groupId>com.fasterxml.jackson.module</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>elasticsearch-tools</artifactId>
+      <artifactId>tasks-coordinator-cli</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -230,6 +249,10 @@
         <exclusion>
           <artifactId>datacite-rest-client</artifactId>
           <groupId>org.gbif.datacite</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+          <groupId>com.fasterxml.jackson.module</groupId>
         </exclusion>
       </exclusions>
     </dependency>

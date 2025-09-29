@@ -6,6 +6,7 @@
     "fields" : [
       {"name": "id", "type": ["null", "string"], "default" : null, "doc":""},
       {"name": "eventType", "type": ["null", "string"], "default" : null, "doc": ""},
+      {"name": "verbatimEventType", "type": ["null", "string"], "default" : null, "doc": ""},
       {"name": "order", "type": ["null", "int"], "default" : null, "doc": "Order starting from the event to the top parent"}
     ]
   },
@@ -26,7 +27,7 @@
       {"name": "datasetID", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/datasetID"},
       {"name": "datasetName", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/datasetName"},
       {"name": "samplingProtocol", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/samplingProtocol"},
-      {"name": "parentsLineage", "type": {"type" : "array", "items" : "Parent"}, "default" : [], "doc":""},
+      {"name": "parentsLineage", "type": {"type" : "array", "items" : "org.gbif.pipelines.io.avro.Parent"}, "default" : [], "doc":""},
       {"name": "locationID", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/locationID"},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]

@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>identifiers</artifactId>
-    <version>3.1.1-SNAPSHOT</version>
+   <version>3.2.11-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -22,6 +22,12 @@
         <configuration>
           <forkCount>2</forkCount>
           <reuseForks>true</reuseForks>
+          <argLine>
+            --add-opens java.base/java.lang=ALL-UNNAMED
+            --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+            --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+            -Dillegal-access=permit
+          </argLine>
         </configuration>
       </plugin>
     </plugins>
@@ -165,6 +171,12 @@
             <artifactId>maven-failsafe-plugin</artifactId>
             <configuration>
               <skip>true</skip>
+              <argLine>
+                --add-opens java.base/java.lang=ALL-UNNAMED
+                --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+                -Dillegal-access=permit
+              </argLine>
             </configuration>
           </plugin>
         </plugins>

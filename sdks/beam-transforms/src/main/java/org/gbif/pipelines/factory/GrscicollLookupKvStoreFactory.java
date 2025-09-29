@@ -61,7 +61,7 @@ public class GrscicollLookupKvStoreFactory {
         ClientConfiguration.builder()
             .withBaseApiUrl(api)
             .withFileCacheMaxSizeMb(grscicollLookupConfig.getWsCacheSizeMb())
-            .withTimeOut(grscicollLookupConfig.getWsTimeoutSec())
+            .withTimeOutMillisec(grscicollLookupConfig.getWsTimeoutSec() * 1000)
             .build();
 
     String zk = grscicollLookupConfig.getZkConnectionString();

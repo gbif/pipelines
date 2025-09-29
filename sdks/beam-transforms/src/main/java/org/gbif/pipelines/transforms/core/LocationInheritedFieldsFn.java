@@ -47,7 +47,7 @@ public class LocationInheritedFieldsFn
     private LocationInheritedFields getLeafChild() {
       ArrayDeque<String> allRecords = new ArrayDeque<>(recordsMap.keySet());
       allRecords.removeAll(recordsWithChildren);
-      return recordsMap.get(allRecords.peek());
+      return recordsMap.getOrDefault(allRecords.peek(), new LocationInheritedFields());
     }
 
     public LocationInheritedRecord toLeafChild() {

@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>sdks</artifactId>
-    <version>3.1.1-SNAPSHOT</version>
+   <version>3.2.11-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -24,6 +24,10 @@
     </dependency>
 
     <!-- This project -->
+    <dependency>
+      <groupId>org.gbif.kvs</groupId>
+      <artifactId>kvs-common</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>models</artifactId>
