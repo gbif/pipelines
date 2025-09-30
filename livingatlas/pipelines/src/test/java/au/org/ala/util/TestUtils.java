@@ -46,6 +46,22 @@ public class TestUtils {
     return ALAFsUtils.readConfigFile(HdfsConfigs.nullConfig(), absolutePath);
   }
 
+  public static String getSandboxPipelineConfigFile() {
+    String file = getPipelinesConfigFile();
+
+    // remove collectory url
+    try {
+      String content = FileUtils.readFileToString(new File(file), Charset.forName("UTF-8"));
+      content = content.replaceAll("http://localhost:COLLECTORY_PORT", "");
+      Path tempFile = Files.createTempFile(null, ".yaml");
+      Files.write(tempFile, content.getBytes(), StandardOpenOption.CREATE);
+      tempFile.toFile().deleteOnExit();
+      return tempFile.toString();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public static String getPipelinesConfigFile() {
     try {
       String templateFile = "src/test/resources/pipelines.yaml";

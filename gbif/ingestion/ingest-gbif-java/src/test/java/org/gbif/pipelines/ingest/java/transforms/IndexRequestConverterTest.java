@@ -12,11 +12,13 @@ import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -41,9 +43,11 @@ public class IndexRequestConverterTest {
     TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(ID).build();
     LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
     TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
+    MultiTaxonRecord multiTaxonRecord = MultiTaxonRecord.newBuilder().setId(ID).build();
     GrscicollRecord grscicollRecord = GrscicollRecord.newBuilder().setId(ID).build();
     MultimediaRecord multimediaRecord = MultimediaRecord.newBuilder().setId(ID).build();
     ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
+    DnaDerivedDataRecord dnaRecord = DnaDerivedDataRecord.newBuilder().setId(ID).build();
     AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
 
     // When
@@ -58,10 +62,11 @@ public class IndexRequestConverterTest {
             .temporalMap(Collections.singletonMap(ID, temporalRecord))
             .basicMap(Collections.singletonMap(ID, basicRecord))
             .locationMap(Collections.singletonMap(ID, locationRecord))
-            .taxonMap(Collections.singletonMap(ID, taxonRecord))
+            .multiTaxonMap(Collections.singletonMap(ID, multiTaxonRecord))
             .grscicollMap(Collections.singletonMap(ID, grscicollRecord))
             .multimediaMap(Collections.singletonMap(ID, multimediaRecord))
             .imageMap(Collections.singletonMap(ID, imageRecord))
+            .dnaMap(Collections.singletonMap(ID, dnaRecord))
             .audubonMap(Collections.singletonMap(ID, audubonRecord))
             .build()
             .getFn()
@@ -94,10 +99,11 @@ public class IndexRequestConverterTest {
     ExtendedRecord extendedRecord = ExtendedRecord.newBuilder().setId(ID).build();
     TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(ID).build();
     LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
-    TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId(ID).build();
+    MultiTaxonRecord multiTaxonRecord = MultiTaxonRecord.newBuilder().setId(ID).build();
     GrscicollRecord grscicollRecord = GrscicollRecord.newBuilder().setId(ID).build();
     MultimediaRecord multimediaRecord = MultimediaRecord.newBuilder().setId(ID).build();
     ImageRecord imageRecord = ImageRecord.newBuilder().setId(ID).build();
+    DnaDerivedDataRecord dnaRecord = DnaDerivedDataRecord.newBuilder().setId(ID).build();
     AudubonRecord audubonRecord = AudubonRecord.newBuilder().setId(ID).build();
 
     // When
@@ -111,10 +117,11 @@ public class IndexRequestConverterTest {
             .clusteringMap(Collections.singletonMap(ID, clusteringRecord))
             .locationMap(Collections.singletonMap(ID, locationRecord))
             .basicMap(Collections.singletonMap(ID, basicRecord))
-            .taxonMap(Collections.singletonMap(ID, taxonRecord))
+            .multiTaxonMap(Collections.singletonMap(ID, multiTaxonRecord))
             .grscicollMap(Collections.singletonMap(ID, grscicollRecord))
             .multimediaMap(Collections.singletonMap(ID, multimediaRecord))
             .imageMap(Collections.singletonMap(ID, imageRecord))
+            .dnaMap(Collections.singletonMap(ID, dnaRecord))
             .audubonMap(Collections.singletonMap(ID, audubonRecord))
             .build()
             .getFn()

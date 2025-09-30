@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.gbif.api.model.Constants;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.BasisOfRecord;
@@ -26,30 +27,7 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
-import org.gbif.pipelines.io.avro.AgentIdentifier;
-import org.gbif.pipelines.io.avro.Authorship;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GeologicalContext;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.IssueRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.NamePart;
-import org.gbif.pipelines.io.avro.NameType;
-import org.gbif.pipelines.io.avro.Nomenclature;
-import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.ParsedName;
-import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.State;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.VocabularyConcept;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.junit.Assert;
@@ -172,10 +150,13 @@ public class OccurrenceHdfsRecordConverterTest {
             .build();
 
     List<RankedName> classification = new ArrayList<>();
-    classification.add(RankedName.newBuilder().setName("CLASS").setRank(Rank.CLASS).build());
-    classification.add(RankedName.newBuilder().setName("ORDER").setRank(Rank.ORDER).build());
+    classification.add(
+        RankedName.newBuilder().setName("CLASS").setRank(Rank.CLASS.toString()).build());
+    classification.add(
+        RankedName.newBuilder().setName("ORDER").setRank(Rank.ORDER.toString()).build());
     TaxonRecord taxonRecord =
         TaxonRecord.newBuilder()
+            .setDatasetKey(Constants.NUB_DATASET_KEY.toString())
             .setCreated(
                 2L) // This value for lastParsed and lastInterpreted since is greater that the Basic
             // record created date
@@ -199,15 +180,54 @@ public class OccurrenceHdfsRecordConverterTest {
     IdentifierRecord identifierRecord =
         IdentifierRecord.newBuilder().setId("1").setInternalId("777").build();
 
+    DnaDerivedDataRecord dnaDerivedDataRecord =
+        DnaDerivedDataRecord.newBuilder()
+            .setId("1")
+            .setDnaDerivedDataItems(
+                Arrays.asList(
+                    DnaDerivedData.newBuilder().setDnaSequenceID("foo1").build(),
+                    DnaDerivedData.newBuilder().setDnaSequenceID("foo2").build()))
+            .build();
+
+    Humboldt humboldt =
+        Humboldt.newBuilder()
+            .setTargetTaxonomicScope(
+                List.of(
+                    TaxonHumboldtRecord.newBuilder()
+                        .setClassification(
+                            List.of(
+                                RankedName.newBuilder().setRank("rank").setName("name").build()))
+                        .build()))
+            .setTargetLifeStageScope(
+                List.of(
+                    VocabularyConcept.newBuilder()
+                        .setConcept("c1")
+                        .setLineage(List.of("c0", "c1"))
+                        .build(),
+                    VocabularyConcept.newBuilder()
+                        .setConcept("c11")
+                        .setLineage(List.of("c00", "c11"))
+                        .build()))
+            .build();
+    HumboldtRecord humboldtRecord =
+        HumboldtRecord.newBuilder()
+            .setId("1")
+            .setCreated(13214L)
+            .setHumboldtItems(List.of(humboldt))
+            .build();
+
     // When
     OccurrenceHdfsRecord hdfsRecord =
         OccurrenceHdfsRecordConverter.builder()
             .basicRecord(basicRecord)
             .metadataRecord(metadataRecord)
-            .taxonRecord(taxonRecord)
+            .multiTaxonRecord(
+                MultiTaxonRecord.newBuilder().setTaxonRecords(List.of(taxonRecord)).build())
             .identifierRecord(identifierRecord)
             .temporalRecord(temporalRecord)
+            .dnaDerivedDataRecord(dnaDerivedDataRecord)
             .extendedRecord(extendedRecord)
+            .humboldtRecord(humboldtRecord)
             .build()
             .convert();
 
@@ -325,6 +345,21 @@ public class OccurrenceHdfsRecordConverterTest {
         hdfsRecord
             .getDwcaextension()
             .contains("http://data.ggbn.org/schemas/ggbn/terms/Amplification"));
+
+    // DNA
+    Assert.assertEquals(2, hdfsRecord.getDnasequenceid().size());
+    Assert.assertTrue(hdfsRecord.getDnasequenceid().contains("foo1"));
+    Assert.assertTrue(hdfsRecord.getDnasequenceid().contains("foo2"));
+
+    // Humboldt
+    Assert.assertTrue(
+        hdfsRecord
+            .getExtHumboldt()
+            .contains(
+                "\"targetLifeStageScope\" : {\n"
+                    + "    \"concepts\" : [ \"c1\", \"c11\" ],\n"
+                    + "    \"lineage\" : [ \"c0\", \"c1\", \"c00\", \"c11\" ]\n"
+                    + "  }"));
   }
 
   @Test
@@ -351,7 +386,7 @@ public class OccurrenceHdfsRecordConverterTest {
 
     // Should
     // Testing de-serialization
-    List<Multimedia> media = MediaSerDeser.fromJson(hdfsRecord.getExtMultimedia());
+    List<Multimedia> media = MediaSerDeser.multimediaFromJson(hdfsRecord.getExtMultimedia());
     Assert.assertEquals(media.get(0), multimedia);
     Assert.assertTrue(hdfsRecord.getMediatype().contains(MediaType.StillImage.name()));
     Assert.assertTrue(
@@ -486,33 +521,45 @@ public class OccurrenceHdfsRecordConverterTest {
     // State
     List<RankedName> classification = new ArrayList<>();
     classification.add(
-        RankedName.newBuilder().setKey(2).setRank(Rank.KINGDOM).setName("Archaea").build());
-    classification.add(
-        RankedName.newBuilder().setKey(79).setRank(Rank.PHYLUM).setName("Crenarchaeota").build());
+        RankedName.newBuilder()
+            .setKey(String.valueOf(2))
+            .setRank(Rank.KINGDOM.toString())
+            .setName("Archaea")
+            .build());
     classification.add(
         RankedName.newBuilder()
-            .setKey(8016360)
-            .setRank(Rank.ORDER)
+            .setKey(String.valueOf(79))
+            .setRank(Rank.PHYLUM.toString())
+            .setName("Crenarchaeota")
+            .build());
+    classification.add(
+        RankedName.newBuilder()
+            .setKey(String.valueOf(8016360))
+            .setRank(Rank.ORDER.toString())
             .setName("Acidilobales")
             .build());
     classification.add(
-        RankedName.newBuilder().setKey(292).setRank(Rank.CLASS).setName("Thermoprotei").build());
+        RankedName.newBuilder()
+            .setKey(String.valueOf(292))
+            .setRank(Rank.CLASS.toString())
+            .setName("Thermoprotei")
+            .build());
     classification.add(
         RankedName.newBuilder()
-            .setKey(7785)
-            .setRank(Rank.FAMILY)
+            .setKey(String.valueOf(7785))
+            .setRank(Rank.FAMILY.toString())
             .setName("Caldisphaeraceae")
             .build());
     classification.add(
         RankedName.newBuilder()
-            .setKey(1000002)
-            .setRank(Rank.GENUS)
+            .setKey(String.valueOf(1000002))
+            .setRank(Rank.GENUS.toString())
             .setName("Caldisphaera")
             .build());
     classification.add(
         RankedName.newBuilder()
-            .setKey(1000003)
-            .setRank(Rank.SPECIES)
+            .setKey(String.valueOf(1000003))
+            .setRank(Rank.SPECIES.toString())
             .setName("Caldisphaera lagunensis")
             .build());
 
@@ -536,13 +583,14 @@ public class OccurrenceHdfsRecordConverterTest {
             .build();
 
     TaxonRecord taxonRecord = new TaxonRecord();
-    RankedName rankedName =
-        RankedName.newBuilder()
-            .setKey(2492483)
-            .setRank(Rank.SPECIES)
+    RankedNameWithAuthorship rankedName =
+        RankedNameWithAuthorship.newBuilder()
+            .setKey(String.valueOf(2492483))
+            .setRank(Rank.SPECIES.toString())
             .setName("Caldisphaera lagunensis Itoh & al., 2003")
             .build();
 
+    taxonRecord.setDatasetKey(Constants.NUB_DATASET_KEY.toString());
     taxonRecord.setUsage(rankedName);
     taxonRecord.setUsage(rankedName);
     taxonRecord.setAcceptedUsage(rankedName);
@@ -553,34 +601,38 @@ public class OccurrenceHdfsRecordConverterTest {
 
     // When
     OccurrenceHdfsRecord hdfsRecord =
-        OccurrenceHdfsRecordConverter.builder().taxonRecord(taxonRecord).build().convert();
+        OccurrenceHdfsRecordConverter.builder()
+            .multiTaxonRecord(
+                MultiTaxonRecord.newBuilder().setTaxonRecords(List.of(taxonRecord)).build())
+            .build()
+            .convert();
 
     // Should
     Assert.assertEquals("Archaea", hdfsRecord.getKingdom());
-    Assert.assertEquals(Integer.valueOf(2), hdfsRecord.getKingdomkey());
+    Assert.assertEquals(String.valueOf(2), hdfsRecord.getKingdomkey());
 
     Assert.assertEquals("Crenarchaeota", hdfsRecord.getPhylum());
-    Assert.assertEquals(Integer.valueOf(79), hdfsRecord.getPhylumkey());
+    Assert.assertEquals(String.valueOf(79), hdfsRecord.getPhylumkey());
 
     Assert.assertEquals("Acidilobales", hdfsRecord.getOrder());
-    Assert.assertEquals(Integer.valueOf(8016360), hdfsRecord.getOrderkey());
+    Assert.assertEquals(String.valueOf(8016360), hdfsRecord.getOrderkey());
 
     Assert.assertEquals("Thermoprotei", hdfsRecord.getClass$());
-    Assert.assertEquals(Integer.valueOf(292), hdfsRecord.getClasskey());
+    Assert.assertEquals(String.valueOf(292), hdfsRecord.getClasskey());
 
     Assert.assertEquals("Caldisphaeraceae", hdfsRecord.getFamily());
-    Assert.assertEquals(Integer.valueOf(7785), hdfsRecord.getFamilykey());
+    Assert.assertEquals(String.valueOf(7785), hdfsRecord.getFamilykey());
 
     Assert.assertEquals("Caldisphaera", hdfsRecord.getGenus());
-    Assert.assertEquals(Integer.valueOf(1000002), hdfsRecord.getGenuskey());
+    Assert.assertEquals(String.valueOf(1000002), hdfsRecord.getGenuskey());
 
     Assert.assertEquals("Caldisphaera lagunensis", hdfsRecord.getSpecies());
-    Assert.assertEquals(Integer.valueOf(1000003), hdfsRecord.getSpecieskey());
+    Assert.assertEquals(String.valueOf(1000003), hdfsRecord.getSpecieskey());
 
     Assert.assertEquals("2492483", hdfsRecord.getAcceptednameusageid());
     Assert.assertEquals(
         "Caldisphaera lagunensis Itoh & al., 2003", hdfsRecord.getAcceptedscientificname());
-    Assert.assertEquals(Integer.valueOf(2492483), hdfsRecord.getAcceptedtaxonkey());
+    Assert.assertEquals(String.valueOf(2492483), hdfsRecord.getAcceptedtaxonkey());
 
     Assert.assertEquals("Caldisphaera", hdfsRecord.getGenericname());
     Assert.assertEquals("lagunensis", hdfsRecord.getSpecificepithet());
@@ -617,8 +669,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getDay());
     Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getMonth());
     Assert.assertEquals(Integer.valueOf(2019), hdfsRecord.getYear());
-    Assert.assertEquals("1", hdfsRecord.getStartdayofyear());
-    Assert.assertEquals("1", hdfsRecord.getEnddayofyear());
+    Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getStartdayofyear());
+    Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getEnddayofyear());
     Assert.assertEquals("2019-01", hdfsRecord.getEventdate());
     Assert.assertEquals(eventDate, hdfsRecord.getDateidentified());
     Assert.assertEquals(eventDate, hdfsRecord.getModified());

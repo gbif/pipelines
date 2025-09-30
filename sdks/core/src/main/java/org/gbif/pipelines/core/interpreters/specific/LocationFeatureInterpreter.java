@@ -12,7 +12,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 
@@ -22,13 +22,13 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 public class LocationFeatureInterpreter {
 
   public static BiConsumer<LocationRecord, LocationFeatureRecord> interpret(
-      KeyValueStore<LatLng, String> kvStore) {
+      KeyValueStore<GeocodeRequest, String> kvStore) {
     return (lr, asr) -> {
       if (kvStore != null) {
         try {
           // Call kv store
           String json =
-              kvStore.get(LatLng.create(lr.getDecimalLatitude(), lr.getDecimalLongitude()));
+              kvStore.get(GeocodeRequest.create(lr.getDecimalLatitude(), lr.getDecimalLongitude()));
 
           // Parse json
           if (!Strings.isNullOrEmpty(json)) {

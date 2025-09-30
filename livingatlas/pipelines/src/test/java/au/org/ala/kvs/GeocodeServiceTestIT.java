@@ -11,12 +11,12 @@ import java.util.Collection;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.parsers.location.GeocodeKvStore;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.factory.BufferedImageFactory;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
+import org.gbif.rest.client.geocode.GeocodeResponse.Location;
 import org.junit.Test;
 
 @Slf4j
@@ -29,22 +29,22 @@ public class GeocodeServiceTestIT {
   @Test
   public void testCountryCoastalPoint() {
 
-    KeyValueStore<LatLng, GeocodeResponse> geoService =
+    KeyValueStore<GeocodeRequest, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
 
     GeocodeResponse resp =
-        geoService.get(LatLng.builder().withLongitude(119.7).withLatitude(-20.0).build());
+        geoService.get(GeocodeRequest.builder().withLng(119.7).withLat(-20.0).build());
     assertFalse(resp.getLocations().isEmpty());
     assertEquals("AU", resp.getLocations().get(0).getName());
 
     GeocodeResponse resp2 =
         geoService.get(
-            LatLng.builder().withLongitude(124.9500000000).withLatitude(-15.0667000000).build());
+            GeocodeRequest.builder().withLng(124.9500000000).withLat(-15.0667000000).build());
     assertFalse(resp2.getLocations().isEmpty());
     assertEquals("AU", resp2.getLocations().get(0).getName());
 
     GeocodeResponse resp3 =
-        geoService.get(LatLng.builder().withLongitude(115.445278).withLatitude(-20.827222).build());
+        geoService.get(GeocodeRequest.builder().withLng(115.445278).withLat(-20.827222).build());
     assertFalse(resp3.getLocations().isEmpty());
     assertEquals("AU", resp3.getLocations().get(0).getName());
   }
@@ -52,15 +52,15 @@ public class GeocodeServiceTestIT {
   @Test
   public void testExternalTerritories() {
 
-    KeyValueStore<LatLng, GeocodeResponse> geoService =
+    KeyValueStore<GeocodeRequest, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
 
     // Christmas Island
     GeocodeResponse resp =
         geoService.get(
-            LatLng.builder()
-                .withLongitude(105.65916507921472)
-                .withLatitude(-10.47444666578651)
+            GeocodeRequest.builder()
+                .withLng(105.65916507921472)
+                .withLat(-10.47444666578651)
                 .build());
     assertFalse(resp.getLocations().isEmpty());
     assertEquals("AU", resp.getLocations().get(0).getName());
@@ -68,9 +68,9 @@ public class GeocodeServiceTestIT {
     // Cocos Island
     GeocodeResponse resp2 =
         geoService.get(
-            LatLng.builder()
-                .withLongitude(96.82189811041627)
-                .withLatitude(-12.149492596153177)
+            GeocodeRequest.builder()
+                .withLng(96.82189811041627)
+                .withLat(-12.149492596153177)
                 .build());
     assertFalse(resp2.getLocations().isEmpty());
     assertEquals("AU", resp2.getLocations().get(0).getName());
@@ -78,9 +78,9 @@ public class GeocodeServiceTestIT {
     // HM Heard Island and McDonald Islands
     GeocodeResponse resp3 =
         geoService.get(
-            LatLng.builder()
-                .withLongitude(73.50048378875914)
-                .withLatitude(-53.05122953207953)
+            GeocodeRequest.builder()
+                .withLng(73.50048378875914)
+                .withLat(-53.05122953207953)
                 .build());
     assertFalse(resp3.getLocations().isEmpty());
     assertEquals("AU", resp2.getLocations().get(0).getName());
@@ -88,9 +88,9 @@ public class GeocodeServiceTestIT {
     // Norfolk Island
     GeocodeResponse resp4 =
         geoService.get(
-            LatLng.builder()
-                .withLongitude(167.96164271317312)
-                .withLatitude(-29.030669709715056)
+            GeocodeRequest.builder()
+                .withLng(167.96164271317312)
+                .withLat(-29.030669709715056)
                 .build());
     assertFalse(resp4.getLocations().isEmpty());
     assertEquals("AU", resp4.getLocations().get(0).getName());
@@ -98,9 +98,9 @@ public class GeocodeServiceTestIT {
     // Lord Howe
     GeocodeResponse resp5 =
         geoService.get(
-            LatLng.builder()
-                .withLongitude(159.0851385821144)
-                .withLatitude(-31.560315624981254)
+            GeocodeRequest.builder()
+                .withLng(159.0851385821144)
+                .withLat(-31.560315624981254)
                 .build());
     assertFalse(resp5.getLocations().isEmpty());
     assertEquals("AU", resp5.getLocations().get(0).getName());
@@ -113,36 +113,36 @@ public class GeocodeServiceTestIT {
   @Test
   public void testCountryDatelineTests() {
 
-    KeyValueStore<LatLng, GeocodeResponse> geoService =
+    KeyValueStore<GeocodeRequest, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
 
     // FJ
     GeocodeResponse resp =
-        geoService.get(LatLng.builder().withLongitude(179.9).withLatitude(-17.99).build());
+        geoService.get(GeocodeRequest.builder().withLng(179.9).withLat(-17.99).build());
     assertFalse(resp.getLocations().isEmpty());
     assertEquals("FJ", resp.getLocations().get(0).getName());
 
     // NZ
     GeocodeResponse resp2 =
-        geoService.get(LatLng.builder().withLongitude(179.9).withLatitude(-40.0).build());
+        geoService.get(GeocodeRequest.builder().withLng(179.9).withLat(-40.0).build());
     assertFalse(resp2.getLocations().isEmpty());
     assertEquals("NZ", resp2.getLocations().get(0).getName());
 
     // NZ - other side of dateline
     GeocodeResponse resp3 =
-        geoService.get(LatLng.builder().withLongitude(-179.9).withLatitude(-40.0).build());
+        geoService.get(GeocodeRequest.builder().withLng(-179.9).withLat(-40.0).build());
     assertFalse(resp3.getLocations().isEmpty());
     assertEquals("NZ", resp3.getLocations().get(0).getName());
 
     // south pole
     GeocodeResponse resp4 =
-        geoService.get(LatLng.builder().withLongitude(179.9).withLatitude(-90.0).build());
+        geoService.get(GeocodeRequest.builder().withLng(179.9).withLat(-90.0).build());
     assertFalse(resp4.getLocations().isEmpty());
     assertEquals("AQ", resp4.getLocations().get(0).getName());
 
     // north pole
     GeocodeResponse resp5 =
-        geoService.get(LatLng.builder().withLongitude(179.9).withLatitude(90.0).build());
+        geoService.get(GeocodeRequest.builder().withLng(179.9).withLat(90.0).build());
     assertTrue(resp5.getLocations().isEmpty());
   }
 
@@ -153,11 +153,11 @@ public class GeocodeServiceTestIT {
   @Test
   public void testBiomeTerrestrial() {
 
-    KeyValueStore<LatLng, GeocodeResponse> geoService =
+    KeyValueStore<GeocodeRequest, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createBiomeSupplier(TestUtils.getConfig()).get();
 
     GeocodeResponse resp =
-        geoService.get(LatLng.builder().withLongitude(146.2).withLatitude(-27.9).build());
+        geoService.get(GeocodeRequest.builder().withLng(146.2).withLat(-27.9).build());
 
     assertFalse(resp.getLocations().isEmpty());
     Collection<Location> locations = resp.getLocations();
@@ -171,11 +171,11 @@ public class GeocodeServiceTestIT {
   @Test
   public void testBiomeMarine() {
 
-    KeyValueStore<LatLng, GeocodeResponse> geoService =
+    KeyValueStore<GeocodeRequest, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createBiomeSupplier(TestUtils.getConfig()).get();
 
     GeocodeResponse resp =
-        geoService.get(LatLng.builder().withLongitude(106.6).withLatitude(-31.2).build());
+        geoService.get(GeocodeRequest.builder().withLng(106.6).withLat(-31.2).build());
 
     assertFalse(resp.getLocations().isEmpty());
     Collection<Location> locations = resp.getLocations();
@@ -192,10 +192,10 @@ public class GeocodeServiceTestIT {
    */
   @Test
   public void testInsideCountry() {
-    KeyValueStore<LatLng, GeocodeResponse> geoService =
+    KeyValueStore<GeocodeRequest, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
     GeocodeResponse resp =
-        geoService.get(LatLng.builder().withLongitude(146.2).withLatitude(-27.9).build());
+        geoService.get(GeocodeRequest.builder().withLng(146.2).withLat(-27.9).build());
     assertFalse(resp.getLocations().isEmpty());
     Collection<Location> locations = resp.getLocations();
     assertFalse(locations.isEmpty());
@@ -210,20 +210,20 @@ public class GeocodeServiceTestIT {
 
   @Test
   public void testInsideEEZ() {
-    KeyValueStore<LatLng, GeocodeResponse> geoService =
+    KeyValueStore<GeocodeRequest, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
     GeocodeResponse resp =
-        geoService.get(LatLng.builder().withLongitude(151.329751).withLatitude(-36.407357).build());
+        geoService.get(GeocodeRequest.builder().withLng(151.329751).withLat(-36.407357).build());
     assertFalse(resp.getLocations().isEmpty());
     assertEquals("AU", resp.getLocations().iterator().next().getIsoCountryCode2Digit());
   }
 
   @Test
   public void testInsideStateProvince() {
-    KeyValueStore<LatLng, GeocodeResponse> geoService =
+    KeyValueStore<GeocodeRequest, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createStateProvinceSupplier(TestUtils.getConfig()).get();
     GeocodeResponse resp =
-        geoService.get(LatLng.builder().withLongitude(146.2).withLatitude(-27.9).build());
+        geoService.get(GeocodeRequest.builder().withLng(146.2).withLat(-27.9).build());
     assertFalse(resp.getLocations().isEmpty());
     Collection<Location> locations = resp.getLocations();
     assertFalse(locations.isEmpty());
@@ -236,44 +236,44 @@ public class GeocodeServiceTestIT {
     assertTrue(stateProvince.isPresent());
     assertEquals("Queensland", stateProvince.get().getName());
 
-    resp = geoService.get(LatLng.builder().withLongitude(146.923).withLatitude(-31.2).build());
+    resp = geoService.get(GeocodeRequest.builder().withLng(146.923).withLat(-31.2).build());
     assertEquals(1, resp.getLocations().size());
     assertEquals("New South Wales", resp.getLocations().iterator().next().getName());
     // Manually Check if the result is from bitmap
-    resp = geoService.get(LatLng.builder().withLongitude(146.3).withLatitude(-27.8).build());
+    resp = geoService.get(GeocodeRequest.builder().withLng(146.3).withLat(-27.8).build());
     assertEquals("Queensland", stateProvince.get().getName());
   }
 
   @Test
   public void testOutsideStateProvince() {
-    KeyValueStore<LatLng, GeocodeResponse> geoService =
+    KeyValueStore<GeocodeRequest, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createStateProvinceSupplier(TestUtils.getConfig()).get();
 
     GeocodeResponse resp =
-        geoService.get(
-            LatLng.builder().withLongitude(-145.077283).withLatitude(-38.188337).build());
+        geoService.get(GeocodeRequest.builder().withLng(-145.077283).withLat(-38.188337).build());
     assertTrue(resp.getLocations().isEmpty());
   }
 
   //   -30.060141,151.905301;
   @Test
   public void testCountryEEZ1() {
-    KeyValueStore<LatLng, GeocodeResponse> geoService =
+    KeyValueStore<GeocodeRequest, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
 
     GeocodeResponse resp =
-        geoService.get(LatLng.builder().withLongitude(146.804061).withLatitude(-35.482884).build());
+        geoService.get(GeocodeRequest.builder().withLng(146.804061).withLat(-35.482884).build());
 
     assertFalse(resp.getLocations().isEmpty());
   }
+
   //    -35.482884,146.804061
   @Test
   public void testCountryEEZ2() {
-    KeyValueStore<LatLng, GeocodeResponse> geoService =
+    KeyValueStore<GeocodeRequest, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
 
     GeocodeResponse resp =
-        geoService.get(LatLng.builder().withLongitude(151.905301).withLatitude(-30.060141).build());
+        geoService.get(GeocodeRequest.builder().withLng(151.905301).withLat(-30.060141).build());
 
     assertFalse(resp.getLocations().isEmpty());
   }
@@ -281,22 +281,21 @@ public class GeocodeServiceTestIT {
   // -36.792365,146.074153
   @Test
   public void testCountryEEZ3() {
-    KeyValueStore<LatLng, GeocodeResponse> geoService =
+    KeyValueStore<GeocodeRequest, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
 
     GeocodeResponse resp =
-        geoService.get(LatLng.builder().withLongitude(146.074153).withLatitude(-36.792365).build());
+        geoService.get(GeocodeRequest.builder().withLng(146.074153).withLat(-36.792365).build());
     assertFalse(resp.getLocations().isEmpty());
   }
 
   @Test
   public void testOutsideCountryEEZ() {
-    KeyValueStore<LatLng, GeocodeResponse> geoService =
+    KeyValueStore<GeocodeRequest, GeocodeResponse> geoService =
         GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
 
     GeocodeResponse resp =
-        geoService.get(
-            LatLng.builder().withLongitude(-145.077283).withLatitude(-38.188337).build());
+        geoService.get(GeocodeRequest.builder().withLng(-145.077283).withLat(-38.188337).build());
     assertTrue(resp.getLocations().isEmpty());
   }
 
@@ -308,26 +307,24 @@ public class GeocodeServiceTestIT {
         BufferedImageFactory.loadImageFile(
             HdfsConfigs.nullConfig(), "/tmp/pipelines-shp/cw_state_poly.png");
     // Create a KV store (From SHP file or others)
-    KeyValueStore<LatLng, GeocodeResponse> stateProvinceStore =
+    KeyValueStore<GeocodeRequest, GeocodeResponse> stateProvinceStore =
         StateProvinceKeyValueStore.create(TestUtils.getConfig().getGeocodeConfig());
     // Bind bitmap to provide bitmap cache
-    KeyValueStore<LatLng, GeocodeResponse> stateProvinceKvStore =
+    KeyValueStore<GeocodeRequest, GeocodeResponse> stateProvinceKvStore =
         GeocodeKvStore.create(stateProvinceStore, image);
 
     // Check if search from BitMap
     GeocodeResponse resp =
-        stateProvinceKvStore.get(LatLng.builder().withLongitude(146.3).withLatitude(-27.9).build());
+        stateProvinceKvStore.get(GeocodeRequest.builder().withLng(146.3).withLat(-27.9).build());
     assertEquals(1, resp.getLocations().size());
     assertEquals("Queensland", resp.getLocations().iterator().next().getName());
 
     resp =
-        stateProvinceKvStore.get(
-            LatLng.builder().withLongitude(146.921).withLatitude(-31.25).build());
+        stateProvinceKvStore.get(GeocodeRequest.builder().withLng(146.921).withLat(-31.25).build());
     assertEquals(1, resp.getLocations().size());
 
     resp =
-        stateProvinceKvStore.get(
-            LatLng.builder().withLongitude(146.923).withLatitude(-31.2).build());
+        stateProvinceKvStore.get(GeocodeRequest.builder().withLng(146.923).withLat(-31.2).build());
     assertEquals(1, resp.getLocations().size());
     assertEquals("New South Wales", resp.getLocations().iterator().next().getName());
   }

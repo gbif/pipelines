@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>coordinator</artifactId>
-    <version>3.0.2-SNAPSHOT</version>
+   <version>3.2.11-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -122,18 +122,6 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>validator-ws-client</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>beam-common</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>beam-transforms</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-gbif-beam</artifactId>
-    </dependency>
 
     <!-- GBIF -->
     <dependency>
@@ -247,7 +235,16 @@
           <artifactId>datacite-rest-client</artifactId>
           <groupId>org.gbif.datacite</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+          <groupId>com.fasterxml.jackson.module</groupId>
+        </exclusion>
       </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>beam-common</artifactId>
     </dependency>
 
     <!-- Beam -->

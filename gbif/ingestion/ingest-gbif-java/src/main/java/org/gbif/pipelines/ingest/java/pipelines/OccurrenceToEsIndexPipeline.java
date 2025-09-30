@@ -25,22 +25,24 @@ import org.gbif.pipelines.ingest.java.transforms.IndexRequestConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -154,8 +156,8 @@ public class OccurrenceToEsIndexPipeline {
     CompletableFuture<Map<String, LocationRecord>> locationMapFeature =
         readAvroAsFuture(options, CORE_TERM, executor, LocationTransform.builder().create());
 
-    CompletableFuture<Map<String, TaxonRecord>> taxonMapFeature =
-        readAvroAsFuture(options, CORE_TERM, executor, TaxonomyTransform.builder().create());
+    CompletableFuture<Map<String, MultiTaxonRecord>> multiTaxonMapFeature =
+        readAvroAsFuture(options, CORE_TERM, executor, MultiTaxonomyTransform.builder().create());
 
     CompletableFuture<Map<String, GrscicollRecord>> grscicollMapFeature =
         readAvroAsFuture(options, CORE_TERM, executor, GrscicollTransform.builder().create());
@@ -165,6 +167,9 @@ public class OccurrenceToEsIndexPipeline {
 
     CompletableFuture<Map<String, ImageRecord>> imageMapFeature =
         readAvroAsFuture(options, CORE_TERM, executor, ImageTransform.builder().create());
+
+    CompletableFuture<Map<String, DnaDerivedDataRecord>> dnaMapFeature =
+        readAvroAsFuture(options, CORE_TERM, executor, DnaDerivedDataTransform.builder().create());
 
     CompletableFuture<Map<String, AudubonRecord>> audubonMapFeature =
         readAvroAsFuture(options, CORE_TERM, executor, AudubonTransform.builder().create());
@@ -180,11 +185,14 @@ public class OccurrenceToEsIndexPipeline {
             .basicMap(basicMapFeature.get())
             .temporalMap(temporalMapFeature.get())
             .locationMap(locationMapFeature.get())
-            .taxonMap(taxonMapFeature.get())
+            .multiTaxonMap(multiTaxonMapFeature.get())
             .grscicollMap(grscicollMapFeature.get())
             .multimediaMap(multimediaMapFeature.get())
             .imageMap(imageMapFeature.get())
+            .dnaMap(dnaMapFeature.get())
             .audubonMap(audubonMapFeature.get())
+            .indexLegacyTaxonomy(options.isIndexLegacyTaxonomy())
+            .indexMultiTaxonomy(options.isIndexMultiTaxonomy())
             .build()
             .getFn();
 

@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 
 /**
  * CentrePoints is used by countryCentres and stateProvinceCentres, so it can be a singleton.
@@ -37,7 +37,7 @@ public class CentrePoints {
 
   private String regionType;
 
-  private final Map<String, LatLng> centres = new HashMap<>();
+  private final Map<String, GeocodeRequest> centres = new HashMap<>();
   private final Map<String, BBox> bBox = new HashMap<>();
   // Only for country, map country code to country name
   private final Map<String, String> codes = new HashMap<>();
@@ -75,7 +75,8 @@ public class CentrePoints {
               String[] ss = l.split("\t");
               int length = ss.length;
               String name = ss[0].toUpperCase().replace("\"", ""); // Remove possible string quotes
-              LatLng centre = LatLng.create(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
+              GeocodeRequest centre =
+                  GeocodeRequest.create(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
               // country code
               if (length == 4) {
                 String code = ss[3].toUpperCase();
@@ -106,14 +107,14 @@ public class CentrePoints {
   public boolean coordinatesMatchCentre(
       String location, double decimalLatitude, double decimalLongitude) {
 
-    LatLng supposedCentre = centres.get(location.toUpperCase());
+    GeocodeRequest supposedCentre = centres.get(location.toUpperCase());
     if (supposedCentre != null) {
       int latDecPlaces = noOfDecimalPlace(decimalLatitude);
       int longDecPlaces = noOfDecimalPlace(decimalLongitude);
 
       // approximate the centre points appropriately
-      double approximatedLat = round(supposedCentre.getLatitude(), latDecPlaces);
-      double approximatedLong = round(supposedCentre.getLongitude(), longDecPlaces);
+      double approximatedLat = round(supposedCentre.getLat(), latDecPlaces);
+      double approximatedLong = round(supposedCentre.getLng(), longDecPlaces);
 
       // compare approximated centre point with supplied coordinates
       if (log.isDebugEnabled()) {
@@ -149,12 +150,16 @@ public class CentrePoints {
     }
   }
 
-  /** @return size of centres */
+  /**
+   * @return size of centres
+   */
   public int size() {
     return centres.size();
   }
 
-  /** @return keys */
+  /**
+   * @return keys
+   */
   public Set<String> keys() {
     return centres.keySet();
   }
@@ -221,8 +226,8 @@ public class CentrePoints {
       }
     }
 
-    public void add(LatLng c) {
-      add(c.getLongitude(), c.getLatitude());
+    public void add(GeocodeRequest c) {
+      add(c.getLng(), c.getLat());
     }
 
     /** Extends this bbox to include the point (x, y) */
@@ -239,12 +244,12 @@ public class CentrePoints {
       add(box.getBottomRight());
     }
 
-    public LatLng getTopLeft() {
-      return LatLng.create(ymax, xmin);
+    public GeocodeRequest getTopLeft() {
+      return GeocodeRequest.create(ymax, xmin);
     }
 
-    public LatLng getBottomRight() {
-      return LatLng.create(ymin, xmax);
+    public GeocodeRequest getBottomRight() {
+      return GeocodeRequest.create(ymin, xmax);
     }
 
     @Override

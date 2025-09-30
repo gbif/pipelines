@@ -4,6 +4,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUDUBON_RECOR
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DNA_DERIVED_DATA_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_GBIF_IDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.FILTER_ER_BASED_ON_GBIF_ID;
@@ -45,6 +46,7 @@ public class IngestMetricsBuilderTest {
     metrics.incMetric(VERBATIM_RECORDS_COUNT);
     metrics.incMetric(AUDUBON_RECORDS_COUNT);
     metrics.incMetric(IMAGE_RECORDS_COUNT);
+    metrics.incMetric(DNA_DERIVED_DATA_RECORDS_COUNT);
     metrics.incMetric(MEASUREMENT_OR_FACT_RECORDS_COUNT);
     metrics.incMetric(MULTIMEDIA_RECORDS_COUNT);
     metrics.incMetric(FILTER_ER_BASED_ON_GBIF_ID);
@@ -65,7 +67,7 @@ public class IngestMetricsBuilderTest {
         .getCounters()
         .forEach(mr -> map.put(mr.getName().getName(), mr.getAttempted()));
 
-    Assert.assertEquals(18, map.size());
+    Assert.assertEquals(19, map.size());
     Assert.assertEquals(Long.valueOf(1L), map.get(BASIC_RECORDS_COUNT));
     Assert.assertEquals(Long.valueOf(1L), map.get(LOCATION_RECORDS_COUNT));
     Assert.assertEquals(Long.valueOf(1L), map.get(METADATA_RECORDS_COUNT));
@@ -74,6 +76,7 @@ public class IngestMetricsBuilderTest {
     Assert.assertEquals(Long.valueOf(1L), map.get(VERBATIM_RECORDS_COUNT));
     Assert.assertEquals(Long.valueOf(1L), map.get(AUDUBON_RECORDS_COUNT));
     Assert.assertEquals(Long.valueOf(1L), map.get(IMAGE_RECORDS_COUNT));
+    Assert.assertEquals(Long.valueOf(1L), map.get(DNA_DERIVED_DATA_RECORDS_COUNT));
     Assert.assertEquals(Long.valueOf(1L), map.get(MEASUREMENT_OR_FACT_RECORDS_COUNT));
     Assert.assertEquals(Long.valueOf(1L), map.get(MULTIMEDIA_RECORDS_COUNT));
     Assert.assertEquals(Long.valueOf(1L), map.get(FILTER_ER_BASED_ON_GBIF_ID));

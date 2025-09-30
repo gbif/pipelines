@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>examples</artifactId>
-    <version>3.0.1-SNAPSHOT</version>
+   <version>3.2.2-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -20,6 +20,7 @@
 
   <properties>
     <avro-generated-path>${project.basedir}/src/main/java-generated/</avro-generated-path>
+    <sonar.skip>true</sonar.skip>
   </properties>
 
   <build>

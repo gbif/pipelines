@@ -18,7 +18,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
@@ -33,16 +33,18 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 public class LocationTransform extends Transform<ExtendedRecord, LocationRecord> {
 
   private final ALAPipelinesConfig alaConfig;
-  private final SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> countryKvStoreSupplier;
-  private final SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>>
+  private final SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>>
+      countryKvStoreSupplier;
+  private final SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>>
       stateProvinceKvStoreSupplier;
-  private final SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> biomeKvStoreSupplier;
+  private final SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>>
+      biomeKvStoreSupplier;
   private final List<DateComponentOrdering> orderings;
   private final SerializableFunction<String, String> preprocessDateFn;
 
-  private KeyValueStore<LatLng, GeocodeResponse> countryKvStore;
-  private KeyValueStore<LatLng, GeocodeResponse> stateProvinceKvStore;
-  private KeyValueStore<LatLng, GeocodeResponse> biomeKvStore;
+  private KeyValueStore<GeocodeRequest, GeocodeResponse> countryKvStore;
+  private KeyValueStore<GeocodeRequest, GeocodeResponse> stateProvinceKvStore;
+  private KeyValueStore<GeocodeRequest, GeocodeResponse> biomeKvStore;
 
   private ALALocationInterpreter alaLocationInterpreter;
   private CentrePoints countryCentrePoints;
@@ -52,9 +54,10 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   @Builder(buildMethodName = "create")
   private LocationTransform(
       ALAPipelinesConfig alaConfig,
-      SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> countryKvStoreSupplier,
-      SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> stateProvinceKvStoreSupplier,
-      SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> biomeKvStoreSupplier,
+      SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> countryKvStoreSupplier,
+      SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>>
+          stateProvinceKvStoreSupplier,
+      SerializableSupplier<KeyValueStore<GeocodeRequest, GeocodeResponse>> biomeKvStoreSupplier,
       List<DateComponentOrdering> orderings,
       SerializableFunction<String, String> preprocessDateFn) {
 

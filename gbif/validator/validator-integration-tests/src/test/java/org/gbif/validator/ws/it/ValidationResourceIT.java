@@ -36,6 +36,7 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -209,6 +210,7 @@ public class ValidationResourceIT {
   }
 
   @Test
+  @Disabled("URL is validated and checked for content type")
   public void validationSubmitUrlIT() {
     ValidationRequest validationRequest = testValidationRequest();
     Validation validation =

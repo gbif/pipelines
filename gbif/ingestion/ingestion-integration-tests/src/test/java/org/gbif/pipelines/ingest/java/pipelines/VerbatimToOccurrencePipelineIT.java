@@ -27,17 +27,7 @@ import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.ingest.java.transforms.InterpretedAvroWriter;
 import org.gbif.pipelines.ingest.resources.ZkServer;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.specific.GbifIdTransform;
@@ -157,7 +147,7 @@ public class VerbatimToOccurrencePipelineIT {
       "--metaFileName=verbatim-to-occurrence.yml",
       "--inputPath=" + outputFile + "/" + datasetKey + "/" + attempt + "/verbatim.avro",
       "--targetPath=" + outputFile,
-      "--interpretationTypes=IDENTIFIER_ABSENT,CLUSTERING,TEMPORAL,LOCATION,GRSCICOLL,MULTIMEDIA,MEASUREMENT_OR_FACT_TABLE,BASIC,TAXONOMY,IMAGE,AMPLIFICATION,OCCURRENCE,VERBATIM,LOCATION_FEATURE,MEASUREMENT_OR_FACT,AUDUBON,METADATA",
+      "--interpretationTypes=IDENTIFIER_ABSENT,CLUSTERING,TEMPORAL,LOCATION,GRSCICOLL,MULTIMEDIA,MEASUREMENT_OR_FACT_TABLE,BASIC,MULTI_TAXONOMY,IMAGE,AMPLIFICATION,OCCURRENCE,VERBATIM,LOCATION_FEATURE,MEASUREMENT_OR_FACT,AUDUBON,METADATA",
       "--properties=" + outputFile + "/pipelines.yaml",
       "--testMode=true"
     };
@@ -252,12 +242,13 @@ public class VerbatimToOccurrencePipelineIT {
     assertFile(IdentifierRecord.class, interpretedOutput + "/identifier_invalid");
     assertFile(GrscicollRecord.class, interpretedOutput + "/grscicoll");
     assertFile(ImageRecord.class, interpretedOutput + "/image");
+    assertFile(DnaDerivedDataRecord.class, interpretedOutput + "/dna_derived_data");
     assertFile(LocationRecord.class, interpretedOutput + "/location");
     assertFile(MultimediaRecord.class, interpretedOutput + "/multimedia");
-    assertFile(TaxonRecord.class, interpretedOutput + "/taxonomy");
+    assertFile(MultiTaxonRecord.class, interpretedOutput + "/multi_taxonomy");
     assertFile(TemporalRecord.class, interpretedOutput + "/temporal");
     assertFile(ExtendedRecord.class, interpretedOutput + "/verbatim");
-    int expected = 12;
+    int expected = 13;
     if (options.getInterpretationTypes().contains(METADATA.name())
         || options.getInterpretationTypes().contains(ALL.name())) {
       assertFile(MetadataRecord.class, interpretedOutput + "/metadata");

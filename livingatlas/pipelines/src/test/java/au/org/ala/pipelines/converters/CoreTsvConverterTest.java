@@ -32,6 +32,7 @@ import org.gbif.pipelines.io.avro.Nomenclature;
 import org.gbif.pipelines.io.avro.ParsedName;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.RankedNameWithAuthorship;
 import org.gbif.pipelines.io.avro.Status;
 import org.gbif.pipelines.io.avro.TaxonProfile;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -135,7 +136,7 @@ public class CoreTsvConverterTest {
       "\"raw_er_institutionID\"", // DwcTerm.institutionID
       "\"raw_er_island\"", // DwcTerm.island
       "\"raw_er_islandGroup\"", // DwcTerm.islandGroup
-      "\"{concept: br_lifeStage, lineage: [br_lifeStageLineage]}\"", // DwcTerm.lifeStage
+      "\"{concept: br_lifeStage, lineage: [br_lifeStageLineage], tags: []}\"", // DwcTerm.lifeStage
       "\"raw_er_locationAccordingTo\"", // DwcTerm.locationAccordingTo
       "\"raw_er_locationID\"", // DwcTerm.locationID
       "\"3.3333333333E10\"", // DwcTerm.maximumDistanceAboveSurfaceInMeters
@@ -180,14 +181,14 @@ public class CoreTsvConverterTest {
       "\"br_samplingProtocol\"", // DwcTerm.samplingProtocol
       "\"atxr_ScientificNameAuthorship\"", // DwcTerm.scientificNameAuthorship
       "\"raw_er_scientificNameID\"", // DwcTerm.scientificNameID
-      "\"br_sex\"", // DwcTerm.sex
+      "\"{concept: sex, lineage: [br_sex], tags: []}\"", // DwcTerm.sex
       "\"raw_er_specificEpithet\"", // DwcTerm.specificEpithet
       "\"111111\"", // DwcTerm.startDayOfYear
       "\"raw_er_subgenus\"", // DwcTerm.subgenus
       "\"raw_er_taxonID\"", // DwcTerm.taxonID
       "\"raw_er_taxonomicStatus\"", // DwcTerm.taxonomicStatus
       "\"raw_er_taxonRemarks\"", // DwcTerm.taxonRemarks
-      "\"br_typeStatus\"", // DwcTerm.typeStatus
+      "\"Type A|Type B\"", // DwcTerm.typeStatus
       "\"raw_er_verbatimCoordinates\"", // DwcTerm.verbatimCoordinates
       "\"raw_er_verbatimCoordinateSystem\"", // DwcTerm.verbatimCoordinateSystem
       "\"raw_er_verbatimDepth\"", // DwcTerm.verbatimDepth
@@ -468,7 +469,11 @@ public class CoreTsvConverterTest {
             .setId(DwcTerm.occurrenceID.simpleName())
             .setCreated(2L)
             .setBasisOfRecord("br_basisOfRecord")
-            .setSex("br_sex")
+            .setSex(
+                VocabularyConcept.newBuilder()
+                    .setConcept("sex")
+                    .setLineage(Collections.singletonList("br_sex"))
+                    .build())
             .setLifeStage(
                 VocabularyConcept.newBuilder()
                     .setConcept("br_lifeStage")
@@ -485,7 +490,16 @@ public class CoreTsvConverterTest {
                     .setLineage(Collections.singletonList("br_degreeOfEstablishment"))
                     .build())
             .setIndividualCount(222)
-            .setTypeStatus(Collections.singletonList("br_typeStatus"))
+            .setTypeStatus(
+                Arrays.asList(
+                    VocabularyConcept.newBuilder()
+                        .setConcept("Type A")
+                        .setLineage(Collections.singletonList("br_typeStatus"))
+                        .build(),
+                    VocabularyConcept.newBuilder()
+                        .setConcept("Type B")
+                        .setLineage(Collections.singletonList("br_typeStatus"))
+                        .build()))
             .setTypifiedName("br_typifiedName")
             .setSampleSizeValue(222d)
             .setSampleSizeUnit("br_sampleSizeUnit")
@@ -557,28 +571,28 @@ public class CoreTsvConverterTest {
             .setId(DwcTerm.occurrenceID.simpleName())
             .setSynonym(false)
             .setUsage(
-                RankedName.newBuilder()
-                    .setRank(Rank.SPECIES)
+                RankedNameWithAuthorship.newBuilder()
+                    .setRank(Rank.SPECIES.toString())
                     .setName("txr_Usage_name")
-                    .setKey(4)
+                    .setKey("4")
                     .build())
             .setClassification(
                 Arrays.asList(
                     RankedName.newBuilder()
-                        .setRank(Rank.SPECIES)
+                        .setRank(Rank.SPECIES.toString())
                         .setName("txr_Classification_SPECIES_name")
-                        .setKey(44)
+                        .setKey("44")
                         .build(),
                     RankedName.newBuilder()
-                        .setRank(Rank.CLASS)
+                        .setRank(Rank.CLASS.toString())
                         .setName("txr_Classification_CLASS_name")
-                        .setKey(444)
+                        .setKey("444")
                         .build()))
             .setAcceptedUsage(
-                RankedName.newBuilder()
-                    .setRank(Rank.SPECIES)
+                RankedNameWithAuthorship.newBuilder()
+                    .setRank(Rank.SPECIES.toString())
                     .setName("txr_Usage_name")
-                    .setKey(4444)
+                    .setKey("4444")
                     .build())
             .setNomenclature(
                 Nomenclature.newBuilder()
@@ -1024,10 +1038,10 @@ public class CoreTsvConverterTest {
         TaxonRecord.newBuilder()
             .setId(DwcTerm.occurrenceID.simpleName())
             .setAcceptedUsage(
-                RankedName.newBuilder()
-                    .setRank(Rank.SPECIES)
+                RankedNameWithAuthorship.newBuilder()
+                    .setRank(Rank.SPECIES.toString())
                     .setName("txr_Usage_name")
-                    .setKey(4444)
+                    .setKey("4444")
                     .build())
             .build();
 

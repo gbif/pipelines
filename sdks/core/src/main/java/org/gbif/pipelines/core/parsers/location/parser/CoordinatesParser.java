@@ -10,7 +10,7 @@ import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -19,32 +19,33 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 class CoordinatesParser {
 
   // parses decimal latitude and longitude fields
-  private static final Function<ExtendedRecord, ParsedField<LatLng>> DECIMAL_LAT_LNG_FN =
+  private static final Function<ExtendedRecord, ParsedField<GeocodeRequest>> DECIMAL_LAT_LNG_FN =
       (er ->
           CoordinateParseUtils.parseLatLng(
               extractValue(er, DwcTerm.decimalLatitude),
               extractValue(er, DwcTerm.decimalLongitude)));
 
   // parses footprint WKT field (if it contains only a single point)
-  private static final Function<ExtendedRecord, ParsedField<LatLng>> FOOTPRINT_WKT_FN =
+  private static final Function<ExtendedRecord, ParsedField<GeocodeRequest>> FOOTPRINT_WKT_FN =
       (er -> CoordinateParseUtils.parsePointFootprintWKT(extractValue(er, DwcTerm.footprintWKT)));
 
   // parses verbatim latitude and longitude fields
-  private static final Function<ExtendedRecord, ParsedField<LatLng>> VERBATIM_LAT_LNG_FN =
+  private static final Function<ExtendedRecord, ParsedField<GeocodeRequest>> VERBATIM_LAT_LNG_FN =
       (er ->
           CoordinateParseUtils.parseLatLng(
               extractValue(er, DwcTerm.verbatimLatitude),
               extractValue(er, DwcTerm.verbatimLongitude)));
 
   // parses verbatim coordinates fields
-  private static final Function<ExtendedRecord, ParsedField<LatLng>> VERBATIM_COORDS_FN =
+  private static final Function<ExtendedRecord, ParsedField<GeocodeRequest>> VERBATIM_COORDS_FN =
       (er ->
           CoordinateParseUtils.parseVerbatimCoordinates(
               extractValue(er, DwcTerm.verbatimCoordinates)));
 
   // list with all the parsing functions
-  private static final List<Function<ExtendedRecord, ParsedField<LatLng>>> PARSING_FUNCTIONS =
-      Arrays.asList(DECIMAL_LAT_LNG_FN, VERBATIM_LAT_LNG_FN, VERBATIM_COORDS_FN);
+  private static final List<Function<ExtendedRecord, ParsedField<GeocodeRequest>>>
+      PARSING_FUNCTIONS =
+          Arrays.asList(DECIMAL_LAT_LNG_FN, VERBATIM_LAT_LNG_FN, VERBATIM_COORDS_FN);
 
   /**
    * Parses the coordinates fields of a {@link ExtendedRecord}.
@@ -58,12 +59,13 @@ class CoordinatesParser {
    * </ol>
    *
    * @param extendedRecord {@link ExtendedRecord} with the fields to parse.
-   * @return {@link ParsedField<LatLng>} for the coordinates parsed.
+   * @return {@link ParsedField< GeocodeRequest >} for the coordinates parsed.
    */
-  static ParsedField<LatLng> parseCoords(ExtendedRecord extendedRecord) {
+  static ParsedField<GeocodeRequest> parseCoords(ExtendedRecord extendedRecord) {
     Set<String> issues = new TreeSet<>();
-    for (Function<ExtendedRecord, ParsedField<LatLng>> parsingFunction : PARSING_FUNCTIONS) {
-      ParsedField<LatLng> result = parsingFunction.apply(extendedRecord);
+    for (Function<ExtendedRecord, ParsedField<GeocodeRequest>> parsingFunction :
+        PARSING_FUNCTIONS) {
+      ParsedField<GeocodeRequest> result = parsingFunction.apply(extendedRecord);
 
       if (result.isSuccessful()) {
         // return the first successful result
@@ -83,11 +85,11 @@ class CoordinatesParser {
    * parseCoords since footprintWKT has its own CRS in footprintSRS.
    *
    * @param extendedRecord {@link ExtendedRecord} with the fields to parse.
-   * @return {@link ParsedField<LatLng>} for the coordinates parsed.
+   * @return {@link ParsedField< GeocodeRequest >} for the coordinates parsed.
    */
-  static ParsedField<LatLng> parseFootprint(ExtendedRecord extendedRecord) {
+  static ParsedField<GeocodeRequest> parseFootprint(ExtendedRecord extendedRecord) {
     Set<String> issues = new TreeSet<>();
-    ParsedField<LatLng> result = FOOTPRINT_WKT_FN.apply(extendedRecord);
+    ParsedField<GeocodeRequest> result = FOOTPRINT_WKT_FN.apply(extendedRecord);
 
     if (result.isSuccessful()) {
       // return the first successful result

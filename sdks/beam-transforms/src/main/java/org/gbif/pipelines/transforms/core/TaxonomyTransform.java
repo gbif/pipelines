@@ -12,7 +12,7 @@ import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.species.Identification;
+import org.gbif.kvs.species.NameUsageMatchRequest;
 import org.gbif.pipelines.core.functions.SerializableConsumer;
 import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.Interpretation;
@@ -20,7 +20,7 @@ import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.rest.client.species.NameUsageMatch;
+import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 /**
  * Beam level transformations for the DWC Taxon, reads an avro, writes an avro, maps from value to
@@ -34,14 +34,20 @@ import org.gbif.rest.client.species.NameUsageMatch;
 @Slf4j
 public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
 
-  private final SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>> kvStoreSupplier;
-  private KeyValueStore<Identification, NameUsageMatch> kvStore;
+  private final SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
+      kvStoreSupplier;
+  private KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> kvStore;
+
+  private final String checklistKey;
 
   @Builder(buildMethodName = "create")
   private TaxonomyTransform(
-      SerializableSupplier<KeyValueStore<Identification, NameUsageMatch>> kvStoreSupplier) {
+      SerializableSupplier<KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse>>
+          kvStoreSupplier,
+      String checklistKey) {
     super(TaxonRecord.class, TAXONOMY, TaxonomyTransform.class.getName(), TAXON_RECORDS_COUNT);
     this.kvStoreSupplier = kvStoreSupplier;
+    this.checklistKey = checklistKey;
   }
 
   /** Maps {@link TaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
@@ -98,7 +104,7 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
     return Interpretation.from(source)
         .to(TaxonRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(TaxonomyInterpreter.taxonomyInterpreter(kvStore))
+        .via(TaxonomyInterpreter.taxonomyInterpreter(kvStore, checklistKey))
         .via(TaxonomyInterpreter::setCoreId)
         .via(TaxonomyInterpreter::setParentEventId)
         .skipWhen(tr -> tr.getId() == null)

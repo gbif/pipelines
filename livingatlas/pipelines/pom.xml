@@ -5,7 +5,7 @@
   <parent>
     <groupId>au.org.ala</groupId>
     <artifactId>livingatlas</artifactId>
-    <version>3.0.1-SNAPSHOT</version>
+    <version>3.2.11-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -33,17 +33,13 @@
 
     <!-- Tools-->
     <commons-configuration.version>1.6</commons-configuration.version>
-    <netty.version>3.9.9.Final</netty.version>
-    <netty-all.version>4.1.42.Final</netty-all.version>
+    <netty-all.version>4.1.100.Final</netty-all.version>
     <snakeyaml.version>1.25</snakeyaml.version>
     <streamex.version>0.7.2</streamex.version>
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
     <json-simple.version>1.1.1</json-simple.version>
     <hadoop-compress.version>1.2</hadoop-compress.version>
-
-    <!-- GBIF parent currently using 2.4.0 -->
-    <spark.embedded.version>2.4.5</spark.embedded.version>
 
     <!-- Plugins -->
     <org.jetbrains.annotations>13.0</org.jetbrains.annotations>
@@ -57,11 +53,10 @@
     <mockwebserver.version>4.2.2</mockwebserver.version>
     <checker-qual.version>3.9.1</checker-qual.version>
     <snappy-java.version>1.1.8.4</snappy-java.version>
+    <junit-jupiter.version>5.7.2</junit-jupiter.version>
 
-    <spark.version>3.3.1</spark.version>
-    <hadoop.version>3.3.4</hadoop.version>
+    <hadoop.version>3.4.0</hadoop.version>
     <maven-scala-plugin.version>4.8.0</maven-scala-plugin.version>
-    <scala.version>2.12.17</scala.version>
   </properties>
 
   <build>
@@ -140,16 +135,40 @@
           <systemPropertyVariables>
             <pipelinesTestYamlConfigFile>src/test/resources/pipelines.yaml</pipelinesTestYamlConfigFile>
           </systemPropertyVariables>
+          <argLine>
+            --add-opens=java.base/java.lang=ALL-UNNAMED
+            --add-opens=java.base/java.util=ALL-UNNAMED
+            --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+            --add-opens=java.base/sun.nio.cs=ALL-UNNAMED
+            --add-exports=java.base/sun.nio.ch=ALL-UNNAMED
+            --add-exports=java.base/sun.nio.cs=ALL-UNNAMED
+            --add-opens=java.base/java.util=ALL-UNNAMED
+            --add-exports=java.desktop/com.sun.imageio.spi=ALL-UNNAMED
+            --add-opens=java.desktop/com.sun.imageio.spi=ALL-UNNAMED
+            --add-exports=java.base/sun.security.action=ALL-UNNAMED
+          </argLine>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <argLine>
+            --add-opens=java.base/java.lang=ALL-UNNAMED
+            --add-opens=java.base/java.util=ALL-UNNAMED
+            --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+            --add-opens=java.base/sun.nio.cs=ALL-UNNAMED
+            --add-exports=java.base/sun.nio.ch=ALL-UNNAMED
+            --add-exports=java.base/sun.nio.cs=ALL-UNNAMED
+            --add-opens=java.base/java.util=ALL-UNNAMED
+            --add-exports=java.desktop/com.sun.imageio.spi=ALL-UNNAMED
+            --add-opens=java.desktop/com.sun.imageio.spi=ALL-UNNAMED
+            --add-exports=java.base/sun.security.action=ALL-UNNAMED
+          </argLine>
         <!-- this has been commented out as it causes issues with local builds -->
-<!--        <configuration>-->
 <!--          <forkCount>2</forkCount>-->
 <!--          <reuseForks>true</reuseForks>-->
-<!--        </configuration>       -->
+        </configuration>
       </plugin>
       <plugin>
         <groupId>pl.project13.maven</groupId>
@@ -184,7 +203,7 @@
         <configuration combine.self="override">
           <java>
             <googleJavaFormat>
-              <version>1.7</version>
+              <version>${googleJavaFormat.version}</version>
               <style>GOOGLE</style>
             </googleJavaFormat>
           </java>
@@ -252,6 +271,12 @@
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-sdks-java-io-solr</artifactId>
       <version>${apache.beam.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-buffer</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>
@@ -267,11 +292,6 @@
       <groupId>commons-configuration</groupId>
       <artifactId>commons-configuration</artifactId>
       <version>${commons-configuration.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty</artifactId>
-      <version>${netty.version}</version>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
@@ -303,6 +323,13 @@
           <groupId>org.gbif.registry</groupId>
           <artifactId>registry-ws-client</artifactId>
         </exclusion>
+        <!-- DO NOT REMOVE -->
+        <!-- This is required for integration tests in some envronments. -->
+        <!-- The integration test error is an java.lang.UnsatisfiedLinkError for a JNA path -->
+        <exclusion>
+          <groupId>org.elasticsearch</groupId>
+          <artifactId>jna</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -322,6 +349,11 @@
           <artifactId>kotlin-stdlib</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.clustering</groupId>
+      <artifactId>clustering-gbif</artifactId>
+      <version>1.0.9</version>
     </dependency>
 
     <!-- GBIF -->
@@ -737,7 +769,7 @@
     <dependency>
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
-      <version>${zookeeper-version}</version>
+      <version>${zookeeper.version}</version>
       <exclusions>
         <exclusion>
           <groupId>org.jboss.netty</groupId>
@@ -750,6 +782,12 @@
       </exclusions>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
 
     <!-- ALA's layers store -->
     <dependency>
@@ -760,10 +798,6 @@
         <exclusion>
           <groupId>javax.media</groupId>
           <artifactId>jai_imageio</artifactId>
-        </exclusion>
-        <exclusion>
-          <artifactId>xercesImpl</artifactId>
-          <groupId>xerces</groupId>
         </exclusion>
         <exclusion>
           <artifactId>xercesImpl</artifactId>
@@ -781,6 +815,12 @@
         <exclusion>
           <groupId>commons-io</groupId>
           <artifactId>commons-io</artifactId>
+        </exclusion>
+        <!-- causes error with org.apache.xalan.processor.TransformerFactoryImpl does not define or inherit an implementation of the resolved method
+         setFeature(java.lang.String, boolean)' of abstract class javax.xml.transform.TransformerFactory for Java 17 -->
+        <exclusion>
+          <groupId>xalan</groupId>
+          <artifactId>xalan</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -831,6 +871,18 @@
       <groupId>org.gbif.hadoop</groupId>
       <artifactId>hadoop-compress</artifactId>
       <version>${hadoop-compress.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>2.23.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
 
@@ -916,6 +968,20 @@
                 </configuration>
               </execution>
             </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>skip-release-it</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
           </plugin>
         </plugins>
       </build>

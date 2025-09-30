@@ -1,5 +1,7 @@
 package org.gbif.pipelines.transforms.converters;
 
+import static org.gbif.pipelines.core.converters.OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,43 +29,12 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
-import org.gbif.pipelines.io.avro.AgentIdentifier;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.Authorship;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ClusteringRecord;
-import org.gbif.pipelines.io.avro.Diagnostic;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.GadmFeatures;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MachineTag;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.NamePart;
-import org.gbif.pipelines.io.avro.NameRank;
-import org.gbif.pipelines.io.avro.NameType;
-import org.gbif.pipelines.io.avro.NomCode;
-import org.gbif.pipelines.io.avro.ParsedName;
-import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.State;
-import org.gbif.pipelines.io.avro.Status;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.VocabularyConcept;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
-import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.GrscicollTransform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
-import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
@@ -275,25 +246,61 @@ public class OccurrenceJsonTransformTest {
 
     List<RankedName> rankedNameList = new ArrayList<>();
 
-    RankedName synonym =
-        RankedName.newBuilder().setKey(10).setName("synonym").setRank(Rank.SPECIES).build();
-    RankedName au =
-        RankedName.newBuilder().setKey(11).setName("accepted usage").setRank(Rank.SPECIES).build();
+    RankedNameWithAuthorship synonym =
+        RankedNameWithAuthorship.newBuilder()
+            .setKey(String.valueOf(10))
+            .setName("synonym")
+            .setRank(Rank.SPECIES.toString())
+            .build();
+    RankedNameWithAuthorship au =
+        RankedNameWithAuthorship.newBuilder()
+            .setKey(String.valueOf(11))
+            .setName("accepted usage")
+            .setRank(Rank.SPECIES.toString())
+            .build();
 
     RankedName name1 =
-        RankedName.newBuilder().setKey(1).setName("KINGDOM").setRank(Rank.KINGDOM).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(1))
+            .setName("KINGDOM")
+            .setRank(Rank.KINGDOM.toString())
+            .build();
     RankedName name2 =
-        RankedName.newBuilder().setKey(2).setName("PHYLUM").setRank(Rank.PHYLUM).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(2))
+            .setName("PHYLUM")
+            .setRank(Rank.PHYLUM.toString())
+            .build();
     RankedName name3 =
-        RankedName.newBuilder().setKey(3).setName("CLASS").setRank(Rank.CLASS).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(3))
+            .setName("CLASS")
+            .setRank(Rank.CLASS.toString())
+            .build();
     RankedName name4 =
-        RankedName.newBuilder().setKey(4).setName("ORDER").setRank(Rank.ORDER).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(4))
+            .setName("ORDER")
+            .setRank(Rank.ORDER.toString())
+            .build();
     RankedName name5 =
-        RankedName.newBuilder().setKey(5).setName("FAMILY").setRank(Rank.FAMILY).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(5))
+            .setName("FAMILY")
+            .setRank(Rank.FAMILY.toString())
+            .build();
     RankedName name6 =
-        RankedName.newBuilder().setKey(6).setName("GENUS").setRank(Rank.GENUS).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(6))
+            .setName("GENUS")
+            .setRank(Rank.GENUS.toString())
+            .build();
     RankedName name7 =
-        RankedName.newBuilder().setKey(7).setName("SPECIES").setRank(Rank.SPECIES).build();
+        RankedName.newBuilder()
+            .setKey(String.valueOf(7))
+            .setName("SPECIES")
+            .setRank(Rank.SPECIES.toString())
+            .build();
 
     rankedNameList.add(name1);
     rankedNameList.add(name2);
@@ -325,6 +332,7 @@ public class OccurrenceJsonTransformTest {
     TaxonRecord tr =
         TaxonRecord.newBuilder()
             .setId("777")
+            .setDatasetKey(GBIF_BACKBONE_DATASET_KEY)
             .setAcceptedUsage(au)
             .setClassification(rankedNameList)
             .setUsage(synonym)
@@ -368,6 +376,9 @@ public class OccurrenceJsonTransformTest {
             .setDiagnostics(diagnostic)
             .build();
 
+    MultiTaxonRecord mtr =
+        MultiTaxonRecord.newBuilder().setId("777").setTaxonRecords(List.of(tr)).build();
+
     // grscicoll
     Match institutionMatch =
         Match.newBuilder()
@@ -388,6 +399,8 @@ public class OccurrenceJsonTransformTest {
             .setCollectionMatch(collectionMatch)
             .build();
     gr.getIssues().getIssueList().add(OccurrenceIssue.INSTITUTION_MATCH_FUZZY.name());
+
+    DnaDerivedDataRecord dnar = DnaDerivedDataRecord.newBuilder().setId("777").build();
 
     // State
     Multimedia stillImage = new Multimedia();
@@ -436,7 +449,7 @@ public class OccurrenceJsonTransformTest {
     GbifIdTransform gbifIdTransform = GbifIdTransform.builder().create();
     ClusteringTransform clusteringTransform = ClusteringTransform.builder().create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+    MultiTaxonomyTransform multiTaxonomyTransform = MultiTaxonomyTransform.builder().create();
     GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
 
@@ -444,6 +457,7 @@ public class OccurrenceJsonTransformTest {
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
+    DnaDerivedDataTransform dnaTransform = DnaDerivedDataTransform.builder().create();
 
     // When
     PCollectionView<MetadataRecord> metadataView =
@@ -471,8 +485,9 @@ public class OccurrenceJsonTransformTest {
         p.apply("Read clustering", Create.of(cr))
             .apply("Map clustering to KV", clusteringTransform.toKv());
 
-    PCollection<KV<String, TaxonRecord>> taxonCollection =
-        p.apply("Read Taxon", Create.of(tr)).apply("Map Taxon to KV", taxonomyTransform.toKv());
+    PCollection<KV<String, MultiTaxonRecord>> multiTaxonCollection =
+        p.apply("Read Multi Taxon", Create.of(mtr))
+            .apply("Map Multi Taxon to KV", multiTaxonomyTransform.toKv());
 
     PCollection<KV<String, GrscicollRecord>> grscicollCollection =
         p.apply("Read Grscicoll", Create.of(gr))
@@ -490,6 +505,10 @@ public class OccurrenceJsonTransformTest {
         p.apply("Read Audubon", Create.empty(new TypeDescriptor<AudubonRecord>() {}))
             .apply("Map Audubon to KV", audubonTransform.toKv());
 
+    PCollection<KV<String, DnaDerivedDataRecord>> dnaCollection =
+        p.apply("Read DNA", Create.empty(new TypeDescriptor<DnaDerivedDataRecord>() {}))
+            .apply("Map DNA to KV", dnaTransform.toKv());
+
     SingleOutput<KV<String, CoGbkResult>, String> occurrenceJsonDoFn =
         OccurrenceJsonTransform.builder()
             .extendedRecordTag(verbatimTransform.getTag())
@@ -498,12 +517,15 @@ public class OccurrenceJsonTransformTest {
             .clusteringRecordTag(clusteringTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
-            .taxonRecordTag(taxonomyTransform.getTag())
+            .multiTaxonRecordTag(multiTaxonomyTransform.getTag())
             .grscicollRecordTag(grscicollTransform.getTag())
             .multimediaRecordTag(multimediaTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
+            .dnaRecordTag(dnaTransform.getTag())
             .metadataView(metadataView)
+            .indexMultiTaxonomy(true)
+            .indexLegacyTaxonomy(true)
             .build()
             .converter();
 
@@ -515,12 +537,13 @@ public class OccurrenceJsonTransformTest {
             .and(clusteringTransform.getTag(), clusteringCollection)
             .and(temporalTransform.getTag(), temporalCollection)
             .and(locationTransform.getTag(), locationCollection)
-            .and(taxonomyTransform.getTag(), taxonCollection)
+            .and(multiTaxonomyTransform.getTag(), multiTaxonCollection)
             .and(grscicollTransform.getTag(), grscicollCollection)
             // Extension
             .and(multimediaTransform.getTag(), multimediaCollection)
             .and(imageTransform.getTag(), imageCollection)
             .and(audubonTransform.getTag(), audubonCollection)
+            .and(dnaTransform.getTag(), dnaCollection)
             // Raw
             .and(verbatimTransform.getTag(), verbatimCollection)
             // Apply
@@ -537,9 +560,12 @@ public class OccurrenceJsonTransformTest {
             .verbatim(er)
             .temporal(tmr)
             .location(lr)
-            .taxon(tr)
+            .multiTaxon(mtr)
             .grscicoll(gr)
             .multimedia(mmr)
+            .dnaDerivedData(dnar)
+            .indexMultiTaxonomy(true)
+            .indexLegacyTaxonomy(true)
             .build()
             .toJsonWithNulls();
 
