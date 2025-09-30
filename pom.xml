@@ -115,7 +115,7 @@
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
     <gbif-occurrence.version>1.1.7-SNAPSHOT</gbif-occurrence.version>
     <vocabulary-lookup.version>2.0.3</vocabulary-lookup.version>
-    <registry.version>4.1.15-SNAPSHOT</registry.version>
+    <registry.version>4.1.16-SNAPSHOT</registry.version>
     <gbif-common-ws.version>2.0.10-java11</gbif-common-ws.version>
     <gbif-postal-service.version>2.1.4-SNAPSHOT</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
