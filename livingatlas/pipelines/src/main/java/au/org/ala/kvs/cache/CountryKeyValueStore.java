@@ -6,7 +6,7 @@ import java.util.List;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
+import org.gbif.rest.client.geocode.GeocodeResponse.Location;
 
 public class CountryKeyValueStore implements KeyValueStore<GeocodeRequest, GeocodeResponse> {
 
@@ -29,7 +29,7 @@ public class CountryKeyValueStore implements KeyValueStore<GeocodeRequest, Geoco
 
   @Override
   public GeocodeResponse get(GeocodeRequest latLng) {
-    List<Location> locations = service.lookupCountry(latLng.getLatitude(), latLng.getLongitude());
+    List<Location> locations = service.lookupCountry(latLng.getLat(), latLng.getLng());
     if (locations != null && !locations.isEmpty()) {
       for (Location location : locations) {
         if (location.getName() != null

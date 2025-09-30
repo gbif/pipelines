@@ -1,7 +1,7 @@
 package au.org.ala.clustering;
 
 import java.util.*;
-import org.gbif.pipelines.core.parsers.clustering.OccurrenceFeatures;
+import org.gbif.clustering.parsers.OccurrenceFeatures;
 
 /** Utility methods for identifying the representative record in cluster. */
 public class RepresentativeRecordUtils {

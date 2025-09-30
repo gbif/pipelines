@@ -52,8 +52,9 @@ public class CoordinatesParser {
               extractValue(er, DwcTerm.verbatimCoordinates)));
 
   // list with all the parsing functions
-  private static final List<Function<ExtendedRecord, ParsedField<GeocodeRequest>>> PARSING_FUNCTIONS =
-      Arrays.asList(DECIMAL_LAT_LNG_FN, VERBATIM_LAT_LNG_FN, VERBATIM_COORDS_FN);
+  private static final List<Function<ExtendedRecord, ParsedField<GeocodeRequest>>>
+      PARSING_FUNCTIONS =
+          Arrays.asList(DECIMAL_LAT_LNG_FN, VERBATIM_LAT_LNG_FN, VERBATIM_COORDS_FN);
 
   /**
    * Parses the coordinates fields of a {@link ExtendedRecord}.
@@ -73,11 +74,12 @@ public class CoordinatesParser {
    * Coordinates will try to reproject WGS84. Always return coordinates with success or fail status
    *
    * @param extendedRecord {@link ExtendedRecord} with the fields to parse.
-   * @return {@link ParsedField<  GeocodeRequest  >} for the coordinates parsed.
+   * @return {@link ParsedField< GeocodeRequest >} for the coordinates parsed.
    */
   public static ParsedField<GeocodeRequest> parseCoords(ExtendedRecord extendedRecord) {
     Set<String> issues = new TreeSet<>();
-    for (Function<ExtendedRecord, ParsedField<GeocodeRequest>> parsingFunction : PARSING_FUNCTIONS) {
+    for (Function<ExtendedRecord, ParsedField<GeocodeRequest>> parsingFunction :
+        PARSING_FUNCTIONS) {
       ParsedField<GeocodeRequest> result = parsingFunction.apply(extendedRecord);
       if (result.isSuccessful()) {
         // return the first successful result
@@ -89,7 +91,7 @@ public class CoordinatesParser {
 
         ParsedField<GeocodeRequest> projectedLatLng =
             Wgs84Projection.reproject(
-                result.getResult().getLatitude(), result.getResult().getLongitude(), geodeticDatum);
+                result.getResult().getLat(), result.getResult().getLng(), geodeticDatum);
 
         // Convert failure to success status with valid lat/lng
         // Add existing issues.

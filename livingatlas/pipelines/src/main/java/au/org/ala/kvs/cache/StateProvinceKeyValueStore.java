@@ -25,7 +25,6 @@ public class StateProvinceKeyValueStore implements KeyValueStore<GeocodeRequest,
 
   @Override
   public GeocodeResponse get(GeocodeRequest latLng) {
-    return new GeocodeResponse(
-        service.lookupStateProvince(latLng.getLatitude(), latLng.getLongitude()));
+    return new GeocodeResponse(service.lookupStateProvince(latLng.getLat(), latLng.getLng()));
   }
 }

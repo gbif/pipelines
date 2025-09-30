@@ -29,6 +29,7 @@ import org.gbif.pipelines.io.avro.Nomenclature;
 import org.gbif.pipelines.io.avro.ParsedName;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.RankedNameWithAuthorship;
 import org.gbif.pipelines.io.avro.Status;
 import org.gbif.pipelines.io.avro.TaxonProfile;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -149,7 +150,11 @@ public class MultimediaCsvConverterTest {
             .setId(DwcTerm.occurrenceID.simpleName())
             .setCreated(2L)
             .setBasisOfRecord("br_basisOfRecord")
-            .setSex("br_sex")
+            .setSex(
+                VocabularyConcept.newBuilder()
+                    .setConcept("sex")
+                    .setLineage(Collections.singletonList("br_sex"))
+                    .build())
             .setLifeStage(
                 VocabularyConcept.newBuilder()
                     .setConcept("br_lifeStage")
@@ -166,7 +171,12 @@ public class MultimediaCsvConverterTest {
                     .setLineage(Collections.singletonList("br_degreeOfEstablishment"))
                     .build())
             .setIndividualCount(222)
-            .setTypeStatus(Collections.singletonList("br_typeStatus"))
+            .setTypeStatus(
+                Collections.singletonList(
+                    VocabularyConcept.newBuilder()
+                        .setConcept("Type")
+                        .setLineage(Collections.singletonList("br_typeStatus"))
+                        .build()))
             .setTypifiedName("br_typifiedName")
             .setSampleSizeValue(222d)
             .setSampleSizeUnit("br_sampleSizeUnit")
@@ -230,28 +240,28 @@ public class MultimediaCsvConverterTest {
             .setId(DwcTerm.occurrenceID.simpleName())
             .setSynonym(false)
             .setUsage(
-                RankedName.newBuilder()
-                    .setRank(Rank.SPECIES)
+                RankedNameWithAuthorship.newBuilder()
+                    .setRank(Rank.SPECIES.toString())
                     .setName("txr_Usage_name")
-                    .setKey(4)
+                    .setKey("4")
                     .build())
             .setClassification(
                 Arrays.asList(
                     RankedName.newBuilder()
-                        .setRank(Rank.SPECIES)
+                        .setRank(Rank.SPECIES.toString())
                         .setName("txr_Classification_SPECIES_name")
-                        .setKey(44)
+                        .setKey("44")
                         .build(),
                     RankedName.newBuilder()
-                        .setRank(Rank.CLASS)
+                        .setRank(Rank.CLASS.toString())
                         .setName("txr_Classification_CLASS_name")
-                        .setKey(444)
+                        .setKey("444")
                         .build()))
             .setAcceptedUsage(
-                RankedName.newBuilder()
-                    .setRank(Rank.SPECIES)
+                RankedNameWithAuthorship.newBuilder()
+                    .setRank(Rank.SPECIES.toString())
                     .setName("txr_Usage_name")
-                    .setKey(4444)
+                    .setKey("4444")
                     .build())
             .setNomenclature(
                 Nomenclature.newBuilder()
