@@ -14,15 +14,17 @@ import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 
@@ -37,12 +39,14 @@ public class OccurrenceHdfsRecordConverter {
   private Map<String, BasicRecord> basicMap;
   @NonNull private final Map<String, TemporalRecord> temporalMap;
   @NonNull private final Map<String, LocationRecord> locationMap;
-  @NonNull private final Map<String, TaxonRecord> taxonMap;
   private Map<String, GrscicollRecord> grscicollMap;
   @NonNull private final Map<String, MultimediaRecord> multimediaMap;
   @NonNull private final Map<String, ImageRecord> imageMap;
+  @NonNull private final Map<String, DnaDerivedDataRecord> dnaMap;
   @NonNull private final Map<String, AudubonRecord> audubonMap;
   private Map<String, EventCoreRecord> eventCoreRecordMap;
+  private final Map<String, MultiTaxonRecord> multiTaxonMap;
+  private final Map<String, HumboldtRecord> humboldtMap;
 
   public Function<IdentifierRecord, List<OccurrenceHdfsRecord>> getFn() {
     return id -> Collections.singletonList(convert(id));
@@ -55,15 +59,19 @@ public class OccurrenceHdfsRecordConverter {
     ExtendedRecord er = verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
     TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
     LocationRecord lr = locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
-    TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
+    MultiTaxonRecord mtxr =
+        multiTaxonMap.getOrDefault(k, MultiTaxonRecord.newBuilder().setId(k).build());
 
-    // Extension
+    // Multimedia extension
     MultimediaRecord mr =
         multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
     ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
     AudubonRecord ar = audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
-
     MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
+
+    // DNA extension
+    DnaDerivedDataRecord dnar =
+        dnaMap.getOrDefault(k, DnaDerivedDataRecord.newBuilder().setId(k).build());
 
     metrics.incMetric(AVRO_TO_HDFS_COUNT);
 
@@ -75,8 +83,9 @@ public class OccurrenceHdfsRecordConverter {
                 .metadataRecord(metadata)
                 .temporalRecord(tr)
                 .locationRecord(lr)
-                .taxonRecord(txr)
+                .multiTaxonRecord(mtxr)
                 .multimediaRecord(mmr)
+                .dnaDerivedDataRecord(dnar)
                 .extendedRecord(er);
 
     Optional.ofNullable(basicMap)
@@ -102,6 +111,12 @@ public class OccurrenceHdfsRecordConverter {
             em ->
                 hdfsRecord.eventCoreRecord(
                     em.getOrDefault(k, EventCoreRecord.newBuilder().setId(k).build())));
+
+    Optional.ofNullable(humboldtMap)
+        .ifPresent(
+            hm ->
+                hdfsRecord.humboldtRecord(
+                    hm.getOrDefault(k, HumboldtRecord.newBuilder().setId(k).build())));
 
     return hdfsRecord.build().convert();
   }

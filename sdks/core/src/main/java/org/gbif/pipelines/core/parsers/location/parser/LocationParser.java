@@ -16,7 +16,7 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.parsers.VocabularyParser;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.utils.ModelUtils;
@@ -32,7 +32,7 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 public class LocationParser {
 
   public static ParsedField<ParsedLocation> parse(
-      ExtendedRecord er, KeyValueStore<LatLng, GeocodeResponse> kvStore) {
+      ExtendedRecord er, KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
     ModelUtils.checkNullOrEmpty(er);
     Objects.requireNonNull(kvStore, "GeocodeService kvStore is required");
 
@@ -60,7 +60,7 @@ public class LocationParser {
     Country countryMatched = countryCode.orElseGet(() -> countryName.orElse(null));
 
     // Parse coordinates
-    ParsedField<LatLng> coordsParsed = parseLatLng(er);
+    ParsedField<GeocodeRequest> coordsParsed = parseLatLng(er);
 
     // Add issues from coordinates parsing
     issues.addAll(coordsParsed.getIssues());
@@ -101,7 +101,7 @@ public class LocationParser {
         .build();
   }
 
-  private static ParsedField<Country> parseCountry(
+  public static ParsedField<Country> parseCountry(
       ExtendedRecord er, VocabularyParser<Country> parser, String issue) {
     Optional<ParseResult<Country>> parseResultOpt = parser.map(er, parseRes -> parseRes);
 
@@ -130,13 +130,13 @@ public class LocationParser {
     return Optional.ofNullable(field.getResult());
   }
 
-  private static ParsedField<LatLng> parseLatLng(ExtendedRecord er) {
-    ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
+  private static ParsedField<GeocodeRequest> parseLatLng(ExtendedRecord er) {
+    ParsedField<GeocodeRequest> parsedLatLon = CoordinatesParser.parseCoords(er);
     Term datum = DwcTerm.geodeticDatum;
 
     if (!parsedLatLon.isSuccessful()) {
       // coords parsing failed, try the footprintWKT
-      ParsedField<LatLng> parsedFootprint = CoordinatesParser.parseFootprint(er);
+      ParsedField<GeocodeRequest> parsedFootprint = CoordinatesParser.parseFootprint(er);
       if (parsedFootprint.isSuccessful()) {
         parsedLatLon = parsedFootprint;
         datum = DwcTerm.footprintSRS;
@@ -149,17 +149,17 @@ public class LocationParser {
 
     // interpret geodetic datum and reproject if needed
     // the reprojection will keep the original values even if it failed with issues
-    ParsedField<LatLng> projectedLatLng =
+    ParsedField<GeocodeRequest> projectedLatLng =
         Wgs84Projection.reproject(
-            parsedLatLon.getResult().getLatitude(),
-            parsedLatLon.getResult().getLongitude(),
+            parsedLatLon.getResult().getLat(),
+            parsedLatLon.getResult().getLng(),
             extractValue(er, datum));
 
     // collect issues
     Set<String> issues = parsedLatLon.getIssues();
     issues.addAll(projectedLatLng.getIssues());
 
-    return ParsedField.<LatLng>builder()
+    return ParsedField.<GeocodeRequest>builder()
         .successful(true)
         .result(projectedLatLng.getResult())
         .issues(issues)

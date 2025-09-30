@@ -30,23 +30,25 @@ import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.converters.OccurrenceJsonTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -134,6 +136,8 @@ public class OccurrenceToEsIndexPipeline {
             .pipeline(p)
             .pathFn(pathFn)
             .asParentChildRecord(false)
+            .indexMultiTaxonomy(options.isIndexMultiTaxonomy())
+            .indexLegacyTaxonomy(options.isIndexLegacyTaxonomy())
             .build()
             .apply();
 
@@ -178,6 +182,8 @@ public class OccurrenceToEsIndexPipeline {
     private final Pipeline pipeline;
     private final UnaryOperator<String> pathFn;
     private final boolean asParentChildRecord;
+    private final boolean indexMultiTaxonomy;
+    private final boolean indexLegacyTaxonomy;
 
     // Init transforms
     private final BasicTransform basicTransform = BasicTransform.builder().create();
@@ -186,12 +192,14 @@ public class OccurrenceToEsIndexPipeline {
     private final MetadataTransform metadataTransform = MetadataTransform.builder().create();
     private final VerbatimTransform verbatimTransform = VerbatimTransform.create();
     private final TemporalTransform temporalTransform = TemporalTransform.builder().create();
-    private final TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+    private final MultiTaxonomyTransform multiTaxonomyTransform =
+        MultiTaxonomyTransform.builder().create();
     private final GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     private final LocationTransform locationTransform = LocationTransform.builder().create();
     private final MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     private final AudubonTransform audubonTransform = AudubonTransform.builder().create();
     private final ImageTransform imageTransform = ImageTransform.builder().create();
+    private final DnaDerivedDataTransform dnaTransform = DnaDerivedDataTransform.builder().create();
 
     PCollection<String> apply() {
 
@@ -230,10 +238,10 @@ public class OccurrenceToEsIndexPipeline {
               .apply("Read occurrence Location", locationTransform.read(pathFn))
               .apply("Map occurrence Location to KV", locationTransform.toKv());
 
-      PCollection<KV<String, TaxonRecord>> taxonCollection =
+      PCollection<KV<String, MultiTaxonRecord>> multiTaxonCollection =
           pipeline
-              .apply("Read occurrence Taxon", taxonomyTransform.read(pathFn))
-              .apply("Map occurrence Taxon to KV", taxonomyTransform.toKv());
+              .apply("Read occurrence Multi Taxon", multiTaxonomyTransform.readIfExists(pathFn))
+              .apply("Map occurrence Multi Taxon to KV", multiTaxonomyTransform.toKv());
 
       PCollection<KV<String, GrscicollRecord>> grscicollCollection =
           pipeline
@@ -250,6 +258,11 @@ public class OccurrenceToEsIndexPipeline {
               .apply("Read occurrence Image", imageTransform.read(pathFn))
               .apply("Map occurrence Image to KV", imageTransform.toKv());
 
+      PCollection<KV<String, DnaDerivedDataRecord>> dnaCollection =
+          pipeline
+              .apply("Read occurrence DNA Derived Data", dnaTransform.read(pathFn))
+              .apply("Map occurrence DNA Derived Data to KV", dnaTransform.toKv());
+
       PCollection<KV<String, AudubonRecord>> audubonCollection =
           pipeline
               .apply("Read occurrence Audubon", audubonTransform.read(pathFn))
@@ -264,13 +277,16 @@ public class OccurrenceToEsIndexPipeline {
               .basicRecordTag(basicTransform.getTag())
               .temporalRecordTag(temporalTransform.getTag())
               .locationRecordTag(locationTransform.getTag())
-              .taxonRecordTag(taxonomyTransform.getTag())
+              .multiTaxonRecordTag(multiTaxonomyTransform.getTag())
               .grscicollRecordTag(grscicollTransform.getTag())
               .multimediaRecordTag(multimediaTransform.getTag())
               .imageRecordTag(imageTransform.getTag())
+              .dnaRecordTag(dnaTransform.getTag())
               .audubonRecordTag(audubonTransform.getTag())
               .metadataView(metadataView)
               .asParentChildRecord(asParentChildRecord)
+              .indexMultiTaxonomy(indexMultiTaxonomy)
+              .indexLegacyTaxonomy(indexLegacyTaxonomy)
               .build()
               .converter();
 
@@ -281,11 +297,12 @@ public class OccurrenceToEsIndexPipeline {
           .and(clusteringTransform.getTag(), clusteringCollection)
           .and(temporalTransform.getTag(), temporalCollection)
           .and(locationTransform.getTag(), locationCollection)
-          .and(taxonomyTransform.getTag(), taxonCollection)
+          .and(multiTaxonomyTransform.getTag(), multiTaxonCollection)
           .and(grscicollTransform.getTag(), grscicollCollection)
           // Extension
           .and(multimediaTransform.getTag(), multimediaCollection)
           .and(imageTransform.getTag(), imageCollection)
+          .and(dnaTransform.getTag(), dnaCollection)
           .and(audubonTransform.getTag(), audubonCollection)
           // Raw
           .and(verbatimTransform.getTag(), verbatimCollection)

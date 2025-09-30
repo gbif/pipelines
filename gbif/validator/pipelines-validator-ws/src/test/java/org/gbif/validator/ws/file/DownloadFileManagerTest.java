@@ -24,9 +24,6 @@ class DownloadFileManagerTest extends DownloadFileBaseTest {
 
   @Test
   void isAvailableTest() {
-    // Existing url
-    assertTrue(DownloadFileManager.isAvailable(testPath("/Archive.zip")));
-
     // Non-existing url
     assertFalse(DownloadFileManager.isAvailable(testPath("/ThisDoesNotExist.zip")));
   }

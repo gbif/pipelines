@@ -235,6 +235,28 @@ public class VocabularyInterpreterTest {
   }
 
   @Test
+  public void interpretTypeStatusWithSciNameTest() {
+    final String tp1 = "Type of sci name";
+    final String tp2 = "invalid of test";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.typeStatus.qualifiedName(), tp1 + " | " + tp2 + " | ");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    VocabularyInterpreter.interpretTypeStatus(vocabularyService).accept(er, br);
+
+    // Should
+    Assert.assertEquals(1, br.getTypeStatus().size());
+    Assert.assertEquals("Type", br.getTypeStatus().get(0).getConcept());
+    assertIssueSize(br, 1);
+    assertIssue(OccurrenceIssue.TYPE_STATUS_INVALID, br);
+  }
+
+  @Test
   public void interpretTypeStatusSuspectedTypeTest() {
     final String tp1 = "possible";
 

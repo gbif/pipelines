@@ -4,7 +4,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_REPROJECTED;
 import static org.junit.Assert.*;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.junit.Test;
 
@@ -18,14 +18,15 @@ public class Wgs84ProjectionTest {
     String datum = "NAD 27";
 
     // When
-    ParsedField<LatLng> result = Wgs84Projection.reproject(lat, lng, datum);
+    ParsedField<GeocodeRequest> result = Wgs84Projection.reproject(lat, lng, datum);
 
     // Should
     assertTrue(result.isSuccessful());
-    assertExpected(result, LatLng.create(18.826932, -68.6000422), COORDINATE_REPROJECTED);
+    assertExpected(result, GeocodeRequest.create(18.826932, -68.6000422), COORDINATE_REPROJECTED);
   }
 
-  private void assertExpected(ParsedField<LatLng> pr, Object expected, OccurrenceIssue... issue) {
+  private void assertExpected(
+      ParsedField<GeocodeRequest> pr, Object expected, OccurrenceIssue... issue) {
     assertNotNull(pr);
     assertTrue(pr.isSuccessful());
     assertNotNull(pr.getResult());

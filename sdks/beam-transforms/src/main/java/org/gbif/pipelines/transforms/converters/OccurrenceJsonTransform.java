@@ -20,13 +20,14 @@ import org.gbif.pipelines.core.converters.ParentJsonConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 
@@ -96,17 +97,20 @@ public class OccurrenceJsonTransform implements Serializable {
   @NonNull private final TupleTag<BasicRecord> basicRecordTag;
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
-  @NonNull private final TupleTag<TaxonRecord> taxonRecordTag;
+  @NonNull private final TupleTag<MultiTaxonRecord> multiTaxonRecordTag;
   @NonNull private final TupleTag<GrscicollRecord> grscicollRecordTag;
   // Extension
   @NonNull private final TupleTag<MultimediaRecord> multimediaRecordTag;
   @NonNull private final TupleTag<ImageRecord> imageRecordTag;
   @NonNull private final TupleTag<AudubonRecord> audubonRecordTag;
+  @NonNull private final TupleTag<DnaDerivedDataRecord> dnaRecordTag;
 
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
 
   // Determines if the output record is a parent-child record
   @Builder.Default private final boolean asParentChildRecord = false;
+  @Builder.Default private final boolean indexLegacyTaxonomy = true;
+  @Builder.Default private final boolean indexMultiTaxonomy = true;
 
   public SingleOutput<KV<String, CoGbkResult>, String> converter() {
 
@@ -133,7 +137,8 @@ public class OccurrenceJsonTransform implements Serializable {
                 v.getOnly(temporalRecordTag, TemporalRecord.newBuilder().setId(k).build());
             LocationRecord lr =
                 v.getOnly(locationRecordTag, LocationRecord.newBuilder().setId(k).build());
-            TaxonRecord txr = v.getOnly(taxonRecordTag, TaxonRecord.newBuilder().setId(k).build());
+            MultiTaxonRecord mtxr =
+                v.getOnly(multiTaxonRecordTag, MultiTaxonRecord.newBuilder().setId(k).build());
             GrscicollRecord gr =
                 v.getOnly(grscicollRecordTag, GrscicollRecord.newBuilder().setId(k).build());
 
@@ -143,6 +148,8 @@ public class OccurrenceJsonTransform implements Serializable {
             ImageRecord ir = v.getOnly(imageRecordTag, ImageRecord.newBuilder().setId(k).build());
             AudubonRecord ar =
                 v.getOnly(audubonRecordTag, AudubonRecord.newBuilder().setId(k).build());
+            DnaDerivedDataRecord dnar =
+                v.getOnly(dnaRecordTag, DnaDerivedDataRecord.newBuilder().setId(k).build());
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
             OccurrenceJsonConverter occurrenceJsonConverter =
@@ -153,10 +160,13 @@ public class OccurrenceJsonTransform implements Serializable {
                     .basic(br)
                     .temporal(tr)
                     .location(lr)
-                    .taxon(txr)
+                    .multiTaxon(mtxr)
                     .grscicoll(gr)
                     .multimedia(mmr)
+                    .dnaDerivedData(dnar)
                     .verbatim(er)
+                    .indexLegacyTaxonomy(indexLegacyTaxonomy)
+                    .indexMultiTaxonomy(indexMultiTaxonomy)
                     .build();
             if (asParentChildRecord) {
               c.output(
@@ -166,7 +176,7 @@ public class OccurrenceJsonTransform implements Serializable {
                       .build()
                       .toJson());
             } else {
-              // Occurrence index clients (GraphQL) rely on exinsting fields null vaules
+              // Occurrence index clients (GraphQL) rely on existing fields null values
               c.output(occurrenceJsonConverter.toJsonWithNulls());
             }
 

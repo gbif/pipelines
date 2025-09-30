@@ -219,9 +219,10 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     Optional<Double> fileNumber =
         HdfsUtils.getDoubleByKey(hdfsConfigs, metaPath, Metrics.ARCHIVE_TO_OCC_COUNT);
 
-    if (!fileNumber.isPresent()) {
+    if (fileNumber.isEmpty()) {
       throw new IllegalArgumentException(
-          "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
+          "Please check metadata yaml file or message records number, recordsNumber can't be null or empty! File: "
+              + metaFileName);
     }
 
     if (currentSize > 0) {

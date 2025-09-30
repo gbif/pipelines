@@ -1,14 +1,18 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.pipelines.core.utils.EventsUtils.*;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -23,6 +27,9 @@ import org.gbif.pipelines.io.avro.VocabularyConcept;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VocabularyInterpreter {
+
+  private static final Pattern TYPE_STATUS_SEPARATOR =
+      Pattern.compile("^(.+) (OF|FOR) ", Pattern.CASE_INSENSITIVE);
 
   /** Values taken from <a href="https://github.com/gbif/vocabulary/issues/87">here</a> */
   private static final Set<String> SUSPECTED_TYPE_STATUS_VALUES =
@@ -62,14 +69,29 @@ public class VocabularyInterpreter {
   public static BiConsumer<ExtendedRecord, EventCoreRecord> interpretEventType(
       VocabularyService vocabularyService) {
     return (er, ecr) ->
-        interpretVocabulary(er, DwcTerm.eventType, vocabularyService).ifPresent(ecr::setEventType);
+        ecr.setEventType(
+            interpretVocabulary(er, DwcTerm.eventType, vocabularyService)
+                .orElseGet(
+                    () ->
+                        interpretVocabulary(
+                                DwcTerm.eventType, DEFAULT_EVENT_TYPE, vocabularyService)
+                            .orElse(
+                                VocabularyConceptFactory.createConcept(
+                                    DEFAULT_EVENT_TYPE,
+                                    Collections.emptyList(),
+                                    Collections.emptyMap()))));
   }
 
   /** {@link DwcTerm#typeStatus} interpretation. */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretTypeStatus(
       VocabularyService vocabularyService) {
     return (er, br) ->
-        extractListValue(er, DwcTerm.typeStatus)
+        extractListValue(er, DwcTerm.typeStatus).stream()
+            .map(
+                v -> {
+                  Matcher m = TYPE_STATUS_SEPARATOR.matcher(v);
+                  return m.find() ? m.group(1) : v;
+                })
             .forEach(
                 value ->
                     interpretVocabulary(
@@ -115,7 +137,7 @@ public class VocabularyInterpreter {
     return interpretVocabulary(term, extractNullAwareValue(er, term), vocabularyService, issueFn);
   }
 
-  static Optional<VocabularyConcept> interpretVocabulary(
+  public static Optional<VocabularyConcept> interpretVocabulary(
       Term term, String value, VocabularyService vocabularyService, Consumer<String> issueFn) {
     if (vocabularyService == null) {
       return Optional.empty();

@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>validator</artifactId>
-    <version>2.19.0-SNAPSHOT</version>
+   <version>3.2.11-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -19,6 +19,9 @@
     <start-class>org.gbif.validator.ws.ValidatorWsApplication</start-class>
     <zookeeper.version>3.8.1</zookeeper.version>
     <curator.version>5.5.0</curator.version>
+    <curator-framework.version>5.5.0-disable-connectstr-updates</curator-framework.version>
+    <swagger.version>2.2.15</swagger.version>
+    <springdoc.version>1.8.0</springdoc.version>
   </properties>
 
   <build>
@@ -286,7 +289,7 @@
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-framework</artifactId>
-      <version>${curator.version}</version>
+      <version>${curator-framework.version}</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -374,6 +377,23 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
+    </dependency>
+
+    <!-- enable swagger -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-ui</artifactId>
+      <version>${springdoc.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId>
+      <artifactId>swagger-core</artifactId>
+      <version>${swagger.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId>
+      <artifactId>swagger-annotations</artifactId>
+      <version>${swagger.version}</version>
     </dependency>
 
     <!-- Tests -->

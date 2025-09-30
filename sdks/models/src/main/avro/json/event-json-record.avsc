@@ -6,7 +6,89 @@
     "type" : "record",
     "fields" : [
       {"name": "id", "type": ["null", "string"], "default" : null, "doc":""},
-      {"name": "eventType", "type": ["null", "string"], "default" : null, "doc": ""}
+      {"name": "eventType", "type": ["null", "string"], "default" : null, "doc": ""},
+      {"name": "verbatimEventType", "type": ["null", "string"], "default" : null, "doc": ""}
+    ]
+  },
+  {
+    "name":"HumboldtTaxonClassification",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "doc":"Humboldt taxonomy classification",
+    "fields":[
+      {"name": "usageKey", "type": ["null", "string"], "default" : null},
+      {"name": "usageName", "type": ["null", "string"], "default" : null},
+      {"name": "usageRank", "type": ["null", "string"], "default" : null},
+      {"name":"classification",
+        "type":{ "type":"map","values":"string" },
+        "default": {}
+      },
+      {"name":"classificationKeys",
+        "type":{ "type":"map","values":"string" },
+        "default": {}
+      },
+      {"name":"taxonKeys",
+        "type":{"type":"array","items":"string"},
+        "default":[]
+      },
+      {"name":"issues","type":{"type":"array","items":"string"},"default":[],"doc":""}
+    ]
+  },
+  {
+    "name" : "Humboldt",
+    "namespace" : "org.gbif.pipelines.io.avro.json",
+    "type" : "record",
+    "fields" : [
+      {"name": "siteCount", "type": ["null", "int"], "default" : null, "doc": ""},
+      {"name": "verbatimSiteDescriptions", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "verbatimSiteNames", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "geospatialScopeAreaValue", "type": ["null", "double"], "default" : null, "doc": ""},
+      {"name": "geospatialScopeAreaUnit", "type": ["null", "string"], "default" : null, "doc": ""},
+      {"name": "totalAreaSampledValue", "type": ["null", "double"], "default" : null, "doc": ""},
+      {"name": "totalAreaSampledUnit", "type": ["null", "string"], "default" : null, "doc": ""},
+      {"name": "targetHabitatScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "excludedHabitatScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "eventDurationValueInMinutes", "type": ["null", "double"], "default" : null, "doc": ""},
+      {"name": "eventDurationValue", "type": ["null", "double"], "default" : null, "doc": ""},
+      {"name": "eventDurationUnit", "type": ["null", "string"], "default" : null, "doc": ""},
+      {"name": "targetTaxonomicScope", "type": { "type":"map", "values": { "type": "array", "items": "HumboldtTaxonClassification" }},"default": {}, "doc":""},
+      {"name": "excludedTaxonomicScope", "type": { "type":"map", "values": { "type": "array", "items": "HumboldtTaxonClassification" }},"default": {}, "doc":""},
+      {"name": "taxonCompletenessProtocols", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "isTaxonomicScopeFullyReported", "type": ["null", "boolean"], "default" : null, "doc": ""},
+      {"name": "isAbsenceReported", "type": ["null", "boolean"], "default" : null, "doc": ""},
+      {"name": "absentTaxa", "type": { "type":"map", "values": { "type": "array", "items": "HumboldtTaxonClassification" }},"default": {}, "doc":""},
+      {"name": "hasNonTargetTaxa", "type": ["null", "boolean"], "default" : null, "doc": ""},
+      {"name": "nonTargetTaxa", "type": { "type":"map", "values": { "type": "array", "items": "HumboldtTaxonClassification" }},"default": {}, "doc":""},
+      {"name": "areNonTargetTaxaFullyReported", "type": ["null", "boolean"], "default" : null, "doc": ""},
+      {"name": "targetLifeStageScope", "type": {"type" : "array", "items" : "VocabularyConcept"}, "default" : [], "doc": ""},
+      {"name": "excludedLifeStageScope", "type": {"type" : "array", "items" : "VocabularyConcept"}, "default" : [], "doc": ""},
+      {"name": "isLifeStageScopeFullyReported", "type": ["null", "boolean"], "default" : null, "doc": ""},
+      {"name": "targetDegreeOfEstablishmentScope", "type": {"type" : "array", "items" : "VocabularyConcept"}, "default" : [], "doc": ""},
+      {"name": "excludedDegreeOfEstablishmentScope", "type": {"type" : "array", "items" : "VocabularyConcept"}, "default" : [], "doc": ""},
+      {"name": "isDegreeOfEstablishmentScopeFullyReported", "type": ["null", "boolean"], "default" : null, "doc": ""},
+      {"name": "targetGrowthFormScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "excludedGrowthFormScope", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "isGrowthFormScopeFullyReported", "type": ["null", "boolean"], "default" : null, "doc": ""},
+      {"name": "hasNonTargetOrganisms", "type": ["null", "boolean"], "default" : null, "doc": ""},
+      {"name": "compilationTypes", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "compilationSourceTypes", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "inventoryTypes", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "protocolNames", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "protocolDescriptions", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "protocolReferences", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "isAbundanceReported", "type": ["null", "boolean"], "default" : null, "doc": ""},
+      {"name": "isAbundanceCapReported", "type": ["null", "boolean"], "default" : null, "doc": ""},
+      {"name": "abundanceCap", "type": ["null", "int"], "default" : null, "doc": ""},
+      {"name": "isVegetationCoverReported", "type": ["null", "boolean"], "default" : null, "doc": ""},
+      {"name": "isLeastSpecificTargetCategoryQuantityInclusive", "type": ["null", "boolean"], "default" : null, "doc": ""},
+      {"name": "hasVouchers", "type": ["null", "boolean"], "default" : null, "doc": ""},
+      {"name": "voucherInstitutions", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "hasMaterialSamples", "type": ["null", "boolean"], "default" : null, "doc": ""},
+      {"name": "materialSampleTypes", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "samplingPerformedBy", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": ""},
+      {"name": "isSamplingEffortReported", "type": ["null", "boolean"], "default" : null, "doc": ""},
+      {"name": "samplingEffortValue", "type": ["null", "double"], "default" : null, "doc": ""},
+      {"name": "samplingEffortUnit", "type": ["null", "string"], "default" : null, "doc": ""}
     ]
   },
   {
@@ -18,16 +100,18 @@
       // Internal
       {"name":"id","type":["null","string"],"default":null,"doc":""},
       {"name":"created","type":["null","string"],"default":null,"doc":""},
-      {"name":"parentsLineage", "type": {"type" : "array", "items" : "Parent"}, "default" : [], "doc":""},
+      {"name":"parentsLineage", "type": {"type" : "array", "items" : "org.gbif.pipelines.io.avro.json.Parent"}, "default" : [], "doc":""},
       {"name":"license","type":["null","string"],"default":null,"doc":""},
       // Record-level
       {"name":"eventType","type":["null","VocabularyConcept"],"default":null,"doc":""},
+      {"name":"verbatimEventType","type":["null","string"],"default":null,"doc":""},
       {"name":"eventName","type":["null","string"],"default":null,"doc":""},
       {"name":"references","type":["null","string"],"default":null,"doc":""},
       {"name":"institutionCode","type":["null","string"],"default":null,"doc":""},
       {"name":"datasetID","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"datasetName","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"modified","type":["null","string"],"default":null,"doc":""},
+      {"name":"fieldNumber","type":["null","string"],"default":null,"doc":""},
       // Event
       {"name":"samplingProtocol","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"samplingProtocolJoined","type":["null","string"],"default":null,"doc":""},
@@ -40,6 +124,7 @@
       {"name":"day","type":["null","int"],"default":null,"doc":""},
       {"name":"eventDate","type":["null","EventDate"],"default":null,"doc":""},
       {"name":"eventDateSingle","type":["null","string"],"default":null,"doc":""},
+      {"name":"eventDateInterval","type":["null","string"],"default":null,"doc":""},
       {"name":"startDayOfYear","type":["null","int"],"default":null,"doc":""},
       {"name":"endDayOfYear","type":["null","int"],"default":null,"doc":""},
       {"name":"locationID", "type": ["null", "string"], "default" : null, "doc": ""},
@@ -79,6 +164,8 @@
       {"name":"measurementOrFactTypes","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"measurementOrFactMethods","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"measurementOrFactCount","type":["null","int"],"default":null,"doc":""},
+      // Humboldt
+      {"name":"humboldt","type":{"type":"array","items":"Humboldt"},"default":[],"doc":""},
       // Extra
       {"name":"issues","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"notIssues","type":{"type":"array","items":"string"},"default":[],"doc":""},
@@ -90,8 +177,10 @@
       {"name":"surveyID","type":["null","string"],"default":null,"doc":""},
       {"name":"eventHierarchy","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"eventTypeHierarchy","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"verbatimEventTypeHierarchy","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"eventHierarchyJoined","type":["null","string"],"default":null,"doc":""},
       {"name":"eventTypeHierarchyJoined","type":["null","string"],"default":null,"doc":""},
+      {"name":"verbatimEventTypeHierarchyJoined","type":["null","string"],"default":null,"doc":""},
       {"name":"eventHierarchyLevels","type":["null","int"],"default":null,"doc":""},
       {"name":"measurementOrFacts","type":{"type":"array","items":"org.gbif.pipelines.io.avro.json.MeasurementOrFactJsonRecord"},"default":[],"doc":""},
       // Extensions

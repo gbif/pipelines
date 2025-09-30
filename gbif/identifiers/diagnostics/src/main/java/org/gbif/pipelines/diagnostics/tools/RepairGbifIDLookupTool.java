@@ -64,6 +64,9 @@ public class RepairGbifIDLookupTool implements Tool {
   @Parameter(names = "--zk-connection", description = "Zookeeper connection")
   public String zkConnection;
 
+  @Parameter(names = "--hbase-znode", description = "Hbase zookeeper node name")
+  public String hbaseZnode;
+
   @Parameter(names = "--lookup-table", description = "Hbase occurrence lookup table")
   @NotNull
   public String lookupTable;
@@ -145,6 +148,7 @@ public class RepairGbifIDLookupTool implements Tool {
       keygenService =
           KeygenServiceFactory.builder()
               .zkConnection(zkConnection)
+              .hbaseZnode(hbaseZnode)
               .lookupTable(lookupTable)
               .counterTable(counterTable)
               .occurrenceTable(occurrenceTable)

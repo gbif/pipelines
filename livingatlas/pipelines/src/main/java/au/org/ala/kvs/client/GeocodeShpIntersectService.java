@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.common.PipelinesException;
-import org.gbif.rest.client.geocode.Location;
+import org.gbif.rest.client.geocode.GeocodeResponse.Location;
 
 /**
  * This is a port of the functionality in geocode to using ALA's layer-store

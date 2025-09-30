@@ -1,34 +1,26 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.utils.EventsUtils.*;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.vocabulary.DurationUnit;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
 import org.gbif.pipelines.core.utils.HashConverter;
-import org.gbif.pipelines.io.avro.EventCoreRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFact;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
 import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
 import org.gbif.pipelines.io.avro.json.EventJsonRecord;
+import org.gbif.pipelines.io.avro.json.Humboldt;
+import org.gbif.pipelines.io.avro.json.HumboldtTaxonClassification;
 import org.gbif.pipelines.io.avro.json.JoinRecord;
 import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 import org.gbif.pipelines.io.avro.json.MetadataJsonRecord;
@@ -36,6 +28,7 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.io.avro.json.Parent;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
+import org.gbif.pipelines.io.avro.json.VocabularyConcept;
 
 @Slf4j
 @Builder
@@ -55,6 +48,7 @@ public class ParentJsonConverter {
   protected final EventInheritedRecord eventInheritedRecord;
   protected OccurrenceJsonRecord occurrenceJsonRecord;
   protected MeasurementOrFactRecord measurementOrFactRecord;
+  protected final HumboldtRecord humboldtRecord;
 
   public ParentJsonRecord convertToParent() {
     return (occurrenceJsonRecord != null) ? convertToParentOccurrence() : convertToParentEvent();
@@ -97,14 +91,14 @@ public class ParentJsonConverter {
         .setInternalId(
             HashConverter.getSha1(
                 metadata.getDatasetKey(),
-                occurrenceJsonRecord.getVerbatim().getCoreId(),
+                occurrenceJsonRecord.getEventId(),
                 occurrenceJsonRecord.getOccurrenceId()))
         .setJoinRecordBuilder(
             JoinRecord.newBuilder()
                 .setName(ConverterConstants.OCCURRENCE)
                 .setParent(
                     HashConverter.getSha1(
-                        metadata.getDatasetKey(), occurrenceJsonRecord.getVerbatim().getCoreId())))
+                        metadata.getDatasetKey(), occurrenceJsonRecord.getEventId())))
         .setOccurrence(occurrenceJsonRecord)
         .setAll(occurrenceJsonRecord.getAll())
         .setVerbatim(occurrenceJsonRecord.getVerbatim())
@@ -131,12 +125,13 @@ public class ParentJsonConverter {
     builder.setId(verbatim.getId());
     mapIssues(builder);
 
+    mapExtendedRecord(builder);
     mapEventCoreRecord(builder);
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
     mapMultimediaRecord(builder);
-    mapExtendedRecord(builder);
     mapMeasurementOrFactRecord(builder);
+    mapHumboldtRecord(builder);
 
     return builder;
   }
@@ -176,13 +171,24 @@ public class ParentJsonConverter {
         .setParentEventID(eventCore.getParentEventID())
         .setLocationID(eventCore.getLocationID());
 
+    // Vocabulary
+    JsonConverter.convertVocabularyConcept(eventCore.getEventType())
+        .ifPresent(builder::setEventType);
+
+    builder.setVerbatimEventType(
+        extractOptValue(verbatim, DwcTerm.eventType).orElse(DEFAULT_EVENT_TYPE));
+
     if (eventCore.getParentsLineage() != null && !eventCore.getParentsLineage().isEmpty()) {
       List<String> eventTypes = getParentsLineageEventTypes();
+      List<String> verbatimEventTypes = getParentsLineageVerbatimEventTypes();
       List<String> eventIDs = getLineageEventIDs();
 
       builder
           .setEventTypeHierarchy(eventTypes)
           .setEventTypeHierarchyJoined(String.join(ConverterConstants.DELIMITER, eventTypes))
+          .setVerbatimEventTypeHierarchy(verbatimEventTypes)
+          .setVerbatimEventTypeHierarchyJoined(
+              String.join(ConverterConstants.DELIMITER, verbatimEventTypes))
           .setEventHierarchy(eventIDs)
           .setEventHierarchyJoined(String.join(ConverterConstants.DELIMITER, eventIDs))
           .setEventHierarchyLevels(eventIDs.size());
@@ -204,19 +210,33 @@ public class ParentJsonConverter {
       List<String> eventHierarchy = new ArrayList<>();
       Optional.ofNullable(builder.getParentEventID()).ifPresent(eventHierarchy::add);
       Optional.ofNullable(builder.getEventID()).ifPresent(eventHierarchy::add);
-      builder.setEventHierarchy(eventHierarchy);
+
+      builder
+          .setEventHierarchy(eventHierarchy)
+          .setEventHierarchyJoined(String.join(ConverterConstants.DELIMITER, eventHierarchy))
+          .setEventHierarchyLevels(eventHierarchy.size());
 
       // add the single type to hierarchy for consistency
       List<String> eventTypeHierarchy = new ArrayList<>();
       if (builder.getEventType() != null && builder.getEventType().getConcept() != null) {
         eventTypeHierarchy.add(builder.getEventType().getConcept());
       }
-      builder.setEventTypeHierarchy(eventTypeHierarchy);
-    }
 
-    // Vocabulary
-    JsonConverter.convertVocabularyConcept(eventCore.getEventType())
-        .ifPresent(builder::setEventType);
+      builder
+          .setEventTypeHierarchy(eventTypeHierarchy)
+          .setEventTypeHierarchyJoined(
+              String.join(ConverterConstants.DELIMITER, eventTypeHierarchy));
+
+      List<String> verbatimEventTypeHierarchy = new ArrayList<>();
+      if (builder.getVerbatimEventType() != null) {
+        verbatimEventTypeHierarchy.add(builder.getVerbatimEventType());
+      }
+
+      builder
+          .setVerbatimEventTypeHierarchy(verbatimEventTypeHierarchy)
+          .setVerbatimEventTypeHierarchyJoined(
+              String.join(ConverterConstants.DELIMITER, verbatimEventTypeHierarchy));
+    }
 
     // License
     JsonConverter.convertLicense(eventCore.getLicense()).ifPresent(builder::setLicense);
@@ -238,6 +258,7 @@ public class ParentJsonConverter {
 
     JsonConverter.convertEventDate(temporal.getEventDate()).ifPresent(builder::setEventDate);
     JsonConverter.convertEventDateSingle(temporal).ifPresent(builder::setEventDateSingle);
+    JsonConverter.convertEventDateInterval(temporal).ifPresent(builder::setEventDateInterval);
   }
 
   private void mapLocationRecord(EventJsonRecord.Builder builder) {
@@ -287,13 +308,23 @@ public class ParentJsonConverter {
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
 
-    if (eventCore.getEventType() != null) {
-      eventTypes.add(eventCore.getEventType().getConcept());
-    } else {
-      extractOptValue(verbatim, DwcTerm.eventType).ifPresent(eventTypes::add);
-    }
+    // eventType can't be null, the interpretation uses a fallback
+    eventTypes.add(eventCore.getEventType().getConcept());
 
     return eventTypes;
+  }
+
+  private List<String> getParentsLineageVerbatimEventTypes() {
+    List<String> verbatimEventTypes =
+        eventCore.getParentsLineage().stream()
+            .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
+            .map(org.gbif.pipelines.io.avro.Parent::getVerbatimEventType)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+
+    verbatimEventTypes.add(extractOptValue(verbatim, DwcTerm.eventType).orElse(DEFAULT_EVENT_TYPE));
+
+    return verbatimEventTypes;
   }
 
   private List<String> getLineageEventIDs() {
@@ -318,10 +349,144 @@ public class ParentJsonConverter {
     builder.setMeasurementOrFactMethods(
         measurementOrFactRecord.getMeasurementOrFactItems().stream()
             .map(MeasurementOrFact::getMeasurementMethod)
+            .filter(Objects::nonNull)
+            .distinct()
             .collect(Collectors.toList()));
     builder.setMeasurementOrFactTypes(
         measurementOrFactRecord.getMeasurementOrFactItems().stream()
             .map(MeasurementOrFact::getMeasurementType)
+            .filter(Objects::nonNull)
+            .distinct()
+            .collect(Collectors.toList()));
+  }
+
+  private void mapHumboldtRecord(EventJsonRecord.Builder builder) {
+    builder.setHumboldt(
+        humboldtRecord.getHumboldtItems().stream()
+            .map(
+                h -> {
+                  Humboldt.Builder humboldtBuilder =
+                      Humboldt.newBuilder()
+                          .setSiteCount(h.getSiteCount())
+                          .setVerbatimSiteDescriptions(h.getVerbatimSiteDescriptions())
+                          .setVerbatimSiteNames(h.getVerbatimSiteNames())
+                          .setGeospatialScopeAreaValue(h.getGeospatialScopeAreaValue())
+                          .setGeospatialScopeAreaUnit(h.getGeospatialScopeAreaUnit())
+                          .setTotalAreaSampledValue(h.getTotalAreaSampledValue())
+                          .setTotalAreaSampledUnit(h.getTotalAreaSampledUnit())
+                          .setEventDurationValue(h.getEventDurationValue())
+                          .setEventDurationUnit(h.getEventDurationUnit())
+                          .setGeospatialScopeAreaUnit(h.getGeospatialScopeAreaUnit())
+                          .setTaxonCompletenessProtocols(h.getTaxonCompletenessProtocols())
+                          .setIsTaxonomicScopeFullyReported(h.getIsTaxonomicScopeFullyReported())
+                          .setIsAbsenceReported(h.getIsAbsenceReported())
+                          .setHasNonTargetTaxa(h.getHasNonTargetTaxa())
+                          .setAreNonTargetTaxaFullyReported(h.getAreNonTargetTaxaFullyReported())
+                          .setIsLifeStageScopeFullyReported(h.getIsLifeStageScopeFullyReported())
+                          .setIsDegreeOfEstablishmentScopeFullyReported(
+                              h.getIsDegreeOfEstablishmentScopeFullyReported())
+                          .setIsGrowthFormScopeFullyReported(h.getIsGrowthFormScopeFullyReported())
+                          .setHasNonTargetOrganisms(h.getHasNonTargetOrganisms())
+                          .setCompilationTypes(h.getCompilationTypes())
+                          .setCompilationSourceTypes(h.getCompilationSourceTypes())
+                          .setInventoryTypes(h.getInventoryTypes())
+                          .setProtocolNames(h.getProtocolNames())
+                          .setProtocolDescriptions(h.getProtocolDescriptions())
+                          .setProtocolReferences(h.getProtocolReferences())
+                          .setIsAbundanceReported(h.getIsAbundanceReported())
+                          .setIsAbundanceCapReported(h.getIsAbundanceCapReported())
+                          .setAbundanceCap(h.getAbundanceCap())
+                          .setIsVegetationCoverReported(h.getIsVegetationCoverReported())
+                          .setIsLeastSpecificTargetCategoryQuantityInclusive(
+                              h.getIsLeastSpecificTargetCategoryQuantityInclusive())
+                          .setHasVouchers(h.getHasVouchers())
+                          .setVoucherInstitutions(h.getVoucherInstitutions())
+                          .setHasMaterialSamples(h.getHasMaterialSamples())
+                          .setMaterialSampleTypes(h.getMaterialSampleTypes())
+                          .setSamplingPerformedBy(h.getSamplingPerformedBy())
+                          .setIsSamplingEffortReported(h.getIsSamplingEffortReported())
+                          .setSamplingEffortValue(h.getSamplingEffortValue())
+                          .setSamplingEffortUnit(h.getSamplingEffortUnit());
+
+                  Function<
+                          List<org.gbif.pipelines.io.avro.VocabularyConcept>,
+                          List<VocabularyConcept>>
+                      vocabConverter =
+                          vocabs ->
+                              vocabs.stream()
+                                  .map(
+                                      v ->
+                                          VocabularyConcept.newBuilder()
+                                              .setConcept(v.getConcept())
+                                              .setLineage(v.getLineage())
+                                              .build())
+                                  .collect(Collectors.toList());
+
+                  humboldtBuilder.setTargetHabitatScope(h.getTargetHabitatScope());
+                  humboldtBuilder.setExcludedHabitatScope(h.getExcludedHabitatScope());
+                  humboldtBuilder.setTargetGrowthFormScope(h.getTargetGrowthFormScope());
+                  humboldtBuilder.setExcludedGrowthFormScope(h.getExcludedGrowthFormScope());
+                  humboldtBuilder.setTargetLifeStageScope(
+                      vocabConverter.apply(h.getTargetLifeStageScope()));
+                  humboldtBuilder.setExcludedLifeStageScope(
+                      vocabConverter.apply(h.getExcludedLifeStageScope()));
+                  humboldtBuilder.setTargetDegreeOfEstablishmentScope(
+                      vocabConverter.apply(h.getTargetDegreeOfEstablishmentScope()));
+                  humboldtBuilder.setExcludedDegreeOfEstablishmentScope(
+                      vocabConverter.apply(h.getExcludedDegreeOfEstablishmentScope()));
+
+                  if (h.getEventDurationValue() != null && h.getEventDurationUnit() != null) {
+                    DurationUnit eventDurationUnit = DurationUnit.valueOf(h.getEventDurationUnit());
+                    humboldtBuilder.setEventDurationValueInMinutes(
+                        h.getEventDurationValue() * eventDurationUnit.getDurationInMinutes());
+                  }
+
+                  // taxon
+                  Function<
+                          List<TaxonHumboldtRecord>, Map<String, List<HumboldtTaxonClassification>>>
+                      taxonFn =
+                          taxonRecords -> {
+                            Map<String, List<HumboldtTaxonClassification>> classifications =
+                                new HashMap<>();
+                            taxonRecords.forEach(
+                                t -> {
+                                  HumboldtTaxonClassification.Builder taxonBuilder =
+                                      HumboldtTaxonClassification.newBuilder()
+                                          .setUsageKey(t.getUsageKey())
+                                          .setUsageName(t.getUsageName())
+                                          .setUsageRank(t.getUsageRank());
+
+                                  Map<String, String> classification = new HashMap<>();
+                                  Map<String, String> classificationKeys = new HashMap<>();
+                                  List<String> taxonKeys = new ArrayList<>();
+                                  t.getClassification()
+                                      .forEach(
+                                          c -> {
+                                            classification.put(c.getRank(), c.getName());
+                                            classificationKeys.put(c.getRank(), c.getKey());
+                                            taxonKeys.add(c.getKey());
+                                          });
+
+                                  taxonBuilder.setClassification(classification);
+                                  taxonBuilder.setClassificationKeys(classificationKeys);
+                                  taxonBuilder.setTaxonKeys(taxonKeys);
+                                  taxonBuilder.setIssues(t.getIssues().getIssueList());
+                                  classifications
+                                      .computeIfAbsent(t.getChecklistKey(), k -> new ArrayList<>())
+                                      .add(taxonBuilder.build());
+                                });
+                            return classifications;
+                          };
+
+                  humboldtBuilder.setTargetTaxonomicScope(
+                      taxonFn.apply(h.getTargetTaxonomicScope()));
+                  humboldtBuilder.setExcludedTaxonomicScope(
+                      taxonFn.apply(h.getExcludedTaxonomicScope()));
+                  humboldtBuilder.setAbsentTaxa(taxonFn.apply(h.getAbsentTaxa()));
+                  humboldtBuilder.setNonTargetTaxa(taxonFn.apply(h.getNonTargetTaxa()));
+
+                  return humboldtBuilder.build();
+                })
             .collect(Collectors.toList()));
   }
 
@@ -333,6 +498,7 @@ public class ParentJsonConverter {
     extractOptValue(verbatim, DwcTerm.institutionCode).ifPresent(builder::setInstitutionCode);
     extractOptValue(verbatim, DwcTerm.verbatimDepth).ifPresent(builder::setVerbatimDepth);
     extractOptValue(verbatim, DwcTerm.verbatimElevation).ifPresent(builder::setVerbatimElevation);
+    extractLengthAwareOptValue(verbatim, DwcTerm.fieldNumber).ifPresent(builder::setFieldNumber);
 
     // Todo: replce with extractOptValue
     String eventName = verbatim.getCoreTerms().get(ConverterConstants.EVENT_NAME);
@@ -341,13 +507,14 @@ public class ParentJsonConverter {
 
   private void mapIssues(EventJsonRecord.Builder builder) {
     JsonConverter.mapIssues(
-        Arrays.asList(metadata, eventCore, temporal, location, multimedia),
+        Arrays.asList(metadata, eventCore, temporal, location, multimedia, humboldtRecord),
         builder::setIssues,
         builder::setNotIssues);
   }
 
   private void mapCreated(ParentJsonRecord.Builder builder) {
-    JsonConverter.getMaxCreationDate(metadata, eventCore, temporal, location, multimedia)
+    JsonConverter.getMaxCreationDate(
+            metadata, eventCore, temporal, location, multimedia, humboldtRecord)
         .ifPresent(builder::setCreated);
   }
 

@@ -15,13 +15,14 @@ import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
@@ -40,11 +41,14 @@ public class IndexRequestConverter {
   @NonNull private final Map<String, ClusteringRecord> clusteringMap;
   @NonNull private final Map<String, TemporalRecord> temporalMap;
   @NonNull private final Map<String, LocationRecord> locationMap;
-  @NonNull private final Map<String, TaxonRecord> taxonMap;
+  @NonNull private final Map<String, MultiTaxonRecord> multiTaxonMap;
   @NonNull private final Map<String, GrscicollRecord> grscicollMap;
   @NonNull private final Map<String, MultimediaRecord> multimediaMap;
   @NonNull private final Map<String, ImageRecord> imageMap;
+  @NonNull private final Map<String, DnaDerivedDataRecord> dnaMap;
   @NonNull private final Map<String, AudubonRecord> audubonMap;
+  @Builder.Default private boolean indexMultiTaxonomy = true;
+  @Builder.Default private boolean indexLegacyTaxonomy = true;
 
   /** Join all records, convert into string json and IndexRequest for ES */
   public Function<IdentifierRecord, IndexRequest> getFn() {
@@ -57,13 +61,16 @@ public class IndexRequestConverter {
       BasicRecord br = basicMap.getOrDefault(k, BasicRecord.newBuilder().setId(k).build());
       TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
       LocationRecord lr = locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
-      TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
+      MultiTaxonRecord mtxr =
+          multiTaxonMap.getOrDefault(k, MultiTaxonRecord.newBuilder().setId(k).build());
       GrscicollRecord gr =
           grscicollMap.getOrDefault(k, GrscicollRecord.newBuilder().setId(k).build());
       // Extension
       MultimediaRecord mr =
           multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
       ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
+      DnaDerivedDataRecord dnar =
+          dnaMap.getOrDefault(k, DnaDerivedDataRecord.newBuilder().setId(k).build());
       AudubonRecord ar = audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
 
       MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
@@ -75,9 +82,12 @@ public class IndexRequestConverter {
               .basic(br)
               .temporal(tr)
               .location(lr)
-              .taxon(txr)
+              .multiTaxon(mtxr)
               .grscicoll(gr)
               .multimedia(mmr)
+              .dnaDerivedData(dnar)
+              .indexMultiTaxonomy(indexMultiTaxonomy)
+              .indexLegacyTaxonomy(indexLegacyTaxonomy)
               .verbatim(er)
               .build()
               .convert();

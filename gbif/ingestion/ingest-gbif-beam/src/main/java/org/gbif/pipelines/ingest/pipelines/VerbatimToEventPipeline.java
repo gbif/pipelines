@@ -37,10 +37,11 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -124,7 +125,8 @@ public class VerbatimToEventPipeline {
     LocationTransform locationTransform = transformsFactory.createLocationTransform();
     VerbatimTransform verbatimTransform = transformsFactory.createVerbatimTransform();
     TemporalTransform temporalTransform = transformsFactory.createTemporalTransform();
-    TaxonomyTransform taxonomyTransform = transformsFactory.createTaxonomyTransform();
+    MultiTaxonomyTransform multiTaxonomyTransform =
+        transformsFactory.createMultiTaxonomyTransform();
     MultimediaTransform multimediaTransform = transformsFactory.createMultimediaTransform();
     AudubonTransform audubonTransform = transformsFactory.createAudubonTransform();
     ImageTransform imageTransform = transformsFactory.createImageTransform();
@@ -132,6 +134,7 @@ public class VerbatimToEventPipeline {
     IdentifierTransform identifierTransform = transformsFactory.createIdentifierTransform();
     MeasurementOrFactTransform measurementOrFactTransform =
         transformsFactory.createMeasurementOrFactTransform();
+    HumboldtTransform humboldtTransform = transformsFactory.createHumboldtTransform();
 
     log.info("Creating beam pipeline");
 
@@ -173,23 +176,30 @@ public class VerbatimToEventPipeline {
     uniqueRawRecords
         .apply("Check event core transform", eventCoreTransform.check(types))
         .apply("Interpret event core", eventCoreTransform.interpret())
-        .apply("Write event core to avro", eventCoreTransform.write(pathFn).withoutSharding());
+        .apply(
+            "Write event core to avro",
+            eventCoreTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
 
     uniqueRawRecords
         .apply("Check event temporal transform", temporalTransform.check(types))
         .apply("Interpret event temporal", temporalTransform.interpret())
-        .apply("Write event temporal to avro", temporalTransform.write(pathFn).withoutSharding());
+        .apply(
+            "Write event temporal to avro",
+            temporalTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
 
     uniqueRawRecords
-        .apply("Check event taxonomy transform", taxonomyTransform.check(types))
-        .apply("Interpret event taxonomy", taxonomyTransform.interpret())
-        .apply("Write event taxon to avro", taxonomyTransform.write(pathFn).withoutSharding());
+        .apply("Check event multi-taxonomy transform", multiTaxonomyTransform.check(types))
+        .apply("Interpret event multi-taxonomy", multiTaxonomyTransform.interpret())
+        .apply(
+            "Write event multi-taxon to avro",
+            multiTaxonomyTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
 
     uniqueRawRecords
         .apply("Check event multimedia transform", multimediaTransform.check(types))
         .apply("Interpret event multimedia", multimediaTransform.interpret())
         .apply(
-            "Write event multimedia to avro", multimediaTransform.write(pathFn).withoutSharding());
+            "Write event multimedia to avro",
+            multimediaTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
 
     uniqueRawRecords
         .apply("Check event audubon transform", audubonTransform.check(types))
@@ -204,7 +214,9 @@ public class VerbatimToEventPipeline {
     uniqueRawRecords
         .apply("Check location transform", locationTransform.check(types))
         .apply("Interpret event location", locationTransform.interpret(metadataView))
-        .apply("Write event location to avro", locationTransform.write(pathFn).withoutSharding());
+        .apply(
+            "Write event location to avro",
+            locationTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
 
     uniqueRawRecords
         .apply("Check event measurementOrFact", measurementOrFactTransform.check(types))
@@ -214,8 +226,15 @@ public class VerbatimToEventPipeline {
             measurementOrFactTransform.write(pathFn).withoutSharding());
 
     uniqueRawRecords
+        .apply("Check event humboldt transform", humboldtTransform.check(types))
+        .apply("Interpret event humboldt", humboldtTransform.interpret())
+        .apply("Write event humboldt to avro", humboldtTransform.write(pathFn));
+
+    uniqueRawRecords
         .apply("Check event verbatim transform", verbatimTransform.check(types))
-        .apply("Write event verbatim to avro", verbatimTransform.write(pathFn).withoutSharding());
+        .apply(
+            "Write event verbatim to avro",
+            verbatimTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

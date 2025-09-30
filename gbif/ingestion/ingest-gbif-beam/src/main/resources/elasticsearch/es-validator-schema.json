@@ -65,6 +65,7 @@
       "institutionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "collectionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "isClustered": {"type": "boolean"},
+      "dnaSequenceID": {"type": "keyword", "copy_to": "all"},
 
       "basisOfRecord": {"type": "keyword"},
 
@@ -462,25 +463,26 @@
             }
           },
           "kingdom": {"type": "text"},
-          "kingdomKey": {"type": "long"},
+          "kingdomKey": {"type": "keyword"},
           "phylum": {"type": "text"},
-          "phylumKey": {"type": "long"},
+          "phylumKey": {"type": "keyword"},
           "class": {"type": "text"},
-          "classKey": {"type": "long"},
+          "classKey": {"type": "keyword"},
           "order": {"type": "text"},
-          "orderKey": {"type": "long"},
+          "orderKey": {"type": "keyword"},
           "family": {"type": "text"},
-          "familyKey": {"type": "long"},
+          "familyKey": {"type": "keyword"},
           "genus": {"type": "text"},
-          "genusKey": {"type": "long"},
+          "genusKey": {"type": "keyword"},
           "species": {"type": "text"},
-          "speciesKey": {"type": "long"},
+          "speciesKey": {"type": "keyword"},
           "synonym": {"type": "boolean"},
           "taxonID": {"type": "keyword"},
-          "taxonKey": {"type": "long"},
+          "taxonConceptID": {"type": "keyword"},
+          "taxonKey": {"type": "keyword"},
           "usage": {
             "properties": {
-              "key": {"type": "long"},
+              "key": {"type": "keyword" },
               "name": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
               "rank": {"type": "keyword"}
             }
@@ -530,7 +532,7 @@
           "iucnRedListCategoryCode": {"type": "keyword"}
         }
       },
-
+      "checklistKey": {"type": "keyword"},
       "mediaTypes": {"type": "keyword", "copy_to": "all"},
       "mediaLicenses": {"type": "keyword", "copy_to": "all"},
       "multimediaItems": {"type": "nested", "enabled": false,

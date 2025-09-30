@@ -25,6 +25,9 @@ public class ModelUtils {
   public static final String DEFAULT_SEPARATOR = "\\|";
 
   public static String extractValue(ExtendedRecord er, Term term) {
+    if (er == null || term == null) {
+      return null;
+    }
     String value = er.getCoreTerms().get(term.qualifiedName());
     return value != null ? value.trim() : extractFromIdentificationExtension(er, term);
   }
@@ -81,7 +84,15 @@ public class ModelUtils {
   }
 
   public static List<String> extractListValue(String separatorRegex, ExtendedRecord er, Term term) {
-    return extractOptValue(er, term)
+    return extractListValue(extractValue(er, term), separatorRegex);
+  }
+
+  public static List<String> extractListValue(String rawValue) {
+    return extractListValue(rawValue, DEFAULT_SEPARATOR);
+  }
+
+  public static List<String> extractListValue(String rawValue, String separatorRegex) {
+    return Optional.ofNullable(rawValue)
         .filter(x -> !x.isEmpty())
         .map(
             x ->

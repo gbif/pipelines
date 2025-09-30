@@ -1,5 +1,6 @@
 package org.gbif.pipelines.transforms.table;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -20,27 +21,32 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedData;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.TypeStatus;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
+import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
@@ -96,6 +102,12 @@ public class OccurrenceHdfsRecordTransformTest {
     ClusteringRecord cr = ClusteringRecord.newBuilder().setId("777").setIsClustered(true).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("777").setDay(25).build();
     TaxonRecord txr = TaxonRecord.newBuilder().setId("777").setCoreId("setCoreId").build();
+    MultiTaxonRecord mtxr =
+        MultiTaxonRecord.newBuilder()
+            .setId("777")
+            .setCoreId("setCoreId")
+            .setTaxonRecords(new ArrayList<>())
+            .build();
     GrscicollRecord gr =
         GrscicollRecord.newBuilder()
             .setId("777")
@@ -111,13 +123,21 @@ public class OccurrenceHdfsRecordTransformTest {
     MultimediaRecord mmr = MultimediaRecord.newBuilder().setId("777").build();
     AudubonRecord aur = AudubonRecord.newBuilder().setId("777").build();
     ImageRecord imr = ImageRecord.newBuilder().setId("777").build();
+    DnaDerivedDataRecord dnar =
+        DnaDerivedDataRecord.newBuilder()
+            .setId("777")
+            .setDnaDerivedDataItems(
+                Collections.singletonList(
+                    DnaDerivedData.newBuilder().setDnaSequenceID("foo1").build()))
+            .build();
+    HumboldtRecord hr = HumboldtRecord.newBuilder().setId("777").build();
 
     BasicTransform basicTransform = BasicTransform.builder().create();
     GbifIdTransform idTransform = GbifIdTransform.builder().create();
     ClusteringTransform clusteringTransform = ClusteringTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.builder().create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+    MultiTaxonomyTransform multiTaxonomyTransform = MultiTaxonomyTransform.builder().create();
     GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
     EventCoreTransform eventCoreTransform = EventCoreTransform.builder().create();
@@ -126,6 +146,8 @@ public class OccurrenceHdfsRecordTransformTest {
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
+    DnaDerivedDataTransform dnaDerivedDataTransform = DnaDerivedDataTransform.builder().create();
+    HumboldtTransform humboldtTransform = HumboldtTransform.builder().create();
 
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Read Metadata", Create.of(mr)).apply("Convert to view", View.asSingleton());
@@ -137,13 +159,15 @@ public class OccurrenceHdfsRecordTransformTest {
             .basicRecordTag(basicTransform.getTag())
             .clusteringRecordTag(clusteringTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
-            .taxonRecordTag(taxonomyTransform.getTag())
+            .multiTaxonRecordTag(multiTaxonomyTransform.getTag())
             .grscicollRecordTag(grscicollTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
             .eventCoreRecordTag(eventCoreTransform.getTag())
             .multimediaRecordTag(multimediaTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
+            .dnaRecordTag(dnaDerivedDataTransform.getTag())
+            .humboldtRecordTag(humboldtTransform.getTag())
             .metadataView(metadataView)
             .build();
 
@@ -167,8 +191,9 @@ public class OccurrenceHdfsRecordTransformTest {
     PCollection<KV<String, LocationRecord>> locationCollection =
         p.apply("Create location", Create.of(lr)).apply("KV location", locationTransform.toKv());
 
-    PCollection<KV<String, TaxonRecord>> taxonomyCollection =
-        p.apply("Create taxon", Create.of(txr)).apply("KV taxon", taxonomyTransform.toKv());
+    PCollection<KV<String, MultiTaxonRecord>> multiTaxonomyCollection =
+        p.apply("Create multi taxon", Create.of(mtxr))
+            .apply("KV multi taxon", multiTaxonomyTransform.toKv());
 
     PCollection<KV<String, GrscicollRecord>> grscicollCollection =
         p.apply("Create grscicoll", Create.of(gr)).apply("KV grscicoll", grscicollTransform.toKv());
@@ -184,8 +209,14 @@ public class OccurrenceHdfsRecordTransformTest {
     PCollection<KV<String, ImageRecord>> imageCollection =
         p.apply("Create image", Create.of(imr)).apply("KV image", imageTransform.toKv());
 
+    PCollection<KV<String, DnaDerivedDataRecord>> dnaCollection =
+        p.apply("Create DNA", Create.of(dnar)).apply("KV DNA", dnaDerivedDataTransform.toKv());
+
     PCollection<KV<String, AudubonRecord>> audubonCollection =
         p.apply("Create audubon", Create.of(aur)).apply("KV audubon", audubonTransform.toKv());
+
+    PCollection<KV<String, HumboldtRecord>> humboldtCollection =
+        p.apply("Create humboldt", Create.of(hr)).apply("KV humboldt", humboldtTransform.toKv());
 
     PCollection<OccurrenceHdfsRecord> result =
         KeyedPCollectionTuple
@@ -196,12 +227,14 @@ public class OccurrenceHdfsRecordTransformTest {
             .and(basicTransform.getTag(), basicCollection)
             .and(temporalTransform.getTag(), temporalCollection)
             .and(locationTransform.getTag(), locationCollection)
-            .and(taxonomyTransform.getTag(), taxonomyCollection)
+            .and(multiTaxonomyTransform.getTag(), multiTaxonomyCollection)
             .and(grscicollTransform.getTag(), grscicollCollection)
             .and(eventCoreTransform.getTag(), eventCoreCollection)
             .and(multimediaTransform.getTag(), multimediaCollection)
             .and(imageTransform.getTag(), imageCollection)
+            .and(dnaDerivedDataTransform.getTag(), dnaCollection)
             .and(audubonTransform.getTag(), audubonCollection)
+            .and(humboldtTransform.getTag(), humboldtCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging", transform.converter());
@@ -224,11 +257,7 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setPreparations(Collections.emptyList());
     expected.setOthercatalognumbers(Collections.emptyList());
     expected.setParenteventgbifid(Collections.emptyList());
-    expected.setTypestatus(
-        TypeStatus.newBuilder()
-            .setConcepts(Collections.emptyList())
-            .setLineage(Collections.emptyList())
-            .build());
+    expected.setTypestatus(null);
     expected.setSamplingprotocol(Collections.emptyList());
     expected.setHighergeography(Collections.emptyList());
     expected.setGeoreferencedby(Collections.emptyList());
@@ -237,6 +266,8 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setProjectid(Collections.singletonList("setProjectId"));
     expected.setAssociatedsequences(Collections.emptyList());
     expected.setDay(25);
+    expected.setDnasequenceid(Collections.singletonList("foo1"));
+    expected.setClassifications(new HashMap<>());
 
     PAssert.that(result).containsInAnyOrder(expected);
     p.run();

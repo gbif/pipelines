@@ -179,6 +179,7 @@ public class IdentifierCallback extends AbstractMessageCallback<PipelinesVerbati
             .messageNumber(messageNumber)
             .metaFileName(new DwcaToAvroConfiguration().metaFileName)
             .metricName(Metrics.ARCHIVE_TO_OCC_COUNT)
+            .alternativeMetricName(Metrics.ARCHIVE_TO_ER_COUNT)
             .build()
             .get();
 
