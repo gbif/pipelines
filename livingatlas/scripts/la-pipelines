@@ -375,8 +375,8 @@ function copy () {
     logStepStart "Copy" $dr
     SECONDS=0
 
-    DR_URL=${COLLECTORY_WS_URL}dataResource/$dr\?api_key\=$COLLECTORY_WS_API_KEY
-    DR_CONN_URL=`curl -s -o - ${DR_URL} | yq -P e '.connectionParameters.url' -`
+    DR_URL="${COLLECTORY_WS_URL}dataResource/$dr"
+    DR_CONN_URL=$(curl -s -H "Authorization: $COLLECTORY_WS_API_KEY" ${DR_URL} | yq -P e '.connectionParameters.url' -)
     DR_DEST="$COPY_DEST/$dr"
     if [[ ! -d "$DR_DEST" ]] ; then $_D mkdir -p $DR_DEST; fi
     log.debug "Trying to copy $dr using ${DR_URL//[0-9]/X} and connection url $DR_CONN_URL into $DR_DEST/$dr.zip"
