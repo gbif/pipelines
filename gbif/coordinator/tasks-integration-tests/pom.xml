@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>coordinator</artifactId>
-    <version>2.19.0-SNAPSHOT</version>
+   <version>3.2.11-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -21,6 +21,12 @@
         <configuration>
           <forkCount>2</forkCount>
           <reuseForks>true</reuseForks>
+          <argLine>
+            --add-opens java.base/java.lang=ALL-UNNAMED
+            --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+            --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
+            -Dillegal-access=permit
+          </argLine>
         </configuration>
       </plugin>
     </plugins>
@@ -102,8 +108,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>elasticsearch-tools</artifactId>
+      <groupId>org.elasticsearch.client</groupId>
+      <artifactId>elasticsearch-rest-client</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -149,6 +155,10 @@
         <exclusion>
           <artifactId>datacite-rest-client</artifactId>
           <groupId>org.gbif.datacite</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+          <groupId>com.fasterxml.jackson.module</groupId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -198,6 +208,55 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>ingest-gbif-java</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>ingest-gbif-beam</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>beam-transforms</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>beam-common</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-ws-client</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.gbif.common</groupId>
+          <artifactId>gbif-cli</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>datacite-rest-client</artifactId>
+          <groupId>org.gbif.datacite</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+          <groupId>com.fasterxml.jackson.module</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
       <groupId>org.gbif.crawler</groupId>
       <artifactId>crawler-coordinator</artifactId>
       <scope>test</scope>
@@ -221,11 +280,10 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-gbif-java</artifactId>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-wrangler</artifactId>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
 
 </project>

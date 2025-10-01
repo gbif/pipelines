@@ -42,10 +42,11 @@ import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -65,6 +66,7 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
  *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
  *      {@link org.gbif.pipelines.io.avro.ImageRecord},
+ *      {@link org.gbif.pipelines.io.avro.DnaDerivedDataRecord},
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord},
@@ -148,12 +150,14 @@ public class VerbatimToOccurrencePipeline {
     ClusteringTransform clusteringTransform = transformsFactory.createClusteringTransform();
     BasicTransform basicTransform = transformsFactory.createBasicTransform();
     TemporalTransform temporalTransform = transformsFactory.createTemporalTransform();
-    TaxonomyTransform taxonomyTransform = transformsFactory.createTaxonomyTransform();
+    MultiTaxonomyTransform multiTaxonomyTransform =
+        transformsFactory.createMultiTaxonomyTransform();
     GrscicollTransform grscicollTransform = transformsFactory.createGrscicollTransform();
     LocationTransform locationTransform = transformsFactory.createLocationTransform();
     MultimediaTransform multimediaTransform = transformsFactory.createMultimediaTransform();
     AudubonTransform audubonTransform = transformsFactory.createAudubonTransform();
     ImageTransform imageTransform = transformsFactory.createImageTransform();
+    DnaDerivedDataTransform dnaTransform = transformsFactory.createDnaDerivedTransform();
 
     log.info("Creating beam pipeline");
     Pipeline p = pipelinesFn.apply(options);
@@ -203,8 +207,7 @@ public class VerbatimToOccurrencePipeline {
       uniqueGbifId.apply("Write GBIF IDs to avro", idTransform.write(pathFn).withoutSharding());
       idsTuple
           .get(uniqueIdTransform.getInvalidTag())
-          .apply(
-              "Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn).withoutSharding());
+          .apply("Write invalid GBIF IDs to avro", idTransform.writeInvalid(pathFn));
     } else if (useGbifIdReadIO(types)) {
       uniqueGbifId = p.apply("Read GBIF ids records", idTransform.read(interpretedPathFn));
     } else {
@@ -232,8 +235,7 @@ public class VerbatimToOccurrencePipeline {
 
       absentTyple
           .get(uniqueIdTransform.getInvalidTag())
-          .apply(
-              "Write invalid GBIF ids to avro", idTransform.writeInvalid(pathFn).withoutSharding());
+          .apply("Write invalid GBIF ids to avro", idTransform.writeInvalid(pathFn));
 
       // Merge GBIF ids collections
       uniqueGbifId =
@@ -262,29 +264,39 @@ public class VerbatimToOccurrencePipeline {
 
     filteredUniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
-        .apply("Write verbatim to avro", verbatimTransform.write(pathFn).withoutSharding());
+        .apply(
+            "Write verbatim to avro",
+            verbatimTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
 
     uniqueGbifId
         .apply(
             "Check clustering transform condition",
             clusteringTransform.check(types, IdentifierRecord.class))
         .apply("Interpret clustering", clusteringTransform.interpret())
-        .apply("Write clustering to avro", clusteringTransform.write(pathFn).withoutSharding());
+        .apply(
+            "Write clustering to avro",
+            clusteringTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
 
     filteredUniqueRecords
         .apply("Check basic transform condition", basicTransform.check(types))
         .apply("Interpret basic", basicTransform.interpret())
-        .apply("Write basic to avro", basicTransform.write(pathFn).withoutSharding());
+        .apply(
+            "Write basic to avro",
+            basicTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
 
     filteredUniqueRecords
         .apply("Check temporal transform condition", temporalTransform.check(types))
         .apply("Interpret temporal", temporalTransform.interpret())
-        .apply("Write temporal to avro", temporalTransform.write(pathFn).withoutSharding());
+        .apply(
+            "Write temporal to avro",
+            temporalTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
 
     filteredUniqueRecords
         .apply("Check multimedia transform condition", multimediaTransform.check(types))
         .apply("Interpret multimedia", multimediaTransform.interpret())
-        .apply("Write multimedia to avro", multimediaTransform.write(pathFn).withoutSharding());
+        .apply(
+            "Write multimedia to avro",
+            multimediaTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
 
     filteredUniqueRecords
         .apply("Check image transform condition", imageTransform.check(types))
@@ -292,14 +304,21 @@ public class VerbatimToOccurrencePipeline {
         .apply("Write image to avro", imageTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
+        .apply("Check dna transform condition", dnaTransform.check(types))
+        .apply("Interpret dna", dnaTransform.interpret())
+        .apply("Write dna to avro", dnaTransform.write(pathFn).withoutSharding());
+
+    filteredUniqueRecords
         .apply("Check audubon transform condition", audubonTransform.check(types))
         .apply("Interpret audubon", audubonTransform.interpret())
         .apply("Write audubon to avro", audubonTransform.write(pathFn).withoutSharding());
 
     filteredUniqueRecords
-        .apply("Check taxonomy transform condition", taxonomyTransform.check(types))
-        .apply("Interpret taxonomy", taxonomyTransform.interpret())
-        .apply("Write taxon to avro", taxonomyTransform.write(pathFn).withoutSharding());
+        .apply("Check multi-taxonomy transform condition", multiTaxonomyTransform.check(types))
+        .apply("Interpret multi-taxonomy", multiTaxonomyTransform.interpret())
+        .apply(
+            "Write multi-taxon to avro",
+            multiTaxonomyTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
 
     filteredUniqueRecords
         .apply("Check grscicoll transform condition", grscicollTransform.check(types))
@@ -309,7 +328,9 @@ public class VerbatimToOccurrencePipeline {
     filteredUniqueRecords
         .apply("Check location transform condition", locationTransform.check(types))
         .apply("Interpret location", locationTransform.interpret(metadataView))
-        .apply("Write location to avro", locationTransform.write(pathFn).withoutSharding());
+        .apply(
+            "Write location to avro",
+            locationTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

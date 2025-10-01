@@ -49,6 +49,11 @@ public class XmlIOTest {
     coreMap1.put(DwcTerm.recordedBy.qualifiedName(), "de Vauloger");
     coreMap1.put(DwcTerm.locality.qualifiedName(), "Algeria, Tunisia, Sweden, other countries");
     coreMap1.put(DwcTerm.occurrenceID.qualifiedName(), "ZFMK/Ob/223903199/909708/169734");
+    coreMap1.put(DwcTerm.preparations.qualifiedName(), "preserved specimen");
+    coreMap1.put(
+        DwcTerm.occurrenceRemarks.qualifiedName(),
+        "de Vauloger 1890 (= Marcel de Vauloger de Beaupré?); Projects: Oberthuer");
+    coreMap1.put(DcTerm.modified.qualifiedName(), "2015-08-19T10:14:46");
 
     final List<Map<String, String>> multimediaExtension2 = new ArrayList<>();
     multimediaExtension2.add(
@@ -101,6 +106,11 @@ public class XmlIOTest {
     coreMap1.put(DwcTerm.recordedBy.qualifiedName(), "de Vauloger");
     coreMap1.put(DwcTerm.locality.qualifiedName(), "Algeria, Tunisia, Sweden, other countries");
     coreMap1.put(DwcTerm.occurrenceID.qualifiedName(), "ZFMK/Ob/223903199/909708/169734");
+    coreMap1.put(
+        DwcTerm.occurrenceRemarks.qualifiedName(),
+        "de Vauloger 1890 (= Marcel de Vauloger de Beaupré?); Projects: Oberthuer");
+    coreMap1.put(DcTerm.modified.qualifiedName(), "2015-08-19T10:14:46");
+    coreMap1.put(DwcTerm.preparations.qualifiedName(), "preserved specimen");
 
     final List<Map<String, String>> multimediaExtension1 = new ArrayList<>();
     multimediaExtension1.add(
@@ -134,6 +144,9 @@ public class XmlIOTest {
     coreMap2.put(DwcTerm.institutionCode.qualifiedName(), "ZFMK");
     coreMap2.put(DwcTerm.scientificName.qualifiedName(), "Curculionidae Latreille, 1802");
     coreMap2.put(DwcTerm.occurrenceID.qualifiedName(), "ZFMK/Ob/223902837/908708/169372");
+    coreMap2.put(DwcTerm.occurrenceRemarks.qualifiedName(), "Projects: Oberthuer");
+    coreMap2.put(DcTerm.modified.qualifiedName(), "2015-02-19T11:49:48");
+    coreMap2.put(DwcTerm.preparations.qualifiedName(), "preserved specimen");
 
     final List<Map<String, String>> multimediaExtension2 = new ArrayList<>();
     multimediaExtension2.add(

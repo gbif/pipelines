@@ -1,13 +1,16 @@
 package org.gbif.pipelines.tasks;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,12 +31,24 @@ public class Validations {
       Retry.of(
           "validatorCall",
           RetryConfig.custom()
-              .maxAttempts(7)
-              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(6)))
+              .maxAttempts(15)
+              .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
+              .intervalFunction(
+                  IntervalFunction.ofExponentialBackoff(
+                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(30)))
               .build());
 
   public static void updateStatus(
       ValidationWsClient validationClient, UUID key, StepType stepType, Status status) {
+    updateStatus(validationClient, key, stepType, status, null);
+  }
+
+  public static void updateStatus(
+      ValidationWsClient validationClient,
+      UUID key,
+      StepType stepType,
+      Status status,
+      String message) {
 
     Validation validation = Retry.decorateFunction(RETRY, validationClient::get).apply(key);
     if (validation == null) {
@@ -43,11 +58,9 @@ public class Validations {
 
     Graph<StepType> validatorWorkflow = PipelinesWorkflow.getValidatorWorkflow();
     // Mark all previous steps as FINISHED
-    for (ValidationStep step : validation.getMetrics().getStepTypes()) {
-      if (validatorWorkflow.getLevel(stepType) > step.getExecutionOrder()) {
-        step.setStatus(Status.FINISHED);
-      }
-    }
+    validation.getMetrics().getStepTypes().stream()
+        .filter(step -> validatorWorkflow.getLevel(stepType) > step.getExecutionOrder())
+        .forEach(step -> step.setStatus(Status.FINISHED));
 
     Status newStatus = status;
     if (validation.hasFinished()) {
@@ -76,6 +89,7 @@ public class Validations {
       // Required to keep validation api separate to gbif-api
       if (step.getStepType().equals(stepType.name())) {
         step.setStatus(newStatus);
+        step.setMessage(message);
         addValidationType = false;
         break;
       }
@@ -86,6 +100,7 @@ public class Validations {
           ValidationStep.builder()
               .stepType(stepType.name())
               .status(newStatus)
+              .message(message)
               .executionOrder(validatorWorkflow.getLevel(stepType))
               .build();
       metrics.getStepTypes().add(step);
@@ -93,7 +108,12 @@ public class Validations {
 
     validation.setMetrics(metrics);
 
-    log.info("Validaton {} main state to {} and step state to {}", stepType, mainStatus, newStatus);
+    log.info(
+        "Validaton {} main state to {} and step state to {} with message {}",
+        stepType,
+        mainStatus,
+        newStatus,
+        message);
     Retry.decorateRunnable(RETRY, () -> validationClient.update(key, validation)).run();
   }
 }

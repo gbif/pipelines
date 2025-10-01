@@ -5,7 +5,7 @@ Maintainer: GBIF and LivingAtlases Pipelines Team <pipelines@lists.gbif.org>
 Uploaders: GBIF and LivingAtlases Pipelines Team <pipelines@lists.gbif.org>
 Build-Depends:
  debhelper (>= 11),
- openjdk-8-jdk,
+ openjdk-17-jdk,
  maven
 Standards-Version: 4.2.1
 Homepage: https://github.com/gbif/pipelines
@@ -14,7 +14,7 @@ Vcs-Git: https://github.com/gbif/pipelines.git
 
 Package: la-pipelines
 Architecture: all
-Depends: ${misc:Depends}, openjdk-8-jdk, ca-certificates, bash-completion, curl
+Depends: ${misc:Depends}, openjdk-17-jdk, ca-certificates, bash-completion, curl
 Suggests: yq, docopts
 Description: Utility for data processing and indexing of biodiversity data
  This package contains the Pipelines Data ingress utility package from
@@ -25,7 +25,7 @@ Description: Utility for data processing and indexing of biodiversity data
 
 Package: la-pipelines-migration
 Architecture: all
-Depends: ${misc:Depends}, openjdk-8-jdk
+Depends: ${misc:Depends}, openjdk-17-jdk
 Description: Utility for data processing and indexing of biodiversity data
  This package contains the Pipelines Data ingress utility package from
  GBIF and Living Atlases.

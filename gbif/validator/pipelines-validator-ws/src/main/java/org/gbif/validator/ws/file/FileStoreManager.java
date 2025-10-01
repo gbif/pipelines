@@ -76,7 +76,7 @@ public class FileStoreManager {
       // from here we can decide to change the content type (e.g. zipped excel file)
       return fromMediaTypeAndFormat(dataFilePath, fileName, detectedMediaType, destinationFolder);
     } catch (Exception ex) {
-      log.warn("Deleting temporary content of {} after IOException.", fileName);
+      log.error("Deleting temporary content of {} after IOException.", fileName, ex);
       FileUtils.deleteDirectory(destinationFolder.toFile());
       throw ex;
     }
@@ -125,7 +125,10 @@ public class FileStoreManager {
       throws IOException {
 
     if (!isAvailable(url)) {
-      throw new IllegalArgumentException("Url " + url + " is not reachable");
+      throw new IllegalArgumentException(
+          "Failed to download file from "
+              + url
+              + ". The resource is not reachable. Please check that the URL is correct");
     }
 
     String fileName = getFileName(url);

@@ -8,6 +8,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CHRONOMETRIC_AGE_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.CLONING_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DNA_DERIVED_DATA_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_GBIF_IDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
@@ -100,6 +101,7 @@ public class IngestMetricsBuilder {
         .addMetric(VerbatimTransform.class, VERBATIM_RECORDS_COUNT)
         .addMetric(AudubonTransform.class, AUDUBON_RECORDS_COUNT)
         .addMetric(ImageTransform.class, IMAGE_RECORDS_COUNT)
+        .addMetric(ImageTransform.class, DNA_DERIVED_DATA_RECORDS_COUNT)
         .addMetric(MeasurementOrFactTransform.class, MEASUREMENT_OR_FACT_RECORDS_COUNT)
         .addMetric(MultimediaTransform.class, MULTIMEDIA_RECORDS_COUNT)
         .addMetric(FilterRecordsTransform.class, FILTER_ER_BASED_ON_GBIF_ID)

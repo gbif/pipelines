@@ -1,11 +1,13 @@
 package org.gbif.pipelines.core.converters;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -14,19 +16,26 @@ import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.Constants;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
+import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
+import org.gbif.pipelines.core.utils.SortUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedData;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
+import org.gbif.pipelines.io.avro.json.Classification;
 import org.gbif.pipelines.io.avro.json.GeologicalContext;
 import org.gbif.pipelines.io.avro.json.GeologicalRange;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
@@ -35,16 +44,22 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 @Builder
 public class OccurrenceJsonConverter {
 
+  public static final String GBIF_BACKBONE_DATASET_KEY = Constants.NUB_DATASET_KEY.toString();
+
   private final MetadataRecord metadata;
   private final IdentifierRecord identifier;
   private final ClusteringRecord clustering;
   private final BasicRecord basic;
   private final TemporalRecord temporal;
   private final LocationRecord location;
-  private final TaxonRecord taxon;
+  private final MultiTaxonRecord multiTaxon;
   private final GrscicollRecord grscicoll;
   private final MultimediaRecord multimedia;
+  private final DnaDerivedDataRecord dnaDerivedData;
   private final ExtendedRecord verbatim;
+
+  private final boolean indexLegacyTaxonomy;
+  private final boolean indexMultiTaxonomy;
 
   public OccurrenceJsonRecord convert() {
 
@@ -60,10 +75,17 @@ public class OccurrenceJsonConverter {
     mapBasicRecord(builder);
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
-    mapTaxonRecord(builder);
+    if (indexLegacyTaxonomy) {
+      mapTaxonRecord(builder);
+    }
+    if (indexMultiTaxonomy) {
+      mapMultiTaxonRecord(builder);
+    }
     mapGrscicollRecord(builder);
     mapMultimediaRecord(builder);
+    mapDnaDerivedDataRecord(builder);
     mapExtendedRecord(builder);
+    mapSortField(builder);
 
     return builder.build();
   }
@@ -289,8 +311,54 @@ public class OccurrenceJsonConverter {
   }
 
   private void mapTaxonRecord(OccurrenceJsonRecord.Builder builder) {
-    // Set  GbifClassification
-    builder.setGbifClassification(JsonConverter.convertClassification(verbatim, taxon));
+
+    if (multiTaxon != null
+        && multiTaxon.getTaxonRecords() != null
+        && !multiTaxon.getTaxonRecords().isEmpty()) {
+
+      Optional<TaxonRecord> gbifRecord =
+          multiTaxon.getTaxonRecords().stream()
+              .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
+              .findFirst();
+
+      gbifRecord.ifPresent(
+          tr -> {
+            try {
+              builder.setGbifClassification(
+                  JsonConverter.convertToGbifClassification(verbatim, tr));
+            } catch (Exception e) {
+              log.error("Error converting to GBIF classification", e);
+            }
+          });
+    }
+  }
+
+  private void mapMultiTaxonRecord(OccurrenceJsonRecord.Builder builder) {
+    if (multiTaxon != null
+        && multiTaxon.getTaxonRecords() != null
+        && !multiTaxon.getTaxonRecords().isEmpty()) {
+      Map<String, Classification> classifications =
+          JsonConverter.convertToClassifications(multiTaxon);
+      builder.setClassifications(classifications);
+      List<String> checklistKeys =
+          multiTaxon.getTaxonRecords().stream()
+              .filter(
+                  tr ->
+                      tr.getUsage() != null
+                          && !TaxonomyInterpreter.INCERTAE_SEDIS_KEY.equals(tr.getUsage().getKey()))
+              .map(TaxonRecord::getDatasetKey)
+              .collect(Collectors.toList());
+
+      builder.setChecklistKey(checklistKeys);
+
+      // Raw to index classification
+      if (verbatim != null) {
+        extractOptValue(verbatim, DwcTerm.taxonID).ifPresent(builder::setTaxonID);
+        extractOptValue(verbatim, DwcTerm.taxonConceptID).ifPresent(builder::setTaxonConceptID);
+        extractOptValue(verbatim, DwcTerm.scientificName)
+            .ifPresent(builder::setVerbatimScientificName);
+      }
+    }
   }
 
   private void mapGrscicollRecord(OccurrenceJsonRecord.Builder builder) {
@@ -309,6 +377,18 @@ public class OccurrenceJsonConverter {
         .setMultimediaItems(JsonConverter.convertMultimediaList(multimedia))
         .setMediaTypes(JsonConverter.convertMultimediaType(multimedia))
         .setMediaLicenses(JsonConverter.convertMultimediaLicense(multimedia));
+  }
+
+  private void mapDnaDerivedDataRecord(OccurrenceJsonRecord.Builder builder) {
+    if (dnaDerivedData != null
+        && dnaDerivedData.getDnaDerivedDataItems() != null
+        && !dnaDerivedData.getDnaDerivedDataItems().isEmpty()) {
+      builder.setDnaSequenceID(
+          new ArrayList<>(
+              dnaDerivedData.getDnaDerivedDataItems().stream()
+                  .map(DnaDerivedData::getDnaSequenceID)
+                  .collect(Collectors.toSet())));
+    }
   }
 
   private void mapExtendedRecord(OccurrenceJsonRecord.Builder builder) {
@@ -337,11 +417,20 @@ public class OccurrenceJsonConverter {
     extractLengthAwareOptValue(verbatim, DwcTerm.islandGroup).ifPresent(builder::setIslandGroup);
     extractLengthAwareOptValue(verbatim, DwcTerm.previousIdentifications)
         .ifPresent(builder::setPreviousIdentifications);
-    extractLengthAwareOptValue(verbatim, DwcTerm.taxonConceptID)
-        .ifPresent(builder.getGbifClassification()::setTaxonConceptID);
+
+    if (builder.getGbifClassification() != null) {
+      extractLengthAwareOptValue(verbatim, DwcTerm.taxonConceptID)
+          .ifPresent(builder.getGbifClassification()::setTaxonConceptID);
+    }
   }
 
   private void mapIssues(OccurrenceJsonRecord.Builder builder) {
+
+    Optional<TaxonRecord> gbifRecord =
+        multiTaxon.getTaxonRecords().stream()
+            .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
+            .findFirst();
+
     JsonConverter.mapIssues(
         Arrays.asList(
             metadata,
@@ -350,11 +439,18 @@ public class OccurrenceJsonConverter {
             basic,
             temporal,
             location,
-            taxon,
+            gbifRecord.orElse(TaxonRecord.newBuilder().build()),
             grscicoll,
             multimedia),
         builder::setIssues,
         builder::setNotIssues);
+
+    // populate the non-taxonomic issues field
+    JsonConverter.mapIssues(
+        Arrays.asList(
+            metadata, identifier, clustering, basic, temporal, location, grscicoll, multimedia),
+        builder::setNonTaxonomicIssues,
+        v -> {});
   }
 
   private void mapCreated(OccurrenceJsonRecord.Builder builder) {
@@ -365,9 +461,16 @@ public class OccurrenceJsonConverter {
             basic,
             temporal,
             location,
-            taxon,
+            multiTaxon,
             grscicoll,
+            dnaDerivedData,
             multimedia)
         .ifPresent(builder::setCreated);
+  }
+
+  private void mapSortField(OccurrenceJsonRecord.Builder builder) {
+    builder.setYearMonthGbifIdSort(
+        SortUtils.yearDescMonthAscGbifIdAscSortKey(
+            builder.getYear(), builder.getMonth(), builder.getGbifId()));
   }
 }

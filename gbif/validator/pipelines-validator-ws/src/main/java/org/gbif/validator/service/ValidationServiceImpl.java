@@ -1,7 +1,5 @@
 package org.gbif.validator.service;
 
-import static org.gbif.validator.service.EncodingUtil.encode;
-import static org.gbif.validator.service.EncodingUtil.getRedirectedUrl;
 import static org.gbif.validator.service.ValidationFactory.metricsSubmitError;
 import static org.gbif.validator.service.ValidationFactory.newValidationInstance;
 
@@ -11,9 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -78,23 +74,21 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     return reachedMaximum;
   }
 
-  public Optional<Validation.ErrorCode> validate(ValidationRequest validationRequest) {
+  public void validateRequest(ValidationRequest validationRequest) {
     if (validationRequest.getInstallationKey() != null
         && (validationRequest.getNotificationEmail() == null
             || validationRequest.getNotificationEmail().isEmpty())) {
-      return Optional.of(Validation.ErrorCode.NOTIFICATION_EMAILS_MISSING);
+      throw errorMapper.apply(Validation.ErrorCode.NOTIFICATION_EMAILS_MISSING);
     }
-    return reachedMaxRunningValidations(getPrincipal().getUsername())
-        ? Optional.of(Validation.ErrorCode.MAX_RUNNING_VALIDATIONS)
-        : Optional.empty();
+    if (reachedMaxRunningValidations(getPrincipal().getUsername())) {
+      throw errorMapper.apply(Validation.ErrorCode.MAX_RUNNING_VALIDATIONS);
+    }
   }
 
   @Override
   public Validation validateFile(MultipartFile file, ValidationRequest validationRequest) {
-    Optional<Validation.ErrorCode> error = validate(validationRequest);
-    if (error.isPresent()) {
-      throw errorMapper.apply(error.get());
-    }
+    validateRequest(validationRequest);
+
     log.info("Staring validation for the file {}", file.getOriginalFilename());
     UUID key = UUID.randomUUID();
     FileStoreManager.AsyncDataFileTask task = fileStoreManager.uploadDataFile(file, key.toString());
@@ -129,17 +123,16 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   @Override
   public Validation validateFileFromUrl(String fileURL, ValidationRequest validationRequest) {
     try {
-      Optional<Validation.ErrorCode> error = validate(validationRequest);
-      if (error.isPresent()) {
-        throw errorMapper.apply(error.get());
-      }
+      validateRequest(validationRequest);
+
       log.info("Staring validation for the URL {}", fileURL);
       UUID key = UUID.randomUUID();
-      String encodedFileURL = encode(fileURL);
-      Optional<String> redirectedUrl = getRedirectedUrl(encodedFileURL);
+      String encodedFileURL = EncodingUtil.encode(fileURL);
+      Optional<String> redirectedUrl = EncodingUtil.getRedirectedUrl(encodedFileURL);
       if (redirectedUrl.isPresent()) {
         encodedFileURL = redirectedUrl.get();
       }
+
       // this should also become asynchronous at some point
       FileStoreManager.AsyncDownloadResult downloadResult =
           fileStoreManager.downloadDataFile(
@@ -160,7 +153,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       log.error("File limit error", ex);
       throw errorMapper.apply(Validation.ErrorCode.MAX_FILE_SIZE_VIOLATION);
     } catch (IOException ex) {
-      log.error("Can not download file submitted", ex);
+      log.error("Can't download submitted file", ex);
       throw errorMapper.apply(Validation.ErrorCode.IO_ERROR);
     }
   }
@@ -347,12 +340,11 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
               + " file format is not supported, file name: "
               + dataFile.getSourceFileName());
     }
-    return new HashSet<>(
-        Arrays.asList(
-            StepType.VALIDATOR_VALIDATE_ARCHIVE.name(),
-            stepType,
-            StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name(),
-            StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
-            StepType.VALIDATOR_COLLECT_METRICS.name()));
+    return Set.of(
+        StepType.VALIDATOR_VALIDATE_ARCHIVE.name(),
+        stepType,
+        StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name(),
+        StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
+        StepType.VALIDATOR_COLLECT_METRICS.name());
   }
 }

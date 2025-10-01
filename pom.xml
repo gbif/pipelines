@@ -5,17 +5,18 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>58</version>
+    <version>59</version>
   </parent>
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.19.0-SNAPSHOT</version>
+  <version>3.2.11-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
     <module>gbif</module>
     <module>sdks</module>
+    <module>livingatlas</module>
   </modules>
 
   <name>Pipelines :: Parent</name>
@@ -75,10 +76,24 @@
       <url>https://repository.gbif.org/repository/typesafe/</url>
     </repository>
   </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>gbif-central</id>
+      <url>https://repository.gbif.org/repository/central/</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>gbif-release</id>
+      <url>https://repository.gbif.org/repository/releases/</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>gbif-snapshot</id>
+      <url>https://repository.gbif.org/repository/snapshots/</url>
+    </pluginRepository>
+  </pluginRepositories>
 
   <properties>
     <!-- Common variables -->
-    <jdkLevel>11</jdkLevel>
+    <jdkLevel>17</jdkLevel>
     <maven.compiler.source>${jdkLevel}</maven.compiler.source>
     <maven.compiler.target>${jdkLevel}</maven.compiler.target>
 
@@ -92,18 +107,18 @@
 
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.67</gbif-parsers.version>
-    <dwca-io.version>2.17-H3-SNAPSHOT</dwca-io.version>
-    <gbif-api.version>1.17.0-SNAPSHOT</gbif-api.version>
-    <gbif-common.version>0.59</gbif-common.version>
-    <dwc-api.version>1.49-H3-SNAPSHOT</dwc-api.version>
-    <kvs.version>1.35-H3-SNAPSHOT</kvs.version>
-    <hbase-utils.version>0.14-H3-SNAPSHOT</hbase-utils.version>
-    <gbif-wrangler.version>0.5-SNAPSHOT</gbif-wrangler.version>
-    <gbif-occurrence.version>0.195.7-H3-SNAPSHOT</gbif-occurrence.version>
-    <vocabulary-lookup.version>1.0.10-SNAPSHOT</vocabulary-lookup.version>
-    <registry.version>3.96.6-SNAPSHOT</registry.version>
-    <gbif-common-ws.version>1.26</gbif-common-ws.version>
-    <gbif-postal-service.version>1.9.0-SNAPSHOT</gbif-postal-service.version>
+    <dwca-io.version>3.0.1-SNAPSHOT</dwca-io.version>
+    <gbif-api.version>2.2.0-SNAPSHOT</gbif-api.version>
+    <gbif-common.version>0.60</gbif-common.version>
+    <dwc-api.version>2.1.7-SNAPSHOT</dwc-api.version>
+    <kvs.version>3.0</kvs.version>
+    <hbase-utils.version>1.0.0</hbase-utils.version>
+    <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
+    <gbif-occurrence.version>1.1.7-SNAPSHOT</gbif-occurrence.version>
+    <vocabulary-lookup.version>2.0.3</vocabulary-lookup.version>
+    <registry.version>4.1.16-SNAPSHOT</registry.version>
+    <gbif-common-ws.version>2.0.10-java11</gbif-common-ws.version>
+    <gbif-postal-service.version>2.1.4-SNAPSHOT</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
 
     <!-- Main distributed libraries -->
@@ -127,7 +142,7 @@
     <geotools.version>20.5</geotools.version>
     <commons-lang3.version>3.10</commons-lang3.version>
     <!-- Be carful when change the guava version, it can break XML parsing and etc at runtime -->
-    <guava.version>27.0.1-jre</guava.version>
+    <guava.version>33.0.0-jre</guava.version>
     <amqp-client.version>4.8.0</amqp-client.version>
 
     <!-- Fault tolerance -->
@@ -180,11 +195,10 @@
     <!-- Maven plugin -->
     <maven-plugin-api.version>3.8.6</maven-plugin-api.version>
     <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
-    <jacoco-maven-plugin.version>0.8.8</jacoco-maven-plugin.version>
     <maven-plugin-plugin.version>3.9.0</maven-plugin-plugin.version>
+    <build-helper-maven.version>3.6.0</build-helper-maven.version>
 
     <!-- Plugins -->
-    <io.fabric8.version>0.33.0</io.fabric8.version>
     <googleJavaFormat.version>1.17.0</googleJavaFormat.version>
 
     <!-- Sonar -->
@@ -226,11 +240,13 @@
             <dependencySourceIncludes>
               <dependencySourceInclude>org.gbif:*</dependencySourceInclude>
             </dependencySourceIncludes>
+            <failOnError>false</failOnError>
           </configuration>
         </plugin>
         <plugin>
-          <groupId>org.jacoco</groupId>
-          <artifactId>jacoco-maven-plugin</artifactId>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>${build-helper-maven.version}</version>
         </plugin>
         <plugin>
           <groupId>com.diffplug.spotless</groupId>
@@ -244,11 +260,6 @@
               </googleJavaFormat>
             </java>
           </configuration>
-        </plugin>
-        <plugin>
-          <groupId>io.fabric8</groupId>
-          <artifactId>docker-maven-plugin</artifactId>
-          <version>${io.fabric8.version}</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -272,7 +283,6 @@
           </execution>
         </executions>
       </plugin>
-
     </plugins>
   </build>
 
@@ -456,6 +466,11 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-common</artifactId>
         <version>${gbif-common.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.kvs</groupId>
+        <artifactId>kvs-common</artifactId>
+        <version>${kvs.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.kvs</groupId>
@@ -1118,58 +1133,5 @@
 
     </dependencies>
   </dependencyManagement>
-
-  <profiles>
-    <profile>
-      <id>coverage</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>prepare-agent-ut</id>
-                <goals>
-                  <goal>prepare-agent</goal>
-                </goals>
-                <configuration>
-                  <destFile>${jacoco.ut.output.file}</destFile>
-                  <append>true</append>
-                  <includes>org.gbif.*,au.org.ala.*</includes>
-                  <propertyName>surefireArgLine</propertyName>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <dependencies>
-              <dependency>
-                <groupId>org.apache.maven.surefire</groupId>
-                <artifactId>surefire-junit47</artifactId>
-                <version>${maven-failsafe-plugin.version}</version>
-              </dependency>
-            </dependencies>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>skip-coverage</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <configuration>
-              <skip>true</skip>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 
 </project>

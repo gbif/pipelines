@@ -29,8 +29,9 @@ import org.springframework.web.bind.annotation.RequestPart;
 public interface ValidationWsClient extends ValidationService<File> {
 
   /** Uploads a file and starts the validation process. */
-  @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-  Validation submitFile(@RequestPart("file") File file);
+  default Validation submitFile(@RequestPart("file") File file) {
+    return validateFile(file, ValidationRequest.builder().build());
+  }
 
   /** Uploads a file and starts the validation process. */
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})

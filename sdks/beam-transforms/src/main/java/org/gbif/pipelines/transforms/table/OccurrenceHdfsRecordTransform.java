@@ -21,15 +21,17 @@ import org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
+import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.Transform;
@@ -84,14 +86,16 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
   @NonNull private final TupleTag<BasicRecord> basicRecordTag;
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
-  @NonNull private final TupleTag<TaxonRecord> taxonRecordTag;
+  @NonNull private final TupleTag<MultiTaxonRecord> multiTaxonRecordTag;
   @NonNull private final TupleTag<GrscicollRecord> grscicollRecordTag;
   @NonNull private final TupleTag<EventCoreRecord> eventCoreRecordTag;
 
   // Extension
   @NonNull private final TupleTag<MultimediaRecord> multimediaRecordTag;
   @NonNull private final TupleTag<ImageRecord> imageRecordTag;
+  @NonNull private final TupleTag<DnaDerivedDataRecord> dnaRecordTag;
   @NonNull private final TupleTag<AudubonRecord> audubonRecordTag;
+  @NonNull private final TupleTag<HumboldtRecord> humboldtRecordTag;
 
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
 
@@ -120,18 +124,23 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
                 v.getOnly(temporalRecordTag, TemporalRecord.newBuilder().setId(k).build());
             LocationRecord lr =
                 v.getOnly(locationRecordTag, LocationRecord.newBuilder().setId(k).build());
-            TaxonRecord txr = v.getOnly(taxonRecordTag, TaxonRecord.newBuilder().setId(k).build());
+            MultiTaxonRecord mtxr =
+                v.getOnly(multiTaxonRecordTag, MultiTaxonRecord.newBuilder().setId(k).build());
             GrscicollRecord gr =
                 v.getOnly(grscicollRecordTag, GrscicollRecord.newBuilder().setId(k).build());
             // Extension
             MultimediaRecord mr =
                 v.getOnly(multimediaRecordTag, MultimediaRecord.newBuilder().setId(k).build());
             ImageRecord ir = v.getOnly(imageRecordTag, ImageRecord.newBuilder().setId(k).build());
+            DnaDerivedDataRecord dnar =
+                v.getOnly(dnaRecordTag, DnaDerivedDataRecord.newBuilder().setId(k).build());
             AudubonRecord ar =
                 v.getOnly(audubonRecordTag, AudubonRecord.newBuilder().setId(k).build());
 
             EventCoreRecord eventCoreRecord =
                 v.getOnly(eventCoreRecordTag, EventCoreRecord.newBuilder().setId(k).build());
+            HumboldtRecord humboldtRecord =
+                v.getOnly(humboldtRecordTag, HumboldtRecord.newBuilder().setId(k).build());
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
             OccurrenceHdfsRecord record =
@@ -142,11 +151,13 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
                     .metadataRecord(mdr)
                     .temporalRecord(tr)
                     .locationRecord(lr)
-                    .taxonRecord(txr)
+                    .multiTaxonRecord(mtxr)
                     .grscicollRecord(gr)
                     .multimediaRecord(mmr)
+                    .dnaDerivedDataRecord(dnar)
                     .extendedRecord(er)
                     .eventCoreRecord(eventCoreRecord)
+                    .humboldtRecord(humboldtRecord)
                     .build()
                     .convert();
 

@@ -253,9 +253,10 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
     // this is a deliberate hack(see issue https://github.com/gbif/pipelines/issues/885)
     DatasetType datasetType = message.getDatasetType();
-    if (message.getDatasetType() == DatasetType.MATERIAL_ENTITY) {
-      datasetType = DatasetType.OCCURRENCE;
-    }
+    // TODO: can we remove this??
+    //    if (message.getDatasetType() == DatasetType.MATERIAL_ENTITY) {
+    //      datasetType = DatasetType.OCCURRENCE;
+    //    }
 
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),

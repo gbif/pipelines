@@ -16,14 +16,14 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.gbif.rest.client.geocode.Location;
+import org.gbif.rest.client.geocode.GeocodeResponse.Location;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -57,11 +57,11 @@ public class AlaLocationInterpreterTest {
   public void biomeTest() {
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
 
-    KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
+    KeyValueTestStoreStub<GeocodeRequest, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     Location terrestrial = new Location();
     terrestrial.setName("Terrestrial");
     kvStore.put(
-        LatLng.create(-31.25d, 146.921099d),
+        GeocodeRequest.create(-31.25d, 146.921099d),
         new GeocodeResponse(Collections.singletonList(terrestrial)));
 
     Map<String, String> coreMap = new HashMap<>();
@@ -171,9 +171,10 @@ public class AlaLocationInterpreterTest {
     state.setName("New South Wales");
     state.setType("State");
 
-    KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
+    KeyValueTestStoreStub<GeocodeRequest, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        LatLng.create(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
+        GeocodeRequest.create(-31.25d, 146.921099d),
+        new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -204,9 +205,10 @@ public class AlaLocationInterpreterTest {
     state.setName("New South Wales");
     state.setType("State");
 
-    KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
+    KeyValueTestStoreStub<GeocodeRequest, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        LatLng.create(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
+        GeocodeRequest.create(-31.25d, 146.921099d),
+        new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -234,9 +236,10 @@ public class AlaLocationInterpreterTest {
     state.setName("New South Wales");
     state.setType("State");
 
-    KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
+    KeyValueTestStoreStub<GeocodeRequest, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        LatLng.create(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
+        GeocodeRequest.create(-31.25d, 146.921099d),
+        new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -269,9 +272,10 @@ public class AlaLocationInterpreterTest {
     state.setName("vic");
     state.setType("State");
 
-    KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
+    KeyValueTestStoreStub<GeocodeRequest, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        LatLng.create(-37.47d, 144.785153d), new GeocodeResponse(Collections.singletonList(state)));
+        GeocodeRequest.create(-37.47d, 144.785153d),
+        new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -307,9 +311,9 @@ public class AlaLocationInterpreterTest {
     state.setName("New South Wales");
     state.setType("State");
 
-    KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
+    KeyValueTestStoreStub<GeocodeRequest, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        LatLng.create(-31.2532183d, 146.921099d),
+        GeocodeRequest.create(-31.2532183d, 146.921099d),
         new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
@@ -330,9 +334,9 @@ public class AlaLocationInterpreterTest {
     state.setName("New South Wales");
     state.setType("State");
 
-    KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
+    KeyValueTestStoreStub<GeocodeRequest, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-        LatLng.create(-31.2532183d, 146.921099d),
+        GeocodeRequest.create(-31.2532183d, 146.921099d),
         new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
@@ -357,8 +361,9 @@ public class AlaLocationInterpreterTest {
 
   @Test
   public void assertCountryCentre() {
-    KeyValueTestStoreStub<LatLng, GeocodeResponse> store = new KeyValueTestStoreStub<>();
-    store.put(LatLng.create(-29.532804, 145.491477), createCountryResponse(Country.AUSTRALIA));
+    KeyValueTestStoreStub<GeocodeRequest, GeocodeResponse> store = new KeyValueTestStoreStub<>();
+    store.put(
+        GeocodeRequest.create(-29.532804, 145.491477), createCountryResponse(Country.AUSTRALIA));
 
     MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();

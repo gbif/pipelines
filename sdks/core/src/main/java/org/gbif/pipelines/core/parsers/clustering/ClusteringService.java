@@ -1,11 +1,13 @@
 package org.gbif.pipelines.core.parsers.clustering;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.hbase.TableName;
@@ -30,6 +32,11 @@ public class ClusteringService implements Serializable {
             "clusteringCall",
             RetryConfig.custom()
                 .maxAttempts(config.getRetryMaxAttempts())
+                .retryExceptions(
+                    JsonParseException.class,
+                    IOException.class,
+                    TimeoutException.class,
+                    PipelinesException.class)
                 .intervalFunction(
                     IntervalFunction.ofExponentialBackoff(
                         Duration.ofSeconds(config.getRetryDuration())))

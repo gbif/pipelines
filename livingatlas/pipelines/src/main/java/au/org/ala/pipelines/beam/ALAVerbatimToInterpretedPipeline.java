@@ -176,11 +176,7 @@ public class ALAVerbatimToInterpretedPipeline {
         ALABasicTransform.builder()
             .vocabularyServiceSupplier(
                 config.getGbifConfig().getVocabularyConfig() != null
-                    ? FileVocabularyFactory.builder()
-                        .config(config.getGbifConfig())
-                        .hdfsConfigs(hdfsConfigs)
-                        .build()
-                        .getInstanceSupplier()
+                    ? FileVocabularyFactory.getInstanceSupplier(hdfsConfigs, config.getGbifConfig())
                     : null)
             .recordedByKvStoreSupplier(RecordedByKVStoreFactory.createSupplier(config))
             .occStatusKvStoreSupplier(

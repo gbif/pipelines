@@ -7,6 +7,8 @@ import java.util.concurrent.Executors;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
 import org.gbif.pipelines.fragmenter.common.TableAssert;
+import org.gbif.pipelines.fragmenter.strategy.DwcaStrategy;
+import org.gbif.pipelines.fragmenter.strategy.XmlStrategy;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -47,7 +49,8 @@ public class FragmentPersisterIT {
 
     // When
     long result =
-        FragmentPersister.dwcaBuilder()
+        FragmentPersister.builder()
+            .strategy(DwcaStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(regularZipDwca)
@@ -77,7 +80,8 @@ public class FragmentPersisterIT {
 
     // When
     long result =
-        FragmentPersister.dwcaBuilder()
+        FragmentPersister.builder()
+            .strategy(DwcaStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(regularDwca)
@@ -107,7 +111,8 @@ public class FragmentPersisterIT {
 
     // When
     long result =
-        FragmentPersister.dwcaBuilder()
+        FragmentPersister.builder()
+            .strategy(DwcaStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(regularDwca)
@@ -140,7 +145,8 @@ public class FragmentPersisterIT {
 
     // When
     long resultFirst =
-        FragmentPersister.dwcaBuilder()
+        FragmentPersister.builder()
+            .strategy(DwcaStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(regularDwca)
@@ -156,7 +162,8 @@ public class FragmentPersisterIT {
             .persist();
 
     long resultSecond =
-        FragmentPersister.dwcaBuilder()
+        FragmentPersister.builder()
+            .strategy(DwcaStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(regularUpdatedDwca)
@@ -193,7 +200,8 @@ public class FragmentPersisterIT {
 
     // When
     long resultFirst =
-        FragmentPersister.dwcaBuilder()
+        FragmentPersister.builder()
+            .strategy(DwcaStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(regularDwca)
@@ -210,7 +218,8 @@ public class FragmentPersisterIT {
             .persist();
 
     long resultSecond =
-        FragmentPersister.dwcaBuilder()
+        FragmentPersister.builder()
+            .strategy(DwcaStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(regularUpdatedDwca)
@@ -248,7 +257,8 @@ public class FragmentPersisterIT {
 
     // When
     long result =
-        FragmentPersister.dwcaBuilder()
+        FragmentPersister.builder()
+            .strategy(DwcaStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(occurrenceAsExtensionDwca)
@@ -278,7 +288,8 @@ public class FragmentPersisterIT {
 
     // When
     long result =
-        FragmentPersister.dwcaBuilder()
+        FragmentPersister.builder()
+            .strategy(DwcaStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(occurrenceAsExtensionDwca)
@@ -310,7 +321,8 @@ public class FragmentPersisterIT {
 
     // When
     long result =
-        FragmentPersister.dwcaBuilder()
+        FragmentPersister.builder()
+            .strategy(DwcaStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(multimediaExtensionDwca)
@@ -340,7 +352,8 @@ public class FragmentPersisterIT {
 
     // When
     long result =
-        FragmentPersister.dwcaBuilder()
+        FragmentPersister.builder()
+            .strategy(DwcaStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(multimediaExtensionDwca)
@@ -373,7 +386,8 @@ public class FragmentPersisterIT {
 
     // When
     long result =
-        FragmentPersister.xmlBuilder()
+        FragmentPersister.builder()
+            .strategy(XmlStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(xmlArchivePath)
@@ -403,7 +417,8 @@ public class FragmentPersisterIT {
 
     // When
     long result =
-        FragmentPersister.xmlBuilder()
+        FragmentPersister.builder()
+            .strategy(XmlStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(xmlArchivePath)
@@ -435,7 +450,8 @@ public class FragmentPersisterIT {
 
     // When
     long resultFirst =
-        FragmentPersister.xmlBuilder()
+        FragmentPersister.builder()
+            .strategy(XmlStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(xmlArchivePath)
@@ -451,7 +467,8 @@ public class FragmentPersisterIT {
             .persist();
 
     long resultSecond =
-        FragmentPersister.xmlBuilder()
+        FragmentPersister.builder()
+            .strategy(XmlStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(xmlArchivePath)
@@ -488,7 +505,8 @@ public class FragmentPersisterIT {
 
     // When
     long resultFirst =
-        FragmentPersister.xmlBuilder()
+        FragmentPersister.builder()
+            .strategy(XmlStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(xmlArchivePath)
@@ -505,7 +523,8 @@ public class FragmentPersisterIT {
             .persist();
 
     long resultSecond =
-        FragmentPersister.xmlBuilder()
+        FragmentPersister.builder()
+            .strategy(XmlStrategy.create())
             .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
             .keygenConfig(HbaseServer.CFG)
             .pathToArchive(xmlArchivePath)
