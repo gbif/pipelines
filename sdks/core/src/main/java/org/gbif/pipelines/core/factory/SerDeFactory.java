@@ -10,8 +10,8 @@ import com.fasterxml.jackson.dataformat.avro.AvroModule;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 import org.apache.avro.specific.SpecificData;
+import org.gbif.pipelines.io.avro.json.Classification;
 import org.gbif.pipelines.io.avro.json.Coordinates;
-import org.gbif.pipelines.io.avro.json.GbifClassification;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.io.avro.json.VerbatimRecord;
 
@@ -20,13 +20,13 @@ public class SerDeFactory {
 
   private static final ObjectMapper AVRO_MAPPER =
       new ObjectMapper()
-          .addMixIn(GbifClassification.class, GbifClassificationMixin.class)
+          .addMixIn(Classification.class, ClassificationMixin.class)
           .addMixIn(SpecificData.class, multiMediaMixin.class)
           .registerModule(new AvroModule());
 
   private static final ObjectMapper AVRO_MAPPER_NON_NULLS =
       new ObjectMapper()
-          .addMixIn(GbifClassification.class, GbifClassificationMixin.class)
+          .addMixIn(Classification.class, ClassificationMixin.class)
           .addMixIn(Coordinates.class, CoordinatesMixin.class)
           .addMixIn(SpecificData.class, multiMediaMixin.class)
           .registerModule(new AvroModule())
@@ -34,7 +34,7 @@ public class SerDeFactory {
 
   private static final ObjectMapper AVRO_EVENTS_MAPPER_NON_NULLS =
       new ObjectMapper()
-          .addMixIn(GbifClassification.class, GbifClassificationMixin.class)
+          .addMixIn(Classification.class, ClassificationMixin.class)
           .addMixIn(OccurrenceJsonRecord.class, OccurrenceJsonRecordEventMixin.class)
           .addMixIn(Coordinates.class, CoordinatesMixin.class)
           .addMixIn(SpecificData.class, multiMediaMixin.class)
@@ -53,7 +53,7 @@ public class SerDeFactory {
     return AVRO_EVENTS_MAPPER_NON_NULLS;
   }
 
-  public interface GbifClassificationMixin {
+  public interface ClassificationMixin {
 
     @JsonProperty("class")
     String getClass$();
