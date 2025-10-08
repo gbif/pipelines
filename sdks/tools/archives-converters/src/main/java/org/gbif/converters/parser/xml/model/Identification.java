@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.parsing.xml.HigherTaxonParser;
 import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
-import org.gbif.pipelines.core.utils.ModelUtils;
 
 /**
  * This class represents one of possibly many "identifications" in ABCD records. There are two
