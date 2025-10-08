@@ -74,7 +74,8 @@ public class Abcd206RuleSet extends AbstractRuleSet {
       addFn.accept("idGenus", "setGenus");
       addFn.accept("idScientificName", "setScientificName");
       addFn.accept("scientificNameID", "setScientificNameID");
-      addFn.accept("identifiedByID", "setIdentifiedByID");
+
+      addNonNullMethod(digester, "identifiedByID", "addIdentifiedByID", 0);
 
       addNonNullPrioritizedProperty(digester, "idDateIdentified", ID_DATE_IDENTIFIED, 2);
       addNonNullPrioritizedProperty(digester, "idIdentifierName", ID_IDENTIFIER_NAME, 2);

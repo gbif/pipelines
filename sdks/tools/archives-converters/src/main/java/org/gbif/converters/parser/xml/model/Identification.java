@@ -15,7 +15,9 @@
  */
 package org.gbif.converters.parser.xml.model;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.parsing.xml.HigherTaxonParser;
 import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
+import org.gbif.pipelines.core.utils.ModelUtils;
 
 /**
  * This class represents one of possibly many "identifications" in ABCD records. There are two
@@ -46,7 +49,7 @@ public class Identification extends PropertyPrioritizer {
   private String scientificName;
   private String scientificNameID;
   private String identifierName;
-  private String identifiedByID;
+  private List<String> identifiedByIDList = new ArrayList<>();
   private Set<Taxon> higherTaxons = new HashSet<>();
 
   /**
@@ -86,7 +89,7 @@ public class Identification extends PropertyPrioritizer {
     record.setScientificName(this.scientificName);
     record.setIdentifierName(this.identifierName);
     record.setScientificNameID(this.scientificNameID);
-    record.setIdentifiedByID(this.identifiedByID);
+    record.setIdentifiedByID(getIdentifiedByIDConcatenated());
     if (setUnitQualifier) {
       record.setUnitQualifier(this.scientificName);
     }
@@ -113,6 +116,14 @@ public class Identification extends PropertyPrioritizer {
           break;
       }
     }
+  }
+
+  public String getIdentifiedByIDConcatenated() {
+    return String.join(ModelUtils.DEFAULT_SEPARATOR, identifiedByIDList);
+  }
+
+  public void addIdentifiedByID(String id) {
+    identifiedByIDList.add(id);
   }
 
   public void addHigherTaxon(String rank, String name) {
