@@ -117,8 +117,10 @@ public class Identification extends PropertyPrioritizer {
     }
   }
 
-  public void addIdentifiedByID(String id) {
-    identifiedByIDList.add(id);
+  public void addIdentifiedByID(String identifiedByID) {
+    if (identifiedByID != null && !identifiedByID.isEmpty()) {
+      identifiedByIDList.add(identifiedByID);
+    }
   }
 
   public void addHigherTaxon(String rank, String name) {
