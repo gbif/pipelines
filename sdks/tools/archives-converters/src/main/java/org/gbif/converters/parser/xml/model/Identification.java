@@ -89,7 +89,7 @@ public class Identification extends PropertyPrioritizer {
     record.setScientificName(this.scientificName);
     record.setIdentifierName(this.identifierName);
     record.setScientificNameID(this.scientificNameID);
-    record.setIdentifiedByID(getIdentifiedByIDConcatenated());
+    record.setIdentifiedByID(String.join("|", identifiedByIDList));
     if (setUnitQualifier) {
       record.setUnitQualifier(this.scientificName);
     }
@@ -116,10 +116,6 @@ public class Identification extends PropertyPrioritizer {
           break;
       }
     }
-  }
-
-  public String getIdentifiedByIDConcatenated() {
-    return String.join(ModelUtils.DEFAULT_SEPARATOR, identifiedByIDList);
   }
 
   public void addIdentifiedByID(String id) {
