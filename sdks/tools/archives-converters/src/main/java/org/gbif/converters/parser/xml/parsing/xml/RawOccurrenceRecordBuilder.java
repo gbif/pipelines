@@ -88,7 +88,6 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   private String occurrenceRemarks;
   private String modified;
   private String preparations;
-  private String recordedByID;
   private String identifiedByID;
   private String scientificNameID;
 
@@ -113,6 +112,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   private List<Identification> identifications = new ArrayList<>();
   private List<ImageRecord> images = new ArrayList<>();
   private List<LinkRecord> links = new ArrayList<>();
+  private List<String> recordedByIDList = new ArrayList<>();
 
   public List<RawOccurrenceRecord> generateRawOccurrenceRecords() {
     List<RawOccurrenceRecord> records = new ArrayList<>();
@@ -238,7 +238,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     bareBones.setModified(modified);
     bareBones.setOccurrenceRemarks(occurrenceRemarks);
     bareBones.setPreparations(preparations);
-    bareBones.setRecordedByID(recordedByID);
+    bareBones.setRecordedByID(String.join("|", recordedByIDList));
     bareBones.setIdentifiedByID(identifiedByID);
     bareBones.setScientificNameID(scientificNameID);
 
@@ -291,6 +291,12 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   public void addLink(LinkRecord link) {
     if (link != null && !link.isEmpty()) {
       links.add(link);
+    }
+  }
+
+  public void addRecordedByID(String recordedByID) {
+    if (recordedByID != null && !recordedByID.isEmpty()) {
+      recordedByIDList.add(recordedByID);
     }
   }
 
@@ -801,14 +807,6 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
 
   public void setPreparations(String preparations) {
     this.preparations = preparations;
-  }
-
-  public String getRecordedByID() {
-    return recordedByID;
-  }
-
-  public void setRecordedByID(String recordedByID) {
-    this.recordedByID = recordedByID;
   }
 
   public String getIdentifiedByID() {
