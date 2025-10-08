@@ -90,7 +90,7 @@ public class DerivedMetadataTransform implements Serializable {
                             Optional.ofNullable(getAssociatedVerbatim(tr, verbatimRecords))
                                 .map(
                                     vr ->
-                                        JsonConverter.convertToGbifClassificationFromMultiTaxon(
+                                        JsonConverter.convertToClassificationFromMultiTaxon(
                                             vr, tr)))
                     .filter(Optional::isPresent)
                     .map(Optional::get)

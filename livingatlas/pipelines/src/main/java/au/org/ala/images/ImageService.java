@@ -10,10 +10,10 @@ import retrofit2.http.*;
 public interface ImageService {
 
   @Multipart
-  @POST("/batch/upload")
+  @POST("batch/upload")
   Call<BatchUploadResponse> upload(
       @Part("dataResourceUid") RequestBody dataResourceUid, @Part MultipartBody.Part file);
 
-  @GET("/ws/exportDataset/{dataResourceUid}")
+  @GET("ws/exportDataset/{dataResourceUid}")
   Call<ResponseBody> downloadMappingFile(@Path("dataResourceUid") String dataResourceUid);
 }

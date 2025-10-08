@@ -88,18 +88,19 @@ public class SensitiveDataInterpreter {
     if (record == null) {
       return;
     }
-    RankedName name = record.getAcceptedUsage();
+    RankedNameWithAuthorship name = record.getAcceptedUsage();
     if (name == null) {
       return;
     }
-    constructField(name, DwcTerm.scientificName, sensitive, properties, RankedName::getName);
-    constructField(name, DwcTerm.taxonConceptID, sensitive, properties, n -> n.getKey().toString());
-    constructField(name, DwcTerm.taxonRank, sensitive, properties, n -> n.getRank().name());
+    constructField(
+        name, DwcTerm.scientificName, sensitive, properties, RankedNameWithAuthorship::getName);
+    constructField(name, DwcTerm.taxonConceptID, sensitive, properties, n -> n.getKey());
+    constructField(name, DwcTerm.taxonRank, sensitive, properties, n -> n.getRank());
 
     if (record.getClassification() != null) {
       for (RankedName r : record.getClassification()) {
-        Term rank = TERM_FACTORY.findTerm(r.getRank().name().toLowerCase());
-        constructField(name, rank, sensitive, properties, RankedName::getName);
+        Term rank = TERM_FACTORY.findTerm(r.getRank().toLowerCase());
+        constructField(name, rank, sensitive, properties, RankedNameWithAuthorship::getName);
       }
     }
     constructFields(sensitive, properties, (IndexedRecord) record);
@@ -243,17 +244,17 @@ public class SensitiveDataInterpreter {
     String scientificName = DwcTerm.scientificName.simpleName();
     String taxonRank = DwcTerm.taxonRank.simpleName();
     if (altered.containsKey(scientificName) || altered.containsKey(taxonRank)) {
-      Optional<RankedName> name = Optional.ofNullable(record.getAcceptedUsage());
+      Optional<RankedNameWithAuthorship> name = Optional.ofNullable(record.getAcceptedUsage());
       String newScientificName =
-          altered.getOrDefault(scientificName, name.map(RankedName::getName).orElse(null));
+          altered.getOrDefault(
+              scientificName, name.map(RankedNameWithAuthorship::getName).orElse(null));
       String newTaxonRank =
           altered.getOrDefault(
-              taxonRank,
-              name.map(RankedName::getRank).map(Rank::name).orElse(Rank.UNRANKED.name()));
+              taxonRank, name.map(RankedNameWithAuthorship::getRank).orElse(Rank.UNRANKED.name()));
       record.setAcceptedUsage(
-          RankedName.newBuilder()
+          RankedNameWithAuthorship.newBuilder()
               .setName(newScientificName)
-              .setRank(Rank.valueOf(newTaxonRank.toUpperCase()))
+              .setRank(Rank.valueOf(newTaxonRank.toUpperCase()).toString())
               .build());
       record.setClassification(null);
       record.setSynonym(null);
@@ -536,9 +537,9 @@ public class SensitiveDataInterpreter {
       return taxonId;
     }
     if (txr != null) {
-      Integer key = txr.getAcceptedUsage().getKey();
+      String key = txr.getAcceptedUsage().getKey();
       if (key != null) {
-        return key.toString();
+        return key;
       }
     }
     if (er != null) {

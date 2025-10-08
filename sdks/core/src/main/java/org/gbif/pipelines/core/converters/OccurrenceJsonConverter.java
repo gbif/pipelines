@@ -75,12 +75,7 @@ public class OccurrenceJsonConverter {
     mapBasicRecord(builder);
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
-    if (indexLegacyTaxonomy) {
-      mapTaxonRecord(builder);
-    }
-    if (indexMultiTaxonomy) {
-      mapMultiTaxonRecord(builder);
-    }
+    mapMultiTaxonRecord(builder);
     mapGrscicollRecord(builder);
     mapMultimediaRecord(builder);
     mapDnaDerivedDataRecord(builder);
@@ -310,29 +305,6 @@ public class OccurrenceJsonConverter {
     JsonConverter.convertGadm(location.getGadm()).ifPresent(builder::setGadm);
   }
 
-  private void mapTaxonRecord(OccurrenceJsonRecord.Builder builder) {
-
-    if (multiTaxon != null
-        && multiTaxon.getTaxonRecords() != null
-        && !multiTaxon.getTaxonRecords().isEmpty()) {
-
-      Optional<TaxonRecord> gbifRecord =
-          multiTaxon.getTaxonRecords().stream()
-              .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
-              .findFirst();
-
-      gbifRecord.ifPresent(
-          tr -> {
-            try {
-              builder.setGbifClassification(
-                  JsonConverter.convertToGbifClassification(verbatim, tr));
-            } catch (Exception e) {
-              log.error("Error converting to GBIF classification", e);
-            }
-          });
-    }
-  }
-
   private void mapMultiTaxonRecord(OccurrenceJsonRecord.Builder builder) {
     if (multiTaxon != null
         && multiTaxon.getTaxonRecords() != null
@@ -417,11 +389,6 @@ public class OccurrenceJsonConverter {
     extractLengthAwareOptValue(verbatim, DwcTerm.islandGroup).ifPresent(builder::setIslandGroup);
     extractLengthAwareOptValue(verbatim, DwcTerm.previousIdentifications)
         .ifPresent(builder::setPreviousIdentifications);
-
-    if (builder.getGbifClassification() != null) {
-      extractLengthAwareOptValue(verbatim, DwcTerm.taxonConceptID)
-          .ifPresent(builder.getGbifClassification()::setTaxonConceptID);
-    }
   }
 
   private void mapIssues(OccurrenceJsonRecord.Builder builder) {
@@ -433,15 +400,7 @@ public class OccurrenceJsonConverter {
 
     JsonConverter.mapIssues(
         Arrays.asList(
-            metadata,
-            identifier,
-            clustering,
-            basic,
-            temporal,
-            location,
-            gbifRecord.orElse(TaxonRecord.newBuilder().build()),
-            grscicoll,
-            multimedia),
+            metadata, identifier, clustering, basic, temporal, location, grscicoll, multimedia),
         builder::setIssues,
         builder::setNotIssues);
 

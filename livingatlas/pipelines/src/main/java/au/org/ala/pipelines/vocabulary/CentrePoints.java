@@ -75,7 +75,8 @@ public class CentrePoints {
               String[] ss = l.split("\t");
               int length = ss.length;
               String name = ss[0].toUpperCase().replace("\"", ""); // Remove possible string quotes
-              GeocodeRequest centre = GeocodeRequest.create(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
+              GeocodeRequest centre =
+                  GeocodeRequest.create(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
               // country code
               if (length == 4) {
                 String code = ss[3].toUpperCase();
@@ -112,8 +113,8 @@ public class CentrePoints {
       int longDecPlaces = noOfDecimalPlace(decimalLongitude);
 
       // approximate the centre points appropriately
-      double approximatedLat = round(supposedCentre.getLatitude(), latDecPlaces);
-      double approximatedLong = round(supposedCentre.getLongitude(), longDecPlaces);
+      double approximatedLat = round(supposedCentre.getLat(), latDecPlaces);
+      double approximatedLong = round(supposedCentre.getLng(), longDecPlaces);
 
       // compare approximated centre point with supplied coordinates
       if (log.isDebugEnabled()) {
@@ -149,12 +150,16 @@ public class CentrePoints {
     }
   }
 
-  /** @return size of centres */
+  /**
+   * @return size of centres
+   */
   public int size() {
     return centres.size();
   }
 
-  /** @return keys */
+  /**
+   * @return keys
+   */
   public Set<String> keys() {
     return centres.keySet();
   }
@@ -222,7 +227,7 @@ public class CentrePoints {
     }
 
     public void add(GeocodeRequest c) {
-      add(c.getLongitude(), c.getLatitude());
+      add(c.getLng(), c.getLat());
     }
 
     /** Extends this bbox to include the point (x, y) */

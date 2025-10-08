@@ -1,6 +1,6 @@
 package au.org.ala.kvs.client.retrofit;
 
-import static org.gbif.rest.client.retrofit.SyncCall.syncCall;
+import static au.org.ala.kvs.client.retrofit.SyncCall.syncCall;
 
 import au.org.ala.kvs.client.*;
 import au.org.ala.utils.WsUtils;
@@ -8,16 +8,20 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.gbif.pipelines.core.config.model.WsConfig;
 
 @Slf4j
-/** Collectory service client implementation. */
+/**
+ * Collectory service client implementation.
+ *
+ * <p>Add functionality to support a minimal sandbox: - detect the absence of the collectory URL
+ * config to trigger this sandbox mode. When in sandbox mode, return ALACollectoryMetadata object
+ * where the name == dataResourceUid and the uniqueKey == occurrenceID.
+ */
 public class ALACollectoryServiceClient implements ALACollectoryService {
 
   private final ALACollectoryRetrofitService alaCollectoryService;
@@ -27,13 +31,23 @@ public class ALACollectoryServiceClient implements ALACollectoryService {
   /** Creates an instance using the provided configuration settings. */
   public ALACollectoryServiceClient(WsConfig config) {
     okHttpClient = WsUtils.createOKClient(config);
-    alaCollectoryService =
-        WsUtils.createClient(okHttpClient, config, ALACollectoryRetrofitService.class);
+    if (config.getWsUrl() == null) {
+      log.info("Collectory URL not configured. Running in sandbox mode.");
+      alaCollectoryService = null;
+    } else {
+      alaCollectoryService =
+          WsUtils.createClient(okHttpClient, config, ALACollectoryRetrofitService.class);
+    }
   }
+
   /** Retrieve list of resources */
   @Override
   public List<EntityReference> listDataResources() {
-    return syncCall(alaCollectoryService.lookupDataResources());
+    if (alaCollectoryService == null) {
+      return Collections.emptyList();
+    } else {
+      return syncCall(alaCollectoryService.lookupDataResources());
+    }
   }
 
   /**
@@ -43,19 +57,35 @@ public class ALACollectoryServiceClient implements ALACollectoryService {
    */
   @Override
   public ALACollectoryMetadata lookupDataResource(String dataResourceUid) {
-    try {
-      return syncCall(alaCollectoryService.lookupDataResource(dataResourceUid));
-    } catch (Exception e) {
-      // this necessary due to collectory returning 500s
-      // instead of 404s
-      log.error("Exception thrown when calling the collectory. " + e.getMessage(), e);
-      return ALACollectoryMetadata.EMPTY;
+    if (alaCollectoryService == null) {
+      return ALACollectoryMetadata.builder()
+          .uid(dataResourceUid)
+          .contentTypes(new ArrayList<>())
+          .name(dataResourceUid)
+          .connectionParameters(
+              ConnectionParameters.builder()
+                  .termsForUniqueKey(new ArrayList<>(Collections.singleton("occurrenceID")))
+                  .build())
+          .build();
+    } else {
+      try {
+        return syncCall(alaCollectoryService.lookupDataResource(dataResourceUid));
+      } catch (Exception e) {
+        // this necessary due to collectory returning 500s
+        // instead of 404s
+        log.error("Exception thrown when calling the collectory. " + e.getMessage(), e);
+        return ALACollectoryMetadata.EMPTY;
+      }
     }
   }
 
   @Override
   public ALACollectionMatch lookupCodes(String institutionCode, String collectionCode) {
-    return syncCall(alaCollectoryService.lookupCodes(institutionCode, collectionCode));
+    if (alaCollectoryService == null) {
+      return ALACollectionMatch.EMPTY;
+    } else {
+      return syncCall(alaCollectoryService.lookupCodes(institutionCode, collectionCode));
+    }
   }
 
   @Override

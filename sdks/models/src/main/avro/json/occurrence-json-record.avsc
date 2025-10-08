@@ -160,7 +160,6 @@
       {"name":"notIssues","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"nonTaxonomicIssues","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"extensions","type":{"type":"array","items":"string"},"default":[],"doc":""},
-      {"name":"gbifClassification","type":["null","GbifClassification"],"default":null,"doc":""},
       {"name":"taxonID","type":["null","string"],"default":null,"doc":""},
       {"name":"taxonConceptID","type":["null","string"],"default":null,"doc":""},
       {"name":"verbatimScientificName","type":["null","string"],"default":null,"doc":""},

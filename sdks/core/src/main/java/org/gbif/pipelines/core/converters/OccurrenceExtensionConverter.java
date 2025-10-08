@@ -77,6 +77,11 @@ public class OccurrenceExtensionConverter {
         // Extract occurrenceID and use it as map key
         String occurrenceId = rawExtensionData.get(DwcTerm.occurrenceID.qualifiedName());
 
+        // If no occurrenceId found, use id from the "parent" extended record
+        if (occurrenceId == null) {
+          occurrenceId = er.getCoreTerms().get(DwcTerm.occurrenceID.qualifiedName());
+        }
+
         Map<String, List<Map<String, String>>> parsedExtensions = result.get(occurrenceId);
 
         // If the map is null we create new map for the extension

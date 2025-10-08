@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.converters.JsonConverter;
+import org.gbif.pipelines.core.utils.SortUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.Parent;
 import org.gbif.pipelines.io.avro.json.*;
@@ -65,6 +66,10 @@ public class ALAOccurrenceJsonConverter {
               + Math.abs(location.getDecimalLongitude())
               + (location.getDecimalLongitude() > 0 ? "E" : "W"));
     }
+
+    builder.setYearMonthGbifIdSort(
+        SortUtils.yearDescMonthAscGbifIdAscSortKey(
+            builder.getYear(), builder.getMonth(), builder.getGbifId()));
 
     return builder.build();
   }
@@ -187,9 +192,7 @@ public class ALAOccurrenceJsonConverter {
     // Simple
     builder
         .setBasisOfRecord(basic.getBasisOfRecord())
-        .setSex(basic.getSex())
         .setIndividualCount(basic.getIndividualCount())
-        .setTypeStatus(basic.getTypeStatus())
         .setTypifiedName(basic.getTypifiedName())
         .setSampleSizeValue(basic.getSampleSizeValue())
         .setSampleSizeUnit(basic.getSampleSizeUnit())
@@ -218,6 +221,9 @@ public class ALAOccurrenceJsonConverter {
     JsonConverter.convertVocabularyConcept(basic.getDegreeOfEstablishment())
         .ifPresent(builder::setDegreeOfEstablishment);
     JsonConverter.convertVocabularyConcept(basic.getPathway()).ifPresent(builder::setPathway);
+    JsonConverter.convertVocabularyConcept(basic.getSex()).ifPresent(builder::setSex);
+    JsonConverter.convertVocabularyConceptList(basic.getTypeStatus())
+        .ifPresent(builder::setTypeStatus);
 
     // License
     JsonConverter.convertLicense(basic.getLicense()).ifPresent(builder::setLicense);
@@ -294,81 +300,36 @@ public class ALAOccurrenceJsonConverter {
   }
 
   private void mapTaxonRecord(OccurrenceJsonRecord.Builder builder) {
-    // Set  GbifClassification
-    GbifClassification gc = convertClassification(verbatim, taxon);
 
+    // Set  GbifClassification
     List<Taxonomy> taxonomy = new ArrayList<>();
 
     taxonomy.add(
-        Taxonomy.newBuilder().setName(gc.getKingdom()).setTaxonKey(gc.getKingdomKey()).build());
+        Taxonomy.newBuilder()
+            .setName(taxon.getKingdom())
+            .setTaxonKey(taxon.getKingdomID())
+            .build());
     taxonomy.add(
-        Taxonomy.newBuilder().setName(gc.getPhylum()).setTaxonKey(gc.getPhylumKey()).build());
+        Taxonomy.newBuilder().setName(taxon.getPhylum()).setTaxonKey(taxon.getPhylumID()).build());
     taxonomy.add(
-        Taxonomy.newBuilder().setName(gc.getClass$()).setTaxonKey(gc.getClassKey()).build());
+        Taxonomy.newBuilder().setName(taxon.getClasss()).setTaxonKey(taxon.getClassID()).build());
     taxonomy.add(
-        Taxonomy.newBuilder().setName(gc.getOrder()).setTaxonKey(gc.getOrderKey()).build());
+        Taxonomy.newBuilder().setName(taxon.getOrder()).setTaxonKey(taxon.getOrderID()).build());
     taxonomy.add(
-        Taxonomy.newBuilder().setName(gc.getFamily()).setTaxonKey(gc.getFamilyKey()).build());
+        Taxonomy.newBuilder().setName(taxon.getFamily()).setTaxonKey(taxon.getFamilyID()).build());
     taxonomy.add(
-        Taxonomy.newBuilder().setName(gc.getGenus()).setTaxonKey(gc.getGenusKey()).build());
+        Taxonomy.newBuilder().setName(taxon.getGenus()).setTaxonKey(taxon.getGenusID()).build());
     taxonomy.add(
-        Taxonomy.newBuilder().setName(gc.getSpecies()).setTaxonKey(gc.getSpeciesKey()).build());
-    if (gc.getAcceptedUsage() != null
-        && (gc.getAcceptedUsage().getGuid() != null || gc.getAcceptedUsage().getKey() != null)) {
-      taxonomy.add(
-          Taxonomy.newBuilder()
-              .setName(gc.getAcceptedUsage().getName())
-              .setTaxonKey(
-                  gc.getAcceptedUsage().getGuid() != null
-                      ? gc.getAcceptedUsage().getGuid()
-                      : gc.getAcceptedUsage().getKey().toString())
-              .build());
-    }
+        Taxonomy.newBuilder()
+            .setName(taxon.getSpecies())
+            .setTaxonKey(taxon.getSpeciesID())
+            .build());
 
     taxonomy =
         taxonomy.stream().filter(tr -> tr.getTaxonKey() != null).collect(Collectors.toList());
 
     // set taxonomy
     builder.setTaxonomy(taxonomy);
-    gc.setTaxonKey(taxonomy.stream().map(t -> t.getTaxonKey()).collect(Collectors.toList()));
-    builder.setGbifClassification(gc);
-  }
-
-  public static GbifClassification convertClassification(
-      ExtendedRecord verbatim, ALATaxonRecord taxon) {
-
-    GbifClassification.Builder classificationBuilder =
-        GbifClassification.newBuilder().setTaxonID(taxon.getTaxonConceptID());
-
-    classificationBuilder.setAcceptedUsage(
-        org.gbif.pipelines.io.avro.json.RankedName.newBuilder()
-            .setKey(taxon.getLft())
-            .setGuid(taxon.getTaxonConceptID())
-            .setName(taxon.getScientificName())
-            .setRank(taxon.getTaxonRank())
-            .build());
-
-    classificationBuilder.setKingdom(taxon.getKingdom());
-    classificationBuilder.setKingdomKey(taxon.getKingdomID());
-    classificationBuilder.setPhylum(taxon.getPhylum());
-    classificationBuilder.setPhylumKey(taxon.getPhylumID());
-    classificationBuilder.setClass$(taxon.getClasss());
-    classificationBuilder.setClassKey(taxon.getClassID());
-    classificationBuilder.setOrder(taxon.getOrder());
-    classificationBuilder.setOrderKey(taxon.getOrderID());
-    classificationBuilder.setFamily(taxon.getFamily());
-    classificationBuilder.setFamilyKey(taxon.getFamilyID());
-    classificationBuilder.setGenus(taxon.getGenus());
-    classificationBuilder.setGenusKey(taxon.getGenusID());
-    classificationBuilder.setSpecies(taxon.getSpecies());
-    classificationBuilder.setSpeciesKey(taxon.getSpeciesID());
-
-    // Raw to index classification
-    extractOptValue(verbatim, DwcTerm.taxonID).ifPresent(classificationBuilder::setTaxonID);
-    extractOptValue(verbatim, DwcTerm.scientificName)
-        .ifPresent(classificationBuilder::setVerbatimScientificName);
-
-    return classificationBuilder.build();
   }
 
   private void mapMultimediaRecord(OccurrenceJsonRecord.Builder builder) {}

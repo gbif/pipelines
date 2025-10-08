@@ -11,7 +11,7 @@
       {"name": "id","type":"string", "doc":"Pipelines identifier"},
       {"name": "wktConvexHull","type":["null","string"],"default":null},
       {"name": "temporalCoverage","type":["null","EventDate"],"default":null},
-      {"name": "taxonomicCoverage","type":{"type":"array","items":"GbifClassification"},"default":[],"doc":""}
+      {"name": "taxonomicCoverage","type":{"type":"array","items":"Classification"},"default":[],"doc":""}
     ]
   }
 ]

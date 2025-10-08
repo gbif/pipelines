@@ -31,7 +31,8 @@
         "mapping": {
           "copy_to": "all",
           "type": "keyword",
-          "index": false, "doc_values": false
+          "index": true,
+          "doc_values": true
         }
       }
     },
@@ -110,7 +111,9 @@
         "path_match": "classifications.*.acceptedUsage.name",
         "mapping": {
           "copy_to": "all",
-          "type": "keyword", "index": false, "doc_values": false
+          "type": "keyword",
+          "index": true,
+          "doc_values": true
         }
       }
     },
@@ -214,7 +217,8 @@
       "classifications_classificationDepth_idx": {
         "path_match": "classifications.*.classificationDepth.*",
         "mapping": {
-          "type": "keyword"
+          "type": "keyword",
+          "index": false, "doc_values": false
         }
       }
     },
@@ -222,7 +226,8 @@
       "classifications_classificationDepth_key": {
         "path_match": "classifications.*.classificationDepth.*.*",
         "mapping": {
-          "type": "keyword"
+          "type": "keyword",
+          "index": false, "doc_values": false
         }
       }
     },
@@ -668,100 +673,6 @@
   "nonTaxonomicIssues": {"type": "keyword"},
   "extensions": {"type": "keyword"},
 
-  "gbifClassification": {
-      "properties": {
-        "acceptedUsage": {
-          "properties": {
-            "key": {"type": "keyword" },
-            "name": {"type": "text", "index":  false, "boost": 100.0, "copy_to": "all"},
-            "rank": {"type": "keyword", "index":  false}
-          }
-        },
-        "classification": {
-          "properties": {
-            "key": {"type": "keyword" },
-            "name": {"type": "text", "boost": 90.0, "copy_to": "all"},
-            "rank": {"type": "keyword"}
-          }
-        },
-      "classificationPath": {"type": "keyword"},
-      "diagnostics": {
-        "properties": {
-        "matchType": {"type": "keyword", "index":  false, "store": false},
-        "note": {"type": "text","index":  false, "store": false},
-        "status": {"type": "keyword","index":  false, "store": false}
-        }
-      },
-      "kingdom": {"type": "keyword", "index": false, "doc_values": false},
-      "kingdomKey": {"type": "keyword"},
-      "phylum": {"type": "keyword", "index": false, "doc_values": false},
-      "phylumKey": {"type": "keyword"},
-      "class": {"type": "keyword", "index": false, "doc_values": false},
-      "classKey": {"type": "keyword"},
-      "order": {"type": "keyword", "index": false, "doc_values": false},
-      "orderKey": {"type": "keyword"},
-      "family": {"type": "keyword", "index": false, "doc_values": false},
-      "familyKey": {"type": "keyword"},
-      "genus": {"type": "keyword", "index": false, "doc_values": false},
-      "genusKey": {"type": "keyword"},
-      "species": {"type": "keyword", "index": false, "doc_values": false},
-      "speciesKey": {"type": "keyword"},
-      "synonym": {"type": "boolean"},
-      "taxonID": {"type": "keyword"},
-      "taxonConceptID": {"type": "keyword"},
-      "taxonKey": {"type": "keyword"},
-      "usage": {
-        "properties": {
-        "key": {"type": "keyword" },
-        "name": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
-        "rank": {"type": "keyword"}
-        }
-      },
-      "usageParsedName": {
-        "properties": {
-          "abbreviated": {"type": "boolean", "index":  false, "store": false},
-          "autonym": {"type": "boolean", "index":  false, "store": false},
-          "basionymAuthorship": {
-            "enabled": false,
-            "properties": {
-              "authors": {"type": "keyword", "index": false, "doc_values": false, "store": false},
-              "empty": {"type": "boolean", "index": false, "doc_values": false, "store": false},
-              "exAuthors": {"type": "keyword", "index": false, "doc_values": false, "store": false},
-              "year": {"type": "keyword", "index": false, "doc_values": false, "store": false}
-            }
-          },
-          "binomial": {"type": "boolean", "index":  false, "store": false},
-          "candidatus": {"type": "boolean", "index":  false, "store": false},
-          "code": {"type": "text", "index":  false, "store": false},
-          "combinationAuthorship": {
-            "enabled": false,
-            "properties": {
-              "authors": {"type": "keyword", "index": false, "doc_values": false, "store": false},
-              "empty": {"type": "boolean", "index": false, "doc_values": false, "store": false},
-              "exAuthors": {"type": "keyword", "index": false, "doc_values": false, "store": false},
-              "year": {"type": "keyword", "index": false, "doc_values": false, "store": false}
-            }
-          },
-          "doubtful": {"type": "boolean", "index":  false, "store": false},
-          "genericName": {"type": "keyword", "index": false, "doc_values": false},
-          "genus": {"type": "keyword", "index": false, "doc_values": false},
-          "incomplete": {"type": "boolean", "index":  false, "store": false},
-          "indetermined": {"type": "boolean", "index":  false, "store": false},
-          "infraspecificEpithet": {"type": "keyword", "index": false, "doc_values": false},
-          "notho": {"type": "keyword", "index":  false, "store": false},
-          "rank": {"type": "keyword", "index":  false},
-          "specificEpithet": {"type": "keyword", "index": false, "doc_values": false},
-          "state": {"type": "keyword", "index":  false, "store": false},
-          "terminalEpithet": {"type": "keyword", "index":  false, "store": false},
-          "trinomial": {"type": "boolean", "index":  false, "store": false},
-          "type": {"type": "keyword", "index":  false, "store": false},
-          "uninomial": {"type": "keyword", "index":  false, "store": false}
-        }
-      },
-      "verbatimScientificName": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
-      "iucnRedListCategoryCode": {"type": "keyword"}
-      }
-    },
   "checklistKey": {"type": "keyword"},
   "mediaTypes": {"type": "keyword", "copy_to": "all"},
   "mediaLicenses": {"type": "keyword", "copy_to": "all"},

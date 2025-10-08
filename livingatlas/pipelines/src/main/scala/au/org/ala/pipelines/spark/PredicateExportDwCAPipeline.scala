@@ -639,7 +639,9 @@ object PredicateExportDwCAPipeline {
       extensionFileName: String,
       extensionFields: Array[String]
   ): Elem = {
-    <extension rowType={extensionUri} encoding="UTF-8" fieldsTerminatedBy="\t" linesTerminatedBy="\r\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="1">
+    <extension rowType={
+      extensionUri
+    } encoding="UTF-8" fieldsTerminatedBy="\t" linesTerminatedBy="\r\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="1">
       <files>
         <location>{extensionFileName}.txt</location>
       </files>
@@ -669,7 +671,9 @@ object PredicateExportDwCAPipeline {
       extensionFileName: String,
       extensionFields: Array[String]
   ): Elem = {
-    <extension rowType={extensionUri} encoding="UTF-8" fieldsTerminatedBy="\t" linesTerminatedBy="\r\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="1">
+    <extension rowType={
+      extensionUri
+    } encoding="UTF-8" fieldsTerminatedBy="\t" linesTerminatedBy="\r\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="1">
       <files>
         <location>{extensionFileName}.txt</location>
       </files>
@@ -698,7 +702,9 @@ object PredicateExportDwCAPipeline {
     val coreFileName =
       coreURI.substring(coreURI.lastIndexOf("/") + 1).toLowerCase
     val metaXml = <archive xmlns="http://rs.tdwg.org/dwc/text/">
-      <core rowType={coreURI} encoding="UTF-8" fieldsTerminatedBy="\t" linesTerminatedBy="\r\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="1">
+      <core rowType={
+      coreURI
+    } encoding="UTF-8" fieldsTerminatedBy="\t" linesTerminatedBy="\r\n" fieldsEnclosedBy="&quot;" ignoreHeaderLines="1">
         <files>
           <location>{coreFileName}.txt</location>
         </files>

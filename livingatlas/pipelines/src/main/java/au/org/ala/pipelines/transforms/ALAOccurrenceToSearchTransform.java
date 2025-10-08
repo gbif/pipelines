@@ -3,6 +3,7 @@ package au.org.ala.pipelines.transforms;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.NonNull;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -21,6 +22,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.OccurrenceSearchRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.VocabularyConcept;
 
 /**
  * This converter will take AVRO record artefacts related to an event and produce a single AVRO
@@ -90,7 +92,7 @@ public class ALAOccurrenceToSearchTransform implements Serializable {
 
               // copy basic fields
               builder.setBasisOfRecord(br.getBasisOfRecord());
-              builder.setSex(br.getSex());
+              builder.setSex(br.getSex() != null ? br.getSex().getConcept() : null);
               builder.setLifeStage(
                   br.getLifeStage() != null ? br.getLifeStage().getConcept() : null);
               builder.setEstablishmentMeans(
@@ -103,7 +105,12 @@ public class ALAOccurrenceToSearchTransform implements Serializable {
                       : null);
               builder.setPathway(br.getPathway() != null ? br.getPathway().getConcept() : null);
               builder.setIndividualCount(br.getIndividualCount());
-              builder.setTypeStatus(br.getTypeStatus());
+              builder.setTypeStatus(
+                  br.getTypeStatus() != null
+                      ? br.getTypeStatus().stream()
+                          .map(VocabularyConcept::getConcept)
+                          .collect(Collectors.toList())
+                      : null);
               builder.setTypifiedName(br.getTypifiedName());
               builder.setSampleSizeValue(br.getSampleSizeValue());
               builder.setSampleSizeUnit(br.getSampleSizeUnit());
