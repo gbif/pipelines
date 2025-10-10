@@ -610,14 +610,14 @@ public class HdfsViewPipeline {
         .write(tableCollection);
 
     OccurrenceTableTransform.builder()
-      .extendedRecordTag(verbatimTransform.getTag())
-      .identifierRecordTag(idTransform.getTag())
-      .metadataView(metadataView)
-      .numShards(numberOfShards)
-      .path(pathFn.apply(OCCURRENCE_TABLE))
-      .types(types)
-      .build()
-      .write(tableCollection);
+        .extendedRecordTag(verbatimTransform.getTag())
+        .identifierRecordTag(idTransform.getTag())
+        .metadataView(metadataView)
+        .numShards(numberOfShards)
+        .path(pathFn.apply(OCCURRENCE_TABLE))
+        .types(types)
+        .build()
+        .write(tableCollection);
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
