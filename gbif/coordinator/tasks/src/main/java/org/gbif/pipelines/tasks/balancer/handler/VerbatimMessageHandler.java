@@ -159,22 +159,7 @@ public class VerbatimMessageHandler {
 
     StepRunner runner;
 
-    // Strategy 1: Chooses a runner type by number of records in a dataset
-    if (recordsNumber > 0) {
-
-      int switchRecord = config.switchRecordsNumber;
-      if (isValidator(message.getPipelineSteps())) {
-        log.info(
-            "Use validatorSwitchRecordsNumber settings, becuase message contains validtor pipeline steps");
-        switchRecord = config.validatorSwitchRecordsNumber;
-      }
-
-      runner = recordsNumber >= switchRecord ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
-      log.info("Records number - {}, Spark Runner type - {}", recordsNumber, runner);
-      return runner;
-    }
-
-    // Strategy 2: Chooses a runner type by calculating verbatim.avro file size
+    // Chooses a runner type by calculating verbatim.avro file size
     String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
     StepConfiguration stepConfig = config.stepConfig;
     String repositoryPath =
