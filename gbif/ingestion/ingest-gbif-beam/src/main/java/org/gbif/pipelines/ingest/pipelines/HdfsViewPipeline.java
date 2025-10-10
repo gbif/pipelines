@@ -19,6 +19,7 @@ import static org.gbif.api.model.pipelines.InterpretationType.RecordType.LOAN_TA
 import static org.gbif.api.model.pipelines.InterpretationType.RecordType.MATERIAL_SAMPLE_TABLE;
 import static org.gbif.api.model.pipelines.InterpretationType.RecordType.MEASUREMENT_OR_FACT_TABLE;
 import static org.gbif.api.model.pipelines.InterpretationType.RecordType.MULTIMEDIA_TABLE;
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.OCCURRENCE_TABLE;
 import static org.gbif.api.model.pipelines.InterpretationType.RecordType.PERMIT_TABLE;
 import static org.gbif.api.model.pipelines.InterpretationType.RecordType.PREPARATION_TABLE;
 import static org.gbif.api.model.pipelines.InterpretationType.RecordType.PRESERVATION_TABLE;
@@ -109,6 +110,7 @@ import org.gbif.pipelines.transforms.table.MaterialSampleTableTransform;
 import org.gbif.pipelines.transforms.table.MeasurementOrFactTableTransform;
 import org.gbif.pipelines.transforms.table.MultimediaTableTransform;
 import org.gbif.pipelines.transforms.table.OccurrenceHdfsRecordTransform;
+import org.gbif.pipelines.transforms.table.OccurrenceTableTransform;
 import org.gbif.pipelines.transforms.table.PermitTableTransform;
 import org.gbif.pipelines.transforms.table.PreparationTableTransform;
 import org.gbif.pipelines.transforms.table.PreservationTableTransform;
@@ -603,6 +605,16 @@ public class HdfsViewPipeline {
         .metadataView(metadataView)
         .numShards(numberOfShards)
         .path(pathFn.apply(HUMBOLDT_TABLE))
+        .types(types)
+        .build()
+        .write(tableCollection);
+
+    OccurrenceTableTransform.builder()
+        .extendedRecordTag(verbatimTransform.getTag())
+        .identifierRecordTag(idTransform.getTag())
+        .metadataView(metadataView)
+        .numShards(numberOfShards)
+        .path(pathFn.apply(OCCURRENCE_TABLE))
         .types(types)
         .build()
         .write(tableCollection);

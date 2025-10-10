@@ -124,7 +124,7 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
             .collect(Collectors.toList());
 
     String[] extraNamespace =
-        url.toString().replaceAll("http://rs.gbif.org/extension/", "").split("/");
+        url.toString().replaceAll("https?://rs.gbif.org/(extension|core)/", "").split("/");
 
     ExtensionPojo extPojo =
         new ExtensionPojo(

@@ -18,6 +18,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.Validatio
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;

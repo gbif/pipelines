@@ -20,6 +20,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_S
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MULTIMEDIA_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_EXT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PERMIT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PREPARATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PRESERVATION_TABLE_RECORDS_COUNT;
@@ -70,6 +71,7 @@ import org.gbif.pipelines.core.converters.LoanTableConverter;
 import org.gbif.pipelines.core.converters.MaterialSampleTableConverter;
 import org.gbif.pipelines.core.converters.MeasurementOrFactTableConverter;
 import org.gbif.pipelines.core.converters.MultimediaTableConverter;
+import org.gbif.pipelines.core.converters.OccurrenceTableConverter;
 import org.gbif.pipelines.core.converters.PermitTableConverter;
 import org.gbif.pipelines.core.converters.PreparationTableConverter;
 import org.gbif.pipelines.core.converters.PreservationTableConverter;
@@ -106,6 +108,7 @@ import org.gbif.pipelines.io.avro.extension.dwc.ChronometricAgeTable;
 import org.gbif.pipelines.io.avro.extension.dwc.IdentificationTable;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.extension.dwc.ResourceRelationshipTable;
+import org.gbif.pipelines.io.avro.extension.dwc_occurrence.xml.OccurrenceTable;
 import org.gbif.pipelines.io.avro.extension.eco.HumboldtTable;
 import org.gbif.pipelines.io.avro.extension.gbif.DnaDerivedDataTable;
 import org.gbif.pipelines.io.avro.extension.gbif.IdentifierTable;
@@ -886,6 +889,29 @@ public class HdfsViewPipeline {
         .executor(executor)
         .options(options)
         .recordType(HUMBOLDT_TABLE)
+        .types(types)
+        .build()
+        .write();
+
+    // OccurrenceTable (occurrence extension)
+    Function<IdentifierRecord, List<OccurrenceTable>> occurrenceExtFn =
+        TableConverter.<OccurrenceTable>builder()
+            .metrics(metrics)
+            .converterFn(OccurrenceTableConverter::convert)
+            .metadataRecord(metadataRecord)
+            .counterName(OCCURRENCE_EXT_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<OccurrenceTable>builder()
+        .recordFunction(occurrenceExtFn)
+        .identifierRecords(idRecordMap.values())
+        .targetPathFn(pathFn)
+        .schema(OccurrenceTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .recordType(OCCURRENCE_TABLE)
         .types(types)
         .build()
         .write();
