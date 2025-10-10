@@ -186,6 +186,8 @@ public class PipelinesVariables {
     public static final String DNA_DERIVED_DATA_TABLE_RECORDS_COUNT =
         "dnaDerivedDataTableRecordsCount";
     public static final String HUMBOLDT_TABLE_RECORDS_COUNT = "humboldtTableRecordsCount";
+    public static final String OCCURRENCE_EXT_TABLE_RECORDS_COUNT =
+        "occurrenceExtTableRecordsCount";
 
     // Fragmenter
     public static final String FRAGMENTER_COUNT = "fragmenterRecordsCount";
