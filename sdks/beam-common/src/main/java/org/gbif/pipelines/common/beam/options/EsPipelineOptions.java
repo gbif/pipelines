@@ -96,6 +96,10 @@ public interface EsPipelineOptions extends PipelineOptions {
   @Default.String("5m")
   String getUnassignedNodeDelay();
 
+  @Description("Elasticsearch index mapping total fields limit")
+  @Default.Integer(1000)
+  Integer getIndexMappingTotalFieldsLimit();
+
   void setUnassignedNodeDelay(String unassignedNodeDelay);
 
   @Description("Elasticsearch document id")

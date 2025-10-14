@@ -93,6 +93,9 @@ public class EsIndexUtils {
     settings.put(Field.INDEX_ANALYSIS, Indexing.ANALYSIS);
     settings.put(Field.INDEX_MAX_RESULT_WINDOW, options.getIndexMaxResultWindow().toString());
     settings.put(Field.INDEX_UNASSIGNED_NODE_DELAY, options.getUnassignedNodeDelay());
+    settings.put(
+        Field.INDEX_MAPPING_TOTAL_FIELDS_LIMIT,
+        options.getIndexMappingTotalFieldsLimit().toString());
 
     if (options.getUseSlowlog()) {
       settings.put(

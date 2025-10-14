@@ -353,7 +353,8 @@ public class BeamParametersBuilder {
           .putIfPresent("esSchemaPath", esConfig.schemaPath)
           .putIfPresent("indexRefreshInterval", indexConfig.refreshInterval)
           .putIfPresent("indexNumberShards", esShardsNumber)
-          .putIfPresent("indexNumberReplicas", indexConfig.numberReplicas);
+          .putIfPresent("indexNumberReplicas", indexConfig.numberReplicas)
+          .putIfPresent("indexMappingTotalFieldsLimit", indexConfig.indexMappingTotalFieldsLimit);
     }
   }
 }
