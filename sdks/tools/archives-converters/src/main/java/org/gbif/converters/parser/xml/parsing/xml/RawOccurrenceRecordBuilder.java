@@ -303,9 +303,9 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   }
 
   public void addAssociatedSequence(String sequenceId) {
-      if (sequenceId != null && !sequenceId.isEmpty()) {
-          associatedSequencesList.add(sequenceId);
-      }
+    if (sequenceId != null && !sequenceId.isEmpty()) {
+      associatedSequencesList.add(sequenceId);
+    }
   }
 
   /**
