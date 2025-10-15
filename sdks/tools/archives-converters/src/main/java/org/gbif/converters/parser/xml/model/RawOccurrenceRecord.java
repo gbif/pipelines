@@ -96,6 +96,7 @@ public class RawOccurrenceRecord implements Serializable {
   private String recordedByID;
   private String identifiedByID;
   private String scientificNameID;
+  private String associatedSequences;
 
   private Set<Collector> collectors = new HashSet<>();
   private List<IdentifierRecord> identifierRecords = new ArrayList<>();
@@ -141,5 +142,6 @@ public class RawOccurrenceRecord implements Serializable {
     this.recordedByID = dwcr.value(DwcTerm.recordedByID);
     this.identifiedByID = dwcr.value(DwcTerm.identifiedByID);
     this.scientificNameID = dwcr.value(DwcTerm.scientificNameID);
+    this.associatedSequences = dwcr.value(DwcTerm.associatedSequences);
   }
 }

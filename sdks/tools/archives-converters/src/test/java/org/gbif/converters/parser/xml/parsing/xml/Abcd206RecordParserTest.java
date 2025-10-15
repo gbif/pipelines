@@ -48,6 +48,7 @@ public class Abcd206RecordParserTest extends ParserTestCase {
     assertEquals(
         "http://purl.oclc.org/net/edu.harvard.huh/guid/uuid/d5fea488-5786-4106-af90-396ef452c3aa|http://viaf.org/viaf/100383596|http://www.wikidata.org/entity/Q78738",
         ror.getIdentifiedByID());
+    assertEquals("112358", ror.getAssociatedSequences());
   }
 
   @Test
