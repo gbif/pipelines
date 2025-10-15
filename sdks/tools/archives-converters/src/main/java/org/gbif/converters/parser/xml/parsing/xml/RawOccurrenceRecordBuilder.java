@@ -242,7 +242,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     bareBones.setRecordedByID(String.join("|", recordedByIDList));
     bareBones.setIdentifiedByID(identifiedByID);
     bareBones.setScientificNameID(scientificNameID);
-    bareBones.setAssociatedSequences(String.join(",", associatedSequencesList));
+    bareBones.setAssociatedSequences(String.join("|", associatedSequencesList));
 
     return bareBones;
   }
