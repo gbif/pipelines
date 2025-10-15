@@ -83,6 +83,7 @@ public class ExtendedRecordConverter {
     setter.accept(DwcTerm.recordedByID, rawRecord.getRecordedByID());
     setter.accept(DwcTerm.identifiedByID, rawRecord.getIdentifiedByID());
     setter.accept(DwcTerm.scientificNameID, rawRecord.getScientificNameID());
+    setter.accept(DwcTerm.associatedSequences, rawRecord.getAssociatedSequences());
 
     if (rawRecord.getCollectors() != null) {
       String recordedBy =
