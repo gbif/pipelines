@@ -57,6 +57,7 @@ public class Abcd206RuleSet extends AbstractRuleSet {
     addFn.accept("preparations", "setPreparations");
 
     addNonNullMethod(digester, "recordedByID", "addRecordedByID", 0);
+    addNonNullMethod(digester, "associatedSequences", "addAssociatedSequence", 0);
 
     addNonNullPrioritizedProperty(digester, "country", COUNTRY, 2);
     addNonNullPrioritizedProperty(digester, "geodeticDatum", GEODETIC_DATUM, 2);

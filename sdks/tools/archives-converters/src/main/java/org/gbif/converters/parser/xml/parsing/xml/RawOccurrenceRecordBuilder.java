@@ -113,6 +113,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   private List<ImageRecord> images = new ArrayList<>();
   private List<LinkRecord> links = new ArrayList<>();
   private List<String> recordedByIDList = new ArrayList<>();
+  private List<String> associatedSequencesList = new ArrayList<>();
 
   public List<RawOccurrenceRecord> generateRawOccurrenceRecords() {
     List<RawOccurrenceRecord> records = new ArrayList<>();
@@ -241,6 +242,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     bareBones.setRecordedByID(String.join("|", recordedByIDList));
     bareBones.setIdentifiedByID(identifiedByID);
     bareBones.setScientificNameID(scientificNameID);
+    bareBones.setAssociatedSequences(String.join(",", associatedSequencesList));
 
     return bareBones;
   }
@@ -298,6 +300,12 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     if (recordedByID != null && !recordedByID.isEmpty()) {
       recordedByIDList.add(recordedByID);
     }
+  }
+
+  public void addAssociatedSequence(String sequenceId) {
+      if (sequenceId != null && !sequenceId.isEmpty()) {
+          associatedSequencesList.add(sequenceId);
+      }
   }
 
   /**
