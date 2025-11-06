@@ -387,32 +387,32 @@ public class OccurrenceHdfsRecordConverter {
     if (usage != null) {
 
       // Required taxon keys and names
-      map.put(GbifTerm.taxonKey.simpleName().toString().toLowerCase(), usage.getKey());
-      map.put(DwcTerm.scientificName.simpleName().toString().toLowerCase(), usage.getName());
+      map.put(GbifTerm.taxonKey.simpleName().toLowerCase(), usage.getKey());
+      map.put(DwcTerm.scientificName.simpleName().toLowerCase(), usage.getName());
 
       map.put(
-          GbifTerm.acceptedTaxonKey.simpleName().toString().toLowerCase(),
+          GbifTerm.acceptedTaxonKey.simpleName().toLowerCase(),
           acceptedUsage != null ? acceptedUsage.getKey() : usage.getKey());
       map.put(
-          DwcTerm.acceptedNameUsageID.simpleName().toString().toLowerCase(),
+          DwcTerm.acceptedNameUsageID.simpleName().toLowerCase(),
           acceptedUsage != null ? acceptedUsage.getKey() : usage.getKey());
       map.put(
-          GbifTerm.acceptedScientificName.simpleName().toString().toLowerCase(),
+          GbifTerm.acceptedScientificName.simpleName().toLowerCase(),
           acceptedUsage != null ? acceptedUsage.getName() : usage.getName());
 
       // Optional taxonomic fields
       map.put(
-          DwcTerm.genericName.simpleName().toString().toLowerCase(),
+          DwcTerm.genericName.simpleName().toLowerCase(),
           usage.getGenericName() != null ? usage.getGenericName() : "");
       map.put(
-          DwcTerm.specificEpithet.simpleName().toString().toLowerCase(),
+          DwcTerm.specificEpithet.simpleName().toLowerCase(),
           usage.getSpecificEpithet() != null ? usage.getSpecificEpithet() : "");
       map.put(
-          DwcTerm.infraspecificEpithet.simpleName().toString().toLowerCase(),
+          DwcTerm.infraspecificEpithet.simpleName().toLowerCase(),
           usage.getInfraspecificEpithet() != null ? usage.getInfraspecificEpithet() : "");
 
       map.put(
-          DwcTerm.taxonRank.simpleName().toString().toLowerCase(),
+          DwcTerm.taxonRank.simpleName().toLowerCase(),
           usage.getRank() != null ? usage.getRank() : "");
     }
 
