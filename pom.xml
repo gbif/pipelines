@@ -116,7 +116,7 @@
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
     <gbif-occurrence.version>1.1.7-SNAPSHOT</gbif-occurrence.version>
     <vocabulary-lookup.version>2.0.3</vocabulary-lookup.version>
-    <registry.version>4.1.19-SNAPSHOT</registry.version>
+    <registry.version>4.1.21-SNAPSHOT</registry.version>
     <gbif-common-ws.version>2.0.10-java11</gbif-common-ws.version>
     <gbif-postal-service.version>2.1.4-SNAPSHOT</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
@@ -190,7 +190,7 @@
     <log4j-over-slf4j.version>1.7.25</log4j-over-slf4j.version>
     <log4j-1.2-api.version>2.8.1</log4j-1.2-api.version>
     <zookeeper.version>3.8.3</zookeeper.version>
-    <testcontainers.elasticsearch.version>1.17.5</testcontainers.elasticsearch.version>
+    <testcontainers.elasticsearch.version>1.21.3</testcontainers.elasticsearch.version>
 
     <!-- Maven plugin -->
     <maven-plugin-api.version>3.8.6</maven-plugin-api.version>

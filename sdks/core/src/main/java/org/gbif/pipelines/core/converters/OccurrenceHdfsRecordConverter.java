@@ -49,6 +49,41 @@ public class OccurrenceHdfsRecordConverter {
   private final EventCoreRecord eventCoreRecord;
   private final HumboldtRecord humboldtRecord;
 
+  // required taxonomic terms. These need to be populated at least with empty string
+  // to support SQL queries and avoid 'Key not found' errors.
+  static final Set<String> REQUIRED_TAXONOMIC_FIELDS =
+      Set.of(
+          GbifTerm.taxonKey.simpleName().toLowerCase(),
+          DwcTerm.scientificName.simpleName().toLowerCase(),
+          GbifTerm.acceptedTaxonKey.simpleName().toLowerCase(),
+          DwcTerm.acceptedNameUsageID.simpleName().toLowerCase(),
+          GbifTerm.acceptedScientificName.simpleName().toLowerCase(),
+          DwcTerm.genericName.simpleName().toLowerCase(),
+          DwcTerm.specificEpithet.simpleName().toLowerCase(),
+          DwcTerm.infraspecificEpithet.simpleName().toLowerCase(),
+          DwcTerm.taxonRank.simpleName().toLowerCase(),
+          DwcTerm.class_.simpleName().toLowerCase(),
+          GbifTerm.classKey.simpleName().toLowerCase(),
+          DwcTerm.family.simpleName().toLowerCase(),
+          GbifTerm.familyKey.simpleName().toLowerCase(),
+          DwcTerm.genus.simpleName().toLowerCase(),
+          GbifTerm.genusKey.simpleName().toLowerCase(),
+          DwcTerm.kingdom.simpleName().toLowerCase(),
+          GbifTerm.kingdomKey.simpleName().toLowerCase(),
+          DwcTerm.order.simpleName().toLowerCase(),
+          GbifTerm.orderKey.simpleName().toLowerCase(),
+          DwcTerm.phylum.simpleName().toLowerCase(),
+          GbifTerm.phylumKey.simpleName().toLowerCase(),
+          GbifTerm.species.simpleName().toLowerCase(),
+          DwcTerm.subfamily.simpleName().toLowerCase(),
+          "subfamilykey",
+          DwcTerm.superfamily.simpleName().toLowerCase(),
+          "superfamilykey",
+          DwcTerm.tribe.simpleName().toLowerCase(),
+          "tribekey",
+          IucnTerm.iucnRedListCategory.simpleName().toLowerCase(),
+          GbifTerm.verbatimScientificName.simpleName().toLowerCase());
+
   /**
    * Collects data from {@link SpecificRecordBase} instances into a {@link OccurrenceHdfsRecord}.
    *
@@ -57,6 +92,7 @@ public class OccurrenceHdfsRecordConverter {
   public OccurrenceHdfsRecord convert() {
     OccurrenceHdfsRecord occurrenceHdfsRecord = new OccurrenceHdfsRecord();
     occurrenceHdfsRecord.setIssue(new ArrayList<>());
+    occurrenceHdfsRecord.setNontaxonomicissue(new ArrayList<>());
 
     // Order is important
     mapIdentifierRecord(occurrenceHdfsRecord);
@@ -99,7 +135,25 @@ public class OccurrenceHdfsRecordConverter {
    * @param issueRecord record issues
    * @param occurrenceHdfsRecord target object
    */
-  private static void addIssues(
+  private static void addNonTaxonIssues(
+      IssueRecord issueRecord, OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    if (issueRecord == null || issueRecord.getIssueList() == null) {
+      return;
+    }
+
+    List<String> issues = issueRecord.getIssueList();
+
+    occurrenceHdfsRecord.getIssue().addAll(issues);
+    occurrenceHdfsRecord.getNontaxonomicissue().addAll(issues);
+  }
+
+  /**
+   * Adds the list of issues to the list of issues in the {@link OccurrenceHdfsRecord}.
+   *
+   * @param issueRecord record issues
+   * @param occurrenceHdfsRecord target object
+   */
+  private static void addTaxonIssues(
       IssueRecord issueRecord, OccurrenceHdfsRecord occurrenceHdfsRecord) {
     if (Objects.nonNull(issueRecord) && Objects.nonNull(issueRecord.getIssueList())) {
       List<String> currentIssues = occurrenceHdfsRecord.getIssue();
@@ -159,7 +213,7 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setGeoreferencedby(locationRecord.getGeoreferencedBy());
 
     setCreatedIfGreater(occurrenceHdfsRecord, locationRecord.getCreated());
-    addIssues(locationRecord.getIssues(), occurrenceHdfsRecord);
+    addNonTaxonIssues(locationRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   private void mapProjectIds(OccurrenceHdfsRecord occurrenceHdfsRecord) {
@@ -200,7 +254,7 @@ public class OccurrenceHdfsRecordConverter {
     }
 
     setCreatedIfGreater(occurrenceHdfsRecord, metadataRecord.getCreated());
-    addIssues(metadataRecord.getIssues(), occurrenceHdfsRecord);
+    addNonTaxonIssues(metadataRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   /** Copies the {@link TemporalRecord} data into the {@link OccurrenceHdfsRecord}. */
@@ -261,7 +315,7 @@ public class OccurrenceHdfsRecordConverter {
     }
 
     setCreatedIfGreater(occurrenceHdfsRecord, temporalRecord.getCreated());
-    addIssues(temporalRecord.getIssues(), occurrenceHdfsRecord);
+    addNonTaxonIssues(temporalRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   private void mapMultiTaxonRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
@@ -285,6 +339,23 @@ public class OccurrenceHdfsRecordConverter {
                         tr.getClassification().stream()
                             .map(RankedName::getKey)
                             .collect(Collectors.toList()))));
+
+    occurrenceHdfsRecord.setTaxonomicstatuses(
+        multiTaxonRecord.getTaxonRecords().stream()
+            .collect(
+                Collectors.toMap(
+                    TaxonRecord::getDatasetKey,
+                    tr ->
+                        tr.getUsage() != null && tr.getUsage().getStatus() != null
+                            ? tr.getUsage().getStatus()
+                            : "")));
+
+    occurrenceHdfsRecord.setTaxonomicissue(
+        multiTaxonRecord.getTaxonRecords().stream()
+            .collect(
+                Collectors.toMap(
+                    TaxonRecord::getDatasetKey,
+                    tr -> tr.getIssues() != null ? tr.getIssues().getIssueList() : List.of())));
 
     occurrenceHdfsRecord.setClassificationdetails(
         multiTaxonRecord.getTaxonRecords().stream()
@@ -316,44 +387,37 @@ public class OccurrenceHdfsRecordConverter {
     if (usage != null) {
 
       // Required taxon keys and names
-      map.put(GbifTerm.taxonKey.simpleName().toLowerCase(), usage.getKey());
-      map.put(DwcTerm.scientificName.simpleName().toLowerCase(), usage.getName());
+      map.put(GbifTerm.taxonKey.simpleName().toString().toLowerCase(), usage.getKey());
+      map.put(DwcTerm.scientificName.simpleName().toString().toLowerCase(), usage.getName());
 
       map.put(
-          GbifTerm.acceptedTaxonKey.simpleName().toLowerCase(),
+          GbifTerm.acceptedTaxonKey.simpleName().toString().toLowerCase(),
           acceptedUsage != null ? acceptedUsage.getKey() : usage.getKey());
       map.put(
-          DwcTerm.acceptedNameUsageID.simpleName().toLowerCase(),
+          DwcTerm.acceptedNameUsageID.simpleName().toString().toLowerCase(),
           acceptedUsage != null ? acceptedUsage.getKey() : usage.getKey());
       map.put(
-          GbifTerm.acceptedScientificName.simpleName().toLowerCase(),
+          GbifTerm.acceptedScientificName.simpleName().toString().toLowerCase(),
           acceptedUsage != null ? acceptedUsage.getName() : usage.getName());
 
       // Optional taxonomic fields
-      if (usage.getGenericName() != null) {
-        map.put(DwcTerm.genericName.simpleName().toLowerCase(), usage.getGenericName());
-      }
-      if (usage.getSpecificEpithet() != null) {
-        map.put(DwcTerm.specificEpithet.simpleName().toLowerCase(), usage.getSpecificEpithet());
-      }
-      if (usage.getInfraspecificEpithet() != null) {
-        map.put(
-            DwcTerm.infraspecificEpithet.simpleName().toLowerCase(),
-            usage.getInfraspecificEpithet());
-      }
-      if (usage.getRank() != null) {
-        map.put(DwcTerm.taxonRank.simpleName().toLowerCase(), usage.getRank());
-      }
-
-      // Taxonomic status
       map.put(
-          DwcTerm.taxonomicStatus.simpleName().toLowerCase(),
-          usage.getStatus() != null ? usage.getStatus() : "");
+          DwcTerm.genericName.simpleName().toString().toLowerCase(),
+          usage.getGenericName() != null ? usage.getGenericName() : "");
+      map.put(
+          DwcTerm.specificEpithet.simpleName().toString().toLowerCase(),
+          usage.getSpecificEpithet() != null ? usage.getSpecificEpithet() : "");
+      map.put(
+          DwcTerm.infraspecificEpithet.simpleName().toString().toLowerCase(),
+          usage.getInfraspecificEpithet() != null ? usage.getInfraspecificEpithet() : "");
+
+      map.put(
+          DwcTerm.taxonRank.simpleName().toString().toLowerCase(),
+          usage.getRank() != null ? usage.getRank() : "");
     }
 
     extractOptValue(verbatim, DwcTerm.scientificName)
         .ifPresent(s -> map.put(GbifTerm.verbatimScientificName.simpleName().toLowerCase(), s));
-
     // Classification hierarchy
     taxonRecord
         .getClassification()
@@ -364,20 +428,14 @@ public class OccurrenceHdfsRecordConverter {
             });
 
     // Optional IUCN field
-    if (taxonRecord.getIucnRedListCategoryCode() != null) {
-      map.put(
-          IucnTerm.iucnRedListCategory.simpleName().toLowerCase(),
-          taxonRecord.getIucnRedListCategoryCode());
-    }
+    map.put(
+        IucnTerm.iucnRedListCategory.simpleName().toLowerCase(),
+        taxonRecord.getIucnRedListCategoryCode() != null
+            ? taxonRecord.getIucnRedListCategoryCode()
+            : "");
 
-    // Add taxonomic issues
-    if (taxonRecord.getIssues() != null
-        && taxonRecord.getIssues().getIssueList() != null
-        && !taxonRecord.getIssues().getIssueList().isEmpty()) {
-      map.put(
-          GbifTerm.taxonomicIssue.simpleName().toLowerCase(),
-          taxonRecord.getIssues().getIssueList().stream()
-              .collect(Collectors.joining(ModelUtils.DEFAULT_SEPARATOR)));
+    for (String field : REQUIRED_TAXONOMIC_FIELDS) {
+      map.putIfAbsent(field, "");
     }
 
     return map;
@@ -486,7 +544,7 @@ public class OccurrenceHdfsRecordConverter {
 
     occurrenceHdfsRecord.setIucnredlistcategory(taxonRecord.getIucnRedListCategoryCode());
 
-    addIssues(taxonRecord.getIssues(), occurrenceHdfsRecord);
+    addTaxonIssues(taxonRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   /** Copies the {@link GrscicollRecord} data into the {@link OccurrenceHdfsRecord}. */
@@ -509,7 +567,7 @@ public class OccurrenceHdfsRecordConverter {
       }
     }
 
-    addIssues(grscicollRecord.getIssues(), occurrenceHdfsRecord);
+    addNonTaxonIssues(grscicollRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   /** Copies the {@link IdentifierRecord} data into the {@link OccurrenceHdfsRecord}. */
@@ -522,7 +580,7 @@ public class OccurrenceHdfsRecordConverter {
     }
 
     setCreatedIfGreater(occurrenceHdfsRecord, identifierRecord.getFirstLoaded());
-    addIssues(identifierRecord.getIssues(), occurrenceHdfsRecord);
+    addNonTaxonIssues(identifierRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   /** Copies the {@link ClusteringRecord} data into the {@link OccurrenceHdfsRecord}. */
@@ -533,7 +591,7 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setIsincluster(clusteringRecord.getIsClustered());
 
     setCreatedIfGreater(occurrenceHdfsRecord, clusteringRecord.getCreated());
-    addIssues(clusteringRecord.getIssues(), occurrenceHdfsRecord);
+    addNonTaxonIssues(clusteringRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   /** Copies the {@link BasicRecord} data into the {@link OccurrenceHdfsRecord}. */
@@ -646,7 +704,7 @@ public class OccurrenceHdfsRecordConverter {
     mapGeologicalContext(occurrenceHdfsRecord);
 
     setCreatedIfGreater(occurrenceHdfsRecord, basicRecord.getCreated());
-    addIssues(basicRecord.getIssues(), occurrenceHdfsRecord);
+    addNonTaxonIssues(basicRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   private void mapGeologicalContext(OccurrenceHdfsRecord occurrenceHdfsRecord) {
@@ -927,7 +985,7 @@ public class OccurrenceHdfsRecordConverter {
     setCreatedIfGreater(occurrenceHdfsRecord, multimediaRecord.getCreated());
     occurrenceHdfsRecord.setMediatype(mediaTypes);
 
-    addIssues(multimediaRecord.getIssues(), occurrenceHdfsRecord);
+    addNonTaxonIssues(multimediaRecord.getIssues(), occurrenceHdfsRecord);
   }
 
   private void mapDnaDerivedDataRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
@@ -1063,7 +1121,7 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setExtHumboldt(MediaSerDeser.humboldtToJson(jsonViews));
     }
 
-    addIssues(humboldtRecord.getIssues(), occurrenceHdfsRecord);
+    addNonTaxonIssues(humboldtRecord.getIssues(), occurrenceHdfsRecord);
 
     // Add taxonomic issues
     String taxonIssues =
@@ -1074,15 +1132,6 @@ public class OccurrenceHdfsRecordConverter {
                         .flatMap(t -> t.getIssues().getIssueList().stream())
                         .collect(Collectors.joining(ModelUtils.DEFAULT_SEPARATOR)))
             .collect(Collectors.joining(ModelUtils.DEFAULT_SEPARATOR));
-
-    if (taxonIssues != null) {
-      String existing =
-          occurrenceHdfsRecord.getTaxonomicissue() != null
-              ? occurrenceHdfsRecord.getTaxonomicissue()
-              : "";
-      occurrenceHdfsRecord.setTaxonomicissue(
-          String.join(ModelUtils.DEFAULT_SEPARATOR, existing, taxonIssues));
-    }
   }
 
   private <T> void addToList(List<T> existingList, T value) {
