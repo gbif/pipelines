@@ -556,8 +556,8 @@ public class ParentJsonConverter {
   private void mapSortField(ParentJsonRecord.Builder builder) {
     builder.setYearMonthEventIdSort(
         SortUtils.yearDescMonthAscGbifIdAscSortKey(
-            builder.getEvent().getYear(),
-            builder.getEvent().getMonth(),
-            builder.getEvent().getEventID().hashCode()));
+            builder.getEvent() != null ? builder.getEvent().getYear() : null,
+            builder.getEvent() != null ? builder.getEvent().getMonth() : null,
+            builder.getEvent() != null ? builder.getEvent().getEventID().hashCode() : 0L));
   }
 }
