@@ -26,6 +26,7 @@
       {"name":"lastCrawled","type":["null","string"],"default":null,"doc":""},
       {"name":"created","type":["null","string"],"default":null,"doc":""},
       {"name":"crawlId","type":["null","int"],"default":null,"doc":""},
+      {"name":"yearMonthEventIdSort","type":"long","doc":""},
       // Metadata
       {"name":"metadata","type":["null","MetadataJsonRecord"],"default":null,"doc":""},
       // DerivedMetadata

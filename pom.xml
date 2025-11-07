@@ -108,7 +108,7 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <dwca-io.version>3.0.1-SNAPSHOT</dwca-io.version>
-    <gbif-api.version>2.2.0-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>2.2.0-events-issues-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
     <dwc-api.version>2.1.7-SNAPSHOT</dwc-api.version>
     <kvs.version>3.0</kvs.version>
@@ -116,7 +116,7 @@
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
     <gbif-occurrence.version>1.1.7-SNAPSHOT</gbif-occurrence.version>
     <vocabulary-lookup.version>2.0.3</vocabulary-lookup.version>
-    <registry.version>4.1.18-SNAPSHOT</registry.version>
+    <registry.version>4.1.19-SNAPSHOT</registry.version>
     <gbif-common-ws.version>2.0.10-java11</gbif-common-ws.version>
     <gbif-postal-service.version>2.1.4-SNAPSHOT</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
