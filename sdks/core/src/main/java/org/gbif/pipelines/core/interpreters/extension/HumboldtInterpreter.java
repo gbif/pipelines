@@ -175,8 +175,7 @@ public class HumboldtInterpreter {
             .map(
                 EcoTerm.isAbundanceReported,
                 interpretBoolean(
-                    Humboldt::setIsAbundanceReported,
-                    EventIssue.IS_ABUNDANCE_REPORTED_INVALID))
+                    Humboldt::setIsAbundanceReported, EventIssue.IS_ABUNDANCE_REPORTED_INVALID))
             .map(
                 EcoTerm.isAbundanceCapReported,
                 interpretBoolean(
@@ -213,8 +212,7 @@ public class HumboldtInterpreter {
             .map(
                 EcoTerm.samplingEffortValue,
                 interpretDouble(
-                    Humboldt::setSamplingEffortValue,
-                    EventIssue.SAMPLING_EFFORT_VALUE_INVALID))
+                    Humboldt::setSamplingEffortValue, EventIssue.SAMPLING_EFFORT_VALUE_INVALID))
             .map(EcoTerm.samplingEffortUnit, interpretString(Humboldt::setSamplingEffortUnit))
             .postMap(checkAreas())
             .postMap(checkMissingUnits())
