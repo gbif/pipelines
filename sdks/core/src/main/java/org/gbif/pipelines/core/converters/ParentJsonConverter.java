@@ -81,8 +81,6 @@ public class ParentJsonConverter {
 
     JsonConverter.convertToDate(identifier.getFirstLoaded()).ifPresent(builder::setFirstLoaded);
 
-    mapSortField(builder);
-
     return builder.build();
   }
 
@@ -135,6 +133,7 @@ public class ParentJsonConverter {
     mapMultimediaRecord(builder);
     mapMeasurementOrFactRecord(builder);
     mapHumboldtRecord(builder);
+    mapSortField(builder);
 
     return builder;
   }
@@ -553,11 +552,9 @@ public class ParentJsonConverter {
         .collect(Collectors.toList());
   }
 
-  private void mapSortField(ParentJsonRecord.Builder builder) {
+  private void mapSortField(EventJsonRecord.Builder builder) {
     builder.setYearMonthEventIdSort(
         SortUtils.yearDescMonthAscGbifIdAscSortKey(
-            builder.getEvent() != null ? builder.getEvent().getYear() : null,
-            builder.getEvent() != null ? builder.getEvent().getMonth() : null,
-            builder.getEvent() != null ? builder.getEvent().getEventID().hashCode() : 0L));
+            builder.getYear(), builder.getMonth(), builder.getEventID().hashCode()));
   }
 }

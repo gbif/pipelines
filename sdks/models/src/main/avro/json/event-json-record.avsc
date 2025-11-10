@@ -102,6 +102,7 @@
       {"name":"created","type":["null","string"],"default":null,"doc":""},
       {"name":"parentsLineage", "type": {"type" : "array", "items" : "org.gbif.pipelines.io.avro.json.Parent"}, "default" : [], "doc":""},
       {"name":"license","type":["null","string"],"default":null,"doc":""},
+      {"name":"yearMonthEventIdSort","type":"long","doc":""},
       // Record-level
       {"name":"eventType","type":["null","VocabularyConcept"],"default":null,"doc":""},
       {"name":"verbatimEventType","type":["null","string"],"default":null,"doc":""},

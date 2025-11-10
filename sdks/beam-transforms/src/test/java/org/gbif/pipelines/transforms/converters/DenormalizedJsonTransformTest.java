@@ -54,6 +54,8 @@ import org.junit.runners.JUnit4;
 @Category(NeedsRunner.class)
 public class DenormalizedJsonTransformTest {
 
+  // TODO: fails
+
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
   @Test
