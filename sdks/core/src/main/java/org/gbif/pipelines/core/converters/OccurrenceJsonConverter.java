@@ -398,9 +398,18 @@ public class OccurrenceJsonConverter {
             .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
             .findFirst();
 
+    // populate the legacy all issues field
     JsonConverter.mapIssues(
         Arrays.asList(
-            metadata, identifier, clustering, basic, temporal, location, grscicoll, multimedia),
+            metadata,
+            identifier,
+            clustering,
+            basic,
+            temporal,
+            location,
+            grscicoll,
+            multimedia,
+            gbifRecord.orElse(TaxonRecord.newBuilder().build())),
         builder::setIssues,
         builder::setNotIssues);
 
