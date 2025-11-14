@@ -268,6 +268,7 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setDay(25);
     expected.setDnasequenceid(Collections.singletonList("foo1"));
     expected.setClassifications(new HashMap<>());
+    expected.setNontaxonomicissue(List.of());
 
     PAssert.that(result).containsInAnyOrder(expected);
     p.run();
