@@ -353,7 +353,10 @@ public class OccurrenceHdfsRecordConverter {
             .collect(
                 Collectors.toMap(
                     TaxonRecord::getDatasetKey,
-                    tr -> tr.getIssues() != null && tr.getIssues().getIssueList() != null ? tr.getIssues().getIssueList() : List.of())));
+                    tr ->
+                        tr.getIssues() != null && tr.getIssues().getIssueList() != null
+                            ? tr.getIssues().getIssueList()
+                            : List.of())));
 
     occurrenceHdfsRecord.setClassificationdetails(
         multiTaxonRecord.getTaxonRecords().stream()
