@@ -23,7 +23,6 @@ import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.pojo.HumboldtJsonView;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
-import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
@@ -1123,15 +1122,13 @@ public class OccurrenceHdfsRecordConverter {
 
     addNonTaxonIssues(humboldtRecord.getIssues(), occurrenceHdfsRecord);
 
-    // Add taxonomic issues
-    String taxonIssues =
-        humboldtRecord.getHumboldtItems().stream()
-            .map(
-                h ->
-                    h.getTargetTaxonomicScope().stream()
-                        .flatMap(t -> t.getIssues().getIssueList().stream())
-                        .collect(Collectors.joining(ModelUtils.DEFAULT_SEPARATOR)))
-            .collect(Collectors.joining(ModelUtils.DEFAULT_SEPARATOR));
+    // Add taxonomic issues from humboldtRecord
+    humboldtRecord
+        .getHumboldtItems()
+        .forEach(
+            h ->
+                h.getTargetTaxonomicScope()
+                    .forEach(ir -> addTaxonIssues(ir.getIssues(), occurrenceHdfsRecord)));
   }
 
   private <T> void addToList(List<T> existingList, T value) {
