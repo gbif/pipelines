@@ -1131,24 +1131,6 @@ public class OccurrenceHdfsRecordConverter {
                     .forEach(ir -> addTaxonIssues(ir.getIssues(), occurrenceHdfsRecord)));
   }
 
-  private <T> void addToList(List<T> existingList, T value) {
-    if (value != null) {
-      if (existingList == null) {
-        existingList = new ArrayList<>();
-      }
-      existingList.add(value);
-    }
-  }
-
-  private <T> void addToList(List<T> existingList, List<T> values) {
-    if (values != null && !values.isEmpty()) {
-      if (existingList == null) {
-        existingList = new ArrayList<>();
-      }
-      existingList.addAll(values);
-    }
-  }
-
   /** Gets the {@link Schema.Field} associated to a verbatim term. */
   private static Schema.Field verbatimSchemaField(Term term) {
     return OccurrenceHdfsRecord.SCHEMA$.getField("v_" + term.simpleName().toLowerCase());
