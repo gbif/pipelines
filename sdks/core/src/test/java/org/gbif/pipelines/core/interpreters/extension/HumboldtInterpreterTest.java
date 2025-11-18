@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.gbif.api.vocabulary.DurationUnit;
+import org.gbif.api.vocabulary.EventIssue;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.interpreters.MockVocabularyLookups;
@@ -124,24 +125,20 @@ public class HumboldtInterpreterTest {
     assertTrue(
         hr.getIssues()
             .getIssueList()
-            .contains(OccurrenceIssue.GEOSPATIAL_SCOPE_AREA_LOWER_THAN_TOTAL_AREA_SAMPLED.name()));
-    assertTrue(hr.getIssues().getIssueList().contains(OccurrenceIssue.SITE_COUNT_INVALID.name()));
+            .contains(EventIssue.GEOSPATIAL_SCOPE_AREA_LOWER_THAN_TOTAL_AREA_SAMPLED.name()));
+    assertTrue(hr.getIssues().getIssueList().contains(EventIssue.SITE_COUNT_INVALID.name()));
+    assertTrue(
+        hr.getIssues().getIssueList().contains(EventIssue.SAMPLING_EFFORT_UNIT_MISSING.name()));
     assertTrue(
         hr.getIssues()
             .getIssueList()
-            .contains(OccurrenceIssue.SAMPLING_EFFORT_UNIT_MISSING.name()));
+            .contains(EventIssue.IS_TAXONOMIC_SCOPE_FULLY_REPORTED_INVALID.name()));
     assertTrue(
         hr.getIssues()
             .getIssueList()
-            .contains(OccurrenceIssue.IS_TAXONOMIC_SCOPE_FULLY_REPORTED_INVALID.name()));
+            .contains(EventIssue.TARGET_DEGREE_OF_ESTABLISHMENT_EXCLUDED.name()));
     assertTrue(
-        hr.getIssues()
-            .getIssueList()
-            .contains(OccurrenceIssue.TARGET_DEGREE_OF_ESTABLISHMENT_EXCLUDED.name()));
-    assertTrue(
-        hr.getIssues()
-            .getIssueList()
-            .contains(OccurrenceIssue.HAS_NON_TARGET_TAXA_MISMATCH.name()));
+        hr.getIssues().getIssueList().contains(EventIssue.HAS_NON_TARGET_TAXA_MISMATCH.name()));
   }
 
   @Test
@@ -171,7 +168,7 @@ public class HumboldtInterpreterTest {
     assertTrue(
         hr.getIssues()
             .getIssueList()
-            .contains(OccurrenceIssue.GEOSPATIAL_SCOPE_AREA_UNIT_MISSING.name()));
+            .contains(EventIssue.GEOSPATIAL_SCOPE_AREA_UNIT_MISSING.name()));
     assertEquals(1, hr.getIssues().getIssueList().size());
   }
 

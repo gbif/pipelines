@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.gbif.api.vocabulary.DurationUnit;
+import org.gbif.api.vocabulary.EventIssue;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -85,8 +86,8 @@ public class ParentJsonConverterTest {
                 IssueRecord.newBuilder()
                     .setIssueList(
                         List.of(
-                            OccurrenceIssue.TARGET_DEGREE_OF_ESTABLISHMENT_EXCLUDED.name(),
-                            OccurrenceIssue.HAS_MATERIAL_SAMPLES_MISMATCH.name()))
+                            EventIssue.TARGET_DEGREE_OF_ESTABLISHMENT_EXCLUDED.name(),
+                            EventIssue.HAS_MATERIAL_SAMPLES_MISMATCH.name()))
                     .build())
             .build();
 

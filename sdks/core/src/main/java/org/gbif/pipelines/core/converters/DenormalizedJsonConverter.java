@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.utils.HashConverter;
+import org.gbif.pipelines.core.utils.SortUtils;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
@@ -108,6 +109,7 @@ public class DenormalizedJsonConverter {
     mapLocationRecord(builder);
     mapMultimediaRecord(builder);
     mapExtendedRecord(builder);
+    mapSortField(builder);
 
     return builder;
   }
@@ -233,5 +235,11 @@ public class DenormalizedJsonConverter {
   private void mapCreated(ParentJsonRecord.Builder builder) {
     JsonConverter.getMaxCreationDate(metadata, eventCore, temporal, location, multimedia)
         .ifPresent(builder::setCreated);
+  }
+
+  private void mapSortField(EventJsonRecord.Builder builder) {
+    builder.setYearMonthEventIdSort(
+        SortUtils.yearDescMonthAscGbifIdAscSortKey(
+            builder.getYear(), builder.getMonth(), builder.getEventID() != null ? builder.getEventID().hashCode() : Long.MAX_VALUE));
   }
 }
