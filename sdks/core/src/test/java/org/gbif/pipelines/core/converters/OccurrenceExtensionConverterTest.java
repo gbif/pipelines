@@ -98,7 +98,11 @@ public class OccurrenceExtensionConverterTest {
     exts.put(MeasurementOrFact.qualifiedName(), Arrays.asList(extMap, extMap));
 
     ExtendedRecord extendedRecord =
-            ExtendedRecord.newBuilder().setId(occurrenceId).setCoreTerms(coreMap).setExtensions(exts).build();
+        ExtendedRecord.newBuilder()
+            .setId(occurrenceId)
+            .setCoreTerms(coreMap)
+            .setExtensions(exts)
+            .build();
 
     // When
     List<ExtendedRecord> result = OccurrenceExtensionConverter.convert(extendedRecord);
@@ -114,7 +118,7 @@ public class OccurrenceExtensionConverterTest {
 
     Assert.assertEquals(2, erResult.getExtensions().get(MeasurementOrFact.qualifiedName()).size());
     Assert.assertEquals(
-            1, erResult.getExtensions().get(MeasurementOrFact.qualifiedName()).get(0).size());
+        1, erResult.getExtensions().get(MeasurementOrFact.qualifiedName()).get(0).size());
 
     // coreId has the id reported in the Core
     Assert.assertEquals(occurrenceId, erResult.getCoreId());
