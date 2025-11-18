@@ -101,8 +101,7 @@
     "created": {"type": "date"},
     "uniqueKey": {"type": "keyword"},
     "firstLoaded": {"type": "date"},
-    "yearMonthGbifIdSort": {"type":  "long"},
-    "dnaSequenceID": {"type": "keyword", "copy_to": "all"},
+    "yearMonthEventIdSort": {"type":  "long"},
 
     "metadata": {
       "type": "object",

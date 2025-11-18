@@ -20,8 +20,8 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.Strings;
 import org.gbif.api.vocabulary.DurationUnit;
+import org.gbif.api.vocabulary.EventIssue;
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.BooleanParser;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.dwc.terms.DwcTerm;
@@ -66,7 +66,7 @@ public class HumboldtInterpreter {
             .to(() -> Humboldt.newBuilder().build())
             .map(
                 EcoTerm.siteCount,
-                interpretInt(Humboldt::setSiteCount, OccurrenceIssue.SITE_COUNT_INVALID))
+                interpretInt(Humboldt::setSiteCount, EventIssue.SITE_COUNT_INVALID))
             .map(
                 EcoTerm.verbatimSiteDescriptions,
                 interpretStringList(Humboldt::setVerbatimSiteDescriptions))
@@ -75,7 +75,7 @@ public class HumboldtInterpreter {
                 EcoTerm.geospatialScopeAreaValue,
                 interpretDouble(
                     Humboldt::setGeospatialScopeAreaValue,
-                    OccurrenceIssue.GEOSPATIAL_SCOPE_AREA_VALUE_INVALID))
+                    EventIssue.GEOSPATIAL_SCOPE_AREA_VALUE_INVALID))
             .map(
                 EcoTerm.geospatialScopeAreaUnit,
                 interpretString(Humboldt::setGeospatialScopeAreaUnit))
@@ -83,7 +83,7 @@ public class HumboldtInterpreter {
                 EcoTerm.totalAreaSampledValue,
                 interpretDouble(
                     Humboldt::setTotalAreaSampledValue,
-                    OccurrenceIssue.TOTAL_AREA_SAMPLED_VALUE_INVALID))
+                    EventIssue.TOTAL_AREA_SAMPLED_VALUE_INVALID))
             .map(EcoTerm.totalAreaSampledUnit, interpretString(Humboldt::setTotalAreaSampledUnit))
             .map(EcoTerm.targetHabitatScope, interpretStringList(Humboldt::setTargetHabitatScope))
             .map(
@@ -92,7 +92,7 @@ public class HumboldtInterpreter {
             .map(
                 EcoTerm.eventDurationValue,
                 interpretDouble(
-                    Humboldt::setEventDurationValue, OccurrenceIssue.EVENT_DURATION_VALUE_INVALID))
+                    Humboldt::setEventDurationValue, EventIssue.EVENT_DURATION_VALUE_INVALID))
             .map(EcoTerm.eventDurationUnit, HumboldtInterpreter::interpretEventDurationUnit)
             .map(
                 EcoTerm.targetTaxonomicScope, interpretTaxon(hr, Humboldt::setTargetTaxonomicScope))
@@ -106,22 +106,22 @@ public class HumboldtInterpreter {
                 EcoTerm.isTaxonomicScopeFullyReported,
                 interpretBoolean(
                     Humboldt::setIsTaxonomicScopeFullyReported,
-                    OccurrenceIssue.IS_TAXONOMIC_SCOPE_FULLY_REPORTED_INVALID))
+                    EventIssue.IS_TAXONOMIC_SCOPE_FULLY_REPORTED_INVALID))
             .map(
                 EcoTerm.isAbsenceReported,
                 interpretBoolean(
-                    Humboldt::setIsAbsenceReported, OccurrenceIssue.IS_ABSENCE_REPORTED_INVALID))
+                    Humboldt::setIsAbsenceReported, EventIssue.IS_ABSENCE_REPORTED_INVALID))
             .map(EcoTerm.absentTaxa, interpretTaxon(hr, Humboldt::setAbsentTaxa))
             .map(
                 EcoTerm.hasNonTargetTaxa,
                 interpretBoolean(
-                    Humboldt::setHasNonTargetTaxa, OccurrenceIssue.HAS_NON_TARGET_TAXA_INVALID))
+                    Humboldt::setHasNonTargetTaxa, EventIssue.HAS_NON_TARGET_TAXA_INVALID))
             .map(EcoTerm.nonTargetTaxa, interpretTaxon(hr, Humboldt::setNonTargetTaxa))
             .map(
                 EcoTerm.areNonTargetTaxaFullyReported,
                 interpretBoolean(
                     Humboldt::setAreNonTargetTaxaFullyReported,
-                    OccurrenceIssue.ARE_NON_TARGET_TAXA_FULLY_REPORTED_INVALID))
+                    EventIssue.ARE_NON_TARGET_TAXA_FULLY_REPORTED_INVALID))
             .map(
                 EcoTerm.targetLifeStageScope,
                 interpretVocabularyList(DwcTerm.lifeStage, Humboldt::setTargetLifeStageScope))
@@ -132,7 +132,7 @@ public class HumboldtInterpreter {
                 EcoTerm.isLifeStageScopeFullyReported,
                 interpretBoolean(
                     Humboldt::setIsLifeStageScopeFullyReported,
-                    OccurrenceIssue.IS_LIFE_STAGE_SCOPE_FULLY_REPORTED_INVALID))
+                    EventIssue.IS_LIFE_STAGE_SCOPE_FULLY_REPORTED_INVALID))
             .map(
                 EcoTerm.targetDegreeOfEstablishmentScope,
                 interpretVocabularyList(
@@ -145,7 +145,7 @@ public class HumboldtInterpreter {
                 EcoTerm.isDegreeOfEstablishmentScopeFullyReported,
                 interpretBoolean(
                     Humboldt::setIsDegreeOfEstablishmentScopeFullyReported,
-                    OccurrenceIssue.IS_DEGREE_OF_ESTABLISHMENT_SCOPE_FULLY_REPORTED_INVALID))
+                    EventIssue.IS_DEGREE_OF_ESTABLISHMENT_SCOPE_FULLY_REPORTED_INVALID))
             .map(
                 EcoTerm.targetGrowthFormScope,
                 interpretStringList(Humboldt::setTargetGrowthFormScope))
@@ -156,12 +156,12 @@ public class HumboldtInterpreter {
                 EcoTerm.isGrowthFormScopeFullyReported,
                 interpretBoolean(
                     Humboldt::setIsGrowthFormScopeFullyReported,
-                    OccurrenceIssue.IS_GROWTH_FORM_SCOPE_FULLY_REPORTED_INVALID))
+                    EventIssue.IS_GROWTH_FORM_SCOPE_FULLY_REPORTED_INVALID))
             .map(
                 EcoTerm.hasNonTargetOrganisms,
                 interpretBoolean(
                     Humboldt::setHasNonTargetOrganisms,
-                    OccurrenceIssue.HAS_NON_TARGET_ORGANISMS_INVALID))
+                    EventIssue.HAS_NON_TARGET_ORGANISMS_INVALID))
             .map(EcoTerm.compilationTypes, interpretStringList(Humboldt::setCompilationTypes))
             .map(
                 EcoTerm.compilationSourceTypes,
@@ -175,46 +175,44 @@ public class HumboldtInterpreter {
             .map(
                 EcoTerm.isAbundanceReported,
                 interpretBoolean(
-                    Humboldt::setIsAbundanceReported,
-                    OccurrenceIssue.IS_ABUNDANCE_REPORTED_INVALID))
+                    Humboldt::setIsAbundanceReported, EventIssue.IS_ABUNDANCE_REPORTED_INVALID))
             .map(
                 EcoTerm.isAbundanceCapReported,
                 interpretBoolean(
                     Humboldt::setIsAbundanceCapReported,
-                    OccurrenceIssue.IS_ABUNDANCE_CAP_REPORTED_INVALID))
+                    EventIssue.IS_ABUNDANCE_CAP_REPORTED_INVALID))
             .map(
                 EcoTerm.abundanceCap,
-                interpretInt(Humboldt::setAbundanceCap, OccurrenceIssue.ABUNDANCE_CAP_INVALID))
+                interpretInt(Humboldt::setAbundanceCap, EventIssue.ABUNDANCE_CAP_INVALID))
             .map(
                 EcoTerm.isVegetationCoverReported,
                 interpretBoolean(
                     Humboldt::setIsVegetationCoverReported,
-                    OccurrenceIssue.IS_VEGETATION_COVER_REPORTED_INVALID))
+                    EventIssue.IS_VEGETATION_COVER_REPORTED_INVALID))
             .map(
                 EcoTerm.isLeastSpecificTargetCategoryQuantityInclusive,
                 interpretBoolean(
                     Humboldt::setIsLeastSpecificTargetCategoryQuantityInclusive,
-                    OccurrenceIssue.IS_LEAST_SPECIFIC_TARGET_CATEGORY_QUANTITY_INCLUSIVE_INVALID))
+                    EventIssue.IS_LEAST_SPECIFIC_TARGET_CATEGORY_QUANTITY_INCLUSIVE_INVALID))
             .map(
                 EcoTerm.hasVouchers,
-                interpretBoolean(Humboldt::setHasVouchers, OccurrenceIssue.HAS_VOUCHERS_INVALID))
+                interpretBoolean(Humboldt::setHasVouchers, EventIssue.HAS_VOUCHERS_INVALID))
             .map(EcoTerm.voucherInstitutions, interpretStringList(Humboldt::setVoucherInstitutions))
             .map(
                 EcoTerm.hasMaterialSamples,
                 interpretBoolean(
-                    Humboldt::setHasMaterialSamples, OccurrenceIssue.HAS_MATERIAL_SAMPLES_INVALID))
+                    Humboldt::setHasMaterialSamples, EventIssue.HAS_MATERIAL_SAMPLES_INVALID))
             .map(EcoTerm.materialSampleTypes, interpretStringList(Humboldt::setMaterialSampleTypes))
             .map(EcoTerm.samplingPerformedBy, interpretStringList(Humboldt::setSamplingPerformedBy))
             .map(
                 EcoTerm.isSamplingEffortReported,
                 interpretBoolean(
                     Humboldt::setIsSamplingEffortReported,
-                    OccurrenceIssue.IS_SAMPLING_EFFORT_REPORTED_INVALID))
+                    EventIssue.IS_SAMPLING_EFFORT_REPORTED_INVALID))
             .map(
                 EcoTerm.samplingEffortValue,
                 interpretDouble(
-                    Humboldt::setSamplingEffortValue,
-                    OccurrenceIssue.SAMPLING_EFFORT_VALUE_INVALID))
+                    Humboldt::setSamplingEffortValue, EventIssue.SAMPLING_EFFORT_VALUE_INVALID))
             .map(EcoTerm.samplingEffortUnit, interpretString(Humboldt::setSamplingEffortUnit))
             .postMap(checkAreas())
             .postMap(checkMissingUnits())
@@ -234,12 +232,12 @@ public class HumboldtInterpreter {
       if (humboldt.getNonTargetTaxa() != null
           && !humboldt.getNonTargetTaxa().isEmpty()
           && Boolean.FALSE.equals(humboldt.getHasNonTargetTaxa())) {
-        return List.of(OccurrenceIssue.HAS_NON_TARGET_TAXA_MISMATCH.name());
+        return List.of(EventIssue.HAS_NON_TARGET_TAXA_MISMATCH.name());
       }
       if (humboldt.getMaterialSampleTypes() != null
           && !humboldt.getMaterialSampleTypes().isEmpty()
           && Boolean.FALSE.equals(humboldt.getHasMaterialSamples())) {
-        return List.of(OccurrenceIssue.HAS_MATERIAL_SAMPLES_MISMATCH.name());
+        return List.of(EventIssue.HAS_MATERIAL_SAMPLES_MISMATCH.name());
       }
       return issues;
     };
@@ -259,24 +257,24 @@ public class HumboldtInterpreter {
 
       if (existExclusion.apply(
           humboldt.getTargetTaxonomicScope(), humboldt.getExcludedTaxonomicScope())) {
-        return List.of(OccurrenceIssue.TARGET_TAXONOMIC_SCOPE_EXCLUDED.name());
+        return List.of(EventIssue.TARGET_TAXONOMIC_SCOPE_EXCLUDED.name());
       }
       if (existExclusion.apply(
           humboldt.getTargetLifeStageScope(), humboldt.getExcludedLifeStageScope())) {
-        return List.of(OccurrenceIssue.TARGET_LIFE_STAGE_SCOPE_EXCLUDED.name());
+        return List.of(EventIssue.TARGET_LIFE_STAGE_SCOPE_EXCLUDED.name());
       }
       if (existExclusion.apply(
           humboldt.getTargetDegreeOfEstablishmentScope(),
           humboldt.getExcludedDegreeOfEstablishmentScope())) {
-        return List.of(OccurrenceIssue.TARGET_DEGREE_OF_ESTABLISHMENT_EXCLUDED.name());
+        return List.of(EventIssue.TARGET_DEGREE_OF_ESTABLISHMENT_EXCLUDED.name());
       }
       if (existExclusion.apply(
           humboldt.getTargetGrowthFormScope(), humboldt.getExcludedGrowthFormScope())) {
-        return List.of(OccurrenceIssue.TARGET_GROWTH_FORM_EXCLUDED.name());
+        return List.of(EventIssue.TARGET_GROWTH_FORM_EXCLUDED.name());
       }
       if (existExclusion.apply(
           humboldt.getTargetHabitatScope(), humboldt.getExcludedHabitatScope())) {
-        return List.of(OccurrenceIssue.TARGET_HABITAT_SCOPE_EXCLUDED.name());
+        return List.of(EventIssue.TARGET_HABITAT_SCOPE_EXCLUDED.name());
       }
       return issues;
     };
@@ -292,7 +290,7 @@ public class HumboldtInterpreter {
               .getGeospatialScopeAreaUnit()
               .equalsIgnoreCase(humboldt.getTotalAreaSampledUnit())
           && humboldt.getGeospatialScopeAreaValue() < humboldt.getTotalAreaSampledValue()) {
-        return List.of(OccurrenceIssue.GEOSPATIAL_SCOPE_AREA_LOWER_THAN_TOTAL_AREA_SAMPLED.name());
+        return List.of(EventIssue.GEOSPATIAL_SCOPE_AREA_LOWER_THAN_TOTAL_AREA_SAMPLED.name());
       }
       return List.of();
     };
@@ -302,25 +300,25 @@ public class HumboldtInterpreter {
     List<String> issues = new ArrayList<>();
     return humboldt -> {
       if (humboldt.getEventDurationValue() != null && humboldt.getEventDurationUnit() == null) {
-        issues.add(OccurrenceIssue.EVENT_DURATION_UNIT_MISSING.name());
+        issues.add(EventIssue.EVENT_DURATION_UNIT_MISSING.name());
       }
       if (humboldt.getGeospatialScopeAreaValue() != null
           && humboldt.getGeospatialScopeAreaUnit() == null) {
-        issues.add(OccurrenceIssue.GEOSPATIAL_SCOPE_AREA_UNIT_MISSING.name());
+        issues.add(EventIssue.GEOSPATIAL_SCOPE_AREA_UNIT_MISSING.name());
       }
       if (humboldt.getSamplingEffortValue() != null && humboldt.getSamplingEffortUnit() == null) {
-        issues.add(OccurrenceIssue.SAMPLING_EFFORT_UNIT_MISSING.name());
+        issues.add(EventIssue.SAMPLING_EFFORT_UNIT_MISSING.name());
       }
       if (humboldt.getTotalAreaSampledValue() != null
           && humboldt.getTotalAreaSampledUnit() == null) {
-        issues.add(OccurrenceIssue.TOTAL_AREA_SAMPLED_UNIT_MISSING.name());
+        issues.add(EventIssue.TOTAL_AREA_SAMPLED_UNIT_MISSING.name());
       }
       return issues;
     };
   }
 
   private static BiFunction<Humboldt, String, List<String>> interpretBoolean(
-      BiConsumer<Humboldt, Boolean> setter, OccurrenceIssue issue) {
+      BiConsumer<Humboldt, Boolean> setter, EventIssue issue) {
     return (humboldt, rawValue) -> {
       List<String> issues = new ArrayList<>();
       if (!Strings.isNullOrEmpty(rawValue)) {
@@ -354,7 +352,7 @@ public class HumboldtInterpreter {
   }
 
   private static BiFunction<Humboldt, String, List<String>> interpretDouble(
-      BiConsumer<Humboldt, Double> setter, OccurrenceIssue issue) {
+      BiConsumer<Humboldt, Double> setter, EventIssue issue) {
     return (humboldt, rawValue) -> {
       List<String> issues = new ArrayList<>();
       Consumer<Optional<Double>> fn =
@@ -373,7 +371,7 @@ public class HumboldtInterpreter {
   }
 
   private static BiFunction<Humboldt, String, List<String>> interpretInt(
-      BiConsumer<Humboldt, Integer> setter, OccurrenceIssue issue) {
+      BiConsumer<Humboldt, Integer> setter, EventIssue issue) {
     return (humboldt, rawValue) -> {
       List<String> issues = new ArrayList<>();
       if (!Strings.isNullOrEmpty(rawValue)) {
