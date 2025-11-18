@@ -14,6 +14,7 @@ import org.gbif.api.vocabulary.DurationUnit;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
 import org.gbif.pipelines.core.utils.HashConverter;
+import org.gbif.pipelines.core.utils.SortUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
@@ -132,6 +133,7 @@ public class ParentJsonConverter {
     mapMultimediaRecord(builder);
     mapMeasurementOrFactRecord(builder);
     mapHumboldtRecord(builder);
+    mapSortField(builder);
 
     return builder;
   }
@@ -548,5 +550,13 @@ public class ParentJsonConverter {
     return parents.stream()
         .map(p -> Parent.newBuilder().setId(p.getId()).setEventType(p.getEventType()).build())
         .collect(Collectors.toList());
+  }
+
+  private void mapSortField(EventJsonRecord.Builder builder) {
+    builder.setYearMonthEventIdSort(
+        SortUtils.yearDescMonthAscGbifIdAscSortKey(
+            builder.getYear(),
+            builder.getMonth(),
+            builder.getEventID() != null ? builder.getEventID().hashCode() : Long.MAX_VALUE));
   }
 }
