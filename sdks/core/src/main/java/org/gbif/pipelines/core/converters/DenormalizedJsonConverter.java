@@ -240,6 +240,8 @@ public class DenormalizedJsonConverter {
   private void mapSortField(EventJsonRecord.Builder builder) {
     builder.setYearMonthEventIdSort(
         SortUtils.yearDescMonthAscGbifIdAscSortKey(
-            builder.getYear(), builder.getMonth(), builder.getEventID() != null ? builder.getEventID().hashCode() : Long.MAX_VALUE));
+            builder.getYear(),
+            builder.getMonth(),
+            builder.getEventID() != null ? builder.getEventID().hashCode() : Long.MAX_VALUE));
   }
 }
