@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Create;
@@ -315,22 +314,6 @@ public class EventToEsIndexPipeline {
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", eventJsonDoFn);
 
-    PCollection<String> occurrenceJsonCollection =
-        datasetHasOccurrences
-            ? OccurrenceToEsIndexPipeline.IndexingTransform.builder()
-                .pipeline(p)
-                .pathFn(occurrencesPathFn)
-                .asParentChildRecord(true)
-                .build()
-                .apply()
-            : p.apply("Create empty occurrenceJsonCollection", Create.empty(StringUtf8Coder.of()));
-
-    // Merge events and occurrences
-    PCollection<String> jsonCollection =
-        PCollectionList.of(eventJsonCollection)
-            .and(occurrenceJsonCollection)
-            .apply("Join event and occurrence Json records", Flatten.pCollections());
-
     log.info("Adding step 6: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =
         ElasticsearchIO.ConnectionConfiguration.create(
@@ -360,7 +343,7 @@ public class EventToEsIndexPipeline {
       writeIO = writeIO.withIdFn(input -> input.get(esDocumentId).asText());
     }
 
-    jsonCollection.apply("Push records to ES", writeIO);
+    eventJsonCollection.apply("Push records to ES", writeIO);
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

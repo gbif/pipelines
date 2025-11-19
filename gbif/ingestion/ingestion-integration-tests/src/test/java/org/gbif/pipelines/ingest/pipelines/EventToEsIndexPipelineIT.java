@@ -508,7 +508,8 @@ public class EventToEsIndexPipelineIT {
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(4, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertEquals(3, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertResultsSize(idxName, "occurrence", 0);
 
     ParentJsonRecord eventRecord = getResult(idxName, ID, "event");
     assertRootParenJsonRecordResponse(eventRecord);
@@ -521,6 +522,39 @@ public class EventToEsIndexPipelineIT {
     assertEquals(
         Collections.singletonList("survey"), eventRecordSub2.getEventInherited().getEventType());
     assertEquals("L1", eventRecordSub2.getEventInherited().getLocationID());
+  }
+
+  @SneakyThrows
+  private void assertResultsSize(String idxName, String type, int expectedSize) {
+    Response response =
+        EsService.executeQuery(
+            ES_SERVER.getEsClient(),
+            idxName,
+            "{\n"
+                + "  \"query\": {\n"
+                + "    \"bool\" : {\n"
+                + "      \"must\" : [\n"
+                + "        {\n"
+                + "          \"term\": {\n"
+                + "            \"type\": \""
+                + type
+                + "\"\n"
+                + "          }\n"
+                + "        }\n"
+                + "      ]\n"
+                + "    }\n"
+                + "  }\n"
+                + "}");
+    ObjectMapper mapper = SerDeFactory.avroMapperNonNulls();
+    ArrayNode results =
+        (ArrayNode)
+            mapper
+                .readValue(
+                    IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8),
+                    JsonNode.class)
+                .get("hits")
+                .get("hits");
+    assertEquals(expectedSize, results.size());
   }
 
   /**

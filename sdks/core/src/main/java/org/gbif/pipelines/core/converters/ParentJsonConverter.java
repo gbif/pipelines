@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.DurationUnit;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
-import org.gbif.pipelines.core.utils.HashConverter;
 import org.gbif.pipelines.core.utils.SortUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
@@ -22,10 +21,8 @@ import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
 import org.gbif.pipelines.io.avro.json.EventJsonRecord;
 import org.gbif.pipelines.io.avro.json.Humboldt;
 import org.gbif.pipelines.io.avro.json.HumboldtTaxonClassification;
-import org.gbif.pipelines.io.avro.json.JoinRecord;
 import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 import org.gbif.pipelines.io.avro.json.MetadataJsonRecord;
-import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.io.avro.json.Parent;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
@@ -47,13 +44,8 @@ public class ParentJsonConverter {
   protected final LocationInheritedRecord locationInheritedRecord;
   protected final TemporalInheritedRecord temporalInheritedRecord;
   protected final EventInheritedRecord eventInheritedRecord;
-  protected OccurrenceJsonRecord occurrenceJsonRecord;
   protected MeasurementOrFactRecord measurementOrFactRecord;
   protected final HumboldtRecord humboldtRecord;
-
-  public ParentJsonRecord convertToParent() {
-    return (occurrenceJsonRecord != null) ? convertToParentOccurrence() : convertToParentEvent();
-  }
 
   @SneakyThrows
   public String toJson() {
@@ -61,7 +53,7 @@ public class ParentJsonConverter {
   }
 
   /** Converts to parent record based on an event record. */
-  private ParentJsonRecord convertToParentEvent() {
+  public ParentJsonRecord convertToParent() {
     ParentJsonRecord.Builder builder =
         convertToParentRecord()
             .setId(verbatim.getId())
@@ -70,8 +62,7 @@ public class ParentJsonConverter {
             .setType(ConverterConstants.EVENT)
             .setEventBuilder(convertToEvent())
             .setAll(JsonConverter.convertFieldAll(verbatim, false))
-            .setVerbatim(JsonConverter.convertVerbatimEventRecord(verbatim))
-            .setJoinRecordBuilder(JoinRecord.newBuilder().setName(ConverterConstants.EVENT));
+            .setVerbatim(JsonConverter.convertVerbatimEventRecord(verbatim));
 
     mapCreated(builder);
     mapDerivedMetadata(builder);
@@ -82,29 +73,6 @@ public class ParentJsonConverter {
     JsonConverter.convertToDate(identifier.getFirstLoaded()).ifPresent(builder::setFirstLoaded);
 
     return builder.build();
-  }
-
-  /** Converts to a parent record based on an occurrence record. */
-  private ParentJsonRecord convertToParentOccurrence() {
-    return convertToParentRecord()
-        .setType(ConverterConstants.OCCURRENCE)
-        .setId(occurrenceJsonRecord.getId())
-        .setInternalId(
-            HashConverter.getSha1(
-                metadata.getDatasetKey(),
-                occurrenceJsonRecord.getEventId(),
-                occurrenceJsonRecord.getOccurrenceId()))
-        .setJoinRecordBuilder(
-            JoinRecord.newBuilder()
-                .setName(ConverterConstants.OCCURRENCE)
-                .setParent(
-                    HashConverter.getSha1(
-                        metadata.getDatasetKey(), occurrenceJsonRecord.getEventId())))
-        .setOccurrence(occurrenceJsonRecord)
-        .setAll(occurrenceJsonRecord.getAll())
-        .setVerbatim(occurrenceJsonRecord.getVerbatim())
-        .setCreated(occurrenceJsonRecord.getCreated())
-        .build();
   }
 
   /** Converts to a parent record */
