@@ -71,4 +71,56 @@ public class OccurrenceExtensionConverterTest {
     // coreId has the id reported in the Core
     Assert.assertEquals(idCore, erResult.getCoreId());
   }
+
+  @Test
+  public void extensionsWithoutOccurrenceIdTest() {
+    // State
+    String occurrenceId = "some-occurrence-id";
+    String somethingCore = "somethingCore";
+    String somethingExt = "somethingExt";
+
+    // Core
+    Map<String, String> coreMap = new HashMap<>(2);
+    coreMap.put(DwcTerm.occurrenceID.qualifiedName(), occurrenceId);
+    coreMap.put(somethingCore, somethingCore);
+
+    // Ext
+    Map<String, String> occurrenceExtension = new HashMap<>(2);
+    occurrenceExtension.put(DwcTerm.occurrenceID.qualifiedName(), occurrenceId);
+    occurrenceExtension.put(somethingExt, somethingExt);
+
+    Map<String, String> extMap = new HashMap<>(1);
+    extMap.put(somethingExt, somethingExt);
+
+    // Set
+    Map<String, List<Map<String, String>>> exts = new HashMap<>(2);
+    exts.put(Occurrence.qualifiedName(), Collections.singletonList(occurrenceExtension));
+    exts.put(MeasurementOrFact.qualifiedName(), Arrays.asList(extMap, extMap));
+
+    ExtendedRecord extendedRecord =
+        ExtendedRecord.newBuilder()
+            .setId(occurrenceId)
+            .setCoreTerms(coreMap)
+            .setExtensions(exts)
+            .build();
+
+    // When
+    List<ExtendedRecord> result = OccurrenceExtensionConverter.convert(extendedRecord);
+
+    // Should
+    Assert.assertFalse(result.isEmpty());
+
+    ExtendedRecord erResult = result.get(0);
+
+    Assert.assertEquals(occurrenceId, erResult.getId());
+    Assert.assertEquals(somethingCore, erResult.getCoreTerms().get(somethingCore));
+    Assert.assertEquals(somethingExt, erResult.getCoreTerms().get(somethingExt));
+
+    Assert.assertEquals(2, erResult.getExtensions().get(MeasurementOrFact.qualifiedName()).size());
+    Assert.assertEquals(
+        1, erResult.getExtensions().get(MeasurementOrFact.qualifiedName()).get(0).size());
+
+    // coreId has the id reported in the Core
+    Assert.assertEquals(occurrenceId, erResult.getCoreId());
+  }
 }
