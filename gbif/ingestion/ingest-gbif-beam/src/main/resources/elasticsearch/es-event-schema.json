@@ -233,6 +233,7 @@
     "event": {
       "type": "object",
       "properties": {
+        "yearMonthEventIDSort": {"type":  "keyword"},
         "references": {"type":"text", "copy_to": "all"},
         "samplingProtocolJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
         "samplingProtocol":  {
@@ -519,8 +520,7 @@
             "samplingEffortUnit": {"type": "keyword"}
           }
         }
-      },
-      "yearMonthEventIDSort": {"type":  "keyword"}
+      }
     },
 
     "verbatim": {"type": "object", "enabled": false}
