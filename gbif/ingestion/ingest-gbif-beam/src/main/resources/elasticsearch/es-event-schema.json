@@ -520,7 +520,7 @@
           }
         }
       },
-      "yearMonthEventIdSort": {"type":  "long"}
+      "yearMonthEventIDSort": {"type":  "keyword"}
     },
 
     "verbatim": {"type": "object", "enabled": false}

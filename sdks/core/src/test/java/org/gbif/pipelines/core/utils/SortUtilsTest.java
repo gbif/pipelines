@@ -34,4 +34,39 @@ public class SortUtilsTest {
         yearDescMonthAscGbifIdAscSortKey(year1, month1, gbifId1)
             < yearDescMonthAscGbifIdAscSortKey(year2, month2, gbifId2));
   }
+
+  @Test
+  public void yearDescMonthAscEventIDAscSortKeyTest() {
+    assertFirstValueLowerThanSecondWithString(2025, 1, "S189842677", 2025, 4, "S189842699");
+    assertFirstValueLowerThanSecondWithString(2025, 1, "S189842677", 1900, 1, "S189842699");
+    assertFirstValueLowerThanSecondWithString(4000, 1, "S189842677", 1900, 1, "S189842699");
+    assertFirstValueLowerThanSecondWithString(2025, 1, "S189842677", 2024, 12, "S189842677");
+    assertFirstValueLowerThanSecondWithString(2025, 1, "S189842677", 2025, 1, "S189842678");
+    assertFirstValueLowerThanSecondWithString(2025, 1, "S189842677", 2025, 1, "ZZZZZ");
+    assertFirstValueLowerThanSecondWithString(2025, 1, "ZZZZZ", 2025, 2, "a");
+    assertFirstValueLowerThanSecondWithString(2025, 1, "ZZZZZ", 2025, 2, "ZZZZZ");
+    assertFirstValueLowerThanSecondWithString(2025, 12, "S189842677", null, 4, "S189842699");
+    assertFirstValueLowerThanSecondWithString(2025, 12, "S189842677", null, 12, "S189842699");
+    assertFirstValueLowerThanSecondWithString(2025, 12, "S189842677", null, null, "S189842699");
+    assertFirstValueLowerThanSecondWithString(2025, 12, "S189842677", 1800, null, "S189842699");
+    assertFirstValueLowerThanSecondWithString(2030, 12, "S189842677", 2020, null, "S189842699");
+    assertFirstValueLowerThanSecondWithString(2025, 12, "S189842677", 2025, 12, "T");
+
+    assertEquals(
+        yearDescMonthAscEventIDAscSortKey(2025, 1, "S189842677"),
+        yearDescMonthAscEventIDAscSortKey(2025, 1, "S189842677"));
+  }
+
+  private static void assertFirstValueLowerThanSecondWithString(
+      Integer year1,
+      Integer month1,
+      String eventId1,
+      Integer year2,
+      Integer month2,
+      String eventId2) {
+    assertTrue(
+        yearDescMonthAscEventIDAscSortKey(year1, month1, eventId1)
+                .compareTo(yearDescMonthAscEventIDAscSortKey(year2, month2, eventId2))
+            < 0);
+  }
 }
