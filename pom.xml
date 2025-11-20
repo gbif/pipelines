@@ -159,7 +159,7 @@
     <pipelines.lucene.version>8.6.2</pipelines.lucene.version>
     <apache.httpcomponents.version>4.4.12</apache.httpcomponents.version>
 
-    <jackson.version>2.11.3</jackson.version>
+    <jackson.version>2.12.0</jackson.version>
 
     <retrofit.version>2.9.0</retrofit.version>
     <okhttp.version>4.9.1</okhttp.version>
