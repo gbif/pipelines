@@ -160,6 +160,7 @@
     <apache.httpcomponents.version>4.4.12</apache.httpcomponents.version>
 
     <jackson.version>2.16.1</jackson.version>
+    <snake-yaml-version>2.2</snake-yaml-version>
 
     <retrofit.version>2.9.0</retrofit.version>
     <okhttp.version>4.9.1</okhttp.version>
@@ -895,6 +896,11 @@
         <groupId>com.fasterxml.jackson.dataformat</groupId>
         <artifactId>jackson-dataformat-xml</artifactId>
         <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>${snake-yaml-version}</version>
       </dependency>
 
       <!-- Http clients -->
