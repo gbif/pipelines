@@ -36,7 +36,8 @@ public class InheritedFieldsTransform implements Serializable {
                 KV.of(
                     eventCoreRecord.getId(),
                     Edge.of(eventCoreRecord.getId(), eventCoreRecord.getId(), eventCoreRecord)));
-            if (eventCoreRecord.getParentsLineage() != null) {
+            if (eventCoreRecord.getParentsLineage() != null
+                && !eventCoreRecord.getParentsLineage().isEmpty()) {
               eventCoreRecord
                   .getParentsLineage()
                   .forEach(
