@@ -1129,6 +1129,12 @@
         <artifactId>testcontainers</artifactId>
         <version>${testcontainers.elasticsearch.version}</version>
         <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
     </dependencies>
