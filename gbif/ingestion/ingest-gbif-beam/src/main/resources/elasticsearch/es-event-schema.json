@@ -101,7 +101,6 @@
     "created": {"type": "date"},
     "uniqueKey": {"type": "keyword"},
     "firstLoaded": {"type": "date"},
-    "yearMonthEventIdSort": {"type":  "long"},
 
     "metadata": {
       "type": "object",
@@ -520,7 +519,8 @@
             "samplingEffortUnit": {"type": "keyword"}
           }
         }
-      }
+      },
+      "yearMonthEventIdSort": {"type":  "long"}
     },
 
     "verbatim": {"type": "object", "enabled": false}
