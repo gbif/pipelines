@@ -242,8 +242,12 @@ public class ParentJsonConverter {
         .setStateProvince(location.getStateProvince())
         .setMinimumElevationInMeters(location.getMinimumElevationInMeters())
         .setMaximumElevationInMeters(location.getMaximumElevationInMeters())
+        .setElevation(location.getElevation())
+        .setElevationAccuracy(location.getElevationAccuracy())
         .setMinimumDepthInMeters(location.getMinimumDepthInMeters())
         .setMaximumDepthInMeters(location.getMaximumDepthInMeters())
+        .setDepth(location.getDepth())
+        .setDepthAccuracy(location.getDepthAccuracy())
         .setMaximumDistanceAboveSurfaceInMeters(location.getMaximumDistanceAboveSurfaceInMeters())
         .setMinimumDistanceAboveSurfaceInMeters(location.getMinimumDistanceAboveSurfaceInMeters())
         .setCoordinateUncertaintyInMeters(location.getCoordinateUncertaintyInMeters())
@@ -252,7 +256,11 @@ public class ParentJsonConverter {
         .setRepatriated(location.getRepatriated())
         .setHasGeospatialIssue(location.getHasGeospatialIssue())
         .setLocality(location.getLocality())
-        .setFootprintWKT(location.getFootprintWKT());
+        .setFootprintWKT(location.getFootprintWKT())
+        .setGeoreferencedBy(location.getGeoreferencedBy())
+        .setHigherGeography(location.getHigherGeography())
+        .setGbifRegion(location.getGbifRegion())
+        .setPublishedByGbifRegion(location.getPublishedByGbifRegion());
 
     // Coordinates
     Double decimalLongitude = location.getDecimalLongitude();
@@ -469,6 +477,8 @@ public class ParentJsonConverter {
     extractOptValue(verbatim, DwcTerm.verbatimDepth).ifPresent(builder::setVerbatimDepth);
     extractOptValue(verbatim, DwcTerm.verbatimElevation).ifPresent(builder::setVerbatimElevation);
     extractLengthAwareOptValue(verbatim, DwcTerm.fieldNumber).ifPresent(builder::setFieldNumber);
+    extractLengthAwareOptValue(verbatim, DwcTerm.island).ifPresent(builder::setIsland);
+    extractLengthAwareOptValue(verbatim, DwcTerm.islandGroup).ifPresent(builder::setIslandGroup);
 
     // Todo: replce with extractOptValue
     String eventName = verbatim.getCoreTerms().get(ConverterConstants.EVENT_NAME);

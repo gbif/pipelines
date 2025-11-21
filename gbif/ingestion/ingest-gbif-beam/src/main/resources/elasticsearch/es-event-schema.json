@@ -10,9 +10,7 @@
       "verbatim": {
         "path_match": "verbatim.*",
         "mapping": {
-          "type": "keyword",
-          "normalizer": "lowercase_normalizer",
-          "copy_to": "all"
+          "type": "keyword"
         }
       }
     },
@@ -36,7 +34,8 @@
       "humboldt_usage_rank": {
         "path_match": "event.humboldt.*.*.usageRank",
         "mapping": {
-          "type": "keyword"
+          "type": "keyword",
+          "index": false, "doc_values": false
         }
       }
     },
@@ -44,7 +43,8 @@
       "humboldt_classification_rank": {
         "path_match": "event.humboldt.*.*.classification.*",
         "mapping": {
-          "type": "keyword"
+          "type": "keyword",
+          "index": false, "doc_values": false
         }
       }
     },
@@ -52,7 +52,8 @@
       "humboldt_classification": {
         "path_match": "event.humboldt.*.*.classification.*.*",
         "mapping": {
-          "type": "keyword"
+          "type": "keyword",
+          "index": false, "doc_values": false
         }
       }
     },
@@ -60,7 +61,8 @@
       "humboldt_classification_keys_rank": {
         "path_match": "event.humboldt.*.*.classificationKeys.*",
         "mapping": {
-          "type": "keyword"
+          "type": "keyword",
+          "index": false, "doc_values": false
         }
       }
     },
@@ -68,7 +70,8 @@
       "humboldt_classification_keys": {
         "path_match": "event.humboldt.*.*.classificationKeys.*.*",
         "mapping": {
-          "type": "keyword"
+          "type": "keyword",
+          "index": false, "doc_values": false
         }
       }
     },
