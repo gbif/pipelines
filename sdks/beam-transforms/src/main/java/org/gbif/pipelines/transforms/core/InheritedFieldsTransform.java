@@ -42,11 +42,7 @@ public class InheritedFieldsTransform implements Serializable {
 
             if (eventCoreRecord.getParentsLineage() != null
                 && !eventCoreRecord.getParentsLineage().isEmpty()) {
-              // workaround for error: java.lang.ClassCastException: class
-              // org.apache.avro.generic.GenericData$Record cannot be cast to class
-              // org.gbif.pipelines.io.avro.Parent (org.apache.avro.generic.GenericData$Record is in
-              // unnamed module of loader 'app'; org.gbif.pipelines.io.avro.Parent is in unnamed
-              // module of loader org.apache.spark.util.MutableURLClassLoader @2702448a)
+              // workaround for https://github.com/gbif/pipelines/issues/1231
               for (Object rawObj : eventCoreRecord.getParentsLineage()) {
                 Parent parent = null;
 
