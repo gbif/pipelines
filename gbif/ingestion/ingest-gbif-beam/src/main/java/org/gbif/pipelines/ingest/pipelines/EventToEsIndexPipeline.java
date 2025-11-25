@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Create;
@@ -551,6 +552,7 @@ public class EventToEsIndexPipeline {
               // Collection of EventCoreRecord
               .apply("Get EventCoreRecord values", Values.create())
               // Collection of KV<ParentId,Edge.of(ParentId,EventCoreRecord.id, EventCoreRecord)
+              .setCoder(AvroCoder.of(EventCoreRecord.class))
               .apply(
                   "Group by child and parent",
                   inheritedFieldsTransform.childToParentEdgeConverter())
