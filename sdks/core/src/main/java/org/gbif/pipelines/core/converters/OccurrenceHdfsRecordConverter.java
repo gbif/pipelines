@@ -79,6 +79,8 @@ public class OccurrenceHdfsRecordConverter {
           DwcTerm.superfamily.simpleName().toLowerCase(),
           DwcTerm.tribe.simpleName().toLowerCase(),
           GbifTerm.tribeKey.simpleName().toLowerCase(),
+          DwcTerm.subtribe.simpleName().toLowerCase(),
+          GbifTerm.subtribeKey.simpleName().toLowerCase(),
           IucnTerm.iucnRedListCategory.simpleName().toLowerCase(),
           GbifTerm.verbatimScientificName.simpleName().toLowerCase());
 
