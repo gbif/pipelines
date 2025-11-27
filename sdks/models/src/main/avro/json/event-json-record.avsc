@@ -11,14 +11,25 @@
     ]
   },
   {
+     "name": "TaxonUsage",
+     "namespace": "org.gbif.pipelines.io.avro.json",
+     "type": "record",
+     "doc": "A container for the taxon usage for Humboldt taxon fields.",
+     "fields": [
+         {"name": "key", "type": ["null", "string"], "default" : null},
+         {"name": "name", "type": ["null", "string"], "default" : null},
+         {"name": "rank", "type": ["null", "string"], "default" : null}
+     ]
+  },
+  {
     "name":"HumboldtTaxonClassification",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
     "doc":"Humboldt taxonomy classification",
     "fields":[
-      {"name": "usageKey", "type": ["null", "string"], "default" : null},
-      {"name": "usageName", "type": ["null", "string"], "default" : null},
-      {"name": "usageRank", "type": ["null", "string"], "default" : null},
+      {"name": "usage", "type": ["null", "TaxonUsage"], "default" : null},
+      {"name": "acceptedUsage", "type": ["null", "TaxonUsage"], "default" : null},
+      {"name": "iucnRedListCategoryCode", "type" : ["null", "string"], "default" : null, "doc":"The IUCN Red List Category or conservation status"},
       {"name":"classification",
         "type":{ "type":"map","values":"string" },
         "default": {}

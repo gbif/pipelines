@@ -1,9 +1,11 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import lombok.Builder;
@@ -15,11 +17,12 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TypeDescriptor;
-import org.gbif.pipelines.core.converters.JsonConverter;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
+import org.gbif.pipelines.io.avro.json.DerivedTaxon;
+import org.gbif.pipelines.io.avro.json.DerivedTaxonUsage;
 
 @Builder
 public class DerivedMetadataTransform implements Serializable {
@@ -59,7 +62,7 @@ public class DerivedMetadataTransform implements Serializable {
             EventDate temporalCoverage =
                 result.getOnly(temporalCoverageTag, EventDate.newBuilder().build());
 
-            List<MultiTaxonRecord> classifications =
+            List<MultiTaxonRecord> multiTaxonRecords =
                 StreamSupport.stream(
                         result
                             .getOnly(ITERABLE_MULTI_TAXON_TAG, Collections.emptyList())
@@ -83,18 +86,65 @@ public class DerivedMetadataTransform implements Serializable {
                       .setLte(temporalCoverage.getLte()));
             }
 
-            builder.setTaxonomicCoverage(
-                classifications.stream()
-                    .map(
-                        tr ->
-                            Optional.ofNullable(getAssociatedVerbatim(tr, verbatimRecords))
-                                .map(
-                                    vr ->
-                                        JsonConverter.convertToClassificationFromMultiTaxon(
-                                            vr, tr)))
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .collect(Collectors.toList()));
+            Map<String, List<DerivedTaxon>> taxonomicCoverage = new HashMap<>();
+            multiTaxonRecords.forEach(
+                mt -> {
+                  mt.getTaxonRecords()
+                      .forEach(
+                          tr -> {
+                            DerivedTaxon.Builder derivedTaxon = DerivedTaxon.newBuilder();
+
+                            if (tr.getUsage() != null) {
+                              derivedTaxon
+                                  .setUsage(
+                                      DerivedTaxonUsage.newBuilder()
+                                          .setKey(tr.getUsage().getRank())
+                                          .setRank(tr.getUsage().getRank())
+                                          .setName(tr.getUsage().getName())
+                                          .build())
+                                  .setStatus(tr.getUsage().getStatus());
+                            }
+
+                            if (tr.getAcceptedUsage() != null) {
+                              derivedTaxon.setAcceptedUsage(
+                                  DerivedTaxonUsage.newBuilder()
+                                      .setKey(tr.getAcceptedUsage().getRank())
+                                      .setRank(tr.getAcceptedUsage().getRank())
+                                      .setName(tr.getAcceptedUsage().getName())
+                                      .build());
+                            }
+
+                            derivedTaxon.setIucnRedListCategoryCode(
+                                tr.getIucnRedListCategoryCode());
+
+                            if (tr.getClassification() != null) {
+                              Map<String, String> classification = new HashMap<>();
+                              Map<String, String> classificationKeys = new HashMap<>();
+                              List<String> taxonKeys = new ArrayList<>();
+                              tr.getClassification()
+                                  .forEach(
+                                      cl -> {
+                                        classification.put(cl.getRank(), cl.getName());
+                                        classificationKeys.put(cl.getRank(), cl.getKey());
+                                        taxonKeys.add(cl.getKey());
+                                      });
+
+                              derivedTaxon.setClassification(classification);
+                              derivedTaxon.setClassificationKeys(classificationKeys);
+                              derivedTaxon.setTaxonKeys(taxonKeys);
+                            }
+
+                            if (tr.getIssues() != null) {
+                              derivedTaxon.setIssues(tr.getIssues().getIssueList());
+                            }
+
+                            taxonomicCoverage
+                                .computeIfAbsent(tr.getDatasetKey(), k -> new ArrayList<>())
+                                .add(derivedTaxon.build());
+                          });
+                });
+            builder.setTaxonomicCoverage(taxonomicCoverage);
+
             c.output(KV.of(key, builder.build()));
           }
         };

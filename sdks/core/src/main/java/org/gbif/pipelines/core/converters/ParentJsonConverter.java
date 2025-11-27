@@ -25,6 +25,7 @@ import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 import org.gbif.pipelines.io.avro.json.MetadataJsonRecord;
 import org.gbif.pipelines.io.avro.json.Parent;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
+import org.gbif.pipelines.io.avro.json.TaxonUsage;
 import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 import org.gbif.pipelines.io.avro.json.VocabularyConcept;
 
@@ -429,10 +430,26 @@ public class ParentJsonConverter {
                             taxonRecords.forEach(
                                 t -> {
                                   HumboldtTaxonClassification.Builder taxonBuilder =
-                                      HumboldtTaxonClassification.newBuilder()
-                                          .setUsageKey(t.getUsageKey())
-                                          .setUsageName(t.getUsageName())
-                                          .setUsageRank(t.getUsageRank());
+                                      HumboldtTaxonClassification.newBuilder();
+
+                                  if (t.getUsage() != null) {
+                                    taxonBuilder.setUsage(
+                                        TaxonUsage.newBuilder()
+                                            .setKey(t.getUsage().getKey())
+                                            .setName(t.getUsage().getName())
+                                            .setRank(t.getUsage().getRank())
+                                            .build());
+                                  }
+                                  if (t.getAcceptedUsage() != null) {
+                                    taxonBuilder.setAcceptedUsage(
+                                        TaxonUsage.newBuilder()
+                                            .setKey(t.getAcceptedUsage().getKey())
+                                            .setName(t.getAcceptedUsage().getName())
+                                            .setRank(t.getAcceptedUsage().getRank())
+                                            .build());
+                                  }
+                                  taxonBuilder.setIucnRedListCategoryCode(
+                                      t.getIucnRedListCategoryCode());
 
                                   Map<String, String> classification = new HashMap<>();
                                   Map<String, String> classificationKeys = new HashMap<>();
@@ -479,10 +496,6 @@ public class ParentJsonConverter {
     extractLengthAwareOptValue(verbatim, DwcTerm.fieldNumber).ifPresent(builder::setFieldNumber);
     extractLengthAwareOptValue(verbatim, DwcTerm.island).ifPresent(builder::setIsland);
     extractLengthAwareOptValue(verbatim, DwcTerm.islandGroup).ifPresent(builder::setIslandGroup);
-
-    // Todo: replce with extractOptValue
-    String eventName = verbatim.getCoreTerms().get(ConverterConstants.EVENT_NAME);
-    Optional.ofNullable(eventName).ifPresent(builder::setEventName);
   }
 
   private void mapIssues(EventJsonRecord.Builder builder) {
