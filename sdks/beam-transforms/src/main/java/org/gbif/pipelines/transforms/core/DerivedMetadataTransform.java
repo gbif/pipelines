@@ -1,5 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,12 +19,14 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MultiTaxonRecord;
+import org.gbif.pipelines.io.avro.json.DerivedClassification;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
-import org.gbif.pipelines.io.avro.json.DerivedTaxon;
 import org.gbif.pipelines.io.avro.json.DerivedTaxonUsage;
+import org.gbif.pipelines.io.avro.json.TaxonCoverage;
 
 @Builder
 public class DerivedMetadataTransform implements Serializable {
@@ -86,13 +90,26 @@ public class DerivedMetadataTransform implements Serializable {
                       .setLte(temporalCoverage.getLte()));
             }
 
-            Map<String, List<DerivedTaxon>> taxonomicCoverage = new HashMap<>();
+            TaxonCoverage.Builder taxonCoverage = TaxonCoverage.newBuilder();
+            Map<String, List<DerivedClassification>> classifications = new HashMap<>();
+            taxonCoverage.setClassifications(classifications);
+
+            List<String> taxonIDs = new ArrayList<>();
+            taxonCoverage.setTaxonIDs(taxonIDs);
+
             multiTaxonRecords.forEach(
                 mt -> {
+
+                  // add taxonID
+                  ExtendedRecord er = getAssociatedVerbatim(mt, verbatimRecords);
+                  extractOptValue(er, DwcTerm.taxonID).ifPresent(taxonIDs::add);
+
+                  // add classification
                   mt.getTaxonRecords()
                       .forEach(
                           tr -> {
-                            DerivedTaxon.Builder derivedTaxon = DerivedTaxon.newBuilder();
+                            DerivedClassification.Builder derivedTaxon =
+                                DerivedClassification.newBuilder();
 
                             if (tr.getUsage() != null) {
                               derivedTaxon
@@ -138,12 +155,13 @@ public class DerivedMetadataTransform implements Serializable {
                               derivedTaxon.setIssues(tr.getIssues().getIssueList());
                             }
 
-                            taxonomicCoverage
+                            classifications
                                 .computeIfAbsent(tr.getDatasetKey(), k -> new ArrayList<>())
                                 .add(derivedTaxon.build());
                           });
                 });
-            builder.setTaxonomicCoverage(taxonomicCoverage);
+
+            builder.setTaxonomicCoverage(taxonCoverage.build());
 
             c.output(KV.of(key, builder.build()));
           }

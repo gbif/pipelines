@@ -13,7 +13,7 @@
     ]
   },
   {
-    "name":"DerivedTaxon",
+    "name":"DerivedClassification",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
     "doc": "Simplified taxonomic fields derived from the occurrences taxonomic classification",
@@ -38,6 +38,15 @@
     ]
   },
   {
+    "name":"TaxonCoverage",
+    "namespace":"org.gbif.pipelines.io.avro.json",
+    "type":"record",
+    "fields":[
+      {"name": "taxonIDs","type":{"type":"array","items":"string"},"default":[]},
+      {"name": "classifications", "type": { "type":"map", "values": { "type": "array", "items": "DerivedClassification" }},"default": {}}
+    ]
+  },
+  {
     "name":"DerivedMetadataRecord",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
@@ -46,7 +55,7 @@
       {"name": "id","type":"string", "doc":"Pipelines identifier"},
       {"name": "wktConvexHull","type":["null","string"],"default":null},
       {"name": "temporalCoverage","type":["null","EventDate"],"default":null},
-      {"name": "taxonomicCoverage", "type": { "type":"map", "values": { "type": "array", "items": "DerivedTaxon" }},"default": {}, "doc":""}
+      {"name": "taxonomicCoverage","type":["null","TaxonCoverage"],"default":null}
     ]
   }
 ]
