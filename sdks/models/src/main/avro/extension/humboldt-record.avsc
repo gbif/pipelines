@@ -23,7 +23,7 @@
         {"name": "checklistKey", "type" : ["null", "string"], "default" : null, "doc":"The taxonomy dataset identifier"},
         {"name": "usage", "type": ["null", "TaxonHumboldtUsage"], "default" : null},
         {"name": "acceptedUsage", "type": ["null", "TaxonHumboldtUsage"], "default" : null},
-        {"name" : "iucnRedListCategoryCode", "type" : ["null", "string"], "default" : null, "doc":"The IUCN Red List Category or conservation status"},
+        {"name": "iucnRedListCategoryCode", "type" : ["null", "string"], "default" : null, "doc":"The IUCN Red List Category or conservation status"},
         {"name": "classification", "type" : { "type" : "array", "items" : "org.gbif.pipelines.io.avro.RankedName" }, "default": []},
         {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
