@@ -159,7 +159,8 @@
     <pipelines.lucene.version>8.6.2</pipelines.lucene.version>
     <apache.httpcomponents.version>4.4.12</apache.httpcomponents.version>
 
-    <jackson.version>2.11.3</jackson.version>
+    <jackson.version>2.16.1</jackson.version>
+    <snake-yaml-version>2.2</snake-yaml-version>
 
     <retrofit.version>2.9.0</retrofit.version>
     <okhttp.version>4.9.1</okhttp.version>
@@ -190,7 +191,7 @@
     <log4j-over-slf4j.version>1.7.25</log4j-over-slf4j.version>
     <log4j-1.2-api.version>2.8.1</log4j-1.2-api.version>
     <zookeeper.version>3.8.3</zookeeper.version>
-    <testcontainers.elasticsearch.version>1.21.3</testcontainers.elasticsearch.version>
+    <testcontainers.elasticsearch.version>2.0.2</testcontainers.elasticsearch.version>
 
     <!-- Maven plugin -->
     <maven-plugin-api.version>3.8.6</maven-plugin-api.version>
@@ -896,6 +897,11 @@
         <artifactId>jackson-dataformat-xml</artifactId>
         <version>${jackson.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>${snake-yaml-version}</version>
+      </dependency>
 
       <!-- Http clients -->
       <dependency>
@@ -1120,7 +1126,7 @@
       </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
-        <artifactId>elasticsearch</artifactId>
+        <artifactId>testcontainers-elasticsearch</artifactId>
         <version>${testcontainers.elasticsearch.version}</version>
         <scope>test</scope>
       </dependency>

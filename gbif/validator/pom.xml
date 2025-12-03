@@ -54,7 +54,7 @@
     <!-- Tests -->
     <junit-jupiter.version>5.7.2</junit-jupiter.version>
     <mockserver.version>5.11.2</mockserver.version>
-    <testcontainers.postgres.version>1.15.3</testcontainers.postgres.version>
+    <testcontainers.postgres.version>2.0.2</testcontainers.postgres.version>
     <junit-platform-commons.version>1.7.0</junit-platform-commons.version>
 
     <!-- Json/Xml-->
@@ -474,7 +474,7 @@
       </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
-        <artifactId>postgresql</artifactId>
+        <artifactId>testcontainers-postgresql</artifactId>
         <version>${testcontainers.postgres.version}</version>
         <scope>test</scope>
       </dependency>
