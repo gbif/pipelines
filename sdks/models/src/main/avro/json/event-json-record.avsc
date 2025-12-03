@@ -120,6 +120,7 @@
       {"name":"eventName","type":["null","string"],"default":null,"doc":""},
       {"name":"references","type":["null","string"],"default":null,"doc":""},
       {"name":"institutionCode","type":["null","string"],"default":null,"doc":""},
+      {"name":"collectionCode","type":["null","string"],"default":null,"doc":""},
       {"name":"datasetID","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"datasetName","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"modified","type":["null","string"],"default":null,"doc":""},

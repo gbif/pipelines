@@ -318,6 +318,13 @@
             "verbatim": {"type": "keyword", "ignore_above": 1024}
           }
         },
+        "collectionCode":  {
+          "type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024,
+          "fields": {
+            "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+            "verbatim": {"type": "keyword", "ignore_above": 1024}
+          }
+        },
         "locality":  {
           "type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024,
           "fields": {
