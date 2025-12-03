@@ -1,15 +1,14 @@
 package au.org.ala.pipelines.transforms;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.HashMap;
+import java.util.Map;
 import org.gbif.common.shaded.com.fasterxml.jackson.core.JsonProcessingException;
 import org.gbif.common.shaded.com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.IndexRecord;
 import org.junit.jupiter.api.Test;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class IndexRecordTransformTest {
 
@@ -62,7 +61,8 @@ class IndexRecordTransformTest {
   }
 
   @Test
-  void parseDynamicProperties_givenCsvEscapedJson_thenPropertiesParsedCorrectly() throws JsonProcessingException {
+  void parseDynamicProperties_givenCsvEscapedJson_thenPropertiesParsedCorrectly()
+      throws JsonProcessingException {
     IndexRecord.Builder b = newBuilderWithStrings();
     CsvMapper mapper = new CsvMapper();
     String inputJson = "{\"a\":\"1\",\"b\":2}";
