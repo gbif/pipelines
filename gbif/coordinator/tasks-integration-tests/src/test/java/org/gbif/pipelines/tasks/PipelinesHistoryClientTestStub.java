@@ -1,6 +1,5 @@
 package org.gbif.pipelines.tasks;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
