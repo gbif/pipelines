@@ -161,11 +161,6 @@
       <version>1.16.1</version>
     </dependency>
     <dependency>
-      <groupId>org.locationtech.jts</groupId>
-      <artifactId>jts-io</artifactId>
-      <version>1.16.1</version>
-    </dependency>
-    <dependency>
       <groupId>org.locationtech.spatial4j</groupId>
       <artifactId>spatial4j</artifactId>
       <version>0.7</version>
