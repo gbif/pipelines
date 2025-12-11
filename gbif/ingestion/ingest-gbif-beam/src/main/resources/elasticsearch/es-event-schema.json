@@ -1,9 +1,9 @@
-  {
-    "_source": {
-      "excludes": [
-        "derivedMetadata.taxonomicCoverage",
-        "all"
-      ]
+{
+  "_source": {
+    "excludes": [
+      "derivedMetadata.taxonomicCoverage",
+      "all"
+    ]
   },
   "dynamic_templates": [
     {
@@ -243,7 +243,6 @@
           }
           }
         }
-      }
     },
 
     "event": {
