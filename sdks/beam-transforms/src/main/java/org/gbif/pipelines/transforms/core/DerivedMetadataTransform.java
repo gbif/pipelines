@@ -115,7 +115,7 @@ public class DerivedMetadataTransform implements Serializable {
                               derivedTaxon
                                   .setUsage(
                                       DerivedTaxonUsage.newBuilder()
-                                          .setKey(tr.getUsage().getRank())
+                                          .setKey(tr.getUsage().getKey())
                                           .setRank(tr.getUsage().getRank())
                                           .setName(tr.getUsage().getName())
                                           .build())
@@ -125,10 +125,13 @@ public class DerivedMetadataTransform implements Serializable {
                             if (tr.getAcceptedUsage() != null) {
                               derivedTaxon.setAcceptedUsage(
                                   DerivedTaxonUsage.newBuilder()
-                                      .setKey(tr.getAcceptedUsage().getRank())
+                                      .setKey(tr.getAcceptedUsage().getKey())
                                       .setRank(tr.getAcceptedUsage().getRank())
                                       .setName(tr.getAcceptedUsage().getName())
                                       .build());
+                            } else {
+                              // Usage is set as the accepted usage if the accepted usage is null
+                              derivedTaxon.setAcceptedUsage(derivedTaxon.getUsage());
                             }
 
                             derivedTaxon.setIucnRedListCategoryCode(
