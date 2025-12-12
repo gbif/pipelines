@@ -217,7 +217,6 @@
         "publisherTitle": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
         "license": {"type": "keyword", "copy_to": "all"},
         "protocol": {"type": "keyword", "copy_to": "all"},
-        "publishingCountry": {"type": "keyword", "copy_to": "all"},
         "datasetPublishingCountry": {"type": "keyword", "copy_to": "all"},
         "publishingOrganizationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
         "networkKeys": {"type": "keyword", "normalizer": "lowercase_normalizer"},
@@ -230,6 +229,7 @@
     "derivedMetadata": {
       "type": "object",
       "properties": {
+        "id": {"type":"keyword"},
         "wktConvexHull": {
           "type": "geo_shape"
         },
@@ -248,6 +248,8 @@
     "event": {
       "type": "object",
       "properties": {
+        "publishingCountry": {"type": "keyword", "copy_to": "all"},
+        "gbifRegion": {"type":"keyword", "copy_to": "all"},
         "yearMonthEventIDSort": {"type":  "keyword"},
         "references": {"type":"keyword", "index": false, "doc_values": false},
         "samplingProtocolJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
