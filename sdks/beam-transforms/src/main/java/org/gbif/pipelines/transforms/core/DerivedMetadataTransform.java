@@ -138,19 +138,13 @@ public class DerivedMetadataTransform implements Serializable {
                                 tr.getIucnRedListCategoryCode());
 
                             if (tr.getClassification() != null) {
-                              Map<String, String> classification = new HashMap<>();
-                              Map<String, String> classificationKeys = new HashMap<>();
                               List<String> taxonKeys = new ArrayList<>();
                               tr.getClassification()
                                   .forEach(
                                       cl -> {
-                                        classification.put(cl.getRank(), cl.getName());
-                                        classificationKeys.put(cl.getRank(), cl.getKey());
                                         taxonKeys.add(cl.getKey());
                                       });
 
-                              derivedTaxon.setClassification(classification);
-                              derivedTaxon.setClassificationKeys(classificationKeys);
                               derivedTaxon.setTaxonKeys(taxonKeys);
                             }
 

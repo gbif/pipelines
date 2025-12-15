@@ -22,14 +22,6 @@
       {"name":"acceptedUsage","type":["null","DerivedTaxonUsage"],"default":null,"doc":""},
       {"name":"status","type":["null","string"],"default":null,"doc":""},
       {"name":"iucnRedListCategoryCode","type":["null","string"],"default":null,"doc":""},
-      {"name":"classification",
-        "type":{ "type":"map","values":"string" },
-        "default": {}
-      },
-      {"name":"classificationKeys",
-        "type":{ "type":"map","values":"string" },
-        "default": {}
-      },
       {"name":"taxonKeys",
         "type":{"type":"array","items":"string"},
         "default":[]

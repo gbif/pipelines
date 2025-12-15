@@ -125,42 +125,6 @@
       }
     },
     {
-      "derived_taxon_classification_rank": {
-        "path_match": "derivedMetadata.taxonomicCoverage.classifications.*.classification.*",
-        "mapping": {
-          "type": "keyword",
-          "index": false, "doc_values": false
-        }
-      }
-    },
-    {
-      "derived_taxon_classification": {
-        "path_match": "derivedMetadata.taxonomicCoverage.classifications.*.classification.*.*",
-        "mapping": {
-          "type": "keyword",
-          "index": false, "doc_values": false
-        }
-      }
-    },
-    {
-      "derived_taxon_classification_keys_rank": {
-        "path_match": "derivedMetadata.taxonomicCoverage.classifications.*.classificationKeys.*",
-        "mapping": {
-          "type": "keyword",
-          "index": false, "doc_values": false
-        }
-      }
-    },
-    {
-      "derived_taxon_classification_keys": {
-        "path_match": "derivedMetadata.taxonomicCoverage.classifications.*.classificationKeys.*.*",
-        "mapping": {
-          "type": "keyword",
-          "index": false, "doc_values": false
-        }
-      }
-    },
-    {
       "derived_taxon_classification_taxon_keys": {
         "path_match": "derivedMetadata.taxonomicCoverage.classifications.*.taxonKeys",
         "mapping": {
