@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.Strings;
+import org.gbif.api.model.Constants;
 import org.gbif.api.vocabulary.DurationUnit;
 import org.gbif.api.vocabulary.EventIssue;
 import org.gbif.api.vocabulary.Extension;
@@ -40,12 +41,15 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Humboldt;
 import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.TaxonHumboldtRecord;
+import org.gbif.pipelines.io.avro.TaxonHumboldtUsage;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 @Builder(buildMethodName = "create")
 @Slf4j
 public class HumboldtInterpreter {
+
+  public static final String IUCN_REDLIST_GBIF_KEY = Constants.IUCN_DATASET_KEY.toString();
 
   private static final BooleanParser BOOLEAN_PARSER = BooleanParser.getInstance();
 
@@ -415,16 +419,34 @@ public class HumboldtInterpreter {
                       kvStore,
                       thr,
                       response -> {
-                        thr.setUsageRank(KINGDOM_RANK);
-                        thr.setUsageName(INCERTAE_SEDIS_NAME);
-                        thr.setUsageKey(INCERTAE_SEDIS_KEY);
+                        thr.setUsage(
+                            TaxonHumboldtUsage.newBuilder()
+                                .setRank(KINGDOM_RANK)
+                                .setName(INCERTAE_SEDIS_NAME)
+                                .setKey(INCERTAE_SEDIS_KEY)
+                                .build());
                         thr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
                       },
                       response -> {
                         if (response.getUsage() != null) {
-                          thr.setUsageName(response.getUsage().getName());
-                          thr.setUsageKey(String.valueOf(response.getUsage().getKey()));
-                          thr.setUsageRank(response.getUsage().getRank());
+                          thr.setUsage(
+                              TaxonHumboldtUsage.newBuilder()
+                                  .setRank(response.getUsage().getRank())
+                                  .setName(response.getUsage().getName())
+                                  .setKey(String.valueOf(response.getUsage().getKey()))
+                                  .build());
+                        }
+
+                        if (response.getAcceptedUsage() != null) {
+                          thr.setAcceptedUsage(
+                              TaxonHumboldtUsage.newBuilder()
+                                  .setRank(response.getAcceptedUsage().getRank())
+                                  .setName(response.getAcceptedUsage().getName())
+                                  .setKey(String.valueOf(response.getAcceptedUsage().getKey()))
+                                  .build());
+                        } else {
+                          // Usage is set as the accepted usage if the accepted usage is null
+                          thr.setAcceptedUsage(thr.getUsage());
                         }
 
                         if (response.getClassification() != null) {
@@ -433,6 +455,15 @@ public class HumboldtInterpreter {
                                   .map(TaxonRecordConverter::convertRankedName)
                                   .collect(Collectors.toList()));
                         }
+
+                        // IUCN Red List Category
+                        Optional.ofNullable(response.getAdditionalStatus())
+                            .orElseGet(List::of)
+                            .stream()
+                            .filter(status -> status.getDatasetKey().equals(IUCN_REDLIST_GBIF_KEY))
+                            .findFirst()
+                            .map(NameUsageMatchResponse.Status::getStatusCode)
+                            .ifPresent(thr::setIucnRedListCategoryCode);
                       });
                 }
               });

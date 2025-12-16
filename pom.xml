@@ -116,8 +116,8 @@
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
     <gbif-occurrence.version>1.1.9-SNAPSHOT</gbif-occurrence.version>
     <vocabulary-lookup.version>2.0.3</vocabulary-lookup.version>
-    <registry.version>4.1.21-SNAPSHOT</registry.version>
-    <gbif-common-ws.version>2.1.1-SNAPSHOT</gbif-common-ws.version>
+    <registry.version>4.2.0-SNAPSHOT</registry.version>
+    <gbif-common-ws.version>2.0.10-java11</gbif-common-ws.version>
     <gbif-postal-service.version>2.1.4-SNAPSHOT</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
 
@@ -140,6 +140,7 @@
     <fastutil.version>8.5.9</fastutil.version>
 
     <geotools.version>20.5</geotools.version>
+    <jts.version>1.16.1</jts.version>
     <commons-lang3.version>3.20.0</commons-lang3.version>
     <!-- Be carful when change the guava version, it can break XML parsing and etc at runtime -->
     <guava.version>33.5.0-jre</guava.version>
@@ -970,6 +971,11 @@
         <groupId>org.geotools</groupId>
         <artifactId>gt-epsg-hsql</artifactId>
         <version>${geotools.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.locationtech.jts</groupId>
+        <artifactId>jts-core</artifactId>
+        <version>${jts.version}</version>
       </dependency>
 
       <dependency>
