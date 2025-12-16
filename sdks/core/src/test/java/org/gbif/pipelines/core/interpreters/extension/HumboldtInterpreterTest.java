@@ -103,9 +103,9 @@ public class HumboldtInterpreterTest {
             .filter(
                 ts ->
                     ts.getClassification().size() == 2
-                        && ts.getUsageName().equalsIgnoreCase("Aves")
-                        && ts.getUsageRank() != null
-                        && ts.getUsageKey() != null)
+                        && ts.getUsage().getName().equalsIgnoreCase("Aves")
+                        && ts.getUsage().getRank() != null
+                        && ts.getUsage().getKey() != null)
             .count());
     assertEquals(
         1,
@@ -113,9 +113,9 @@ public class HumboldtInterpreterTest {
             .filter(
                 ts ->
                     ts.getClassification().size() == 1
-                        && ts.getUsageName().equals(TaxonomyInterpreter.INCERTAE_SEDIS_NAME)
-                        && ts.getUsageKey().equals(TaxonomyInterpreter.INCERTAE_SEDIS_KEY)
-                        && ts.getUsageRank().equals(TaxonomyInterpreter.KINGDOM_RANK)
+                        && ts.getUsage().getName().equals(TaxonomyInterpreter.INCERTAE_SEDIS_NAME)
+                        && ts.getUsage().getKey().equals(TaxonomyInterpreter.INCERTAE_SEDIS_KEY)
+                        && ts.getUsage().getRank().equals(TaxonomyInterpreter.KINGDOM_RANK)
                         && ts.getIssues()
                             .getIssueList()
                             .contains(OccurrenceIssue.TAXON_MATCH_NONE.name()))

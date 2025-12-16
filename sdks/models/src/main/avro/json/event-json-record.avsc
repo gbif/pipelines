@@ -11,14 +11,25 @@
     ]
   },
   {
+     "name": "TaxonUsage",
+     "namespace": "org.gbif.pipelines.io.avro.json",
+     "type": "record",
+     "doc": "A container for the taxon usage for Humboldt taxon fields.",
+     "fields": [
+         {"name": "key", "type": ["null", "string"], "default" : null},
+         {"name": "name", "type": ["null", "string"], "default" : null},
+         {"name": "rank", "type": ["null", "string"], "default" : null}
+     ]
+  },
+  {
     "name":"HumboldtTaxonClassification",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
     "doc":"Humboldt taxonomy classification",
     "fields":[
-      {"name": "usageKey", "type": ["null", "string"], "default" : null},
-      {"name": "usageName", "type": ["null", "string"], "default" : null},
-      {"name": "usageRank", "type": ["null", "string"], "default" : null},
+      {"name": "usage", "type": ["null", "TaxonUsage"], "default" : null},
+      {"name": "acceptedUsage", "type": ["null", "TaxonUsage"], "default" : null},
+      {"name": "iucnRedListCategoryCode", "type" : ["null", "string"], "default" : null, "doc":"The IUCN Red List Category or conservation status"},
       {"name":"classification",
         "type":{ "type":"map","values":"string" },
         "default": {}
@@ -109,6 +120,7 @@
       {"name":"eventName","type":["null","string"],"default":null,"doc":""},
       {"name":"references","type":["null","string"],"default":null,"doc":""},
       {"name":"institutionCode","type":["null","string"],"default":null,"doc":""},
+      {"name":"collectionCode","type":["null","string"],"default":null,"doc":""},
       {"name":"datasetID","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"datasetName","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"modified","type":["null","string"],"default":null,"doc":""},
@@ -138,9 +150,13 @@
       {"name":"stateProvince","type":["null","string"],"default":null,"doc":""},
       {"name":"minimumElevationInMeters","type":["null","double"],"default":null,"doc":""},
       {"name":"maximumElevationInMeters","type":["null","double"],"default":null,"doc":""},
+      {"name":"elevation","type":["null","double"],"default":null, "doc":"http://rs.gbif.org/terms/1.0/elevation"},
+      {"name":"elevationAccuracy","type":["null","double"],"default":null, "doc":"http://rs.gbif.org/terms/1.0/elevationAccuracy"},
       {"name":"verbatimElevation","type":["null","string"],"default":null,"doc":""},
       {"name":"minimumDepthInMeters","type":["null","double"],"default":null,"doc":""},
       {"name":"maximumDepthInMeters","type":["null","double"],"default":null,"doc":""},
+      {"name":"depth","type":["null","double"],"default":null, "doc":"http://rs.gbif.org/terms/1.0/depth"},
+      {"name":"depthAccuracy","type":["null","double"],"default":null, "doc":"http://rs.gbif.org/terms/1.0/depthAccuracy"},
       {"name":"verbatimDepth","type":["null","string"],"default":null,"doc":""},
       {"name":"minimumDistanceAboveSurfaceInMeters","type":["null","double"],"default":null,"doc":""},
       {"name":"maximumDistanceAboveSurfaceInMeters","type":["null","double"],"default":null,"doc":""},
@@ -157,6 +173,12 @@
       {"name":"footprintWKT","type":["null","string"],"default":null,"doc":""},
       {"name":"distanceFromCentroidInMeters","type":["null","double"],"default":null,"doc":""},
       {"name":"publishingCountry","type":["null","string"],"default":null,"doc":""},
+      {"name":"georeferencedBy","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"higherGeography","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"island","type":["null","string"],"default":null,"doc":""},
+      {"name":"islandGroup","type":["null","string"],"default":null,"doc":""},
+      {"name":"gbifRegion","type":["null","string"],"default":null,"doc":""},
+      {"name":"publishedByGbifRegion","type":["null","string"],"default":null,"doc":""},
       // Multimedia
       {"name":"mediaTypes","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"mediaLicenses","type":{"type":"array","items":"string"},"default":[],"doc":""},
