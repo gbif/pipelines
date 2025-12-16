@@ -49,13 +49,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.util.SocketUtils;
+import org.springframework.test.util.TestSocketUtils;
 
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
@@ -87,7 +87,7 @@ public class ValidationResourceIT {
 
   @BeforeAll
   public static void init() {
-    clientAndServer = ClientAndServer.startClientAndServer(SocketUtils.findAvailableTcpPort());
+    clientAndServer = ClientAndServer.startClientAndServer(TestSocketUtils.findAvailableTcpPort());
     setExpectations();
   }
 

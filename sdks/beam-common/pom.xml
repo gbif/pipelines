@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>sdks</artifactId>
-   <version>3.2.14-SNAPSHOT</version>
+   <version>3.2.14-SRPING358-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
