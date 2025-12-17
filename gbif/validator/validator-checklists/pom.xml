@@ -60,6 +60,7 @@
 
     <!-- Match Checklistbank versions -->
     <gbif-cli.version>1.1</gbif-cli.version>
+    <gbif-api.version>2.0.0</gbif-api.version>
     <guava.version>32.1.2-jre</guava.version>
     <jcommander.version>1.60</jcommander.version>
     <jsr305.version>3.0.2</jsr305.version>
@@ -102,6 +103,11 @@
           <artifactId>gbif-api</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-api</artifactId>
+      <version>${gbif-api.version}</version>
     </dependency>
 
     <!--Checklists validations -->
@@ -168,6 +174,11 @@
         </exclusion>
       </exclusions>
     </dependency>
+      <dependency>
+          <groupId>org.gbif.checklistbank</groupId>
+          <artifactId>checklistbank-nub</artifactId>
+          <version>${gbif-checklistbank.version}</version>
+      </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-core</artifactId>
@@ -205,8 +216,16 @@
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common-ws</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>dwc-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>dwca-io</artifactId>
+    </dependency>
 
-    <!-- Spring dependencies -->
+      <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
