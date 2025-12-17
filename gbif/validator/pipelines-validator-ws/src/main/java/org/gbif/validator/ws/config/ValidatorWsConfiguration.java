@@ -55,7 +55,7 @@ public class ValidatorWsConfiguration {
 
   @Bean
   public FileStoreManager uploadedFileManager(
-      @Value("${upload.workingDirectory}") String uploadWorkingDirectory,
+      @Value("${spring.servlet.multipart.location}") String uploadWorkingDirectory,
       @Value("${storePath}") String storePath,
       DownloadFileManager downloadFileManager)
       throws IOException {
