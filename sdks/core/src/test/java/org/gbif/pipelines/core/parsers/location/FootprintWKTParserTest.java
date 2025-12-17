@@ -4,9 +4,9 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.location.parser.FootprintWKTParser;
 import org.gbif.pipelines.core.parsers.location.parser.SpatialReferenceSystemParser;
+import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
 import org.junit.Assert;
 import org.junit.Test;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /** Tests of footprintWKT parser. */
 public class FootprintWKTParserTest {

@@ -15,10 +15,10 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.geocode.GeocodeRequest;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
+import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
+import org.geotools.api.referencing.operation.MathTransform;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.operation.MathTransform;
 
 /** Utils class that reprojects to WGS84 based on geotools transformations and SRS databases. */
 @Slf4j

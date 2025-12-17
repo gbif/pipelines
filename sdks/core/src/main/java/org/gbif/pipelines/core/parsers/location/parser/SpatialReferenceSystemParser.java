@@ -5,15 +5,15 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.DatumParser;
+import org.geotools.api.referencing.FactoryException;
+import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
+import org.geotools.api.referencing.datum.DatumAuthorityFactory;
+import org.geotools.api.referencing.datum.GeodeticDatum;
 import org.geotools.factory.BasicFactories;
-import org.geotools.factory.FactoryRegistryException;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.geotools.referencing.cs.DefaultEllipsoidalCS;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.datum.DatumAuthorityFactory;
-import org.opengis.referencing.datum.GeodeticDatum;
+import org.geotools.util.factory.FactoryRegistryException;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

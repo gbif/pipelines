@@ -139,8 +139,8 @@
     <!-- Match the version from name-parser -->
     <fastutil.version>8.5.9</fastutil.version>
 
-    <geotools.version>20.5</geotools.version>
-    <jts.version>1.16.1</jts.version>
+    <geotools.version>34.0</geotools.version>
+    <jts.version>1.19.0</jts.version>
     <commons-lang3.version>3.20.0</commons-lang3.version>
     <!-- Be carful when change the guava version, it can break XML parsing and etc at runtime -->
     <guava.version>33.5.0-jre</guava.version>
@@ -944,11 +944,6 @@
       </dependency>
       <dependency>
         <groupId>org.geotools</groupId>
-        <artifactId>gt-opengis</artifactId>
-        <version>${geotools.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.geotools</groupId>
         <artifactId>gt-main</artifactId>
         <version>${geotools.version}</version>
       </dependency>
@@ -960,11 +955,6 @@
       <dependency>
         <groupId>org.geotools</groupId>
         <artifactId>gt-transform</artifactId>
-        <version>${geotools.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.geotools</groupId>
-        <artifactId>gt-geometry</artifactId>
         <version>${geotools.version}</version>
       </dependency>
       <dependency>

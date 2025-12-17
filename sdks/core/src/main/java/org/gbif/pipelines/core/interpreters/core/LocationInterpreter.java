@@ -42,7 +42,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
 
 /** Interprets the location terms of a {@link ExtendedRecord}. */
 @Slf4j

@@ -200,10 +200,6 @@
     </dependency>
     <dependency>
       <groupId>org.geotools</groupId>
-      <artifactId>gt-opengis</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.geotools</groupId>
       <artifactId>gt-main</artifactId>
     </dependency>
     <dependency>
@@ -213,10 +209,6 @@
     <dependency>
       <groupId>org.geotools</groupId>
       <artifactId>gt-transform</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.geotools</groupId>
-      <artifactId>gt-geometry</artifactId>
     </dependency>
     <dependency>
       <groupId>org.geotools</groupId>

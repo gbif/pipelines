@@ -5,14 +5,14 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
+import org.geotools.api.referencing.FactoryException;
+import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
+import org.geotools.api.referencing.operation.MathTransform;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.operation.transform.IdentityTransform;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.WKTReader;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.operation.MathTransform;
 
 /** Parser for the Dwc Terms related to the footprintWKT. */
 @Slf4j
