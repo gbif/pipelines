@@ -43,6 +43,7 @@
     <spring-boot-admin.version>3.5.6</spring-boot-admin.version>
     <spring-cloud-openfeign.version>4.3.0</spring-cloud-openfeign.version>
     <spring-cloud-zookeeper.version>4.3.0</spring-cloud-zookeeper.version>
+    <spring-cloud-bootstrap.version>4.3.0</spring-cloud-bootstrap.version>
     <mybatis-spring-boot-starter.version>3.0.5</mybatis-spring-boot-starter.version>
     <spring-cloud-sleuth.version>3.1.11</spring-cloud-sleuth.version>
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
@@ -158,6 +159,11 @@
         <groupId>org.mybatis.spring.boot</groupId>
         <artifactId>mybatis-spring-boot-starter</artifactId>
         <version>${mybatis-spring-boot-starter.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-bootstrap</artifactId>
+        <version>${spring-cloud-bootstrap.version}</version>
       </dependency>
       <dependency>
         <groupId>org.mybatis</groupId>

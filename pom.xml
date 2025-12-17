@@ -434,11 +434,6 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>org.springframework.cloud</groupId>
-        <artifactId>spring-cloud-starter-bootstrap</artifactId>
-        <version>${spring-cloud-bootstrap.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.gbif.occurrence</groupId>
         <artifactId>occurrence-common</artifactId>
         <version>${gbif-occurrence.version}</version>
