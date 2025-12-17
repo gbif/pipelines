@@ -429,6 +429,12 @@
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
       <version>${logstash-encoder.version}</version>
+        <exclusions>
+            <exclusion>
+                <artifactId>jackson-databind</artifactId>
+                <groupId>tools.jackson.core</groupId>
+            </exclusion>
+        </exclusions>
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
