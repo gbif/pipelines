@@ -66,6 +66,7 @@
     <jsr305.version>3.0.2</jsr305.version>
     <metainf-services.version>1.7</metainf-services.version>
     <validation-api.version>1.1.0.Final</validation-api.version>
+    <neo4j.version>3.5.29</neo4j.version>
 
     <logstash-encoder.version>4.10</logstash-encoder.version>
     <yammer-metrics.version>2.2.0</yammer-metrics.version>
@@ -174,11 +175,21 @@
         </exclusion>
       </exclusions>
     </dependency>
-      <dependency>
-          <groupId>org.gbif.checklistbank</groupId>
-          <artifactId>checklistbank-nub</artifactId>
-          <version>${gbif-checklistbank.version}</version>
-      </dependency>
+    <dependency>
+      <groupId>org.gbif.checklistbank</groupId>
+      <artifactId>checklistbank-nub</artifactId>
+      <version>${gbif-checklistbank.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.neo4j</groupId>
+      <artifactId>neo4j</artifactId>
+      <version>${neo4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.neo4j</groupId>
+      <artifactId>neo4j-slf4j</artifactId>
+      <version>${neo4j.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-core</artifactId>
