@@ -201,10 +201,6 @@ public class EventToEsIndexPipeline {
         p.apply("Read Event Location", locationTransform.read(pathFn))
             .apply("Map Location to KV", locationTransform.toKv());
 
-    PCollection<KV<String, MultiTaxonRecord>> taxonCollection =
-        p.apply("Read event multi-taxon records", multiTaxonomyTransform.readIfExists(pathFn))
-            .apply("Map event multi-taxon records to KV", multiTaxonomyTransform.toKv());
-
     InheritedFields inheritedFields =
         InheritedFields.builder()
             .inheritedFieldsTransform(InheritedFieldsTransform.builder().build())
@@ -237,7 +233,6 @@ public class EventToEsIndexPipeline {
             .verbatimCollection(verbatimCollection)
             .temporalCollection(temporalCollection)
             .locationCollection(locationCollection)
-            .multiTaxonCollection(taxonCollection)
             .eventCoreCollection(eventCoreCollection)
             .occurrencesPathFn(occurrencesPathFn)
             .datasetHasOccurrences(datasetHasOccurrences)
@@ -368,7 +363,6 @@ public class EventToEsIndexPipeline {
     private final PCollection<KV<String, ExtendedRecord>> verbatimCollection;
     private final PCollection<KV<String, TemporalRecord>> temporalCollection;
     private final PCollection<KV<String, LocationRecord>> locationCollection;
-    private final PCollection<KV<String, MultiTaxonRecord>> multiTaxonCollection;
     private final PCollection<KV<String, EventCoreRecord>> eventCoreCollection;
     private final UnaryOperator<String> occurrencesPathFn;
     private final boolean datasetHasOccurrences;
@@ -454,16 +448,7 @@ public class EventToEsIndexPipeline {
                   "Create empty eventOccurrencesMultiTaxonCollection",
                   Create.empty(new TypeDescriptor<KV<String, MultiTaxonRecord>>() {}));
 
-      PCollection<KV<String, MultiTaxonRecord>> multiTaxonRecordsOfSubEvents =
-          ParentEventExpandTransform.createTaxonTransform(
-                  multiTaxonomyTransform.getTag(),
-                  eventCoreTransform.getTag(),
-                  multiTaxonomyTransform.getEdgeTag())
-              .toSubEventsRecords("MultiTaxon", multiTaxonCollection, eventCoreCollection);
-
-      return PCollectionList.of(multiTaxonCollection)
-          .and(eventOccurrencesTaxonCollection)
-          .and(multiTaxonRecordsOfSubEvents)
+      return PCollectionList.of(eventOccurrencesTaxonCollection)
           .apply("Join event and occurrence taxon records", Flatten.pCollections())
           .apply("Select a sample of taxon records", Sample.fixedSizePerKey(MAX_TAXON_PER_EVENTS));
     }
