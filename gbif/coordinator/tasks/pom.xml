@@ -40,7 +40,7 @@
     <!-- Match the GBIF http-client! -->
     <httpcore.version>4.4.13</httpcore.version>
     <jcommander.version>1.60</jcommander.version>
-    <logstash-encoder.version>9.0</logstash-encoder.version>
+    <logstash-encoder.version>8.1</logstash-encoder.version>
     <metainf-services.version>1.11</metainf-services.version>
     <dropwizard-metrics.version>4.2.37</dropwizard-metrics.version>
     <commons-lang.version>2.6</commons-lang.version>
@@ -433,14 +433,8 @@
     <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
-        <scope>runtime</scope>
+      <scope>runtime</scope>
       <version>${logstash-encoder.version}</version>
-        <exclusions>
-            <exclusion>
-                <artifactId>jackson-databind</artifactId>
-                <groupId>tools.jackson.core</groupId>
-            </exclusion>
-        </exclusions>
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>

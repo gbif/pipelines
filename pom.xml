@@ -152,6 +152,7 @@
     <!-- Logging -->
     <slf4j.version>2.0.17</slf4j.version>
     <logback.version>1.5.21</logback.version>
+    <logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
     <log4j.version>1.2.17</log4j.version>
     <logstash-gelf.version>1.15.1</logstash-gelf.version>
 
@@ -818,6 +819,11 @@
         <artifactId>logstash-gelf</artifactId>
         <version>${logstash-gelf.version}</version>
         <scope>runtime</scope>
+      </dependency>
+      <dependency>
+        <groupId>net.logstash.logback</groupId>
+        <artifactId>logstash-logback-encoder</artifactId>
+        <version>${logstash-logback-encoder.version}</version>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
