@@ -203,6 +203,10 @@
           <groupId>org.elasticsearch.client</groupId>
           <artifactId>elasticsearch-rest-high-level-client</artifactId>
         </exclusion>
+          <exclusion>
+              <artifactId>log4j-api</artifactId>
+              <groupId>org.apache.logging.log4j</groupId>
+          </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -415,19 +419,21 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+      <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>jul-to-slf4j</artifactId>
+          <version>${slf4j.version}</version>
+      </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>${logback.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
+        <scope>runtime</scope>
       <version>${logback.version}</version>
     </dependency>
     <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
+        <scope>runtime</scope>
       <version>${logstash-encoder.version}</version>
         <exclusions>
             <exclusion>
@@ -561,6 +567,13 @@
                     <exclude>hidden/com/fasterxml/jackson/**</exclude>
                     <exclude>retrofit2/**</exclude>
                   </excludes>
+                </filter>
+                <filter>
+                  <artifact>org.gbif.vocabulary:vocabulary-lookup:shaded</artifact>
+                  <excludes>
+                     <exclude>org/slf4j/**</exclude>
+                     <exclude>ch/qos/logback/**</exclude>
+                   </excludes>
                 </filter>
               </filters>
               <transformers>
