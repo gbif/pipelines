@@ -4,11 +4,13 @@ import java.nio.file.Path;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.ToString;
 import org.gbif.validator.api.FileFormat;
 
 @Data
 @Builder
 @AllArgsConstructor(staticName = "create")
+@ToString(callSuper = true)
 public class DataFile {
 
   private final Path filePath;

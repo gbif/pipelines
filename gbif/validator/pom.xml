@@ -34,7 +34,6 @@
 
     <!-- Checklists validation-->
     <gbif-checklistbank.version>3.0.9</gbif-checklistbank.version>
-    <gbif-metadata-profile-eml.version>2.9</gbif-metadata-profile-eml.version>
     <neo4j-lucene.version>5.5.0</neo4j-lucene.version>
     <lucene-analyzers.version>5.4.1</lucene-analyzers.version>
 
@@ -140,6 +139,11 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-common-mybatis</artifactId>
         <version>${gbif-common-mybatis.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-metadata-common</artifactId>
+        <version>${gbif-metadata-profile-eml.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
