@@ -277,14 +277,15 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   private Dataset readEml(Path pathToArchive) {
     try {
+      log.info("Reading EML from archive at {}", pathToArchive);
       Optional<Path> existedPath = MetadataPath.parsePath(pathToArchive);
 
-      if (!existedPath.isPresent()) {
+      if (existedPath.isEmpty()) {
         log.error("Can't find metadata eml file");
         return null;
       }
 
-      String eml = new String(Files.readAllBytes(existedPath.get()), StandardCharsets.UTF_8);
+      String eml = Files.readString(existedPath.get());
       return DatasetEmlParser.build(eml.getBytes(StandardCharsets.UTF_8));
 
     } catch (Exception ex) {
