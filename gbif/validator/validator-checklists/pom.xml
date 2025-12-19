@@ -59,7 +59,7 @@
   <properties>
 
     <!-- Match Checklistbank versions -->
-    <gbif-cli.version>1.1</gbif-cli.version>
+    <gbif-cli.version>3.0.1-SNAPSHOT</gbif-cli.version>
     <gbif-api.version>2.0.0</gbif-api.version>
     <guava.version>32.1.2-jre</guava.version>
     <jcommander.version>1.60</jcommander.version>
@@ -67,8 +67,6 @@
     <metainf-services.version>1.7</metainf-services.version>
     <validation-api.version>1.1.0.Final</validation-api.version>
     <neo4j.version>3.5.29</neo4j.version>
-
-    <logstash-encoder.version>4.10</logstash-encoder.version>
     <yammer-metrics.version>2.2.0</yammer-metrics.version>
   </properties>
 
@@ -281,17 +279,14 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>${logback.version}</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
-      <version>${logback.version}</version>
     </dependency>
     <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
-      <version>${logstash-encoder.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
