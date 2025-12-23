@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>coordinator</artifactId>
-   <version>3.2.14-SNAPSHOT</version>
+    <version>3.2.14-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -47,6 +47,7 @@
     <commons-configuration.version>1.10</commons-configuration.version>
     <xercesImpl.version>2.12.2</xercesImpl.version>
     <woodstox-core.version>7.1.1</woodstox-core.version>
+    <log4j.version>2.25.2</log4j.version>
   </properties>
 
   <dependencies>
@@ -145,12 +146,6 @@
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common-ws</artifactId>
       <version>${gbif-common-ws.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId> org.apache.logging.log4j</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -203,10 +198,6 @@
           <groupId>org.elasticsearch.client</groupId>
           <artifactId>elasticsearch-rest-high-level-client</artifactId>
         </exclusion>
-          <exclusion>
-              <artifactId>log4j-api</artifactId>
-              <groupId>org.apache.logging.log4j</groupId>
-          </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -419,11 +410,11 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-      <dependency>
-          <groupId>org.slf4j</groupId>
-          <artifactId>jul-to-slf4j</artifactId>
-          <version>${slf4j.version}</version>
-      </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jul-to-slf4j</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
@@ -435,6 +426,19 @@
       <artifactId>logstash-logback-encoder</artifactId>
       <scope>runtime</scope>
       <version>${logstash-encoder.version}</version>
+    </dependency>
+    <!-- Log4j2 API (required by Elasticsearch) -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>${log4j.version}</version>
+    </dependency>
+
+    <!-- Route Log4j2 calls to SLF4J/Logback -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-to-slf4j</artifactId>
+      <version>${log4j.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
