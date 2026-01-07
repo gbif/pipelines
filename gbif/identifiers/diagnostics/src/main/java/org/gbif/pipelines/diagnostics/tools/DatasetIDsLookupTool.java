@@ -2,7 +2,7 @@ package org.gbif.pipelines.diagnostics.tools;
 
 import com.beust.jcommander.Parameter;
 import java.util.function.ObjLongConsumer;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.hbase.client.Connection;
