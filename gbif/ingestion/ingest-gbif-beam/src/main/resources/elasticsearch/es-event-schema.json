@@ -224,6 +224,34 @@
             "verbatim": {"type": "keyword", "ignore_above": 1024}
           }
         },
+        "projectTitle": {
+          "type": "keyword", "ignore_above": 1024, "normalizer": "lowercase_normalizer",
+          "fields": {
+            "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+            "verbatim": {"type": "keyword", "ignore_above": 1024}
+          }
+        },
+        "projectID": {
+          "type": "keyword", "ignore_above": 1024, "normalizer": "lowercase_normalizer",
+          "fields": {
+            "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+            "verbatim": {"type": "keyword", "ignore_above": 1024}
+          }
+        },
+        "fundingAttribution": {
+          "type": "keyword", "ignore_above": 1024, "normalizer": "lowercase_normalizer",
+          "fields": {
+            "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+            "verbatim": {"type": "keyword", "ignore_above": 1024}
+          }
+        },
+        "fundingAttributionID": {
+          "type": "keyword", "ignore_above": 1024, "normalizer": "lowercase_normalizer",
+          "fields": {
+            "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+            "verbatim": {"type": "keyword", "ignore_above": 1024}
+          }
+        },
         "eventID": {
           "type": "keyword", "normalizer": "lowercase_normalizer", "ignore_above": 1024,
           "fields": {

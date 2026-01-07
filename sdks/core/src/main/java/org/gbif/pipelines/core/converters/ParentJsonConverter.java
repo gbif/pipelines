@@ -140,7 +140,11 @@ public class ParentJsonConverter {
         .setSamplingProtocol(eventCore.getSamplingProtocol())
         .setParentsLineage(convertParents(eventCore.getParentsLineage()))
         .setParentEventID(eventCore.getParentEventID())
-        .setLocationID(eventCore.getLocationID());
+        .setLocationID(eventCore.getLocationID())
+        .setProjectTitle(eventCore.getProjectTitle())
+        .setProjectID(eventCore.getProjectID())
+        .setFundingAttribution(eventCore.getFundingAttribution())
+        .setFundingAttributionID(eventCore.getFundingAttributionID());
 
     // Vocabulary
     JsonConverter.convertVocabularyConcept(eventCore.getEventType())

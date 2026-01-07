@@ -108,6 +108,7 @@ public class EventToEsIndexPipelineIT {
       coreEvent1.put(DwcTerm.parentEventID.qualifiedName(), parentId);
     }
     coreEvent1.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
+    coreEvent1.put(DwcTerm.fundingAttributionID.qualifiedName(), "FA1|FA2");
 
     return ExtendedRecord.newBuilder()
         .setId(id)
@@ -668,5 +669,7 @@ public class EventToEsIndexPipelineIT {
             .iterator()
             .next()
             .size());
+
+    Assert.assertEquals(2, record.getEvent().getFundingAttributionID().size());
   }
 }

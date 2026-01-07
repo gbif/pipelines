@@ -117,6 +117,10 @@ public class EventCoreTransform extends Transform<ExtendedRecord, EventCoreRecor
         .via((e, r) -> CoreInterpreter.interpretSamplingProtocol(e, r::setSamplingProtocol))
         .via((e, r) -> CoreInterpreter.interpretParentEventID(e, r::setParentEventID))
         .via((e, r) -> CoreInterpreter.interpretLocationID(e, r::setLocationID))
+        .via((e, r) -> CoreInterpreter.interpretProjectID(e, r::setProjectID))
+        .via((e, r) -> CoreInterpreter.interpretProjectTitle(e, r::setProjectTitle))
+        .via((e, r) -> CoreInterpreter.interpretFundingAttribution(e, r::setFundingAttribution))
+        .via((e, r) -> CoreInterpreter.interpretFundingAttributionID(e, r::setFundingAttributionID))
         .via(CoreInterpreter.interpretLineages(erWithParents, vocabularyService))
         .getOfNullable();
   }
