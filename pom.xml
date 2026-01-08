@@ -134,8 +134,9 @@
 
     <scala.version>2.12.18</scala.version>
 
-    <!-- Match the version brought in through Tika in the gbif-parsers -->
     <commons-io.version>2.21.0</commons-io.version>
+    <commons-text.version>1.12.0</commons-text.version>
+
     <!-- Match the version from name-parser -->
     <fastutil.version>8.5.9</fastutil.version>
 
@@ -747,6 +748,16 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
         <version>${commons-lang3.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons-io.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>${commons-text.version}</version>
       </dependency>
       <dependency>
         <groupId>jakarta.validation</groupId>
