@@ -5,10 +5,10 @@ import static org.gbif.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.ws.security.UserRoles.IPT_ROLE;
 import static org.gbif.ws.security.UserRoles.USER_ROLE;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.paging.PagingResponse;

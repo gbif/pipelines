@@ -1,7 +1,7 @@
 package org.gbif.pipelines.common.configs;
 
 import com.beust.jcommander.Parameter;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import lombok.ToString;
 import org.apache.avro.file.CodecFactory;
 

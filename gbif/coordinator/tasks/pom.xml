@@ -31,7 +31,7 @@
 
   <properties>
 
-    <gbif-cli.version>3.0.1-SNAPSHOT</gbif-cli.version>
+    <gbif-cli.version>3.0.1</gbif-cli.version>
     <gbif-httputils.version>0.12</gbif-httputils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
 
@@ -441,9 +441,8 @@
       <version>${log4j.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
-      <version>${findbugs-jsr305.version}</version>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>

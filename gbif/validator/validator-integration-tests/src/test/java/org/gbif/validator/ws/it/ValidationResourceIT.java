@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import jakarta.validation.ValidationException;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,7 +19,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import javax.validation.ValidationException;
 import lombok.SneakyThrows;
 import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.common.paging.PagingResponse;

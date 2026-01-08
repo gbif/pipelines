@@ -64,6 +64,10 @@
           </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+    </dependency>
 
     <!-- HBase -->
     <dependency>

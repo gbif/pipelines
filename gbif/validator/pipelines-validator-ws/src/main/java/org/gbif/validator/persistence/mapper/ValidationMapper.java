@@ -1,9 +1,9 @@
 package org.gbif.validator.persistence.mapper;
 
+import jakarta.annotation.Nullable;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import javax.annotation.Nullable;
 import org.apache.ibatis.annotations.Param;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.ValidationSearchRequest;

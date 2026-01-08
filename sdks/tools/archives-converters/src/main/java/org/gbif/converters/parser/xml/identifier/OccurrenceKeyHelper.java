@@ -1,9 +1,9 @@
 package org.gbif.converters.parser.xml.identifier;
 
+import jakarta.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.StringJoiner;
-import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 

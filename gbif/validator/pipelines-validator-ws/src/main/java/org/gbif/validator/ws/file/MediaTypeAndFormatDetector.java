@@ -4,6 +4,7 @@ import static org.gbif.validator.ws.file.SupportedMediaTypes.COMPRESS_CONTENT_TY
 import static org.gbif.validator.ws.file.SupportedMediaTypes.SPREADSHEET_CONTENT_TYPES;
 import static org.gbif.validator.ws.file.SupportedMediaTypes.TABULAR_CONTENT_TYPES;
 
+import jakarta.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -13,7 +14,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

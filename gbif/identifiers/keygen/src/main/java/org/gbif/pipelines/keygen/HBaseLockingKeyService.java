@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.hadoop.hbase.filter.CompareFilter.CompareOp.EQUAL;
 
 import com.google.common.annotations.VisibleForTesting;
+import jakarta.annotation.Nullable;
 import java.io.Serializable;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -18,7 +19,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ObjLongConsumer;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.hbase.TableName;

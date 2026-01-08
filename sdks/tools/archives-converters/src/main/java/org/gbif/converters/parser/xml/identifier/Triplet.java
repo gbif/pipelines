@@ -1,8 +1,8 @@
 package org.gbif.converters.parser.xml.identifier;
 
 import com.google.common.base.Preconditions;
+import jakarta.annotation.Nullable;
 import java.util.UUID;
-import javax.annotation.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
