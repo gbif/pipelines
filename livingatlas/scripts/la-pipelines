@@ -313,6 +313,8 @@ COLLECTORY_WS_URL=$(getConf collectory.wsUrl);
 COLLECTORY_WS_API_KEY=$(getConf collectory.httpHeaders.Authorization);
 COPY_DEST=$(getConf copy.copyPath)
 
+EXTRA_JVM_OPTS_CONFIG=$(getConf jvm.extra_opts)
+
 # Split exclude list of drs
 IFS=',' read -ra excludes <<< "$exclude"
 
@@ -373,8 +375,8 @@ function copy () {
     logStepStart "Copy" $dr
     SECONDS=0
 
-    DR_URL=${COLLECTORY_WS_URL}dataResource/$dr\?api_key\=$COLLECTORY_WS_API_KEY
-    DR_CONN_URL=`curl -s -o - ${DR_URL} | yq -P e '.connectionParameters.url' -`
+    DR_URL="${COLLECTORY_WS_URL}dataResource/$dr"
+    DR_CONN_URL=$(curl -s -H "Authorization: $COLLECTORY_WS_API_KEY" ${DR_URL} | yq -P e '.connectionParameters.url' -)
     DR_DEST="$COPY_DEST/$dr"
     if [[ ! -d "$DR_DEST" ]] ; then $_D mkdir -p $DR_DEST; fi
     log.debug "Trying to copy $dr using ${DR_URL//[0-9]/X} and connection url $DR_CONN_URL into $DR_DEST/$dr.zip"
@@ -455,7 +457,7 @@ function dwca-avro () {
 
     if [[ $dr != "all" ]] ; then
       logStepStart "DWCA-AVRO conversion" $dr
-      $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
+      $_D java $EXTRA_JVM_CLI_ARGS $EXTRA_JVM_OPTS_CONFIG -Dspark.local.dir=$SPARK_TMP \
           -Djava.io.tmpdir=$DWCA_TMP \
           -cp $LOCAL_PIPELINES_JAR $CLASS \
           --datasetId=$dr \
@@ -471,7 +473,7 @@ function dwca-avro () {
       while IFS=, read -r dr inputPath
       do
           log.info "Dataset = $dr and Input file = $inputPath"
-          $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
+          $_D java $EXTRA_JVM_CLI_ARGS $EXTRA_JVM_OPTS_CONFIG -Dspark.local.dir=$SPARK_TMP \
               -Djava.io.tmpdir=$DWCA_TMP \
               -cp $LOCAL_PIPELINES_JAR $CLASS \
               --datasetId=$dr \
@@ -487,7 +489,7 @@ function common-pipeline() {
 
     log.info $(date)
 
-    $_D java $EXTRA_JVM_CLI_ARGS \
+    $_D java $EXTRA_JVM_CLI_ARGS $EXTRA_JVM_OPTS_CONFIG \
         $(getConf $SH_ARGS.jvm) \
         -cp $PIPELINES_JAR $CLASS \
         --datasetId=$dr \

@@ -1,11 +1,11 @@
 package org.gbif.pipelines.validator.checklists.ws;
 
+import jakarta.annotation.Nullable;
 import java.util.Optional;
 import org.gbif.api.vocabulary.Kingdom;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.TaxonomicStatus;
 import org.gbif.nub.lookup.straight.LookupUsage;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;

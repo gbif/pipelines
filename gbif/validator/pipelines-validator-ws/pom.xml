@@ -20,8 +20,8 @@
     <zookeeper.version>3.8.1</zookeeper.version>
     <curator.version>5.5.0</curator.version>
     <curator-framework.version>5.5.0-disable-connectstr-updates</curator-framework.version>
-    <swagger.version>2.2.15</swagger.version>
-    <springdoc.version>1.8.0</springdoc.version>
+    <swagger.version>2.2.41</swagger.version>
+    <springdoc-openapi-ui.version>2.8.14</springdoc-openapi-ui.version>
   </properties>
 
   <build>
@@ -113,11 +113,6 @@
             <version>${maven-failsafe-plugin.version}</version>
           </dependency>
           <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-surefire-provider</artifactId>
-            <version>${junit-platform-surefire-provider.version}</version>
-          </dependency>
-          <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>${junit-jupiter.version}</version>
@@ -156,6 +151,12 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-api</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -168,6 +169,12 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-ws-client</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -184,6 +191,16 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-metadata-profile-eml</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-metadata-common</artifactId>
     </dependency>
 
     <!-- Spring dependencies -->
@@ -222,45 +239,44 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-oxm</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-zookeeper-all</artifactId>
-      <version>${spring-cloud-zookeeper.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.zookeeper</groupId>
-          <artifactId>zookeeper</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework.cloud</groupId>
-          <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework.cloud</groupId>
-          <artifactId>spring-cloud-starter-netflix-archaius</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework.cloud</groupId>
-          <artifactId>spring-cloud-netflix-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework.cloud</groupId>
-          <artifactId>spring-cloud-starter-loadbalancer</artifactId>
-        </exclusion>
-        <exclusion>
-          <artifactId>spring-cloud-starter-zookeeper-config</artifactId>
-          <groupId>org.springframework.cloud</groupId>
-        </exclusion>
-      </exclusions>
+      <artifactId>spring-cloud-starter-bootstrap</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-zookeeper-discovery</artifactId>
-      <version>${spring-cloud-zookeeper.version}</version>
+      <exclusions>
+          <exclusion>
+              <groupId>org.apache.curator</groupId>
+              <artifactId>curator-client</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>org.apache.zookeeper</groupId>
+              <artifactId>zookeeper</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>org.springframework.cloud</groupId>
+              <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>org.springframework.cloud</groupId>
+              <artifactId>spring-cloud-starter-netflix-archaius</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>org.springframework.cloud</groupId>
+              <artifactId>spring-cloud-netflix-core</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>org.springframework.cloud</groupId>
+              <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+          </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>de.codecentric</groupId>
@@ -321,8 +337,8 @@
 
     <!-- validation -->
     <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
     </dependency>
 
     <!-- Persistence/JDBC Driver-->
@@ -382,8 +398,8 @@
     <!-- enable swagger -->
     <dependency>
       <groupId>org.springdoc</groupId>
-      <artifactId>springdoc-openapi-ui</artifactId>
-      <version>${springdoc.version}</version>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>${springdoc-openapi-ui.version}</version>
     </dependency>
     <dependency>
       <groupId>io.swagger.core.v3</groupId>

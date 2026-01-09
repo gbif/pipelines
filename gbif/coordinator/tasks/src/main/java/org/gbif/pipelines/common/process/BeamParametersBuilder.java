@@ -2,29 +2,20 @@ package org.gbif.pipelines.common.process;
 
 import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import org.gbif.api.model.pipelines.InterpretationType.RecordType;
-import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.common.messaging.api.messages.*;
 import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
 import org.gbif.pipelines.common.configs.ElasticsearchConfiguration;
 import org.gbif.pipelines.common.configs.IndexConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.indexing.IndexSettings;
 import org.gbif.pipelines.tasks.common.hdfs.HdfsViewConfiguration;
+import org.gbif.pipelines.tasks.dwcdp.DwcDpConfiguration;
 import org.gbif.pipelines.tasks.events.indexing.EventsIndexingConfiguration;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
 import org.gbif.pipelines.tasks.occurrences.identifier.IdentifierConfiguration;
@@ -38,6 +29,12 @@ public class BeamParametersBuilder {
   @NoArgsConstructor(staticName = "create")
   public static class BeamParameters {
     private final Map<String, String> map = new HashMap<>();
+
+    private final List<String> simpleArgs = new ArrayList<>();
+
+    public void addSingleArg(String... args) {
+      simpleArgs.addAll(Arrays.asList(args));
+    }
 
     public BeamParameters put(String key, Object value) {
       map.put(key, String.valueOf(value));
@@ -61,9 +58,12 @@ public class BeamParametersBuilder {
     }
 
     public List<String> toList() {
-      return map.entrySet().stream()
-          .map(es -> "--" + es.getKey() + "=" + es.getValue())
-          .collect(Collectors.toList());
+      List<String> args = new ArrayList<>(simpleArgs);
+      args.addAll(
+          map.entrySet().stream()
+              .map(es -> "--" + es.getKey() + "=" + es.getValue())
+              .collect(Collectors.toList()));
+      return args;
     }
 
     public String[] toArray() {
@@ -141,6 +141,25 @@ public class BeamParametersBuilder {
         // Extra
         .putIfPresent("backPressure", config.backPressure)
         .putCondition(config.esGeneratedIds, "esDocumentId", "");
+  }
+
+  public static BeamParameters dwcDpIndexing(
+      DwcDpConfiguration config,
+      DwcDpDownloadFinishedMessage message,
+      IndexSettings indexSettings) {
+
+    return IndexingCommon.builder()
+        .datasetUuid(message.getDatasetUuid())
+        .attempt(message.getAttempt())
+        .stepConfig(config.stepConfig)
+        .esConfig(config.esConfig)
+        .indexConfig(config.indexConfig)
+        .metaFileName("")
+        .pipelinesConfigPath("")
+        .esIndexName(indexSettings.getIndexName())
+        .esShardsNumber(indexSettings.getNumberOfShards())
+        .build()
+        .create();
   }
 
   public static BeamParameters occurrenceIdentifier(
@@ -334,7 +353,8 @@ public class BeamParametersBuilder {
           .putIfPresent("esSchemaPath", esConfig.schemaPath)
           .putIfPresent("indexRefreshInterval", indexConfig.refreshInterval)
           .putIfPresent("indexNumberShards", esShardsNumber)
-          .putIfPresent("indexNumberReplicas", indexConfig.numberReplicas);
+          .putIfPresent("indexNumberReplicas", indexConfig.numberReplicas)
+          .putIfPresent("indexMappingTotalFieldsLimit", indexConfig.indexMappingTotalFieldsLimit);
     }
   }
 }

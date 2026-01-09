@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>coordinator</artifactId>
-   <version>3.2.14-SNAPSHOT</version>
+    <version>3.2.14-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -31,26 +31,23 @@
 
   <properties>
 
-    <gbif-cli.version>0.14</gbif-cli.version>
+    <gbif-cli.version>3.0.1</gbif-cli.version>
     <gbif-httputils.version>0.12</gbif-httputils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
 
-    <guice.version>4.2.3</guice.version>
     <!-- Match the GBIF http-client! -->
     <httpclient.version>4.5.6</httpclient.version>
     <!-- Match the GBIF http-client! -->
-    <httpcore.version>4.4.10</httpcore.version>
-    <jcommander.version>1.58</jcommander.version>
-    <jersey.version>1.19</jersey.version>
-    <jsr305.version>3.0.1</jsr305.version>
-    <logstash-encoder.version>4.11</logstash-encoder.version>
-    <metainf-services.version>1.7</metainf-services.version>
-    <validation-api.version>1.1.0.Final</validation-api.version>
-    <yammer-metrics.version>2.2.0</yammer-metrics.version>
+    <httpcore.version>4.4.13</httpcore.version>
+    <jcommander.version>1.60</jcommander.version>
+    <logstash-encoder.version>8.1</logstash-encoder.version>
+    <metainf-services.version>1.11</metainf-services.version>
+    <dropwizard-metrics.version>4.2.37</dropwizard-metrics.version>
     <commons-lang.version>2.6</commons-lang.version>
     <commons-configuration.version>1.10</commons-configuration.version>
-    <xercesImpl.version>2.12.1</xercesImpl.version>
-    <woodstox-core.version>5.3.0</woodstox-core.version>
+    <xercesImpl.version>2.12.2</xercesImpl.version>
+    <woodstox-core.version>7.1.1</woodstox-core.version>
+    <log4j.version>2.25.2</log4j.version>
   </properties>
 
   <dependencies>
@@ -149,12 +146,6 @@
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common-ws</artifactId>
       <version>${gbif-common-ws.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId> org.apache.logging.log4j</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -234,6 +225,10 @@
         <exclusion>
           <artifactId>datacite-rest-client</artifactId>
           <groupId>org.gbif.datacite</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
+          <groupId>com.fasterxml.jackson.module</groupId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -390,10 +385,16 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <!-- metrics -->
     <dependency>
-      <groupId>com.yammer.metrics</groupId>
+      <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-core</artifactId>
-      <version>${yammer-metrics.version}</version>
+      <version>${dropwizard-metrics.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.dropwizard.metrics</groupId>
+      <artifactId>metrics-annotation</artifactId>
+      <version>${dropwizard-metrics.version}</version>
     </dependency>
     <dependency>
       <groupId>com.beust</groupId>
@@ -410,54 +411,48 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>${logback.version}</version>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jul-to-slf4j</artifactId>
+      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
+      <artifactId>logback-classic</artifactId>
+        <scope>runtime</scope>
       <version>${logback.version}</version>
     </dependency>
     <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
+      <scope>runtime</scope>
       <version>${logstash-encoder.version}</version>
     </dependency>
+    <!-- Log4j2 API (required by Elasticsearch) -->
     <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
-      <version>${findbugs-jsr305.version}</version>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>${log4j.version}</version>
+    </dependency>
+
+    <!-- Route Log4j2 calls to SLF4J/Logback -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-to-slf4j</artifactId>
+      <version>${log4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.google.inject</groupId>
-      <artifactId>guice</artifactId>
-      <version>${guice.version}</version>
-    </dependency>
-    <dependency>
       <groupId>com.rabbitmq</groupId>
       <artifactId>amqp-client</artifactId>
       <scope>runtime</scope>
       <version>${amqp-client.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-client</artifactId>
-      <version>${jersey.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey.contribs</groupId>
-      <artifactId>jersey-apache-client4</artifactId>
-      <version>${jersey.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
-      <version>${validation-api.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -512,7 +507,10 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>${commons-io.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-text</artifactId>
     </dependency>
     <dependency>
       <groupId>commons-configuration</groupId>
@@ -569,6 +567,13 @@
                     <exclude>hidden/com/fasterxml/jackson/**</exclude>
                     <exclude>retrofit2/**</exclude>
                   </excludes>
+                </filter>
+                <filter>
+                  <artifact>org.gbif.vocabulary:vocabulary-lookup:shaded</artifact>
+                  <excludes>
+                     <exclude>org/slf4j/**</exclude>
+                     <exclude>ch/qos/logback/**</exclude>
+                   </excludes>
                 </filter>
               </filters>
               <transformers>

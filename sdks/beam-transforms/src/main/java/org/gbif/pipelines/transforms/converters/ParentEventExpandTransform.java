@@ -114,12 +114,14 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
           @DoFn.ProcessElement
           public void processElement(ProcessContext c) {
             CoGbkResult v = c.element().getValue();
-            EventCoreRecord eventCoreRecord = v.getOnly(eventCoreRecordTupleTag);
-            T r = v.getOnly(recordTupleTag, null);
-            if (eventCoreRecord.getParentsLineage() != null && r != null) {
-              eventCoreRecord
-                  .getParentsLineage()
-                  .forEach(p -> c.output(Edge.of(p.getId(), r.getId(), r)));
+            EventCoreRecord eventCoreRecord = v.getOnly(eventCoreRecordTupleTag, null);
+            if (eventCoreRecord != null) {
+              T r = v.getOnly(recordTupleTag, null);
+              if (eventCoreRecord.getParentsLineage() != null && r != null) {
+                eventCoreRecord
+                    .getParentsLineage()
+                    .forEach(p -> c.output(Edge.of(p.getId(), r.getId(), r)));
+              }
             }
           }
         });
@@ -150,14 +152,16 @@ public class ParentEventExpandTransform<T extends SpecificRecordBase & Record>
           @DoFn.ProcessElement
           public void processElement(ProcessContext c) {
             CoGbkResult v = c.element().getValue();
-            EventCoreRecord eventCoreRecord = v.getOnly(eventCoreRecordTupleTag);
-            T r = v.getOnly(recordTupleTag, null);
-            if (r != null) {
-              c.output(KV.of(eventCoreRecord.getId(), Edge.of(r.getId(), r.getId(), r)));
-              if (eventCoreRecord.getParentsLineage() != null) {
-                eventCoreRecord
-                    .getParentsLineage()
-                    .forEach(p -> c.output(KV.of(p.getId(), Edge.of(r.getId(), p.getId(), r))));
+            EventCoreRecord eventCoreRecord = v.getOnly(eventCoreRecordTupleTag, null);
+            if (eventCoreRecord != null) {
+              T r = v.getOnly(recordTupleTag, null);
+              if (r != null) {
+                c.output(KV.of(eventCoreRecord.getId(), Edge.of(r.getId(), r.getId(), r)));
+                if (eventCoreRecord.getParentsLineage() != null) {
+                  eventCoreRecord
+                      .getParentsLineage()
+                      .forEach(p -> c.output(KV.of(p.getId(), Edge.of(r.getId(), p.getId(), r))));
+                }
               }
             }
           }

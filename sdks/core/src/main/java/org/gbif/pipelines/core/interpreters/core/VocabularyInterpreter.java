@@ -137,7 +137,7 @@ public class VocabularyInterpreter {
     return interpretVocabulary(term, extractNullAwareValue(er, term), vocabularyService, issueFn);
   }
 
-  static Optional<VocabularyConcept> interpretVocabulary(
+  public static Optional<VocabularyConcept> interpretVocabulary(
       Term term, String value, VocabularyService vocabularyService, Consumer<String> issueFn) {
     if (vocabularyService == null) {
       return Optional.empty();

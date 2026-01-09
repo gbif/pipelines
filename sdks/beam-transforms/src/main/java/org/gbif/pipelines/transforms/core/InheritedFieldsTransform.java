@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.core;
 
 import java.io.Serializable;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
@@ -9,10 +10,12 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.pojo.Edge;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
+import org.gbif.pipelines.io.avro.Parent;
 import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
 import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 
+@Slf4j
 @Builder
 public class InheritedFieldsTransform implements Serializable {
 
@@ -36,16 +39,48 @@ public class InheritedFieldsTransform implements Serializable {
                 KV.of(
                     eventCoreRecord.getId(),
                     Edge.of(eventCoreRecord.getId(), eventCoreRecord.getId(), eventCoreRecord)));
-            if (eventCoreRecord.getParentsLineage() != null) {
-              eventCoreRecord
-                  .getParentsLineage()
-                  .forEach(
-                      parent ->
-                          c.output(
-                              KV.of(
-                                  parent.getId(),
-                                  Edge.of(
-                                      parent.getId(), eventCoreRecord.getId(), eventCoreRecord))));
+
+            if (eventCoreRecord.getParentsLineage() != null
+                && !eventCoreRecord.getParentsLineage().isEmpty()) {
+              // workaround for https://github.com/gbif/pipelines/issues/1231
+              for (Object rawObj : eventCoreRecord.getParentsLineage()) {
+                Parent parent = null;
+
+                try {
+                  if (rawObj instanceof Parent) {
+                    parent = (Parent) rawObj;
+                  } else if (rawObj instanceof org.apache.avro.generic.GenericRecord) {
+                    org.apache.avro.generic.GenericRecord gr =
+                        (org.apache.avro.generic.GenericRecord) rawObj;
+                    parent = new Parent();
+                    if (gr.get("id") != null) {
+                      parent.setId(gr.get("id").toString());
+                    }
+                    if (gr.get("eventType") != null) {
+                      parent.setEventType(gr.get("eventType").toString());
+                    }
+                    if (gr.get("verbatimEventType") != null) {
+                      parent.setVerbatimEventType(gr.get("verbatimEventType").toString());
+                    }
+                    if (gr.get("order") != null) {
+                      parent.setOrder(Integer.parseInt(gr.get("order").toString()));
+                    }
+                  }
+
+                  if (parent != null && parent.getId() != null) {
+                    c.output(
+                        KV.of(
+                            parent.getId(),
+                            Edge.of(parent.getId(), eventCoreRecord.getId(), eventCoreRecord)));
+                  }
+
+                } catch (Exception e) {
+                  log.warn(
+                      "Failed inheriting parent events data for event {}",
+                      eventCoreRecord.getId(),
+                      e);
+                }
+              }
             }
           }
         };

@@ -25,6 +25,7 @@ import org.gbif.pipelines.io.avro.DnaDerivedData;
 import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -45,6 +46,7 @@ import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
+import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.specific.ClusteringTransform;
@@ -128,6 +130,7 @@ public class OccurrenceHdfsRecordTransformTest {
                 Collections.singletonList(
                     DnaDerivedData.newBuilder().setDnaSequenceID("foo1").build()))
             .build();
+    HumboldtRecord hr = HumboldtRecord.newBuilder().setId("777").build();
 
     BasicTransform basicTransform = BasicTransform.builder().create();
     GbifIdTransform idTransform = GbifIdTransform.builder().create();
@@ -144,6 +147,7 @@ public class OccurrenceHdfsRecordTransformTest {
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
     DnaDerivedDataTransform dnaDerivedDataTransform = DnaDerivedDataTransform.builder().create();
+    HumboldtTransform humboldtTransform = HumboldtTransform.builder().create();
 
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Read Metadata", Create.of(mr)).apply("Convert to view", View.asSingleton());
@@ -163,6 +167,7 @@ public class OccurrenceHdfsRecordTransformTest {
             .audubonRecordTag(audubonTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
             .dnaRecordTag(dnaDerivedDataTransform.getTag())
+            .humboldtRecordTag(humboldtTransform.getTag())
             .metadataView(metadataView)
             .build();
 
@@ -210,6 +215,9 @@ public class OccurrenceHdfsRecordTransformTest {
     PCollection<KV<String, AudubonRecord>> audubonCollection =
         p.apply("Create audubon", Create.of(aur)).apply("KV audubon", audubonTransform.toKv());
 
+    PCollection<KV<String, HumboldtRecord>> humboldtCollection =
+        p.apply("Create humboldt", Create.of(hr)).apply("KV humboldt", humboldtTransform.toKv());
+
     PCollection<OccurrenceHdfsRecord> result =
         KeyedPCollectionTuple
             // Core
@@ -226,6 +234,7 @@ public class OccurrenceHdfsRecordTransformTest {
             .and(imageTransform.getTag(), imageCollection)
             .and(dnaDerivedDataTransform.getTag(), dnaCollection)
             .and(audubonTransform.getTag(), audubonCollection)
+            .and(humboldtTransform.getTag(), humboldtCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging", transform.converter());
@@ -259,6 +268,7 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setDay(25);
     expected.setDnasequenceid(Collections.singletonList("foo1"));
     expected.setClassifications(new HashMap<>());
+    expected.setNontaxonomicissue(List.of());
 
     PAssert.that(result).containsInAnyOrder(expected);
     p.run();

@@ -1,7 +1,7 @@
 package org.gbif.pipelines.common.configs;
 
 import com.beust.jcommander.Parameter;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import lombok.ToString;
 
 @ToString
@@ -46,4 +46,7 @@ public class IndexConfiguration {
   @Parameter(names = "--index-occurrence-version")
   @NotNull
   public String occurrenceVersion;
+
+  @Parameter(names = "--index-mapping-total-fields-limit")
+  public Integer indexMappingTotalFieldsLimit;
 }

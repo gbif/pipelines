@@ -3,7 +3,7 @@
   <parent>
     <groupId>au.org.ala</groupId>
     <artifactId>livingatlas</artifactId>
-   <version>3.2.0-SNAPSHOT</version>
+    <version>3.2.14-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -16,7 +16,7 @@
     <!-- this library is not in the parent POM, but is in use by gbif/crawler
      which uses version 1.58
      -->
-    <spark.version>3.3.1</spark.version>
+    <spark.version>3.4.0</spark.version>
     <jcommander.version>1.78</jcommander.version>
     <sonar.skip>true</sonar.skip>
   </properties>

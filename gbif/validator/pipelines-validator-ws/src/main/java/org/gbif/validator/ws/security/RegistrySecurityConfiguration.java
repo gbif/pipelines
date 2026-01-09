@@ -6,10 +6,8 @@ import org.gbif.ws.remoteauth.RemoteAuthWebSecurityConfigurer;
 import org.gbif.ws.remoteauth.RestTemplateRemoteAuthClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
 /**
  * Configuration for all data sources, MyBatis mappers and services required by the Registry
@@ -33,12 +31,5 @@ public class RegistrySecurityConfiguration {
   }
 
   @Configuration
-  @EnableWebSecurity
-  public static class ValidatorWebSecurity extends RemoteAuthWebSecurityConfigurer {
-
-    public ValidatorWebSecurity(
-        ApplicationContext applicationContext, RemoteAuthClient remoteAuthClient) {
-      super(applicationContext, remoteAuthClient);
-    }
-  }
+  public class SecurityConfiguration extends RemoteAuthWebSecurityConfigurer {}
 }

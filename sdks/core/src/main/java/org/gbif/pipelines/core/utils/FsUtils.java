@@ -98,7 +98,7 @@ public final class FsUtils {
         FileUtils.deleteDirectory(tmp);
         log.info("temp directory {} deleted", tmp.getPath());
       } catch (IOException e) {
-        log.error("Could not delete temp directory {}", tmp.getPath());
+        log.error("Could not delete temp directory {}", tmp.getPath(), e);
       }
     }
   }
@@ -198,7 +198,7 @@ public final class FsUtils {
       fn.accept(p);
 
     } catch (IOException e) {
-      log.warn("Can't change permissions for folder/file - {}", path);
+      log.warn("Can't change permissions for folder/file - {}", path, e);
     }
   }
 
@@ -219,7 +219,7 @@ public final class FsUtils {
         log.info("File {} moved status - {}", path, rename);
       }
     } catch (IOException e) {
-      log.warn("Can't move files using filter - {}, into path - {}", globFilter, targetPath);
+      log.warn("Can't move files using filter - {}, into path - {}", globFilter, targetPath, e);
     }
   }
 
@@ -239,7 +239,7 @@ public final class FsUtils {
         fs.delete(path, Boolean.TRUE);
       }
     } catch (IOException e) {
-      log.warn("Can't delete files using filter - {}", globFilter);
+      log.warn("Can't delete files using filter - {}", globFilter, e);
     }
   }
 

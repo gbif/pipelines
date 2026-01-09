@@ -1,9 +1,13 @@
 package org.gbif.pipelines.transforms.core;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
+
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import lombok.Builder;
@@ -15,11 +19,14 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TypeDescriptor;
-import org.gbif.pipelines.core.converters.JsonConverter;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MultiTaxonRecord;
+import org.gbif.pipelines.io.avro.json.DerivedClassification;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
+import org.gbif.pipelines.io.avro.json.DerivedTaxonUsage;
+import org.gbif.pipelines.io.avro.json.TaxonCoverage;
 
 @Builder
 public class DerivedMetadataTransform implements Serializable {
@@ -59,7 +66,7 @@ public class DerivedMetadataTransform implements Serializable {
             EventDate temporalCoverage =
                 result.getOnly(temporalCoverageTag, EventDate.newBuilder().build());
 
-            List<MultiTaxonRecord> classifications =
+            List<MultiTaxonRecord> multiTaxonRecords =
                 StreamSupport.stream(
                         result
                             .getOnly(ITERABLE_MULTI_TAXON_TAG, Collections.emptyList())
@@ -83,18 +90,76 @@ public class DerivedMetadataTransform implements Serializable {
                       .setLte(temporalCoverage.getLte()));
             }
 
-            builder.setTaxonomicCoverage(
-                classifications.stream()
-                    .map(
-                        tr ->
-                            Optional.ofNullable(getAssociatedVerbatim(tr, verbatimRecords))
-                                .map(
-                                    vr ->
-                                        JsonConverter.convertToClassificationFromMultiTaxon(
-                                            vr, tr)))
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .collect(Collectors.toList()));
+            TaxonCoverage.Builder taxonCoverage = TaxonCoverage.newBuilder();
+            Map<String, List<DerivedClassification>> classifications = new HashMap<>();
+            taxonCoverage.setClassifications(classifications);
+
+            List<String> taxonIDs = new ArrayList<>();
+            taxonCoverage.setTaxonIDs(taxonIDs);
+
+            multiTaxonRecords.forEach(
+                mt -> {
+
+                  // add taxonID
+                  ExtendedRecord er = getAssociatedVerbatim(mt, verbatimRecords);
+                  extractOptValue(er, DwcTerm.taxonID).ifPresent(taxonIDs::add);
+
+                  // add classification
+                  mt.getTaxonRecords()
+                      .forEach(
+                          tr -> {
+                            DerivedClassification.Builder derivedTaxon =
+                                DerivedClassification.newBuilder();
+
+                            if (tr.getUsage() != null) {
+                              derivedTaxon
+                                  .setUsage(
+                                      DerivedTaxonUsage.newBuilder()
+                                          .setKey(tr.getUsage().getKey())
+                                          .setRank(tr.getUsage().getRank())
+                                          .setName(tr.getUsage().getName())
+                                          .build())
+                                  .setStatus(tr.getUsage().getStatus());
+                            }
+
+                            if (tr.getAcceptedUsage() != null) {
+                              derivedTaxon.setAcceptedUsage(
+                                  DerivedTaxonUsage.newBuilder()
+                                      .setKey(tr.getAcceptedUsage().getKey())
+                                      .setRank(tr.getAcceptedUsage().getRank())
+                                      .setName(tr.getAcceptedUsage().getName())
+                                      .build());
+                            } else {
+                              // Usage is set as the accepted usage if the accepted usage is null
+                              derivedTaxon.setAcceptedUsage(derivedTaxon.getUsage());
+                            }
+
+                            derivedTaxon.setIucnRedListCategoryCode(
+                                tr.getIucnRedListCategoryCode());
+
+                            if (tr.getClassification() != null) {
+                              List<String> taxonKeys = new ArrayList<>();
+                              tr.getClassification()
+                                  .forEach(
+                                      cl -> {
+                                        taxonKeys.add(cl.getKey());
+                                      });
+
+                              derivedTaxon.setTaxonKeys(taxonKeys);
+                            }
+
+                            if (tr.getIssues() != null) {
+                              derivedTaxon.setIssues(tr.getIssues().getIssueList());
+                            }
+
+                            classifications
+                                .computeIfAbsent(tr.getDatasetKey(), k -> new ArrayList<>())
+                                .add(derivedTaxon.build());
+                          });
+                });
+
+            builder.setTaxonomicCoverage(taxonCoverage.build());
+
             c.output(KV.of(key, builder.build()));
           }
         };

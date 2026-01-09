@@ -20,7 +20,9 @@
     <generated-path>${project.basedir}/src/main/java-generated/</generated-path>
     <package>org.gbif.pipelines.core.converters</package>
 
-    <axws-api.version>2.3.1</axws-api.version>
+    <jaxws-api.version>2.3.1</jaxws-api.version>
+    <jts.version>1.19.0</jts.version>
+    <spatial4j.version>0.8</spatial4j.version>
   </properties>
 
   <build>
@@ -93,7 +95,7 @@
     <dependency>
       <groupId>javax.xml.ws</groupId>
       <artifactId>jaxws-api</artifactId>
-      <version>${axws-api.version}</version>
+      <version>${jaxws-api.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
@@ -140,6 +142,30 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-api</artifactId>
+      <exclusions>
+          <exclusion>
+              <groupId>org.locationtech.jts</groupId>
+              <artifactId>jts-core</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>org.locationtech.jts</groupId>
+              <artifactId>jts-io</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>org.locationtech.spatial4j</groupId>
+              <artifactId>spatial4j</artifactId>
+          </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.locationtech.jts</groupId>
+      <artifactId>jts-core</artifactId>
+      <version>${jts.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.locationtech.spatial4j</groupId>
+      <artifactId>spatial4j</artifactId>
+      <version>${spatial4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -174,10 +200,6 @@
     </dependency>
     <dependency>
       <groupId>org.geotools</groupId>
-      <artifactId>gt-opengis</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.geotools</groupId>
       <artifactId>gt-main</artifactId>
     </dependency>
     <dependency>
@@ -187,10 +209,6 @@
     <dependency>
       <groupId>org.geotools</groupId>
       <artifactId>gt-transform</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.geotools</groupId>
-      <artifactId>gt-geometry</artifactId>
     </dependency>
     <dependency>
       <groupId>org.geotools</groupId>

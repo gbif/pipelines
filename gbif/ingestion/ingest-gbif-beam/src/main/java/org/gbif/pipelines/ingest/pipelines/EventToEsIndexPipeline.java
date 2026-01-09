@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
+import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.transforms.Create;
@@ -45,6 +45,7 @@ import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -74,6 +75,7 @@ import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
+import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
@@ -172,6 +174,7 @@ public class EventToEsIndexPipeline {
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
     DnaDerivedDataTransform dnaTransform = DnaDerivedDataTransform.builder().create();
+    HumboldtTransform humboldtTransform = HumboldtTransform.builder().create();
 
     log.info("Adding step 3: Creating beam pipeline");
     PCollectionView<MetadataRecord> metadataView =
@@ -261,6 +264,10 @@ public class EventToEsIndexPipeline {
         p.apply("Read Event DNA Derived Data", dnaTransform.readIfExists(pathFn))
             .apply("Map DNA Derived Data to KV", dnaTransform.toKv());
 
+    PCollection<KV<String, HumboldtRecord>> humboldtCollection =
+        p.apply("Read Event Humboldt Data", humboldtTransform.readIfExists(pathFn))
+            .apply("Map Humboldt Data to KV", humboldtTransform.toKv());
+
     log.info("Adding step 3: Converting into a json object");
     SingleOutput<KV<String, CoGbkResult>, String> eventJsonDoFn =
         ParentJsonTransform.builder()
@@ -274,6 +281,7 @@ public class EventToEsIndexPipeline {
             .audubonRecordTag(audubonTransform.getTag())
             .derivedMetadataRecordTag(DerivedMetadataTransform.tag())
             .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
+            .humboldtRecordTag(humboldtTransform.getTag())
             .locationInheritedRecordTag(InheritedFieldsTransform.LIR_TAG)
             .temporalInheritedRecordTag(InheritedFieldsTransform.TIR_TAG)
             .eventInheritedRecordTag(InheritedFieldsTransform.EIR_TAG)
@@ -293,6 +301,7 @@ public class EventToEsIndexPipeline {
             .and(audubonTransform.getTag(), audubonCollection)
             .and(measurementOrFactTransform.getTag(), measurementOrFactCollection)
             .and(dnaTransform.getTag(), dnaCollection)
+            .and(humboldtTransform.getTag(), humboldtCollection)
             // Internal
             .and(identifierTransform.getTag(), identifierCollection)
             // Raw
@@ -305,22 +314,6 @@ public class EventToEsIndexPipeline {
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", eventJsonDoFn);
-
-    PCollection<String> occurrenceJsonCollection =
-        datasetHasOccurrences
-            ? OccurrenceToEsIndexPipeline.IndexingTransform.builder()
-                .pipeline(p)
-                .pathFn(occurrencesPathFn)
-                .asParentChildRecord(true)
-                .build()
-                .apply()
-            : p.apply("Create empty occurrenceJsonCollection", Create.empty(StringUtf8Coder.of()));
-
-    // Merge events and occurrences
-    PCollection<String> jsonCollection =
-        PCollectionList.of(eventJsonCollection)
-            .and(occurrenceJsonCollection)
-            .apply("Join event and occurrence Json records", Flatten.pCollections());
 
     log.info("Adding step 6: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =
@@ -351,7 +344,7 @@ public class EventToEsIndexPipeline {
       writeIO = writeIO.withIdFn(input -> input.get(esDocumentId).asText());
     }
 
-    jsonCollection.apply("Push records to ES", writeIO);
+    eventJsonCollection.apply("Push records to ES", writeIO);
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
@@ -559,6 +552,7 @@ public class EventToEsIndexPipeline {
               // Collection of EventCoreRecord
               .apply("Get EventCoreRecord values", Values.create())
               // Collection of KV<ParentId,Edge.of(ParentId,EventCoreRecord.id, EventCoreRecord)
+              .setCoder(AvroCoder.of(EventCoreRecord.class))
               .apply(
                   "Group by child and parent",
                   inheritedFieldsTransform.childToParentEdgeConverter())

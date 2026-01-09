@@ -360,24 +360,7 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         indexRecord.getStrings().put(RAW_PREFIX + key, entry.getValue());
       } else {
         if (key.endsWith(DwcTerm.dynamicProperties.simpleName())) {
-          try {
-            // index separate properties and the dynamicProperties
-            // field as a string as it may not be parseable JSON
-            indexRecord.getStrings().put(DwcTerm.dynamicProperties.simpleName(), entry.getValue());
-
-            // attempt JSON parse - best effort service only, if this fails
-            // we carry on indexing
-            ObjectMapper om = new ObjectMapper();
-            Map dynamicProperties = om.readValue(entry.getValue(), Map.class);
-
-            // ensure the dynamic properties are maps of string, string to avoid serialisation
-            // issues
-            dynamicProperties.replaceAll((s, c) -> c != null ? c.toString() : "");
-
-            indexRecord.setDynamicProperties(dynamicProperties);
-          } catch (Exception e) {
-            // NOP
-          }
+          parseDynamicProperties(entry.getValue(), indexRecord);
         } else {
           indexRecord.getStrings().put(key, entry.getValue());
         }
@@ -411,6 +394,34 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     applyEventLocation(indexRecord, elr, skipKeys);
     applyEventTemporal(indexRecord, etr, skipKeys);
     return indexRecord.build();
+  }
+
+  // Attempt JSON parse - best effort service only, if this fails, we carry on indexing
+  protected static void parseDynamicProperties(String value, IndexRecord.Builder indexRecord) {
+    try {
+      // index separate properties and the dynamicProperties
+      // field as a string as it may not be parseable JSON
+      indexRecord.getStrings().put(DwcTerm.dynamicProperties.simpleName(), value);
+
+      // Cleanup escaped quotes, the jacksonCSV parser used is not configured to do this for us.
+      var cleanStringValue = value;
+      if (cleanStringValue.startsWith("\"") && cleanStringValue.endsWith("\"")) {
+        cleanStringValue =
+            cleanStringValue.substring(1, cleanStringValue.length() - 1).replaceAll("\"\"", "\"");
+      }
+
+      ObjectMapper om = new ObjectMapper();
+      Map dynamicProperties = om.readValue(cleanStringValue, Map.class);
+
+      // ensure the dynamic properties are maps of string, string to avoid serialisation
+      // issues
+      dynamicProperties.replaceAll((s, c) -> c != null ? c.toString() : "");
+
+      indexRecord.setDynamicProperties(dynamicProperties);
+    } catch (Exception e) {
+      // NOP
+      log.warn("Failed to parse dynamicProperties: {}\n{}", e.getMessage(), value);
+    }
   }
 
   private static void applyMultimedia(
@@ -606,7 +617,8 @@ public class IndexRecordTransform implements Serializable, IndexFields {
           indexRecord, DwcTerm.recordedByID.simpleName(), br.getRecordedByIds());
       addTermWithAgentsSafely(
           indexRecord, DwcTerm.identifiedByID.simpleName(), br.getIdentifiedByIds());
-      addMultiValueTermSafely(indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
+      addMultiValueTermSafelyVocabularyList(
+          indexRecord, DwcTerm.typeStatus.simpleName(), br.getTypeStatus());
       addMultiValueTermSafely(indexRecord, DwcTerm.identifiedBy.simpleName(), br.getIdentifiedBy());
       addMultiValueTermSafely(indexRecord, DwcTerm.preparations.simpleName(), br.getPreparations());
       addMultiValueTermSafely(indexRecord, DwcTerm.datasetID.simpleName(), br.getDatasetID());
@@ -784,6 +796,21 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     }
   }
 
+  private static void addMultiValueTermSafelyVocabularyList(
+      IndexRecord.Builder indexRecord, String indexField, List<VocabularyConcept> values) {
+    if (values != null && !values.isEmpty()) {
+      List<String> stringValues =
+          values.stream()
+              .map(VocabularyConcept::getConcept)
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList());
+      List<String> multiValuedField =
+          indexRecord.getMultiValues().getOrDefault(indexField, new ArrayList<>());
+      multiValuedField.addAll(stringValues);
+      indexRecord.getMultiValues().put(indexField, multiValuedField);
+    }
+  }
+
   private static void addEstablishmentValueSafely(
       IndexRecord.Builder indexRecord, String field, VocabularyConcept establishmentMeans) {
     if (establishmentMeans != null) {
@@ -942,7 +969,9 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     for (RankedName entry : taxonomy) {
       indexRecord
           .getInts()
-          .put("gbif_s_" + entry.getRank().toString().toLowerCase() + "_id", entry.getKey());
+          .put(
+              "gbif_s_" + entry.getRank().toString().toLowerCase() + "_id",
+              Integer.parseInt(entry.getKey()));
       indexRecord
           .getStrings()
           .put("gbif_s_" + entry.getRank().toString().toLowerCase(), entry.getName());

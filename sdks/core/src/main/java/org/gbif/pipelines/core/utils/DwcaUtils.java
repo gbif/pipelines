@@ -64,6 +64,8 @@ public class DwcaUtils {
     EXTENSION_TYPE_MAP.put(Extension.MULTIMEDIA.getRowType(), RecordType.MULTIMEDIA_TABLE.name());
     EXTENSION_TYPE_MAP.put(
         Extension.DNA_DERIVED_DATA.getRowType(), RecordType.DNA_DERIVED_DATA_TABLE.name());
+    EXTENSION_TYPE_MAP.put(Extension.HUMBOLDT.getRowType(), RecordType.HUMBOLDT_TABLE.name());
+    EXTENSION_TYPE_MAP.put(Extension.OCCURRENCE.getRowType(), RecordType.OCCURRENCE_TABLE.name());
   }
 
   @SneakyThrows

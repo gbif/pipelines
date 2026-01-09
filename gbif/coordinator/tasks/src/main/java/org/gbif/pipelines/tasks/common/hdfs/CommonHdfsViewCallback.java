@@ -163,6 +163,7 @@ public class CommonHdfsViewCallback {
         .submitAwaitVoid();
   }
 
+  /** Compute number of shards based on size in bytes */
   private int computeNumberOfShards(PipelinesInterpretationMessage message) throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
@@ -182,12 +183,18 @@ public class CommonHdfsViewCallback {
       throw new IllegalArgumentException(
           "Please check interpretation source directory! - " + dirPath);
     }
+    var numberOfShards = getNumberOfShards(sizeByte);
+    return numberOfShards <= 0 ? 1 : (int) numberOfShards;
+  }
+
+  /** Calculate number of shards based on size in bytes */
+  private double getNumberOfShards(long sizeByte) {
     long sizeExpected = config.hdfsAvroExpectedFileSizeInMb * 1048576L; // 1024 * 1024
     double numberOfShards = (sizeByte * config.hdfsAvroCoefficientRatio / 100f) / sizeExpected;
     double numberOfShardsFloor = Math.floor(numberOfShards);
     numberOfShards =
         numberOfShards - numberOfShardsFloor > 0.5d ? numberOfShardsFloor + 1 : numberOfShardsFloor;
-    return numberOfShards <= 0 ? 1 : (int) numberOfShards;
+    return numberOfShards;
   }
 
   // If there is one step only like metadata, we have to run the RecordType steps

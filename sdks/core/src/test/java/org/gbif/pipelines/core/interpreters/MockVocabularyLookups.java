@@ -12,6 +12,29 @@ import org.gbif.vocabulary.model.LanguageRegion;
 
 public class MockVocabularyLookups {
 
+  public static class GenericMockVocabularyLookup implements VocabularyLookup {
+
+    @Override
+    public Optional<LookupConcept> lookup(String s) {
+      return lookup(s, null);
+    }
+
+    @Override
+    public Optional<LookupConcept> lookup(String s, LanguageRegion languageRegion) {
+      if (!Strings.isNullOrEmpty(s)) {
+        Concept concept = new Concept();
+        concept.setName(s);
+        LookupConcept lookupConcept = LookupConcept.of(concept, new ArrayList<>(1), null);
+
+        return Optional.of(lookupConcept);
+      }
+      return Optional.empty();
+    }
+
+    @Override
+    public void close() {}
+  }
+
   public static class LifeStageMockVocabularyLookup implements VocabularyLookup {
 
     @Override

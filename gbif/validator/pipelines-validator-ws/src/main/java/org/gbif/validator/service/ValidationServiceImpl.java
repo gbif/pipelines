@@ -263,7 +263,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       v.setStatus(Status.QUEUED);
       v.setFileFormat(dataFile.getFileFormat());
       v.getMetrics().setStepTypes(StepsMapper.mapToValidationSteps(pipelinesSteps));
-      v.setDataset(readEml(dataFile.getFilePath()));
+      v.setDataset(readEml(dataFile.getFilePath().getParent()));
 
       // Update DB
       updateAndGet(v);
@@ -279,13 +279,21 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     try {
       Optional<Path> existedPath = MetadataPath.parsePath(pathToArchive);
 
-      if (!existedPath.isPresent()) {
+      if (existedPath.isEmpty()) {
         log.error("Can't find metadata eml file");
         return null;
       }
 
-      String eml = new String(Files.readAllBytes(existedPath.get()), StandardCharsets.UTF_8);
-      return DatasetEmlParser.build(eml.getBytes(StandardCharsets.UTF_8));
+      String eml = Files.readString(existedPath.get());
+      // Set the context classloader to ensure Digester can find GBIF classes
+      Thread currentThread = Thread.currentThread();
+      ClassLoader originalClassLoader = currentThread.getContextClassLoader();
+      try {
+        currentThread.setContextClassLoader(getClass().getClassLoader());
+        return DatasetEmlParser.build(eml.getBytes(StandardCharsets.UTF_8));
+      } finally {
+        currentThread.setContextClassLoader(originalClassLoader);
+      }
 
     } catch (Exception ex) {
       log.error("Can't parse eml file and convert to Dataset. {}", ex.getMessage());

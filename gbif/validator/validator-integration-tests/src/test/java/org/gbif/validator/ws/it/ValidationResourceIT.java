@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import jakarta.validation.ValidationException;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,7 +19,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import javax.validation.ValidationException;
 import lombok.SneakyThrows;
 import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -49,13 +49,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.util.SocketUtils;
+import org.springframework.test.util.TestSocketUtils;
 
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
@@ -87,7 +87,7 @@ public class ValidationResourceIT {
 
   @BeforeAll
   public static void init() {
-    clientAndServer = ClientAndServer.startClientAndServer(SocketUtils.findAvailableTcpPort());
+    clientAndServer = ClientAndServer.startClientAndServer(TestSocketUtils.findAvailableTcpPort());
     setExpectations();
   }
 

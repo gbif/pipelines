@@ -21,10 +21,22 @@
       <artifactId>lombok</artifactId>
     </dependency>
 
+
+
     <!-- GBIF -->
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-api</artifactId>
+    </dependency>
+
+    <!-- Validation -->
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
     </dependency>
 
     <!-- Jackson -->

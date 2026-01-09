@@ -17,6 +17,7 @@ import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -45,6 +46,7 @@ public class OccurrenceHdfsRecordConverter {
   @NonNull private final Map<String, AudubonRecord> audubonMap;
   private Map<String, EventCoreRecord> eventCoreRecordMap;
   private final Map<String, MultiTaxonRecord> multiTaxonMap;
+  private final Map<String, HumboldtRecord> humboldtMap;
 
   public Function<IdentifierRecord, List<OccurrenceHdfsRecord>> getFn() {
     return id -> Collections.singletonList(convert(id));
@@ -60,15 +62,16 @@ public class OccurrenceHdfsRecordConverter {
     MultiTaxonRecord mtxr =
         multiTaxonMap.getOrDefault(k, MultiTaxonRecord.newBuilder().setId(k).build());
 
-    // Extension
+    // Multimedia extension
     MultimediaRecord mr =
         multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
     ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
+    AudubonRecord ar = audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
+    MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
+
+    // DNA extension
     DnaDerivedDataRecord dnar =
         dnaMap.getOrDefault(k, DnaDerivedDataRecord.newBuilder().setId(k).build());
-    AudubonRecord ar = audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
-
-    MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
     metrics.incMetric(AVRO_TO_HDFS_COUNT);
 
@@ -108,6 +111,12 @@ public class OccurrenceHdfsRecordConverter {
             em ->
                 hdfsRecord.eventCoreRecord(
                     em.getOrDefault(k, EventCoreRecord.newBuilder().setId(k).build())));
+
+    Optional.ofNullable(humboldtMap)
+        .ifPresent(
+            hm ->
+                hdfsRecord.humboldtRecord(
+                    hm.getOrDefault(k, HumboldtRecord.newBuilder().setId(k).build())));
 
     return hdfsRecord.build().convert();
   }

@@ -64,7 +64,7 @@ public class BalancerCallbackIT {
   @Test
   public void verbatimMessageHandlerDistributedTest() {
     // State
-    BalancerConfiguration config = createConfig();
+    BalancerConfiguration config = createConfig2();
     config.switchRecordsNumber = 1;
 
     BalancerCallback callback = new BalancerCallback(config, PUBLISHER);
@@ -149,6 +149,24 @@ public class BalancerCallbackIT {
     // Main
     config.switchFilesNumber = 1;
     config.switchFileSizeMb = 1;
+    config.switchRecordsNumber = 1;
+    config.validatorSwitchRecordsNumber = 1;
+
+    // Step config
+    config.stepConfig.coreSiteConfig = "";
+    config.stepConfig.hdfsSiteConfig = "";
+    config.stepConfig.repositoryPath =
+        this.getClass().getClassLoader().getResource("data7/ingest").getPath();
+
+    return config;
+  }
+
+  private BalancerConfiguration createConfig2() {
+    BalancerConfiguration config = new BalancerConfiguration();
+
+    // Main
+    config.switchFilesNumber = 1;
+    config.switchFileSizeMb = 0;
     config.switchRecordsNumber = 1;
     config.validatorSwitchRecordsNumber = 1;
 

@@ -5,10 +5,10 @@ import static org.gbif.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.ws.security.UserRoles.IPT_ROLE;
 import static org.gbif.ws.security.UserRoles.USER_ROLE;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.UUID;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -20,7 +20,6 @@ import org.gbif.validator.service.ErrorMapper;
 import org.gbif.validator.service.ValidationService;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,7 +40,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping(value = "validation", produces = MediaType.APPLICATION_JSON_VALUE)
 @Secured({USER_ROLE, APP_ROLE, IPT_ROLE, ADMIN_ROLE})
 @RequiredArgsConstructor
-@Validated
 public class ValidationResource {
 
   private final ValidationService<MultipartFile> validationService;
@@ -66,19 +64,19 @@ public class ValidationResource {
 
   /** Gets the detail of Validation. */
   @GetMapping(path = "/{key}")
-  public Validation get(@PathVariable UUID key) {
+  public Validation get(@PathVariable("key") UUID key) {
     return validationService.get(key);
   }
 
   /** Cancels a Validation. */
   @PutMapping(path = "/{key}/cancel")
-  public Validation cancel(@PathVariable UUID key) {
+  public Validation cancel(@PathVariable("key") UUID key) {
     return validationService.cancel(key);
   }
 
   /** Deletes a Validation. */
   @DeleteMapping(path = "/{key}")
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     validationService.delete(key);
   }
 
@@ -87,7 +85,7 @@ public class ValidationResource {
       path = "/{key}",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
   public Validation update(
-      @PathVariable UUID key, @RequestBody @Valid @NotNull Validation validation) {
+      @PathVariable("key") UUID key, @RequestBody @Valid @NotNull Validation validation) {
     if (!key.equals(validation.getKey())) {
       throw errorMapper.apply(Validation.ErrorCode.WRONG_KEY_IN_REQUEST);
     }
@@ -96,7 +94,7 @@ public class ValidationResource {
 
   /** Get EML data */
   @GetMapping(path = "/{key}/eml")
-  public Dataset getEml(@PathVariable UUID key) {
+  public Dataset getEml(@PathVariable("key") UUID key) {
     return validationService.getDataset(key);
   }
 

@@ -1,6 +1,8 @@
 package org.gbif.pipelines.tasks;
 
-import java.time.LocalDateTime;
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotNull;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,8 +13,6 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.gbif.api.model.common.paging.Pageable;
@@ -68,7 +68,7 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
       for (StepType st : pipelineExecution.getStepsToRun()) {
         PipelineStep s =
             new PipelineStep()
-                .setStarted(LocalDateTime.now())
+                .setStarted(OffsetDateTime.now())
                 .setState(Status.SUBMITTED)
                 .setType(st);
         s.setKey(++ek);

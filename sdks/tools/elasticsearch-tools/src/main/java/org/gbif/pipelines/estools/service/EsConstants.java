@@ -21,6 +21,7 @@ public final class EsConstants {
     public static final String DURABILITY = "durability";
     public static final String ACTIONS = "actions";
     public static final String MAPPINGS = "mappings";
+    public static final String MAPPING = "mapping";
     public static final String ALIAS = "alias";
     public static final String COUNT = "count";
     public static final String MAX_RESULT_WINDOW = "max_result_window";
@@ -34,6 +35,8 @@ public final class EsConstants {
     public static final String INDEX_MAX_RESULT_WINDOW = Util.INDEX_PREFIX + MAX_RESULT_WINDOW;
     public static final String INDEX_UNASSIGNED_NODE_DELAY =
         Util.INDEX_PREFIX + UNASSIGNED_NODE_DELAY;
+    public static final String INDEX_MAPPING_TOTAL_FIELDS_LIMIT =
+        Util.INDEX_PREFIX + MAPPING + Util.JSON_CONCATENATOR + "total_fields.limit";
 
     public static final String INDEX_SEARCH_SLOWLOG_THRESHOLD_QUERY_WARN =
         "index.search.slowlog.threshold.query.warn";

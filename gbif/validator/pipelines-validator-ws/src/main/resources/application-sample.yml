@@ -6,9 +6,6 @@ schemas:
   dwcMeta:
     - https://raw.githubusercontent.com/tdwg/dwc/9adb52a5389a29ba9483ea12a138cf781c6472e4/standard/documents/text/tdwg_dwc_text.xsd
     - https://dwc.tdwg.org/text/tdwg_dwc_text.xsd
-upload:
-  workingDirectory: @upload.workingDirectory@
-  maxUploadSize: @upload.maxUploadSize@
 
 storePath: @storePath@
 
@@ -57,6 +54,9 @@ spring:
     enabled: false
   flyway:
     enabled: false
-  http:
+  servlet:
     multipart:
       enabled: true
+      location: @upload.workingDirectory@
+      max-file-size: @upload.maxUploadSize@
+      max-request-size: @upload.maxUploadSize@

@@ -38,12 +38,12 @@
       {"name":"eventInherited","type":["null","EventInheritedRecord"],"default":null,"doc":""},
       // Event
       {"name":"event","type":["null","EventJsonRecord"],"default":null,"doc":""},
-      // Occurrence
+      // Occurrence(needed for ALA)
       {"name":"occurrence","type":["null","OccurrenceJsonRecord"],"default":null,"doc":""},
+      // ES document join field type(needed for ALA)
+      {"name":"joinRecord","type":["null","JoinRecord"],"default":null,"doc":""},
       // Raw
-      {"name":"verbatim","type":["null","VerbatimRecord"],"default":null,"doc":""},
-      // ES document join field type
-      {"name":"joinRecord","type":["null","JoinRecord"],"default":null,"doc":""}
+      {"name":"verbatim","type":["null","VerbatimRecord"],"default":null,"doc":""}
     ]
   }
 ]

@@ -15,7 +15,7 @@
   <name>Pipelines :: GBIF :: Identifiers</name>
 
   <properties>
-    <jcommander.version>1.78</jcommander.version>
+    <jcommander.version>1.82</jcommander.version>
   </properties>
 
   <modules>

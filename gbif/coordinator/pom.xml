@@ -15,7 +15,7 @@
   <name>Pipelines :: GBIF :: Coordinator</name>
 
   <properties>
-    <gbif-crawler.version>1.13</gbif-crawler.version>
+    <gbif-crawler.version>2.0.8</gbif-crawler.version>
   </properties>
 
   <modules>

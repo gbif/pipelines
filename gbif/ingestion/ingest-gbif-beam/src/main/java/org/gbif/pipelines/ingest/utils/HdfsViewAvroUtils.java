@@ -18,6 +18,8 @@ import org.gbif.pipelines.io.avro.extension.dwc.ChronometricAgeTable;
 import org.gbif.pipelines.io.avro.extension.dwc.IdentificationTable;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.extension.dwc.ResourceRelationshipTable;
+import org.gbif.pipelines.io.avro.extension.dwc_occurrence.xml.OccurrenceTable;
+import org.gbif.pipelines.io.avro.extension.eco.HumboldtTable;
 import org.gbif.pipelines.io.avro.extension.gbif.DnaDerivedDataTable;
 import org.gbif.pipelines.io.avro.extension.gbif.IdentifierTable;
 import org.gbif.pipelines.io.avro.extension.gbif.ImageTable;
@@ -134,6 +136,8 @@ public class HdfsViewAvroUtils {
         DNA_DERIVED_DATA_TABLE,
         Extension.DNA_DERIVED_DATA,
         DnaDerivedDataTable.class);
+    cleanMove(opt, coreType, HUMBOLDT_TABLE, Extension.HUMBOLDT, HumboldtTable.class);
+    cleanMove(opt, coreType, OCCURRENCE_TABLE, Extension.OCCURRENCE, OccurrenceTable.class);
   }
 
   private static void moveAll(InterpretationPipelineOptions options) {

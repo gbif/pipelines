@@ -24,6 +24,7 @@ import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -94,6 +95,7 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
   @NonNull private final TupleTag<ImageRecord> imageRecordTag;
   @NonNull private final TupleTag<DnaDerivedDataRecord> dnaRecordTag;
   @NonNull private final TupleTag<AudubonRecord> audubonRecordTag;
+  @NonNull private final TupleTag<HumboldtRecord> humboldtRecordTag;
 
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
 
@@ -137,6 +139,8 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
 
             EventCoreRecord eventCoreRecord =
                 v.getOnly(eventCoreRecordTag, EventCoreRecord.newBuilder().setId(k).build());
+            HumboldtRecord humboldtRecord =
+                v.getOnly(humboldtRecordTag, HumboldtRecord.newBuilder().setId(k).build());
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
             OccurrenceHdfsRecord record =
@@ -153,6 +157,7 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
                     .dnaDerivedDataRecord(dnar)
                     .extendedRecord(er)
                     .eventCoreRecord(eventCoreRecord)
+                    .humboldtRecord(humboldtRecord)
                     .build()
                     .convert();
 

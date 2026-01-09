@@ -9,6 +9,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DNA_DERIVED_D
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EXTENDED_MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GEL_IMAGE_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GERMPLASM_ACCESSION_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.HUMBOLDT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFICATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTIFIER_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IMAGE_TABLE_RECORDS_COUNT;
@@ -19,6 +20,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_S
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRIAL_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MULTIMEDIA_TABLE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_EXT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PERMIT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PREPARATION_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.PRESERVATION_TABLE_RECORDS_COUNT;
@@ -61,6 +63,7 @@ import org.gbif.pipelines.core.converters.GermplasmAccessionTableConverter;
 import org.gbif.pipelines.core.converters.GermplasmMeasurementScoreTableConverter;
 import org.gbif.pipelines.core.converters.GermplasmMeasurementTraitTableConverter;
 import org.gbif.pipelines.core.converters.GermplasmMeasurementTrialTableConverter;
+import org.gbif.pipelines.core.converters.HumboldtTableConverter;
 import org.gbif.pipelines.core.converters.IdentificationTableConverter;
 import org.gbif.pipelines.core.converters.IdentifierTableConverter;
 import org.gbif.pipelines.core.converters.ImageTableConverter;
@@ -68,6 +71,7 @@ import org.gbif.pipelines.core.converters.LoanTableConverter;
 import org.gbif.pipelines.core.converters.MaterialSampleTableConverter;
 import org.gbif.pipelines.core.converters.MeasurementOrFactTableConverter;
 import org.gbif.pipelines.core.converters.MultimediaTableConverter;
+import org.gbif.pipelines.core.converters.OccurrenceTableConverter;
 import org.gbif.pipelines.core.converters.PermitTableConverter;
 import org.gbif.pipelines.core.converters.PreparationTableConverter;
 import org.gbif.pipelines.core.converters.PreservationTableConverter;
@@ -88,6 +92,7 @@ import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -103,6 +108,8 @@ import org.gbif.pipelines.io.avro.extension.dwc.ChronometricAgeTable;
 import org.gbif.pipelines.io.avro.extension.dwc.IdentificationTable;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.extension.dwc.ResourceRelationshipTable;
+import org.gbif.pipelines.io.avro.extension.dwc_occurrence.xml.OccurrenceTable;
+import org.gbif.pipelines.io.avro.extension.eco.HumboldtTable;
 import org.gbif.pipelines.io.avro.extension.gbif.DnaDerivedDataTable;
 import org.gbif.pipelines.io.avro.extension.gbif.IdentifierTable;
 import org.gbif.pipelines.io.avro.extension.gbif.ImageTable;
@@ -131,6 +138,7 @@ import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
+import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -315,6 +323,9 @@ public class HdfsViewPipeline {
       CompletableFuture<Map<String, EventCoreRecord>> eventCoreMapFeature =
           readAvroAsFuture(options, coreTerm, executor, EventCoreTransform.builder().create());
       occurrenceBuilder.eventCoreRecordMap(eventCoreMapFeature.get());
+      CompletableFuture<Map<String, HumboldtRecord>> humboldtMapFeature =
+          readAvroAsFuture(options, coreTerm, executor, HumboldtTransform.builder().create());
+      occurrenceBuilder.humboldtMap(humboldtMapFeature.get());
     }
 
     // OccurrenceHdfsRecord
@@ -855,6 +866,52 @@ public class HdfsViewPipeline {
         .executor(executor)
         .options(options)
         .recordType(MULTIMEDIA_TABLE)
+        .types(types)
+        .build()
+        .write();
+
+    // HumboldtTable
+    Function<IdentifierRecord, List<HumboldtTable>> humboldtFn =
+        TableConverter.<HumboldtTable>builder()
+            .metrics(metrics)
+            .converterFn(HumboldtTableConverter::convert)
+            .metadataRecord(metadataRecord)
+            .counterName(HUMBOLDT_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<HumboldtTable>builder()
+        .recordFunction(humboldtFn)
+        .identifierRecords(idRecordMap.values())
+        .targetPathFn(pathFn)
+        .schema(HumboldtTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .recordType(HUMBOLDT_TABLE)
+        .types(types)
+        .build()
+        .write();
+
+    // OccurrenceTable (occurrence extension)
+    Function<IdentifierRecord, List<OccurrenceTable>> occurrenceExtFn =
+        TableConverter.<OccurrenceTable>builder()
+            .metrics(metrics)
+            .converterFn(OccurrenceTableConverter::convert)
+            .metadataRecord(metadataRecord)
+            .counterName(OCCURRENCE_EXT_TABLE_RECORDS_COUNT)
+            .verbatimMap(verbatimMapFeature.get())
+            .build()
+            .getFn();
+
+    TableRecordWriter.<OccurrenceTable>builder()
+        .recordFunction(occurrenceExtFn)
+        .identifierRecords(idRecordMap.values())
+        .targetPathFn(pathFn)
+        .schema(OccurrenceTable.getClassSchema())
+        .executor(executor)
+        .options(options)
+        .recordType(OCCURRENCE_TABLE)
         .types(types)
         .build()
         .write();
