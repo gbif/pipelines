@@ -227,6 +227,10 @@ public class OccurrenceHdfsRecordConverter {
       projectIds.addAll(basicRecord.getProjectId());
     }
 
+    if (eventCoreRecord != null && eventCoreRecord.getProjectID() != null) {
+      projectIds.addAll(eventCoreRecord.getProjectID());
+    }
+
     if (!projectIds.isEmpty()) {
       occurrenceHdfsRecord.setProjectid(new ArrayList<>(projectIds));
     }
@@ -920,6 +924,10 @@ public class OccurrenceHdfsRecordConverter {
                 .setLineage(eventCoreRecord.getEventType().getLineage())
                 .build());
       }
+
+      occurrenceHdfsRecord.setProjecttitle(eventCoreRecord.getProjectTitle());
+      occurrenceHdfsRecord.setFundingattribution(eventCoreRecord.getFundingAttribution());
+      occurrenceHdfsRecord.setFundingattributionid(eventCoreRecord.getFundingAttributionID());
     }
   }
 
