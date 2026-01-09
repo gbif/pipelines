@@ -103,6 +103,7 @@ public class ParentJsonConverter {
     mapMeasurementOrFactRecord(builder);
     mapHumboldtRecord(builder);
     mapSortField(builder);
+    mapProjectIds(builder);
 
     return builder;
   }
@@ -117,7 +118,6 @@ public class ParentJsonConverter {
         .setHostingOrganizationKey(metadata.getHostingOrganizationKey())
         .setNetworkKeys(metadata.getNetworkKeys())
         .setProgrammeAcronym(metadata.getProgrammeAcronym())
-        .setProjectId(metadata.getProjectId())
         .setProtocol(metadata.getProtocol())
         .setPublisherTitle(metadata.getPublisherTitle())
         .setPublishingOrganizationKey(metadata.getPublishingOrganizationKey());
@@ -142,7 +142,6 @@ public class ParentJsonConverter {
         .setParentEventID(eventCore.getParentEventID())
         .setLocationID(eventCore.getLocationID())
         .setProjectTitle(eventCore.getProjectTitle())
-        .setProjectID(eventCore.getProjectID())
         .setFundingAttribution(eventCore.getFundingAttribution())
         .setFundingAttributionID(eventCore.getFundingAttributionID());
 
@@ -219,6 +218,22 @@ public class ParentJsonConverter {
     // Multivalue fields
     JsonConverter.convertToMultivalue(eventCore.getSamplingProtocol())
         .ifPresent(builder::setSamplingProtocolJoined);
+  }
+
+  private void mapProjectIds(EventJsonRecord.Builder builder) {
+    Set<String> projectIdsSet = new HashSet<>();
+
+    if (metadata.getProjectId() != null) {
+      projectIdsSet.add(metadata.getProjectId());
+    }
+
+    if (eventCore.getProjectID() != null && !eventCore.getProjectID().isEmpty()) {
+      projectIdsSet.addAll(eventCore.getProjectID());
+    }
+
+    if (!projectIdsSet.isEmpty()) {
+      builder.setProjectID(new ArrayList<>(projectIdsSet));
+    }
   }
 
   private void mapTemporalRecord(EventJsonRecord.Builder builder) {
