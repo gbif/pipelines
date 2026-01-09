@@ -143,6 +143,7 @@
       {"name":"locationID", "type": ["null", "string"], "default" : null, "doc": ""},
       {"name":"projectTitle","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"projectID","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"projectIDJoined", "type":["null","string"],"default": null,"doc":""},
       {"name":"fundingAttribution","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"fundingAttributionID","type":{"type":"array","items":"string"},"default":[],"doc":""},
       // Location

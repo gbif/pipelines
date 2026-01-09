@@ -184,8 +184,6 @@
         "datasetPublishingCountry": {"type": "keyword", "copy_to": "all"},
         "publishingOrganizationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
         "networkKeys": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-        "projectId": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-        "projectIdJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
         "programmeAcronym": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"}
       }
     },
@@ -238,6 +236,7 @@
             "verbatim": {"type": "keyword", "ignore_above": 1024}
           }
         },
+        "projectIDJoined": {"type": "keyword", "normalizer": "lowercase_normalizer"},
         "fundingAttribution": {
           "type": "keyword", "ignore_above": 1024, "normalizer": "lowercase_normalizer",
           "fields": {

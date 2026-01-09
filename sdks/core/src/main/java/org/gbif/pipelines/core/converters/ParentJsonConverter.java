@@ -232,7 +232,9 @@ public class ParentJsonConverter {
     }
 
     if (!projectIdsSet.isEmpty()) {
-      builder.setProjectID(new ArrayList<>(projectIdsSet));
+      List<String> projectIDsAsList = new ArrayList<>(projectIdsSet);
+      builder.setProjectID(projectIDsAsList);
+      JsonConverter.convertToMultivalue(projectIDsAsList).ifPresent(builder::setProjectIDJoined);
     }
   }
 
