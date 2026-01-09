@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
@@ -153,12 +152,15 @@ public class ValidationResourceIT {
     assertNotNull(persistedValidation);
     assertNull(persistedValidation.getDataset());
 
+    // Wait for the submit operation to complete
+    TimeUnit.SECONDS.sleep(2L);
+
     PagingResponse<Validation> validations =
         validationWsClient.list(
             ValidationSearchRequest.builder()
                 .offset(0L)
                 .limit(10)
-                .status(Set.of(Status.QUEUED, Status.SUBMITTED))
+                .status(Collections.singleton(Status.QUEUED))
                 .sortByCreated(ValidationSearchRequest.SortOrder.DESC)
                 .build());
     assertNotNull(validations.getCount());
@@ -284,7 +286,7 @@ public class ValidationResourceIT {
   }
 
   @Test
-  public void cancelValidationIT() {
+  public void cancelValidationIT() throws Exception {
     File archive = readTestFileInputStream("/archive.zip");
     Validation validation = validationWsClient.submitFile(archive);
     assertNotNull(validation);
@@ -294,6 +296,9 @@ public class ValidationResourceIT {
     assertNotNull(persistedValidation);
 
     validationWsClient.cancel(persistedValidation.getKey());
+
+    // Wait for the submit operation to complete
+    TimeUnit.SECONDS.sleep(2L);
 
     PagingResponse<Validation> validations =
         validationWsClient.list(
