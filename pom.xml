@@ -16,7 +16,7 @@
   <modules>
     <module>gbif</module>
     <module>sdks</module>
-    <module>livingatlas</module>
+<!--    <module>livingatlas</module>-->
   </modules>
 
   <name>Pipelines :: Parent</name>
@@ -106,9 +106,9 @@
     <lombok.version>1.18.42</lombok.version>
 
     <!-- GBIF libraries -->
-    <gbif-parsers.version>0.67</gbif-parsers.version>
+    <gbif-parsers.version>0.68</gbif-parsers.version>
     <dwca-io.version>3.0.1</dwca-io.version>
-    <gbif-api.version>2.2.1-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>2.2.2</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
     <dwc-api.version>2.1.9-events-SNAPSHOT</dwc-api.version>
     <kvs.version>3.0</kvs.version>
@@ -116,9 +116,9 @@
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
     <gbif-occurrence.version>1.1.10-events-SNAPSHOT</gbif-occurrence.version>
     <vocabulary-lookup.version>2.0.3</vocabulary-lookup.version>
-    <registry.version>4.1.21-SNAPSHOT</registry.version>
-    <gbif-common-ws.version>2.1.1-SNAPSHOT</gbif-common-ws.version>
-    <gbif-postal-service.version>2.1.4-SNAPSHOT</gbif-postal-service.version>
+    <registry.version>4.2.0</registry.version>
+    <gbif-common-ws.version>2.1.1</gbif-common-ws.version>
+    <gbif-postal-service.version>2.1.4</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
 
     <!-- Main distributed libraries -->
@@ -134,8 +134,9 @@
 
     <scala.version>2.12.18</scala.version>
 
-    <!-- Match the version brought in through Tika in the gbif-parsers -->
     <commons-io.version>2.21.0</commons-io.version>
+    <commons-text.version>1.12.0</commons-text.version>
+
     <!-- Match the version from name-parser -->
     <fastutil.version>8.5.9</fastutil.version>
 
@@ -169,7 +170,8 @@
     <okio.version>3.6.0</okio.version>
     <okio-kotlin.version>1.9.10</okio-kotlin.version>
 
-    <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
+    <jakarta-validation.version>3.1.1</jakarta-validation.version>
+    <jakarta-annotation.version>3.0.0</jakarta-annotation.version>
 
     <commons-compress.version>1.28.0</commons-compress.version>
     <commons-digester.version>2.1</commons-digester.version>
@@ -194,6 +196,7 @@
     <log4j-1.2-api.version>2.25.2</log4j-1.2-api.version>
     <zookeeper.version>3.8.3</zookeeper.version>
     <testcontainers.elasticsearch.version>2.0.2</testcontainers.elasticsearch.version>
+    <validation.api.version>2.0.1.Final</validation.api.version>
 
     <!-- Maven plugin -->
     <maven-plugin-api.version>3.8.6</maven-plugin-api.version>
@@ -408,11 +411,6 @@
         <groupId>au.org.ala</groupId>
         <artifactId>pipelines</artifactId>
         <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>commons-io</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>${commons-io.version}</version>
       </dependency>
 
       <!-- GBIF -->
@@ -753,9 +751,24 @@
         <version>${commons-lang3.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.google.code.findbugs</groupId>
-        <artifactId>jsr305</artifactId>
-        <version>${findbugs-jsr305.version}</version>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons-io.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>${commons-text.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.validation</groupId>
+        <artifactId>jakarta.validation-api</artifactId>
+        <version>${jakarta-validation.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.annotation</groupId>
+        <artifactId>jakarta.annotation-api</artifactId>
+        <version>${jakarta-annotation.version}</version>
       </dependency>
       <dependency>
         <groupId>net.sf.supercsv</groupId>
@@ -1141,6 +1154,12 @@
         <groupId>org.testcontainers</groupId>
         <artifactId>testcontainers</artifactId>
         <version>${testcontainers.elasticsearch.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>javax.validation</groupId>
+        <artifactId>validation-api</artifactId>
+        <version>${validation.api.version}</version>
         <scope>test</scope>
       </dependency>
 

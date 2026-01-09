@@ -60,7 +60,7 @@
   <properties>
 
     <!-- Match Checklistbank versions -->
-    <gbif-cli.version>3.0.1-SNAPSHOT</gbif-cli.version>
+    <gbif-cli.version>3.0.1</gbif-cli.version>
     <gbif-api.version>2.0.0</gbif-api.version>
     <guava.version>32.1.2-jre</guava.version>
     <jcommander.version>1.60</jcommander.version>
@@ -290,19 +290,17 @@
       <artifactId>logstash-logback-encoder</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
-      <version>${findbugs-jsr305.version}</version>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>${guava.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
-      <version>${validation-api.version}</version>
     </dependency>
 
     <dependency>

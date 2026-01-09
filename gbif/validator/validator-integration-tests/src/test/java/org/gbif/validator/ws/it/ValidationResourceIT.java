@@ -18,7 +18,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import javax.validation.ValidationException;
 import lombok.SneakyThrows;
 import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -153,6 +152,9 @@ public class ValidationResourceIT {
     assertNotNull(persistedValidation);
     assertNull(persistedValidation.getDataset());
 
+    // Wait for the submit operation to complete
+    TimeUnit.SECONDS.sleep(2L);
+
     PagingResponse<Validation> validations =
         validationWsClient.list(
             ValidationSearchRequest.builder()
@@ -239,7 +241,7 @@ public class ValidationResourceIT {
   @Test
   public void validationSubmitUrlWrongEmailFormatIT() {
     Assertions.assertThrows(
-        ValidationException.class,
+        IllegalArgumentException.class,
         () ->
             validationWsClient.validateFileFromUrl(
                 testPath("/archive.zip"),
@@ -284,7 +286,7 @@ public class ValidationResourceIT {
   }
 
   @Test
-  public void cancelValidationIT() {
+  public void cancelValidationIT() throws Exception {
     File archive = readTestFileInputStream("/archive.zip");
     Validation validation = validationWsClient.submitFile(archive);
     assertNotNull(validation);
@@ -294,6 +296,9 @@ public class ValidationResourceIT {
     assertNotNull(persistedValidation);
 
     validationWsClient.cancel(persistedValidation.getKey());
+
+    // Wait for the submit operation to complete
+    TimeUnit.SECONDS.sleep(2L);
 
     PagingResponse<Validation> validations =
         validationWsClient.list(
