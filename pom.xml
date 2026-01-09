@@ -16,7 +16,7 @@
   <modules>
     <module>gbif</module>
     <module>sdks</module>
-    <module>livingatlas</module>
+<!--    <module>livingatlas</module>-->
   </modules>
 
   <name>Pipelines :: Parent</name>
