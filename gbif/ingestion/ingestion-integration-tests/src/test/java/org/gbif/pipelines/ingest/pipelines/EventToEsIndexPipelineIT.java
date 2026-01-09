@@ -184,6 +184,7 @@ public class EventToEsIndexPipelineIT {
                       .setConcept("Survey")
                       .setLineage(Collections.singletonList("Survey"))
                       .build())
+            .setFundingAttributionID(Arrays.asList("FA1", "FA2"))
               .build();
       writer.append(eventCoreRecord);
 
