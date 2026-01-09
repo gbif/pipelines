@@ -227,7 +227,9 @@ public class OccurrenceHdfsRecordConverter {
       projectIds.addAll(basicRecord.getProjectId());
     }
 
-    if (eventCoreRecord != null && eventCoreRecord.getProjectID() != null) {
+    if (eventCoreRecord != null
+        && eventCoreRecord.getCreated() != null
+        && eventCoreRecord.getProjectID() != null) {
       projectIds.addAll(eventCoreRecord.getProjectID());
     }
 
