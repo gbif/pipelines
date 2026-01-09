@@ -20,7 +20,11 @@ validation:
       idleTimeout: 60000
       maximumPoolSize: 10
       minimumIdle: 1
+
 spring:
+  servlet:
+    multipart:
+      location: //tmp/
   application.name: pipelines-validator-ws
   liquibase:
     enabled: false
