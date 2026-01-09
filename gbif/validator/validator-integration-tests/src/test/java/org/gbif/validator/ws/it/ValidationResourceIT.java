@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import jakarta.validation.ValidationException;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -239,7 +238,7 @@ public class ValidationResourceIT {
   @Test
   public void validationSubmitUrlWrongEmailFormatIT() {
     Assertions.assertThrows(
-        ValidationException.class,
+        IllegalArgumentException.class,
         () ->
             validationWsClient.validateFileFromUrl(
                 testPath("/archive.zip"),
