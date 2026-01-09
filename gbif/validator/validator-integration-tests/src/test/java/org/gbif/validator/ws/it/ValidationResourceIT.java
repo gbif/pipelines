@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
@@ -157,7 +158,7 @@ public class ValidationResourceIT {
             ValidationSearchRequest.builder()
                 .offset(0L)
                 .limit(10)
-                .status(Collections.singleton(Status.QUEUED))
+                .status(Set.of(Status.QUEUED, Status.SUBMITTED))
                 .sortByCreated(ValidationSearchRequest.SortOrder.DESC)
                 .build());
     assertNotNull(validations.getCount());
