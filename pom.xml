@@ -196,6 +196,7 @@
     <log4j-1.2-api.version>2.25.2</log4j-1.2-api.version>
     <zookeeper.version>3.8.3</zookeeper.version>
     <testcontainers.elasticsearch.version>2.0.2</testcontainers.elasticsearch.version>
+    <validation.api.version>2.0.1.Final</validation.api.version>
 
     <!-- Maven plugin -->
     <maven-plugin-api.version>3.8.6</maven-plugin-api.version>
@@ -1153,6 +1154,12 @@
         <groupId>org.testcontainers</groupId>
         <artifactId>testcontainers</artifactId>
         <version>${testcontainers.elasticsearch.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>javax.validation</groupId>
+        <artifactId>validation-api</artifactId>
+        <version>${validation.api.version}</version>
         <scope>test</scope>
       </dependency>
 

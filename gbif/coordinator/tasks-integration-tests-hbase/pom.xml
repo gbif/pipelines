@@ -16,7 +16,6 @@
   <properties>
     <fest.version>2.0M10</fest.version>
     <mockito.version>5.21.0</mockito.version>
-    <validation.api.version>2.0.1.Final</validation.api.version>
   </properties>
 
   <build>
@@ -118,7 +117,6 @@
     <dependency>
       <groupId>javax.validation</groupId>
       <artifactId>validation-api</artifactId>
-      <version>${validation.api.version}</version>
       <scope>test</scope>
     </dependency>
 
