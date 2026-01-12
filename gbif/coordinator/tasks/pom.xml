@@ -418,6 +418,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
+        <scope>runtime</scope>
       <version>${logback.version}</version>
     </dependency>
     <dependency>
