@@ -5,6 +5,8 @@ import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
@@ -119,16 +121,39 @@ public abstract class ConverterToVerbatim {
 
   private void createMetafile(FileSystem fs, Path metaPath, Metric metric) throws IOException {
     if (metaPath != null) {
-      String info =
-          Metrics.ARCHIVE_TO_ER_COUNT
-              + ": "
-              + metric.getNumberOfRecords()
-              + "\n"
-              + Metrics.ARCHIVE_TO_OCC_COUNT
-              + ": "
-              + metric.getNumberOfOccurrenceRecords()
-              + "\n";
-      FsUtils.createFile(fs, metaPath, info);
+
+      Long largest = Math.max(metric.getNumberOfOccurrenceRecords(), metric.getNumberOfRecords());
+      if (metric.getExtensionsCount() != null && !metric.getExtensionsCount().isEmpty()) {
+        Long largestExt = Collections.max(metric.getExtensionsCount().values());
+        if (largestExt > largest) {
+          largest = largestExt;
+        }
+      }
+
+      StringBuilder info =
+          new StringBuilder(
+              Metrics.ARCHIVE_TO_ER_COUNT
+                  + ": "
+                  + metric.getNumberOfRecords()
+                  + "\n"
+                  + Metrics.ARCHIVE_TO_OCC_COUNT
+                  + ": "
+                  + metric.getNumberOfOccurrenceRecords()
+                  + "\n"
+                  + Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT
+                  + ": "
+                  + largest
+                  + "\n");
+
+      for (Map.Entry<String, Long> entry : metric.getExtensionsCount().entrySet()) {
+        info.append("\"")
+            .append(entry.getKey())
+            .append("\": ")
+            .append(entry.getValue())
+            .append("\n");
+      }
+
+      FsUtils.createFile(fs, metaPath, info.toString());
     }
   }
 

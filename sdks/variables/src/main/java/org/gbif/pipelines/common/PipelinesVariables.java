@@ -113,6 +113,7 @@ public class PipelinesVariables {
     public static final String EVENTS_AVRO_TO_JSON_COUNT = "eventsAvroToJsonCount";
     public static final String ARCHIVE_TO_ER_COUNT = "archiveToErCount";
     public static final String ARCHIVE_TO_OCC_COUNT = "archiveToOccurrenceCount";
+    public static final String ARCHIVE_TO_LARGEST_FILE_COUNT = "archiveToLargestFileCount";
     public static final String AVRO_TO_HDFS_COUNT = "avroToHdfsCount";
     // GBIF ID
     public static final String FILTERED_GBIF_IDS_COUNT = "filteredGbifIdsCount";
