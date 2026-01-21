@@ -103,6 +103,7 @@ public class ParentJsonConverter {
     mapMeasurementOrFactRecord(builder);
     mapHumboldtRecord(builder);
     mapSortField(builder);
+    mapProjectIds(builder);
 
     return builder;
   }
@@ -117,7 +118,6 @@ public class ParentJsonConverter {
         .setHostingOrganizationKey(metadata.getHostingOrganizationKey())
         .setNetworkKeys(metadata.getNetworkKeys())
         .setProgrammeAcronym(metadata.getProgrammeAcronym())
-        .setProjectId(metadata.getProjectId())
         .setProtocol(metadata.getProtocol())
         .setPublisherTitle(metadata.getPublisherTitle())
         .setPublishingOrganizationKey(metadata.getPublishingOrganizationKey());
@@ -140,7 +140,10 @@ public class ParentJsonConverter {
         .setSamplingProtocol(eventCore.getSamplingProtocol())
         .setParentsLineage(convertParents(eventCore.getParentsLineage()))
         .setParentEventID(eventCore.getParentEventID())
-        .setLocationID(eventCore.getLocationID());
+        .setLocationID(eventCore.getLocationID())
+        .setProjectTitle(eventCore.getProjectTitle())
+        .setFundingAttribution(eventCore.getFundingAttribution())
+        .setFundingAttributionID(eventCore.getFundingAttributionID());
 
     // Vocabulary
     JsonConverter.convertVocabularyConcept(eventCore.getEventType())
@@ -215,6 +218,24 @@ public class ParentJsonConverter {
     // Multivalue fields
     JsonConverter.convertToMultivalue(eventCore.getSamplingProtocol())
         .ifPresent(builder::setSamplingProtocolJoined);
+  }
+
+  private void mapProjectIds(EventJsonRecord.Builder builder) {
+    Set<String> projectIdsSet = new HashSet<>();
+
+    if (metadata.getProjectId() != null) {
+      projectIdsSet.add(metadata.getProjectId());
+    }
+
+    if (eventCore.getProjectID() != null && !eventCore.getProjectID().isEmpty()) {
+      projectIdsSet.addAll(eventCore.getProjectID());
+    }
+
+    if (!projectIdsSet.isEmpty()) {
+      List<String> projectIDsAsList = new ArrayList<>(projectIdsSet);
+      builder.setProjectID(projectIDsAsList);
+      JsonConverter.convertToMultivalue(projectIDsAsList).ifPresent(builder::setProjectIDJoined);
+    }
   }
 
   private void mapTemporalRecord(EventJsonRecord.Builder builder) {

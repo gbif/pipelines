@@ -269,7 +269,9 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setDnasequenceid(Collections.singletonList("foo1"));
     expected.setClassifications(new HashMap<>());
     expected.setNontaxonomicissue(List.of());
-
+    expected.setProjecttitle(List.of());
+    expected.setFundingattribution(List.of());
+    expected.setFundingattributionid(List.of());
     PAssert.that(result).containsInAnyOrder(expected);
     p.run();
   }
