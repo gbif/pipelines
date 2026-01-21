@@ -223,7 +223,7 @@ public class OccurrenceHdfsRecordConverter {
       projectIds.add(metadataRecord.getProjectId());
     }
 
-    if (basicRecord != null) {
+    if (basicRecord != null && basicRecord.getProjectId() != null) {
       projectIds.addAll(basicRecord.getProjectId());
     }
 
