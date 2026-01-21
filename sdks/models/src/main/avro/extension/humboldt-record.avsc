@@ -4,15 +4,26 @@
  */
 [
  {
+    "name": "TaxonHumboldtUsage",
+    "namespace": "org.gbif.pipelines.io.avro",
+    "type": "record",
+    "doc": "A container for the taxon usage for Humboldt taxon fields.",
+    "fields": [
+        {"name": "key", "type": ["null", "string"], "default" : null},
+        {"name": "name", "type": ["null", "string"], "default" : null},
+        {"name": "rank", "type": ["null", "string"], "default" : null}
+    ]
+ },
+ {
     "name": "TaxonHumboldtRecord",
     "namespace": "org.gbif.pipelines.io.avro",
     "type": "record",
     "doc": "A container for interpreted Humboldt taxon fields.",
     "fields": [
         {"name": "checklistKey", "type" : ["null", "string"], "default" : null, "doc":"The taxonomy dataset identifier"},
-        {"name": "usageKey", "type": ["null", "string"], "default" : null},
-        {"name": "usageName", "type": ["null", "string"], "default" : null},
-        {"name": "usageRank", "type": ["null", "string"], "default" : null},
+        {"name": "usage", "type": ["null", "TaxonHumboldtUsage"], "default" : null},
+        {"name": "acceptedUsage", "type": ["null", "TaxonHumboldtUsage"], "default" : null},
+        {"name": "iucnRedListCategoryCode", "type" : ["null", "string"], "default" : null, "doc":"The IUCN Red List Category or conservation status"},
         {"name": "classification", "type" : { "type" : "array", "items" : "org.gbif.pipelines.io.avro.RankedName" }, "default": []},
         {"name": "issues", "type": "IssueRecord", "default":{}}
     ]

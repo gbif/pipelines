@@ -16,7 +16,6 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.converters.OccurrenceJsonConverter;
-import org.gbif.pipelines.core.converters.ParentJsonConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
@@ -107,8 +106,6 @@ public class OccurrenceJsonTransform implements Serializable {
 
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
 
-  // Determines if the output record is a parent-child record
-  @Builder.Default private final boolean asParentChildRecord = false;
   @Builder.Default private final boolean indexLegacyTaxonomy = true;
   @Builder.Default private final boolean indexMultiTaxonomy = true;
 
@@ -168,17 +165,8 @@ public class OccurrenceJsonTransform implements Serializable {
                     .indexLegacyTaxonomy(indexLegacyTaxonomy)
                     .indexMultiTaxonomy(indexMultiTaxonomy)
                     .build();
-            if (asParentChildRecord) {
-              c.output(
-                  ParentJsonConverter.builder()
-                      .occurrenceJsonRecord(occurrenceJsonConverter.convert())
-                      .metadata(mdr)
-                      .build()
-                      .toJson());
-            } else {
-              // Occurrence index clients (GraphQL) rely on existing fields null values
-              c.output(occurrenceJsonConverter.toJsonWithNulls());
-            }
+            // Occurrence index clients (GraphQL) rely on existing fields null values
+            c.output(occurrenceJsonConverter.toJsonWithNulls());
 
             counter.inc();
           }

@@ -2,10 +2,10 @@ package org.gbif.pipelines.validator.checklists.cli.config;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import java.io.File;
-import javax.validation.Valid;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.cli.PropertyName;
 import org.gbif.common.messaging.config.MessagingConfiguration;

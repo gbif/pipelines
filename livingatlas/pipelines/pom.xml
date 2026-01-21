@@ -5,7 +5,7 @@
   <parent>
     <groupId>au.org.ala</groupId>
     <artifactId>livingatlas</artifactId>
-    <version>3.2.13-SNAPSHOT</version>
+    <version>3.2.14-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -34,7 +34,7 @@
     <!-- Tools-->
     <commons-configuration.version>1.6</commons-configuration.version>
     <netty-all.version>4.1.100.Final</netty-all.version>
-    <snakeyaml.version>1.25</snakeyaml.version>
+    <snakeyaml.version>2.5</snakeyaml.version>
     <streamex.version>0.7.2</streamex.version>
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
@@ -527,8 +527,8 @@
       <artifactId>commons-lang3</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.yaml</groupId>
@@ -652,11 +652,6 @@
     </dependency>
     <dependency>
       <groupId>org.geotools</groupId>
-      <artifactId>gt-opengis</artifactId>
-      <version>${geotools.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.geotools</groupId>
       <artifactId>gt-main</artifactId>
       <version>${geotools.version}</version>
     </dependency>
@@ -668,11 +663,6 @@
     <dependency>
       <groupId>org.geotools</groupId>
       <artifactId>gt-transform</artifactId>
-      <version>${geotools.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.geotools</groupId>
-      <artifactId>gt-geometry</artifactId>
       <version>${geotools.version}</version>
     </dependency>
     <dependency>
@@ -864,7 +854,7 @@
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
-      <artifactId>elasticsearch</artifactId>
+      <artifactId>testcontainers-elasticsearch</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

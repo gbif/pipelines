@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.pipelines.fragmenter;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -11,7 +12,6 @@ import java.util.TreeMap;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;

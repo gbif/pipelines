@@ -2,8 +2,8 @@ package org.gbif.pipelines.diagnostics;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import jakarta.validation.constraints.NotNull;
 import java.util.Arrays;
-import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.diagnostics.tools.Tool;

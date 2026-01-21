@@ -2,8 +2,8 @@ package org.gbif.pipelines.tasks.common.hdfs;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.api.model.pipelines.InterpretationType;
 import org.gbif.api.model.pipelines.StepType;

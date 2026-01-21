@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>gbif</artifactId>
-   <version>3.2.14-SNAPSHOT</version>
+   <version>3.2.15-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -29,61 +29,63 @@
   <properties>
 
     <!-- GBIF -->
-    <gbif-common-mybatis.version>1.1</gbif-common-mybatis.version>
-    <gbif-metadata-profile-eml.version>2.6</gbif-metadata-profile-eml.version>
+    <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
+    <gbif-metadata-profile-eml.version>2.9</gbif-metadata-profile-eml.version>
 
     <!-- Checklists validation-->
-    <gbif-checklistbank.version>2.126</gbif-checklistbank.version>
-    <neo4j.version>3.5.29</neo4j.version>
+    <gbif-checklistbank.version>3.0.9</gbif-checklistbank.version>
     <neo4j-lucene.version>5.5.0</neo4j-lucene.version>
     <lucene-analyzers.version>5.4.1</lucene-analyzers.version>
 
     <!-- Spring -->
-    <spring-boot.version>2.3.12.RELEASE</spring-boot.version>
-    <spring-boot-admin.version>2.2.4</spring-boot-admin.version>
-    <spring-cloud-openfeign.version>2.2.10.RELEASE</spring-cloud-openfeign.version>
-    <spring-cloud-zookeeper.version>2.2.5.RELEASE</spring-cloud-zookeeper.version>
-    <mybatis-spring-boot-starter.version>2.3.2</mybatis-spring-boot-starter.version>
-    <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
+    <spring-boot.version>3.5.8</spring-boot.version>
+    <spring-boot-admin.version>3.5.6</spring-boot-admin.version>
+    <spring-cloud-openfeign.version>4.3.0</spring-cloud-openfeign.version>
+    <spring-cloud-zookeeper.version>4.3.0</spring-cloud-zookeeper.version>
+    <spring-cloud-bootstrap.version>4.3.0</spring-cloud-bootstrap.version>
+    <mybatis-spring-boot-starter.version>3.0.5</mybatis-spring-boot-starter.version>
+    <spring-cloud-sleuth.version>3.1.11</spring-cloud-sleuth.version>
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
-    <spring.version>5.2.12.RELEASE</spring.version>
-    <spring-security.version>5.3.6.RELEASE</spring-security.version>
-    <mybatis-spring.version>2.0.1</mybatis-spring.version>
-    <feign.version>10.12</feign.version>
+    <spring.version>6.2.14</spring.version>
+    <spring-security.version>6.5.7</spring-security.version>
+    <mybatis-spring.version>3.0.5</mybatis-spring.version>
+    <feign.version>13.6</feign.version>
 
     <!-- Tests -->
-    <junit-jupiter.version>5.7.2</junit-jupiter.version>
-    <mockserver.version>5.11.2</mockserver.version>
-    <testcontainers.postgres.version>1.15.3</testcontainers.postgres.version>
-    <junit-platform-commons.version>1.7.0</junit-platform-commons.version>
+    <junit-jupiter.version>5.12.2</junit-jupiter.version>
+    <mockserver.version>5.15.0</mockserver.version>
+    <testcontainers.postgres.version>2.0.2</testcontainers.postgres.version>
+    <junit-platform-commons.version>6.0.1</junit-platform-commons.version>
 
     <!-- Json/Xml-->
-    <xml-apis.version>1.4.01</xml-apis.version>
+    <xml-apis.version>2.0.2</xml-apis.version>
 
     <!-- Special media type handling-->
-    <apache-poi.version>5.0.0</apache-poi.version>
+    <apache-poi.version>5.5.1</apache-poi.version>
     <apache-odftoolkit.version>0.8.2-incubating</apache-odftoolkit.version>
-    <apache-tika.version>1.17</apache-tika.version>
+    <apache-tika.version>3.2.3</apache-tika.version>
 
     <!-- Commons -->
-    <commons-io.version>2.2</commons-io.version>
-    <commons-fileupload.version>1.4</commons-fileupload.version>
+    <commons-io.version>2.21.0</commons-io.version>
+    <commons-fileupload.version>1.6.0</commons-fileupload.version>
 
     <!-- Validation -->
-    <jsr305.version>3.0.1</jsr305.version>
+    <jsr305.version>3.0.2</jsr305.version>
 
     <!-- Persistence-->
-    <hikari.version>3.2.0</hikari.version>
-    <mybatis.version>3.5.1</mybatis.version>
+    <hikari.version>7.0.2</hikari.version>
+    <mybatis.version>3.5.19</mybatis.version>
 
     <!-- Logging -->
-    <logstash-encoder.version>4.11</logstash-encoder.version>
-    <slf4j.version>1.7.30</slf4j.version>
+    <logstash-encoder.version>9.0</logstash-encoder.version>
+    <slf4j.version>2.0.17</slf4j.version>
+    <jakarta-validation.version>3.1.1</jakarta-validation.version>
+    <jakarta-annotation.version>3.0.0</jakarta-annotation.version>
+    <mail.version>1.4.7</mail.version>
 
     <!-- Plugin versions -->
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
-    <junit-platform-surefire-provider.version>1.3.2</junit-platform-surefire-provider.version>
-    <maven-surefire-plugin-validator.version>3.0.0</maven-surefire-plugin-validator.version>
+    <maven-surefire-plugin-validator.version>3.1.2</maven-surefire-plugin-validator.version>
   </properties>
 
   <dependencyManagement>
@@ -140,6 +142,11 @@
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
+        <artifactId>gbif-metadata-common</artifactId>
+        <version>${gbif-metadata-profile-eml.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
         <artifactId>gbif-metadata-profile-eml</artifactId>
         <version>${gbif-metadata-profile-eml.version}</version>
       </dependency>
@@ -156,6 +163,11 @@
         <groupId>org.mybatis.spring.boot</groupId>
         <artifactId>mybatis-spring-boot-starter</artifactId>
         <version>${mybatis-spring-boot-starter.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-bootstrap</artifactId>
+        <version>${spring-cloud-bootstrap.version}</version>
       </dependency>
       <dependency>
         <groupId>org.mybatis</groupId>
@@ -274,6 +286,25 @@
         <artifactId>spring-boot-configuration-processor</artifactId>
         <version>${spring-boot.version}</version>
         <optional>true</optional>
+      </dependency>
+
+      <!-- Validation-->
+      <dependency>
+        <groupId>jakarta.validation</groupId>
+        <artifactId>jakarta.validation-api</artifactId>
+        <version>${jakarta-validation.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.annotation</groupId>
+        <artifactId>jakarta.annotation-api</artifactId>
+        <version>${jakarta-annotation.version}</version>
+      </dependency>
+
+      <!-- Mail -->
+      <dependency>
+        <groupId>javax.mail</groupId>
+        <artifactId>mail</artifactId>
+        <version>${mail.version}</version>
       </dependency>
 
       <!-- Feing Clients-->
@@ -397,24 +428,6 @@
         <scope>import</scope>
       </dependency>
       <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-api</artifactId>
-        <version>${junit-jupiter.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-engine</artifactId>
-        <version>${junit-jupiter.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.platform</groupId>
-        <artifactId>junit-platform-commons</artifactId>
-        <version>${junit-platform-commons.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
         <groupId>org.mock-server</groupId>
         <artifactId>mockserver-core</artifactId>
         <version>${mockserver.version}</version>
@@ -474,7 +487,7 @@
       </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
-        <artifactId>postgresql</artifactId>
+        <artifactId>testcontainers-postgresql</artifactId>
         <version>${testcontainers.postgres.version}</version>
         <scope>test</scope>
       </dependency>

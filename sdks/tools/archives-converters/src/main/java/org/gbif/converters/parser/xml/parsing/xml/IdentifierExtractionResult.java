@@ -1,7 +1,7 @@
 package org.gbif.converters.parser.xml.parsing.xml;
 
+import jakarta.annotation.Nullable;
 import java.util.Set;
-import javax.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

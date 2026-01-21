@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>gbif</artifactId>
-   <version>3.2.14-SNAPSHOT</version>
+   <version>3.2.15-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -15,7 +15,7 @@
   <name>Pipelines :: GBIF :: Coordinator</name>
 
   <properties>
-    <gbif-crawler.version>1.13</gbif-crawler.version>
+    <gbif-crawler.version>2.0.8</gbif-crawler.version>
   </properties>
 
   <modules>

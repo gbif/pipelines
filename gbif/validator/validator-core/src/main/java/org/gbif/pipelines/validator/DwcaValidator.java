@@ -19,6 +19,7 @@ import static org.gbif.validator.api.EvaluationType.OCCURRENCE_NOT_UNIQUELY_IDEN
 import static org.gbif.validator.api.EvaluationType.RECORD_NOT_UNIQUELY_IDENTIFIED;
 import static org.gbif.validator.api.EvaluationType.RECORD_REFERENTIAL_INTEGRITY_VIOLATION;
 
+import jakarta.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

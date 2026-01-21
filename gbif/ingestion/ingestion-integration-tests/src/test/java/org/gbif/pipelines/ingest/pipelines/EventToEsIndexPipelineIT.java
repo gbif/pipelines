@@ -394,7 +394,12 @@ public class EventToEsIndexPipelineIT {
       writer.append(extendedRecord);
 
       ExtendedRecord subEventExtendedRecord =
-          ExtendedRecord.newBuilder().setId(SUB_EVENT_ID).setCoreId(ID).setExtensions(ext).build();
+          ExtendedRecord.newBuilder()
+              .setId(SUB_EVENT_ID)
+              .setCoreTerms(Map.of(DwcTerm.taxonID.qualifiedName(), "taxonID1"))
+              .setCoreId(ID)
+              .setExtensions(ext)
+              .build();
       writer.append(subEventExtendedRecord);
     }
 
@@ -508,10 +513,35 @@ public class EventToEsIndexPipelineIT {
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
-    assertEquals(4, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertEquals(3, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+    assertResultsSize(idxName, "occurrence", 0);
 
     ParentJsonRecord eventRecord = getResult(idxName, ID, "event");
     assertRootParenJsonRecordResponse(eventRecord);
+
+    ParentJsonRecord subEvent1 = getResult(idxName, SUB_EVENT_ID, "event");
+    Assert.assertEquals(
+        2,
+        subEvent1
+            .getDerivedMetadata()
+            .getTaxonomicCoverage()
+            .getClassifications()
+            .values()
+            .iterator()
+            .next()
+            .size());
+
+    ParentJsonRecord subEvent2 = getResult(idxName, SUB_EVENT_ID_2, "event");
+    Assert.assertEquals(
+        1,
+        subEvent2
+            .getDerivedMetadata()
+            .getTaxonomicCoverage()
+            .getClassifications()
+            .values()
+            .iterator()
+            .next()
+            .size());
 
     ParentJsonRecord eventRecordSub2 = getResult(idxName, SUB_EVENT_ID_2, "event");
     assertEquals("DK", eventRecordSub2.getLocationInherited().getCountryCode());
@@ -521,6 +551,39 @@ public class EventToEsIndexPipelineIT {
     assertEquals(
         Collections.singletonList("survey"), eventRecordSub2.getEventInherited().getEventType());
     assertEquals("L1", eventRecordSub2.getEventInherited().getLocationID());
+  }
+
+  @SneakyThrows
+  private void assertResultsSize(String idxName, String type, int expectedSize) {
+    Response response =
+        EsService.executeQuery(
+            ES_SERVER.getEsClient(),
+            idxName,
+            "{\n"
+                + "  \"query\": {\n"
+                + "    \"bool\" : {\n"
+                + "      \"must\" : [\n"
+                + "        {\n"
+                + "          \"term\": {\n"
+                + "            \"type\": \""
+                + type
+                + "\"\n"
+                + "          }\n"
+                + "        }\n"
+                + "      ]\n"
+                + "    }\n"
+                + "  }\n"
+                + "}");
+    ObjectMapper mapper = SerDeFactory.avroMapperNonNulls();
+    ArrayNode results =
+        (ArrayNode)
+            mapper
+                .readValue(
+                    IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8),
+                    JsonNode.class)
+                .get("hits")
+                .get("hits");
+    assertEquals(expectedSize, results.size());
   }
 
   /**
@@ -581,6 +644,29 @@ public class EventToEsIndexPipelineIT {
 
     // Assert taxonomic coverage
     Assert.assertNotNull(record.getDerivedMetadata().getTaxonomicCoverage());
-    Assert.assertEquals(2, record.getDerivedMetadata().getTaxonomicCoverage().size());
+    Assert.assertEquals(
+        1, record.getDerivedMetadata().getTaxonomicCoverage().getClassifications().size());
+    Assert.assertEquals(
+        GBIF_BACKBONE_DATASET_KEY,
+        record
+            .getDerivedMetadata()
+            .getTaxonomicCoverage()
+            .getClassifications()
+            .keySet()
+            .iterator()
+            .next());
+    Assert.assertEquals(1, record.getDerivedMetadata().getTaxonomicCoverage().getTaxonIDs().size());
+    Assert.assertEquals(
+        "taxonID1", record.getDerivedMetadata().getTaxonomicCoverage().getTaxonIDs().get(0));
+    Assert.assertEquals(
+        3,
+        record
+            .getDerivedMetadata()
+            .getTaxonomicCoverage()
+            .getClassifications()
+            .values()
+            .iterator()
+            .next()
+            .size());
   }
 }

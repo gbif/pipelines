@@ -18,7 +18,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import javax.validation.ValidationException;
 import lombok.SneakyThrows;
 import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -49,13 +48,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.util.SocketUtils;
+import org.springframework.test.util.TestSocketUtils;
 
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
@@ -87,7 +86,7 @@ public class ValidationResourceIT {
 
   @BeforeAll
   public static void init() {
-    clientAndServer = ClientAndServer.startClientAndServer(SocketUtils.findAvailableTcpPort());
+    clientAndServer = ClientAndServer.startClientAndServer(TestSocketUtils.findAvailableTcpPort());
     setExpectations();
   }
 
@@ -152,6 +151,9 @@ public class ValidationResourceIT {
     Validation persistedValidation = validationWsClient.get(validation.getKey());
     assertNotNull(persistedValidation);
     assertNull(persistedValidation.getDataset());
+
+    // Wait for the submit operation to complete
+    TimeUnit.SECONDS.sleep(2L);
 
     PagingResponse<Validation> validations =
         validationWsClient.list(
@@ -239,7 +241,7 @@ public class ValidationResourceIT {
   @Test
   public void validationSubmitUrlWrongEmailFormatIT() {
     Assertions.assertThrows(
-        ValidationException.class,
+        IllegalArgumentException.class,
         () ->
             validationWsClient.validateFileFromUrl(
                 testPath("/archive.zip"),
@@ -284,7 +286,7 @@ public class ValidationResourceIT {
   }
 
   @Test
-  public void cancelValidationIT() {
+  public void cancelValidationIT() throws Exception {
     File archive = readTestFileInputStream("/archive.zip");
     Validation validation = validationWsClient.submitFile(archive);
     assertNotNull(validation);
@@ -294,6 +296,9 @@ public class ValidationResourceIT {
     assertNotNull(persistedValidation);
 
     validationWsClient.cancel(persistedValidation.getKey());
+
+    // Wait for the submit operation to complete
+    TimeUnit.SECONDS.sleep(2L);
 
     PagingResponse<Validation> validations =
         validationWsClient.list(

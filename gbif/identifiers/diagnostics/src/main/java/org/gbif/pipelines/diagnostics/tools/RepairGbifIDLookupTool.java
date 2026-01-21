@@ -2,13 +2,13 @@ package org.gbif.pipelines.diagnostics.tools;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import jakarta.validation.constraints.NotNull;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
-import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

@@ -18,10 +18,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.web.multipart.commons.CommonsMultipartResolver;
-import org.springframework.web.multipart.support.MultipartFilter;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 /** Ws Validation application Spring configuration. */
 @Configuration
@@ -57,7 +55,7 @@ public class ValidatorWsConfiguration {
 
   @Bean
   public FileStoreManager uploadedFileManager(
-      @Value("${upload.workingDirectory}") String uploadWorkingDirectory,
+      @Value("${spring.servlet.multipart.location}") String uploadWorkingDirectory,
       @Value("${storePath}") String storePath,
       DownloadFileManager downloadFileManager)
       throws IOException {
@@ -65,19 +63,8 @@ public class ValidatorWsConfiguration {
   }
 
   @Bean("multipartResolver")
-  public CommonsMultipartResolver multipartResolver(
-      @Value("${upload.maxUploadSize}") Long maxUploadSize) {
-    CommonsMultipartResolver multipart = new CommonsMultipartResolver();
-    multipart.setMaxUploadSize(maxUploadSize);
-    return multipart;
-  }
-
-  @Bean
-  @Order(0)
-  public MultipartFilter multipartFilter() {
-    MultipartFilter multipartFilter = new MultipartFilter();
-    multipartFilter.setMultipartResolverBeanName("multipartResolver");
-    return multipartFilter;
+  public StandardServletMultipartResolver multipartResolver() {
+    return new StandardServletMultipartResolver();
   }
 
   @Primary

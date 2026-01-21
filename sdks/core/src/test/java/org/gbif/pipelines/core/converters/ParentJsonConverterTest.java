@@ -22,6 +22,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonHumboldtRecord;
+import org.gbif.pipelines.io.avro.TaxonHumboldtUsage;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
 import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
@@ -60,9 +61,12 @@ public class ParentJsonConverterTest {
                             Collections.singletonList(
                                 TaxonHumboldtRecord.newBuilder()
                                     .setChecklistKey(CHECKLIST_KEY)
-                                    .setUsageKey("k1")
-                                    .setUsageName("n1")
-                                    .setUsageRank("r1")
+                                    .setUsage(
+                                        TaxonHumboldtUsage.newBuilder()
+                                            .setKey("k1")
+                                            .setName("n1")
+                                            .setRank("r1")
+                                            .build())
                                     .setClassification(
                                         Arrays.asList(
                                             RankedName.newBuilder()
@@ -115,9 +119,9 @@ public class ParentJsonConverterTest {
     List<HumboldtTaxonClassification> classification = taxonScope.get(CHECKLIST_KEY);
     assertEquals(1, classification.size());
     HumboldtTaxonClassification humboldtTaxonClassification = classification.get(0);
-    assertEquals("k1", humboldtTaxonClassification.getUsageKey());
-    assertEquals("n1", humboldtTaxonClassification.getUsageName());
-    assertEquals("r1", humboldtTaxonClassification.getUsageRank());
+    assertEquals("k1", humboldtTaxonClassification.getUsage().getKey());
+    assertEquals("n1", humboldtTaxonClassification.getUsage().getName());
+    assertEquals("r1", humboldtTaxonClassification.getUsage().getRank());
     assertEquals(2, humboldtTaxonClassification.getClassification().size());
     assertEquals(2, humboldtTaxonClassification.getClassificationKeys().size());
     assertEquals(2, humboldtTaxonClassification.getTaxonKeys().size());
@@ -176,23 +180,34 @@ public class ParentJsonConverterTest {
     assertEquals(2, taxon.get(CHECKLIST_KEY).size());
     assertEquals(2, taxon.get(CHECKLIST_KEY2).size());
     assertEquals(
-        1, taxon.get(CHECKLIST_KEY).stream().filter(t -> t.getUsageKey().equals("k1")).count());
+        1,
+        taxon.get(CHECKLIST_KEY).stream().filter(t -> t.getUsage().getKey().equals("k1")).count());
 
     assertEquals(
-        1, taxon.get(CHECKLIST_KEY2).stream().filter(t -> t.getUsageKey().equals("k11")).count());
+        1,
+        taxon.get(CHECKLIST_KEY2).stream()
+            .filter(t -> t.getUsage().getKey().equals("k11"))
+            .count());
     assertEquals(
-        1, taxon.get(CHECKLIST_KEY).stream().filter(t -> t.getUsageKey().equals("k30")).count());
+        1,
+        taxon.get(CHECKLIST_KEY).stream().filter(t -> t.getUsage().getKey().equals("k30")).count());
     assertEquals(
-        1, taxon.get(CHECKLIST_KEY2).stream().filter(t -> t.getUsageKey().equals("k301")).count());
+        1,
+        taxon.get(CHECKLIST_KEY2).stream()
+            .filter(t -> t.getUsage().getKey().equals("k301"))
+            .count());
   }
 
   private static TaxonHumboldtRecord taxonHumboldtRecord(
       String checklistKey, String name, String parent) {
     return TaxonHumboldtRecord.newBuilder()
         .setChecklistKey(checklistKey)
-        .setUsageKey("k" + name)
-        .setUsageName("n" + name)
-        .setUsageRank("r" + name)
+        .setUsage(
+            TaxonHumboldtUsage.newBuilder()
+                .setKey("k" + name)
+                .setName("n" + name)
+                .setRank("r" + name)
+                .build())
         .setClassification(
             Arrays.asList(
                 RankedName.newBuilder()

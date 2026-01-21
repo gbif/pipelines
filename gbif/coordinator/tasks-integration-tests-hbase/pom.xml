@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>coordinator</artifactId>
-   <version>3.2.14-SNAPSHOT</version>
+   <version>3.2.15-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -15,7 +15,7 @@
 
   <properties>
     <fest.version>2.0M10</fest.version>
-    <mockito.version>5.5.0</mockito.version>
+    <mockito.version>5.21.0</mockito.version>
   </properties>
 
   <build>
@@ -54,6 +54,16 @@
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-test</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>netty-handler</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>netty-transport-native-epoll</artifactId>
+          <groupId>io.netty</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.curator</groupId>
@@ -75,6 +85,12 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>tasks-coordinator-cli</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>amqp-client</artifactId>
+          <groupId>com.rabbitmq</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
@@ -97,6 +113,11 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-minicluster</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <!-- GBIF -->

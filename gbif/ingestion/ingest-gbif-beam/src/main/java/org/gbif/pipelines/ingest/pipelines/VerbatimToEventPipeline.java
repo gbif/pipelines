@@ -228,7 +228,9 @@ public class VerbatimToEventPipeline {
     uniqueRawRecords
         .apply("Check event humboldt transform", humboldtTransform.check(types))
         .apply("Interpret event humboldt", humboldtTransform.interpret())
-        .apply("Write event humboldt to avro", humboldtTransform.write(pathFn));
+        .apply(
+            "Write event humboldt to avro",
+            humboldtTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
 
     uniqueRawRecords
         .apply("Check event verbatim transform", verbatimTransform.check(types))

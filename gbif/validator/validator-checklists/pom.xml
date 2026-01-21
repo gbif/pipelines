@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>validator</artifactId>
-   <version>3.2.14-SNAPSHOT</version>
+   <version>3.2.15-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -35,6 +35,7 @@
             --add-opens java.base/java.lang.reflect=ALL-UNNAMED
             --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED
             --add-exports=java.base/sun.nio.ch=ALL-UNNAMED
+            --add-opens java.base/java.io=ALL-UNNAMED
             --add-opens=java.base/java.util=ALL-UNNAMED
             -Dillegal-access=permit
           </argLine>
@@ -49,7 +50,7 @@
             --add-opens=java.base/java.util=ALL-UNNAMED
             --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
             --add-exports=java.base/sun.nio.ch=ALL-UNNAMED
-            --add-opens=java.base/java.util=ALL-UNNAMED
+            --add-opens java.base/java.io=ALL-UNNAMED
           </argLine>
         </configuration>
       </plugin>
@@ -59,14 +60,14 @@
   <properties>
 
     <!-- Match Checklistbank versions -->
-    <gbif-cli.version>1.1</gbif-cli.version>
+    <gbif-cli.version>3.0.1</gbif-cli.version>
+    <gbif-api.version>2.0.0</gbif-api.version>
     <guava.version>32.1.2-jre</guava.version>
     <jcommander.version>1.60</jcommander.version>
     <jsr305.version>3.0.2</jsr305.version>
     <metainf-services.version>1.7</metainf-services.version>
     <validation-api.version>1.1.0.Final</validation-api.version>
-
-    <logstash-encoder.version>4.10</logstash-encoder.version>
+    <neo4j.version>3.5.29</neo4j.version>
     <yammer-metrics.version>2.2.0</yammer-metrics.version>
   </properties>
 
@@ -102,6 +103,11 @@
           <artifactId>gbif-api</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-api</artifactId>
+      <version>${gbif-api.version}</version>
     </dependency>
 
     <!--Checklists validations -->
@@ -169,6 +175,21 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>org.gbif.checklistbank</groupId>
+      <artifactId>checklistbank-nub</artifactId>
+      <version>${gbif-checklistbank.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.neo4j</groupId>
+      <artifactId>neo4j</artifactId>
+      <version>${neo4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.neo4j</groupId>
+      <artifactId>neo4j-slf4j</artifactId>
+      <version>${neo4j.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-core</artifactId>
       <version>${neo4j-lucene.version}</version>
@@ -205,8 +226,16 @@
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common-ws</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>dwc-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>dwca-io</artifactId>
+    </dependency>
 
-    <!-- Spring dependencies -->
+      <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
@@ -251,32 +280,27 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>${logback.version}</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
-      <version>${logback.version}</version>
     </dependency>
     <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
-      <version>${logstash-encoder.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
-      <version>${findbugs-jsr305.version}</version>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>${guava.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
-      <version>${validation-api.version}</version>
     </dependency>
 
     <dependency>

@@ -3,13 +3,14 @@ package org.gbif.pipelines.tasks;
 import static org.gbif.common.messaging.api.messages.OccurrenceDeletionReason.NOT_SEEN_IN_LAST_CRAWL;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -27,7 +28,6 @@ import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
@@ -336,7 +336,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
                 .getAllNodesFor(Collections.singleton(stepType));
 
         PipelineExecution execution =
-            new PipelineExecution().setStepsToRun(stepTypes).setCreated(LocalDateTime.now());
+            new PipelineExecution().setStepsToRun(stepTypes).setCreated(OffsetDateTime.now());
 
         Supplier<Long> executionIdSupplier =
             () -> {
@@ -381,7 +381,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       step.setMessage(OBJECT_MAPPER.writeValueAsString(message))
           .setState(PipelineStep.Status.RUNNING)
           .setRunner(StepRunner.valueOf(getRunner()))
-          .setStarted(LocalDateTime.now())
+          .setStarted(OffsetDateTime.now())
           .setPipelinesVersion(getPipelinesVersion());
 
       Function<PipelineStep, Long> pipelineStepFn =
@@ -466,7 +466,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     }
 
     if (status == PipelineStep.Status.COMPLETED || status == PipelineStep.Status.ABORTED) {
-      pipelineStep.setFinished(LocalDateTime.now());
+      pipelineStep.setFinished(OffsetDateTime.now());
     }
 
     try {

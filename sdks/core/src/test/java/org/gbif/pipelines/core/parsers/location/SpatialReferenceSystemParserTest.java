@@ -2,10 +2,10 @@ package org.gbif.pipelines.core.parsers.location;
 
 import java.util.stream.Stream;
 import org.gbif.pipelines.core.parsers.location.parser.SpatialReferenceSystemParser;
+import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
 import org.geotools.referencing.NamedIdentifier;
 import org.junit.Assert;
 import org.junit.Test;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /** Tests for Spatial Reference Systems parsing. */
 public class SpatialReferenceSystemParserTest {

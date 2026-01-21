@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>ingestion</artifactId>
-   <version>3.2.14-SNAPSHOT</version>
+   <version>3.2.15-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -16,7 +16,7 @@
   <description>Base Apache Beam pipelines for ingestion biodiversity data</description>
 
   <properties>
-    <metrics-core.version>4.2.15</metrics-core.version>
+    <metrics-core.version>4.2.37</metrics-core.version>
     <jaxws-api.version>2.3.1</jaxws-api.version>
   </properties>
 
@@ -261,7 +261,7 @@
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
-      <artifactId>elasticsearch</artifactId>
+      <artifactId>testcontainers-elasticsearch</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

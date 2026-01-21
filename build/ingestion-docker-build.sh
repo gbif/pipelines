@@ -20,9 +20,9 @@ if [[ $IS_M2RELEASEBUILD = true ]]; then
 fi
 
 echo "Removing local Docker image: ${IMAGE}"
-docker rmi -f ${IMAGE}
+docker rmi -f ${IMAGE} || true
 
 if [[ $IS_M2RELEASEBUILD = true ]]; then
   echo "Removing local Docker image with latest tag: ${IMAGE_LATEST}"
-  docker rmi -f ${IMAGE_LATEST}
+  docker rmi -f ${IMAGE_LATEST} || true
 fi
