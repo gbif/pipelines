@@ -19,8 +19,6 @@
 
   <modules>
     <module>plugins</module>
-<!--    <module>beam-common</module>-->
-<!--    <module>beam-transforms</module>-->
     <module>core</module>
     <module>models</module>
     <module>models-pojo</module>
