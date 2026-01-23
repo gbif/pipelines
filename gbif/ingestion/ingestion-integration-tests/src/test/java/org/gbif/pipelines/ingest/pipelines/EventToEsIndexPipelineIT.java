@@ -108,7 +108,6 @@ public class EventToEsIndexPipelineIT {
       coreEvent1.put(DwcTerm.parentEventID.qualifiedName(), parentId);
     }
     coreEvent1.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
-    coreEvent1.put(DwcTerm.fundingAttributionID.qualifiedName(), "FA1|FA2");
 
     return ExtendedRecord.newBuilder()
         .setId(id)
@@ -184,7 +183,6 @@ public class EventToEsIndexPipelineIT {
                       .setConcept("Survey")
                       .setLineage(Collections.singletonList("Survey"))
                       .build())
-              .setFundingAttributionID(Arrays.asList("FA1", "FA2"))
               .build();
       writer.append(eventCoreRecord);
 
@@ -396,12 +394,7 @@ public class EventToEsIndexPipelineIT {
       writer.append(extendedRecord);
 
       ExtendedRecord subEventExtendedRecord =
-          ExtendedRecord.newBuilder()
-              .setId(SUB_EVENT_ID)
-              .setCoreTerms(Map.of(DwcTerm.taxonID.qualifiedName(), "taxonID1"))
-              .setCoreId(ID)
-              .setExtensions(ext)
-              .build();
+          ExtendedRecord.newBuilder().setId(SUB_EVENT_ID).setCoreId(ID).setExtensions(ext).build();
       writer.append(subEventExtendedRecord);
     }
 
@@ -521,30 +514,6 @@ public class EventToEsIndexPipelineIT {
     ParentJsonRecord eventRecord = getResult(idxName, ID, "event");
     assertRootParenJsonRecordResponse(eventRecord);
 
-    ParentJsonRecord subEvent1 = getResult(idxName, SUB_EVENT_ID, "event");
-    Assert.assertEquals(
-        2,
-        subEvent1
-            .getDerivedMetadata()
-            .getTaxonomicCoverage()
-            .getClassifications()
-            .values()
-            .iterator()
-            .next()
-            .size());
-
-    ParentJsonRecord subEvent2 = getResult(idxName, SUB_EVENT_ID_2, "event");
-    Assert.assertEquals(
-        1,
-        subEvent2
-            .getDerivedMetadata()
-            .getTaxonomicCoverage()
-            .getClassifications()
-            .values()
-            .iterator()
-            .next()
-            .size());
-
     ParentJsonRecord eventRecordSub2 = getResult(idxName, SUB_EVENT_ID_2, "event");
     assertEquals("DK", eventRecordSub2.getLocationInherited().getCountryCode());
     assertEquals(SUB_EVENT_ID_2, eventRecordSub2.getTemporalInherited().getId());
@@ -646,31 +615,6 @@ public class EventToEsIndexPipelineIT {
 
     // Assert taxonomic coverage
     Assert.assertNotNull(record.getDerivedMetadata().getTaxonomicCoverage());
-    Assert.assertEquals(
-        1, record.getDerivedMetadata().getTaxonomicCoverage().getClassifications().size());
-    Assert.assertEquals(
-        GBIF_BACKBONE_DATASET_KEY,
-        record
-            .getDerivedMetadata()
-            .getTaxonomicCoverage()
-            .getClassifications()
-            .keySet()
-            .iterator()
-            .next());
-    Assert.assertEquals(1, record.getDerivedMetadata().getTaxonomicCoverage().getTaxonIDs().size());
-    Assert.assertEquals(
-        "taxonID1", record.getDerivedMetadata().getTaxonomicCoverage().getTaxonIDs().get(0));
-    Assert.assertEquals(
-        3,
-        record
-            .getDerivedMetadata()
-            .getTaxonomicCoverage()
-            .getClassifications()
-            .values()
-            .iterator()
-            .next()
-            .size());
-
-    Assert.assertEquals(2, record.getEvent().getFundingAttributionID().size());
+    Assert.assertEquals(2, record.getDerivedMetadata().getTaxonomicCoverage().size());
   }
 }

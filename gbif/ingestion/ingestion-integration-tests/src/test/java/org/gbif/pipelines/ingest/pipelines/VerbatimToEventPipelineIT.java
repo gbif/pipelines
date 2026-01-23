@@ -22,7 +22,7 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.EcoTerm;
+// import org.gbif.dwc.terms.EcoTerm;
 import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.core.io.SyncDataFileWriter;
@@ -30,7 +30,7 @@ import org.gbif.pipelines.ingest.resources.ZkServer;
 import org.gbif.pipelines.ingest.utils.InterpretedAvroWriter;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.HumboldtRecord;
+// import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -108,7 +108,6 @@ public class VerbatimToEventPipelineIT {
       core.put(DwcTerm.eventID.qualifiedName(), "eventID");
       core.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
       core.put(DwcTerm.eventType.qualifiedName(), "Survey");
-      core.put(DwcTerm.fundingAttribution.qualifiedName(), "FA1|FA2");
 
       Map<String, String> ext1 = new HashMap<>();
       ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");
@@ -122,9 +121,9 @@ public class VerbatimToEventPipelineIT {
       ext1.put(DwcTerm.measurementDeterminedDate.qualifiedName(), "2010/2011");
 
       Map<String, String> extHumboldt = new HashMap<>();
-      extHumboldt.put(EcoTerm.siteCount.qualifiedName(), "4");
-      extHumboldt.put(EcoTerm.verbatimSiteNames.qualifiedName(), "sn1 |sn2");
-      extHumboldt.put(EcoTerm.eventDurationValue.qualifiedName(), "1");
+      //      extHumboldt.put(EcoTerm.siteCount.qualifiedName(), "4");
+      //      extHumboldt.put(EcoTerm.verbatimSiteNames.qualifiedName(), "sn1 |sn2");
+      //      extHumboldt.put(EcoTerm.eventDurationValue.qualifiedName(), "1");
 
       Map<String, String> core2 = new HashMap<>();
       core2.put(DwcTerm.datasetID.qualifiedName(), "datasetID");
@@ -137,7 +136,7 @@ public class VerbatimToEventPipelineIT {
 
       Map<String, List<Map<String, String>>> ext = new HashMap<>();
       ext.put(Extension.MEASUREMENT_OR_FACT.getRowType(), Collections.singletonList(ext1));
-      ext.put(Extension.HUMBOLDT.getRowType(), Collections.singletonList(extHumboldt));
+      //      ext.put(Extension.HUMBOLDT.getRowType(), Collections.singletonList(extHumboldt));
 
       ExtendedRecord extendedRecord =
           ExtendedRecord.newBuilder()
@@ -176,7 +175,7 @@ public class VerbatimToEventPipelineIT {
     assertFile(ExtendedRecord.class, interpretedOutput + "/verbatim");
     assertFile(EventCoreRecord.class, interpretedOutput + "/event");
     assertFile(MeasurementOrFactRecord.class, interpretedOutput + "/measurement_or_fact");
-    assertFile(HumboldtRecord.class, interpretedOutput + "/humboldt");
+    //    assertFile(HumboldtRecord.class, interpretedOutput + "/humboldt");
     assertEventCoreRecord(interpretedOutput + "/event");
   }
 

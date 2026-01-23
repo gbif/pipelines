@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>coordinator</artifactId>
-    <version>3.2.15-SNAPSHOT</version>
+   <version>4.0.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -76,30 +76,6 @@
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>variables</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-gbif-java</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.beam</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-gbif-fragmenter</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
@@ -229,43 +205,6 @@
         <exclusion>
           <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
           <groupId>com.fasterxml.jackson.module</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>beam-common</artifactId>
-    </dependency>
-
-    <!-- Beam -->
-    <dependency>
-      <groupId>org.apache.beam</groupId>
-      <artifactId>beam-sdks-java-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.beam</groupId>
-      <artifactId>beam-sdks-java-io-hadoop-file-system</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.beam</groupId>
-      <artifactId>beam-runners-spark-3</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.beam</groupId>
-          <artifactId>beam-sdks-java-extensions-google-cloud-platform-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.beam</groupId>
-          <artifactId>beam-runners-java-job-service</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.beam</groupId>
-          <artifactId>beam-runners-java-fn-execution</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.beam</groupId>
-          <artifactId>beam-runners-core-construction-java</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -418,7 +357,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-        <scope>runtime</scope>
+      <scope>runtime</scope>
       <version>${logback.version}</version>
     </dependency>
     <dependency>
@@ -571,9 +510,9 @@
                 <filter>
                   <artifact>org.gbif.vocabulary:vocabulary-lookup:shaded</artifact>
                   <excludes>
-                     <exclude>org/slf4j/**</exclude>
-                     <exclude>ch/qos/logback/**</exclude>
-                   </excludes>
+                    <exclude>org/slf4j/**</exclude>
+                    <exclude>ch/qos/logback/**</exclude>
+                  </excludes>
                 </filter>
               </filters>
               <transformers>

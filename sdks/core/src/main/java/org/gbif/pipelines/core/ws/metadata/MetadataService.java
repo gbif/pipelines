@@ -10,7 +10,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Path;
 
 /** retro client for gbif services. */
-interface MetadataService {
+public interface MetadataService {
 
   /**
    * get networks info of provided dataset uuid.

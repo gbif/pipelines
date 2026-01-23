@@ -98,6 +98,9 @@ public class IdentificationUtils {
    * identification extension only if all the identification fields in the core are null.
    */
   private static boolean areAllIdentificationFieldsNull(ExtendedRecord er) {
+    if (er.getCoreTerms() == null || er.getCoreTerms().isEmpty()) {
+      return true;
+    }
     return IDENTIFICATION_FIELDS.stream()
         .noneMatch(f -> hasValue(er.getCoreTerms().get(f.qualifiedName())));
   }

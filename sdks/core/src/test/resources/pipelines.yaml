@@ -68,3 +68,68 @@ vocabularyConfig:
   vocabulariesNames:
     http://rs.tdwg.org/dwc/terms/degreeOfEstablishment: degreeOfEstablishment
     http://rs.tdwg.org/dwc/terms/Sex: Sex
+processingConfigs:
+  "100_000 > recordCount <= 10_000_000":
+    description: "100k to 10 million"
+    args:
+      - "--numberOfShards=100"
+    driverMemoryOverheadFactor: "0.10"
+    executorMemoryOverheadFactor: "0.15"
+    driverCores: 4
+    executorInstances: 10
+    executorCores: 10
+    defaultParallelism: 100
+    driverMinCpu: "2000m"
+    driverMaxCpu: "8000m"
+    driverLimitMemory: "4Gi"
+    executorMinCpu: "1000m"
+    executorMaxCpu: "8000m"
+    executorLimitMemory: "30Gi"
+  "10_000_000 > recordCount <= 50_000_000":
+    description: "10 million to 50 million"
+    args:
+      - "--numberOfShards=200"
+    driverMemoryOverheadFactor: "0.10"
+    executorMemoryOverheadFactor: "0.15"
+    driverCores: 4
+    executorInstances: 20
+    executorCores: 10
+    defaultParallelism: 200
+    driverMinCpu: "2000m"
+    driverMaxCpu: "8000m"
+    driverLimitMemory: "4Gi"
+    executorMinCpu: "1000m"
+    executorMaxCpu: "8000m"
+    executorLimitMemory: "30Gi"
+  "50_000_000 > recordCount <= 500_000_000":
+    description: "50 million to 500 million - iNaturalist"
+    args:
+      - "--numberOfShards=500"
+    driverMemoryOverheadFactor: "0.10"
+    executorMemoryOverheadFactor: "0.15"
+    driverCores: 4
+    executorInstances: 30
+    executorCores: 10
+    defaultParallelism: 500
+    driverMinCpu: "2000m"
+    driverMaxCpu: "8000m"
+    driverLimitMemory: "4Gi"
+    executorMinCpu: "1000m"
+    executorMaxCpu: "8000m"
+    executorLimitMemory: "30Gi"
+  "recordCount > 500_000_000":
+    description: "500 million+"
+    args:
+      - "--numberOfShards=1000"
+    driverMemoryOverheadFactor: "0.10"
+    executorMemoryOverheadFactor: "0.15"
+    driverCores: 4
+    executorInstances: 40
+    executorCores: 10
+    defaultParallelism: 1000
+    driverMinCpu: "2000m"
+    driverMaxCpu: "8000m"
+    driverLimitMemory: "4Gi"
+    executorMinCpu: "1000m"
+    executorMaxCpu: "8000m"
+    executorLimitMemory: "30Gi"

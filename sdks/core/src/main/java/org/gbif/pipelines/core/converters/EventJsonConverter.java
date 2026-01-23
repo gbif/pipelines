@@ -173,8 +173,9 @@ public class EventJsonConverter {
   }
 
   private void mapSortField(EventJsonRecord.Builder builder) {
+    Optional<String> eventID = extractOptValue(verbatim, DwcTerm.eventID);
     builder.setYearMonthEventIDSort(
         SortUtils.yearDescMonthAscEventIDAscSortKey(
-            builder.getYear(), builder.getMonth(), builder.getEventID()));
+            temporal.getYear(), temporal.getMonth(), eventID.orElseGet(null)));
   }
 }

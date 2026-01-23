@@ -141,11 +141,6 @@
       {"name":"startDayOfYear","type":["null","int"],"default":null,"doc":""},
       {"name":"endDayOfYear","type":["null","int"],"default":null,"doc":""},
       {"name":"locationID", "type": ["null", "string"], "default" : null, "doc": ""},
-      {"name":"projectTitle","type":{"type":"array","items":"string"},"default":[],"doc":""},
-      {"name":"projectID","type":{"type":"array","items":"string"},"default":[],"doc":""},
-      {"name":"projectIDJoined", "type":["null","string"],"default": null,"doc":""},
-      {"name":"fundingAttribution","type":{"type":"array","items":"string"},"default":[],"doc":""},
-      {"name":"fundingAttributionID","type":{"type":"array","items":"string"},"default":[],"doc":""},
       // Location
       {"name":"locality","type":["null","string"],"default":null,"doc":""},
       {"name":"continent","type":["null","string"],"default":null,"doc":""},

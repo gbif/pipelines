@@ -16,6 +16,7 @@ import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
@@ -27,7 +28,7 @@ import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.balancer.BalancerConfiguration;
-import org.gbif.pipelines.tasks.occurrences.identifier.IdentifierConfiguration;
+// import org.gbif.pipelines.tasks.occurrences.identifier.IdentifierConfiguration;
 import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 
 /**
@@ -100,7 +101,8 @@ public class VerbatimMessageHandler {
           getRecordNumber(
               config,
               m,
-              new IdentifierConfiguration().metaFileName,
+              null,
+              //              new IdentifierConfiguration().metaFileName,
               Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
 
       log.info("The record numbers - occ: {}, er: {}, ids: {}", occCount, erCount, uniqueIdsCount);
@@ -120,7 +122,7 @@ public class VerbatimMessageHandler {
 
       long recordsNumber = recordNumberOpt.get();
 
-      String runner = computeRunner(config, m, recordsNumber).name();
+      String runner = computeRunner(config, m).name();
 
       ValidationResult result = m.getValidationResult();
       if (result.getNumberOfRecords() == null || isValidator(m.getPipelineSteps())) {
@@ -150,8 +152,7 @@ public class VerbatimMessageHandler {
    * Computes runner type: Strategy 1 - Chooses a runner type by number of records in a dataset
    * Strategy 2 - Chooses a runner type by calculating verbatim.avro file size
    */
-  private static StepRunner computeRunner(
-      BalancerConfiguration config, PipelinesVerbatimMessage message, long recordsNumber)
+  public static StepRunner computeRunner(BalancerConfiguration config, PipelineBasedMessage message)
       throws IOException {
 
     String datasetId = message.getDatasetUuid().toString();
@@ -208,7 +209,7 @@ public class VerbatimMessageHandler {
         HdfsConfigs.create(stepConfig.hdfsSiteConfig, stepConfig.coreSiteConfig);
     Optional<Long> fileNumber = HdfsUtils.getLongByKey(hdfsConfigs, metaPath, metricName);
 
-    if (messageNumber == null && !fileNumber.isPresent()) {
+    if (messageNumber == null && fileNumber.isEmpty()) {
       return Optional.empty();
     }
 

@@ -1,0 +1,234 @@
+apiVersion: spark.stackable.tech/v1alpha1
+kind: SparkApplication
+metadata:
+  name: verba-inter-935bb261-f341-49db-9b4c-58d7fbac0386-1
+spec:
+  image: docker.gbif.org/ingest-gbif-spark:3.2.7-SNAPSHOT
+  sparkImage:
+    productVersion: 3.5.1
+    stackableVersion: 24.7.0
+    custom: docker.gbif.org/extended-stackable/spark-k8s-celeborn:3.5.1-stackable24.7.0
+  mode: cluster
+  mainApplicationFile: hdfs://gbif-hdfs/user/fmendez/ingest-gbif-spark-3.2.7-SNAPSHOT-3.5.6.jar
+  mainClass: org.gbif.pipelines.interpretation.spark.VerbatimExtensionsInterpretation
+  vectorAggregatorConfigMapName: gbif-vector-aggregator-discovery
+  s3connection:
+    inline:
+      host: minio.minio-system.svc.cluster.local
+      port: 9000
+      accessStyle: Path
+      credentials:
+        secretClass: gbif-spark-history-lab-credentials-class
+  logFileDirectory:
+    s3:
+      prefix: /
+      bucket:
+        inline:
+          bucketName: spark-history-lab-bucket
+  args:
+    - "--datasetId=02cb399f-3283-49fa-bce0-627c7f83083f"
+    - "--attempt=1"
+    - "--appName=verba-inter-02cb399f-3283-49fa-bce0-627c7f83083f-1-F"
+    - "--numberOfShards=20"
+    - "--icebergCatalog=iceberg.lab"
+    - "--dwcCoreTerm=Occurrence"
+  sparkConf:
+    "spark.driver.extraJavaOptions": "-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35"
+    "spark.executor.extraJavaOptions": "-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35 -XX:ConcGCThread=20"
+    "spark.jars.packages": "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.6.0"
+    "spark.dynamicAllocation.enabled": "false"
+    "spark.decommission.enabled": "false"
+    "spark.storage.decommission.shuffleBlocks.enabled": "false"
+    "spark.storage.decommission.rddBlocks.enabled": "false"
+    "spark.shuffle.readHostLocalDisk": "false"
+    "spark.shuffle.service.enabled": "false"
+    "spark.shuffle.manager": "org.apache.spark.shuffle.celeborn.SparkShuffleManager"
+    "spark.serializer": "org.apache.spark.serializer.KryoSerializer"
+    "spark.celeborn.client.spark.shuffle.writer": "hash"
+    "spark.celeborn.client.push.replicate.enabled": "true"
+    "spark.sql.adaptive.localShuffleReader.enabled": "false"
+    "spark.sql.adaptive.enabled": "true"
+    "spark.sql.adaptive.skewJoin.enabled": "true"
+    "spark.shuffle.sort.io.plugin.class": "org.apache.spark.shuffle.celeborn.CelebornShuffleDataIO"
+    "spark.celeborn.master.endpoints": "gbif-shuffle-service-celeborn-master-0.gbif-shuffle-service-celeborn-master-svc.test:9097,gbif-shuffle-service-celeborn-master-1.gbif-shuffle-service-celeborn-master-svc.test:9097,gbif-shuffle-service-celeborn-master-2.gbif-shuffle-service-celeborn-master-svc.test:9097"
+    "spark.files.fetchTimeout": "300s"
+    "spark.sql.shuffle.partitions": "100"
+    "spark.default.parallelism": "100"
+    "spark.jars.ivy": "/tmp"
+    "spark.jars.ivySettings": "/tmp/ivy-settings.xml"
+    "spark.broadcast.compress": "true"
+    "spark.checkpoint.compress": "true"
+    "spark.executor.heartbeatInterval": "30s"
+    "spark.network.timeout": "900s"
+    "spark.io.compression.codec": "snappy"
+    "spark.rdd.compress": "true"
+    "spark.sql.hive.dropTableInPurge": "true"
+    "spark.shuffle.io.maxRetries": "5"
+    "spark.shuffle.io.retryWait": "300s"
+    "spark.driver.extraClassPath": "/etc/hadoop/conf/:/etc/gbif/:/stackable/spark/extra-jars/*:/stackable/spark/jobs/"
+    "spark.executor.extraClassPath": "/etc/hadoop/conf/:/etc/gbif/:/stackable/spark/extra-jars/*:/stackable/spark/jobs/"
+    "spark.kubernetes.allocation.batch.size": "5"
+    "spark.kubernetes.scheduler.name": "yunikorn"
+    "spark.kubernetes.executor.label.queue": "root.lab.pipelines"
+    "spark.kubernetes.submit.label.queue": "root.lab.pipelines"
+    "spark.executor.instances": "10"
+    "spark.executor.cores": "10"
+    "spark.executor.memoryOverheadFactor": "0.15"
+    "spark.driver.cores": "4"
+    "spark.driver.memoryOverheadFactor": "0.10"
+    "spark.kubernetes.executor.podNamePrefix": "verba-inter-935bb261-f341-49db-9b4c-58d7fbac0386-1"
+  volumes:
+    - name: ivy-settings
+      configMap:
+        name: gbif-airflow-ivy
+        items:
+          - key: ivy-settings.xml
+            path: ivy-settings.xml
+    - name: hdfs-env
+      configMap:
+        name: gbif-hdfs
+        items:
+          - key: core-site.xml
+            path: core-site.xml
+          - key: hdfs-site.xml
+            path: hdfs-site.xml
+    - name: hive-env
+      configMap:
+        name: gbif-hive-metastore-custom
+        items:
+          - key: hive-site.xml
+            path: hive-site.xml
+    - name: hbase-env
+      configMap:
+        name: gbif-hbase
+        items:
+          - key: hbase-site.xml
+            path: hbase-site.xml
+    - name: pipelines-spark-yaml
+      configMap:
+        name: pipelines-spark-yaml
+        items:
+          - key: pipelines-spark.yaml
+            path: pipelines-spark.yaml
+  job:
+    podOverrides:
+      metadata:
+        labels:
+          queue: "root.lab.pipelines"
+    config:
+      volumeMounts:
+        - name: ivy-settings
+          mountPath: /tmp/ivy-settings.xml
+          subPath: ivy-settings.xml
+  driver:
+    podOverrides:
+      metadata:
+        labels:
+          queue: "root.lab.pipelines"
+      spec:
+        initContainers:
+          - name: job
+            imagePullPolicy: Always
+            resources:
+              limits:
+                cpu: 500m
+                memory: 256Mi
+              requests:
+                cpu: 250m
+                memory: 128Mi
+    config:
+      resources:
+        cpu:
+          min: "2000m"
+          max: "8000m"
+        memory:
+          limit: "4Gi"
+      logging:
+        enableVectorAgent: true
+        containers:
+          vector:
+            file:
+              level: "WARN"
+          spark:
+            console:
+              level: "INFO"
+            file:
+              level: "INFO"
+            loggers:
+              ROOT:
+                level: "INFO"
+      volumeMounts:
+        - name: ivy-settings
+          mountPath: /tmp/ivy-settings.xml
+          subPath: ivy-settings.xml
+        - name: hdfs-env
+          mountPath: /etc/hadoop/conf/core-site.xml
+          subPath: core-site.xml
+        - name: hdfs-env
+          mountPath: /etc/hadoop/conf/hdfs-site.xml
+          subPath: hdfs-site.xml
+        - name: hive-env
+          mountPath: /etc/hadoop/conf/hive-site.xml
+          subPath: hive-site.xml
+        - name: hbase-env
+          mountPath: /etc/hadoop/conf/hbase-site.xml
+          subPath: hbase-site.xml
+        - name: pipelines-spark-yaml
+          mountPath: /tmp/pipelines-spark.yaml
+          subPath: pipelines-spark.yaml
+  executor:
+    podOverrides:
+      metadata:
+        labels:
+          queue: "root.lab.pipelines"
+      spec:
+        initContainers:
+          - name: job
+            imagePullPolicy: Always
+            resources:
+              limits:
+                cpu: 500m
+                memory: 256Mi
+              requests:
+                cpu: 250m
+                memory: 128Mi
+    config:
+      resources:
+        cpu:
+          min: "1000m"
+          max: "8000m"
+        memory:
+          limit: "30Gi"
+      logging:
+        enableVectorAgent: true
+        containers:
+          vector:
+            file:
+              level: "WARN"
+          spark:
+            console:
+              level: "INFO"
+            file:
+              level: "INFO"
+            loggers:
+              ROOT:
+                level: "INFO"
+      volumeMounts:
+        - name: ivy-settings
+          mountPath: /tmp/ivy-settings.xml
+          subPath: ivy-settings.xml
+        - name: hdfs-env
+          mountPath: /etc/hadoop/conf/core-site.xml
+          subPath: core-site.xml
+        - name: hdfs-env
+          mountPath: /etc/hadoop/conf/hdfs-site.xml
+          subPath: hdfs-site.xml
+        - name: hive-env
+          mountPath: /etc/hadoop/conf/hive-site.xml
+          subPath: hive-site.xml
+        - name: hbase-env
+          mountPath: /etc/hadoop/conf/hbase-site.xml
+          subPath: hbase-site.xml
+        - name: pipelines-spark-yaml
+          mountPath: /tmp/pipelines-spark.yaml
+          subPath: pipelines-spark.yaml

@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>validator</artifactId>
-   <version>3.2.15-SNAPSHOT</version>
+   <version>4.0.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -51,6 +51,7 @@
             --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
             --add-exports=java.base/sun.nio.ch=ALL-UNNAMED
             --add-opens java.base/java.io=ALL-UNNAMED
+            --add-opens=java.base/java.util=ALL-UNNAMED
           </argLine>
         </configuration>
       </plugin>
@@ -235,7 +236,7 @@
       <artifactId>dwca-io</artifactId>
     </dependency>
 
-      <!-- Spring dependencies -->
+    <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>

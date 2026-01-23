@@ -13,10 +13,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetDataPackageService;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.messages.DwcDpDownloadFinishedMessage;
-import org.gbif.pipelines.common.indexing.IndexSettings;
-import org.gbif.pipelines.common.process.AirflowSparkLauncher;
-import org.gbif.pipelines.common.process.BeamParametersBuilder;
-import org.gbif.pipelines.common.process.SparkDynamicSettings;
+// import org.gbif.pipelines.common.indexing.IndexSettings;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.factory.FileSystemFactory;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -47,11 +44,12 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
 
     // Prepare the indexing
     String datasetKey = message.getDatasetUuid().toString();
-    IndexSettings indexSettings =
-        IndexSettings.create(config.indexConfig, null, datasetKey, message.getAttempt(), 1_000_000);
+    //    IndexSettings indexSettings =
+    //        IndexSettings.create(config.indexConfig, null, datasetKey, message.getAttempt(),
+    // 1_000_000);
 
-    BeamParametersBuilder.BeamParameters beamParameters =
-        BeamParametersBuilder.dwcDpIndexing(config, message, indexSettings);
+    //    BeamParametersBuilder.BeamParameters beamParameters =
+    //        BeamParametersBuilder.dwcDpIndexing(config, message, indexSettings);
 
     Path dpPath =
         HdfsUtils.buildOutputPath(
@@ -60,10 +58,10 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
             String.valueOf(message.getAttempt()),
             "datapackage.json");
 
-    beamParameters.addSingleArg(datasetKey, dpPath.toString());
+    //    beamParameters.addSingleArg(datasetKey, dpPath.toString());
 
     // Run the Airflow DAG
-    runDag(message, beamParameters);
+    //    runDag(message, beamParameters);
   }
 
   /**
@@ -141,25 +139,27 @@ public class DwcDpCallback extends AbstractMessageCallback<DwcDpDownloadFinished
   }
 
   /** Runs the Airflow DAG to process the DwcDP files using the provided Beam parameters. */
-  private void runDag(
-      DwcDpDownloadFinishedMessage message, BeamParametersBuilder.BeamParameters beamParameters) {
-
-    // Spark dynamic settings
-    boolean x =
-        config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
-    SparkDynamicSettings sparkSettings = SparkDynamicSettings.create(config.sparkConfig, 0L, false);
-
-    // App name
-    String sparkAppName = "dwc-dp-" + message.getDatasetUuid() + message.getAttempt();
-
-    // Submit
-    AirflowSparkLauncher.builder()
-        .airflowConfiguration(config.airflowConfig)
-        .sparkStaticConfiguration(config.sparkConfig)
-        .sparkDynamicSettings(sparkSettings)
-        .beamParameters(beamParameters)
-        .sparkAppName(sparkAppName)
-        .build()
-        .submitAwaitVoid();
-  }
+  //  private void runDag(
+  //      DwcDpDownloadFinishedMessage message, BeamParametersBuilder.BeamParameters beamParameters)
+  // {
+  //
+  //    // Spark dynamic settings
+  //    boolean x =
+  //        config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
+  //    SparkDynamicSettings sparkSettings = SparkDynamicSettings.create(config.sparkConfig, 0L,
+  // false);
+  //
+  //    // App name
+  //    String sparkAppName = "dwc-dp-" + message.getDatasetUuid() + message.getAttempt();
+  //
+  //    // Submit
+  //    AirflowSparkLauncher.builder()
+  //        .airflowConfiguration(config.airflowConfig)
+  //        .sparkStaticConfiguration(config.sparkConfig)
+  //        .sparkDynamicSettings(sparkSettings)
+  //        .beamParameters(beamParameters)
+  //        .sparkAppName(sparkAppName)
+  //        .build()
+  //        .submitAwaitVoid();
+  //  }
 }

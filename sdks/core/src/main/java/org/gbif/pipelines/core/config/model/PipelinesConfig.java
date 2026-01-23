@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,22 @@ import org.gbif.common.parsers.date.DateComponentOrdering;
 public class PipelinesConfig implements Serializable {
 
   private static final long serialVersionUID = 8102560635064341713L;
+
+  /** The directory where the input files are located */
+  private String inputPath;
+
+  /** The directory where the output files are written to */
+  private String outputPath;
+
+  private String hdfsSiteConfig;
+
+  private String coreSiteConfig;
+
+  private String hiveDB;
+
+  private String hdfsWarehousePath;
+
+  private String hiveMetastoreUris;
 
   private String zkConnectionString;
 
@@ -42,7 +59,11 @@ public class PipelinesConfig implements Serializable {
 
   private LockConfig hdfsLock;
 
-  private VocabularyConfig vocabularyConfig;
+  private EsConfig elastic;
+
+  @Deprecated private VocabularyConfig vocabularyConfig;
+
+  private WsConfig vocabularyService;
 
   private ClusteringRelationshipConfig clusteringRelationshipConfig;
 
@@ -57,4 +78,12 @@ public class PipelinesConfig implements Serializable {
   private Set<String> extensionsAllowedForVerbatimSet;
 
   private String fragmentsTable;
+
+  private StandaloneConfig standalone;
+
+  private AirflowConfig airflowConfig;
+
+  private Map<String, SparkJobConfig> processingConfigs;
+
+  private IndexConfig indexConfig;
 }

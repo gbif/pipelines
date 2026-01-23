@@ -29,10 +29,6 @@
       {"name": "samplingProtocol", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/samplingProtocol"},
       {"name": "parentsLineage", "type": {"type" : "array", "items" : "org.gbif.pipelines.io.avro.Parent"}, "default" : [], "doc":""},
       {"name": "locationID", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/locationID"},
-      {"name": "projectTitle", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/projectTitle"},
-      {"name": "projectID", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/projectID"},
-      {"name": "fundingAttribution", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/fundingAttribution"},
-      {"name": "fundingAttributionID", "type": {"type" : "array", "items" : "string"}, "default" : [], "doc": "http://rs.tdwg.org/dwc/terms/fundingAttributionID"},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

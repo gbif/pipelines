@@ -1,1 +1,0 @@
-locationID	taxonID	country	locality	occurrenceStatus

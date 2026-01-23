@@ -1,0 +1,72 @@
+inputPath: file:///Users/djtfmartin/dev/my-forks/pipelines/gbif/ingestion/ingest-gbif-spark/test-data
+outputPath: file:///Users/djtfmartin/dev/my-forks/pipelines/gbif/ingestion/ingest-gbif-spark/interpreted-out
+zkConnectionString:
+gbifApi:
+  wsUrl: https://api.gbif-lab.org/v1/
+nameUsageMatchingService:
+  checklistKeys:
+    - d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
+  ws:
+    numOfKeyBuckets: 10
+    tableName: lab_name_usage_kv
+    api:
+      wsUrl: https://api.gbif-lab.org/
+vocabularyService:
+  wsUrl: https://api.gbif-lab.org/v1/
+grscicollLookup:
+  numOfKeyBuckets: 5
+  tableName: lab_grscicoll_lookup_kv
+  api:
+    wsUrl: https://api.gbif-lab.org/v1/
+geocode:
+  numOfKeyBuckets: 10
+  tableName: lab_geocode_kv
+  wsCacheSizeMb: 128
+  api:
+    wsUrl: https://api.gbif-lab.org/v1/
+imageCachePath:
+content:
+  esHosts:
+    - http://cms-search.gbif-dev.org:9200/
+amplification:
+  wsUrl: http://blast.gbif-dev.org
+fragmentsTable: lab_occurrence_fragment
+keygen:
+  occurrenceTable: lab_occurrence
+  counterTable: lab_occurrence_counter
+  lookupTable: lab_occurrence_lookup
+  zkConnectionString: c5n7.gbif-test.org:31706,c5n9.gbif-test.org:31706,c6n8.gbif-test.org:31706
+  hbaseZnode: /znode-93f9cdb5-d146-46da-9f80-e8546468b0fe/hbase
+elastic:
+  esHosts: http://localhost:9200
+  esAlias: occurrence_lab
+  esSchemaPath: elasticsearch/es-occurrence-schema.json
+  esMaxBatchSizeBytes: 10485760
+  esMaxBatchSize: 1700
+  indexNumberReplicas: 0
+extensionsAllowedForVerbatimSet:
+  - http://rs.tdwg.org/dwc/terms/Occurrence
+  - http://rs.tdwg.org/ac/terms/Multimedia
+  - http://data.ggbn.org/schemas/ggbn/terms/Amplification
+  - http://data.ggbn.org/schemas/ggbn/terms/Cloning
+  - http://data.ggbn.org/schemas/ggbn/terms/GelImage
+  - http://data.ggbn.org/schemas/ggbn/terms/Loan
+  - http://data.ggbn.org/schemas/ggbn/terms/MaterialSample
+  - http://data.ggbn.org/schemas/ggbn/terms/Permit
+  - http://data.ggbn.org/schemas/ggbn/terms/Preparation
+  - http://data.ggbn.org/schemas/ggbn/terms/Preservation
+  - http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact
+  - http://rs.tdwg.org/chrono/terms/ChronometricAge
+  - http://purl.org/germplasm/germplasmTerm#GermplasmAccession
+  - http://purl.org/germplasm/germplasmTerm#MeasurementScore
+  - http://purl.org/germplasm/germplasmTerm#MeasurementTrait
+  - http://purl.org/germplasm/germplasmTerm#MeasurementTrial
+  - http://rs.tdwg.org/dwc/terms/Identification
+  - http://rs.gbif.org/terms/1.0/Identifier
+  - http://rs.gbif.org/terms/1.0/Image
+  - http://rs.tdwg.org/dwc/terms/MeasurementOrFact
+  - http://rs.gbif.org/terms/1.0/Multimedia
+  - http://rs.gbif.org/terms/1.0/Reference
+  - http://rs.tdwg.org/dwc/terms/ResourceRelationship
+  - http://rs.gbif.org/terms/1.0/DNADerivedData
+  - https://tdwg.github.io/attribution/people/dwc/AgentActions

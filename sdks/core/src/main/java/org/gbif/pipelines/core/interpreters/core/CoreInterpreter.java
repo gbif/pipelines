@@ -83,12 +83,18 @@ public class CoreInterpreter {
 
   /** {@link DwcTerm#datasetID} interpretation. */
   public static void interpretDatasetID(ExtendedRecord er, Consumer<List<String>> consumer) {
-    interpretStringList(er, DwcTerm.datasetID, consumer);
+    List<String> list = extractListValue(er, DwcTerm.datasetID);
+    if (!list.isEmpty()) {
+      consumer.accept(list);
+    }
   }
 
   /** {@link DwcTerm#datasetName} interpretation. */
   public static void interpretDatasetName(ExtendedRecord er, Consumer<List<String>> consumer) {
-    interpretStringList(er, DwcTerm.datasetName, consumer);
+    List<String> list = extractListValue(er, DwcTerm.datasetName);
+    if (!list.isEmpty()) {
+      consumer.accept(list);
+    }
   }
 
   /** {@link DwcTerm#parentEventID} interpretation. */
@@ -157,42 +163,15 @@ public class CoreInterpreter {
 
   /** {@link DwcTerm#samplingProtocol} interpretation. */
   public static void interpretSamplingProtocol(ExtendedRecord er, Consumer<List<String>> consumer) {
-    interpretStringList(er, DwcTerm.samplingProtocol, consumer);
+    List<String> list = extractListValue(er, DwcTerm.samplingProtocol);
+    if (!list.isEmpty()) {
+      consumer.accept(list);
+    }
   }
 
   /** {@link DwcTerm#locationID} interpretation. */
   public static void interpretLocationID(ExtendedRecord er, Consumer<String> consumer) {
     extractOptValue(er, DwcTerm.locationID).ifPresent(consumer);
-  }
-
-  /** {@link DwcTerm#projectTitle} interpretation. */
-  public static void interpretProjectTitle(ExtendedRecord er, Consumer<List<String>> consumer) {
-    interpretStringList(er, DwcTerm.projectTitle, consumer);
-  }
-
-  /** {@link DwcTerm#projectID} interpretation. */
-  public static void interpretProjectID(ExtendedRecord er, Consumer<List<String>> consumer) {
-    interpretStringList(er, DwcTerm.projectID, consumer);
-  }
-
-  /** {@link DwcTerm#fundingAttribution} interpretation. */
-  public static void interpretFundingAttribution(
-      ExtendedRecord er, Consumer<List<String>> consumer) {
-    interpretStringList(er, DwcTerm.fundingAttribution, consumer);
-  }
-
-  /** {@link DwcTerm#fundingAttributionID} interpretation. */
-  public static void interpretFundingAttributionID(
-      ExtendedRecord er, Consumer<List<String>> consumer) {
-    interpretStringList(er, DwcTerm.fundingAttributionID, consumer);
-  }
-
-  public static void interpretStringList(
-      ExtendedRecord er, DwcTerm term, Consumer<List<String>> consumer) {
-    List<String> list = extractListValue(er, term);
-    if (!list.isEmpty()) {
-      consumer.accept(list);
-    }
   }
 
   /** Some parentEventID can have looped link */

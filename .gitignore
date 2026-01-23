@@ -31,3 +31,4 @@ livingatlas/debian/la-pipelines-migration/
 livingatlas/debian/maven-repo-local/
 dependency-reduced-pom.xml
 /**/dependency-reduced-pom.xml
+/gbif/ingestion/ingest-gbif-spark/src/main/java/org/gbif/pipelines/interpretation/spark/TableTest.java

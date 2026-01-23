@@ -30,8 +30,10 @@ public class OccurrenceExtensionConverter {
 
     Map<String, String> coreTerms = er.getCoreTerms();
     Map<String, Map<String, List<Map<String, String>>>> occIdExtMap = collectExtensions(er);
+    List<Map<String, String>> occurrenceExtension =
+        er.getExtensions().get(DwcTerm.Occurrence.qualifiedName());
 
-    return er.getExtensions().get(DwcTerm.Occurrence.qualifiedName()).stream()
+    return occurrenceExtension.stream()
         .map(occExt -> merge(er.getId(), coreTerms, occExt, occIdExtMap))
         .filter(Optional::isPresent)
         .map(Optional::get)

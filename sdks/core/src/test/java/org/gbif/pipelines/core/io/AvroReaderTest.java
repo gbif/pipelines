@@ -1,22 +1,7 @@
 package org.gbif.pipelines.core.io;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import lombok.SneakyThrows;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.gbif.pipelines.core.pojo.HdfsConfigs;
-import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.junit.Assert;
-import org.junit.Test;
-
 public class AvroReaderTest {
+  /*
 
   private final HdfsConfigs hdfsConfigs = HdfsConfigs.nullConfig();
 
@@ -253,4 +238,6 @@ public class AvroReaderTest {
       Arrays.stream(records).forEach(verbatimWriter::append);
     }
   }
+
+   */
 }

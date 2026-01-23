@@ -2,8 +2,8 @@ package org.gbif.pipelines.tasks.dwcdp;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.pipelines.common.configs.*;
 
@@ -20,9 +20,6 @@ public class DwcDpConfiguration {
   public IndexConfiguration indexConfig = new IndexConfiguration();
 
   @ParametersDelegate @Valid public SparkConfiguration sparkConfig = new SparkConfiguration();
-
-  @ParametersDelegate @Valid @NotNull
-  public AirflowConfiguration airflowConfig = new AirflowConfiguration();
 
   @Parameter(names = "--archive-repository")
   @NotNull

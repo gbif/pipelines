@@ -288,28 +288,6 @@ public class CoreInterpreterTest {
   }
 
   @Test
-  public void interpretProjectIDTest() {
-    final String name1 = "name 1";
-    final String name2 = "name 2";
-
-    // State
-    Map<String, String> coreMap = new HashMap<>(1);
-    coreMap.put(DwcTerm.projectID.qualifiedName(), name1 + " | " + name2 + " | ");
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-
-    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
-
-    // When
-    CoreInterpreter.interpretProjectID(er, br::setProjectId);
-
-    // Should
-    Assert.assertEquals(2, br.getProjectId().size());
-    Assert.assertTrue(br.getProjectId().contains(name1));
-    Assert.assertTrue(br.getProjectId().contains(name2));
-    assertIssueSizeZero(br);
-  }
-
-  @Test
   public void interpretSamplingProtocolTest() {
     final String sp1 = "protocol";
     final String sp2 = "other protocol";

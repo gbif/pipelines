@@ -2,11 +2,11 @@ package org.gbif.pipelines.tasks.verbatims.xml;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.Set;
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import lombok.ToString;
 import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;

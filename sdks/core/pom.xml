@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>sdks</artifactId>
-   <version>3.2.15-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -99,7 +99,8 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>models</artifactId>
+      <artifactId>models-pojo</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
@@ -245,14 +246,9 @@
 
     <!-- HDFS Table -->
     <dependency>
-      <groupId>org.gbif.occurrence</groupId>
-      <artifactId>occurrence-hdfs-table</artifactId>
+      <groupId>org.gbif.download</groupId>
+      <artifactId>hdfs-tables</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.gbif.occurrence</groupId>
-      <artifactId>occurrence-common</artifactId>
-    </dependency>
-
     <!-- Common -->
     <dependency>
       <groupId>org.apache.avro</groupId>

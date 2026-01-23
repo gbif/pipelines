@@ -4,6 +4,11 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -16,9 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.License;
 import org.gbif.dwc.terms.*;
-import org.gbif.occurrence.common.TermUtils;
 import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.pojo.HumboldtJsonView;
@@ -26,6 +31,7 @@ import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.terms.utils.TermUtils;
 
 /** Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}. */
 @Slf4j
@@ -223,14 +229,8 @@ public class OccurrenceHdfsRecordConverter {
       projectIds.add(metadataRecord.getProjectId());
     }
 
-    if (basicRecord != null && basicRecord.getProjectId() != null) {
+    if (basicRecord != null) {
       projectIds.addAll(basicRecord.getProjectId());
-    }
-
-    if (eventCoreRecord != null
-        && eventCoreRecord.getCreated() != null
-        && eventCoreRecord.getProjectID() != null) {
-      projectIds.addAll(eventCoreRecord.getProjectID());
     }
 
     if (!projectIds.isEmpty()) {
@@ -427,6 +427,7 @@ public class OccurrenceHdfsRecordConverter {
 
     extractOptValue(verbatim, DwcTerm.scientificName)
         .ifPresent(s -> map.put(GbifTerm.verbatimScientificName.simpleName().toLowerCase(), s));
+
     // Classification hierarchy
     taxonRecord
         .getClassification()
@@ -845,47 +846,32 @@ public class OccurrenceHdfsRecordConverter {
    * the recognized data type.
    *
    * @param occurrenceHdfsRecord target record
-   * @param avroField field to be copied
    * @param fieldName {@link OccurrenceHdfsRecord} field/property name
    * @param value field data/value
    */
   private static void setHdfsRecordField(
-      OccurrenceHdfsRecord occurrenceHdfsRecord,
-      Schema.Field avroField,
-      String fieldName,
-      String value) {
+      OccurrenceHdfsRecord occurrenceHdfsRecord, Field field, String fieldName, String value) {
     try {
-      Schema.Type fieldType = avroField.schema().getType();
-      if (Schema.Type.UNION == avroField.schema().getType()) {
-        fieldType = avroField.schema().getTypes().get(0).getType();
-      }
-      switch (fieldType) {
-        case INT:
-          PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Integer.valueOf(value));
-          break;
-        case LONG:
-          PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Long.valueOf(value));
-          break;
-        case BOOLEAN:
-          PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Boolean.valueOf(value));
-          break;
-        case DOUBLE:
-          PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Double.valueOf(value));
-          break;
-        case FLOAT:
-          PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Float.valueOf(value));
-          break;
-        default:
-          PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, value);
-          break;
+      Type fieldType = field.getGenericType();
+      if (fieldType.equals(Integer.class)) {
+        PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Integer.valueOf(value));
+      } else if (fieldType.equals(Long.class)) {
+        PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Long.valueOf(value));
+      } else if (fieldType.equals(Boolean.class)) {
+        PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Boolean.valueOf(value));
+      } else if (fieldType.equals(Double.class)) {
+        PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Double.valueOf(value));
+      } else if (fieldType.equals(Float.class)) {
+        PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Float.valueOf(value));
+      } else {
+        PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, value);
       }
     } catch (Exception ex) {
-      log.error(
+      log.debug(
           "Ignoring error setting field {}, field name {}, value. Exception: {}",
-          avroField,
+          field,
           fieldName,
-          value,
-          ex);
+          value);
     }
   }
 
@@ -926,10 +912,6 @@ public class OccurrenceHdfsRecordConverter {
                 .setLineage(eventCoreRecord.getEventType().getLineage())
                 .build());
       }
-
-      occurrenceHdfsRecord.setProjecttitle(eventCoreRecord.getProjectTitle());
-      occurrenceHdfsRecord.setFundingattribution(eventCoreRecord.getFundingAttribution());
-      occurrenceHdfsRecord.setFundingattributionid(eventCoreRecord.getFundingAttributionID());
     }
   }
 
@@ -944,9 +926,19 @@ public class OccurrenceHdfsRecordConverter {
       Optional.ofNullable(verbatimSchemaField(term))
           .ifPresent(
               field -> {
-                String verbatimField =
-                    "V" + field.name().substring(2, 3).toUpperCase() + field.name().substring(3);
-                setHdfsRecordField(occurrenceHdfsRecord, field, verbatimField, v);
+                try {
+                  String verbatimField =
+                      "V" + StringUtils.capitalize(term.simpleName().toLowerCase());
+
+                  // special case for class, as always
+                  if (DwcTerm.class_ == term) {
+                    verbatimField = "VClass$";
+                  }
+
+                  PropertyUtils.setProperty(occurrenceHdfsRecord, verbatimField, v);
+                } catch (Exception e) {
+                  throw new RuntimeException(e);
+                }
               });
     }
 
@@ -955,22 +947,35 @@ public class OccurrenceHdfsRecordConverter {
           .ifPresent(
               field -> {
                 // Fields that were set by other mappers are ignored
-                if (Objects.isNull(occurrenceHdfsRecord.get(field.name()))) {
-                  String interpretedFieldname = field.name();
-                  if (DcTerm.abstract_ == term) {
-                    interpretedFieldname = "abstract$";
-                  } else if (DwcTerm.class_ == term) {
-                    interpretedFieldname = "class$";
-                  } else if (DwcTerm.group == term) {
-                    interpretedFieldname = "group";
-                  } else if (DwcTerm.order == term) {
-                    interpretedFieldname = "order";
-                  } else if (DcTerm.date == term) {
-                    interpretedFieldname = "date";
-                  } else if (DcTerm.format == term) {
-                    interpretedFieldname = "format";
+
+                // Use reflection to get the value (previously used names from Avro schema)
+                String methodName =
+                    "get"
+                        + Character.toUpperCase(field.getName().charAt(0))
+                        + field.getName().substring(1);
+                try {
+                  Method method = occurrenceHdfsRecord.getClass().getMethod(methodName);
+                  if (Objects.isNull(method.invoke(occurrenceHdfsRecord))) {
+                    String interpretedFieldname = field.getName();
+                    if (DcTerm.abstract_ == term) {
+                      interpretedFieldname = "abstract$";
+                    } else if (DwcTerm.class_ == term) {
+                      interpretedFieldname = "class$";
+                    } else if (DwcTerm.group == term) {
+                      interpretedFieldname = "group";
+                    } else if (DwcTerm.order == term) {
+                      interpretedFieldname = "order";
+                    } else if (DcTerm.date == term) {
+                      interpretedFieldname = "date";
+                    } else if (DcTerm.format == term) {
+                      interpretedFieldname = "format";
+                    }
+                    setHdfsRecordField(occurrenceHdfsRecord, field, interpretedFieldname, v);
                   }
-                  setHdfsRecordField(occurrenceHdfsRecord, field, interpretedFieldname, v);
+                } catch (IllegalAccessException
+                    | InvocationTargetException
+                    | NoSuchMethodException ex) {
+                  throw new RuntimeException(ex);
                 }
               });
     }
@@ -992,13 +997,21 @@ public class OccurrenceHdfsRecordConverter {
             .map(TextNode::valueOf)
             .map(TextNode::asText)
             .collect(Collectors.toList());
+
     occurrenceHdfsRecord.setExtMultimedia(
-        MediaSerDeser.multimediaToJson(multimediaRecord.getMultimediaItems()));
+        base64Encode(MediaSerDeser.multimediaToJson(multimediaRecord.getMultimediaItems())));
 
     setCreatedIfGreater(occurrenceHdfsRecord, multimediaRecord.getCreated());
     occurrenceHdfsRecord.setMediatype(mediaTypes);
 
     addNonTaxonIssues(multimediaRecord.getIssues(), occurrenceHdfsRecord);
+  }
+
+  public static String base64Encode(String original) {
+    if (original == null) {
+      return null;
+    }
+    return Base64.getEncoder().encodeToString(original.getBytes(StandardCharsets.UTF_8));
   }
 
   private void mapDnaDerivedDataRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
@@ -1086,7 +1099,7 @@ public class OccurrenceHdfsRecordConverter {
                                       .map(RankedName::getKey)
                                       .collect(Collectors.toSet()));
                           values
-                              .computeIfAbsent("issues", k -> new ArrayList<>())
+                              .computeIfAbsent("taxonomicissue", k -> new ArrayList<>())
                               .addAll(t.getIssues().getIssueList());
 
                           t.getClassification()
@@ -1149,7 +1162,7 @@ public class OccurrenceHdfsRecordConverter {
                   })
               .collect(Collectors.toList());
 
-      occurrenceHdfsRecord.setExtHumboldt(MediaSerDeser.humboldtToJson(jsonViews));
+      occurrenceHdfsRecord.setExtHumboldt(base64Encode(MediaSerDeser.humboldtToJson(jsonViews)));
     }
 
     addNonTaxonIssues(humboldtRecord.getIssues(), occurrenceHdfsRecord);
@@ -1164,12 +1177,26 @@ public class OccurrenceHdfsRecordConverter {
   }
 
   /** Gets the {@link Schema.Field} associated to a verbatim term. */
-  private static Schema.Field verbatimSchemaField(Term term) {
-    return OccurrenceHdfsRecord.SCHEMA$.getField("v_" + term.simpleName().toLowerCase());
+  private static Field verbatimSchemaField(Term term) {
+    try {
+
+      if (term == DwcTerm.class_) {
+        return OccurrenceHdfsRecord.class.getDeclaredField("vClass$");
+      }
+
+      return OccurrenceHdfsRecord.class.getDeclaredField(
+          "v" + StringUtils.capitalize(term.simpleName().toLowerCase()));
+    } catch (NoSuchFieldException e) {
+      return null; // Field not found
+    }
   }
 
   /** Gets the {@link Schema.Field} associated to a interpreted term. */
-  private static Schema.Field interpretedSchemaField(Term term) {
-    return OccurrenceHdfsRecord.SCHEMA$.getField(HiveColumns.columnFor(term));
+  private static Field interpretedSchemaField(Term term) {
+    try {
+      return OccurrenceHdfsRecord.class.getDeclaredField(HiveColumns.columnFor(term));
+    } catch (NoSuchFieldException e) {
+      return null; // Field not found
+    }
   }
 }

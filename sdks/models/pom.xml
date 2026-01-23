@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>sdks</artifactId>
-    <version>3.2.15-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -48,9 +48,9 @@
       </plugin>
       <!-- Generate avro schemas from XML extensions-->
       <plugin>
-        <groupId>org.gbif.occurrence</groupId>
+        <groupId>org.gbif.download</groupId>
         <artifactId>maven-extension-avsc-schema-generator</artifactId>
-        <version>${gbif-occurrence.version}</version>
+        <version>1.0-SNAPSHOT</version>
         <executions>
           <execution>
             <id>avroschemageneration</id>
@@ -173,10 +173,6 @@
           <artifactId>snappy-java</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.beam</groupId>
-      <artifactId>beam-sdks-java-core</artifactId>
     </dependency>
   </dependencies>
 

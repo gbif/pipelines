@@ -360,7 +360,24 @@ public class IndexRecordTransform implements Serializable, IndexFields {
         indexRecord.getStrings().put(RAW_PREFIX + key, entry.getValue());
       } else {
         if (key.endsWith(DwcTerm.dynamicProperties.simpleName())) {
-          parseDynamicProperties(entry.getValue(), indexRecord);
+          try {
+            // index separate properties and the dynamicProperties
+            // field as a string as it may not be parseable JSON
+            indexRecord.getStrings().put(DwcTerm.dynamicProperties.simpleName(), entry.getValue());
+
+            // attempt JSON parse - best effort service only, if this fails
+            // we carry on indexing
+            ObjectMapper om = new ObjectMapper();
+            Map dynamicProperties = om.readValue(entry.getValue(), Map.class);
+
+            // ensure the dynamic properties are maps of string, string to avoid serialisation
+            // issues
+            dynamicProperties.replaceAll((s, c) -> c != null ? c.toString() : "");
+
+            indexRecord.setDynamicProperties(dynamicProperties);
+          } catch (Exception e) {
+            // NOP
+          }
         } else {
           indexRecord.getStrings().put(key, entry.getValue());
         }
@@ -394,34 +411,6 @@ public class IndexRecordTransform implements Serializable, IndexFields {
     applyEventLocation(indexRecord, elr, skipKeys);
     applyEventTemporal(indexRecord, etr, skipKeys);
     return indexRecord.build();
-  }
-
-  // Attempt JSON parse - best effort service only, if this fails, we carry on indexing
-  protected static void parseDynamicProperties(String value, IndexRecord.Builder indexRecord) {
-    try {
-      // index separate properties and the dynamicProperties
-      // field as a string as it may not be parseable JSON
-      indexRecord.getStrings().put(DwcTerm.dynamicProperties.simpleName(), value);
-
-      // Cleanup escaped quotes, the jacksonCSV parser used is not configured to do this for us.
-      var cleanStringValue = value;
-      if (cleanStringValue.startsWith("\"") && cleanStringValue.endsWith("\"")) {
-        cleanStringValue =
-            cleanStringValue.substring(1, cleanStringValue.length() - 1).replaceAll("\"\"", "\"");
-      }
-
-      ObjectMapper om = new ObjectMapper();
-      Map dynamicProperties = om.readValue(cleanStringValue, Map.class);
-
-      // ensure the dynamic properties are maps of string, string to avoid serialisation
-      // issues
-      dynamicProperties.replaceAll((s, c) -> c != null ? c.toString() : "");
-
-      indexRecord.setDynamicProperties(dynamicProperties);
-    } catch (Exception e) {
-      // NOP
-      log.warn("Failed to parse dynamicProperties: {}\n{}", e.getMessage(), value);
-    }
   }
 
   private static void applyMultimedia(

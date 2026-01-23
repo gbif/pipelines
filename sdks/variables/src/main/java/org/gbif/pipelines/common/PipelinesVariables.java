@@ -121,6 +121,7 @@ public class PipelinesVariables {
     public static final String IDENTICAL_GBIF_OBJECTS_COUNT = "identicalGbifObjectsCount";
     public static final String INVALID_GBIF_ID_COUNT = "invalidGbifIdCount";
     public static final String ABSENT_GBIF_ID_COUNT = "absentGbifIdCount";
+    public static final String VALID_GBIF_ID_COUNT = "validAndPersistedGbifIdCount";
     // Occurrence
     public static final String UNIQUE_IDS_COUNT = "uniqueIdsCount";
     public static final String DUPLICATE_IDS_COUNT = "duplicatedIdsCount";

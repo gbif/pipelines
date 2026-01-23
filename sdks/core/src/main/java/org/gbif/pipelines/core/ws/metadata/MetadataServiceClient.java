@@ -98,7 +98,7 @@ public class MetadataServiceClient {
     Objects.requireNonNull(datasetId);
     Call<Dataset> call = rest.getService().getDataset(datasetId);
     Dataset dataset = performCall(call);
-    // Has Contenful Elastic being configured?
+    // Has Contentful Elastic being configured?
     if (Objects.nonNull(contentService)) {
       getContentProjectData(dataset).ifPresent(dataset::setProject);
     }

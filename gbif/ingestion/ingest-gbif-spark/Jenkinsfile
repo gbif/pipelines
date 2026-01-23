@@ -1,0 +1,106 @@
+pipeline {
+  agent any
+  tools {
+    maven 'Maven 3.9.9'
+    jdk 'OpenJDK17'
+  }
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '5'))
+    skipStagesAfterUnstable()
+    timestamps()
+    disableConcurrentBuilds()
+  }
+  triggers {
+    snapshotDependencies()
+  }
+  stages {
+    stage('Setup') {
+      steps {
+        script {
+          env.VERSION = """${sh(returnStdout: true, script: './build/get-version.sh ${RELEASE}')}"""
+        }
+      }
+    }
+
+    stage('Quick build') {
+      tools {
+        jdk 'OpenJDK17'
+      }
+      steps {
+        withMaven () {
+          sh 'mvn clean install -DskipTests'
+        }
+        dir('gbif/coordinator/tasks') {
+          withMaven() {
+            sh 'mvn clean install -DskipTests -Pgbif-artifacts'
+          }
+        }
+      }
+    }
+
+    stage('Build healthcheck') {
+      tools {
+        jdk 'OpenJDK17'
+      }
+      steps {
+        dir('gbif/ingestion/ingest-healthcheck') {
+          withMaven() {
+            sh 'mvn clean install'
+          }
+        }
+      }
+    }
+
+    stage('Build Tasks coordinator CLI') {
+      tools {
+        jdk 'OpenJDK17'
+      }
+      steps {
+        dir('gbif/coordinator/tasks') {
+            withMaven(
+                globalMavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
+                mavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig1396361652540',
+                traceability: true) {
+                    sh '''
+                       mvn -B -U clean package dependency:analyze deploy  -Pgbif-artifacts
+                      '''
+                  }
+        }
+      }
+    }
+
+    stage('Build Validator') {
+      tools {
+        jdk 'OpenJDK17'
+      }
+      steps {
+        dir('gbif/validator') {
+            withMaven(
+                globalMavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709',
+                mavenSettingsConfig: 'org.jenkinsci.plugins.configfiles.maven.MavenSettingsConfig1396361652540',
+                traceability: true) {
+                    sh '''
+                       mvn -B -U clean package dependency:analyze deploy  -Pgbif-artifacts
+                      '''
+                  }
+        }
+      }
+    }
+
+    stage('Build Spark Docker image') {
+      steps {
+        sh 'build/spark-docker-build.sh false ${VERSION}'
+      }
+    }
+    stage('Build Standalone Spark Docker image') {
+      steps {
+        sh 'build/spark-docker-standalone-build.sh false ${VERSION}'
+      }
+    }
+    stage('Build Healthcheck Docker image') {
+      steps {
+        sh 'build/healthcheck-docker-build.sh false ${VERSION}'
+      }
+    }
+  }
+}

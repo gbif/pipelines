@@ -107,7 +107,7 @@ public class MetadataInterpreter {
   }
 
   // Copied from CrawlerCoordinatorServiceImpl
-  private static List<Endpoint> prioritySortEndpoints(List<Endpoint> endpoints) {
+  public static List<Endpoint> prioritySortEndpoints(List<Endpoint> endpoints) {
     // Filter out all Endpoints that we can't crawl
     return endpoints.stream()
         .filter(endpoint -> EndpointPriorityComparator.PRIORITIES.contains(endpoint.getType()))
@@ -121,7 +121,7 @@ public class MetadataInterpreter {
   }
 
   /** Gets the latest crawl attempt time, if exists. */
-  private static Optional<Date> getLastCrawledDate(List<MachineTag> machineTags) {
+  public static Optional<Date> getLastCrawledDate(List<MachineTag> machineTags) {
     return Optional.ofNullable(machineTags)
         .flatMap(
             x ->
@@ -139,7 +139,7 @@ public class MetadataInterpreter {
   }
 
   /** Copy MachineTags into the Avro Metadata record. */
-  private static void copyMachineTags(List<MachineTag> machineTags, MetadataRecord mdr) {
+  public static void copyMachineTags(List<MachineTag> machineTags, MetadataRecord mdr) {
     if (Objects.nonNull(machineTags) && !machineTags.isEmpty()) {
       mdr.setMachineTags(
           machineTags.stream()
