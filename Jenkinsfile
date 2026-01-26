@@ -20,6 +20,7 @@ pipeline {
     disableConcurrentBuilds()
   }
   triggers {
+    githubPush()
     snapshotDependencies()
   }
   stages {
