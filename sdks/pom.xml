@@ -19,9 +19,9 @@
 
   <modules>
     <module>plugins</module>
-    <module>core</module>
     <module>models</module>
     <module>models-pojo</module>
+    <module>core</module>
     <module>sdks-integration-tests</module>
     <module>tools</module>
     <module>variables</module>

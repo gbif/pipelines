@@ -22,10 +22,53 @@
     <schemas-path>${project.basedir}/../models/src/main/avro</schemas-path>
     <generated-path>${project.basedir}/src/main/java-generated/</generated-path>
     <package-name>org.gbif.pipelines.io.avro</package-name>
+
+    <schema-generated-path>${project.basedir}/src/main/avro</schema-generated-path>
+    <schema-generated-table-path>${schema-generated-path}/table/</schema-generated-table-path>
+    <occurrence-avsc-schema-name>occurrence-hdfs-record.avsc</occurrence-avsc-schema-name>
+    <schema-generated-occurrence-path>${schema-generated-path}/${occurrence-avsc-schema-name}</schema-generated-occurrence-path>
+
   </properties>
 
   <build>
     <plugins>
+      <!-- Generate avro schemas from XML extensions-->
+      <plugin>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>maven-occurrence-avsc-schema-generator</artifactId>
+        <version>${project.version}</version>
+        <executions>
+          <execution>
+            <id>avroschemageneration</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>avroschemageneration</goal>
+            </goals>
+            <configuration>
+              <pathToWrite>${schema-generated-occurrence-path}</pathToWrite>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Generate avro schemas from XML extensions-->
+      <plugin>
+        <groupId>org.gbif.download</groupId>
+        <artifactId>maven-extension-avsc-schema-generator</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <executions>
+          <execution>
+            <id>avroschemageneration</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>avroschemageneration</goal>
+            </goals>
+            <configuration>
+              <pathToWrite>${schema-generated-table-path}</pathToWrite>
+              <namespace>${namespace}.extension</namespace>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <!-- Generate POJOs from avro schemas -->
       <plugin>
         <groupId>org.gbif.pipelines</groupId>

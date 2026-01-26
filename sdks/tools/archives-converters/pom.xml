@@ -23,11 +23,6 @@
       <artifactId>lombok</artifactId>
     </dependency>
 
-    <!-- This project -->
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>models</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>core</artifactId>
@@ -134,6 +129,36 @@
     </dependency>
 
   </dependencies>
+
+  <build>
+  <plugins>
+
+    <!--  Generate source from Avro definitions -->
+    <plugin>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro-maven-plugin</artifactId>
+      <version>${avro.version}</version>
+      <executions>
+        <execution>
+          <id>generate-extended-record-avro-java</id>
+          <phase>generate-sources</phase>
+          <goals>
+            <goal>schema</goal>
+          </goals>
+          <configuration>
+            <stringType>String</stringType>
+            <enableDecimalLogicalType>true</enableDecimalLogicalType>
+            <sourceDirectory>../../models/src/main/avro/</sourceDirectory>
+            <outputDirectory>${project.build.directory}/generated-sources/avro</outputDirectory>\
+            <includes>
+              <include>extended-record.avsc</include>
+            </includes>
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
+  </plugins>
+  </build>
 
   <profiles>
     <profile>
