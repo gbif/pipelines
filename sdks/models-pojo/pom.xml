@@ -138,7 +138,7 @@
       <artifactId>lombok</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.gbif.pipelines.</groupId>
+      <groupId>org.gbif.pipelines</groupId>
       <artifactId>models</artifactId>
       <version>${project.version}</version>
     </dependency>
