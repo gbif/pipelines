@@ -307,6 +307,9 @@ public class ValidationResourceIT {
                 .limit(10)
                 .status(Validation.finishedStatuses())
                 .build());
+
+    //    System.out.println("Finished validations: " + validations.getCount());
+    //    System.out.println("Looking for validation key: " + persistedValidation.getKey());
     assertTrue(
         validations.getResults().stream()
             .anyMatch(v -> v.getKey().equals(persistedValidation.getKey())));

@@ -16,7 +16,6 @@
 
   <modules>
     <module>coordinator</module>
-    <module>identifiers</module>
     <module>ingestion</module>
     <module>validator</module>
   </modules>

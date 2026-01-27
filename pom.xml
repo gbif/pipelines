@@ -228,6 +228,7 @@
     <!-- Extensions and AVRO-->
     <namespace>org.gbif.pipelines.io.avro</namespace>
 
+    <keygen.version>1.0.0-SNAPSHOT</keygen.version>
   </properties>
 
   <build>
@@ -329,25 +330,15 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.pipelines</groupId>
+        <groupId>org.gbif.identifiers</groupId>
         <artifactId>keygen</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.pipelines</groupId>
-        <artifactId>diagnostics</artifactId>
-        <version>${project.version}</version>
+        <version>${keygen.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>archives-converters</artifactId>
         <version>${project.version}</version>
       </dependency>
-<!--      <dependency>-->
-<!--        <groupId>org.gbif.pipelines</groupId>-->
-<!--        <artifactId>ingest-gbif-fragmenter</artifactId>-->
-<!--        <version>${project.version}</version>-->
-<!--      </dependency>-->
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>tasks-coordinator-cli</artifactId>

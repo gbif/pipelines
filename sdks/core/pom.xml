@@ -108,7 +108,7 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.gbif.pipelines</groupId>
+      <groupId>org.gbif.identifiers</groupId>
       <artifactId>keygen</artifactId>
       <exclusions>
         <exclusion>
