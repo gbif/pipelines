@@ -168,7 +168,7 @@ public abstract class ConverterToVerbatim {
       String term = pathParts[pathParts.length - 1];
 
       return (namespace + "_" + term);
-    } catch (Exception e){
+    } catch (Exception e) {
       return uri;
     }
   }
