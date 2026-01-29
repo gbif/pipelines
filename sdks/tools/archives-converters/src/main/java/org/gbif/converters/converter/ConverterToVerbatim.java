@@ -167,7 +167,7 @@ public abstract class ConverterToVerbatim {
       String[] pathParts = u.getPath().split("/");
       String term = pathParts[pathParts.length - 1];
 
-      return (namespace + "_" + term).toLowerCase();
+      return (namespace + "_" + term);
     } catch (Exception e){
       return uri;
     }
