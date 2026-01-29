@@ -4,6 +4,7 @@ import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Map;
@@ -147,13 +148,28 @@ public abstract class ConverterToVerbatim {
 
       for (Map.Entry<String, Long> entry : metric.getExtensionsCount().entrySet()) {
         info.append("\"")
-            .append(entry.getKey())
+            .append(toNamespacedYamlKey(entry.getKey()))
             .append("\": ")
             .append(entry.getValue())
             .append("\n");
       }
 
       FsUtils.createFile(fs, metaPath, info.toString());
+    }
+  }
+
+  public static String toNamespacedYamlKey(String uri) {
+    try {
+      URI u = URI.create(uri);
+      String host = u.getHost().replace("www.", "");
+      String namespace = host.split("\\.")[0];
+
+      String[] pathParts = u.getPath().split("/");
+      String term = pathParts[pathParts.length - 1];
+
+      return (namespace + "_" + term).toLowerCase();
+    } catch (Exception e){
+      return uri;
     }
   }
 
