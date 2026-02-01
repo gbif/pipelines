@@ -28,8 +28,7 @@ public class EventCoreTransform implements Serializable {
       throw new IllegalArgumentException("ExtendedRecord is null or empty");
     }
 
-    var vocabServiceUrl = config.getVocabularyService().getWsUrl();
-    var vocabularyService = VocabularyServiceFactory.getInstance(vocabServiceUrl);
+    var vocabularyService = VocabularyServiceFactory.getInstance(config);
 
     EventCoreRecord r =
         EventCoreRecord.newBuilder()

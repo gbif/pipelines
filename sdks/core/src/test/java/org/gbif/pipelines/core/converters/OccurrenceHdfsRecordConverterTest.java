@@ -269,8 +269,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getProjectid());
 
     // Test fields names with reserved words
-    Assert.assertEquals("CLASS", hdfsRecord.getClass$());
-    Assert.assertEquals("classs", hdfsRecord.getVClass$());
+    Assert.assertEquals("CLASS", hdfsRecord.getClass_());
+    Assert.assertEquals("classs", hdfsRecord.getVClass_());
 
     Assert.assertEquals("ORDER", hdfsRecord.getOrder());
     Assert.assertEquals("order", hdfsRecord.getVOrder());
@@ -610,7 +610,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("Acidilobales", hdfsRecord.getOrder());
     Assert.assertEquals(String.valueOf(8016360), hdfsRecord.getOrderkey());
 
-    Assert.assertEquals("Thermoprotei", hdfsRecord.getClass$());
+    Assert.assertEquals("Thermoprotei", hdfsRecord.getClass_());
     Assert.assertEquals(String.valueOf(292), hdfsRecord.getClasskey());
 
     Assert.assertEquals("Caldisphaeraceae", hdfsRecord.getFamily());

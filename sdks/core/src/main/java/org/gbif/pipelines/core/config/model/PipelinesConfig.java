@@ -61,7 +61,7 @@ public class PipelinesConfig implements Serializable {
 
   private EsConfig elastic;
 
-  @Deprecated private VocabularyConfig vocabularyConfig;
+  private VocabularyConfig vocabularyConfig;
 
   private WsConfig vocabularyService;
 

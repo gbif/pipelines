@@ -32,8 +32,7 @@ public class HumboldtTransform implements Serializable {
       throw new IllegalArgumentException("ExtendedRecord is null or empty");
     }
 
-    var vocabServiceUrl = config.getVocabularyService().getWsUrl();
-    var vocabularyService = VocabularyServiceFactory.getInstance(vocabServiceUrl);
+    var vocabularyService = VocabularyServiceFactory.getInstance(config);
 
     KeyValueStore<NameUsageMatchRequest, NameUsageMatchResponse> nameUsageMatchKvStore =
         MultiTaxonomyKVSFactory.getKvStore(config);

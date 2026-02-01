@@ -1,0 +1,100 @@
+{
+  "key": "d1fec91e-5b53-4cff-9b31-10fed530a3c3",
+  "endorsingNodeKey": "8dae0f8c-12bc-444d-b889-6b177550a8b2",
+  "endorsementApproved": true,
+  "endorsementStatus": "ENDORSED",
+  "title": "Bulgarian Society for the Protection of Birds",
+  "description": "The Bulgarian Society for the Protection of birds (BSPB), BirdLife International partner in Bulgaria, was found in 1988. BSPB is one of the biggest and oldest NGOs in Bulgaria that has developed a range of tools that can facilitate the process of biodiversity data collection, analysis and communication based on citizen science.  It runs several nationally-wide bird monitoring schemes, based on citizen science such as Common bird monitoring scheme (CBM) (providing common bird index as indicator for agriculture practices) and Mid-winter Count of waterfowl. CBM has been operating for nearly 20 years and has over 500 volunteers that have taken part in the monitoring scheme. The Second Bulgarian Breeding Atlas is another ongoing research activity that involves both professionals and amateurs to collect data in in total 1300 10x10-km-squares. For the purposes of more effective nature conservation BSPB trains hundreds of people to identify birds, and encourages citizens to collect data on field about both biodiversity and threats. \nOne of the tools that BSPB has developed is SmartBirds  - the only biodiversity database and citizen science-based portal in Bulgaria. It is connected with an app SmartBirds Pro for field data collection. It is connected with the SmartBird PRO app, used by more than 500 citizens, state authorities’ experts and researchers. The app is designed for recording data on various taxa including invertebrates, reptiles, birds, mammals, fish and plants. It also contains specific form for recording various threats to biodiversity including poisoning and poaching. The app is also used in N. Macedonia and Albania (in the national languages). It allows to register not only observations related to different taxa but also large spectrum of threats to biodiversity.",
+  "language": "eng",
+  "email": [
+    "bspb_hq@bspb.org"
+  ],
+  "phone": [
+    "+358 02 979 95 00"
+  ],
+  "homepage": [
+    "https://bspb.org/en/"
+  ],
+  "logoUrl": "https://bspb.org/wp-content/uploads/2022/11/BSPB-BL-01.png",
+  "address": [
+    "Yavorov quarter, Bl. 71, Entr. 4, app. 1"
+  ],
+  "city": "Sofia",
+  "province": "Sofia",
+  "country": "BG",
+  "postalCode": "1111",
+  "latitude": 42.68769,
+  "longitude": 23.34209,
+  "numPublishedDatasets": 4,
+  "createdBy": "gbif.express",
+  "modifiedBy": "andrea",
+  "created": "2024-01-15T10:09:32.930+00:00",
+  "modified": "2025-08-07T13:15:37.998+00:00",
+  "endorsed": "2024-01-15T13:42:51.424+00:00",
+  "contacts": [
+    {
+      "key": 5129992,
+      "type": "TECHNICAL_POINT_OF_CONTACT",
+      "primary": false,
+      "userId": [ ],
+      "firstName": "Georgi",
+      "lastName": "Popgeorgiev",
+      "position": [ ],
+      "email": [
+        "georgi.popgeorgiev@bspb.org"
+      ],
+      "phone": [
+        "+359876939252"
+      ],
+      "homepage": [ ],
+      "address": [ ],
+      "createdBy": "gbif.express",
+      "modifiedBy": "gbif.express",
+      "created": "2024-01-15T10:09:32.930+00:00",
+      "modified": "2024-01-15T10:09:32.930+00:00"
+    },
+    {
+      "key": 5129993,
+      "type": "POINT_OF_CONTACT",
+      "primary": false,
+      "userId": [ ],
+      "firstName": "Stoycho",
+      "lastName": "Stoychev",
+      "position": [ ],
+      "email": [
+        "stoycho.stoychev@bspb.org"
+      ],
+      "phone": [
+        "+359878599375"
+      ],
+      "homepage": [ ],
+      "address": [ ],
+      "createdBy": "gbif.express",
+      "modifiedBy": "gbif.express",
+      "created": "2024-01-15T10:09:32.930+00:00",
+      "modified": "2024-01-15T10:09:32.930+00:00"
+    }
+  ],
+  "endpoints": [ ],
+  "machineTags": [ ],
+  "tags": [ ],
+  "identifiers": [ ],
+  "comments": [
+    {
+      "key": 40045,
+      "content": "[2025-08-07, ah]: re-connecting endorsement from the PNMC to the new national node, following the guidelines at https://www.gbif.org/endorsement-guidelines: \"What happens to publishers endorsed by the Participant Node Managers Committee when their country becomes a GBIF Participant? -->\n\nIf a country joins GBIF and there are existing publishers endorsed by the Participant Node Managers Committee, endorsement will be transferred to the new national node.\"",
+      "createdBy": "andrea",
+      "modifiedBy": "andrea",
+      "created": "2025-08-07T13:15:24.302+00:00",
+      "modified": "2025-08-07T13:15:24.302+00:00"
+    },
+    {
+      "key": 35534,
+      "content": "\nIs associated with a GBIF-funded project: no\n\n\nExpects to publish:\n\n\n - ResourceMetaData\n - ChecklistData\n - OccurrenceData\n - SamplingEventData\n\nExpected data content:\n\n> One of the tools that BSPB has developed is SmartBirds  - the only biodiversity database and citizen science-based portal in Bulgaria. It is connected with an app SmartBirds Pro for field data collection. It is connected with the SmartBird PRO app, used by more than 500 citizens, state authorities’ experts and researchers. The app is designed for recording data on various taxa including invertebrates, reptiles, birds, mammals, fish and plants. It also contains specific form for recording various threats to biodiversity including poisoning and poaching. The app is also used in N. Macedonia and Albania (in the national languages). It allows to register not only observations related to different taxa but also large spectrum of threats to biodiversity.\n\n\nWill run a server which exposes data: no\n\n\nPlans to run publishing software (e.g. an IPT): no\n\n\nNeeds help for data publishing: yes\n",
+      "createdBy": "gbif.express",
+      "modifiedBy": "gbif.express",
+      "created": "2024-01-15T10:09:32.930+00:00",
+      "modified": "2024-01-15T10:09:32.930+00:00"
+    }
+  ]
+}

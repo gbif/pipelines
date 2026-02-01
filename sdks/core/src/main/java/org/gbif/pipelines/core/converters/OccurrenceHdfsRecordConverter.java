@@ -474,7 +474,7 @@ public class OccurrenceHdfsRecordConverter {
                     occurrenceHdfsRecord.setPhylumkey(rankedName.getKey());
                     break;
                   case "CLASS":
-                    occurrenceHdfsRecord.setClass$(rankedName.getName());
+                    occurrenceHdfsRecord.setClass_(rankedName.getName());
                     occurrenceHdfsRecord.setClasskey(rankedName.getKey());
                     break;
                   case "ORDER":
@@ -932,7 +932,7 @@ public class OccurrenceHdfsRecordConverter {
 
                   // special case for class, as always
                   if (DwcTerm.class_ == term) {
-                    verbatimField = "VClass$";
+                    verbatimField = "VClass_";
                   }
 
                   PropertyUtils.setProperty(occurrenceHdfsRecord, verbatimField, v);
@@ -1181,7 +1181,7 @@ public class OccurrenceHdfsRecordConverter {
     try {
 
       if (term == DwcTerm.class_) {
-        return OccurrenceHdfsRecord.class.getDeclaredField("vClass$");
+        return OccurrenceHdfsRecord.class.getDeclaredField("vClass_");
       }
 
       return OccurrenceHdfsRecord.class.getDeclaredField(

@@ -1,0 +1,82 @@
+[
+  {
+    "id": "KEN",
+    "type": "GADM0",
+    "source": "http://gadm.org/",
+    "title": "Kenya",
+    "isoCountryCode2Digit": "KE",
+    "distance": 0
+  },
+  {
+    "id": "KEN.33_1",
+    "type": "GADM1",
+    "source": "http://gadm.org/",
+    "title": "Narok",
+    "isoCountryCode2Digit": "KE",
+    "distance": 0
+  },
+  {
+    "id": "KEN.33.2_1",
+    "type": "GADM2",
+    "source": "http://gadm.org/",
+    "title": "Kilgoris",
+    "isoCountryCode2Digit": "KE",
+    "distance": 0
+  },
+  {
+    "id": "KEN.33.2.4_1",
+    "type": "GADM3",
+    "source": "http://gadm.org/",
+    "title": "Kimintet",
+    "isoCountryCode2Digit": "KE",
+    "distance": 0
+  },
+  {
+    "id": "WGSRPD:KEN-OO",
+    "type": "WGSRPD",
+    "source": "http://www.tdwg.org/standards/109",
+    "title": "Kenya",
+    "isoCountryCode2Digit": "KE",
+    "distance": 0
+  },
+  {
+    "id": "AFRICA",
+    "type": "Continent",
+    "source": "https://github.com/gbif/continents",
+    "title": "AFRICA",
+    "isoCountryCode2Digit": "",
+    "distance": 0
+  },
+  {
+    "id": "http://marineregions.org/mrgid/8349",
+    "type": "Political",
+    "source": "https://www.marineregions.org/",
+    "title": "Kenya",
+    "isoCountryCode2Digit": "KE",
+    "distance": 0
+  },
+  {
+    "id": "KEN.33.6_1",
+    "type": "GADM2",
+    "source": "http://gadm.org/",
+    "title": "Narok West",
+    "isoCountryCode2Digit": "KE",
+    "distance": 0.02343617083232209
+  },
+  {
+    "id": "KEN.33.6.2_1",
+    "type": "GADM3",
+    "source": "http://gadm.org/",
+    "title": "Mara",
+    "isoCountryCode2Digit": "KE",
+    "distance": 0.02343617083232209
+  },
+  {
+    "id": "KEN.33.6.4_1",
+    "type": "GADM3",
+    "source": "http://gadm.org/",
+    "title": "Siana",
+    "isoCountryCode2Digit": "KE",
+    "distance": 0.04921453627337332
+  }
+]

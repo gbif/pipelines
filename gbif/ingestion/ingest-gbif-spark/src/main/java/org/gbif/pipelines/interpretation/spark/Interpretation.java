@@ -118,6 +118,9 @@ public class Interpretation {
         arity = 1)
     private boolean useCheckpoints = true;
 
+    @Parameter(names = "--useSystemExit", description = "Use checkpoints where possible", arity = 1)
+    private boolean useSystemExit = true;
+
     @Parameter(
         names = {"--help", "-h"},
         help = true,
@@ -160,7 +163,9 @@ public class Interpretation {
     fileSystem.close();
     spark.stop();
     spark.close();
-    System.exit(0);
+    if (args.useSystemExit) {
+      System.exit(0);
+    }
   }
 
   public static void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
@@ -208,7 +213,7 @@ public class Interpretation {
       // Load the extended records
       sparkLog(spark, "loadExtendedRecords", "Loading extended records", useCheckpoints);
       Dataset<ExtendedRecord> extendedRecords =
-          loadExtendedRecords(spark, config, inputPath, outputPath, numberOfShards, useCheckpoints);
+          loadExtendedRecords(spark, config, inputPath, outputPath, numberOfShards);
 
       // Process identifiers - persisting new identifiers
       sparkLog(spark, "processIdentifiers", "Processing identifiers", useCheckpoints);
@@ -301,10 +306,11 @@ public class Interpretation {
    * Joins the extended records with their corresponding identifiers and creates a simple occurrence
    * record containing only the id, verbatim and identifier fields.
    *
-   * @param extendedRecords
-   * @param identifiers
-   * @param outputPath
-   * @param spark
+   * @param spark The Spark session.
+   * @param extendedRecords The dataset of extended records.
+   * @param identifiers The dataset of identifier records.
+   * @param outputPath The output path for checkpointing.
+   * @param useCheckpoints Whether to use checkpoints for intermediate datasets.
    * @return The dataset of simple occurrence records.
    */
   private static Dataset<Occurrence> joinRecordsAndIdentifiers(
@@ -470,8 +476,7 @@ public class Interpretation {
       PipelinesConfig config,
       String inputPath,
       String outputPath,
-      int numberOfShards,
-      boolean useCheckpoints) {
+      int numberOfShards) {
 
     final Set<String> allowExtensions =
         Optional.ofNullable(config.getExtensionsAllowedForVerbatimSet())
@@ -530,10 +535,10 @@ public class Interpretation {
    * Process and then reload identifiers if the /identifiers directory exists, then we assume that
    * the valid and absent identifiers are already present because of a previous interpretation run
    *
-   * @param spark
-   * @param config
-   * @param outputPath
-   * @param datasetId
+   * @param spark the spark session
+   * @param config the pipelines config
+   * @param outputPath the output path
+   * @param datasetId the dataset id
    */
   public static void processIdentifiers(
       SparkSession spark,
