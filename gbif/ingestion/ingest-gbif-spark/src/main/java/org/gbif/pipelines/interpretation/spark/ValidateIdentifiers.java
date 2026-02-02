@@ -239,7 +239,7 @@ public class ValidateIdentifiers {
       invalidIdentifiers
           .write()
           .mode(SaveMode.Overwrite)
-          .parquet(outputPath + "/identifiers_invalid");
+          .parquet(outputPath + "/" + IDENTIFIERS_INVALID);
 
       // 3. write absent ids
       absentIdentifiers

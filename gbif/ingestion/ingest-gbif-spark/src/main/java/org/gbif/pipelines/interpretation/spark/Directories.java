@@ -22,7 +22,10 @@ public interface Directories {
   String IDENTIFIERS_ABSENT = "identifiers_absent";
 
   String IDENTIFIERS_TRANSFORMED = "identifiers_transformed";
+  /** Directory for identifiers that have been validates */
   String IDENTIFIERS_VALID = "identifiers_valid";
+
+  String IDENTIFIERS_INVALID = "identifiers_invalid";
   /** Directory for occurrence parquet files ready to be loaded into Hive */
   String OCCURRENCE_HDFS = "hdfs";
   /** Directory for occurrence parquet files ready to be loaded into Elastic */
@@ -32,11 +35,10 @@ public interface Directories {
    * been loaded from the original verbatim AVRO, default values applied
    */
   String OCCURRENCE_VERBATIM = "verbatim";
-
+  /** Directory for simple event parquet files generated as output from interpretation */
   String SIMPLE_EVENT = "simple-event";
-  String SIMPLE_EVENT_WITH_INHERITED = "simple-event-with-inherited";
   /** Directory for simple occurrence parquet files used as input for interpretation */
   String SIMPLE_OCCURRENCE = "simple-occurrence";
-
+  /** Directory for extended verbatim files after filtering out records with missing core ID */
   String VERBATIM_EXT_FILTERED = "verbatim_ext_filtered";
 }
