@@ -6,6 +6,8 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 
+import java.util.List;
+
 @Slf4j
 public class OccurrenceInterpretationDistributedCallback extends OccurrenceInterpretationCallback {
 
@@ -23,7 +25,9 @@ public class OccurrenceInterpretationDistributedCallback extends OccurrenceInter
         "interpretation",
         fileSystem,
         pipelinesConfig.getAirflowConfig().interpretationDag,
-        StepType.VERBATIM_TO_INTERPRETED);
+        StepType.VERBATIM_TO_INTERPRETED,
+        List.of("--interpretTypes="+String.join(",", message.getInterpretTypes()))
+    );
   }
 
   @Override
