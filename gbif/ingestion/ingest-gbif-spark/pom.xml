@@ -105,12 +105,6 @@
             <groupId>org.gbif.pipelines</groupId>
             <artifactId>models-pojo</artifactId>
             <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.gbif.pipelines</groupId>
@@ -257,11 +251,11 @@
             <version>${guava.version}</version>
             <scope>provided</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.gbif</groupId>-->
-<!--            <artifactId>dwca-io</artifactId>-->
-<!--            <version>${dwca-io.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.gbif</groupId>
+            <artifactId>dwca-io</artifactId>
+            <version>${dwca-io.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>dwc-api</artifactId>
@@ -355,6 +349,11 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.gbif</groupId>
+            <artifactId>gbif-common</artifactId>
+            <version>${gbif-common.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
@@ -583,7 +582,6 @@
             <groupId>commons-httpclient</groupId>
             <artifactId>commons-httpclient</artifactId>
             <version>${commons-httpclient.version}</version>
-            <scope>provided</scope>
         </dependency>
         <!-- Old Jackson 1.x (needed by ES-Hadoop 7.x) -->
         <dependency>
@@ -601,6 +599,12 @@
             <artifactId>junit</artifactId>
             <version>${junit4.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.rabbitmq</groupId>
+            <artifactId>amqp-client</artifactId>
+            <version>5.25.0</version>
+            <scope>compile</scope>
         </dependency>
         <!-- HBase MapReduce integration - needed for Fragmenter -->
         <dependency>
