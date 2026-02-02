@@ -38,7 +38,7 @@
         <elasticsearch.version>7.9.2</elasticsearch.version>
         <elasticsearch-spark.version>7.17.29</elasticsearch-spark.version>
         <netty.version>4.1.96.Final</netty.version>
-        <hbase.version>2.6.0-hadoop3</hbase.version>
+        <hbase.version>2.5.4-hadoop3</hbase.version>
         <prometheus.version>0.16.0</prometheus.version>
         <log4j-api.version>2.20.0</log4j-api.version>
         <annotations.version>17.0.0</annotations.version>
