@@ -728,7 +728,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.gbif.pipelines.coordinator.Standalone</mainClass>
+                            <mainClass>org.gbif.pipelines.coordinator.Coordinator</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

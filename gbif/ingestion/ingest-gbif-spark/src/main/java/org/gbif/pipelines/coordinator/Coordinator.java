@@ -23,11 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 /** The runnable */
 @Slf4j
-public class Standalone {
-
-  //  static {
-  //    DefaultExports.initialize();
-  //  }
+public class Coordinator {
 
   private volatile boolean running = true;
 
@@ -68,7 +64,7 @@ public class Standalone {
 
   public static void main(String[] argsv) throws Exception {
 
-    Standalone.Args args = new Standalone.Args();
+    Coordinator.Args args = new Coordinator.Args();
     JCommander jCommander = new JCommander(args);
     jCommander.parse(argsv);
     Mode mode = Mode.valueOf(args.mode);
@@ -80,7 +76,7 @@ public class Standalone {
     if (args.prometheusPort > 0) {
       log.info("Starting Prometheus HTTP server on port {}", args.prometheusPort);
       try (HTTPServer httpServer = HTTPServer.builder().port(args.prometheusPort).buildAndStart()) {
-        new Standalone()
+        new Coordinator()
             .start(
                 mode,
                 config,
@@ -93,7 +89,7 @@ public class Standalone {
       }
     } else {
       log.info("Prometheus HTTP server disabled");
-      new Standalone()
+      new Coordinator()
           .start(
               mode,
               config,

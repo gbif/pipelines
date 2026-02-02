@@ -30,8 +30,8 @@ public class VocabularyServiceFactory {
   /**
    * Creates or retrieves the singleton instance of the VocabularyService.
    *
-   * @param config
-   * @return
+   * @param config pipelines config
+   * @return the singleton VocabularyService instance
    */
   public static VocabularyService getInstance(PipelinesConfig config) {
 
@@ -39,7 +39,7 @@ public class VocabularyServiceFactory {
       synchronized (LOCK) {
         if (vocabularyService == null) {
 
-          if (config == null
+          if (config != null
               && config.getVocabularyService() != null
               && config.getVocabularyService().getWsUrl() != null) {
 

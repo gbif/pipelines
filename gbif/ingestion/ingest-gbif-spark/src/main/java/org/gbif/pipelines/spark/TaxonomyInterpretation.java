@@ -150,7 +150,7 @@ public class TaxonomyInterpretation {
         outputPath + "/" + METRICS_FILENAME);
 
     log.info(
-        "Finished clustering in {} secs, records: {}",
+        "Finished taxonomy re-interpretation in {} secs, records: {}",
         (System.currentTimeMillis() - start) / 1000,
         recordCount);
   }

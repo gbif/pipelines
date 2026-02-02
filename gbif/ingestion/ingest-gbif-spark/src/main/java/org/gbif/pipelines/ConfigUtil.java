@@ -17,6 +17,12 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 
 public class ConfigUtil {
 
+  /**
+   * Loads the PipelinesConfig from a YAML file.
+   *
+   * @param configPath Path to the YAML configuration file.
+   * @return PipelinesConfig object populated with the configuration data.
+   */
   public static PipelinesConfig loadConfig(String configPath) {
     try (BufferedReader br = new BufferedReader(new FileReader(configPath, UTF_8))) {
       ObjectMapper mapper = new ObjectMapper(new YAMLFactory());

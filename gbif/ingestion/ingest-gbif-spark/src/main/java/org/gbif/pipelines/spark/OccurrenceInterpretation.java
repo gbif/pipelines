@@ -32,6 +32,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
+import org.gbif.api.model.pipelines.InterpretationType;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
@@ -121,6 +122,12 @@ public class OccurrenceInterpretation {
     private boolean useSystemExit = true;
 
     @Parameter(
+        names = "--interpretTypes",
+        description = "Use checkpoints where possible",
+        arity = 1)
+    private List<InterpretationType.RecordType> interpretTypes = null;
+
+    @Parameter(
         names = {"--help", "-h"},
         help = true,
         description = "Show usage")
@@ -149,16 +156,23 @@ public class OccurrenceInterpretation {
     FileSystem fileSystem = getFileSystem(spark, config);
     /* ############ standard init block - end ########## */
 
-    runInterpretation(
-        spark,
-        fileSystem,
-        config,
-        datasetId,
-        attempt,
-        args.numberOfShards,
-        args.tripletValid,
-        args.occurrenceIdValid,
-        args.useCheckpoints);
+    if (args.interpretTypes != null
+        && args.interpretTypes.size() == 1
+        && args.interpretTypes.get(0) != InterpretationType.RecordType.MULTI_TAXONOMY) {
+      log.info("Running only taxonomy interpretation");
+      TaxonomyInterpretation.runTaxonomy(spark, fileSystem, config, datasetId, attempt);
+    } else {
+      runInterpretation(
+          spark,
+          fileSystem,
+          config,
+          datasetId,
+          attempt,
+          args.numberOfShards,
+          args.tripletValid,
+          args.occurrenceIdValid,
+          args.useCheckpoints);
+    }
 
     fileSystem.close();
     spark.stop();

@@ -17,21 +17,18 @@ public class Metrics {
           .help("Timestamp of the last completed dataset message in milliseconds")
           .register();
 
-  // Create a gauge metric
   public static final Gauge CONCURRENT_DATASETS =
       Gauge.builder()
           .name("concurrent_datasets")
           .help("Number of datasets being interpreted concurrently in a pod")
           .register();
 
-  // Create a gauge metric
   public static final Counter MESSAGES_READ_FROM_QUEUE =
       Counter.builder()
           .name("messages_read_from_queue")
           .help("Number of completed datasets being interpreted concurrently in a pod")
           .register();
 
-  // Create a gauge metric
   public static final Counter COMPLETED_DATASETS =
       Counter.builder()
           .name("completed_datasets")

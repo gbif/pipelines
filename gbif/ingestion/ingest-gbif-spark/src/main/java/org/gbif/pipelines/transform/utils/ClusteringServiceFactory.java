@@ -16,7 +16,6 @@ public class ClusteringServiceFactory {
 
   private final ClusteringService service;
   private static volatile ClusteringServiceFactory instance;
-  private static final Object MUTEX = new Object();
 
   @SneakyThrows
   private ClusteringServiceFactory(Connection c, ClusteringRelationshipConfig config) {
