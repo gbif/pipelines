@@ -38,6 +38,7 @@
         <elasticsearch.version>7.9.2</elasticsearch.version>
         <elasticsearch-spark.version>7.17.29</elasticsearch-spark.version>
         <netty.version>4.1.96.Final</netty.version>
+        <!-- note: hbase 2.6.0-hadoop3 causes an issue with fragmenter with stackable 24.7 -->
         <hbase.version>2.5.13-hadoop3</hbase.version>
         <prometheus.version>0.16.0</prometheus.version>
         <log4j-api.version>2.20.0</log4j-api.version>
@@ -727,7 +728,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.gbif.pipelines.interpretation.standalone.Standalone</mainClass>
+                            <mainClass>org.gbif.pipelines.coordinator.Standalone</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

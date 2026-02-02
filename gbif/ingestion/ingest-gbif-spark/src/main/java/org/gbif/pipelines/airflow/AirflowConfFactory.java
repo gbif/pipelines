@@ -20,15 +20,6 @@ public class AirflowConfFactory {
       String datasetId,
       int attempt,
       String sparkAppName,
-      long recordsNumber) {
-    return createConf(pipelinesConfig, datasetId, attempt, sparkAppName, recordsNumber, List.of());
-  }
-
-  public static Conf createConf(
-      PipelinesConfig pipelinesConfig,
-      String datasetId,
-      int attempt,
-      String sparkAppName,
       long recordsNumber,
       List<String> extraArgs) {
 

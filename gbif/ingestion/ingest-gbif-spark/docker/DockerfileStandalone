@@ -44,4 +44,4 @@ ENTRYPOINT ["sh", "-c", "java $JVM_OPTIONS \
   --add-opens java.base/java.util=ALL-UNNAMED \
   --add-opens java.base/sun.nio.ch=ALL-UNNAMED \
   -cp /opt/spark/jars/*:/jobs/ingest-gbif-spark.jar \
-  org.gbif.pipelines.interpretation.standalone.Standalone \"$@\"", "sh"]
+  org.gbif.pipelines.coordinator.Standalone \"$@\"", "sh"]
