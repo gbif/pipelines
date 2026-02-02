@@ -1,0 +1,14 @@
+{
+  "institutionMatch": {
+    "matchType": "NONE",
+    "status": "AMBIGUOUS",
+    "reasons": null,
+    "entityMatched": null
+  },
+  "collectionMatch": {
+    "matchType": "NONE",
+    "status": null,
+    "reasons": null,
+    "entityMatched": null
+  }
+}

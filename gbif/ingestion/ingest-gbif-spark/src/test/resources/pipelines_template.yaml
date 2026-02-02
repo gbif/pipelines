@@ -1,0 +1,61 @@
+inputPath: __TO_BE_SET__
+outputPath: __TO_BE_SET__
+zkConnectionString:
+gbifApi:
+  wsUrl: __TO_BE_SET__
+nameUsageMatchingService:
+  checklistKeys:
+    - d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
+  ws:
+    api:
+      wsUrl: __TO_BE_SET__
+vocabularyService:
+  wsUrl: https://api.gbif.org/v1/
+grscicollLookup:
+  api:
+    wsUrl: __TO_BE_SET__
+geocode:
+  wsCacheSizeMb: 128
+  api:
+    wsUrl: __TO_BE_SET__
+imageCachePath:
+fragmentsTable: test_occurrence_fragment
+keygen:
+  occurrenceTable: test_occurrence
+  counterTable: test_occurrence_counter
+  lookupTable: test_occurrence_lookup
+  zkConnectionString: __TO_BE_SET__
+  hbaseZnode:
+elastic:
+  esHosts: http://localhost:9200
+  esAlias: occurrence
+  esSchemaPath: elasticsearch/es-occurrence-schema.json
+  esMaxBatchSizeBytes: 10485760
+  esMaxBatchSize: 1700
+  indexNumberReplicas: 0
+extensionsAllowedForVerbatimSet:
+  - http://rs.tdwg.org/dwc/terms/Occurrence
+  - http://rs.tdwg.org/ac/terms/Multimedia
+  - http://data.ggbn.org/schemas/ggbn/terms/Amplification
+  - http://data.ggbn.org/schemas/ggbn/terms/Cloning
+  - http://data.ggbn.org/schemas/ggbn/terms/GelImage
+  - http://data.ggbn.org/schemas/ggbn/terms/Loan
+  - http://data.ggbn.org/schemas/ggbn/terms/MaterialSample
+  - http://data.ggbn.org/schemas/ggbn/terms/Permit
+  - http://data.ggbn.org/schemas/ggbn/terms/Preparation
+  - http://data.ggbn.org/schemas/ggbn/terms/Preservation
+  - http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact
+  - http://rs.tdwg.org/chrono/terms/ChronometricAge
+  - http://purl.org/germplasm/germplasmTerm#GermplasmAccession
+  - http://purl.org/germplasm/germplasmTerm#MeasurementScore
+  - http://purl.org/germplasm/germplasmTerm#MeasurementTrait
+  - http://purl.org/germplasm/germplasmTerm#MeasurementTrial
+  - http://rs.tdwg.org/dwc/terms/Identification
+  - http://rs.gbif.org/terms/1.0/Identifier
+  - http://rs.gbif.org/terms/1.0/Image
+  - http://rs.tdwg.org/dwc/terms/MeasurementOrFact
+  - http://rs.gbif.org/terms/1.0/Multimedia
+  - http://rs.gbif.org/terms/1.0/Reference
+  - http://rs.tdwg.org/dwc/terms/ResourceRelationship
+  - http://rs.gbif.org/terms/1.0/DNADerivedData
+  - https://tdwg.github.io/attribution/people/dwc/AgentActions

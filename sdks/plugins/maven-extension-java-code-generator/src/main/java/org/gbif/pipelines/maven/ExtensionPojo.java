@@ -64,8 +64,8 @@ public class ExtensionPojo {
       this.qualifier = qualifier;
 
       // name
-      if (name.equals("Class")) {
-        this.name = "Class$";
+      if (name.equals("Class") || name.equals("Class_")) {
+        this.name = "Class_";
       } else {
         String clearedName = name;
         if (Character.isDigit(name.charAt(0))) {
@@ -82,7 +82,7 @@ public class ExtensionPojo {
       }
 
       // v_name
-      if (this.name.contains("_")) {
+      if (this.name.contains("_") && !this.name.contains("Class_")) {
         this.vName = "V" + this.name.substring(1);
       } else {
         this.vName = "V" + this.name;

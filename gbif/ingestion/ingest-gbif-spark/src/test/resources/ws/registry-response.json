@@ -1,0 +1,1299 @@
+{
+  "key": "7683cc47-cb13-4bad-9614-387c66aa8df0",
+  "installationKey": "17a83780-3060-4851-9d6f-029d5fcb81c9",
+  "publishingOrganizationKey": "d1fec91e-5b53-4cff-9b31-10fed530a3c3",
+  "doi": "10.15468/sg5qp9",
+  "version": "1.6",
+  "external": false,
+  "numConstituents": 0,
+  "type": "OCCURRENCE",
+  "subtype": "OBSERVATION",
+  "title": "Mid-winter count of water birds and other bird species in Bulgaria",
+  "description": "<p>This dataset contains data on water birds and other wintering bird species, collected in the framework of the Mid-Winter Count of Waterfowl monitoring scheme, since 1997. The Mid-Winter Waterfowl Count in Bulgaria is part of the annual international simultaneous counts in the Western Palearctic, carried out in mid January, coordinated by Wetlands International (formerly IWRB) as well as an integral part of the National system for monitoring of Biodiversity. The goals of the count include: - to monitor the trends in the numbers and distribution of wintering waterfowl in Bulgaria; - to monitor the condition of the wetlands that hold water birds; - to determine the threatening factors for birds and wintering sites as well as trends throughout the years; - to analyse the collected data in order to define the priority measures for conservation of the species and the wintering sites, and establish levels for the sustainable harvest of resource species. The counts provide scientifically sound data for decision-making, enable the MoEW to meet its needs for biodiversity monitoring and, via Wetlands International, meet the requirements of the Ramsar Convention.</p>",
+  "language": "eng",
+  "citation": {
+    "text": "Chesmedjiev S, Arkumarev V, Hristov I, Mateeva I, Stoychev S, Popgeorgiev G (2026). Mid-winter count of water birds and other bird species in Bulgaria. Version 1.6. Bulgarian Society for the Protection of Birds. Occurrence dataset https://doi.org/10.15468/sg5qp9 accessed via GBIF.org on 2026-01-31.",
+    "citationProvidedBySource": false
+  },
+  "contactsCitation": [
+    {
+      "key": 6893797,
+      "abbreviatedName": "Chesmedjiev S",
+      "firstName": "Svilen",
+      "lastName": "Chesmedjiev",
+      "roles": [
+        "ORIGINATOR"
+      ],
+      "userId": [
+        "https://orcid.org/0000-0002-7625-8898"
+      ]
+    },
+    {
+      "key": 6893798,
+      "abbreviatedName": "Arkumarev V",
+      "firstName": "Volen",
+      "lastName": "Arkumarev",
+      "roles": [
+        "ORIGINATOR"
+      ],
+      "userId": [ ]
+    },
+    {
+      "key": 6893799,
+      "abbreviatedName": "Hristov I",
+      "firstName": "Iordan",
+      "lastName": "Hristov",
+      "roles": [
+        "ORIGINATOR"
+      ],
+      "userId": [ ]
+    },
+    {
+      "key": 6893800,
+      "abbreviatedName": "Mateeva I",
+      "firstName": "Irina",
+      "lastName": "Mateeva",
+      "roles": [
+        "METADATA_AUTHOR",
+        "ORIGINATOR"
+      ],
+      "userId": [
+        "https://orcid.org/ 0000-0003-4369- 7656"
+      ]
+    },
+    {
+      "key": 6893801,
+      "abbreviatedName": "Stoychev S",
+      "firstName": "Stoycho",
+      "lastName": "Stoychev",
+      "roles": [
+        "ORIGINATOR"
+      ],
+      "userId": [ ]
+    },
+    {
+      "key": 6893802,
+      "abbreviatedName": "Popgeorgiev G",
+      "firstName": "Georgi",
+      "lastName": "Popgeorgiev",
+      "roles": [
+        "METADATA_AUTHOR",
+        "ORIGINATOR"
+      ],
+      "userId": [
+        "https://orcid.org/0000-0002-7625-8898"
+      ]
+    }
+  ],
+  "lockedForAutoUpdate": false,
+  "createdBy": "d1fec91e-5b53-4cff-9b31-10fed530a3c3",
+  "modifiedBy": "crawler.gbif.org",
+  "created": "2024-03-13T08:17:39.995+00:00",
+  "modified": "2026-01-30T10:01:04.898+00:00",
+  "contacts": [
+    {
+      "key": 6893797,
+      "type": "ORIGINATOR",
+      "primary": true,
+      "userId": [
+        "https://orcid.org/0000-0002-7625-8898"
+      ],
+      "firstName": "Svilen",
+      "lastName": "Chesmedjiev",
+      "position": [
+        "Monitoring coordinator 2016 - 2024"
+      ],
+      "email": [
+        "svilen.cheshmedjiev@bspb.org"
+      ],
+      "phone": [
+        "+359878599383"
+      ],
+      "homepage": [
+        "https://bspb.org/"
+      ],
+      "organization": "Bulgarian Society for the Protection of Birds",
+      "address": [
+        "Yavorov quarter, Bl. 71, Entr. 4, app. 1"
+      ],
+      "city": "Sofia",
+      "province": "Sofia",
+      "country": "BG",
+      "postalCode": "1111",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2026-01-30T10:01:04.824+00:00",
+      "modified": "2026-01-30T10:01:04.824+00:00"
+    },
+    {
+      "key": 6893798,
+      "type": "ORIGINATOR",
+      "primary": false,
+      "userId": [ ],
+      "firstName": "Volen",
+      "lastName": "Arkumarev",
+      "position": [
+        "Monitoring coordinator 2015"
+      ],
+      "email": [
+        "volen.arkumarev@bspb.org"
+      ],
+      "phone": [
+        "+359887093547"
+      ],
+      "homepage": [
+        "https://bspb.org/"
+      ],
+      "organization": "Bulgarian Society for the Protection of Birds",
+      "address": [
+        "Yavorov quarter, Bl. 71, Entr. 4, app. 1"
+      ],
+      "city": "Sofia",
+      "province": "Sofia",
+      "country": "BG",
+      "postalCode": "1111",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2026-01-30T10:01:04.828+00:00",
+      "modified": "2026-01-30T10:01:04.828+00:00"
+    },
+    {
+      "key": 6893799,
+      "type": "ORIGINATOR",
+      "primary": false,
+      "userId": [ ],
+      "firstName": "Iordan",
+      "lastName": "Hristov",
+      "position": [
+        "Monitoring coordinator 2013-2014"
+      ],
+      "email": [
+        "iordan.hristov@bspb.org"
+      ],
+      "phone": [
+        "+35829799500"
+      ],
+      "homepage": [
+        "https://bspb.org/"
+      ],
+      "organization": "Bulgarian Society for the Protection of Birds",
+      "address": [
+        "Yavorov quarter, Bl. 71, Entr. 4, app. 1"
+      ],
+      "city": "Sofia",
+      "country": "BG",
+      "postalCode": "1111",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2026-01-30T10:01:04.829+00:00",
+      "modified": "2026-01-30T10:01:04.829+00:00"
+    },
+    {
+      "key": 6893800,
+      "type": "ORIGINATOR",
+      "primary": false,
+      "userId": [
+        "https://orcid.org/ 0000-0003-4369- 7656"
+      ],
+      "firstName": "Irina",
+      "lastName": "Mateeva",
+      "position": [
+        "Monitoring coordinator 1997 - 2012"
+      ],
+      "email": [
+        "irina.kostadinova@bspb.org"
+      ],
+      "phone": [
+        "+359878599360"
+      ],
+      "homepage": [
+        "https://bspb.org/"
+      ],
+      "organization": "Bulgarian Society for the Protection of Birds",
+      "address": [
+        "Yavorov quarter, Bl. 71, Entr. 4, app. 1"
+      ],
+      "city": "Sofia",
+      "province": "Sofia",
+      "country": "BG",
+      "postalCode": "1111",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2026-01-30T10:01:04.831+00:00",
+      "modified": "2026-01-30T10:01:04.831+00:00"
+    },
+    {
+      "key": 6893801,
+      "type": "ORIGINATOR",
+      "primary": false,
+      "userId": [ ],
+      "firstName": "Stoycho",
+      "lastName": "Stoychev",
+      "position": [
+        "Conservation director"
+      ],
+      "email": [
+        "stoycho.stoychev@bspb.org"
+      ],
+      "phone": [
+        "+35829799500"
+      ],
+      "homepage": [
+        "https://bspb.org/"
+      ],
+      "organization": "Bulgarian Society for the Protection of Birds",
+      "address": [
+        "Yavorov quarter, Bl. 71, Entr. 4, app. 1"
+      ],
+      "city": "Sofia",
+      "province": "Sofia",
+      "country": "BG",
+      "postalCode": "1111",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2026-01-30T10:01:04.832+00:00",
+      "modified": "2026-01-30T10:01:04.832+00:00"
+    },
+    {
+      "key": 6893802,
+      "type": "ORIGINATOR",
+      "primary": false,
+      "userId": [
+        "https://orcid.org/0000-0002-7625-8898"
+      ],
+      "firstName": "Georgi",
+      "lastName": "Popgeorgiev",
+      "position": [
+        "DB manager"
+      ],
+      "email": [
+        "georgi.popgeorgiev@gmail.com"
+      ],
+      "phone": [
+        "+35929799500"
+      ],
+      "homepage": [
+        "https://bspb.org/"
+      ],
+      "organization": "Bulgarian Society for the Protection of Birds",
+      "address": [
+        "Plovdiv"
+      ],
+      "city": "Plovdiv",
+      "province": "Plovdiv",
+      "country": "BG",
+      "postalCode": "4000",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2026-01-30T10:01:04.833+00:00",
+      "modified": "2026-01-30T10:01:04.833+00:00"
+    },
+    {
+      "key": 6893803,
+      "type": "METADATA_AUTHOR",
+      "primary": true,
+      "userId": [
+        "https://orcid.org/0000-0002-7625-8898"
+      ],
+      "firstName": "Georgi",
+      "lastName": "Popgeorgiev",
+      "position": [
+        "DB manager"
+      ],
+      "email": [
+        "georgi.popgeorgiev@gmail.com"
+      ],
+      "phone": [
+        "+35929799500"
+      ],
+      "homepage": [
+        "https://bspb.org/"
+      ],
+      "organization": "Bulgarian Society for the Protection of Birds",
+      "address": [
+        "Plovdiv"
+      ],
+      "city": "Plovdiv",
+      "province": "Plovdiv",
+      "country": "BG",
+      "postalCode": "4000",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2026-01-30T10:01:04.835+00:00",
+      "modified": "2026-01-30T10:01:04.835+00:00"
+    },
+    {
+      "key": 6893804,
+      "type": "METADATA_AUTHOR",
+      "primary": false,
+      "userId": [
+        "https://orcid.org/ 0000-0003-4369- 7656"
+      ],
+      "firstName": "Irina",
+      "lastName": "Mateeva",
+      "position": [
+        "Monitoring coordinator 1997 - 2012"
+      ],
+      "email": [
+        "irina.kostadinova@bspb.org"
+      ],
+      "phone": [
+        "+359878599360"
+      ],
+      "homepage": [
+        "https://bspb.org/"
+      ],
+      "organization": "Bulgarian Society for the Protection of Birds",
+      "address": [
+        "Yavorov quarter, Bl. 71, Entr. 4, app. 1"
+      ],
+      "city": "Sofia",
+      "province": "Sofia",
+      "country": "BG",
+      "postalCode": "1111",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2026-01-30T10:01:04.836+00:00",
+      "modified": "2026-01-30T10:01:04.836+00:00"
+    },
+    {
+      "key": 6893805,
+      "type": "ADMINISTRATIVE_POINT_OF_CONTACT",
+      "primary": true,
+      "userId": [
+        "https://orcid.org/0000-0002-7625-8898"
+      ],
+      "firstName": "Svilen",
+      "lastName": "Chesmedjiev",
+      "position": [
+        "Monitoring coordinator 2016 - 2024"
+      ],
+      "email": [
+        "svilen.cheshmedjiev@bspb.org"
+      ],
+      "phone": [
+        "+359878599383"
+      ],
+      "homepage": [
+        "https://bspb.org/"
+      ],
+      "organization": "Bulgarian Society for the Protection of Birds",
+      "address": [
+        "Yavorov quarter, Bl. 71, Entr. 4, app. 1"
+      ],
+      "city": "Sofia",
+      "province": "Sofia",
+      "country": "BG",
+      "postalCode": "1111",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2026-01-30T10:01:04.837+00:00",
+      "modified": "2026-01-30T10:01:04.837+00:00"
+    },
+    {
+      "key": 6893806,
+      "type": "ADMINISTRATIVE_POINT_OF_CONTACT",
+      "primary": false,
+      "userId": [ ],
+      "firstName": "Volen",
+      "lastName": "Arkumarev",
+      "position": [
+        "Monitoring coordinator 2015"
+      ],
+      "email": [
+        "volen.arkumarev@bspb.org"
+      ],
+      "phone": [
+        "+359887093547"
+      ],
+      "homepage": [
+        "https://bspb.org/"
+      ],
+      "organization": "Bulgarian Society for the Protection of Birds",
+      "address": [
+        "Yavorov quarter, Bl. 71, Entr. 4, app. 1"
+      ],
+      "city": "Sofia",
+      "province": "Sofia",
+      "country": "BG",
+      "postalCode": "1111",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2026-01-30T10:01:04.839+00:00",
+      "modified": "2026-01-30T10:01:04.839+00:00"
+    },
+    {
+      "key": 6893807,
+      "type": "ADMINISTRATIVE_POINT_OF_CONTACT",
+      "primary": false,
+      "userId": [ ],
+      "firstName": "Iordan",
+      "lastName": "Hristov",
+      "position": [
+        "Monitoring coordinator 2013-2014"
+      ],
+      "email": [
+        "iordan.hristov@bspb.org"
+      ],
+      "phone": [
+        "+35829799500"
+      ],
+      "homepage": [ ],
+      "organization": "Bulgarian Society for the Protection of Birds",
+      "address": [
+        "Yavorov quarter, Bl. 71, Entr. 4, app. 1"
+      ],
+      "city": "Sofia",
+      "country": "BG",
+      "postalCode": "1111",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2026-01-30T10:01:04.840+00:00",
+      "modified": "2026-01-30T10:01:04.840+00:00"
+    },
+    {
+      "key": 6893808,
+      "type": "ADMINISTRATIVE_POINT_OF_CONTACT",
+      "primary": false,
+      "userId": [
+        "https://orcid.org/ 0000-0003-4369- 7656"
+      ],
+      "firstName": "Irina",
+      "lastName": "Mateeva",
+      "position": [
+        "Monitoring coordinator 1997 - 2012"
+      ],
+      "email": [
+        "irina.kostadinova@bspb.org"
+      ],
+      "phone": [
+        "+359878599360"
+      ],
+      "homepage": [
+        "https://bspb.org/"
+      ],
+      "organization": "Bulgarian Society for the Protection of Birds",
+      "address": [
+        "Yavorov quarter, Bl. 71, Entr. 4, app. 1"
+      ],
+      "city": "Sofia",
+      "province": "Sofia",
+      "country": "BG",
+      "postalCode": "1111",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2026-01-30T10:01:04.841+00:00",
+      "modified": "2026-01-30T10:01:04.841+00:00"
+    },
+    {
+      "key": 6893809,
+      "type": "ADMINISTRATIVE_POINT_OF_CONTACT",
+      "primary": false,
+      "userId": [ ],
+      "firstName": "Stoycho",
+      "lastName": "Stoychev",
+      "position": [
+        "Conservation director"
+      ],
+      "email": [
+        "stoycho.stoychev@bspb.org"
+      ],
+      "phone": [
+        "+35829799500"
+      ],
+      "homepage": [ ],
+      "organization": "Bulgarian Society for the Protection of Birds",
+      "address": [
+        "Yavorov quarter, Bl. 71, Entr. 4, app. 1"
+      ],
+      "city": "Sofia",
+      "province": "Sofia",
+      "country": "BG",
+      "postalCode": "1111",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2026-01-30T10:01:04.842+00:00",
+      "modified": "2026-01-30T10:01:04.842+00:00"
+    },
+    {
+      "key": 6893810,
+      "type": "ADMINISTRATIVE_POINT_OF_CONTACT",
+      "primary": false,
+      "userId": [
+        "https://orcid.org/0000-0002-7625-8898"
+      ],
+      "firstName": "Georgi",
+      "lastName": "Popgeorgiev",
+      "position": [
+        "DB manager"
+      ],
+      "email": [
+        "georgi.popgeorgiev@gmail.com"
+      ],
+      "phone": [
+        "+3590876939252"
+      ],
+      "homepage": [
+        "https://bspb.org/"
+      ],
+      "organization": "Bulgarian Society for the Protection of Birds",
+      "address": [
+        "Plovdiv"
+      ],
+      "city": "Plovdiv",
+      "province": "Plovdiv",
+      "country": "BG",
+      "postalCode": "4000",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2026-01-30T10:01:04.843+00:00",
+      "modified": "2026-01-30T10:01:04.843+00:00"
+    }
+  ],
+  "endpoints": [
+    {
+      "key": 1238559,
+      "type": "DWC_ARCHIVE",
+      "url": "https://cloud.gbif.org/eca/archive.do?r=mindwintercountbulgaria",
+      "createdBy": "d1fec91e-5b53-4cff-9b31-10fed530a3c3",
+      "modifiedBy": "d1fec91e-5b53-4cff-9b31-10fed530a3c3",
+      "created": "2026-01-30T10:00:03.489+00:00",
+      "modified": "2026-01-30T10:00:03.489+00:00",
+      "machineTags": [ ]
+    },
+    {
+      "key": 1238558,
+      "type": "EML",
+      "url": "https://cloud.gbif.org/eca/eml.do?r=mindwintercountbulgaria",
+      "createdBy": "d1fec91e-5b53-4cff-9b31-10fed530a3c3",
+      "modifiedBy": "d1fec91e-5b53-4cff-9b31-10fed530a3c3",
+      "created": "2026-01-30T10:00:03.440+00:00",
+      "modified": "2026-01-30T10:00:03.440+00:00",
+      "machineTags": [ ]
+    }
+  ],
+  "machineTags": [
+    {
+      "key": 29293373,
+      "namespace": "crawler.gbif.org",
+      "name": "crawl_attempt",
+      "value": "96",
+      "createdBy": "crawler.gbif.org",
+      "created": "2026-01-30T10:01:03.422+00:00"
+    }
+  ],
+  "tags": [ ],
+  "identifiers": [
+    {
+      "key": 361505,
+      "type": "UUID",
+      "identifier": "7683cc47-cb13-4bad-9614-387c66aa8df0",
+      "createdBy": "crawler.gbif.org",
+      "created": "2024-03-13T08:24:28.740+00:00",
+      "primary": false
+    },
+    {
+      "key": 361504,
+      "type": "URL",
+      "identifier": "https://cloud.gbif.org/eca/resource?r=mindwintercountbulgaria",
+      "createdBy": "crawler.gbif.org",
+      "created": "2024-03-13T08:18:52.548+00:00",
+      "primary": false
+    }
+  ],
+  "comments": [ ],
+  "bibliographicCitations": [ ],
+  "curatorialUnits": [ ],
+  "taxonomicCoverages": [
+    {
+      "description": "N/A, N/A, N/A, N/A",
+      "coverages": [
+        {
+          "scientificName": "Psittacidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Troglodytidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Suliformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Laridae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Sylviidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Corvidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Cuculiformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Upupidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Phylloscopidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Anseriformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Regulidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Columbidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Certhiidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Motacillidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Muscicapidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Procellariidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Phalacrocoracidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Cuculidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Aegithalidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Galliformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Podicipedidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Phoenicopteriformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Emberizidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Passeriformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Haematopodidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Pelecaniformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Ciconiiformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Glareolidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Picidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Falconiformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Accipitriformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Sittidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Sturnidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Pandionidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Cettiidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Chordata",
+          "rank": {
+            "verbatim": "phylum",
+            "interpreted": "PHYLUM"
+          }
+        },
+        {
+          "scientificName": "Gruiformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Fringillidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Aves",
+          "rank": {
+            "verbatim": "kingdom",
+            "interpreted": "KINGDOM"
+          }
+        },
+        {
+          "scientificName": "Columbiformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Scolopacidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Alcedinidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Tichodromidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Aves",
+          "rank": {
+            "verbatim": "class",
+            "interpreted": "CLASS"
+          }
+        },
+        {
+          "scientificName": "Charadriiformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Charadriidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Threskiornithidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Passeridae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Gruidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Recurvirostridae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Bucerotiformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Calcariidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Bombycillidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Prunellidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Accipitridae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Podicipediformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Hirundinidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Strigidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Psittaciformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Alaudidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Phoenicopteridae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Otididae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Phasianidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Remizidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Panuridae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Falconidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Turdidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Rallidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Tytonidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Procellariiformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Acrocephalidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Strigiformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Otidiformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Cinclidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Coraciiformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Piciformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Laniidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Paridae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Gaviidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Ardeidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Gaviiformes",
+          "rank": {
+            "verbatim": "order",
+            "interpreted": "ORDER"
+          }
+        },
+        {
+          "scientificName": "Ciconiidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Anatidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Meropidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        },
+        {
+          "scientificName": "Pelecanidae",
+          "rank": {
+            "verbatim": "family",
+            "interpreted": "FAMILY"
+          }
+        }
+      ]
+    }
+  ],
+  "geographicCoverages": [
+    {
+      "description": "Bulgaria",
+      "boundingBox": {
+        "minLatitude": 41.367868,
+        "maxLatitude": 44.214633,
+        "minLongitude": 22.50736,
+        "maxLongitude": 28.64176,
+        "globalCoverage": false
+      }
+    }
+  ],
+  "temporalCoverages": [
+    {
+      "@type": "range",
+      "start": "1997-01-11T00:00:00.000+00:00",
+      "end": "2026-01-18T00:00:00.000+00:00"
+    }
+  ],
+  "keywordCollections": [
+    {
+      "thesaurus": "GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type_2015-07-10.xml",
+      "keywords": [
+        "Occurrence; Birds; Water birds; Bulgaria; Wintering; Wetlands; Observation; Conservation"
+      ]
+    },
+    {
+      "thesaurus": "GBIF Dataset Subtype Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_subtype.xml",
+      "keywords": [
+        "Observation"
+      ]
+    }
+  ],
+  "project": {
+    "title": "The biodiversity of the Balkans in GBIF",
+    "identifier": "nlbif2022.015",
+    "contacts": [
+      {
+        "type": "POINT_OF_CONTACT",
+        "primary": false,
+        "userId": [ ],
+        "firstName": "Svetlana",
+        "lastName": "Miteva",
+        "position": [ ],
+        "email": [ ],
+        "phone": [ ],
+        "homepage": [ ],
+        "address": [ ]
+      },
+      {
+        "type": "CONTENT_PROVIDER",
+        "primary": false,
+        "userId": [
+          "https://orcid.org/0000-0002-7625-8898"
+        ],
+        "firstName": "Georgi",
+        "lastName": "Popgeorgiev",
+        "position": [ ],
+        "email": [ ],
+        "phone": [ ],
+        "homepage": [ ],
+        "address": [ ]
+      }
+    ],
+    "funding": "The datasets publication was organised with the support of Project nlbif2022.015 funded by NLBIF to The Habitat Foundation: https://www.nlbif.nl/the-biodiversity-of-the-balkans-in-gbif/",
+    "awards": [ ],
+    "relatedProjects": [ ],
+    "abstract": "The region of the Balkans is identified as a European biodiversity hot spot. The Balkans include part of Croatia, the whole of Bosnia and Herzegovina, Albania, Kosovo, Montenegro, North Macedonia, Greece, Bulgaria and the European part of Turkey. The Balkans is part of the Mediterranean Key Biodiversity Area (KBA).\n\nHowever, the biodiversity in the Balkans is threatened. More and more Balkan countries open their economies and become more accessible and attractive for large international investors and tourists. This causes major landscape changes. Agriculture is intensifying, infrastructure is being modernised and expanding at an accelerated pace, hydroelectric power stations in rivers are build, etc.\n\nReliable data on species occurrence is needed for evidence-based conservation and management and further research on the biodiversity in the Balkans. Unfortunately, only a small amount of the geographically referenced species occurrence data from the Balkans is available. Baseline data on many groups like mammals, insects, plants, reptiles and amphibians are absent.\n\nWith this project, we aim to mobilise data from the Balkans. Species specialists from five Balkan countries will be trained in data mobilisation. By promoting, communicating, and training researchers, the project will demonstrate the importance of FAIR data availability, aiming at mainstreaming biodiversity data publication in the region. The target is publishing more than 100.000 records, which will increase the number of published data on mammals, birds, insects, fish, reptiles and amphibians by at least 10%. The results of this project will also be published in Biodiversity Data Journal (Pensoft Publishers)."
+  },
+  "samplingDescription": {
+    "studyExtent": "The Mid-Winter Count of Waterfowl is carried out according to a standard methodology . It takes place annually in thee to four days around the second weekend of January (in general between 10th and 17th January for the reported period), where in total 265 wetlands, including rivers and the Black sea Coast (according predefined list) are visited by in total of 43 teams of experts and volunteers. The country is divided into regions, which are covered by separate teams. Each team has a predefined route and wetlands they cover each year. At least one professional ornithologist or ornithologist with many years of experience in field identification of waterfowl participates in each team. \nData is collected in notebooks for the period 1997 – 2015 with real coordinates, and then processed electronically. Since 2016 data are collected through the mobile application SmartBirds Pro and directly incorporated in the SmartBirds Information System (https://smartbirds.org/).\nData collected contain: date and hour of observation, observer, location (including exact geographical location), weather conditions, wetland condition, species name, number of individuals observed and additional notes.\nThe smaller wetlands are observed from a single observation point, while the larger wetlands, river streams (Danube, Maritsa, Tundzha, Osam, Ogosta, Yantra, Iskar, Struma, etc.) and the Black Sea Coast are observed from more predefined observation points, in order to ensure full coverage of wetlands.",
+    "sampling": "At wetlands full count of water birds and other bird species is carried out with following specifics: geese are counted at sunrise at roosting sites at wetland or sea at time they take off to foraging areas; cormorants are counted at dusk when they come to roosting sites. Both geese and cormorants are not counted during the day unless the birds are observed very far from known roosts or the roosts of these species in the given region are not known.",
+    "qualityControl": "The mobile application SmartBirds Pro, which is used for data collection has mechanisms to minimise the errors during the data entry, such as predefined lists of species, lists of meteorological conditions, status of species, as well as obligatory fields, which prevents recording with missing key information.\nData collected are checked for completeness, consistency and content  by the monitoring coordinator. Further on the content of the data is double checked by database moderators.",
+    "methodSteps": [
+      "During survey work, observers record each individual bird."
+    ]
+  },
+  "countryCoverage": [ ],
+  "collections": [ ],
+  "dataDescriptions": [ ],
+  "dataLanguage": "eng",
+  "pubDate": "2026-01-30T00:00:00.000+00:00",
+  "maintenanceUpdateFrequency": "ANNUALLY",
+  "maintenanceDescription": "",
+  "license": "http://creativecommons.org/licenses/by-nc/4.0/legalcode",
+  "dwca": {
+    "coreType": "http://rs.tdwg.org/dwc/terms/Occurrence",
+    "extensions": [ ],
+    "modified": "2026-01-30T10:01:04.756+00:00"
+  }
+}

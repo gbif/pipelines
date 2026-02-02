@@ -1,0 +1,48 @@
+{
+  "key": "17a83780-3060-4851-9d6f-029d5fcb81c9",
+  "organizationKey": "fbca90e3-8aed-48b1-84e3-369afbd000ce",
+  "type": "IPT_INSTALLATION",
+  "title": "GBIF Europe and Central Asia",
+  "description": "This IPT is hosted by GBIF to provide a publishing option for datasets from countries in the GBIF Europe and Central Asia region, who prefer not to run their own IPT.",
+  "createdBy": "fbca90e3-8aed-48b1-84e3-369afbd000ce",
+  "modifiedBy": "17a83780-3060-4851-9d6f-029d5fcb81c9",
+  "created": "2020-04-06T15:32:09.017+00:00",
+  "modified": "2020-04-06T15:44:52.633+00:00",
+  "disabled": false,
+  "contacts": [
+    {
+      "key": 2035915,
+      "type": "TECHNICAL_POINT_OF_CONTACT",
+      "primary": true,
+      "userId": [ ],
+      "firstName": "Dag Endresen",
+      "position": [ ],
+      "email": [
+        "dag.endresen@nhm.uio.no"
+      ],
+      "phone": [ ],
+      "homepage": [ ],
+      "address": [ ],
+      "createdBy": "fbca90e3-8aed-48b1-84e3-369afbd000ce",
+      "modifiedBy": "17a83780-3060-4851-9d6f-029d5fcb81c9",
+      "created": "2020-04-06T15:32:09.052+00:00",
+      "modified": "2020-04-06T15:44:52.813+00:00"
+    }
+  ],
+  "endpoints": [
+    {
+      "key": 485108,
+      "type": "FEED",
+      "url": "https://cloud.gbif.org/eca/rss.do",
+      "createdBy": "17a83780-3060-4851-9d6f-029d5fcb81c9",
+      "modifiedBy": "17a83780-3060-4851-9d6f-029d5fcb81c9",
+      "created": "2020-04-06T15:44:52.973+00:00",
+      "modified": "2020-04-06T15:44:52.973+00:00",
+      "machineTags": [ ]
+    }
+  ],
+  "machineTags": [ ],
+  "tags": [ ],
+  "identifiers": [ ],
+  "comments": [ ]
+}

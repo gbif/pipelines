@@ -51,7 +51,7 @@ public class BasicTransform implements Serializable {
             .build();
 
     var vocabServiceUrl = config.getVocabularyService().getWsUrl();
-    var vocabService = VocabularyServiceFactory.getInstance(vocabServiceUrl);
+    var vocabService = VocabularyServiceFactory.getInstance(config);
 
     // Apply interpreters sequentially
     BasicInterpreter.interpretBasisOfRecord(source, record);

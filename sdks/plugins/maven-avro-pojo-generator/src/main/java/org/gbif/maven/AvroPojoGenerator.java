@@ -137,7 +137,7 @@ public class AvroPojoGenerator extends AbstractMojo {
       name = normalizeName(name);
       String type = resolveType(field.get("type"), namespace, imports);
       if ("class".equals(name) || "v_class".equals(name) || "v_class".equals(name))
-        name = name + "$";
+        name = name + "_";
       if (type.equals("IssueRecord")) body.append("    @lombok.Builder.Default\n");
       if (type.equals("org.gbif.pipelines.io.avro.IssueRecord"))
         body.append("    @lombok.Builder.Default\n");
@@ -330,7 +330,7 @@ public class AvroPojoGenerator extends AbstractMojo {
       }
     }
     if (input.equals("vClass")) {
-      return "vClass$";
+      return "vClass_";
     } else {
       return startsWithUnderscore ? "_" + input : input;
     }
