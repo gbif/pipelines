@@ -152,12 +152,30 @@ public class Fragmenter {
       boolean useOccurrenceId)
       throws Exception {
 
-    try {
-      MDC.put("datasetKey", datasetId);
-      long start = System.currentTimeMillis();
-      log.info("Starting to run fragmenter for dataset {}, attempt {}", datasetId, attempt);
+    MDC.put("datasetKey", datasetId);
+    long start = System.currentTimeMillis();
+    log.info("Starting to run fragmenter for dataset {}, attempt {}", datasetId, attempt);
 
-      String outputPath = config.getOutputPath() + "/" + datasetId + "/" + attempt;
+    String outputPath = config.getOutputPath() + "/" + datasetId + "/" + attempt;
+
+    // Configure HFile output
+    Configuration hbaseConf = HBaseConfiguration.create();
+    hbaseConf.set(FileOutputFormat.COMPRESS, "true");
+    hbaseConf.setClass(FileOutputFormat.COMPRESS_CODEC, SnappyCodec.class, CompressionCodec.class);
+    hbaseConf.addResource(new Path("/etc/hadoop/conf/hbase-site.xml"));
+    hbaseConf.set("hbase.fs.tmp.dir", outputPath + "/hfile-staging");
+    hbaseConf.set("hbase.mapreduce.hfileoutputformat.table.name", config.getFragmentsTable());
+
+    if (config.getHdfsSiteConfig() != null && config.getCoreSiteConfig() != null) {
+      hbaseConf.addResource(new Path(config.getHdfsSiteConfig()));
+      hbaseConf.addResource(new Path(config.getCoreSiteConfig()));
+    }
+
+    try (Connection connection = ConnectionFactory.createConnection(hbaseConf);
+        Admin admin = connection.getAdmin();
+        Table table = connection.getTable(TableName.valueOf(config.getFragmentsTable()));
+        RegionLocator regionLocator =
+            connection.getRegionLocator(TableName.valueOf(config.getFragmentsTable()))) {
 
       // read verbatim records
       Dataset<ExtendedRecord> verbatim =
@@ -208,62 +226,37 @@ public class Fragmenter {
                             record.getAs("recordBody")));
                     return cells.iterator();
                   });
-      //            .repartitionAndSortWithinPartitions(new SaltPrefixPartitioner(10));
 
       cleanHdfsPath(fileSystem, config, outputPath);
       String hfilePath = outputPath + "/fragment";
 
-      // Configure HFile output
-      Configuration hbaseConf = HBaseConfiguration.create();
-      hbaseConf.set(FileOutputFormat.COMPRESS, "true");
-      hbaseConf.setClass(
-          FileOutputFormat.COMPRESS_CODEC, SnappyCodec.class, CompressionCodec.class);
-      hbaseConf.addResource(new Path("/etc/hadoop/conf/hbase-site.xml"));
-      hbaseConf.set("hbase.fs.tmp.dir", outputPath + "/hfile-staging");
-      hbaseConf.set("hbase.mapreduce.hfileoutputformat.table.name", config.getFragmentsTable());
+      Job job = Job.getInstance(hbaseConf);
+      job.setMapOutputKeyClass(ImmutableBytesWritable.class);
+      job.setMapOutputValueClass(org.apache.hadoop.hbase.KeyValue.class);
+      HFileOutputFormat2.configureIncrementalLoad(job, table, regionLocator);
 
-      if (config.getHdfsSiteConfig() != null && config.getCoreSiteConfig() != null) {
-        hbaseConf.addResource(new Path(config.getHdfsSiteConfig()));
-        hbaseConf.addResource(new Path(config.getCoreSiteConfig()));
-      }
+      hbaseKvs
+          .mapToPair(
+              cell -> {
+                ImmutableBytesWritable k = new ImmutableBytesWritable(Bytes.toBytes(cell._1._1));
+                Cell row =
+                    new KeyValue(
+                        Bytes.toBytes(cell._1._1), // key
+                        Bytes.toBytes("fragment"), // column family
+                        Bytes.toBytes(cell._1._2), // cell
+                        Bytes.toBytes(cell._2) // cell value
+                        );
+                return new Tuple2<>(k, row);
+              })
+          .saveAsNewAPIHadoopFile(
+              hfilePath,
+              ImmutableBytesWritable.class,
+              KeyValue.class,
+              HFileOutputFormat2.class,
+              hbaseConf);
 
-      try (Connection connection = ConnectionFactory.createConnection(hbaseConf);
-          Admin admin = connection.getAdmin();
-          Table table = connection.getTable(TableName.valueOf(config.getFragmentsTable()));
-          RegionLocator regionLocator =
-              connection.getRegionLocator(TableName.valueOf(config.getFragmentsTable()))) {
-
-        Job job = Job.getInstance(hbaseConf);
-        job.setMapOutputKeyClass(ImmutableBytesWritable.class);
-        job.setMapOutputValueClass(org.apache.hadoop.hbase.KeyValue.class);
-        HFileOutputFormat2.configureIncrementalLoad(job, table, regionLocator);
-
-        hbaseKvs
-            .mapToPair(
-                cell -> {
-                  ImmutableBytesWritable k = new ImmutableBytesWritable(Bytes.toBytes(cell._1._1));
-                  Cell row =
-                      new KeyValue(
-                          Bytes.toBytes(cell._1._1), // key
-                          Bytes.toBytes("fragment"), // column family
-                          Bytes.toBytes(cell._1._2), // cell
-                          Bytes.toBytes(cell._2) // cell value
-                          );
-                  return new Tuple2<>(k, row);
-                })
-            .saveAsNewAPIHadoopFile(
-                hfilePath,
-                ImmutableBytesWritable.class,
-                KeyValue.class,
-                HFileOutputFormat2.class,
-                hbaseConf);
-
-        LoadIncrementalHFiles loader = new LoadIncrementalHFiles(hbaseConf);
-        loader.doBulkLoad(new Path(hfilePath), admin, table, regionLocator);
-
-      } catch (Exception ex) {
-        log.error("Error while loading HFiles from {}", config.getFragmentsTable(), ex);
-      }
+      LoadIncrementalHFiles loader = new LoadIncrementalHFiles(hbaseConf);
+      loader.doBulkLoad(new Path(hfilePath), admin, table, regionLocator);
 
       writeMetricsYaml(
           fileSystem,
