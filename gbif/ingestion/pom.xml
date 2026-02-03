@@ -16,13 +16,8 @@
   <description>Apache Beam pipelines</description>
 
   <modules>
-<!--    <module>ingest-gbif-beam</module>-->
     <module>ingest-gbif-spark</module>
     <module>ingest-healthcheck</module>
-<!--    <module>ingest-gbif-fragmenter</module>-->
-<!--    <module>ingest-gbif-java</module>-->
-<!--    <module>ingestion-integration-tests</module>-->
-<!--    <module>ingestion-integration-tests-hbase</module>-->
 <!--    <module>pre-backbone-release</module>-->
   </modules>
 

@@ -171,7 +171,8 @@ public class OccurrenceInterpretation {
           args.numberOfShards,
           args.tripletValid,
           args.occurrenceIdValid,
-          args.useCheckpoints);
+          args.useCheckpoints,
+          args.interpretTypes);
     }
 
     fileSystem.close();
@@ -209,8 +210,17 @@ public class OccurrenceInterpretation {
       int numberOfShards,
       Boolean tripletValid,
       Boolean occurrenceIdValid,
-      Boolean useCheckpoints)
+      Boolean useCheckpoints,
+      List<InterpretationType.RecordType> interpretTypes)
       throws IOException {
+
+    if (interpretTypes != null
+        && interpretTypes.size() == 1
+        && interpretTypes.get(0) != InterpretationType.RecordType.MULTI_TAXONOMY) {
+      log.info("Running only taxonomy interpretation");
+      TaxonomyInterpretation.runTaxonomy(spark, fs, config, datasetId, attempt);
+      return;
+    }
 
     long start = System.currentTimeMillis();
 
