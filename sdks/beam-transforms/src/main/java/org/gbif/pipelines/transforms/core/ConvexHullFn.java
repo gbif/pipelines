@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser;
@@ -17,6 +18,7 @@ import org.locationtech.jts.io.WKTWriter;
 
 /** Beam that calculates a ConvexHull form all coordinates accumulated from location records. */
 @Data
+@Slf4j
 public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn.Accum, String> {
 
   private static final TupleTag<String> TAG = new TupleTag<String>() {};
@@ -41,7 +43,9 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
         Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
         if (geometry.isValid() && !geometry.isEmpty()) {
           if (geometry.getArea() > 0) {
-            return Optional.of(new WKTWriter().write(geometry));
+            String convexHull = new WKTWriter().write(geometry);
+            log.info("Convex hull converted:{} ", convexHull);
+            return Optional.of(convexHull);
           } else {
             // Get the bounding box envelope
             Geometry envelope = geometry.getEnvelope();
@@ -52,7 +56,9 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
             }
 
             if (envelope instanceof Polygon && envelope.getArea() > 0) {
-              return Optional.of(new WKTWriter().write(envelope));
+              String convexHull = new WKTWriter().write(envelope);
+              log.info("Convex hull converted:{} ", convexHull);
+              return Optional.of(convexHull);
             }
           }
         }
