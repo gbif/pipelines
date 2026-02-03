@@ -114,7 +114,7 @@
     <kvs.version>3.0</kvs.version>
     <hbase-utils.version>1.0.0</hbase-utils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
-    <gbif-occurrence.version>1.1.13</gbif-occurrence.version>
+    <gbif-occurrence.version>1.1.14</gbif-occurrence.version>
     <vocabulary-lookup.version>2.0.3</vocabulary-lookup.version>
     <registry.version>4.2.3</registry.version>
     <gbif-common-ws.version>2.1.1</gbif-common-ws.version>
