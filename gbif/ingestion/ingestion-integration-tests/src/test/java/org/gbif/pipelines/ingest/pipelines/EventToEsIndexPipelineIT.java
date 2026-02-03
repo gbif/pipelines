@@ -648,7 +648,9 @@ public class EventToEsIndexPipelineIT {
 
     // Assert geographic coverage/convex hull
     Assert.assertNotNull(record.getDerivedMetadata().getWktConvexHull());
-    Assert.assertEquals("POINT (5 10)", record.getDerivedMetadata().getWktConvexHull());
+    Assert.assertEquals(
+        "POLYGON ((5.0001 10, 5 9.9999, 4.9999 10, 5 10.0001, 5.0001 10))",
+        record.getDerivedMetadata().getWktConvexHull());
 
     // Assert taxonomic coverage
     Assert.assertNotNull(record.getDerivedMetadata().getTaxonomicCoverage());
