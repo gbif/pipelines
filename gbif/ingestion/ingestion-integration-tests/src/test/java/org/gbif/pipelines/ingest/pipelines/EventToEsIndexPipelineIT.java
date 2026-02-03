@@ -450,7 +450,13 @@ public class EventToEsIndexPipelineIT {
     try (SyncDataFileWriter<LocationRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, LocationTransform.builder().create(), OCCURRENCE_TERM, postfix)) {
-      LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
+      LocationRecord locationRecord =
+          LocationRecord.newBuilder()
+              .setId(ID)
+              .setHasCoordinate(true)
+              .setDecimalLatitude(10d)
+              .setDecimalLongitude(5d)
+              .build();
       writer.append(locationRecord);
     }
     try (SyncDataFileWriter<MultiTaxonRecord> writer =

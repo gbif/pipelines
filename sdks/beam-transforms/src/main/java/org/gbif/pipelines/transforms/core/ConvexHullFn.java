@@ -12,6 +12,7 @@ import org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.io.WKTWriter;
 
 /** Beam that calculates a ConvexHull form all coordinates accumulated from location records. */
@@ -38,7 +39,7 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
     public Optional<String> toWktConvexHull() {
       if (!coordinates.isEmpty()) {
         Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
-        if (geometry.isValid() && geometry.getArea() > 0) {
+        if (geometry.isValid() && (!(geometry instanceof Polygon) || geometry.getArea() > 0)) {
           return Optional.of(new WKTWriter().write(geometry));
         }
       }
