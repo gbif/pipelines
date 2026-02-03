@@ -366,7 +366,7 @@ public class OccurrenceJsonConverter {
   private void mapExtendedRecord(OccurrenceJsonRecord.Builder builder) {
 
     builder
-        .setId(identifier.getInternalId())
+        .setId(verbatim.getId())
         .setAll(JsonConverter.convertFieldAll(verbatim))
         .setExtensions(JsonConverter.convertExtensions(verbatim))
         .setVerbatim(JsonConverter.convertVerbatimRecord(verbatim));

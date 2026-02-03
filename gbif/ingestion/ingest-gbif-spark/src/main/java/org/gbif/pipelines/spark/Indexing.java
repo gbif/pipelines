@@ -210,7 +210,6 @@ public class Indexing {
           .option("es.batch.size.entries", config.getElastic().getEsMaxBatchSize())
           .option("es.batch.size.bytes", config.getElastic().getEsMaxBatchSizeBytes())
           .option("es.mapping.id", "gbifId")
-          .option("es.mapping.id", "id")
           .option("es.nodes.wan.only", "true")
           .option("es.batch.write.refresh", "false")
           .mode("append")
