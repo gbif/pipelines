@@ -39,7 +39,9 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
     public Optional<String> toWktConvexHull() {
       if (!coordinates.isEmpty()) {
         Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
-        if (geometry.isValid() && (!(geometry instanceof Polygon) || geometry.getArea() > 0)) {
+        if (geometry.isValid()
+            && !geometry.isEmpty()
+            && (!(geometry instanceof Polygon) || geometry.getArea() > 0)) {
           return Optional.of(new WKTWriter().write(geometry));
         }
       }
