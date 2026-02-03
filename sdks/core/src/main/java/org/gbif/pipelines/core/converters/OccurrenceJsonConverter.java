@@ -366,7 +366,7 @@ public class OccurrenceJsonConverter {
   private void mapExtendedRecord(OccurrenceJsonRecord.Builder builder) {
 
     builder
-        .setId(verbatim.getId())
+        .setId(identifier.getInternalId())
         .setAll(JsonConverter.convertFieldAll(verbatim))
         .setExtensions(JsonConverter.convertExtensions(verbatim))
         .setVerbatim(JsonConverter.convertVerbatimRecord(verbatim));
@@ -423,15 +423,15 @@ public class OccurrenceJsonConverter {
 
   private void mapCreated(OccurrenceJsonRecord.Builder builder) {
     JsonConverter.getMaxCreationDate(
-            metadata,
-            clustering,
-            basic,
-            temporal,
-            location,
-            multiTaxon,
-            grscicoll,
-            dnaDerivedData,
-            multimedia)
+                    metadata,
+                    clustering,
+                    basic,
+                    temporal,
+                    location,
+                    multiTaxon,
+                    grscicoll,
+                    dnaDerivedData,
+                    multimedia)
         .ifPresent(builder::setCreated);
   }
 
