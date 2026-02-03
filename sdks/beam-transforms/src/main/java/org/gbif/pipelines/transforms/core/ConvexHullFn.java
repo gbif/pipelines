@@ -12,8 +12,6 @@ import org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.io.WKTWriter;
 
@@ -42,7 +40,9 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
       if (!coordinates.isEmpty()) {
         Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
         if (geometry.isValid() && !geometry.isEmpty()) {
-          if (geometry instanceof Point || geometry instanceof LineString) {
+          if (geometry.getArea() > 0) {
+            return Optional.of(new WKTWriter().write(geometry));
+          } else {
             // Get the bounding box envelope
             Geometry envelope = geometry.getEnvelope();
 
@@ -54,8 +54,6 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
             if (envelope instanceof Polygon && envelope.getArea() > 0) {
               return Optional.of(new WKTWriter().write(envelope));
             }
-          } else if (geometry instanceof Polygon && geometry.getArea() > 0) {
-            return Optional.of(new WKTWriter().write(geometry));
           }
         }
       }
