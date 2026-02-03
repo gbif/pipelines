@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>3.2.15-issue-1261-SNAPSHOT</version>
+  <version>3.2.16-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
