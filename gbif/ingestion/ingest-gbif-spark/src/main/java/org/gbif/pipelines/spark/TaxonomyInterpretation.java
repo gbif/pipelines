@@ -186,7 +186,7 @@ public class TaxonomyInterpretation {
                   ExtendedRecord er =
                       MAPPER.readValue(simpleRecord.getVerbatim(), ExtendedRecord.class);
 
-                  // Apply all transforms
+                  // Apply taxonomy transforms
                   MultiTaxonRecord mtr = taxonomyTransform.convert(er);
 
                   return Occurrence.builder()
