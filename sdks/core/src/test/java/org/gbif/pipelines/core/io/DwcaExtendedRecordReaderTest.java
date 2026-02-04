@@ -3,6 +3,7 @@ package org.gbif.pipelines.core.io;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
+import java.util.Map;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Test;
 
@@ -20,6 +21,9 @@ public class DwcaExtendedRecordReaderTest {
       // Should
       assertNotNull(current);
       assertNotNull(current.getId());
+
+      Map<String, Long> exts = dwcaReader.getExtensionsCount();
+      assertNotNull(exts.get("http://rs.gbif.org/terms/1.0/Identifier"));
     }
   }
 

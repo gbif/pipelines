@@ -83,7 +83,10 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
     }
     reader.close();
 
-    return Metric.create(reader.getRecordsReturned(), reader.getOccurrenceRecordsReturned());
+    return Metric.create(
+        reader.getRecordsReturned(),
+        reader.getOccurrenceRecordsReturned(),
+        reader.getExtensionsCount());
   }
 
   @SneakyThrows
