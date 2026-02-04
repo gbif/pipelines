@@ -61,7 +61,7 @@ public class DerivedMetadataTransform implements Serializable {
           public void processElement(ProcessContext c) {
             CoGbkResult result = c.element().getValue();
             String key = c.element().getKey();
-            String convexHull = result.getOnly(convexHullTag);
+            String convexHull = result.getOnly(convexHullTag, null);
 
             EventDate temporalCoverage =
                 result.getOnly(temporalCoverageTag, EventDate.newBuilder().build());

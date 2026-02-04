@@ -11,6 +11,10 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.io.WKTWriter;
 
 /** Beam that calculates a ConvexHull form all coordinates accumulated from location records. */
@@ -36,8 +40,24 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
 
     public Optional<String> toWktConvexHull() {
       if (!coordinates.isEmpty()) {
-        return Optional.of(
-            new WKTWriter().write(ConvexHullParser.fromCoordinates(coordinates).getConvexHull()));
+        Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
+        if (geometry.isValid() && !geometry.isEmpty()) {
+          if (geometry instanceof Point || geometry instanceof LineString) {
+            // Get the bounding box envelope
+            Geometry envelope = geometry.getEnvelope();
+
+            // Buffer slightly if envelope is still a line or point
+            if (!(envelope instanceof Polygon)) {
+              envelope = envelope.buffer(0.0001, 1);
+            }
+
+            if (envelope instanceof Polygon && envelope.getArea() > 0) {
+              return Optional.of(new WKTWriter().write(envelope));
+            }
+          } else if (geometry instanceof Polygon && geometry.getArea() > 0) {
+            return Optional.of(new WKTWriter().write(geometry));
+          }
+        }
       }
       return Optional.empty();
     }
