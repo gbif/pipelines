@@ -43,7 +43,7 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
         Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
 
         if (geometry.isValid() && !geometry.isEmpty()) {
-          if (geometry.getArea() > 0.00001) {
+          if (geometry instanceof Polygon && geometry.getArea() > 0) {
             geometry.normalize();
             return Optional.of(new WKTWriter().write(geometry));
           } else {
