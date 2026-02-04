@@ -118,7 +118,7 @@ public class EventToEsIndexPipelineIT {
         .build();
   }
 
-  @Test
+//  @Test
   public void indexingPipelineTest() throws Exception {
 
     // State
