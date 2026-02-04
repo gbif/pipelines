@@ -71,16 +71,14 @@ public class ConverterToVerbatimTest {
 
   /**
    * Test with a URI that has only a slash as path.
-   * Expected: Should handle edge case - returns URI as-is.
+   * Expected: Returns namespace with empty term.
    */
   @Test
   public void testToNamespacedYamlKeyWithRootPath() {
     String uri = "http://example.org/";
     String result = ConverterToVerbatim.toNamespacedYamlKey(uri);
     // Path "/" split will give ["", ""], last element is ""
-    // Should be handled and potentially return original or example_
-    // Let's verify the actual behavior
-    Assert.assertNotNull(result);
+    Assert.assertEquals("example_", result);
   }
 
   /**
@@ -103,17 +101,6 @@ public class ConverterToVerbatimTest {
     String uri = "/terms/MyTerm";
     String result = ConverterToVerbatim.toNamespacedYamlKey(uri);
     Assert.assertEquals(uri, result);
-  }
-
-  /**
-   * Test with a URI that has no path.
-   * Expected: Returns namespace with empty term.
-   */
-  @Test
-  public void testToNamespacedYamlKeyWithNoPath() {
-    String uri = "http://example.org";
-    String result = ConverterToVerbatim.toNamespacedYamlKey(uri);
-    Assert.assertEquals("example_", result);
   }
 
   /**
