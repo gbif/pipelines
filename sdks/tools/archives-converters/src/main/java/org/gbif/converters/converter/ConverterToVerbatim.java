@@ -133,16 +133,17 @@ public abstract class ConverterToVerbatim {
 
       StringBuilder info =
           new StringBuilder(
-              Metrics.ARCHIVE_TO_ER_COUNT
-                  + ": "
+              "\""
+                  + Metrics.ARCHIVE_TO_ER_COUNT
+                  + "\": "
                   + metric.getNumberOfRecords()
-                  + "\n"
+                  + "\n\""
                   + Metrics.ARCHIVE_TO_OCC_COUNT
-                  + ": "
+                  + "\": "
                   + metric.getNumberOfOccurrenceRecords()
-                  + "\n"
+                  + "\n\""
                   + Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT
-                  + ": "
+                  + "\": "
                   + largest
                   + "\n");
 
