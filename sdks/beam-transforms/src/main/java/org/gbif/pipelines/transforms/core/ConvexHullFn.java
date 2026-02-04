@@ -43,7 +43,7 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
         Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
 
         if (geometry.isValid() && !geometry.isEmpty()) {
-          if (geometry.getArea() > 0) {
+          if (geometry.getArea() > 0.00001) {
             geometry.normalize();
             return Optional.of(new WKTWriter().write(geometry));
           } else {
@@ -52,7 +52,7 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
 
             // Buffer slightly if envelope is still a line or point
             if (!(envelope instanceof Polygon)) {
-              envelope = envelope.buffer(0.00001, 1);
+              envelope = envelope.buffer(0.0001, 1);
             }
 
             if (envelope instanceof Polygon && envelope.getArea() > 0) {
