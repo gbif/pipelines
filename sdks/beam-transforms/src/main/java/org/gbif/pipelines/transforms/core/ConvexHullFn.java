@@ -6,19 +6,19 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.Combine;
 import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.io.WKTWriter;
 
 /** Beam that calculates a ConvexHull form all coordinates accumulated from location records. */
 @Data
+@Slf4j
 public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn.Accum, String> {
 
   private static final TupleTag<String> TAG = new TupleTag<String>() {};
@@ -41,8 +41,12 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
     public Optional<String> toWktConvexHull() {
       if (!coordinates.isEmpty()) {
         Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
+
         if (geometry.isValid() && !geometry.isEmpty()) {
-          if (geometry instanceof Point || geometry instanceof LineString) {
+          if (geometry instanceof Polygon && geometry.getArea() > 0) {
+            geometry.normalize();
+            return Optional.of(new WKTWriter().write(geometry));
+          } else {
             // Get the bounding box envelope
             Geometry envelope = geometry.getEnvelope();
 
@@ -52,10 +56,9 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
             }
 
             if (envelope instanceof Polygon && envelope.getArea() > 0) {
+              envelope.normalize();
               return Optional.of(new WKTWriter().write(envelope));
             }
-          } else if (geometry instanceof Polygon && geometry.getArea() > 0) {
-            return Optional.of(new WKTWriter().write(geometry));
           }
         }
       }
