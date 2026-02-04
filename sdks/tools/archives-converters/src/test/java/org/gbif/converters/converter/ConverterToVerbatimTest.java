@@ -6,15 +6,15 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- * Test class for ConverterToVerbatim, specifically for the toNamespacedYamlKey method
- * and extension counting logic.
+ * Test class for ConverterToVerbatim, specifically for the toNamespacedYamlKey method and extension
+ * counting logic.
  */
 @RunWith(JUnit4.class)
 public class ConverterToVerbatimTest {
 
   /**
-   * Test with a standard Darwin Core URI.
-   * Expected: namespace extracted from host and term from path.
+   * Test with a standard Darwin Core URI. Expected: namespace extracted from host and term from
+   * path.
    */
   @Test
   public void testToNamespacedYamlKeyWithStandardUri() {
@@ -23,10 +23,7 @@ public class ConverterToVerbatimTest {
     Assert.assertEquals("rs_Occurrence", result);
   }
 
-  /**
-   * Test with a URI containing www. prefix.
-   * Expected: www. should be removed from the host.
-   */
+  /** Test with a URI containing www. prefix. Expected: www. should be removed from the host. */
   @Test
   public void testToNamespacedYamlKeyWithWwwPrefix() {
     String uri = "http://www.example.org/terms/MyTerm";
@@ -35,8 +32,8 @@ public class ConverterToVerbatimTest {
   }
 
   /**
-   * Test with a URI that has a path with multiple segments.
-   * Expected: only the last segment should be used as the term.
+   * Test with a URI that has a path with multiple segments. Expected: only the last segment should
+   * be used as the term.
    */
   @Test
   public void testToNamespacedYamlKeyWithMultiplePathSegments() {
@@ -46,8 +43,8 @@ public class ConverterToVerbatimTest {
   }
 
   /**
-   * Test with a host that has no dots (single-level domain).
-   * Expected: Should handle gracefully - the entire host becomes the namespace.
+   * Test with a host that has no dots (single-level domain). Expected: Should handle gracefully -
+   * the entire host becomes the namespace.
    */
   @Test
   public void testToNamespacedYamlKeyWithHostWithoutDots() {
@@ -57,8 +54,7 @@ public class ConverterToVerbatimTest {
   }
 
   /**
-   * Test with an empty path.
-   * Expected: Should handle edge case - returns namespace with empty term.
+   * Test with an empty path. Expected: Should handle edge case - returns namespace with empty term.
    */
   @Test
   public void testToNamespacedYamlKeyWithEmptyPath() {
@@ -69,10 +65,7 @@ public class ConverterToVerbatimTest {
     Assert.assertEquals("example_", result);
   }
 
-  /**
-   * Test with a URI that has only a slash as path.
-   * Expected: Returns namespace with empty term.
-   */
+  /** Test with a URI that has only a slash as path. Expected: Returns namespace with empty term. */
   @Test
   public void testToNamespacedYamlKeyWithRootPath() {
     String uri = "http://example.org/";
@@ -81,10 +74,7 @@ public class ConverterToVerbatimTest {
     Assert.assertEquals("example_", result);
   }
 
-  /**
-   * Test with a malformed URI.
-   * Expected: Should catch exception and return the original string.
-   */
+  /** Test with a malformed URI. Expected: Should catch exception and return the original string. */
   @Test
   public void testToNamespacedYamlKeyWithMalformedUri() {
     String uri = "not-a-valid-uri";
@@ -93,8 +83,8 @@ public class ConverterToVerbatimTest {
   }
 
   /**
-   * Test with a URI without a host (e.g., relative URI).
-   * Expected: Should catch exception and return the original string.
+   * Test with a URI without a host (e.g., relative URI). Expected: Should catch exception and
+   * return the original string.
    */
   @Test
   public void testToNamespacedYamlKeyWithoutHost() {
@@ -103,20 +93,14 @@ public class ConverterToVerbatimTest {
     Assert.assertEquals(uri, result);
   }
 
-  /**
-   * Test with null input.
-   * Expected: Should catch exception and return null.
-   */
+  /** Test with null input. Expected: Should catch exception and return null. */
   @Test
   public void testToNamespacedYamlKeyWithNull() {
     String result = ConverterToVerbatim.toNamespacedYamlKey(null);
     Assert.assertNull(result);
   }
 
-  /**
-   * Test with empty string.
-   * Expected: Should catch exception and return empty string.
-   */
+  /** Test with empty string. Expected: Should catch exception and return empty string. */
   @Test
   public void testToNamespacedYamlKeyWithEmptyString() {
     String uri = "";
@@ -124,10 +108,7 @@ public class ConverterToVerbatimTest {
     Assert.assertEquals(uri, result);
   }
 
-  /**
-   * Test with HTTPS URI.
-   * Expected: Should work the same as HTTP.
-   */
+  /** Test with HTTPS URI. Expected: Should work the same as HTTP. */
   @Test
   public void testToNamespacedYamlKeyWithHttps() {
     String uri = "https://rs.gbif.org/terms/Multimedia";
@@ -136,8 +117,8 @@ public class ConverterToVerbatimTest {
   }
 
   /**
-   * Test with a URI containing special characters in the term.
-   * Expected: Should preserve the term as-is.
+   * Test with a URI containing special characters in the term. Expected: Should preserve the term
+   * as-is.
    */
   @Test
   public void testToNamespacedYamlKeyWithSpecialCharsInTerm() {

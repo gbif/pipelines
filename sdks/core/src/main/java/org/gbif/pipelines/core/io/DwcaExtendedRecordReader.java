@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Map;
 import java.util.function.Function;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +35,7 @@ public class DwcaExtendedRecordReader implements Closeable {
 
   @Getter private long recordsReturned;
   @Getter private long occurrenceRecordsReturned;
-  @Getter private Map<String, Long> extensionsCount = new HashMap<>();
+  @Getter private final Map<String, Long> extensionsCount = new HashMap<>();
   private ExtendedRecord current;
 
   /** Creates a DwcaReader of an expanded archive. */

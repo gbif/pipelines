@@ -72,12 +72,15 @@ public class DwcaExtendedRecordReaderTest {
       // Should
       Map<String, Long> extensionsCount = dwcaReader.getExtensionsCount();
       assertNotNull("extensionsCount should not be null", extensionsCount);
-      assertTrue("extensionsCount should contain Identifier extension", 
+      assertTrue(
+          "extensionsCount should contain Identifier extension",
           extensionsCount.containsKey("http://rs.gbif.org/terms/1.0/Identifier"));
-      
+
       // Verify the count is correct - the test data has 307 identifier extension records
-      assertEquals("extensionsCount should have 307 Identifier records", 
-          Long.valueOf(307), extensionsCount.get("http://rs.gbif.org/terms/1.0/Identifier"));
+      assertEquals(
+          "extensionsCount should have 307 Identifier records",
+          Long.valueOf(307),
+          extensionsCount.get("http://rs.gbif.org/terms/1.0/Identifier"));
     }
   }
 
@@ -96,7 +99,8 @@ public class DwcaExtendedRecordReaderTest {
       // Should
       Map<String, Long> extensionsCount = dwcaReader.getExtensionsCount();
       assertNotNull("extensionsCount should not be null", extensionsCount);
-      assertTrue("extensionsCount should be empty when there are no extensions", 
+      assertTrue(
+          "extensionsCount should be empty when there are no extensions",
           extensionsCount.isEmpty());
     }
   }
