@@ -161,10 +161,18 @@ public abstract class ConverterToVerbatim {
   public static String toNamespacedYamlKey(String uri) {
     try {
       URI u = URI.create(uri);
-      String host = u.getHost().replace("www.", "");
+      String host = u.getHost();
+      if (host == null || host.isEmpty()) {
+        return uri;
+      }
+      host = host.replace("www.", "");
       String namespace = host.split("\\.")[0];
 
-      String[] pathParts = u.getPath().split("/");
+      String path = u.getPath();
+      if (path == null || path.isEmpty()) {
+        return uri;
+      }
+      String[] pathParts = path.split("/");
       String term = pathParts[pathParts.length - 1];
 
       return (namespace + "_" + term);
