@@ -23,6 +23,9 @@ public class DwcaExtendedRecordReaderTest {
       // Should
       assertNotNull(current);
       assertNotNull(current.getId());
+
+      Map<String, Long> exts = dwcaReader.getExtensionsCount();
+      assertNotNull(exts.get("http://rs.gbif.org/terms/1.0/Identifier"));
     }
   }
 
