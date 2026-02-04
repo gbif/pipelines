@@ -534,7 +534,6 @@ public class ParentJsonConverter {
   }
 
   private void mapDerivedMetadata(ParentJsonRecord.Builder builder) {
-    log.info("DerivedMetada to index: {}", derivedMetadata);
     builder.setDerivedMetadata(derivedMetadata);
   }
 
