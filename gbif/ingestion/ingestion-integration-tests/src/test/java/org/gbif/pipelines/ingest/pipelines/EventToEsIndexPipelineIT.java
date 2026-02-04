@@ -76,7 +76,6 @@ import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -118,7 +117,7 @@ public class EventToEsIndexPipelineIT {
         .build();
   }
 
-//  @Test
+  //  @Test
   public void indexingPipelineTest() throws Exception {
 
     // State
