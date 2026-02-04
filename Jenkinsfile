@@ -85,7 +85,7 @@ pipeline {
       }
       when {
         expression {
-          env.RELEASE == 'false'
+          env.BUILD_TYPE == 'QUICK' && env.RELEASE == 'false'
         }
       }
       steps {
