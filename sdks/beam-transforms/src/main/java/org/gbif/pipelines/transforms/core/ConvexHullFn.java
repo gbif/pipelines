@@ -41,27 +41,32 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
     public Optional<String> toWktConvexHull() {
       if (!coordinates.isEmpty()) {
         Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
-        if (geometry.isValid() && !geometry.isEmpty()) {
-          if (geometry.getArea() > 0) {
-            String convexHull = new WKTWriter().write(geometry);
-            log.info("Convex hull converted:{} ", convexHull);
-            return Optional.of(convexHull);
-          } else {
-            // Get the bounding box envelope
-            Geometry envelope = geometry.getEnvelope();
 
-            // Buffer slightly if envelope is still a line or point
-            if (!(envelope instanceof Polygon)) {
-              envelope = envelope.buffer(0.0001, 1);
-            }
-
-            if (envelope instanceof Polygon && envelope.getArea() > 0) {
-              String convexHull = new WKTWriter().write(envelope);
-              log.info("Convex hull converted:{} ", convexHull);
-              return Optional.of(convexHull);
-            }
-          }
+        if (geometry.isValid() && !geometry.isEmpty() && geometry instanceof Polygon && geometry.getArea() > 0) {
+          return Optional.of(new WKTWriter().write(geometry));
         }
+
+//        if (geometry.isValid() && !geometry.isEmpty()) {
+//          if (geometry.getArea() > 0) {
+//            String convexHull = new WKTWriter().write(geometry);
+//            log.info("Convex hull converted:{} ", convexHull);
+//            return Optional.of(convexHull);
+//          } else {
+//            // Get the bounding box envelope
+//            Geometry envelope = geometry.getEnvelope();
+//
+//            // Buffer slightly if envelope is still a line or point
+//            if (!(envelope instanceof Polygon)) {
+//              envelope = envelope.buffer(0.0001, 1);
+//            }
+//
+//            if (envelope instanceof Polygon && envelope.getArea() > 0) {
+//              String convexHull = new WKTWriter().write(envelope);
+//              log.info("Convex hull converted:{} ", convexHull);
+//              return Optional.of(convexHull);
+//            }
+//          }
+//        }
       }
       return Optional.empty();
     }
