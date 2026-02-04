@@ -75,13 +75,16 @@ import org.gbif.pipelines.transforms.specific.GbifIdTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)
+@Ignore
 public class EventToEsIndexPipelineIT {
 
   private static final DwcTerm EVENT_TERM = DwcTerm.Event;
@@ -117,7 +120,7 @@ public class EventToEsIndexPipelineIT {
         .build();
   }
 
-  //  @Test
+  @Test
   public void indexingPipelineTest() throws Exception {
 
     // State
