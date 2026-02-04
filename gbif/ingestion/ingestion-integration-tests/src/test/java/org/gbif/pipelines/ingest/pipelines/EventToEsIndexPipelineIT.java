@@ -450,7 +450,13 @@ public class EventToEsIndexPipelineIT {
     try (SyncDataFileWriter<LocationRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, LocationTransform.builder().create(), OCCURRENCE_TERM, postfix)) {
-      LocationRecord locationRecord = LocationRecord.newBuilder().setId(ID).build();
+      LocationRecord locationRecord =
+          LocationRecord.newBuilder()
+              .setId(ID)
+              .setHasCoordinate(true)
+              .setDecimalLatitude(10d)
+              .setDecimalLongitude(5d)
+              .build();
       writer.append(locationRecord);
     }
     try (SyncDataFileWriter<MultiTaxonRecord> writer =
@@ -642,7 +648,9 @@ public class EventToEsIndexPipelineIT {
 
     // Assert geographic coverage/convex hull
     Assert.assertNotNull(record.getDerivedMetadata().getWktConvexHull());
-    Assert.assertEquals("POINT (5 10)", record.getDerivedMetadata().getWktConvexHull());
+    Assert.assertEquals(
+        "POLYGON ((4.9999 10, 5 10.0001, 5.0001 10, 5 9.9999, 4.9999 10))",
+        record.getDerivedMetadata().getWktConvexHull());
 
     // Assert taxonomic coverage
     Assert.assertNotNull(record.getDerivedMetadata().getTaxonomicCoverage());
