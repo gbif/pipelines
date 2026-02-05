@@ -147,9 +147,8 @@ public abstract class ConverterToVerbatim {
                   + "\n");
 
       for (Map.Entry<String, Long> entry : metric.getExtensionsCount().entrySet()) {
-        info.append("\"")
-            .append(toNamespacedYamlKey(entry.getKey()))
-            .append("\": ")
+        info.append(toNamespacedYamlKey(entry.getKey()))
+            .append(": ")
             .append(entry.getValue())
             .append("\n");
       }
@@ -161,41 +160,28 @@ public abstract class ConverterToVerbatim {
   public static String toNamespacedYamlKey(String uri) {
     try {
       URI u = URI.create(uri);
-
       String host = u.getHost();
       if (host == null || host.isEmpty()) {
         return uri;
       }
       host = host.replace("www.", "");
-      String[] hostParts = host.split("\\.");
-      if (hostParts.length == 0 || hostParts[0] == null || hostParts[0].isEmpty()) {
-        return uri;
-      }
-      String namespace = hostParts[0];
+      String namespace = host.split("\\.")[0];
 
       String path = u.getPath();
-      if (path == null || path.isEmpty() || "/".equals(path)) {
+      if (path == null || path.isEmpty()) {
+        if (!namespace.isEmpty()) {
+          return namespace;
+        }
         return uri;
       }
       String[] pathParts = path.split("/");
-      if (pathParts.length == 0) {
-        return uri;
+      if (pathParts.length > 1) {
+        String term = pathParts[pathParts.length - 1];
+        return (namespace + "_" + term);
+      } else {
+        return (namespace + "_" + path.replace("/", ""));
       }
-      // Take the last non-empty segment as the term
-      String term = null;
-      for (int i = pathParts.length - 1; i >= 0; i--) {
-        if (pathParts[i] != null && !pathParts[i].isEmpty()) {
-          term = pathParts[i];
-          break;
-        }
-      }
-      if (term == null || term.isEmpty()) {
-        return uri;
-      }
-
-      return namespace + "_" + term;
     } catch (Exception e) {
-      // On any URI parsing or processing error, fall back to the original string
       return uri;
     }
   }

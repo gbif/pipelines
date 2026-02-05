@@ -35,7 +35,7 @@ public class DwcaExtendedRecordReader implements Closeable {
 
   @Getter private long recordsReturned;
   @Getter private long occurrenceRecordsReturned;
-  @Getter private Map<String, Long> extensionsCount = new HashMap<>();
+  @Getter private final Map<String, Long> extensionsCount = new HashMap<>();
   private ExtendedRecord current;
 
   /** Creates a DwcaReader of an expanded archive. */
