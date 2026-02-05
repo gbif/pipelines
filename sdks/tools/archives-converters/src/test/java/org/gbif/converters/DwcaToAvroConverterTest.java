@@ -55,7 +55,7 @@ public class DwcaToAvroConverterTest {
     // check content
     List<String> metrics = Files.readAllLines(Paths.get(metricPath), Charsets.UTF_16);
     assertTrue(metrics.contains("archiveToLargestFileCount: 307"));
-    assertTrue(metrics.contains("\"rs_Identifier\": 46"));
+    assertTrue(metrics.contains("rs_Identifier: 46"));
     Files.deleteIfExists(verbatim.toPath());
   }
 
