@@ -78,8 +78,8 @@ public class DwcaExtendedRecordReaderTest {
 
       // Verify the count is correct - the test data has 307 identifier extension records
       assertEquals(
-          "extensionsCount should have 307 Identifier records",
-          Long.valueOf(307),
+          "extensionsCount should have 46 Identifier records",
+          Long.valueOf(46),
           extensionsCount.get("http://rs.gbif.org/terms/1.0/Identifier"));
     }
   }

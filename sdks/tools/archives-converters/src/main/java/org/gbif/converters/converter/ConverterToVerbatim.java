@@ -171,12 +171,18 @@ public abstract class ConverterToVerbatim {
 
       String path = u.getPath();
       if (path == null || path.isEmpty()) {
+        if (!namespace.isEmpty()) {
+          return namespace;
+        }
         return uri;
       }
       String[] pathParts = path.split("/");
-      String term = pathParts[pathParts.length - 1];
-
-      return (namespace + "_" + term);
+      if (pathParts.length > 1) {
+        String term = pathParts[pathParts.length - 1];
+        return (namespace + "_" + term);
+      } else {
+        return (namespace + "_" + path.replace("/", ""));
+      }
     } catch (Exception e) {
       return uri;
     }

@@ -62,7 +62,7 @@ public class ConverterToVerbatimTest {
     String result = ConverterToVerbatim.toNamespacedYamlKey(uri);
     // Empty path will cause pathParts to be [""], so the last element is ""
     // This results in namespace + "_" + empty string
-    Assert.assertEquals("example_", result);
+    Assert.assertEquals("example", result);
   }
 
   /** Test with a URI that has only a slash as path. Expected: Returns namespace with empty term. */
