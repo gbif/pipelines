@@ -133,24 +133,22 @@ public abstract class ConverterToVerbatim {
 
       StringBuilder info =
           new StringBuilder(
-              "\""
-                  + Metrics.ARCHIVE_TO_ER_COUNT
-                  + "\": "
+              Metrics.ARCHIVE_TO_ER_COUNT
+                  + ": "
                   + metric.getNumberOfRecords()
-                  + "\n\""
+                  + "\n"
                   + Metrics.ARCHIVE_TO_OCC_COUNT
-                  + "\": "
+                  + ": "
                   + metric.getNumberOfOccurrenceRecords()
-                  + "\n\""
+                  + "\n"
                   + Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT
-                  + "\": "
+                  + ": "
                   + largest
                   + "\n");
 
       for (Map.Entry<String, Long> entry : metric.getExtensionsCount().entrySet()) {
-        info.append("\"")
-            .append(toNamespacedYamlKey(entry.getKey()))
-            .append("\": ")
+        info.append(toNamespacedYamlKey(entry.getKey()))
+            .append(": ")
             .append(entry.getValue())
             .append("\n");
       }
