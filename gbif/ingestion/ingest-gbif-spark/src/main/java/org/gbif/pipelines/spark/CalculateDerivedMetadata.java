@@ -134,7 +134,7 @@ public class CalculateDerivedMetadata implements Serializable {
         spark, outputPath, events, eventIdConvexHull, temporalCoverages, taxonomicCoverages);
   }
 
-  private static Dataset<Tuple2<String, String>> calculateTaxonomicCoverage(
+  public static Dataset<Tuple2<String, String>> calculateTaxonomicCoverage(
       String outputPath, Dataset<Occurrence> occurrence) {
 
     ObjectMapper MAPPER = new ObjectMapper();
@@ -146,7 +146,7 @@ public class CalculateDerivedMetadata implements Serializable {
                 (MapFunction<Occurrence, EventTaxonCoverage>)
                     occ -> {
                       String eventId = occ.getCoreId();
-                      List<String> taxonIDs = new ArrayList<>();
+                      Set<String> taxonIDs = new HashSet<>();
                       Map<String, List<DerivedClassification>> classifications = new HashMap<>();
 
                       // retrieve taxonID from verbatim
@@ -178,7 +178,7 @@ public class CalculateDerivedMetadata implements Serializable {
 
                       TaxonCoverage taxonCoverage =
                           TaxonCoverage.newBuilder()
-                              .setTaxonIDs(taxonIDs)
+                              .setTaxonIDs(taxonIDs.stream().toList())
                               .setClassifications(classifications)
                               .build();
 
@@ -322,7 +322,7 @@ public class CalculateDerivedMetadata implements Serializable {
    * @return
    */
   @NotNull
-  private static Dataset<DerivedMetadataRecord> createDerivedDataRecords(
+  public static Dataset<DerivedMetadataRecord> createDerivedDataRecords(
       SparkSession spark,
       String outputPath,
       Dataset<Event> events,
@@ -394,7 +394,7 @@ public class CalculateDerivedMetadata implements Serializable {
   }
 
   @NotNull
-  private static Dataset<Tuple3<String, String, String>> calculateTemporalCoverage(
+  public static Dataset<Tuple3<String, String, String>> calculateTemporalCoverage(
       SparkSession spark,
       String outputPath,
       Dataset<Event> events,
@@ -530,7 +530,7 @@ public class CalculateDerivedMetadata implements Serializable {
     return hulls;
   }
 
-  private static Dataset<Tuple2<String, EventDate>> gatherEventDatesFromChildEvents(
+  public static Dataset<Tuple2<String, EventDate>> gatherEventDatesFromChildEvents(
       SparkSession spark, Dataset<Event> events) {
     events.createOrReplaceTempView("simple_event");
     return spark
@@ -566,7 +566,7 @@ public class CalculateDerivedMetadata implements Serializable {
             Encoders.tuple(Encoders.STRING(), Encoders.bean(EventDate.class)));
   }
 
-  private static Dataset<EventCoordinate> gatherCoordinatesFromChildEvents(
+  public static Dataset<EventCoordinate> gatherCoordinatesFromChildEvents(
       SparkSession spark, Dataset<Event> events) {
     events.createOrReplaceTempView("simple_event");
     return spark
