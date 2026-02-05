@@ -728,13 +728,17 @@
                 <version>3.1.2</version>
                 <!-- Use latest -->
                 <configuration>
+                    <parallel>none</parallel>
                     <argLine>
                         --add-exports java.base/sun.nio.ch=ALL-UNNAMED
-                        --add-opens java.base/java.io=ALL-UNNAMED
                         --add-exports java.base/sun.nio.ch=ALL-UNNAMED
                         --add-exports java.base/sun.security.action=ALL-UNNAMED
-                        --add-opens java.base/java.lang=ALL-UNNAMED
+                        --add-opens java.base/java.io=ALL-UNNAMED
+                        --add-opens java.base/java.lang.invoke=ALL-UNNAMED
                         --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                        --add-opens java.base/java.lang=ALL-UNNAMED
+                        --add-opens java.base/java.nio=ALL-UNNAMED
+                        --add-opens java.base/java.util=ALL-UNNAMED
                     </argLine>
                 </configuration>
             </plugin>

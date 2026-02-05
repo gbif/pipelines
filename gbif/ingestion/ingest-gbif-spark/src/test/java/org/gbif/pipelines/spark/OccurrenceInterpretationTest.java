@@ -1,12 +1,9 @@
 package org.gbif.pipelines.spark;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.apache.parquet.hadoop.ParquetFileWriter.Mode.OVERWRITE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -25,29 +22,9 @@ import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 
-public class OccurrenceInterpretationTest {
-
-  @ClassRule public static final HbaseServer HBASE_SERVER = new HbaseServer();
-
-  @Rule
-  public WireMockRule registryRule =
-      new WireMockRule(wireMockConfig().dynamicPort().dynamicHttpsPort());
-
-  @Rule
-  public WireMockRule nameMatchingRule =
-      new WireMockRule(wireMockConfig().dynamicPort().dynamicHttpsPort());
-
-  @Rule
-  public WireMockRule grsciCollRule =
-      new WireMockRule(wireMockConfig().dynamicPort().dynamicHttpsPort());
-
-  @Rule
-  public WireMockRule geocodeRule =
-      new WireMockRule(wireMockConfig().dynamicPort().dynamicHttpsPort());
+public class OccurrenceInterpretationTest extends MockedServicesTest {
 
   @Test
   public void test() throws Exception {
@@ -56,98 +33,15 @@ public class OccurrenceInterpretationTest {
     assert testRootUrl != null;
     String testResourcesRoot = testRootUrl.getFile();
 
-    // setup hbase, registry, geocode, grscicoll, taxon web services mocks here
-    nameMatchingRule.stubFor(
-        get(anyUrl())
-            .willReturn(
-                aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(
-                        Files.readString(
-                            java.nio.file.Path.of(
-                                testResourcesRoot + "ws/namematching-response.json")))));
-
-    geocodeRule.stubFor(
-        get(anyUrl())
-            .willReturn(
-                aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(
-                        Files.readString(
-                            java.nio.file.Path.of(
-                                testResourcesRoot + "ws/geocode-response.json")))));
-
-    grsciCollRule.stubFor(
-        get(anyUrl())
-            .willReturn(
-                aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(
-                        Files.readString(
-                            java.nio.file.Path.of(
-                                testResourcesRoot + "ws/grscioll-response.json")))));
-
-    registryRule.stubFor(
-        get(urlPathMatching("/v1/dataset/7683cc47-cb13-4bad-9614-387c66aa8df0"))
-            .willReturn(
-                aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(
-                        Files.readString(
-                            java.nio.file.Path.of(
-                                testResourcesRoot + "ws/registry-response.json")))));
-
-    registryRule.stubFor(
-        get(urlPathMatching("/v1/dataset/7683cc47-cb13-4bad-9614-387c66aa8df0/networks"))
-            .willReturn(
-                aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody("[]")));
-
-    registryRule.stubFor(
-        get(urlPathMatching("/v1/organization/d1fec91e-5b53-4cff-9b31-10fed530a3c3"))
-            .willReturn(
-                aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(
-                        Files.readString(
-                            java.nio.file.Path.of(
-                                testResourcesRoot + "ws/organization-response.json")))));
-
-    registryRule.stubFor(
-        get(urlPathMatching("/v1/installation/17a83780-3060-4851-9d6f-029d5fcb81c9"))
-            .willReturn(
-                aResponse()
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(
-                        Files.readString(
-                            java.nio.file.Path.of(
-                                testResourcesRoot + "ws/installation-response.json")))));
-
     // change pipelines config YAML to URLs of the mocked services if needed
     String testUuid = "7683cc47-cb13-4bad-9614-387c66aa8df0";
     int attempt = 1;
 
+    String basePath = getClass().getResource("/").getFile();
+
     // Generate test parquet files
-    generateIdentifierParquet(testUuid, attempt);
-    generateVerbatimParquet(testUuid, attempt);
-
-    String outputFile = testRootUrl.getFile();
-
-    TestConfigUtil.createConfigYaml(
-        HBASE_SERVER.getZkQuorum(),
-        testResourcesRoot,
-        registryRule.port(),
-        nameMatchingRule.port(),
-        geocodeRule.port(),
-        grsciCollRule.port());
+    generateIdentifierParquet(basePath, testUuid, attempt);
+    generateVerbatimParquet(basePath, testUuid, attempt);
 
     OccurrenceInterpretation.main(
         new String[] {
@@ -156,21 +50,21 @@ public class OccurrenceInterpretationTest {
           "--attempt=" + attempt,
           "--tripletValid=false",
           "--occurrenceIdValid=true",
-          "--config=" + outputFile + "/pipelines.yaml",
+          "--config=" + testResourcesRoot + "/pipelines.yaml",
           "--master=local[*]",
           "--numberOfShards=1",
           "--useSystemExit=false"
         });
 
     // check outputs exist
-    assertParquetExists(outputFile, testUuid, attempt, "hdfs");
-    assertParquetExists(outputFile, testUuid, attempt, "json");
-    assertParquetExists(outputFile, testUuid, attempt, "simple-occurrence");
-    assertParquetExists(outputFile, testUuid, attempt, "verbatim_ext_filtered");
+    assertParquetExists(basePath, testUuid, attempt, Directories.OCCURRENCE_HDFS);
+    assertParquetExists(basePath, testUuid, attempt, Directories.OCCURRENCE_JSON);
+    assertParquetExists(basePath, testUuid, attempt, Directories.SIMPLE_OCCURRENCE);
+    assertParquetExists(basePath, testUuid, attempt, Directories.VERBATIM_EXT_FILTERED);
 
     // check hdfs outputs in detail
-    checkHdfsTableOutputs(outputFile, testUuid, attempt);
-    checkJsonOutputs(outputFile, testUuid, attempt);
+    checkHdfsTableOutputs(basePath, testUuid, attempt);
+    checkJsonOutputs(basePath, testUuid, attempt);
   }
 
   private void checkJsonOutputs(String outputFile, String testUuid, int attempt) {}
@@ -182,7 +76,7 @@ public class OccurrenceInterpretationTest {
         java.nio.file.Path.of(outputFile)
             .resolve(testUuid)
             .resolve(String.valueOf(attempt))
-            .resolve("hdfs");
+            .resolve(Directories.OCCURRENCE_HDFS);
 
     java.nio.file.Path parquetFile =
         Files.list(dir)
@@ -228,7 +122,8 @@ public class OccurrenceInterpretationTest {
             .isPresent());
   }
 
-  private void generateIdentifierParquet(String uuid, int attempt) throws IOException {
+  private void generateIdentifierParquet(String basePath, String uuid, int attempt)
+      throws IOException {
 
     IdentifierRecord ir = new IdentifierRecord();
     ir.setId("1");
@@ -239,11 +134,24 @@ public class OccurrenceInterpretationTest {
     Schema schema = ReflectData.AllowNull.get().getSchema(IdentifierRecord.class);
 
     // Output Parquet file path
-    String outputFile = getClass().getResource("/").getFile();
     String identifiersValidPath =
-        outputFile + "/" + uuid + "/" + attempt + "/identifiers_valid/identifers.parquet";
+        basePath
+            + "/"
+            + uuid
+            + "/"
+            + attempt
+            + "/"
+            + Directories.IDENTIFIERS_VALID
+            + "/identifers.parquet";
     String identifiersAbsentPath =
-        outputFile + "/" + uuid + "/" + attempt + "/identifiers_absent/identifers.parquet";
+        basePath
+            + "/"
+            + uuid
+            + "/"
+            + attempt
+            + "/"
+            + Directories.IDENTIFIERS_ABSENT
+            + "/identifers.parquet";
 
     try (ParquetWriter<IdentifierRecord> writer =
         AvroParquetWriter.<IdentifierRecord>builder(new Path(identifiersValidPath))
@@ -268,7 +176,8 @@ public class OccurrenceInterpretationTest {
     }
   }
 
-  private void generateVerbatimParquet(String uuid, int attempt) throws IOException {
+  private void generateVerbatimParquet(String basePath, String uuid, int attempt)
+      throws IOException {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").build();
     er.setCoreRowType(DwcTerm.Occurrence.qualifiedName());
     Map<String, String> coreTerms = new HashMap<>();
@@ -320,8 +229,7 @@ public class OccurrenceInterpretationTest {
     Schema schema = ReflectData.AllowNull.get().getSchema(ExtendedRecord.class);
 
     // Output Parquet file path
-    String outputFile = getClass().getResource("/").getFile();
-    String outputPath = outputFile + "/" + uuid + "/" + attempt + "/verbatim/verbatim.parquet";
+    String outputPath = basePath + "/" + uuid + "/" + attempt + "/verbatim/verbatim.parquet";
     Path path = new Path(outputPath);
 
     try (ParquetWriter<ExtendedRecord> writer =

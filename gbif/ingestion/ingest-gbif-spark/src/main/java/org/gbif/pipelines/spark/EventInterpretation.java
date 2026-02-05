@@ -73,6 +73,9 @@ public class EventInterpretation {
         help = true,
         description = "Show usage")
     private boolean help;
+
+    @Parameter(names = "--useSystemExit", description = "Use checkpoints where possible", arity = 1)
+    private boolean useSystemExit = true;
   }
 
   public static void main(String[] argsv) throws Exception {
@@ -102,7 +105,9 @@ public class EventInterpretation {
     fileSystem.close();
     spark.stop();
     spark.close();
-    System.exit(0);
+    if (args.useSystemExit) {
+      System.exit(0);
+    }
   }
 
   public static void runEventInterpretation(
@@ -130,17 +135,19 @@ public class EventInterpretation {
 
     Dataset<EventLineage> lineage = generateLineage(spark, extendedRecords);
 
-    lineage.show(10, false);
+    if (log.isDebugEnabled()) {
+      lineage.show(10, false);
+    }
 
     // run the record by record transformations
-    Dataset<Event> simpleRecords =
-        runTransforms(spark, config, extendedRecords, metadata, lineage, outputPath);
+    runTransforms(spark, config, extendedRecords, metadata, lineage, outputPath);
 
     // using the parent lineage, join back to get the full event records
-    simpleRecords = EventInheritance.runEventInheritance(spark, outputPath);
+    EventInheritance.runEventInheritance(spark, outputPath);
 
     // calculate derived metadata and join to events
-    simpleRecords = CalculateDerivedMetadata.addCalculateDerivedMetadata(spark, fs, outputPath);
+    Dataset<Event> simpleRecords =
+        CalculateDerivedMetadata.addCalculateDerivedMetadata(spark, fs, outputPath);
 
     // write parquet for elastic
     toJson(simpleRecords, metadata)
@@ -201,34 +208,30 @@ public class EventInterpretation {
               ParentJsonConverter c =
                   ParentJsonConverter.builder()
                       .metadata(metadata)
-                      .eventCore(MAPPER.readValue((String) r.getEventCore(), EventCoreRecord.class))
-                      .identifier(
-                          MAPPER.readValue((String) r.getIdentifier(), IdentifierRecord.class))
-                      .verbatim(MAPPER.readValue((String) r.getVerbatim(), ExtendedRecord.class))
-                      .temporal(MAPPER.readValue((String) r.getTemporal(), TemporalRecord.class))
-                      .location(MAPPER.readValue((String) r.getLocation(), LocationRecord.class))
+                      .eventCore(MAPPER.readValue(r.getEventCore(), EventCoreRecord.class))
+                      .identifier(MAPPER.readValue(r.getIdentifier(), IdentifierRecord.class))
+                      .verbatim(MAPPER.readValue(r.getVerbatim(), ExtendedRecord.class))
+                      .temporal(MAPPER.readValue(r.getTemporal(), TemporalRecord.class))
+                      .location(MAPPER.readValue(r.getLocation(), LocationRecord.class))
                       .measurementOrFactRecord(
-                          MAPPER.readValue(
-                              (String) r.getMeasurementOrFact(), MeasurementOrFactRecord.class))
-                      .humboldtRecord(
-                          MAPPER.readValue((String) r.getHumboldt(), HumboldtRecord.class))
-                      .multimedia(
-                          MAPPER.readValue((String) r.getMultimedia(), MultimediaRecord.class))
+                          MAPPER.readValue(r.getMeasurementOrFact(), MeasurementOrFactRecord.class))
+                      .humboldtRecord(MAPPER.readValue(r.getHumboldt(), HumboldtRecord.class))
+                      .multimedia(MAPPER.readValue(r.getMultimedia(), MultimediaRecord.class))
                       .eventInheritedRecord(
                           MAPPER.readValue(
-                              (String) r.getEventInherited(),
+                              r.getEventInherited(),
                               org.gbif.pipelines.io.avro.json.EventInheritedRecord.class))
                       .locationInheritedRecord(
                           MAPPER.readValue(
-                              (String) r.getLocationInherited(),
+                              r.getLocationInherited(),
                               org.gbif.pipelines.io.avro.json.LocationInheritedRecord.class))
                       .temporalInheritedRecord(
                           MAPPER.readValue(
-                              (String) r.getTemporalInherited(),
+                              r.getTemporalInherited(),
                               org.gbif.pipelines.io.avro.json.TemporalInheritedRecord.class))
                       .derivedMetadata(
                           MAPPER.readValue(
-                              (String) r.getDerivedMetadata(),
+                              r.getDerivedMetadata(),
                               org.gbif.pipelines.io.avro.json.DerivedMetadataRecord.class))
                       .build();
               return c.convertToParent();
@@ -244,22 +247,17 @@ public class EventInterpretation {
               OccurrenceHdfsRecordConverter c =
                   OccurrenceHdfsRecordConverter.builder()
                       .metadataRecord(metadata)
-                      .extendedRecord(
-                          MAPPER.readValue((String) record.getVerbatim(), ExtendedRecord.class))
-                      .locationRecord(
-                          MAPPER.readValue((String) record.getLocation(), LocationRecord.class))
-                      .temporalRecord(
-                          MAPPER.readValue((String) record.getTemporal(), TemporalRecord.class))
-                      .multiTaxonRecord(
-                          MAPPER.readValue((String) record.getTaxon(), MultiTaxonRecord.class))
+                      .extendedRecord(MAPPER.readValue(record.getVerbatim(), ExtendedRecord.class))
+                      .locationRecord(MAPPER.readValue(record.getLocation(), LocationRecord.class))
+                      .temporalRecord(MAPPER.readValue(record.getTemporal(), TemporalRecord.class))
+                      .multiTaxonRecord(MAPPER.readValue(record.getTaxon(), MultiTaxonRecord.class))
                       .identifierRecord(
-                          MAPPER.readValue((String) record.getIdentifier(), IdentifierRecord.class))
+                          MAPPER.readValue(record.getIdentifier(), IdentifierRecord.class))
                       .multimediaRecord(
-                          MAPPER.readValue((String) record.getMultimedia(), MultimediaRecord.class))
+                          MAPPER.readValue(record.getMultimedia(), MultimediaRecord.class))
                       .eventCoreRecord(
-                          MAPPER.readValue((String) record.getEventCore(), EventCoreRecord.class))
-                      .humboldtRecord(
-                          MAPPER.readValue((String) record.getHumboldt(), HumboldtRecord.class))
+                          MAPPER.readValue(record.getEventCore(), EventCoreRecord.class))
+                      .humboldtRecord(MAPPER.readValue(record.getHumboldt(), HumboldtRecord.class))
                       .build();
 
               return c.convert();

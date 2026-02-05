@@ -13,12 +13,14 @@ import org.gbif.pipelines.core.config.model.VocabularyConfig;
 public class TestConfigUtil {
 
   public static void createConfigYaml(
-      String zkConnectionString,
       String inputPath,
+      String testResourcePath,
+      String zkConnectionString,
       int registryPort,
       int namematchingPort,
       int geocodePort,
-      int grscicollPort)
+      int grscicollPort,
+      String outConfigFilePath)
       throws IOException {
 
     // create props
@@ -47,10 +49,10 @@ public class TestConfigUtil {
       config.getKeygen().setZkConnectionString(zkConnectionString);
 
       VocabularyConfig vocabularyConfig = new VocabularyConfig();
-      vocabularyConfig.setVocabulariesPath(inputPath + "vocabs");
+      vocabularyConfig.setVocabulariesPath(testResourcePath + "vocabs");
       config.setVocabularyConfig(vocabularyConfig);
     }
-    try (FileOutputStream out = new FileOutputStream(inputPath + "/pipelines.yaml")) {
+    try (FileOutputStream out = new FileOutputStream(testResourcePath + "/" + outConfigFilePath)) {
       mapper.writeValue(out, config);
     }
   }

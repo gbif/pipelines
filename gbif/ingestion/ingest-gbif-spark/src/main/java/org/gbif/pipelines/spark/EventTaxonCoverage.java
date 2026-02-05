@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TaxonomicCoverage implements java.io.Serializable {
+public class EventTaxonCoverage implements java.io.Serializable {
   String eventId;
-  String classifications;
+  String taxonCoverage;
 }

@@ -1,8 +1,8 @@
 package org.gbif.pipelines.spark;
 
+import static org.apache.spark.sql.functions.col;
 import static org.gbif.pipelines.ConfigUtil.loadConfig;
-import static org.gbif.pipelines.spark.Directories.SIMPLE_EVENT;
-import static org.gbif.pipelines.spark.Directories.SIMPLE_OCCURRENCE;
+import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
 
@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
-import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
@@ -24,7 +23,6 @@ import org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.io.avro.json.Classification;
 import org.gbif.pipelines.io.avro.json.DerivedClassification;
 import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
 import org.gbif.pipelines.io.avro.json.TaxonCoverage;
@@ -90,9 +88,12 @@ public class CalculateDerivedMetadata implements Serializable {
             Encoders.bean(Event.class))
         .write()
         .mode(SaveMode.Overwrite)
-        .parquet(outputPath + "/" + SIMPLE_EVENT);
+        .parquet(outputPath + "/" + SIMPLE_EVENT_WITH_DERIVED);
 
-    return spark.read().parquet(outputPath + "/" + SIMPLE_EVENT).as(Encoders.bean(Event.class));
+    return spark
+        .read()
+        .parquet(outputPath + "/" + SIMPLE_EVENT_WITH_DERIVED)
+        .as(Encoders.bean(Event.class));
   }
 
   /**
@@ -130,7 +131,7 @@ public class CalculateDerivedMetadata implements Serializable {
         calculateTaxonomicCoverage(outputPath, occurrence);
 
     return createDerivedDataRecords(
-        spark, outputPath, eventIdConvexHull, temporalCoverages, taxonomicCoverages);
+        spark, outputPath, events, eventIdConvexHull, temporalCoverages, taxonomicCoverages);
   }
 
   private static Dataset<Tuple2<String, String>> calculateTaxonomicCoverage(
@@ -138,13 +139,13 @@ public class CalculateDerivedMetadata implements Serializable {
 
     ObjectMapper MAPPER = new ObjectMapper();
 
-    // creates a coreId -> Classifications map
-    Dataset<TaxonomicCoverage> taxonomicCoverages =
+    // creates a EventID -> TaxonCoverage map
+    Dataset<EventTaxonCoverage> taxonomicCoverages =
         occurrence
             .map(
-                (MapFunction<Occurrence, TaxonomicCoverage>)
+                (MapFunction<Occurrence, EventTaxonCoverage>)
                     occ -> {
-                      String coreId = occ.getCoreId();
+                      String eventId = occ.getCoreId();
                       List<String> taxonIDs = new ArrayList<>();
                       Map<String, List<DerivedClassification>> classifications = new HashMap<>();
 
@@ -163,7 +164,8 @@ public class CalculateDerivedMetadata implements Serializable {
 
                         if (multiTaxonRecord.getTaxonRecords() != null) {
 
-                          multiTaxonRecord.getTaxonRecords().stream()
+                          multiTaxonRecord
+                              .getTaxonRecords()
                               .forEach(
                                   tr -> {
                                     DerivedClassification classification =
@@ -180,103 +182,133 @@ public class CalculateDerivedMetadata implements Serializable {
                               .setClassifications(classifications)
                               .build();
 
-                      return new TaxonomicCoverage(
-                          coreId, MAPPER.writeValueAsString(taxonCoverage));
+                      return new EventTaxonCoverage(
+                          eventId, MAPPER.writeValueAsString(taxonCoverage));
                     },
-                Encoders.bean(TaxonomicCoverage.class))
+                Encoders.bean(EventTaxonCoverage.class))
             .distinct();
 
-    // merge partial
-    Dataset<TaxonomicCoverage> partialMergedCoverages =
+    // Merge partial - from the previous stage we have multiple taxonomic coverages per event
+    // EVENT1 -> TC1
+    // EVENT1 -> TC2
+    // EVENT2 -> TC3
+    // Consolidate to EVENT1 -> TC1 + TC2
+    Dataset<EventTaxonCoverage> partialMergedCoverages =
         taxonomicCoverages.mapPartitions(
-            (MapPartitionsFunction<TaxonomicCoverage, TaxonomicCoverage>)
+            (MapPartitionsFunction<EventTaxonCoverage, EventTaxonCoverage>)
                 iter -> {
 
-                  // eventid -> list of taxonomic coverages
-                  Map<String, TaxonomicCoverage> acc = new HashMap<>();
+                  // Eventid -> list of taxonomic coverages
+                  Map<String, TaxonCoverage> acc = new HashMap<>();
 
-                  // FIXME - merging logic
-                  //
-                  //                  while (iter.hasNext()) {
-                  //
-                  //                    TaxonomicCoverage tc = iter.next();
-                  //
-                  //                    TaxonomicCoverage merged =
-                  //                        acc.computeIfAbsent(
-                  //                            tc.getEventId(), eventId -> new TaxonomicCoverage(
-                  //                                    eventId, null
-                  //                                ));
-                  //
-                  //                    TaxonCoverage taxonCoverage = merged.getClassifications() !=
-                  // null ?
-                  //                            MAPPER.readValue(merged.getClassifications(),
-                  // TaxonCoverage.class)
-                  //                            : new TaxonCoverage();
-                  //
-                  //
-                  //                    TaxonCoverage newTaxonCoverage =
-                  // MAPPER.readValue(tc.getClassifications(), TaxonCoverage.class);
-                  //
-                  //
-                  //
-                  //                    classifications.addAll(newClassifications);
-                  //
-                  //                    List<Classification> allMerged =
-                  //                        new HashSet<>(classifications).stream().toList();
-                  //
-                  //
-                  // merged.setClassifications(MAPPER.writeValueAsString(allMerged));
-                  //                  }
+                  while (iter.hasNext()) {
 
-                  return acc.values().iterator();
+                    EventTaxonCoverage tc = iter.next();
+
+                    // get existed taxon coverage in the map for eventID
+                    TaxonCoverage existedForEventID = acc.get(tc.eventId);
+
+                    if (existedForEventID == null) {
+                      TaxonCoverage newTaxonCoverage =
+                          MAPPER.readValue(tc.getTaxonCoverage(), TaxonCoverage.class);
+                      acc.put(tc.getEventId(), newTaxonCoverage);
+                    } else {
+                      TaxonCoverage newTaxonCoverage =
+                          MAPPER.readValue(tc.getTaxonCoverage(), TaxonCoverage.class);
+
+                      // merge taxonIDs
+                      Set<String> mergedTaxonIDs = new HashSet<>(existedForEventID.getTaxonIDs());
+                      mergedTaxonIDs.addAll(newTaxonCoverage.getTaxonIDs());
+                      existedForEventID.setTaxonIDs(new ArrayList<>(mergedTaxonIDs));
+
+                      // merge classifications
+                      Map<String, List<DerivedClassification>> mergedClassifications =
+                          existedForEventID.getClassifications();
+                      newTaxonCoverage
+                          .getClassifications()
+                          .forEach(
+                              (key, value) -> {
+                                mergedClassifications.merge(
+                                    key,
+                                    value,
+                                    (oldList, newList) -> {
+                                      Set<DerivedClassification> set = new HashSet<>(oldList);
+                                      set.addAll(newList);
+                                      return new ArrayList<>(set);
+                                    });
+                              });
+                      existedForEventID.setClassifications(mergedClassifications);
+                    }
+                  }
+
+                  return acc.entrySet().stream()
+                      .map(
+                          e -> {
+                            try {
+                              return new EventTaxonCoverage(
+                                  e.getKey(), // eventID
+                                  MAPPER.writeValueAsString(
+                                      e.getValue()) // merged TaxonCoverage as JSON
+                                  );
+                            } catch (Exception ex) {
+                              throw new RuntimeException(ex);
+                            }
+                          })
+                      .iterator();
                 },
-            Encoders.bean(TaxonomicCoverage.class));
+            Encoders.bean(EventTaxonCoverage.class));
 
-    KeyValueGroupedDataset<String, TaxonomicCoverage> groupedPartial =
+    // group by eventID to prepare for final merge
+    KeyValueGroupedDataset<String, EventTaxonCoverage> groupedPartial =
         partialMergedCoverages.groupByKey(
-            (MapFunction<TaxonomicCoverage, String>) TaxonomicCoverage::getEventId,
+            (MapFunction<EventTaxonCoverage, String>) EventTaxonCoverage::getEventId,
             Encoders.STRING());
 
     Dataset<Tuple2<String, String>> grouped =
         groupedPartial
             .reduceGroups(
-                (ReduceFunction<TaxonomicCoverage>)
+                (ReduceFunction<EventTaxonCoverage>)
                     (a, b) -> {
-                      TaxonomicCoverage merged = new TaxonomicCoverage(a.getEventId(), null);
+                      EventTaxonCoverage merged = new EventTaxonCoverage(a.getEventId(), null);
+                      TaxonCoverage taxonCoverageA =
+                          MAPPER.readValue(a.getTaxonCoverage(), TaxonCoverage.class);
+                      TaxonCoverage taxonCoverageB =
+                          MAPPER.readValue(b.getTaxonCoverage(), TaxonCoverage.class);
 
-                      List<Classification> classifications =
-                          MAPPER.readValue(
-                              a.getClassifications(),
-                              MAPPER
-                                  .getTypeFactory()
-                                  .constructCollectionType(List.class, Classification.class));
+                      taxonCoverageA.getTaxonIDs().addAll(taxonCoverageB.getTaxonIDs());
 
-                      List<Classification> toMerge =
-                          MAPPER.readValue(
-                              b.getClassifications(),
-                              MAPPER
-                                  .getTypeFactory()
-                                  .constructCollectionType(List.class, Classification.class));
+                      // checklistKey -> DerivedClassification
+                      Map<String, List<DerivedClassification>> classificationsA =
+                          taxonCoverageA.getClassifications();
+                      Map<String, List<DerivedClassification>> classificationsB =
+                          taxonCoverageB.getClassifications();
 
-                      classifications.addAll(toMerge);
+                      Map<String, List<DerivedClassification>> mergedClassifications =
+                          new HashMap<>(classificationsA);
 
-                      if (classifications.size() > 100) {
-                        classifications =
-                            classifications.stream().limit(100).collect(Collectors.toList());
-                      }
+                      classificationsA.forEach(
+                          (checklistKey, classListA) -> {
+                            if (classificationsB.containsKey(checklistKey)) {
+                              List<DerivedClassification> classListB =
+                                  classificationsB.get(checklistKey);
+                              Set<DerivedClassification> mergedSet = new HashSet<>(classListA);
+                              mergedSet.addAll(classListB);
+                              mergedClassifications.put(checklistKey, new ArrayList<>(mergedSet));
+                            }
+                          });
+                      taxonCoverageA.setClassifications(mergedClassifications);
 
-                      merged.setClassifications(MAPPER.writeValueAsString(classifications));
-
-                      return merged;
+                      return new EventTaxonCoverage(
+                          a.getEventId(), MAPPER.writeValueAsString(taxonCoverageA));
                     })
             .map(
-                (MapFunction<Tuple2<String, TaxonomicCoverage>, Tuple2<String, String>>)
+                (MapFunction<Tuple2<String, EventTaxonCoverage>, Tuple2<String, String>>)
                     row -> {
-                      return new Tuple2<>(row._1, row._2.getClassifications());
+                      return new Tuple2<>(row._1, row._2.getTaxonCoverage());
                     },
                 Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
 
-    grouped.write().mode(SaveMode.Overwrite).parquet(outputPath + "/derived/taxonomic_coverage");
+    grouped.write().mode(SaveMode.Overwrite).parquet(outputPath + "/derived/taxon_coverage");
 
     return grouped;
   }
@@ -293,31 +325,36 @@ public class CalculateDerivedMetadata implements Serializable {
   private static Dataset<DerivedMetadataRecord> createDerivedDataRecords(
       SparkSession spark,
       String outputPath,
+      Dataset<Event> events,
       Dataset<Tuple2<String, String>> eventIdConvexHull,
       Dataset<Tuple3<String, String, String>> temporalCoverages,
       Dataset<Tuple2<String, String>> taxonomicCoverages) {
 
+    events.select(col("id").as("eventId")).toDF("eventId").createOrReplaceTempView("events");
     eventIdConvexHull.toDF("eventId", "convexHull").createOrReplaceTempView("hulls");
     temporalCoverages.toDF("eventId", "lte", "gte").createOrReplaceTempView("temporal");
-    taxonomicCoverages.toDF("eventId", "classifications").createOrReplaceTempView("taxonomic");
+    taxonomicCoverages.toDF("eventId", "taxonCoverage").createOrReplaceTempView("taxonomic");
 
     Dataset<Row> df1 =
         spark
             .sql(
                 """
                 SELECT
-                       h.eventId as eventId,
+                       e.eventId as eventId,
                        h.convexHull as convexHull,
                        te.lte as lte,
                        te.gte as gte,
-                       ta.classifications as classifications
-                FROM hulls h
+                       ta.taxonCoverage as taxonCoverage
+                FROM events e
+                LEFT OUTER JOIN hulls h
+                ON e.eventId = h.eventId
                 LEFT OUTER JOIN temporal te
                 ON h.eventId = te.eventId
                 LEFT OUTER JOIN taxonomic ta
                 ON h.eventId = ta.eventId
                 """)
             .cache();
+
     Dataset<DerivedMetadataRecord> derivedMetadataRecordDataset =
         df1.map(
             (MapFunction<Row, DerivedMetadataRecord>)
@@ -326,15 +363,13 @@ public class CalculateDerivedMetadata implements Serializable {
                   String convexHull = row.getAs("convexHull");
                   String lte = row.getAs("lte");
                   String gte = row.getAs("gte");
+                  String taxonCoverageJson = row.getAs("taxonCoverage");
 
-                  // FIXME
-                  String classificationsJson = row.getAs("classifications");
-                  List<Classification> classifications =
-                      MAPPER.readValue(
-                          classificationsJson,
-                          MAPPER
-                              .getTypeFactory()
-                              .constructCollectionType(List.class, Classification.class));
+                  TaxonCoverage taxonCoverage = null;
+
+                  if (taxonCoverageJson != null) {
+                    taxonCoverage = MAPPER.readValue(taxonCoverageJson, TaxonCoverage.class);
+                  }
 
                   // create derived metadata record
                   DerivedMetadataRecord.Builder builder =
@@ -345,14 +380,16 @@ public class CalculateDerivedMetadata implements Serializable {
                           .setGte(gte)
                           .setLte(lte)
                           .build());
-                  //                  builder.setTaxonomicCoverage(classifications);
+                  builder.setTaxonomicCoverage(taxonCoverage);
                   return builder.build();
                 },
             Encoders.bean(DerivedMetadataRecord.class));
+
     derivedMetadataRecordDataset
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/event_derived_metadata");
+
     return derivedMetadataRecordDataset;
   }
 
@@ -510,6 +547,9 @@ public class CalculateDerivedMetadata implements Serializable {
             (FilterFunction<Row>)
                 row -> {
                   String temporalJson = row.getAs("temporal");
+                  if (temporalJson == null) {
+                    return false;
+                  }
                   TemporalRecord temporalRecord =
                       MAPPER.readValue(temporalJson, TemporalRecord.class);
                   return temporalRecord != null && temporalRecord.getEventDate() != null;
@@ -543,6 +583,9 @@ public class CalculateDerivedMetadata implements Serializable {
             (FilterFunction<Row>)
                 row -> {
                   String locationJson = row.getAs("location");
+                  if (locationJson == null) {
+                    return false;
+                  }
                   LocationRecord locationRecord =
                       MAPPER.readValue(locationJson, LocationRecord.class);
                   return locationRecord.getHasCoordinate()
@@ -699,9 +742,5 @@ public class CalculateDerivedMetadata implements Serializable {
       Optional.ofNullable(maxDate).ifPresent(evenDate::setLte);
       return evenDate.build();
     }
-  }
-
-  static class HullState implements Serializable {
-    List<Coordinate> hullCoords;
   }
 }
