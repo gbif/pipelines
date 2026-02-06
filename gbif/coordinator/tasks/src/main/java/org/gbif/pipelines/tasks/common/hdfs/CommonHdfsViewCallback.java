@@ -1,14 +1,18 @@
 package org.gbif.pipelines.tasks.common.hdfs;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EXTENSION_PREFIX;
+
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.InterpretationType.RecordType;
+import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
@@ -97,12 +101,17 @@ public class CommonHdfsViewCallback {
     // Spark dynamic settings
     Long messageNumber = null;
     String metaFileName = null;
+    String interpretationRecordsMetric = null;
+    long allRecords = 0;
     if (message instanceof PipelinesInterpretedMessage) {
       messageNumber = ((PipelinesInterpretedMessage) message).getNumberOfRecords();
       metaFileName = new InterpreterConfiguration().metaFileName;
+      interpretationRecordsMetric = Metrics.BASIC_RECORDS_COUNT;
     } else if (message instanceof PipelinesEventsInterpretedMessage) {
       messageNumber = ((PipelinesEventsInterpretedMessage) message).getNumberOfEventRecords();
       metaFileName = new EventsInterpretationConfiguration().metaFileName;
+      interpretationRecordsMetric = Metrics.UNIQUE_IDS_COUNT;
+      allRecords = countAllRecords(message);
     }
 
     long interpretationRecordsNumber =
@@ -112,7 +121,7 @@ public class CommonHdfsViewCallback {
             .attempt(message.getAttempt().toString())
             .messageNumber(messageNumber)
             .metaFileName(metaFileName)
-            .metricName(Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED)
+            .metricName(interpretationRecordsMetric + Metrics.ATTEMPTED)
             .alternativeMetricName(Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED)
             .skipIf(true)
             .build()
@@ -129,6 +138,8 @@ public class CommonHdfsViewCallback {
             .skipIf(true)
             .build()
             .get();
+
+    dwcaRecordsNumber = Math.max(allRecords, dwcaRecordsNumber);
 
     if (interpretationRecordsNumber == 0 && dwcaRecordsNumber == 0) {
       throw new PipelinesException(
@@ -210,5 +221,37 @@ public class CommonHdfsViewCallback {
       return Collections.singleton(config.recordType.name());
     }
     return interpretTypes;
+  }
+
+  private long countAllRecords(PipelinesInterpretationMessage message) throws IOException {
+    String metaPath =
+        String.join(
+            "/",
+            config.stepConfig.repositoryPath,
+            message.getDatasetUuid().toString(),
+            message.getAttempt().toString(),
+            new DwcaToAvroConfiguration().metaFileName);
+    log.info("Getting records number from the file - {}", metaPath);
+
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+
+    List<PipelineStep.MetricInfo> metrics =
+        HdfsUtils.readMetricsFromMetaFile(hdfsConfigs, metaPath);
+    return metrics.stream()
+        .filter(
+            m ->
+                m.getName().equals(Metrics.ARCHIVE_TO_ER_COUNT)
+                    || m.getName().startsWith(EXTENSION_PREFIX))
+        .mapToLong(
+            m -> {
+              try {
+                return Long.parseLong(m.getValue());
+              } catch (Exception ex) {
+                log.info("Couldn't parse metric value: {}", m.getValue(), ex);
+                return 0;
+              }
+            })
+        .sum();
   }
 }

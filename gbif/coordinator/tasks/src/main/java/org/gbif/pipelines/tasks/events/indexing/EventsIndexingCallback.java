@@ -64,7 +64,8 @@ public class EventsIndexingCallback
 
   @Override
   public boolean isMessageCorrect(PipelinesEventsInterpretedMessage message) {
-    return message.getNumberOfEventRecords() > 0;
+    return message.getPipelineSteps().contains(StepType.EVENTS_INTERPRETED_TO_INDEX.name())
+        && message.getNumberOfEventRecords() > 0;
   }
 
   /**
