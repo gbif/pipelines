@@ -3,12 +3,14 @@ package org.gbif.pipelines.tasks.common.hdfs;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.InterpretationType.RecordType;
+import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
@@ -97,12 +99,31 @@ public class CommonHdfsViewCallback {
     // Spark dynamic settings
     Long messageNumber = null;
     String metaFileName = null;
+    String interpretationRecordsMetric = null;
+    long dwcaRecordsNumber = 0;
     if (message instanceof PipelinesInterpretedMessage) {
       messageNumber = ((PipelinesInterpretedMessage) message).getNumberOfRecords();
       metaFileName = new InterpreterConfiguration().metaFileName;
+      interpretationRecordsMetric = Metrics.BASIC_RECORDS_COUNT;
+
+      dwcaRecordsNumber =
+        RecordCountReader.builder()
+          .stepConfig(config.stepConfig)
+          .datasetKey(message.getDatasetUuid().toString())
+          .attempt(message.getAttempt().toString())
+          .metaFileName(new DwcaToAvroConfiguration().metaFileName)
+          .metricName(Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT)
+          .alternativeMetricName(Metrics.ARCHIVE_TO_ER_COUNT)
+          .skipIf(true)
+          .build()
+          .get();
+
     } else if (message instanceof PipelinesEventsInterpretedMessage) {
       messageNumber = ((PipelinesEventsInterpretedMessage) message).getNumberOfEventRecords();
       metaFileName = new EventsInterpretationConfiguration().metaFileName;
+      interpretationRecordsMetric = Metrics.UNIQUE_IDS_COUNT;
+
+      dwcaRecordsNumber = countAllRecords(message);
     }
 
     long interpretationRecordsNumber =
@@ -112,20 +133,8 @@ public class CommonHdfsViewCallback {
             .attempt(message.getAttempt().toString())
             .messageNumber(messageNumber)
             .metaFileName(metaFileName)
-            .metricName(Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED)
+            .metricName(interpretationRecordsMetric + Metrics.ATTEMPTED)
             .alternativeMetricName(Metrics.UNIQUE_GBIF_IDS_COUNT + Metrics.ATTEMPTED)
-            .skipIf(true)
-            .build()
-            .get();
-
-    long dwcaRecordsNumber =
-        RecordCountReader.builder()
-            .stepConfig(config.stepConfig)
-            .datasetKey(message.getDatasetUuid().toString())
-            .attempt(message.getAttempt().toString())
-            .metaFileName(new DwcaToAvroConfiguration().metaFileName)
-            .metricName(Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT)
-            .alternativeMetricName(Metrics.ARCHIVE_TO_ER_COUNT)
             .skipIf(true)
             .build()
             .get();
@@ -210,5 +219,33 @@ public class CommonHdfsViewCallback {
       return Collections.singleton(config.recordType.name());
     }
     return interpretTypes;
+  }
+
+  private long countAllRecords(PipelinesInterpretationMessage message) throws IOException {
+    String metaPath =
+        String.join(
+            "/",
+            config.stepConfig.repositoryPath,
+            message.getDatasetUuid().toString(),
+            message.getAttempt().toString(),
+            new DwcaToAvroConfiguration().metaFileName);
+    log.info("Getting records number from the file - {}", metaPath);
+
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+
+    List<PipelineStep.MetricInfo> metrics =
+        HdfsUtils.readMetricsFromMetaFile(hdfsConfigs, metaPath);
+    return metrics.stream()
+        .filter(m -> m.getName().equals(Metrics.ARCHIVE_TO_ER_COUNT) || m.getName().contains("_"))
+        .mapToLong(
+            m -> {
+              try {
+                return Long.parseLong(m.getValue());
+              } catch (Exception ex) {
+                return 0;
+              }
+            })
+        .sum();
   }
 }
