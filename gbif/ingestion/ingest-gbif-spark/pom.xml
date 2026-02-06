@@ -17,13 +17,13 @@
         <scala.version>2.12.18</scala.version>
         <lombok.version>1.18.42</lombok.version>
         <slf4j.version>2.0.7</slf4j.version>
-        <dwca-io.version>3.0.0</dwca-io.version>
+        <dwca-io.version>3.0.1</dwca-io.version>
         <gbif-parsers.version>0.68</gbif-parsers.version>
         <commons-io.version>2.13.0</commons-io.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>
         <fastutil.version>8.5.15</fastutil.version>
-        <dwc-api.version>2.1.8</dwc-api.version>
-        <gbif-api.version>2.2.3</gbif-api.version>
+        <dwc-api.version>2.1.9</dwc-api.version>
+        <gbif-api.version>2.3.1</gbif-api.version>
         <gbif-common.version>0.60</gbif-common.version>
         <gbif-postal-service.version>2.1.3</gbif-postal-service.version>
         <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
@@ -35,7 +35,7 @@
         <geotools.version>20.5</geotools.version>
         <java.version>17</java.version>
         <junit4.version>4.13.2</junit4.version>
-        <guava.version>14.0.1</guava.version>
+        <guava.version>33.5.0-jre</guava.version>
         <elasticsearch.version>7.9.2</elasticsearch.version>
         <elasticsearch-spark.version>7.17.29</elasticsearch-spark.version>
         <netty.version>4.1.96.Final</netty.version>
