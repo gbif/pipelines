@@ -126,16 +126,16 @@ public class CommonHdfsViewCallback {
             .get();
 
     long dwcaRecordsNumber =
-      RecordCountReader.builder()
-        .stepConfig(config.stepConfig)
-        .datasetKey(message.getDatasetUuid().toString())
-        .attempt(message.getAttempt().toString())
-        .metaFileName(new DwcaToAvroConfiguration().metaFileName)
-        .metricName(Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT)
-        .alternativeMetricName(Metrics.ARCHIVE_TO_ER_COUNT)
-        .skipIf(true)
-        .build()
-        .get();
+        RecordCountReader.builder()
+            .stepConfig(config.stepConfig)
+            .datasetKey(message.getDatasetUuid().toString())
+            .attempt(message.getAttempt().toString())
+            .metaFileName(new DwcaToAvroConfiguration().metaFileName)
+            .metricName(Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT)
+            .alternativeMetricName(Metrics.ARCHIVE_TO_ER_COUNT)
+            .skipIf(true)
+            .build()
+            .get();
 
     dwcaRecordsNumber = Math.max(allRecords, dwcaRecordsNumber);
 
