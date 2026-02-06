@@ -775,12 +775,6 @@
         <artifactId>super-csv</artifactId>
         <version>${super-csv.version}</version>
       </dependency>
-      <!-- FIXME: test -->
-      <dependency>
-        <groupId>com.twitter</groupId>
-        <artifactId>chill-java</artifactId>
-        <version>0.10.0</version>
-      </dependency>
 
       <!-- XML -->
       <dependency>
