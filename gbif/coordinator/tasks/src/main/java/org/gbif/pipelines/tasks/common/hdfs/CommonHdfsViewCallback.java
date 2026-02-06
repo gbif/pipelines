@@ -124,6 +124,7 @@ public class CommonHdfsViewCallback {
       interpretationRecordsMetric = Metrics.UNIQUE_IDS_COUNT;
 
       dwcaRecordsNumber = countAllRecords(message);
+      log.info("Count for records in events: {}", dwcaRecordsNumber);
     }
 
     long interpretationRecordsNumber =
@@ -233,6 +234,8 @@ public class CommonHdfsViewCallback {
 
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
+
+    // TODO: use alt metric for old ingestions
 
     List<PipelineStep.MetricInfo> metrics =
         HdfsUtils.readMetricsFromMetaFile(hdfsConfigs, metaPath);
