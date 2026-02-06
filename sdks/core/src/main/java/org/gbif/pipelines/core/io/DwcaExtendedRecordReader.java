@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
@@ -33,6 +35,7 @@ public class DwcaExtendedRecordReader implements Closeable {
 
   @Getter private long recordsReturned;
   @Getter private long occurrenceRecordsReturned;
+  @Getter private final Map<String, Long> extensionsCount = new HashMap<>();
   private ExtendedRecord current;
 
   /** Creates a DwcaReader of an expanded archive. */
@@ -84,6 +87,11 @@ public class DwcaExtendedRecordReader implements Closeable {
     recordsReturned++;
 
     current = convertFn.apply(iterator.next());
+
+    Map<String, List<Map<String, String>>> extensions = current.getExtensions();
+    for (String key : extensions.keySet()) {
+      extensionsCount.put(key, extensionsCount.getOrDefault(key, 0L) + extensions.get(key).size());
+    }
 
     if (current.getCoreRowType().equals(DwcTerm.Occurrence.qualifiedName())) {
       occurrenceRecordsReturned++;

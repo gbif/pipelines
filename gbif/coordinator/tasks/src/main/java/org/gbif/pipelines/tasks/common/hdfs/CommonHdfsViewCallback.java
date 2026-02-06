@@ -124,7 +124,7 @@ public class CommonHdfsViewCallback {
             .datasetKey(message.getDatasetUuid().toString())
             .attempt(message.getAttempt().toString())
             .metaFileName(new DwcaToAvroConfiguration().metaFileName)
-            .metricName(Metrics.ARCHIVE_TO_OCC_COUNT)
+            .metricName(Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT)
             .alternativeMetricName(Metrics.ARCHIVE_TO_ER_COUNT)
             .skipIf(true)
             .build()
@@ -135,7 +135,7 @@ public class CommonHdfsViewCallback {
           "No data to index. Both interpretationRecordsNumber and dwcaRecordsNumber have 0 records, check metadata yaml files");
     }
 
-    long recordsNumber = Math.min(dwcaRecordsNumber, interpretationRecordsNumber);
+    long recordsNumber = Math.max(dwcaRecordsNumber, interpretationRecordsNumber);
     if (interpretationRecordsNumber == 0) {
       recordsNumber = dwcaRecordsNumber;
     } else if (dwcaRecordsNumber == 0) {

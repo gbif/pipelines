@@ -4,7 +4,10 @@ import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
@@ -119,16 +122,67 @@ public abstract class ConverterToVerbatim {
 
   private void createMetafile(FileSystem fs, Path metaPath, Metric metric) throws IOException {
     if (metaPath != null) {
-      String info =
-          Metrics.ARCHIVE_TO_ER_COUNT
-              + ": "
-              + metric.getNumberOfRecords()
-              + "\n"
-              + Metrics.ARCHIVE_TO_OCC_COUNT
-              + ": "
-              + metric.getNumberOfOccurrenceRecords()
-              + "\n";
-      FsUtils.createFile(fs, metaPath, info);
+
+      Long largest = Math.max(metric.getNumberOfOccurrenceRecords(), metric.getNumberOfRecords());
+      if (metric.getExtensionsCount() != null && !metric.getExtensionsCount().isEmpty()) {
+        Long largestExt = Collections.max(metric.getExtensionsCount().values());
+        if (largestExt > largest) {
+          largest = largestExt;
+        }
+      }
+
+      StringBuilder info =
+          new StringBuilder(
+              Metrics.ARCHIVE_TO_ER_COUNT
+                  + ": "
+                  + metric.getNumberOfRecords()
+                  + "\n"
+                  + Metrics.ARCHIVE_TO_OCC_COUNT
+                  + ": "
+                  + metric.getNumberOfOccurrenceRecords()
+                  + "\n"
+                  + Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT
+                  + ": "
+                  + largest
+                  + "\n");
+
+      for (Map.Entry<String, Long> entry : metric.getExtensionsCount().entrySet()) {
+        info.append(toNamespacedYamlKey(entry.getKey()))
+            .append(": ")
+            .append(entry.getValue())
+            .append("\n");
+      }
+
+      FsUtils.createFile(fs, metaPath, info.toString());
+    }
+  }
+
+  public static String toNamespacedYamlKey(String uri) {
+    try {
+      URI u = URI.create(uri);
+      String host = u.getHost();
+      if (host == null || host.isEmpty()) {
+        return uri;
+      }
+      host = host.replace("www.", "");
+      String namespace = host.split("\\.")[0];
+
+      String path = u.getPath();
+      if (path == null || path.isEmpty()) {
+        if (!namespace.isEmpty()) {
+          return namespace;
+        }
+        return uri;
+      }
+      String[] pathParts = path.split("/");
+      if (pathParts.length > 1) {
+        String term = pathParts[pathParts.length - 1];
+        return (namespace + "_" + term);
+      } else {
+        return (namespace + "_" + path.replace("/", ""));
+      }
+    } catch (Exception e) {
+      return uri;
     }
   }
 
