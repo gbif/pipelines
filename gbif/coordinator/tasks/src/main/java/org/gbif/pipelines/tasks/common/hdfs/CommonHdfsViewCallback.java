@@ -100,31 +100,16 @@ public class CommonHdfsViewCallback {
     Long messageNumber = null;
     String metaFileName = null;
     String interpretationRecordsMetric = null;
-    long dwcaRecordsNumber = 0;
+    long allRecords = 0;
     if (message instanceof PipelinesInterpretedMessage) {
       messageNumber = ((PipelinesInterpretedMessage) message).getNumberOfRecords();
       metaFileName = new InterpreterConfiguration().metaFileName;
       interpretationRecordsMetric = Metrics.BASIC_RECORDS_COUNT;
-
-      dwcaRecordsNumber =
-          RecordCountReader.builder()
-              .stepConfig(config.stepConfig)
-              .datasetKey(message.getDatasetUuid().toString())
-              .attempt(message.getAttempt().toString())
-              .metaFileName(new DwcaToAvroConfiguration().metaFileName)
-              .metricName(Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT)
-              .alternativeMetricName(Metrics.ARCHIVE_TO_ER_COUNT)
-              .skipIf(true)
-              .build()
-              .get();
-
     } else if (message instanceof PipelinesEventsInterpretedMessage) {
       messageNumber = ((PipelinesEventsInterpretedMessage) message).getNumberOfEventRecords();
       metaFileName = new EventsInterpretationConfiguration().metaFileName;
       interpretationRecordsMetric = Metrics.UNIQUE_IDS_COUNT;
-
-      dwcaRecordsNumber = countAllRecords(message);
-      log.info("Count for records in events: {}", dwcaRecordsNumber);
+      allRecords = countAllRecords(message);
     }
 
     long interpretationRecordsNumber =
@@ -139,6 +124,20 @@ public class CommonHdfsViewCallback {
             .skipIf(true)
             .build()
             .get();
+
+    long dwcaRecordsNumber =
+      RecordCountReader.builder()
+        .stepConfig(config.stepConfig)
+        .datasetKey(message.getDatasetUuid().toString())
+        .attempt(message.getAttempt().toString())
+        .metaFileName(new DwcaToAvroConfiguration().metaFileName)
+        .metricName(Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT)
+        .alternativeMetricName(Metrics.ARCHIVE_TO_ER_COUNT)
+        .skipIf(true)
+        .build()
+        .get();
+
+    dwcaRecordsNumber = Math.max(allRecords, dwcaRecordsNumber);
 
     if (interpretationRecordsNumber == 0 && dwcaRecordsNumber == 0) {
       throw new PipelinesException(
@@ -234,8 +233,6 @@ public class CommonHdfsViewCallback {
 
     HdfsConfigs hdfsConfigs =
         HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
-
-    // TODO: use alt metric for old ingestions
 
     List<PipelineStep.MetricInfo> metrics =
         HdfsUtils.readMetricsFromMetaFile(hdfsConfigs, metaPath);
