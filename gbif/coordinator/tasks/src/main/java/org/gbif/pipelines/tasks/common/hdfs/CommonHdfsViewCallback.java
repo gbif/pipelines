@@ -107,16 +107,16 @@ public class CommonHdfsViewCallback {
       interpretationRecordsMetric = Metrics.BASIC_RECORDS_COUNT;
 
       dwcaRecordsNumber =
-        RecordCountReader.builder()
-          .stepConfig(config.stepConfig)
-          .datasetKey(message.getDatasetUuid().toString())
-          .attempt(message.getAttempt().toString())
-          .metaFileName(new DwcaToAvroConfiguration().metaFileName)
-          .metricName(Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT)
-          .alternativeMetricName(Metrics.ARCHIVE_TO_ER_COUNT)
-          .skipIf(true)
-          .build()
-          .get();
+          RecordCountReader.builder()
+              .stepConfig(config.stepConfig)
+              .datasetKey(message.getDatasetUuid().toString())
+              .attempt(message.getAttempt().toString())
+              .metaFileName(new DwcaToAvroConfiguration().metaFileName)
+              .metricName(Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT)
+              .alternativeMetricName(Metrics.ARCHIVE_TO_ER_COUNT)
+              .skipIf(true)
+              .build()
+              .get();
 
     } else if (message instanceof PipelinesEventsInterpretedMessage) {
       messageNumber = ((PipelinesEventsInterpretedMessage) message).getNumberOfEventRecords();
