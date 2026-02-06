@@ -198,6 +198,7 @@ public class PipelinesVariables {
     public static final String LOCATION_FEATURE_RECORDS_COUNT = "locationFeatureRecordsCount";
 
     public static final String ATTEMPTED = "Attempted";
+    public static final String EXTENSION_PREFIX = "extension_";
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)

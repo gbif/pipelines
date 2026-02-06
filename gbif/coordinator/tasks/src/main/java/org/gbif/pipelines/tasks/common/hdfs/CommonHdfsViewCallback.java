@@ -1,5 +1,7 @@
 package org.gbif.pipelines.tasks.common.hdfs;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EXTENSION_PREFIX;
+
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.Collections;
@@ -237,12 +239,16 @@ public class CommonHdfsViewCallback {
     List<PipelineStep.MetricInfo> metrics =
         HdfsUtils.readMetricsFromMetaFile(hdfsConfigs, metaPath);
     return metrics.stream()
-        .filter(m -> m.getName().equals(Metrics.ARCHIVE_TO_ER_COUNT) || m.getName().contains("_"))
+        .filter(
+            m ->
+                m.getName().equals(Metrics.ARCHIVE_TO_ER_COUNT)
+                    || m.getName().startsWith(EXTENSION_PREFIX))
         .mapToLong(
             m -> {
               try {
                 return Long.parseLong(m.getValue());
               } catch (Exception ex) {
+                log.info("Couldn't parse metric value: {}", m.getValue(), ex);
                 return 0;
               }
             })

@@ -1,5 +1,6 @@
 package org.gbif.converters.converter;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.EXTENSION_PREFIX;
 import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 
 import java.io.BufferedOutputStream;
@@ -147,7 +148,8 @@ public abstract class ConverterToVerbatim {
                   + "\n");
 
       for (Map.Entry<String, Long> entry : metric.getExtensionsCount().entrySet()) {
-        info.append(toNamespacedYamlKey(entry.getKey()))
+        info.append(EXTENSION_PREFIX)
+            .append(toNamespacedYamlKey(entry.getKey()))
             .append(": ")
             .append(entry.getValue())
             .append("\n");
