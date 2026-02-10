@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>3.2.21-SNAPSHOT</version>
+  <version>3.2.23-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -47,10 +47,6 @@
 
   <repositories>
     <repository>
-      <id>gbif-central</id>
-      <url>https://repository.gbif.org/repository/central/</url>
-    </repository>
-    <repository>
       <id>gbif-release</id>
       <url>https://repository.gbif.org/repository/releases/</url>
     </repository>
@@ -77,10 +73,6 @@
     </repository>
   </repositories>
   <pluginRepositories>
-    <pluginRepository>
-      <id>gbif-central</id>
-      <url>https://repository.gbif.org/repository/central/</url>
-    </pluginRepository>
     <pluginRepository>
       <id>gbif-release</id>
       <url>https://repository.gbif.org/repository/releases/</url>

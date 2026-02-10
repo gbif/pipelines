@@ -22,7 +22,7 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.events.interpretation.EventsInterpretationConfiguration;
-import org.gbif.pipelines.tasks.occurrences.interpretation.InterpreterConfiguration;
+import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
@@ -137,31 +137,31 @@ public class EventsIndexingCallback
 
   /** Sum of event and occurrence records */
   private long getRecordNumber(PipelinesEventsInterpretedMessage message) throws IOException {
-    long eventRecords =
+    long interpretationRecords =
         RecordCountReader.builder()
             .stepConfig(config.stepConfig)
             .datasetKey(message.getDatasetUuid().toString())
             .attempt(message.getAttempt().toString())
             .messageNumber(message.getNumberOfEventRecords())
             .metaFileName(new EventsInterpretationConfiguration().metaFileName)
-            .metricName(Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED)
-            .alternativeMetricName(Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED)
+            .metricName(Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED)
+            .alternativeMetricName(Metrics.IDENTIFIER_RECORDS_COUNT + Metrics.ATTEMPTED)
             .build()
             .get();
 
-    long occurrenceRecords =
+    long dwcaRecordsNumber =
         RecordCountReader.builder()
             .stepConfig(config.stepConfig)
             .datasetKey(message.getDatasetUuid().toString())
             .attempt(message.getAttempt().toString())
-            .messageNumber(message.getNumberOfOccurrenceRecords())
-            .metaFileName(new InterpreterConfiguration().metaFileName)
-            .metricName(Metrics.BASIC_RECORDS_COUNT + Metrics.ATTEMPTED)
-            .alternativeMetricName(Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED)
+            .messageNumber(message.getNumberOfEventRecords())
+            .metaFileName(new DwcaToAvroConfiguration().metaFileName)
+            .metricName(Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT)
+            .alternativeMetricName(Metrics.ARCHIVE_TO_ER_COUNT)
             .skipIf(true)
             .build()
             .get();
 
-    return occurrenceRecords + eventRecords;
+    return Math.max(dwcaRecordsNumber, interpretationRecords);
   }
 }

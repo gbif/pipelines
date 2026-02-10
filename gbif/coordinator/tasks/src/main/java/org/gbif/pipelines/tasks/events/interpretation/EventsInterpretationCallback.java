@@ -1,5 +1,6 @@
 package org.gbif.pipelines.tasks.events.interpretation;
 
+import java.io.IOException;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.airflow.AppName;
@@ -17,11 +19,13 @@ import org.gbif.pipelines.common.hdfs.HdfsViewSettings;
 import org.gbif.pipelines.common.process.AirflowSparkLauncher;
 import org.gbif.pipelines.common.process.BeamParametersBuilder;
 import org.gbif.pipelines.common.process.BeamParametersBuilder.BeamParameters;
+import org.gbif.pipelines.common.process.RecordCountReader;
 import org.gbif.pipelines.common.process.SparkDynamicSettings;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
+import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
@@ -105,17 +109,28 @@ public class EventsInterpretationCallback extends AbstractMessageCallback<Pipeli
         message.getRunner());
   }
 
-  private void runDistributed(PipelinesEventsMessage message) {
+  private void runDistributed(PipelinesEventsMessage message) throws IOException {
 
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
+
+    long recordsNumber =
+        RecordCountReader.builder()
+            .stepConfig(config.stepConfig)
+            .datasetKey(message.getDatasetUuid().toString())
+            .attempt(message.getAttempt().toString())
+            .messageNumber(message.getNumberOfEventRecords())
+            .metaFileName(new DwcaToAvroConfiguration().metaFileName)
+            .metricName(PipelinesVariables.Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT)
+            .alternativeMetricName(PipelinesVariables.Metrics.ARCHIVE_TO_ER_COUNT)
+            .build()
+            .get();
 
     // Spark dynamic settings
     boolean useMemoryExtraCoef =
         config.sparkConfig.extraCoefDatasetSet.contains(message.getDatasetUuid().toString());
     SparkDynamicSettings sparkSettings =
-        SparkDynamicSettings.create(
-            config.sparkConfig, message.getNumberOfEventRecords(), useMemoryExtraCoef);
+        SparkDynamicSettings.create(config.sparkConfig, recordsNumber, useMemoryExtraCoef);
 
     String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
     String path = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
