@@ -87,7 +87,7 @@ public class SparkDynamicSettings {
    * <p>coefficient - extra coefficient, extra coefficient to control executors, memory and
    * parallelism
    */
-  private int computePowerFn(
+  public static int computePowerFn(
       SparkConfiguration sparkConfig, long recordsNumber, double coefficient) {
     double result =
         sparkConfig.powerFnCoefficient

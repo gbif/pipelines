@@ -49,7 +49,6 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -280,10 +279,6 @@ public class TransformsFactory {
   public SingleOutput<KV<String, CoGbkResult>, ExtendedRecord> createFilterRecordsTransform(
       VerbatimTransform verbatimTransform, GbifIdTransform idTransform) {
     return FilterRecordsTransform.create(verbatimTransform.getTag(), idTransform.getTag()).filter();
-  }
-
-  public MeasurementOrFactTransform createMeasurementOrFactTransform() {
-    return MeasurementOrFactTransform.builder().create();
   }
 
   public SerializableSupplier<HBaseLockingKey> createHBaseLockingKeySupplier() {

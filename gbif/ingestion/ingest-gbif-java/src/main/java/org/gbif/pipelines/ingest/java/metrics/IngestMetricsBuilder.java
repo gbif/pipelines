@@ -26,7 +26,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.INVALID_GBIF_
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOAN_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MATERIAL_SAMPLE_TABLE_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_SCORE_TABLE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_TRAIT_TABLE_RECORDS_COUNT;
@@ -62,7 +61,6 @@ import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.table.AmplificationTableTransform;
@@ -102,7 +100,6 @@ public class IngestMetricsBuilder {
         .addMetric(AudubonTransform.class, AUDUBON_RECORDS_COUNT)
         .addMetric(ImageTransform.class, IMAGE_RECORDS_COUNT)
         .addMetric(ImageTransform.class, DNA_DERIVED_DATA_RECORDS_COUNT)
-        .addMetric(MeasurementOrFactTransform.class, MEASUREMENT_OR_FACT_RECORDS_COUNT)
         .addMetric(MultimediaTransform.class, MULTIMEDIA_RECORDS_COUNT)
         .addMetric(FilterRecordsTransform.class, FILTER_ER_BASED_ON_GBIF_ID)
         .addMetric(UniqueGbifIdTransform.class, UNIQUE_GBIF_IDS_COUNT)

@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.converters.JsonConverter.convertMoFFromVerbatim;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
@@ -20,6 +21,7 @@ import org.gbif.api.model.Constants;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
+import org.gbif.pipelines.core.pojo.MoFData;
 import org.gbif.pipelines.core.utils.SortUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
@@ -36,6 +38,7 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.gbif.pipelines.io.avro.json.Classification;
+import org.gbif.pipelines.io.avro.json.EventJsonRecord;
 import org.gbif.pipelines.io.avro.json.GeologicalContext;
 import org.gbif.pipelines.io.avro.json.GeologicalRange;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
@@ -81,6 +84,7 @@ public class OccurrenceJsonConverter {
     mapDnaDerivedDataRecord(builder);
     mapExtendedRecord(builder);
     mapSortField(builder);
+    mapMoFFromVerbatim(builder);
 
     return builder.build();
   }
@@ -440,5 +444,15 @@ public class OccurrenceJsonConverter {
     builder.setYearMonthGbifIdSort(
         SortUtils.yearDescMonthAscGbifIdAscSortKey(
             builder.getYear(), builder.getMonth(), builder.getGbifId()));
+  }
+
+  private void mapMoFFromVerbatim(OccurrenceJsonRecord.Builder builder) {
+    MoFData moFData = convertMoFFromVerbatim(verbatim);
+    if (!moFData.getMeasurementTypes().isEmpty()) {
+      builder.setMeasurementTypes(new ArrayList<>(moFData.getMeasurementTypes()));
+    }
+    if (!moFData.getMeasurementTypeIDs().isEmpty()) {
+      builder.setMeasurementTypeIDs(new ArrayList<>(moFData.getMeasurementTypeIDs()));
+    }
   }
 }

@@ -688,6 +688,9 @@
   "dnaSequenceID":  {"type": "keyword"},
   "footprintWKT":  {"type": "keyword", "index": false, "doc_values": false},
 
+  "measurementTypes": {"type": "keyword", "copy_to": "all"},
+  "measurementTypeIDs": {"type": "keyword", "copy_to": "all"},
+
   "verbatim": {"type": "object", "enabled": false}
   }
 }

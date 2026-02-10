@@ -1,6 +1,8 @@
 package org.gbif.pipelines.core.converters;
 
 import static org.gbif.pipelines.core.converters.OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.hasExtension;
 
 import com.google.common.base.Strings;
 import java.time.Instant;
@@ -23,9 +25,11 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.ObisTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
+import org.gbif.pipelines.core.pojo.MoFData;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.*;
@@ -465,5 +469,38 @@ public class JsonConverter {
     Optional.ofNullable(taxonRecord.getAcceptedUsage()).ifPresent(au -> taxonKey.add(au.getKey()));
 
     return taxonKey.stream().map(String::valueOf).collect(Collectors.toList());
+  }
+
+  public static MoFData convertMoFFromVerbatim(ExtendedRecord verbatim) {
+    Set<String> measurementTypes = new HashSet<>();
+    Set<String> measurementTypeIDs = new HashSet<>();
+    if (hasExtension(verbatim, Extension.MEASUREMENT_OR_FACT.getRowType())) {
+      verbatim
+          .getExtensions()
+          .get(Extension.MEASUREMENT_OR_FACT.getRowType())
+          .forEach(
+              e -> {
+                extractNullAwareOptValue(e, DwcTerm.measurementType)
+                    .ifPresent(measurementTypes::add);
+              });
+    }
+
+    if (hasExtension(verbatim, Extension.EXTENDED_MEASUREMENT_OR_FACT.getRowType())) {
+      verbatim
+          .getExtensions()
+          .get(Extension.EXTENDED_MEASUREMENT_OR_FACT.getRowType())
+          .forEach(
+              e -> {
+                extractNullAwareOptValue(e, DwcTerm.measurementType)
+                    .ifPresent(measurementTypes::add);
+                extractNullAwareOptValue(e, ObisTerm.measurementTypeID)
+                    .ifPresent(measurementTypeIDs::add);
+              });
+    }
+
+    return MoFData.builder()
+        .measurementTypes(measurementTypes)
+        .measurementTypeIDs(measurementTypeIDs)
+        .build();
   }
 }

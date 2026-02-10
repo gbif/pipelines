@@ -1,8 +1,12 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.converters.JsonConverter.convertMoFFromVerbatim;
 import static org.gbif.pipelines.core.utils.EventsUtils.*;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.hasExtension;
 
 import java.util.*;
 import java.util.function.Function;
@@ -11,8 +15,11 @@ import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.DurationUnit;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.ObisTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
+import org.gbif.pipelines.core.pojo.MoFData;
 import org.gbif.pipelines.core.utils.SortUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
@@ -45,7 +52,6 @@ public class ParentJsonConverter {
   protected final LocationInheritedRecord locationInheritedRecord;
   protected final TemporalInheritedRecord temporalInheritedRecord;
   protected final EventInheritedRecord eventInheritedRecord;
-  protected MeasurementOrFactRecord measurementOrFactRecord;
   protected final HumboldtRecord humboldtRecord;
 
   @SneakyThrows
@@ -100,10 +106,10 @@ public class ParentJsonConverter {
     mapTemporalRecord(builder);
     mapLocationRecord(builder);
     mapMultimediaRecord(builder);
-    mapMeasurementOrFactRecord(builder);
     mapHumboldtRecord(builder);
     mapSortField(builder);
     mapProjectIds(builder);
+    mapMoFFromVerbatim(builder);
 
     return builder;
   }
@@ -345,21 +351,6 @@ public class ParentJsonConverter {
         .setMediaLicenses(JsonConverter.convertMultimediaLicense(multimedia));
   }
 
-  private void mapMeasurementOrFactRecord(EventJsonRecord.Builder builder) {
-    builder.setMeasurementOrFactMethods(
-        measurementOrFactRecord.getMeasurementOrFactItems().stream()
-            .map(MeasurementOrFact::getMeasurementMethod)
-            .filter(Objects::nonNull)
-            .distinct()
-            .collect(Collectors.toList()));
-    builder.setMeasurementOrFactTypes(
-        measurementOrFactRecord.getMeasurementOrFactItems().stream()
-            .map(MeasurementOrFact::getMeasurementType)
-            .filter(Objects::nonNull)
-            .distinct()
-            .collect(Collectors.toList()));
-  }
-
   private void mapHumboldtRecord(EventJsonRecord.Builder builder) {
     builder.setHumboldt(
         humboldtRecord.getHumboldtItems().stream()
@@ -518,6 +509,29 @@ public class ParentJsonConverter {
     extractLengthAwareOptValue(verbatim, DwcTerm.fieldNumber).ifPresent(builder::setFieldNumber);
     extractLengthAwareOptValue(verbatim, DwcTerm.island).ifPresent(builder::setIsland);
     extractLengthAwareOptValue(verbatim, DwcTerm.islandGroup).ifPresent(builder::setIslandGroup);
+
+    // set measurement or facts fields
+    if (hasExtension(verbatim, Extension.MEASUREMENT_OR_FACT.getRowType())) {
+      Set<String> measurementTypes =
+          verbatim.getExtensions().get(Extension.MEASUREMENT_OR_FACT.getRowType()).stream()
+              .filter(v -> !v.isEmpty())
+              .map(e -> extractNullAwareValue(e, DwcTerm.measurementType))
+              .filter(v -> v != null && !v.isEmpty())
+              .collect(Collectors.toSet());
+      if (!measurementTypes.isEmpty()) {
+        builder.setMeasurementTypes(new ArrayList<>(measurementTypes));
+      }
+    }
+  }
+
+  private void mapMoFFromVerbatim(EventJsonRecord.Builder builder) {
+    MoFData moFData = convertMoFFromVerbatim(verbatim);
+    if (!moFData.getMeasurementTypes().isEmpty()) {
+      builder.setMeasurementTypes(new ArrayList<>(moFData.getMeasurementTypes()));
+    }
+    if (!moFData.getMeasurementTypeIDs().isEmpty()) {
+      builder.setMeasurementTypeIDs(new ArrayList<>(moFData.getMeasurementTypeIDs()));
+    }
   }
 
   private void mapIssues(EventJsonRecord.Builder builder) {

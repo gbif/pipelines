@@ -43,7 +43,6 @@ import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
@@ -132,8 +131,6 @@ public class VerbatimToEventPipeline {
     ImageTransform imageTransform = transformsFactory.createImageTransform();
     EventCoreTransform eventCoreTransform = transformsFactory.createEventCoreTransform();
     IdentifierTransform identifierTransform = transformsFactory.createIdentifierTransform();
-    MeasurementOrFactTransform measurementOrFactTransform =
-        transformsFactory.createMeasurementOrFactTransform();
     HumboldtTransform humboldtTransform = transformsFactory.createHumboldtTransform();
 
     log.info("Creating beam pipeline");
@@ -217,13 +214,6 @@ public class VerbatimToEventPipeline {
         .apply(
             "Write event location to avro",
             locationTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
-
-    uniqueRawRecords
-        .apply("Check event measurementOrFact", measurementOrFactTransform.check(types))
-        .apply("Interpret event measurementOrFact", measurementOrFactTransform.interpret())
-        .apply(
-            "Write event measurementOrFact to avro",
-            measurementOrFactTransform.write(pathFn).withoutSharding());
 
     uniqueRawRecords
         .apply("Check event humboldt transform", humboldtTransform.check(types))
