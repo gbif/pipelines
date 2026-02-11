@@ -119,9 +119,9 @@ public class TableBuild {
         .config("spark.sql.warehouse.dir", "hdfs://gbif-hdfs/stackable/warehouse")
 
         // FIXME move to config
-        .config("spark.sql.catalog.local.commit.retry.num-retries", "10")
-        .config("spark.sql.catalog.local.commit.retry.min-wait-ms", "100")
-        .config("spark.sql.catalog.local.commit.retry.max-wait-ms", "1000")
+        .config("spark.sql.catalog.iceberg.commit.retry.num-retries", "10")
+        .config("spark.sql.catalog.iceberg.commit.retry.min-wait-ms", "1000")
+        .config("spark.sql.catalog.iceberg.commit.retry.max-wait-ms", "10000")
         .config("spark.hadoop.hive.metastore.uris", config.getHiveMetastoreUris());
   }
 
