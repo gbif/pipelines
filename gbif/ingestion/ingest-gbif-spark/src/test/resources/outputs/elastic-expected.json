@@ -1,0 +1,1371 @@
+{
+  "all": {
+    "array": [
+      {
+        "element": {
+          "string": "East Africa Mammal Survey"
+        }
+      },
+      {
+        "element": {
+          "string": "Animalia"
+        }
+      },
+      {
+        "element": {
+          "string": "Panthera leo"
+        }
+      },
+      {
+        "element": {
+          "string": "Chordata"
+        }
+      },
+      {
+        "element": {
+          "string": "A. Taxonomist"
+        }
+      },
+      {
+        "element": {
+          "string": "Maasai Mara National Reserve"
+        }
+      },
+      {
+        "element": {
+          "string": "leo"
+        }
+      },
+      {
+        "element": {
+          "string": "KE"
+        }
+      },
+      {
+        "element": {
+          "string": "Felidae"
+        }
+      },
+      {
+        "element": {
+          "string": "30"
+        }
+      },
+      {
+        "element": {
+          "string": "96"
+        }
+      },
+      {
+        "element": {
+          "string": "Panthera"
+        }
+      },
+      {
+        "element": {
+          "string": "Carnivora"
+        }
+      },
+      {
+        "element": {
+          "string": "Narok"
+        }
+      },
+      {
+        "element": {
+          "string": "14"
+        }
+      },
+      {
+        "element": {
+          "string": "2023"
+        }
+      },
+      {
+        "element": {
+          "string": "Kenya"
+        }
+      },
+      {
+        "element": {
+          "string": "Mammals"
+        }
+      },
+      {
+        "element": {
+          "string": "NMK"
+        }
+      },
+      {
+        "element": {
+          "string": "occ-123456"
+        }
+      },
+      {
+        "element": {
+          "string": "J. Smith"
+        }
+      },
+      {
+        "element": {
+          "string": "Mammalia"
+        }
+      },
+      {
+        "element": {
+          "string": "3"
+        }
+      },
+      {
+        "element": {
+          "string": "event-98765"
+        }
+      },
+      {
+        "element": {
+          "string": "HumanObservation"
+        }
+      },
+      {
+        "element": {
+          "string": "species"
+        }
+      },
+      {
+        "element": {
+          "string": "2023-01-01"
+        }
+      },
+      {
+        "element": {
+          "string": "7"
+        }
+      },
+      {
+        "element": {
+          "string": "-1.4061"
+        }
+      },
+      {
+        "element": {
+          "string": "adult"
+        }
+      },
+      {
+        "element": {
+          "string": "male"
+        }
+      },
+      {
+        "element": {
+          "string": "35.0128"
+        }
+      }
+    ]
+  },
+  "associatedSequences": {
+    "array": []
+  },
+  "basisOfRecord": {
+    "string": "HUMAN_OBSERVATION"
+  },
+  "catalogNumber": null,
+  "checklistKey": {
+    "array": [
+      {
+        "element": {
+          "string": "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c"
+        }
+      }
+    ]
+  },
+  "classifications": {
+    "map": {
+      "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c": {
+        "value": {
+          "acceptedUsage": {
+            "acceptedUsage": {
+              "authorship": {
+                "string": "(Linnaeus, 1758)"
+              },
+              "code": {
+                "string": "ZOOLOGICAL"
+              },
+              "formattedName": {
+                "string": "<i>Panthera</i> <i>leo</i> (Linnaeus, 1758)"
+              },
+              "genericName": {
+                "string": "Panthera"
+              },
+              "infragenericEpithet": null,
+              "infraspecificEpithet": null,
+              "key": {
+                "string": "5219404"
+              },
+              "name": {
+                "string": "Panthera leo (Linnaeus, 1758)"
+              },
+              "rank": {
+                "string": "SPECIES"
+              },
+              "specificEpithet": {
+                "string": "leo"
+              }
+            }
+          },
+          "classification": {
+            "map": {
+              "GENUS": {
+                "string": "Panthera"
+              },
+              "FAMILY": {
+                "string": "Felidae"
+              },
+              "KINGDOM": {
+                "string": "Animalia"
+              },
+              "ORDER": {
+                "string": "Carnivora"
+              },
+              "PHYLUM": {
+                "string": "Chordata"
+              },
+              "SPECIES": {
+                "string": "Panthera leo"
+              },
+              "CLASS": {
+                "string": "Mammalia"
+              }
+            }
+          },
+          "classificationDepth": {
+            "map": {
+              "1": {
+                "string": "44"
+              },
+              "2": {
+                "string": "359"
+              },
+              "3": {
+                "string": "732"
+              },
+              "4": {
+                "string": "9703"
+              },
+              "5": {
+                "string": "2435194"
+              },
+              "6": {
+                "string": "5219404"
+              },
+              "0": {
+                "string": "1"
+              }
+            }
+          },
+          "classificationKeys": {
+            "map": {
+              "GENUS": {
+                "string": "2435194"
+              },
+              "FAMILY": {
+                "string": "9703"
+              },
+              "KINGDOM": {
+                "string": "1"
+              },
+              "ORDER": {
+                "string": "732"
+              },
+              "PHYLUM": {
+                "string": "44"
+              },
+              "SPECIES": {
+                "string": "5219404"
+              },
+              "CLASS": {
+                "string": "359"
+              }
+            }
+          },
+          "issues": {
+            "array": []
+          },
+          "iucnRedListCategoryCode": {
+            "string": "VU"
+          },
+          "status": {
+            "string": "ACCEPTED"
+          },
+          "taxonKeys": {
+            "array": [
+              {
+                "element": {
+                  "string": "1"
+                }
+              },
+              {
+                "element": {
+                  "string": "44"
+                }
+              },
+              {
+                "element": {
+                  "string": "359"
+                }
+              },
+              {
+                "element": {
+                  "string": "732"
+                }
+              },
+              {
+                "element": {
+                  "string": "9703"
+                }
+              },
+              {
+                "element": {
+                  "string": "2435194"
+                }
+              },
+              {
+                "element": {
+                  "string": "5219404"
+                }
+              }
+            ]
+          },
+          "usage": {
+            "usage": {
+              "authorship": {
+                "string": "(Linnaeus, 1758)"
+              },
+              "code": {
+                "string": "ZOOLOGICAL"
+              },
+              "formattedName": {
+                "string": "<i>Panthera</i> <i>leo</i> (Linnaeus, 1758)"
+              },
+              "genericName": {
+                "string": "Panthera"
+              },
+              "infragenericEpithet": null,
+              "infraspecificEpithet": null,
+              "key": {
+                "string": "5219404"
+              },
+              "name": {
+                "string": "Panthera leo (Linnaeus, 1758)"
+              },
+              "rank": {
+                "string": "SPECIES"
+              },
+              "specificEpithet": {
+                "string": "leo"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "collectionCode": {
+    "string": "Mammals"
+  },
+  "collectionKey": null,
+  "continent": {
+    "string": "AFRICA"
+  },
+  "coordinatePrecision": null,
+  "coordinateUncertaintyInMeters": {
+    "double": 30.0
+  },
+  "coordinates": {
+    "coordinates": {
+      "lat": -1.4061,
+      "lon": 35.0128
+    }
+  },
+  "country": {
+    "string": "Kenya"
+  },
+  "countryCode": {
+    "string": "KE"
+  },
+  "crawlId": null,
+  "created": {
+    "string": "2026-02-02T13:46:38.499"
+  },
+  "datasetID": {
+    "array": []
+  },
+  "datasetKey": {
+    "string": "7683cc47-cb13-4bad-9614-387c66aa8df0"
+  },
+  "datasetName": {
+    "array": [
+      {
+        "element": {
+          "string": "East Africa Mammal Survey"
+        }
+      }
+    ]
+  },
+  "datasetPublishingCountry": {
+    "string": "BG"
+  },
+  "datasetTitle": {
+    "string": "Mid-winter count of water birds and other bird species in Bulgaria"
+  },
+  "dateIdentified": null,
+  "day": null,
+  "decimalLatitude": {
+    "double": -1.4061
+  },
+  "decimalLongitude": {
+    "double": 35.0128
+  },
+  "degreeOfEstablishment": null,
+  "depth": null,
+  "depthAccuracy": null,
+  "distanceFromCentroidInMeters": null,
+  "dnaSequenceID": {
+    "array": []
+  },
+  "elevation": null,
+  "elevationAccuracy": null,
+  "endDayOfYear": null,
+  "endorsingNodeKey": {
+    "string": "8dae0f8c-12bc-444d-b889-6b177550a8b2"
+  },
+  "establishmentMeans": null,
+  "eventDate": {
+    "eventDate": {
+      "gte": {
+        "string": "2023-01-01T00:00:00.000"
+      },
+      "lte": {
+        "string": "2023-12-31T23:59:59.999"
+      }
+    }
+  },
+  "eventDateInterval": {
+    "string": "2023"
+  },
+  "eventDateSingle": {
+    "string": "2023-01-01T00:00"
+  },
+  "eventHierarchy": {
+    "array": []
+  },
+  "eventHierarchyJoined": null,
+  "eventHierarchyLevels": null,
+  "eventId": {
+    "string": "event-98765"
+  },
+  "eventTypeHierarchy": {
+    "array": []
+  },
+  "eventTypeHierarchyJoined": null,
+  "extensions": {
+    "array": []
+  },
+  "fieldNumber": null,
+  "footprintWKT": null,
+  "gadm": {
+    "gadm": {
+      "gids": {
+        "array": [
+          {
+            "element": {
+              "string": "KEN"
+            }
+          },
+          {
+            "element": {
+              "string": "KEN.33_1"
+            }
+          },
+          {
+            "element": {
+              "string": "KEN.33.2_1"
+            }
+          },
+          {
+            "element": {
+              "string": "KEN.33.2.4_1"
+            }
+          }
+        ]
+      },
+      "level0Gid": {
+        "string": "KEN"
+      },
+      "level0Name": {
+        "string": "Kenya"
+      },
+      "level1Gid": {
+        "string": "KEN.33_1"
+      },
+      "level1Name": {
+        "string": "Narok"
+      },
+      "level2Gid": {
+        "string": "KEN.33.2_1"
+      },
+      "level2Name": {
+        "string": "Kilgoris"
+      },
+      "level3Gid": {
+        "string": "KEN.33.2.4_1"
+      },
+      "level3Name": {
+        "string": "Kimintet"
+      }
+    }
+  },
+  "gbifId": 1,
+  "gbifRegion": {
+    "string": "AFRICA"
+  },
+  "geologicalContext": {
+    "geologicalContext": {
+      "bed": null,
+      "biostratigraphy": {
+        "array": []
+      },
+      "earliestAgeOrLowestStage": null,
+      "earliestEonOrLowestEonothem": null,
+      "earliestEpochOrLowestSeries": null,
+      "earliestEraOrLowestErathem": null,
+      "earliestPeriodOrLowestSystem": null,
+      "formation": null,
+      "group": null,
+      "highestBiostratigraphicZone": null,
+      "latestAgeOrHighestStage": null,
+      "latestEonOrHighestEonothem": null,
+      "latestEpochOrHighestSeries": null,
+      "latestEraOrHighestErathem": null,
+      "latestPeriodOrHighestSystem": null,
+      "lithostratigraphy": {
+        "array": []
+      },
+      "lowestBiostratigraphicZone": null,
+      "member": null,
+      "range": null
+    }
+  },
+  "georeferencedBy": {
+    "array": []
+  },
+  "hasCoordinate": {
+    "boolean": true
+  },
+  "hasGeospatialIssue": {
+    "boolean": false
+  },
+  "higherGeography": {
+    "array": []
+  },
+  "hostingOrganizationKey": {
+    "string": "fbca90e3-8aed-48b1-84e3-369afbd000ce"
+  },
+  "id": {
+    "string": "1"
+  },
+  "identifiedBy": {
+    "array": [
+      {
+        "element": {
+          "string": "A. Taxonomist"
+        }
+      }
+    ]
+  },
+  "identifiedByIds": {
+    "array": []
+  },
+  "identifiedByJoined": {
+    "string": "A. Taxonomist"
+  },
+  "individualCount": {
+    "int": 3
+  },
+  "installationKey": {
+    "string": "17a83780-3060-4851-9d6f-029d5fcb81c9"
+  },
+  "institutionCode": {
+    "string": "NMK"
+  },
+  "institutionKey": null,
+  "isClustered": {
+    "boolean": false
+  },
+  "isSequenced": {
+    "boolean": false
+  },
+  "island": null,
+  "islandGroup": null,
+  "issues": {
+    "array": [
+      {
+        "element": {
+          "string": "OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT"
+        }
+      },
+      {
+        "element": {
+          "string": "RECORDED_DATE_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "GEODETIC_DATUM_ASSUMED_WGS84"
+        }
+      },
+      {
+        "element": {
+          "string": "CONTINENT_DERIVED_FROM_COORDINATES"
+        }
+      }
+    ]
+  },
+  "lastCrawled": {
+    "string": "2026-01-30T10:01:03.422"
+  },
+  "license": {
+    "string": "CC_BY_NC_4_0"
+  },
+  "lifeStage": null,
+  "locality": {
+    "string": "Maasai Mara National Reserve"
+  },
+  "locationID": null,
+  "maximumDepthInMeters": null,
+  "maximumDistanceAboveSurfaceInMeters": null,
+  "maximumElevationInMeters": null,
+  "measurementOrFactCount": null,
+  "measurementOrFactMethods": {
+    "array": []
+  },
+  "measurementOrFactTypes": {
+    "array": []
+  },
+  "measurementOrFacts": {
+    "array": []
+  },
+  "mediaLicenses": {
+    "array": []
+  },
+  "mediaTypes": {
+    "array": []
+  },
+  "minimumDepthInMeters": null,
+  "minimumDistanceAboveSurfaceInMeters": null,
+  "minimumElevationInMeters": null,
+  "modified": null,
+  "month": null,
+  "multimediaItems": {
+    "array": []
+  },
+  "networkKeys": {
+    "array": []
+  },
+  "nonTaxonomicIssues": {
+    "array": [
+      {
+        "element": {
+          "string": "OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT"
+        }
+      },
+      {
+        "element": {
+          "string": "RECORDED_DATE_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "GEODETIC_DATUM_ASSUMED_WGS84"
+        }
+      },
+      {
+        "element": {
+          "string": "CONTINENT_DERIVED_FROM_COORDINATES"
+        }
+      }
+    ]
+  },
+  "notIssues": {
+    "array": [
+      {
+        "element": {
+          "string": "COORDINATE_PRECISION_UNCERTAINTY_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "MODIFIED_DATE_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "GEOREFERENCED_DATE_UNLIKELY"
+        }
+      },
+      {
+        "element": {
+          "string": "AGE_OR_STAGE_RANK_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "COORDINATE_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "COLLECTION_MATCH_NONE"
+        }
+      },
+      {
+        "element": {
+          "string": "COORDINATE_PRECISION_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "ELEVATION_NON_NUMERIC"
+        }
+      },
+      {
+        "element": {
+          "string": "COUNTRY_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "ELEVATION_NOT_METRIC"
+        }
+      },
+      {
+        "element": {
+          "string": "AGE_OR_STAGE_INFERRED_FROM_PARENT_RANK"
+        }
+      },
+      {
+        "element": {
+          "string": "PRESUMED_NEGATED_LONGITUDE"
+        }
+      },
+      {
+        "element": {
+          "string": "IDENTIFIED_DATE_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "TAXON_CONCEPT_ID_NOT_FOUND"
+        }
+      },
+      {
+        "element": {
+          "string": "AMBIGUOUS_INSTITUTION"
+        }
+      },
+      {
+        "element": {
+          "string": "PERIOD_OR_SYSTEM_AND_EPOCH_OR_SERIES_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "BASIS_OF_RECORD_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "TYPE_STATUS_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "EPOCH_OR_SERIES_RANK_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "TAXON_ID_NOT_FOUND"
+        }
+      },
+      {
+        "element": {
+          "string": "TAXON_MATCH_FUZZY"
+        }
+      },
+      {
+        "element": {
+          "string": "CONTINENT_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "FOOTPRINT_SRS_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "ERA_OR_ERATHEM_INFERRED_FROM_PARENT_RANK"
+        }
+      },
+      {
+        "element": {
+          "string": "MODIFIED_DATE_UNLIKELY"
+        }
+      },
+      {
+        "element": {
+          "string": "PERIOD_OR_SYSTEM_RANK_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "EPOCH_OR_SERIES_AND_AGE_OR_STAGE_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "EON_OR_EONOTHEM_AND_ERA_OR_ERATHEM_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "COORDINATE_ROUNDED"
+        }
+      },
+      {
+        "element": {
+          "string": "IDENTIFIED_DATE_UNLIKELY"
+        }
+      },
+      {
+        "element": {
+          "string": "COUNTRY_DERIVED_FROM_COORDINATES"
+        }
+      },
+      {
+        "element": {
+          "string": "COORDINATE_REPROJECTION_FAILED"
+        }
+      },
+      {
+        "element": {
+          "string": "MULTIMEDIA_URI_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "ERA_OR_ERATHEM_RANK_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "ELEVATION_UNLIKELY"
+        }
+      },
+      {
+        "element": {
+          "string": "SUSPECTED_TYPE"
+        }
+      },
+      {
+        "element": {
+          "string": "COLLECTION_MATCH_FUZZY"
+        }
+      },
+      {
+        "element": {
+          "string": "DIFFERENT_OWNER_INSTITUTION"
+        }
+      },
+      {
+        "element": {
+          "string": "EON_OR_EONOTHEM_RANK_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "TAXON_MATCH_TAXON_CONCEPT_ID_IGNORED"
+        }
+      },
+      {
+        "element": {
+          "string": "INDIVIDUAL_COUNT_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "ERA_OR_ERATHEM_AND_PERIOD_OR_SYSTEM_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "PERIOD_OR_SYSTEM_INVALID_RANGE"
+        }
+      },
+      {
+        "element": {
+          "string": "ERA_OR_ERATHEM_INVALID_RANGE"
+        }
+      },
+      {
+        "element": {
+          "string": "ZERO_COORDINATE"
+        }
+      },
+      {
+        "element": {
+          "string": "SCIENTIFIC_NAME_ID_NOT_FOUND"
+        }
+      },
+      {
+        "element": {
+          "string": "COUNTRY_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "FOOTPRINT_WKT_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "CONTINENT_COUNTRY_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "OCCURRENCE_STATUS_UNPARSABLE"
+        }
+      },
+      {
+        "element": {
+          "string": "INSTITUTION_COLLECTION_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "EON_OR_EONOTHEM_INVALID_RANGE"
+        }
+      },
+      {
+        "element": {
+          "string": "COORDINATE_OUT_OF_RANGE"
+        }
+      },
+      {
+        "element": {
+          "string": "FOOTPRINT_WKT_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "COORDINATE_REPROJECTION_SUSPICIOUS"
+        }
+      },
+      {
+        "element": {
+          "string": "DEPTH_UNLIKELY"
+        }
+      },
+      {
+        "element": {
+          "string": "ELEVATION_MIN_MAX_SWAPPED"
+        }
+      },
+      {
+        "element": {
+          "string": "TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED"
+        }
+      },
+      {
+        "element": {
+          "string": "TAXON_MATCH_NONE"
+        }
+      },
+      {
+        "element": {
+          "string": "GEODETIC_DATUM_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "AGE_OR_STAGE_INVALID_RANGE"
+        }
+      },
+      {
+        "element": {
+          "string": "TAXON_MATCH_AGGREGATE"
+        }
+      },
+      {
+        "element": {
+          "string": "COORDINATE_REPROJECTED"
+        }
+      },
+      {
+        "element": {
+          "string": "PRESUMED_SWAPPED_COORDINATE"
+        }
+      },
+      {
+        "element": {
+          "string": "SCIENTIFIC_NAME_AND_ID_INCONSISTENT"
+        }
+      },
+      {
+        "element": {
+          "string": "REFERENCES_URI_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "COUNTRY_COORDINATE_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "DEPTH_NON_NUMERIC"
+        }
+      },
+      {
+        "element": {
+          "string": "COORDINATE_UNCERTAINTY_METERS_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "PRESUMED_NEGATED_LATITUDE"
+        }
+      },
+      {
+        "element": {
+          "string": "COORDINATE_ACCURACY_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "GEOREFERENCED_DATE_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "TAXON_MATCH_HIGHERRANK"
+        }
+      },
+      {
+        "element": {
+          "string": "CONTINENT_DERIVED_FROM_COUNTRY"
+        }
+      },
+      {
+        "element": {
+          "string": "AMBIGUOUS_COLLECTION"
+        }
+      },
+      {
+        "element": {
+          "string": "DEPTH_MIN_MAX_SWAPPED"
+        }
+      },
+      {
+        "element": {
+          "string": "EPOCH_OR_SERIES_INFERRED_FROM_PARENT_RANK"
+        }
+      },
+      {
+        "element": {
+          "string": "POSSIBLY_ON_LOAN"
+        }
+      },
+      {
+        "element": {
+          "string": "RECORDED_DATE_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "PERIOD_OR_SYSTEM_INFERRED_FROM_PARENT_RANK"
+        }
+      },
+      {
+        "element": {
+          "string": "INSTITUTION_MATCH_FUZZY"
+        }
+      },
+      {
+        "element": {
+          "string": "TAXON_MATCH_TAXON_ID_IGNORED"
+        }
+      },
+      {
+        "element": {
+          "string": "TAXON_MATCH_NAME_AND_ID_AMBIGUOUS"
+        }
+      },
+      {
+        "element": {
+          "string": "EPOCH_OR_SERIES_INVALID_RANGE"
+        }
+      },
+      {
+        "element": {
+          "string": "DEPTH_NOT_METRIC"
+        }
+      },
+      {
+        "element": {
+          "string": "MULTIMEDIA_DATE_INVALID"
+        }
+      },
+      {
+        "element": {
+          "string": "INTERPRETATION_ERROR"
+        }
+      },
+      {
+        "element": {
+          "string": "INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS"
+        }
+      },
+      {
+        "element": {
+          "string": "RECORDED_DATE_UNLIKELY"
+        }
+      },
+      {
+        "element": {
+          "string": "CONTINENT_COORDINATE_MISMATCH"
+        }
+      },
+      {
+        "element": {
+          "string": "INSTITUTION_MATCH_NONE"
+        }
+      },
+      {
+        "element": {
+          "string": "OCCURRENCE_STATUS_INFERRED_FROM_BASIS_OF_RECORD"
+        }
+      }
+    ]
+  },
+  "occurrenceId": {
+    "string": "occ-123456"
+  },
+  "occurrenceStatus": {
+    "string": "PRESENT"
+  },
+  "organismId": null,
+  "organismQuantity": null,
+  "organismQuantityType": null,
+  "otherCatalogNumbers": {
+    "array": []
+  },
+  "otherCatalogNumbersJoined": null,
+  "parentEventId": null,
+  "pathway": null,
+  "preparations": {
+    "array": []
+  },
+  "preparationsJoined": null,
+  "previousIdentifications": null,
+  "programmeAcronym": null,
+  "projectId": {
+    "array": [
+      {
+        "element": {
+          "string": "nlbif2022.015"
+        }
+      }
+    ]
+  },
+  "projectIdJoined": {
+    "string": "nlbif2022.015"
+  },
+  "protocol": {
+    "string": "EML"
+  },
+  "publishedByGbifRegion": {
+    "string": "EUROPE"
+  },
+  "publisherTitle": {
+    "string": "Bulgarian Society for the Protection of Birds"
+  },
+  "publishingCountry": {
+    "string": "BG"
+  },
+  "publishingOrganizationKey": {
+    "string": "d1fec91e-5b53-4cff-9b31-10fed530a3c3"
+  },
+  "recordNumber": null,
+  "recordedBy": {
+    "array": [
+      {
+        "element": {
+          "string": "J. Smith"
+        }
+      }
+    ]
+  },
+  "recordedByIds": {
+    "array": []
+  },
+  "recordedByJoined": {
+    "string": "J. Smith"
+  },
+  "references": null,
+  "relativeOrganismQuantity": null,
+  "repatriated": {
+    "boolean": true
+  },
+  "sampleSizeUnit": null,
+  "sampleSizeValue": null,
+  "samplingProtocol": {
+    "array": []
+  },
+  "samplingProtocolJoined": null,
+  "scoordinates": {
+    "string": "POINT (35.0128 -1.4061)"
+  },
+  "sex": null,
+  "startDayOfYear": null,
+  "stateProvince": {
+    "string": "Narok"
+  },
+  "taxonConceptID": null,
+  "taxonID": null,
+  "taxonomy": {
+    "array": []
+  },
+  "typeStatus": null,
+  "typifiedName": null,
+  "verbatim": {
+    "verbatim": {
+      "core": {
+        "map": {
+          "http://rs.tdwg.org/dwc/terms/month": {
+            "string": "7"
+          },
+          "http://rs.tdwg.org/dwc/terms/datasetName": {
+            "string": "East Africa Mammal Survey"
+          },
+          "http://rs.tdwg.org/dwc/terms/specificEpithet": {
+            "string": "leo"
+          },
+          "http://rs.tdwg.org/dwc/terms/year": {
+            "string": "2023"
+          },
+          "http://rs.tdwg.org/dwc/terms/genus": {
+            "string": "Panthera"
+          },
+          "http://rs.tdwg.org/dwc/terms/individualCount": {
+            "string": "3"
+          },
+          "http://rs.tdwg.org/dwc/terms/kingdom": {
+            "string": "Animalia"
+          },
+          "http://rs.tdwg.org/dwc/terms/taxonRank": {
+            "string": "species"
+          },
+          "http://rs.tdwg.org/dwc/terms/scientificName": {
+            "string": "Panthera leo"
+          },
+          "http://rs.tdwg.org/dwc/terms/lifeStage": {
+            "string": "adult"
+          },
+          "http://rs.tdwg.org/dwc/terms/decimalLongitude": {
+            "string": "35.0128"
+          },
+          "http://rs.tdwg.org/dwc/terms/order": {
+            "string": "Carnivora"
+          },
+          "http://rs.tdwg.org/dwc/terms/basisOfRecord": {
+            "string": "HumanObservation"
+          },
+          "http://rs.tdwg.org/dwc/terms/occurrenceID": {
+            "string": "occ-123456"
+          },
+          "http://rs.tdwg.org/dwc/terms/day": {
+            "string": "14"
+          },
+          "http://rs.tdwg.org/dwc/terms/countryCode": {
+            "string": "KE"
+          },
+          "http://rs.tdwg.org/dwc/terms/stateProvince": {
+            "string": "Narok"
+          },
+          "http://rs.tdwg.org/dwc/terms/class": {
+            "string": "Mammalia"
+          },
+          "http://rs.tdwg.org/dwc/terms/recordedBy": {
+            "string": "J. Smith"
+          },
+          "http://rs.tdwg.org/dwc/terms/coordinateUncertaintyInMeters": {
+            "string": "30"
+          },
+          "http://rs.tdwg.org/dwc/terms/institutionCode": {
+            "string": "NMK"
+          },
+          "http://unknown.org/crawl_attempt": {
+            "string": "96"
+          },
+          "http://rs.tdwg.org/dwc/terms/eventID": {
+            "string": "event-98765"
+          },
+          "http://rs.tdwg.org/dwc/terms/collectionCode": {
+            "string": "Mammals"
+          },
+          "http://rs.tdwg.org/dwc/terms/sex": {
+            "string": "male"
+          },
+          "http://rs.tdwg.org/dwc/terms/country": {
+            "string": "Kenya"
+          },
+          "http://rs.tdwg.org/dwc/terms/phylum": {
+            "string": "Chordata"
+          },
+          "http://rs.tdwg.org/dwc/terms/family": {
+            "string": "Felidae"
+          },
+          "http://rs.tdwg.org/dwc/terms/eventDate": {
+            "string": "2023-01-01"
+          },
+          "http://rs.tdwg.org/dwc/terms/decimalLatitude": {
+            "string": "-1.4061"
+          },
+          "http://rs.tdwg.org/dwc/terms/identifiedBy": {
+            "string": "A. Taxonomist"
+          },
+          "http://rs.tdwg.org/dwc/terms/locality": {
+            "string": "Maasai Mara National Reserve"
+          }
+        }
+      },
+      "coreId": {
+        "string": "1"
+      },
+      "extensions": {
+        "map": {}
+      }
+    }
+  },
+  "verbatimScientificName": {
+    "string": "Panthera leo"
+  },
+  "waterBody": null,
+  "year": {
+    "int": 2023
+  },
+  "yearMonthGbifIdSort": 2245273112662769665
+}

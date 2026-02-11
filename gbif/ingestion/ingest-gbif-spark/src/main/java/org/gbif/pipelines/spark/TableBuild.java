@@ -232,7 +232,9 @@ public class TableBuild {
       // This assumes that datasetKey is a partition column,
       // which allows for efficient deletion of just the relevant partition.
       spark.sql(
-          "DELETE FROM %s.%s WHERE datasetKey = '%s'", config.getHiveDB(), coreDwcTerm, datasetId);
+          String.format(
+              "DELETE FROM %s.%s WHERE datasetKey = '%s'",
+              config.getHiveDB(), coreDwcTerm, datasetId));
 
       // Build the insert query
       String insertQuery =
