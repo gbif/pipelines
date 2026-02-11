@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.core;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.StreamSupport;
@@ -15,7 +16,6 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.io.WKTWriter;
-import org.locationtech.jts.simplify.TopologyPreservingSimplifier;
 
 /** Beam that calculates a ConvexHull form all coordinates accumulated from location records. */
 @Data
@@ -41,27 +41,43 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
 
     public Optional<String> toWktConvexHull() {
       if (!coordinates.isEmpty()) {
-        Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
+        if (coordinates.size() == 1) {
+          Coordinate coord = coordinates.iterator().next();
+          return Optional.of("POINT(" + coord.x + " " + coord.y + ")");
+        } else if (coordinates.size() == 2) {
+          StringBuilder wktBuilder = new StringBuilder("LINESTRING(");
 
-        if (geometry.isValid() && !geometry.isEmpty()) {
-          if (geometry instanceof Polygon) {
-            geometry = TopologyPreservingSimplifier.simplify(geometry, 0.00001);
-          }
-          if (geometry instanceof Polygon && geometry.getArea() > 0) {
-            geometry.normalize();
-            return Optional.of(new WKTWriter().write(geometry));
-          } else {
-            // Get the bounding box envelope
-            Geometry envelope = geometry.getEnvelope();
+          Iterator<Coordinate> iterator = coordinates.iterator();
+          while (iterator.hasNext()) {
+            Coordinate coord = iterator.next();
+            double lon = coord.x;
+            wktBuilder.append(lon).append(" ").append(coord.y);
 
-            // Buffer slightly if envelope is still a line or point
-            if (!(envelope instanceof Polygon)) {
-              envelope = envelope.buffer(0.0001, 1);
+            if (iterator.hasNext()) {
+              wktBuilder.append(", ");
             }
+          }
 
-            if (envelope instanceof Polygon && envelope.getArea() > 0) {
-              envelope.normalize();
-              return Optional.of(new WKTWriter().write(envelope));
+          wktBuilder.append(")");
+          return Optional.of(wktBuilder.toString());
+        } else {
+          Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
+
+          if (geometry.isValid() && !geometry.isEmpty()) {
+            if (geometry instanceof Polygon && geometry.getArea() > 0) {
+              return Optional.of(new WKTWriter().write(geometry));
+            } else {
+              // Get the bounding box envelope
+              Geometry envelope = geometry.getEnvelope();
+
+              // Buffer slightly if envelope is still a line or point
+              if (!(envelope instanceof Polygon)) {
+                envelope = envelope.buffer(0.0001, 1);
+              }
+
+              if (envelope instanceof Polygon && envelope.getArea() > 0) {
+                return Optional.of(new WKTWriter().write(envelope));
+              }
             }
           }
         }
