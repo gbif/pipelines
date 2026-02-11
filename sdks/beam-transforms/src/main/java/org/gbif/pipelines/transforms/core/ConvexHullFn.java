@@ -15,6 +15,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.io.WKTWriter;
+import org.locationtech.jts.simplify.TopologyPreservingSimplifier;
 
 /** Beam that calculates a ConvexHull form all coordinates accumulated from location records. */
 @Data
@@ -43,6 +44,9 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
         Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
 
         if (geometry.isValid() && !geometry.isEmpty()) {
+          if (geometry instanceof Polygon) {
+            geometry = TopologyPreservingSimplifier.simplify(geometry, 0.00001);
+          }
           if (geometry instanceof Polygon && geometry.getArea() > 0) {
             geometry.normalize();
             return Optional.of(new WKTWriter().write(geometry));
