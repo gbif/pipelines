@@ -229,14 +229,12 @@ public class TableBuild {
       // Build the insert query
       String insertQuery =
           String.format(
-              "INSERT OVERWRITE %s.%s (%s) PARTITION (datasetkey = '%s') SELECT %s FROM %s.%s",
+                "INSERT OVERWRITE TABLE %s.%s (%s) SELECT %s FROM %s.%s",
               config.getHiveDB(),
               coreDwcTerm,
               Arrays.stream(tblSchema.fields())
                   .map(StructField::name)
-                  .filter(s -> !s.equals("datasetkey"))
                   .collect(Collectors.joining(", ")),
-              datasetId,
               generateSelectColumns(tblSchema, hdfsColumnList),
               config.getHiveDB(),
               table);
@@ -309,7 +307,6 @@ public class TableBuild {
   private static String generateSelectColumns(
       StructType tblSchema, Map<String, HdfsColumn> hdfsColumnList) {
     return Arrays.stream(tblSchema.fields())
-        .filter(f -> !f.name().equalsIgnoreCase("datasetkey"))
         .map(
             structField -> {
               HdfsColumn hdfsColumn = hdfsColumnList.get(structField.name());
@@ -410,7 +407,11 @@ public class TableBuild {
         TBLPROPERTIES (
           'write.format.default'='parquet',
           'parquet.compression'='SNAPPY',
-          'auto.purge'='true'
+          'auto.purge'='true',
+          'commit.retry.num-retries' = '10',
+          'commit.retry.min-wait-ms' = '1000',
+          'commit.retry.max-wait-ms' = '10000',
+          'write.merge.isolation-level' = 'snapshot'
         )
         """,
         tableName, getFieldDefns());
