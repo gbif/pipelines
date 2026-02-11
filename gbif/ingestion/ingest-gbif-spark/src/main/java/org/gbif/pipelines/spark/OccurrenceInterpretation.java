@@ -230,8 +230,8 @@ public class OccurrenceInterpretation {
     }
 
     if (interpretTypes != null
-            && interpretTypes.size() == 1
-            && interpretTypes.get(0) == InterpretationType.RecordType.CLUSTERING) {
+        && interpretTypes.size() == 1
+        && interpretTypes.get(0) == InterpretationType.RecordType.CLUSTERING) {
       log.info("Running only clustering interpretation");
       ClusteringInterpretation.runClustering(spark, fs, config, datasetId, attempt);
       return;
