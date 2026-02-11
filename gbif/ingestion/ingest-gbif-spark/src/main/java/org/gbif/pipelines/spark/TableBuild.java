@@ -229,7 +229,7 @@ public class TableBuild {
       // Build the insert query
       String insertQuery =
           String.format(
-              "INSERT OVERWRITE TABLE %s.%s (%s) PARTITION (datasetkey = '%s') SELECT %s FROM %s.%s",
+              "INSERT OVERWRITE %s.%s (%s) PARTITION (datasetkey = '%s') SELECT %s FROM %s.%s",
               config.getHiveDB(),
               coreDwcTerm,
               Arrays.stream(tblSchema.fields())
