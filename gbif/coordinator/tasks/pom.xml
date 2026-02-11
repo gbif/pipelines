@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>coordinator</artifactId>
-   <version>4.0.0-SNAPSHOT</version>
+   <version>4.0.0-hdfs-delete-from-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -160,8 +160,12 @@
       <version>${gbif-crawler.version}</version>
       <exclusions>
         <exclusion>
-          <artifactId>commons-logging</artifactId>
           <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>jcl-over-slf4j</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -180,11 +184,23 @@
       <groupId>org.gbif.crawler</groupId>
       <artifactId>crawler-ws-client</artifactId>
       <version>${gbif-crawler.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>jcl-over-slf4j</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.crawler</groupId>
       <artifactId>crawler-metasync</artifactId>
       <version>${gbif-crawler.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>jcl-over-slf4j</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif.registry</groupId>
@@ -348,11 +364,6 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jul-to-slf4j</artifactId>
-      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
