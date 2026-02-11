@@ -229,7 +229,7 @@ public class TableBuild {
       // Build the insert query
       String insertQuery =
           String.format(
-                "INSERT OVERWRITE TABLE %s.%s (%s) SELECT %s FROM %s.%s",
+              "INSERT OVERWRITE TABLE %s.%s (%s) SELECT %s FROM %s.%s",
               config.getHiveDB(),
               coreDwcTerm,
               Arrays.stream(tblSchema.fields())
@@ -242,7 +242,24 @@ public class TableBuild {
       log.debug("Inserting data into {} table: {}", coreDwcTerm, insertQuery);
 
       // Execute the insert
-      spark.sql(insertQuery);
+      boolean success = false;
+      int retries = 0;
+      while (!success) {
+        try {
+          spark.sql(insertQuery);
+          success = true;
+        } catch (org.apache.iceberg.exceptions.CommitFailedException e) {
+          if (retries > 5) {
+            log.error("Insert failed after {} retries", retries, e);
+            throw e;
+          } else {
+            log.warn(
+                "Insert failed with CommitFailedException, retrying... (attempt {})", retries, e);
+            Thread.sleep(5000L * retries); // Exponential backoff: 0s, 2s, 4s, 6s, 8s
+          }
+          retries++;
+        }
+      }
 
       // Drop the temporary table
       spark.sql("DROP TABLE " + table);

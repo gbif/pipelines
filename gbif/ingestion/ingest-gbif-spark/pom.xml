@@ -374,6 +374,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.iceberg</groupId>
+            <artifactId>iceberg-spark-runtime-3.5_2.12</artifactId>
+            <version>1.6.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
             <version>${log4j-api.version}</version>
