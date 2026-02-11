@@ -309,7 +309,7 @@ public class TableBuild {
   private static String generateSelectColumns(
       StructType tblSchema, Map<String, HdfsColumn> hdfsColumnList) {
     return Arrays.stream(tblSchema.fields())
-        .filter(f -> f.name().equalsIgnoreCase("datasetkey"))
+        .filter(f -> !f.name().equalsIgnoreCase("datasetkey"))
         .map(
             structField -> {
               HdfsColumn hdfsColumn = hdfsColumnList.get(structField.name());
