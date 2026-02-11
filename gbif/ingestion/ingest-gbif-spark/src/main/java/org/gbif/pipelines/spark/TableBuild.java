@@ -232,10 +232,10 @@ public class TableBuild {
               "INSERT OVERWRITE TABLE %s.%s (%s) PARTITION (datasetkey = '%s') SELECT %s FROM %s.%s",
               config.getHiveDB(),
               coreDwcTerm,
-              datasetId,
               Arrays.stream(tblSchema.fields())
                   .map(StructField::name)
                   .collect(Collectors.joining(", ")),
+              datasetId,
               generateSelectColumns(tblSchema, hdfsColumnList),
               config.getHiveDB(),
               table);
