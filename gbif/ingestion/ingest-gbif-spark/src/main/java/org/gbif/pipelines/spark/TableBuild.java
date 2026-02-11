@@ -20,6 +20,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.occurrence.download.hive.OccurrenceHDFSTableDefinition;
@@ -116,8 +117,6 @@ public class TableBuild {
             "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
         .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
         .config("spark.sql.warehouse.dir", "hdfs://gbif-hdfs/stackable/warehouse")
-
-        // FIXME move to config
         .config("spark.sql.catalog.iceberg.commit.retry.num-retries", "10")
         .config("spark.sql.catalog.iceberg.commit.retry.min-wait-ms", "1000")
         .config("spark.sql.catalog.iceberg.commit.retry.max-wait-ms", "10000")
@@ -227,39 +226,24 @@ public class TableBuild {
       // Read the target table i.e. 'occurrence' or 'event' schema to ensure it exists
       StructType tblSchema = spark.read().format("iceberg").load(coreDwcTerm).schema();
 
-      // try with delete and insert to avoid locking the whole table for the duration of the load,
-      // which can cause issues with concurrent reads and writes.
-      // This assumes that datasetKey is a partition column,
-      // which allows for efficient deletion of just the relevant partition.
-      //      spark.sql(
-      //          String.format(
-      //              "DELETE FROM %s.%s WHERE datasetKey = '%s'",
-      //              config.getHiveDB(), coreDwcTerm, datasetId));
-      //
-      //      // Build the insert query
-      //      String insertQuery =
-      //          String.format(
-      //              "INSERT INTO TABLE %s.%s (%s) SELECT %s FROM %s.%s",
-      //              config.getHiveDB(),
-      //              coreDwcTerm,
-      //              Arrays.stream(tblSchema.fields())
-      //                  .map(StructField::name)
-      //                  .collect(Collectors.joining(", ")),
-      //              generateSelectColumns(tblSchema, hdfsColumnList),
-      //              config.getHiveDB(),
-      //              table);
+      // Build the insert query
+      String insertQuery =
+          String.format(
+              "INSERT OVERWRITE TABLE %s.%s (%s) PARTITION (datasetkey = '%s') SELECT %s FROM %s.%s",
+              datasetId,
+              config.getHiveDB(),
+              coreDwcTerm,
+              Arrays.stream(tblSchema.fields())
+                  .map(StructField::name)
+                  .collect(Collectors.joining(", ")),
+              generateSelectColumns(tblSchema, hdfsColumnList),
+              config.getHiveDB(),
+              table);
 
-      //      log.debug("Inserting data into {} table: {}", coreDwcTerm, insertQuery);
+      log.debug("Inserting data into {} table: {}", coreDwcTerm, insertQuery);
 
       // Execute the insert
-      //      spark.sql(insertQuery);
-
-      Dataset<Row> projected =
-          spark.sql(
-              String.format(
-                  "SELECT %s FROM %s.%s",
-                  generateSelectColumns(tblSchema, hdfsColumnList), config.getHiveDB(), table));
-      projected.writeTo("iceberg." + config.getHiveDB() + "." + coreDwcTerm).overwritePartitions();
+      spark.sql(insertQuery);
 
       // Drop the temporary table
       spark.sql("DROP TABLE " + table);
