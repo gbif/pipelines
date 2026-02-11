@@ -20,7 +20,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.occurrence.download.hive.OccurrenceHDFSTableDefinition;
@@ -122,6 +121,7 @@ public class TableBuild {
         .config("spark.sql.catalog.iceberg.commit.retry.num-retries", "10")
         .config("spark.sql.catalog.iceberg.commit.retry.min-wait-ms", "1000")
         .config("spark.sql.catalog.iceberg.commit.retry.max-wait-ms", "10000")
+        .config("spark.sql.catalog.iceberg.commit.retry.total-timeout-ms", "600000")
         .config("spark.hadoop.hive.metastore.uris", config.getHiveMetastoreUris());
   }
 
@@ -231,28 +231,35 @@ public class TableBuild {
       // which can cause issues with concurrent reads and writes.
       // This assumes that datasetKey is a partition column,
       // which allows for efficient deletion of just the relevant partition.
-      spark.sql(
-          String.format(
-              "DELETE FROM %s.%s WHERE datasetKey = '%s'",
-              config.getHiveDB(), coreDwcTerm, datasetId));
+      //      spark.sql(
+      //          String.format(
+      //              "DELETE FROM %s.%s WHERE datasetKey = '%s'",
+      //              config.getHiveDB(), coreDwcTerm, datasetId));
+      //
+      //      // Build the insert query
+      //      String insertQuery =
+      //          String.format(
+      //              "INSERT INTO TABLE %s.%s (%s) SELECT %s FROM %s.%s",
+      //              config.getHiveDB(),
+      //              coreDwcTerm,
+      //              Arrays.stream(tblSchema.fields())
+      //                  .map(StructField::name)
+      //                  .collect(Collectors.joining(", ")),
+      //              generateSelectColumns(tblSchema, hdfsColumnList),
+      //              config.getHiveDB(),
+      //              table);
 
-      // Build the insert query
-      String insertQuery =
-          String.format(
-              "INSERT INTO TABLE %s.%s (%s) SELECT %s FROM %s.%s",
-              config.getHiveDB(),
-              coreDwcTerm,
-              Arrays.stream(tblSchema.fields())
-                  .map(StructField::name)
-                  .collect(Collectors.joining(", ")),
-              generateSelectColumns(tblSchema, hdfsColumnList),
-              config.getHiveDB(),
-              table);
-
-      log.debug("Inserting data into {} table: {}", coreDwcTerm, insertQuery);
+      //      log.debug("Inserting data into {} table: {}", coreDwcTerm, insertQuery);
 
       // Execute the insert
-      spark.sql(insertQuery);
+      //      spark.sql(insertQuery);
+
+      Dataset<Row> projected =
+          spark.sql(
+              String.format(
+                  "SELECT %s FROM %s.%s",
+                  generateSelectColumns(tblSchema, hdfsColumnList), config.getHiveDB(), table));
+      projected.writeTo("iceberg." + config.getHiveDB() + "." + coreDwcTerm).overwritePartitions();
 
       // Drop the temporary table
       spark.sql("DROP TABLE " + table);
