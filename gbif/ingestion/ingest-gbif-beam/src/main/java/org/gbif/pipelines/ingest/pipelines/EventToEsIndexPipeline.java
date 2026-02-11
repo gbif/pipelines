@@ -3,7 +3,6 @@ package org.gbif.pipelines.ingest.pipelines;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.ALL_AVRO;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
