@@ -168,11 +168,14 @@ public class TableBuild {
                           sourceDirectory))
               .toList();
 
+      // get the schema from the first dataset
+      StructType schema = spark.read().parquet(pathsToLoad.get(0)).schema();
+
       // load hdfs view for all dataset
-      Dataset<Row> hdfs = spark.read().parquet(pathsToLoad.toArray(new String[0]));
+      Dataset<Row> hdfs = spark.read().schema(schema).parquet(pathsToLoad.toArray(new String[0]));
 
       // Generate a unique temporary table name
-      String table = String.format("%s_%s", coreDwcTerm, System.currentTimeMillis()).toString();
+      String table = String.format("%s_%s", coreDwcTerm, System.currentTimeMillis());
 
       // Switch to the configured Hive database
       spark.sql("USE " + config.getHiveDB());
