@@ -93,7 +93,7 @@ public class TableBuild {
 
     /* ############ standard init block - end ########## */
     // initialize the target tables if they do not exist
-    initialiseTargetTables(spark, args.tableName);
+    initialiseTargetTables(spark, config.getHiveDB(), args.tableName);
     runTableBuild(
         spark,
         fileSystem,
@@ -278,7 +278,11 @@ public class TableBuild {
     }
   }
 
-  public static void initialiseTargetTables(SparkSession spark, String coreDwcTerm) {
+  public static void initialiseTargetTables(
+      SparkSession spark, String catalog, String coreDwcTerm) {
+
+    spark.sql("USE " + catalog + ";");
+
     if (spark.catalog().tableExists(coreDwcTerm)) {
       log.info("Table {} exists", coreDwcTerm);
     } else {

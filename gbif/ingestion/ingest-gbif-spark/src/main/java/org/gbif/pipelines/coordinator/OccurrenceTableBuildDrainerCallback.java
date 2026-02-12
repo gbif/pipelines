@@ -39,7 +39,8 @@ public class OccurrenceTableBuildDrainerCallback
   @Override
   public void init() throws IOException {
     super.init();
-    TableBuild.initialiseTargetTables(sparkSession, this.tableName);
+    TableBuild.initialiseTargetTables(
+        sparkSession, this.pipelinesConfig.getHiveDB(), this.tableName);
   }
 
   @Override
