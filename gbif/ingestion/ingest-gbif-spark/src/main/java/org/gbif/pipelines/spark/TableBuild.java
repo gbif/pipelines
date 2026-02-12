@@ -24,6 +24,7 @@ import org.apache.spark.sql.types.StructType;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.occurrence.download.hive.OccurrenceHDFSTableDefinition;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 
@@ -166,10 +167,19 @@ public class TableBuild {
                           entry.getKey(),
                           entry.getValue(),
                           sourceDirectory))
+              .filter(
+                  path -> {
+                    try {
+                      return isNonEmptyHdfsDir(fileSystem, path);
+                    } catch (IOException e) {
+                      log.error("Error checking HDFS path: {}", path, e);
+                      return false;
+                    }
+                  })
               .toList();
 
       // get the schema from the first dataset
-      StructType schema = spark.read().parquet(pathsToLoad.get(0)).schema();
+      StructType schema = Encoders.bean(OccurrenceHdfsRecord.class).schema();
 
       // load hdfs view for all dataset
       Dataset<Row> hdfs = spark.read().schema(schema).parquet(pathsToLoad.toArray(new String[0]));
@@ -419,6 +429,33 @@ public class TableBuild {
   @NotNull
   public static String getMetricsFileName(String tableName) {
     return tableName + "-to-hdfs.yml";
+  }
+
+  @NotNull
+  private static boolean isNonEmptyHdfsDir(FileSystem fileSystem, String pathAsString)
+      throws IOException {
+    Path path = new Path(pathAsString);
+    log.debug("Checking path: {}", path);
+    if (fileSystem.exists(path)) {
+
+      boolean hasSuccessFile = fileSystem.exists(new Path(path, "_SUCCESS"));
+      if (!hasSuccessFile) {
+        log.warn("Path {} does not contain _SUCCESS file", path);
+        return false;
+      }
+
+      boolean hasNonEmptyParquet =
+          Arrays.stream(fileSystem.listStatus(path))
+              .filter(status -> status.getPath().getName().endsWith(".parquet"))
+              .anyMatch(status -> status.getLen() > 0);
+      if (!hasNonEmptyParquet) {
+        log.warn("Path {} does not contain any non-empty parquet files", path);
+        return false;
+      }
+
+      return true;
+    }
+    return false;
   }
 
   @NotNull
