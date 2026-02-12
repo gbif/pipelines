@@ -3,6 +3,9 @@ package org.gbif.pipelines.coordinator;
 import static org.gbif.pipelines.Metrics.*;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.*;
 import org.gbif.common.messaging.api.MessageCallback;
@@ -18,9 +21,16 @@ public abstract class PipelinesQueueDrainerCallback<
 
   protected List<I> messagesBuffer = new ArrayList<>();
 
+  private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+  private static final long TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
+
+  private long lastBufferDrainedTime = -1l;
+
   public PipelinesQueueDrainerCallback(
       PipelinesConfig pipelinesConfig, MessagePublisher publisher, String sparkMaster) {
     super(pipelinesConfig, publisher, sparkMaster);
+    startTimeoutChecker();
   }
 
   protected abstract void handleBulkMessages(List<I> messages) throws Exception;
@@ -69,16 +79,40 @@ public abstract class PipelinesQueueDrainerCallback<
       CONCURRENT_DATASETS.inc();
       messagesBuffer.add(message);
 
-      if (messagesBuffer.size() < 100) {
+      if (messagesBuffer.size() >= 100) {
         log.info("Processing buffered messages, buffer size {}", messagesBuffer.size());
         handleBulkMessages(messagesBuffer);
         messagesBuffer.clear();
+        lastBufferDrainedTime = System.currentTimeMillis();
       }
     } catch (Exception e) {
       log.error("Error processing message for dataset batch. Will mark entire batch as failed");
-
-      // TOOD
+      // FIXME send pipeline failed message for each message in buffer
 
     }
+  }
+
+  public void startTimeoutChecker() {
+    log.info("Starting timeout checker for buffered messages with timeout of {} ms", TIMEOUT_MS);
+    scheduler.scheduleAtFixedRate(
+        () -> {
+          long now = System.currentTimeMillis();
+          if (now - lastBufferDrainedTime > TIMEOUT_MS) {
+            try {
+              log.info(
+                  "Buffer timeout reached, processing buffered messages, buffer size {}",
+                  messagesBuffer.size());
+              handleBulkMessages(messagesBuffer);
+            } catch (Exception e) {
+              log.error("Error processing buffered messages, marking entire batch as failed", e);
+              // FIXME send pipeline failed message for each message in buffer
+            }
+            messagesBuffer.clear();
+            lastBufferDrainedTime = now;
+          }
+        },
+        60,
+        60,
+        TimeUnit.SECONDS); // check every 60 seconds
   }
 }
