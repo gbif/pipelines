@@ -300,18 +300,22 @@ public abstract class PipelinesCallback<
 
       CONCURRENT_DATASETS.dec();
 
-      if (message.getExecutionId() != null) {
-        MDC.put("datasetKey", message.getDatasetUuid().toString());
-        log.debug("Mark execution as FINISHED if all steps are FINISHED");
-        Runnable r =
-            () -> {
-              log.debug(
-                  "History client: mark pipeline execution if finished, executionId {}",
-                  message.getExecutionId());
-              historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
-            };
-        Retry.decorateRunnable(RETRY, r).run();
-      }
+      markExecutionAsFinished(message);
+    }
+  }
+
+  protected void markExecutionAsFinished(I message) {
+    if (message.getExecutionId() != null) {
+      MDC.put("datasetKey", message.getDatasetUuid().toString());
+      log.debug("Mark execution as FINISHED if all steps are FINISHED");
+      Runnable r =
+          () -> {
+            log.debug(
+                "History client: mark pipeline execution if finished, executionId {}",
+                message.getExecutionId());
+            historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
+          };
+      Retry.decorateRunnable(RETRY, r).run();
     }
   }
 

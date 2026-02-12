@@ -95,6 +95,9 @@ public abstract class PipelinesQueueDrainerCallback<
             messagesBuffer.size());
 
         bulkTrackingUpdate();
+        for (I messageA : messagesBuffer.keySet()) {
+          markExecutionAsFinished(messageA);
+        }
 
         messagesBuffer.clear();
         lastBufferDrainedTime = System.currentTimeMillis();
@@ -108,14 +111,14 @@ public abstract class PipelinesQueueDrainerCallback<
 
   private void bulkTrackingUpdate() throws IOException {
     for (I message : messagesBuffer.keySet()) {
-      TrackingInfo info = messagesBuffer.get(message);
+      TrackingInfo trackingInfo = messagesBuffer.get(message);
       O outgoingMessage = createOutgoingMessage(message);
 
       String nextMessageClassName = outgoingMessage.getClass().getSimpleName();
       String messagePayload = outgoingMessage.toString();
 
       publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
-      updateQueuedStatus(info, message);
+      updateQueuedStatus(trackingInfo, message);
 
       log.debug("Finished processing datasetKey: {}", message.getDatasetUuid());
     }
@@ -139,6 +142,10 @@ public abstract class PipelinesQueueDrainerCallback<
               } else {
                 handleBulkMessages(messagesBuffer.keySet().stream().toList());
                 bulkTrackingUpdate();
+                for (I message : messagesBuffer.keySet()) {
+                  markExecutionAsFinished(message);
+                }
+
                 messagesBuffer.clear();
               }
             } catch (Exception e) {
