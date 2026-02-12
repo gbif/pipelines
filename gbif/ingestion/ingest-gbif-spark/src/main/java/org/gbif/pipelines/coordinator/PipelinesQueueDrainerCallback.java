@@ -11,6 +11,7 @@ import org.gbif.api.model.pipelines.*;
 import org.gbif.common.messaging.api.MessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.slf4j.MDC;
 
@@ -20,6 +21,7 @@ public abstract class PipelinesQueueDrainerCallback<
     extends PipelinesCallback<I, O> implements MessageCallback<I> {
 
   protected List<I> messagesBuffer = new ArrayList<>();
+  protected Long recordsBuffered = 0l;
 
   private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
@@ -78,8 +80,9 @@ public abstract class PipelinesQueueDrainerCallback<
     try {
       CONCURRENT_DATASETS.inc();
       messagesBuffer.add(message);
+      recordsBuffered += ((PipelinesInterpretedMessage) message).getNumberOfRecords();
 
-      if (messagesBuffer.size() >= 100) {
+      if (messagesBuffer.size() >= 1000 || recordsBuffered >= 10_000) {
         log.info("Processing buffered messages, buffer size {}", messagesBuffer.size());
         handleBulkMessages(messagesBuffer);
         messagesBuffer.clear();
@@ -102,12 +105,18 @@ public abstract class PipelinesQueueDrainerCallback<
               log.info(
                   "Buffer timeout reached, processing buffered messages, buffer size {}",
                   messagesBuffer.size());
-              handleBulkMessages(messagesBuffer);
+              if (messagesBuffer.isEmpty()) {
+                log.info("Buffer is empty, skipping processing");
+              } else {
+                handleBulkMessages(messagesBuffer);
+                messagesBuffer.clear();
+              }
             } catch (Exception e) {
               log.error("Error processing buffered messages, marking entire batch as failed", e);
+              messagesBuffer.clear();
               // FIXME send pipeline failed message for each message in buffer
             }
-            messagesBuffer.clear();
+
             lastBufferDrainedTime = now;
           }
         },
