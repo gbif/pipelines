@@ -229,7 +229,8 @@ public class TableBuild {
       Map<String, HdfsColumn> hdfsColumnList = getHdfsColumns(hdfs);
 
       // Read the target table i.e. 'occurrence' or 'event' schema to ensure it exists
-      StructType tblSchema = spark.read().format("iceberg").load(coreDwcTerm).schema();
+      StructType tblSchema =
+          spark.read().format("iceberg").load(config.getHiveDB() + "." + coreDwcTerm).schema();
 
       // Build the insert query
       String insertQuery =
