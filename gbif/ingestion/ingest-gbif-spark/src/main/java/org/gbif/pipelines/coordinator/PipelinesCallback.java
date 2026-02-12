@@ -459,7 +459,7 @@ public abstract class PipelinesCallback<
 
   public abstract O createOutgoingMessage(I message);
 
-  private void updateQueuedStatus(TrackingInfo info, I message) {
+  protected void updateQueuedStatus(TrackingInfo info, I message) {
 
     List<PipelinesWorkflow.Graph<StepType>.Edge> nodeEdges;
     if (false /* isValidator*/) {
