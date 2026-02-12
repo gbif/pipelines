@@ -63,7 +63,7 @@ public abstract class PipelinesQueueDrainerCallback<
             MDC.putCloseable("datasetKey", message.getDatasetUuid().toString());
         MDC.MDCCloseable mdc1 = MDC.putCloseable("attempt", message.getAttempt().toString());
         MDC.MDCCloseable mdc2 = MDC.putCloseable("step", getStepType().name())) {
-      log.info("Processing attempt {}", message.getAttempt());
+      log.info("Processing attempt {}, queue size {}", message.getAttempt(), messagesBuffer.size());
 
       trackingInfo = trackPipelineStep(message);
 

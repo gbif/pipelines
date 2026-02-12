@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.StepType;
@@ -64,12 +65,9 @@ public class OccurrenceTableBuildDrainerCallback
     Map<UUID, Integer> datasetMap =
         messages.stream()
             .map(message -> Map.of(message.getDatasetUuid(), message.getAttempt()))
-            .reduce(
-                (m1, m2) -> {
-                  m1.putAll(m2);
-                  return m1;
-                })
-            .orElse(Map.of());
+            .flatMap(m -> m.entrySet().stream())
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
     TableBuild.runTableBuild(
         sparkSession, fileSystem, pipelinesConfig, datasetMap, tableName, sourceDirectory);
   }
