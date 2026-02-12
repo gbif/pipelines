@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.StreamSupport;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -73,19 +72,17 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
           return Optional.empty();
         }
 
-        if (geometry instanceof Polygon && geometry.getArea() > 0 && !crossesDateline(geometry)) {
+        if (geometry instanceof Polygon
+            && geometry.getArea() >= 0.0001
+            && !crossesDateline(geometry)) {
           return Optional.of(new WKTWriter().write(geometry));
         }
 
         if (crossesDateline(geometry)) {
-          Envelope env = geometry.getEnvelopeInternal();
-          return Optional.of(
-              String.format(
-                  "ENVELOPE(%f, %f, %f, %f)",
-                  env.getMinX(), env.getMaxX(), env.getMaxY(), env.getMinY()));
+          return Optional.of(splitPolygon(geometry.getEnvelopeInternal()));
         }
 
-        if (geometry.getArea() == 0) {
+        if (geometry.getArea() < 0.0001) {
           // Get the bounding box envelope
           Geometry envelope = geometry.getEnvelope();
 
@@ -105,6 +102,44 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
     private boolean crossesDateline(Geometry geometry) {
       return geometry.getEnvelopeInternal().getWidth() > 180.0;
     }
+
+    private String splitPolygon(Envelope env) {
+      double westStart = env.getMinX();
+      double eastEnd = env.getMaxX();
+      double south = env.getMinY();
+      double north = env.getMaxY();
+
+      // take into account negative longitudes
+      double realWest = Math.max(westStart, eastEnd);
+      double realEast = Math.min(westStart, eastEnd);
+
+      StringBuilder sb = new StringBuilder("MULTIPOLYGON(");
+
+      // from realWest to 180
+      sb.append("((");
+      appendBox(sb, realWest, 180.0, south, north);
+      sb.append(")), ");
+
+      // from -180 to realEast
+      sb.append("((");
+      appendBox(sb, -180.0, realEast, south, north);
+      sb.append("))");
+
+      sb.append(")");
+      return sb.toString();
+    }
+
+    private void appendBox(StringBuilder sb, double x1, double x2, double y1, double y2) {
+      appendCoord(sb, x1, y1).append(", ");
+      appendCoord(sb, x2, y1).append(", ");
+      appendCoord(sb, x2, y2).append(", ");
+      appendCoord(sb, x1, y2).append(", ");
+      appendCoord(sb, x1, y1);
+    }
+
+    private static StringBuilder appendCoord(StringBuilder sb, double x, double y) {
+      return sb.append(x).append(" ").append(y);
+    }
   }
 
   @Override
@@ -115,12 +150,8 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
   @Override
   public Accum addInput(Accum mutableAccumulator, LocationRecord input) {
     if (Optional.ofNullable(input.getHasCoordinate()).orElse(Boolean.FALSE)) {
-
-      Function<Double, Double> round = v -> Math.round(v * 1000000.0) / 1000000.0;
-
       return mutableAccumulator.acc(
-          new Coordinate(
-              round.apply(input.getDecimalLongitude()), round.apply(input.getDecimalLatitude())));
+          new Coordinate(input.getDecimalLongitude(), input.getDecimalLatitude()));
     }
     return mutableAccumulator;
   }

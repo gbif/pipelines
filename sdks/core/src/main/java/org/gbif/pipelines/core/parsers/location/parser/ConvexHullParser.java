@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
 
 /**
  * Utility to transform elements into <a href="https://en.wikipedia.org/wiki/Convex_hull">Convex
@@ -88,7 +89,7 @@ public class ConvexHullParser {
                       concat(
                           ch1.getConvexHull().getCoordinates(),
                           ch2.getConvexHull().getCoordinates()),
-                      new GeometryFactory()));
+                      new GeometryFactory(new PrecisionModel(100000))));
     }
   }
 }
