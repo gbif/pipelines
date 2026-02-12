@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.StreamSupport;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.io.WKTWriter;
@@ -44,7 +46,9 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
         if (coordinates.size() == 1) {
           Coordinate coord = coordinates.iterator().next();
           return Optional.of("POINT(" + coord.x + " " + coord.y + ")");
-        } else if (coordinates.size() == 2) {
+        }
+
+        if (coordinates.size() == 2) {
           StringBuilder wktBuilder = new StringBuilder("LINESTRING(");
 
           Iterator<Coordinate> iterator = coordinates.iterator();
@@ -60,29 +64,46 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
 
           wktBuilder.append(")");
           return Optional.of(wktBuilder.toString());
-        } else {
-          Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
+        }
 
-          if (geometry.isValid() && !geometry.isEmpty()) {
-            if (geometry instanceof Polygon && geometry.getArea() > 0) {
-              return Optional.of(new WKTWriter().write(geometry));
-            } else {
-              // Get the bounding box envelope
-              Geometry envelope = geometry.getEnvelope();
+        Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
+        geometry.normalize();
 
-              // Buffer slightly if envelope is still a line or point
-              if (!(envelope instanceof Polygon)) {
-                envelope = envelope.buffer(0.0001, 1);
-              }
+        if (!geometry.isValid() && geometry.isEmpty()) {
+          return Optional.empty();
+        }
 
-              if (envelope instanceof Polygon && envelope.getArea() > 0) {
-                return Optional.of(new WKTWriter().write(envelope));
-              }
-            }
+        if (geometry instanceof Polygon && geometry.getArea() > 0 && !crossesDateline(geometry)) {
+          return Optional.of(new WKTWriter().write(geometry));
+        }
+
+        if (crossesDateline(geometry)) {
+          Envelope env = geometry.getEnvelopeInternal();
+          return Optional.of(
+              String.format(
+                  "ENVELOPE(%f, %f, %f, %f)",
+                  env.getMinX(), env.getMaxX(), env.getMaxY(), env.getMinY()));
+        }
+
+        if (geometry.getArea() == 0) {
+          // Get the bounding box envelope
+          Geometry envelope = geometry.getEnvelope();
+
+          // Buffer slightly if envelope is still a line or point
+          if (!(envelope instanceof Polygon)) {
+            envelope = envelope.buffer(0.0001, 1);
+          }
+
+          if (envelope instanceof Polygon && envelope.getArea() > 0) {
+            return Optional.of(new WKTWriter().write(envelope));
           }
         }
       }
       return Optional.empty();
+    }
+
+    private boolean crossesDateline(Geometry geometry) {
+      return geometry.getEnvelopeInternal().getWidth() > 180.0;
     }
   }
 
@@ -94,8 +115,12 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
   @Override
   public Accum addInput(Accum mutableAccumulator, LocationRecord input) {
     if (Optional.ofNullable(input.getHasCoordinate()).orElse(Boolean.FALSE)) {
+
+      Function<Double, Double> round = v -> Math.round(v * 1000000.0) / 1000000.0;
+
       return mutableAccumulator.acc(
-          new Coordinate(input.getDecimalLongitude(), input.getDecimalLatitude()));
+          new Coordinate(
+              round.apply(input.getDecimalLongitude()), round.apply(input.getDecimalLatitude())));
     }
     return mutableAccumulator;
   }
