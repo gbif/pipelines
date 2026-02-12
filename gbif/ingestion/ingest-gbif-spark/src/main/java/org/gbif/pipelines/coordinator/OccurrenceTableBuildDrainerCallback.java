@@ -4,18 +4,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.*;
+import org.gbif.common.messaging.api.messages.PipelinesHdfsViewMessage;
+import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.TableBuild;
 
 @Slf4j
-public class OccurrenceTableBuildCallback
-    extends PipelinesCallback<PipelinesInterpretedMessage, PipelinesHdfsViewMessage>
+public class OccurrenceTableBuildDrainerCallback
+    extends PipelinesQueueDrainerCallback<PipelinesInterpretedMessage, PipelinesHdfsViewMessage>
     implements MessageCallback<PipelinesInterpretedMessage> {
 
   protected String tableName;
@@ -23,7 +25,7 @@ public class OccurrenceTableBuildCallback
 
   List<PipelinesInterpretedMessage> buffer = new ArrayList<>();
 
-  public OccurrenceTableBuildCallback(
+  public OccurrenceTableBuildDrainerCallback(
       PipelinesConfig pipelinesConfig,
       MessagePublisher publisher,
       String master,
@@ -53,13 +55,22 @@ public class OccurrenceTableBuildCallback
 
   @Override
   protected void runPipeline(PipelinesInterpretedMessage message) throws Exception {
+    // not used as we are draining the queue and processing in bulk
+  }
+
+  @Override
+  protected void handleBulkMessages(List<PipelinesInterpretedMessage> messages) throws Exception {
+    Map<UUID, Integer> datasetMap =
+        messages.stream()
+            .map(message -> Map.of(message.getDatasetUuid(), message.getAttempt()))
+            .reduce(
+                (m1, m2) -> {
+                  m1.putAll(m2);
+                  return m1;
+                })
+            .orElse(Map.of());
     TableBuild.runTableBuild(
-        sparkSession,
-        fileSystem,
-        pipelinesConfig,
-        Map.of(message.getDatasetUuid(), message.getAttempt()),
-        tableName,
-        sourceDirectory);
+        sparkSession, fileSystem, pipelinesConfig, datasetMap, tableName, sourceDirectory);
   }
 
   @Override

@@ -1,7 +1,6 @@
 package org.gbif.pipelines.spark;
 
 import static org.gbif.pipelines.ConfigUtil.loadConfig;
-import static org.gbif.pipelines.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.coordinator.DistributedUtil.timeAndRecPerSecond;
 import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
@@ -93,8 +92,15 @@ public class TableBuild {
     FileSystem fileSystem = getFileSystem(spark, config);
 
     /* ############ standard init block - end ########## */
+    // initialize the target tables if they do not exist
+    initialiseTargetTables(spark, args.tableName);
     runTableBuild(
-        spark, fileSystem, config, datasetId, attempt, args.tableName, args.sourceDirectory);
+        spark,
+        fileSystem,
+        config,
+        Map.of(UUID.fromString(datasetId), attempt),
+        args.tableName,
+        args.sourceDirectory);
 
     spark.stop();
     spark.close();
@@ -130,8 +136,6 @@ public class TableBuild {
    * @param spark Spark session
    * @param fileSystem HDFS file system
    * @param config Pipelines config
-   * @param datasetId Dataset ID
-   * @param attempt Attempt number
    * @param coreDwcTerm table name e.g. occurrence or event
    * @param sourceDirectory Source directory of parquet files
    */
@@ -139,8 +143,7 @@ public class TableBuild {
       SparkSession spark,
       FileSystem fileSystem,
       PipelinesConfig config,
-      String datasetId,
-      int attempt,
+      Map<UUID, Integer> datasetMap,
       String coreDwcTerm,
       String sourceDirectory)
       throws Exception {
@@ -149,16 +152,27 @@ public class TableBuild {
       spark.udf().register("base64_decode", new Base64DecodeUDF(), DataTypes.StringType);
 
       long start = System.currentTimeMillis();
-      MDC.put("datasetKey", datasetId);
+      //      MDC.put("datasetKey", datasetId);
+
       log.info("Starting table build");
 
-      String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
+      List<String> pathsToLoad =
+          datasetMap.entrySet().stream()
+              .map(
+                  entry ->
+                      String.format(
+                          "%s/%s/%d/%s",
+                          config.getOutputPath(),
+                          entry.getKey(),
+                          entry.getValue(),
+                          sourceDirectory))
+              .toList();
 
-      // load hdfs view
-      Dataset<Row> hdfs = spark.read().parquet(outputPath + "/" + sourceDirectory);
+      // load hdfs view for all dataset
+      Dataset<Row> hdfs = spark.read().parquet(pathsToLoad.toArray(new String[0]));
 
       // Generate a unique temporary table name
-      String table = String.format("%s_%s_%d", coreDwcTerm, datasetId.replace("-", "_"), attempt);
+      String table = String.format("%s_%s", coreDwcTerm, System.currentTimeMillis()).toString();
 
       // Switch to the configured Hive database
       spark.sql("USE " + config.getHiveDB());
@@ -198,28 +212,6 @@ public class TableBuild {
         throw new IllegalStateException("There are " + count + " records with NULL datasetKey");
       }
 
-      if (spark.catalog().tableExists(coreDwcTerm)) {
-        log.info("Table {} exists", coreDwcTerm);
-      } else {
-        log.info("Table {} does not exist and will be created", coreDwcTerm);
-
-        // Create or populate the occurrence table SQL
-        spark.sql(getCreateTableSQL(coreDwcTerm));
-
-        log.info("Table {} created. Creating extension tables", coreDwcTerm);
-
-        // create extension tables dynamically if they do not exist
-        for (ExtensionTable extTable : ExtensionTable.tableExtensions()) {
-          String extTableName = extTable.getHiveTableName();
-          if (spark.catalog().tableExists(extTableName)) {
-            log.info("Extension table {} exists", extTableName);
-          } else {
-            log.info("Extension table {} does not exist and will be created", extTableName);
-            createExtensionTable(spark, extTable, coreDwcTerm);
-          }
-        }
-      }
-
       // get the hdfs columns from the parquet with mappings to iceberg columns
       Map<String, HdfsColumn> hdfsColumnList = getHdfsColumns(hdfs);
 
@@ -254,7 +246,9 @@ public class TableBuild {
             throw e;
           } else {
             log.warn(
-                "Insert failed with CommitFailedException, retrying... (attempt {})", retries, e);
+                "Insert failed with CommitFailedException, retrying... (attempt {})",
+                retries,
+                e.getMessage());
             Thread.sleep(5000L * retries); // Exponential backoff: 0s, 2s, 4s, 6s, 8s
           }
           retries++;
@@ -265,22 +259,46 @@ public class TableBuild {
       spark.sql("DROP TABLE " + table);
 
       // process extensions
-      VerbatimExtensionsInterpretation.processExtensions(
-          spark, config, datasetId, attempt, config.getHiveDB(), coreDwcTerm);
+      //      VerbatimExtensionsInterpretation.processExtensions(
+      //          spark, config, datasetId, attempt, config.getHiveDB(), coreDwcTerm);
 
       log.debug("Dropped Iceberg table: {}", table);
       cleanHdfsPath(fileSystem, config, table);
 
       // Write metrics to yaml
-      writeMetricsYaml(
-          fileSystem,
-          Map.of("avroToHdfsCountAttempted", avroToHdfsCountAttempted),
-          outputPath + "/" + getMetricsFileName(coreDwcTerm));
+      //      writeMetricsYaml(
+      //          fileSystem,
+      //          Map.of("avroToHdfsCountAttempted", avroToHdfsCountAttempted),
+      //          outputPath + "/" + getMetricsFileName(coreDwcTerm));
 
       log.info(timeAndRecPerSecond("tablebuild", start, avroToHdfsCountAttempted));
 
     } finally {
       MDC.remove("datasetKey");
+    }
+  }
+
+  public static void initialiseTargetTables(SparkSession spark, String coreDwcTerm) {
+    if (spark.catalog().tableExists(coreDwcTerm)) {
+      log.info("Table {} exists", coreDwcTerm);
+    } else {
+      log.info("Table {} does not exist and will be created", coreDwcTerm);
+
+      // Create or populate the occurrence table SQL
+      spark.sql(getCreateTableSQL(coreDwcTerm));
+
+      log.info("Table {} created. Creating extension tables", coreDwcTerm);
+
+      // create extension tables dynamically if they do not exist
+      for (ExtensionTable extTable : ExtensionTable.tableExtensions()) {
+        String extTableName = extTable.getHiveTableName();
+        if (spark.catalog().tableExists(extTableName)) {
+          log.info("Extension table {} exists", extTableName);
+        } else {
+          log.info("Extension table {} does not exist and will be created", extTableName);
+          createExtensionTable(spark, extTable, coreDwcTerm);
+        }
+      }
     }
   }
 

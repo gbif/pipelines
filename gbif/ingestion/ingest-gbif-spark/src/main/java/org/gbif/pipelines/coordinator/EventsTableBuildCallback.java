@@ -1,5 +1,6 @@
 package org.gbif.pipelines.coordinator;
 
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.StepType;
@@ -45,8 +46,7 @@ public class EventsTableBuildCallback
         sparkSession,
         fileSystem,
         pipelinesConfig,
-        message.getDatasetUuid().toString(),
-        message.getAttempt(),
+        Map.of(message.getDatasetUuid(), message.getAttempt()),
         tableName,
         sourceDirectory);
   }

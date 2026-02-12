@@ -145,7 +145,7 @@ public class Coordinator {
       case TABLEBUILD:
         callbackFn =
             (messagePublisher ->
-                new OccurrenceTableBuildCallback(
+                new OccurrenceTableBuildDrainerCallback(
                     config, messagePublisher, master, "occurrence", OCCURRENCE_HDFS));
         break;
       case TABLEBUILD_DISTRIBUTED:

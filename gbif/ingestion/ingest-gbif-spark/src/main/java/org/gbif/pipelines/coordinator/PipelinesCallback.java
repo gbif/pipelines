@@ -315,7 +315,7 @@ public abstract class PipelinesCallback<
     }
   }
 
-  private static void checkIfPaused() {
+  protected static void checkIfPaused() {
     while (new File(PAUSE_FILE_PATH).exists()) {
       log.warn(
           "Found "
@@ -329,7 +329,7 @@ public abstract class PipelinesCallback<
     }
   }
 
-  private boolean isProcessingStopped(I message) {
+  protected boolean isProcessingStopped(I message) {
 
     Long currentKey = message.getExecutionId();
     UUID datasetKey = message.getDatasetUuid();
@@ -396,7 +396,7 @@ public abstract class PipelinesCallback<
     return new ArrayList<>();
   }
 
-  private void updateTrackingStatus(
+  protected void updateTrackingStatus(
       TrackingInfo trackingInfo, I message, PipelineStep.Status status) {
 
     String path =
@@ -506,7 +506,7 @@ public abstract class PipelinesCallback<
     return containsEvents;
   }
 
-  private TrackingInfo trackPipelineStep(I message) throws Exception {
+  protected TrackingInfo trackPipelineStep(I message) throws Exception {
 
     //
     //        if (isValidator) {
