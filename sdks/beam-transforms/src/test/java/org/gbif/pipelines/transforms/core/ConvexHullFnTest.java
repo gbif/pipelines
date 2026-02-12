@@ -19,9 +19,7 @@ public class ConvexHullFnTest {
   public void accumulatorTest() {
     WKTReader wktReader = new WKTReader();
 
-    Geometry geometry =
-        wktReader.read(
-            "POLYGON((100000 515000,100000 520000,105000 520000,105000 515000,100000 515000))");
+    Geometry geometry = wktReader.read("POLYGON((10 51.5,10 52,10.5 52,10.5 51.5,10 51.5))");
 
     // Tests an accumulator built from a collection of coordinates
     ConvexHullFn.Accum accum = new ConvexHullFn.Accum();
