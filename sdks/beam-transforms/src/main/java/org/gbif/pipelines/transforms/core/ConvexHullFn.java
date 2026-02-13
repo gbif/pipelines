@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.StreamSupport;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -150,8 +151,12 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
   @Override
   public Accum addInput(Accum mutableAccumulator, LocationRecord input) {
     if (Optional.ofNullable(input.getHasCoordinate()).orElse(Boolean.FALSE)) {
+
+      Function<Double, Double> round = v -> Math.round(v * 1_000_000.0) / 1_000_000.0;
+
       return mutableAccumulator.acc(
-          new Coordinate(input.getDecimalLongitude(), input.getDecimalLatitude()));
+          new Coordinate(
+              round.apply(input.getDecimalLongitude()), round.apply(input.getDecimalLatitude())));
     }
     return mutableAccumulator;
   }

@@ -89,7 +89,7 @@ public class ConvexHullParser {
                       concat(
                           ch1.getConvexHull().getCoordinates(),
                           ch2.getConvexHull().getCoordinates()),
-                      new GeometryFactory(new PrecisionModel(100000))));
+                      new GeometryFactory(new PrecisionModel(1_000_000))));
     }
   }
 }
