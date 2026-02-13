@@ -304,10 +304,15 @@ public abstract class PipelinesCallback<
     }
   }
 
+  /**
+   * Attempt to mark execution as finished.
+   *
+   * @param message
+   */
   protected void markExecutionAsFinished(I message) {
     if (message.getExecutionId() != null) {
       MDC.put("datasetKey", message.getDatasetUuid().toString());
-      log.debug("Mark execution as FINISHED if all steps are FINISHED");
+      log.info("Mark execution as FINISHED if all steps are FINISHED");
       Runnable r =
           () -> {
             log.debug(
@@ -316,6 +321,10 @@ public abstract class PipelinesCallback<
             historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
           };
       Retry.decorateRunnable(RETRY, r).run();
+    } else {
+      log.info(
+          "Execution id is null, skipping mark execution as finished for datasetKey {} ",
+          message.getDatasetUuid());
     }
   }
 

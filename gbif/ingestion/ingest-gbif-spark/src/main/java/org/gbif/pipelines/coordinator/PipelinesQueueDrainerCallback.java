@@ -23,13 +23,13 @@ public abstract class PipelinesQueueDrainerCallback<
     extends PipelinesCallback<I, O> implements MessageCallback<I> {
 
   protected LinkedHashMap<I, TrackingInfo> messagesBuffer = new LinkedHashMap<>();
-  protected Long recordsBuffered = 0l;
+  protected Long recordsBuffered = 0L;
 
   private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
   private static final long TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
 
-  private long lastBufferDrainedTime = -1l;
+  private long lastBufferDrainedTime = -1L;
 
   public PipelinesQueueDrainerCallback(
       PipelinesConfig pipelinesConfig, MessagePublisher publisher, String sparkMaster) {
@@ -145,7 +145,6 @@ public abstract class PipelinesQueueDrainerCallback<
                 for (I message : messagesBuffer.keySet()) {
                   markExecutionAsFinished(message);
                 }
-
                 messagesBuffer.clear();
               }
             } catch (Exception e) {
