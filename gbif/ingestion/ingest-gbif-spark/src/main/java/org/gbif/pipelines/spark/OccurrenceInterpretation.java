@@ -250,8 +250,6 @@ public class OccurrenceInterpretation {
 
       String inputPath = String.format("%s/%s/%d", config.getInputPath(), datasetId, attempt);
       String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
-      String lastSuccessfulSymLinkPath =
-          String.format("%s/%s/last_successful", config.getOutputPath(), datasetId, attempt);
 
       // Load the extended records
       sparkLog(spark, "loadExtendedRecords", "Loading extended records", useCheckpoints);
@@ -312,9 +310,6 @@ public class OccurrenceInterpretation {
               PipelinesVariables.Metrics.BASIC_RECORDS_COUNT, identifiersCount,
               PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT, identifiersCount),
           outputPath + "/" + METRICS_FILENAME);
-
-      // create symlink on hdfs to the latest successful attempt
-      fs.createSymlink(new Path(outputPath), new Path(lastSuccessfulSymLinkPath), false);
 
       MDC.put("datasetKey", datasetId);
       log.info(timeAndRecPerSecond("interpretation", start, identifiersCount));
