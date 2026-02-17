@@ -29,6 +29,9 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
   @Data
   public static class Accum implements Serializable {
 
+    // Threshold for detecting dateline proximity (degrees from dateline)
+    private static final double DATELINE_PROXIMITY_THRESHOLD = 170.0;
+
     private Set<Coordinate> coordinates = new HashSet<>();
 
     public Accum acc(Set<Coordinate> coordinates) {
@@ -111,8 +114,8 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
       // 1. It has a large envelope width (> 180), AND
       // 2. It has coordinates near both +180 and -180 (indicating wrap-around)
       // We check if minX is negative and near -180, and maxX is positive and near +180
-      boolean hasNegativeSide = minX < 0 && minX <= -170;
-      boolean hasPositiveSide = maxX > 0 && maxX >= 170;
+      boolean hasNegativeSide = minX < 0 && minX <= -DATELINE_PROXIMITY_THRESHOLD;
+      boolean hasPositiveSide = maxX > 0 && maxX >= DATELINE_PROXIMITY_THRESHOLD;
       
       return env.getWidth() > 180.0 && hasNegativeSide && hasPositiveSide;
     }
