@@ -114,7 +114,7 @@ public class OccurrenceHdfsRecordTransform implements Serializable {
 
             // Core
             MetadataRecord mdr = c.sideInput(metadataView);
-            IdentifierRecord id = v.getOnly(identifierRecordTag, null);
+            IdentifierRecord id = v.getOnly(identifierRecordTag);
             ClusteringRecord cr =
                 v.getOnly(clusteringRecordTag, ClusteringRecord.newBuilder().setId(k).build());
             ExtendedRecord er =

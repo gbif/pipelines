@@ -1,5 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
+import static org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser.PRECISION;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -29,6 +31,7 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
   @Data
   public static class Accum implements Serializable {
 
+    private static final double MIN_AREA = 0.0001;
     private Set<Coordinate> coordinates = new HashSet<>();
 
     public Accum acc(Set<Coordinate> coordinates) {
@@ -42,61 +45,64 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
     }
 
     public Optional<String> toWktConvexHull() {
-      if (!coordinates.isEmpty()) {
-        if (coordinates.size() == 1) {
-          Coordinate coord = coordinates.iterator().next();
-          return Optional.of("POINT(" + coord.x + " " + coord.y + ")");
-        }
+      if (coordinates.isEmpty()) {
+        return Optional.empty();
+      }
 
-        if (coordinates.size() == 2) {
-          StringBuilder wktBuilder = new StringBuilder("LINESTRING(");
+      if (coordinates.size() == 1) {
+        Coordinate coord = coordinates.iterator().next();
+        return Optional.of("POINT(" + coord.x + " " + coord.y + ")");
+      }
 
-          Iterator<Coordinate> iterator = coordinates.iterator();
-          while (iterator.hasNext()) {
-            Coordinate coord = iterator.next();
-            double lon = coord.x;
-            wktBuilder.append(lon).append(" ").append(coord.y);
+      if (coordinates.size() == 2) {
+        StringBuilder wktBuilder = new StringBuilder("LINESTRING(");
 
-            if (iterator.hasNext()) {
-              wktBuilder.append(", ");
-            }
+        Iterator<Coordinate> iterator = coordinates.iterator();
+        while (iterator.hasNext()) {
+          Coordinate coord = iterator.next();
+          double lon = coord.x;
+          wktBuilder.append(lon).append(" ").append(coord.y);
+
+          if (iterator.hasNext()) {
+            wktBuilder.append(", ");
           }
-
-          wktBuilder.append(")");
-          return Optional.of(wktBuilder.toString());
         }
 
-        Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
-        geometry.normalize();
+        wktBuilder.append(")");
+        return Optional.of(wktBuilder.toString());
+      }
 
-        if (!geometry.isValid() && geometry.isEmpty()) {
-          return Optional.empty();
+      Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
+      geometry.normalize();
+
+      if (!geometry.isValid() || geometry.isEmpty()) {
+        return Optional.empty();
+      }
+
+      if (geometry instanceof Polygon
+          && geometry.getArea() >= MIN_AREA
+          && !crossesDateline(geometry)) {
+        return Optional.of(new WKTWriter().write(geometry));
+      }
+
+      if (crossesDateline(geometry)) {
+        return Optional.of(splitPolygon(geometry.getEnvelopeInternal()));
+      }
+
+      if (geometry.getArea() < MIN_AREA) {
+        // Get the bounding box envelope
+        Geometry envelope = geometry.getEnvelope();
+
+        // Buffer slightly if envelope is still a line or point
+        if (!(envelope instanceof Polygon)) {
+          envelope = envelope.buffer(MIN_AREA, 1);
         }
 
-        if (geometry instanceof Polygon
-            && geometry.getArea() >= 0.0001
-            && !crossesDateline(geometry)) {
-          return Optional.of(new WKTWriter().write(geometry));
-        }
-
-        if (crossesDateline(geometry)) {
-          return Optional.of(splitPolygon(geometry.getEnvelopeInternal()));
-        }
-
-        if (geometry.getArea() < 0.0001) {
-          // Get the bounding box envelope
-          Geometry envelope = geometry.getEnvelope();
-
-          // Buffer slightly if envelope is still a line or point
-          if (!(envelope instanceof Polygon)) {
-            envelope = envelope.buffer(0.0001, 1);
-          }
-
-          if (envelope instanceof Polygon && envelope.getArea() > 0) {
-            return Optional.of(new WKTWriter().write(envelope));
-          }
+        if (envelope instanceof Polygon && envelope.getArea() > 0) {
+          return Optional.of(new WKTWriter().write(envelope));
         }
       }
+
       return Optional.empty();
     }
 
@@ -152,7 +158,7 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
   public Accum addInput(Accum mutableAccumulator, LocationRecord input) {
     if (Optional.ofNullable(input.getHasCoordinate()).orElse(Boolean.FALSE)) {
 
-      Function<Double, Double> round = v -> Math.round(v * 1_000_000.0) / 1_000_000.0;
+      Function<Double, Double> round = v -> Math.round(v * PRECISION) / PRECISION;
 
       return mutableAccumulator.acc(
           new Coordinate(

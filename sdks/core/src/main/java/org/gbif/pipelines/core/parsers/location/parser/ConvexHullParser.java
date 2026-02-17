@@ -19,6 +19,8 @@ import org.locationtech.jts.geom.PrecisionModel;
 @UtilityClass
 public class ConvexHullParser {
 
+  public static double PRECISION = 1_000_000;
+
   /** Concatenates two arrays. */
   private static <T> T[] concat(T[] array1, T[] array2) {
     T[] both = Arrays.copyOf(array1, array1.length + array2.length);
@@ -89,7 +91,7 @@ public class ConvexHullParser {
                       concat(
                           ch1.getConvexHull().getCoordinates(),
                           ch2.getConvexHull().getCoordinates()),
-                      new GeometryFactory(new PrecisionModel(1_000_000))));
+                      new GeometryFactory(new PrecisionModel(PRECISION))));
     }
   }
 }
