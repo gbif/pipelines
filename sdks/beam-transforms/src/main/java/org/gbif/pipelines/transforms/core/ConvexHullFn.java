@@ -4,7 +4,6 @@ import static org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser.P
 
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -18,7 +17,11 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.PrecisionModel;
+import org.locationtech.jts.geom.impl.CoordinateArraySequence;
 import org.locationtech.jts.io.WKTWriter;
 
 /** Beam that calculates a ConvexHull form all coordinates accumulated from location records. */
@@ -55,21 +58,11 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
       }
 
       if (coordinates.size() == 2) {
-        StringBuilder wktBuilder = new StringBuilder("LINESTRING(");
-
-        Iterator<Coordinate> iterator = coordinates.iterator();
-        while (iterator.hasNext()) {
-          Coordinate coord = iterator.next();
-          double lon = coord.x;
-          wktBuilder.append(lon).append(" ").append(coord.y);
-
-          if (iterator.hasNext()) {
-            wktBuilder.append(", ");
-          }
-        }
-
-        wktBuilder.append(")");
-        return Optional.of(wktBuilder.toString());
+        LineString lineString =
+            new LineString(
+                new CoordinateArraySequence(coordinates.toArray(new Coordinate[] {})),
+                new GeometryFactory(new PrecisionModel(PRECISION)));
+        return Optional.of(new WKTWriter().write(lineString));
       }
 
       Geometry geometry = ConvexHullParser.fromCoordinates(coordinates).getConvexHull();
