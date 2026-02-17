@@ -13,12 +13,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.types.DataTypes;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.pipelines.EsIndexUtils;
+import org.gbif.pipelines.IndexSettings;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.estools.client.EsClient;
+import org.gbif.pipelines.estools.client.EsConfig;
+import org.gbif.pipelines.estools.service.EsService;
 
 @Slf4j
 public class FullIndexBuild {
@@ -56,9 +65,10 @@ public class FullIndexBuild {
       return;
     }
 
-    long start = System.currentTimeMillis();
-
     PipelinesConfig config = loadConfig(args.config);
+    assert config != null && config.getIndexConfig() != null && config.getElastic() != null;
+
+    final Map<String, Integer> datasetAttemptMap = new HashMap<>();
 
     /* ############ standard init block ########## */
     SparkSession spark =
@@ -76,6 +86,7 @@ public class FullIndexBuild {
     for (FileStatus fileStatus : fileStatuses) {
       if (fileStatus.isDirectory()) {
         String datasetId = fileStatus.getPath().getName();
+
         FileStatus[] successFiles =
             fileSystem.globStatus(new Path(fileStatus.getPath() + "/*/json/_SUCCESS"));
 
@@ -87,36 +98,22 @@ public class FullIndexBuild {
             newestSuccessFile = successFile;
           }
         }
+
         if (newestSuccessFile != null) {
           Path successAttemptDir =
               newestSuccessFile
                   .getPath()
                   .getParent()
                   .getParent(); // go up from hdfs/_SUCCESS to interpretation dir
-          Path symlinkPath = new Path(fileStatus.getPath(), "last-successful");
 
-          // delete existing symlink if it exists
-          if (fileSystem.exists(symlinkPath)) {
-            fileSystem.delete(symlinkPath, false);
-          }
-
-          // create symlink
-          //          fileSystem.createSymlink(successAttemptDir, symlinkPath, true);
+          String attempt = successAttemptDir.getName(); // this should be the attempt number
           System.out.println(
               "Created symlink for dataset " + datasetId + " to " + successAttemptDir.toString());
 
           // add if the _SUCCESS file is less than 4 weeks old to the list of paths to read from
-          if (fileSystem.getFileStatus(successAttemptDir).getModificationTime()
-              > System.currentTimeMillis() - 3L * 7 * 24 * 60 * 60 * 1000) {
-            hdfsPaths.add(successAttemptDir.toString() + "/hdfs/");
-            log.debug(
-                "Adding HDFS path for dataset {}: {}", datasetId, successAttemptDir.toString());
-          } else {
-            log.info(
-                "Skipping HDFS path for dataset {}: {} (older than 3 weeks)",
-                datasetId,
-                successAttemptDir.toString());
-          }
+          hdfsPaths.add(successAttemptDir.toString() + "/json/");
+          datasetAttemptMap.put(datasetId, Integer.parseInt(attempt));
+          log.debug("Adding HDFS path for dataset {}: {}", datasetId, successAttemptDir.toString());
 
         } else {
           // System.out.println("No successful interpretation found for dataset " + datasetId);
@@ -126,21 +123,16 @@ public class FullIndexBuild {
 
     log.info("Starting full index build");
 
-    String coreDwcTerm = "occurrence";
+    if (hdfsPaths.isEmpty()) {
+      log.warn("No datasets with successful interpretations found. Exiting.");
+      return;
+    }
 
     // load all hdfs view parquet
-//    Dataset<Row> hdfs = spark.read().parquet(hdfsPaths.toArray(new String[0])).coalesce(1200);
-    Dataset<Row> hdfs = spark.read().parquet(
-      new String[]{
-        "/Users/djtfmartin/dev/pipelines/gbif/ingestion/ingest-gbif-spark/test-data/02996492-a184-4a55-9735-897a4ab84b18/1/json", // small dataset 1
-        "/Users/djtfmartin/dev/pipelines/gbif/ingestion/ingest-gbif-spark/test-data/2669f062-aef9-4677-8669-017897bc0622/1/json", // small dataset 2
-        "/Users/djtfmartin/dev/pipelines/gbif/ingestion/ingest-gbif-spark/test-data/27be081b-0250-4cfe-ab5c-e835a66772b8/1/json" //  dataset over 10k
-      }
-    ).coalesce(1200);
-
+    Dataset<Row> hdfs = spark.read().parquet(hdfsPaths.toArray(new String[0])).coalesce(1200);
     Dataset<Row> datasetCountsDF = hdfs.groupBy(col("datasetkey")).count().orderBy(desc("count"));
 
-    Map<String, Long> datasetCounts = new HashMap<>();
+    final Map<String, Long> datasetCounts = new HashMap<>();
 
     for (Row row : datasetCountsDF.collectAsList()) {
       String key = row.getAs("datasetkey");
@@ -148,57 +140,81 @@ public class FullIndexBuild {
       datasetCounts.put(key, count);
     }
 
+    CloseableHttpClient httpClient =
+        HttpClients.custom()
+            .setDefaultRequestConfig(
+                RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
+            .build();
+
+    final Map<String, String> datasetToIndexNameMap = new HashMap<>();
     // create the empty indexes with the schema
     for (Map.Entry<String, Long> entry : datasetCounts.entrySet()) {
 
       String datasetKey = entry.getKey();
-      Long count = entry.getValue();
+      Long recordCount = entry.getValue();
 
       String esIndexName =
-          count > 10_000L
-              ? "full_build_occurrence_" + datasetKey
-              : "full_build_occurrence_shared";
+          IndexSettings.computeIndexName(
+              DatasetType.OCCURRENCE,
+              config.getIndexConfig(),
+              httpClient,
+              datasetKey,
+              datasetAttemptMap.get(datasetKey),
+              recordCount.intValue());
 
-      // FIXME - need to be computed...
-      Integer indexNumberShards = 5;
+      Integer indexNumberShards =
+          IndexSettings.computeNumberOfShards(
+              config.getIndexConfig(), esIndexName, recordCount.intValue());
 
       Indexing.ElasticOptions options =
-              Indexing.ElasticOptions.fromArgsAndConfig(
-                      config,
-                      "full_build_occurrence",
-                      esIndexName,
-                      "elasticsearch/es-occurrence-schema.json",
-                      datasetKey, // used for updating the alias
-                      1, // used for updating the alias
-                      indexNumberShards);
+          Indexing.ElasticOptions.fromArgsAndConfig(
+              config,
+              config.getIndexConfig().getOccurrenceAlias(),
+              esIndexName,
+              "elasticsearch/es-occurrence-schema.json",
+              datasetKey, // used for updating the alias
+              datasetAttemptMap.get(datasetKey),
+              indexNumberShards);
 
       // Create ES index and alias if not exists
       EsIndexUtils.createIndexAndAliasForDefault(options);
+
+      datasetToIndexNameMap.put(datasetKey, esIndexName);
     }
+
+    spark
+        .udf()
+        .register(
+            "computeIndexNameUDF",
+            (String datasetKey) -> datasetToIndexNameMap.get(datasetKey),
+            DataTypes.StringType);
 
     Dataset<Row> indexingDF =
         hdfs.join(datasetCountsDF, "datasetkey")
-            .withColumn(
-                "index_name",
-                when(
-                    col("count").gt(10_000L),
-                    concat(
-                            lit("full_build_occurrence_"),
-                            col("datasetkey")
-                    ))
-                .otherwise(lit("full_build_occurrence_shared")))
-            .drop("count");
+            .withColumn("index_name", callUDF("computeIndexNameUDF", col("datasetkey")));
 
     // Write to Elasticsearch
-    indexingDF.write()
-            .format("org.elasticsearch.spark.sql")
-            .option("es.resource", "{index_name}/_doc")
-            .mode(SaveMode.Append)
-            .option("es.batch.size.entries", config.getElastic().getEsMaxBatchSize())
-            .option("es.batch.size.bytes", config.getElastic().getEsMaxBatchSizeBytes())
-            .option("es.mapping.id", "gbifId")
-            .option("es.nodes.wan.only", "true")
-            .option("es.batch.write.refresh", "false")
-            .save();
+    indexingDF
+        .write()
+        .format("org.elasticsearch.spark.sql")
+        .option("es.resource", "{index_name}/_doc")
+        .mode(SaveMode.Append)
+        .option("es.batch.size.entries", config.getElastic().getEsMaxBatchSize())
+        .option("es.batch.size.bytes", config.getElastic().getEsMaxBatchSizeBytes())
+        .option("es.mapping.id", "gbifId")
+        .option("es.nodes.wan.only", "true")
+        .option("es.batch.write.refresh", "false")
+        .save();
+
+    try (EsClient esClient = EsClient.from(EsConfig.from(config.getElastic().getEsHosts()))) {
+      datasetToIndexNameMap
+          .values()
+          .forEach(
+              indexName -> {
+                System.out.println("Refreshing index " + indexName);
+                EsService.refreshIndex(esClient, indexName);
+              });
+    }
+    System.out.println("Full index build completed");
   }
 }

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.coordinator;
+package org.gbif.pipelines;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -36,7 +36,8 @@ public class IndexSettings {
       Integer attempt,
       long recordsNumber)
       throws IOException {
-    this.indexName = computeIndexName(datasetType, indexConfig, httpClient, datasetId, attempt, recordsNumber);
+    this.indexName =
+        computeIndexName(datasetType, indexConfig, httpClient, datasetId, attempt, recordsNumber);
     this.numberOfShards = computeNumberOfShards(indexConfig, indexName, recordsNumber);
     switch (datasetType) {
       case OCCURRENCE -> this.indexAlias = indexConfig.getOccurrenceAlias();
@@ -77,7 +78,7 @@ public class IndexSettings {
    * Case 3 - Default dynamic index name for all other datasets
    * </pre>
    */
-  private String computeIndexName(
+  public static String computeIndexName(
       DatasetType datasetType,
       IndexConfig indexConfig,
       HttpClient httpClient,
@@ -112,6 +113,53 @@ public class IndexSettings {
   }
 
   /**
+   * Computes the name for ES index:
+   *
+   * <pre>
+   * Case 1 - Independent index for datasets where number of records more than config.indexIndepRecord
+   * Case 2 - Default static index name for datasets where last changed date more than config.indexDefStaticDateDurationDd
+   * Case 3 - Default dynamic index name for all other datasets
+   * </pre>
+   */
+  public static String computeIndexName(
+      DatasetType datasetType,
+      IndexConfig indexConfig,
+      String datasetId,
+      Integer attempt,
+      long recordsNumber,
+      String defaultSharedIndexName) {
+
+    // Independent index for datasets where number of records more than config.indexIndepRecord
+    String idxName;
+    String indexVersion;
+    switch (datasetType) {
+      case OCCURRENCE -> indexVersion = indexConfig.occurrenceVersion;
+      case SAMPLING_EVENT -> indexVersion = indexConfig.eventVersion;
+      default -> throw new IllegalStateException("Unexpected value: " + datasetType);
+    }
+
+    if (recordsNumber >= indexConfig.bigIndexIfRecordsMoreThan) {
+      idxName = datasetId + "_" + attempt + "_" + indexVersion;
+      idxName = idxName + "_" + Instant.now().toEpochMilli();
+      log.info("ES Index name - {}, recordsNumber - {}", idxName, recordsNumber);
+      return idxName;
+    }
+
+    // Default index name for all other datasets
+    return defaultSharedIndexName;
+  }
+
+  public static String getDefaultSharedIndexName(
+      IndexConfig indexConfig, String indexVersion, HttpClient httpClient) throws IOException {
+    String esPr = indexConfig.defaultPrefixName + "_" + indexVersion;
+    String idxName =
+        getIndexName(indexConfig, httpClient, esPr)
+            .orElse(esPr + "_" + Instant.now().toEpochMilli());
+    log.info("ES Index name - {}", idxName);
+    return idxName;
+  }
+
+  /**
    * Computes number of index shards:
    *
    * <pre>
@@ -119,7 +167,8 @@ public class IndexSettings {
    * 2) in case of independent index -> recordsNumber / config.indexRecordsPerShard
    * </pre>
    */
-  private int computeNumberOfShards(IndexConfig indexConfig, String indexName, long recordsNumber) {
+  public static int computeNumberOfShards(
+      IndexConfig indexConfig, String indexName, long recordsNumber) {
     if (indexName.startsWith(indexConfig.defaultPrefixName)) {
       int s =
           (int) Math.ceil((double) indexConfig.defaultSize / (double) indexConfig.recordsPerShard);
@@ -134,7 +183,7 @@ public class IndexSettings {
     return isCeil ? (int) Math.ceil(shards) : (int) Math.floor(shards);
   }
 
-  private Optional<String> getIndexName(
+  public static Optional<String> getIndexName(
       IndexConfig indexConfig, HttpClient httpClient, String prefix) throws IOException {
     String url = String.format(indexConfig.defaultSmallestIndexCatUrl, prefix);
     HttpUriRequest httpGet = new HttpGet(url);
