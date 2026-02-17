@@ -19,7 +19,7 @@ import org.locationtech.jts.geom.PrecisionModel;
 @UtilityClass
 public class ConvexHullParser {
 
-  public static double PRECISION = 1_000_000;
+  public static final double PRECISION = 1_000_000;
 
   /** Concatenates two arrays. */
   private static <T> T[] concat(T[] array1, T[] array2) {
