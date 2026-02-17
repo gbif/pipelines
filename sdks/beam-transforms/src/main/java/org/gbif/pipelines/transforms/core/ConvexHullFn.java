@@ -101,7 +101,20 @@ public class ConvexHullFn extends Combine.CombineFn<LocationRecord, ConvexHullFn
     }
 
     private boolean crossesDateline(Geometry geometry) {
-      return geometry.getEnvelopeInternal().getWidth() > 180.0;
+      // Check if the geometry has coordinates on both sides of the dateline
+      // by looking for coordinates near +180 and near -180
+      Envelope env = geometry.getEnvelopeInternal();
+      double minX = env.getMinX();
+      double maxX = env.getMaxX();
+      
+      // A geometry crosses the dateline if:
+      // 1. It has a large envelope width (> 180), AND
+      // 2. It has coordinates near both +180 and -180 (indicating wrap-around)
+      // We check if minX is negative and near -180, and maxX is positive and near +180
+      boolean hasNegativeSide = minX < 0 && minX <= -170;
+      boolean hasPositiveSide = maxX > 0 && maxX >= 170;
+      
+      return env.getWidth() > 180.0 && hasNegativeSide && hasPositiveSide;
     }
 
     private String splitPolygon(Envelope env) {
