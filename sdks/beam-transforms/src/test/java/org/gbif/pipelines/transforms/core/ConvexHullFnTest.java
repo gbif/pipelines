@@ -89,7 +89,7 @@ public class ConvexHullFnTest {
   }
 
   @Test
-  public void meridianTest() {
+  public void crossesDatelineTest() {
     double[][] coords = {
       {51.512, 176.057}, {60.486, 179.428}, {54.28, 168.744}, {58.364, 169.723},
       {51.39, 171.271}, {51.515, 176.109}, {52.263, 172.974}, {52.286, 172.274},
