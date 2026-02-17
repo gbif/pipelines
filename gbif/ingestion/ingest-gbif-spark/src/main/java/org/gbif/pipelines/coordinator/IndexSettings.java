@@ -36,8 +36,7 @@ public class IndexSettings {
       Integer attempt,
       long recordsNumber)
       throws IOException {
-    this.indexName =
-        computeIndexName(datasetType, indexConfig, httpClient, datasetId, attempt, recordsNumber);
+    this.indexName = computeIndexName(datasetType, indexConfig, httpClient, datasetId, attempt, recordsNumber);
     this.numberOfShards = computeNumberOfShards(indexConfig, indexName, recordsNumber);
     switch (datasetType) {
       case OCCURRENCE -> this.indexAlias = indexConfig.getOccurrenceAlias();
@@ -46,7 +45,7 @@ public class IndexSettings {
     }
   }
 
-  private IndexSettings(String indexName, Integer numberOfShards, String indexAlias) {
+  private IndexSettings(String indexName, Integer numberOfShards) {
     this.numberOfShards = numberOfShards;
     this.indexName = indexName;
     this.indexAlias = null;
@@ -65,8 +64,8 @@ public class IndexSettings {
         datasetType, indexConfig, httpClient, datasetId, attempt, recordsNumber);
   }
 
-  public static IndexSettings create(String indexName, Integer numberOfShards, String indexAlias) {
-    return new IndexSettings(indexName, numberOfShards, indexAlias);
+  public static IndexSettings create(String indexName, Integer numberOfShards) {
+    return new IndexSettings(indexName, numberOfShards);
   }
 
   /**
