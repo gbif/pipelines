@@ -162,12 +162,10 @@ public class OccurrenceHdfsRecordTransformTest {
             .multiTaxonRecordTag(multiTaxonomyTransform.getTag())
             .grscicollRecordTag(grscicollTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
-            .eventCoreRecordTag(eventCoreTransform.getTag())
             .multimediaRecordTag(multimediaTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
             .dnaRecordTag(dnaDerivedDataTransform.getTag())
-            .humboldtRecordTag(humboldtTransform.getTag())
             .metadataView(metadataView)
             .build();
 
@@ -269,9 +267,6 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setDnasequenceid(Collections.singletonList("foo1"));
     expected.setClassifications(new HashMap<>());
     expected.setNontaxonomicissue(List.of());
-    expected.setProjecttitle(List.of());
-    expected.setFundingattribution(List.of());
-    expected.setFundingattributionid(List.of());
     PAssert.that(result).containsInAnyOrder(expected);
     p.run();
   }

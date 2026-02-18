@@ -227,7 +227,6 @@ public class OccurrenceHdfsRecordConverterTest {
             .temporalRecord(temporalRecord)
             .dnaDerivedDataRecord(dnaDerivedDataRecord)
             .extendedRecord(extendedRecord)
-            .humboldtRecord(humboldtRecord)
             .build()
             .convert();
 
@@ -350,16 +349,6 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(2, hdfsRecord.getDnasequenceid().size());
     Assert.assertTrue(hdfsRecord.getDnasequenceid().contains("foo1"));
     Assert.assertTrue(hdfsRecord.getDnasequenceid().contains("foo2"));
-
-    // Humboldt
-    Assert.assertTrue(
-        hdfsRecord
-            .getExtHumboldt()
-            .contains(
-                "\"targetLifeStageScope\" : {\n"
-                    + "    \"concepts\" : [ \"c1\", \"c11\" ],\n"
-                    + "    \"lineage\" : [ \"c0\", \"c1\", \"c00\", \"c11\" ]\n"
-                    + "  }"));
   }
 
   @Test

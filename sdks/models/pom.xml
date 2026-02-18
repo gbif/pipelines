@@ -22,7 +22,8 @@
     <schema-generated-table-path>${schema-generated-path}/table/</schema-generated-table-path>
 
     <occurrence-avsc-schema-name>occurrence-hdfs-record.avsc</occurrence-avsc-schema-name>
-    <schema-generated-occurrence-path>${schema-generated-path}/${occurrence-avsc-schema-name}</schema-generated-occurrence-path>
+    <event-avsc-schema-name>event-hdfs-record.avsc</event-avsc-schema-name>
+    <schema-generated-occurrence-path>${schema-generated-path}</schema-generated-occurrence-path>
 
   </properties>
 
@@ -42,6 +43,8 @@
             </goals>
             <configuration>
               <pathToWrite>${schema-generated-occurrence-path}</pathToWrite>
+              <occurrenceFile>${occurrence-avsc-schema-name}</occurrenceFile>
+              <eventFile>${event-avsc-schema-name}</eventFile>
             </configuration>
           </execution>
         </executions>
@@ -155,6 +158,7 @@
               <directory>${schema-generated-path}</directory>
               <includes>
                 <include>**/${occurrence-avsc-schema-name}</include>
+                <include>**/${event-avsc-schema-name}</include>
               </includes>
             </fileset>
           </filesets>

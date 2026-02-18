@@ -106,18 +106,6 @@ public class OccurrenceHdfsRecordConverter {
                 hdfsRecord.grscicollRecord(
                     gm.getOrDefault(k, GrscicollRecord.newBuilder().setId(k).build())));
 
-    Optional.ofNullable(eventCoreRecordMap)
-        .ifPresent(
-            em ->
-                hdfsRecord.eventCoreRecord(
-                    em.getOrDefault(k, EventCoreRecord.newBuilder().setId(k).build())));
-
-    Optional.ofNullable(humboldtMap)
-        .ifPresent(
-            hm ->
-                hdfsRecord.humboldtRecord(
-                    hm.getOrDefault(k, HumboldtRecord.newBuilder().setId(k).build())));
-
     return hdfsRecord.build().convert();
   }
 }

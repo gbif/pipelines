@@ -30,8 +30,7 @@ public class SparkDynamicSettingsTest {
     sparkConfiguration.powerFnCoefficient = 0.00094;
     sparkConfiguration.powerFnExponent = 0.926;
 
-    System.out.println(
-    SparkDynamicSettings.computePowerFn(sparkConfiguration, 33_000_000L, 3));
+    System.out.println(SparkDynamicSettings.computePowerFn(sparkConfiguration, 33_000_000L, 3));
 
     // State
     long fileRecordsNumber = 100;
