@@ -337,7 +337,6 @@ public class EventToEsIndexPipelineIT {
               .build();
       writer.append(extendedRecord1);
 
-      // Occurrence vinculada al primer sub-evento (SUB_EVENT_ID)
       ExtendedRecord extendedRecord2 =
           ExtendedRecord.newBuilder()
               .setId(OCC_ID_2)
@@ -352,7 +351,6 @@ public class EventToEsIndexPipelineIT {
               .build();
       writer.append(extendedRecord2);
 
-      // Occurrence vinculada al segundo sub-evento (SUB_EVENT_ID_2)
       ExtendedRecord extendedRecord3 =
           ExtendedRecord.newBuilder()
               .setId(OCC_ID_3)
@@ -463,7 +461,6 @@ public class EventToEsIndexPipelineIT {
     try (SyncDataFileWriter<MultiTaxonRecord> writer =
         InterpretedAvroWriter.createAvroWriter(
             optionsWriter, MultiTaxonomyTransform.builder().create(), OCCURRENCE_TERM, postfix)) {
-      // Occurrence 1 - vinculada al evento raíz con 3 clasificaciones
       MultiTaxonRecord multiTaxonRecord1 =
           MultiTaxonRecord.newBuilder()
               .setId(OCC_ID_1)

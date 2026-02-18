@@ -254,7 +254,6 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setRecordedbyid(Collections.emptyList());
     expected.setPreparations(Collections.emptyList());
     expected.setOthercatalognumbers(Collections.emptyList());
-    expected.setParenteventgbifid(Collections.emptyList());
     expected.setTypestatus(null);
     expected.setSamplingprotocol(Collections.emptyList());
     expected.setHighergeography(Collections.emptyList());
