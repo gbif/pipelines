@@ -112,43 +112,6 @@ public class IndexSettings {
     return idxName;
   }
 
-  /**
-   * Computes the name for ES index:
-   *
-   * <pre>
-   * Case 1 - Independent index for datasets where number of records more than config.indexIndepRecord
-   * Case 2 - Default static index name for datasets where last changed date more than config.indexDefStaticDateDurationDd
-   * Case 3 - Default dynamic index name for all other datasets
-   * </pre>
-   */
-  public static String computeIndexName(
-      DatasetType datasetType,
-      IndexConfig indexConfig,
-      String datasetId,
-      Integer attempt,
-      long recordsNumber,
-      String defaultSharedIndexName) {
-
-    // Independent index for datasets where number of records more than config.indexIndepRecord
-    String idxName;
-    String indexVersion;
-    switch (datasetType) {
-      case OCCURRENCE -> indexVersion = indexConfig.occurrenceVersion;
-      case SAMPLING_EVENT -> indexVersion = indexConfig.eventVersion;
-      default -> throw new IllegalStateException("Unexpected value: " + datasetType);
-    }
-
-    if (recordsNumber >= indexConfig.bigIndexIfRecordsMoreThan) {
-      idxName = datasetId + "_" + attempt + "_" + indexVersion;
-      idxName = idxName + "_" + Instant.now().toEpochMilli();
-      log.info("ES Index name - {}, recordsNumber - {}", idxName, recordsNumber);
-      return idxName;
-    }
-
-    // Default index name for all other datasets
-    return defaultSharedIndexName;
-  }
-
   public static String getDefaultSharedIndexName(
       IndexConfig indexConfig, String indexVersion, HttpClient httpClient) throws IOException {
     String esPr = indexConfig.defaultPrefixName + "_" + indexVersion;

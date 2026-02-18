@@ -107,16 +107,10 @@ public class FullIndexBuild {
                   .getParent(); // go up from hdfs/_SUCCESS to interpretation dir
 
           String attempt = successAttemptDir.getName(); // this should be the attempt number
-          System.out.println(
-              "Created symlink for dataset " + datasetId + " to " + successAttemptDir.toString());
 
           // add if the _SUCCESS file is less than 4 weeks old to the list of paths to read from
-          hdfsPaths.add(successAttemptDir.toString() + "/json/");
+          hdfsPaths.add(successAttemptDir + "/json/");
           datasetAttemptMap.put(datasetId, Integer.parseInt(attempt));
-          log.debug("Adding HDFS path for dataset {}: {}", datasetId, successAttemptDir.toString());
-
-        } else {
-          // System.out.println("No successful interpretation found for dataset " + datasetId);
         }
       }
     }
@@ -131,6 +125,8 @@ public class FullIndexBuild {
     // load all hdfs view parquet
     Dataset<Row> hdfs = spark.read().parquet(hdfsPaths.toArray(new String[0])).coalesce(1200);
     Dataset<Row> datasetCountsDF = hdfs.groupBy(col("datasetkey")).count().orderBy(desc("count"));
+
+    datasetCountsDF.show(1000, false);
 
     final Map<String, Long> datasetCounts = new HashMap<>();
 
@@ -147,11 +143,23 @@ public class FullIndexBuild {
             .build();
 
     final Map<String, String> datasetToIndexNameMap = new HashMap<>();
+
+    boolean defaultIndexCreated = false;
+    String defaultIndexName = null;
+
     // create the empty indexes with the schema
     for (Map.Entry<String, Long> entry : datasetCounts.entrySet()) {
 
       String datasetKey = entry.getKey();
       Long recordCount = entry.getValue();
+
+      // avoid trying to create a new index if the record count is low
+      // and we already created a default index for another dataset with low record count
+      if (recordCount < config.getIndexConfig().getBigIndexIfRecordsMoreThan()
+          && defaultIndexCreated) {
+        datasetToIndexNameMap.put(datasetKey, defaultIndexName);
+        continue;
+      }
 
       String esIndexName =
           IndexSettings.computeIndexName(
@@ -178,15 +186,26 @@ public class FullIndexBuild {
 
       // Create ES index and alias if not exists
       EsIndexUtils.createIndexAndAliasForDefault(options);
-
       datasetToIndexNameMap.put(datasetKey, esIndexName);
+
+      if (recordCount < config.getIndexConfig().getBigIndexIfRecordsMoreThan()) {
+        defaultIndexCreated = true;
+        defaultIndexName =
+            IndexSettings.getDefaultSharedIndexName(
+                config.getIndexConfig(),
+                config.getIndexConfig().getOccurrenceVersion(),
+                httpClient);
+      }
     }
 
     spark
         .udf()
         .register(
             "computeIndexNameUDF",
-            (String datasetKey) -> datasetToIndexNameMap.get(datasetKey),
+            (String datasetKey) -> {
+              String index = datasetToIndexNameMap.get(datasetKey);
+              return index != null ? index : "BROKEN";
+            },
             DataTypes.StringType);
 
     Dataset<Row> indexingDF =
@@ -211,10 +230,10 @@ public class FullIndexBuild {
           .values()
           .forEach(
               indexName -> {
-                System.out.println("Refreshing index " + indexName);
+                log.info("Refreshing index " + indexName);
                 EsService.refreshIndex(esClient, indexName);
               });
     }
-    System.out.println("Full index build completed");
+    log.info("Full index build completed");
   }
 }
