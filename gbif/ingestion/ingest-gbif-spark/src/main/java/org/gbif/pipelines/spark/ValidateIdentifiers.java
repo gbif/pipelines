@@ -21,6 +21,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.MapFunction;
@@ -169,7 +170,7 @@ public class ValidateIdentifiers {
     try {
 
       long start = System.currentTimeMillis();
-      MDC.put("datasetKey", datasetID);
+      ThreadContext.put("datasetKey", datasetID);
       log.info(
           "Starting validation with tripleValid: {}, occurrenceIdValid: {}, useExtendedRecordId: {}",
           tripletValid,

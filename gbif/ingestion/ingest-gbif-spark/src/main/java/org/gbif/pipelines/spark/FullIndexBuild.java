@@ -193,19 +193,16 @@ public class FullIndexBuild {
         .withColumn(
             "index_name",
             when(
-                col("count").gt(config.getIndexConfig().getBigIndexIfRecordsMoreThan()),
-                concat(
-                    col("datasetkey"),
-                    lit("_"),
-                    col("attempt"),
-                    lit("_"),
-                    lit(config.getIndexConfig().getOccurrenceVersion()),
-                    lit("_"),
-                    lit(timestamp)
-                )
-            )
-            .otherwise(lit(defaultIndexName))
-        )
+                    col("count").gt(config.getIndexConfig().getBigIndexIfRecordsMoreThan()),
+                    concat(
+                        col("datasetkey"),
+                        lit("_"),
+                        col("attempt"),
+                        lit("_"),
+                        lit(config.getIndexConfig().getOccurrenceVersion()),
+                        lit("_"),
+                        lit(timestamp)))
+                .otherwise(lit(defaultIndexName)))
         .write()
         .mode(SaveMode.Overwrite)
         .parquet("hdfs://gbif-hdfs/data/index_rebuild_lab");

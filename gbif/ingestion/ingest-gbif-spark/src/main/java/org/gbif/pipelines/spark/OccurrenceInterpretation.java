@@ -243,7 +243,6 @@ public class OccurrenceInterpretation {
     long start = System.currentTimeMillis();
 
     try {
-      MDC.put("datasetKey", datasetId);
       ThreadContext.put("datasetKey", datasetId);
       log.info(
           "Starting interpretation with tripleValid: {}, occurrenceIdValid: {}",
@@ -313,7 +312,7 @@ public class OccurrenceInterpretation {
               PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT, identifiersCount),
           outputPath + "/" + METRICS_FILENAME);
 
-      MDC.put("datasetKey", datasetId);
+      ThreadContext.put("datasetKey", datasetId);
       log.info(timeAndRecPerSecond("interpretation", start, identifiersCount));
     } finally {
       MDC.remove("datasetKey");

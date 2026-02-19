@@ -90,12 +90,19 @@ public class RebuildLastSuccessful {
             fileSystem.delete(symlinkPath, false);
           }
 
-          // create symlink
-          //          fileSystem.createSymlink(successAttemptDir, symlinkPath, true);
-          System.out.println(
-              "Created symlink for dataset " + datasetId + " to " + successAttemptDir.toString());
+          // add if the _SUCCESS file is less than 4 weeks old to the list of paths to read from
+          if (fileSystem.getFileStatus(successAttemptDir).getModificationTime()
+              > System.currentTimeMillis() - 3L * 7 * 24 * 60 * 60 * 1000) {
+            //            System.out.println(
+            //                String.format(
+            //                    "Adding HDFS path for dataset %s",
+            //                    datasetId,
+            //                    successAttemptDir.toString()));
+          } else {
+            System.out.printf("Older than 3 weeks %s%n", datasetId);
+          }
         } else {
-          // System.out.println("No successful interpretation found for dataset " + datasetId);
+          System.out.println("No successful interpretation found for dataset " + datasetId);
         }
       }
     }

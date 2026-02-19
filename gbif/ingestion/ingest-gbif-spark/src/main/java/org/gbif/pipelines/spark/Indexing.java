@@ -18,6 +18,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
@@ -170,7 +171,7 @@ public class Indexing {
 
     try {
       long start = System.currentTimeMillis();
-      MDC.put("datasetKey", datasetId);
+      ThreadContext.put("datasetKey", datasetId);
       log.info(
           "Starting index with esIndexName: {}, indexNumberShards: {}",
           esIndexName,

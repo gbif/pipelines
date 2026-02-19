@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.logging.log4j.ThreadContext;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.pipelines.airflow.AirflowConfFactory;
@@ -42,7 +43,7 @@ public class DistributedUtil {
       List<String> extraArgs)
       throws Exception {
 
-    MDC.put("datasetKey", message.getDatasetUuid().toString());
+    ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
     long start = System.currentTimeMillis();
     Long recordsNumber = getRecordsNumber(pipelinesConfig, message, fileSystem);
     log.info("Starting distributed {}, records count {}", jobName, recordsNumber);
@@ -71,7 +72,7 @@ public class DistributedUtil {
         .build()
         .submitAwaitVoid();
 
-    MDC.put("datasetKey", message.getDatasetUuid().toString());
+    ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
     log.info(timeAndRecPerSecond(jobName, start, recordsNumber));
     MDC.remove("datasetKey");
   }

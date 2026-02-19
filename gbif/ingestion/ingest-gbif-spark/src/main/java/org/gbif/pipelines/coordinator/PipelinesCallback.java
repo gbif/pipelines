@@ -34,6 +34,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.SparkSession;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.gbif.api.model.pipelines.*;
@@ -46,7 +47,6 @@ import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.slf4j.MDC;
 
 @Slf4j
 public abstract class PipelinesCallback<
@@ -213,7 +213,7 @@ public abstract class PipelinesCallback<
     LAST_CONSUMED_MESSAGE_FROM_QUEUE_MS.set(System.currentTimeMillis());
     MESSAGES_READ_FROM_QUEUE.inc();
 
-    MDC.put(
+    ThreadContext.put(
         "datasetKey",
         message.getDatasetUuid() != null ? message.getDatasetUuid().toString() : "NO_DATASET");
     log.debug("Received message: {}", message);
@@ -228,11 +228,11 @@ public abstract class PipelinesCallback<
     }
 
     TrackingInfo trackingInfo = null;
+    ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
+    ThreadContext.put("attempt", message.getAttempt().toString());
+    ThreadContext.put("step", getStepType().name());
 
-    try (MDC.MDCCloseable mdc =
-            MDC.putCloseable("datasetKey", message.getDatasetUuid().toString());
-        MDC.MDCCloseable mdc1 = MDC.putCloseable("attempt", message.getAttempt().toString());
-        MDC.MDCCloseable mdc2 = MDC.putCloseable("step", getStepType().name())) {
+    try {
       log.info("Processing attempt {}", message.getAttempt());
 
       trackingInfo = trackPipelineStep(message);
@@ -274,7 +274,7 @@ public abstract class PipelinesCallback<
         LAST_DATASETS_ERROR.set(System.currentTimeMillis());
 
         // FIXMETrackingInfo trackingInfo = trackPipelineStep(message);
-        MDC.put("datasetKey", message.getDatasetUuid().toString());
+        ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
         String error =
             "Error for datasetKey - " + message.getDatasetUuid() + " : " + ex.getMessage();
         log.error(error, ex);
@@ -285,7 +285,7 @@ public abstract class PipelinesCallback<
         }
 
       } catch (Exception e) {
-        MDC.put("datasetKey", message.getDatasetUuid().toString());
+        ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
         log.error(
             "Failed to update tracking status for datasetKey - " + message.getDatasetUuid(), e);
       }
@@ -301,7 +301,7 @@ public abstract class PipelinesCallback<
       CONCURRENT_DATASETS.dec();
 
       if (message.getExecutionId() != null) {
-        MDC.put("datasetKey", message.getDatasetUuid().toString());
+        ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
         log.debug("Mark execution as FINISHED if all steps are FINISHED");
         Runnable r =
             () -> {

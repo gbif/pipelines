@@ -17,6 +17,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.types.DataTypes;
@@ -150,7 +151,7 @@ public class TableBuild {
       spark.udf().register("base64_decode", new Base64DecodeUDF(), DataTypes.StringType);
 
       long start = System.currentTimeMillis();
-      MDC.put("datasetKey", datasetId);
+      ThreadContext.put("datasetKey", datasetId);
       log.info("Starting table build");
 
       String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);

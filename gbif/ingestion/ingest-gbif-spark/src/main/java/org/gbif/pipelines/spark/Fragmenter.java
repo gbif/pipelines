@@ -29,6 +29,7 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.SnappyCodec;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
@@ -152,7 +153,7 @@ public class Fragmenter {
       boolean useOccurrenceId)
       throws Exception {
 
-    MDC.put("datasetKey", datasetId);
+    ThreadContext.put("datasetKey", datasetId);
     long start = System.currentTimeMillis();
     log.info("Starting to run fragmenter for dataset {}, attempt {}", datasetId, attempt);
 

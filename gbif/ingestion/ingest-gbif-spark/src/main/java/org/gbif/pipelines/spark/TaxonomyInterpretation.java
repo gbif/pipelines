@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
@@ -36,7 +37,6 @@ import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transform.MultiTaxonomyTransform;
-import org.slf4j.MDC;
 
 /** Main class for the Spark pipeline that just reruns taxonomy interpretation. */
 @Slf4j
@@ -121,7 +121,7 @@ public class TaxonomyInterpretation {
 
     long start = System.currentTimeMillis();
 
-    MDC.put("datasetKey", datasetId);
+    ThreadContext.put("datasetKey", datasetId);
 
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
 
