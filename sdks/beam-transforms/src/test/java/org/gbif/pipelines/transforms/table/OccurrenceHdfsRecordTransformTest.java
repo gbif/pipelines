@@ -244,6 +244,7 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setDatasetname(Collections.singletonList("setDatasetName"));
     expected.setDwcaextension(
         Collections.singletonList("http://rs.tdwg.org/dwc/terms/MeasurementOrFact"));
+    expected.setMeasurementtype(List.of("Type1"));
     expected.setIsincluster(true);
     expected.setIdentifiedby(Collections.emptyList());
     expected.setIdentifiedbyid(Collections.emptyList());
