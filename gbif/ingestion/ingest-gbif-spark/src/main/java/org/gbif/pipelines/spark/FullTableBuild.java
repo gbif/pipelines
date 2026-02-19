@@ -46,6 +46,9 @@ public class FullTableBuild {
         required = false)
     private String master;
 
+    @Parameter(names = "--numberOfShards", description = "Number of shards")
+    private int numberOfShards = 2400;
+
     @Parameter(
         names = {"--help", "-h"},
         help = true,
@@ -139,7 +142,8 @@ public class FullTableBuild {
     String coreDwcTerm = "occurrence";
 
     // load hdfs view
-    Dataset<Row> hdfs = spark.read().parquet(hdfsPaths.toArray(new String[0])).coalesce(1200);
+    Dataset<Row> hdfs =
+        spark.read().parquet(hdfsPaths.toArray(new String[0])).repartition(args.numberOfShards);
 
     String tempLoadingTable =
         String.format("%s_%s_%d", "occurrence", "rebuild", System.currentTimeMillis());

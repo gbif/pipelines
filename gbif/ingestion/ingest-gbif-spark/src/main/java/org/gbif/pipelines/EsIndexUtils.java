@@ -49,6 +49,17 @@ public class EsIndexUtils {
   }
 
   /** Add alias to index if the index is default/regular (it will contain many datasets) */
+  public static void addIndexAlias(
+      EsClient esClient, Indexing.ElasticOptions options, String indexName) {
+    Objects.requireNonNull(indexName, "index are required");
+    swapIndexes(
+        esClient,
+        Arrays.stream(options.getEsAlias()).collect(Collectors.toSet()),
+        Collections.singleton(indexName),
+        Collections.emptySet());
+  }
+
+  /** Add alias to index if the index is default/regular (it will contain many datasets) */
   private static void addIndexAliasForDefault(EsClient esClient, Indexing.ElasticOptions options) {
     String index = options.getEsIndexName();
     Objects.requireNonNull(index, "index are required");

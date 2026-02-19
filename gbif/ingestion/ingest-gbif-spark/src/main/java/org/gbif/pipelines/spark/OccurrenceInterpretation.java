@@ -29,6 +29,7 @@ import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
@@ -243,6 +244,7 @@ public class OccurrenceInterpretation {
 
     try {
       MDC.put("datasetKey", datasetId);
+      ThreadContext.put("datasetKey", datasetId);
       log.info(
           "Starting interpretation with tripleValid: {}, occurrenceIdValid: {}",
           tripletValid,

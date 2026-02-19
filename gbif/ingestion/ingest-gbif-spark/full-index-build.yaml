@@ -63,8 +63,8 @@ spec:
     "spark.kubernetes.scheduler.name": "yunikorn"
     "spark.kubernetes.executor.label.queue": "root.lab.pipelines"
     "spark.kubernetes.submit.label.queue": "root.lab.pipelines"
-    "spark.executor.instances": "25"
-    "spark.executor.cores": "10"
+    "spark.executor.instances": "30"
+    "spark.executor.cores": "8"
     "spark.executor.memoryOverheadFactor": "0.15"
     "spark.driver.cores": "4"
     "spark.driver.memoryOverheadFactor": "0.10"
@@ -188,6 +188,18 @@ spec:
         labels:
           queue: "root.lab.pipelines"
       spec:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/hostname
+                      operator: NotIn
+                      values:
+                        - c6p4
+                        - c6p5
+                        - c7p9
+                        - c7p10
         initContainers:
           - name: job
             imagePullPolicy: Always

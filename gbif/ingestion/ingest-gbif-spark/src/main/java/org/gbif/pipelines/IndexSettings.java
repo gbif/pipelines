@@ -37,7 +37,14 @@ public class IndexSettings {
       long recordsNumber)
       throws IOException {
     this.indexName =
-        computeIndexName(datasetType, indexConfig, httpClient, datasetId, attempt, recordsNumber);
+        computeIndexName(
+            datasetType,
+            indexConfig,
+            httpClient,
+            datasetId,
+            attempt,
+            recordsNumber,
+            Instant.now().toEpochMilli());
     this.numberOfShards = computeNumberOfShards(indexConfig, indexName, recordsNumber);
     switch (datasetType) {
       case OCCURRENCE -> this.indexAlias = indexConfig.getOccurrenceAlias();
@@ -84,7 +91,8 @@ public class IndexSettings {
       HttpClient httpClient,
       String datasetId,
       Integer attempt,
-      long recordsNumber)
+      long recordsNumber,
+      long timestamp)
       throws IOException {
 
     // Independent index for datasets where number of records more than config.indexIndepRecord
@@ -97,8 +105,7 @@ public class IndexSettings {
     }
 
     if (recordsNumber >= indexConfig.bigIndexIfRecordsMoreThan) {
-      idxName = datasetId + "_" + attempt + "_" + indexVersion;
-      idxName = idxName + "_" + Instant.now().toEpochMilli();
+      idxName = datasetId + "_" + attempt + "_" + indexVersion + "_" + timestamp;
       log.info("ES Index name - {}, recordsNumber - {}", idxName, recordsNumber);
       return idxName;
     }
@@ -107,7 +114,7 @@ public class IndexSettings {
     String esPr = indexConfig.defaultPrefixName + "_" + indexVersion;
     idxName =
         getIndexName(indexConfig, httpClient, esPr)
-            .orElse(esPr + "_" + Instant.now().toEpochMilli());
+            .orElse(esPr + "_" + timestamp); // Instant.now().toEpochMilli());
     log.info("ES Index name - {}", idxName);
     return idxName;
   }
