@@ -201,7 +201,7 @@ public class TableBuild {
       }
 
       if (spark.catalog().tableExists(coreDwcTerm)) {
-        log.info("Table {} exists", coreDwcTerm);
+        log.debug("Table {} exists", coreDwcTerm);
       } else {
         log.info("Table {} does not exist and will be created", coreDwcTerm);
 
