@@ -64,53 +64,54 @@ public class SamplesToAvro {
       LocatedFileStatus fileStatus = iter.next();
 
       if (fileStatus.getPath().getName().endsWith(".csv")) {
-          log.info("Reading {} and converting to avro", fileStatus.getPath().getName());
-          try (CSVReader csvReader = new CSVReader(new InputStreamReader(fs.open(fileStatus.getPath())))) {
-              String outputPath = LayerCrawler.getSampleAvroPath(options);
-              DatumWriter<SampleRecord> datumWriter =
-                      new GenericDatumWriter<>(SampleRecord.getClassSchema());
-              try (OutputStream output = fs.create(ALAFsUtils.createPath(outputPath));
-                   DataFileWriter<SampleRecord> dataFileWriter = new DataFileWriter<>(datumWriter)) {
-                  dataFileWriter.setCodec(BASE_CODEC);
-                  dataFileWriter.create(SampleRecord.getClassSchema(), output);
+        log.info("Reading {} and converting to avro", fileStatus.getPath().getName());
+        try (CSVReader csvReader =
+            new CSVReader(new InputStreamReader(fs.open(fileStatus.getPath())))) {
+          String outputPath = LayerCrawler.getSampleAvroPath(options);
+          DatumWriter<SampleRecord> datumWriter =
+              new GenericDatumWriter<>(SampleRecord.getClassSchema());
+          try (OutputStream output = fs.create(ALAFsUtils.createPath(outputPath));
+              DataFileWriter<SampleRecord> dataFileWriter = new DataFileWriter<>(datumWriter)) {
+            dataFileWriter.setCodec(BASE_CODEC);
+            dataFileWriter.create(SampleRecord.getClassSchema(), output);
 
-                  String[] columnHeaders = csvReader.readNext();
-                  String[] line;
-                  while ((line = csvReader.readNext()) != null) {
+            String[] columnHeaders = csvReader.readNext();
+            String[] line;
+            while ((line = csvReader.readNext()) != null) {
 
-                      if (line.length == columnHeaders.length) {
+              if (line.length == columnHeaders.length) {
 
-                          HashMap<String, String> strings = new HashMap<>();
-                          HashMap<String, Double> doubles = new HashMap<>();
+                HashMap<String, String> strings = new HashMap<>();
+                HashMap<String, Double> doubles = new HashMap<>();
 
-                          // first two columns are latitude,longitude
-                          for (int i = 2; i < columnHeaders.length; i++) {
-                              if (StringUtils.trimToNull(line[i]) != null) {
-                                  if (columnHeaders[i].startsWith("el")) {
-                                      try {
-                                          doubles.put(columnHeaders[i], Double.parseDouble(line[i]));
-                                      } catch (NumberFormatException ex) {
-                                          // do something
-                                      }
-                                  } else {
-                                      strings.put(columnHeaders[i], line[i]);
-                                  }
-                              }
-                          }
-
-                          SampleRecord sampleRecord =
-                                  SampleRecord.newBuilder()
-                                          .setLatLng(line[0] + "," + line[1])
-                                          .setDoubles(doubles)
-                                          .setStrings(strings)
-                                          .build();
-                          dataFileWriter.append(sampleRecord);
-                          counter = +1;
+                // first two columns are latitude,longitude
+                for (int i = 2; i < columnHeaders.length; i++) {
+                  if (StringUtils.trimToNull(line[i]) != null) {
+                    if (columnHeaders[i].startsWith("el")) {
+                      try {
+                        doubles.put(columnHeaders[i], Double.parseDouble(line[i]));
+                      } catch (NumberFormatException ex) {
+                        // do something
                       }
+                    } else {
+                      strings.put(columnHeaders[i], line[i]);
+                    }
                   }
+                }
+
+                SampleRecord sampleRecord =
+                    SampleRecord.newBuilder()
+                        .setLatLng(line[0] + "," + line[1])
+                        .setDoubles(doubles)
+                        .setStrings(strings)
+                        .build();
+                dataFileWriter.append(sampleRecord);
+                counter = +1;
               }
-              log.info("File written to {}", outputPath);
+            }
           }
+          log.info("File written to {}", outputPath);
+        }
       }
     }
 
