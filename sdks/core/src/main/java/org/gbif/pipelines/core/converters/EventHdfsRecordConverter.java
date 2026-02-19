@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.utils.ExtensionUtils.convertMoFFromVerbatim;
+
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 import java.time.LocalDate;
@@ -18,6 +20,7 @@ import org.gbif.occurrence.common.TermUtils;
 import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.pojo.HumboldtJsonView;
+import org.gbif.pipelines.core.pojo.MoFData;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
@@ -108,6 +111,7 @@ public class EventHdfsRecordConverter {
     mapProjectIds(eventHdfsRecord);
     mapHumboldtRecord(eventHdfsRecord);
     mapMetadataRecord(eventHdfsRecord);
+    mapMoFFromVerbatim(eventHdfsRecord);
 
     return eventHdfsRecord;
   }
@@ -387,6 +391,16 @@ public class EventHdfsRecordConverter {
             .map(Entry::getKey)
             .collect(Collectors.toList());
     eventHdfsRecord.setDwcaextension(extensions);
+  }
+
+  private void mapMoFFromVerbatim(EventHdfsRecord eventHdfsRecord) {
+    MoFData moFData = convertMoFFromVerbatim(extendedRecord);
+    if (!moFData.getMeasurementTypes().isEmpty()) {
+      eventHdfsRecord.setMeasurementtype(new ArrayList<>(moFData.getMeasurementTypes()));
+    }
+    if (!moFData.getMeasurementTypeIDs().isEmpty()) {
+      eventHdfsRecord.setMeasurementtypeid(new ArrayList<>(moFData.getMeasurementTypeIDs()));
+    }
   }
 
   /** Copies the {@link EventCoreRecord} data into the {@link EventHdfsRecord}. */

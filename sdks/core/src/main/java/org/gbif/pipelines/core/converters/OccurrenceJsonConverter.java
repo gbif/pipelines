@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.converters;
 
-import static org.gbif.pipelines.core.converters.JsonConverter.convertMoFFromVerbatim;
+import static org.gbif.pipelines.core.utils.ExtensionUtils.convertMoFFromVerbatim;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 

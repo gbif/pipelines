@@ -9,6 +9,6 @@ import lombok.Data;
 @Builder
 public class MoFData {
 
-  Set<String> measurementTypes = new HashSet<>();
-  Set<String> measurementTypeIDs = new HashSet<>();
+  @Builder.Default Set<String> measurementTypes = new HashSet<>();
+  @Builder.Default Set<String> measurementTypeIDs = new HashSet<>();
 }

@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.utils.ExtensionUtils.convertMoFFromVerbatim;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -20,6 +21,7 @@ import org.gbif.dwc.terms.*;
 import org.gbif.occurrence.common.TermUtils;
 import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
+import org.gbif.pipelines.core.pojo.MoFData;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.*;
@@ -103,6 +105,7 @@ public class OccurrenceHdfsRecordConverter {
     mapExtendedRecord(occurrenceHdfsRecord);
     mapProjectIds(occurrenceHdfsRecord);
     mapDnaDerivedDataRecord(occurrenceHdfsRecord);
+    mapMoFFromVerbatim(occurrenceHdfsRecord);
 
     return occurrenceHdfsRecord;
   }
@@ -891,6 +894,16 @@ public class OccurrenceHdfsRecordConverter {
             .map(Entry::getKey)
             .collect(Collectors.toList());
     occurrenceHdfsRecord.setDwcaextension(extensions);
+  }
+
+  private void mapMoFFromVerbatim(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    MoFData moFData = convertMoFFromVerbatim(extendedRecord);
+    if (!moFData.getMeasurementTypes().isEmpty()) {
+      occurrenceHdfsRecord.setMeasurementtype(new ArrayList<>(moFData.getMeasurementTypes()));
+    }
+    if (!moFData.getMeasurementTypeIDs().isEmpty()) {
+      occurrenceHdfsRecord.setMeasurementtypeid(new ArrayList<>(moFData.getMeasurementTypeIDs()));
+    }
   }
 
   private void mapTerm(String k, String v, OccurrenceHdfsRecord occurrenceHdfsRecord) {

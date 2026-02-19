@@ -14,12 +14,14 @@ import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MediaType;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.dwc.terms.ObisTerm;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.event.EventHdfsRecord;
@@ -66,6 +68,16 @@ public class EventHdfsRecordConverterTest {
     extensions.put(
         "http://data.ggbn.org/schemas/ggbn/terms/Amplification",
         Collections.singletonList(Collections.singletonMap("key", "value")));
+    extensions.put(
+        Extension.MEASUREMENT_OR_FACT.getRowType(),
+        Arrays.asList(
+            Map.of(DwcTerm.measurementType.qualifiedName(), "mt1"),
+            Map.of(DwcTerm.measurementType.qualifiedName(), "mt2")));
+    extensions.put(
+        Extension.EXTENDED_MEASUREMENT_OR_FACT.getRowType(),
+        Arrays.asList(
+            Map.of(DwcTerm.measurementType.qualifiedName(), "mt3"),
+            Map.of(ObisTerm.measurementTypeID.qualifiedName(), "mtid1")));
 
     ExtendedRecord extendedRecord =
         ExtendedRecord.newBuilder()
@@ -203,13 +215,17 @@ public class EventHdfsRecordConverterTest {
     Assert.assertEquals("v_previousIdentifications", hdfsRecord.getVPreviousidentifications());
 
     // extensions
-    Assert.assertEquals(2, hdfsRecord.getDwcaextension().size());
+    Assert.assertEquals(4, hdfsRecord.getDwcaextension().size());
     Assert.assertTrue(
         hdfsRecord.getDwcaextension().contains("http://rs.tdwg.org/ac/terms/Multimedia"));
     Assert.assertTrue(
         hdfsRecord
             .getDwcaextension()
             .contains("http://data.ggbn.org/schemas/ggbn/terms/Amplification"));
+
+    // MoF
+    Assert.assertEquals(3, hdfsRecord.getMeasurementtype().size());
+    Assert.assertEquals(1, hdfsRecord.getMeasurementtypeid().size());
 
     // Humboldt
     Assert.assertTrue(
