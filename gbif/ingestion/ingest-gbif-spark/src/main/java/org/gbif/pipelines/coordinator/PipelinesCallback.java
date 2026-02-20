@@ -231,11 +231,6 @@ public abstract class PipelinesCallback<
     ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
     ThreadContext.put("attempt", message.getAttempt().toString());
     ThreadContext.put("step", getStepType().name());
-    ThreadContext.put(
-        "executionId",
-        Optional.ofNullable(message.getExecutionId())
-            .map(String::valueOf)
-            .orElse("NO_EXECUTION_ID"));
 
     try {
       log.info("Processing attempt {}", message.getAttempt());
@@ -253,28 +248,19 @@ public abstract class PipelinesCallback<
       updateTrackingStatus(trackingInfo, message, PipelineStep.Status.COMPLETED);
 
       // Create and send outgoing message
-      if (true /*!hasMoreStepsToProcess(message.getExecutionId())*/) {
-        log.info(
-            "There are more steps to process for executionId {}, not sending next message",
-            trackingInfo.executionId);
-      } else {
-        log.info(
-            "No more steps to process for executionId {}, sending next message",
-            trackingInfo.executionId);
+      O outgoingMessage = createOutgoingMessage(message);
 
-        O outgoingMessage = createOutgoingMessage(message);
+      String nextMessageClassName = outgoingMessage.getClass().getSimpleName();
+      String messagePayload = outgoingMessage.toString();
 
-        String nextMessageClassName = outgoingMessage.getClass().getSimpleName();
-        String messagePayload = outgoingMessage.toString();
+      publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
 
-        publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
-        String logInfo =
-            "Next message has been sent - "
-                + outgoingMessage.getClass().getSimpleName()
-                + ":"
-                + outgoingMessage;
-        log.debug(logInfo);
-      }
+      String logInfo =
+          "Next message has been sent - "
+              + outgoingMessage.getClass().getSimpleName()
+              + ":"
+              + outgoingMessage;
+      log.debug(logInfo);
 
       updateQueuedStatus(trackingInfo, message);
 
@@ -634,37 +620,6 @@ public abstract class PipelinesCallback<
         .attempt(attempt.toString())
         .build();
   }
-
-//  boolean hasMoreStepsToProcess(Long executionId) {
-//
-//    Function<Long, List<PipelineStep>> getStepsByExecutionKeyFn =
-//        ek -> {
-//          log.debug("History client: get steps by execution key {}", ek);
-//          return historyClient.getPipelineStepsByExecutionKey(ek);
-//        };
-//
-//    List<PipelineStep> stepsByExecutionKey =
-//        Retry.decorateFunction(RETRY, getStepsByExecutionKeyFn).apply(executionId);
-//
-//    if (stepsByExecutionKey == null || stepsByExecutionKey.isEmpty()) {
-//      log.warn("No steps found for execution key {}", executionId);
-//      return false;
-//    }
-//
-//    // if the last step is this one, and it's in a finished state, then there are no more steps to
-//    // process
-//    PipelineStep lastStep = stepsByExecutionKey.get(stepsByExecutionKey.size() - 1);
-//    if (lastStep.getType() == getStepType()) {
-//      log.info(
-//          "No more steps to process for execution key {}, last step {} is in state {}",
-//          executionId,
-//          lastStep.getType(),
-//          lastStep.getState());
-//      return false;
-//    }
-//
-//    return true;
-//  }
 
   @Builder
   public static class TrackingInfo {
