@@ -253,7 +253,7 @@ public abstract class PipelinesCallback<
       updateTrackingStatus(trackingInfo, message, PipelineStep.Status.COMPLETED);
 
       // Create and send outgoing message
-      if (!hasMoreStepsToProcess(message.getExecutionId())) {
+      if (true /*!hasMoreStepsToProcess(message.getExecutionId())*/) {
         log.info(
             "There are more steps to process for executionId {}, not sending next message",
             trackingInfo.executionId);
@@ -635,36 +635,36 @@ public abstract class PipelinesCallback<
         .build();
   }
 
-  boolean hasMoreStepsToProcess(Long executionId) {
-
-    Function<Long, List<PipelineStep>> getStepsByExecutionKeyFn =
-        ek -> {
-          log.debug("History client: get steps by execution key {}", ek);
-          return historyClient.getPipelineStepsByExecutionKey(ek);
-        };
-
-    List<PipelineStep> stepsByExecutionKey =
-        Retry.decorateFunction(RETRY, getStepsByExecutionKeyFn).apply(executionId);
-
-    if (stepsByExecutionKey == null || stepsByExecutionKey.isEmpty()) {
-      log.warn("No steps found for execution key {}", executionId);
-      return false;
-    }
-
-    // if the last step is this one, and it's in a finished state, then there are no more steps to
-    // process
-    PipelineStep lastStep = stepsByExecutionKey.get(stepsByExecutionKey.size() - 1);
-    if (lastStep.getType() == getStepType()) {
-      log.info(
-          "No more steps to process for execution key {}, last step {} is in state {}",
-          executionId,
-          lastStep.getType(),
-          lastStep.getState());
-      return false;
-    }
-
-    return true;
-  }
+//  boolean hasMoreStepsToProcess(Long executionId) {
+//
+//    Function<Long, List<PipelineStep>> getStepsByExecutionKeyFn =
+//        ek -> {
+//          log.debug("History client: get steps by execution key {}", ek);
+//          return historyClient.getPipelineStepsByExecutionKey(ek);
+//        };
+//
+//    List<PipelineStep> stepsByExecutionKey =
+//        Retry.decorateFunction(RETRY, getStepsByExecutionKeyFn).apply(executionId);
+//
+//    if (stepsByExecutionKey == null || stepsByExecutionKey.isEmpty()) {
+//      log.warn("No steps found for execution key {}", executionId);
+//      return false;
+//    }
+//
+//    // if the last step is this one, and it's in a finished state, then there are no more steps to
+//    // process
+//    PipelineStep lastStep = stepsByExecutionKey.get(stepsByExecutionKey.size() - 1);
+//    if (lastStep.getType() == getStepType()) {
+//      log.info(
+//          "No more steps to process for execution key {}, last step {} is in state {}",
+//          executionId,
+//          lastStep.getType(),
+//          lastStep.getState());
+//      return false;
+//    }
+//
+//    return true;
+//  }
 
   @Builder
   public static class TrackingInfo {
