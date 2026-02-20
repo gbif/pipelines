@@ -3,6 +3,7 @@ package org.gbif.pipelines.transforms.converters;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -77,6 +78,7 @@ public class EventJsonTransformTest {
     erMap.put(DwcTerm.scientificName.qualifiedName(), "scientificName");
     erMap.put(DwcTerm.taxonID.qualifiedName(), "taxonID");
     erMap.put(DwcTerm.scientificName.qualifiedName(), "scientificName");
+    erMap.put(DwcTerm.projectTitle.qualifiedName(), "title1|title2");
 
     MetadataRecord mr =
         MetadataRecord.newBuilder()
@@ -116,7 +118,11 @@ public class EventJsonTransformTest {
                     Collections.singletonList(Collections.singletonMap("k", "v"))))
             .build();
 
-    EventCoreRecord ecr = EventCoreRecord.newBuilder().setId("777").build();
+    EventCoreRecord ecr =
+        EventCoreRecord.newBuilder()
+            .setId("777")
+            .setProjectTitle(List.of("title1", "title2"))
+            .build();
 
     IdentifierRecord ir =
         IdentifierRecord.newBuilder()

@@ -60,3 +60,10 @@ spring:
       location: @upload.workingDirectory@
       max-file-size: @upload.maxUploadSize@
       max-request-size: @upload.maxUploadSize@
+  config:
+    import: "optional:zookeeper:"
+  cloud:
+    zookeeper:
+      enabled: false
+      discovery:
+        enabled: false

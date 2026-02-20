@@ -10,13 +10,14 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>3.2.15-SNAPSHOT</version>
+  <version>3.2.24-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
     <module>gbif</module>
     <module>sdks</module>
-<!--    <module>livingatlas</module>-->
+    <!-- Please comment livingatlas module if gives problems with the build and ask for help -->
+    <module>livingatlas</module>
   </modules>
 
   <name>Pipelines :: Parent</name>
@@ -47,10 +48,6 @@
 
   <repositories>
     <repository>
-      <id>gbif-central</id>
-      <url>https://repository.gbif.org/repository/central/</url>
-    </repository>
-    <repository>
       <id>gbif-release</id>
       <url>https://repository.gbif.org/repository/releases/</url>
     </repository>
@@ -78,10 +75,6 @@
   </repositories>
   <pluginRepositories>
     <pluginRepository>
-      <id>gbif-central</id>
-      <url>https://repository.gbif.org/repository/central/</url>
-    </pluginRepository>
-    <pluginRepository>
       <id>gbif-release</id>
       <url>https://repository.gbif.org/repository/releases/</url>
     </pluginRepository>
@@ -108,15 +101,15 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.68</gbif-parsers.version>
     <dwca-io.version>3.0.1</dwca-io.version>
-    <gbif-api.version>2.2.2</gbif-api.version>
+    <gbif-api.version>2.2.4</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
-    <dwc-api.version>2.1.8</dwc-api.version>
+    <dwc-api.version>2.1.9</dwc-api.version>
     <kvs.version>3.0</kvs.version>
     <hbase-utils.version>1.0.0</hbase-utils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
-    <gbif-occurrence.version>1.1.10</gbif-occurrence.version>
+    <gbif-occurrence.version>1.1.14</gbif-occurrence.version>
     <vocabulary-lookup.version>2.0.3</vocabulary-lookup.version>
-    <registry.version>4.2.0</registry.version>
+    <registry.version>4.2.3</registry.version>
     <gbif-common-ws.version>2.1.1</gbif-common-ws.version>
     <gbif-postal-service.version>2.1.4</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>

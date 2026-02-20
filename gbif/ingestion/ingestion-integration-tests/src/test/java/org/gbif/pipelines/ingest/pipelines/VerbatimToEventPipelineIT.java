@@ -108,6 +108,7 @@ public class VerbatimToEventPipelineIT {
       core.put(DwcTerm.eventID.qualifiedName(), "eventID");
       core.put(DwcTerm.samplingProtocol.qualifiedName(), "samplingProtocol");
       core.put(DwcTerm.eventType.qualifiedName(), "Survey");
+      core.put(DwcTerm.fundingAttribution.qualifiedName(), "FA1|FA2");
 
       Map<String, String> ext1 = new HashMap<>();
       ext1.put(DwcTerm.measurementID.qualifiedName(), "Id1");
