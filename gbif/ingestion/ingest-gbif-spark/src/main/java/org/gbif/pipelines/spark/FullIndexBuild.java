@@ -110,6 +110,8 @@ public class FullIndexBuild {
             .orderBy(desc("count"))
             .withColumn("attempt", callUDF("getAttemptUDF", col("datasetkey")));
 
+    datasetCountsDF.show(10000, false);
+
     final Map<String, Long> datasetCounts = new HashMap<>();
 
     for (Row row : datasetCountsDF.collectAsList()) {
@@ -189,7 +191,7 @@ public class FullIndexBuild {
     }
 
     // datasetId + "_" + attempt + "_" + indexVersion + "_" + timestamp;
-    hdfs.join(datasetCountsDF, "datasetkey")
+    hdfs.join(broadcast(datasetCountsDF), "datasetkey")
         .withColumn(
             "index_name",
             when(
