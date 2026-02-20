@@ -73,10 +73,14 @@ public class FileSystemFactory {
     return new FileSystemFactory(hdfsConfigs);
   }
 
+  @SneakyThrows
   public FileSystem getFs(String path) {
     if (path != null) {
-      // using startsWith to allow for EMR style paths of hdfs:///
-      if (hdfsPrefix != null && path.startsWith(hdfsPrefix)) {
+      if (path.startsWith(FsUtils.S3_PREFIX) || path.startsWith("s3a://")) {
+        Configuration conf = new Configuration();
+        conf.set("fs.s3.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem");
+        return FileSystem.get(new URI(path), conf);
+      } else if (hdfsPrefix != null && path.startsWith(hdfsPrefix)) {
         return hdfsFs;
       } else if (path.startsWith(FsUtils.HDFS_EMR_PREFIX)) {
         return hdfsFs;

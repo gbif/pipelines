@@ -55,6 +55,7 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 public final class FsUtils {
 
   public static final String HDFS_EMR_PREFIX = "hdfs:///";
+  public static final String S3_PREFIX = "s3://";
 
   /**
    * Reads Beam options from arguments or file.
