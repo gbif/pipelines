@@ -152,7 +152,10 @@ public class VerbatimToEventPipeline {
     PCollection<ExtendedRecord> uniqueRawRecords =
         p.apply("Read event  verbatim", verbatimTransform.read(options.getInputPath()))
             .apply("Filter event duplicates", transformsFactory.createUniqueIdTransform())
-            .apply("Filter event extensions", transformsFactory.createExtensionFilterTransform());
+            .apply("Filter event extensions", transformsFactory.createExtensionFilterTransform())
+            .apply(
+                "Filter event extensions that have an occurrenceID",
+                transformsFactory.createEventExtensionsTransform());
 
     // view with the records that have parents to find the hierarchy in the event core
     // interpretation later

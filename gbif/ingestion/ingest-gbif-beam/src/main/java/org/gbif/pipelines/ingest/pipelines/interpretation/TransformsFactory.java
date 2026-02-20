@@ -36,6 +36,7 @@ import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.common.FilterRecordsTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
+import org.gbif.pipelines.transforms.converters.EventExtensionsTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
@@ -274,6 +275,10 @@ public class TransformsFactory {
 
   public SingleOutput<ExtendedRecord, ExtendedRecord> createOccurrenceExtensionTransform() {
     return OccurrenceExtensionTransform.create();
+  }
+
+  public SingleOutput<ExtendedRecord, ExtendedRecord> createEventExtensionsTransform() {
+    return EventExtensionsTransform.create();
   }
 
   public SingleOutput<KV<String, CoGbkResult>, ExtendedRecord> createFilterRecordsTransform(
