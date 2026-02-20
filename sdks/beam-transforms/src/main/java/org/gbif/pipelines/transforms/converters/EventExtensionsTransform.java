@@ -1,8 +1,6 @@
 package org.gbif.pipelines.transforms.converters;
 
-import static org.gbif.pipelines.core.utils.ModelUtils.hasExtension;
-
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -29,6 +27,11 @@ public class EventExtensionsTransform extends DoFn<ExtendedRecord, ExtendedRecor
     return ParDo.of(new EventExtensionsTransform());
   }
 
+  private static final List<String> EXTENSIONS_TO_PARSE =
+      List.of(
+          Extension.EXTENDED_MEASUREMENT_OR_FACT.getRowType(),
+          Extension.DNA_DERIVED_DATA.getRowType());
+
   @ProcessElement
   public void processElement(@Element ExtendedRecord er, OutputReceiver<ExtendedRecord> out) {
     convert(er, out::output);
@@ -36,23 +39,32 @@ public class EventExtensionsTransform extends DoFn<ExtendedRecord, ExtendedRecor
 
   public void convert(ExtendedRecord er, Consumer<ExtendedRecord> resultConsumer) {
 
-    Arrays.asList(Extension.EXTENDED_MEASUREMENT_OR_FACT, Extension.DNA_DERIVED_DATA)
+    ExtendedRecord.Builder builder =
+        ExtendedRecord.newBuilder()
+            .setId(er.getId())
+            .setCoreRowType(er.getCoreRowType())
+            .setCoreTerms(er.getCoreTerms());
+
+    Map<String, List<Map<String, String>>> extensions = new HashMap<>();
+    er.getExtensions()
         .forEach(
-            extension -> {
-              if (hasExtension(er, extension.getRowType())) {
+            (extension, values) -> {
+              if (EXTENSIONS_TO_PARSE.contains(extension)) {
                 List<Map<String, String>> parsedExtension =
-                    er.getExtensions().get(extension.getRowType()).stream()
+                    er.getExtensions().get(extension).stream()
                         .filter(v -> !v.containsKey(DwcTerm.occurrenceID.qualifiedName()))
                         .collect(Collectors.toList());
 
-                if (parsedExtension.isEmpty()) {
-                  er.getExtensions().remove(extension.getRowType());
-                } else {
-                  er.getExtensions().put(extension.getRowType(), parsedExtension);
+                if (!parsedExtension.isEmpty()) {
+                  extensions.put(extension, parsedExtension);
                 }
+              } else {
+                extensions.put(extension, values);
               }
             });
 
-    resultConsumer.accept(er);
+    builder.setExtensions(extensions);
+
+    resultConsumer.accept(builder.build());
   }
 }
