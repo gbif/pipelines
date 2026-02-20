@@ -143,7 +143,7 @@ public class FullTableBuild {
 
     // load hdfs view
     Dataset<Row> hdfs =
-        spark.read().parquet(hdfsPaths.toArray(new String[0])).repartition(args.numberOfShards);
+        spark.read().parquet(hdfsPaths.toArray(new String[0])).coalesce(args.numberOfShards);
 
     String tempLoadingTable =
         String.format("%s_%s_%d", "occurrence", "rebuild", System.currentTimeMillis());
