@@ -660,9 +660,10 @@ public abstract class PipelinesCallback<
           executionId,
           lastStep.getType(),
           lastStep.getState());
+      return false;
     }
 
-    return false;
+    return true;
   }
 
   @Builder
