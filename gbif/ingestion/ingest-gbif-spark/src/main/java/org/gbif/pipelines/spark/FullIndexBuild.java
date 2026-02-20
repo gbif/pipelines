@@ -53,7 +53,9 @@ public class FullIndexBuild {
     @Parameter(names = "--numberOfShards", description = "Number of shards")
     private int numberOfShards = 2400;
 
-    @Parameter(names = "--maxRecordsPerFile", description = "Max records per file when writing to HDFS before writing to ES")
+    @Parameter(
+        names = "--maxRecordsPerFile",
+        description = "Max records per file when writing to HDFS before writing to ES")
     private int maxRecordsPerFile = 200_000;
 
     @Parameter(
@@ -100,99 +102,98 @@ public class FullIndexBuild {
     Dataset<Row> hdfs =
         spark.read().parquet(hdfsPaths.toArray(new String[0])).coalesce(args.numberOfShards);
 
-        spark
-            .udf()
-            .register(
-                "getAttemptUDF",
-                (String datasetKey) -> datasetAttemptMap.get(datasetKey),
-                DataTypes.IntegerType);
+    spark
+        .udf()
+        .register(
+            "getAttemptUDF",
+            (String datasetKey) -> datasetAttemptMap.get(datasetKey),
+            DataTypes.IntegerType);
 
-        Dataset<Row> datasetCountsDF =
-            hdfs.groupBy(col("datasetkey"))
-                .count()
-                .orderBy(desc("count"))
-                .withColumn("attempt", callUDF("getAttemptUDF", col("datasetkey")));
+    Dataset<Row> datasetCountsDF =
+        hdfs.groupBy(col("datasetkey"))
+            .count()
+            .orderBy(desc("count"))
+            .withColumn("attempt", callUDF("getAttemptUDF", col("datasetkey")));
 
-        datasetCountsDF.show(10000, false);
+    datasetCountsDF.show(10000, false);
 
-        final Map<String, Long> datasetCounts = new HashMap<>();
+    final Map<String, Long> datasetCounts = new HashMap<>();
 
-        for (Row row : datasetCountsDF.collectAsList()) {
-          String key = row.getAs("datasetkey");
-          Long count = row.getAs("count");
-          datasetCounts.put(key, count);
+    for (Row row : datasetCountsDF.collectAsList()) {
+      String key = row.getAs("datasetkey");
+      Long count = row.getAs("count");
+      datasetCounts.put(key, count);
+    }
+
+    long timestamp = Instant.now().toEpochMilli();
+
+    CloseableHttpClient httpClient =
+        HttpClients.custom()
+            .setDefaultRequestConfig(
+                RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
+            .build();
+
+    final Map<String, String> datasetToIndexNameMap = new HashMap<>();
+
+    boolean defaultIndexCreated = false;
+    String defaultIndexName = null;
+
+    // create the empty indexes with the schema
+    for (Map.Entry<String, Long> entry : datasetCounts.entrySet()) {
+
+      String datasetKey = entry.getKey();
+      Long recordCount = entry.getValue();
+
+      // avoid trying to create a new index if the record count is low
+      // and we already created a default index for another dataset with low record count
+      if (recordCount < config.getIndexConfig().getBigIndexIfRecordsMoreThan()
+          && defaultIndexCreated) {
+        datasetToIndexNameMap.put(datasetKey, defaultIndexName);
+        continue;
+      }
+
+      String esIndexName =
+          IndexSettings.computeIndexName(
+              DatasetType.OCCURRENCE,
+              config.getIndexConfig(),
+              httpClient,
+              datasetKey,
+              datasetAttemptMap.get(datasetKey),
+              recordCount.intValue(),
+              timestamp);
+
+      Integer indexNumberShards =
+          IndexSettings.computeNumberOfShards(
+              config.getIndexConfig(), esIndexName, recordCount.intValue());
+
+      Indexing.ElasticOptions options =
+          Indexing.ElasticOptions.fromArgsAndConfig(
+              config,
+              config.getIndexConfig().getOccurrenceAlias(),
+              esIndexName,
+              "elasticsearch/es-occurrence-schema.json",
+              datasetKey, // used for updating the alias
+              datasetAttemptMap.get(datasetKey),
+              indexNumberShards);
+
+      // Create ES index and alias if not exists
+      EsIndexUtils.createIndexAndAliasForDefault(options);
+      datasetToIndexNameMap.put(datasetKey, esIndexName);
+
+      if (recordCount < config.getIndexConfig().getBigIndexIfRecordsMoreThan()) {
+        defaultIndexCreated = true;
+        defaultIndexName =
+            IndexSettings.getDefaultSharedIndexName(
+                config.getIndexConfig(),
+                config.getIndexConfig().getOccurrenceVersion(),
+                httpClient);
+      } else {
+        EsConfig esConfig = EsConfig.from(options.getEsHosts());
+        try (EsClient esClient = EsClient.from(esConfig)) {
+          EsIndexUtils.addIndexAlias(esClient, options, esIndexName);
         }
-
-        long timestamp = Instant.now().toEpochMilli();
-
-        CloseableHttpClient httpClient =
-            HttpClients.custom()
-                .setDefaultRequestConfig(
-
-     RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
-                .build();
-
-        final Map<String, String> datasetToIndexNameMap = new HashMap<>();
-
-        boolean defaultIndexCreated = false;
-        String defaultIndexName = null;
-
-        // create the empty indexes with the schema
-        for (Map.Entry<String, Long> entry : datasetCounts.entrySet()) {
-
-          String datasetKey = entry.getKey();
-          Long recordCount = entry.getValue();
-
-          // avoid trying to create a new index if the record count is low
-          // and we already created a default index for another dataset with low record count
-          if (recordCount < config.getIndexConfig().getBigIndexIfRecordsMoreThan()
-              && defaultIndexCreated) {
-            datasetToIndexNameMap.put(datasetKey, defaultIndexName);
-            continue;
-          }
-
-          String esIndexName =
-              IndexSettings.computeIndexName(
-                  DatasetType.OCCURRENCE,
-                  config.getIndexConfig(),
-                  httpClient,
-                  datasetKey,
-                  datasetAttemptMap.get(datasetKey),
-                  recordCount.intValue(),
-                  timestamp);
-
-          Integer indexNumberShards =
-              IndexSettings.computeNumberOfShards(
-                  config.getIndexConfig(), esIndexName, recordCount.intValue());
-
-          Indexing.ElasticOptions options =
-              Indexing.ElasticOptions.fromArgsAndConfig(
-                  config,
-                  config.getIndexConfig().getOccurrenceAlias(),
-                  esIndexName,
-                  "elasticsearch/es-occurrence-schema.json",
-                  datasetKey, // used for updating the alias
-                  datasetAttemptMap.get(datasetKey),
-                  indexNumberShards);
-
-          // Create ES index and alias if not exists
-          EsIndexUtils.createIndexAndAliasForDefault(options);
-          datasetToIndexNameMap.put(datasetKey, esIndexName);
-
-          if (recordCount < config.getIndexConfig().getBigIndexIfRecordsMoreThan()) {
-            defaultIndexCreated = true;
-            defaultIndexName =
-                IndexSettings.getDefaultSharedIndexName(
-                    config.getIndexConfig(),
-                    config.getIndexConfig().getOccurrenceVersion(),
-                    httpClient);
-          } else {
-            EsConfig esConfig = EsConfig.from(options.getEsHosts());
-            try (EsClient esClient = EsClient.from(esConfig)) {
-              EsIndexUtils.addIndexAlias(esClient, options, esIndexName);
-            }
-          }
-        }
+      }
+    }
 
     // datasetId + "_" + attempt + "_" + indexVersion + "_" + timestamp;
     hdfs.join(broadcast(datasetCountsDF), "datasetkey")
@@ -214,30 +215,30 @@ public class FullIndexBuild {
         .mode(SaveMode.Overwrite)
         .parquet("hdfs://gbif-hdfs/data/index_rebuild_lab");
 
-        // Write to Elasticsearch
-        spark
-            .read()
-            .parquet("hdfs://gbif-hdfs/data/index_rebuild_lab")
-            .write()
-            .format("org.elasticsearch.spark.sql")
-            .option("es.resource", "{index_name}/_doc")
-            .mode(SaveMode.Append)
-            .option("es.batch.size.entries", config.getElastic().getEsMaxBatchSize())
-            .option("es.batch.size.bytes", config.getElastic().getEsMaxBatchSizeBytes())
-            .option("es.mapping.id", "gbifId")
-            .option("es.nodes.wan.only", "true")
-            .option("es.batch.write.refresh", "false")
-            .save();
+    // Write to Elasticsearch
+    spark
+        .read()
+        .parquet("hdfs://gbif-hdfs/data/index_rebuild_lab")
+        .write()
+        .format("org.elasticsearch.spark.sql")
+        .option("es.resource", "{index_name}/_doc")
+        .mode(SaveMode.Append)
+        .option("es.batch.size.entries", config.getElastic().getEsMaxBatchSize())
+        .option("es.batch.size.bytes", config.getElastic().getEsMaxBatchSizeBytes())
+        .option("es.mapping.id", "gbifId")
+        .option("es.nodes.wan.only", "true")
+        .option("es.batch.write.refresh", "false")
+        .save();
 
-        try (EsClient esClient = EsClient.from(EsConfig.from(config.getElastic().getEsHosts()))) {
-          datasetToIndexNameMap.values().stream()
-              .distinct()
-              .forEach(
-                  indexName -> {
-                    log.info("Refreshing index " + indexName);
-                    EsService.refreshIndex(esClient, indexName);
-                  });
-        }
+    try (EsClient esClient = EsClient.from(EsConfig.from(config.getElastic().getEsHosts()))) {
+      datasetToIndexNameMap.values().stream()
+          .distinct()
+          .forEach(
+              indexName -> {
+                log.info("Refreshing index " + indexName);
+                EsService.refreshIndex(esClient, indexName);
+              });
+    }
 
     fileSystem.close();
     spark.stop();
