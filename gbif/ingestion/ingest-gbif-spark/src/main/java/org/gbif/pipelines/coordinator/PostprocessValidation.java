@@ -111,25 +111,34 @@ public class PostprocessValidation {
 
     boolean isValid = true;
     String validationMessage = "No identifier issues";
-    if (absentPercent > 0d && apiRecords > 0) {
-      if (absentPercent > threshold && existingCount != apiRecords) {
-        validationMessage =
-            String.format(
-                "GBIF ID problems exceed %.0f%% threshold: %.0f%% duplicates; %d total records; %d absent records",
-                threshold, absentPercent, totalCount, absentIdCount);
-        isValid = false;
-      } else {
-        validationMessage =
-            String.format(
-                "GBIF ID problems within %.0f%% threshold: %.0f%% duplicates; %d total records; %d absent records",
-                threshold, absentPercent, totalCount, absentIdCount);
-      }
-    } else if (absentPercent == 100d) {
-      validationMessage = "Skip ID validation: dataset has no API records and all IDs are new";
-    } else if (absentPercent > 0d) {
+    if (config.isIdThresholdSkip()) {
       validationMessage =
-          String.format("Dataset has no API records, but %.0f%% of IDs aren't new", absentPercent);
-      isValid = false;
+          String.format(
+              "Current configured to skip ID threshold validation",
+              threshold, absentPercent, totalCount, absentIdCount);
+      isValid = true;
+    } else {
+      if (absentPercent > 0d && apiRecords > 0) {
+        if (absentPercent > threshold && existingCount != apiRecords) {
+          validationMessage =
+              String.format(
+                  "GBIF ID problems exceed %.0f%% threshold: %.0f%% duplicates; %d total records; %d absent records",
+                  threshold, absentPercent, totalCount, absentIdCount);
+          isValid = false;
+        } else {
+          validationMessage =
+              String.format(
+                  "GBIF ID problems within %.0f%% threshold: %.0f%% duplicates; %d total records; %d absent records",
+                  threshold, absentPercent, totalCount, absentIdCount);
+        }
+      } else if (absentPercent == 100d) {
+        validationMessage = "Skip ID validation: dataset has no API records and all IDs are new";
+      } else if (absentPercent > 0d) {
+        validationMessage =
+            String.format(
+                "Dataset has no API records, but %.0f%% of IDs aren't new", absentPercent);
+        isValid = false;
+      }
     }
     return new IdentifierValidationResult(totalCount, absentIdCount, isValid, validationMessage);
   }
