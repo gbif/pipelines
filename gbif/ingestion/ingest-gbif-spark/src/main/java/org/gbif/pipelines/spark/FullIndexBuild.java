@@ -8,13 +8,10 @@ import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -26,11 +23,11 @@ import org.apache.spark.sql.types.DataTypes;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.pipelines.EsIndexUtils;
 import org.gbif.pipelines.IndexSettings;
+import org.gbif.pipelines.IngestUtils;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.service.EsService;
-import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 public class FullIndexBuild {
@@ -55,8 +52,21 @@ public class FullIndexBuild {
 
     @Parameter(
         names = "--maxRecordsPerFile",
-        description = "Max records per file when writing to HDFS before writing to ES")
+        description = "Max records per file when writing to HDFS before writing to Elastic")
     private int maxRecordsPerFile = 200_000;
+
+    @Parameter(
+        names = "--sourceDirectory",
+        description = "Directory containing the parquet to load",
+        required = true)
+    private String sourceDirectory = "json";
+
+    @Parameter(
+        names = "--unsuccessfulDumpFilename",
+        description =
+            "Filename to dump the list of unsuccessful datasets to in HDFS for later review",
+        required = true)
+    private String unsuccessfulDumpFilename = "unsuccessful-elastic-datasets.txt";
 
     @Parameter(
         names = {"--help", "-h"},
@@ -79,8 +89,6 @@ public class FullIndexBuild {
     PipelinesConfig config = loadConfig(args.config);
     assert config != null && config.getIndexConfig() != null && config.getElastic() != null;
 
-    final Map<String, Integer> datasetAttemptMap = new HashMap<>();
-
     /* ############ standard init block ########## */
     SparkSession spark =
         getSparkSession(
@@ -89,24 +97,32 @@ public class FullIndexBuild {
 
     /* ############ standard init block - end ########## */
 
-    List<String> hdfsPaths = getElasticParquetFilePaths(fileSystem, config, datasetAttemptMap);
+    IngestUtils.DirectoryScanResult scanResult =
+        IngestUtils.getSuccessFulParquetFilePaths(
+            fileSystem,
+            config,
+            args.sourceDirectory,
+            config.getRebuildPath() + "/" + args.unsuccessfulDumpFilename);
 
     log.info("Starting full index build");
 
-    if (hdfsPaths.isEmpty()) {
+    if (scanResult.successfulPaths().isEmpty()) {
       log.warn("No datasets with successful interpretations found. Exiting.");
       return;
     }
 
     // load all hdfs view parquet
     Dataset<Row> hdfs =
-        spark.read().parquet(hdfsPaths.toArray(new String[0])).coalesce(args.numberOfShards);
+        spark
+            .read()
+            .parquet(scanResult.successfulPaths().toArray(new String[0]))
+            .coalesce(args.numberOfShards);
 
     spark
         .udf()
         .register(
             "getAttemptUDF",
-            (String datasetKey) -> datasetAttemptMap.get(datasetKey),
+            (String datasetKey) -> scanResult.datasetAttemptMap().get(datasetKey),
             DataTypes.IntegerType);
 
     Dataset<Row> datasetCountsDF =
@@ -158,7 +174,7 @@ public class FullIndexBuild {
               config.getIndexConfig(),
               httpClient,
               datasetKey,
-              datasetAttemptMap.get(datasetKey),
+              scanResult.datasetAttemptMap().get(datasetKey),
               recordCount.intValue(),
               timestamp);
 
@@ -173,7 +189,7 @@ public class FullIndexBuild {
               esIndexName,
               "elasticsearch/es-occurrence-schema.json",
               datasetKey, // used for updating the alias
-              datasetAttemptMap.get(datasetKey),
+              scanResult.datasetAttemptMap().get(datasetKey),
               indexNumberShards);
 
       // Create ES index and alias if not exists
@@ -213,12 +229,12 @@ public class FullIndexBuild {
         .write()
         .option("maxRecordsPerFile", args.maxRecordsPerFile)
         .mode(SaveMode.Overwrite)
-        .parquet("hdfs://gbif-hdfs/data/index_rebuild_lab");
+        .parquet("hdfs://gbif-hdfs/data/rebuild_lab/elastic");
 
     // Write to Elasticsearch
     spark
         .read()
-        .parquet("hdfs://gbif-hdfs/data/index_rebuild_lab")
+        .parquet("hdfs://gbif-hdfs/data/rebuild_lab/elastic")
         .write()
         .format("org.elasticsearch.spark.sql")
         .option("es.resource", "{index_name}/_doc")
@@ -244,46 +260,5 @@ public class FullIndexBuild {
     spark.stop();
     spark.close();
     log.info("Full index build completed");
-  }
-
-  private static @NotNull List<String> getElasticParquetFilePaths(
-      FileSystem fileSystem, PipelinesConfig config, Map<String, Integer> datasetAttemptMap)
-      throws IOException {
-    List<String> hdfsPaths = new ArrayList<>();
-    FileStatus[] fileStatuses = fileSystem.globStatus(new Path(config.getOutputPath() + "/*"));
-
-    // for each directory, find the last successful interpretation and create a symlink to it
-    for (FileStatus fileStatus : fileStatuses) {
-      if (fileStatus.isDirectory()) {
-        String datasetId = fileStatus.getPath().getName();
-
-        FileStatus[] successFiles =
-            fileSystem.globStatus(new Path(fileStatus.getPath() + "/*/json/_SUCCESS"));
-
-        // find the newest _SUCCESS file
-        FileStatus newestSuccessFile = null;
-        for (FileStatus successFile : successFiles) {
-          if (newestSuccessFile == null
-              || successFile.getModificationTime() > newestSuccessFile.getModificationTime()) {
-            newestSuccessFile = successFile;
-          }
-        }
-
-        if (newestSuccessFile != null) {
-          Path successAttemptDir =
-              newestSuccessFile
-                  .getPath()
-                  .getParent()
-                  .getParent(); // go up from hdfs/_SUCCESS to interpretation dir
-
-          String attempt = successAttemptDir.getName(); // this should be the attempt number
-
-          // add if the _SUCCESS file is less than 4 weeks old to the list of paths to read from
-          hdfsPaths.add(successAttemptDir + "/json/");
-          datasetAttemptMap.put(datasetId, Integer.parseInt(attempt));
-        }
-      }
-    }
-    return hdfsPaths;
   }
 }

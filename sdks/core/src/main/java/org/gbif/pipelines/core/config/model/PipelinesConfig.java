@@ -23,9 +23,15 @@ public class PipelinesConfig implements Serializable {
   /** The directory where the output files are written to */
   private String outputPath;
 
-  private String hdfsSiteConfig;
+  /** The directory where the intermediate files & debug outputs are written to
+   * as part of the rebuild jobs */
+  private String rebuildPath;
 
-  private String coreSiteConfig;
+  private String hdfsSiteConfig = "/etc/hadoop/conf/hdfs-site.xml";
+
+  private String coreSiteConfig = "/etc/hadoop/conf/core-site.xml";
+
+  private String hbaseSiteConfig = "/etc/hadoop/conf/hbase-site.xml";
 
   private String hiveDB;
 
@@ -78,6 +84,10 @@ public class PipelinesConfig implements Serializable {
   private Set<String> extensionsAllowedForVerbatimSet;
 
   private String fragmentsTable;
+
+  private String fragmentHfilePath = "fragment";
+
+  private String fragmentHfileStagingPath = "hfile-staging";
 
   private StandaloneConfig standalone;
 
