@@ -1,12 +1,16 @@
 package org.gbif.pipelines.transforms.converters;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /**
@@ -41,26 +45,25 @@ public class EventExtensionsTransform extends DoFn<ExtendedRecord, ExtendedRecor
             .setCoreRowType(er.getCoreRowType())
             .setCoreTerms(er.getCoreTerms());
 
-    // FIXME: test
-    //    Map<String, List<Map<String, String>>> extensions = new HashMap<>();
-    //    er.getExtensions()
-    //        .forEach(
-    //            (extension, values) -> {
-    //              if (EXTENSIONS_TO_PARSE.contains(extension)) {
-    //                List<Map<String, String>> parsedExtension =
-    //                    er.getExtensions().get(extension).stream()
-    //                        .filter(v -> !v.containsKey(DwcTerm.occurrenceID.qualifiedName()))
-    //                        .collect(Collectors.toList());
-    //
-    //                if (!parsedExtension.isEmpty()) {
-    //                  extensions.put(extension, parsedExtension);
-    //                }
-    //              } else {
-    //                extensions.put(extension, values);
-    //              }
-    //            });
-    //
-    //    builder.setExtensions(extensions);
+    Map<String, List<Map<String, String>>> extensions = new HashMap<>();
+    er.getExtensions()
+        .forEach(
+            (extension, values) -> {
+              if (EXTENSIONS_TO_PARSE.contains(extension)) {
+                List<Map<String, String>> parsedExtension =
+                    values.stream()
+                        .filter(v -> !v.containsKey(DwcTerm.occurrenceID.qualifiedName()))
+                        .collect(Collectors.toList());
+
+                if (!parsedExtension.isEmpty()) {
+                  extensions.put(extension, parsedExtension);
+                }
+              } else {
+                extensions.put(extension, values);
+              }
+            });
+
+    builder.setExtensions(extensions);
 
     resultConsumer.accept(builder.build());
   }
