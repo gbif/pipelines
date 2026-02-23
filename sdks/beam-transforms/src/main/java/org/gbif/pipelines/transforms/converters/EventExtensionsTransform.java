@@ -45,25 +45,26 @@ public class EventExtensionsTransform extends DoFn<ExtendedRecord, ExtendedRecor
             .setCoreRowType(er.getCoreRowType())
             .setCoreTerms(er.getCoreTerms());
 
-    Map<String, List<Map<String, String>>> extensions = new HashMap<>();
-    er.getExtensions()
-        .forEach(
-            (extension, values) -> {
-              if (EXTENSIONS_TO_PARSE.contains(extension)) {
-                List<Map<String, String>> parsedExtension =
-                    er.getExtensions().get(extension).stream()
-                        .filter(v -> !v.containsKey(DwcTerm.occurrenceID.qualifiedName()))
-                        .collect(Collectors.toList());
-
-                if (!parsedExtension.isEmpty()) {
-                  extensions.put(extension, parsedExtension);
-                }
-              } else {
-                extensions.put(extension, values);
-              }
-            });
-
-    builder.setExtensions(extensions);
+    // FIXME: test
+//    Map<String, List<Map<String, String>>> extensions = new HashMap<>();
+//    er.getExtensions()
+//        .forEach(
+//            (extension, values) -> {
+//              if (EXTENSIONS_TO_PARSE.contains(extension)) {
+//                List<Map<String, String>> parsedExtension =
+//                    er.getExtensions().get(extension).stream()
+//                        .filter(v -> !v.containsKey(DwcTerm.occurrenceID.qualifiedName()))
+//                        .collect(Collectors.toList());
+//
+//                if (!parsedExtension.isEmpty()) {
+//                  extensions.put(extension, parsedExtension);
+//                }
+//              } else {
+//                extensions.put(extension, values);
+//              }
+//            });
+//
+//    builder.setExtensions(extensions);
 
     resultConsumer.accept(builder.build());
   }
