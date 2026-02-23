@@ -115,7 +115,10 @@ public class PostprocessValidation {
       validationMessage =
           String.format(
               "Current configured to skip ID threshold validation",
-              threshold, absentPercent, totalCount, absentIdCount);
+              threshold,
+              absentPercent,
+              totalCount,
+              absentIdCount);
       isValid = true;
     } else {
       if (absentPercent > 0d && apiRecords > 0) {
