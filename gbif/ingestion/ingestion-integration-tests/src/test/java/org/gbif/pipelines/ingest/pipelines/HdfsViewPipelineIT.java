@@ -38,6 +38,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.event.EventHdfsRecord;
 import org.gbif.pipelines.io.avro.extension.dwc.MeasurementOrFactTable;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
@@ -422,7 +423,11 @@ public class HdfsViewPipelineIT {
                 + datasetKey
                 + "_147-00000-of-00001.avro";
 
-    assertFile(OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
+    if (InterpretationType.RecordType.EVENT == recordType) {
+      assertFile(EventHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
+    } else {
+      assertFile(OccurrenceHdfsRecord.class, outputFn.apply(recordType.name().toLowerCase()));
+    }
     assertFileExistFalse(outputFn.apply("measurementorfacttable"));
     assertFileExistFalse(outputFn.apply("extendedmeasurementorfacttable"));
     assertFileExistFalse(outputFn.apply("germplasmmeasurementtrialtable"));

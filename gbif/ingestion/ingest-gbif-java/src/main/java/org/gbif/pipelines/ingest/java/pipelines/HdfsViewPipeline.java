@@ -96,7 +96,6 @@ import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
@@ -158,7 +157,6 @@ import org.slf4j.MDC;
  *      {@link MultimediaRecord},
  *      {@link ImageRecord},
  *      {@link AudubonRecord},
- *      {@link MeasurementOrFactRecord},
  *      {@link TaxonRecord},
  *      {@link GrscicollRecord},
  *      {@link LocationRecord}

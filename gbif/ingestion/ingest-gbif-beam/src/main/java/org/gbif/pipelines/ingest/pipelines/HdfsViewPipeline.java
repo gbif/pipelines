@@ -95,6 +95,7 @@ import org.gbif.pipelines.transforms.table.AudubonTableTransform;
 import org.gbif.pipelines.transforms.table.ChronometricAgeTableTransform;
 import org.gbif.pipelines.transforms.table.CloningTableTransform;
 import org.gbif.pipelines.transforms.table.DnaDerivedDataTableTransform;
+import org.gbif.pipelines.transforms.table.EventHdfsRecordTransform;
 import org.gbif.pipelines.transforms.table.ExtendedMeasurementOrFactTableTransform;
 import org.gbif.pipelines.transforms.table.GelImageTableTransform;
 import org.gbif.pipelines.transforms.table.GermplasmAccessionTableTransform;
@@ -266,8 +267,15 @@ public class HdfsViewPipeline {
             .apply("Map Location to KV", locationTransform.toKv());
 
     PCollection<KV<String, MultiTaxonRecord>> multiTaxonCollection =
-        p.apply("Read Multi Taxon", multiTaxonomyTransform.read(interpretPathFn))
-            .apply("Map Multi Taxon to KV", multiTaxonomyTransform.toKv());
+        coreTerm == DwcTerm.Event
+            ? p.apply(
+                "Empty Multi Taxon records",
+                Create.empty(
+                    TypeDescriptors.kvs(
+                        TypeDescriptors.strings(),
+                        multiTaxonomyTransform.getOutputTypeDescriptor())))
+            : p.apply("Read Multi Taxon", multiTaxonomyTransform.read(interpretPathFn))
+                .apply("Map Multi Taxon to KV", multiTaxonomyTransform.toKv());
 
     PCollection<KV<String, GrscicollRecord>> grscicollCollection =
         coreTerm == DwcTerm.Event
@@ -289,8 +297,14 @@ public class HdfsViewPipeline {
 
     // only reads them if they exist not to reinterpret the DNA extension for all the datasets
     PCollection<KV<String, DnaDerivedDataRecord>> dnaCollection =
-        p.apply("Read DNA", dnaTransform.readIfExists(interpretPathFn))
-            .apply("Map DNA to KV", dnaTransform.toKv());
+        coreTerm == DwcTerm.Event
+            ? p.apply(
+                "Empty DNA records",
+                Create.empty(
+                    TypeDescriptors.kvs(
+                        TypeDescriptors.strings(), dnaTransform.getOutputTypeDescriptor())))
+            : p.apply("Read DNA", dnaTransform.readIfExists(interpretPathFn))
+                .apply("Map DNA to KV", dnaTransform.toKv());
 
     PCollection<KV<String, AudubonRecord>> audubonCollection =
         p.apply("Read Audubon", audubonTransform.read(interpretPathFn))
@@ -316,49 +330,81 @@ public class HdfsViewPipeline {
                     TypeDescriptors.kvs(
                         TypeDescriptors.strings(), humboldtTransform.getOutputTypeDescriptor())));
 
-    // OccurrenceHdfsRecord
-    log.info("Adding step 3: Converting into a OccurrenceHdfsRecord object");
-    OccurrenceHdfsRecordTransform hdfsRecordTransform =
-        OccurrenceHdfsRecordTransform.builder()
-            .extendedRecordTag(verbatimTransform.getTag())
-            .identifierRecordTag(idTransform.getTag())
-            .clusteringRecordTag(clusteringTransform.getTag())
-            .basicRecordTag(basicTransform.getTag())
-            .temporalRecordTag(temporalTransform.getTag())
-            .locationRecordTag(locationTransform.getTag())
-            .multiTaxonRecordTag(multiTaxonomyTransform.getTag())
-            .grscicollRecordTag(grscicollTransform.getTag())
-            .multimediaRecordTag(multimediaTransform.getTag())
-            .imageRecordTag(imageTransform.getTag())
-            .dnaRecordTag(dnaTransform.getTag())
-            .audubonRecordTag(audubonTransform.getTag())
-            .eventCoreRecordTag(eventCoreTransform.getTag())
-            .humboldtRecordTag(humboldtTransform.getTag())
-            .metadataView(metadataView)
-            .build();
+    if (DwcTerm.Event == coreTerm) {
+      log.info("Adding step 3: Converting into a EventHdfsRecord object");
+      EventHdfsRecordTransform eventHdfsRecordTransform =
+          EventHdfsRecordTransform.builder()
+              .extendedRecordTag(verbatimTransform.getTag())
+              .identifierRecordTag(idTransform.getTag())
+              .eventCoreRecordTag(eventCoreTransform.getTag())
+              .humboldtRecordTag(humboldtTransform.getTag())
+              .temporalRecordTag(temporalTransform.getTag())
+              .locationRecordTag(locationTransform.getTag())
+              .multimediaRecordTag(multimediaTransform.getTag())
+              .imageRecordTag(imageTransform.getTag())
+              .audubonRecordTag(audubonTransform.getTag())
+              .metadataView(metadataView)
+              .build();
 
-    KeyedPCollectionTuple
-        // Core
-        .of(basicTransform.getTag(), basicCollection)
-        .and(idTransform.getTag(), idCollection)
-        .and(clusteringTransform.getTag(), clusteringCollection)
-        .and(temporalTransform.getTag(), temporalCollection)
-        .and(locationTransform.getTag(), locationCollection)
-        .and(multiTaxonomyTransform.getTag(), multiTaxonCollection)
-        .and(grscicollTransform.getTag(), grscicollCollection)
-        .and(eventCoreTransform.getTag(), eventCoreCollection)
-        // Extension
-        .and(multimediaTransform.getTag(), multimediaCollection)
-        .and(imageTransform.getTag(), imageCollection)
-        .and(dnaTransform.getTag(), dnaCollection)
-        .and(audubonTransform.getTag(), audubonCollection)
-        .and(humboldtTransform.getTag(), humboldtCollection)
-        // Raw
-        .and(verbatimTransform.getTag(), verbatimCollection)
-        // Apply
-        .apply("Group hdfs objects", CoGroupByKey.create())
-        .apply("Merge to HdfsRecord", hdfsRecordTransform.converter())
-        .apply(hdfsRecordTransform.write(pathFn.apply(recordType), numberOfShards));
+      KeyedPCollectionTuple
+          // Core
+          .of(eventCoreTransform.getTag(), eventCoreCollection)
+          .and(idTransform.getTag(), idCollection)
+          .and(temporalTransform.getTag(), temporalCollection)
+          .and(locationTransform.getTag(), locationCollection)
+          // Extension
+          .and(multimediaTransform.getTag(), multimediaCollection)
+          .and(imageTransform.getTag(), imageCollection)
+          .and(audubonTransform.getTag(), audubonCollection)
+          .and(humboldtTransform.getTag(), humboldtCollection)
+          // Raw
+          .and(verbatimTransform.getTag(), verbatimCollection)
+          // Apply
+          .apply("Group event hdfs objects", CoGroupByKey.create())
+          .apply("Merge to EventHdfsRecord", eventHdfsRecordTransform.converter())
+          .apply(eventHdfsRecordTransform.write(pathFn.apply(recordType), numberOfShards));
+    } else {
+      log.info("Adding step 3: Converting into a OccurrenceHdfsRecord object");
+      OccurrenceHdfsRecordTransform hdfsRecordTransform =
+          OccurrenceHdfsRecordTransform.builder()
+              .extendedRecordTag(verbatimTransform.getTag())
+              .identifierRecordTag(idTransform.getTag())
+              .clusteringRecordTag(clusteringTransform.getTag())
+              .basicRecordTag(basicTransform.getTag())
+              .temporalRecordTag(temporalTransform.getTag())
+              .locationRecordTag(locationTransform.getTag())
+              .multiTaxonRecordTag(multiTaxonomyTransform.getTag())
+              .grscicollRecordTag(grscicollTransform.getTag())
+              .multimediaRecordTag(multimediaTransform.getTag())
+              .imageRecordTag(imageTransform.getTag())
+              .dnaRecordTag(dnaTransform.getTag())
+              .audubonRecordTag(audubonTransform.getTag())
+              .metadataView(metadataView)
+              .build();
+
+      KeyedPCollectionTuple
+          // Core
+          .of(basicTransform.getTag(), basicCollection)
+          .and(idTransform.getTag(), idCollection)
+          .and(clusteringTransform.getTag(), clusteringCollection)
+          .and(temporalTransform.getTag(), temporalCollection)
+          .and(locationTransform.getTag(), locationCollection)
+          .and(multiTaxonomyTransform.getTag(), multiTaxonCollection)
+          .and(grscicollTransform.getTag(), grscicollCollection)
+          .and(eventCoreTransform.getTag(), eventCoreCollection)
+          // Extension
+          .and(multimediaTransform.getTag(), multimediaCollection)
+          .and(imageTransform.getTag(), imageCollection)
+          .and(dnaTransform.getTag(), dnaCollection)
+          .and(audubonTransform.getTag(), audubonCollection)
+          .and(humboldtTransform.getTag(), humboldtCollection)
+          // Raw
+          .and(verbatimTransform.getTag(), verbatimCollection)
+          // Apply
+          .apply("Group hdfs objects", CoGroupByKey.create())
+          .apply("Merge to HdfsRecord", hdfsRecordTransform.converter())
+          .apply(hdfsRecordTransform.write(pathFn.apply(recordType), numberOfShards));
+    }
 
     // Table records
     PCollection<KV<String, CoGbkResult>> tableCollection =

@@ -36,8 +36,6 @@ import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MachineTag;
-import org.gbif.pipelines.io.avro.MeasurementOrFact;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
@@ -57,7 +55,6 @@ import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
 import org.junit.Rule;
@@ -250,17 +247,6 @@ public class ParentJsonTransformTest {
     TemporalInheritedRecord tir = TemporalInheritedRecord.newBuilder().setId("777").build();
     EventInheritedRecord eir = EventInheritedRecord.newBuilder().setId("777").build();
 
-    MeasurementOrFactRecord mofr =
-        MeasurementOrFactRecord.newBuilder()
-            .setId("777")
-            .setMeasurementOrFactItems(
-                Collections.singletonList(
-                    MeasurementOrFact.newBuilder()
-                        .setMeasurementType("sampling")
-                        .setMeasurementMethod("sample")
-                        .build()))
-            .build();
-
     HumboldtRecord hr =
         HumboldtRecord.newBuilder()
             .setId("777")
@@ -284,8 +270,6 @@ public class ParentJsonTransformTest {
     MultimediaTransform multimediaTransform = MultimediaTransform.builder().create();
     AudubonTransform audubonTransform = AudubonTransform.builder().create();
     ImageTransform imageTransform = ImageTransform.builder().create();
-    MeasurementOrFactTransform measurementOrFactTransform =
-        MeasurementOrFactTransform.builder().create();
     HumboldtTransform humboldtTransform =
         HumboldtTransform.builder()
             .vocabularyServiceSupplier(() -> null)
@@ -355,10 +339,6 @@ public class ParentJsonTransformTest {
             .apply("Map EventInheritedRecord to KV", WithKeys.of(EventInheritedRecord::getId))
             .setCoder(AvroKvCoder.of(EventInheritedRecord.class));
 
-    PCollection<KV<String, MeasurementOrFactRecord>> measurementOrFactCollection =
-        p.apply("Read MeasurementOrFactRecord", Create.of(mofr))
-            .apply("Map MeasurementOrFactRecord to KV", measurementOrFactTransform.toKv());
-
     PCollection<KV<String, HumboldtRecord>> humboldtCollection =
         p.apply("Read HumboldtRecord", Create.of(hr))
             .apply("Map HumboldtRecord to KV", humboldtTransform.toKv());
@@ -374,7 +354,6 @@ public class ParentJsonTransformTest {
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
             .derivedMetadataRecordTag(DerivedMetadataTransform.tag())
-            .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
             .humboldtRecordTag(humboldtTransform.getTag())
             .locationInheritedRecordTag(InheritedFieldsTransform.LIR_TAG)
             .temporalInheritedRecordTag(InheritedFieldsTransform.TIR_TAG)
@@ -393,7 +372,6 @@ public class ParentJsonTransformTest {
             .and(multimediaTransform.getTag(), multimediaCollection)
             .and(imageTransform.getTag(), imageCollection)
             .and(audubonTransform.getTag(), audubonCollection)
-            .and(measurementOrFactTransform.getTag(), measurementOrFactCollection)
             .and(humboldtTransform.getTag(), humboldtCollection)
             // Internal
             .and(identifierTransform.getTag(), identifierCollection)
@@ -419,7 +397,6 @@ public class ParentJsonTransformTest {
             .multimedia(mmr)
             .verbatim(er)
             .derivedMetadata(dmr)
-            .measurementOrFactRecord(mofr)
             .humboldtRecord(hr)
             .locationInheritedRecord(lir)
             .temporalInheritedRecord(tir)

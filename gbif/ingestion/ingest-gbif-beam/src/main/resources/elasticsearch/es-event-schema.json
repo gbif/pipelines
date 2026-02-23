@@ -404,6 +404,9 @@
           }
         },
 
+        "measurementTypes": {"type": "keyword", "copy_to": "all"},
+        "measurementTypeIDs": {"type": "keyword", "copy_to": "all"},
+
         "humboldt": {
           "type": "nested",
           "properties": {

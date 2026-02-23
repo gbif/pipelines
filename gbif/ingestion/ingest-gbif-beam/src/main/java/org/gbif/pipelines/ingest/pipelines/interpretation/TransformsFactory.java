@@ -36,6 +36,7 @@ import org.gbif.pipelines.transforms.common.ExtensionFilterTransform;
 import org.gbif.pipelines.transforms.common.FilterRecordsTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
+import org.gbif.pipelines.transforms.converters.EventExtensionsTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
@@ -49,7 +50,6 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.DnaDerivedDataTransform;
 import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
@@ -277,13 +277,13 @@ public class TransformsFactory {
     return OccurrenceExtensionTransform.create();
   }
 
+  public SingleOutput<ExtendedRecord, ExtendedRecord> createEventExtensionsTransform() {
+    return EventExtensionsTransform.create();
+  }
+
   public SingleOutput<KV<String, CoGbkResult>, ExtendedRecord> createFilterRecordsTransform(
       VerbatimTransform verbatimTransform, GbifIdTransform idTransform) {
     return FilterRecordsTransform.create(verbatimTransform.getTag(), idTransform.getTag()).filter();
-  }
-
-  public MeasurementOrFactTransform createMeasurementOrFactTransform() {
-    return MeasurementOrFactTransform.builder().create();
   }
 
   public SerializableSupplier<HBaseLockingKey> createHBaseLockingKeySupplier() {

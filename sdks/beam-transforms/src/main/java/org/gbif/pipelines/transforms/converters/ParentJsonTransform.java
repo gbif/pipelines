@@ -23,7 +23,6 @@ import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -88,7 +87,6 @@ public class ParentJsonTransform implements Serializable {
   @NonNull private final TupleTag<AudubonRecord> audubonRecordTag;
   @NonNull private final PCollectionView<MetadataRecord> metadataView;
   @NonNull private final TupleTag<DerivedMetadataRecord> derivedMetadataRecordTag;
-  @NonNull private final TupleTag<MeasurementOrFactRecord> measurementOrFactRecordTag;
   @NonNull private final TupleTag<HumboldtRecord> humboldtRecordTag;
 
   @NonNull private final TupleTag<LocationInheritedRecord> locationInheritedRecordTag;
@@ -127,10 +125,6 @@ public class ParentJsonTransform implements Serializable {
             ImageRecord imr = v.getOnly(imageRecordTag, ImageRecord.newBuilder().setId(k).build());
             AudubonRecord ar =
                 v.getOnly(audubonRecordTag, AudubonRecord.newBuilder().setId(k).build());
-            MeasurementOrFactRecord mofr =
-                v.getOnly(
-                    measurementOrFactRecordTag,
-                    MeasurementOrFactRecord.newBuilder().setId(k).build());
             HumboldtRecord hr =
                 v.getOnly(humboldtRecordTag, HumboldtRecord.newBuilder().setId(k).build());
 
@@ -170,7 +164,6 @@ public class ParentJsonTransform implements Serializable {
                     .verbatim(er)
                     .derivedMetadata(dmr)
                     .locationInheritedRecord(lir)
-                    .measurementOrFactRecord(mofr)
                     .humboldtRecord(hr)
                     .temporalInheritedRecord(tir)
                     .eventInheritedRecord(eir)

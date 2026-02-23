@@ -17,7 +17,6 @@ import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.RankedName;
@@ -232,7 +231,6 @@ public class ParentJsonConverterTest {
         .temporal(TemporalRecord.newBuilder().setId("1").build())
         .location(LocationRecord.newBuilder().setId("1").build())
         .multimedia(MultimediaRecord.newBuilder().setId("1").build())
-        .measurementOrFactRecord(MeasurementOrFactRecord.newBuilder().setId("1").build())
         .locationInheritedRecord(LocationInheritedRecord.newBuilder().setId("1").build())
         .temporalInheritedRecord(TemporalInheritedRecord.newBuilder().setId("1").build())
         .eventInheritedRecord(EventInheritedRecord.newBuilder().setId("1").build());

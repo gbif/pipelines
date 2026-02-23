@@ -162,12 +162,10 @@ public class OccurrenceHdfsRecordTransformTest {
             .multiTaxonRecordTag(multiTaxonomyTransform.getTag())
             .grscicollRecordTag(grscicollTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
-            .eventCoreRecordTag(eventCoreTransform.getTag())
             .multimediaRecordTag(multimediaTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
             .imageRecordTag(imageTransform.getTag())
             .dnaRecordTag(dnaDerivedDataTransform.getTag())
-            .humboldtRecordTag(humboldtTransform.getTag())
             .metadataView(metadataView)
             .build();
 
@@ -246,6 +244,7 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setDatasetname(Collections.singletonList("setDatasetName"));
     expected.setDwcaextension(
         Collections.singletonList("http://rs.tdwg.org/dwc/terms/MeasurementOrFact"));
+    expected.setMeasurementtype(List.of("Type1"));
     expected.setIsincluster(true);
     expected.setIdentifiedby(Collections.emptyList());
     expected.setIdentifiedbyid(Collections.emptyList());
@@ -256,7 +255,6 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setRecordedbyid(Collections.emptyList());
     expected.setPreparations(Collections.emptyList());
     expected.setOthercatalognumbers(Collections.emptyList());
-    expected.setParenteventgbifid(Collections.emptyList());
     expected.setTypestatus(null);
     expected.setSamplingprotocol(Collections.emptyList());
     expected.setHighergeography(Collections.emptyList());
@@ -269,9 +267,6 @@ public class OccurrenceHdfsRecordTransformTest {
     expected.setDnasequenceid(Collections.singletonList("foo1"));
     expected.setClassifications(new HashMap<>());
     expected.setNontaxonomicissue(List.of());
-    expected.setProjecttitle(List.of());
-    expected.setFundingattribution(List.of());
-    expected.setFundingattributionid(List.of());
     PAssert.that(result).containsInAnyOrder(expected);
     p.run();
   }
