@@ -3,9 +3,7 @@ package org.gbif.pipelines.core.converters;
 import static org.gbif.pipelines.core.utils.EventsUtils.*;
 import static org.gbif.pipelines.core.utils.ExtensionUtils.convertMoFFromVerbatim;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractLengthAwareOptValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
-import static org.gbif.pipelines.core.utils.ModelUtils.hasExtension;
 
 import java.util.*;
 import java.util.function.Function;
@@ -14,7 +12,6 @@ import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.DurationUnit;
-import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.factory.SerDeFactory;
 import org.gbif.pipelines.core.pojo.MoFData;
@@ -507,19 +504,6 @@ public class ParentJsonConverter {
     extractLengthAwareOptValue(verbatim, DwcTerm.fieldNumber).ifPresent(builder::setFieldNumber);
     extractLengthAwareOptValue(verbatim, DwcTerm.island).ifPresent(builder::setIsland);
     extractLengthAwareOptValue(verbatim, DwcTerm.islandGroup).ifPresent(builder::setIslandGroup);
-
-    // set measurement or facts fields
-    if (hasExtension(verbatim, Extension.MEASUREMENT_OR_FACT.getRowType())) {
-      Set<String> measurementTypes =
-          verbatim.getExtensions().get(Extension.MEASUREMENT_OR_FACT.getRowType()).stream()
-              .filter(v -> !v.isEmpty())
-              .map(e -> extractNullAwareValue(e, DwcTerm.measurementType))
-              .filter(v -> v != null && !v.isEmpty())
-              .collect(Collectors.toSet());
-      if (!measurementTypes.isEmpty()) {
-        builder.setMeasurementTypes(new ArrayList<>(measurementTypes));
-      }
-    }
   }
 
   private void mapMoFFromVerbatim(EventJsonRecord.Builder builder) {
