@@ -1,5 +1,8 @@
 package org.gbif.pipelines.spark;
 
+import static org.apache.spark.sql.functions.*;
+import static org.apache.spark.sql.functions.callUDF;
+import static org.apache.spark.sql.functions.col;
 import static org.gbif.pipelines.ConfigUtil.loadConfig;
 import static org.gbif.pipelines.coordinator.DistributedUtil.timeAndRecPerSecond;
 import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
@@ -15,12 +18,14 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.types.ArrayType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.occurrence.download.hive.OccurrenceHDFSTableDefinition;
 import org.gbif.pipelines.IngestUtils;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -107,7 +112,32 @@ public class FullTableBuild {
             args.sourceDirectory,
             config.getRebuildPath() + "/" + args.unsuccessfulDumpFilename);
 
+    // For testing - hardcode the scan result to avoid hitting HDFS and speed up development.
+    // The paths should be to the directories containing the parquet files, not the parquet files
+    // themselves.
+    //    IngestUtils.DirectoryScanResult scanResult =
+    //        new IngestUtils.DirectoryScanResult(
+    //            List.of(
+    //
+    // "hdfs://gbif-hdfs/data/ingest_lab/34039ff3-7eaf-4ebf-bcf4-64b7365004b4/1/hdfs/",
+    //
+    // "hdfs://gbif-hdfs/data/ingest_lab/cc63e998-fe1b-468d-94f1-6afcf494d0e4/1/hdfs/",
+    //
+    // "hdfs://gbif-hdfs/data/ingest_lab/100a9054-e46c-4302-b059-3a8836df1cf7/1/hdfs/",
+    //
+    // "hdfs://gbif-hdfs/data/ingest_lab/f08c9244-5af4-458c-8966-43d981da09e7/1/hdfs/"),
+    //            Map.of(
+    //                "34039ff3-7eaf-4ebf-bcf4-64b7365004b4",
+    //                1,
+    //                "cc63e998-fe1b-468d-94f1-6afcf494d0e4",
+    //                1,
+    //                "100a9054-e46c-4302-b059-3a8836df1cf7",
+    //                1,
+    //                "f08c9244-5af4-458c-8966-43d981da09e7",
+    //                1));
+
     spark.udf().register("base64_decode", new TableBuild.Base64DecodeUDF(), DataTypes.StringType);
+    spark.udf().register("cleanDelimiters", new CleanDelimiterCharsUdf(), DataTypes.StringType);
 
     log.info("Starting table build");
 
@@ -160,16 +190,10 @@ public class FullTableBuild {
       throw new IllegalStateException("There are " + count + " records with NULL datasetKey");
     }
 
-    if (spark.catalog().tableExists(args.coreDwcTerm)) {
-      log.info("Table {} exists", args.coreDwcTerm);
-    } else {
-      log.info("Table {} does not exist and will be created", args.coreDwcTerm);
+    String prefix = "rebuild_" + start + "_";
 
-      // Create or populate the occurrence table SQL
-      spark.sql(getCreateTableSQL(args.coreDwcTerm));
-
-      log.info("Table {} created. Creating extension tables", args.coreDwcTerm);
-    }
+    // Create the occurrence table SQL
+    spark.sql(getCreateTableSQL(prefix, args.coreDwcTerm));
 
     // get the hdfs columns from the parquet with mappings to iceberg columns
     Map<String, TableBuild.HdfsColumn> hdfsColumnList = getHdfsColumns(hdfs);
@@ -180,8 +204,9 @@ public class FullTableBuild {
     // Build the insert query
     String insertQuery =
         String.format(
-            "INSERT OVERWRITE TABLE %s.%s (%s) SELECT %s FROM %s.%s",
+            "INSERT OVERWRITE TABLE %s.%s%s (%s) SELECT %s FROM %s.%s",
             config.getHiveDB(),
+            prefix,
             args.coreDwcTerm,
             Arrays.stream(tblSchema.fields())
                 .map(StructField::name)
@@ -198,7 +223,87 @@ public class FullTableBuild {
     // Drop the temporary table
     spark.sql("DROP TABLE " + tempLoadingTable);
 
-    log.info(timeAndRecPerSecond("full-tablebuild", start, avroToHdfsCountAttempted));
+    // create occurrence_multimedia table
+    spark.sql(getCreateMultimediaTableSQL(prefix, args.coreDwcTerm));
+
+    // Insert multimedia data into the occurrence_multimedia table
+    insertOverwriteMultimediaTable(
+        spark, prefix + args.coreDwcTerm, prefix + args.coreDwcTerm + "_multimedia");
+
+    log.info(timeAndRecPerSecond("full-table-build", start, avroToHdfsCountAttempted));
+  }
+
+  public static void insertOverwriteMultimediaTable(
+      SparkSession spark, String occurrenceTable, String multimediaTable) {
+    spark
+        .table(occurrenceTable)
+        .select(
+            col("gbifid"),
+            from_json(
+                    col("ext_multimedia"),
+                    new ArrayType(
+                        new StructType()
+                            .add("type", "string", false)
+                            .add("format", "string", false)
+                            .add("identifier", "string", false)
+                            .add("references", "string", false)
+                            .add("title", "string", false)
+                            .add("description", "string", false)
+                            .add("source", "string", false)
+                            .add("audience", "string", false)
+                            .add("created", "string", false)
+                            .add("creator", "string", false)
+                            .add("contributor", "string", false)
+                            .add("publisher", "string", false)
+                            .add("license", "string", false)
+                            .add("rightsHolder", "string", false),
+                        true))
+                .alias("mm_record"),
+            col("datasetkey"))
+        .select(col("gbifid"), explode(col("mm_record")).alias("mm_record"), col("datasetkey"))
+        .select(
+            col("gbifid"),
+            callUDF("cleanDelimiters", col("mm_record.type")).alias("type"),
+            callUDF("cleanDelimiters", col("mm_record.format")).alias("format"),
+            callUDF("cleanDelimiters", col("mm_record.identifier")).alias("identifier"),
+            callUDF("cleanDelimiters", col("mm_record.references")).alias("references"),
+            callUDF("cleanDelimiters", col("mm_record.title")).alias("title"),
+            callUDF("cleanDelimiters", col("mm_record.description")).alias("description"),
+            callUDF("cleanDelimiters", col("mm_record.source")).alias("source"),
+            callUDF("cleanDelimiters", col("mm_record.audience")).alias("audience"),
+            col("mm_record.created").alias("created"),
+            callUDF("cleanDelimiters", col("mm_record.creator")).alias("creator"),
+            callUDF("cleanDelimiters", col("mm_record.contributor")).alias("contributor"),
+            callUDF("cleanDelimiters", col("mm_record.publisher")).alias("publisher"),
+            callUDF("cleanDelimiters", col("mm_record.license")).alias("license"),
+            callUDF("cleanDelimiters", col("mm_record.rightsHolder")).alias("rightsHolder"),
+            col("datasetkey"))
+        .createOrReplaceTempView("mm_records");
+
+    spark.sql(
+        String.format(
+            """
+                    INSERT OVERWRITE TABLE %s
+                    SELECT
+                        gbifid,
+                        type,
+                        format,
+                        identifier,
+                        references,
+                        title,
+                        description,
+                        source,
+                        audience,
+                        created,
+                        creator,
+                        contributor,
+                        publisher,
+                        license,
+                        rightsHolder,
+                        datasetkey
+                    FROM mm_records
+                    """,
+            multimediaTable));
   }
 
   private static String generateSelectColumns(
@@ -271,25 +376,66 @@ public class FullTableBuild {
     return hdfsColumnList;
   }
 
-  static String getFieldDefns() {
+  static String getFieldDefinitions() {
     return OccurrenceHDFSTableDefinition.definition().stream()
         .map(field -> field.getHiveField() + " " + field.getHiveDataType())
         .collect(Collectors.joining(", \n"));
   }
 
-  public static String getCreateTableSQL(String tableName) {
+  public static String getCreateTableSQL(String prefix, String tableName) {
     return String.format(
         """
-          CREATE TABLE IF NOT EXISTS %s
+          CREATE TABLE IF NOT EXISTS %s%s
           (%s)
           USING iceberg
           PARTITIONED BY (datasetkey)
           TBLPROPERTIES (
-            'write.format.default'='parquet',
-            'parquet.compression'='SNAPPY',
-            'auto.purge'='true'
+            'write.format.default' = 'parquet',
+            'parquet.compression' = 'ZSTD',
+            'auto.purge' = 'true',
+            'write.merge.isolation-level' = 'snapshot',
+            'commit.retry.num-retries' = '10',
+            'commit.retry.min-wait-ms' = '1000',
+            'commit.retry.max-wait-ms' = '10000'
           )
         """,
-        tableName, getFieldDefns());
+        prefix, tableName, getFieldDefinitions());
+  }
+
+  public static String getCreateMultimediaTableSQL(String prefix, String coreDwcTerm) {
+    return String.format(
+        """
+          CREATE TABLE IF NOT EXISTS %s%s_multimedia
+          (
+             gbifid STRING,
+             type STRING,
+             format STRING,
+             identifier STRING,
+             references STRING,
+             title STRING,
+             description STRING,
+             source STRING,
+             audience STRING,
+             created STRING,
+             creator STRING,
+             contributor STRING,
+             publisher STRING,
+             license STRING,
+             rightsHolder STRING,
+             datasetkey STRING
+          )
+          USING iceberg
+          PARTITIONED BY (datasetkey)
+          TBLPROPERTIES (
+            'write.format.default' = 'parquet',
+            'parquet.compression' = 'ZSTD',
+            'auto.purge' = 'true',
+            'write.merge.isolation-level' = 'snapshot',
+            'commit.retry.num-retries' = '10',
+            'commit.retry.min-wait-ms' = '1000',
+            'commit.retry.max-wait-ms' = '10000'
+          )
+        """,
+        prefix, coreDwcTerm);
   }
 }

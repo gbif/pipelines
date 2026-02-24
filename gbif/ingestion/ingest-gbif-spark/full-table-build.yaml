@@ -30,6 +30,8 @@ spec:
     - "--sourceDirectory=hdfs"
     - "--appName=full-table-build"
     - "--numberOfShards=2400"
+    - "--unsuccessfulDumpFilename=full-table-build-unsuccessful-datasets.txt"
+    - "--coreDwcTerm=occurrence"
   sparkConf:
     "spark.driver.extraJavaOptions": "-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35"
     "spark.executor.extraJavaOptions": "-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35 -XX:ConcGCThread=20"
