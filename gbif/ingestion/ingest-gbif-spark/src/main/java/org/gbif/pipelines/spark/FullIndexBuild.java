@@ -29,6 +29,14 @@ import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.service.EsService;
 
+/**
+ * This class performs a full rebuild of the elastic search index for a given core Darwin Core term
+ * (e.g. occurrence or event) by reading from parquet files in HDFS and writing to Elasticsearch. It
+ * creates new indexes with the appropriate number of shards based on the record count for each
+ * dataset, and updates the alias to point to the new index. It also handles datasets with low
+ * record counts by putting them in a shared default index to avoid creating many small indexes in
+ * Elasticsearch.
+ */
 @Slf4j
 public class FullIndexBuild {
 
@@ -229,12 +237,12 @@ public class FullIndexBuild {
         .write()
         .option("maxRecordsPerFile", args.maxRecordsPerFile)
         .mode(SaveMode.Overwrite)
-        .parquet("hdfs://gbif-hdfs/data/rebuild_lab/elastic");
+        .parquet(config.getRebuildPath() + "/elastic");
 
     // Write to Elasticsearch
     spark
         .read()
-        .parquet("hdfs://gbif-hdfs/data/rebuild_lab/elastic")
+        .parquet(config.getRebuildPath() + "/elastic")
         .write()
         .format("org.elasticsearch.spark.sql")
         .option("es.resource", "{index_name}/_doc")

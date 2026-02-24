@@ -8,12 +8,10 @@ import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -25,6 +23,13 @@ import org.gbif.pipelines.IngestUtils;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * This class performs a full rebuild of the Iceberg table from the parquet files in HDFS. It reads
+ * the parquet files, maps the columns to the Iceberg schema, and writes the data to a temporary
+ * Iceberg table. Then it inserts the data from the temporary table into the final Iceberg table
+ * (e.g. 'occurrence' or 'event') and drops the temporary table. It also checks for any records with
+ * NULL or empty datasetKey or gbifId and throws an exception if any are found.
+ */
 @Slf4j
 public class FullTableBuild {
 
@@ -48,7 +53,7 @@ public class FullTableBuild {
 
     @Parameter(
         names = "--sourceDirectory",
-        description = "Directory containing the parquet to load",
+        description = "Directory containing the parquet to load e.g. hdfs, json, etc",
         required = true)
     private String sourceDirectory = "hdfs";
 
@@ -90,7 +95,7 @@ public class FullTableBuild {
     /* ############ standard init block ########## */
     SparkSession spark =
         getSparkSession(
-            args.master, "Rebuild Occurrence Table", config, TableBuild::configSparkSession);
+            args.master, "Rebuild Iceberg Table", config, TableBuild::configSparkSession);
     FileSystem fileSystem = getFileSystem(spark, config);
 
     /* ############ standard init block - end ########## */
@@ -264,23 +269,6 @@ public class FullTableBuild {
     }
 
     return hdfsColumnList;
-  }
-
-  @NotNull
-  public static String getMetricsFileName(String tableName) {
-    return tableName + "-to-hdfs.yml";
-  }
-
-  @NotNull
-  private static void cleanHdfsPath(FileSystem fileSystem, PipelinesConfig config, String table)
-      throws IOException {
-    Path warehousePath = new Path(config.getHdfsWarehousePath() + "/" + table);
-    log.debug("Checking warehouse path: {}", warehousePath);
-    if (fileSystem.exists(warehousePath)) {
-      log.debug("Deleting warehouse path: {}", warehousePath);
-      fileSystem.delete(warehousePath, true);
-      log.debug("Deleted warehouse path: {}", warehousePath);
-    }
   }
 
   static String getFieldDefns() {

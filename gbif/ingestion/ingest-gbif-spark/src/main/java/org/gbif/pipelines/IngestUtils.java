@@ -13,14 +13,17 @@ import org.jetbrains.annotations.NotNull;
 public class IngestUtils {
 
   /**
-   * Scans the output directory for _SUCCESS files to find the most recent successful interpretation
-   * for each dataset, and returns the paths to read from as well as a map of datasetId to attempt
-   * number. Also writes the list of unsuccessful datasets to a hdfs file for later review.
+   * Scans the output directory (e.g. /data/ingest) for _SUCCESS files to find the most recent
+   * successful interpretation for each dataset, and returns the paths to read from as well as a map
+   * of datasetId to attempt number. Also writes the list of unsuccessful datasets to a hdfs file
+   * for later review.
    *
-   * @param fileSystem
-   * @param config
-   * @param sourceDirectory
-   * @param unsuccessfulFileDumpPath
+   * @param fileSystem the Hadoop FileSystem to use for scanning directories and writing the
+   *     unsuccessful datasets file
+   * @param config the PipelinesConfig containing the output path to scan
+   * @param sourceDirectory the name of the source directory to look for (e.g. "hdfs" or "json")
+   * @param unsuccessfulFileDumpPath the HDFS path to write the list of unsuccessful datasets to
+   *     (e.g. /data/unsuccessful_datasets.txt)
    * @return a DirectoryScanResult containing the list of successful paths to read from and a map of
    *     datasetId to attempt number
    * @throws IOException
