@@ -67,7 +67,7 @@
     <jsr305.version>3.0.2</jsr305.version>
     <metainf-services.version>1.7</metainf-services.version>
     <validation-api.version>1.1.0.Final</validation-api.version>
-    <neo4j.version>3.5.29</neo4j.version>
+    <neo4j.version>5.26.21</neo4j.version>
     <yammer-metrics.version>2.2.0</yammer-metrics.version>
   </properties>
 
