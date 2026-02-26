@@ -116,7 +116,10 @@ public class FullTableBuild {
     /* ############ standard init block ########## */
     SparkSession spark =
         getSparkSession(
-            args.master, "Rebuild iceberg tables - " + args.coreDwcTerm, config, TableBuild::configSparkSession);
+            args.master,
+            "Rebuild iceberg tables - " + args.coreDwcTerm,
+            config,
+            TableBuild::configSparkSession);
     FileSystem fileSystem = getFileSystem(spark, config);
 
     /* ############ standard init block - end ########## */
