@@ -65,7 +65,7 @@ pipeline {
       }
       steps {
         withMaven () {
-          sh 'mvn clean install -P skip-release-it'
+          sh 'mvn clean install -U -P skip-release-it'
         }
       }
     }
