@@ -247,22 +247,8 @@ public abstract class PipelinesCallback<
       // Acknowledge message processing
       updateTrackingStatus(trackingInfo, message, PipelineStep.Status.COMPLETED);
 
-      // Create and send outgoing message
-      O outgoingMessage = createOutgoingMessage(message);
-
-      String nextMessageClassName = outgoingMessage.getClass().getSimpleName();
-      String messagePayload = outgoingMessage.toString();
-
-      publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
-
-      String logInfo =
-          "Next message has been sent - "
-              + outgoingMessage.getClass().getSimpleName()
-              + ":"
-              + outgoingMessage;
-      log.debug(logInfo);
-
-      updateQueuedStatus(trackingInfo, message);
+      // set outgoing message to the queue for the next step
+      sendOutgoingMessage(trackingInfo, message);
 
       log.info("Finished processing datasetKey: {}", message.getDatasetUuid());
 
@@ -313,6 +299,57 @@ public abstract class PipelinesCallback<
         Retry.decorateRunnable(RETRY, r).run();
       }
     }
+  }
+
+  private void sendOutgoingMessage(TrackingInfo trackingInfo, I message) throws IOException {
+    Function<Long, List<PipelineStep>> getStepsByExecutionKeyFn =
+        ek -> {
+          log.debug("History client: get steps by execution key {}", ek);
+          return historyClient.getPipelineStepsByExecutionKey(ek);
+        };
+
+    List<PipelineStep> executionPipelineSteps =
+        Retry.decorateFunction(RETRY, getStepsByExecutionKeyFn).apply(trackingInfo.executionId);
+
+    log.info(
+        "Execution steps for execution key {}: {}",
+        trackingInfo.executionId,
+        executionPipelineSteps);
+
+    List<PipelineStep> thisPipelineStep =
+        executionPipelineSteps.stream().filter(ps -> ps.getType() == getStepType()).toList();
+
+    if (thisPipelineStep.isEmpty()) {
+      log.warn(
+          "Current step {} is not found in the execution steps, won't send outgoing message",
+          getStepType());
+      return;
+    }
+
+    PipelineStep step = thisPipelineStep.get(0);
+    // is this steptype the last in the list
+    if (!executionPipelineSteps.isEmpty()
+        && executionPipelineSteps.indexOf(step) == executionPipelineSteps.size() - 1) {
+      log.info("Current step {} is last step, won't send outgoing message", getStepType());
+      return;
+    }
+
+    // Create and send outgoing message
+    O outgoingMessage = createOutgoingMessage(message);
+
+    String nextMessageClassName = outgoingMessage.getClass().getSimpleName();
+    String messagePayload = outgoingMessage.toString();
+
+    publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
+
+    String logInfo =
+        "Next message has been sent - "
+            + outgoingMessage.getClass().getSimpleName()
+            + ":"
+            + outgoingMessage;
+    log.debug(logInfo);
+
+    updateQueuedStatus(trackingInfo, message);
   }
 
   private static void checkIfPaused() {
@@ -508,12 +545,6 @@ public abstract class PipelinesCallback<
 
   private TrackingInfo trackPipelineStep(I message) throws Exception {
 
-    //
-    //        if (isValidator) {
-    //            log.info("Skipping status updating, isValidator {}", isValidator);
-    //            return Optional.empty();
-    //        }
-
     // create pipeline process. If it already exists it returns the existing one (the db query
     // does an upsert).
     UUID datasetUuid = message.getDatasetUuid();
@@ -573,7 +604,7 @@ public abstract class PipelinesCallback<
     List<PipelineStep> stepsByExecutionKey =
         Retry.decorateFunction(RETRY, getStepsByExecutionKeyFn).apply(executionId);
 
-    // add step to the process
+    // get the step to the process
     PipelineStep step =
         stepsByExecutionKey.stream()
             .filter(ps -> ps.getType() == getStepType())
