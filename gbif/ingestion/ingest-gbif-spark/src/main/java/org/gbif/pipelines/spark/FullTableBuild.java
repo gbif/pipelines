@@ -7,6 +7,7 @@ import static org.gbif.pipelines.ConfigUtil.loadConfig;
 import static org.gbif.pipelines.coordinator.DistributedUtil.timeAndRecPerSecond;
 import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
+import static org.gbif.terms.utils.TermUtils.INTERPRETED_HUMBOLDT_TERMS;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -18,10 +19,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.types.ArrayType;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructField;
-import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.types.*;
+import org.gbif.dwc.terms.Term;
+import org.gbif.occurrence.download.hive.HiveDataTypes;
 import org.gbif.occurrence.download.hive.OccurrenceHDFSTableDefinition;
 import org.gbif.pipelines.IngestUtils;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -37,6 +37,8 @@ import org.jetbrains.annotations.NotNull;
  */
 @Slf4j
 public class FullTableBuild {
+
+  public static final List<String> SUPPORTED_CORE_TERMS = List.of("occurrence", "event");
 
   @Parameters(separators = "=")
   private static class Args {
@@ -76,6 +78,12 @@ public class FullTableBuild {
     private String unsuccessfulDumpFilename = "unsuccessful-iceberg-datasets.txt";
 
     @Parameter(
+        names = "--earliestModificationTime",
+        description =
+            "Only consider parquet files modified after this time (ISO 8601 format, e.g. 2024-01-01T00:00:00Z)")
+    private String earliestModificationTime = null;
+
+    @Parameter(
         names = {"--help", "-h"},
         help = true,
         description = "Show usage")
@@ -93,6 +101,14 @@ public class FullTableBuild {
       return;
     }
 
+    if (args.coreDwcTerm == null
+        || args.coreDwcTerm.isEmpty()
+        || !SUPPORTED_CORE_TERMS.contains(args.coreDwcTerm)) {
+      log.error("coreDwcTerm is required and cannot be empty");
+      jCommander.usage();
+      return;
+    }
+
     long start = System.currentTimeMillis();
 
     PipelinesConfig config = loadConfig(args.config);
@@ -100,7 +116,7 @@ public class FullTableBuild {
     /* ############ standard init block ########## */
     SparkSession spark =
         getSparkSession(
-            args.master, "Rebuild Iceberg Table", config, TableBuild::configSparkSession);
+            args.master, "Rebuild iceberg tables - " + args.coreDwcTerm, config, TableBuild::configSparkSession);
     FileSystem fileSystem = getFileSystem(spark, config);
 
     /* ############ standard init block - end ########## */
@@ -110,7 +126,8 @@ public class FullTableBuild {
             fileSystem,
             config,
             args.sourceDirectory,
-            config.getRebuildPath() + "/" + args.unsuccessfulDumpFilename);
+            config.getRebuildPath() + "/" + args.unsuccessfulDumpFilename,
+            args.earliestModificationTime);
 
     // For testing - hardcode the scan result to avoid hitting HDFS and speed up development.
     // The paths should be to the directories containing the parquet files, not the parquet files
@@ -223,12 +240,20 @@ public class FullTableBuild {
     // Drop the temporary table
     spark.sql("DROP TABLE " + tempLoadingTable);
 
-    // create occurrence_multimedia table
+    // Create occurrence_multimedia table
     spark.sql(getCreateMultimediaTableSQL(prefix, args.coreDwcTerm));
 
     // Insert multimedia data into the occurrence_multimedia table
     insertOverwriteMultimediaTable(
         spark, prefix + args.coreDwcTerm, prefix + args.coreDwcTerm + "_multimedia");
+
+    if (args.coreDwcTerm.equalsIgnoreCase("event")) {
+      // For event table, also create the event_humboldt table and insert data
+      // Create event_humboldt table
+      String tableName = prefix + "event_humboldt";
+      spark.sql(getCreateIfNotExistsHumboldt(tableName));
+      insertOverwriteHumboldtTable(spark, tableName);
+    }
 
     log.info(timeAndRecPerSecond("full-table-build", start, avroToHdfsCountAttempted));
   }
@@ -304,6 +329,105 @@ public class FullTableBuild {
                     FROM mm_records
                     """,
             multimediaTable));
+  }
+
+  public static String getCreateIfNotExistsHumboldt(String tableName) {
+
+    String selectTerms =
+        INTERPRETED_HUMBOLDT_TERMS.stream()
+            .map(term -> term.simpleName() + " " + HiveDataTypes.typeForTerm(term, false))
+            .collect(Collectors.joining(","));
+
+    return String.format(
+        """
+                 CREATE TABLE IF NOT EXISTS %s
+                 (gbifid STRING, %s, datasetkey STRING) "
+                 STORED AS PARQUET
+                 TBLPROPERTIES (
+                    'write.format.default' = 'parquet',
+                    'parquet.compression' = 'ZSTD',
+                    'auto.purge' = 'true',
+                    'write.merge.isolation-level' = 'snapshot',
+                    'commit.retry.num-retries' = '10',
+                    'commit.retry.min-wait-ms' = '1000',
+                    'commit.retry.max-wait-ms' = '10000'
+                 )
+            """,
+        tableName, selectTerms);
+  }
+
+  public static void insertOverwriteHumboldtTable(SparkSession spark, String tableName) {
+    spark
+        .table(tableName)
+        .select(
+            col("gbifid"),
+            from_json(
+                    col("ext_humboldt"),
+                    new ArrayType(
+                        createHumboldtStructTypeFromJson(INTERPRETED_HUMBOLDT_TERMS), true))
+                .alias("h_record"))
+        .select(col("gbifid"), explode(col("h_record")).alias("h_record"))
+        .createOrReplaceTempView("h_records");
+
+    String interpretedTerms =
+        INTERPRETED_HUMBOLDT_TERMS.stream()
+            .map(t -> "h_record." + t.simpleName())
+            .collect(Collectors.joining(","));
+
+    spark.sql(
+        String.format(
+            """
+                      INSERT OVERWRITE TABLE %s
+                      SELECT gbifid, %s, datasetkey FROM h_records
+                    """,
+            tableName, interpretedTerms));
+  }
+
+  private static StructType createHumboldtStructTypeFromJson(List<Term> terms) {
+    StructType structType = new StructType();
+    for (Term humboldtTerm : terms) {
+      String hiveDataType = HiveDataTypes.typeForTerm(humboldtTerm, false);
+      DataType type = null;
+      switch (hiveDataType) {
+        case HiveDataTypes.TYPE_STRING:
+          type = DataTypes.StringType;
+          break;
+        case HiveDataTypes.TYPE_ARRAY_STRING:
+          type = new ArrayType(DataTypes.StringType, true);
+          break;
+        case HiveDataTypes.TYPE_INT:
+          type = DataTypes.IntegerType;
+          break;
+        case HiveDataTypes.TYPE_DOUBLE:
+          type = DataTypes.DoubleType;
+          break;
+        case HiveDataTypes.TYPE_BOOLEAN:
+          type = DataTypes.BooleanType;
+          break;
+        case HiveDataTypes.TYPE_MAP_OF_MAP_ARRAY_STRUCT:
+          type =
+              new MapType(
+                  DataTypes.StringType,
+                  new MapType(
+                      DataTypes.StringType, new ArrayType(DataTypes.StringType, true), true),
+                  true);
+          break;
+        case HiveDataTypes.TYPE_VOCABULARY_ARRAY_STRUCT:
+          type =
+              new StructType()
+                  .add("concepts", new ArrayType(DataTypes.StringType, true))
+                  .add("lineage", new ArrayType(DataTypes.StringType, true));
+          break;
+      }
+
+      if (type != null) {
+        structType = structType.add(humboldtTerm.simpleName(), type, true);
+      } else {
+        log.warn("Type not found for humboldt term {}", humboldtTerm);
+      }
+    }
+
+    return structType;
   }
 
   private static String generateSelectColumns(

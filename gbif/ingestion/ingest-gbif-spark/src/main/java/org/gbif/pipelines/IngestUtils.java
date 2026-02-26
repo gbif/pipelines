@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -32,12 +33,23 @@ public class IngestUtils {
       FileSystem fileSystem,
       PipelinesConfig config,
       String sourceDirectory,
-      String unsuccessfulFileDumpPath)
+      String unsuccessfulFileDumpPath,
+      String earliestAllowedSuccessFileDate)
       throws IOException {
+
+    Long earliestAllowedSuccessFileDateEpochMillis = null;
+
+    if (StringUtils.isNotBlank(earliestAllowedSuccessFileDate)) {
+
+      // parse date ISO 8601 format to epoch seconds
+      earliestAllowedSuccessFileDateEpochMillis =
+          java.time.Instant.parse(earliestAllowedSuccessFileDate).toEpochMilli();
+    }
 
     List<String> hdfsPaths = new ArrayList<>();
     FileStatus[] fileStatuses = fileSystem.globStatus(new Path(config.getOutputPath() + "/*"));
     List<String> unsuccessfulDatasets = new ArrayList<>();
+    List<String> tooOldDatasets = new ArrayList<>();
     Map<String, Integer> datasetAttemptMap = new java.util.HashMap<>();
 
     // for each directory, find the last successful interpretation and create a symlink to it
@@ -61,17 +73,25 @@ public class IngestUtils {
           }
 
           if (newestSuccessFile != null) {
-            Path successAttemptDir =
-                newestSuccessFile
-                    .getPath()
-                    .getParent()
-                    .getParent(); // go up from hdfs/_SUCCESS to interpretation dir
 
-            String attempt = successAttemptDir.getName(); // this should be the attempt number
+            if (earliestAllowedSuccessFileDateEpochMillis != null
+                && newestSuccessFile.getModificationTime()
+                    < earliestAllowedSuccessFileDateEpochMillis) {
+              tooOldDatasets.add(datasetId);
+            } else {
 
-            // add if the _SUCCESS file is less than 4 weeks old to the list of paths to read from
-            hdfsPaths.add(successAttemptDir + "/" + sourceDirectory + "/");
-            datasetAttemptMap.put(datasetId, Integer.parseInt(attempt));
+              Path successAttemptDir =
+                  newestSuccessFile
+                      .getPath()
+                      .getParent()
+                      .getParent(); // go up from hdfs/_SUCCESS to interpretation dir
+
+              String attempt = successAttemptDir.getName(); // this should be the attempt number
+
+              // add if the _SUCCESS file is less than 4 weeks old to the list of paths to read from
+              hdfsPaths.add(successAttemptDir + "/" + sourceDirectory + "/");
+              datasetAttemptMap.put(datasetId, Integer.parseInt(attempt));
+            }
           } else {
             unsuccessfulDatasets.add(datasetId);
           }
@@ -86,7 +106,10 @@ public class IngestUtils {
     try (org.apache.hadoop.fs.FSDataOutputStream outputStream =
         fileSystem.create(unsuccessfulFilePath)) {
       for (String datasetId : unsuccessfulDatasets) {
-        outputStream.writeBytes(datasetId + "\n");
+        outputStream.writeBytes(datasetId + ",MISSING\n");
+      }
+      for (String datasetId : tooOldDatasets) {
+        outputStream.writeBytes(datasetId + ",OUT_OF_SYNC\n");
       }
     }
 

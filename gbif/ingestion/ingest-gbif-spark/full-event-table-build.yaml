@@ -1,7 +1,7 @@
 apiVersion: spark.stackable.tech/v1alpha1
 kind: SparkApplication
 metadata:
-  name: full-index-build
+  name: full-event-table-build
 spec:
   image: docker.gbif.org/ingest-gbif-spark:4.0.0-SNAPSHOT
   sparkImage:
@@ -10,7 +10,7 @@ spec:
     custom: docker.gbif.org/extended-stackable/spark-k8s-all-deps:3.5.1-stackable24.7.0-1.0.0
   mode: cluster
   mainApplicationFile: hdfs://gbif-hdfs/user/dave/ingest.jar
-  mainClass: org.gbif.pipelines.spark.FullIndexBuild
+  mainClass: org.gbif.pipelines.spark.FullTableBuild
   vectorAggregatorConfigMapName: gbif-vector-aggregator-discovery
   s3connection:
     inline:
@@ -26,10 +26,11 @@ spec:
         inline:
           bucketName: spark-history-lab-bucket
   args:
-    - "--tableName=occurrence"
-    - "--sourceDirectory=hdfs"
-    - "--appName=full-index-build"
+    - "--coreDwcTerm=event"
+    - "--sourceDirectory=event-hdfs"
+    - "--appName=full-event-table-build"
     - "--numberOfShards=2400"
+    - "--unsuccessfulDumpFilename=full-event-table-build-unsuccessful-datasets.txt"
   sparkConf:
     "spark.driver.extraJavaOptions": "-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35"
     "spark.executor.extraJavaOptions": "-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35 -XX:ConcGCThread=20"
@@ -63,12 +64,12 @@ spec:
     "spark.kubernetes.scheduler.name": "yunikorn"
     "spark.kubernetes.executor.label.queue": "root.lab.pipelines"
     "spark.kubernetes.submit.label.queue": "root.lab.pipelines"
-    "spark.executor.instances": "30"
-    "spark.executor.cores": "8"
+    "spark.executor.instances": "25"
+    "spark.executor.cores": "10"
     "spark.executor.memoryOverheadFactor": "0.15"
     "spark.driver.cores": "4"
     "spark.driver.memoryOverheadFactor": "0.10"
-    "spark.kubernetes.executor.podNamePrefix": "full-index-build"
+    "spark.kubernetes.executor.podNamePrefix": "full-table-build"
     "spark.kubernetes.driver.ownPersistentVolumeClaim": "true"
     "spark.kubernetes.driver.reusePersistentVolumeClaim": "true"
     "spark.kubernetes.driver.waitToReusePersistentVolumeClaim": "true"
@@ -188,18 +189,6 @@ spec:
         labels:
           queue: "root.lab.pipelines"
       spec:
-        affinity:
-          nodeAffinity:
-            requiredDuringSchedulingIgnoredDuringExecution:
-              nodeSelectorTerms:
-                - matchExpressions:
-                    - key: kubernetes.io/hostname
-                      operator: NotIn
-                      values:
-                        - c6p4
-                        - c6p5
-                        - c7p9
-                        - c7p10
         initContainers:
           - name: job
             imagePullPolicy: Always

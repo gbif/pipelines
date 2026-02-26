@@ -77,6 +77,12 @@ public class FullIndexBuild {
     private String unsuccessfulDumpFilename = "unsuccessful-elastic-datasets.txt";
 
     @Parameter(
+        names = "--earliestModificationTime",
+        description =
+            "Only consider parquet files modified after this time (ISO 8601 format, e.g. 2024-01-01T00:00:00Z)")
+    private String earliestModificationTime = null;
+
+    @Parameter(
         names = {"--help", "-h"},
         help = true,
         description = "Show usage")
@@ -110,7 +116,8 @@ public class FullIndexBuild {
             fileSystem,
             config,
             args.sourceDirectory,
-            config.getRebuildPath() + "/" + args.unsuccessfulDumpFilename);
+            config.getRebuildPath() + "/" + args.unsuccessfulDumpFilename,
+            args.earliestModificationTime);
 
     log.info("Starting full index build");
 

@@ -1,7 +1,7 @@
 apiVersion: spark.stackable.tech/v1alpha1
 kind: SparkApplication
 metadata:
-  name: full-index-build
+  name: full-occurrence-table-build
 spec:
   image: docker.gbif.org/ingest-gbif-spark:4.0.0-SNAPSHOT
   sparkImage:
@@ -10,7 +10,7 @@ spec:
     custom: docker.gbif.org/extended-stackable/spark-k8s-all-deps:3.5.1-stackable24.7.0-1.0.0
   mode: cluster
   mainApplicationFile: hdfs://gbif-hdfs/user/dave/ingest.jar
-  mainClass: org.gbif.pipelines.spark.FullIndexBuild
+  mainClass: org.gbif.pipelines.spark.FullTableBuild
   vectorAggregatorConfigMapName: gbif-vector-aggregator-discovery
   s3connection:
     inline:
@@ -26,10 +26,12 @@ spec:
         inline:
           bucketName: spark-history-lab-bucket
   args:
-    - "--tableName=occurrence"
+    - "--coreDwcTerm=occurrence"
     - "--sourceDirectory=hdfs"
-    - "--appName=full-index-build"
+    - "--appName=full-occurrence-table-build"
     - "--numberOfShards=2400"
+    - "--unsuccessfulDumpFilename=full-occurrence-table-build-unsuccessful-datasets.txt"
+    - "--earliestModificationTime=2026-02-12T00:00:00Z"
   sparkConf:
     "spark.driver.extraJavaOptions": "-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35"
     "spark.executor.extraJavaOptions": "-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35 -XX:ConcGCThread=20"
@@ -39,31 +41,21 @@ spec:
     "spark.storage.decommission.rddBlocks.enabled": "false"
     "spark.shuffle.readHostLocalDisk": "false"
     "spark.shuffle.service.enabled": "false"
-    "spark.shuffle.manager": "org.apache.spark.shuffle.celeborn.SparkShuffleManager"
     "spark.serializer": "org.apache.spark.serializer.KryoSerializer"
-    "spark.celeborn.client.spark.shuffle.writer": "hash"
-    "spark.celeborn.client.push.replicate.enabled": "true"
     "spark.sql.adaptive.localShuffleReader.enabled": "false"
     "spark.sql.adaptive.enabled": "true"
     "spark.sql.adaptive.skewJoin.enabled": "true"
-    "spark.shuffle.sort.io.plugin.class": "org.apache.spark.shuffle.celeborn.CelebornShuffleDataIO"
-    "spark.celeborn.master.endpoints": "gbif-shuffle-service-celeborn-master-0.gbif-shuffle-service-celeborn-master-svc.test:9097,gbif-shuffle-service-celeborn-master-1.gbif-shuffle-service-celeborn-master-svc.test:9097,gbif-shuffle-service-celeborn-master-2.gbif-shuffle-service-celeborn-master-svc.test:9097"
     "spark.files.fetchTimeout": "300s"
     "spark.sql.shuffle.partitions": "2400"
     "spark.default.parallelism": "2400"
-    "spark.sql.adaptive.advisoryPartitionSizeInBytes": "128MB"
-    "spark.io.compression.codec": "lz4"
-    "spark.memory.storageFraction": "0.1"
-    "spark.cleaner.periodicGC.interval": "1min"
     "spark.jars.ivy": "/tmp"
     "spark.jars.ivySettings": "/tmp/ivy-settings.xml"
     "spark.broadcast.compress": "true"
     "spark.checkpoint.compress": "true"
     "spark.executor.heartbeatInterval": "30s"
     "spark.network.timeout": "900s"
+    "spark.io.compression.codec": "snappy"
     "spark.rdd.compress": "true"
-    "spark.sql.files.maxPartitionBytes": "268435456" # 256MB
-    "spark.sql.files.openCostInBytes": "33554432"
     "spark.sql.hive.dropTableInPurge": "true"
     "spark.shuffle.io.maxRetries": "5"
     "spark.shuffle.io.retryWait": "300s"
@@ -73,16 +65,16 @@ spec:
     "spark.kubernetes.scheduler.name": "yunikorn"
     "spark.kubernetes.executor.label.queue": "root.lab.pipelines"
     "spark.kubernetes.submit.label.queue": "root.lab.pipelines"
-    "spark.executor.instances": "30"
-    "spark.executor.cores": "8"
+    "spark.executor.instances": "25"
+    "spark.executor.cores": "10"
     "spark.executor.memoryOverheadFactor": "0.15"
     "spark.driver.cores": "4"
     "spark.driver.memoryOverheadFactor": "0.10"
-    "spark.kubernetes.executor.podNamePrefix": "full-index-build"
+    "spark.kubernetes.executor.podNamePrefix": "full-table-build"
     "spark.kubernetes.driver.ownPersistentVolumeClaim": "true"
     "spark.kubernetes.driver.reusePersistentVolumeClaim": "true"
     "spark.kubernetes.driver.waitToReusePersistentVolumeClaim": "true"
-#    "spark.shuffle.sort.io.plugin.class": "org.apache.spark.shuffle.KubernetesLocalDiskShuffleDataIO"
+    "spark.shuffle.sort.io.plugin.class": "org.apache.spark.shuffle.KubernetesLocalDiskShuffleDataIO"
     "spark.kubernetes.executor.volumes.persistentVolumeClaim.spark-local-dir-1.options.claimName": "OnDemand"
     "spark.kubernetes.executor.volumes.persistentVolumeClaim.spark-local-dir-1.options.storageClass": "local-path-delete"
     "spark.kubernetes.executor.volumes.persistentVolumeClaim.spark-local-dir-1.options.sizeLimit": "72Gi"
@@ -198,18 +190,6 @@ spec:
         labels:
           queue: "root.lab.pipelines"
       spec:
-        affinity:
-          nodeAffinity:
-            requiredDuringSchedulingIgnoredDuringExecution:
-              nodeSelectorTerms:
-                - matchExpressions:
-                    - key: kubernetes.io/hostname
-                      operator: NotIn
-                      values:
-                        - c6p4
-                        - c6p5
-                        - c7p9
-                        - c7p10
         initContainers:
           - name: job
             imagePullPolicy: Always
