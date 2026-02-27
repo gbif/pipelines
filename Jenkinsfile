@@ -94,7 +94,7 @@ pipeline {
       }
       steps {
         configFileProvider([configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS')]) {
-          sh 'mvn -s $MAVEN_SETTINGS deploy -B -DskipITs -P ${PROFILES}'
+          sh 'mvn -s $MAVEN_SETTINGS deploy -B  -DskipTests -DskipITs -P ${PROFILES}'
         }
       }
     }
