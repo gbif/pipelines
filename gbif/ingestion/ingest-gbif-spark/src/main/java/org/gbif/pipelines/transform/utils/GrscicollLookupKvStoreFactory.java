@@ -61,7 +61,7 @@ public class GrscicollLookupKvStoreFactory {
                           .withHBaseZk(zk)
                           .withHBaseZnode(grscicollLookupConfig.getHbaseZnode())
                           .build())
-                  .withCacheCapacity(25_000L)
+                  .withCacheCapacity(grscicollLookupConfig.getCacheCacheCapacity())
                   .withCacheExpiryTimeInSeconds(
                       grscicollLookupConfig.getCacheExpiryTimeInSeconds());
 

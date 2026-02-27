@@ -80,7 +80,7 @@ public class MultiTaxonomyKVSFactory {
                           .withHBaseZk(zk)
                           .withHBaseZnode(kvConfig.getHbaseZnode())
                           .build())
-                  .withCacheCapacity(25_000L)
+                  .withCacheCapacity(kvConfig.getCacheCacheCapacity())
                   .withCacheExpiryTimeInSeconds(kvConfig.getCacheExpiryTimeInSeconds());
 
           KvConfig.LoaderRetryConfig retryConfig = kvConfig.getLoaderRetryConfig();
@@ -101,7 +101,7 @@ public class MultiTaxonomyKVSFactory {
             throw new IllegalStateException(ex);
           }
         }
-        }
+      }
     }
 
     return kvStore;
