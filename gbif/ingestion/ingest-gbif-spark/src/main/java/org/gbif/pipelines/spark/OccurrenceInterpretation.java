@@ -285,21 +285,21 @@ public class OccurrenceInterpretation {
       Dataset<Occurrence> interpreted =
           runTransforms(spark, config, simpleRecords, metadata, outputPath, useCheckpoints);
 
-      //      Integer numberOfOutputShards = numberOfShards;
-      //      if (identifiersCount < 200_000) {
-      //        numberOfOutputShards = 1;
-      //      }
+      Integer numberOfOutputShards = numberOfShards;
+      if (identifiersCount < 200_000) {
+        numberOfOutputShards = 1;
+      }
       //
       // write parquet for elastic
       sparkLog(spark, "toJson", "Writing JSON output", useCheckpoints);
-      toJson(interpreted, metadata, numberOfShards)
+      toJson(interpreted, metadata, numberOfOutputShards)
           .write()
           .mode(SaveMode.Overwrite)
           .parquet(outputPath + "/" + OCCURRENCE_JSON);
       //
       // write parquet for hdfs view
       sparkLog(spark, "toHdfs", "Writing HDFS output", useCheckpoints);
-      toHdfs(interpreted, metadata, numberOfShards)
+      toHdfs(interpreted, metadata, numberOfOutputShards)
           .write()
           .mode(SaveMode.Overwrite)
           .parquet(outputPath + "/" + OCCURRENCE_HDFS);
@@ -702,9 +702,9 @@ public class OccurrenceInterpretation {
 
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
-    //    if (numOfShards == 1) {
-    //      dataset = dataset.coalesce(1);
-    //    }
+    if (numOfShards == 1) {
+      dataset = dataset.coalesce(1);
+    }
     return dataset;
   }
 
@@ -745,9 +745,9 @@ public class OccurrenceInterpretation {
 
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
-    //    if (numshards == 1) {
-    //      dataset = dataset.coalesce(1);
-    //    }
+    if (numshards == 1) {
+      dataset = dataset.coalesce(1);
+    }
     return dataset;
   }
 }
