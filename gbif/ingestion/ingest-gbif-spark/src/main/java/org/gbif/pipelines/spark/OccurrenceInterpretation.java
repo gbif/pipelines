@@ -286,9 +286,12 @@ public class OccurrenceInterpretation {
           runTransforms(spark, config, simpleRecords, metadata, outputPath, useCheckpoints);
 
       Integer numberOfOutputShards = numberOfShards;
-      if (identifiersCount < 200_000) {
+      if (identifiersCount <= 100_000 && identifiersCount> 50_000) {
+        numberOfOutputShards = 2;
+      } else if (identifiersCount < 50_000){
         numberOfOutputShards = 1;
       }
+
       //
       // write parquet for elastic
       sparkLog(spark, "toJson", "Writing JSON output", useCheckpoints);
