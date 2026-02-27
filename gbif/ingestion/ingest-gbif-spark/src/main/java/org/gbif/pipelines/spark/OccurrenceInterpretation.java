@@ -286,9 +286,9 @@ public class OccurrenceInterpretation {
           runTransforms(spark, config, simpleRecords, metadata, outputPath, useCheckpoints);
 
       Integer numberOfOutputShards = numberOfShards;
-      if (identifiersCount <= 100_000 && identifiersCount> 50_000) {
+      if (identifiersCount> 50_000 && identifiersCount <= 100_000) {
         numberOfOutputShards = 2;
-      } else if (identifiersCount < 50_000){
+      } else if (identifiersCount <= 50_000){
         numberOfOutputShards = 1;
       }
 
@@ -705,9 +705,7 @@ public class OccurrenceInterpretation {
 
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
-    if (numOfShards == 1) {
-      dataset = dataset.coalesce(1);
-    }
+    dataset = dataset.coalesce(numOfShards);
     return dataset;
   }
 
@@ -748,9 +746,7 @@ public class OccurrenceInterpretation {
 
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
-    if (numshards == 1) {
-      dataset = dataset.coalesce(1);
-    }
+    dataset = dataset.coalesce(numshards);
     return dataset;
   }
 }
