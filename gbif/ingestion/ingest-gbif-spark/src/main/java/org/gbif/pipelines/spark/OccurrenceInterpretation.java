@@ -495,15 +495,15 @@ public class OccurrenceInterpretation {
     // write simple interpreted records to disk
     interpreted.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + SIMPLE_OCCURRENCE);
 
-    if (useCheckpoints) {
-      // re-load
-      return spark
-          .read()
-          .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
-          .as(Encoders.bean(Occurrence.class));
-    } else {
-      return interpreted;
-    }
+    //    if (useCheckpoints) {
+    // re-load
+    return spark
+        .read()
+        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
+        .as(Encoders.bean(Occurrence.class));
+    //    } else {
+    //      return interpreted;
+    //    }
   }
 
   /**
