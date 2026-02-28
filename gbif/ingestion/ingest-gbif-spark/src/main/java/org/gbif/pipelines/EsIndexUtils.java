@@ -1,18 +1,13 @@
 package org.gbif.pipelines;
 
 import static org.gbif.pipelines.estools.service.EsService.swapIndexes;
+import static org.gbif.pipelines.estools.service.EsService.swapIndexesWithoutDeletion;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -134,6 +129,7 @@ public class EsIndexUtils {
 
     EsConfig config = EsConfig.from(options.getEsHosts());
 
+    // no swapping for the default index
     String idxToAdd =
         options.getEsIndexName().startsWith(options.getDatasetId())
             ? options.getEsIndexName()
@@ -188,6 +184,35 @@ public class EsIndexUtils {
   public static void refreshIndex(Indexing.ElasticOptions options) {
     try (EsClient esClient = EsClient.from(EsConfig.from(options.getEsHosts()))) {
       EsService.refreshIndex(esClient, options.getEsIndexName());
+    }
+  }
+
+  public static void swapIndicies(String rebuildAlias, String liveAlias, String esHosts) {
+    EsConfig config = EsConfig.from(esHosts);
+
+    try (EsClient client = EsClient.from(config)) {
+
+      // get the rebuild alias indexes
+      Set<String> rebuiltIndices =
+          EsService.getIndexesByAliasAndIndexPattern(client, "*", rebuildAlias);
+
+      // get the current live indicies
+      Set<String> liveIndices = EsService.getIndexesByAliasAndIndexPattern(client, "*", liveAlias);
+
+      // add the alias 'liveAlias_old' to the current live indicies,
+      // so we can easily switch back if something goes wrong
+      swapIndexesWithoutDeletion(
+          client, Set.of(liveAlias + "_old"), liveIndices, Collections.emptySet());
+
+      // do the proper swap
+      swapIndexesWithoutDeletion(client, Set.of(liveAlias), rebuiltIndices, Set.of());
+
+      swapIndexesWithoutDeletion(client, Set.of(liveAlias), Set.of(), liveIndices);
+
+      // remove the rebuild alias from the rebuilt indices
+      swapIndexesWithoutDeletion(client, Set.of(rebuildAlias), Set.of(), rebuiltIndices);
+
+      log.info("Swapped indices: {} with alias: {}", rebuildAlias, liveAlias);
     }
   }
 }

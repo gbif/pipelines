@@ -22,6 +22,8 @@ public class IndexConfig implements Serializable {
   // index aliases
   public String occurrenceAlias = "occurrence";
   public String occurrenceVersion;
+  public String occurrenceSchemaPath = "elasticsearch/es-occurrence-schema.json";
   public String eventAlias = "event";
   public String eventVersion;
+  public String eventSchemaPath = "elasticsearch/es-event-schema.json";
 }

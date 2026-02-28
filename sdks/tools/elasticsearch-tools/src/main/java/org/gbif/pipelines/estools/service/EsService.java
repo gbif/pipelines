@@ -174,6 +174,38 @@ public class EsService {
   }
 
   /**
+   * Swaps indexes in aliases.
+   *
+   * <p>In this method we can add or remove indexes in an alias. Also note that in the case of
+   * removing indexes, they are <strong>completely removed</strong> from the ES instance, and not
+   * only from the alias.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param aliases aliases that will be modified
+   * @param idxToAdd indexes to add to the alias.
+   * @param idxToRemove indexes to remove from the alias.
+   */
+  @SneakyThrows
+  public static void swapIndexesWithoutDeletion(
+      @NonNull EsClient esClient,
+      Set<String> aliases,
+      Set<String> idxToAdd,
+      Set<String> idxToRemove) {
+    if ((idxToAdd == null || idxToAdd.isEmpty())
+        && (idxToRemove == null || idxToRemove.isEmpty())) {
+      // nothing to swap
+      return;
+    }
+
+    HttpEntity body =
+        HttpRequestBuilder.newInstance()
+            .withIndexAliasAction(aliases, idxToAdd, idxToRemove, false)
+            .build();
+    String aliasEndpoint = buildEndpoint("_aliases");
+    esClient.performPostRequest(aliasEndpoint, Collections.emptyMap(), body);
+  }
+
+  /**
    * Counts the number of documents of an index.
    *
    * @param esClient client to call ES. It is required.
@@ -183,22 +215,6 @@ public class EsService {
   @SneakyThrows
   public static long countIndexDocuments(@NonNull EsClient esClient, String idxName) {
     String endpoint = buildEndpoint(idxName, "_count/");
-    Response response = esClient.performGetRequest(endpoint);
-    return HttpResponseParser.parseIndexCountResponse(response.getEntity());
-  }
-
-  /**
-   * Counts the number of documents of an index.
-   *
-   * @param esClient client to call ES. It is required.
-   * @param idxName index to get the count from.
-   * @param datasetKey Registry dataset key
-   * @return number of documents of the index.
-   */
-  @SneakyThrows
-  public static long countIndexDocumentsByDatasetKey(
-      @NonNull EsClient esClient, String idxName, String datasetKey) {
-    String endpoint = buildEndpoint(idxName, "_count?q=datasetKey:" + datasetKey);
     Response response = esClient.performGetRequest(endpoint);
     return HttpResponseParser.parseIndexCountResponse(response.getEntity());
   }
@@ -280,7 +296,7 @@ public class EsService {
       if (HttpStatus.SC_NOT_FOUND == e.getResponse().getStatusLine().getStatusCode()) {
         return false;
       }
-      throw new IllegalStateException("Error retreiving index", e);
+      throw new IllegalStateException("Error retrieving index", e);
     }
     return true;
   }

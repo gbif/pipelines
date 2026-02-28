@@ -98,7 +98,7 @@ public class Indexing {
 
     Args args = new Args();
     JCommander jCommander = new JCommander(args);
-    jCommander.setAcceptUnknownOptions(true); // FIXME to ease airflow/registry integration
+    jCommander.setAcceptUnknownOptions(true);
     jCommander.parse(argsv);
 
     if (args.help) {
@@ -123,7 +123,7 @@ public class Indexing {
           args.attempt,
           args.esIndexAlias,
           args.esIndexName,
-          "elasticsearch/es-occurrence-schema.json",
+          config.getIndexConfig().getOccurrenceSchemaPath(),
           args.indexNumberShards,
           OccurrenceJsonRecord.class,
           OCCURRENCE_JSON);
@@ -136,7 +136,7 @@ public class Indexing {
           args.attempt,
           args.esIndexAlias,
           args.esIndexName,
-          "elasticsearch/es-event-schema.json",
+          config.getIndexConfig().getEventSchemaPath(),
           args.indexNumberShards,
           ParentJsonRecord.class,
           EVENT_JSON);

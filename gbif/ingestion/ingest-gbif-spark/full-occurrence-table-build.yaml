@@ -32,6 +32,7 @@ spec:
     - "--numberOfShards=2400"
     - "--unsuccessfulDumpFilename=full-occurrence-table-build-unsuccessful-datasets.txt"
     - "--earliestModificationTime=2026-02-12T00:00:00Z"
+    - "--switchOnSuccess=true"
   sparkConf:
     "spark.driver.extraJavaOptions": "-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35"
     "spark.executor.extraJavaOptions": "-XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=35 -XX:ConcGCThread=20"

@@ -84,6 +84,13 @@ public class FullTableBuild {
     private String earliestModificationTime = null;
 
     @Parameter(
+        names = "--switchOnSuccess",
+        description =
+            "Switch the new tables to the final names (e.g. 'occurrence' or 'event') after successful build. "
+                + "If false, the new tables will have a prefix and the old tables will not be overwritten.")
+    private boolean switchOnSuccess = false;
+
+    @Parameter(
         names = {"--help", "-h"},
         help = true,
         description = "Show usage")
@@ -131,30 +138,6 @@ public class FullTableBuild {
             args.sourceDirectory,
             config.getRebuildPath() + "/" + args.unsuccessfulDumpFilename,
             args.earliestModificationTime);
-
-    // For testing - hardcode the scan result to avoid hitting HDFS and speed up development.
-    // The paths should be to the directories containing the parquet files, not the parquet files
-    // themselves.
-    //    IngestUtils.DirectoryScanResult scanResult =
-    //        new IngestUtils.DirectoryScanResult(
-    //            List.of(
-    //
-    // "hdfs://gbif-hdfs/data/ingest_lab/34039ff3-7eaf-4ebf-bcf4-64b7365004b4/1/hdfs/",
-    //
-    // "hdfs://gbif-hdfs/data/ingest_lab/cc63e998-fe1b-468d-94f1-6afcf494d0e4/1/hdfs/",
-    //
-    // "hdfs://gbif-hdfs/data/ingest_lab/100a9054-e46c-4302-b059-3a8836df1cf7/1/hdfs/",
-    //
-    // "hdfs://gbif-hdfs/data/ingest_lab/f08c9244-5af4-458c-8966-43d981da09e7/1/hdfs/"),
-    //            Map.of(
-    //                "34039ff3-7eaf-4ebf-bcf4-64b7365004b4",
-    //                1,
-    //                "cc63e998-fe1b-468d-94f1-6afcf494d0e4",
-    //                1,
-    //                "100a9054-e46c-4302-b059-3a8836df1cf7",
-    //                1,
-    //                "f08c9244-5af4-458c-8966-43d981da09e7",
-    //                1));
 
     spark.udf().register("base64_decode", new TableBuild.Base64DecodeUDF(), DataTypes.StringType);
     spark.udf().register("cleanDelimiters", new CleanDelimiterCharsUdf(), DataTypes.StringType);
@@ -256,6 +239,44 @@ public class FullTableBuild {
       String tableName = prefix + "event_humboldt";
       spark.sql(getCreateIfNotExistsHumboldt(tableName));
       insertOverwriteHumboldtTable(spark, tableName);
+    }
+
+    log.info("Renaming tables to final names if the flag is set: {}", args.switchOnSuccess);
+    if (args.switchOnSuccess) {
+
+      // Rename tables to final names
+      List<String> tables = new ArrayList<>();
+      tables.add(args.coreDwcTerm);
+      tables.add(args.coreDwcTerm + "_multimedia");
+      if (args.coreDwcTerm.equalsIgnoreCase("event")) {
+        tables.add("event_humboldt");
+      }
+
+      // rename old tables if they exist, and drop old_ tables if they exist
+      for (String table : tables) {
+
+        if (spark.catalog().tableExists(table)) {
+
+          log.info("Final table {} already exists and will be overwritten", table);
+          // remove the old table if it exists
+          if (spark.catalog().tableExists("old_" + table)) {
+            log.info("Old table old_{} already exists and will be dropped", table);
+            spark.sql(String.format("DROP TABLE %s.%s", config.getHiveDB(), "old_" + table));
+          }
+
+          // rename the current table to old_table
+          log.info("Renaming existing table {} to old_{}", table, table);
+          spark.sql(
+              String.format(
+                  "ALTER TABLE %s.%s RENAME TO %s", config.getHiveDB(), table, "old_" + table));
+        }
+
+        // rename the new table to the final name
+        log.info("Renaming table {} to final name {}", prefix + table, table);
+        spark.sql(
+            String.format(
+                "ALTER TABLE %s.%s RENAME TO %s", config.getHiveDB(), prefix + table, table));
+      }
     }
 
     log.info(timeAndRecPerSecond("full-table-build", start, avroToHdfsCountAttempted));

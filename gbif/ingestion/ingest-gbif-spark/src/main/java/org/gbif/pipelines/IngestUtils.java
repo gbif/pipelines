@@ -1,6 +1,7 @@
 package org.gbif.pipelines;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -117,5 +118,6 @@ public class IngestUtils {
   }
 
   public record DirectoryScanResult(
-      List<String> successfulPaths, Map<String, Integer> datasetAttemptMap) {}
+      List<String> successfulPaths, Map<String, Integer> datasetAttemptMap)
+      implements Serializable {}
 }

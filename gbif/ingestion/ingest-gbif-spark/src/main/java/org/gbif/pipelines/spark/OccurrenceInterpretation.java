@@ -286,9 +286,9 @@ public class OccurrenceInterpretation {
           runTransforms(spark, config, simpleRecords, metadata, outputPath, useCheckpoints);
 
       Integer numberOfOutputShards = numberOfShards;
-      if (identifiersCount> 50_000 && identifiersCount <= 100_000) {
+      if (identifiersCount > 50_000 && identifiersCount <= 100_000) {
         numberOfOutputShards = 2;
-      } else if (identifiersCount <= 50_000){
+      } else if (identifiersCount <= 50_000) {
         numberOfOutputShards = 1;
       }
 

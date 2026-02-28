@@ -55,6 +55,7 @@ public final class EsConstants {
   public static final class Action {
 
     public static final String ADD = "add";
+    public static final String REMOVE = "remove";
     public static final String REMOVE_INDEX = "remove_index";
   }
 

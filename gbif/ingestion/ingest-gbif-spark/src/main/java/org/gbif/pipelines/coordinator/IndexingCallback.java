@@ -1,5 +1,7 @@
 package org.gbif.pipelines.coordinator;
 
+import java.io.IOException;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.StepType;
@@ -7,6 +9,8 @@ import org.gbif.common.messaging.api.MessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.pipelines.EsIndexUtils;
+import org.gbif.pipelines.IndexSettings;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.spark.Directories;
@@ -16,6 +20,8 @@ import org.gbif.pipelines.spark.Indexing;
 public class IndexingCallback
     extends PipelinesCallback<PipelinesInterpretedMessage, PipelinesIndexedMessage>
     implements MessageCallback<PipelinesInterpretedMessage> {
+
+  private String defaultIndexName = null;
 
   public IndexingCallback(
       PipelinesConfig pipelinesConfig, MessagePublisher publisher, String master) {
@@ -34,6 +40,9 @@ public class IndexingCallback
 
   @Override
   protected void runPipeline(PipelinesInterpretedMessage message) throws Exception {
+
+    initialiseIndex(message);
+
     Indexing.runIndexing(
         sparkSession,
         fileSystem,
@@ -41,11 +50,53 @@ public class IndexingCallback
         message.getDatasetUuid().toString(),
         message.getAttempt(),
         pipelinesConfig.getStandalone().getOccurrenceIndexAlias(),
-        pipelinesConfig.getStandalone().getOccurrenceIndexName(),
+        defaultIndexName,
         pipelinesConfig.getStandalone().getOccurrenceIndexSchema(),
         pipelinesConfig.getStandalone().getOccurrenceIndexNumberOfShards(),
         OccurrenceJsonRecord.class,
         Directories.OCCURRENCE_JSON);
+  }
+
+  private void initialiseIndex(PipelinesInterpretedMessage message) throws IOException {
+
+    if (defaultIndexName != null) {
+      return;
+    }
+
+    log.info("Initialising the index..");
+
+    // check if the index exists, if not create it with the default name and alias
+    String defaultIndexPrefix =
+        pipelinesConfig.getIndexConfig().defaultPrefixName
+            + "_"
+            + pipelinesConfig.getIndexConfig().occurrenceVersion;
+
+    // does the default index exist already ?
+    Optional<String> indexName =
+        IndexSettings.getIndexName(
+            pipelinesConfig.getIndexConfig(), httpClient, defaultIndexPrefix);
+
+    if (indexName.isEmpty()) {
+
+      log.info("create the default index for small datasets..");
+      String indexToBeCreated = defaultIndexPrefix + "_" + System.currentTimeMillis();
+      // create the default index, and add the alias to it, if the index doesn't exist
+      EsIndexUtils.createIndexAndAliasForDefault(
+          Indexing.ElasticOptions.fromArgsAndConfig(
+              pipelinesConfig,
+              pipelinesConfig.getIndexConfig().occurrenceAlias,
+              indexToBeCreated,
+              pipelinesConfig.getIndexConfig().getOccurrenceSchemaPath(),
+              message.getDatasetUuid().toString(),
+              message.getAttempt(),
+              pipelinesConfig.getStandalone().getOccurrenceIndexNumberOfShards()));
+      defaultIndexName = indexToBeCreated;
+    } else {
+      defaultIndexName = indexName.get();
+      log.info("index with the default name already exists {}", defaultIndexName);
+    }
+
+    assert defaultIndexName != null;
   }
 
   @Override
