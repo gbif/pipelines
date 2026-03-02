@@ -124,6 +124,21 @@ public class FullIndexBuild {
     PipelinesConfig config = loadConfig(args.config);
     assert config != null && config.getIndexConfig() != null && config.getElastic() != null;
 
+    boolean isOccurrence = "occurrence".equalsIgnoreCase(args.coreDwcTerm);
+
+    final DatasetType datasetType =
+        isOccurrence ? DatasetType.OCCURRENCE : DatasetType.SAMPLING_EVENT;
+
+    final String schemaPath =
+        isOccurrence
+            ? config.getIndexConfig().getOccurrenceSchemaPath()
+            : config.getIndexConfig().getEventSchemaPath();
+
+    final String versionPath =
+        isOccurrence
+            ? config.getIndexConfig().getOccurrenceVersion()
+            : config.getIndexConfig().getEventVersion();
+
     /* ############ standard init block ########## */
     SparkSession spark =
         getSparkSession(
@@ -132,33 +147,14 @@ public class FullIndexBuild {
 
     /* ############ standard init block - end ########## */
 
-    //    IngestUtils.DirectoryScanResult scanResult =
-    //        IngestUtils.getSuccessFulParquetFilePaths(
-    //            fileSystem,
-    //            config,
-    //            args.sourceDirectory,
-    //            config.getRebuildPath() + "/" + args.unsuccessfulDumpFilename,
-    //            args.earliestModificationTime);
-
-    // For testing - hardcode the scan result to avoid hitting HDFS and speed up development.
-    // The paths should be to the directories containing the parquet files, not the parquet files
-    // themselves.
     IngestUtils.DirectoryScanResult scanResult =
-        new IngestUtils.DirectoryScanResult(
-            List.of(
-                "/Users/djtfmartin/dev/pipelines/gbif/ingestion/ingest-gbif-spark/test-data/02996492-a184-4a55-9735-897a4ab84b18/1/json/",
-                "/Users/djtfmartin/dev/pipelines/gbif/ingestion/ingest-gbif-spark/test-data/23b714b1-fae6-4074-bdd0-5e17ae3b5f11/1/json/",
-                "/Users/djtfmartin/dev/pipelines/gbif/ingestion/ingest-gbif-spark/test-data/2669f062-aef9-4677-8669-017897bc0622/1/json/",
-                "/Users/djtfmartin/dev/pipelines/gbif/ingestion/ingest-gbif-spark/test-data/27be081b-0250-4cfe-ab5c-e835a66772b8/1/json/"),
-            Map.of(
-                "02996492-a184-4a55-9735-897a4ab84b18",
-                1,
-                "23b714b1-fae6-4074-bdd0-5e17ae3b5f11",
-                1,
-                "2669f062-aef9-4677-8669-017897bc0622",
-                1,
-                "27be081b-0250-4cfe-ab5c-e835a66772b8",
-                1));
+        IngestUtils.getSuccessFulParquetFilePaths(
+            fileSystem,
+            config,
+            args.sourceDirectory,
+            config.getRebuildPath() + "/" + args.unsuccessfulDumpFilename,
+            args.earliestModificationTime);
+
 
     log.info("Starting full index build");
 
@@ -235,12 +231,6 @@ public class FullIndexBuild {
         continue;
       }
 
-      DatasetType datasetType =
-          args.coreDwcTerm.equalsIgnoreCase("occurrence")
-              ? DatasetType.OCCURRENCE
-              : DatasetType.SAMPLING_EVENT;
-
-      // FIXME
       String esIndexName =
           recordCount < config.getIndexConfig().getBigIndexIfRecordsMoreThan()
               ? defaultIndexName
@@ -262,7 +252,7 @@ public class FullIndexBuild {
               config,
               rebuildAlias,
               esIndexName,
-              config.getIndexConfig().getOccurrenceSchemaPath(), // FIXME
+              schemaPath,
               datasetKey, // used for updating the alias
               attempt,
               indexNumberShards);
@@ -292,7 +282,7 @@ public class FullIndexBuild {
                         lit("_"),
                         col("attempt"),
                         lit("_"),
-                        lit(config.getIndexConfig().getOccurrenceVersion()),
+                        lit(versionPath),
                         lit("_"),
                         lit(timestamp)))
                 .otherwise(lit(defaultIndexName)))
