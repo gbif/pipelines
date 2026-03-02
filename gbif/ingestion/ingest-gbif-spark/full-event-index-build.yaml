@@ -26,9 +26,9 @@ spec:
         inline:
           bucketName: spark-history-lab-bucket
   args:
-    - "--coreDwcTerm=occurrence"
-    - "--sourceDirectory=json"
-    - "--appName=full-occurrence-index-build"
+    - "--coreDwcTerm=event"
+    - "--sourceDirectory=event-json"
+    - "--appName=full-event-index-build"
     - "--numberOfShards=2400"
     - "--earliestModificationTime=2026-02-12T00:00:00Z"
   sparkConf:
