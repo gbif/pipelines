@@ -119,16 +119,6 @@ public class IndexSettings {
     return idxName;
   }
 
-  public static String getDefaultSharedIndexName(
-      IndexConfig indexConfig, String indexVersion, HttpClient httpClient) throws IOException {
-    String esPr = indexConfig.defaultPrefixName + "_" + indexVersion;
-    String idxName =
-        getIndexName(indexConfig, httpClient, esPr)
-            .orElse(esPr + "_" + Instant.now().toEpochMilli());
-    log.info("ES Index name - {}", idxName);
-    return idxName;
-  }
-
   /**
    * Computes number of index shards:
    *

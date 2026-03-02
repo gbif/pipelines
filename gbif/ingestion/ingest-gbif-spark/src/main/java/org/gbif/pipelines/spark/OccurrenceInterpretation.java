@@ -285,6 +285,7 @@ public class OccurrenceInterpretation {
       Dataset<Occurrence> interpreted =
           runTransforms(spark, config, simpleRecords, metadata, outputPath, useCheckpoints);
 
+      // FIXME move to configuration
       Integer numberOfOutputShards = numberOfShards;
       if (identifiersCount > 50_000 && identifiersCount <= 100_000) {
         numberOfOutputShards = 2;
@@ -292,14 +293,13 @@ public class OccurrenceInterpretation {
         numberOfOutputShards = 1;
       }
 
-      //
       // write parquet for elastic
       sparkLog(spark, "toJson", "Writing JSON output", useCheckpoints);
       toJson(interpreted, metadata, numberOfOutputShards)
           .write()
           .mode(SaveMode.Overwrite)
           .parquet(outputPath + "/" + OCCURRENCE_JSON);
-      //
+
       // write parquet for hdfs view
       sparkLog(spark, "toHdfs", "Writing HDFS output", useCheckpoints);
       toHdfs(interpreted, metadata, numberOfOutputShards)
@@ -498,15 +498,10 @@ public class OccurrenceInterpretation {
     // write simple interpreted records to disk
     interpreted.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + SIMPLE_OCCURRENCE);
 
-    //    if (useCheckpoints) {
-    // re-load
     return spark
         .read()
         .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
         .as(Encoders.bean(Occurrence.class));
-    //    } else {
-    //      return interpreted;
-    //    }
   }
 
   /**

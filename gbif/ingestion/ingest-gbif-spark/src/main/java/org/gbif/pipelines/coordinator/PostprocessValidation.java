@@ -112,14 +112,7 @@ public class PostprocessValidation {
     boolean isValid = true;
     String validationMessage = "No identifier issues";
     if (config.isIdThresholdSkip()) {
-      validationMessage =
-          String.format(
-              "Current configured to skip ID threshold validation",
-              threshold,
-              absentPercent,
-              totalCount,
-              absentIdCount);
-      isValid = true;
+      validationMessage = "Current configured to skip ID threshold validation";
     } else {
       if (absentPercent > 0d && apiRecords > 0) {
         if (absentPercent > threshold && existingCount != apiRecords) {

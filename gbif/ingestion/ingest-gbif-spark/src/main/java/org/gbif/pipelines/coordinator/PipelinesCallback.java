@@ -320,6 +320,7 @@ public abstract class PipelinesCallback<
         executionPipelineSteps.stream().filter(ps -> ps.getType() == getStepType()).toList();
 
     if (thisPipelineStep.isEmpty()) {
+      // expected when we opt to only execute one step with &onlyRequestedStep=true
       log.warn(
           "Current step {} is not found in the execution steps, won't send outgoing message",
           getStepType());

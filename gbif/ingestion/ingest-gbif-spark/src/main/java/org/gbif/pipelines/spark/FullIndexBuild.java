@@ -155,7 +155,6 @@ public class FullIndexBuild {
             config.getRebuildPath() + "/" + args.unsuccessfulDumpFilename,
             args.earliestModificationTime);
 
-
     log.info("Starting full index build");
 
     if (scanResult.successfulPaths().isEmpty()) {

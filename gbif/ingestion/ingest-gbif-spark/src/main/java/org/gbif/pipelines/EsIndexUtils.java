@@ -5,6 +5,7 @@ import static org.gbif.pipelines.estools.service.EsService.swapIndexesWithoutDel
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -12,7 +13,9 @@ import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.pipelines.core.config.model.LockConfig;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
@@ -214,5 +217,67 @@ public class EsIndexUtils {
 
       log.info("Swapped indices: {} with alias: {}", rebuildAlias, liveAlias);
     }
+  }
+
+  public static String initialiseDefaultIndex(
+      PipelinesConfig pipelinesConfig,
+      org.apache.http.client.HttpClient httpClient,
+      DatasetType datasetType,
+      String datasetId,
+      Integer attempt)
+      throws IOException {
+
+    String defaultIndexName;
+    log.info("Initialising the index..");
+
+    final String schemaPath =
+        datasetType.equals(DatasetType.OCCURRENCE)
+            ? pipelinesConfig.getIndexConfig().getOccurrenceSchemaPath()
+            : pipelinesConfig.getIndexConfig().getEventSchemaPath();
+
+    final String esAlias =
+        datasetType.equals(DatasetType.OCCURRENCE)
+            ? pipelinesConfig.getIndexConfig().getOccurrenceAlias()
+            : pipelinesConfig.getIndexConfig().getEventAlias();
+
+    final Integer numberOfShards =
+        datasetType.equals(DatasetType.OCCURRENCE)
+            ? pipelinesConfig.getStandalone().getOccurrenceIndexNumberOfShards()
+            : pipelinesConfig.getStandalone().getEventIndexNumberOfShards();
+
+    // check if the index exists, if not create it with the default name and alias
+    String defaultIndexPrefix =
+        pipelinesConfig.getIndexConfig().defaultPrefixName
+            + "_"
+            + pipelinesConfig.getIndexConfig().occurrenceVersion;
+
+    // does the default index exist already ?
+    Optional<String> indexName =
+        IndexSettings.getIndexName(
+            pipelinesConfig.getIndexConfig(), httpClient, defaultIndexPrefix);
+
+    if (indexName.isEmpty()) {
+
+      log.info("create the default index for small datasets..");
+      String indexToBeCreated = defaultIndexPrefix + "_" + System.currentTimeMillis();
+      // create the default index, and add the alias to it, if the index doesn't exist
+      EsIndexUtils.createIndexAndAliasForDefault(
+          Indexing.ElasticOptions.fromArgsAndConfig(
+              pipelinesConfig,
+              schemaPath,
+              indexToBeCreated,
+              esAlias,
+              datasetId,
+              attempt,
+              numberOfShards));
+      defaultIndexName = indexToBeCreated;
+    } else {
+      defaultIndexName = indexName.get();
+      log.info("index with the default name already exists {}", defaultIndexName);
+    }
+
+    assert defaultIndexName != null;
+
+    return defaultIndexName;
   }
 }
