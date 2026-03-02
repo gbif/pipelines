@@ -332,10 +332,16 @@ public class OccurrenceHdfsRecordConverter {
             .collect(
                 Collectors.toMap(
                     TaxonRecord::getDatasetKey,
-                    tr ->
-                        tr.getClassification().stream()
-                            .map(RankedName::getKey)
-                            .collect(Collectors.toList()))));
+                    tr -> {
+                      Set<String> taxonKeys =
+                          tr.getClassification().stream()
+                              .map(RankedName::getKey)
+                              .collect(Collectors.toCollection(HashSet::new));
+                      if (tr.getSynonym() != null && tr.getSynonym() && tr.getUsage() != null) {
+                        taxonKeys.add(tr.getUsage().getKey());
+                      }
+                      return new ArrayList<>(taxonKeys);
+                    })));
 
     occurrenceHdfsRecord.setTaxonomicstatuses(
         multiTaxonRecord.getTaxonRecords().stream()
