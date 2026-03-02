@@ -44,7 +44,6 @@ public class OccurrenceInterpretationCallback
         pipelinesConfig.getStandalone().getNumberOfShards(),
         message.getValidationResult().isTripletValid(),
         message.getValidationResult().isOccurrenceIdValid(),
-        false,
         message.getInterpretTypes().stream()
             .map(InterpretationType.RecordType::valueOf)
             .collect(Collectors.toList())); // map to enum

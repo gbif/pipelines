@@ -11,6 +11,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.*;
 import java.util.function.Predicate;
 import lombok.Builder;
@@ -29,6 +30,8 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.SnappyCodec;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.logging.log4j.ThreadContext;
+import org.apache.spark.Partitioner;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
@@ -49,7 +52,6 @@ import org.gbif.pipelines.keygen.OccurrenceRecord;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.gbif.pipelines.transform.utils.KeygenServiceFactory;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.MDC;
 import scala.Tuple2;
 
 @Slf4j
@@ -58,6 +60,7 @@ public class Fragmenter {
   public static final String METRICS_FILENAME = "fragmenter.yml";
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
   private static final ObjectMapper MAPPER = new ObjectMapper();
+  public static final String FRAGMENT_COLUMN_FAMILY = "fragment";
 
   @Parameters(separators = "=")
   private static class Args {
@@ -152,7 +155,7 @@ public class Fragmenter {
       boolean useOccurrenceId)
       throws Exception {
 
-    MDC.put("datasetKey", datasetId);
+    ThreadContext.put("datasetKey", datasetId);
     long start = System.currentTimeMillis();
     log.info("Starting to run fragmenter for dataset {}, attempt {}", datasetId, attempt);
 
@@ -162,8 +165,8 @@ public class Fragmenter {
     Configuration hbaseConf = HBaseConfiguration.create();
     hbaseConf.set(FileOutputFormat.COMPRESS, "true");
     hbaseConf.setClass(FileOutputFormat.COMPRESS_CODEC, SnappyCodec.class, CompressionCodec.class);
-    hbaseConf.addResource(new Path("/etc/hadoop/conf/hbase-site.xml"));
-    hbaseConf.set("hbase.fs.tmp.dir", outputPath + "/hfile-staging");
+    hbaseConf.addResource(new Path(config.getHbaseSiteConfig()));
+    hbaseConf.set("hbase.fs.tmp.dir", outputPath + "/" + config.getFragmentHfileStagingPath());
     hbaseConf.set("hbase.mapreduce.hfileoutputformat.table.name", config.getFragmentsTable());
 
     if (config.getHdfsSiteConfig() != null && config.getCoreSiteConfig() != null) {
@@ -225,10 +228,13 @@ public class Fragmenter {
                             new Tuple2<>(record.getAs("key"), "record"),
                             record.getAs("recordBody")));
                     return cells.iterator();
-                  });
+                  })
+              .repartitionAndSortWithinPartitions(
+                  new SaltPrefixPartitioner(2), // 0..99 salt prefix to align with HBase regions
+                  new Tuple2StringComparator());
 
       cleanHdfsPath(fileSystem, config, outputPath);
-      String hfilePath = outputPath + "/fragment";
+      String hfilePath = outputPath + "/" + config.getFragmentHfilePath();
 
       Job job = Job.getInstance(hbaseConf);
       job.setMapOutputKeyClass(ImmutableBytesWritable.class);
@@ -242,7 +248,7 @@ public class Fragmenter {
                 Cell row =
                     new KeyValue(
                         Bytes.toBytes(cell._1._1), // key
-                        Bytes.toBytes("fragment"), // column family
+                        Bytes.toBytes(FRAGMENT_COLUMN_FAMILY), // column family
                         Bytes.toBytes(cell._1._2), // cell
                         Bytes.toBytes(cell._2) // cell value
                         );
@@ -267,19 +273,17 @@ public class Fragmenter {
     } catch (Exception e) {
       log.error("Error during fragmenter: {}", e.getMessage(), e);
       throw e;
-    } finally {
-      MDC.clear();
     }
   }
 
   @NotNull
   private static void cleanHdfsPath(
       FileSystem fileSystem, PipelinesConfig config, String outputPath) throws IOException {
-    Path fragmentPath = new Path(outputPath + "/fragment");
+    Path fragmentPath = new Path(outputPath + "/" + config.getFragmentHfilePath());
     if (fileSystem.exists(fragmentPath)) {
       fileSystem.delete(fragmentPath, true);
     }
-    Path hfilesPath = new Path(outputPath + "/hfile-staging");
+    Path hfilesPath = new Path(outputPath + "/" + config.getFragmentHfileStagingPath());
     if (fileSystem.exists(hfilesPath)) {
       fileSystem.delete(hfilesPath, true);
     }
@@ -334,7 +338,7 @@ public class Fragmenter {
     return RawRecord.builder()
         .key(Keygen.getSaltedKey(key.get()))
         .recordBody(or.getStringRecord())
-        .createdDate(System.currentTimeMillis()) // FIXME - placeholder
+        .createdDate(System.currentTimeMillis())
         .build();
   }
 
@@ -396,7 +400,7 @@ public class Fragmenter {
     try {
       return MAPPER.writeValueAsString(data);
     } catch (IOException e) {
-      log.error("Cannot serialize star record data", e);
+      log.error("Cannot serialize star record data. Record ID: " + er.getId(), e);
     }
     return "";
   }
@@ -421,6 +425,37 @@ public class Fragmenter {
     @Override
     public Optional<String> getTriplet() {
       return Optional.ofNullable(triplet);
+    }
+  }
+
+  /** Partitions by the salt prefix on the given key (which aligns to HBase regions). */
+  public static class SaltPrefixPartitioner extends Partitioner {
+    final int numPartitions;
+
+    public SaltPrefixPartitioner(int saltLength) {
+      numPartitions = Double.valueOf(Math.pow(10, saltLength)).intValue();
+    }
+
+    @Override
+    public int getPartition(Object key) {
+
+      Tuple2<String, String> tupleKey = (Tuple2<String, String>) key;
+      String keyString = tupleKey._1;
+      String saltAsString = (keyString.substring(0, (keyString).indexOf(":")));
+      return Integer.parseInt(saltAsString);
+    }
+
+    @Override
+    public int numPartitions() {
+      return numPartitions;
+    }
+  }
+
+  /** Necessary as the Tuple2 does not implement a comparator in Java */
+  static class Tuple2StringComparator implements Comparator<Tuple2<String, String>>, Serializable {
+    @Override
+    public int compare(Tuple2<String, String> o1, Tuple2<String, String> o2) {
+      return o1._1.equals(o2._1) ? o1._2.compareTo(o2._2) : o1._1.compareTo(o2._1);
     }
   }
 }

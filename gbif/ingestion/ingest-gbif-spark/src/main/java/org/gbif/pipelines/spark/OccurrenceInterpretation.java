@@ -29,6 +29,7 @@ import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
@@ -49,7 +50,6 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.transform.*;
 import org.gbif.pipelines.transform.utils.KeygenServiceFactory;
-import org.slf4j.MDC;
 import scala.Tuple2;
 
 /**
@@ -180,7 +180,6 @@ public class OccurrenceInterpretation {
           args.numberOfShards,
           args.tripletValid,
           args.occurrenceIdValid,
-          args.useCheckpoints,
           args.interpretTypes);
     }
 
@@ -207,7 +206,6 @@ public class OccurrenceInterpretation {
    * @param numberOfShards The number of shards to repartition the data
    * @param tripletValid Whether all triplets are valid
    * @param occurrenceIdValid Whether all occurrence IDs are valid
-   * @param useCheckpoints Whether to use checkpoints for intermediate datasets
    * @throws IOException If an I/O error occurs
    */
   public static void runInterpretation(
@@ -219,7 +217,6 @@ public class OccurrenceInterpretation {
       int numberOfShards,
       Boolean tripletValid,
       Boolean occurrenceIdValid,
-      Boolean useCheckpoints,
       List<InterpretationType.RecordType> interpretTypes)
       throws IOException {
 
@@ -241,81 +238,83 @@ public class OccurrenceInterpretation {
 
     long start = System.currentTimeMillis();
 
-    try {
-      MDC.put("datasetKey", datasetId);
-      log.info(
-          "Starting interpretation with tripleValid: {}, occurrenceIdValid: {}",
-          tripletValid,
-          occurrenceIdValid);
+    ThreadContext.put("datasetKey", datasetId);
+    log.info(
+        "Starting interpretation with tripleValid: {}, occurrenceIdValid: {}",
+        tripletValid,
+        occurrenceIdValid);
 
-      String inputPath = String.format("%s/%s/%d", config.getInputPath(), datasetId, attempt);
-      String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
+    String inputPath = String.format("%s/%s/%d", config.getInputPath(), datasetId, attempt);
+    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
 
-      // Load the extended records
-      sparkLog(spark, "loadExtendedRecords", "Loading extended records", useCheckpoints);
-      Dataset<ExtendedRecord> extendedRecords =
-          loadExtendedRecords(spark, config, inputPath, outputPath, numberOfShards);
+    // Load the extended records
+    sparkLog(spark, "loadExtendedRecords", "Loading extended records");
+    Dataset<ExtendedRecord> extendedRecords =
+        loadExtendedRecords(spark, config, inputPath, outputPath, numberOfShards);
 
-      // Process identifiers - persisting new identifiers
-      sparkLog(spark, "processIdentifiers", "Processing identifiers", useCheckpoints);
-      processIdentifiers(spark, fs, config, outputPath, datasetId, tripletValid, occurrenceIdValid);
+    // Process identifiers - persisting new identifiers
+    sparkLog(spark, "processIdentifiers", "Processing identifiers");
+    processIdentifiers(spark, fs, config, outputPath, datasetId, tripletValid, occurrenceIdValid);
 
-      // load identifiers
-      sparkLog(spark, "loadIdentifiers", "Loading identifiers", useCheckpoints);
-      Dataset<IdentifierRecord> identifiers = loadIdentifiers(spark, outputPath);
-      final long identifiersCount = identifiers.count();
+    // load identifiers
+    sparkLog(spark, "loadIdentifiers", "Loading identifiers");
+    Dataset<IdentifierRecord> identifiers = loadIdentifiers(spark, outputPath);
+    final long identifiersCount = identifiers.count();
 
-      // check all identifier records have a valid internal ID
-      sparkLog(spark, "checkIdentifiers", "Checking identifiers", useCheckpoints);
-      checkIdentifiers(identifiers);
+    // check all identifier records have a valid internal ID
+    sparkLog(spark, "checkIdentifiers", "Checking identifiers");
+    checkIdentifiers(identifiers);
 
-      // join extended records and identifiers
-      sparkLog(
-          spark, "joinRecordsAndIdentifiers", "Joining records and identifiers", useCheckpoints);
-      Dataset<Occurrence> simpleRecords =
-          joinRecordsAndIdentifiers(
-              spark, extendedRecords, identifiers, outputPath, useCheckpoints);
+    // join extended records and identifiers
+    sparkLog(spark, "joinRecordsAndIdentifiers", "Joining records and identifiers");
+    Dataset<Occurrence> simpleRecords =
+        joinRecordsAndIdentifiers(spark, extendedRecords, identifiers, outputPath);
 
-      // a single call to the registry to get the dataset metadata
-      final MetadataRecord metadata = getMetadataRecord(config, datasetId);
+    // a single call to the registry to get the dataset metadata
+    final MetadataRecord metadata = getMetadataRecord(config, datasetId);
 
-      // run all transforms
-      sparkLog(spark, "runTransforms", "Running transforms", useCheckpoints);
-      Dataset<Occurrence> interpreted =
-          runTransforms(spark, config, simpleRecords, metadata, outputPath, useCheckpoints);
+    // run all transforms
+    sparkLog(spark, "runTransforms", "Running transforms");
+    Dataset<Occurrence> interpreted =
+        runTransforms(spark, config, simpleRecords, metadata, outputPath);
 
-      // write parquet for elastic
-      sparkLog(spark, "toJson", "Writing JSON output", useCheckpoints);
-      toJson(interpreted, metadata, numberOfShards)
-          .write()
-          .mode(SaveMode.Overwrite)
-          .parquet(outputPath + "/" + OCCURRENCE_JSON);
-
-      // write parquet for hdfs view
-      sparkLog(spark, "toHdfs", "Writing HDFS output", useCheckpoints);
-      toHdfs(interpreted, metadata, numberOfShards)
-          .write()
-          .mode(SaveMode.Overwrite)
-          .parquet(outputPath + "/" + OCCURRENCE_HDFS);
-
-      // cleanup intermediate parquet outputs
-      HdfsConfigs hdfsConfigs =
-          HdfsConfigs.create(config.getHdfsSiteConfig(), config.getCoreSiteConfig());
-      FsUtils.deleteIfExist(hdfsConfigs, outputPath + "/" + EXTENDED_IDENTIFIERS);
-
-      // write metrics to yaml
-      writeMetricsYaml(
-          fs,
-          Map.of(
-              PipelinesVariables.Metrics.BASIC_RECORDS_COUNT, identifiersCount,
-              PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT, identifiersCount),
-          outputPath + "/" + METRICS_FILENAME);
-
-      MDC.put("datasetKey", datasetId);
-      log.info(timeAndRecPerSecond("interpretation", start, identifiersCount));
-    } finally {
-      MDC.remove("datasetKey");
+    // FIXME move to configuration
+    Integer numberOfOutputShards = numberOfShards;
+    if (identifiersCount > 50_000 && identifiersCount <= 100_000) {
+      numberOfOutputShards = 2;
+    } else if (identifiersCount <= 50_000) {
+      numberOfOutputShards = 1;
     }
+
+    // write parquet for elastic
+    sparkLog(spark, "toJson", "Writing JSON output");
+    toJson(interpreted, metadata, numberOfOutputShards)
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + OCCURRENCE_JSON);
+
+    // write parquet for hdfs view
+    sparkLog(spark, "toHdfs", "Writing HDFS output");
+    toHdfs(interpreted, metadata, numberOfOutputShards)
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + OCCURRENCE_HDFS);
+
+    // cleanup intermediate parquet outputs
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.getHdfsSiteConfig(), config.getCoreSiteConfig());
+    FsUtils.deleteIfExist(hdfsConfigs, outputPath + "/" + EXTENDED_IDENTIFIERS);
+
+    // write metrics to yaml
+    writeMetricsYaml(
+        fs,
+        Map.of(
+            PipelinesVariables.Metrics.BASIC_RECORDS_COUNT, identifiersCount,
+            PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT, identifiersCount),
+        outputPath + "/" + METRICS_FILENAME);
+
+    ThreadContext.put("datasetKey", datasetId);
+    log.info(timeAndRecPerSecond("interpretation", start, identifiersCount));
   }
 
   private static void checkIdentifiers(Dataset<IdentifierRecord> identifiers) {
@@ -351,15 +350,13 @@ public class OccurrenceInterpretation {
    * @param extendedRecords The dataset of extended records.
    * @param identifiers The dataset of identifier records.
    * @param outputPath The output path for checkpointing.
-   * @param useCheckpoints Whether to use checkpoints for intermediate datasets.
    * @return The dataset of simple occurrence records.
    */
   private static Dataset<Occurrence> joinRecordsAndIdentifiers(
       SparkSession spark,
       Dataset<ExtendedRecord> extendedRecords,
       Dataset<IdentifierRecord> identifiers,
-      String outputPath,
-      boolean useCheckpoints) {
+      String outputPath) {
 
     Dataset<Occurrence> occurrences =
         extendedRecords
@@ -382,15 +379,11 @@ public class OccurrenceInterpretation {
             // only include records with ids
             .filter((FilterFunction<Occurrence>) occurrence -> occurrence.getInternalId() != null);
 
-    if (useCheckpoints) {
-      occurrences.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + EXTENDED_IDENTIFIERS);
-      return spark
-          .read()
-          .parquet(outputPath + "/" + EXTENDED_IDENTIFIERS)
-          .as(Encoders.bean(Occurrence.class));
-    } else {
-      return occurrences;
-    }
+    occurrences.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + EXTENDED_IDENTIFIERS);
+    return spark
+        .read()
+        .parquet(outputPath + "/" + EXTENDED_IDENTIFIERS)
+        .as(Encoders.bean(Occurrence.class));
   }
 
   /**
@@ -421,8 +414,7 @@ public class OccurrenceInterpretation {
       PipelinesConfig config,
       Dataset<Occurrence> simpleRecords,
       MetadataRecord metadata,
-      String outputPath,
-      Boolean useCheckpoints) {
+      String outputPath) {
 
     // Set up our transforms
     DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create(config, metadata);
@@ -489,15 +481,10 @@ public class OccurrenceInterpretation {
     // write simple interpreted records to disk
     interpreted.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + SIMPLE_OCCURRENCE);
 
-    if (useCheckpoints) {
-      // re-load
-      return spark
-          .read()
-          .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
-          .as(Encoders.bean(Occurrence.class));
-    } else {
-      return interpreted;
-    }
+    return spark
+        .read()
+        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
+        .as(Encoders.bean(Occurrence.class));
   }
 
   /**
@@ -558,11 +545,8 @@ public class OccurrenceInterpretation {
         .as(Encoders.bean(ExtendedRecord.class));
   }
 
-  private static void sparkLog(
-      SparkSession spark, String groupId, String message, boolean useCheckpoints) {
-    if (useCheckpoints) {
-      spark.sparkContext().setJobGroup(groupId, message, true);
-    }
+  private static void sparkLog(SparkSession spark, String groupId, String message) {
+    spark.sparkContext().setJobGroup(groupId, message, true);
   }
 
   private static Dataset<IdentifierRecord> loadIdentifiers(SparkSession spark, String outputPath) {
@@ -696,9 +680,7 @@ public class OccurrenceInterpretation {
 
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
-    if (numOfShards == 1) {
-      dataset = dataset.coalesce(1);
-    }
+    dataset = dataset.coalesce(numOfShards);
     return dataset;
   }
 
@@ -739,9 +721,7 @@ public class OccurrenceInterpretation {
 
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
-    if (numshards == 1) {
-      dataset = dataset.coalesce(1);
-    }
+    dataset = dataset.coalesce(numshards);
     return dataset;
   }
 }

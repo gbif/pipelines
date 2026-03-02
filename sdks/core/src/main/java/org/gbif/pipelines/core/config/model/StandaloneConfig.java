@@ -16,6 +16,7 @@ public class StandaloneConfig implements Serializable {
   MessagingConfig messaging;
   Integer numberOfShards = 1;
   Double idThresholdPercent = 50d;
+  boolean idThresholdSkip = false;
   List<String> skipInstallationsList = new ArrayList<>();
 
   String occurrenceIndexName = "occurrence_a";

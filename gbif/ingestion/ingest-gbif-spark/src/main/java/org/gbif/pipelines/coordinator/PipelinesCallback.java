@@ -34,6 +34,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.SparkSession;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.gbif.api.model.pipelines.*;
@@ -46,7 +47,6 @@ import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.slf4j.MDC;
 
 @Slf4j
 public abstract class PipelinesCallback<
@@ -213,7 +213,7 @@ public abstract class PipelinesCallback<
     LAST_CONSUMED_MESSAGE_FROM_QUEUE_MS.set(System.currentTimeMillis());
     MESSAGES_READ_FROM_QUEUE.inc();
 
-    MDC.put(
+    ThreadContext.put(
         "datasetKey",
         message.getDatasetUuid() != null ? message.getDatasetUuid().toString() : "NO_DATASET");
     log.debug("Received message: {}", message);
@@ -228,11 +228,11 @@ public abstract class PipelinesCallback<
     }
 
     TrackingInfo trackingInfo = null;
+    ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
+    ThreadContext.put("attempt", message.getAttempt().toString());
+    ThreadContext.put("step", getStepType().name());
 
-    try (MDC.MDCCloseable mdc =
-            MDC.putCloseable("datasetKey", message.getDatasetUuid().toString());
-        MDC.MDCCloseable mdc1 = MDC.putCloseable("attempt", message.getAttempt().toString());
-        MDC.MDCCloseable mdc2 = MDC.putCloseable("step", getStepType().name())) {
+    try {
       log.info("Processing attempt {}", message.getAttempt());
 
       trackingInfo = trackPipelineStep(message);
@@ -247,22 +247,8 @@ public abstract class PipelinesCallback<
       // Acknowledge message processing
       updateTrackingStatus(trackingInfo, message, PipelineStep.Status.COMPLETED);
 
-      // Create and send outgoing message
-      O outgoingMessage = createOutgoingMessage(message);
-
-      String nextMessageClassName = outgoingMessage.getClass().getSimpleName();
-      String messagePayload = outgoingMessage.toString();
-
-      publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
-
-      String logInfo =
-          "Next message has been sent - "
-              + outgoingMessage.getClass().getSimpleName()
-              + ":"
-              + outgoingMessage;
-      log.debug(logInfo);
-
-      updateQueuedStatus(trackingInfo, message);
+      // set outgoing message to the queue for the next step
+      sendOutgoingMessage(trackingInfo, message);
 
       log.info("Finished processing datasetKey: {}", message.getDatasetUuid());
 
@@ -274,7 +260,7 @@ public abstract class PipelinesCallback<
         LAST_DATASETS_ERROR.set(System.currentTimeMillis());
 
         // FIXMETrackingInfo trackingInfo = trackPipelineStep(message);
-        MDC.put("datasetKey", message.getDatasetUuid().toString());
+        ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
         String error =
             "Error for datasetKey - " + message.getDatasetUuid() + " : " + ex.getMessage();
         log.error(error, ex);
@@ -285,7 +271,7 @@ public abstract class PipelinesCallback<
         }
 
       } catch (Exception e) {
-        MDC.put("datasetKey", message.getDatasetUuid().toString());
+        ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
         log.error(
             "Failed to update tracking status for datasetKey - " + message.getDatasetUuid(), e);
       }
@@ -301,7 +287,7 @@ public abstract class PipelinesCallback<
       CONCURRENT_DATASETS.dec();
 
       if (message.getExecutionId() != null) {
-        MDC.put("datasetKey", message.getDatasetUuid().toString());
+        ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
         log.debug("Mark execution as FINISHED if all steps are FINISHED");
         Runnable r =
             () -> {
@@ -313,6 +299,58 @@ public abstract class PipelinesCallback<
         Retry.decorateRunnable(RETRY, r).run();
       }
     }
+  }
+
+  private void sendOutgoingMessage(TrackingInfo trackingInfo, I message) throws IOException {
+    Function<Long, List<PipelineStep>> getStepsByExecutionKeyFn =
+        ek -> {
+          log.debug("History client: get steps by execution key {}", ek);
+          return historyClient.getPipelineStepsByExecutionKey(ek);
+        };
+
+    List<PipelineStep> executionPipelineSteps =
+        Retry.decorateFunction(RETRY, getStepsByExecutionKeyFn).apply(trackingInfo.executionId);
+
+    log.info(
+        "Execution steps for execution key {}: {}",
+        trackingInfo.executionId,
+        executionPipelineSteps);
+
+    List<PipelineStep> thisPipelineStep =
+        executionPipelineSteps.stream().filter(ps -> ps.getType() == getStepType()).toList();
+
+    if (thisPipelineStep.isEmpty()) {
+      // expected when we opt to only execute one step with &onlyRequestedStep=true
+      log.warn(
+          "Current step {} is not found in the execution steps, won't send outgoing message",
+          getStepType());
+      return;
+    }
+
+    PipelineStep step = thisPipelineStep.get(0);
+    // is this steptype the last in the list
+    if (!executionPipelineSteps.isEmpty()
+        && executionPipelineSteps.indexOf(step) == executionPipelineSteps.size() - 1) {
+      log.info("Current step {} is last step, won't send outgoing message", getStepType());
+      return;
+    }
+
+    // Create and send outgoing message
+    O outgoingMessage = createOutgoingMessage(message);
+
+    String nextMessageClassName = outgoingMessage.getClass().getSimpleName();
+    String messagePayload = outgoingMessage.toString();
+
+    publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
+
+    String logInfo =
+        "Next message has been sent - "
+            + outgoingMessage.getClass().getSimpleName()
+            + ":"
+            + outgoingMessage;
+    log.debug(logInfo);
+
+    updateQueuedStatus(trackingInfo, message);
   }
 
   private static void checkIfPaused() {
@@ -508,12 +546,6 @@ public abstract class PipelinesCallback<
 
   private TrackingInfo trackPipelineStep(I message) throws Exception {
 
-    //
-    //        if (isValidator) {
-    //            log.info("Skipping status updating, isValidator {}", isValidator);
-    //            return Optional.empty();
-    //        }
-
     // create pipeline process. If it already exists it returns the existing one (the db query
     // does an upsert).
     UUID datasetUuid = message.getDatasetUuid();
@@ -573,7 +605,7 @@ public abstract class PipelinesCallback<
     List<PipelineStep> stepsByExecutionKey =
         Retry.decorateFunction(RETRY, getStepsByExecutionKeyFn).apply(executionId);
 
-    // add step to the process
+    // get the step to the process
     PipelineStep step =
         stepsByExecutionKey.stream()
             .filter(ps -> ps.getType() == getStepType())

@@ -121,7 +121,7 @@ public class VerbatimExtensionsInterpretation {
       String normalizedField = normalizeFieldName(k);
       selectCols.add(col("record").getItem(k).alias(normalizedField));
     }
-    log.info(
+    log.debug(
         "Selecting [{}] columns for extension",
         selectCols.stream().map(Column::toString).collect(Collectors.joining(", ")));
 
@@ -155,7 +155,7 @@ public class VerbatimExtensionsInterpretation {
     List<String> directories =
         optimized.select(col("directory")).distinct().as(Encoders.STRING()).collectAsList();
 
-    log.info(
+    log.debug(
         "Found {} distinct extension directories: {}",
         directories.size(),
         String.join(", ", directories));

@@ -22,7 +22,7 @@
         <commons-io.version>2.13.0</commons-io.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>
         <fastutil.version>8.5.15</fastutil.version>
-        <dwc-api.version>2.1.10-issue-18-SNAPSHOT</dwc-api.version>
+        <dwc-api.version>2.1.10</dwc-api.version>
         <gbif-api.version>2.3.1</gbif-api.version>
         <gbif-common.version>0.60</gbif-common.version>
         <gbif-postal-service.version>2.1.3</gbif-postal-service.version>
@@ -586,19 +586,19 @@
             <groupId>org.apache.parquet</groupId>
             <artifactId>parquet-hadoop</artifactId>
             <version>1.17.0</version>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.parquet</groupId>
             <artifactId>parquet-common</artifactId>
             <version>1.17.0</version>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.parquet</groupId>
             <artifactId>parquet-column</artifactId>
             <version>1.17.0</version>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>

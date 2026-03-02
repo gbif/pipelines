@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
@@ -31,7 +32,6 @@ import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 import org.gbif.pipelines.transform.*;
-import org.slf4j.MDC;
 import scala.Tuple2;
 
 @Slf4j
@@ -121,7 +121,7 @@ public class EventInterpretation {
 
     long start = System.currentTimeMillis();
 
-    MDC.put("datasetKey", datasetId);
+    ThreadContext.put("datasetKey", datasetId);
     log.info("Starting event interpretation");
 
     String inputPath = String.format("%s/%s/%d", config.getInputPath(), datasetId, attempt);
