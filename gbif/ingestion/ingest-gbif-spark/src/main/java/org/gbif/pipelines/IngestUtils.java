@@ -57,7 +57,7 @@ public class IngestUtils {
     List<String> tooOldDatasets = new ArrayList<>();
     Map<String, Integer> datasetAttemptMap = new java.util.HashMap<>();
 
-    // for each directory, find the last successful interpretation and create a symlink to it
+    // for each directory, find the last successful interpretation
     for (FileStatus fileStatus : fileStatuses) {
       if (fileStatus.isDirectory()) {
         String datasetId = fileStatus.getPath().getName();

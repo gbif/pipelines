@@ -20,6 +20,7 @@ public class IndexingCallback
     extends PipelinesCallback<PipelinesInterpretedMessage, PipelinesIndexedMessage>
     implements MessageCallback<PipelinesInterpretedMessage> {
 
+  private static final Object LOCK = new Object();
   private String defaultIndexName = null;
 
   public IndexingCallback(
@@ -57,17 +58,23 @@ public class IndexingCallback
   }
 
   private void initialiseIndex(PipelinesInterpretedMessage message) throws IOException {
+
     if (defaultIndexName != null) {
       return;
     }
-    defaultIndexName =
-        EsIndexUtils.initialiseDefaultIndex(
-            pipelinesConfig,
-            httpClient,
-            DatasetType.OCCURRENCE,
-            message.getDatasetUuid().toString(),
-            message.getAttempt());
-    assert defaultIndexName != null;
+
+    synchronized (LOCK) {
+      if (defaultIndexName != null) {
+        return;
+      }
+      defaultIndexName =
+          EsIndexUtils.initialiseDefaultIndex(
+              pipelinesConfig,
+              httpClient,
+              DatasetType.OCCURRENCE,
+              message.getDatasetUuid().toString(),
+              message.getAttempt());
+    }
   }
 
   @Override

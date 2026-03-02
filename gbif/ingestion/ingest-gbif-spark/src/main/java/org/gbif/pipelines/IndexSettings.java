@@ -77,46 +77,59 @@ public class IndexSettings {
   }
 
   /**
-   * Computes the name for ES index:
+   * Computes ES index name.
    *
-   * <pre>
-   * Case 1 - Independent index for datasets where number of records more than config.indexIndepRecord
-   * Case 2 - Default static index name for datasets where last changed date more than config.indexDefStaticDateDurationDd
-   * Case 3 - Default dynamic index name for all other datasets
-   * </pre>
+   * <p>Strategy: 1. Independent index if dataset is large (records >= threshold) 2. Otherwise reuse
+   * default index if available 3. Otherwise create new default index with timestamp
    */
   public static String computeIndexName(
       DatasetType datasetType,
       IndexConfig indexConfig,
       HttpClient httpClient,
       String datasetId,
-      Integer attempt,
+      int attempt,
       long recordsNumber,
       long timestamp)
       throws IOException {
 
-    // Independent index for datasets where number of records more than config.indexIndepRecord
-    String idxName;
-    String indexVersion;
-    switch (datasetType) {
-      case OCCURRENCE -> indexVersion = indexConfig.occurrenceVersion;
-      case SAMPLING_EVENT -> indexVersion = indexConfig.eventVersion;
+    String indexVersion = resolveIndexVersion(datasetType, indexConfig);
+
+    if (recordsNumber >= indexConfig.getBigIndexIfRecordsMoreThan()) {
+      return buildIndependentIndexName(datasetId, attempt, indexVersion, timestamp);
+    }
+
+    String defaultPrefix = indexConfig.defaultPrefixName + "_" + indexVersion;
+    String indexName =
+        getIndexName(indexConfig, httpClient, defaultPrefix)
+            .orElse(defaultPrefix + "_" + timestamp);
+
+    log.info("ES Index name - {}", indexName);
+    return indexName;
+  }
+
+  /** Computes ES index name for datasets that must always use an independent (dedicated) index. */
+  public static String computeLargeIndexName(
+      DatasetType datasetType,
+      IndexConfig indexConfig,
+      String datasetId,
+      int attempt,
+      long timestamp) {
+
+    String indexVersion = resolveIndexVersion(datasetType, indexConfig);
+    return buildIndependentIndexName(datasetId, attempt, indexVersion, timestamp);
+  }
+
+  private static String resolveIndexVersion(DatasetType datasetType, IndexConfig config) {
+    return switch (datasetType) {
+      case OCCURRENCE -> config.occurrenceVersion;
+      case SAMPLING_EVENT -> config.eventVersion;
       default -> throw new IllegalStateException("Unexpected value: " + datasetType);
-    }
+    };
+  }
 
-    if (recordsNumber >= indexConfig.bigIndexIfRecordsMoreThan) {
-      idxName = datasetId + "_" + attempt + "_" + indexVersion + "_" + timestamp;
-      log.info("ES Index name - {}, recordsNumber - {}", idxName, recordsNumber);
-      return idxName;
-    }
-
-    // Default index name for all other datasets
-    String esPr = indexConfig.defaultPrefixName + "_" + indexVersion;
-    idxName =
-        getIndexName(indexConfig, httpClient, esPr)
-            .orElse(esPr + "_" + timestamp); // Instant.now().toEpochMilli());
-    log.info("ES Index name - {}", idxName);
-    return idxName;
+  private static String buildIndependentIndexName(
+      String datasetId, int attempt, String version, long timestamp) {
+    return datasetId + "_" + attempt + "_" + version + "_" + timestamp;
   }
 
   /**

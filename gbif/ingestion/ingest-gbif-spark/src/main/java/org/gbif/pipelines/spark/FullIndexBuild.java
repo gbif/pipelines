@@ -13,9 +13,6 @@ import java.time.Instant;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -203,12 +200,6 @@ public class FullIndexBuild {
 
     long timestamp = Instant.now().toEpochMilli();
 
-    CloseableHttpClient httpClient =
-        HttpClients.custom()
-            .setDefaultRequestConfig(
-                RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
-            .build();
-
     final Map<String, String> datasetToIndexNameMap = new HashMap<>();
 
     boolean defaultIndexCreated = false;
@@ -237,14 +228,8 @@ public class FullIndexBuild {
       String esIndexName =
           recordCount < config.getIndexConfig().getBigIndexIfRecordsMoreThan()
               ? defaultIndexName
-              : IndexSettings.computeIndexName(
-                  datasetType,
-                  config.getIndexConfig(),
-                  httpClient,
-                  datasetKey,
-                  attempt,
-                  recordCount.intValue(),
-                  timestamp);
+              : IndexSettings.computeLargeIndexName(
+                  datasetType, config.getIndexConfig(), datasetKey, attempt, timestamp);
 
       Integer indexNumberShards =
           IndexSettings.computeNumberOfShards(

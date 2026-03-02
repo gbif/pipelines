@@ -22,6 +22,7 @@ public class EventsIndexingCallback
     extends PipelinesCallback<PipelinesEventsInterpretedMessage, PipelinesEventsIndexedMessage>
     implements MessageCallback<PipelinesEventsInterpretedMessage> {
 
+  private static final Object LOCK = new Object();
   private String defaultIndexName = null;
 
   public EventsIndexingCallback(
@@ -50,7 +51,7 @@ public class EventsIndexingCallback
         message.getDatasetUuid().toString(),
         message.getAttempt(),
         pipelinesConfig.getStandalone().getEventIndexAlias(),
-        pipelinesConfig.getStandalone().getEventIndexName(),
+        defaultIndexName,
         pipelinesConfig.getStandalone().getEventIndexSchema(),
         pipelinesConfig.getStandalone().getEventIndexNumberOfShards(),
         ParentJsonRecord.class,
@@ -61,14 +62,15 @@ public class EventsIndexingCallback
     if (defaultIndexName != null) {
       return;
     }
-    defaultIndexName =
-        EsIndexUtils.initialiseDefaultIndex(
-            pipelinesConfig,
-            httpClient,
-            DatasetType.SAMPLING_EVENT,
-            message.getDatasetUuid().toString(),
-            message.getAttempt());
-    assert defaultIndexName != null;
+    synchronized (LOCK) {
+      defaultIndexName =
+          EsIndexUtils.initialiseDefaultIndex(
+              pipelinesConfig,
+              httpClient,
+              DatasetType.SAMPLING_EVENT,
+              message.getDatasetUuid().toString(),
+              message.getAttempt());
+    }
   }
 
   @Override
