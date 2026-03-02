@@ -240,6 +240,11 @@ public class EsIndexUtils {
             ? pipelinesConfig.getIndexConfig().getOccurrenceAlias()
             : pipelinesConfig.getIndexConfig().getEventAlias();
 
+    final String version =
+            datasetType.equals(DatasetType.OCCURRENCE)
+                    ? pipelinesConfig.getIndexConfig().getOccurrenceVersion()
+                    : pipelinesConfig.getIndexConfig().getEventVersion();
+
     final Integer numberOfShards =
         datasetType.equals(DatasetType.OCCURRENCE)
             ? pipelinesConfig.getStandalone().getOccurrenceIndexNumberOfShards()
@@ -249,7 +254,7 @@ public class EsIndexUtils {
     String defaultIndexPrefix =
         pipelinesConfig.getIndexConfig().defaultPrefixName
             + "_"
-            + pipelinesConfig.getIndexConfig().occurrenceVersion;
+            + version;
 
     // does the default index exist already ?
     Optional<String> indexName =
@@ -275,8 +280,6 @@ public class EsIndexUtils {
       defaultIndexName = indexName.get();
       log.info("index with the default name already exists {}", defaultIndexName);
     }
-
-    assert defaultIndexName != null;
 
     return defaultIndexName;
   }
