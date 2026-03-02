@@ -52,7 +52,6 @@ import org.gbif.pipelines.keygen.OccurrenceRecord;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.gbif.pipelines.transform.utils.KeygenServiceFactory;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.MDC;
 import scala.Tuple2;
 
 @Slf4j
@@ -274,8 +273,6 @@ public class Fragmenter {
     } catch (Exception e) {
       log.error("Error during fragmenter: {}", e.getMessage(), e);
       throw e;
-    } finally {
-      MDC.clear();
     }
   }
 

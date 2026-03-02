@@ -3,7 +3,6 @@ package org.gbif.pipelines.spark.udf;
 import java.io.Serializable;
 import java.util.function.Function;
 import java.util.regex.Pattern;
-import lombok.SneakyThrows;
 
 public class CleanDelimiters implements Function<String, String>, Serializable {
 
@@ -17,7 +16,6 @@ public class CleanDelimiters implements Function<String, String>, Serializable {
   public static final Pattern DELIMITERS_MATCH_PATTERN = Pattern.compile(DELIMITERS_MATCH);
 
   @Override
-  @SneakyThrows
   public String apply(String value) {
     return value != null ? cleanDelimiters(value) : null;
   }

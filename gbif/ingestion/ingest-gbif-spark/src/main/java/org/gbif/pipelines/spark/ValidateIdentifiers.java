@@ -35,7 +35,6 @@ import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.transform.GbifIdTransform;
 import org.gbif.pipelines.transform.utils.KeygenServiceFactory;
-import org.slf4j.MDC;
 
 /**
  * Validates the identifiers in a dataset of ExtendedRecords and generates IdentifierRecords. This
@@ -167,99 +166,89 @@ public class ValidateIdentifiers {
       boolean useExtendedRecordId)
       throws Exception {
 
-    try {
+    long start = System.currentTimeMillis();
+    ThreadContext.put("datasetKey", datasetID);
+    log.info(
+        "Starting validation with tripleValid: {}, occurrenceIdValid: {}, useExtendedRecordId: {}",
+        tripletValid,
+        occurrenceIdValid,
+        useExtendedRecordId);
 
-      long start = System.currentTimeMillis();
-      ThreadContext.put("datasetKey", datasetID);
-      log.info(
-          "Starting validation with tripleValid: {}, occurrenceIdValid: {}, useExtendedRecordId: {}",
-          tripletValid,
-          occurrenceIdValid,
-          useExtendedRecordId);
+    String inputPath = config.getInputPath() + "/" + datasetID + "/" + attempt;
+    String outputPath = config.getOutputPath() + "/" + datasetID + "/" + attempt;
 
-      String inputPath = config.getInputPath() + "/" + datasetID + "/" + attempt;
-      String outputPath = config.getOutputPath() + "/" + datasetID + "/" + attempt;
+    // Read the verbatim input
+    Dataset<ExtendedRecord> records =
+        spark
+            .read()
+            .format("avro")
+            .load(inputPath + "/verbatim.avro")
+            .repartition(numberOfShards)
+            .as(Encoders.bean(ExtendedRecord.class));
 
-      // Read the verbatim input
-      Dataset<ExtendedRecord> records =
-          spark
-              .read()
-              .format("avro")
-              .load(inputPath + "/verbatim.avro")
-              .repartition(numberOfShards)
-              .as(Encoders.bean(ExtendedRecord.class));
+    // read the extended records and check for occurrences in the extensions
+    Dataset<ExtendedRecord> recordsExpanded =
+        checkExtensionsForOccurrence(spark, records, outputPath);
 
-      // read the extended records and check for occurrences in the extensions
-      Dataset<ExtendedRecord> recordsExpanded =
-          checkExtensionsForOccurrence(spark, records, outputPath);
+    // collect metrics
+    Map<String, Long> metrics = new HashMap<>();
 
-      // collect metrics
-      Map<String, Long> metrics = new HashMap<>();
+    // validate the identifiers from the extended records
+    validateIdentifiers(recordsExpanded, metrics);
 
-      // validate the identifiers from the extended records
-      validateIdentifiers(recordsExpanded, metrics);
+    // run the identifier transform - note: this does not generate new gbifIds
+    identifierTransform(
+            config,
+            datasetID,
+            tripletValid,
+            occurrenceIdValid,
+            useExtendedRecordId,
+            recordsExpanded)
+        .repartition(numberOfShards)
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + IDENTIFIERS_TRANSFORMED);
 
-      // run the identifier transform - note: this does not generate new gbifIds
-      identifierTransform(
-              config,
-              datasetID,
-              tripletValid,
-              occurrenceIdValid,
-              useExtendedRecordId,
-              recordsExpanded)
-          .repartition(numberOfShards)
-          .write()
-          .mode(SaveMode.Overwrite)
-          .parquet(outputPath + "/" + IDENTIFIERS_TRANSFORMED);
+    // reload
+    Dataset<IdentifierRecord> identifiers =
+        spark
+            .read()
+            .format("parquet")
+            .load(outputPath + "/" + IDENTIFIERS_TRANSFORMED)
+            .as(Encoders.bean(IdentifierRecord.class));
 
-      // reload
-      Dataset<IdentifierRecord> identifiers =
-          spark
-              .read()
-              .format("parquet")
-              .load(outputPath + "/" + IDENTIFIERS_TRANSFORMED)
-              .as(Encoders.bean(IdentifierRecord.class));
+    // get the records that are valid and persisted - i.e. if the have an internalId (gbifId)
+    Dataset<IdentifierRecord> validIdentifiers = validAndPersisted(identifiers, metrics);
 
-      // get the records that are valid and persisted - i.e. if the have an internalId (gbifId)
-      Dataset<IdentifierRecord> validIdentifiers = validAndPersisted(identifiers, metrics);
+    // get the absent records - i.e. records not assigned a gbifId and not stored in hbase
+    Dataset<IdentifierRecord> absentIdentifiers = absentAndFilteredCount(identifiers, metrics);
 
-      // get the absent records - i.e. records not assigned a gbifId and not stored in hbase
-      Dataset<IdentifierRecord> absentIdentifiers = absentAndFilteredCount(identifiers, metrics);
+    // get the invalid records - i.e. records with an invalid gbifId
+    Dataset<IdentifierRecord> invalidIdentifiers = invalid(absentIdentifiers, metrics);
 
-      // get the invalid records - i.e. records with an invalid gbifId
-      Dataset<IdentifierRecord> invalidIdentifiers = invalid(absentIdentifiers, metrics);
+    // 1. write unique ids
+    validIdentifiers.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + IDENTIFIERS_VALID);
 
-      // 1. write unique ids
-      validIdentifiers
-          .write()
-          .mode(SaveMode.Overwrite)
-          .parquet(outputPath + "/" + IDENTIFIERS_VALID);
+    // 2. write invalid ids
+    invalidIdentifiers
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + IDENTIFIERS_INVALID);
 
-      // 2. write invalid ids
-      invalidIdentifiers
-          .write()
-          .mode(SaveMode.Overwrite)
-          .parquet(outputPath + "/" + IDENTIFIERS_INVALID);
+    // 3. write absent ids
+    absentIdentifiers
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + IDENTIFIERS_ABSENT);
 
-      // 3. write absent ids
-      absentIdentifiers
-          .write()
-          .mode(SaveMode.Overwrite)
-          .parquet(outputPath + "/" + IDENTIFIERS_ABSENT);
+    // 4. write metrics to yaml
+    writeMetricsYaml(fs, metrics, outputPath + "/" + METRICS_FILENAME);
 
-      // 4. write metrics to yaml
-      writeMetricsYaml(fs, metrics, outputPath + "/" + METRICS_FILENAME);
+    // clean up
+    fs.delete(new Path(outputPath + "/" + IDENTIFIERS_TRANSFORMED), true);
 
-      // clean up
-      fs.delete(new Path(outputPath + "/" + IDENTIFIERS_TRANSFORMED), true);
-
-      log.info(
-          timeAndRecPerSecond(
-              "identifiers", start, metrics.get(VALID_GBIF_ID_COUNT + "Attempted")));
-
-    } finally {
-      MDC.clear();
-    }
+    log.info(
+        timeAndRecPerSecond("identifiers", start, metrics.get(VALID_GBIF_ID_COUNT + "Attempted")));
   }
 
   /**

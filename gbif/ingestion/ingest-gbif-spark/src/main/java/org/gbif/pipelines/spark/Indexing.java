@@ -28,7 +28,6 @@ import org.gbif.pipelines.core.config.model.EsConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
-import org.slf4j.MDC;
 
 /**
  * Main class for indexing occurrence data to Elasticsearch. It reads Parquet files from HDFS,
@@ -169,68 +168,58 @@ public class Indexing {
       Class<T> recordClass,
       String parquetDirectoryToLoad) {
 
-    try {
-      long start = System.currentTimeMillis();
-      ThreadContext.put("datasetKey", datasetId);
-      log.info(
-          "Starting index with esIndexName: {}, indexNumberShards: {}",
-          esIndexName,
-          indexNumberShards);
+    long start = System.currentTimeMillis();
+    ThreadContext.put("datasetKey", datasetId);
+    log.info(
+        "Starting index with esIndexName: {}, indexNumberShards: {}",
+        esIndexName,
+        indexNumberShards);
 
-      // where the pre-prepared json should be
-      String inputPath =
-          String.format(
-              "%s/%s/%d/%s", config.getOutputPath(), datasetId, attempt, parquetDirectoryToLoad);
+    // where the pre-prepared json should be
+    String inputPath =
+        String.format(
+            "%s/%s/%d/%s", config.getOutputPath(), datasetId, attempt, parquetDirectoryToLoad);
 
-      // output path for metrics
-      String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
+    // output path for metrics
+    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
 
-      ElasticOptions options =
-          ElasticOptions.fromArgsAndConfig(
-              config,
-              esIndexAlias,
-              esIndexName,
-              esSchemaPath,
-              datasetId,
-              attempt,
-              indexNumberShards);
+    ElasticOptions options =
+        ElasticOptions.fromArgsAndConfig(
+            config, esIndexAlias, esIndexName, esSchemaPath, datasetId, attempt, indexNumberShards);
 
-      // Create ES index and alias if not exists
-      EsIndexUtils.createIndexAndAliasForDefault(options);
+    // Create ES index and alias if not exists
+    EsIndexUtils.createIndexAndAliasForDefault(options);
 
-      // Returns indices names in case of swapping
-      Set<String> indices = EsIndexUtils.deleteRecordsByDatasetId(options);
+    // Returns indices names in case of swapping
+    Set<String> indices = EsIndexUtils.deleteRecordsByDatasetId(options);
 
-      // Read parquet files
-      Dataset<T> df = spark.read().parquet(inputPath).as(Encoders.bean(recordClass));
+    // Read parquet files
+    Dataset<T> df = spark.read().parquet(inputPath).as(Encoders.bean(recordClass));
 
-      // Write to Elasticsearch
-      df.write()
-          .format("org.elasticsearch.spark.sql")
-          .option("es.resource", esIndexName)
-          .option("es.batch.size.entries", config.getElastic().getEsMaxBatchSize())
-          .option("es.batch.size.bytes", config.getElastic().getEsMaxBatchSizeBytes())
-          .option("es.mapping.id", "gbifId")
-          .option("es.nodes.wan.only", "true")
-          .option("es.batch.write.refresh", "false")
-          .mode("append")
-          .save();
+    // Write to Elasticsearch
+    df.write()
+        .format("org.elasticsearch.spark.sql")
+        .option("es.resource", esIndexName)
+        .option("es.batch.size.entries", config.getElastic().getEsMaxBatchSize())
+        .option("es.batch.size.bytes", config.getElastic().getEsMaxBatchSizeBytes())
+        .option("es.mapping.id", "gbifId")
+        .option("es.nodes.wan.only", "true")
+        .option("es.batch.write.refresh", "false")
+        .mode("append")
+        .save();
 
-      EsIndexUtils.updateAlias(options, indices, config.getIndexLock());
-      EsIndexUtils.refreshIndex(options);
+    EsIndexUtils.updateAlias(options, indices, config.getIndexLock());
+    EsIndexUtils.refreshIndex(options);
 
-      long indexCount = df.count();
+    long indexCount = df.count();
 
-      // write metrics to yaml
-      writeMetricsYaml(
-          fileSystem,
-          Map.of("parquetToJsonCountAttempted", indexCount),
-          outputPath + "/" + METRICS_FILENAME);
+    // write metrics to yaml
+    writeMetricsYaml(
+        fileSystem,
+        Map.of("parquetToJsonCountAttempted", indexCount),
+        outputPath + "/" + METRICS_FILENAME);
 
-      log.info(timeAndRecPerSecond("indexing", start, indexCount));
-    } finally {
-      MDC.clear();
-    }
+    log.info(timeAndRecPerSecond("indexing", start, indexCount));
   }
 
   @Builder
