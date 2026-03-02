@@ -23,7 +23,7 @@
         <commons-lang3.version>3.12.0</commons-lang3.version>
         <fastutil.version>8.5.15</fastutil.version>
         <dwc-api.version>2.1.10</dwc-api.version>
-        <gbif-api.version>2.3.1</gbif-api.version>
+        <gbif-api.version>2.4.0</gbif-api.version>
         <gbif-common.version>0.60</gbif-common.version>
         <gbif-postal-service.version>2.1.3</gbif-postal-service.version>
         <gbif-wrangler.version>1.0.0</gbif-wrangler.version>

@@ -23,6 +23,7 @@ import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import org.gbif.dwc.terms.Term;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.occurrence.download.hive.OccurrenceHDFSTableDefinition;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -270,8 +271,8 @@ public class TableBuild {
 
   public static void createExtensionTable(
       SparkSession spark, ExtensionTable extensionTable, String coreDwcTerm) {
-    log.info("Create extension table: {}", extensionTable.getHiveTableName());
-    spark.sparkContext().setJobDescription("Create " + extensionTable.getHiveTableName());
+    log.info("Create extension table: {}", extensionTableName(extensionTable, coreDwcTerm));
+    spark.sparkContext().setJobDescription("Create " + extensionTableName(extensionTable, coreDwcTerm));
 
     String extensionTableSql = createExtensionTableSQL(extensionTable, coreDwcTerm);
     log.info("Creating extension table SQL {}", extensionTableSql);
@@ -293,20 +294,25 @@ public class TableBuild {
             USING iceberg
             PARTITIONED BY (datasetkey)
             TBLPROPERTIES (
-              'write.format.default' = 'parquet',
-              'parquet.compression' = 'SNAPPY',
-              'auto.purge' = 'true',
-              'write.merge.isolation-level' = 'snapshot',
-              'commit.retry.num-retries' = '10',
-              'commit.retry.min-wait-ms' = '1000',
-              'commit.retry.max-wait-ms' = '10000'
-            )
-            """,
+            'write.format.default' = 'parquet',
+            'parquet.compression' = 'ZSTD',
+            'auto.purge' = 'true',
+            'write.merge.isolation-level' = 'snapshot',
+            'commit.retry.num-retries' = '10',
+            'commit.retry.min-wait-ms' = '1000',
+            'commit.retry.max-wait-ms' = '10000'
+            'write.merge.isolation-level' = 'snapshot'
+        )
+        """,
         extensionTableName(extensionTable, coreDwcTerm), fieldList);
   }
 
-  private static String extensionTableName(ExtensionTable extensionTable, String coreDwcTerm) {
-    return String.format("%s_ext_%s", coreDwcTerm, extensionTable.getHiveTableName());
+  public static String extensionTableName(ExtensionTable extensionTable, String coreDwcTerm) {
+    return String.format("%s_ext_%s_%s",
+            coreDwcTerm,
+            extensionTable.getLeafNamespace(),
+            extensionTable.getHiveTableName()
+    );
   }
 
   private static String generateSelectColumns(
@@ -410,9 +416,13 @@ public class TableBuild {
         USING iceberg
         PARTITIONED BY (datasetkey)
         TBLPROPERTIES (
-          'write.format.default'='parquet',
-          'parquet.compression'='SNAPPY',
-          'auto.purge'='true'
+          'write.format.default' = 'parquet',
+          'parquet.compression' = 'ZSTD',
+          'auto.purge' = 'true',
+          'commit.retry.num-retries' = '10',
+          'commit.retry.min-wait-ms' = '1000',
+          'commit.retry.max-wait-ms' = '10000'
+          'write.merge.isolation-level' = 'snapshot'
         )
         """,
         tableName, getFieldDefns());
