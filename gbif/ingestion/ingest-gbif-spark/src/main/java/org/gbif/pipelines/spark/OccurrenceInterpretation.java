@@ -50,7 +50,6 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.transform.*;
 import org.gbif.pipelines.transform.utils.KeygenServiceFactory;
-import org.slf4j.MDC;
 import scala.Tuple2;
 
 /**
@@ -242,89 +241,83 @@ public class OccurrenceInterpretation {
 
     long start = System.currentTimeMillis();
 
-    try {
-      ThreadContext.put("datasetKey", datasetId);
-      log.info(
-          "Starting interpretation with tripleValid: {}, occurrenceIdValid: {}",
-          tripletValid,
-          occurrenceIdValid);
+    ThreadContext.put("datasetKey", datasetId);
+    log.info(
+        "Starting interpretation with tripleValid: {}, occurrenceIdValid: {}",
+        tripletValid,
+        occurrenceIdValid);
 
-      String inputPath = String.format("%s/%s/%d", config.getInputPath(), datasetId, attempt);
-      String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
+    String inputPath = String.format("%s/%s/%d", config.getInputPath(), datasetId, attempt);
+    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
 
-      // Load the extended records
-      sparkLog(spark, "loadExtendedRecords", "Loading extended records", useCheckpoints);
-      Dataset<ExtendedRecord> extendedRecords =
-          loadExtendedRecords(spark, config, inputPath, outputPath, numberOfShards);
+    // Load the extended records
+    sparkLog(spark, "loadExtendedRecords", "Loading extended records", useCheckpoints);
+    Dataset<ExtendedRecord> extendedRecords =
+        loadExtendedRecords(spark, config, inputPath, outputPath, numberOfShards);
 
-      // Process identifiers - persisting new identifiers
-      sparkLog(spark, "processIdentifiers", "Processing identifiers", useCheckpoints);
-      processIdentifiers(spark, fs, config, outputPath, datasetId, tripletValid, occurrenceIdValid);
+    // Process identifiers - persisting new identifiers
+    sparkLog(spark, "processIdentifiers", "Processing identifiers", useCheckpoints);
+    processIdentifiers(spark, fs, config, outputPath, datasetId, tripletValid, occurrenceIdValid);
 
-      // load identifiers
-      sparkLog(spark, "loadIdentifiers", "Loading identifiers", useCheckpoints);
-      Dataset<IdentifierRecord> identifiers = loadIdentifiers(spark, outputPath);
-      final long identifiersCount = identifiers.count();
+    // load identifiers
+    sparkLog(spark, "loadIdentifiers", "Loading identifiers", useCheckpoints);
+    Dataset<IdentifierRecord> identifiers = loadIdentifiers(spark, outputPath);
+    final long identifiersCount = identifiers.count();
 
-      // check all identifier records have a valid internal ID
-      sparkLog(spark, "checkIdentifiers", "Checking identifiers", useCheckpoints);
-      checkIdentifiers(identifiers);
+    // check all identifier records have a valid internal ID
+    sparkLog(spark, "checkIdentifiers", "Checking identifiers", useCheckpoints);
+    checkIdentifiers(identifiers);
 
-      // join extended records and identifiers
-      sparkLog(
-          spark, "joinRecordsAndIdentifiers", "Joining records and identifiers", useCheckpoints);
-      Dataset<Occurrence> simpleRecords =
-          joinRecordsAndIdentifiers(
-              spark, extendedRecords, identifiers, outputPath, useCheckpoints);
+    // join extended records and identifiers
+    sparkLog(spark, "joinRecordsAndIdentifiers", "Joining records and identifiers", useCheckpoints);
+    Dataset<Occurrence> simpleRecords =
+        joinRecordsAndIdentifiers(spark, extendedRecords, identifiers, outputPath, useCheckpoints);
 
-      // a single call to the registry to get the dataset metadata
-      final MetadataRecord metadata = getMetadataRecord(config, datasetId);
+    // a single call to the registry to get the dataset metadata
+    final MetadataRecord metadata = getMetadataRecord(config, datasetId);
 
-      // run all transforms
-      sparkLog(spark, "runTransforms", "Running transforms", useCheckpoints);
-      Dataset<Occurrence> interpreted =
-          runTransforms(spark, config, simpleRecords, metadata, outputPath, useCheckpoints);
+    // run all transforms
+    sparkLog(spark, "runTransforms", "Running transforms", useCheckpoints);
+    Dataset<Occurrence> interpreted =
+        runTransforms(spark, config, simpleRecords, metadata, outputPath, useCheckpoints);
 
-      // FIXME move to configuration
-      Integer numberOfOutputShards = numberOfShards;
-      if (identifiersCount > 50_000 && identifiersCount <= 100_000) {
-        numberOfOutputShards = 2;
-      } else if (identifiersCount <= 50_000) {
-        numberOfOutputShards = 1;
-      }
-
-      // write parquet for elastic
-      sparkLog(spark, "toJson", "Writing JSON output", useCheckpoints);
-      toJson(interpreted, metadata, numberOfOutputShards)
-          .write()
-          .mode(SaveMode.Overwrite)
-          .parquet(outputPath + "/" + OCCURRENCE_JSON);
-
-      // write parquet for hdfs view
-      sparkLog(spark, "toHdfs", "Writing HDFS output", useCheckpoints);
-      toHdfs(interpreted, metadata, numberOfOutputShards)
-          .write()
-          .mode(SaveMode.Overwrite)
-          .parquet(outputPath + "/" + OCCURRENCE_HDFS);
-
-      // cleanup intermediate parquet outputs
-      HdfsConfigs hdfsConfigs =
-          HdfsConfigs.create(config.getHdfsSiteConfig(), config.getCoreSiteConfig());
-      FsUtils.deleteIfExist(hdfsConfigs, outputPath + "/" + EXTENDED_IDENTIFIERS);
-
-      // write metrics to yaml
-      writeMetricsYaml(
-          fs,
-          Map.of(
-              PipelinesVariables.Metrics.BASIC_RECORDS_COUNT, identifiersCount,
-              PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT, identifiersCount),
-          outputPath + "/" + METRICS_FILENAME);
-
-      ThreadContext.put("datasetKey", datasetId);
-      log.info(timeAndRecPerSecond("interpretation", start, identifiersCount));
-    } finally {
-      MDC.remove("datasetKey");
+    // FIXME move to configuration
+    Integer numberOfOutputShards = numberOfShards;
+    if (identifiersCount > 50_000 && identifiersCount <= 100_000) {
+      numberOfOutputShards = 2;
+    } else if (identifiersCount <= 50_000) {
+      numberOfOutputShards = 1;
     }
+
+    // write parquet for elastic
+    sparkLog(spark, "toJson", "Writing JSON output", useCheckpoints);
+    toJson(interpreted, metadata, numberOfOutputShards)
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + OCCURRENCE_JSON);
+
+    // write parquet for hdfs view
+    sparkLog(spark, "toHdfs", "Writing HDFS output", useCheckpoints);
+    toHdfs(interpreted, metadata, numberOfOutputShards)
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + OCCURRENCE_HDFS);
+
+    // cleanup intermediate parquet outputs
+    HdfsConfigs hdfsConfigs =
+        HdfsConfigs.create(config.getHdfsSiteConfig(), config.getCoreSiteConfig());
+    FsUtils.deleteIfExist(hdfsConfigs, outputPath + "/" + EXTENDED_IDENTIFIERS);
+
+    // write metrics to yaml
+    writeMetricsYaml(
+        fs,
+        Map.of(
+            PipelinesVariables.Metrics.BASIC_RECORDS_COUNT, identifiersCount,
+            PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT, identifiersCount),
+        outputPath + "/" + METRICS_FILENAME);
+
+    ThreadContext.put("datasetKey", datasetId);
+    log.info(timeAndRecPerSecond("interpretation", start, identifiersCount));
   }
 
   private static void checkIdentifiers(Dataset<IdentifierRecord> identifiers) {

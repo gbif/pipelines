@@ -17,7 +17,6 @@ import org.gbif.pipelines.airflow.AppName;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.MDC;
 
 @Slf4j(topic = "Pipeline")
 public class DistributedUtil {
@@ -74,7 +73,6 @@ public class DistributedUtil {
 
     ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
     log.info(timeAndRecPerSecond(jobName, start, recordsNumber));
-    MDC.remove("datasetKey");
   }
 
   public static String timeAndRecPerSecond(String jobName, long start, long recordsNumber) {
