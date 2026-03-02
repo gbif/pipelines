@@ -190,7 +190,7 @@ public class EsIndexUtils {
     }
   }
 
-  public static void swapIndicies(String rebuildAlias, String liveAlias, String esHosts) {
+  public static void swapIndices(String rebuildAlias, String liveAlias, String esHosts) {
     EsConfig config = EsConfig.from(esHosts);
 
     try (EsClient client = EsClient.from(config)) {

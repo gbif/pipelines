@@ -129,6 +129,11 @@ public class FullIndexBuild {
     final DatasetType datasetType =
         isOccurrence ? DatasetType.OCCURRENCE : DatasetType.SAMPLING_EVENT;
 
+    final String esAlias =
+        isOccurrence
+            ? config.getIndexConfig().getOccurrenceAlias()
+            : config.getIndexConfig().getEventAlias();
+
     final String schemaPath =
         isOccurrence
             ? config.getIndexConfig().getOccurrenceSchemaPath()
@@ -148,7 +153,7 @@ public class FullIndexBuild {
     /* ############ standard init block - end ########## */
 
     IngestUtils.DirectoryScanResult scanResult =
-        IngestUtils.getSuccessFulParquetFilePaths(
+        IngestUtils.getSuccessfulParquetFilePaths(
             fileSystem,
             config,
             args.sourceDirectory,
@@ -204,16 +209,11 @@ public class FullIndexBuild {
 
     boolean defaultIndexCreated = false;
 
-    String rebuildAlias =
-        config.getIndexConfig().getOccurrenceAlias() + "_rebuild_" + System.currentTimeMillis();
+    String rebuildAlias = esAlias + "_rebuild_" + System.currentTimeMillis();
 
     // new default name for this rebuild
     final String defaultIndexName =
-        config.getIndexConfig().getDefaultPrefixName()
-            + "_"
-            + config.getIndexConfig().getOccurrenceAlias()
-            + "_"
-            + timestamp;
+        config.getIndexConfig().getDefaultPrefixName() + "_" + esAlias + "_" + timestamp;
 
     // create the empty indexes with the schema
     for (Map.Entry<String, Long> entry : datasetCounts.entrySet()) {
@@ -320,10 +320,7 @@ public class FullIndexBuild {
     spark.close();
 
     if (args.switchOnSuccess) {
-      EsIndexUtils.swapIndicies(
-          rebuildAlias,
-          config.getIndexConfig().getOccurrenceAlias(),
-          config.getElastic().getEsHosts());
+      EsIndexUtils.swapIndices(rebuildAlias, esAlias, config.getElastic().getEsHosts());
     }
     log.info("Full index build completed");
   }

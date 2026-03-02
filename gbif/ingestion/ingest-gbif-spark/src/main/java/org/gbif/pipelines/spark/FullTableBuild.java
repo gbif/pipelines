@@ -132,7 +132,7 @@ public class FullTableBuild {
     /* ############ standard init block - end ########## */
 
     IngestUtils.DirectoryScanResult scanResult =
-        IngestUtils.getSuccessFulParquetFilePaths(
+        IngestUtils.getSuccessfulParquetFilePaths(
             fileSystem,
             config,
             args.sourceDirectory,
@@ -238,7 +238,7 @@ public class FullTableBuild {
       // Create event_humboldt table
       String tableName = prefix + "event_humboldt";
       spark.sql(getCreateIfNotExistsHumboldt(tableName));
-      insertOverwriteHumboldtTable(spark, tableName);
+      insertOverwriteHumboldtTable(spark, "event", tableName);
     }
 
     log.info("Renaming tables to final names if the flag is set: {}", args.switchOnSuccess);
@@ -332,26 +332,26 @@ public class FullTableBuild {
     spark.sql(
         String.format(
             """
-                    INSERT OVERWRITE TABLE %s
-                    SELECT
-                        gbifid,
-                        type,
-                        format,
-                        identifier,
-                        references,
-                        title,
-                        description,
-                        source,
-                        audience,
-                        created,
-                        creator,
-                        contributor,
-                        publisher,
-                        license,
-                        rightsHolder,
-                        datasetkey
-                    FROM mm_records
-                    """,
+               INSERT OVERWRITE TABLE %s
+               SELECT
+                   gbifid,
+                   type,
+                   format,
+                   identifier,
+                   references,
+                   title,
+                   description,
+                   source,
+                   audience,
+                   created,
+                   creator,
+                   contributor,
+                   publisher,
+                   license,
+                   rightsHolder,
+                   datasetkey
+               FROM mm_records
+            """,
             multimediaTable));
   }
 
@@ -364,25 +364,27 @@ public class FullTableBuild {
 
     return String.format(
         """
-                 CREATE TABLE IF NOT EXISTS %s
-                 (gbifid STRING, %s, datasetkey STRING) "
-                 STORED AS PARQUET
-                 TBLPROPERTIES (
-                    'write.format.default' = 'parquet',
-                    'parquet.compression' = 'ZSTD',
-                    'auto.purge' = 'true',
-                    'write.merge.isolation-level' = 'snapshot',
-                    'commit.retry.num-retries' = '10',
-                    'commit.retry.min-wait-ms' = '1000',
-                    'commit.retry.max-wait-ms' = '10000'
-                 )
-            """,
+             CREATE TABLE IF NOT EXISTS %s
+             (gbifid STRING, %s, datasetkey STRING)
+             USING iceberg
+             PARTITIONED BY (datasetkey)
+             TBLPROPERTIES (
+                'write.format.default' = 'parquet',
+                'parquet.compression' = 'ZSTD',
+                'auto.purge' = 'true',
+                'write.merge.isolation-level' = 'snapshot',
+                'commit.retry.num-retries' = '10',
+                'commit.retry.min-wait-ms' = '1000',
+                'commit.retry.max-wait-ms' = '10000'
+             )
+        """,
         tableName, selectTerms);
   }
 
-  public static void insertOverwriteHumboldtTable(SparkSession spark, String tableName) {
+  public static void insertOverwriteHumboldtTable(
+      SparkSession spark, String sourceTableName, String targetTableName) {
     spark
-        .table(tableName)
+        .table(sourceTableName)
         .select(
             col("gbifid"),
             from_json(
@@ -401,10 +403,10 @@ public class FullTableBuild {
     spark.sql(
         String.format(
             """
-                      INSERT OVERWRITE TABLE %s
-                      SELECT gbifid, %s, datasetkey FROM h_records
-                    """,
-            tableName, interpretedTerms));
+              INSERT OVERWRITE TABLE %s
+              SELECT gbifid, %s, datasetkey FROM h_records
+            """,
+            targetTableName, interpretedTerms));
   }
 
   private static StructType createHumboldtStructTypeFromJson(List<Term> terms) {

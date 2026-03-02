@@ -30,21 +30,21 @@ public class IngestUtils {
    *     datasetId to attempt number
    * @throws IOException
    */
-  public static @NotNull DirectoryScanResult getSuccessFulParquetFilePaths(
+  public static @NotNull DirectoryScanResult getSuccessfulParquetFilePaths(
       FileSystem fileSystem,
       PipelinesConfig config,
       String sourceDirectory,
       String unsuccessfulFileDumpPath,
-      String earliestAllowedSuccessFileDate)
+      String earliestAllowedSuccessFileDateString)
       throws IOException {
 
     Long earliestAllowedSuccessFileDateEpochMillis = null;
 
-    if (StringUtils.isNotBlank(earliestAllowedSuccessFileDate)) {
+    if (StringUtils.isNotBlank(earliestAllowedSuccessFileDateString)) {
 
       // parse date ISO 8601 format to epoch seconds
       earliestAllowedSuccessFileDateEpochMillis =
-          java.time.Instant.parse(earliestAllowedSuccessFileDate).toEpochMilli();
+          java.time.Instant.parse(earliestAllowedSuccessFileDateString).toEpochMilli();
     }
 
     List<String> hdfsPaths = new ArrayList<>();
@@ -89,9 +89,16 @@ public class IngestUtils {
 
               String attempt = successAttemptDir.getName(); // this should be the attempt number
 
-              // add if the _SUCCESS file is less than 4 weeks old to the list of paths to read from
-              hdfsPaths.add(successAttemptDir + "/" + sourceDirectory + "/");
-              datasetAttemptMap.put(datasetId, Integer.parseInt(attempt));
+              try {
+                // add if the _SUCCESS file is less than 4 weeks old to the list of paths to read
+                // from
+                datasetAttemptMap.put(datasetId, Integer.parseInt(attempt));
+                hdfsPaths.add(successAttemptDir + "/" + sourceDirectory + "/");
+              } catch (NumberFormatException e) {
+                // ignore - this may happen if the directory structure is not as expected,
+                // in which case we just skip this dataset
+                unsuccessfulDatasets.add(datasetId);
+              }
             }
           } else {
             unsuccessfulDatasets.add(datasetId);
