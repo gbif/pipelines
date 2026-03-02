@@ -262,7 +262,7 @@ public class FullIndexBuild {
               config,
               rebuildAlias,
               esIndexName,
-              Indexing.ELASTICSEARCH_ES_OCCURRENCE_SCHEMA_JSON, // FIXME
+              config.getIndexConfig().getOccurrenceSchemaPath(), // FIXME
               datasetKey, // used for updating the alias
               attempt,
               indexNumberShards);
