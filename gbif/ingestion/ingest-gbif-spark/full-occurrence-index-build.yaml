@@ -26,6 +26,7 @@ spec:
         inline:
           bucketName: spark-history-lab-bucket
   args:
+    - "--coreDwcTerm=occurrence"
     - "--tableName=occurrence"
     - "--sourceDirectory=hdfs"
     - "--appName=full-index-build"

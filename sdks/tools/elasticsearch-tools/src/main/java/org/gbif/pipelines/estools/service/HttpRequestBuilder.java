@@ -99,7 +99,7 @@ class HttpRequestBuilder {
    * Adds actions to add and remove index from the aliases. Note that the indexes to be removed will
    * be removed completely from the ES instance.
    *
-   * @param aliases aliases that wil be modify. This parameter is required.
+   * @param aliases aliases that will be modify. This parameter is required.
    * @param idxToAdd indexes to add to the aliases.
    * @param idxToRemove indexes to remove. Note that these indexes will be completely removed form
    *     the ES instance.
@@ -114,10 +114,11 @@ class HttpRequestBuilder {
    * Adds actions to add and remove index from the aliases. Note that the indexes to be removed will
    * be removed completely from the ES instance.
    *
-   * @param aliases aliases that wil be modify. This parameter is required.
+   * @param aliases aliases that will be modify. This parameter is required.
    * @param idxToAdd indexes to add to the aliases.
    * @param idxToRemove indexes to remove. Note that these indexes will be completely removed form
    *     the ES instance.
+   * @param deleteIndexes if true, the indexes to remove will be deleted from the ES instance.
    */
   HttpRequestBuilder withIndexAliasAction(
       Set<String> aliases, Set<String> idxToAdd, Set<String> idxToRemove, boolean deleteIndexes) {

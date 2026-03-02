@@ -49,6 +49,10 @@ public class IngestUtils {
 
     List<String> hdfsPaths = new ArrayList<>();
     FileStatus[] fileStatuses = fileSystem.globStatus(new Path(config.getOutputPath() + "/*"));
+    if (fileStatuses == null) {
+      throw new IOException("Failed to list directories in " + config.getOutputPath());
+    }
+
     List<String> unsuccessfulDatasets = new ArrayList<>();
     List<String> tooOldDatasets = new ArrayList<>();
     Map<String, Integer> datasetAttemptMap = new java.util.HashMap<>();
@@ -112,7 +116,7 @@ public class IngestUtils {
     // write unsuccessful datasets to a hdfs file for later review
     Path unsuccessfulFilePath = new Path(unsuccessfulFileDumpPath);
     try (org.apache.hadoop.fs.FSDataOutputStream outputStream =
-        fileSystem.create(unsuccessfulFilePath)) {
+        fileSystem.create(unsuccessfulFilePath, true)) {
       for (String datasetId : unsuccessfulDatasets) {
         outputStream.writeBytes(datasetId + ",MISSING\n");
       }

@@ -180,7 +180,6 @@ public class OccurrenceInterpretation {
           args.numberOfShards,
           args.tripletValid,
           args.occurrenceIdValid,
-          args.useCheckpoints,
           args.interpretTypes);
     }
 
@@ -207,7 +206,6 @@ public class OccurrenceInterpretation {
    * @param numberOfShards The number of shards to repartition the data
    * @param tripletValid Whether all triplets are valid
    * @param occurrenceIdValid Whether all occurrence IDs are valid
-   * @param useCheckpoints Whether to use checkpoints for intermediate datasets
    * @throws IOException If an I/O error occurs
    */
   public static void runInterpretation(
@@ -219,7 +217,6 @@ public class OccurrenceInterpretation {
       int numberOfShards,
       Boolean tripletValid,
       Boolean occurrenceIdValid,
-      Boolean useCheckpoints,
       List<InterpretationType.RecordType> interpretTypes)
       throws IOException {
 
@@ -251,35 +248,35 @@ public class OccurrenceInterpretation {
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
 
     // Load the extended records
-    sparkLog(spark, "loadExtendedRecords", "Loading extended records", useCheckpoints);
+    sparkLog(spark, "loadExtendedRecords", "Loading extended records");
     Dataset<ExtendedRecord> extendedRecords =
         loadExtendedRecords(spark, config, inputPath, outputPath, numberOfShards);
 
     // Process identifiers - persisting new identifiers
-    sparkLog(spark, "processIdentifiers", "Processing identifiers", useCheckpoints);
+    sparkLog(spark, "processIdentifiers", "Processing identifiers");
     processIdentifiers(spark, fs, config, outputPath, datasetId, tripletValid, occurrenceIdValid);
 
     // load identifiers
-    sparkLog(spark, "loadIdentifiers", "Loading identifiers", useCheckpoints);
+    sparkLog(spark, "loadIdentifiers", "Loading identifiers");
     Dataset<IdentifierRecord> identifiers = loadIdentifiers(spark, outputPath);
     final long identifiersCount = identifiers.count();
 
     // check all identifier records have a valid internal ID
-    sparkLog(spark, "checkIdentifiers", "Checking identifiers", useCheckpoints);
+    sparkLog(spark, "checkIdentifiers", "Checking identifiers");
     checkIdentifiers(identifiers);
 
     // join extended records and identifiers
-    sparkLog(spark, "joinRecordsAndIdentifiers", "Joining records and identifiers", useCheckpoints);
+    sparkLog(spark, "joinRecordsAndIdentifiers", "Joining records and identifiers");
     Dataset<Occurrence> simpleRecords =
-        joinRecordsAndIdentifiers(spark, extendedRecords, identifiers, outputPath, useCheckpoints);
+        joinRecordsAndIdentifiers(spark, extendedRecords, identifiers, outputPath);
 
     // a single call to the registry to get the dataset metadata
     final MetadataRecord metadata = getMetadataRecord(config, datasetId);
 
     // run all transforms
-    sparkLog(spark, "runTransforms", "Running transforms", useCheckpoints);
+    sparkLog(spark, "runTransforms", "Running transforms");
     Dataset<Occurrence> interpreted =
-        runTransforms(spark, config, simpleRecords, metadata, outputPath, useCheckpoints);
+        runTransforms(spark, config, simpleRecords, metadata, outputPath);
 
     // FIXME move to configuration
     Integer numberOfOutputShards = numberOfShards;
@@ -290,14 +287,14 @@ public class OccurrenceInterpretation {
     }
 
     // write parquet for elastic
-    sparkLog(spark, "toJson", "Writing JSON output", useCheckpoints);
+    sparkLog(spark, "toJson", "Writing JSON output");
     toJson(interpreted, metadata, numberOfOutputShards)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + OCCURRENCE_JSON);
 
     // write parquet for hdfs view
-    sparkLog(spark, "toHdfs", "Writing HDFS output", useCheckpoints);
+    sparkLog(spark, "toHdfs", "Writing HDFS output");
     toHdfs(interpreted, metadata, numberOfOutputShards)
         .write()
         .mode(SaveMode.Overwrite)
@@ -353,15 +350,13 @@ public class OccurrenceInterpretation {
    * @param extendedRecords The dataset of extended records.
    * @param identifiers The dataset of identifier records.
    * @param outputPath The output path for checkpointing.
-   * @param useCheckpoints Whether to use checkpoints for intermediate datasets.
    * @return The dataset of simple occurrence records.
    */
   private static Dataset<Occurrence> joinRecordsAndIdentifiers(
       SparkSession spark,
       Dataset<ExtendedRecord> extendedRecords,
       Dataset<IdentifierRecord> identifiers,
-      String outputPath,
-      boolean useCheckpoints) {
+      String outputPath) {
 
     Dataset<Occurrence> occurrences =
         extendedRecords
@@ -384,15 +379,11 @@ public class OccurrenceInterpretation {
             // only include records with ids
             .filter((FilterFunction<Occurrence>) occurrence -> occurrence.getInternalId() != null);
 
-    if (useCheckpoints) {
-      occurrences.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + EXTENDED_IDENTIFIERS);
-      return spark
-          .read()
-          .parquet(outputPath + "/" + EXTENDED_IDENTIFIERS)
-          .as(Encoders.bean(Occurrence.class));
-    } else {
-      return occurrences;
-    }
+    occurrences.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + EXTENDED_IDENTIFIERS);
+    return spark
+        .read()
+        .parquet(outputPath + "/" + EXTENDED_IDENTIFIERS)
+        .as(Encoders.bean(Occurrence.class));
   }
 
   /**
@@ -423,8 +414,7 @@ public class OccurrenceInterpretation {
       PipelinesConfig config,
       Dataset<Occurrence> simpleRecords,
       MetadataRecord metadata,
-      String outputPath,
-      Boolean useCheckpoints) {
+      String outputPath) {
 
     // Set up our transforms
     DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create(config, metadata);
@@ -555,11 +545,8 @@ public class OccurrenceInterpretation {
         .as(Encoders.bean(ExtendedRecord.class));
   }
 
-  private static void sparkLog(
-      SparkSession spark, String groupId, String message, boolean useCheckpoints) {
-    if (useCheckpoints) {
-      spark.sparkContext().setJobGroup(groupId, message, true);
-    }
+  private static void sparkLog(SparkSession spark, String groupId, String message) {
+    spark.sparkContext().setJobGroup(groupId, message, true);
   }
 
   private static Dataset<IdentifierRecord> loadIdentifiers(SparkSession spark, String outputPath) {

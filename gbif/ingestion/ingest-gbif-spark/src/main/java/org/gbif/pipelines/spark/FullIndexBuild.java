@@ -122,7 +122,11 @@ public class FullIndexBuild {
     }
 
     PipelinesConfig config = loadConfig(args.config);
-    assert config != null && config.getIndexConfig() != null && config.getElastic() != null;
+    if (config == null || config.getIndexConfig() == null || config.getElastic() == null) {
+      log.error("Invalid configuration file. Please provide a valid YAML configuration file.");
+      throw new IllegalArgumentException(
+          "Invalid configuration file. Missing indexConfig or elastic configuration.");
+    }
 
     boolean isOccurrence = "occurrence".equalsIgnoreCase(args.coreDwcTerm);
 
@@ -275,7 +279,7 @@ public class FullIndexBuild {
         .withColumn(
             "index_name",
             when(
-                    col("count").gt(config.getIndexConfig().getBigIndexIfRecordsMoreThan()),
+                    col("count").geq(config.getIndexConfig().getBigIndexIfRecordsMoreThan()),
                     concat(
                         col("datasetkey"),
                         lit("_"),

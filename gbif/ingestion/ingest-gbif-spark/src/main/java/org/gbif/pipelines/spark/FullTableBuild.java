@@ -202,7 +202,12 @@ public class FullTableBuild {
     Map<String, TableBuild.HdfsColumn> hdfsColumnList = getHdfsColumns(hdfs);
 
     // Read the target table i.e. 'occurrence' or 'event' schema to ensure it exists
-    StructType tblSchema = spark.read().format("iceberg").load(args.coreDwcTerm).schema();
+    StructType tblSchema =
+        spark
+            .read()
+            .format("iceberg")
+            .load(String.format("%s.%s%s", config.getHiveDB(), prefix, args.coreDwcTerm))
+            .schema();
 
     // Build the insert query
     String insertQuery =
@@ -238,7 +243,7 @@ public class FullTableBuild {
       // Create event_humboldt table
       String tableName = prefix + "event_humboldt";
       spark.sql(getCreateIfNotExistsHumboldt(tableName));
-      insertOverwriteHumboldtTable(spark, "event", tableName);
+      insertOverwriteHumboldtTable(spark, prefix + "event", tableName);
     }
 
     log.info("Renaming tables to final names if the flag is set: {}", args.switchOnSuccess);
@@ -391,8 +396,9 @@ public class FullTableBuild {
                     col("ext_humboldt"),
                     new ArrayType(
                         createHumboldtStructTypeFromJson(INTERPRETED_HUMBOLDT_TERMS), true))
-                .alias("h_record"))
-        .select(col("gbifid"), explode(col("h_record")).alias("h_record"))
+                .alias("h_record"),
+            col("datasetkey"))
+        .select(col("gbifid"), explode(col("h_record")).alias("h_record"), col("datasetkey"))
         .createOrReplaceTempView("h_records");
 
     String interpretedTerms =
