@@ -26,6 +26,7 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -147,6 +148,7 @@ public class TableBuild {
       throws Exception {
 
     spark.udf().register("base64_decode", new Base64DecodeUDF(), DataTypes.StringType);
+    spark.udf().register("cleanDelimiters", new CleanDelimiterCharsUdf(), DataTypes.StringType);
 
     long start = System.currentTimeMillis();
     ThreadContext.put("datasetKey", datasetId);
