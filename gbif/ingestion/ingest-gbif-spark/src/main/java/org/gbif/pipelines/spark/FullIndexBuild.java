@@ -2,6 +2,7 @@ package org.gbif.pipelines.spark;
 
 import static org.apache.spark.sql.functions.*;
 import static org.gbif.pipelines.ConfigUtil.loadConfig;
+import static org.gbif.pipelines.EsIndexUtils.createDefaultIndexNamePrefix;
 import static org.gbif.pipelines.spark.FullTableBuild.SUPPORTED_CORE_TERMS;
 import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
@@ -198,17 +199,17 @@ public class FullIndexBuild {
       datasetCounts.put(key, count);
     }
 
-    long timestamp = Instant.now().toEpochMilli();
+    long indexCreationTimestamp = Instant.now().toEpochMilli();
 
     final Map<String, String> datasetToIndexNameMap = new HashMap<>();
 
     boolean defaultIndexCreated = false;
 
-    String rebuildAlias = esAlias + "_rebuild_" + System.currentTimeMillis();
+    String rebuildAlias = esAlias + "_rebuild_" + indexCreationTimestamp;
 
     // new default name for this rebuild
     final String defaultIndexName =
-        config.getIndexConfig().getDefaultPrefixName() + "_" + esAlias + "_" + timestamp;
+        createDefaultIndexNamePrefix(config, datasetType) + "_" + indexCreationTimestamp;
 
     // create the empty indexes with the schema
     for (Map.Entry<String, Long> entry : datasetCounts.entrySet()) {
@@ -229,7 +230,11 @@ public class FullIndexBuild {
           recordCount < config.getIndexConfig().getBigIndexIfRecordsMoreThan()
               ? defaultIndexName
               : IndexSettings.computeLargeIndexName(
-                  datasetType, config.getIndexConfig(), datasetKey, attempt, timestamp);
+                  datasetType,
+                  config.getIndexConfig(),
+                  datasetKey,
+                  attempt,
+                  indexCreationTimestamp);
 
       Integer indexNumberShards =
           IndexSettings.computeNumberOfShards(
@@ -272,7 +277,7 @@ public class FullIndexBuild {
                         lit("_"),
                         lit(versionPath),
                         lit("_"),
-                        lit(timestamp)))
+                        lit(indexCreationTimestamp)))
                 .otherwise(lit(defaultIndexName)))
         .write()
         .option("maxRecordsPerFile", args.maxRecordsPerFile)
@@ -313,7 +318,7 @@ public class FullIndexBuild {
     spark.close();
 
     if (args.switchOnSuccess) {
-      EsIndexUtils.swapIndices(rebuildAlias, esAlias, config.getElastic().getEsHosts());
+      EsIndexUtils.swapIndices(rebuildAlias, esAlias, hosts);
     }
     log.info("Full index build completed");
   }

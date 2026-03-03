@@ -190,7 +190,7 @@ public class EsIndexUtils {
     }
   }
 
-  public static void swapIndices(String rebuildAlias, String liveAlias, String esHosts) {
+  public static void swapIndices(String rebuildAlias, String liveAlias, String[] esHosts) {
     EsConfig config = EsConfig.from(esHosts);
 
     try (EsClient client = EsClient.from(config)) {
@@ -201,6 +201,9 @@ public class EsIndexUtils {
 
       // get the current live indicies
       Set<String> liveIndices = EsService.getIndexesByAliasAndIndexPattern(client, "*", liveAlias);
+
+      log.info("Rebuilt indices: {} with alias: {}", rebuiltIndices, rebuildAlias);
+      log.info("Live indices: {} with alias: {}", liveIndices, liveAlias);
 
       // add the alias 'liveAlias_old' to the current live indicies,
       // so we can easily switch back if something goes wrong
@@ -251,7 +254,7 @@ public class EsIndexUtils {
             : pipelinesConfig.getStandalone().getEventIndexNumberOfShards();
 
     // check if the index exists, if not create it with the default name and alias
-    String defaultIndexPrefix = pipelinesConfig.getIndexConfig().defaultPrefixName + "_" + version;
+    String defaultIndexPrefix = createDefaultIndexNamePrefix(pipelinesConfig, datasetType);
 
     // does the default index exist already ?
     Optional<String> indexName =
@@ -279,5 +282,14 @@ public class EsIndexUtils {
     }
 
     return defaultIndexName;
+  }
+
+  public static String createDefaultIndexNamePrefix(
+      PipelinesConfig pipelinesConfig, DatasetType datasetType) {
+    return pipelinesConfig.getIndexConfig().defaultPrefixName
+        + "_"
+        + (datasetType.equals(DatasetType.OCCURRENCE)
+            ? pipelinesConfig.getIndexConfig().getOccurrenceVersion()
+            : pipelinesConfig.getIndexConfig().getEventVersion());
   }
 }
