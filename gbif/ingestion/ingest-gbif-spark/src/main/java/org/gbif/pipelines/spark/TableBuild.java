@@ -5,6 +5,7 @@ import static org.gbif.pipelines.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.coordinator.DistributedUtil.timeAndRecPerSecond;
 import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
+import static org.gbif.pipelines.spark.TableUtil.*;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -23,9 +24,7 @@ import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
-import org.gbif.dwc.terms.Term;
 import org.gbif.occurrence.download.hive.ExtensionTable;
-import org.gbif.occurrence.download.hive.OccurrenceHDFSTableDefinition;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.jetbrains.annotations.NotNull;
 
@@ -159,45 +158,32 @@ public class TableBuild {
     Dataset<Row> hdfs = spark.read().parquet(outputPath + "/" + sourceDirectory);
 
     // Generate a unique temporary table name
-    String table = String.format("%s_%s_%d", coreDwcTerm, datasetId.replace("-", "_"), attempt);
+    String tempCoreTable =
+        String.format("%s_%s_%d", coreDwcTerm, datasetId.replace("-", "_"), attempt);
 
     // Switch to the configured Hive database
     spark.sql("USE " + config.getHiveDB());
 
     // Drop the table if it already exists
-    spark.sql("DROP TABLE IF EXISTS " + table);
+    spark.sql("DROP TABLE IF EXISTS " + tempCoreTable);
 
     // Check HDFS for remnant DB files from failed attempts
-    cleanHdfsPath(fileSystem, config, table);
-    hdfs.writeTo(table).create();
+    cleanHdfsPath(fileSystem, config, tempCoreTable);
+    hdfs.writeTo(tempCoreTable).create();
 
-    log.debug("Created Iceberg table: {}", table);
+    log.debug("Created Iceberg table: {}", tempCoreTable);
 
     // Display table schema and initial record count
-    Dataset<Row> result = spark.sql("SELECT COUNT(*) FROM " + table);
+    Dataset<Row> result = spark.sql("SELECT COUNT(*) FROM " + tempCoreTable);
     long avroToHdfsCountAttempted = result.collectAsList().get(0).getLong(0);
 
     if (log.isDebugEnabled()) {
-      spark.sql("DESCRIBE TABLE " + table).show(false);
-      spark.sql("SELECT COUNT(*) FROM " + table).show(false);
+      spark.sql("DESCRIBE TABLE " + tempCoreTable).show(false);
+      spark.sql("SELECT COUNT(*) FROM " + tempCoreTable).show(false);
     }
 
-    Dataset<Row> df =
-        spark.sql(
-            "SELECT COUNT(*) AS cnt FROM "
-                + table
-                + " WHERE datasetKey IS NULL"
-                + " OR datasetKey = ''"
-                + " OR gbifId IS NULL"
-                + " OR gbifId = ''");
-    long count = df.collectAsList().get(0).getLong(0);
-    if (count > 0) {
-      log.warn(
-          "There are {} records with NULL or empty datasetKey or gbifId in the temporary table {}",
-          count,
-          table);
-      throw new IllegalStateException("There are " + count + " records with NULL datasetKey");
-    }
+    // check for records without gbifId or datasetKey
+    checkForOrphanedRecord(spark, tempCoreTable);
 
     if (spark.catalog().tableExists(coreDwcTerm)) {
       log.debug("Table {} exists", coreDwcTerm);
@@ -242,7 +228,7 @@ public class TableBuild {
                   .collect(Collectors.joining(", ")),
               generateSelectColumns(tblSchema, hdfsColumnList),
               config.getHiveDB(),
-              table);
+              tempCoreTable);
 
       log.debug("Inserting data into {} table: {}", coreDwcTerm, insertQuery);
 
@@ -251,14 +237,23 @@ public class TableBuild {
     }
 
     // Drop the temporary table
-    spark.sql("DROP TABLE " + table);
+    spark.sql("DROP TABLE " + tempCoreTable);
 
-    // process extensions
+    // process verbatim extensions
     VerbatimExtensionsInterpretation.processExtensions(
         spark, config, datasetId, attempt, config.getHiveDB(), coreDwcTerm);
 
-    log.debug("Dropped Iceberg table: {}", table);
-    cleanHdfsPath(fileSystem, config, table);
+    // Create multimedia table if it does not exist
+    if (!spark.catalog().tableExists(coreDwcTerm + "_multimedia")) {
+      log.info("Multimedia table does not exist and will be created");
+      spark.sql(getCreateMultimediaTableSQL(coreDwcTerm));
+    }
+
+    // write to the multimedia table
+    insertOverwriteMultimediaTableFromTemp(spark, coreDwcTerm, tempCoreTable);
+
+    log.debug("Dropped Iceberg table: {}", tempCoreTable);
+    cleanHdfsPath(fileSystem, config, tempCoreTable);
 
     // Write metrics to yaml
     writeMetricsYaml(
@@ -271,48 +266,14 @@ public class TableBuild {
 
   public static void createExtensionTable(
       SparkSession spark, ExtensionTable extensionTable, String coreDwcTerm) {
-    log.info("Create extension table: {}", extensionTableName(extensionTable, coreDwcTerm));
-    spark.sparkContext().setJobDescription("Create " + extensionTableName(extensionTable, coreDwcTerm));
+    log.info("Create extension table: {}", verbatimExtensionTableName(extensionTable, coreDwcTerm));
+    spark
+        .sparkContext()
+        .setJobDescription("Create " + verbatimExtensionTableName(extensionTable, coreDwcTerm));
 
-    String extensionTableSql = createExtensionTableSQL(extensionTable, coreDwcTerm);
+    String extensionTableSql = createVerbatimExtensionTableSQL(extensionTable, coreDwcTerm);
     log.info("Creating extension table SQL {}", extensionTableSql);
     spark.sql(extensionTableSql);
-  }
-
-  public static String createExtensionTableSQL(ExtensionTable extensionTable, String coreDwcTerm) {
-
-    // generate field list
-    String fieldList =
-        extensionTable.getSchema().getFields().stream()
-            .map(f -> f.name() + " STRING")
-            .collect(Collectors.joining(",\n "));
-
-    return String.format(
-        """
-            CREATE TABLE IF NOT EXISTS %s
-            (%s)
-            USING iceberg
-            PARTITIONED BY (datasetkey)
-            TBLPROPERTIES (
-            'write.format.default' = 'parquet',
-            'parquet.compression' = 'ZSTD',
-            'auto.purge' = 'true',
-            'write.merge.isolation-level' = 'snapshot',
-            'commit.retry.num-retries' = '10',
-            'commit.retry.min-wait-ms' = '1000',
-            'commit.retry.max-wait-ms' = '10000'
-            'write.merge.isolation-level' = 'snapshot'
-        )
-        """,
-        extensionTableName(extensionTable, coreDwcTerm), fieldList);
-  }
-
-  public static String extensionTableName(ExtensionTable extensionTable, String coreDwcTerm) {
-    return String.format("%s_ext_%s_%s",
-            coreDwcTerm,
-            extensionTable.getLeafNamespace(),
-            extensionTable.getHiveTableName()
-    );
   }
 
   private static String generateSelectColumns(
@@ -400,32 +361,6 @@ public class TableBuild {
       fileSystem.delete(warehousePath, true);
       log.debug("Deleted warehouse path: {}", warehousePath);
     }
-  }
-
-  static String getFieldDefns() {
-    return OccurrenceHDFSTableDefinition.definition().stream()
-        .map(field -> field.getHiveField() + " " + field.getHiveDataType())
-        .collect(Collectors.joining(", \n"));
-  }
-
-  public static String getCreateTableSQL(String tableName) {
-    return String.format(
-        """
-        CREATE TABLE IF NOT EXISTS %s
-        (%s)
-        USING iceberg
-        PARTITIONED BY (datasetkey)
-        TBLPROPERTIES (
-          'write.format.default' = 'parquet',
-          'parquet.compression' = 'ZSTD',
-          'auto.purge' = 'true',
-          'commit.retry.num-retries' = '10',
-          'commit.retry.min-wait-ms' = '1000',
-          'commit.retry.max-wait-ms' = '10000'
-          'write.merge.isolation-level' = 'snapshot'
-        )
-        """,
-        tableName, getFieldDefns());
   }
 
   @ToString
