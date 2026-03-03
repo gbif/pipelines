@@ -294,17 +294,20 @@ public class FullIndexBuild {
         .option("es.batch.write.refresh", "false")
         .save();
 
-    try (EsClient esClient =
-        EsClient.from(EsConfig.from(config.getElastic().getEsHosts().split(",")))) {
-      datasetToIndexNameMap.values().stream()
-          .distinct()
-          .forEach(
-              indexName -> {
-                log.info("Refreshing index " + indexName);
-                EsService.refreshIndex(esClient, indexName);
-              });
-    }
+    // get es hosts
+    String[] hosts =
+        Arrays.stream(config.getElastic().getEsHosts().split(","))
+            .map(String::trim)
+            .toArray(String[]::new);
+    EsConfig esConfig = EsConfig.from(hosts);
 
+    try (EsClient esClient = EsClient.from(esConfig)) {
+      Set<String> uniqueIndexNames = new HashSet<>(datasetToIndexNameMap.values());
+      for (String indexName : uniqueIndexNames) {
+        log.info("Refreshing index {}", indexName);
+        EsService.refreshIndex(esClient, indexName);
+      }
+    }
     fileSystem.close();
     spark.stop();
     spark.close();
