@@ -294,7 +294,8 @@ public class FullIndexBuild {
         .option("es.batch.write.refresh", "false")
         .save();
 
-    try (EsClient esClient = EsClient.from(EsConfig.from(config.getElastic().getEsHosts()))) {
+    try (EsClient esClient =
+        EsClient.from(EsConfig.from(config.getElastic().getEsHosts().split(",")))) {
       datasetToIndexNameMap.values().stream()
           .distinct()
           .forEach(
