@@ -250,7 +250,7 @@ public class TableBuild {
     }
 
     // write to the multimedia table
-    insertOverwriteMultimediaTableFromTemp(spark, coreDwcTerm, tempCoreTable);
+    insertOverwriteMultimediaTableFromTemp(spark, tempCoreTable, coreDwcTerm + "_multimedia");
 
     log.debug("Dropped Iceberg table: {}", tempCoreTable);
     cleanHdfsPath(fileSystem, config, tempCoreTable);
