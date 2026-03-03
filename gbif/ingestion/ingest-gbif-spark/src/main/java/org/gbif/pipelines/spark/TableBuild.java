@@ -236,9 +236,6 @@ public class TableBuild {
       spark.sql(insertQuery);
     }
 
-    // Drop the temporary table
-    spark.sql("DROP TABLE " + tempCoreTable);
-
     // process verbatim extensions
     VerbatimExtensionsInterpretation.processExtensions(
         spark, config, datasetId, attempt, config.getHiveDB(), coreDwcTerm);
@@ -251,6 +248,9 @@ public class TableBuild {
 
     // write to the multimedia table
     insertOverwriteMultimediaTableFromTemp(spark, tempCoreTable, coreDwcTerm + "_multimedia");
+
+    // Drop the temporary table
+    spark.sql("DROP TABLE " + tempCoreTable);
 
     log.debug("Dropped Iceberg table: {}", tempCoreTable);
     cleanHdfsPath(fileSystem, config, tempCoreTable);
