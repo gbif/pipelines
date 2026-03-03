@@ -27,12 +27,13 @@ public class TableUtil {
         spark.sql(
             String.format(
                 """
-                                SELECT COUNT(*) AS cnt FROM %s
-                                WHERE datasetKey IS NULL"
-                                OR datasetKey = ''"
-                                OR gbifId IS NULL"
-                                OR gbifId = ''"""),
-            tempLoadingTable);
+                    SELECT COUNT(*) AS cnt FROM %s
+                    WHERE datasetKey IS NULL"
+                    OR datasetKey = ''"
+                    OR gbifId IS NULL"
+                    OR gbifId = ''
+                """,
+                tempLoadingTable));
     long count = df.collectAsList().get(0).getLong(0);
     if (count > 0) {
       log.warn(
