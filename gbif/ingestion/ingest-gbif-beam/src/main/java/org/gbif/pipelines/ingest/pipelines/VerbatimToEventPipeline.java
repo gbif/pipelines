@@ -37,13 +37,11 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.core.EventCoreTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.MultiTaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.HumboldtTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.specific.IdentifierTransform;
@@ -125,15 +123,11 @@ public class VerbatimToEventPipeline {
     LocationTransform locationTransform = transformsFactory.createLocationTransform();
     VerbatimTransform verbatimTransform = transformsFactory.createVerbatimTransform();
     TemporalTransform temporalTransform = transformsFactory.createTemporalTransform();
-    MultiTaxonomyTransform multiTaxonomyTransform =
-        transformsFactory.createMultiTaxonomyTransform();
     MultimediaTransform multimediaTransform = transformsFactory.createMultimediaTransform();
     AudubonTransform audubonTransform = transformsFactory.createAudubonTransform();
     ImageTransform imageTransform = transformsFactory.createImageTransform();
     EventCoreTransform eventCoreTransform = transformsFactory.createEventCoreTransform();
     IdentifierTransform identifierTransform = transformsFactory.createIdentifierTransform();
-    MeasurementOrFactTransform measurementOrFactTransform =
-        transformsFactory.createMeasurementOrFactTransform();
     HumboldtTransform humboldtTransform = transformsFactory.createHumboldtTransform();
 
     log.info("Creating beam pipeline");
@@ -158,7 +152,10 @@ public class VerbatimToEventPipeline {
     PCollection<ExtendedRecord> uniqueRawRecords =
         p.apply("Read event  verbatim", verbatimTransform.read(options.getInputPath()))
             .apply("Filter event duplicates", transformsFactory.createUniqueIdTransform())
-            .apply("Filter event extensions", transformsFactory.createExtensionFilterTransform());
+            .apply("Filter event extensions", transformsFactory.createExtensionFilterTransform())
+            .apply(
+                "Filter event extensions that have an occurrenceID",
+                transformsFactory.createEventExtensionsTransform());
 
     // view with the records that have parents to find the hierarchy in the event core
     // interpretation later
@@ -188,13 +185,6 @@ public class VerbatimToEventPipeline {
             temporalTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
 
     uniqueRawRecords
-        .apply("Check event multi-taxonomy transform", multiTaxonomyTransform.check(types))
-        .apply("Interpret event multi-taxonomy", multiTaxonomyTransform.interpret())
-        .apply(
-            "Write event multi-taxon to avro",
-            multiTaxonomyTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
-
-    uniqueRawRecords
         .apply("Check event multimedia transform", multimediaTransform.check(types))
         .apply("Interpret event multimedia", multimediaTransform.interpret())
         .apply(
@@ -217,13 +207,6 @@ public class VerbatimToEventPipeline {
         .apply(
             "Write event location to avro",
             locationTransform.write(pathFn).withNumShards(options.getNumberOfShards()));
-
-    uniqueRawRecords
-        .apply("Check event measurementOrFact", measurementOrFactTransform.check(types))
-        .apply("Interpret event measurementOrFact", measurementOrFactTransform.interpret())
-        .apply(
-            "Write event measurementOrFact to avro",
-            measurementOrFactTransform.write(pathFn).withoutSharding());
 
     uniqueRawRecords
         .apply("Check event humboldt transform", humboldtTransform.check(types))

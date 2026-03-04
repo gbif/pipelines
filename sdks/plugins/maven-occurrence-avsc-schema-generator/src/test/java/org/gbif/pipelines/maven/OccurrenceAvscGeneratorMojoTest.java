@@ -14,20 +14,30 @@ public class OccurrenceAvscGeneratorMojoTest {
 
     // State
     String path = getClass().getResource("/").getPath();
-    String name = "occurrence-hdfs-record.avsc";
+    String occurrenceFile = "occurrence-hdfs-record.avsc";
+    String eventFile = "event-hdfs-record.avsc";
 
     OccurrenceAvscGeneratorMojo mojo = new OccurrenceAvscGeneratorMojo();
-    mojo.setPathToWrite(Paths.get(path, name).toString());
+    mojo.setPathToWrite(Paths.get(path).toString());
+    mojo.setOccurrenceFile(occurrenceFile);
+    mojo.setEventFile(eventFile);
 
     // When
     mojo.execute();
 
     // Should
-    Path result = Paths.get(path, "occurrence-hdfs-record.avsc");
-    Assert.assertTrue(Files.exists(result));
+    Path occurrenceResult = Paths.get(path, occurrenceFile);
+    Assert.assertTrue(Files.exists(occurrenceResult));
 
-    Schema schema = new Schema.Parser().parse(result.toFile());
-    Assert.assertEquals("OccurrenceHdfsRecord", schema.getName());
-    Assert.assertEquals("org.gbif.pipelines.io.avro", schema.getNamespace());
+    Schema occurrenceSchema = new Schema.Parser().parse(occurrenceResult.toFile());
+    Assert.assertEquals("OccurrenceHdfsRecord", occurrenceSchema.getName());
+    Assert.assertEquals("org.gbif.pipelines.io.avro", occurrenceSchema.getNamespace());
+
+    Path eventResult = Paths.get(path, eventFile);
+    Assert.assertTrue(Files.exists(eventResult));
+
+    Schema eventSchema = new Schema.Parser().parse(eventResult.toFile());
+    Assert.assertEquals("EventHdfsRecord", eventSchema.getName());
+    Assert.assertEquals("org.gbif.pipelines.io.avro.event", eventSchema.getNamespace());
   }
 }

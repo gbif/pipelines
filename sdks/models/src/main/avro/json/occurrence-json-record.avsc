@@ -176,6 +176,8 @@
       {"name":"mediaTypes","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"mediaLicenses","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"multimediaItems","type":{"type":"array","items":"Multimedia"},"default":[],"doc":""},
+      {"name":"measurementTypes","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"measurementTypeIDs","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"verbatim","type":["null","VerbatimRecord"],"default":null,"doc":""},
       // De-normalised event info
       {"name":"eventHierarchy","type":{"type":"array","items":"string"},"default":[],"doc":""},

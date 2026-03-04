@@ -41,7 +41,7 @@ public class ALAOccurrenceToSearchTransform implements Serializable {
   @NonNull private final TupleTag<ALAAttributionRecord> alaAttributionTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
   @NonNull private final TupleTag<ALATaxonRecord> taxonRecordTag;
-  @NonNull private final TupleTag<ALASensitivityRecord> sensitivityRecordTag;
+  private final TupleTag<ALASensitivityRecord> sensitivityRecordTag;
 
   // Extension
   public SingleOutput<KV<String, CoGbkResult>, OccurrenceSearchRecord> converter() {
@@ -69,7 +69,10 @@ public class ALAOccurrenceToSearchTransform implements Serializable {
             ALATaxonRecord txr =
                 v.getOnly(taxonRecordTag, ALATaxonRecord.newBuilder().setId(k).build());
             ALASensitivityRecord sdr =
-                v.getOnly(sensitivityRecordTag, ALASensitivityRecord.newBuilder().setId(k).build());
+                sensitivityRecordTag != null
+                    ? v.getOnly(
+                        sensitivityRecordTag, ALASensitivityRecord.newBuilder().setId(k).build())
+                    : null;
 
             // for now, exclude sensitive records from the exports
             if (sdr != null && sdr.getIsSensitive() != null && !sdr.getIsSensitive()) {

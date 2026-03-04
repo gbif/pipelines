@@ -188,10 +188,13 @@
       {"name":"mediaTypes","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"mediaLicenses","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"multimediaItems","type":{"type":"array","items":"Multimedia"},"default":[],"doc":""},
-      // MeasurementOrFact
+      // MeasurementOrFact(needed for ALA only)
       {"name":"measurementOrFactTypes","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"measurementOrFactMethods","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"measurementOrFactCount","type":["null","int"],"default":null,"doc":""},
+      // verbatim MoF and eMoF fields
+      {"name":"measurementTypes","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"measurementTypeIDs","type":{"type":"array","items":"string"},"default":[],"doc":""},
       // Humboldt
       {"name":"humboldt","type":{"type":"array","items":"Humboldt"},"default":[],"doc":""},
       // Extra

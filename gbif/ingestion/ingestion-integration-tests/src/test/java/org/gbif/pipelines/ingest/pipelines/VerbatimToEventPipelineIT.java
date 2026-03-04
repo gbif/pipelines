@@ -32,7 +32,6 @@ import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.junit.Assert;
@@ -171,11 +170,10 @@ public class VerbatimToEventPipelineIT {
 
     String interpretedOutput = String.join("/", outputFile, datasetKey, attempt, "event");
 
-    assertEquals(12, new File(interpretedOutput).listFiles().length);
+    assertEquals(10, new File(interpretedOutput).listFiles().length);
     assertFile(IdentifierRecord.class, interpretedOutput + "/identifier");
     assertFile(ExtendedRecord.class, interpretedOutput + "/verbatim");
     assertFile(EventCoreRecord.class, interpretedOutput + "/event");
-    assertFile(MeasurementOrFactRecord.class, interpretedOutput + "/measurement_or_fact");
     assertFile(HumboldtRecord.class, interpretedOutput + "/humboldt");
     assertEventCoreRecord(interpretedOutput + "/event");
   }
