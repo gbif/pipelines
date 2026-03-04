@@ -287,6 +287,35 @@ public class TableUtil {
             multimediaTable));
   }
 
+  public static void insertOverwriteHumboldtTableFromTemp(
+      SparkSession spark, String sourceTableName, String humboldtTable) {
+    spark
+        .table(sourceTableName)
+        .select(
+            col("gbifid"),
+            from_json(
+                    expr("cast(base64_decode(extHumboldt) as string)"),
+                    new ArrayType(
+                        createHumboldtStructTypeFromJson(INTERPRETED_HUMBOLDT_TERMS), true))
+                .alias("h_record"),
+            col("datasetkey"))
+        .select(col("gbifid"), explode(col("h_record")).alias("h_record"), col("datasetkey"))
+        .createOrReplaceTempView("h_records");
+
+    String interpretedTerms =
+        INTERPRETED_HUMBOLDT_TERMS.stream()
+            .map(t -> "h_record." + t.simpleName())
+            .collect(Collectors.joining(","));
+
+    spark.sql(
+        String.format(
+            """
+              INSERT OVERWRITE TABLE %s
+              SELECT gbifid, %s, datasetkey FROM h_records
+            """,
+            humboldtTable, interpretedTerms));
+  }
+
   public static void insertOverwriteMultimediaTableFromTemp(
       SparkSession spark, String tempOccurrenceTable, String multimediaTable) {
     spark
@@ -408,9 +437,9 @@ public class TableUtil {
     spark.sql(
         String.format(
             """
-                          INSERT OVERWRITE TABLE %s
-                          SELECT gbifid, %s, datasetkey FROM h_records
-                        """,
+              INSERT OVERWRITE TABLE %s
+              SELECT gbifid, %s, datasetkey FROM h_records
+            """,
             targetTableName, interpretedTerms));
   }
 

@@ -274,6 +274,16 @@ public class TableBuild {
     // write to the multimedia table
     insertOverwriteMultimediaTableFromTemp(spark, tempCoreTable, coreDwcTerm + "_multimedia");
 
+    // if a sampling event dataset, create the humboldt_event table if it does not exist and
+    // populate it
+    if (datasetType == DatasetType.SAMPLING_EVENT) {
+      if (!spark.catalog().tableExists(coreDwcTerm + "_multimedia")) {
+        // populate the humboldt_event table
+        spark.sql(getCreateIfNotExistsHumboldt(coreDwcTerm));
+      }
+      insertOverwriteHumboldtTableFromTemp(spark, tempCoreTable, coreDwcTerm + "_humboldt");
+    }
+
     // Drop the temporary table
     spark.sql("DROP TABLE " + tempCoreTable);
 
