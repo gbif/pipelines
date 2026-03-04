@@ -1,11 +1,11 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.converters.ConverterUtils.base64Encode;
 import static org.gbif.pipelines.core.converters.ConverterUtils.mapTerm;
 import static org.gbif.pipelines.core.utils.ExtensionUtils.convertMoFFromVerbatim;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
-import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -17,9 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.dwc.terms.*;
-import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.pojo.HumboldtJsonView;
 import org.gbif.pipelines.core.pojo.MoFData;
@@ -588,7 +586,7 @@ public class EventHdfsRecordConverter {
                   })
               .collect(Collectors.toList());
 
-      eventHdfsRecord.setExtHumboldt(MediaSerDeser.humboldtToJson(jsonViews));
+      eventHdfsRecord.setExtHumboldt(base64Encode(MediaSerDeser.humboldtToJson(jsonViews)));
     }
 
     addNonTaxonIssues(humboldtRecord.getIssues(), eventHdfsRecord);
@@ -600,24 +598,5 @@ public class EventHdfsRecordConverter {
             h ->
                 h.getTargetTaxonomicScope()
                     .forEach(ir -> addTaxonIssues(ir.getIssues(), eventHdfsRecord)));
-  }
-
-  /** Gets the {@link Schema.Field} associated to a verbatim term. */
-  private static Field verbatimSchemaField(Term term) {
-    try {
-      return EventHdfsRecord.class.getDeclaredField(
-          "v" + StringUtils.capitalize(term.simpleName().toLowerCase()));
-    } catch (NoSuchFieldException e) {
-      return null; // Field not found
-    }
-  }
-
-  /** Gets the {@link Schema.Field} associated to a interpreted term. */
-  private static Field interpretedSchemaField(Term term) {
-    try {
-      return EventHdfsRecord.class.getDeclaredField(HiveColumns.columnFor(term));
-    } catch (NoSuchFieldException e) {
-      return null; // Field not found
-    }
   }
 }

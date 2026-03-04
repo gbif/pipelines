@@ -1,12 +1,12 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.converters.ConverterUtils.base64Encode;
 import static org.gbif.pipelines.core.converters.ConverterUtils.mapTerm;
 import static org.gbif.pipelines.core.utils.ExtensionUtils.convertMoFFromVerbatim;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -878,13 +878,6 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setMediatype(mediaTypes);
 
     addNonTaxonIssues(multimediaRecord.getIssues(), occurrenceHdfsRecord);
-  }
-
-  public static String base64Encode(String original) {
-    if (original == null) {
-      return null;
-    }
-    return Base64.getEncoder().encodeToString(original.getBytes(StandardCharsets.UTF_8));
   }
 
   private void mapDnaDerivedDataRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {

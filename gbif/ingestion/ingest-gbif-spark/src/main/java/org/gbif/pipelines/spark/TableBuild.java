@@ -407,7 +407,7 @@ public class TableBuild {
   public static class Base64DecodeUDF implements UDF1<String, String> {
 
     @Override
-    public String call(String encoded) throws Exception {
+    public String call(String encoded) {
       if (encoded == null) {
         return null;
       }

@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.converters;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -223,8 +224,9 @@ public class EventHdfsRecordConverterTest {
 
     // Humboldt
     Assert.assertTrue(
-        hdfsRecord
-            .getExtHumboldt()
+        new String(
+                Base64.getDecoder()
+                    .decode(hdfsRecord.getExtHumboldt().getBytes(StandardCharsets.UTF_8)))
             .contains(
                 "\"targetLifeStageScope\" : {\n"
                     + "    \"concepts\" : [ \"c1\", \"c11\" ],\n"
