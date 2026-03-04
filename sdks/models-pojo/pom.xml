@@ -26,7 +26,9 @@
     <schema-generated-path>${project.basedir}/src/main/avro</schema-generated-path>
     <schema-generated-table-path>${schema-generated-path}/table/</schema-generated-table-path>
     <occurrence-avsc-schema-name>occurrence-hdfs-record.avsc</occurrence-avsc-schema-name>
+    <event-avsc-schema-name>event-hdfs-record.avsc</event-avsc-schema-name>
     <schema-generated-occurrence-path>${schema-generated-path}/${occurrence-avsc-schema-name}</schema-generated-occurrence-path>
+    <schema-generated-event-path>${schema-generated-path}/${event-avsc-schema-name}</schema-generated-event-path>
 
   </properties>
 

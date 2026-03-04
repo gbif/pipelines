@@ -1,37 +1,29 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.converters.ConverterUtils.mapTerm;
+import static org.gbif.pipelines.core.utils.ExtensionUtils.convertMoFFromVerbatim;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.License;
 import org.gbif.dwc.terms.*;
-import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
-import org.gbif.pipelines.core.pojo.HumboldtJsonView;
+import org.gbif.pipelines.core.pojo.MoFData;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.terms.utils.TermUtils;
 
 /** Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}. */
 @Slf4j
@@ -51,8 +43,6 @@ public class OccurrenceHdfsRecordConverter {
   private final MetadataRecord metadataRecord;
   private final MultimediaRecord multimediaRecord;
   private final DnaDerivedDataRecord dnaDerivedDataRecord;
-  private final EventCoreRecord eventCoreRecord;
-  private final HumboldtRecord humboldtRecord;
 
   // required taxonomic terms. These need to be populated at least with empty string
   // to support SQL queries and avoid 'Key not found' errors.
@@ -111,10 +101,9 @@ public class OccurrenceHdfsRecordConverter {
     mapGrscicollRecord(occurrenceHdfsRecord);
     mapMultimediaRecord(occurrenceHdfsRecord);
     mapExtendedRecord(occurrenceHdfsRecord);
-    mapEventCoreRecord(occurrenceHdfsRecord);
     mapProjectIds(occurrenceHdfsRecord);
     mapDnaDerivedDataRecord(occurrenceHdfsRecord);
-    mapHumboldtRecord(occurrenceHdfsRecord);
+    mapMoFFromVerbatim(occurrenceHdfsRecord);
 
     return occurrenceHdfsRecord;
   }
@@ -229,7 +218,7 @@ public class OccurrenceHdfsRecordConverter {
       projectIds.add(metadataRecord.getProjectId());
     }
 
-    if (basicRecord != null) {
+    if (basicRecord != null && basicRecord.getProjectId() != null) {
       projectIds.addAll(basicRecord.getProjectId());
     }
 
@@ -427,7 +416,6 @@ public class OccurrenceHdfsRecordConverter {
 
     extractOptValue(verbatim, DwcTerm.scientificName)
         .ifPresent(s -> map.put(GbifTerm.verbatimScientificName.simpleName().toLowerCase(), s));
-
     // Classification hierarchy
     taxonRecord
         .getClassification()
@@ -841,40 +829,6 @@ public class OccurrenceHdfsRecordConverter {
     }
   }
 
-  /**
-   * From a {@link Schema.Field} copies it value into a the {@link OccurrenceHdfsRecord} field using
-   * the recognized data type.
-   *
-   * @param occurrenceHdfsRecord target record
-   * @param fieldName {@link OccurrenceHdfsRecord} field/property name
-   * @param value field data/value
-   */
-  private static void setHdfsRecordField(
-      OccurrenceHdfsRecord occurrenceHdfsRecord, Field field, String fieldName, String value) {
-    try {
-      Type fieldType = field.getGenericType();
-      if (fieldType.equals(Integer.class)) {
-        PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Integer.valueOf(value));
-      } else if (fieldType.equals(Long.class)) {
-        PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Long.valueOf(value));
-      } else if (fieldType.equals(Boolean.class)) {
-        PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Boolean.valueOf(value));
-      } else if (fieldType.equals(Double.class)) {
-        PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Double.valueOf(value));
-      } else if (fieldType.equals(Float.class)) {
-        PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Float.valueOf(value));
-      } else {
-        PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, value);
-      }
-    } catch (Exception ex) {
-      log.debug(
-          "Ignoring error setting field {}, field name {}, value. Exception: {}",
-          field,
-          fieldName,
-          value);
-    }
-  }
-
   /** Copies the {@link ExtendedRecord} data into the {@link OccurrenceHdfsRecord}. */
   private void mapExtendedRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
     if (extendedRecord == null) {
@@ -891,93 +845,13 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setDwcaextension(extensions);
   }
 
-  /** Copies the {@link EventCoreRecord} data into the {@link OccurrenceHdfsRecord}. */
-  private void mapEventCoreRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
-    if (eventCoreRecord != null && eventCoreRecord.getCreated() != null) {
-      if (eventCoreRecord.getParentsLineage() != null) {
-        occurrenceHdfsRecord.setParenteventgbifid(
-            eventCoreRecord.getParentsLineage().stream()
-                .map(
-                    pl ->
-                        ParentEventGbifId.newBuilder()
-                            .setId(pl.getId())
-                            .setEventtype(pl.getEventType())
-                            .build())
-                .collect(Collectors.toList()));
-      }
-      if (eventCoreRecord.getEventType() != null) {
-        occurrenceHdfsRecord.setEventtype(
-            EventType.newBuilder()
-                .setConcept(eventCoreRecord.getEventType().getConcept())
-                .setLineage(eventCoreRecord.getEventType().getLineage())
-                .build());
-      }
+  private void mapMoFFromVerbatim(OccurrenceHdfsRecord occurrenceHdfsRecord) {
+    MoFData moFData = convertMoFFromVerbatim(extendedRecord);
+    if (!moFData.getMeasurementTypes().isEmpty()) {
+      occurrenceHdfsRecord.setMeasurementtype(new ArrayList<>(moFData.getMeasurementTypes()));
     }
-  }
-
-  private void mapTerm(String k, String v, OccurrenceHdfsRecord occurrenceHdfsRecord) {
-    Term term = TERM_FACTORY.findTerm(k);
-
-    if (term == null) {
-      return;
-    }
-
-    if (TermUtils.verbatimTerms().contains(term)) {
-      Optional.ofNullable(verbatimSchemaField(term))
-          .ifPresent(
-              field -> {
-                try {
-                  String verbatimField =
-                      "V" + StringUtils.capitalize(term.simpleName().toLowerCase());
-
-                  // special case for class, as always
-                  if (DwcTerm.class_ == term) {
-                    verbatimField = "VClass_";
-                  }
-
-                  PropertyUtils.setProperty(occurrenceHdfsRecord, verbatimField, v);
-                } catch (Exception e) {
-                  throw new RuntimeException(e);
-                }
-              });
-    }
-
-    if (!TermUtils.isInterpretedSourceTerm(term)) {
-      Optional.ofNullable(interpretedSchemaField(term))
-          .ifPresent(
-              field -> {
-                // Fields that were set by other mappers are ignored
-
-                // Use reflection to get the value (previously used names from Avro schema)
-                String methodName =
-                    "get"
-                        + Character.toUpperCase(field.getName().charAt(0))
-                        + field.getName().substring(1);
-                try {
-                  Method method = occurrenceHdfsRecord.getClass().getMethod(methodName);
-                  if (Objects.isNull(method.invoke(occurrenceHdfsRecord))) {
-                    String interpretedFieldname = field.getName();
-                    if (DcTerm.abstract_ == term) {
-                      interpretedFieldname = "abstract$";
-                    } else if (DwcTerm.class_ == term) {
-                      interpretedFieldname = "class$";
-                    } else if (DwcTerm.group == term) {
-                      interpretedFieldname = "group";
-                    } else if (DwcTerm.order == term) {
-                      interpretedFieldname = "order";
-                    } else if (DcTerm.date == term) {
-                      interpretedFieldname = "date";
-                    } else if (DcTerm.format == term) {
-                      interpretedFieldname = "format";
-                    }
-                    setHdfsRecordField(occurrenceHdfsRecord, field, interpretedFieldname, v);
-                  }
-                } catch (IllegalAccessException
-                    | InvocationTargetException
-                    | NoSuchMethodException ex) {
-                  throw new RuntimeException(ex);
-                }
-              });
+    if (!moFData.getMeasurementTypeIDs().isEmpty()) {
+      occurrenceHdfsRecord.setMeasurementtypeid(new ArrayList<>(moFData.getMeasurementTypeIDs()));
     }
   }
 
@@ -997,7 +871,6 @@ public class OccurrenceHdfsRecordConverter {
             .map(TextNode::valueOf)
             .map(TextNode::asText)
             .collect(Collectors.toList());
-
     occurrenceHdfsRecord.setExtMultimedia(
         base64Encode(MediaSerDeser.multimediaToJson(multimediaRecord.getMultimediaItems())));
 
@@ -1026,175 +899,6 @@ public class OccurrenceHdfsRecordConverter {
               dnaDerivedDataRecord.getDnaDerivedDataItems().stream()
                   .map(DnaDerivedData::getDnaSequenceID)
                   .collect(Collectors.toSet())));
-    }
-  }
-
-  private void mapHumboldtRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
-    if (humboldtRecord == null || humboldtRecord.getCreated() == null) {
-      return;
-    }
-
-    if (humboldtRecord.getHumboldtItems() != null) {
-
-      Function<List<VocabularyConcept>, HumboldtJsonView.VocabularyList> convertVocabList =
-          list -> {
-            List<String> allConcepts =
-                list.stream()
-                    .map(org.gbif.pipelines.io.avro.VocabularyConcept::getConcept)
-                    .collect(Collectors.toList());
-
-            List<String> allParents =
-                list.stream().flatMap(c -> c.getLineage().stream()).collect(Collectors.toList());
-
-            HumboldtJsonView.VocabularyList vl = new HumboldtJsonView.VocabularyList();
-            vl.setConcepts(allConcepts);
-            vl.setLineage(allParents);
-            return vl;
-          };
-
-      Function<List<TaxonHumboldtRecord>, Map<String, Map<String, List<String>>>>
-          convertToTaxonMap =
-              r -> {
-                Map<String, Map<String, List<String>>> valuesAsList = new HashMap<>();
-
-                r.stream()
-                    .filter(v -> v.getChecklistKey() != null)
-                    .forEach(
-                        t -> {
-                          Map<String, List<String>> values =
-                              valuesAsList.computeIfAbsent(
-                                  t.getChecklistKey(), k -> new HashMap<>());
-
-                          if (t.getUsage() != null) {
-                            values
-                                .computeIfAbsent("usagekey", k -> new ArrayList<>())
-                                .add(t.getUsage().getKey());
-                            values
-                                .computeIfAbsent("usagename", k -> new ArrayList<>())
-                                .add(t.getUsage().getName());
-                            values
-                                .computeIfAbsent("usagerank", k -> new ArrayList<>())
-                                .add(t.getUsage().getRank());
-                          }
-                          if (t.getAcceptedUsage() != null) {
-                            values
-                                .computeIfAbsent("acceptedusagekey", k -> new ArrayList<>())
-                                .add(t.getAcceptedUsage().getKey());
-                            values
-                                .computeIfAbsent("acceptedusagename", k -> new ArrayList<>())
-                                .add(t.getAcceptedUsage().getName());
-                            values
-                                .computeIfAbsent("acceptedusagerank", k -> new ArrayList<>())
-                                .add(t.getAcceptedUsage().getRank());
-                          }
-
-                          values
-                              .computeIfAbsent("iucnRedListCategoryCode", k -> new ArrayList<>())
-                              .add(t.getIucnRedListCategoryCode());
-
-                          values
-                              .computeIfAbsent("taxonkeys", k -> new ArrayList<>())
-                              .addAll(
-                                  t.getClassification().stream()
-                                      .map(RankedName::getKey)
-                                      .collect(Collectors.toSet()));
-                          values
-                              .computeIfAbsent("taxonomicissue", k -> new ArrayList<>())
-                              .addAll(t.getIssues().getIssueList());
-
-                          t.getClassification()
-                              .forEach(
-                                  rn -> {
-                                    values
-                                        .computeIfAbsent(
-                                            rn.getRank().toLowerCase(), k -> new ArrayList<>())
-                                        .add(rn.getName());
-                                    values
-                                        .computeIfAbsent(
-                                            rn.getRank().toLowerCase() + "key",
-                                            k -> new ArrayList<>())
-                                        .add(rn.getKey());
-                                  });
-                        });
-                return valuesAsList;
-              };
-
-      List<HumboldtJsonView> jsonViews =
-          humboldtRecord.getHumboldtItems().stream()
-              .map(
-                  h -> {
-                    HumboldtJsonView jsonView = new HumboldtJsonView();
-                    jsonView.setHumboldt(h);
-
-                    if (h.getTargetLifeStageScope() != null) {
-                      jsonView.setTargetLifeStageScope(
-                          convertVocabList.apply(h.getTargetLifeStageScope()));
-                    }
-                    if (h.getExcludedLifeStageScope() != null) {
-                      jsonView.setExcludedLifeStageScope(
-                          convertVocabList.apply(h.getExcludedLifeStageScope()));
-                    }
-                    if (h.getTargetDegreeOfEstablishmentScope() != null) {
-                      jsonView.setTargetDegreeOfEstablishmentScope(
-                          convertVocabList.apply(h.getTargetDegreeOfEstablishmentScope()));
-                    }
-                    if (h.getExcludedDegreeOfEstablishmentScope() != null) {
-                      jsonView.setExcludedDegreeOfEstablishmentScope(
-                          convertVocabList.apply(h.getExcludedDegreeOfEstablishmentScope()));
-                    }
-
-                    if (h.getTargetTaxonomicScope() != null) {
-                      jsonView.setTargetTaxonomicScope(
-                          convertToTaxonMap.apply(h.getTargetTaxonomicScope()));
-                    }
-                    if (h.getExcludedTaxonomicScope() != null) {
-                      jsonView.setExcludedTaxonomicScope(
-                          convertToTaxonMap.apply(h.getExcludedTaxonomicScope()));
-                    }
-                    if (h.getAbsentTaxa() != null) {
-                      jsonView.setAbsentTaxa(convertToTaxonMap.apply(h.getAbsentTaxa()));
-                    }
-                    if (h.getNonTargetTaxa() != null) {
-                      jsonView.setNonTargetTaxa(convertToTaxonMap.apply(h.getNonTargetTaxa()));
-                    }
-
-                    return jsonView;
-                  })
-              .collect(Collectors.toList());
-    }
-
-    addNonTaxonIssues(humboldtRecord.getIssues(), occurrenceHdfsRecord);
-
-    // Add taxonomic issues from humboldtRecord
-    humboldtRecord
-        .getHumboldtItems()
-        .forEach(
-            h ->
-                h.getTargetTaxonomicScope()
-                    .forEach(ir -> addTaxonIssues(ir.getIssues(), occurrenceHdfsRecord)));
-  }
-
-  /** Gets the {@link Schema.Field} associated to a verbatim term. */
-  private static Field verbatimSchemaField(Term term) {
-    try {
-
-      if (term == DwcTerm.class_) {
-        return OccurrenceHdfsRecord.class.getDeclaredField("vClass_");
-      }
-
-      return OccurrenceHdfsRecord.class.getDeclaredField(
-          "v" + StringUtils.capitalize(term.simpleName().toLowerCase()));
-    } catch (NoSuchFieldException e) {
-      return null; // Field not found
-    }
-  }
-
-  /** Gets the {@link Schema.Field} associated to a interpreted term. */
-  private static Field interpretedSchemaField(Term term) {
-    try {
-      return OccurrenceHdfsRecord.class.getDeclaredField(HiveColumns.columnFor(term));
-    } catch (NoSuchFieldException e) {
-      return null; // Field not found
     }
   }
 }

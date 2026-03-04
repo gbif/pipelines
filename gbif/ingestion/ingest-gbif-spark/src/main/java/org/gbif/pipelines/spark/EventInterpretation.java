@@ -213,8 +213,6 @@ public class EventInterpretation {
                       .verbatim(MAPPER.readValue(r.getVerbatim(), ExtendedRecord.class))
                       .temporal(MAPPER.readValue(r.getTemporal(), TemporalRecord.class))
                       .location(MAPPER.readValue(r.getLocation(), LocationRecord.class))
-                      .measurementOrFactRecord(
-                          MAPPER.readValue(r.getMeasurementOrFact(), MeasurementOrFactRecord.class))
                       .humboldtRecord(MAPPER.readValue(r.getHumboldt(), HumboldtRecord.class))
                       .multimedia(MAPPER.readValue(r.getMultimedia(), MultimediaRecord.class))
                       .eventInheritedRecord(
@@ -255,9 +253,6 @@ public class EventInterpretation {
                           MAPPER.readValue(record.getIdentifier(), IdentifierRecord.class))
                       .multimediaRecord(
                           MAPPER.readValue(record.getMultimedia(), MultimediaRecord.class))
-                      .eventCoreRecord(
-                          MAPPER.readValue(record.getEventCore(), EventCoreRecord.class))
-                      .humboldtRecord(MAPPER.readValue(record.getHumboldt(), HumboldtRecord.class))
                       .build();
 
               return c.convert();

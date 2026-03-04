@@ -97,11 +97,11 @@
       <artifactId>jaxws-api</artifactId>
       <version>${jaxws-api.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>models</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>org.gbif.pipelines</groupId>-->
+<!--      <artifactId>models</artifactId>-->
+<!--      <version>${project.version}</version>-->
+<!--    </dependency>-->
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>models-pojo</artifactId>

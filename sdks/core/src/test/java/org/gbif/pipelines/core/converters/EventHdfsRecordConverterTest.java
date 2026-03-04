@@ -3,13 +3,7 @@ package org.gbif.pipelines.core.converters;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
@@ -262,7 +256,9 @@ public class EventHdfsRecordConverterTest {
 
     // Should
     // Testing de-serialization
-    List<Multimedia> media = MediaSerDeser.multimediaFromJson(hdfsRecord.getExtMultimedia());
+    List<Multimedia> media =
+        MediaSerDeser.multimediaFromJson(
+            new String(Base64.getDecoder().decode(hdfsRecord.getExtMultimedia())));
     Assert.assertEquals(media.get(0), multimedia);
     Assert.assertTrue(hdfsRecord.getMediatype().contains(MediaType.StillImage.name()));
     Assert.assertTrue(

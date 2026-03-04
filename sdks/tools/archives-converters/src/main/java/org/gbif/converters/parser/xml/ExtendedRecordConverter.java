@@ -3,6 +3,7 @@ package org.gbif.converters.parser.xml;
 import com.google.common.base.Strings;
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
@@ -59,7 +60,7 @@ public class ExtendedRecordConverter {
       // Wait all threads
       CompletableFuture.allOf(futures).get();
 
-      return Metric.create(counter.get(), counter.get());
+      return Metric.create(counter.get(), counter.get(), Map.of());
 
     } catch (Exception ex) {
       log.error(ex.getMessage(), ex);
