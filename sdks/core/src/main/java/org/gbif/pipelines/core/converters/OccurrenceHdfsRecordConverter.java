@@ -1161,8 +1161,6 @@ public class OccurrenceHdfsRecordConverter {
                     return jsonView;
                   })
               .collect(Collectors.toList());
-
-      occurrenceHdfsRecord.setExtHumboldt(base64Encode(MediaSerDeser.humboldtToJson(jsonViews)));
     }
 
     addNonTaxonIssues(humboldtRecord.getIssues(), occurrenceHdfsRecord);
