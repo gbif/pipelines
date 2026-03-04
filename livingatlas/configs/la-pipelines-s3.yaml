@@ -1,0 +1,331 @@
+### run options:
+
+run:
+  # where to run: local, spark-embedded or spark-cluster
+  platform: spark-cluster
+  local:
+    # jar: we get the jar from our dev or production environment
+    sparkTmp: /data/spark-tmp
+    sparkMaster: "DONT_SET"
+    dwcaTmp: /data/dwca-tmp
+    dwcaImportDir: /data/biocache-load
+  spark-embedded:
+    dwcaTmp: /data/dwca-tmp
+    dwcaImportDir: /data/biocache-load
+    sparkTmp: /data/spark-tmp
+    sparkMaster: "DONT_SET"
+  spark-cluster:
+    dwcaTmp: /data/dwca-tmp
+    dwcaImportDir: /data/dwca-export
+    jar: s3://test-emr-pipelines/pipelines-3.2.14-SNAPSHOT-shaded.jar
+    sparkSubmit: /usr/bin/spark-submit
+    sparkTmp: /data/spark-tmp
+    # dont specify spark master for EMR
+    sparkMaster: "DONT_SET"
+
+general:
+  attempt: 0
+  hdfsSiteConfig: /etc/hadoop/conf/hdfs-site.xml
+  coreSiteConfig: /etc/hadoop/conf/core-site.xml
+
+fs:
+  platform: hdfs
+  local:
+    fsPath: /data
+  hdfs:
+    fsPath: hdfs:///
+
+dataset-validated-dump:
+
+copy:
+  copyPath: "/data/dwca-export"
+recordedByConfig:
+  cacheSizeMb: 64
+alaNameMatch:
+  wsUrl: https://namematching.natuurdata.dev.inbo.be
+  timeoutSec: 30
+  retryConfig:
+    maxAttempts: 5
+    initialIntervalMillis: 5000
+sds:
+  wsUrl: http://sensitive-data-service.vbp.internal:9189
+  timeoutSec: 30
+collectory:
+  wsUrl: https://natuurdata.dev.inbo.be/collectory/ws/
+  timeoutSec: 30
+  retryConfig:
+    maxAttempts: 10
+    initialIntervalMillis: 10000
+  httpHeaders:
+    Authorization: ${APIKEY}
+    apiKey: ${APIKEY}
+
+imageService:
+  wsUrl: http://image-service.vbp.internal:8080/image-service/
+  timeoutSec: 30
+  httpHeaders:
+    apiKey: ${APIKEY}
+  retryConfig:
+    maxAttempts: 5
+    initialIntervalMillis: 1000
+speciesListService:
+  wsUrl: http://species-list.vbp.internal:8080/species-list/
+  timeoutSec: 90
+  retryConfig:
+    maxAttempts: 5
+    initialIntervalMillis: 1000
+samplingService:
+  wsUrl: http://spatial-service.vbp.internal:8080/spatial-service/
+  timeoutSec: 1200
+  batchSize: 25000
+  batchStatusSleepTime: 1000
+  downloadRetries: 5
+  retryConfig:
+    maxAttempts: 10
+    initialIntervalMillis: 1000
+geocodeConfig:
+  country:
+    path: /home/stefan/Projects/Inbo/pipelines/data/pipelines-shp/political
+    field: ISO_A2
+    intersectBuffer: 0.135
+    intersectMapping:
+      CX: AU
+      CC: AU
+      HM: AU
+      NF: AU
+  eez:
+    path: /home/stefan/Projects/Inbo/pipelines/data/pipelines-shp/eez
+    field: ISO2
+    intersectBuffer: 0.135
+  stateProvince:
+    path: /home/stefan/Projects/Inbo/pipelines/data/pipelines-shp/cw_state_poly
+    field: FEATURE
+    intersectBuffer: 0
+  biome:
+    path: /home/stefan/Projects/Inbo/pipelines/data/pipelines-shp/gadm0
+    field: FEATURE
+
+gbifConfig:
+  extensionsAllowedForVerbatimSet:
+    - http://rs.tdwg.org/ac/terms/Multimedia
+    - http://data.ggbn.org/schemas/ggbn/terms/Amplification
+    - http://data.ggbn.org/schemas/ggbn/terms/Cloning
+    - http://data.ggbn.org/schemas/ggbn/terms/GelImage
+    - http://data.ggbn.org/schemas/ggbn/terms/Loan
+    - http://data.ggbn.org/schemas/ggbn/terms/MaterialSample
+    - http://data.ggbn.org/schemas/ggbn/terms/Permit
+    - http://data.ggbn.org/schemas/ggbn/terms/Preparation
+    - http://data.ggbn.org/schemas/ggbn/terms/Preservation
+    - http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact
+    - http://rs.tdwg.org/chrono/terms/ChronometricAge
+    - http://purl.org/germplasm/germplasmTerm#GermplasmAccession
+    - http://purl.org/germplasm/germplasmTerm#MeasurementScore
+    - http://purl.org/germplasm/germplasmTerm#MeasurementTrait
+    - http://purl.org/germplasm/germplasmTerm#MeasurementTrial
+    - http://rs.tdwg.org/dwc/terms/Identification
+    - http://rs.tdwg.org/dwc/terms/Occurrence
+    - http://rs.gbif.org/terms/1.0/Identifier
+    - http://rs.gbif.org/terms/1.0/Image
+    - http://rs.tdwg.org/dwc/terms/MeasurementOrFact
+    - http://rs.gbif.org/terms/1.0/Multimedia
+    - http://rs.gbif.org/terms/1.0/Reference
+    - http://rs.tdwg.org/dwc/terms/ResourceRelationship
+    - http://rs.gbif.org/terms/1.0/DNADerivedData
+    - http://ala.org.au/terms/seedbank/0.1/SeedbankRecord
+  vocabularyConfig:
+    vocabulariesPath: /home/stefan/Projects/Inbo/pipelines/livingatlas/pipelines/src/test/resources/vocabularies
+    vocabulariesNames:
+      http://rs.tdwg.org/dwc/terms/degreeOfEstablishment: DegreeOfEstablishment
+      http://rs.tdwg.org/dwc/terms/lifeStage: LifeStage
+      http://rs.tdwg.org/dwc/terms/establishmentMeans: EstablishmentMeans
+      http://rs.tdwg.org/dwc/terms/pathway: Pathway
+
+alaNameMatchConfig:
+  matchOnTaxonID: false
+
+# As PipelineOptions does not admits extra arguments, we use this comma separated list of --args to remove it after
+# use it. In the case of fsPath be substitute 'hdfs:///pipelines-data' with fs.hdfs.fsPath if hdfs is selected in
+# fs.platform or '/data' if 'local' is selected.
+pipelineExcludeArgs: fsPath
+
+# class: au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline
+dwca-avro:
+  runner: SparkRunner
+  # Path of the input file
+  inputPath: ./data/biocache-load/{datasetId}/{datasetId}.zip
+  targetPath: "s3://inbo-vbp-dev-pipelines/data/pipelines-data"
+  tempLocation: /tmp/pipelines
+
+# class: au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline
+interpret:
+  appName: Interpretation for {datasetId}
+  interpretationTypes: ALL
+  defaultDateFormat: DMYT,DMY
+  inputPath: "s3://inbo-vbp-dev-pipelines/data/pipelines-data/{datasetId}/0/verbatim/*.avro"
+  targetPath: "s3://inbo-vbp-dev-pipelines/data/pipelines-data"
+  # Skips GBIF id generation and copies ids from ExtendedRecord ids
+  useExtendedRecordId: true
+  runner: SparkRunner
+
+# class: au.org.ala.pipelines.beam.ALAUUIDMintingPipeline
+uuid:
+  appName: UUID minting for {datasetId}
+  runner: SparkRunner
+  numberOfBackupsToKeep: 10
+  percentageChangeAllowed: 50
+  throwErrorOnValidationFail: false
+  inputPath: "s3://inbo-vbp-dev-pipelines/data/pipelines-data"
+  targetPath: "s3://inbo-vbp-dev-pipelines/data/pipelines-data"
+
+images:
+  appName: Image syncing for {datasetId}
+  runner: SparkRunner
+  tempLocation: /tmp
+  # pipe separated list (note: YAML list not coming through correctly)
+  recognisedPaths: "https://natuurdata.dev.inbo.be/images"
+  inputPath: "s3://inbo-vbp-dev-pipelines/data/pipelines-data"
+  targetPath: "s3://inbo-vbp-dev-pipelines/data/pipelines-data"
+
+speciesLists:
+  runner: SparkRunner
+  speciesAggregatesPath: "s3://inbo-vbp-dev-pipelines/data/pipelines-species"
+  tempLocation: /tmp
+  maxDownloadAgeInMinutes: 1440
+  includeConservationStatus: true
+  includeInvasiveStatus: true
+
+# Sampling specific configuration
+sampling:
+  appName: Sample for {datasetId}
+  allDatasetsInputPath: "s3://inbo-vbp-dev-pipelines/data/pipelines-all-datasets"
+  runner: SparkRunner
+  inputPath: "s3://inbo-vbp-dev-pipelines/data/pipelines-data"
+
+# Calculate distance to the expert distribution layers
+# class:au.org.ala.pipelines.beam.DistributionOutlierPipeline
+outlier:
+  appName: Expert distribution outliers for {datasetId}
+  baseUrl: https://spatial-service.vbp.internal:8080/spatial-service/
+  targetPath: "hdfs:///pipelines-outlier"
+  allDatasetsInputPath: "hdfs:///pipelines-all-datasets"
+  runner: SparkRunner
+
+annotation:
+  runner: SparkRunner
+  inputPath: s3://inbo-vbp-dev-pipelines/data/pipelines-annotations
+  targetPath: s3://inbo-vbp-dev-pipelines/data/pipelines-annotations
+  tempLocation: /tmp/
+
+# class: au.org.ala.pipelines.beam.ALAInterpretedToSensitivePipeline
+sensitive:
+  appName: Sensitive Data Processing for {datasetId}
+  runner: SparkRunner
+  inputPath: "s3://inbo-vbp-dev-pipelines/data/pipelines-data"
+
+# class: au.org.ala.pipelines.java.IndexRecordPipeline
+index:
+  appName: IndexRecord generation for {datasetId}
+  includeImages: true
+  includeSpeciesLists: true
+  # set this to false to avoid SDS requirement
+  includeSensitiveDataChecks: true
+  runner: SparkRunner
+  allDatasetsInputPath: "hdfs:///pipelines-all-datasets"
+  inputPath: "s3://inbo-vbp-dev-pipelines/data/pipelines-data/"
+  targetPath: s3://inbo-vbp-dev-pipelines/data/pipelines-data'
+
+# class: au.org.ala.pipelines.beam.IndexRecordToSolrPipeline
+solr:
+  appName: SOLR indexing for {datasetId}
+  allDatasetsInputPath: "hdfs:///pipelines-all-datasets"
+  jackKnifePath: "hdfs:///pipelines-jackknife"
+  clusteringPath: "hdfs:///pipelines-clustering"
+  outlierPath: "hdfs:///pipelines-outlier"
+  annotationsPath: "hdfs:///pipelines-annotations"
+  solrCollection: biocache
+  includeSampling: true
+  includeJackKnife: true
+  includeClustering: false
+  runner: SparkRunner
+  zkHost: solr.vbp.internal:9983
+  numOfPartitions: 12
+  inputPath: "hdfs:///"
+
+# class: au.org.ala.pipelines.beam.IndexRecordToSolrPipeline
+elastic:
+  appName: Elastic indexing for {datasetId}
+  runner: SparkRunner
+  esHosts: http://elasticsearch.vbp.internal:9200
+  esAlias: event
+  esIndexName: "event_{datasetId}"
+  indexNumberShards: 1
+  indexNumberReplicas: 0
+  metaFileName: elastic.yml
+  esDocumentId: internalId
+  inputPath: "hdfs:///"
+
+export:
+  appName: DwCA export for {datasetId}
+  localExportPath: /tmp/pipelines-export
+  allDatasetsInputPath: "hdfs:///pipelines-all-datasets"
+  imageServicePath: "https://images.biodiversiteitsportaal/image/proxyImageThumbnailLarge?imageId={0}"
+  runner: SparkRunner
+  predicateExportEnabled: true
+
+predicate-export:
+  targetPath: "hdfs:///pipelines-export"
+  localExportPath: /tmp/pipelines-export
+  skipEventExportFields:
+    - "id"
+    - "parentId"
+    - "created"
+    - "hasGeospatialIssue"
+    - "hasCoordinate"
+    - "repatriated"
+    - "coreId"
+  skipOccurrenceExportFields:
+    - "id"
+    - "parentId"
+    - "created"
+    - "hasGeospatialIssue"
+    - "hasCoordinate"
+    - "repatriated"
+    - "coreId"
+
+# class: au.org.ala.pipelines.beam.IndexRecordToSolrPipeline
+solrSchema:
+  appName: SOLR Schema Sync
+
+# JackKnife specific configuration
+# class: au.org.ala.pipelines.beam.ALAReverseJackKnifePipeline
+jackKnife:
+  appName: Jack knife outlier detection
+  jackKnifePath: "hdfs:///pipelines-jackknife"
+  layers: cl10001,cl10000,cl10002
+  minSampleThreshold: 80
+  allDatasetsInputPath: "hdfs:///pipelines-all-datasets"
+  runner: SparkRunner
+
+clustering:
+  appName: Occurrence clustering
+  clusteringPath: "hdfs:///pipelines-clustering"
+  allDatasetsInputPath: "hdfs:///pipelines-all-datasets"
+  runner: SparkRunner
+
+# class: DumpArchiveList
+dataset-archive-list:
+  inputPath: "hdfs:///dwca-imports"
+  targetPath: /tmp/dataset-archive-list.csv
+
+# class: au.org.ala.utils.DumpDatasetSize
+dataset-count-dump:
+  targetPath: /tmp/dataset-counts.csv
+  dwcaImportPath: "hdfs:///dwca-imports"
+
+validation-report:
+  targetPath: /tmp/data<set-validation-list.csv
+  fullReportPath: /tmp/full-validation-list.csv
+  zkHost: solr.vbp.internal:9983
+  checkSolr: true
+  checkSampling: true
+  solrCollection: biocache
