@@ -182,6 +182,10 @@ public class VerbatimExtensionsInterpretation {
                                 ext, dwcCoreTerm), // e.g. ac_extension
                         et -> et));
 
+        if (log.isDebugEnabled()) {
+          log.debug("Available ExtensionTables: {}", String.join(", ", extensionTableMap.keySet()));
+        }
+
         if (!extensionTableMap.containsKey(dir)) {
           log.warn("No ExtensionTable found for directory '{}', will not create table schema", dir);
           continue;
