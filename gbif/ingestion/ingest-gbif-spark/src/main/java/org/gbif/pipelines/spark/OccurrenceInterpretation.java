@@ -112,12 +112,6 @@ public class OccurrenceInterpretation {
     @Parameter(names = "--numberOfShards", description = "Number of shards")
     private int numberOfShards = 1;
 
-    @Parameter(
-        names = "--useCheckpoints",
-        description = "Use checkpoints where possible",
-        arity = 1)
-    private boolean useCheckpoints = true;
-
     @Parameter(names = "--useSystemExit", description = "Use checkpoints where possible", arity = 1)
     private boolean useSystemExit = true;
 
