@@ -175,11 +175,12 @@ public class VerbatimExtensionsInterpretation {
         // Check if we can create the table schema
         Map<String, ExtensionTable> extensionTableMap =
             ExtensionTable.tableExtensions().stream()
-                .collect(Collectors.toMap(
-                        ext -> TableUtil.verbatimExtensionTableName(ext, dwcCoreTerm), // e.g. ac_extension
-                        et -> et
-                )
-        );
+                .collect(
+                    Collectors.toMap(
+                        ext ->
+                            TableUtil.verbatimExtensionTableName(
+                                ext, dwcCoreTerm), // e.g. ac_extension
+                        et -> et));
 
         if (!extensionTableMap.containsKey(dir)) {
           log.warn("No ExtensionTable found for directory '{}', will not create table schema", dir);
