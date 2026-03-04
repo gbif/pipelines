@@ -72,14 +72,14 @@ public class BalancerCallback extends AbstractMessageCallback<PipelinesBalancerM
         PipelinesAbcdMessageHandler.handle(publisher, message);
       } else if (PipelinesFragmenterMessage.class.getSimpleName().equals(className)) {
         PipelinesFragmenterMessageHandler.handle(publisher, message);
-      } else if (PipelinesEventsMessage.class.getSimpleName().equals(className)) {
-        EventsMessageHandler.handle(config, publisher, message);
       } else if (PipelinesEventsInterpretedMessage.class.getSimpleName().equals(className)) {
         EventsInterpretedMessageHandler.handle(publisher, message);
       } else if (PipelinesEventsIndexedMessage.class.getSimpleName().equals(className)) {
         EventsIndexedMessageHandler.handle(publisher, message);
       } else if (PipelinesEventsHdfsViewMessage.class.getSimpleName().equals(className)) {
         PipelinesEventsHdfsViewMessageHandler.handle(publisher, message);
+      } else if (PipelinesEventsMessage.class.getSimpleName().equals(className)) {
+        EventsMessageHandler.handle(config, publisher, message);
       } else {
         log.error("Handler for {} wasn't found!", className);
       }

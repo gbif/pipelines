@@ -109,7 +109,7 @@ public class Validations {
     validation.setMetrics(metrics);
 
     log.info(
-        "Validaton {} main state to {} and step state to {} with message {}",
+        "Validation {} main state to {} and step state to {} with message {}",
         stepType,
         mainStatus,
         newStatus,
