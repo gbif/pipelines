@@ -11,11 +11,13 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
@@ -134,7 +136,6 @@ public class VerbatimExtensionsInterpretation {
       PipelinesConfig config,
       String datasetId,
       int attempt,
-      String icebergCatalog,
       String dwcCoreTerm) {
 
     String inputPath = String.format("%s/%s/%d", config.getInputPath(), datasetId, attempt);
@@ -163,14 +164,39 @@ public class VerbatimExtensionsInterpretation {
     // cache columns for later use
     Set<String> dfCols = new HashSet<>(Arrays.asList(optimized.columns()));
 
+    // get catalog tables
+    Dataset<Table> tables = spark.catalog().listTables(config.getHiveDB());
+    Map<String, Table> tableMap =
+        tables.collectAsList().stream()
+            .collect(Collectors.toMap(Table::name, t -> t, (t1, t2) -> t1));
+
+    log.debug(
+        "Existing tables in catalog '{}': {}",
+        config.getHiveDB(),
+        String.join(", ", tableMap.keySet()));
+
     // Write partitioned Parquet output (flat schema)
     for (String dir : directories) {
-      String tableName =
-          dwcCoreTerm.toLowerCase() + "_ext_" + dir.toLowerCase(); // e.g. ac_extension -> extension
-      String table = icebergCatalog + "." + tableName; // e.g. iceberg_catalog.default.ac_extension
 
-      if (!spark.catalog().tableExists(table)) {
-        log.info("Table {} does not exist, checking if we should create {}", table, dir);
+      Pattern pattern = Pattern.compile("^" + dwcCoreTerm + "_ext_" + ".*_" + dir + "$");
+      List<String> matches = tableMap.keySet().stream().filter(pattern.asPredicate()).toList();
+
+      String tableToLoad = null;
+
+      if (matches.isEmpty()) {
+        log.info("No table found for directory '{}', will check if we can create it", dir);
+      } else if (matches.size() > 1) {
+        log.warn(
+            "Multiple tables found for directory '{}': {}, this is unexpected and may indicate an issue",
+            dir,
+            String.join(", ", matches));
+      } else {
+        log.info("Table '{}' already exists for directory '{}'", matches.get(0), dir);
+      }
+
+      if (matches.isEmpty()) {
+
+        log.info("Table does not exist, checking if we should create for {}", dir);
 
         // Check if we can create the table schema
         Map<String, ExtensionTable> extensionTableMap =
@@ -198,15 +224,18 @@ public class VerbatimExtensionsInterpretation {
           // creating table
           createExtensionTable(spark, extTable, dwcCoreTerm);
         }
+      } else {
+        tableToLoad = matches.get(0);
       }
 
-      log.info("Processing extension directory '{}' into table '{}'", dir, table);
+      log.info("Processing extension directory '{}' into table '{}'", dir, tableToLoad);
       spark
           .sparkContext()
-          .setJobGroup("extension-" + table, "Loading extension data into table " + table, true);
+          .setJobGroup(
+              "extension-" + tableToLoad, "Loading extension data into table " + tableToLoad, true);
 
       // get target table schema (table must exist)
-      StructType tblSchema = spark.read().format("iceberg").load(table).schema();
+      StructType tblSchema = spark.read().format("iceberg").load(tableToLoad).schema();
 
       // build select list that matches target schema: use existing columns or nulls cast to the
       // target type
@@ -224,7 +253,7 @@ public class VerbatimExtensionsInterpretation {
       }
 
       // write to existing Iceberg table (append; use overwritePartitions() if needed)
-      toWrite.writeTo(table).overwritePartitions();
+      toWrite.writeTo(tableToLoad).overwritePartitions();
     }
   }
 
@@ -284,7 +313,7 @@ public class VerbatimExtensionsInterpretation {
     FileSystem fileSystem = getFileSystem(spark, config);
     /* ############ standard init block - end ########## */
 
-    processExtensions(spark, config, datasetId, attempt, args.icebergCatalog, args.dwcCoreTerm);
+    processExtensions(spark, config, datasetId, attempt, args.dwcCoreTerm);
 
     fileSystem.close();
     spark.stop();
