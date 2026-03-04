@@ -208,7 +208,10 @@ public class EsIndexUtils {
       // add the alias 'liveAlias_old' to the current live indicies,
       // so we can easily switch back if something goes wrong
       swapIndexesWithoutDeletion(
-          client, Set.of(liveAlias + "_old_" + System.currentTimeMillis()), liveIndices, Collections.emptySet());
+          client,
+          Set.of(liveAlias + "_old_" + System.currentTimeMillis()),
+          liveIndices,
+          Collections.emptySet());
 
       // do the proper swap
       swapIndexesWithoutDeletion(client, Set.of(liveAlias), rebuiltIndices, Set.of());

@@ -13,7 +13,9 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.*;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.dwc.terms.Term;
+import org.gbif.occurrence.download.hive.EventHDFSTableDefinition;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.occurrence.download.hive.HiveDataTypes;
 import org.gbif.occurrence.download.hive.OccurrenceHDFSTableDefinition;
@@ -45,7 +47,7 @@ public class TableUtil {
     }
   }
 
-  public static String getCreateTableSQL(String prefix, String tableName) {
+  public static String getCreateTableSQL(DatasetType datasetType, String prefix, String tableName) {
     return String.format(
         """
                   CREATE TABLE IF NOT EXISTS %s%s
@@ -62,13 +64,22 @@ public class TableUtil {
                     'commit.retry.max-wait-ms' = '10000'
                   )
                 """,
-        prefix, tableName, getFieldDefinitions());
+        prefix, tableName, getFieldDefinitions(datasetType));
   }
 
-  static String getFieldDefinitions() {
-    return OccurrenceHDFSTableDefinition.definition().stream()
-        .map(field -> field.getHiveField() + " " + field.getHiveDataType())
-        .collect(Collectors.joining(", \n"));
+  static String getFieldDefinitions(DatasetType datasetType) {
+
+    if (datasetType == DatasetType.OCCURRENCE) {
+      return OccurrenceHDFSTableDefinition.definition().stream()
+          .map(field -> field.getHiveField() + " " + field.getHiveDataType())
+          .collect(Collectors.joining(", \n"));
+    }
+    if (datasetType == DatasetType.SAMPLING_EVENT) {
+      return EventHDFSTableDefinition.definition().stream()
+          .map(field -> field.getHiveField() + " " + field.getHiveDataType())
+          .collect(Collectors.joining(", \n"));
+    }
+    throw new IllegalArgumentException("Unsupported dataset type: " + datasetType);
   }
 
   public static String getCreateMultimediaTableSQL(String prefix, String coreDwcTerm) {
@@ -162,14 +173,8 @@ public class TableUtil {
     return hdfsColumnList;
   }
 
-  public static String getFieldDefns() {
-    return OccurrenceHDFSTableDefinition.definition().stream()
-        .map(field -> field.getHiveField() + " " + field.getHiveDataType())
-        .collect(Collectors.joining(", \n"));
-  }
-
-  public static String getCreateTableSQL(String tableName) {
-    return getCreateTableSQL("", tableName);
+  public static String getCreateTableSQL(DatasetType datasetType, String tableName) {
+    return getCreateTableSQL(datasetType, "", tableName);
   }
 
   public static String getCreateMultimediaTableSQL(String coreDwcTerm) {

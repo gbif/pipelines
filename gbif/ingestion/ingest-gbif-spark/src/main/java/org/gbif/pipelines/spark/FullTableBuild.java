@@ -17,6 +17,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.*;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.pipelines.IngestUtils;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
@@ -101,12 +102,21 @@ public class FullTableBuild {
       return;
     }
 
-    if (args.coreDwcTerm == null
-        || args.coreDwcTerm.isEmpty()
-        || !SUPPORTED_CORE_TERMS.contains(args.coreDwcTerm)) {
-      log.error("coreDwcTerm is required and cannot be empty");
-      jCommander.usage();
-      return;
+    DatasetType datasetType;
+    switch (args.coreDwcTerm.toLowerCase()) {
+      case "occurrence":
+        datasetType = DatasetType.OCCURRENCE;
+        break;
+      case "event":
+        datasetType = DatasetType.SAMPLING_EVENT;
+        break;
+      default:
+        log.error(
+            "Invalid coreDwcTerm: {}. Supported values are: {}",
+            args.coreDwcTerm,
+            SUPPORTED_CORE_TERMS);
+        jCommander.usage();
+        return;
     }
 
     long start = System.currentTimeMillis();
@@ -174,7 +184,7 @@ public class FullTableBuild {
     String prefix = "rebuild_" + start + "_";
 
     // Create the occurrence table SQL
-    spark.sql(getCreateTableSQL(prefix, args.coreDwcTerm));
+    spark.sql(getCreateTableSQL(datasetType, prefix, args.coreDwcTerm));
 
     // get the hdfs columns from the parquet with mappings to iceberg columns
     Map<String, TableBuild.HdfsColumn> hdfsColumnList = getHdfsColumns(hdfs);

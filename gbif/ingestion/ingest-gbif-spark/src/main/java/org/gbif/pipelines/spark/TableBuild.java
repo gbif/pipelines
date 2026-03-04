@@ -24,6 +24,7 @@ import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
@@ -50,7 +51,7 @@ public class TableBuild {
     @Parameter(names = "--attempt", description = "Attempt number", required = true)
     private int attempt;
 
-    @Parameter(names = "--tableName", description = "Table name", required = true)
+    @Parameter(names = "--core", description = "Table name", required = true)
     private String tableName = "occurrence";
 
     @Parameter(names = "--sourceDirectory", description = "Table name", required = true)
@@ -94,8 +95,29 @@ public class TableBuild {
     FileSystem fileSystem = getFileSystem(spark, config);
 
     /* ############ standard init block - end ########## */
+    DatasetType datasetType;
+    switch (args.tableName.toLowerCase()) {
+      case "occurrence":
+        datasetType = DatasetType.OCCURRENCE;
+        break;
+      case "event":
+        datasetType = DatasetType.SAMPLING_EVENT;
+        break;
+      default:
+        log.error("Invalid coreDwcTerm: {}. Supported values are: {}");
+        jCommander.usage();
+        return;
+    }
+
     runTableBuild(
-        spark, fileSystem, config, datasetId, attempt, args.tableName, args.sourceDirectory);
+        spark,
+        fileSystem,
+        config,
+        datasetType,
+        datasetId,
+        attempt,
+        args.tableName,
+        args.sourceDirectory);
 
     spark.stop();
     spark.close();
@@ -141,6 +163,7 @@ public class TableBuild {
       SparkSession spark,
       FileSystem fileSystem,
       PipelinesConfig config,
+      DatasetType datasetType,
       String datasetId,
       int attempt,
       String coreDwcTerm,
@@ -193,7 +216,7 @@ public class TableBuild {
       log.info("Table {} does not exist and will be created", coreDwcTerm);
 
       // Create or populate the occurrence table SQL
-      spark.sql(getCreateTableSQL(coreDwcTerm));
+      spark.sql(getCreateTableSQL(datasetType, coreDwcTerm));
 
       log.info("Table {} created. Creating extension tables", coreDwcTerm);
 
