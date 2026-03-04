@@ -228,12 +228,10 @@ public class EventHdfsRecordConverterTest {
                 Base64.getDecoder()
                     .decode(hdfsRecord.getExtHumboldt().getBytes(StandardCharsets.UTF_8)))
             .contains(
-                """
-                        "targetLifeStageScope" : {
-                            "concepts" : [ "c1", "c11" ],
-                            "lineage" : [ "c0", "c1", "c00", "c11" ]
-                          }
-                    """));
+                "\"targetLifeStageScope\" : {\n"
+                    + "    \"concepts\" : [ \"c1\", \"c11\" ],\n"
+                    + "    \"lineage\" : [ \"c0\", \"c1\", \"c00\", \"c11\" ]\n"
+                    + "  }"));
   }
 
   @Test
