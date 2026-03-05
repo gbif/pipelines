@@ -246,11 +246,6 @@ public class EsIndexUtils {
             ? pipelinesConfig.getIndexConfig().getOccurrenceAlias()
             : pipelinesConfig.getIndexConfig().getEventAlias();
 
-    final String version =
-        datasetType.equals(DatasetType.OCCURRENCE)
-            ? pipelinesConfig.getIndexConfig().getOccurrenceVersion()
-            : pipelinesConfig.getIndexConfig().getEventVersion();
-
     final Integer numberOfShards =
         datasetType.equals(DatasetType.OCCURRENCE)
             ? pipelinesConfig.getStandalone().getOccurrenceIndexNumberOfShards()
