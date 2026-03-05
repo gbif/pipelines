@@ -6,18 +6,17 @@ import static org.gbif.pipelines.spark.Directories.VERBATIM_EXT_FILTERED;
 import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
 import static org.gbif.pipelines.spark.TableBuild.createExtensionTable;
+import static org.gbif.pipelines.spark.TableUtil.verbatimExtensionTableName;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.sql.*;
-import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
@@ -136,6 +135,7 @@ public class VerbatimExtensionsInterpretation {
       PipelinesConfig config,
       String datasetId,
       int attempt,
+      String icebergCatalog,
       String dwcCoreTerm) {
 
     String inputPath = String.format("%s/%s/%d", config.getInputPath(), datasetId, attempt);
@@ -164,76 +164,49 @@ public class VerbatimExtensionsInterpretation {
     // cache columns for later use
     Set<String> dfCols = new HashSet<>(Arrays.asList(optimized.columns()));
 
-    // get catalog tables
-    Dataset<Table> tables = spark.catalog().listTables(config.getHiveDB());
-    Map<String, Table> tableMap =
-        tables.collectAsList().stream()
-            .collect(Collectors.toMap(Table::name, t -> t, (t1, t2) -> t1));
+    // Check if we can create the table schema
+    Map<String, ExtensionTable> extensionTableMap =
+        ExtensionTable.tableExtensions().stream()
+            .collect(Collectors.toMap(ExtensionTable::getHiveTableName, et -> et));
 
     log.debug(
-        "Existing tables in catalog '{}': {}",
-        config.getHiveDB(),
-        String.join(", ", tableMap.keySet()));
+        "Available extension tables: {}",
+        extensionTableMap.keySet().stream().collect(Collectors.joining(", ")));
 
     // Write partitioned Parquet output (flat schema)
     for (String dir : directories) {
 
-      Pattern pattern = Pattern.compile("^" + dwcCoreTerm + "_ext_" + ".*_" + dir + "$");
-      List<String> matches = tableMap.keySet().stream().filter(pattern.asPredicate()).toList();
-
-      String tableToLoad = null;
-
-      if (matches.isEmpty()) {
-        log.info("No table found for directory '{}', will check if we can create it", dir);
-      } else if (matches.size() > 1) {
+      // find the supported extension for this directory name
+      ExtensionTable extensionTable = extensionTableMap.get(dir.toLowerCase());
+      if (extensionTable == null) {
         log.warn(
-            "Multiple tables found for directory '{}': {}, this is unexpected and may indicate an issue",
+            "Directory '{}' does not match any supported extension, skipping processing for this directory",
+            dir);
+        continue;
+      }
+
+      String table =
+          icebergCatalog
+              + "."
+              + verbatimExtensionTableName(
+                  extensionTable, dwcCoreTerm); // e.g. iceberg_catalog.default.ac_extension
+
+      if (!spark.catalog().tableExists(table)) {
+        log.info(
+            "ExtensionTable found for directory '{}', table schema can be created: {}",
             dir,
-            String.join(", ", matches));
-      } else {
-        log.info("Table '{}' already exists for directory '{}'", matches.get(0), dir);
+            extensionTable.getSchema());
+        // creating table
+        createExtensionTable(spark, extensionTable, dwcCoreTerm);
       }
 
-      if (matches.isEmpty()) {
-
-        log.info("Table does not exist, checking if we should create for {}", dir);
-
-        // Check if we can create the table schema
-        Map<String, ExtensionTable> extensionTableMap =
-            ExtensionTable.tableExtensions().stream()
-                .collect(
-                    Collectors.toMap(
-                        ExtensionTable::getHiveTableName, // e.g. ac_extension
-                        et -> et));
-
-        if (log.isDebugEnabled()) {
-          log.debug("Available ExtensionTables: {}", String.join(", ", extensionTableMap.keySet()));
-        }
-
-        if (!extensionTableMap.containsKey(dir)) {
-          log.warn("No ExtensionTable found for directory '{}', will not create table schema", dir);
-          continue;
-        } else {
-          ExtensionTable extTable = extensionTableMap.get(dir);
-          log.info(
-              "ExtensionTable found for directory '{}', table schema can be created: {}",
-              dir,
-              extTable.getSchema());
-          // creating table
-          createExtensionTable(spark, extTable, dwcCoreTerm);
-        }
-      } else {
-        tableToLoad = matches.get(0);
-      }
-
-      log.info("Processing extension directory '{}' into table '{}'", dir, tableToLoad);
+      log.info("Processing extension directory '{}' into table '{}'", dir, table);
       spark
           .sparkContext()
-          .setJobGroup(
-              "extension-" + tableToLoad, "Loading extension data into table " + tableToLoad, true);
+          .setJobGroup("extension-" + table, "Loading extension data into table " + table, true);
 
       // get target table schema (table must exist)
-      StructType tblSchema = spark.read().format("iceberg").load(tableToLoad).schema();
+      StructType tblSchema = spark.read().format("iceberg").load(table).schema();
 
       // build select list that matches target schema: use existing columns or nulls cast to the
       // target type
@@ -251,7 +224,7 @@ public class VerbatimExtensionsInterpretation {
       }
 
       // write to existing Iceberg table (append; use overwritePartitions() if needed)
-      toWrite.writeTo(tableToLoad).overwritePartitions();
+      toWrite.writeTo(table).overwritePartitions();
     }
   }
 
@@ -311,7 +284,7 @@ public class VerbatimExtensionsInterpretation {
     FileSystem fileSystem = getFileSystem(spark, config);
     /* ############ standard init block - end ########## */
 
-    processExtensions(spark, config, datasetId, attempt, args.dwcCoreTerm);
+    processExtensions(spark, config, datasetId, attempt, args.icebergCatalog, args.dwcCoreTerm);
 
     fileSystem.close();
     spark.stop();
