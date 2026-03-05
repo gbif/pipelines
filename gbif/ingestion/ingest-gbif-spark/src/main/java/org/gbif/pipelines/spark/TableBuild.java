@@ -3,6 +3,8 @@ package org.gbif.pipelines.spark;
 import static org.gbif.pipelines.ConfigUtil.loadConfig;
 import static org.gbif.pipelines.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.coordinator.DistributedUtil.timeAndRecPerSecond;
+import static org.gbif.pipelines.spark.Constants.DATASET_TYPE_ARG;
+import static org.gbif.pipelines.spark.Constants.SOURCE_DIRECTORY_ARG;
 import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
 import static org.gbif.pipelines.spark.TableUtil.*;
@@ -51,10 +53,13 @@ public class TableBuild {
     @Parameter(names = "--attempt", description = "Attempt number", required = true)
     private int attempt;
 
-    @Parameter(names = "--core", description = "Table name", required = true)
-    private String tableName = "occurrence";
+    @Parameter(
+        names = DATASET_TYPE_ARG,
+        description = "OCCURRENCE or SAMPLING_EVENT",
+        required = true)
+    private DatasetType datasetType;
 
-    @Parameter(names = "--sourceDirectory", description = "Table name", required = true)
+    @Parameter(names = SOURCE_DIRECTORY_ARG, description = "Table name", required = true)
     private String sourceDirectory = "hdfs";
 
     @Parameter(names = "--config", description = "Path to YAML configuration file")
@@ -95,29 +100,13 @@ public class TableBuild {
     FileSystem fileSystem = getFileSystem(spark, config);
 
     /* ############ standard init block - end ########## */
-    DatasetType datasetType;
-    switch (args.tableName.toLowerCase()) {
-      case "occurrence":
-        datasetType = DatasetType.OCCURRENCE;
-        break;
-      case "event":
-        datasetType = DatasetType.SAMPLING_EVENT;
-        break;
-      default:
-        log.error("Invalid coreDwcTerm: {}. Supported values are: {}");
-        jCommander.usage();
-        return;
+    if (args.datasetType != DatasetType.OCCURRENCE
+        && args.datasetType != DatasetType.SAMPLING_EVENT) {
+      throw new IllegalArgumentException("Invalid dataset type: " + args.datasetType);
     }
 
     runTableBuild(
-        spark,
-        fileSystem,
-        config,
-        datasetType,
-        datasetId,
-        attempt,
-        args.tableName,
-        args.sourceDirectory);
+        spark, fileSystem, config, args.datasetType, datasetId, attempt, args.sourceDirectory);
 
     spark.stop();
     spark.close();
@@ -156,7 +145,6 @@ public class TableBuild {
    * @param config Pipelines config
    * @param datasetId Dataset ID
    * @param attempt Attempt number
-   * @param coreDwcTerm table name e.g. occurrence or event
    * @param sourceDirectory Source directory of parquet files
    */
   public static <T> void runTableBuild(
@@ -166,9 +154,10 @@ public class TableBuild {
       DatasetType datasetType,
       String datasetId,
       int attempt,
-      String coreDwcTerm,
       String sourceDirectory)
       throws Exception {
+
+    String coreDwcTerm = datasetType == DatasetType.OCCURRENCE ? "occurrence" : "event";
 
     spark.udf().register("base64_decode", new Base64DecodeUDF(), DataTypes.StringType);
     spark.udf().register("cleanDelimiters", new CleanDelimiterCharsUdf(), DataTypes.StringType);

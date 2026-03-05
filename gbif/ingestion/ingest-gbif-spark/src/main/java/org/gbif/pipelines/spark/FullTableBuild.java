@@ -2,6 +2,7 @@ package org.gbif.pipelines.spark;
 
 import static org.gbif.pipelines.ConfigUtil.loadConfig;
 import static org.gbif.pipelines.coordinator.DistributedUtil.timeAndRecPerSecond;
+import static org.gbif.pipelines.spark.Constants.DATASET_TYPE_ARG;
 import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
 import static org.gbif.pipelines.spark.TableUtil.*;
@@ -58,11 +59,8 @@ public class FullTableBuild {
         required = true)
     private String sourceDirectory = "hdfs";
 
-    @Parameter(
-        names = "--coreDwcTerm",
-        description = "Core Darwin Core term to build the table for, e.g. 'occurrence' or 'event'",
-        required = true)
-    private String coreDwcTerm = "occurrence";
+    @Parameter(names = DATASET_TYPE_ARG, description = "OCCURRENCE or SAMPLING_EVENT")
+    private DatasetType datasetType = DatasetType.OCCURRENCE;
 
     @Parameter(
         names = "--unsuccessfulDumpFilename",
@@ -102,21 +100,9 @@ public class FullTableBuild {
       return;
     }
 
-    DatasetType datasetType;
-    switch (args.coreDwcTerm.toLowerCase()) {
-      case "occurrence":
-        datasetType = DatasetType.OCCURRENCE;
-        break;
-      case "event":
-        datasetType = DatasetType.SAMPLING_EVENT;
-        break;
-      default:
-        log.error(
-            "Invalid coreDwcTerm: {}. Supported values are: {}",
-            args.coreDwcTerm,
-            SUPPORTED_CORE_TERMS);
-        jCommander.usage();
-        return;
+    if (args.datasetType != DatasetType.OCCURRENCE
+        && args.datasetType != DatasetType.SAMPLING_EVENT) {
+      throw new IllegalArgumentException("Invalid dataset type: " + args.datasetType);
     }
 
     long start = System.currentTimeMillis();
@@ -127,7 +113,7 @@ public class FullTableBuild {
     SparkSession spark =
         getSparkSession(
             args.master,
-            "Rebuild iceberg tables - " + args.coreDwcTerm,
+            "Rebuild iceberg tables - " + args.datasetType,
             config,
             TableBuild::configSparkSession);
     FileSystem fileSystem = getFileSystem(spark, config);
@@ -154,8 +140,10 @@ public class FullTableBuild {
             .parquet(scanResult.successfulPaths().toArray(new String[0]))
             .coalesce(args.numberOfShards);
 
+    String coreDwcTerm = args.datasetType == DatasetType.OCCURRENCE ? "occurrence" : "event";
+
     String tempLoadingTable =
-        String.format("%s_%s_%d", args.coreDwcTerm, "rebuild", System.currentTimeMillis());
+        String.format("%s_%s_%d", coreDwcTerm, "rebuild", System.currentTimeMillis());
 
     // Switch to the configured Hive database
     spark.sql("USE " + config.getHiveDB());
@@ -184,7 +172,7 @@ public class FullTableBuild {
     String prefix = "rebuild_" + start + "_";
 
     // Create the occurrence table SQL
-    spark.sql(getCreateTableSQL(datasetType, prefix, args.coreDwcTerm));
+    spark.sql(getCreateTableSQL(args.datasetType, prefix, coreDwcTerm));
 
     // get the hdfs columns from the parquet with mappings to iceberg columns
     Map<String, TableBuild.HdfsColumn> hdfsColumnList = getHdfsColumns(hdfs);
@@ -194,7 +182,7 @@ public class FullTableBuild {
         spark
             .read()
             .format("iceberg")
-            .load(String.format("%s.%s%s", config.getHiveDB(), prefix, args.coreDwcTerm))
+            .load(String.format("%s.%s%s", config.getHiveDB(), prefix, coreDwcTerm))
             .schema();
 
     // Build the insert query
@@ -203,7 +191,7 @@ public class FullTableBuild {
             "INSERT OVERWRITE TABLE %s.%s%s (%s) SELECT %s FROM %s.%s",
             config.getHiveDB(),
             prefix,
-            args.coreDwcTerm,
+            coreDwcTerm,
             Arrays.stream(tblSchema.fields())
                 .map(StructField::name)
                 .collect(Collectors.joining(", ")),
@@ -211,7 +199,7 @@ public class FullTableBuild {
             config.getHiveDB(),
             tempLoadingTable);
 
-    log.debug("Inserting data into {} table: {}", args.coreDwcTerm, insertQuery);
+    log.debug("Inserting data into {} table: {}", coreDwcTerm, insertQuery);
 
     // Execute the insert
     spark.sql(insertQuery);
@@ -220,14 +208,14 @@ public class FullTableBuild {
     spark.sql("DROP TABLE " + tempLoadingTable);
 
     // Create occurrence_multimedia table
-    spark.sql(getCreateMultimediaTableSQL(prefix, args.coreDwcTerm));
+    spark.sql(getCreateMultimediaTableSQL(prefix, coreDwcTerm));
 
     // Insert multimedia data into the occurrence_multimedia table
     insertOverwriteMultimediaTable(
-        spark, prefix + args.coreDwcTerm, prefix + args.coreDwcTerm + "_multimedia");
+        spark, prefix + coreDwcTerm, prefix + coreDwcTerm + "_multimedia");
 
     // if its the event table, also create the event_humboldt table and insert data
-    if (args.coreDwcTerm.equalsIgnoreCase("event")) {
+    if (coreDwcTerm.equalsIgnoreCase("event")) {
       // For event table, also create the event_humboldt table and insert data
       // Create event_humboldt table
       String tableName = prefix + "event_humboldt";
@@ -237,7 +225,7 @@ public class FullTableBuild {
 
     log.info("Renaming tables to final names if the flag is set: {}", args.switchOnSuccess);
     if (args.switchOnSuccess) {
-      switchLiveTables(args.coreDwcTerm, spark, config, prefix);
+      switchLiveTables(coreDwcTerm, spark, config, prefix);
     }
 
     log.info(timeAndRecPerSecond("full-table-build", start, avroToHdfsCountAttempted));

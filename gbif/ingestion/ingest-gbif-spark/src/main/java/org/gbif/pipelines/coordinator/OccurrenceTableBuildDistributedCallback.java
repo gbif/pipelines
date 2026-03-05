@@ -1,11 +1,16 @@
 package org.gbif.pipelines.coordinator;
 
+import static org.gbif.pipelines.spark.Constants.DATASET_TYPE_ARG;
+import static org.gbif.pipelines.spark.Constants.SOURCE_DIRECTORY_ARG;
+
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.spark.Directories;
 
 @Slf4j
 public class OccurrenceTableBuildDistributedCallback extends OccurrenceTableBuildCallback {
@@ -23,11 +28,13 @@ public class OccurrenceTableBuildDistributedCallback extends OccurrenceTableBuil
     DistributedUtil.runPipeline(
         pipelinesConfig,
         message,
-        "tablebuild",
+        "occurrence-tablebuild",
         fileSystem,
         pipelinesConfig.getAirflowConfig().tableBuildDag,
         StepType.HDFS_VIEW,
-        List.of("--tableName=occurrence", "--sourceDirectory=hdfs"));
+        List.of(
+            DATASET_TYPE_ARG + "=" + DatasetType.OCCURRENCE,
+            SOURCE_DIRECTORY_ARG + "=" + Directories.OCCURRENCE_HDFS));
   }
 
   @Override

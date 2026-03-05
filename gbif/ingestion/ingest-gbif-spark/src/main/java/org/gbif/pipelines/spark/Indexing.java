@@ -3,8 +3,8 @@ package org.gbif.pipelines.spark;
 import static org.gbif.pipelines.ConfigUtil.loadConfig;
 import static org.gbif.pipelines.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.coordinator.DistributedUtil.timeAndRecPerSecond;
-import static org.gbif.pipelines.spark.Directories.EVENT_JSON;
-import static org.gbif.pipelines.spark.Directories.OCCURRENCE_JSON;
+import static org.gbif.pipelines.spark.Constants.DATASET_TYPE_ARG;
+import static org.gbif.pipelines.spark.Constants.SOURCE_DIRECTORY_ARG;
 import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
 
@@ -42,7 +42,6 @@ public class Indexing {
   public static final String ES_INDEX_NAME_ARG = "--esIndexName";
   public static final String ES_INDEX_ALIAS_ARG = "--esIndexAlias";
   public static final String ES_INDEX_NUMBER_OF_SHARDS_ARG = "--indexNumberShards";
-  public static final String ES_INDEX_DATASET_TYPE = "--datasetType";
 
   @Parameters(separators = "=")
   private static class Args {
@@ -71,8 +70,14 @@ public class Indexing {
         description = "Number of primary shards in the target index. Default = 3")
     private Integer indexNumberShards = 3;
 
-    @Parameter(names = ES_INDEX_DATASET_TYPE, description = "OCCURRENCE or SAMPLING_EVENT")
+    @Parameter(names = DATASET_TYPE_ARG, description = "OCCURRENCE or SAMPLING_EVENT")
     private DatasetType datasetType = DatasetType.OCCURRENCE;
+
+    @Parameter(
+        names = SOURCE_DIRECTORY_ARG,
+        description = "Source directory for parquet files",
+        required = true)
+    private String sourceDirectory = "json";
 
     @Parameter(
         names = "--config",
@@ -125,7 +130,7 @@ public class Indexing {
           config.getIndexConfig().getOccurrenceSchemaPath(),
           args.indexNumberShards,
           OccurrenceJsonRecord.class,
-          OCCURRENCE_JSON);
+          args.sourceDirectory);
     } else if (args.datasetType == DatasetType.SAMPLING_EVENT) {
       runIndexing(
           spark,
@@ -138,9 +143,10 @@ public class Indexing {
           config.getIndexConfig().getEventSchemaPath(),
           args.indexNumberShards,
           ParentJsonRecord.class,
-          EVENT_JSON);
+          args.sourceDirectory);
     } else {
       log.error("Unsupported dataset type: {}", args.datasetType);
+      throw new IllegalArgumentException("Invalid dataset type: " + args.datasetType);
     }
 
     spark.stop();

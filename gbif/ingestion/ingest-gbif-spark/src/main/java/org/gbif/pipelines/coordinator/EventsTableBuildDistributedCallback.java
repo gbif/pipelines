@@ -1,10 +1,13 @@
 package org.gbif.pipelines.coordinator;
 
+import static org.gbif.pipelines.spark.Constants.DATASET_TYPE_ARG;
+import static org.gbif.pipelines.spark.Constants.SOURCE_DIRECTORY_ARG;
 import static org.gbif.pipelines.spark.Directories.EVENT_HDFS;
 
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -25,11 +28,13 @@ public class EventsTableBuildDistributedCallback extends EventsTableBuildCallbac
     DistributedUtil.runPipeline(
         pipelinesConfig,
         message,
-        "tablebuild",
+        "event-tablebuild",
         fileSystem,
         pipelinesConfig.getAirflowConfig().eventsTableBuildDag,
         StepType.EVENTS_HDFS_VIEW,
-        List.of("--tableName=event", "--sourceDirectory=" + EVENT_HDFS));
+        List.of(
+            DATASET_TYPE_ARG + "=" + DatasetType.SAMPLING_EVENT,
+            SOURCE_DIRECTORY_ARG + "=" + EVENT_HDFS));
   }
 
   @Override
