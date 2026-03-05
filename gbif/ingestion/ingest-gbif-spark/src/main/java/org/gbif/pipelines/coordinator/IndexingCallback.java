@@ -27,11 +27,14 @@ public class IndexingCallback
       PipelinesConfig pipelinesConfig, MessagePublisher publisher, String master) {
     super(pipelinesConfig, publisher, master);
 
-    try {
-      initialiseIndex();
-    } catch (IOException e) {
-      log.error("Error initialising index", e);
-      throw new RuntimeException(e);
+    if (isStandalone()) {
+      log.info("Running in standalone mode, initialising index");
+      try {
+        initialiseIndex();
+      } catch (IOException e) {
+        log.error("Error initialising index", e);
+        throw new RuntimeException(e);
+      }
     }
   }
 
@@ -73,7 +76,7 @@ public class IndexingCallback
       }
       defaultIndexName =
           EsIndexUtils.initialiseDefaultIndex(
-              pipelinesConfig, httpClient, DatasetType.OCCURRENCE, "NOT_USED", -1);
+              pipelinesConfig, httpClient, DatasetType.OCCURRENCE, "NOT_USED", 1);
     }
   }
 
