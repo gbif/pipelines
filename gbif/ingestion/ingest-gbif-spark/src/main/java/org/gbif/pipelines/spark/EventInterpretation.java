@@ -30,6 +30,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.converters.*;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.event.EventHdfsRecord;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 import org.gbif.pipelines.transform.*;
 import scala.Tuple2;
@@ -237,27 +238,29 @@ public class EventInterpretation {
         Encoders.bean(ParentJsonRecord.class));
   }
 
-  private static Dataset<OccurrenceHdfsRecord> toHdfs(
+  private static Dataset<EventHdfsRecord> toHdfs(
       Dataset<Event> simpleRecords, MetadataRecord metadata) {
     return simpleRecords.map(
-        (MapFunction<Event, OccurrenceHdfsRecord>)
+        (MapFunction<Event, EventHdfsRecord>)
             record -> {
-              OccurrenceHdfsRecordConverter c =
-                  OccurrenceHdfsRecordConverter.builder()
+              EventHdfsRecordConverter c =
+                  EventHdfsRecordConverter.builder()
                       .metadataRecord(metadata)
                       .extendedRecord(MAPPER.readValue(record.getVerbatim(), ExtendedRecord.class))
                       .locationRecord(MAPPER.readValue(record.getLocation(), LocationRecord.class))
                       .temporalRecord(MAPPER.readValue(record.getTemporal(), TemporalRecord.class))
-                      .multiTaxonRecord(MAPPER.readValue(record.getTaxon(), MultiTaxonRecord.class))
                       .identifierRecord(
                           MAPPER.readValue(record.getIdentifier(), IdentifierRecord.class))
                       .multimediaRecord(
                           MAPPER.readValue(record.getMultimedia(), MultimediaRecord.class))
+                      .eventCoreRecord(
+                          MAPPER.readValue(record.getEventCore(), EventCoreRecord.class))
+                      .humboldtRecord(MAPPER.readValue(record.getHumboldt(), HumboldtRecord.class))
                       .build();
 
               return c.convert();
             },
-        Encoders.bean(OccurrenceHdfsRecord.class));
+        Encoders.bean(EventHdfsRecord.class));
   }
 
   public static Dataset<Event> runTransforms(
@@ -271,7 +274,6 @@ public class EventInterpretation {
     // Used transforms
     LocationTransform locationTransform = LocationTransform.create(config);
     TemporalTransform temporalTransform = TemporalTransform.create(config);
-    MultiTaxonomyTransform taxonomyTransform = MultiTaxonomyTransform.create(config);
     MultimediaTransform multimediaTransform = MultimediaTransform.create(config);
     AudubonTransform audubonTransform = AudubonTransform.create(config);
     ImageTransform imageTransform = ImageTransform.create(config);
@@ -295,7 +297,6 @@ public class EventInterpretation {
                   EventLineage eventLineage = row._2;
                   IdentifierRecord idr =
                       identifierTransform.convert(verbatim, metadata.getDatasetKey());
-                  MultiTaxonRecord tr = taxonomyTransform.convert(verbatim);
                   LocationRecord lr = locationTransform.convert(verbatim, metadata);
                   TemporalRecord ter = temporalTransform.convert(verbatim);
                   MultimediaRecord mr = multimediaTransform.convert(verbatim);
@@ -327,7 +328,6 @@ public class EventInterpretation {
                       .lineage(lineageIds)
                       .identifier(MAPPER.writeValueAsString(idr))
                       .verbatim(MAPPER.writeValueAsString(verbatim))
-                      .taxon(MAPPER.writeValueAsString(tr))
                       .location(MAPPER.writeValueAsString(lr))
                       .temporal(MAPPER.writeValueAsString(ter))
                       .multimedia(MAPPER.writeValueAsString(mmr))
