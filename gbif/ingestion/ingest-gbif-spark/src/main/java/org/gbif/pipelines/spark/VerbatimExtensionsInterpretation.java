@@ -203,9 +203,7 @@ public class VerbatimExtensionsInterpretation {
             ExtensionTable.tableExtensions().stream()
                 .collect(
                     Collectors.toMap(
-                        ext ->
-                            TableUtil.verbatimExtensionTableName(
-                                ext, dwcCoreTerm), // e.g. ac_extension
+                        ExtensionTable::getHiveTableName, // e.g. ac_extension
                         et -> et));
 
         if (log.isDebugEnabled()) {
