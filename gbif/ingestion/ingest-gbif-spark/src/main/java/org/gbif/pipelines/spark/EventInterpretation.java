@@ -30,6 +30,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.converters.*;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.event.EventHdfsRecord;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 import org.gbif.pipelines.transform.*;
 import scala.Tuple2;
@@ -237,27 +238,29 @@ public class EventInterpretation {
         Encoders.bean(ParentJsonRecord.class));
   }
 
-  private static Dataset<OccurrenceHdfsRecord> toHdfs(
+  private static Dataset<EventHdfsRecord> toHdfs(
       Dataset<Event> simpleRecords, MetadataRecord metadata) {
     return simpleRecords.map(
-        (MapFunction<Event, OccurrenceHdfsRecord>)
+        (MapFunction<Event, EventHdfsRecord>)
             record -> {
-              OccurrenceHdfsRecordConverter c =
-                  OccurrenceHdfsRecordConverter.builder()
+              EventHdfsRecordConverter c =
+                  EventHdfsRecordConverter.builder()
                       .metadataRecord(metadata)
                       .extendedRecord(MAPPER.readValue(record.getVerbatim(), ExtendedRecord.class))
                       .locationRecord(MAPPER.readValue(record.getLocation(), LocationRecord.class))
                       .temporalRecord(MAPPER.readValue(record.getTemporal(), TemporalRecord.class))
-                      .multiTaxonRecord(MAPPER.readValue(record.getTaxon(), MultiTaxonRecord.class))
                       .identifierRecord(
                           MAPPER.readValue(record.getIdentifier(), IdentifierRecord.class))
                       .multimediaRecord(
                           MAPPER.readValue(record.getMultimedia(), MultimediaRecord.class))
+                      .humboldtRecord(MAPPER.readValue(record.getHumboldt(), HumboldtRecord.class))
+                      .eventCoreRecord(
+                          MAPPER.readValue(record.getEventCore(), EventCoreRecord.class))
                       .build();
 
               return c.convert();
             },
-        Encoders.bean(OccurrenceHdfsRecord.class));
+        Encoders.bean(EventHdfsRecord.class));
   }
 
   public static Dataset<Event> runTransforms(
