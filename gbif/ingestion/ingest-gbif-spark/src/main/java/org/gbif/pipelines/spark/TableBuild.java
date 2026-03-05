@@ -59,7 +59,10 @@ public class TableBuild {
         required = true)
     private DatasetType datasetType;
 
-    @Parameter(names = SOURCE_DIRECTORY_ARG, description = "Table name", required = true)
+    @Parameter(
+        names = SOURCE_DIRECTORY_ARG,
+        description = "Directory containing parquet to load",
+        required = true)
     private String sourceDirectory = "hdfs";
 
     @Parameter(names = "--config", description = "Path to YAML configuration file")
@@ -204,7 +207,7 @@ public class TableBuild {
     } else {
       log.info("Table {} does not exist and will be created", coreDwcTerm);
 
-      // Create or populate the occurrence table SQL
+      // Create or populate the core table SQL
       spark.sql(getCreateTableSQL(datasetType, coreDwcTerm));
 
       log.info("Table {} created. Creating extension tables", coreDwcTerm);
@@ -266,7 +269,7 @@ public class TableBuild {
     // if a sampling event dataset, create the humboldt_event table if it does not exist and
     // populate it
     if (datasetType == DatasetType.SAMPLING_EVENT) {
-      if (!spark.catalog().tableExists(coreDwcTerm + "_multimedia")) {
+      if (!spark.catalog().tableExists(coreDwcTerm + "_humboldt")) {
         // populate the humboldt_event table
         spark.sql(getCreateIfNotExistsHumboldt(coreDwcTerm));
       }

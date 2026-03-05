@@ -42,7 +42,7 @@ public class EventsIndexingDistributedCallback extends EventsIndexingCallback {
             Indexing.ES_INDEX_NUMBER_OF_SHARDS_ARG + "=" + indexSettings.getNumberOfShards(),
             Indexing.ES_INDEX_ALIAS_ARG + "=" + indexSettings.getIndexAlias(),
             DATASET_TYPE_ARG + "=" + DatasetType.SAMPLING_EVENT,
-            SOURCE_DIRECTORY_ARG + "=" + Directories.OCCURRENCE_JSON);
+            SOURCE_DIRECTORY_ARG + "=" + Directories.EVENT_JSON);
 
     DistributedUtil.runPipeline(
         pipelinesConfig,
