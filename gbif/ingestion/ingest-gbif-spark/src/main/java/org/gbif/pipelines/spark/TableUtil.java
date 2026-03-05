@@ -529,7 +529,6 @@ public class TableUtil {
                     'commit.retry.num-retries' = '10',
                     'commit.retry.min-wait-ms' = '1000',
                     'commit.retry.max-wait-ms' = '10000'
-                    'write.merge.isolation-level' = 'snapshot'
                 )
                 """,
         verbatimExtensionTableName(extensionTable, coreDwcTerm), fieldList);
