@@ -471,20 +471,24 @@ public class CalculateDerivedMetadata implements Serializable {
                 iter -> {
 
                   // eventid -> list of coordinates
-                  Map<String, List<Coordinate>> acc = new HashMap<>();
+                  Map<String, Set<Coordinate>> acc = new HashMap<>();
 
                   while (iter.hasNext()) {
                     EventCoordinate ec = iter.next();
-                    acc.computeIfAbsent(ec.getEventId(), k -> new ArrayList<>())
+                    acc.computeIfAbsent(ec.getEventId(), k -> new HashSet<>())
                         .add(new Coordinate(ec.getLongitude(), ec.getLatitude()));
                   }
 
                   List<Tuple2<String, String>> out = new ArrayList<>();
-                  for (Map.Entry<String, List<Coordinate>> e : acc.entrySet()) {
-                    Geometry hull = ConvexHullParser.fromCoordinates(e.getValue()).getConvexHull();
-
-                    String partialHull = new WKTWriter().write(hull);
-                    out.add(new Tuple2<>(e.getKey(), partialHull));
+                  for (Map.Entry<String, Set<Coordinate>> e : acc.entrySet()) {
+                    if (!e.getValue().isEmpty()) {
+                      Geometry hull =
+                          ConvexHullParser.fromCoordinates(e.getValue()).getConvexHull();
+                      if (hull.isValid() && !hull.isEmpty()) {
+                        String partialHull = new WKTWriter().write(hull);
+                        out.add(new Tuple2<>(e.getKey(), partialHull));
+                      }
+                    }
                   }
 
                   return out.iterator();
@@ -501,7 +505,7 @@ public class CalculateDerivedMetadata implements Serializable {
             .reduceGroups(
                 (ReduceFunction<Tuple2<String, String>>)
                     (a, b) -> {
-                      List<Coordinate> mergedCoords = new ArrayList<>();
+                      Set<Coordinate> mergedCoords = new HashSet<>();
                       String eventId = a._1();
                       String wkt1 = a._2();
                       String wkt2 = b._2();
@@ -513,16 +517,15 @@ public class CalculateDerivedMetadata implements Serializable {
                       Geometry geometry2 = reader.read(wkt2);
                       mergedCoords.addAll(Arrays.asList(geometry1.getCoordinates()));
                       mergedCoords.addAll(Arrays.asList(geometry2.getCoordinates()));
-                      Geometry mergedGeom =
-                          ConvexHullParser.fromCoordinates(mergedCoords).getConvexHull();
-                      String mergedWkt = new WKTWriter().write(mergedGeom);
-                      return new Tuple2(eventId, mergedWkt);
+
+                      Optional<String> geometry = ConvexHullUtils.calculateGeometry(mergedCoords);
+
+                      return geometry.map(s -> new Tuple2(eventId, s)).orElse(null);
                     })
+            .filter(Objects::nonNull)
             .map(
                 (MapFunction<Tuple2<String, Tuple2<String, String>>, Tuple2<String, String>>)
-                    t -> {
-                      return new Tuple2<>(t._1, t._2._2);
-                    },
+                    t -> new Tuple2<>(t._1, t._2._2),
                 Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
 
     hulls.write().mode(SaveMode.Overwrite).parquet(outputPath + "/derived/convex_hull");

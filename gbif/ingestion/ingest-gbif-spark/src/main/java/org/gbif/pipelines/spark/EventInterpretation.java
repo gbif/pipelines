@@ -5,7 +5,6 @@ import static org.gbif.pipelines.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.coordinator.DistributedUtil.timeAndRecPerSecond;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.OccurrenceInterpretation.getMetadataRecord;
-import static org.gbif.pipelines.spark.OccurrenceInterpretation.loadExtendedRecords;
 import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
 
@@ -13,17 +12,23 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.logging.log4j.ThreadContext;
+import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -41,6 +46,11 @@ public class EventInterpretation {
   static final ObjectMapper MAPPER = new ObjectMapper();
 
   public static final String METRICS_FILENAME = "verbatim-to-event.yml";
+
+  private static final List<String> EXTENSIONS_WITH_OCCS =
+      List.of(
+          Extension.EXTENDED_MEASUREMENT_OR_FACT.getRowType(),
+          Extension.DNA_DERIVED_DATA.getRowType());
 
   @Parameters(separators = "=")
   private static class Args {
@@ -343,5 +353,68 @@ public class EventInterpretation {
 
     // re-load
     return spark.read().parquet(outputPath + "/" + SIMPLE_EVENT).as(Encoders.bean(Event.class));
+  }
+
+  private static Dataset<ExtendedRecord> loadExtendedRecords(
+      SparkSession spark,
+      PipelinesConfig config,
+      String inputPath,
+      String outputPath,
+      int numberOfShards) {
+
+    final Set<String> allowExtensions =
+        Optional.ofNullable(config.getExtensionsAllowedForVerbatimSet())
+            .orElse(Collections.emptySet());
+
+    Dataset<ExtendedRecord> extended =
+        spark
+            .read()
+            .format("parquet")
+            .load(inputPath + "/" + OCCURRENCE_VERBATIM)
+            .as(Encoders.bean(ExtendedRecord.class))
+            .filter(
+                (FilterFunction<ExtendedRecord>) er -> er != null && !er.getCoreTerms().isEmpty())
+            .map(
+                (MapFunction<ExtendedRecord, ExtendedRecord>)
+                    er -> {
+                      Map<String, List<Map<String, String>>> extensions = new HashMap<>();
+                      er.getExtensions().entrySet().stream()
+                          .filter(es -> allowExtensions.contains(es.getKey()))
+                          .filter(es -> !es.getValue().isEmpty())
+                          .forEach(
+                              es -> {
+                                if (EXTENSIONS_WITH_OCCS.contains(es.getKey())) {
+                                  List<Map<String, String>> parsedExtension =
+                                      es.getValue().stream()
+                                          .filter(
+                                              v ->
+                                                  !v.containsKey(
+                                                      DwcTerm.occurrenceID.qualifiedName()))
+                                          .collect(Collectors.toList());
+
+                                  if (!parsedExtension.isEmpty()) {
+                                    extensions.put(es.getKey(), parsedExtension);
+                                  }
+                                } else {
+                                  extensions.put(es.getKey(), es.getValue());
+                                }
+                              });
+                      return ExtendedRecord.newBuilder()
+                          .setId(er.getId())
+                          .setCoreId(er.getId())
+                          .setCoreTerms(er.getCoreTerms())
+                          .setExtensions(extensions)
+                          .build();
+                    },
+                Encoders.bean(ExtendedRecord.class))
+            .repartition(numberOfShards);
+
+    // write to parquet for downstream steps
+    extended.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + VERBATIM_EXT_FILTERED);
+    // reload
+    return spark
+        .read()
+        .parquet(outputPath + "/" + VERBATIM_EXT_FILTERED)
+        .as(Encoders.bean(ExtendedRecord.class));
   }
 }
