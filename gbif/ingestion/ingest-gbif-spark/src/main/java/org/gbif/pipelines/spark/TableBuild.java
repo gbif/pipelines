@@ -263,7 +263,7 @@ public class TableBuild {
 
     // process verbatim extensions
     VerbatimExtensionsInterpretation.processExtensions(
-        spark, config, datasetId, attempt, coreDwcTerm);
+        spark, config, datasetId, attempt, config.getHiveDB(), coreDwcTerm);
 
     // Create multimedia table if it does not exist
     if (!spark.catalog().tableExists(coreDwcTerm + "_multimedia")) {
