@@ -176,8 +176,9 @@ public class VerbatimExtensionsInterpretation {
     // Write partitioned Parquet output (flat schema)
     for (String dir : directories) {
 
+      String normalisedDir = dir.toLowerCase().replaceAll("_", "");
       // find the supported extension for this directory name
-      ExtensionTable extensionTable = extensionTableMap.get(dir.toLowerCase());
+      ExtensionTable extensionTable = extensionTableMap.get(normalisedDir);
       if (extensionTable == null) {
         log.warn(
             "Directory '{}' does not match any supported extension, skipping processing for this directory",
@@ -193,8 +194,9 @@ public class VerbatimExtensionsInterpretation {
 
       if (!spark.catalog().tableExists(table)) {
         log.info(
-            "ExtensionTable found for directory '{}', table schema can be created: {}",
+            "ExtensionTable found for directory '{}' normalised '{}', table schema can be created: {}",
             dir,
+            normalisedDir,
             extensionTable.getSchema());
         // creating table
         createExtensionTable(spark, extensionTable, dwcCoreTerm);
