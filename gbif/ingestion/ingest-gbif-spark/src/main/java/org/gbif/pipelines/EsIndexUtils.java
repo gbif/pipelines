@@ -261,15 +261,16 @@ public class EsIndexUtils {
 
     if (indexName.isEmpty()) {
 
-      log.info("create the default index for small datasets..");
       String indexToBeCreated = defaultIndexPrefix + "_" + System.currentTimeMillis();
+      log.info("create the default index for small datasets {}", indexToBeCreated);
+
       // create the default index, and add the alias to it, if the index doesn't exist
       EsIndexUtils.createIndexAndAliasForDefault(
           Indexing.ElasticOptions.fromArgsAndConfig(
               pipelinesConfig,
-              schemaPath,
-              indexToBeCreated,
               esAlias,
+              indexToBeCreated,
+              schemaPath,
               datasetId,
               attempt,
               numberOfShards));
