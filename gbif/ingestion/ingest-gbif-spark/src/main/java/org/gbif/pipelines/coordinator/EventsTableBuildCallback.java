@@ -49,7 +49,6 @@ public class EventsTableBuildCallback
         DatasetType.SAMPLING_EVENT,
         message.getDatasetUuid().toString(),
         message.getAttempt(),
-        tableName,
         sourceDirectory);
   }
 

@@ -48,7 +48,6 @@ public class OccurrenceTableBuildCallback
         DatasetType.OCCURRENCE,
         message.getDatasetUuid().toString(),
         message.getAttempt(),
-        tableName,
         sourceDirectory);
   }
 

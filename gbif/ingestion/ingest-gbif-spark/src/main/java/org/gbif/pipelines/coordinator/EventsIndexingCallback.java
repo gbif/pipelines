@@ -11,7 +11,6 @@ import org.gbif.common.messaging.api.MessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesEventsIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretationMessage;
 import org.gbif.pipelines.EsIndexUtils;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
@@ -28,6 +27,16 @@ public class EventsIndexingCallback
   public EventsIndexingCallback(
       PipelinesConfig pipelinesConfig, MessagePublisher publisher, String master) {
     super(pipelinesConfig, publisher, master);
+
+    if (isStandalone()) {
+      log.info("Running in standalone mode, initialising index");
+      try {
+        initialiseIndex();
+      } catch (IOException e) {
+        log.error("Error initialising index", e);
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   @Override
@@ -43,7 +52,6 @@ public class EventsIndexingCallback
   @Override
   protected void runPipeline(PipelinesEventsInterpretedMessage message) throws Exception {
 
-    initialiseIndex(message);
     Indexing.runIndexing(
         sparkSession,
         fileSystem,
@@ -58,18 +66,14 @@ public class EventsIndexingCallback
         EVENT_JSON);
   }
 
-  private void initialiseIndex(PipelinesInterpretationMessage message) throws IOException {
+  private void initialiseIndex() throws IOException {
     if (defaultIndexName != null) {
       return;
     }
     synchronized (LOCK) {
       defaultIndexName =
           EsIndexUtils.initialiseDefaultIndex(
-              pipelinesConfig,
-              httpClient,
-              DatasetType.SAMPLING_EVENT,
-              message.getDatasetUuid().toString(),
-              message.getAttempt());
+              pipelinesConfig, httpClient, DatasetType.SAMPLING_EVENT, "NOT_USED", -1);
     }
   }
 

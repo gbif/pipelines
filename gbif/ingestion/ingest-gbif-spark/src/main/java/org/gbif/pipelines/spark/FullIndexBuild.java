@@ -3,7 +3,7 @@ package org.gbif.pipelines.spark;
 import static org.apache.spark.sql.functions.*;
 import static org.gbif.pipelines.ConfigUtil.loadConfig;
 import static org.gbif.pipelines.EsIndexUtils.createDefaultIndexNamePrefix;
-import static org.gbif.pipelines.spark.FullTableBuild.SUPPORTED_CORE_TERMS;
+import static org.gbif.pipelines.spark.Constants.DATASET_TYPE_ARG;
 import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
 
@@ -68,11 +68,8 @@ public class FullIndexBuild {
         required = true)
     private String sourceDirectory = "json";
 
-    @Parameter(
-        names = "--coreDwcTerm",
-        description = "Core Darwin Core term to build the table for, e.g. 'occurrence' or 'event'",
-        required = true)
-    private String coreDwcTerm = "occurrence";
+    @Parameter(names = DATASET_TYPE_ARG, description = "OCCURRENCE or SAMPLING_EVENT")
+    private DatasetType datasetType = DatasetType.OCCURRENCE;
 
     @Parameter(
         names = "--unsuccessfulDumpFilename",
@@ -111,14 +108,6 @@ public class FullIndexBuild {
       return;
     }
 
-    if (args.coreDwcTerm == null
-        || args.coreDwcTerm.isEmpty()
-        || !SUPPORTED_CORE_TERMS.contains(args.coreDwcTerm)) {
-      log.error("coreDwcTerm is required and cannot be empty");
-      jCommander.usage();
-      return;
-    }
-
     PipelinesConfig config = loadConfig(args.config);
     if (config == null || config.getIndexConfig() == null || config.getElastic() == null) {
       log.error("Invalid configuration file. Please provide a valid YAML configuration file.");
@@ -126,10 +115,12 @@ public class FullIndexBuild {
           "Invalid configuration file. Missing indexConfig or elastic configuration.");
     }
 
-    boolean isOccurrence = "occurrence".equalsIgnoreCase(args.coreDwcTerm);
+    if (args.datasetType != DatasetType.OCCURRENCE
+        && args.datasetType != DatasetType.SAMPLING_EVENT) {
+      throw new IllegalArgumentException("Invalid dataset type: " + args.datasetType);
+    }
 
-    final DatasetType datasetType =
-        isOccurrence ? DatasetType.OCCURRENCE : DatasetType.SAMPLING_EVENT;
+    boolean isOccurrence = args.datasetType == DatasetType.OCCURRENCE;
 
     final String esAlias =
         isOccurrence
@@ -209,7 +200,7 @@ public class FullIndexBuild {
 
     // new default name for this rebuild
     final String defaultIndexName =
-        createDefaultIndexNamePrefix(config, datasetType) + "_" + indexCreationTimestamp;
+        createDefaultIndexNamePrefix(config, args.datasetType) + "_" + indexCreationTimestamp;
 
     // create the empty indexes with the schema
     for (Map.Entry<String, Long> entry : datasetCounts.entrySet()) {
@@ -230,7 +221,7 @@ public class FullIndexBuild {
           recordCount < config.getIndexConfig().getBigIndexIfRecordsMoreThan()
               ? defaultIndexName
               : IndexSettings.computeLargeIndexName(
-                  datasetType,
+                  args.datasetType,
                   config.getIndexConfig(),
                   datasetKey,
                   attempt,

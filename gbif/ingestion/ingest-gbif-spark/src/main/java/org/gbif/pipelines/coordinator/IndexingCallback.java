@@ -26,6 +26,16 @@ public class IndexingCallback
   public IndexingCallback(
       PipelinesConfig pipelinesConfig, MessagePublisher publisher, String master) {
     super(pipelinesConfig, publisher, master);
+
+    if (isStandalone()) {
+      log.info("Running in standalone mode, initialising index");
+      try {
+        initialiseIndex();
+      } catch (IOException e) {
+        log.error("Error initialising index", e);
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   @Override
@@ -40,9 +50,6 @@ public class IndexingCallback
 
   @Override
   protected void runPipeline(PipelinesInterpretedMessage message) throws Exception {
-
-    initialiseIndex(message);
-
     Indexing.runIndexing(
         sparkSession,
         fileSystem,
@@ -57,7 +64,7 @@ public class IndexingCallback
         Directories.OCCURRENCE_JSON);
   }
 
-  private void initialiseIndex(PipelinesInterpretedMessage message) throws IOException {
+  private void initialiseIndex() throws IOException {
 
     if (defaultIndexName != null) {
       return;
@@ -69,11 +76,7 @@ public class IndexingCallback
       }
       defaultIndexName =
           EsIndexUtils.initialiseDefaultIndex(
-              pipelinesConfig,
-              httpClient,
-              DatasetType.OCCURRENCE,
-              message.getDatasetUuid().toString(),
-              message.getAttempt());
+              pipelinesConfig, httpClient, DatasetType.OCCURRENCE, "NOT_USED", 1);
     }
   }
 

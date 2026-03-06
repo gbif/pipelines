@@ -1,5 +1,8 @@
 package org.gbif.pipelines.coordinator;
 
+import static org.gbif.pipelines.spark.Constants.DATASET_TYPE_ARG;
+import static org.gbif.pipelines.spark.Constants.SOURCE_DIRECTORY_ARG;
+
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
@@ -8,6 +11,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.IndexSettings;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.spark.Directories;
 import org.gbif.pipelines.spark.Indexing;
 
 @Slf4j
@@ -37,7 +41,8 @@ public class IndexingDistributedCallback extends IndexingCallback {
             Indexing.ES_INDEX_NAME_ARG + "=" + indexSettings.getIndexName(),
             Indexing.ES_INDEX_NUMBER_OF_SHARDS_ARG + "=" + indexSettings.getNumberOfShards(),
             Indexing.ES_INDEX_ALIAS_ARG + "=" + indexSettings.getIndexAlias(),
-            Indexing.ES_INDEX_DATASET_TYPE + "=" + DatasetType.OCCURRENCE);
+            DATASET_TYPE_ARG + "=" + DatasetType.OCCURRENCE,
+            SOURCE_DIRECTORY_ARG + "=" + Directories.OCCURRENCE_JSON);
 
     DistributedUtil.runPipeline(
         pipelinesConfig,
