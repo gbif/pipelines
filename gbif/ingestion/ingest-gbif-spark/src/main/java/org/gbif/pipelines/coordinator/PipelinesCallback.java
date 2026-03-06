@@ -567,12 +567,14 @@ public abstract class PipelinesCallback<
           PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents);
       nodeEdges = workflow.getNodeEdges(getStepType());
 
-      log.debug(
-          "Workflow for {} containsOccurrences: {}, containsEvents: {} has nodes {} ",
-          message.getDatasetInfo().getDatasetType(),
-          containsOccurrences,
-          containsEvents,
-          nodeEdges);
+      if (log.isDebugEnabled() && nodeEdges != null) {
+        log.debug(
+            "Workflow for {} containsOccurrences: {}, containsEvents: {} has nodes {} ",
+            message.getDatasetInfo().getDatasetType(),
+            containsOccurrences,
+            containsEvents,
+            nodeEdges.stream().map(e -> e.getNode().name()).collect(Collectors.joining(", ")));
+      }
     }
 
     if (nodeEdges == null || nodeEdges.isEmpty()) {
