@@ -297,6 +297,10 @@ public abstract class PipelinesCallback<
               historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
             };
         Retry.decorateRunnable(RETRY, r).run();
+      } else {
+        log.warn(
+            "Execution id is null for datasetKey {}, can't mark execution as FINISHED if all steps are FINISHED",
+            message.getDatasetUuid());
       }
     }
   }

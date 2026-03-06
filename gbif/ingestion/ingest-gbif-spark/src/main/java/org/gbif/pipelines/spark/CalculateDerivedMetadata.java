@@ -1,10 +1,7 @@
 package org.gbif.pipelines.spark;
 
 import static org.apache.spark.sql.functions.col;
-import static org.gbif.pipelines.ConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.Directories.*;
-import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
-import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -17,7 +14,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.function.*;
 import org.apache.spark.sql.*;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.converters.JsonConverter;
 import org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
