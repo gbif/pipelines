@@ -40,28 +40,6 @@ public class CalculateDerivedMetadata implements Serializable {
 
   static final ObjectMapper MAPPER = new ObjectMapper();
 
-  public static void main(String[] args) throws Exception {
-
-    PipelinesConfig config =
-        loadConfig(
-            "/Users/djtfmartin/dev/my-forks/pipelines/gbif/ingestion/ingest-gbif-spark/pipelines.yaml");
-    String datasetId = "ecebee66-f913-4105-acb6-738430d0edc9";
-    int attempt = 1;
-
-    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
-
-    SparkSession spark =
-        getSparkSession("local[*]", "My app", config, OccurrenceInterpretation::configSparkSession);
-    FileSystem fileSystem = getFileSystem(spark, config);
-
-    runCalculateDerivedMetadata(spark, fileSystem, outputPath);
-
-    fileSystem.close();
-    spark.stop();
-    spark.close();
-    System.exit(0);
-  }
-
   public static Dataset<Event> addCalculateDerivedMetadata(
       SparkSession spark, FileSystem fs, String outputPath) throws IOException {
 

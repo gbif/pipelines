@@ -202,13 +202,15 @@ public class Indexing {
     // Read parquet files
     Dataset<T> df = spark.read().parquet(inputPath).as(Encoders.bean(recordClass));
 
+    String esMappingId = recordClass.equals(OccurrenceJsonRecord.class) ? "gbifId" : "internalId";
+
     // Write to Elasticsearch
     df.write()
         .format("org.elasticsearch.spark.sql")
         .option("es.resource", esIndexName)
         .option("es.batch.size.entries", config.getElastic().getEsMaxBatchSize())
         .option("es.batch.size.bytes", config.getElastic().getEsMaxBatchSizeBytes())
-        .option("es.mapping.id", "gbifId")
+        .option("es.mapping.id", esMappingId)
         .option("es.nodes.wan.only", "true")
         .option("es.batch.write.refresh", "false")
         .mode("append")
