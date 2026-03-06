@@ -320,41 +320,98 @@ public abstract class PipelinesCallback<
         trackingInfo.executionId,
         executionPipelineSteps);
 
+    log.debug(
+        "Execution steps size: {}, steps: {}",
+        executionPipelineSteps.size(),
+        executionPipelineSteps.stream()
+            .map(ps -> ps.getType().name())
+            .collect(Collectors.joining(", ")));
+
     List<PipelineStep> thisPipelineStep =
         executionPipelineSteps.stream().filter(ps -> ps.getType() == getStepType()).toList();
 
     if (thisPipelineStep.isEmpty()) {
       // expected when we opt to only execute one step with &onlyRequestedStep=true
       log.warn(
-          "Current step {} is not found in the execution steps, won't send outgoing message",
-          getStepType());
+          "Current step {} is not found in the execution steps, won't send outgoing message. Available steps: {}",
+          getStepType(),
+          executionPipelineSteps.stream()
+              .map(ps -> ps.getType().name())
+              .collect(Collectors.joining(", ")));
       return;
     }
 
     PipelineStep step = thisPipelineStep.get(0);
+    int idx = executionPipelineSteps.indexOf(step);
     // is this steptype the last in the list
-    if (!executionPipelineSteps.isEmpty()
-        && executionPipelineSteps.indexOf(step) == executionPipelineSteps.size() - 1) {
-      log.info("Current step {} is last step, won't send outgoing message", getStepType());
+    if (!executionPipelineSteps.isEmpty() && idx == executionPipelineSteps.size() - 1) {
+      log.info(
+          "Current step {} is last step (index {} of {}), won't send outgoing message",
+          getStepType(),
+          idx,
+          executionPipelineSteps.size());
       return;
     }
 
     // Create and send outgoing message
-    O outgoingMessage = createOutgoingMessage(message);
+    O outgoingMessage;
+    try {
+      outgoingMessage = createOutgoingMessage(message);
+    } catch (Exception e) {
+      log.error(
+          "Failed to create outgoing message for dataset {}: {}",
+          message.getDatasetUuid(),
+          e.getMessage(),
+          e);
+      return;
+    }
+
+    if (outgoingMessage == null) {
+      log.warn(
+          "createOutgoingMessage returned null for dataset {}, won't send outgoing message",
+          message.getDatasetUuid());
+      return;
+    }
+
+    if (publisher == null) {
+      log.error(
+          "Message publisher is null, cannot send outgoing message for dataset {}",
+          message.getDatasetUuid());
+      return;
+    }
 
     String nextMessageClassName = outgoingMessage.getClass().getSimpleName();
     String messagePayload = outgoingMessage.toString();
 
-    publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
+    Runnable sendRunnable =
+        () -> publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
 
-    String logInfo =
-        "Next message has been sent - "
-            + outgoingMessage.getClass().getSimpleName()
-            + ":"
-            + outgoingMessage;
-    log.debug(logInfo);
+    try {
+      Retry.decorateRunnable(RETRY, sendRunnable).run();
+      String logInfo =
+          "Next message has been sent - "
+              + outgoingMessage.getClass().getSimpleName()
+              + ":"
+              + outgoingMessage;
+      log.debug(logInfo);
+    } catch (Exception e) {
+      log.error(
+          "Failed to send outgoing message for dataset {} after retries: {}",
+          message.getDatasetUuid(),
+          e.getMessage(),
+          e);
+      return;
+    }
 
-    updateQueuedStatus(trackingInfo, message);
+    try {
+      updateQueuedStatus(trackingInfo, message);
+    } catch (Exception e) {
+      log.error(
+          "Failed to update queued status after sending outgoing message for dataset {}: {}",
+          message.getDatasetUuid(),
+          e.getMessage(),
+          e);
+    }
   }
 
   private static void checkIfPaused() {
