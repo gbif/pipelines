@@ -1,69 +1,38 @@
 package org.gbif.pipelines.tasks.balancer.handler;
 
-import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
+import static org.gbif.pipelines.tasks.balancer.handler.VerbatimMessageHandler.computeRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.model.pipelines.StepRunner;
-import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.tasks.balancer.BalancerConfiguration;
 
-/**
- * Populates and sends the {@link PipelinesInterpretedMessage} message, the main method is {@link
- * EventsMessageHandler#handle}
- */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EventsMessageHandler {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  /** Main handler, basically computes the runner type and sends to the same consumer */
   public static void handle(
       BalancerConfiguration config, MessagePublisher publisher, PipelinesBalancerMessage message)
       throws IOException {
 
     log.info("Process PipelinesEventsMessage - {}", message);
 
-    PipelinesEventsMessage m = MAPPER.readValue(message.getPayload(), PipelinesEventsMessage.class);
+    // Populate message fields
+    PipelinesEventsMessage outputMessage =
+        MAPPER.readValue(message.getPayload(), PipelinesEventsMessage.class);
 
-    // TODO: Remove and control message sending via RabbitMQ routing
-    if (config.stepConfig.eventsEnabled
-        && m.getDatasetType() == DatasetType.SAMPLING_EVENT
-        && !isValidator(m.getPipelineSteps())) {
+    StepRunner runner = computeRunner(config, outputMessage);
+    outputMessage.setRunner(runner.name());
 
-      Set<String> interpretationTypes = new HashSet<>(m.getInterpretTypes());
-      interpretationTypes.add(RecordType.EVENT.name());
-      interpretationTypes.remove(RecordType.OCCURRENCE.name());
-
-      PipelinesEventsMessage eventsMessage =
-          new PipelinesEventsMessage(
-              m.getDatasetUuid(),
-              m.getAttempt(),
-              m.getPipelineSteps(),
-              m.getNumberOfEventRecords(),
-              m.getNumberOfOccurrenceRecords(),
-              StepRunner.DISTRIBUTED.name(),
-              m.isRepeatAttempt(),
-              m.getResetPrefix(),
-              m.getExecutionId(),
-              m.getEndpointType(),
-              m.getValidationResult(),
-              interpretationTypes,
-              DatasetType.SAMPLING_EVENT);
-
-      publisher.send(eventsMessage);
-      log.info("The events message has been sent - {}", eventsMessage);
-    }
+    publisher.send(outputMessage);
+    log.info("The message has been sent - {}", outputMessage);
   }
 }
