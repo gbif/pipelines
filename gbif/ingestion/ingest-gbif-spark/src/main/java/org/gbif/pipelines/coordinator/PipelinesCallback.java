@@ -383,11 +383,8 @@ public abstract class PipelinesCallback<
     String nextMessageClassName = outgoingMessage.getClass().getSimpleName();
     String messagePayload = outgoingMessage.toString();
 
-    Runnable sendRunnable =
-        () -> publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
-
     try {
-      Retry.decorateRunnable(RETRY, sendRunnable).run();
+      publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
       String logInfo =
           "Next message has been sent - "
               + outgoingMessage.getClass().getSimpleName()
