@@ -269,11 +269,12 @@ public class TableBuild {
     // if a sampling event dataset, create the humboldt_event table if it does not exist and
     // populate it
     if (datasetType == DatasetType.SAMPLING_EVENT) {
-      if (!spark.catalog().tableExists(coreDwcTerm + "_humboldt")) {
-        // populate the humboldt_event table
-        spark.sql(getCreateIfNotExistsHumboldt(coreDwcTerm));
+      String humboldtTableName = coreDwcTerm + "_humboldt";
+      if (!spark.catalog().tableExists(humboldtTableName)) {
+        // populate the event table
+        spark.sql(getCreateIfNotExistsHumboldt(humboldtTableName));
       }
-      insertOverwriteHumboldtTableFromTemp(spark, tempCoreTable, coreDwcTerm + "_humboldt");
+      insertOverwriteHumboldtTableFromTemp(spark, tempCoreTable, humboldtTableName);
     }
 
     // Drop the temporary table
