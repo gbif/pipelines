@@ -143,6 +143,7 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>models</artifactId>
       <version>${project.version}</version>
+      <optional>true</optional>
     </dependency>
   </dependencies>
 

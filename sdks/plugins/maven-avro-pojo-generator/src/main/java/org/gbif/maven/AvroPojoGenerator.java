@@ -61,34 +61,38 @@ public class AvroPojoGenerator extends AbstractMojo {
             path -> {
               try {
                 JsonNode schemaNode = mapper.readTree(path.toFile());
-                processSchema(schemaNode, outputDir);
+                // pass packageName as the default namespace for top-level schemas in the file
+                processSchema(schemaNode, outputDir, packageName);
               } catch (IOException e) {
                 getLog().error("Failed to process " + path, e);
               }
             });
   }
 
-  private void processSchema(JsonNode schemaNode, String outputDir) throws IOException {
+  private void processSchema(JsonNode schemaNode, String outputDir, String defaultNamespace)
+      throws IOException {
     if (schemaNode.isArray()) {
       Iterator<JsonNode> iter = schemaNode.iterator();
       while (iter.hasNext()) {
-        processSchema(iter.next(), outputDir);
+        processSchema(iter.next(), outputDir, defaultNamespace);
       }
     } else {
       String type = schemaNode.get("type").asText();
 
       if ("record".equals(type)) {
-        generateRecordClass(schemaNode, outputDir);
+        generateRecordClass(schemaNode, outputDir, defaultNamespace);
       } else if ("enum".equals(type)) {
-        generateEnum(schemaNode, outputDir);
+        generateEnum(schemaNode, outputDir, defaultNamespace);
       }
     }
   }
 
-  private void generateRecordClass(JsonNode schemaNode, String outputDir) throws IOException {
+  private void generateRecordClass(JsonNode schemaNode, String outputDir, String defaultNamespace)
+      throws IOException {
     String className = schemaNode.get("name").asText();
+    // use the schema's namespace if present otherwise the passed defaultNamespace
     String namespace =
-        schemaNode.has("namespace") ? schemaNode.get("namespace").asText() : packageName;
+        schemaNode.has("namespace") ? schemaNode.get("namespace").asText() : defaultNamespace;
     String packageDir = namespace.replace('.', '/');
     File outputFolder = new File(outputDir, packageDir);
     if (!outputFolder.exists()) outputFolder.mkdirs();
@@ -105,6 +109,9 @@ public class AvroPojoGenerator extends AbstractMojo {
 
   private String buildClass(JsonNode schemaNode, String namespace) {
     String className = schemaNode.get("name").asText();
+
+    System.out.println("Generating class: " + namespace + "." + className);
+
     JsonNode fields = schemaNode.get("fields");
 
     Set<String> imports = new HashSet<>();
@@ -172,22 +179,22 @@ public class AvroPojoGenerator extends AbstractMojo {
     if (fields.size() < 255) {
       sb.append(
           """
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @EqualsAndHashCode
-    @Builder(builderClassName = "Builder", builderMethodName = "newBuilder", setterPrefix = "set")
-    """);
+        @Data
+        @AllArgsConstructor
+        @NoArgsConstructor
+        @EqualsAndHashCode
+        @Builder(builderClassName = "Builder", builderMethodName = "newBuilder", setterPrefix = "set")
+        """);
     } else { // use SuperBuilder to avoid constructor issues with too many parameters
       sb.append(
           """
-    @Data
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @EqualsAndHashCode
-    @SuperBuilder(builderMethodName = "newBuilder", setterPrefix = "set")
-    """);
+        @Data
+        @Getter
+        @Setter
+        @NoArgsConstructor
+        @EqualsAndHashCode
+        @SuperBuilder(builderMethodName = "newBuilder", setterPrefix = "set")
+        """);
     }
 
     sb.append("public class ").append(className);
@@ -211,10 +218,12 @@ public class AvroPojoGenerator extends AbstractMojo {
     return sb.toString();
   }
 
-  private void generateEnum(JsonNode schemaNode, String outputDir) throws IOException {
+  private void generateEnum(JsonNode schemaNode, String outputDir, String defaultNamespace)
+      throws IOException {
     String enumName = schemaNode.get("name").asText();
+    // use the schema's namespace if present otherwise the passed defaultNamespace
     String namespace =
-        schemaNode.has("namespace") ? schemaNode.get("namespace").asText() : packageName;
+        schemaNode.has("namespace") ? schemaNode.get("namespace").asText() : defaultNamespace;
     String packageDir = namespace.replace('.', '/');
     File outputFolder = new File(outputDir, packageDir);
     if (!outputFolder.exists()) outputFolder.mkdirs();
@@ -259,7 +268,8 @@ public class AvroPojoGenerator extends AbstractMojo {
         case "record":
         case "enum":
           try {
-            processSchema(typeNode, outputDir.getAbsolutePath());
+            // pass currentNamespace so nested types inherit the parent's namespace when none is set
+            processSchema(typeNode, outputDir.getAbsolutePath(), currentNamespace);
           } catch (IOException e) {
             throw new RuntimeException("Failed to generate nested type", e);
           }
