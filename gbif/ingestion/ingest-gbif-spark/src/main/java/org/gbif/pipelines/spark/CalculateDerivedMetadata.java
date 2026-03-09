@@ -2,6 +2,7 @@ package org.gbif.pipelines.spark;
 
 import static org.apache.spark.sql.functions.col;
 import static org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser.PRECISION;
+import static org.gbif.pipelines.spark.ConvexHullUtils.*;
 import static org.gbif.pipelines.spark.Directories.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -495,9 +496,9 @@ public class CalculateDerivedMetadata implements Serializable {
                     Geometry geometry = reader.read(geometries.next()._2());
                     mergedCoords.addAll(Arrays.asList(geometry.getCoordinates()));
                   }
-                  Optional<String> hull = ConvexHullUtils.calculateGeometry(mergedCoords);
-                  return hull.map(
-                          s -> Collections.singletonList(new Tuple2<>(eventId, s)).iterator())
+
+                  return calculateGeometry(mergedCoords)
+                      .map(s -> Collections.singletonList(new Tuple2<>(eventId, s)).iterator())
                       .orElse(Collections.emptyIterator());
                 },
             Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
