@@ -496,9 +496,9 @@ public class CalculateDerivedMetadata implements Serializable {
                     mergedCoords.addAll(Arrays.asList(geometry.getCoordinates()));
                   }
                   Optional<String> hull = ConvexHullUtils.calculateGeometry(mergedCoords);
-                  return hull.isPresent()
-                      ? Collections.singletonList(new Tuple2<>(eventId, hull.get())).iterator()
-                      : Collections.emptyIterator();
+                  return hull.map(
+                          s -> Collections.singletonList(new Tuple2<>(eventId, s)).iterator())
+                      .orElse(Collections.emptyIterator());
                 },
             Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
 
