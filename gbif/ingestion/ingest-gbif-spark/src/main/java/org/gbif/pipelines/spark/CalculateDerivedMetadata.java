@@ -1,12 +1,14 @@
 package org.gbif.pipelines.spark;
 
 import static org.apache.spark.sql.functions.col;
+import static org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser.PRECISION;
 import static org.gbif.pipelines.spark.Directories.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.Function;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
@@ -451,10 +453,14 @@ public class CalculateDerivedMetadata implements Serializable {
                   // eventid -> list of coordinates
                   Map<String, Set<Coordinate>> acc = new HashMap<>();
 
+                  Function<Double, Double> round = v -> Math.round(v * PRECISION) / PRECISION;
+
                   while (iter.hasNext()) {
                     EventCoordinate ec = iter.next();
                     acc.computeIfAbsent(ec.getEventId(), k -> new HashSet<>())
-                        .add(new Coordinate(ec.getLongitude(), ec.getLatitude()));
+                        .add(
+                            new Coordinate(
+                                round.apply(ec.getLongitude()), round.apply(ec.getLatitude())));
                   }
 
                   List<Tuple2<String, String>> out = new ArrayList<>();
