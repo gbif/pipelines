@@ -40,6 +40,15 @@ public class PipelinesXmlMessageHandler {
 
     publisher.send(outputMessage);
 
-    log.info("The message has been sent - {}", outputMessage);
+    if (log.isTraceEnabled()) {
+      log.trace("The message has been sent - {}", outputMessage);
+    }
+
+    log.info(
+        "Outgoing dataset: {}, attempt: {}, executionID: {}, runner: {}",
+        outputMessage.getDatasetInfo(),
+        outputMessage.getExecutionId(),
+        outputMessage.getRoutingKey(),
+        outputMessage.getAttempt());
   }
 }

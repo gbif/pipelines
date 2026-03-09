@@ -343,7 +343,7 @@ public abstract class PipelinesCallback<
 
     PipelineStep step = thisPipelineStep.get(0);
     int idx = executionPipelineSteps.indexOf(step);
-    // is this steptype the last in the list
+    // is this step type the last in the list
     if (!executionPipelineSteps.isEmpty() && idx == executionPipelineSteps.size() - 1) {
       log.info(
           "Current step {} is last step (index {} of {}), won't send outgoing message",
@@ -385,12 +385,11 @@ public abstract class PipelinesCallback<
 
     try {
       publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
-      String logInfo =
-          "Next message has been sent - "
-              + outgoingMessage.getClass().getSimpleName()
-              + ":"
-              + outgoingMessage;
-      log.debug(logInfo);
+      log.info(
+          "Message sent to balancer for {}, executionId: {}, step {}",
+          outgoingMessage.getDatasetInfo(),
+          outgoingMessage.getExecutionId(),
+          this.getStepType().name());
     } catch (Exception e) {
       log.error(
           "Failed to send outgoing message for dataset {} after retries: {}",
