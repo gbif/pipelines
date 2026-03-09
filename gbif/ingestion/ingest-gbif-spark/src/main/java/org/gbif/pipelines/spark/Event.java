@@ -22,7 +22,6 @@ public class Event {
   String verbatim;
   String identifier;
   String location;
-  String taxon;
   String temporal;
   String multimedia;
   String audubon;

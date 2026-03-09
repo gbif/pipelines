@@ -1,12 +1,15 @@
 package org.gbif.pipelines.spark;
 
 import static org.apache.spark.sql.functions.col;
+import static org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser.PRECISION;
+import static org.gbif.pipelines.spark.ConvexHullUtils.*;
 import static org.gbif.pipelines.spark.Directories.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.Function;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
@@ -34,7 +37,7 @@ import scala.Tuple3;
 @Slf4j
 public class CalculateDerivedMetadata implements Serializable {
 
-  static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   public static Dataset<Event> addCalculateDerivedMetadata(
       SparkSession spark, FileSystem fs, String outputPath) throws IOException {
@@ -116,8 +119,6 @@ public class CalculateDerivedMetadata implements Serializable {
 
   public static Dataset<Tuple2<String, String>> calculateTaxonomicCoverage(
       String outputPath, Dataset<Occurrence> occurrence) {
-
-    ObjectMapper MAPPER = new ObjectMapper();
 
     // creates a EventID -> TaxonCoverage map
     Dataset<EventTaxonCoverage> taxonomicCoverages =
@@ -451,20 +452,28 @@ public class CalculateDerivedMetadata implements Serializable {
                 iter -> {
 
                   // eventid -> list of coordinates
-                  Map<String, List<Coordinate>> acc = new HashMap<>();
+                  Map<String, Set<Coordinate>> acc = new HashMap<>();
+
+                  Function<Double, Double> round = v -> Math.round(v * PRECISION) / PRECISION;
 
                   while (iter.hasNext()) {
                     EventCoordinate ec = iter.next();
-                    acc.computeIfAbsent(ec.getEventId(), k -> new ArrayList<>())
-                        .add(new Coordinate(ec.getLongitude(), ec.getLatitude()));
+                    acc.computeIfAbsent(ec.getEventId(), k -> new HashSet<>())
+                        .add(
+                            new Coordinate(
+                                round.apply(ec.getLongitude()), round.apply(ec.getLatitude())));
                   }
 
                   List<Tuple2<String, String>> out = new ArrayList<>();
-                  for (Map.Entry<String, List<Coordinate>> e : acc.entrySet()) {
-                    Geometry hull = ConvexHullParser.fromCoordinates(e.getValue()).getConvexHull();
-
-                    String partialHull = new WKTWriter().write(hull);
-                    out.add(new Tuple2<>(e.getKey(), partialHull));
+                  for (Map.Entry<String, Set<Coordinate>> e : acc.entrySet()) {
+                    if (!e.getValue().isEmpty()) {
+                      Geometry hull =
+                          ConvexHullParser.fromCoordinates(e.getValue()).getConvexHull();
+                      if (hull.isValid() && !hull.isEmpty()) {
+                        String partialHull = new WKTWriter().write(hull);
+                        out.add(new Tuple2<>(e.getKey(), partialHull));
+                      }
+                    }
                   }
 
                   return out.iterator();
@@ -477,33 +486,22 @@ public class CalculateDerivedMetadata implements Serializable {
 
     // merge partial hulls
     Dataset<Tuple2<String, String>> hulls =
-        groupedPartial
-            .reduceGroups(
-                (ReduceFunction<Tuple2<String, String>>)
-                    (a, b) -> {
-                      List<Coordinate> mergedCoords = new ArrayList<>();
-                      String eventId = a._1();
-                      String wkt1 = a._2();
-                      String wkt2 = b._2();
+        groupedPartial.flatMapGroups(
+            (FlatMapGroupsFunction<String, Tuple2<String, String>, Tuple2<String, String>>)
+                (eventId, geometries) -> {
+                  Set<Coordinate> mergedCoords = new HashSet<>();
+                  GeometryFactory geometryFactory = new GeometryFactory();
+                  WKTReader reader = new WKTReader(geometryFactory);
+                  while (geometries.hasNext()) {
+                    Geometry geometry = reader.read(geometries.next()._2());
+                    mergedCoords.addAll(Arrays.asList(geometry.getCoordinates()));
+                  }
 
-                      GeometryFactory geometryFactory = new GeometryFactory();
-                      WKTReader reader = new WKTReader(geometryFactory);
-
-                      Geometry geometry1 = reader.read(wkt1);
-                      Geometry geometry2 = reader.read(wkt2);
-                      mergedCoords.addAll(Arrays.asList(geometry1.getCoordinates()));
-                      mergedCoords.addAll(Arrays.asList(geometry2.getCoordinates()));
-                      Geometry mergedGeom =
-                          ConvexHullParser.fromCoordinates(mergedCoords).getConvexHull();
-                      String mergedWkt = new WKTWriter().write(mergedGeom);
-                      return new Tuple2(eventId, mergedWkt);
-                    })
-            .map(
-                (MapFunction<Tuple2<String, Tuple2<String, String>>, Tuple2<String, String>>)
-                    t -> {
-                      return new Tuple2<>(t._1, t._2._2);
-                    },
-                Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
+                  return calculateGeometry(mergedCoords)
+                      .map(s -> Collections.singletonList(new Tuple2<>(eventId, s)).iterator())
+                      .orElse(Collections.emptyIterator());
+                },
+            Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
 
     hulls.write().mode(SaveMode.Overwrite).parquet(outputPath + "/derived/convex_hull");
 
