@@ -34,7 +34,7 @@ import scala.Tuple3;
 @Slf4j
 public class CalculateDerivedMetadata implements Serializable {
 
-  static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   public static Dataset<Event> addCalculateDerivedMetadata(
       SparkSession spark, FileSystem fs, String outputPath) throws IOException {
@@ -116,8 +116,6 @@ public class CalculateDerivedMetadata implements Serializable {
 
   public static Dataset<Tuple2<String, String>> calculateTaxonomicCoverage(
       String outputPath, Dataset<Occurrence> occurrence) {
-
-    ObjectMapper MAPPER = new ObjectMapper();
 
     // creates a EventID -> TaxonCoverage map
     Dataset<EventTaxonCoverage> taxonomicCoverages =
