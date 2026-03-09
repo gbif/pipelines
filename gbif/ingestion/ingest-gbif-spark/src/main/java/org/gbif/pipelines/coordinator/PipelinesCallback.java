@@ -233,7 +233,11 @@ public abstract class PipelinesCallback<
     ThreadContext.put("step", getStepType().name());
 
     try {
-      log.info("Processing attempt {}", message.getAttempt());
+      log.info(
+          "Processing executionId {}, step {} attempt {}",
+          message.getExecutionId(),
+          message.getAttempt(),
+          getStepType().name());
 
       trackingInfo = trackPipelineStep(message);
 
@@ -297,6 +301,10 @@ public abstract class PipelinesCallback<
               historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
             };
         Retry.decorateRunnable(RETRY, r).run();
+      } else {
+        log.warn(
+            "Execution id is null for datasetKey {}, can't mark execution as FINISHED if all steps are FINISHED",
+            message.getDatasetUuid());
       }
     }
   }
@@ -316,41 +324,108 @@ public abstract class PipelinesCallback<
         trackingInfo.executionId,
         executionPipelineSteps);
 
+    log.debug(
+        "Execution ID {}, steps size: {}, steps: {}",
+        trackingInfo.executionId,
+        executionPipelineSteps.size(),
+        executionPipelineSteps.stream()
+            .map(ps -> ps.getType().name())
+            .collect(Collectors.joining(", ")));
+
     List<PipelineStep> thisPipelineStep =
         executionPipelineSteps.stream().filter(ps -> ps.getType() == getStepType()).toList();
 
     if (thisPipelineStep.isEmpty()) {
       // expected when we opt to only execute one step with &onlyRequestedStep=true
       log.warn(
-          "Current step {} is not found in the execution steps, won't send outgoing message",
-          getStepType());
+          "Execution ID {}, current step {} is not found in the execution steps, won't send outgoing message. Available steps: {}",
+          trackingInfo.executionId,
+          getStepType(),
+          executionPipelineSteps.stream()
+              .map(ps -> ps.getType().name())
+              .collect(Collectors.joining(", ")));
       return;
     }
 
-    PipelineStep step = thisPipelineStep.get(0);
-    // is this steptype the last in the list
-    if (!executionPipelineSteps.isEmpty()
-        && executionPipelineSteps.indexOf(step) == executionPipelineSteps.size() - 1) {
-      log.info("Current step {} is last step, won't send outgoing message", getStepType());
-      return;
+    // if there is no more steps in the execution to run, dont send messages
+    if (!executionPipelineSteps.isEmpty()) {
+      // are there any incomplete steps left in the execution? if not,
+      // don't send message to balancer, just mark execution as finished
+      Set<PipelineStep> unprocessed =
+          executionPipelineSteps.stream()
+              .filter(ps -> !PROCESSED_STATE_SET.contains(ps.getState()))
+              .collect(Collectors.toSet());
+      if (unprocessed.isEmpty()) {
+        log.info(
+            "Execution ID {}, all steps are processed for execution, won't send outgoing message. Steps: {}",
+            trackingInfo.executionId,
+            executionPipelineSteps.stream()
+                .map(ps -> ps.getType().name() + ":" + ps.getState().name())
+                .collect(Collectors.joining(", ")));
+        return;
+      }
     }
 
     // Create and send outgoing message
-    O outgoingMessage = createOutgoingMessage(message);
+    O outgoingMessage;
+    try {
+      outgoingMessage = createOutgoingMessage(message);
+    } catch (Exception e) {
+      log.error(
+          "Failed to create outgoing message for executionID {} dataset {}: {}",
+          trackingInfo.executionId,
+          message.getDatasetUuid(),
+          e.getMessage(),
+          e);
+      return;
+    }
+
+    if (outgoingMessage == null) {
+      log.warn(
+          "createOutgoingMessage returned null for dataset {} and executionID {}, won't send outgoing message",
+          message.getDatasetUuid(),
+          trackingInfo.executionId);
+      return;
+    }
+
+    if (publisher == null) {
+      log.error(
+          "Message publisher is null, cannot send outgoing message for dataset {} and executionID {}",
+          message.getDatasetUuid(),
+          trackingInfo.executionId);
+      return;
+    }
 
     String nextMessageClassName = outgoingMessage.getClass().getSimpleName();
     String messagePayload = outgoingMessage.toString();
 
-    publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
+    try {
+      publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
+      log.info(
+          "Message sent to balancer for {}, executionId: {}, step {}",
+          outgoingMessage.getDatasetInfo(),
+          outgoingMessage.getExecutionId(),
+          this.getStepType().name());
+    } catch (Exception e) {
+      log.error(
+          "Failed to send outgoing message for dataset {} and executionID {} after retries: {}",
+          message.getDatasetUuid(),
+          trackingInfo.executionId,
+          e.getMessage(),
+          e);
+      return;
+    }
 
-    String logInfo =
-        "Next message has been sent - "
-            + outgoingMessage.getClass().getSimpleName()
-            + ":"
-            + outgoingMessage;
-    log.debug(logInfo);
-
-    updateQueuedStatus(trackingInfo, message);
+    try {
+      updateQueuedStatus(trackingInfo, message);
+    } catch (Exception e) {
+      log.error(
+          "Failed to update queued status after sending outgoing message for dataset {} and executionID {}: {}",
+          message.getDatasetUuid(),
+          trackingInfo.executionId,
+          e.getMessage(),
+          e);
+    }
   }
 
   private static void checkIfPaused() {
@@ -509,12 +584,14 @@ public abstract class PipelinesCallback<
           PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents);
       nodeEdges = workflow.getNodeEdges(getStepType());
 
-      log.debug(
-          "Workflow for {} containsOccurrences: {}, containsEvents: {} has nodes {} ",
-          message.getDatasetInfo().getDatasetType(),
-          containsOccurrences,
-          containsEvents,
-          nodeEdges);
+      if (log.isDebugEnabled() && nodeEdges != null) {
+        log.debug(
+            "Workflow for {} containsOccurrences: {}, containsEvents: {} has nodes {} ",
+            message.getDatasetInfo().getDatasetType(),
+            containsOccurrences,
+            containsEvents,
+            nodeEdges.stream().map(e -> e.getNode().name()).collect(Collectors.joining(", ")));
+      }
     }
 
     if (nodeEdges == null || nodeEdges.isEmpty()) {

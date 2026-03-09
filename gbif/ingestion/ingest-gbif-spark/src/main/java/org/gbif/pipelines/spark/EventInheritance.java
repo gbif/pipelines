@@ -114,11 +114,29 @@ public class EventInheritance {
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + EVENT_INHERITED_FIELDS);
 
-    // join back to events and write final output if needed
-    events
+    // Drop the temp view to release cached resources and file metadata
+    spark.catalog().dropTempView("simple_event");
+
+    // Clear the catalog cache to invalidate any stale file metadata
+    spark.catalog().clearCache();
+
+    // Reload events from disk
+    Dataset<Event> freshEvents =
+        spark.read().parquet(outputPath + "/" + SIMPLE_EVENT).as(Encoders.bean(Event.class));
+
+    // Reload inherited fields from disk
+    Dataset<EventInheritedFields> freshInheritedInfo =
+        spark
+            .read()
+            .parquet(outputPath + "/" + EVENT_INHERITED_FIELDS)
+            .as(Encoders.bean(EventInheritedFields.class));
+
+    // join back to events and write to a NEW directory (not the same as input)
+    // This avoids the read-write conflict that causes SparkFileNotFoundException
+    freshEvents
         .joinWith(
-            eventsWithInheritedInfo,
-            events.col("id").equalTo(eventsWithInheritedInfo.col("id")),
+            freshInheritedInfo,
+            freshEvents.col("id").equalTo(freshInheritedInfo.col("id")),
             "left_outer")
         .map(
             (MapFunction<Tuple2<Event, EventInheritedFields>, Event>)
@@ -134,12 +152,15 @@ public class EventInheritance {
                 },
             Encoders.bean(Event.class))
         .write()
-        .mode("overwrite")
-        .parquet(outputPath + "/" + SIMPLE_EVENT);
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + SIMPLE_EVENT_WITH_INHERITED);
 
     log.info("Event inheritance process finished");
 
-    return spark.read().parquet(outputPath + "/" + SIMPLE_EVENT).as(Encoders.bean(Event.class));
+    return spark
+        .read()
+        .parquet(outputPath + "/" + SIMPLE_EVENT_WITH_INHERITED)
+        .as(Encoders.bean(Event.class));
   }
 
   private static EventInheritedRecord inheritEventFrom(

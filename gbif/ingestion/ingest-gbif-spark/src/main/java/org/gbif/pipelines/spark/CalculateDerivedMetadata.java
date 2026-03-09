@@ -1,10 +1,7 @@
 package org.gbif.pipelines.spark;
 
 import static org.apache.spark.sql.functions.col;
-import static org.gbif.pipelines.ConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.Directories.*;
-import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
-import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -17,7 +14,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.function.*;
 import org.apache.spark.sql.*;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.converters.JsonConverter;
 import org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
@@ -46,9 +42,12 @@ public class CalculateDerivedMetadata implements Serializable {
     Dataset<DerivedMetadataRecord> derivedRecords =
         runCalculateDerivedMetadata(spark, fs, outputPath);
 
-    // load simple event
+    // load simple event with inherited fields (output from EventInheritance)
     Dataset<Event> events =
-        spark.read().parquet(outputPath + "/" + SIMPLE_EVENT).as(Encoders.bean(Event.class));
+        spark
+            .read()
+            .parquet(outputPath + "/" + SIMPLE_EVENT_WITH_INHERITED)
+            .as(Encoders.bean(Event.class));
 
     // join events and derived metadata
     events
@@ -88,9 +87,12 @@ public class CalculateDerivedMetadata implements Serializable {
   public static Dataset<DerivedMetadataRecord> runCalculateDerivedMetadata(
       SparkSession spark, FileSystem fileSystem, String outputPath) throws IOException {
 
-    // loads events
+    // loads events with inherited fields (output from EventInheritance)
     Dataset<Event> events =
-        spark.read().parquet(outputPath + "/" + SIMPLE_EVENT).as(Encoders.bean(Event.class));
+        spark
+            .read()
+            .parquet(outputPath + "/" + SIMPLE_EVENT_WITH_INHERITED)
+            .as(Encoders.bean(Event.class));
 
     // load occurrences (handling datasets without occurrences)
     Dataset<Occurrence> occurrence = loadOccurrences(spark, fileSystem, outputPath);

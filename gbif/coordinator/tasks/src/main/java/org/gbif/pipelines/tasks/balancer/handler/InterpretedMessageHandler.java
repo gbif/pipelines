@@ -89,7 +89,17 @@ public class InterpretedMessageHandler {
               DatasetType.SAMPLING_EVENT);
 
       publisher.send(eventsMessage);
-      log.info("The events message has been sent - {}", eventsMessage);
+      if (log.isTraceEnabled()) {
+        log.trace("The message has been sent - {}", outputMessage);
+      }
+
+      log.info(
+          "Outgoing dataset: {}, executionID: {}, routingKey: {}, attempt: {}, runner: {}",
+          outputMessage.getDatasetUuid(),
+          outputMessage.getExecutionId(),
+          outputMessage.getRoutingKey(),
+          outputMessage.getAttempt(),
+          outputMessage.getRunner());
     }
   }
 
