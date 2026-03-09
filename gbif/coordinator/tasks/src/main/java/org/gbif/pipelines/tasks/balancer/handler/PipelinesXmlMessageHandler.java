@@ -45,8 +45,8 @@ public class PipelinesXmlMessageHandler {
     }
 
     log.info(
-        "Outgoing dataset: {}, attempt: {}, executionID: {}, runner: {}",
-        outputMessage.getDatasetInfo(),
+        "Outgoing dataset: {}, executionID: {}, routingKey: {}, attempt: {}",
+        outputMessage.getDatasetUuid(),
         outputMessage.getExecutionId(),
         outputMessage.getRoutingKey(),
         outputMessage.getAttempt());

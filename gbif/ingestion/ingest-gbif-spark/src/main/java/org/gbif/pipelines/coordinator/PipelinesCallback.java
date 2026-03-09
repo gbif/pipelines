@@ -233,7 +233,11 @@ public abstract class PipelinesCallback<
     ThreadContext.put("step", getStepType().name());
 
     try {
-      log.info("Processing attempt {}", message.getAttempt());
+      log.info(
+          "Processing executionId {}, step {} attempt {}",
+          message.getExecutionId(),
+          message.getAttempt(),
+          getStepType().name());
 
       trackingInfo = trackPipelineStep(message);
 

@@ -44,8 +44,8 @@ public class PipelinesEventsHdfsViewMessageHandler {
     }
 
     log.info(
-        "Outgoing dataset: {}, attempt: {}, executionID: {}, runner: {}, routingKey: {}",
-        outputMessage.getDatasetInfo(),
+        "Outgoing dataset: {}, executionID: {}, routingKey: {}, attempt: {}, runner: {}",
+        outputMessage.getDatasetUuid(),
         outputMessage.getExecutionId(),
         outputMessage.getRoutingKey(),
         outputMessage.getAttempt(),
