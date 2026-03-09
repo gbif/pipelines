@@ -42,9 +42,12 @@ public class CalculateDerivedMetadata implements Serializable {
     Dataset<DerivedMetadataRecord> derivedRecords =
         runCalculateDerivedMetadata(spark, fs, outputPath);
 
-    // load simple event
+    // load simple event with inherited fields (output from EventInheritance)
     Dataset<Event> events =
-        spark.read().parquet(outputPath + "/" + SIMPLE_EVENT).as(Encoders.bean(Event.class));
+        spark
+            .read()
+            .parquet(outputPath + "/" + SIMPLE_EVENT_WITH_INHERITED)
+            .as(Encoders.bean(Event.class));
 
     // join events and derived metadata
     events
@@ -84,9 +87,12 @@ public class CalculateDerivedMetadata implements Serializable {
   public static Dataset<DerivedMetadataRecord> runCalculateDerivedMetadata(
       SparkSession spark, FileSystem fileSystem, String outputPath) throws IOException {
 
-    // loads events
+    // loads events with inherited fields (output from EventInheritance)
     Dataset<Event> events =
-        spark.read().parquet(outputPath + "/" + SIMPLE_EVENT).as(Encoders.bean(Event.class));
+        spark
+            .read()
+            .parquet(outputPath + "/" + SIMPLE_EVENT_WITH_INHERITED)
+            .as(Encoders.bean(Event.class));
 
     // load occurrences (handling datasets without occurrences)
     Dataset<Occurrence> occurrence = loadOccurrences(spark, fileSystem, outputPath);

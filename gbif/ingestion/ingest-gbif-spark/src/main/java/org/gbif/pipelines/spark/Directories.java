@@ -38,6 +38,9 @@ public interface Directories {
   /** Directory for simple event parquet files generated as output from interpretation */
   String SIMPLE_EVENT = "simple_event";
 
+  /** Directory for simple event parquet files with inherited fields from EventInheritance */
+  String SIMPLE_EVENT_WITH_INHERITED = "simple_event_with_inherited";
+
   String SIMPLE_EVENT_WITH_DERIVED = "simple_event_with_derived";
   /** Directory for simple occurrence parquet files used as input for interpretation */
   String SIMPLE_OCCURRENCE = "simple_occurrence";
