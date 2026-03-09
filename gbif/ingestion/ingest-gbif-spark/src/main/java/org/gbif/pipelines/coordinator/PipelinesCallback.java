@@ -403,7 +403,7 @@ public abstract class PipelinesCallback<
       publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
       log.info(
           "Message sent to balancer for {}, executionId: {}, step {}",
-          outgoingMessage.getDatasetInfo(),
+          outgoingMessage.getDatasetUuid(),
           outgoingMessage.getExecutionId(),
           this.getStepType().name());
     } catch (Exception e) {
@@ -586,8 +586,9 @@ public abstract class PipelinesCallback<
 
       if (log.isDebugEnabled() && nodeEdges != null) {
         log.debug(
-            "Workflow for {} containsOccurrences: {}, containsEvents: {} has nodes {} ",
+            "Workflow for {} {} containsOccurrences: {}, containsEvents: {} has nodes {} ",
             message.getDatasetInfo().getDatasetType(),
+            message.getDatasetUuid(),
             containsOccurrences,
             containsEvents,
             nodeEdges.stream().map(e -> e.getNode().name()).collect(Collectors.joining(", ")));
