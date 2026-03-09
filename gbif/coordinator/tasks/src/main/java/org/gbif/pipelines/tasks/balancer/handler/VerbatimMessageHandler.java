@@ -97,7 +97,11 @@ public class VerbatimMessageHandler {
               config, m, new DwcaToAvroConfiguration().metaFileName, Metrics.ARCHIVE_TO_ER_COUNT);
 
       Optional<Long> uniqueIdsCount =
-          getRecordNumber(config, m, "verbatim-to-identifier.yml", Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
+          getRecordNumber(
+              config,
+              m,
+              "verbatim-to-identifier.yml",
+              Metrics.UNIQUE_IDS_COUNT + Metrics.ATTEMPTED);
 
       log.info("The record numbers - occ: {}, er: {}, ids: {}", occCount, erCount, uniqueIdsCount);
 
