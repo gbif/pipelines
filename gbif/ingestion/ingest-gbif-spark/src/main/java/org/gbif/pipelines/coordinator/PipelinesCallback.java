@@ -325,7 +325,8 @@ public abstract class PipelinesCallback<
         executionPipelineSteps);
 
     log.debug(
-        "Execution steps size: {}, steps: {}",
+        "Execution ID {}, steps size: {}, steps: {}",
+        trackingInfo.executionId,
         executionPipelineSteps.size(),
         executionPipelineSteps.stream()
             .map(ps -> ps.getType().name())
@@ -337,7 +338,8 @@ public abstract class PipelinesCallback<
     if (thisPipelineStep.isEmpty()) {
       // expected when we opt to only execute one step with &onlyRequestedStep=true
       log.warn(
-          "Current step {} is not found in the execution steps, won't send outgoing message. Available steps: {}",
+          "Execution ID {}, current step {} is not found in the execution steps, won't send outgoing message. Available steps: {}",
+          trackingInfo.executionId,
           getStepType(),
           executionPipelineSteps.stream()
               .map(ps -> ps.getType().name())
@@ -350,7 +352,8 @@ public abstract class PipelinesCallback<
     // is this step type the last in the list
     if (!executionPipelineSteps.isEmpty() && idx == executionPipelineSteps.size() - 1) {
       log.info(
-          "Current step {} is last step (index {} of {}), won't send outgoing message",
+          "Execution ID {}, Current step {} is last step (index {} of {}), won't send outgoing message",
+          trackingInfo.executionId,
           getStepType(),
           idx,
           executionPipelineSteps.size());
@@ -363,7 +366,8 @@ public abstract class PipelinesCallback<
       outgoingMessage = createOutgoingMessage(message);
     } catch (Exception e) {
       log.error(
-          "Failed to create outgoing message for dataset {}: {}",
+          "Failed to create outgoing message for executionID {} dataset {}: {}",
+          trackingInfo.executionId,
           message.getDatasetUuid(),
           e.getMessage(),
           e);
@@ -372,15 +376,17 @@ public abstract class PipelinesCallback<
 
     if (outgoingMessage == null) {
       log.warn(
-          "createOutgoingMessage returned null for dataset {}, won't send outgoing message",
-          message.getDatasetUuid());
+          "createOutgoingMessage returned null for dataset {} and executionID {}, won't send outgoing message",
+          message.getDatasetUuid(),
+          trackingInfo.executionId);
       return;
     }
 
     if (publisher == null) {
       log.error(
-          "Message publisher is null, cannot send outgoing message for dataset {}",
-          message.getDatasetUuid());
+          "Message publisher is null, cannot send outgoing message for dataset {} and executionID {}",
+          message.getDatasetUuid(),
+          trackingInfo.executionId);
       return;
     }
 
@@ -396,8 +402,9 @@ public abstract class PipelinesCallback<
           this.getStepType().name());
     } catch (Exception e) {
       log.error(
-          "Failed to send outgoing message for dataset {} after retries: {}",
+          "Failed to send outgoing message for dataset {} and executionID {} after retries: {}",
           message.getDatasetUuid(),
+          trackingInfo.executionId,
           e.getMessage(),
           e);
       return;
@@ -407,8 +414,9 @@ public abstract class PipelinesCallback<
       updateQueuedStatus(trackingInfo, message);
     } catch (Exception e) {
       log.error(
-          "Failed to update queued status after sending outgoing message for dataset {}: {}",
+          "Failed to update queued status after sending outgoing message for dataset {} and executionID {}: {}",
           message.getDatasetUuid(),
+          trackingInfo.executionId,
           e.getMessage(),
           e);
     }
