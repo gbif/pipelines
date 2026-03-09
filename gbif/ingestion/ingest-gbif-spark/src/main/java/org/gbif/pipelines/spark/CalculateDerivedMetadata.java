@@ -485,32 +485,22 @@ public class CalculateDerivedMetadata implements Serializable {
 
     // merge partial hulls
     Dataset<Tuple2<String, String>> hulls =
-        groupedPartial
-            .reduceGroups(
-                (ReduceFunction<Tuple2<String, String>>)
-                    (a, b) -> {
-                      Set<Coordinate> mergedCoords = new HashSet<>();
-                      String eventId = a._1();
-                      String wkt1 = a._2();
-                      String wkt2 = b._2();
-
-                      GeometryFactory geometryFactory = new GeometryFactory();
-                      WKTReader reader = new WKTReader(geometryFactory);
-
-                      Geometry geometry1 = reader.read(wkt1);
-                      Geometry geometry2 = reader.read(wkt2);
-                      mergedCoords.addAll(Arrays.asList(geometry1.getCoordinates()));
-                      mergedCoords.addAll(Arrays.asList(geometry2.getCoordinates()));
-
-                      Optional<String> geometry = ConvexHullUtils.calculateGeometry(mergedCoords);
-
-                      return geometry.map(s -> new Tuple2(eventId, s)).orElse(null);
-                    })
-            .filter(Objects::nonNull)
-            .map(
-                (MapFunction<Tuple2<String, Tuple2<String, String>>, Tuple2<String, String>>)
-                    t -> new Tuple2<>(t._1, t._2._2),
-                Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
+        groupedPartial.flatMapGroups(
+            (FlatMapGroupsFunction<String, Tuple2<String, String>, Tuple2<String, String>>)
+                (eventId, geometries) -> {
+                  Set<Coordinate> mergedCoords = new HashSet<>();
+                  GeometryFactory geometryFactory = new GeometryFactory();
+                  WKTReader reader = new WKTReader(geometryFactory);
+                  while (geometries.hasNext()) {
+                    Geometry geometry = reader.read(geometries.next()._2());
+                    mergedCoords.addAll(Arrays.asList(geometry.getCoordinates()));
+                  }
+                  Optional<String> hull = ConvexHullUtils.calculateGeometry(mergedCoords);
+                  return hull.isPresent()
+                      ? Collections.singletonList(new Tuple2<>(eventId, hull.get())).iterator()
+                      : Collections.emptyIterator();
+                },
+            Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
 
     hulls.write().mode(SaveMode.Overwrite).parquet(outputPath + "/derived/convex_hull");
 
