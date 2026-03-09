@@ -481,12 +481,12 @@ public class CalculateDerivedMetadata implements Serializable {
     Dataset<Tuple2<String, String>> hulls =
         groupedPartial.flatMapGroups(
             (FlatMapGroupsFunction<String, Tuple2<String, String>, Tuple2<String, String>>)
-                (eventId, iter) -> {
+                (eventId, geometries) -> {
                   Set<Coordinate> mergedCoords = new HashSet<>();
                   GeometryFactory geometryFactory = new GeometryFactory();
                   WKTReader reader = new WKTReader(geometryFactory);
-                  while (iter.hasNext()) {
-                    Geometry geometry = reader.read(iter.next()._2());
+                  while (geometries.hasNext()) {
+                    Geometry geometry = reader.read(geometries.next()._2());
                     mergedCoords.addAll(Arrays.asList(geometry.getCoordinates()));
                   }
                   Optional<String> hull = ConvexHullUtils.calculateGeometry(mergedCoords);
