@@ -347,17 +347,23 @@ public abstract class PipelinesCallback<
       return;
     }
 
-    PipelineStep step = thisPipelineStep.get(0);
-    int idx = executionPipelineSteps.indexOf(step);
-    // is this step type the last in the list
-    if (!executionPipelineSteps.isEmpty() && idx == executionPipelineSteps.size() - 1) {
-      log.info(
-          "Execution ID {}, Current step {} is last step (index {} of {}), won't send outgoing message",
-          trackingInfo.executionId,
-          getStepType(),
-          idx,
-          executionPipelineSteps.size());
-      return;
+    // if there is no more steps in the execution to run, dont send messages
+    if (!executionPipelineSteps.isEmpty()) {
+      // are there any incomplete steps left in the execution? if not,
+      // don't send message to balancer, just mark execution as finished
+      Set<PipelineStep> unprocessed =
+          executionPipelineSteps.stream()
+              .filter(ps -> !PROCESSED_STATE_SET.contains(ps.getState()))
+              .collect(Collectors.toSet());
+      if (unprocessed.isEmpty()) {
+        log.info(
+            "Execution ID {}, all steps are processed for execution, won't send outgoing message. Steps: {}",
+            trackingInfo.executionId,
+            executionPipelineSteps.stream()
+                .map(ps -> ps.getType().name() + ":" + ps.getState().name())
+                .collect(Collectors.joining(", ")));
+        return;
+      }
     }
 
     // Create and send outgoing message
