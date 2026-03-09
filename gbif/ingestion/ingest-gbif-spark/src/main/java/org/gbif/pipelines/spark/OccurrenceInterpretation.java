@@ -265,7 +265,7 @@ public class OccurrenceInterpretation {
         joinRecordsAndIdentifiers(spark, extendedRecords, identifiers, outputPath);
 
     // a single call to the registry to get the dataset metadata
-    final MetadataRecord metadata = getMetadataRecord(config, datasetId);
+    final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
 
     // run all transforms
     sparkLog(spark, "runTransforms", "Running transforms");
@@ -387,11 +387,12 @@ public class OccurrenceInterpretation {
    * @param datasetId The dataset ID.
    * @return The metadata record for the dataset.
    */
-  static MetadataRecord getMetadataRecord(PipelinesConfig config, String datasetId) {
+  static MetadataRecord getMetadataRecord(
+      PipelinesConfig config, String datasetId, Integer attempt) {
     MetadataServiceClient metadataServiceClient =
         MetadataServiceClient.create(config.getGbifApi(), config.getContent());
     final MetadataRecord metadata = MetadataRecord.newBuilder().setDatasetKey(datasetId).build();
-    MetadataInterpreter.interpret(metadataServiceClient).accept(datasetId, metadata);
+    MetadataInterpreter.interpret(metadataServiceClient, datasetId, attempt, metadata);
     return metadata;
   }
 

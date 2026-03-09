@@ -127,7 +127,7 @@ public class ClusteringInterpretation {
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
 
     // a single call to the registry to get the dataset metadata
-    final MetadataRecord metadata = getMetadataRecord(config, datasetId);
+    final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
 
     Dataset<Occurrence> simpleRecords = loadSimpleRecords(spark, outputPath);
 

@@ -128,7 +128,7 @@ public class EventInterpretation {
     String inputPath = String.format("%s/%s/%d", config.getInputPath(), datasetId, attempt);
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
 
-    MetadataRecord metadata = getMetadataRecord(config, datasetId);
+    MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
 
     // Load the extended records
     Dataset<ExtendedRecord> extendedRecords =
