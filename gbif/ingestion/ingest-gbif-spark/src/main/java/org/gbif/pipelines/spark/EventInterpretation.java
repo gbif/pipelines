@@ -410,11 +410,11 @@ public class EventInterpretation {
             .repartition(numberOfShards);
 
     // write to parquet for downstream steps
-    extended.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + VERBATIM_EXT_FILTERED);
+    extended.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + VERBATIM_EVENT_EXT_FILTERED);
     // reload
     return spark
         .read()
-        .parquet(outputPath + "/" + VERBATIM_EXT_FILTERED)
+        .parquet(outputPath + "/" + VERBATIM_EVENT_EXT_FILTERED)
         .as(Encoders.bean(ExtendedRecord.class));
   }
 }

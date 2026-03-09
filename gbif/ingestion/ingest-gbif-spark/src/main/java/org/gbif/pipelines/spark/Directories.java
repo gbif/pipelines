@@ -46,4 +46,10 @@ public interface Directories {
   String SIMPLE_OCCURRENCE = "simple_occurrence";
   /** Directory for extended verbatim files after filtering out records with missing core ID */
   String VERBATIM_EXT_FILTERED = "verbatim_ext_filtered";
+
+  /**
+   * Directory for extended verbatim files for events after filtering out records in extensions that
+   * contain an occurrenceID
+   */
+  String VERBATIM_EVENT_EXT_FILTERED = "verbatim_event_ext_filtered";
 }
