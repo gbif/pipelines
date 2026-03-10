@@ -23,6 +23,7 @@ import static org.gbif.pipelines.spark.SparkUtil.getSparkSession;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.*;
@@ -67,7 +68,8 @@ import scala.Tuple2;
 @Slf4j
 public class OccurrenceInterpretation {
 
-  static final ObjectMapper MAPPER = new ObjectMapper();
+  static final ObjectMapper MAPPER = new ObjectMapper()
+          .setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 
   public static final String METRICS_FILENAME = "verbatim-to-occurrence.yml";
 
