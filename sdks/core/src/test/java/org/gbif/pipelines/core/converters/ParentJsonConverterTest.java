@@ -108,7 +108,7 @@ public class ParentJsonConverterTest {
     assertEquals(1, first.getExcludedHabitatScope().size());
     assertEquals(120.0, first.getEventDurationValueInMinutes(), 0.0001);
     assertEquals(1, first.getTargetLifeStageScope().size());
-    assertTrue(first.getExcludedLifeStageScope().isEmpty());
+    assertNull(first.getExcludedLifeStageScope());
     assertEquals(12.0, first.getGeospatialScopeAreaValue(), 0.0001);
     assertNull(first.getGeospatialScopeAreaUnit());
 
