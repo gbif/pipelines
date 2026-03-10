@@ -49,8 +49,7 @@ public class ConvexHullUtilsTest {
     Optional<String> result = ConvexHullUtils.calculateGeometry(coords);
     assertTrue(result.isPresent());
     assertTrue(
-        "Expected POLYGON output, but got: " + result.get(),
-        result.get().startsWith("POLYGON"));
+        "Expected POLYGON output, but got: " + result.get(), result.get().startsWith("POLYGON"));
   }
 
   @Test

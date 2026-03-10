@@ -369,8 +369,9 @@ public class EventInterpretation {
     Dataset<ExtendedRecord> extended =
         spark
             .read()
-            .format("parquet")
-            .load(inputPath + "/" + OCCURRENCE_VERBATIM)
+            .format("avro")
+            .load(inputPath + "/verbatim.avro")
+            .repartition(numberOfShards)
             .as(Encoders.bean(ExtendedRecord.class))
             .filter(
                 (FilterFunction<ExtendedRecord>) er -> er != null && !er.getCoreTerms().isEmpty())
@@ -410,7 +411,10 @@ public class EventInterpretation {
             .repartition(numberOfShards);
 
     // write to parquet for downstream steps
-    extended.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + VERBATIM_EVENT_EXT_FILTERED);
+    extended
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + VERBATIM_EVENT_EXT_FILTERED);
     // reload
     return spark
         .read()
