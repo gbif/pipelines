@@ -67,7 +67,31 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
     checkJsonOutputs(basePath, testUuid, attempt);
   }
 
-  private void checkJsonOutputs(String outputFile, String testUuid, int attempt) {}
+  private void checkJsonOutputs(String outputFile, String testUuid, int attempt) throws Exception {
+    java.nio.file.Path dir =
+        java.nio.file.Path.of(outputFile)
+            .resolve(testUuid)
+            .resolve(String.valueOf(attempt))
+            .resolve(Directories.OCCURRENCE_JSON);
+
+    java.nio.file.Path parquetFile =
+        Files.list(dir)
+            .filter(path -> path.getFileName().toString().endsWith(".parquet"))
+            .findFirst()
+            .get();
+
+    Configuration conf = new Configuration();
+
+    try (ParquetReader<GenericRecord> reader =
+        AvroParquetReader.<GenericRecord>builder(new Path(parquetFile.toString()))
+            .withConf(conf)
+            .build()) {
+      GenericRecord record;
+      while ((record = reader.read()) != null) {
+        validateRecord(record, EXPECTED_JSON_FIELDS);
+      }
+    }
+  }
 
   private void checkHdfsTableOutputs(String outputFile, String testUuid, int attempt)
       throws Exception {
@@ -283,4 +307,33 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
           Map.entry("institutioncode", "NMK"),
           Map.entry("license", "CC_BY_NC_4_0"),
           Map.entry("publishingcountry", "BG"));
+
+  private static final Map<String, Object> EXPECTED_JSON_FIELDS =
+      Map.ofEntries(
+          // occurrence core
+          Map.entry("basisOfRecord", "HUMAN_OBSERVATION"),
+
+          // location
+          Map.entry("countryCode", "KE"),
+          Map.entry("stateProvince", "Narok"),
+          Map.entry("locality", "Maasai Mara National Reserve"),
+          Map.entry("decimalLatitude", -1.4061),
+          Map.entry("decimalLongitude", 35.0128),
+          Map.entry("hasCoordinate", true),
+
+          // event
+          Map.entry(
+              "eventDate",
+              "{\"gte\": \"2023-01-01T00:00:00.000\", \"lte\": \"2023-12-31T23:59:59.999\"}"),
+          Map.entry("year", 2023),
+
+          // identifiers & counts
+          Map.entry("individualCount", 3),
+          Map.entry("gbifId", "1"),
+          Map.entry("datasetKey", "7683cc47-cb13-4bad-9614-387c66aa8df0"),
+
+          // institution & metadata
+          Map.entry("institutionCode", "NMK"),
+          Map.entry("license", "CC_BY_NC_4_0"),
+          Map.entry("publishingCountry", "BG"));
 }
