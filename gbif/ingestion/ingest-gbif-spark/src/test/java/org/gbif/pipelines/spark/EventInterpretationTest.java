@@ -1,7 +1,5 @@
 package org.gbif.pipelines.spark;
 
-import static org.apache.parquet.hadoop.ParquetFileWriter.Mode.OVERWRITE;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
@@ -9,18 +7,13 @@ import java.util.List;
 import java.util.Map;
 import org.apache.avro.Schema;
 import org.apache.avro.reflect.ReflectData;
-import org.apache.hadoop.fs.Path;
-import org.apache.parquet.avro.AvroParquetWriter;
-import org.apache.parquet.hadoop.ParquetWriter;
-import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class EventInterpretationTest extends MockedServicesTest {
 
-  @Ignore
+  @Test
   public void test() throws Exception {
 
     URL testRootUrl = getClass().getResource("/");
@@ -28,7 +21,7 @@ public class EventInterpretationTest extends MockedServicesTest {
     String testResourcesRoot = testRootUrl.getFile();
 
     String testUuid = "8d5fe649-f85e-43cc-a19c-2a9979a741ac";
-    generateVerbatimParquet(testUuid, 1);
+    generateVerbatimAvro(testUuid, 1);
 
     EventInterpretation.main(
         new String[] {
@@ -44,7 +37,8 @@ public class EventInterpretationTest extends MockedServicesTest {
     // TODO: missing assert results
   }
 
-  private void generateVerbatimParquet(String uuid, int attempt) throws IOException {
+  // java
+  private void generateVerbatimAvro(String uuid, int attempt) throws IOException {
 
     ExtendedRecord parentEr =
         ExtendedRecord.newBuilder()
@@ -95,24 +89,32 @@ public class EventInterpretationTest extends MockedServicesTest {
 
     er.setExtensions(Map.of("http://rs.tdwg.org/dwc/terms/Occurrence", List.of(occurrenceTerms)));
 
-    // Write to parquet
+    // Avro schema for ExtendedRecord
     Schema schema = ReflectData.AllowNull.get().getSchema(ExtendedRecord.class);
 
-    // Output Parquet file path
+    // Output Avro file path (use .avro)
     String outputFile = getClass().getResource("/").getFile();
-    String outputPath = outputFile + "/" + uuid + "/" + attempt + "/verbatim/verbatim.parquet";
-    Path path = new Path(outputPath);
+    String outputPath = outputFile + "/" + uuid + "/" + attempt + "/verbatim.avro";
 
-    try (ParquetWriter<ExtendedRecord> writer =
-        AvroParquetWriter.<ExtendedRecord>builder(path)
-            .withSchema(schema)
-            .withDataModel(ReflectData.get())
-            .withCompressionCodec(CompressionCodecName.SNAPPY)
-            .withConf(new org.apache.hadoop.conf.Configuration())
-            .withWriteMode(OVERWRITE)
-            .build()) {
-      writer.write(parentEr);
-      writer.write(er);
+    // Ensure parent directories exist
+    java.nio.file.Path parent = java.nio.file.Paths.get(outputPath).getParent();
+    if (parent != null) {
+      java.nio.file.Files.createDirectories(parent);
+    }
+
+    // Write Avro container file using ReflectDatumWriter and DataFileWriter
+    org.apache.avro.io.DatumWriter<ExtendedRecord> datumWriter =
+        new org.apache.avro.reflect.ReflectDatumWriter<>(ExtendedRecord.class);
+
+    try (org.apache.avro.file.DataFileWriter<ExtendedRecord> dataFileWriter =
+        new org.apache.avro.file.DataFileWriter<>(datumWriter)) {
+
+      // Use Snappy codec (optional)
+      dataFileWriter.setCodec(org.apache.avro.file.CodecFactory.snappyCodec());
+
+      dataFileWriter.create(schema, new java.io.File(outputPath));
+      dataFileWriter.append(parentEr);
+      dataFileWriter.append(er);
     }
   }
 }
