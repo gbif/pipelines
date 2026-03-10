@@ -148,13 +148,17 @@ public class AvroPojoGenerator extends AbstractMojo {
       if (type.equals("IssueRecord")) body.append("    @lombok.Builder.Default\n");
       if (type.equals("org.gbif.pipelines.io.avro.IssueRecord"))
         body.append("    @lombok.Builder.Default\n");
-      if (type.startsWith("List")) body.append("    @lombok.Builder.Default\n");
-      if (type.startsWith("Map")) body.append("    @lombok.Builder.Default\n");
+      if (type.startsWith("List") && !namespace.equalsIgnoreCase("org.gbif.pipelines.io.avro.json"))
+        body.append("    @lombok.Builder.Default\n");
+      if (type.startsWith("Map") && !namespace.equalsIgnoreCase("org.gbif.pipelines.io.avro.json"))
+        body.append("    @lombok.Builder.Default\n");
 
       body.append("    private ").append(type).append(" ").append(name);
 
-      if (type.startsWith("List")) body.append("= new ArrayList<>()");
-      if (type.startsWith("Map")) body.append("= new HashMap<>()");
+      if (type.startsWith("List") && !namespace.equalsIgnoreCase("org.gbif.pipelines.io.avro.json"))
+        body.append("= new ArrayList<>()");
+      if (type.startsWith("Map") && !namespace.equalsIgnoreCase("org.gbif.pipelines.io.avro.json"))
+        body.append("= new HashMap<>()");
       if (type.equals("IssueRecord")) body.append("= IssueRecord.newBuilder().build()");
       if (type.equals("org.gbif.pipelines.io.avro.IssueRecord"))
         body.append("= org.gbif.pipelines.io.avro.IssueRecord.newBuilder().build()");

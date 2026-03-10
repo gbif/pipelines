@@ -329,6 +329,10 @@ public class ParentJsonConverter {
         .setMediaLicenses(JsonConverter.convertMultimediaLicense(multimedia));
   }
 
+  public static <T> List<T> emptyListToNull(List<T> list) {
+    return (list == null || list.isEmpty()) ? null : list;
+  }
+
   private void mapHumboldtRecord(EventJsonRecord.Builder builder) {
     builder.setHumboldt(
         humboldtRecord.getHumboldtItems().stream()
@@ -337,16 +341,17 @@ public class ParentJsonConverter {
                   Humboldt.Builder humboldtBuilder =
                       Humboldt.newBuilder()
                           .setSiteCount(h.getSiteCount())
-                          .setVerbatimSiteDescriptions(h.getVerbatimSiteDescriptions())
-                          .setVerbatimSiteNames(h.getVerbatimSiteNames())
+                          .setVerbatimSiteDescriptions(
+                              emptyListToNull(h.getVerbatimSiteDescriptions()))
+                          .setVerbatimSiteNames(emptyListToNull(h.getVerbatimSiteNames()))
                           .setGeospatialScopeAreaValue(h.getGeospatialScopeAreaValue())
                           .setGeospatialScopeAreaUnit(h.getGeospatialScopeAreaUnit())
                           .setTotalAreaSampledValue(h.getTotalAreaSampledValue())
                           .setTotalAreaSampledUnit(h.getTotalAreaSampledUnit())
                           .setEventDurationValue(h.getEventDurationValue())
                           .setEventDurationUnit(h.getEventDurationUnit())
-                          .setGeospatialScopeAreaUnit(h.getGeospatialScopeAreaUnit())
-                          .setTaxonCompletenessProtocols(h.getTaxonCompletenessProtocols())
+                          .setTaxonCompletenessProtocols(
+                              emptyListToNull(h.getTaxonCompletenessProtocols()))
                           .setIsTaxonomicScopeFullyReported(h.getIsTaxonomicScopeFullyReported())
                           .setIsAbsenceReported(h.getIsAbsenceReported())
                           .setHasNonTargetTaxa(h.getHasNonTargetTaxa())
@@ -356,12 +361,12 @@ public class ParentJsonConverter {
                               h.getIsDegreeOfEstablishmentScopeFullyReported())
                           .setIsGrowthFormScopeFullyReported(h.getIsGrowthFormScopeFullyReported())
                           .setHasNonTargetOrganisms(h.getHasNonTargetOrganisms())
-                          .setCompilationTypes(h.getCompilationTypes())
-                          .setCompilationSourceTypes(h.getCompilationSourceTypes())
-                          .setInventoryTypes(h.getInventoryTypes())
-                          .setProtocolNames(h.getProtocolNames())
-                          .setProtocolDescriptions(h.getProtocolDescriptions())
-                          .setProtocolReferences(h.getProtocolReferences())
+                          .setCompilationTypes(emptyListToNull(h.getCompilationTypes()))
+                          .setCompilationSourceTypes(emptyListToNull(h.getCompilationSourceTypes()))
+                          .setInventoryTypes(emptyListToNull(h.getInventoryTypes()))
+                          .setProtocolNames(emptyListToNull(h.getProtocolNames()))
+                          .setProtocolDescriptions(emptyListToNull(h.getProtocolDescriptions()))
+                          .setProtocolReferences(emptyListToNull(h.getProtocolReferences()))
                           .setIsAbundanceReported(h.getIsAbundanceReported())
                           .setIsAbundanceCapReported(h.getIsAbundanceCapReported())
                           .setAbundanceCap(h.getAbundanceCap())
@@ -369,32 +374,37 @@ public class ParentJsonConverter {
                           .setIsLeastSpecificTargetCategoryQuantityInclusive(
                               h.getIsLeastSpecificTargetCategoryQuantityInclusive())
                           .setHasVouchers(h.getHasVouchers())
-                          .setVoucherInstitutions(h.getVoucherInstitutions())
+                          .setVoucherInstitutions(emptyListToNull(h.getVoucherInstitutions()))
                           .setHasMaterialSamples(h.getHasMaterialSamples())
-                          .setMaterialSampleTypes(h.getMaterialSampleTypes())
-                          .setSamplingPerformedBy(h.getSamplingPerformedBy())
+                          .setMaterialSampleTypes(emptyListToNull(h.getMaterialSampleTypes()))
+                          .setSamplingPerformedBy(emptyListToNull(h.getSamplingPerformedBy()))
                           .setIsSamplingEffortReported(h.getIsSamplingEffortReported())
                           .setSamplingEffortValue(h.getSamplingEffortValue())
                           .setSamplingEffortUnit(h.getSamplingEffortUnit());
 
+                  // Vocabulary conversion
                   Function<
                           List<org.gbif.pipelines.io.avro.VocabularyConcept>,
                           List<VocabularyConcept>>
                       vocabConverter =
                           vocabs ->
-                              vocabs.stream()
-                                  .map(
-                                      v ->
-                                          VocabularyConcept.newBuilder()
-                                              .setConcept(v.getConcept())
-                                              .setLineage(v.getLineage())
-                                              .build())
-                                  .collect(Collectors.toList());
+                              emptyListToNull(
+                                  vocabs.stream()
+                                      .map(
+                                          v ->
+                                              VocabularyConcept.newBuilder()
+                                                  .setConcept(v.getConcept())
+                                                  .setLineage(v.getLineage())
+                                                  .build())
+                                      .collect(Collectors.toList()));
 
-                  humboldtBuilder.setTargetHabitatScope(h.getTargetHabitatScope());
-                  humboldtBuilder.setExcludedHabitatScope(h.getExcludedHabitatScope());
-                  humboldtBuilder.setTargetGrowthFormScope(h.getTargetGrowthFormScope());
-                  humboldtBuilder.setExcludedGrowthFormScope(h.getExcludedGrowthFormScope());
+                  humboldtBuilder.setTargetHabitatScope(emptyListToNull(h.getTargetHabitatScope()));
+                  humboldtBuilder.setExcludedHabitatScope(
+                      emptyListToNull(h.getExcludedHabitatScope()));
+                  humboldtBuilder.setTargetGrowthFormScope(
+                      emptyListToNull(h.getTargetGrowthFormScope()));
+                  humboldtBuilder.setExcludedGrowthFormScope(
+                      emptyListToNull(h.getExcludedGrowthFormScope()));
                   humboldtBuilder.setTargetLifeStageScope(
                       vocabConverter.apply(h.getTargetLifeStageScope()));
                   humboldtBuilder.setExcludedLifeStageScope(
@@ -410,11 +420,13 @@ public class ParentJsonConverter {
                         h.getEventDurationValue() * eventDurationUnit.getDurationInMinutes());
                   }
 
-                  // taxon
+                  // Taxon conversion
                   Function<
                           List<TaxonHumboldtRecord>, Map<String, List<HumboldtTaxonClassification>>>
                       taxonFn =
                           taxonRecords -> {
+                            if (taxonRecords == null || taxonRecords.isEmpty()) return null;
+
                             Map<String, List<HumboldtTaxonClassification>> classifications =
                                 new HashMap<>();
                             taxonRecords.forEach(
@@ -430,6 +442,7 @@ public class ParentJsonConverter {
                                             .setRank(t.getUsage().getRank())
                                             .build());
                                   }
+
                                   if (t.getAcceptedUsage() != null) {
                                     taxonBuilder.setAcceptedUsage(
                                         TaxonUsage.newBuilder()
@@ -438,12 +451,14 @@ public class ParentJsonConverter {
                                             .setRank(t.getAcceptedUsage().getRank())
                                             .build());
                                   }
+
                                   taxonBuilder.setIucnRedListCategoryCode(
                                       t.getIucnRedListCategoryCode());
 
                                   Map<String, String> classification = new HashMap<>();
                                   Map<String, String> classificationKeys = new HashMap<>();
                                   List<String> taxonKeys = new ArrayList<>();
+
                                   t.getClassification()
                                       .forEach(
                                           c -> {
@@ -454,13 +469,18 @@ public class ParentJsonConverter {
 
                                   taxonBuilder.setClassification(classification);
                                   taxonBuilder.setClassificationKeys(classificationKeys);
-                                  taxonBuilder.setTaxonKeys(taxonKeys);
-                                  taxonBuilder.setIssues(t.getIssues().getIssueList());
+                                  taxonBuilder.setTaxonKeys(emptyListToNull(taxonKeys));
+                                  taxonBuilder.setIssues(
+                                      emptyListToNull(t.getIssues().getIssueList()));
+
                                   classifications
                                       .computeIfAbsent(t.getChecklistKey(), k -> new ArrayList<>())
                                       .add(taxonBuilder.build());
                                 });
-                            return classifications;
+
+                            // Apply emptyListToNull to each map value
+                            classifications.replaceAll((k, v) -> emptyListToNull(v));
+                            return classifications.isEmpty() ? null : classifications;
                           };
 
                   humboldtBuilder.setTargetTaxonomicScope(
