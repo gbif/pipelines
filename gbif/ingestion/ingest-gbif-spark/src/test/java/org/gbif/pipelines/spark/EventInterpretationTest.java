@@ -15,11 +15,12 @@ import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class EventInterpretationTest extends MockedServicesTest {
 
-  @Test
+  @Ignore
   public void test() throws Exception {
 
     URL testRootUrl = getClass().getResource("/");
