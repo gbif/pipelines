@@ -50,7 +50,6 @@ public class BasicTransform implements Serializable {
             .setCreated(Instant.now().toEpochMilli())
             .build();
 
-    var vocabServiceUrl = config.getVocabularyService().getWsUrl();
     var vocabService = VocabularyServiceFactory.getInstance(config);
 
     // Apply interpreters sequentially
