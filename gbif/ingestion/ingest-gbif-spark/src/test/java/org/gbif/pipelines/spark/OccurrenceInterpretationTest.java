@@ -1,6 +1,8 @@
 package org.gbif.pipelines.spark;
 
 import static org.apache.parquet.hadoop.ParquetFileWriter.Mode.OVERWRITE;
+import static org.gbif.pipelines.ConfigUtil.loadConfig;
+import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -13,18 +15,46 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.avro.AvroParquetReader;
 import org.apache.parquet.avro.AvroParquetWriter;
 import org.apache.parquet.hadoop.ParquetReader;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
+import org.apache.spark.sql.SparkSession;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.junit.*;
 
 public class OccurrenceInterpretationTest extends MockedServicesTest {
+
+  private static SparkSession spark;
+  private static java.nio.file.Path sparkTmp = null;
+
+  @BeforeClass
+  public static void setUp() throws Exception {
+    sparkTmp = Files.createTempDirectory("spark-local");
+    spark =
+        SparkSession.builder()
+            .master("local[1]")
+            .config("spark.jars.packages", "org.apache.spark:spark-avro_2.12:3.5.1")
+            .config("spark.ui.enabled", "false")
+            .config("spark.driver.host", "localhost")
+            .config("spark.driver.bindAddress", "127.0.0.1")
+            .config("spark.sql.shuffle.partitions", "1")
+            .config("spark.local.dir", sparkTmp.toAbsolutePath().toString())
+            .getOrCreate();
+  }
+
+  @AfterClass
+  public static void tearDown() {
+    if (spark != null) {
+      spark.close();
+    }
+  }
 
   @Test
   public void test() throws Exception {
@@ -43,18 +73,12 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
     generateIdentifierParquet(basePath, testUuid, attempt);
     generateVerbatimParquet(basePath, testUuid, attempt);
 
-    OccurrenceInterpretation.main(
-        new String[] {
-          "--appName=occurrence-interpretation-test",
-          "--datasetId=" + testUuid,
-          "--attempt=" + attempt,
-          "--tripletValid=false",
-          "--occurrenceIdValid=true",
-          "--config=" + testResourcesRoot + "/pipelines.yaml",
-          "--master=local[*]",
-          "--numberOfShards=1",
-          "--useSystemExit=false"
-        });
+    PipelinesConfig config = loadConfig(testResourcesRoot + "/pipelines.yaml");
+
+    /* ############ standard init block ########## */
+    FileSystem fileSystem = getFileSystem(spark, config);
+    OccurrenceInterpretation.runInterpretation(
+        spark, fileSystem, config, testUuid, attempt, 1, false, true, null);
 
     // check outputs exist
     assertParquetExists(basePath, testUuid, attempt, Directories.OCCURRENCE_HDFS);

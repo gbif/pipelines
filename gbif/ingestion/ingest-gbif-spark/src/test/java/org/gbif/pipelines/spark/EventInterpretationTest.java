@@ -1,5 +1,7 @@
 package org.gbif.pipelines.spark;
 
+import static org.gbif.pipelines.ConfigUtil.loadConfig;
+import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
 import static org.junit.Assert.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +22,7 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.avro.AvroParquetReader;
 import org.apache.parquet.hadoop.ParquetReader;
@@ -29,8 +32,11 @@ import org.apache.spark.sql.SparkSession;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.EcoTerm;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -42,6 +48,31 @@ import org.junit.Test;
  */
 public class EventInterpretationTest extends MockedServicesTest {
 
+  private static SparkSession spark;
+  private static java.nio.file.Path sparkTmp = null;
+
+  @BeforeClass
+  public static void setUp() throws Exception {
+    sparkTmp = Files.createTempDirectory("spark-local");
+    spark =
+        SparkSession.builder()
+            .master("local[1]")
+            .config("spark.jars.packages", "org.apache.spark:spark-avro_2.12:3.5.1")
+            .config("spark.ui.enabled", "false")
+            .config("spark.driver.host", "localhost")
+            .config("spark.driver.bindAddress", "127.0.0.1")
+            .config("spark.sql.shuffle.partitions", "1")
+            .config("spark.local.dir", sparkTmp.toAbsolutePath().toString())
+            .getOrCreate();
+  }
+
+  @AfterClass
+  public static void tearDown() {
+    if (spark != null) {
+      spark.close();
+    }
+  }
+
   @Test
   public void test() throws Exception {
 
@@ -52,16 +83,12 @@ public class EventInterpretationTest extends MockedServicesTest {
     String testUuid = "8d5fe649-f85e-43cc-a19c-2a9979a741ac";
     generateVerbatimAvro(testUuid, 1);
 
-    EventInterpretation.main(
-        new String[] {
-          "--appName=event-interpretation-test",
-          "--datasetId=" + testUuid,
-          "--attempt=" + 1,
-          "--config=" + testResourcesRoot + "/pipelines.yaml",
-          "--master=local[*]",
-          "--numberOfShards=1",
-          "--useSystemExit=false"
-        });
+    PipelinesConfig config = loadConfig(testResourcesRoot + "/pipelines.yaml");
+
+    /* ############ standard init block ########## */
+    FileSystem fileSystem = getFileSystem(spark, config);
+
+    EventInterpretation.runEventInterpretation(spark, fileSystem, config, testUuid, 1, 1);
 
     // Validate EventHdfsRecord output
     checkHdfsTableOutputs(testResourcesRoot, testUuid, 1);
