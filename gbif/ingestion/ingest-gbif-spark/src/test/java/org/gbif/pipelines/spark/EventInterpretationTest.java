@@ -166,11 +166,10 @@ public class EventInterpretationTest extends MockedServicesTest {
             .get();
 
     // load parquet into spark sql dataframe
-    SparkSession spark =
-        SparkSession.builder().appName("EventInterpretationTest").master("local[*]").getOrCreate();
     Dataset<ParentJsonRecord> jsonDf =
         spark.read().parquet(parquetFile.toString()).as(Encoders.bean(ParentJsonRecord.class));
     List<String> jsonRecord = jsonDf.toJSON().collectAsList();
+
     for (String json : jsonRecord) {
 
       String eventId = JsonPath.read(json, "$.event.eventID");
