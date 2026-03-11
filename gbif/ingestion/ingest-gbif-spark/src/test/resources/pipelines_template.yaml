@@ -9,8 +9,8 @@ nameUsageMatchingService:
   ws:
     api:
       wsUrl: __TO_BE_SET__
-vocabularyService:
-  wsUrl: https://api.gbif.org/v1/
+vocabularyConfig:
+  vocabulariesPath: __TO_BE_SET__
 grscicollLookup:
   api:
     wsUrl: __TO_BE_SET__
