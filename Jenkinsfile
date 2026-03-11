@@ -65,9 +65,7 @@ pipeline {
       }
       steps {
         withMaven () {
-            configFileProvider([configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS')]) {
-              sh 'mvn clean install deploy'
-            }
+          sh 'mvn clean install -P skip-release-it'
         }
       }
     }
@@ -85,7 +83,21 @@ pipeline {
         sh 'mvn clean verify -U'
       }
     }
-
+    stage('Snapshots to nexus') {
+      environment {
+        PROFILES = getProfiles()
+      }
+      when {
+        expression {
+          env.RELEASE == 'false'
+        }
+      }
+      steps {
+        configFileProvider([configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS')]) {
+          sh 'mvn -s $MAVEN_SETTINGS deploy -B -DskipITs -P ${PROFILES}'
+        }
+      }
+    }
     stage('Release version to nexus') {
       environment {
         PROFILES = getProfiles()
