@@ -20,47 +20,31 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.spark.storage.StorageLevel;
 import org.gbif.pipelines.io.avro.Parent;
 import scala.Tuple2;
-import scala.Tuple3;
 import scala.reflect.ClassTag;
 import scala.runtime.AbstractFunction2;
 
 @Slf4j
 public class CalculateLineage {
 
-  public static void main(String[] args) {
-
-    java.util.List<Tuple3<String, String, String>> events =
-        java.util.List.of(
-            new Tuple3<>("Event1", "TypeA", null),
-            new Tuple3<>("Event2", "TypeB", "Event1"),
-            new Tuple3<>("Event3", "TypeC", "Event1"),
-            new Tuple3<>("Event4", "TypeD", "Event2"));
-
-    SparkSession.Builder sparkBuilder = SparkSession.builder().appName("graphx test");
-    sparkBuilder = sparkBuilder.master("local[*]");
-    SparkSession spark = sparkBuilder.getOrCreate();
-    Dataset<Row> eventDf =
-        spark
-            .createDataset(
-                events, Encoders.tuple(Encoders.STRING(), Encoders.STRING(), Encoders.STRING()))
-            .select(
-                col("_1").as("eventId"), col("_2").as("eventType"), col("_3").as("parentEventId"))
-            .toDF();
-    Dataset<EventLineage> lineages = calculateLineage(spark, eventDf);
-
-    spark.close();
-  }
-
   /**
    * Calculates lineage using GraphX Pregel API
    *
-   * @param spark
-   * @param eventDf
+   * @param spark the SparkSession to use for processing
+   * @param eventDf a DataFrame containing event data with columns: eventId, eventType,
+   *     parentEventId
+   * @return The event lineages
    */
   public static Dataset<EventLineage> calculateLineage(SparkSession spark, Dataset<Row> eventDf) {
 
-    Dataset<Row> eventDfWithId = eventDf.withColumn("vertexId", monotonically_increasing_id());
+    // check if eventDf has required columns
+    List<String> requiredColumns = Arrays.asList("eventId", "eventType", "parentEventId");
+    for (String col : requiredColumns) {
+      if (!Arrays.asList(eventDf.columns()).contains(col)) {
+        throw new IllegalArgumentException("Input DataFrame must contain column: " + col);
+      }
+    }
 
+    Dataset<Row> eventDfWithId = eventDf.withColumn("vertexId", monotonically_increasing_id());
     eventDfWithId.createOrReplaceTempView("events");
 
     String sqlQuery =

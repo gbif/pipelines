@@ -285,41 +285,27 @@ public class ParentJsonConverter {
   }
 
   private List<String> getParentsLineageEventTypes() {
-    List<String> eventTypes =
-        eventCore.getParentsLineage().stream()
-            .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
-            .map(org.gbif.pipelines.io.avro.Parent::getEventType)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
 
-    // eventType can't be null, the interpretation uses a fallback
-    eventTypes.add(eventCore.getEventType().getConcept());
-
-    return eventTypes;
+    return eventCore.getParentsLineage().stream()
+        .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
+        .map(org.gbif.pipelines.io.avro.Parent::getEventType)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
 
   private List<String> getParentsLineageVerbatimEventTypes() {
-    List<String> verbatimEventTypes =
-        eventCore.getParentsLineage().stream()
-            .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
-            .map(org.gbif.pipelines.io.avro.Parent::getVerbatimEventType)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
-
-    verbatimEventTypes.add(extractOptValue(verbatim, DwcTerm.eventType).orElse(DEFAULT_EVENT_TYPE));
-
-    return verbatimEventTypes;
+    return eventCore.getParentsLineage().stream()
+        .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
+        .map(org.gbif.pipelines.io.avro.Parent::getVerbatimEventType)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
 
   private List<String> getLineageEventIDs() {
-
-    List<String> eventIDs =
-        eventCore.getParentsLineage().stream()
-            .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
-            .map(org.gbif.pipelines.io.avro.Parent::getId)
-            .collect(Collectors.toList());
-    eventIDs.add(eventCore.getId());
-    return eventIDs;
+    return eventCore.getParentsLineage().stream()
+        .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
+        .map(org.gbif.pipelines.io.avro.Parent::getId)
+        .collect(Collectors.toList());
   }
 
   private void mapMultimediaRecord(EventJsonRecord.Builder builder) {

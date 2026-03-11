@@ -200,7 +200,7 @@ public class EventInterpretation {
         extendedRecords.map(
             (MapFunction<ExtendedRecord, Row>)
                 record -> {
-                  String eventID = record.getId();
+                  String eventID = ModelUtils.extractValue(record, DwcTerm.eventID);
                   Optional<String> eventTypeOpt =
                       ModelUtils.extractOptValue(record, DwcTerm.eventType);
                   Optional<String> parentEventIDOpt =
@@ -299,7 +299,12 @@ public class EventInterpretation {
     Dataset<Tuple2<ExtendedRecord, EventLineage>> join =
         extendedRecords
             .as("extendedRecord")
-            .joinWith(lineage, extendedRecords.col("id").equalTo(lineage.col("id")), "left_outer");
+            .joinWith(
+                lineage,
+                extendedRecords
+                    .col("coreTerms.`http://rs.tdwg.org/dwc/terms/eventID`")
+                    .equalTo(lineage.col("id")),
+                "left_outer");
 
     Dataset<Event> interpreted =
         join.map(

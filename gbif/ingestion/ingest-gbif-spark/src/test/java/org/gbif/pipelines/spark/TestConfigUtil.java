@@ -8,7 +8,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.VocabularyConfig;
 
@@ -52,15 +51,16 @@ public class TestConfigUtil {
 
       VocabularyConfig vocabularyConfig = new VocabularyConfig();
       vocabularyConfig.setVocabulariesPath(testResourcePath + "vocab");
-      vocabularyConfig.setVocabulariesNames(Map.of(
-        "http://rs.tdwg.org/dwc/terms/degreeOfEstablishment", "DegreeOfEstablishment",
-        "http://rs.tdwg.org/dwc/terms/lifeStage", "LifeStage",
-        "http://rs.tdwg.org/dwc/terms/establishmentMeans", "EstablishmentMeans",
-        "http://rs.tdwg.org/dwc/terms/pathway", "Pathway",
-        "http://rs.tdwg.org/dwc/terms/eventType", "EventType"
-//#    http://rs.tdwg.org/dwc/terms/typeStatus: TypeStatus.json
-//#    http://rs.tdwg.org/dwc/terms/sex: Sex.json
-      ));
+      vocabularyConfig.setVocabulariesNames(
+          Map.of(
+              "http://rs.tdwg.org/dwc/terms/degreeOfEstablishment", "DegreeOfEstablishment",
+              "http://rs.tdwg.org/dwc/terms/lifeStage", "LifeStage",
+              "http://rs.tdwg.org/dwc/terms/establishmentMeans", "EstablishmentMeans",
+              "http://rs.tdwg.org/dwc/terms/pathway", "Pathway",
+              "http://rs.tdwg.org/dwc/terms/eventType", "EventType"
+              // #    http://rs.tdwg.org/dwc/terms/typeStatus: TypeStatus.json
+              // #    http://rs.tdwg.org/dwc/terms/sex: Sex.json
+              ));
       config.setVocabularyConfig(vocabularyConfig);
     }
     try (FileOutputStream out = new FileOutputStream(testResourcePath + "/" + outConfigFilePath)) {

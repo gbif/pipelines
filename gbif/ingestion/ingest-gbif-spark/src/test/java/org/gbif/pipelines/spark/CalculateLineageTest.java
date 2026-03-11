@@ -1,0 +1,78 @@
+package org.gbif.pipelines.spark;
+
+import static org.apache.spark.sql.functions.col;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
+import org.gbif.pipelines.io.avro.Parent;
+import org.junit.Test;
+import scala.Tuple3;
+
+import java.util.List;
+
+public class CalculateLineageTest {
+
+  @Test
+  public void testCalculateLineage() {
+
+    java.util.List<Tuple3<String, String, String>> events =
+        java.util.List.of(
+            new Tuple3<>("Event1", "TypeA", null),
+            new Tuple3<>("Event2", "TypeB", "Event1"),
+            new Tuple3<>("Event3", "TypeC", "Event1"),
+            new Tuple3<>("Event4", "TypeD", "Event2"));
+
+    SparkSession.Builder sparkBuilder = SparkSession.builder().appName("graphx test");
+    sparkBuilder = sparkBuilder.master("local[*]");
+    SparkSession spark = sparkBuilder.getOrCreate();
+    Dataset<Row> eventDf =
+        spark
+            .createDataset(
+                events, Encoders.tuple(Encoders.STRING(), Encoders.STRING(), Encoders.STRING()))
+            .select(
+                col("_1").as("eventId"), col("_2").as("eventType"), col("_3").as("parentEventId"))
+            .toDF();
+    Dataset<EventLineage> lineagesDf = CalculateLineage.calculateLineage(spark, eventDf);
+
+    // convert to list
+    List<EventLineage> lineages = lineagesDf.collectAsList();
+
+    spark.close();
+
+    // Expect one lineage row per input event
+    assertEquals(4, lineages.size());
+
+    // Each event id should appear in the output JSON
+    assertTrue(lineages.stream().anyMatch(j -> j.getId().equals("Event1")));
+    assertTrue(lineages.stream().anyMatch(j -> j.getId().equals("Event2")));
+    assertTrue(lineages.stream().anyMatch(j -> j.getId().equals("Event3")));
+    assertTrue(lineages.stream().anyMatch(j -> j.getId().equals("Event4")));
+
+    // assert Event4 has parents Event2 and Event1
+    EventLineage event4 =
+            lineages.stream().filter(l -> "Event4".equals(l.getId())).findFirst().orElse(null);
+    assertTrue(event4 != null);
+
+    List<Parent> parents = event4.getLineage();
+    assertTrue(parents != null && parents.size() >= 2);
+
+    // presence checks
+    assertTrue(parents.stream().anyMatch(p -> "Event2".equals(p.getId())));
+    assertTrue(parents.stream().anyMatch(p -> "Event1".equals(p.getId())));
+
+    // assert Event3 has parent Event1
+    EventLineage event3 =
+            lineages.stream().filter(l -> "Event3".equals(l.getId())).findFirst().orElse(null);
+    assertTrue(event3 != null);
+
+    // assert Event3 does not have parent  Event2
+    List<Parent> parents3 = event3.getLineage();
+    assertTrue(parents3 != null && parents3.size() == 2);
+    assertTrue(parents3.stream().anyMatch(p -> "Event1".equals(p.getId())));
+    assertTrue(parents3.stream().anyMatch(p -> "Event3".equals(p.getId())));
+  }
+}

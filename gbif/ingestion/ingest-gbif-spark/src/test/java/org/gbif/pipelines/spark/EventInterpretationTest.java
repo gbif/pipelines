@@ -33,6 +33,13 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 import org.junit.Test;
 
+/**
+ * This test validates the full event interpretation pipeline by generating a simple verbatim event
+ * record with a parent-child relationship, running the interpretation, and then checking the
+ * outputs in both EventHdfsRecord (parquet) and EventJsonRecord (json) formats. It ensures that the
+ * interpretation logic correctly processes the input and produces the expected derived fields,
+ * hierarchies, and metadata.
+ */
 public class EventInterpretationTest extends MockedServicesTest {
 
   @Test
@@ -132,18 +139,20 @@ public class EventInterpretationTest extends MockedServicesTest {
             .get();
 
     // load parquet into spark sql dataframe
-    SparkSession spark = SparkSession.builder().appName("EventInterpretationTest").master("local[*]").getOrCreate();
-    Dataset<ParentJsonRecord> jsonDf =  spark.read().parquet(parquetFile.toString()).as(Encoders.bean(ParentJsonRecord.class));
+    SparkSession spark =
+        SparkSession.builder().appName("EventInterpretationTest").master("local[*]").getOrCreate();
+    Dataset<ParentJsonRecord> jsonDf =
+        spark.read().parquet(parquetFile.toString()).as(Encoders.bean(ParentJsonRecord.class));
     List<String> jsonRecord = jsonDf.toJSON().collectAsList();
     for (String json : jsonRecord) {
 
       String eventId = JsonPath.read(json, "$.event.eventID");
-      //write json in pretty print to file for debugging
-      java.nio.file.Files.write(java.nio.file.Path.of(
-              outputFile + "event"+ eventId+".json"), new ObjectMapper().readTree(json).toPrettyString()
-              .getBytes(StandardCharsets.UTF_8));
+      // write json in pretty print to file for debugging
+      java.nio.file.Files.write(
+          java.nio.file.Path.of(outputFile + "event" + eventId + ".json"),
+          new ObjectMapper().readTree(json).toPrettyString().getBytes(StandardCharsets.UTF_8));
 
-      if("EVT-000".equals(eventId)) {
+      if ("EVT-000".equals(eventId)) {
         // Parent record checks
         assertEquals("EVT-000", JsonPath.read(json, "$.event.eventID"));
         assertEquals("Project", JsonPath.read(json, "$.event.eventType.concept"));
@@ -152,7 +161,9 @@ public class EventInterpretationTest extends MockedServicesTest {
         assertEquals("EVT-001", JsonPath.read(json, "$.event.eventID"));
         assertEquals("Survey", JsonPath.read(json, "$.event.eventType.concept"));
         assertEquals("EVT-000", JsonPath.read(json, "$.event.parentEventID"));
-        assertEquals(Map.of("gte", "2024-06-15T00:00:00.000", "lte", "2024-06-15T23:59:59.999"), JsonPath.read(json, "$.event.eventDate"));
+        assertEquals(
+            Map.of("gte", "2024-06-15T00:00:00.000", "lte", "2024-06-15T23:59:59.999"),
+            JsonPath.read(json, "$.event.eventDate"));
         assertEquals(List.of("visual survey"), JsonPath.read(json, "$.event.samplingProtocol"));
         assertEquals("Kenya", JsonPath.read(json, "$.event.country"));
         assertEquals("KE", JsonPath.read(json, "$.event.countryCode"));
@@ -168,17 +179,23 @@ public class EventInterpretationTest extends MockedServicesTest {
         assertEquals("2024-06-15T00:00", JsonPath.read(json, "$.event.eventDateSingle"));
 
         // event hierarchy and ids
-        assertEquals(List.of("2", "2"), JsonPath.<List<String>>read(json, "$.event.eventHierarchy"));
-        assertEquals("2 / 2", JsonPath.read(json, "$.event.eventHierarchyJoined"));
+        assertEquals(
+            List.of("EVT-000", "EVT-001"),
+            JsonPath.<List<String>>read(json, "$.event.eventHierarchy"));
+        assertEquals("EVT-000 / EVT-001", JsonPath.read(json, "$.event.eventHierarchyJoined"));
         assertEquals(2, JsonPath.<Integer>read(json, "$.event.eventHierarchyLevels").intValue());
         assertEquals("EVT-001", JsonPath.read(json, "$.event.eventID"));
         assertEquals("2", JsonPath.read(json, "$.event.id"));
 
         // eventType and lineage
         assertEquals("Survey", JsonPath.read(json, "$.event.eventType.concept"));
-        assertEquals(List.of("Event", "Project", "Survey"), JsonPath.<List<String>>read(json, "$.event.eventType.lineage"));
-        assertEquals(List.of("Survey", "Survey"), JsonPath.<List<String>>read(json, "$.event.eventTypeHierarchy"));
-        assertEquals("Survey / Survey", JsonPath.read(json, "$.event.eventTypeHierarchyJoined"));
+        assertEquals(
+            List.of("Event", "Project", "Survey"),
+            JsonPath.<List<String>>read(json, "$.event.eventType.lineage"));
+        assertEquals(
+            List.of("Project", "Survey"),
+            JsonPath.<List<String>>read(json, "$.event.eventTypeHierarchy"));
+        assertEquals("Project / Survey", JsonPath.read(json, "$.event.eventTypeHierarchyJoined"));
 
         // extensions & flags
         List<String> exts = JsonPath.<List<String>>read(json, "$.event.extensions");
@@ -212,17 +229,20 @@ public class EventInterpretationTest extends MockedServicesTest {
         // parent & parentsLineage
         assertEquals("EVT-000", JsonPath.read(json, "$.event.parentEventID"));
         assertEquals("Survey", JsonPath.read(json, "$.event.parentsLineage[0].eventType"));
-        assertEquals("2", JsonPath.read(json, "$.event.parentsLineage[0].id"));
+        assertEquals("EVT-001", JsonPath.read(json, "$.event.parentsLineage[0].id"));
 
         // project & publishing info
-        assertEquals(List.of("nlbif2022.015"), JsonPath.<List<String>>read(json, "$.event.projectID"));
+        assertEquals(
+            List.of("nlbif2022.015"), JsonPath.<List<String>>read(json, "$.event.projectID"));
         assertEquals("nlbif2022.015", JsonPath.read(json, "$.event.projectIDJoined"));
         assertEquals("EUROPE", JsonPath.read(json, "$.event.publishedByGbifRegion"));
         assertEquals("BG", JsonPath.read(json, "$.event.publishingCountry"));
         assertTrue(JsonPath.<Boolean>read(json, "$.event.repatriated"));
 
         // sampling protocol / effort / coordinates summary
-        assertEquals(List.of("visual survey"), JsonPath.<List<String>>read(json, "$.event.samplingProtocol"));
+        assertEquals(
+            List.of("visual survey"),
+            JsonPath.<List<String>>read(json, "$.event.samplingProtocol"));
         assertEquals("visual survey", JsonPath.read(json, "$.event.samplingProtocolJoined"));
         assertEquals("POINT (35.0128 -1.4061)", JsonPath.read(json, "$.event.scoordinates"));
         assertEquals(167, JsonPath.<Integer>read(json, "$.event.startDayOfYear").intValue());
@@ -230,39 +250,75 @@ public class EventInterpretationTest extends MockedServicesTest {
         // survey / verbatim event type info
         assertEquals("EVT-001", JsonPath.read(json, "$.event.surveyID"));
         assertEquals("Survey", JsonPath.read(json, "$.event.verbatimEventType"));
-        assertEquals(List.of("Survey", "Survey"), JsonPath.<List<String>>read(json, "$.event.verbatimEventTypeHierarchy"));
-        assertEquals("Survey / Survey", JsonPath.read(json, "$.event.verbatimEventTypeHierarchyJoined"));
+        assertEquals(
+            List.of("Project", "Survey"),
+            JsonPath.<List<String>>read(json, "$.event.verbatimEventTypeHierarchy"));
+        assertEquals(
+            "Project / Survey", JsonPath.read(json, "$.event.verbatimEventTypeHierarchyJoined"));
 
         // humboldt
-        assertEquals(100, JsonPath.<Integer>read(json, "$.event.humboldt[0].abundanceCap").intValue());
-        assertEquals(List.of("Survey"), JsonPath.<List<String>>read(json, "$.event.humboldt[0].compilationSourceTypes"));
-        assertEquals(List.of("Aggregate"), JsonPath.<List<String>>read(json, "$.event.humboldt[0].compilationTypes"));
-        assertEquals(List.of("Plot-based"), JsonPath.<List<String>>read(json, "$.event.humboldt[0].inventoryTypes"));
-        assertEquals(List.of("Shrub"), JsonPath.<List<String>>read(json, "$.event.humboldt[0].excludedGrowthFormScope"));
-        assertEquals("Juvenile", JsonPath.read(json, "$.event.humboldt[0].excludedLifeStageScope[0].concept"));
+        assertEquals(
+            100, JsonPath.<Integer>read(json, "$.event.humboldt[0].abundanceCap").intValue());
+        assertEquals(
+            List.of("Survey"),
+            JsonPath.<List<String>>read(json, "$.event.humboldt[0].compilationSourceTypes"));
+        assertEquals(
+            List.of("Aggregate"),
+            JsonPath.<List<String>>read(json, "$.event.humboldt[0].compilationTypes"));
+        assertEquals(
+            List.of("Plot-based"),
+            JsonPath.<List<String>>read(json, "$.event.humboldt[0].inventoryTypes"));
+        assertEquals(
+            List.of("Shrub"),
+            JsonPath.<List<String>>read(json, "$.event.humboldt[0].excludedGrowthFormScope"));
+        assertEquals(
+            "Juvenile",
+            JsonPath.read(json, "$.event.humboldt[0].excludedLifeStageScope[0].concept"));
         assertFalse(JsonPath.<Boolean>read(json, "$.event.humboldt[0].hasMaterialSamples"));
         assertFalse(JsonPath.<Boolean>read(json, "$.event.humboldt[0].hasNonTargetOrganisms"));
         assertFalse(JsonPath.<Boolean>read(json, "$.event.humboldt[0].hasVouchers"));
         assertEquals("hours", JsonPath.read(json, "$.event.humboldt[0].samplingEffortUnit"));
-        assertEquals(2.0d, JsonPath.<Double>read(json, "$.event.humboldt[0].samplingEffortValue"), 1e-6);
-        assertEquals(List.of("Team A"), JsonPath.<List<String>>read(json, "$.event.humboldt[0].samplingPerformedBy"));
-        assertEquals(List.of("Visual survey along transect"), JsonPath.<List<String>>read(json, "$.event.humboldt[0].protocolDescriptions"));
-        assertEquals(List.of("Standard Transect"), JsonPath.<List<String>>read(json, "$.event.humboldt[0].protocolNames"));
-        assertEquals(List.of("Protocol-2024"), JsonPath.<List<String>>read(json, "$.event.humboldt[0].protocolReferences"));
+        assertEquals(
+            2.0d, JsonPath.<Double>read(json, "$.event.humboldt[0].samplingEffortValue"), 1e-6);
+        assertEquals(
+            List.of("Team A"),
+            JsonPath.<List<String>>read(json, "$.event.humboldt[0].samplingPerformedBy"));
+        assertEquals(
+            List.of("Visual survey along transect"),
+            JsonPath.<List<String>>read(json, "$.event.humboldt[0].protocolDescriptions"));
+        assertEquals(
+            List.of("Standard Transect"),
+            JsonPath.<List<String>>read(json, "$.event.humboldt[0].protocolNames"));
+        assertEquals(
+            List.of("Protocol-2024"),
+            JsonPath.<List<String>>read(json, "$.event.humboldt[0].protocolReferences"));
         assertTrue(JsonPath.<Boolean>read(json, "$.event.humboldt[0].isAbundanceReported"));
         assertFalse(JsonPath.<Boolean>read(json, "$.event.humboldt[0].isAbundanceCapReported"));
-        assertTrue(JsonPath.<Boolean>read(json, "$.event.humboldt[0].isGrowthFormScopeFullyReported"));
-        assertTrue(JsonPath.<Boolean>read(json, "$.event.humboldt[0].isLifeStageScopeFullyReported"));
+        assertTrue(
+            JsonPath.<Boolean>read(json, "$.event.humboldt[0].isGrowthFormScopeFullyReported"));
+        assertTrue(
+            JsonPath.<Boolean>read(json, "$.event.humboldt[0].isLifeStageScopeFullyReported"));
         assertTrue(JsonPath.<Boolean>read(json, "$.event.humboldt[0].isSamplingEffortReported"));
-        assertEquals(List.of("tissue;soil"), JsonPath.<List<String>>read(json, "$.event.humboldt[0].materialSampleTypes"));
+        assertEquals(
+            List.of("tissue;soil"),
+            JsonPath.<List<String>>read(json, "$.event.humboldt[0].materialSampleTypes"));
         assertEquals(12, JsonPath.<Integer>read(json, "$.event.humboldt[0].siteCount").intValue());
-        assertEquals("established", JsonPath.read(json, "$.event.humboldt[0].targetDegreeOfEstablishmentScope[0].concept"));
-        assertEquals(List.of("Tree"), JsonPath.<List<String>>read(json, "$.event.humboldt[0].targetGrowthFormScope"));
-        assertEquals("Adult", JsonPath.read(json, "$.event.humboldt[0].targetLifeStageScope[0].concept"));
-        assertEquals(List.of("National Museum"), JsonPath.<List<String>>read(json, "$.event.humboldt[0].voucherInstitutions"));
+        assertEquals(
+            "established",
+            JsonPath.read(json, "$.event.humboldt[0].targetDegreeOfEstablishmentScope[0].concept"));
+        assertEquals(
+            List.of("Tree"),
+            JsonPath.<List<String>>read(json, "$.event.humboldt[0].targetGrowthFormScope"));
+        assertEquals(
+            "Adult", JsonPath.read(json, "$.event.humboldt[0].targetLifeStageScope[0].concept"));
+        assertEquals(
+            List.of("National Museum"),
+            JsonPath.<List<String>>read(json, "$.event.humboldt[0].voucherInstitutions"));
 
         // eventInherited
-        assertEquals(List.of("Survey"), JsonPath.<List<String>>read(json, "$.eventInherited.eventType"));
+        assertEquals(
+            List.of("Survey", "Project"),
+            JsonPath.<List<String>>read(json, "$.eventInherited.eventType"));
         assertEquals("2", JsonPath.read(json, "$.eventInherited.id"));
 
         // top-level ids & timing (exact match to test resource)
@@ -270,21 +326,36 @@ public class EventInterpretationTest extends MockedServicesTest {
 
         // locationInherited
         assertEquals("KE", JsonPath.read(json, "$.locationInherited.countryCode"));
-        assertEquals(-1.4061d, JsonPath.<Double>read(json, "$.locationInherited.decimalLatitude"), 1e-6);
-        assertEquals(35.0128d, JsonPath.<Double>read(json, "$.locationInherited.decimalLongitude"), 1e-6);
+        assertEquals(
+            -1.4061d, JsonPath.<Double>read(json, "$.locationInherited.decimalLatitude"), 1e-6);
+        assertEquals(
+            35.0128d, JsonPath.<Double>read(json, "$.locationInherited.decimalLongitude"), 1e-6);
         assertEquals("2", JsonPath.read(json, "$.locationInherited.id"));
         assertEquals("Narok", JsonPath.read(json, "$.locationInherited.stateProvince"));
 
         // metadata
-        assertEquals("8d5fe649-f85e-43cc-a19c-2a9979a741ac", JsonPath.read(json, "$.metadata.datasetKey"));
+        assertEquals(
+            "8d5fe649-f85e-43cc-a19c-2a9979a741ac", JsonPath.read(json, "$.metadata.datasetKey"));
         assertEquals("BG", JsonPath.read(json, "$.metadata.datasetPublishingCountry"));
-        assertEquals("Mid-winter count of water birds and other bird species in Bulgaria", JsonPath.read(json, "$.metadata.datasetTitle"));
-        assertEquals("8dae0f8c-12bc-444d-b889-6b177550a8b2", JsonPath.read(json, "$.metadata.endorsingNodeKey"));
-        assertEquals("fbca90e3-8aed-48b1-84e3-369afbd000ce", JsonPath.read(json, "$.metadata.hostingOrganizationKey"));
-        assertEquals("17a83780-3060-4851-9d6f-029d5fcb81c9", JsonPath.read(json, "$.metadata.installationKey"));
+        assertEquals(
+            "Mid-winter count of water birds and other bird species in Bulgaria",
+            JsonPath.read(json, "$.metadata.datasetTitle"));
+        assertEquals(
+            "8dae0f8c-12bc-444d-b889-6b177550a8b2",
+            JsonPath.read(json, "$.metadata.endorsingNodeKey"));
+        assertEquals(
+            "fbca90e3-8aed-48b1-84e3-369afbd000ce",
+            JsonPath.read(json, "$.metadata.hostingOrganizationKey"));
+        assertEquals(
+            "17a83780-3060-4851-9d6f-029d5fcb81c9",
+            JsonPath.read(json, "$.metadata.installationKey"));
         assertEquals("EML", JsonPath.read(json, "$.metadata.protocol"));
-        assertEquals("Bulgarian Society for the Protection of Birds", JsonPath.read(json, "$.metadata.publisherTitle"));
-        assertEquals("d1fec91e-5b53-4cff-9b31-10fed530a3c3", JsonPath.read(json, "$.metadata.publishingOrganizationKey"));
+        assertEquals(
+            "Bulgarian Society for the Protection of Birds",
+            JsonPath.read(json, "$.metadata.publisherTitle"));
+        assertEquals(
+            "d1fec91e-5b53-4cff-9b31-10fed530a3c3",
+            JsonPath.read(json, "$.metadata.publishingOrganizationKey"));
 
         // temporalInherited
         assertEquals(15, JsonPath.<Integer>read(json, "$.temporalInherited.day").intValue());
@@ -296,48 +367,182 @@ public class EventInterpretationTest extends MockedServicesTest {
         assertEquals("event", JsonPath.read(json, "$.type"));
 
         // verbatim - core map
-        assertEquals("EVT-001", JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/eventID']"));
-        assertEquals("Kenya", JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/country']"));
-        assertEquals("EVT-000", JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/parentEventID']"));
-        assertEquals("visual survey", JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/samplingProtocol']"));
-        assertEquals("Maasai Mara National Reserve", JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/locality']"));
-        assertEquals("2 hours", JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/samplingEffort']"));
-        assertEquals("2024-06-15", JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/eventDate']"));
-        assertEquals("Survey", JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/eventType']"));
-        assertEquals("Dummy event for testing", JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/eventRemarks']"));
-        assertEquals("35.0128", JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/decimalLongitude']"));
-        assertEquals("-1.4061", JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/decimalLatitude']"));
-        assertEquals("KE", JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/countryCode']"));
-        assertEquals("10:30:00Z", JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/eventTime']"));
-        assertEquals("Narok", JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/stateProvince']"));
+        assertEquals(
+            "EVT-001",
+            JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/eventID']"));
+        assertEquals(
+            "Kenya",
+            JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/country']"));
+        assertEquals(
+            "EVT-000",
+            JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/parentEventID']"));
+        assertEquals(
+            "visual survey",
+            JsonPath.read(
+                json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/samplingProtocol']"));
+        assertEquals(
+            "Maasai Mara National Reserve",
+            JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/locality']"));
+        assertEquals(
+            "2 hours",
+            JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/samplingEffort']"));
+        assertEquals(
+            "2024-06-15",
+            JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/eventDate']"));
+        assertEquals(
+            "Survey",
+            JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/eventType']"));
+        assertEquals(
+            "Dummy event for testing",
+            JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/eventRemarks']"));
+        assertEquals(
+            "35.0128",
+            JsonPath.read(
+                json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/decimalLongitude']"));
+        assertEquals(
+            "-1.4061",
+            JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/decimalLatitude']"));
+        assertEquals(
+            "KE",
+            JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/countryCode']"));
+        assertEquals(
+            "10:30:00Z",
+            JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/eventTime']"));
+        assertEquals(
+            "Narok",
+            JsonPath.read(json, "$.verbatim.core['http://rs.tdwg.org/dwc/terms/stateProvince']"));
 
         // verbatim - extensions map (eco/Event)
-        assertEquals("100", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/abundanceCap']"));
-        assertEquals("EVT-001", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/dwc/terms/eventID']"));
-        assertEquals("false", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/isAbundanceCapReported']"));
-        assertEquals("Dr. Jane Doe", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/identifiedBy']"));
-        assertEquals("Adult", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/targetLifeStageScope']"));
-        assertEquals("Tree", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/targetGrowthFormScope']"));
-        assertEquals("yes", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/hasMaterialSamples']"));
-        assertEquals("hours", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/samplingEffortUnit']"));
-        assertEquals("Plot-based", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/inventoryTypes']"));
-        assertEquals("Established", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/targetDegreeOfEstablishmentScope']"));
-        assertEquals("Shrub", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/excludedGrowthFormScope']"));
-        assertEquals("Juvenile", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/excludedLifeStageScope']"));
-        assertEquals("Protocol-2024", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/protocolReferences']"));
-        assertEquals("true", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/isSamplingEffortReported']"));
-        assertEquals("Introduced", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/excludedDegreeOfEstablishmentScope']"));
-        assertEquals("National Museum", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/voucherInstitutions']"));
-        assertEquals("false", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/isDegreeOfEstablishmentScopeFullyReported']"));
-        assertEquals("2", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/samplingEffortValue']"));
-        assertEquals("no", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/hasNonTargetOrganisms']"));
-        assertEquals("Visual survey along transect", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/protocolDescriptions']"));
-        assertEquals("true", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/isAbundanceReported']"));
-        assertEquals("canopy", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/verbatimTargetScope']"));
-        assertEquals("true", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/isLifeStageScopeFullyReported']"));
-        assertEquals("ID-REF-001", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/identificationReferences']"));
-        assertEquals("Survey", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/compilationSourceTypes']"));
-        assertEquals("12", JsonPath.read(json, "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/siteCount']"));
+        assertEquals(
+            "100",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/abundanceCap']"));
+        assertEquals(
+            "EVT-001",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/dwc/terms/eventID']"));
+        assertEquals(
+            "false",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/isAbundanceCapReported']"));
+        assertEquals(
+            "Dr. Jane Doe",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/identifiedBy']"));
+        assertEquals(
+            "Adult",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/targetLifeStageScope']"));
+        assertEquals(
+            "Tree",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/targetGrowthFormScope']"));
+        assertEquals(
+            "yes",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/hasMaterialSamples']"));
+        assertEquals(
+            "hours",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/samplingEffortUnit']"));
+        assertEquals(
+            "Plot-based",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/inventoryTypes']"));
+        assertEquals(
+            "Established",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/targetDegreeOfEstablishmentScope']"));
+        assertEquals(
+            "Shrub",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/excludedGrowthFormScope']"));
+        assertEquals(
+            "Juvenile",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/excludedLifeStageScope']"));
+        assertEquals(
+            "Protocol-2024",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/protocolReferences']"));
+        assertEquals(
+            "true",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/isSamplingEffortReported']"));
+        assertEquals(
+            "Introduced",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/excludedDegreeOfEstablishmentScope']"));
+        assertEquals(
+            "National Museum",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/voucherInstitutions']"));
+        assertEquals(
+            "false",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/isDegreeOfEstablishmentScopeFullyReported']"));
+        assertEquals(
+            "2",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/samplingEffortValue']"));
+        assertEquals(
+            "no",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/hasNonTargetOrganisms']"));
+        assertEquals(
+            "Visual survey along transect",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/protocolDescriptions']"));
+        assertEquals(
+            "true",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/isAbundanceReported']"));
+        assertEquals(
+            "canopy",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/verbatimTargetScope']"));
+        assertEquals(
+            "true",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/isLifeStageScopeFullyReported']"));
+        assertEquals(
+            "ID-REF-001",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/identificationReferences']"));
+        assertEquals(
+            "Survey",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/compilationSourceTypes']"));
+        assertEquals(
+            "12",
+            JsonPath.read(
+                json,
+                "$.verbatim.extensions['http://rs.tdwg.org/eco/terms/Event'][0]['http://rs.tdwg.org/eco/terms/siteCount']"));
       } else {
         throw new IllegalStateException("Unexpected eventID: " + eventId);
       }
