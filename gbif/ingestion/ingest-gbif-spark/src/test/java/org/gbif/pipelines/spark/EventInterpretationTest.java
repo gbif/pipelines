@@ -205,14 +205,18 @@ public class EventInterpretationTest extends MockedServicesTest {
           assertEquals(1, JsonPath.<Integer>read(json, "$.crawlId.int").intValue());
           assertEquals("2", JsonPath.read(json, "$.derivedMetadata.derivedMetadata.id.string"));
           assertEquals(
-                  "2024-06-15T00:00:00.000",
-                  JsonPath.read(json, "$.derivedMetadata.derivedMetadata.temporalCoverage.temporalCoverage.gte.string"));
+              "2024-06-15T00:00:00.000",
+              JsonPath.read(
+                  json,
+                  "$.derivedMetadata.derivedMetadata.temporalCoverage.temporalCoverage.gte.string"));
           assertEquals(
-                  "2024-06-15T23:59:59.999",
-                  JsonPath.read(json, "$.derivedMetadata.derivedMetadata.temporalCoverage.temporalCoverage.lte.string"));
+              "2024-06-15T23:59:59.999",
+              JsonPath.read(
+                  json,
+                  "$.derivedMetadata.derivedMetadata.temporalCoverage.temporalCoverage.lte.string"));
           assertEquals(
-                  "POINT(-1.4061 35.0128)",
-                  JsonPath.read(json, "$.derivedMetadata.derivedMetadata.wktConvexHull.string"));
+              "POINT(-1.4061 35.0128)",
+              JsonPath.read(json, "$.derivedMetadata.derivedMetadata.wktConvexHull.string"));
 
           // Event core fields
           assertEquals("EVT-001", JsonPath.read(json, "$.event.event.eventID.string"));
@@ -223,70 +227,91 @@ public class EventInterpretationTest extends MockedServicesTest {
           org.junit.Assert.assertEquals(-1.4061d, lat, 1e-6);
           org.junit.Assert.assertEquals(35.0128d, lon, 1e-6);
           // numeric latitude/longitude also present
-          org.junit.Assert.assertEquals(-1.4061d, JsonPath.<Double>read(json, "$.event.event.decimalLatitude.double"), 1e-6);
-          org.junit.Assert.assertEquals(35.0128d, JsonPath.<Double>read(json, "$.event.event.decimalLongitude.double"), 1e-6);
+          org.junit.Assert.assertEquals(
+              -1.4061d, JsonPath.<Double>read(json, "$.event.event.decimalLatitude.double"), 1e-6);
+          org.junit.Assert.assertEquals(
+              35.0128d, JsonPath.<Double>read(json, "$.event.event.decimalLongitude.double"), 1e-6);
 
           assertEquals("Kenya", JsonPath.read(json, "$.event.event.country.string"));
           assertEquals("KE", JsonPath.read(json, "$.event.event.countryCode.string"));
           assertEquals(15, JsonPath.<Integer>read(json, "$.event.event.day.int").intValue());
-          assertEquals(167, JsonPath.<Integer>read(json, "$.event.event.endDayOfYear.int").intValue());
+          assertEquals(
+              167, JsonPath.<Integer>read(json, "$.event.event.endDayOfYear.int").intValue());
           assertEquals("2024-06-15", JsonPath.read(json, "$.event.event.eventDateInterval.string"));
-          assertEquals("2024-06-15T00:00", JsonPath.read(json, "$.event.event.eventDateSingle.string"));
           assertEquals(
-                  "2024-06-15T00:00:00.000",
-                  JsonPath.read(json, "$.event.event.eventDate.eventDate.gte.string"));
+              "2024-06-15T00:00", JsonPath.read(json, "$.event.event.eventDateSingle.string"));
           assertEquals(
-                  "2024-06-15T23:59:59.999",
-                  JsonPath.read(json, "$.event.event.eventDate.eventDate.lte.string"));
+              "2024-06-15T00:00:00.000",
+              JsonPath.read(json, "$.event.event.eventDate.eventDate.gte.string"));
+          assertEquals(
+              "2024-06-15T23:59:59.999",
+              JsonPath.read(json, "$.event.event.eventDate.eventDate.lte.string"));
 
           // event hierarchy
           assertEquals(
-                  "2", JsonPath.read(json, "$.event.event.eventHierarchy.array[0].element.string"));
+              "2", JsonPath.read(json, "$.event.event.eventHierarchy.array[0].element.string"));
           assertEquals(
-                  "2", JsonPath.read(json, "$.event.event.eventHierarchy.array[1].element.string"));
+              "2", JsonPath.read(json, "$.event.event.eventHierarchy.array[1].element.string"));
           assertEquals("2 / 2", JsonPath.read(json, "$.event.event.eventHierarchyJoined.string"));
-          assertEquals(2, JsonPath.<Integer>read(json, "$.event.event.eventHierarchyLevels.int").intValue());
+          assertEquals(
+              2, JsonPath.<Integer>read(json, "$.event.event.eventHierarchyLevels.int").intValue());
 
           // eventType & type hierarchy
-          assertEquals("Event", JsonPath.read(json, "$.event.event.eventType.eventType.concept.string"));
           assertEquals(
-                  "Event", JsonPath.read(json, "$.event.event.eventType.eventType.lineage.array[0].element.string"));
+              "Event", JsonPath.read(json, "$.event.event.eventType.eventType.concept.string"));
           assertEquals(
-                  "Survey", JsonPath.read(json, "$.event.event.eventTypeHierarchy.array[0].element.string"));
+              "Event",
+              JsonPath.read(
+                  json, "$.event.event.eventType.eventType.lineage.array[0].element.string"));
           assertEquals(
-                  "Event", JsonPath.read(json, "$.event.event.eventTypeHierarchy.array[1].element.string"));
-          assertEquals("Survey / Event", JsonPath.read(json, "$.event.event.eventTypeHierarchyJoined.string"));
+              "Survey",
+              JsonPath.read(json, "$.event.event.eventTypeHierarchy.array[0].element.string"));
+          assertEquals(
+              "Event",
+              JsonPath.read(json, "$.event.event.eventTypeHierarchy.array[1].element.string"));
+          assertEquals(
+              "Survey / Event",
+              JsonPath.read(json, "$.event.event.eventTypeHierarchyJoined.string"));
 
           // extensions list on event
-          List<String> eventExts = JsonPath.<List<String>>read(json, "$.event.event.extensions.array[*].element.string");
+          List<String> eventExts =
+              JsonPath.<List<String>>read(json, "$.event.event.extensions.array[*].element.string");
           assertNotNull(eventExts);
           org.junit.Assert.assertTrue(eventExts.contains("http://rs.tdwg.org/eco/terms/Event"));
-          org.junit.Assert.assertTrue(eventExts.contains("http://rs.tdwg.org/dwc/terms/Occurrence"));
+          org.junit.Assert.assertTrue(
+              eventExts.contains("http://rs.tdwg.org/dwc/terms/Occurrence"));
 
           // GADM and region/state
           assertEquals("Kenya", JsonPath.read(json, "$.event.event.gadm.gadm.level0Name.string"));
           assertEquals("Narok", JsonPath.read(json, "$.event.event.gadm.gadm.level1Name.string"));
-          assertEquals("Kilgoris", JsonPath.read(json, "$.event.event.gadm.gadm.level2Name.string"));
-          assertEquals("Kimintet", JsonPath.read(json, "$.event.event.gadm.gadm.level3Name.string"));
+          assertEquals(
+              "Kilgoris", JsonPath.read(json, "$.event.event.gadm.gadm.level2Name.string"));
+          assertEquals(
+              "Kimintet", JsonPath.read(json, "$.event.event.gadm.gadm.level3Name.string"));
           assertEquals("AFRICA", JsonPath.read(json, "$.event.event.gbifRegion.string"));
           assertEquals("Narok", JsonPath.read(json, "$.event.event.stateProvince.string"));
 
           // flags & basic meta
-          org.junit.Assert.assertTrue(JsonPath.<Boolean>read(json, "$.event.event.hasCoordinate.boolean"));
-          org.junit.Assert.assertFalse(JsonPath.<Boolean>read(json, "$.event.event.hasGeospatialIssue.boolean"));
+          org.junit.Assert.assertTrue(
+              JsonPath.<Boolean>read(json, "$.event.event.hasCoordinate.boolean"));
+          org.junit.Assert.assertFalse(
+              JsonPath.<Boolean>read(json, "$.event.event.hasGeospatialIssue.boolean"));
           assertEquals("2", JsonPath.read(json, "$.event.event.id.string"));
 
           // issues
-          List<String> issues = JsonPath.<List<String>>read(json, "$.event.event.issues.array[*].element.string");
+          List<String> issues =
+              JsonPath.<List<String>>read(json, "$.event.event.issues.array[*].element.string");
           assertNotNull(issues);
           org.junit.Assert.assertTrue(issues.contains("GEODETIC_DATUM_ASSUMED_WGS84"));
           org.junit.Assert.assertTrue(issues.contains("CONTINENT_DERIVED_FROM_COORDINATES"));
 
           // locality and temporal
-          assertEquals("Maasai Mara National Reserve", JsonPath.read(json, "$.event.event.locality.string"));
+          assertEquals(
+              "Maasai Mara National Reserve", JsonPath.read(json, "$.event.event.locality.string"));
           assertEquals(6, JsonPath.<Integer>read(json, "$.event.event.month.int").intValue());
           assertEquals(2024, JsonPath.<Integer>read(json, "$.event.event.year.int").intValue());
-          assertEquals("0797506EVT-001", JsonPath.read(json, "$.event.event.yearMonthEventIDSort.string"));
+          assertEquals(
+              "0797506EVT-001", JsonPath.read(json, "$.event.event.yearMonthEventIDSort.string"));
 
           // parent and parentsLineage
           assertEquals("EVT-000", JsonPath.read(json, "$.event.event.parentEventID.string"));
@@ -296,52 +321,109 @@ public class EventInterpretationTest extends MockedServicesTest {
           org.junit.Assert.assertTrue(parentsElem.toString().contains("2"));
 
           // project & publishing info
-          assertEquals("nlbif2022.015", JsonPath.read(json, "$.event.event.projectID.array[0].element.string"));
-          assertEquals("nlbif2022.015", JsonPath.read(json, "$.event.event.projectIDJoined.string"));
+          assertEquals(
+              "nlbif2022.015",
+              JsonPath.read(json, "$.event.event.projectID.array[0].element.string"));
+          assertEquals(
+              "nlbif2022.015", JsonPath.read(json, "$.event.event.projectIDJoined.string"));
           assertEquals("EUROPE", JsonPath.read(json, "$.event.event.publishedByGbifRegion.string"));
           assertEquals("BG", JsonPath.read(json, "$.event.event.publishingCountry.string"));
-          org.junit.Assert.assertTrue(JsonPath.<Boolean>read(json, "$.event.event.repatriated.boolean"));
+          org.junit.Assert.assertTrue(
+              JsonPath.<Boolean>read(json, "$.event.event.repatriated.boolean"));
 
           // sampling protocol / effort / coordinates summary
           assertEquals(
-                  "visual survey",
-                  JsonPath.read(json, "$.event.event.samplingProtocol.array[0].element.string"));
-          assertEquals("visual survey", JsonPath.read(json, "$.event.event.samplingProtocolJoined.string"));
-          assertEquals("POINT (35.0128 -1.4061)", JsonPath.read(json, "$.event.event.scoordinates.string"));
-          assertEquals(167, JsonPath.<Integer>read(json, "$.event.event.startDayOfYear.int").intValue());
+              "visual survey",
+              JsonPath.read(json, "$.event.event.samplingProtocol.array[0].element.string"));
+          assertEquals(
+              "visual survey", JsonPath.read(json, "$.event.event.samplingProtocolJoined.string"));
+          assertEquals(
+              "POINT (35.0128 -1.4061)", JsonPath.read(json, "$.event.event.scoordinates.string"));
+          assertEquals(
+              167, JsonPath.<Integer>read(json, "$.event.event.startDayOfYear.int").intValue());
 
-          //Humboldt interpretation
+          // Humboldt interpretation
           String humboldtBase = "$.event.event.humboldt.array[0].element";
           String humElement = humboldtBase + "['element2.element']";
 
-          assertEquals(100, JsonPath.<Integer>read(json, humElement + "['abundanceCap'].int").intValue());
-          assertEquals("Survey", JsonPath.read(json, humElement + "['compilationSourceTypes'].array[0].element.string"));
-          assertEquals("Aggregate", JsonPath.read(json, humElement + "['compilationTypes'].array[0].element.string"));
-          assertEquals("Plot-based", JsonPath.read(json, humElement + "['inventoryTypes'].array[0].element.string"));
-          assertEquals("Shrub", JsonPath.read(json, humElement + "['excludedGrowthFormScope'].array[0].element.string"));
-          assertEquals("Juvenile", JsonPath.read(json, humElement + "['excludedLifeStageScope'].array[0].element['element5.element'].concept.string"));
-          assertEquals("established", JsonPath.read(json, humElement + "['targetDegreeOfEstablishmentScope'].array[0].element['element8.element'].concept.string"));
-          assertEquals("Tree", JsonPath.read(json, humElement + "['targetGrowthFormScope'].array[0].element.string"));
-          assertEquals("Adult", JsonPath.read(json, humElement + "['targetLifeStageScope'].array[0].element['element9.element'].concept.string"));
+          assertEquals(
+              100, JsonPath.<Integer>read(json, humElement + "['abundanceCap'].int").intValue());
+          assertEquals(
+              "Survey",
+              JsonPath.read(
+                  json, humElement + "['compilationSourceTypes'].array[0].element.string"));
+          assertEquals(
+              "Aggregate",
+              JsonPath.read(json, humElement + "['compilationTypes'].array[0].element.string"));
+          assertEquals(
+              "Plot-based",
+              JsonPath.read(json, humElement + "['inventoryTypes'].array[0].element.string"));
+          assertEquals(
+              "Shrub",
+              JsonPath.read(
+                  json, humElement + "['excludedGrowthFormScope'].array[0].element.string"));
+          assertEquals(
+              "Juvenile",
+              JsonPath.read(
+                  json,
+                  humElement
+                      + "['excludedLifeStageScope'].array[0].element['element5.element'].concept.string"));
+          assertEquals(
+              "established",
+              JsonPath.read(
+                  json,
+                  humElement
+                      + "['targetDegreeOfEstablishmentScope'].array[0].element['element8.element'].concept.string"));
+          assertEquals(
+              "Tree",
+              JsonPath.read(
+                  json, humElement + "['targetGrowthFormScope'].array[0].element.string"));
+          assertEquals(
+              "Adult",
+              JsonPath.read(
+                  json,
+                  humElement
+                      + "['targetLifeStageScope'].array[0].element['element9.element'].concept.string"));
 
-          assertEquals("National Museum", JsonPath.read(json, humElement + "['voucherInstitutions'].array[0].element.string"));
-          assertEquals(12, JsonPath.<Integer>read(json, humElement + "['siteCount'].int").intValue());
+          assertEquals(
+              "National Museum",
+              JsonPath.read(json, humElement + "['voucherInstitutions'].array[0].element.string"));
+          assertEquals(
+              12, JsonPath.<Integer>read(json, humElement + "['siteCount'].int").intValue());
           assertEquals("hours", JsonPath.read(json, humElement + "['samplingEffortUnit'].string"));
-          assertEquals(2.0, JsonPath.<Double>read(json, humElement + "['samplingEffortValue'].double"), 1e-6);
-          assertEquals("Team A", JsonPath.read(json, humElement + "['samplingPerformedBy'].array[0].element.string"));
+          assertEquals(
+              2.0,
+              JsonPath.<Double>read(json, humElement + "['samplingEffortValue'].double"),
+              1e-6);
+          assertEquals(
+              "Team A",
+              JsonPath.read(json, humElement + "['samplingPerformedBy'].array[0].element.string"));
 
-          assertEquals("Visual survey along transect", JsonPath.read(json, humElement + "['protocolDescriptions'].array[0].element.string"));
-          assertEquals("Standard Transect", JsonPath.read(json, humElement + "['protocolNames'].array[0].element.string"));
-          assertEquals("Protocol-2024", JsonPath.read(json, humElement + "['protocolReferences'].array[0].element.string"));
+          assertEquals(
+              "Visual survey along transect",
+              JsonPath.read(json, humElement + "['protocolDescriptions'].array[0].element.string"));
+          assertEquals(
+              "Standard Transect",
+              JsonPath.read(json, humElement + "['protocolNames'].array[0].element.string"));
+          assertEquals(
+              "Protocol-2024",
+              JsonPath.read(json, humElement + "['protocolReferences'].array[0].element.string"));
 
           assertFalse(JsonPath.<Boolean>read(json, humElement + "['hasMaterialSamples'].boolean"));
           assertFalse(JsonPath.<Boolean>read(json, humElement + "['hasVouchers'].boolean"));
-          assertFalse(JsonPath.<Boolean>read(json, humElement + "['hasNonTargetOrganisms'].boolean"));
+          assertFalse(
+              JsonPath.<Boolean>read(json, humElement + "['hasNonTargetOrganisms'].boolean"));
           assertTrue(JsonPath.<Boolean>read(json, humElement + "['isAbundanceReported'].boolean"));
-          assertFalse(JsonPath.<Boolean>read(json, humElement + "['isAbundanceCapReported'].boolean"));
-          assertTrue(JsonPath.<Boolean>read(json, humElement + "['isGrowthFormScopeFullyReported'].boolean"));
-          assertTrue(JsonPath.<Boolean>read(json, humElement + "['isLifeStageScopeFullyReported'].boolean"));
-          assertTrue(JsonPath.<Boolean>read(json, humElement + "['isSamplingEffortReported'].boolean"));
+          assertFalse(
+              JsonPath.<Boolean>read(json, humElement + "['isAbundanceCapReported'].boolean"));
+          assertTrue(
+              JsonPath.<Boolean>read(
+                  json, humElement + "['isGrowthFormScopeFullyReported'].boolean"));
+          assertTrue(
+              JsonPath.<Boolean>read(
+                  json, humElement + "['isLifeStageScopeFullyReported'].boolean"));
+          assertTrue(
+              JsonPath.<Boolean>read(json, humElement + "['isSamplingEffortReported'].boolean"));
           // humboldt array exists (contains an element with nested element2.element object)
           Object hum = JsonPath.read(json, "$.event.event.humboldt.array[0].element");
           org.junit.Assert.assertNotNull(hum);
@@ -349,25 +431,44 @@ public class EventInterpretationTest extends MockedServicesTest {
 
           // metadata top-level
           assertEquals(
-                  "8d5fe649-f85e-43cc-a19c-2a9979a741ac",
-                  JsonPath.read(json, "$.metadata.metadata.datasetKey.string"));
+              "8d5fe649-f85e-43cc-a19c-2a9979a741ac",
+              JsonPath.read(json, "$.metadata.metadata.datasetKey.string"));
           assertEquals(
-                  "Mid-winter count of water birds and other bird species in Bulgaria",
-                  JsonPath.read(json, "$.metadata.metadata.datasetTitle.string"));
+              "Mid-winter count of water birds and other bird species in Bulgaria",
+              JsonPath.read(json, "$.metadata.metadata.datasetTitle.string"));
           assertEquals(
-                  "Bulgarian Society for the Protection of Birds",
-                  JsonPath.read(json, "$.metadata.metadata.publisherTitle.string"));
+              "Bulgarian Society for the Protection of Birds",
+              JsonPath.read(json, "$.metadata.metadata.publisherTitle.string"));
           assertEquals("EML", JsonPath.read(json, "$.metadata.metadata.protocol.string"));
-          assertEquals("d1fec91e-5b53-4cff-9b31-10fed530a3c3", JsonPath.read(json, "$.metadata.metadata.publishingOrganizationKey.string"));
-          assertEquals("BG", JsonPath.read(json, "$.metadata.metadata.datasetPublishingCountry.string"));
-          assertEquals("8dae0f8c-12bc-444d-b889-6b177550a8b2", JsonPath.read(json, "$.metadata.metadata.endorsingNodeKey.string"));
-          assertEquals("fbca90e3-8aed-48b1-84e3-369afbd000ce", JsonPath.read(json, "$.metadata.metadata.hostingOrganizationKey.string"));
-          assertEquals("17a83780-3060-4851-9d6f-029d5fcb81c9", JsonPath.read(json, "$.metadata.metadata.installationKey.string"));
+          assertEquals(
+              "d1fec91e-5b53-4cff-9b31-10fed530a3c3",
+              JsonPath.read(json, "$.metadata.metadata.publishingOrganizationKey.string"));
+          assertEquals(
+              "BG", JsonPath.read(json, "$.metadata.metadata.datasetPublishingCountry.string"));
+          assertEquals(
+              "8dae0f8c-12bc-444d-b889-6b177550a8b2",
+              JsonPath.read(json, "$.metadata.metadata.endorsingNodeKey.string"));
+          assertEquals(
+              "fbca90e3-8aed-48b1-84e3-369afbd000ce",
+              JsonPath.read(json, "$.metadata.metadata.hostingOrganizationKey.string"));
+          assertEquals(
+              "17a83780-3060-4851-9d6f-029d5fcb81c9",
+              JsonPath.read(json, "$.metadata.metadata.installationKey.string"));
 
           // locationInherited checks
-          assertEquals("KE", JsonPath.read(json, "$.locationInherited.locationInherited.countryCode.string"));
-          org.junit.Assert.assertEquals(-1.4061d, JsonPath.<Double>read(json, "$.locationInherited.locationInherited.decimalLatitude.double"), 1e-6);
-          org.junit.Assert.assertEquals(35.0128d, JsonPath.<Double>read(json, "$.locationInherited.locationInherited.decimalLongitude.double"), 1e-6);
+          assertEquals(
+              "KE",
+              JsonPath.read(json, "$.locationInherited.locationInherited.countryCode.string"));
+          org.junit.Assert.assertEquals(
+              -1.4061d,
+              JsonPath.<Double>read(
+                  json, "$.locationInherited.locationInherited.decimalLatitude.double"),
+              1e-6);
+          org.junit.Assert.assertEquals(
+              35.0128d,
+              JsonPath.<Double>read(
+                  json, "$.locationInherited.locationInherited.decimalLongitude.double"),
+              1e-6);
           assertEquals("2", JsonPath.read(json, "$.locationInherited.locationInherited.id.string"));
 
         } else {
@@ -479,9 +580,7 @@ public class EventInterpretationTest extends MockedServicesTest {
     er.setExtensions(
         Map.of(
             Extension.OCCURRENCE.getRowType(), List.of(occurrenceTerms),
-            Extension.HUMBOLDT.getRowType(), List.of(humboldtTerms)
-        )
-    );
+            Extension.HUMBOLDT.getRowType(), List.of(humboldtTerms)));
 
     // Avro schema for ExtendedRecord
     Schema schema = ReflectData.AllowNull.get().getSchema(ExtendedRecord.class);
