@@ -65,7 +65,9 @@ pipeline {
       }
       steps {
         withMaven () {
-          sh 'mvn clean install -P skip-release-it'
+            configFileProvider([configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS')]) {
+              sh 'mvn clean install deploy'
+            }
         }
       }
     }
