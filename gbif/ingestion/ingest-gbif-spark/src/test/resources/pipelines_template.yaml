@@ -59,3 +59,4 @@ extensionsAllowedForVerbatimSet:
   - http://rs.tdwg.org/dwc/terms/ResourceRelationship
   - http://rs.gbif.org/terms/1.0/DNADerivedData
   - https://tdwg.github.io/attribution/people/dwc/AgentActions
+  - http://rs.tdwg.org/eco/terms/Event

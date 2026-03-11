@@ -68,8 +68,8 @@ import scala.Tuple2;
 @Slf4j
 public class OccurrenceInterpretation {
 
-  static final ObjectMapper MAPPER = new ObjectMapper()
-          .setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+  static final ObjectMapper MAPPER =
+      new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 
   public static final String METRICS_FILENAME = "verbatim-to-occurrence.yml";
 
