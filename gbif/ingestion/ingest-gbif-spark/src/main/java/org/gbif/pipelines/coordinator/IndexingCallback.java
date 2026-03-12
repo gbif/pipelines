@@ -9,11 +9,11 @@ import org.gbif.common.messaging.api.MessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.pipelines.EsIndexUtils;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.spark.Directories;
-import org.gbif.pipelines.spark.Indexing;
+import org.gbif.pipelines.spark.IndexingPipeline;
+import org.gbif.pipelines.spark.util.EsIndexUtils;
 
 @Slf4j
 public class IndexingCallback
@@ -45,12 +45,12 @@ public class IndexingCallback
 
   @Override
   protected void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
-    Indexing.configSparkSession(sparkBuilder, config);
+    IndexingPipeline.configSparkSession(sparkBuilder, config);
   }
 
   @Override
   protected void runPipeline(PipelinesInterpretedMessage message) throws Exception {
-    Indexing.runIndexing(
+    IndexingPipeline.runIndexing(
         sparkSession,
         fileSystem,
         pipelinesConfig,
@@ -82,7 +82,7 @@ public class IndexingCallback
 
   @Override
   protected String getMetaFileName() {
-    return Indexing.METRICS_FILENAME;
+    return IndexingPipeline.METRICS_FILENAME;
   }
 
   @Override

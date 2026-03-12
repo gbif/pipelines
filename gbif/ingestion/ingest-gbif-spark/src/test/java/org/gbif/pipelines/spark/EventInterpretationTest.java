@@ -1,7 +1,7 @@
 package org.gbif.pipelines.spark;
 
-import static org.gbif.pipelines.ConfigUtil.loadConfig;
-import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
+import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
+import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.junit.Assert.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -88,7 +88,7 @@ public class EventInterpretationTest extends MockedServicesTest {
     /* ############ standard init block ########## */
     FileSystem fileSystem = getFileSystem(spark, config);
 
-    EventInterpretation.runEventInterpretation(spark, fileSystem, config, testUuid, 1, 1);
+    EventInterpretationPipeline.runEventInterpretation(spark, fileSystem, config, testUuid, 1, 1);
 
     // Validate EventHdfsRecord output
     checkHdfsTableOutputs(testResourcesRoot, testUuid, 1);

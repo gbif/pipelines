@@ -39,7 +39,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.StandaloneConfig;
-import org.gbif.pipelines.spark.ValidateIdentifiers;
+import org.gbif.pipelines.spark.IdentifiersPipeline;
 
 @Slf4j
 @Builder
@@ -79,7 +79,7 @@ public class PostprocessValidation {
   private IdentifierValidationResult validateThreshold() throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
-    String metaFileName = ValidateIdentifiers.METRICS_FILENAME;
+    String metaFileName = IdentifiersPipeline.METRICS_FILENAME;
     String metaPath = String.join("/", outputPath, datasetId, attempt, metaFileName);
     log.debug("Getting records number from the file - {}", metaPath);
 

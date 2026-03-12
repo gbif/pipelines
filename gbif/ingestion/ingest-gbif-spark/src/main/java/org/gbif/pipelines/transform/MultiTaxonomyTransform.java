@@ -23,8 +23,8 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.interpreters.core.MultiTaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MultiTaxonRecord;
-import org.gbif.pipelines.transform.utils.GeocodeKVSFactory;
-import org.gbif.pipelines.transform.utils.MultiTaxonomyKVSFactory;
+import org.gbif.pipelines.transform.factory.GeocodeKVSFactory;
+import org.gbif.pipelines.transform.factory.MultiTaxonomyKVSFactory;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 

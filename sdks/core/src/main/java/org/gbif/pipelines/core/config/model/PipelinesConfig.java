@@ -98,4 +98,6 @@ public class PipelinesConfig implements Serializable {
   private Map<String, SparkJobConfig> processingConfigs;
 
   private IndexConfig indexConfig;
+
+  private DerivedMetadataConfig derivedMetadataConfig;
 }

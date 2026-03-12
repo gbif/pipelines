@@ -1,7 +1,7 @@
 package org.gbif.pipelines.coordinator;
 
-import static org.gbif.pipelines.spark.Constants.DATASET_TYPE_ARG;
-import static org.gbif.pipelines.spark.Constants.SOURCE_DIRECTORY_ARG;
+import static org.gbif.pipelines.spark.ArgsConstants.DATASET_TYPE_ARG;
+import static org.gbif.pipelines.spark.ArgsConstants.SOURCE_DIRECTORY_ARG;
 
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -9,10 +9,10 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.pipelines.IndexSettings;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.Directories;
-import org.gbif.pipelines.spark.Indexing;
+import org.gbif.pipelines.spark.IndexingPipeline;
+import org.gbif.pipelines.spark.util.IndexSettings;
 
 @Slf4j
 public class IndexingDistributedCallback extends IndexingCallback {
@@ -38,9 +38,11 @@ public class IndexingDistributedCallback extends IndexingCallback {
     log.info("Start the process. Message - {}", message);
     List<String> extraArgs =
         List.of(
-            Indexing.ES_INDEX_NAME_ARG + "=" + indexSettings.getIndexName(),
-            Indexing.ES_INDEX_NUMBER_OF_SHARDS_ARG + "=" + indexSettings.getNumberOfShards(),
-            Indexing.ES_INDEX_ALIAS_ARG + "=" + indexSettings.getIndexAlias(),
+            IndexingPipeline.ES_INDEX_NAME_ARG + "=" + indexSettings.getIndexName(),
+            IndexingPipeline.ES_INDEX_NUMBER_OF_SHARDS_ARG
+                + "="
+                + indexSettings.getNumberOfShards(),
+            IndexingPipeline.ES_INDEX_ALIAS_ARG + "=" + indexSettings.getIndexAlias(),
             DATASET_TYPE_ARG + "=" + DatasetType.OCCURRENCE,
             SOURCE_DIRECTORY_ARG + "=" + Directories.OCCURRENCE_JSON);
 

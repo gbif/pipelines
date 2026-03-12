@@ -9,7 +9,7 @@ import org.gbif.pipelines.core.interpreters.specific.ClusteredInterpreter;
 import org.gbif.pipelines.core.parsers.clustering.ClusteringService;
 import org.gbif.pipelines.io.avro.ClusteringRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.transform.utils.ClusteringServiceFactory;
+import org.gbif.pipelines.transform.factory.ClusteringServiceFactory;
 
 public class ClusteringTransform implements Serializable, Closeable {
 

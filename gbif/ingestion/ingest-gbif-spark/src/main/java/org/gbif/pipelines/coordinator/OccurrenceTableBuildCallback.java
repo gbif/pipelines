@@ -8,7 +8,7 @@ import org.gbif.common.messaging.api.MessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.*;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.spark.TableBuild;
+import org.gbif.pipelines.spark.TableBuildPipeline;
 
 @Slf4j
 public class OccurrenceTableBuildCallback
@@ -31,7 +31,7 @@ public class OccurrenceTableBuildCallback
 
   @Override
   protected void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
-    TableBuild.configSparkSession(sparkBuilder, config);
+    TableBuildPipeline.configSparkSession(sparkBuilder, config);
   }
 
   @Override
@@ -41,7 +41,7 @@ public class OccurrenceTableBuildCallback
 
   @Override
   protected void runPipeline(PipelinesInterpretedMessage message) throws Exception {
-    TableBuild.runTableBuild(
+    TableBuildPipeline.runTableBuild(
         sparkSession,
         fileSystem,
         pipelinesConfig,

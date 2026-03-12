@@ -52,4 +52,9 @@ public interface Directories {
    * contain an occurrenceID
    */
   String VERBATIM_EVENT_EXT_FILTERED = "verbatim_event_ext_filtered";
+
+  String EVENT_DERIVED_CONVEX_HULL = "derived/convex_hull";
+  String EVENT_DERIVED_TEMPORAL_COVERAGE = "derived/temporal_coverage";
+  String EVENT_DERIVED_METADATA = "event_derived_metadata";
+  String EVENT_DERIVED_TAXON_COVERAGE = "derived/taxon_coverage";
 }

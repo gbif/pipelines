@@ -2,7 +2,7 @@ package org.gbif.pipelines.coordinator;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.gbif.api.model.pipelines.PipelineStep.Status.RUNNING;
-import static org.gbif.pipelines.Metrics.*;
+import static org.gbif.pipelines.coordinator.PrometheusMetrics.*;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.google.common.base.Strings;

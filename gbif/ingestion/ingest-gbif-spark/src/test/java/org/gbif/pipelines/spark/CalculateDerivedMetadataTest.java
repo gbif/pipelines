@@ -9,11 +9,15 @@ import java.util.Set;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
+import org.gbif.pipelines.core.config.model.DerivedMetadataConfig;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.MultiTaxonRecord;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.RankedNameWithAuthorship;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.json.TaxonCoverage;
+import org.gbif.pipelines.spark.pojo.Occurrence;
+import org.gbif.pipelines.spark.util.DerivedMetadataUtil;
 import org.junit.Test;
 import scala.Tuple2;
 
@@ -95,9 +99,12 @@ public class CalculateDerivedMetadataTest {
     assert testRootUrl != null;
     String testResourcesRoot = testRootUrl.getFile();
 
+    PipelinesConfig config = new PipelinesConfig();
+    config.setDerivedMetadataConfig(new DerivedMetadataConfig());
+
     Dataset<Tuple2<String, String>> calculatedTaxonCoverage =
-        CalculateDerivedMetadata.calculateTaxonomicCoverage(
-            testResourcesRoot + "/calculate-derived-data/taxon-coverage", ds);
+        DerivedMetadataUtil.calculateTaxonomicCoverage(
+            testResourcesRoot + "/calculate-derived-data/taxon-coverage", config, ds);
 
     Tuple2<String, String> idAndCoverage = calculatedTaxonCoverage.first();
 

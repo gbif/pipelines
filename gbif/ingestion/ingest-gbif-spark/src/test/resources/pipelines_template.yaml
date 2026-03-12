@@ -33,6 +33,8 @@ elastic:
   esMaxBatchSizeBytes: 10485760
   esMaxBatchSize: 1700
   indexNumberReplicas: 0
+derivedMetadataConfig:
+  maxTaxonCoveragePerEvent: 2000
 extensionsAllowedForVerbatimSet:
   - http://rs.tdwg.org/dwc/terms/Occurrence
   - http://rs.tdwg.org/ac/terms/Multimedia

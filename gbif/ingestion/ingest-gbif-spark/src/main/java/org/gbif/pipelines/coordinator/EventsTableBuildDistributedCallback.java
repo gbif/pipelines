@@ -1,7 +1,7 @@
 package org.gbif.pipelines.coordinator;
 
-import static org.gbif.pipelines.spark.Constants.DATASET_TYPE_ARG;
-import static org.gbif.pipelines.spark.Constants.SOURCE_DIRECTORY_ARG;
+import static org.gbif.pipelines.spark.ArgsConstants.DATASET_TYPE_ARG;
+import static org.gbif.pipelines.spark.ArgsConstants.SOURCE_DIRECTORY_ARG;
 import static org.gbif.pipelines.spark.Directories.EVENT_HDFS;
 
 import java.util.List;

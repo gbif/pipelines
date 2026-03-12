@@ -9,7 +9,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesEventsHdfsViewMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.spark.TableBuild;
+import org.gbif.pipelines.spark.TableBuildPipeline;
 
 @Slf4j
 public class EventsTableBuildCallback
@@ -32,7 +32,7 @@ public class EventsTableBuildCallback
 
   @Override
   protected void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
-    TableBuild.configSparkSession(sparkBuilder, config);
+    TableBuildPipeline.configSparkSession(sparkBuilder, config);
   }
 
   @Override
@@ -42,7 +42,7 @@ public class EventsTableBuildCallback
 
   @Override
   protected void runPipeline(PipelinesEventsInterpretedMessage message) throws Exception {
-    TableBuild.runTableBuild(
+    TableBuildPipeline.runTableBuild(
         sparkSession,
         fileSystem,
         pipelinesConfig,

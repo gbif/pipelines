@@ -11,6 +11,8 @@ import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.pipelines.io.avro.Parent;
+import org.gbif.pipelines.spark.pojo.EventLineage;
+import org.gbif.pipelines.spark.util.LineageUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -59,7 +61,7 @@ public class CalculateLineageTest {
             .select(
                 col("_1").as("eventId"), col("_2").as("eventType"), col("_3").as("parentEventId"))
             .toDF();
-    Dataset<EventLineage> lineagesDf = CalculateLineage.calculateLineage(spark, eventDf);
+    Dataset<EventLineage> lineagesDf = LineageUtil.calculateLineage(spark, eventDf);
 
     // convert to list
     List<EventLineage> lineages = lineagesDf.collectAsList();

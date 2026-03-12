@@ -8,7 +8,7 @@ import org.gbif.pipelines.core.interpreters.core.CoreInterpreter;
 import org.gbif.pipelines.core.interpreters.core.VocabularyInterpreter;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transform.utils.VocabularyServiceFactory;
+import org.gbif.pipelines.transform.factory.VocabularyServiceFactory;
 
 public class EventCoreTransform implements Serializable {
 
