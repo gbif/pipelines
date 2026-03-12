@@ -44,7 +44,9 @@ public class CalculateLineage {
       }
     }
 
-    Dataset<Row> eventDfWithId = eventDf.withColumn("vertexId", monotonically_increasing_id());
+    // filter out rows with null eventId and assign unique vertexId to each event
+    Dataset<Row> eventDfWithId = eventDf.filter(col("eventId").isNotNull())
+            .withColumn("vertexId", monotonically_increasing_id());
     eventDfWithId.createOrReplaceTempView("events");
 
     String sqlQuery =
