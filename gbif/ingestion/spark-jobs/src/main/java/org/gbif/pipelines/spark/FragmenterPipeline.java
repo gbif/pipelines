@@ -142,7 +142,6 @@ public class FragmenterPipeline {
   }
 
   public static void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
-    // nothing
   }
 
   public static void runFragmenter(

@@ -152,8 +152,6 @@ public class IndexingPipeline {
   }
 
   public static void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
-    sparkBuilder.config(
-        "spark.jars.packages", "org.elasticsearch:elasticsearch-spark-30_2.12:7.12.1");
     sparkBuilder.config("es.nodes", String.join(",", config.getElastic().getEsHosts()));
   }
 

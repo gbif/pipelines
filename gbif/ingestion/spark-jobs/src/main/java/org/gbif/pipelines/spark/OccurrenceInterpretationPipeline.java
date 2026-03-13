@@ -189,9 +189,7 @@ public class OccurrenceInterpretationPipeline {
     }
   }
 
-  public static void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
-    sparkBuilder.config("spark.jars.packages", "org.apache.spark:spark-avro_2.12:3.5.1");
-  }
+  public static void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {}
 
   /**
    * Runs the interpretation pipeline.

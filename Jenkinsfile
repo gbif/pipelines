@@ -54,7 +54,7 @@ pipeline {
       }
     }
 
-    stage('Quick build') {
+    stage('Quick build - snapshot to nexus') {
       environment {
         PROFILES = getProfiles()
       }

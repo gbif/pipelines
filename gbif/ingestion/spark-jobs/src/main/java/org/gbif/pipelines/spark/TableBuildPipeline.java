@@ -120,23 +120,6 @@ public class TableBuildPipeline {
   public static void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
     sparkBuilder
         .enableHiveSupport()
-        .config("spark.jars.packages", "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.6.0")
-        .config("spark.sql.defaultCatalog", "iceberg")
-        .config("spark.sql.catalog.iceberg", "org.apache.iceberg.spark.SparkCatalog")
-        .config("spark.sql.catalog.iceberg.type", "hive")
-        .config("spark.sql.catalog.local", "org.apache.iceberg.spark.SparkCatalog")
-        .config("spark.sql.catalog.local.type", "hadoop")
-        .config("spark.sql.catalog.spark_catalog", "org.apache.iceberg.spark.SparkSessionCatalog")
-        .config(
-            "spark.sql.extensions",
-            "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
-        .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
-        .config("spark.sql.warehouse.dir", "hdfs://gbif-hdfs/stackable/warehouse")
-
-        // FIXME move to config
-        .config("spark.sql.catalog.local.commit.retry.num-retries", "10")
-        .config("spark.sql.catalog.local.commit.retry.min-wait-ms", "100")
-        .config("spark.sql.catalog.local.commit.retry.max-wait-ms", "1000")
         .config("spark.hadoop.hive.metastore.uris", config.getHiveMetastoreUris());
   }
 
