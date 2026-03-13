@@ -438,8 +438,10 @@ public class DerivedMetadataUtil implements Serializable {
                   TemporalAccum accum = new TemporalAccum();
                   eventIter.forEachRemaining(
                       eventDate -> {
-                        accum.setMinDate(eventDate._2().getGte());
-                        accum.setMaxDate(eventDate._2().getLte());
+                          if (eventDate != null && eventDate._2() != null) {
+                              accum.setMinDate(eventDate._2().getGte());
+                              accum.setMaxDate(eventDate._2().getLte());
+                          }
                       });
                   return new Tuple3<String, String, String>(
                       eventId,
