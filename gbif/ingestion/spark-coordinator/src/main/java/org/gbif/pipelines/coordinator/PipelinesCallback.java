@@ -5,6 +5,7 @@ import static org.gbif.api.model.pipelines.PipelineStep.Status.RUNNING;
 import static org.gbif.pipelines.coordinator.PrometheusMetrics.*;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import feign.Contract;
 import feign.Feign;
@@ -36,7 +37,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.SparkSession;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.gbif.api.model.pipelines.*;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.api.vocabulary.DatasetType;
@@ -139,6 +139,7 @@ public abstract class PipelinesCallback<
 
     Configuration hadoopConf = null;
     if (isStandalone()) {
+
       SparkSession.Builder sparkBuilder = SparkSession.builder().appName("pipelines_standalone");
       sparkBuilder = sparkBuilder.master(sparkMaster);
 
