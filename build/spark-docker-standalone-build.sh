@@ -3,7 +3,7 @@
 IS_M2RELEASEBUILD=$1
 POM_VERSION=$2
 
-MODULE="ingest-gbif-spark"
+MODULE="spark-coordinator"
 
 IMAGE=docker.gbif.org/${MODULE}-standalone:${POM_VERSION}
 IMAGE_LATEST=docker.gbif.org/${MODULE}-standalone:latest
