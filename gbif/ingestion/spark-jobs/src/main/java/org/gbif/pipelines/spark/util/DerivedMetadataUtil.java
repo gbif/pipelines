@@ -432,23 +432,32 @@ public class DerivedMetadataUtil implements Serializable {
                 (MapFunction<Tuple2<String, EventDate>, String>) Tuple2::_1, Encoders.STRING());
 
     Dataset<Tuple3<String, String, String>> temporalCoverages =
-        groupedByIdDates.mapGroups(
-            (MapGroupsFunction<String, Tuple2<String, EventDate>, Tuple3<String, String, String>>)
-                (eventId, eventIter) -> {
-                  TemporalAccum accum = new TemporalAccum();
-                  eventIter.forEachRemaining(
-                      eventDate -> {
-                          if (eventDate != null && eventDate._2() != null) {
+        groupedByIdDates
+            .mapGroups(
+                (MapGroupsFunction<
+                        String, Tuple2<String, EventDate>, Tuple3<String, String, String>>)
+                    (eventId, eventIter) -> {
+                      TemporalAccum accum = new TemporalAccum();
+                      eventIter.forEachRemaining(
+                          eventDate -> {
+                            if (eventDate != null && eventDate._2() != null) {
                               accum.setMinDate(eventDate._2().getGte());
                               accum.setMaxDate(eventDate._2().getLte());
-                          }
-                      });
-                  return new Tuple3<String, String, String>(
-                      eventId,
-                      accum.toEventDate().get().getLte(),
-                      accum.toEventDate().get().getGte());
-                },
-            Encoders.tuple(Encoders.STRING(), Encoders.STRING(), Encoders.STRING()));
+                            }
+                          });
+
+                      if (accum.toEventDate().isEmpty()) {
+                        return new Tuple3<String, String, String>(eventId, null, null);
+                      }
+                      return new Tuple3<String, String, String>(
+                          eventId,
+                          accum.toEventDate().get().getLte(),
+                          accum.toEventDate().get().getGte());
+                    },
+                Encoders.tuple(Encoders.STRING(), Encoders.STRING(), Encoders.STRING()))
+            .filter(
+                (FilterFunction<Tuple3<String, String, String>>)
+                    t -> t._2() != null || t._3() != null);
 
     temporalCoverages
         .write()
