@@ -118,12 +118,12 @@ pipeline {
 
     stage('Build Spark Docker image') {
       steps {
-        sh 'build/spark-docker-build.sh false ${VERSION}'
+        sh 'build/spark-jobs-docker-build.sh false ${VERSION}'
       }
     }
     stage('Build Standalone Spark Docker image') {
       steps {
-        sh 'build/spark-docker-standalone-build.sh false ${VERSION}'
+        sh 'build/spark-coordinator-docker-build.sh false ${VERSION}'
       }
     }
     stage('Build Healthcheck Docker image') {

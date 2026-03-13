@@ -5,11 +5,11 @@ POM_VERSION=$2
 
 MODULE="spark-coordinator"
 
-IMAGE=docker.gbif.org/${MODULE}-standalone:${POM_VERSION}
-IMAGE_LATEST=docker.gbif.org/${MODULE}-standalone:latest
+IMAGE=docker.gbif.org/${MODULE}:${POM_VERSION}
+IMAGE_LATEST=docker.gbif.org/${MODULE}:latest
 
 echo "Building Docker image: ${IMAGE}"
-docker build -f ./gbif/ingestion/${MODULE}/docker/DockerfileStandalone ./gbif/ingestion/${MODULE} --build-arg VERSION=${POM_VERSION} --build-arg JAR_FILE=${MODULE}-${POM_VERSION}-3.5.6.jar -t ${IMAGE}
+docker build -f ./gbif/ingestion/${MODULE}/docker/Dockerfile ./gbif/ingestion/${MODULE} --build-arg VERSION=${POM_VERSION} --build-arg JAR_FILE=${MODULE}-${POM_VERSION}-3.5.6.jar -t ${IMAGE}
 
 echo "Pushing Docker image to the repository"
 docker push ${IMAGE}
