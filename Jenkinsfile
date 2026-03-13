@@ -55,6 +55,9 @@ pipeline {
     }
 
     stage('Quick build') {
+      environment {
+        PROFILES = getProfiles()
+      }
       tools {
         jdk 'OpenJDK17'
       }
