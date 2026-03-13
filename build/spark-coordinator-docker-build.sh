@@ -5,7 +5,7 @@ POM_VERSION=$2
 
 MODULE="spark-coordinator"
 
-IMAGE=docker.gbif.org/${MODULE}:${POM_VERSION}
+IMAGE=docker.gbif.org/ingest-${MODULE}:${POM_VERSION}
 IMAGE_LATEST=docker.gbif.org/ingest-${MODULE}:latest
 
 echo "Building Docker image: ${IMAGE}"
