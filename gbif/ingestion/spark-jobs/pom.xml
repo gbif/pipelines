@@ -6,9 +6,9 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.gbif.pipelines</groupId>
     <version>4.0.0-SNAPSHOT</version>
-    <artifactId>ingest-gbif-spark</artifactId>
+    <artifactId>spark-jobs</artifactId>
     <packaging>jar</packaging>
-    <name>Pipelines :: GBIF :: Ingestion :: Ingest-GBIF Spark version</name>
+    <name>Pipelines :: GBIF :: Ingestion :: Spark pipelines</name>
     <description>Apache Spark pipelines for ingestion biodiversity data</description>
     <properties>
         <spark.version>3.5.6</spark.version>
@@ -25,7 +25,6 @@
         <dwc-api.version>2.1.10</dwc-api.version>
         <gbif-api.version>2.4.0</gbif-api.version>
         <gbif-common.version>0.60</gbif-common.version>
-        <gbif-postal-service.version>2.1.3</gbif-postal-service.version>
         <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
         <gbif-kvs.version>3.1.0</gbif-kvs.version>
         <gbif-hdfs-tables.version>1.0-SNAPSHOT</gbif-hdfs-tables.version>
@@ -48,6 +47,10 @@
         <scala-collection-compat_2.12.version>2.7.0</scala-collection-compat_2.12.version>
         <commons-csv.version>1.10.0</commons-csv.version>
         <commons-httpclient.version>3.1</commons-httpclient.version>
+        <parquet-avro.version>1.17.0</parquet-avro.version>
+        <!-- need for ES spark connector -->
+        <old-jackson.version>1.9.13</old-jackson.version>
+        <prometheus-metrics.version>1.4.3</prometheus-metrics.version>
     </properties>
     <repositories>
         <repository>
@@ -81,17 +84,6 @@
         </snapshotRepository>
     </distributionManagement>
     <dependencies>
-        <dependency>
-            <groupId>org.gbif.common</groupId>
-            <artifactId>gbif-postal-service</artifactId>
-            <version>${gbif-postal-service.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
         <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>gbif-wrangler</artifactId>
@@ -579,25 +571,25 @@
         <dependency>
             <groupId>org.apache.parquet</groupId>
             <artifactId>parquet-avro</artifactId>
-            <version>1.17.0</version>
+            <version>${parquet-avro.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.parquet</groupId>
             <artifactId>parquet-hadoop</artifactId>
-            <version>1.17.0</version>
+            <version>${parquet-avro.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.parquet</groupId>
             <artifactId>parquet-common</artifactId>
-            <version>1.17.0</version>
+            <version>${parquet-avro.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.parquet</groupId>
             <artifactId>parquet-column</artifactId>
-            <version>1.17.0</version>
+            <version>${parquet-avro.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -627,12 +619,12 @@
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.9.13</version>
+            <version>${old-jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-core-asl</artifactId>
-            <version>1.9.13</version>
+            <version>${old-jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -640,12 +632,7 @@
             <version>${junit4.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.rabbitmq</groupId>
-            <artifactId>amqp-client</artifactId>
-            <version>5.25.0</version>
-            <scope>compile</scope>
-        </dependency>
+
         <!-- HBase MapReduce integration - needed for Fragmenter -->
         <dependency>
             <groupId>org.apache.hbase</groupId>
@@ -695,17 +682,17 @@
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>prometheus-metrics-core</artifactId>
-            <version>1.4.3</version>
+            <version>${prometheus-metrics.version}</version>
         </dependency>
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>prometheus-metrics-instrumentation-jvm</artifactId>
-            <version>1.4.3</version>
+            <version>${prometheus-metrics.version}</version>
         </dependency>
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>prometheus-metrics-exporter-httpserver</artifactId>
-            <version>1.4.3</version>
+            <version>${prometheus-metrics.version}</version>
         </dependency>
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
@@ -716,18 +703,6 @@
     </dependencies>
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>org.gbif.pipelines.coordinator.Coordinator</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -788,10 +763,9 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <finalName>${project.artifactId}-${project.version}-${spark.version}</finalName>
+                            <finalName>${project.artifactId}-${project.version}-exec</finalName>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
-                                <!-- TODO: review these. One is needed for geotools to work -->
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer
@@ -810,7 +784,6 @@
                                 </filter>
                             </filters>
                             <relocations>
-                                <!-- Retrofit version clashes with Spark. TODO: check this! -->
                                 <relocation>
                                     <pattern>com.google.gson</pattern>
                                     <shadedPattern>org.shaded.com.google.gson</shadedPattern>

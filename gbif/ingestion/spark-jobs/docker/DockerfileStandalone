@@ -3,7 +3,7 @@ ARG JAR_FILE=${JAVA_JAR_FILE}
 ARG JMX_EXPORTER_VERSION=1.0.1
 USER root
 RUN mkdir /jobs
-COPY --chown=1000:1000 "./target/${JAR_FILE}" "/jobs/ingest-gbif-spark.jar"
+COPY --chown=1000:1000 "./target/${JAR_FILE}" "/jobs/spark-coordinator.jar"
 
 # Add Iceberg runtime jar to Spark jars folder
 ADD https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-3.5_2.12/1.6.1/iceberg-spark-runtime-3.5_2.12-1.6.1.jar \
@@ -12,10 +12,6 @@ ADD https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-extensions-3
     /opt/spark/jars/
 
 # Download JMX exporter
-ADD https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/1.0.1/jmx_prometheus_javaagent-1.0.1.jar \
-    /tmp/jmx_prometheus_javaagent.jar
-
-RUN chmod 777 /tmp/jmx_prometheus_javaagent.jar
 RUN chmod 777 /opt/spark/jars/iceberg-spark-extensions-3.5_2.12-1.6.1.jar
 RUN chmod 777 /opt/spark/jars/iceberg-spark-runtime-3.5_2.12-1.6.1.jar
 RUN chmod 777 /opt/spark/work-dir
@@ -43,5 +39,5 @@ ENTRYPOINT ["sh", "-c", "java $JVM_OPTIONS \
   --add-opens java.base/java.nio=ALL-UNNAMED \
   --add-opens java.base/java.util=ALL-UNNAMED \
   --add-opens java.base/sun.nio.ch=ALL-UNNAMED \
-  -cp /opt/spark/jars/*:/jobs/ingest-gbif-spark.jar \
+  -cp /opt/spark/jars/*:/jobs/spark-coordinator.jar \
   org.gbif.pipelines.coordinator.Coordinator \"$@\"", "sh"]

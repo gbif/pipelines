@@ -13,12 +13,13 @@
   <packaging>pom</packaging>
 
   <name>Pipelines :: GBIF :: Ingestion</name>
-  <description>Apache Beam pipelines</description>
+  <description>Spark pipelines and coordination</description>
 
   <modules>
-    <module>ingest-gbif-spark</module>
-    <module>ingest-healthcheck</module>
-<!--    <module>pre-backbone-release</module>-->
+    <module>healthcheck</module>
+    <module>spark-jobs</module>
+    <module>spark-coordinator</module>
+      <!--    <module>pre-backbone-release</module>-->
   </modules>
 
 </project>

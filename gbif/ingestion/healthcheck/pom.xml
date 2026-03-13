@@ -6,9 +6,9 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.gbif.pipelines</groupId>
     <version>4.0.0-SNAPSHOT</version>
-    <artifactId>ingest-healthcheck</artifactId>
+    <artifactId>healthcheck</artifactId>
     <packaging>jar</packaging>
-    <name>Pipelines :: GBIF :: Ingestion :: Ingest-GBIF Health check</name>
+    <name>Pipelines :: GBIF :: Ingestion :: Health check</name>
     <description>Health checker for CLIs running in k8s</description>
     <repositories>
         <repository>

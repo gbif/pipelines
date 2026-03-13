@@ -3,39 +3,41 @@ outputPath: file:///Users/djtfmartin/dev/pipelines/gbif/ingestion/ingest-gbif-sp
 rebuildPath: file:///Users/djtfmartin/dev/pipelines/gbif/ingestion/ingest-gbif-spark/rebuild-path
 zkConnectionString:
 gbifApi:
-  wsUrl: https://api.gbif-lab.org/v1/
+  wsUrl: https://api.gbif-dev.org/v1/
 nameUsageMatchingService:
   checklistKeys:
     - d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
   ws:
     numOfKeyBuckets: 10
-    tableName: lab_name_usage_kv
+    tableName: dev_name_usage_kv
     api:
-      wsUrl: https://api.gbif-lab.org/
+      wsUrl: https://api.gbif-dev.org/
 vocabularyService:
-  wsUrl: https://api.gbif-lab.org/v1/
+  wsUrl: https://api.gbif.org/v1/
+derivedMetadataConfig:
+  maxTaxonCoveragePerEvent: 2000
 grscicollLookup:
   numOfKeyBuckets: 5
-  tableName: lab_grscicoll_lookup_kv
+  tableName: dev_grscicoll_lookup_kv
   api:
-    wsUrl: https://api.gbif-lab.org/v1/
+    wsUrl: https://api.gbif-dev.org/v1/
 geocode:
   numOfKeyBuckets: 10
-  tableName: lab_geocode_kv
+  tableName: dev_geocode_kv
   wsCacheSizeMb: 128
   api:
-    wsUrl: https://api.gbif-lab.org/v1/
+    wsUrl: https://api.gbif-dev.org/v1/
 imageCachePath:
 content:
   esHosts:
     - http://cms-search.gbif-dev.org:9200/
 amplification:
   wsUrl: http://blast.gbif-dev.org
-fragmentsTable: lab_occurrence_fragment
+fragmentsTable: dev_occurrence_fragment
 keygen:
-  occurrenceTable: lab_occurrence
-  counterTable: lab_occurrence_counter
-  lookupTable: lab_occurrence_lookup
+  occurrenceTable: dev_occurrence
+  counterTable: dev_occurrence_counter
+  lookupTable: dev_occurrence_lookup
   zkConnectionString: c5n7.gbif-test.org:31706,c5n9.gbif-test.org:31706,c6n8.gbif-test.org:31706
   hbaseZnode: /znode-93f9cdb5-d146-46da-9f80-e8546468b0fe/hbase
 elastic:
@@ -51,10 +53,10 @@ indexConfig:
   defaultSize: 24000000
   defaultNewIfSize: 23500000
   defaultSmallestIndexCatUrl: http://localhost:9200/_cat/indices/%s*?v&h=docs.count,index&s=docs.count:asc&format=json
-  occurrenceAlias: occurrence_lab
-  occurrenceVersion: lab_occurrence_d
-  eventAlias: event_lab
-  eventVersion: lab_event_d
+  occurrenceAlias: occurrence_dev
+  occurrenceVersion: dev_occurrence_d
+  eventAlias: event_dev
+  eventVersion: dev_event_d
 extensionsAllowedForVerbatimSet:
   - http://rs.tdwg.org/dwc/terms/Occurrence
   - http://rs.tdwg.org/ac/terms/Multimedia
