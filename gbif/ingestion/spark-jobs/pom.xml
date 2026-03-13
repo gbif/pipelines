@@ -608,6 +608,7 @@
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch-spark-30_${scala.binary.version}</artifactId>
             <version>${elasticsearch-spark.version}</version>
+            <scope>provided</scope>
         </dependency>
         <!-- Old Apache Commons HttpClient (needed by ES-Hadoop 7.x) -->
         <dependency>
