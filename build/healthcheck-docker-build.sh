@@ -3,7 +3,7 @@
 IS_M2RELEASEBUILD=$1
 POM_VERSION=$2
 
-MODULE="ingest-healthcheck"
+MODULE="healthcheck"
 
 IMAGE=docker.gbif.org/${MODULE}:${POM_VERSION}
 IMAGE_LATEST=docker.gbif.org/${MODULE}:latest
