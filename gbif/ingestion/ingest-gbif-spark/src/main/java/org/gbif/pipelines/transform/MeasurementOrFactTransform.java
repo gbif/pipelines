@@ -24,24 +24,6 @@ public class MeasurementOrFactTransform implements Serializable {
 
   public MeasurementOrFactRecord convert(ExtendedRecord source) {
 
-    // FIXME - need to check - useDynamicPropertiesInterpretation is always false in beam
-    // pipelines....
-    //        List<Map<String, String>> dynExts = Collections.emptyList();
-    //        if (useDynamicPropertiesInterpretation) {
-    //            dynExts = MeasurementOrFactConverter.extractFromDynamicProperties(source);
-    //        }
-
-    //        if (!dynExts.isEmpty()) {
-    //            record = ExtendedRecord.newBuilder(source).build();
-    //            if (hasExtension(record, Extension.MEASUREMENT_OR_FACT)) {
-    //
-    // record.getExtensions().get(Extension.MEASUREMENT_OR_FACT.getRowType()).addAll(dynExts);
-    //            } else {
-    //                record.getExtensions().put(Extension.MEASUREMENT_OR_FACT.getRowType(),
-    // dynExts);
-    //            }
-    //        }
-
     MeasurementOrFactRecord r =
         MeasurementOrFactRecord.newBuilder()
             .setId(source.getId())

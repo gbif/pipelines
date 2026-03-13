@@ -23,7 +23,7 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.interpreters.core.*;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.transform.utils.VocabularyServiceFactory;
+import org.gbif.pipelines.transform.factory.VocabularyServiceFactory;
 
 /** */
 public class BasicTransform implements Serializable {
@@ -67,7 +67,6 @@ public class BasicTransform implements Serializable {
     CoreInterpreter.interpretLicense(source, record::setLicense);
     BasicInterpreter.interpretIdentifiedByIds(source, record);
     BasicInterpreter.interpretRecordedByIds(source, record);
-    // FIXME
     BasicInterpreter.interpretOccurrenceStatus(OccurrenceStatusParserKvStore.create())
         .accept(source, record);
     VocabularyInterpreter.interpretEstablishmentMeans(vocabService).accept(source, record);

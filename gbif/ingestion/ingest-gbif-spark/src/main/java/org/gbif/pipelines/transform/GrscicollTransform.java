@@ -8,7 +8,7 @@ import org.gbif.pipelines.core.interpreters.core.GrscicollInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.transform.utils.GrscicollLookupKvStoreFactory;
+import org.gbif.pipelines.transform.factory.GrscicollLookupKvStoreFactory;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse;
 
 public class GrscicollTransform implements java.io.Serializable {

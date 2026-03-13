@@ -8,7 +8,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesFragmenterMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.spark.Fragmenter;
+import org.gbif.pipelines.spark.FragmenterPipeline;
 
 @Slf4j
 public class FragmenterCallback
@@ -22,7 +22,7 @@ public class FragmenterCallback
 
   @Override
   protected void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
-    Fragmenter.configSparkSession(sparkBuilder, config);
+    FragmenterPipeline.configSparkSession(sparkBuilder, config);
   }
 
   @Override
@@ -32,7 +32,7 @@ public class FragmenterCallback
 
   @Override
   protected void runPipeline(PipelinesInterpretedMessage message) throws Exception {
-    Fragmenter.runFragmenter(
+    FragmenterPipeline.runFragmenter(
         sparkSession,
         fileSystem,
         pipelinesConfig,
@@ -44,7 +44,7 @@ public class FragmenterCallback
 
   @Override
   protected String getMetaFileName() {
-    return Fragmenter.METRICS_FILENAME;
+    return FragmenterPipeline.METRICS_FILENAME;
   }
 
   @Override

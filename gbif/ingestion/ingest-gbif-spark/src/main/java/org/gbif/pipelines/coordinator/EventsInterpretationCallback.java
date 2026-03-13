@@ -12,8 +12,8 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.spark.EventInterpretation;
-import org.gbif.pipelines.spark.OccurrenceInterpretation;
+import org.gbif.pipelines.spark.EventInterpretationPipeline;
+import org.gbif.pipelines.spark.OccurrenceInterpretationPipeline;
 
 @Slf4j
 public class EventsInterpretationCallback
@@ -34,7 +34,7 @@ public class EventsInterpretationCallback
 
   @Override
   protected void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
-    OccurrenceInterpretation.configSparkSession(sparkBuilder, config);
+    OccurrenceInterpretationPipeline.configSparkSession(sparkBuilder, config);
   }
 
   @Override
@@ -46,7 +46,7 @@ public class EventsInterpretationCallback
   protected void runPipeline(PipelinesEventsMessage message) throws Exception {
 
     // Run interpretation
-    EventInterpretation.runEventInterpretation(
+    EventInterpretationPipeline.runEventInterpretation(
         sparkSession,
         fileSystem,
         pipelinesConfig,
@@ -57,7 +57,7 @@ public class EventsInterpretationCallback
 
   @Override
   protected String getMetaFileName() {
-    return EventInterpretation.METRICS_FILENAME;
+    return EventInterpretationPipeline.METRICS_FILENAME;
   }
 
   public PipelinesEventsInterpretedMessage createOutgoingMessage(PipelinesEventsMessage message) {

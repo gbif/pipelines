@@ -10,7 +10,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.spark.ValidateIdentifiers;
+import org.gbif.pipelines.spark.IdentifiersPipeline;
 
 @Slf4j
 public class IdentifierCallback
@@ -29,14 +29,14 @@ public class IdentifierCallback
 
   @Override
   protected void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
-    ValidateIdentifiers.configSparkSession(sparkBuilder, config);
+    IdentifiersPipeline.configSparkSession(sparkBuilder, config);
   }
 
   @Override
   protected void runPipeline(PipelinesVerbatimMessage message) throws Exception {
 
     // run pipeline
-    ValidateIdentifiers.runValidation(
+    IdentifiersPipeline.runValidation(
         sparkSession,
         fileSystem,
         pipelinesConfig,
@@ -75,7 +75,7 @@ public class IdentifierCallback
 
   @Override
   protected String getMetaFileName() {
-    return ValidateIdentifiers.METRICS_FILENAME;
+    return IdentifiersPipeline.METRICS_FILENAME;
   }
 
   @Override

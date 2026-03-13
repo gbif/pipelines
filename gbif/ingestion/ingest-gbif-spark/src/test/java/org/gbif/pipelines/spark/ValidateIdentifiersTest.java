@@ -47,7 +47,7 @@ public class ValidateIdentifiersTest {
     Dataset<ExtendedRecord> dataset =
         spark.createDataset(records, Encoders.bean(ExtendedRecord.class));
 
-    ValidateIdentifiers.validateIdentifiers(dataset, metrics);
+    IdentifiersPipeline.validateIdentifiers(dataset, metrics);
 
     assert metrics.get(UNIQUE_IDS_COUNT + "Attempted") == 3;
   }
@@ -70,7 +70,7 @@ public class ValidateIdentifiersTest {
     Dataset<ExtendedRecord> dataset =
         spark.createDataset(records, Encoders.bean(ExtendedRecord.class));
 
-    ValidateIdentifiers.validateIdentifiers(dataset, metrics);
+    IdentifiersPipeline.validateIdentifiers(dataset, metrics);
 
     assert metrics.get(UNIQUE_IDS_COUNT + "Attempted") == 3;
     assert metrics.get(DUPLICATE_IDS_COUNT + "Attempted") == 3;

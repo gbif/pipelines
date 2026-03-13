@@ -9,7 +9,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.spark.OccurrenceInterpretation;
+import org.gbif.pipelines.spark.OccurrenceInterpretationPipeline;
 
 @Slf4j
 public class OccurrenceInterpretationCallback
@@ -23,7 +23,7 @@ public class OccurrenceInterpretationCallback
 
   @Override
   protected void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
-    OccurrenceInterpretation.configSparkSession(sparkBuilder, config);
+    OccurrenceInterpretationPipeline.configSparkSession(sparkBuilder, config);
   }
 
   @Override
@@ -35,7 +35,7 @@ public class OccurrenceInterpretationCallback
   protected void runPipeline(PipelinesVerbatimMessage message) throws Exception {
 
     // Run interpretation
-    OccurrenceInterpretation.runInterpretation(
+    OccurrenceInterpretationPipeline.runInterpretation(
         sparkSession,
         fileSystem,
         pipelinesConfig,
@@ -51,7 +51,7 @@ public class OccurrenceInterpretationCallback
 
   @Override
   protected String getMetaFileName() {
-    return OccurrenceInterpretation.METRICS_FILENAME;
+    return OccurrenceInterpretationPipeline.METRICS_FILENAME;
   }
 
   public PipelinesInterpretedMessage createOutgoingMessage(PipelinesVerbatimMessage message) {

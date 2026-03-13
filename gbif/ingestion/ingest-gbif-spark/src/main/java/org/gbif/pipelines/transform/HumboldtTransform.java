@@ -11,8 +11,8 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.interpreters.extension.HumboldtInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.HumboldtRecord;
-import org.gbif.pipelines.transform.utils.MultiTaxonomyKVSFactory;
-import org.gbif.pipelines.transform.utils.VocabularyServiceFactory;
+import org.gbif.pipelines.transform.factory.MultiTaxonomyKVSFactory;
+import org.gbif.pipelines.transform.factory.VocabularyServiceFactory;
 import org.gbif.rest.client.species.NameUsageMatchResponse;
 
 public class HumboldtTransform implements Serializable {

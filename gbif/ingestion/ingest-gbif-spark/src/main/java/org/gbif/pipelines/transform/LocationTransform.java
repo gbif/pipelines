@@ -23,7 +23,7 @@ import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.transform.utils.GeocodeKVSFactory;
+import org.gbif.pipelines.transform.factory.GeocodeKVSFactory;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
 @Slf4j

@@ -1,7 +1,8 @@
 package org.gbif.pipelines.coordinator;
 
-import static org.gbif.pipelines.ConfigUtil.loadConfig;
+import static org.gbif.pipelines.spark.ArgsConstants.*;
 import static org.gbif.pipelines.spark.Directories.*;
+import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -33,7 +34,7 @@ public class Coordinator {
     @Parameter(names = "--mode", description = "e.g. INTERPRETATION", required = true)
     private String mode;
 
-    @Parameter(names = "--config", description = "Path to YAML configuration file")
+    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
     private String config = "/tmp/pipelines-spark.yaml";
 
     @Parameter(
@@ -41,7 +42,7 @@ public class Coordinator {
         description = "Number of queue listener threads (no of parallel messages processed)")
     private int threads = 1;
 
-    @Parameter(names = "--master", description = "Master - relevant for embedded spark only")
+    @Parameter(names = SPARK_MASTER_ARG, description = "Master - relevant for embedded spark only")
     private String master = "local[*]";
 
     @Parameter(names = "--queueName", description = "queueName", required = true)

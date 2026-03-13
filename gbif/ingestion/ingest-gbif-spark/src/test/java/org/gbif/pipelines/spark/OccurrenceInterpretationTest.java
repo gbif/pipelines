@@ -1,8 +1,8 @@
 package org.gbif.pipelines.spark;
 
 import static org.apache.parquet.hadoop.ParquetFileWriter.Mode.OVERWRITE;
-import static org.gbif.pipelines.ConfigUtil.loadConfig;
-import static org.gbif.pipelines.spark.SparkUtil.getFileSystem;
+import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
+import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -84,7 +84,7 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
 
     /* ############ standard init block ########## */
     FileSystem fileSystem = getFileSystem(spark, config);
-    OccurrenceInterpretation.runInterpretation(
+    OccurrenceInterpretationPipeline.runInterpretation(
         spark, fileSystem, config, testUuid, attempt, 1, false, true, null);
 
     // check outputs exist
