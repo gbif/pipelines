@@ -54,7 +54,10 @@ pipeline {
       }
     }
 
-    stage('Quick build') {
+    stage('Quick build - snapshot to nexus') {
+      environment {
+        PROFILES = getProfiles()
+      }
       tools {
         jdk 'OpenJDK17'
       }
@@ -65,7 +68,9 @@ pipeline {
       }
       steps {
         withMaven () {
-          sh 'mvn clean install -P skip-release-it'
+            configFileProvider([configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS')]) {
+              sh 'mvn -s $MAVEN_SETTINGS deploy -B -P ${PROFILES}'
+            }
         }
       }
     }
@@ -83,21 +88,7 @@ pipeline {
         sh 'mvn clean verify -U'
       }
     }
-    stage('Snapshots to nexus') {
-      environment {
-        PROFILES = getProfiles()
-      }
-      when {
-        expression {
-          env.RELEASE == 'false'
-        }
-      }
-      steps {
-        configFileProvider([configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS')]) {
-          sh 'mvn -s $MAVEN_SETTINGS deploy -B -DskipITs -P ${PROFILES}'
-        }
-      }
-    }
+
     stage('Release version to nexus') {
       environment {
         PROFILES = getProfiles()
@@ -118,12 +109,12 @@ pipeline {
 
     stage('Build Spark Docker image') {
       steps {
-        sh 'build/spark-docker-build.sh false ${VERSION}'
+        sh 'build/spark-jobs-docker-build.sh false ${VERSION}'
       }
     }
     stage('Build Standalone Spark Docker image') {
       steps {
-        sh 'build/spark-docker-standalone-build.sh false ${VERSION}'
+        sh 'build/spark-coordinator-docker-build.sh false ${VERSION}'
       }
     }
     stage('Build Healthcheck Docker image') {
