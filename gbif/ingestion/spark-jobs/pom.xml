@@ -763,7 +763,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <finalName>${project.artifactId}-${project.version}-exec</finalName>
+                            <finalName>${project.artifactId}-${project.version}-${spark.version}</finalName>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer
