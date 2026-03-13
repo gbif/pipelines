@@ -43,10 +43,7 @@ public class FullIndexBuildPipeline {
   @Parameters(separators = "=")
   private static class Args {
 
-    @Parameter(
-        names = CONFIG_PATH_ARG,
-        description = "Path to YAML configuration file",
-        required = true)
+    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
     private String config = "/tmp/pipelines-spark.yaml";
 
     @Parameter(

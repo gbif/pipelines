@@ -93,10 +93,7 @@ public class IdentifiersPipeline {
     @Parameter(names = NUMBER_OF_SHARDS_ARG, description = "Number of shards", required = false)
     private int numberOfShards;
 
-    @Parameter(
-        names = CONFIG_PATH_ARG,
-        description = "Path to YAML configuration file",
-        required = true)
+    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
     private String config = "/tmp/pipelines-spark.yaml";
 
     @Parameter(

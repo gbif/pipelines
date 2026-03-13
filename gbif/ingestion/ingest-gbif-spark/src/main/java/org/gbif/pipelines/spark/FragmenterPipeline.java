@@ -91,10 +91,7 @@ public class FragmenterPipeline {
         arity = 1)
     private boolean occurrenceIdValid = true;
 
-    @Parameter(
-        names = CONFIG_PATH_ARG,
-        description = "Path to YAML configuration file",
-        required = true)
+    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
     private String config = "/tmp/pipelines-spark.yaml";
 
     @Parameter(

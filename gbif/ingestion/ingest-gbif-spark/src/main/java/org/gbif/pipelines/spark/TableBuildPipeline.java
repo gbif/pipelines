@@ -65,10 +65,7 @@ public class TableBuildPipeline {
         required = true)
     private String sourceDirectory = "hdfs";
 
-    @Parameter(
-        names = CONFIG_PATH_ARG,
-        description = "Path to YAML configuration file",
-        required = true)
+    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
     private String config = "/tmp/pipelines-spark.yaml";
 
     @Parameter(

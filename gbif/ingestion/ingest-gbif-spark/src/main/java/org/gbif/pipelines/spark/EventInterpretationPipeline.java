@@ -73,10 +73,7 @@ public class EventInterpretationPipeline {
     @Parameter(names = ATTEMPT_ID_ARG, description = "Attempt number", required = true)
     private int attempt;
 
-    @Parameter(
-        names = CONFIG_PATH_ARG,
-        description = "Path to YAML configuration file",
-        required = true)
+    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
     private String config = "/tmp/pipelines-spark.yaml";
 
     @Parameter(
