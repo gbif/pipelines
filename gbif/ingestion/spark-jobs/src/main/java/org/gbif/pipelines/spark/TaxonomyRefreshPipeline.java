@@ -106,7 +106,8 @@ public class TaxonomyRefreshPipeline {
     System.exit(0);
   }
 
-  public static void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {}
+  public static void configSparkSession(
+      SparkSession.Builder sparkBuilder, PipelinesConfig config) {}
 
   public static void runTaxonomy(
       SparkSession spark,

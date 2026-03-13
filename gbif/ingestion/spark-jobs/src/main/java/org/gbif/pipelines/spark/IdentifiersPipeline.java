@@ -148,7 +148,8 @@ public class IdentifiersPipeline {
     System.exit(0);
   }
 
-  public static void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {}
+  public static void configSparkSession(
+      SparkSession.Builder sparkBuilder, PipelinesConfig config) {}
 
   public static void runValidation(
       SparkSession spark,

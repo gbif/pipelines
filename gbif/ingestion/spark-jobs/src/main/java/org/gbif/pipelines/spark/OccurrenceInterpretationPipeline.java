@@ -189,7 +189,8 @@ public class OccurrenceInterpretationPipeline {
     }
   }
 
-  public static void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {}
+  public static void configSparkSession(
+      SparkSession.Builder sparkBuilder, PipelinesConfig config) {}
 
   /**
    * Runs the interpretation pipeline.

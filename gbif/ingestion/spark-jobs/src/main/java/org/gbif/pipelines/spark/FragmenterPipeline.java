@@ -141,8 +141,8 @@ public class FragmenterPipeline {
     fileSystem.close();
   }
 
-  public static void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
-  }
+  public static void configSparkSession(
+      SparkSession.Builder sparkBuilder, PipelinesConfig config) {}
 
   public static void runFragmenter(
       SparkSession spark,

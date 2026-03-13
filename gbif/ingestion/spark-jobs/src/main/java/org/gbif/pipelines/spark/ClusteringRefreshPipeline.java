@@ -90,8 +90,7 @@ public class ClusteringRefreshPipeline {
 
     /* ############ standard init block ########## */
     SparkSession spark =
-        getSparkSession(
-            args.master, args.appName, config, ClusteringRefreshPipeline::configSparkSession);
+        getSparkSession(args.master, args.appName, config, (builder, pipelinesConfig) -> {});
     FileSystem fileSystem = getFileSystem(spark, config);
     /* ############ standard init block - end ########## */
 
