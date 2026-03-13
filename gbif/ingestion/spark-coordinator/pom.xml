@@ -26,6 +26,7 @@
         <log4j-api.version>2.20.0</log4j-api.version>
         <scala.version>2.12.18</scala.version>
         <slf4j.version>2.0.7</slf4j.version>
+        <elasticsearch-spark.version>7.17.29</elasticsearch-spark.version>
     </properties>
 
     <dependencies>
@@ -181,6 +182,11 @@
             <artifactId>log4j-api</artifactId>
             <version>${log4j-api.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch-spark-30_${scala.binary.version}</artifactId>
+            <version>${elasticsearch-spark.version}</version>
         </dependency>
     </dependencies>
     <build>
