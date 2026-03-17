@@ -183,7 +183,8 @@ public class VerbatimMessageHandler {
       long switchFileSizeByte = config.switchFileSizeMb * 1024L * 1024L;
       runner = fileSizeByte > switchFileSizeByte ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
       log.info(
-          "File size (bytes): {}, switchFileSize (bytes): {}, Chosen Runner type - {}",
+          "DatasetID: {}, File size of verbatim AVRO (bytes): {}, switchFileSize (bytes): {}, Chosen Runner type: {}",
+          message.getDatasetUuid(),
           fileSizeByte,
           switchFileSizeByte,
           runner);
