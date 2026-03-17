@@ -182,7 +182,11 @@ public class VerbatimMessageHandler {
     if (fileSizeByte > 0) {
       long switchFileSizeByte = config.switchFileSizeMb * 1024L * 1024L;
       runner = fileSizeByte > switchFileSizeByte ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
-      log.info("File size - {}, Spark Runner type - {}", fileSizeByte, runner);
+      log.info(
+          "File size (bytes): {}, switchFileSize (bytes): {}, Chosen Runner type - {}",
+          fileSizeByte,
+          switchFileSizeByte,
+          runner);
       return runner;
     }
 
