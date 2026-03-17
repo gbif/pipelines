@@ -122,7 +122,7 @@
     <hadoop.version>3.3.5</hadoop.version>
     <hbase.version>2.6.0-hadoop3</hbase.version>
     <curator.version>5.6.0</curator.version>
-    <spark.version>3.5.1</spark.version>
+    <spark.version>3.5.7</spark.version>
     <iceberg.version>1.6.1</iceberg.version>
 
     <scala.version>2.12.18</scala.version>
