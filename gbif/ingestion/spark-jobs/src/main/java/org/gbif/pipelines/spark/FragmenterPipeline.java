@@ -158,7 +158,6 @@ public class FragmenterPipeline {
     ThreadContext.put("datasetKey", datasetId);
     ThreadContext.put("attempt", String.valueOf(attempt));
     ThreadContext.put("step", StepType.FRAGMENTER.name());
-    ThreadContext.put("logger_name", FragmenterPipeline.class.getSimpleName());
 
     long start = System.currentTimeMillis();
     log.info("Starting to run fragmenter for dataset {}, attempt {}", datasetId, attempt);

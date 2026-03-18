@@ -144,7 +144,6 @@ public class EventInterpretationPipeline {
 
     ThreadContext.put("datasetKey", datasetId);
     ThreadContext.put("attempt", String.valueOf(attempt));
-    ThreadContext.put("logger_name", EventInterpretationPipeline.class.getSimpleName());
     ThreadContext.put("step", StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
     log.info("Starting event interpretation");
 

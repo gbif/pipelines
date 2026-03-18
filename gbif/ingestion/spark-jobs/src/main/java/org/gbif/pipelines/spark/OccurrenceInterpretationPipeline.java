@@ -239,7 +239,6 @@ public class OccurrenceInterpretationPipeline {
 
     ThreadContext.put("datasetKey", datasetId);
     ThreadContext.put("attempt", String.valueOf(attempt));
-    ThreadContext.put("logger_name", OccurrenceInterpretationPipeline.class.getSimpleName());
     ThreadContext.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
 
     log.info(

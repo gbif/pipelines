@@ -120,7 +120,6 @@ public class TaxonomyRefreshPipeline {
     long start = System.currentTimeMillis();
 
     ThreadContext.put("datasetKey", datasetId);
-    ThreadContext.put("logger_name", TaxonomyRefreshPipeline.class.getSimpleName());
 
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
 

@@ -172,7 +172,6 @@ public class IndexingPipeline {
     long start = System.currentTimeMillis();
     ThreadContext.put("datasetKey", datasetId);
     ThreadContext.put("attempt", String.valueOf(attempt));
-    ThreadContext.put("logger_name", IndexingPipeline.class.getSimpleName());
     ThreadContext.put(
         "step",
         recordClass.equals(OccurrenceJsonRecord.class)
