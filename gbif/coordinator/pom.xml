@@ -20,8 +20,7 @@
 
   <modules>
     <module>tasks</module>
-<!--    <module>tasks-integration-tests</module>-->
-<!--    <module>tasks-integration-tests-hbase</module>-->
+    <module>tasks-integration-tests</module>
   </modules>
 
 

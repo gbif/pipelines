@@ -36,6 +36,7 @@ import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
 import org.gbif.api.model.pipelines.InterpretationType;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
@@ -237,6 +238,9 @@ public class OccurrenceInterpretationPipeline {
     long start = System.currentTimeMillis();
 
     ThreadContext.put("datasetKey", datasetId);
+    ThreadContext.put("attempt", String.valueOf(attempt));
+    ThreadContext.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
+
     log.info(
         "Starting interpretation with tripleValid: {}, occurrenceIdValid: {}",
         tripletValid,

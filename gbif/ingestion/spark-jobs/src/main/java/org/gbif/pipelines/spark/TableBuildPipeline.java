@@ -22,6 +22,7 @@ import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -150,6 +151,13 @@ public class TableBuildPipeline {
 
     long start = System.currentTimeMillis();
     ThreadContext.put("datasetKey", datasetId);
+    ThreadContext.put("attempt", String.valueOf(attempt));
+    ThreadContext.put(
+        "step",
+        datasetType == DatasetType.OCCURRENCE
+            ? StepType.HDFS_VIEW.name()
+            : StepType.EVENTS_HDFS_VIEW.name());
+
     log.info("Starting table build");
 
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);

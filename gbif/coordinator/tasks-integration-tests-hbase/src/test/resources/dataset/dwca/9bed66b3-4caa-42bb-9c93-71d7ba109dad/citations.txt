@@ -1,3 +1,0 @@
-Please cite this data as follows, and pay attention to the rights documented in the rights.txt:
-Please respect the rights declared for each dataset in the download: 
-Botanic Garden and Botanical Museum Berlin-Dahlem. PonTaurus collection. Occurrence Dataset https://doi.org/10.15468/igasai accessed via GBIF.org on 2017-10-09. doi:10.15468/igasai

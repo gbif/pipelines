@@ -21,6 +21,7 @@ import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.pipelines.core.config.model.EsConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -170,6 +171,13 @@ public class IndexingPipeline {
 
     long start = System.currentTimeMillis();
     ThreadContext.put("datasetKey", datasetId);
+    ThreadContext.put("attempt", String.valueOf(attempt));
+    ThreadContext.put(
+        "step",
+        recordClass.equals(OccurrenceJsonRecord.class)
+            ? StepType.INTERPRETED_TO_INDEX.name()
+            : StepType.EVENTS_INTERPRETED_TO_INDEX.name());
+
     log.info(
         "Starting index with esIndexName: {}, indexNumberShards: {}",
         esIndexName,

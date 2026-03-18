@@ -30,6 +30,7 @@ import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
@@ -142,6 +143,8 @@ public class EventInterpretationPipeline {
     long start = System.currentTimeMillis();
 
     ThreadContext.put("datasetKey", datasetId);
+    ThreadContext.put("attempt", String.valueOf(attempt));
+    ThreadContext.put("step", StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
     log.info("Starting event interpretation");
 
     String inputPath = String.format("%s/%s/%d", config.getInputPath(), datasetId, attempt);

@@ -40,6 +40,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
@@ -155,6 +156,9 @@ public class FragmenterPipeline {
       throws Exception {
 
     ThreadContext.put("datasetKey", datasetId);
+    ThreadContext.put("attempt", String.valueOf(attempt));
+    ThreadContext.put("step", StepType.FRAGMENTER.name());
+
     long start = System.currentTimeMillis();
     log.info("Starting to run fragmenter for dataset {}, attempt {}", datasetId, attempt);
 
@@ -272,6 +276,11 @@ public class FragmenterPipeline {
     } catch (Exception e) {
       log.error("Error during fragmenter: {}", e.getMessage(), e);
       throw e;
+    } finally {
+      // clear ThreadContext to avoid leaking values to other tasks/threads
+      ThreadContext.remove("datasetKey");
+      ThreadContext.remove("attempt");
+      ThreadContext.remove("step");
     }
   }
 
