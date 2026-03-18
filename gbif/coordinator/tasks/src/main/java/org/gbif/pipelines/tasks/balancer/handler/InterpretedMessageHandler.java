@@ -72,6 +72,9 @@ public class InterpretedMessageHandler {
       interpretationTypes.add(RecordType.EVENT.name());
       interpretationTypes.remove(RecordType.OCCURRENCE.name());
 
+      // get the step runner
+      StepRunner stepRunner = computeRunner(config, m);
+
       PipelinesEventsMessage eventsMessage =
           new PipelinesEventsMessage(
               m.getDatasetUuid(),
@@ -79,7 +82,7 @@ public class InterpretedMessageHandler {
               m.getPipelineSteps(),
               m.getNumberOfEventRecords(),
               m.getNumberOfRecords(),
-              StepRunner.DISTRIBUTED.name(),
+              stepRunner.name(),
               m.isRepeatAttempt(),
               m.getResetPrefix(),
               m.getExecutionId(),
