@@ -152,6 +152,7 @@ public class TableBuildPipeline {
     long start = System.currentTimeMillis();
     ThreadContext.put("datasetKey", datasetId);
     ThreadContext.put("attempt", String.valueOf(attempt));
+    ThreadContext.put("logger_name", TableBuildPipeline.class.getSimpleName());
     ThreadContext.put(
         "step",
         datasetType == DatasetType.OCCURRENCE

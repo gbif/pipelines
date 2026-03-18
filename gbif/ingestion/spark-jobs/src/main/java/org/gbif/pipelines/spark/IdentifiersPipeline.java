@@ -165,6 +165,9 @@ public class IdentifiersPipeline {
 
     long start = System.currentTimeMillis();
     ThreadContext.put("datasetKey", datasetID);
+    ThreadContext.put("attempt", String.valueOf(attempt));
+    ThreadContext.put("logger_name", IdentifiersPipeline.class.getSimpleName());
+
     log.info(
         "Starting validation with tripleValid: {}, occurrenceIdValid: {}, useExtendedRecordId: {}",
         tripletValid,

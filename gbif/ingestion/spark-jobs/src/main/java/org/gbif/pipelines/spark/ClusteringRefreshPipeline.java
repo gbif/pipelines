@@ -113,6 +113,7 @@ public class ClusteringRefreshPipeline {
     long start = System.currentTimeMillis();
 
     ThreadContext.put("datasetKey", datasetId);
+    ThreadContext.put("logger_name", ClusteringRefreshPipeline.class.getSimpleName());
     log.info("Starting clustering");
 
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
