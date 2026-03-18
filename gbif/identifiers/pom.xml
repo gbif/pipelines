@@ -4,21 +4,22 @@
 
   <parent>
     <groupId>org.gbif.pipelines</groupId>
-    <artifactId>pipelines-parent</artifactId>
+    <artifactId>gbif</artifactId>
     <version>4.0.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>gbif</artifactId>
+  <artifactId>identifiers</artifactId>
   <packaging>pom</packaging>
 
-  <name>Pipelines :: GBIF</name>
+  <name>Pipelines :: GBIF :: Identifiers</name>
+
+  <properties>
+    <jcommander.version>1.82</jcommander.version>
+  </properties>
 
   <modules>
-    <module>identifiers</module>
-    <module>coordinator</module>
-    <module>ingestion</module>
-    <module>validator</module>
+    <module>diagnostics</module>
   </modules>
 
 </project>
