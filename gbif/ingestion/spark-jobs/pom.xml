@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>ingestion</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>4.0.0-gracefulshutdown-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -613,7 +613,6 @@
             <version>${hbase.version}</version>
             <scope>compile</scope>
         </dependency>
-
         <dependency>
             <groupId>org.wiremock</groupId>
             <artifactId>wiremock-standalone</artifactId>
@@ -637,23 +636,6 @@
             <artifactId>mockito-core</artifactId>
             <version>4.11.0</version>
             <scope>test</scope>
-        </dependency>
-
-        <!-- Prometheus monitoring -->
-        <dependency>
-            <groupId>io.prometheus</groupId>
-            <artifactId>prometheus-metrics-core</artifactId>
-            <version>${prometheus-metrics.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.prometheus</groupId>
-            <artifactId>prometheus-metrics-instrumentation-jvm</artifactId>
-            <version>${prometheus-metrics.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.prometheus</groupId>
-            <artifactId>prometheus-metrics-exporter-httpserver</artifactId>
-            <version>${prometheus-metrics.version}</version>
         </dependency>
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>

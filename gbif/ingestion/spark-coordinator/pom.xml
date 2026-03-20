@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>ingestion</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>4.0.0-gracefulshutdown-SNAPSHOT</version>
     </parent>
 
     <artifactId>spark-coordinator</artifactId>
@@ -188,6 +188,34 @@
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch-spark-30_${scala.binary.version}</artifactId>
             <version>${elasticsearch-spark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.gbif</groupId>
+            <artifactId>gbif-api</artifactId>
+        </dependency>
+        <!-- Prometheus monitoring -->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>prometheus-metrics-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>prometheus-metrics-instrumentation-jvm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>prometheus-metrics-exporter-httpserver</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.gbif.pipelines</groupId>
+            <artifactId>core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.beust</groupId>
+            <artifactId>jcommander</artifactId>
+            <version>1.82</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
     <build>

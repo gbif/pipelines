@@ -5,7 +5,7 @@
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.gbif.pipelines</groupId>
-    <version>4.0.0-SNAPSHOT</version>
+    <version>4.0.0-gracefulshutdown-SNAPSHOT</version>
     <artifactId>healthcheck</artifactId>
     <packaging>jar</packaging>
     <name>Pipelines :: GBIF :: Ingestion :: Health check</name>
