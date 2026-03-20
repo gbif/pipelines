@@ -228,8 +228,9 @@ public class Coordinator {
           .addShutdownHook(
               new Thread(
                   () -> {
-                    log.info("Shutting down coordinator listener. Waiting for current datasets ({}) to complete...",
-                            PrometheusMetrics.CONCURRENT_DATASETS.get());
+                    log.info(
+                        "Shutting down coordinator listener. Waiting for current datasets ({}) to complete...",
+                        PrometheusMetrics.CONCURRENT_DATASETS.get());
                     running = false;
                     try {
                       finalListener.close();
@@ -321,8 +322,6 @@ public class Coordinator {
             messagingConfig.getPassword(),
             messagingConfig.getVirtualHost()));
   }
-
-
 
   public enum Mode {
     IDENTIFIER,
