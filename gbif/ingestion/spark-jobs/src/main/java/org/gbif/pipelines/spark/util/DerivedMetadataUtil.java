@@ -643,7 +643,7 @@ public class DerivedMetadataUtil implements Serializable {
 
     log.info("distinct coordinates - union-ed {}", unioned.count());
 
-      log.info("distinct coordinates - unioned {}", unioned.count());
+    log.info("distinct coordinates - unioned {}", unioned.count());
 
     // drop duplicates using explicit columns (faster/clearer than distinct())
     Dataset<EventCoordinate> eventIdEventCoordinates =
