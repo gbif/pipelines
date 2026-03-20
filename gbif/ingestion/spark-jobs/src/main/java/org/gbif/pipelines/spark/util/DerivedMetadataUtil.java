@@ -499,6 +499,7 @@ public class DerivedMetadataUtil implements Serializable {
                 "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
                 "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude")
             .dropDuplicates("eventId", "longitude", "latitude");
+    log.info("coreSel {}", coreSel.count());
 
     Dataset<Row> eventSel =
         eventIdToCoordinates
@@ -507,6 +508,7 @@ public class DerivedMetadataUtil implements Serializable {
                 "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
                 "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude")
             .dropDuplicates("eventId", "longitude", "latitude");
+    log.info("eventSel {}", eventSel.count());
 
     Dataset<Row> coreEventSel =
         coreIdEventCoordinates
@@ -515,6 +517,7 @@ public class DerivedMetadataUtil implements Serializable {
                 "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
                 "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude")
             .dropDuplicates("eventId", "longitude", "latitude");
+    log.info("coreEventSel {}", coreEventSel.count());
 
     // union the already-deduped smaller datasets
     Dataset<Row> unioned = coreSel.union(eventSel).union(coreEventSel);
