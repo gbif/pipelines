@@ -428,13 +428,15 @@ public class DerivedMetadataUtil implements Serializable {
         getCoreIdEventDates(occurrence);
     log.info("coredIdOccurrenceEventDates {}", coredIdOccurrenceEventDates.count());
 
-    KeyValueGroupedDataset<String, Tuple2<String, EventDate>> groupedByIdDates =
-        coredIdOccurrenceEventDates
-            .union(eventIdToEventDate)
-            .distinct()
-            .groupByKey(
-                (MapFunction<Tuple2<String, EventDate>, String>) Tuple2::_1, Encoders.STRING());
+    Dataset<Tuple2<String, EventDate>> unionEventDates =
+        coredIdOccurrenceEventDates.union(eventIdToEventDate).dropDuplicates("_1", "_2");
 
+    log.info("unionEventDates {}", unionEventDates.count());
+    KeyValueGroupedDataset<String, Tuple2<String, EventDate>> groupedByIdDates =
+        unionEventDates.groupByKey(
+            (MapFunction<Tuple2<String, EventDate>, String>) Tuple2::_1, Encoders.STRING());
+
+    log.info("groupedByIdDates {}", groupedByIdDates.count());
     Dataset<Tuple3<String, String, String>> temporalCoverages =
         groupedByIdDates
             .mapGroups(
