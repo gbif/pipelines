@@ -489,12 +489,27 @@ public class DerivedMetadataUtil implements Serializable {
     Dataset<EventCoordinate> coreIdOccurrenceCoordinates = getCoreIdCoordinates(occurrence);
     log.info("coreIdOccurrenceCoordinates {}", coreIdOccurrenceCoordinates.count());
 
-    // Calculate Convex Hull
-    Dataset<EventCoordinate> eventIdEventCoordinates =
+    // round coordinates to PRECISION to reduce near-duplicate floats, then dedupe by the three
+    // columns
+    Dataset<Row> unioned =
         coreIdOccurrenceCoordinates
             .union(eventIdToCoordinates)
             .union(coreIdEventCoordinates)
-            .distinct();
+            .selectExpr(
+                "eventId",
+                "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
+                "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude");
+
+    // drop duplicates using explicit columns (faster/clearer than distinct())
+    Dataset<EventCoordinate> eventIdEventCoordinates =
+        unioned
+            .dropDuplicates("eventId", "longitude", "latitude")
+            .map(
+                (MapFunction<Row, EventCoordinate>)
+                    r ->
+                        new EventCoordinate(
+                            r.getAs("eventId"), r.getAs("longitude"), r.getAs("latitude")),
+                Encoders.bean(EventCoordinate.class));
 
     log.info("distinct coordinates {}", eventIdEventCoordinates.count());
 
