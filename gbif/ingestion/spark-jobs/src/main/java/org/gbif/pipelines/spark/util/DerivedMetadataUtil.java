@@ -125,17 +125,21 @@ public class DerivedMetadataUtil implements Serializable {
     log.info("occurrences {}", occurrence.count());
 
     // Calculate Convex Hull
+    log.info("calculating convex hulls");
     Dataset<Tuple2<String, String>> eventIdConvexHull =
         calculateConvexHull(spark, outputPath, events, occurrence);
 
     // Calculate Temporal Coverage
+    log.info("calculating temporal Coverages");
     Dataset<Tuple3<String, String, String>> temporalCoverages =
         calculateTemporalCoverage(spark, outputPath, events, occurrence);
 
     // Calculate Taxonomic Coverage
+    log.info("calculating taxonomic Coverages");
     Dataset<Tuple2<String, String>> taxonomicCoverages =
         calculateTaxonomicCoverage(outputPath, config, occurrence);
 
+    log.info("creating derived data");
     return createDerivedDataRecords(
         spark, outputPath, events, eventIdConvexHull, temporalCoverages, taxonomicCoverages);
   }
@@ -472,6 +476,7 @@ public class DerivedMetadataUtil implements Serializable {
       String outputPath,
       Dataset<Event> events,
       Dataset<Occurrence> occurrence) {
+
     // join to child events to get all coordinates associated with parent event
     Dataset<EventCoordinate> eventIdToCoordinates = gatherCoordinatesFromChildEvents(spark, events);
     log.info("eventIdToCoordinates {}", eventIdToCoordinates.count());
@@ -490,6 +495,8 @@ public class DerivedMetadataUtil implements Serializable {
             .union(eventIdToCoordinates)
             .union(coreIdEventCoordinates)
             .distinct();
+
+    log.info("distinct coordinates {}", eventIdEventCoordinates.count());
 
     // Warning - this has the potential to OOM if there are too many coordinates for an event
     Dataset<Tuple2<String, String>> partialHulls =
@@ -549,6 +556,7 @@ public class DerivedMetadataUtil implements Serializable {
                 },
             Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
 
+    log.info("Writing out convex hulls {}", hulls.count());
     hulls.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + EVENT_DERIVED_CONVEX_HULL);
 
     return hulls;
