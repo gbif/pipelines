@@ -145,7 +145,7 @@ public class EventInterpretationPipeline {
     ThreadContext.put("datasetKey", datasetId);
     ThreadContext.put("attempt", String.valueOf(attempt));
     ThreadContext.put("step", StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
-    log.info("Starting event interpretation");
+    log.info("Starting event interpretation for attempt {}", attempt);
 
     String inputPath = String.format("%s/%s/%d", config.getInputPath(), datasetId, attempt);
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);

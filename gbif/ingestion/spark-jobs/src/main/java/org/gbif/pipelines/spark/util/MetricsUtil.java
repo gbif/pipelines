@@ -13,12 +13,13 @@ import org.yaml.snakeyaml.Yaml;
 public class MetricsUtil {
 
   /**
-   * @param fs
-   * @param allMetrics
-   * @param fileName
+   * Writes the metrics YAML to FS (HDFS if configured)
+   *
+   * @param fs the filesystem
+   * @param metrics the metrics to serialise
+   * @param fileName the name of the file to write the metrics to
    */
-  public static void writeMetricsYaml(
-      FileSystem fs, Map<String, Long> allMetrics, String fileName) {
+  public static void writeMetricsYaml(FileSystem fs, Map<String, Long> metrics, String fileName) {
 
     // Configure YAML output (optional)
     DumperOptions options = new DumperOptions();
@@ -31,7 +32,7 @@ public class MetricsUtil {
 
     // Write to a YAML file
     try (StringWriter writer = new StringWriter()) {
-      yaml.dump(allMetrics, writer);
+      yaml.dump(metrics, writer);
       FsUtils.createFile(fs, fileName, writer.toString());
     } catch (IOException e) {
       log.error("Failed to write metrics yaml", e);

@@ -125,17 +125,21 @@ public class DerivedMetadataUtil implements Serializable {
     log.info("occurrences {}", occurrence.count());
 
     // Calculate Convex Hull
+    log.info("calculating convex hulls");
     Dataset<Tuple2<String, String>> eventIdConvexHull =
         calculateConvexHull(spark, outputPath, events, occurrence);
 
     // Calculate Temporal Coverage
+    log.info("calculating temporal Coverages");
     Dataset<Tuple3<String, String, String>> temporalCoverages =
         calculateTemporalCoverage(spark, outputPath, events, occurrence);
 
     // Calculate Taxonomic Coverage
+    log.info("calculating taxonomic Coverages");
     Dataset<Tuple2<String, String>> taxonomicCoverages =
         calculateTaxonomicCoverage(outputPath, config, occurrence);
 
+    log.info("creating derived data");
     return createDerivedDataRecords(
         spark, outputPath, events, eventIdConvexHull, temporalCoverages, taxonomicCoverages);
   }
@@ -424,13 +428,40 @@ public class DerivedMetadataUtil implements Serializable {
         getCoreIdEventDates(occurrence);
     log.info("coredIdOccurrenceEventDates {}", coredIdOccurrenceEventDates.count());
 
-    KeyValueGroupedDataset<String, Tuple2<String, EventDate>> groupedByIdDates =
+    Dataset<Row> coreOccEventSel =
         coredIdOccurrenceEventDates
-            .union(eventIdToEventDate)
-            .distinct()
-            .groupByKey(
-                (MapFunction<Tuple2<String, EventDate>, String>) Tuple2::_1, Encoders.STRING());
+            .selectExpr("_1 as eventId", "_2.gte as gte", "_2.lte as lte", "_2.lte as interval")
+            .dropDuplicates("eventId", "gte", "lte", "interval");
+    log.info("coreEventSel {}", coreOccEventSel.count());
 
+    Dataset<Row> eventIdToEventDateSel =
+        eventIdToEventDate
+            .selectExpr("_1 as eventId", "_2.gte as gte", "_2.lte as lte", "_2.lte as interval")
+            .dropDuplicates("eventId", "gte", "lte", "interval");
+    log.info("coreEventSel {}", eventIdToEventDateSel.count());
+
+    Dataset<Tuple2<String, EventDate>> unionEventDates =
+        coreOccEventSel
+            .union(eventIdToEventDateSel)
+            .dropDuplicates("eventId", "gte", "lte", "interval")
+            .map(
+                (MapFunction<Row, Tuple2<String, EventDate>>)
+                    row -> {
+                      String eventId = row.getAs("eventId");
+                      String gte = row.getAs("gte");
+                      String lte = row.getAs("lte");
+                      String interval = row.getAs("interval");
+                      EventDate eventDate = new EventDate(gte, lte, interval);
+                      return new Tuple2<>(eventId, eventDate);
+                    },
+                Encoders.tuple(Encoders.STRING(), Encoders.bean(EventDate.class)));
+
+    log.info("unionEventDates {}", unionEventDates.count());
+    KeyValueGroupedDataset<String, Tuple2<String, EventDate>> groupedByIdDates =
+        unionEventDates.groupByKey(
+            (MapFunction<Tuple2<String, EventDate>, String>) Tuple2::_1, Encoders.STRING());
+
+    log.info("groupedByIdDates {}", groupedByIdDates.count());
     Dataset<Tuple3<String, String, String>> temporalCoverages =
         groupedByIdDates
             .mapGroups(
@@ -472,6 +503,7 @@ public class DerivedMetadataUtil implements Serializable {
       String outputPath,
       Dataset<Event> events,
       Dataset<Occurrence> occurrence) {
+
     // join to child events to get all coordinates associated with parent event
     Dataset<EventCoordinate> eventIdToCoordinates = gatherCoordinatesFromChildEvents(spark, events);
     log.info("eventIdToCoordinates {}", eventIdToCoordinates.count());
@@ -484,12 +516,53 @@ public class DerivedMetadataUtil implements Serializable {
     Dataset<EventCoordinate> coreIdOccurrenceCoordinates = getCoreIdCoordinates(occurrence);
     log.info("coreIdOccurrenceCoordinates {}", coreIdOccurrenceCoordinates.count());
 
-    // Calculate Convex Hull
-    Dataset<EventCoordinate> eventIdEventCoordinates =
+    // round coordinates to PRECISION to reduce near-duplicate floats, then dedupe by the three
+    // columns
+    // build the three selected datasets and trim/dedupe them independently
+    Dataset<Row> coreSel =
         coreIdOccurrenceCoordinates
-            .union(eventIdToCoordinates)
-            .union(coreIdEventCoordinates)
-            .distinct();
+            .selectExpr(
+                "eventId",
+                "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
+                "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude")
+            .dropDuplicates("eventId", "longitude", "latitude");
+    log.info("coreSel {}", coreSel.count());
+
+    Dataset<Row> eventSel =
+        eventIdToCoordinates
+            .selectExpr(
+                "eventId",
+                "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
+                "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude")
+            .dropDuplicates("eventId", "longitude", "latitude");
+    log.info("eventSel {}", eventSel.count());
+
+    Dataset<Row> coreEventSel =
+        coreIdEventCoordinates
+            .selectExpr(
+                "eventId",
+                "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
+                "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude")
+            .dropDuplicates("eventId", "longitude", "latitude");
+    log.info("coreEventSel {}", coreEventSel.count());
+
+    // union the already-deduped smaller datasets
+    Dataset<Row> unioned = coreSel.union(eventSel).union(coreEventSel);
+
+    log.info("distinct coordinates - unioned {}", unioned.count());
+
+    // drop duplicates using explicit columns (faster/clearer than distinct())
+    Dataset<EventCoordinate> eventIdEventCoordinates =
+        unioned
+            .dropDuplicates("eventId", "longitude", "latitude")
+            .map(
+                (MapFunction<Row, EventCoordinate>)
+                    r ->
+                        new EventCoordinate(
+                            r.getAs("eventId"), r.getAs("longitude"), r.getAs("latitude")),
+                Encoders.bean(EventCoordinate.class));
+
+    log.info("distinct coordinates {}", eventIdEventCoordinates.count());
 
     // Warning - this has the potential to OOM if there are too many coordinates for an event
     Dataset<Tuple2<String, String>> partialHulls =
@@ -549,6 +622,7 @@ public class DerivedMetadataUtil implements Serializable {
                 },
             Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
 
+    log.info("Writing out convex hulls {}", hulls.count());
     hulls.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + EVENT_DERIVED_CONVEX_HULL);
 
     return hulls;
