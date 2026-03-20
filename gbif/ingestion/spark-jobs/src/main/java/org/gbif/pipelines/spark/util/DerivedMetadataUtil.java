@@ -428,8 +428,33 @@ public class DerivedMetadataUtil implements Serializable {
         getCoreIdEventDates(occurrence);
     log.info("coredIdOccurrenceEventDates {}", coredIdOccurrenceEventDates.count());
 
+    Dataset<Row> coreOccEventSel =
+        coredIdOccurrenceEventDates
+            .selectExpr("_1 as eventId", "_2.gte as gte", "_2.lte as lte", "_2.lte as interval")
+            .dropDuplicates("eventId", "gte", "lte", "interval");
+    log.info("coreEventSel {}", coreOccEventSel.count());
+
+    Dataset<Row> eventIdToEventDateSel =
+        eventIdToEventDate
+            .selectExpr("_1 as eventId", "_2.gte as gte", "_2.lte as lte", "_2.lte as interval")
+            .dropDuplicates("eventId", "gte", "lte", "interval");
+    log.info("coreEventSel {}", eventIdToEventDateSel.count());
+
     Dataset<Tuple2<String, EventDate>> unionEventDates =
-        coredIdOccurrenceEventDates.union(eventIdToEventDate).dropDuplicates("_1", "_2");
+        coreOccEventSel
+            .union(eventIdToEventDateSel)
+            .dropDuplicates("eventId", "gte", "lte", "interval")
+            .map(
+                (MapFunction<Row, Tuple2<String, EventDate>>)
+                    row -> {
+                      String eventId = row.getAs("eventId");
+                      String gte = row.getAs("gte");
+                      String lte = row.getAs("lte");
+                      String interval = row.getAs("interval");
+                      EventDate eventDate = new EventDate(gte, lte, interval);
+                      return new Tuple2<>(eventId, eventDate);
+                    },
+                Encoders.tuple(Encoders.STRING(), Encoders.bean(EventDate.class)));
 
     log.info("unionEventDates {}", unionEventDates.count());
     KeyValueGroupedDataset<String, Tuple2<String, EventDate>> groupedByIdDates =
