@@ -500,7 +500,7 @@ public class DerivedMetadataUtil implements Serializable {
                 "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
                 "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude");
 
-      log.info("distinct coordinates - unioned {}", unioned.count());
+    log.info("distinct coordinates - unioned {}", unioned.count());
 
     // drop duplicates using explicit columns (faster/clearer than distinct())
     Dataset<EventCoordinate> eventIdEventCoordinates =
