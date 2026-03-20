@@ -491,14 +491,33 @@ public class DerivedMetadataUtil implements Serializable {
 
     // round coordinates to PRECISION to reduce near-duplicate floats, then dedupe by the three
     // columns
-    Dataset<Row> unioned =
+    // build the three selected datasets and trim/dedupe them independently
+    Dataset<Row> coreSel =
         coreIdOccurrenceCoordinates
-            .union(eventIdToCoordinates)
-            .union(coreIdEventCoordinates)
             .selectExpr(
                 "eventId",
                 "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
-                "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude");
+                "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude")
+            .dropDuplicates("eventId", "longitude", "latitude");
+
+    Dataset<Row> eventSel =
+        eventIdToCoordinates
+            .selectExpr(
+                "eventId",
+                "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
+                "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude")
+            .dropDuplicates("eventId", "longitude", "latitude");
+
+    Dataset<Row> coreEventSel =
+        coreIdEventCoordinates
+            .selectExpr(
+                "eventId",
+                "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
+                "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude")
+            .dropDuplicates("eventId", "longitude", "latitude");
+
+    // union the already-deduped smaller datasets
+    Dataset<Row> unioned = coreSel.union(eventSel).union(coreEventSel);
 
     log.info("distinct coordinates - unioned {}", unioned.count());
 
