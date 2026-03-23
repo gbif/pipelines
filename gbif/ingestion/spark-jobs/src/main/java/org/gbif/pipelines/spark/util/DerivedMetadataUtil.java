@@ -3,6 +3,7 @@ package org.gbif.pipelines.spark.util;
 import static org.apache.spark.sql.functions.col;
 import static org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser.PRECISION;
 import static org.gbif.pipelines.spark.Directories.*;
+import static org.gbif.pipelines.spark.EventInterpretationPipeline.sparkLog;
 import static org.gbif.pipelines.spark.util.ConvexHullUtil.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +23,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.converters.JsonConverter;
 import org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.json.DerivedClassification;
@@ -137,18 +139,37 @@ public class DerivedMetadataUtil implements Serializable {
     // Calculate Taxonomic Coverage
     log.info("calculating taxonomic Coverages");
     Dataset<Tuple2<String, String>> taxonomicCoverages =
-        calculateTaxonomicCoverage(outputPath, config, occurrence);
+        calculateTaxonomicCoverage(spark, outputPath, config, occurrence);
+
+    cleanupTemporaryDIrectories(fileSystem, outputPath);
 
     log.info("creating derived data");
     return createDerivedDataRecords(
         spark, outputPath, events, eventIdConvexHull, temporalCoverages, taxonomicCoverages);
   }
 
+  public static void cleanupTemporaryDIrectories(FileSystem fileSystem, String outputPath) {
+      FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_coordinates_joined");
+      FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_convex_hull");
+
+
+  }
+
+
+
   public static Dataset<Tuple2<String, String>> calculateTaxonomicCoverage(
-      String outputPath, PipelinesConfig config, Dataset<Occurrence> occurrence) {
+      SparkSession spark,
+      String outputPath,
+      PipelinesConfig config,
+      Dataset<Occurrence> occurrence) {
 
     final Integer maxTaxonCoveragePerEvent =
         config.getDerivedMetadataConfig().getMaxTaxonCoveragePerEvent();
+
+    sparkLog(
+        spark,
+        "CalculateTaxonomicCoverage",
+        "with maxTaxonCoveragePerEvent:" + maxTaxonCoveragePerEvent);
 
     // creates a EventID -> TaxonCoverage map
     Dataset<EventTaxonCoverage> taxonomicCoverages =
@@ -197,7 +218,18 @@ public class DerivedMetadataUtil implements Serializable {
                           eventId, MAPPER.writeValueAsString(taxonCoverage));
                     },
                 Encoders.bean(EventTaxonCoverage.class))
-            .distinct();
+            .dropDuplicates();
+
+    sparkLog(spark, "CalculateTaxonomicCoverage", "Write taxonomicCoverages and reload");
+    taxonomicCoverages
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/temp_taxonomic_coverages");
+    taxonomicCoverages =
+        spark
+            .read()
+            .parquet(outputPath + "/temp_taxonomic_coverages")
+            .as(Encoders.bean(EventTaxonCoverage.class));
 
     // Merge partial - from the previous stage we have multiple taxonomic coverages per event
     // EVENT1 -> TC1
@@ -275,12 +307,24 @@ public class DerivedMetadataUtil implements Serializable {
                 },
             Encoders.bean(EventTaxonCoverage.class));
 
+    sparkLog(spark, "CalculateTaxonomicCoverage", "Write partial merged and reload");
+    partialMergedCoverages
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/temp_taxonomic_coverages");
+    partialMergedCoverages =
+        spark
+            .read()
+            .parquet(outputPath + "/temp_partial_merged_taxonomic_coverages")
+            .as(Encoders.bean(EventTaxonCoverage.class));
+
     // group by eventID to prepare for final merge
     KeyValueGroupedDataset<String, EventTaxonCoverage> groupedPartial =
         partialMergedCoverages.groupByKey(
             (MapFunction<EventTaxonCoverage, String>) EventTaxonCoverage::getEventId,
             Encoders.STRING());
 
+    sparkLog(spark, "CalculateTaxonomicCoverage", "final merge down");
     Dataset<Tuple2<String, String>> grouped =
         groupedPartial
             .reduceGroups(
@@ -325,12 +369,17 @@ public class DerivedMetadataUtil implements Serializable {
                     },
                 Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
 
+    sparkLog(spark, "CalculateTaxonomicCoverage", "Write and reload");
     grouped
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + EVENT_DERIVED_TAXON_COVERAGE);
 
-    return grouped;
+    // reload
+    return spark
+        .read()
+        .parquet(outputPath + "/" + EVENT_DERIVED_TAXON_COVERAGE)
+        .as(Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
   }
 
   /**
@@ -419,11 +468,14 @@ public class DerivedMetadataUtil implements Serializable {
       String outputPath,
       Dataset<Event> events,
       Dataset<Occurrence> occurrence) {
+
+    sparkLog(spark, "CalculateTemporalCoverage", "gatherEventDatesFromChildEvents");
     Dataset<Tuple2<String, EventDate>> eventIdToEventDate =
         gatherEventDatesFromChildEvents(spark, events);
     log.info("eventIdToEventDate {}", eventIdToEventDate.count());
 
     // get unique occurrence temporal - coreId -> eventDate
+    sparkLog(spark, "CalculateTemporalCoverage", "getCoreIdEventDates");
     Dataset<Tuple2<String, EventDate>> coredIdOccurrenceEventDates =
         getCoreIdEventDates(occurrence);
     log.info("coredIdOccurrenceEventDates {}", coredIdOccurrenceEventDates.count());
@@ -440,6 +492,7 @@ public class DerivedMetadataUtil implements Serializable {
             .dropDuplicates("eventId", "gte", "lte", "interval");
     log.info("coreEventSel {}", eventIdToEventDateSel.count());
 
+    sparkLog(spark, "CalculateTemporalCoverage", "Union event dates");
     Dataset<Tuple2<String, EventDate>> unionEventDates =
         coreOccEventSel
             .union(eventIdToEventDateSel)
@@ -456,12 +509,24 @@ public class DerivedMetadataUtil implements Serializable {
                     },
                 Encoders.tuple(Encoders.STRING(), Encoders.bean(EventDate.class)));
 
-    log.info("unionEventDates {}", unionEventDates.count());
+    sparkLog(spark, "CalculateTemporalCoverage", "Write union event dates and reload");
+    unionEventDates
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/temp_union_event_dates");
+    unionEventDates =
+        spark
+            .read()
+            .parquet(outputPath + "/temp_union_event_dates")
+            .as(Encoders.tuple(Encoders.STRING(), Encoders.bean(EventDate.class)));
+
+    sparkLog(spark, "CalculateTemporalCoverage", "unionEventDates.groupByKey");
     KeyValueGroupedDataset<String, Tuple2<String, EventDate>> groupedByIdDates =
         unionEventDates.groupByKey(
             (MapFunction<Tuple2<String, EventDate>, String>) Tuple2::_1, Encoders.STRING());
 
     log.info("groupedByIdDates {}", groupedByIdDates.count());
+    sparkLog(spark, "CalculateTemporalCoverage", "temporalCoverages with accumulators");
     Dataset<Tuple3<String, String, String>> temporalCoverages =
         groupedByIdDates
             .mapGroups(
@@ -494,7 +559,12 @@ public class DerivedMetadataUtil implements Serializable {
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + EVENT_DERIVED_TEMPORAL_COVERAGE);
-    return temporalCoverages;
+
+    // reload from disk
+    return spark
+        .read()
+        .parquet(outputPath + "/" + EVENT_DERIVED_TEMPORAL_COVERAGE)
+        .as(Encoders.tuple(Encoders.STRING(), Encoders.STRING(), Encoders.STRING()));
   }
 
   @NotNull
@@ -505,14 +575,17 @@ public class DerivedMetadataUtil implements Serializable {
       Dataset<Occurrence> occurrence) {
 
     // join to child events to get all coordinates associated with parent event
+    sparkLog(spark, "CalculateConvexHull", "gatherCoordinatesFromChildEvents");
     Dataset<EventCoordinate> eventIdToCoordinates = gatherCoordinatesFromChildEvents(spark, events);
     log.info("eventIdToCoordinates {}", eventIdToCoordinates.count());
 
     // join child events ?
+    sparkLog(spark, "CalculateConvexHull", "getEventCoordinates");
     Dataset<EventCoordinate> coreIdEventCoordinates = getEventCoordinates(events);
     log.info("coreIdEventCoordinates {}", coreIdEventCoordinates.count());
 
     // get unique occurrence locations - coredId -> "lat||long"
+    sparkLog(spark, "CalculateConvexHull", "getCoreIdCoordinates");
     Dataset<EventCoordinate> coreIdOccurrenceCoordinates = getCoreIdCoordinates(occurrence);
     log.info("coreIdOccurrenceCoordinates {}", coreIdOccurrenceCoordinates.count());
 
@@ -549,6 +622,11 @@ public class DerivedMetadataUtil implements Serializable {
     // union the already-deduped smaller datasets
     Dataset<Row> unioned = coreSel.union(eventSel).union(coreEventSel);
 
+    // write to disk and reload
+    sparkLog(spark, "CalculateConvexHull", "write coordinates joined and reload");
+    unioned.write().mode(SaveMode.Overwrite).parquet(outputPath + "/temp_coordinates_joined");
+    unioned = spark.read().parquet(outputPath + "/temp_coordinates_joined");
+
     log.info("distinct coordinates - unioned {}", unioned.count());
 
     // drop duplicates using explicit columns (faster/clearer than distinct())
@@ -562,8 +640,21 @@ public class DerivedMetadataUtil implements Serializable {
                             r.getAs("eventId"), r.getAs("longitude"), r.getAs("latitude")),
                 Encoders.bean(EventCoordinate.class));
 
-    log.info("distinct coordinates {}", eventIdEventCoordinates.count());
+    // write and reload
+    sparkLog(spark, "CalculateConvexHull", "write eventID coordinates joined and reload");
+    eventIdEventCoordinates
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/temp_event_id_coordinates");
+    eventIdEventCoordinates =
+        spark
+            .read()
+            .parquet(outputPath + "/temp_event_id_coordinates")
+            .as(Encoders.bean(EventCoordinate.class));
+    ;
 
+    log.info("distinct coordinates {}", eventIdEventCoordinates.count());
+    sparkLog(spark, "CalculateConvexHull", "Calculate partial hulls");
     // Warning - this has the potential to OOM if there are too many coordinates for an event
     Dataset<Tuple2<String, String>> partialHulls =
         eventIdEventCoordinates.mapPartitions(
@@ -599,6 +690,15 @@ public class DerivedMetadataUtil implements Serializable {
                 },
             Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
 
+    // write and reload
+    sparkLog(spark, "CalculateConvexHull", "Write partial hulls and reload");
+    partialHulls.write().mode(SaveMode.Overwrite).parquet(outputPath + "/temp_partial_hulls");
+    partialHulls =
+        spark
+            .read()
+            .parquet(outputPath + "/temp_partial_hulls")
+            .as(Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
+
     KeyValueGroupedDataset<String, Tuple2<String, String>> groupedPartial =
         partialHulls.groupByKey(
             (MapFunction<Tuple2<String, String>, String>) Tuple2::_1, Encoders.STRING());
@@ -623,9 +723,14 @@ public class DerivedMetadataUtil implements Serializable {
             Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
 
     log.info("Writing out convex hulls {}", hulls.count());
+    sparkLog(spark, "CalculateConvexHull", "Write completed hulls and reload");
     hulls.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + EVENT_DERIVED_CONVEX_HULL);
 
-    return hulls;
+    // reload
+    return spark
+        .read()
+        .parquet(outputPath + "/" + EVENT_DERIVED_CONVEX_HULL)
+        .as(Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
   }
 
   public static Dataset<Tuple2<String, EventDate>> gatherEventDatesFromChildEvents(
@@ -664,6 +769,7 @@ public class DerivedMetadataUtil implements Serializable {
             Encoders.tuple(Encoders.STRING(), Encoders.bean(EventDate.class)));
   }
 
+  // taking 25mins for a small-ish dataset
   public static Dataset<EventCoordinate> gatherCoordinatesFromChildEvents(
       SparkSession spark, Dataset<Event> events) {
     events.createOrReplaceTempView("simple_event");

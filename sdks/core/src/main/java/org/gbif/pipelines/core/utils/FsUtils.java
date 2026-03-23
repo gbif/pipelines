@@ -281,6 +281,23 @@ public final class FsUtils {
   }
 
   /**
+   * Removes a directory with content if the folder exists
+   *
+   * @param directoryPath path to some directory
+   */
+  public static boolean deleteIfExists(FileSystem fs, String directoryPath) {
+    directoryPath = convertLocalHdfsPath(directoryPath);
+
+    Path path = new Path(directoryPath);
+    try {
+      return fs.exists(path) && fs.delete(path, true);
+    } catch (IOException e) {
+      log.error("Can't delete {} directory, cause - {}", directoryPath, e.getCause());
+      return false;
+    }
+  }
+
+  /**
    * Convert EMR style path with hdfs:/// prefix to local path.
    *
    * <p>eg. hdfs:///mypath/123 to /mypath/123

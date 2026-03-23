@@ -104,7 +104,7 @@ public class CalculateDerivedMetadataTest {
 
     Dataset<Tuple2<String, String>> calculatedTaxonCoverage =
         DerivedMetadataUtil.calculateTaxonomicCoverage(
-            testResourcesRoot + "/calculate-derived-data/taxon-coverage", config, ds);
+            spark, testResourcesRoot + "/calculate-derived-data/taxon-coverage", config, ds);
 
     Tuple2<String, String> idAndCoverage = calculatedTaxonCoverage.first();
 
