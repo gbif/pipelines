@@ -254,8 +254,10 @@ public class EventInterpretationTest extends MockedServicesTest {
 
         // parent & parentsLineage
         assertEquals("EVT-000", JsonPath.read(json, "$.event.parentEventID"));
-        assertEquals("Survey", JsonPath.read(json, "$.event.parentsLineage[0].eventType"));
-        assertEquals("EVT-001", JsonPath.read(json, "$.event.parentsLineage[0].id"));
+        assertEquals("Project", JsonPath.read(json, "$.event.parentsLineage[0].eventType"));
+        assertEquals("EVT-000", JsonPath.read(json, "$.event.parentsLineage[0].id"));
+        assertEquals("Survey", JsonPath.read(json, "$.event.parentsLineage[1].eventType"));
+        assertEquals("EVT-001", JsonPath.read(json, "$.event.parentsLineage[1].id"));
 
         // project & publishing info
         assertEquals(
@@ -343,7 +345,7 @@ public class EventInterpretationTest extends MockedServicesTest {
 
         // eventInherited
         assertEquals(
-            List.of("Survey", "Project"),
+            List.of("Project", "Survey"),
             JsonPath.<List<String>>read(json, "$.eventInherited.eventType"));
         assertEquals("2", JsonPath.read(json, "$.eventInherited.id"));
 

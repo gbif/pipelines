@@ -163,27 +163,17 @@ public class EventInterpretationPipeline {
     sparkLog(spark, "event-interpretation", "Generating event lineage");
     Dataset<EventLineage> lineage = generateLineage(spark, extendedRecords);
 
-    boolean isLineageEmpty = lineage.count() > 0;
-    if (log.isDebugEnabled()) {
-      lineage.show(10, false);
-    }
-
     // run the record by record transformations
     sparkLog(spark, "event-interpretation", "Running record by record transformations");
     runTransforms(spark, config, extendedRecords, metadata, lineage, outputPath);
 
-    if (!isLineageEmpty) {
-      // using the parent lineage, join back to get the full event records
-      sparkLog(spark, "event-interpretation", "Event inheritance");
-      EventInheritanceUtil.runEventInheritance(spark, outputPath);
-    }
-
-    String simpleRecordsDirectory = isLineageEmpty ? SIMPLE_EVENT : SIMPLE_EVENT_WITH_INHERITED;
+    // using the parent lineage, join back to get the full event records
+    sparkLog(spark, "event-interpretation", "Event inheritance");
+    EventInheritanceUtil.runEventInheritance(spark, outputPath);
 
     // calculate derived metadata and join to events
     sparkLog(spark, "event-interpretation", "Add derived data");
-    DerivedMetadataUtil.addCalculateDerivedMetadata(
-        spark, config, fs, outputPath, simpleRecordsDirectory);
+    DerivedMetadataUtil.addCalculateDerivedMetadata(spark, config, fs, outputPath);
 
     // load simple records
     Dataset<Event> simpleRecords =

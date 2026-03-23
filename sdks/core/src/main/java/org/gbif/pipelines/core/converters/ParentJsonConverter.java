@@ -287,7 +287,7 @@ public class ParentJsonConverter {
   private List<String> getParentsLineageEventTypes() {
 
     return eventCore.getParentsLineage().stream()
-        .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
+        .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder))
         .map(org.gbif.pipelines.io.avro.Parent::getEventType)
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
@@ -295,7 +295,7 @@ public class ParentJsonConverter {
 
   private List<String> getParentsLineageVerbatimEventTypes() {
     return eventCore.getParentsLineage().stream()
-        .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
+        .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder))
         .map(org.gbif.pipelines.io.avro.Parent::getVerbatimEventType)
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
@@ -303,7 +303,7 @@ public class ParentJsonConverter {
 
   private List<String> getLineageEventIDs() {
     return eventCore.getParentsLineage().stream()
-        .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder).reversed())
+        .sorted(Comparator.comparingInt(org.gbif.pipelines.io.avro.Parent::getOrder))
         .map(org.gbif.pipelines.io.avro.Parent::getId)
         .collect(Collectors.toList());
   }

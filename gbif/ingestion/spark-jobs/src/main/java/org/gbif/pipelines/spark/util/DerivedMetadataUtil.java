@@ -66,11 +66,7 @@ public class DerivedMetadataUtil implements Serializable {
    * @throws IOException
    */
   public static Dataset<Event> addCalculateDerivedMetadata(
-      SparkSession spark,
-      PipelinesConfig config,
-      FileSystem fs,
-      String outputPath,
-      String simpleEventDirectory)
+      SparkSession spark, PipelinesConfig config, FileSystem fs, String outputPath)
       throws IOException {
 
     Dataset<DerivedMetadataRecord> derivedRecords =
@@ -80,7 +76,7 @@ public class DerivedMetadataUtil implements Serializable {
     Dataset<Event> events =
         spark
             .read()
-            .parquet(outputPath + "/" + simpleEventDirectory)
+            .parquet(outputPath + "/" + SIMPLE_EVENT_WITH_INHERITED)
             .as(Encoders.bean(Event.class));
 
     // join events and derived metadata
