@@ -39,7 +39,10 @@ import org.gbif.pipelines.core.converters.*;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.event.EventHdfsRecord;
+import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
+import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
+import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
 import org.gbif.pipelines.spark.pojo.Event;
 import org.gbif.pipelines.spark.pojo.EventLineage;
 import org.gbif.pipelines.spark.util.DerivedMetadataUtil;
@@ -153,32 +156,48 @@ public class EventInterpretationPipeline {
     MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
 
     // Load the extended records
+    sparkLog(spark, "event-interpretation", "Loading extended records");
     Dataset<ExtendedRecord> extendedRecords =
         loadExtendedRecords(spark, config, inputPath, outputPath, numberOfShards);
 
+    sparkLog(spark, "event-interpretation", "Generating event lineage");
     Dataset<EventLineage> lineage = generateLineage(spark, extendedRecords);
+
+    boolean isLineageEmpty = lineage.isEmpty();
 
     if (log.isDebugEnabled()) {
       lineage.show(10, false);
     }
 
     // run the record by record transformations
+    sparkLog(spark, "event-interpretation", "Running record by record transformations");
     runTransforms(spark, config, extendedRecords, metadata, lineage, outputPath);
 
-    // using the parent lineage, join back to get the full event records
-    EventInheritanceUtil.runEventInheritance(spark, outputPath);
+    if (!isLineageEmpty) {
+      // using the parent lineage, join back to get the full event records
+      sparkLog(spark, "event-interpretation", "Event inheritance");
+      EventInheritanceUtil.runEventInheritance(spark, outputPath);
+    }
 
     // calculate derived metadata and join to events
+    sparkLog(spark, "event-interpretation", "Add derived data");
+    DerivedMetadataUtil.addCalculateDerivedMetadata(spark, config, fs, outputPath);
+
+    String simpleRecordsPath = isLineageEmpty ? SIMPLE_EVENT : SIMPLE_EVENT_WITH_DERIVED;
+
+    // load simple records
     Dataset<Event> simpleRecords =
-        DerivedMetadataUtil.addCalculateDerivedMetadata(spark, config, fs, outputPath);
+        spark.read().parquet(outputPath + "/" + simpleRecordsPath).as(Encoders.bean(Event.class));
 
     // write parquet for elastic
+    sparkLog(spark, "event-interpretation", "Export to JSON parquet");
     toJson(simpleRecords, metadata)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + EVENT_JSON);
 
     // write parquet for hdfs view
+    sparkLog(spark, "event-interpretation", "Export to HDFS parquet");
     toHdfs(simpleRecords, metadata)
         .write()
         .mode(SaveMode.Overwrite)
@@ -228,6 +247,32 @@ public class EventInterpretationPipeline {
     return simpleRecords.map(
         (MapFunction<Event, ParentJsonRecord>)
             r -> {
+              String eventCoreInherited = r.getEventInherited();
+              String locationInherited = r.getLocationInherited();
+              String temporalInherited = r.getTemporalInherited();
+              EventInheritedRecord eventInheritedRecord = null;
+              LocationInheritedRecord locationInheritedRecord = null;
+              TemporalInheritedRecord temporalInheritedRecord = null;
+
+              if (eventCoreInherited != null) {
+                eventInheritedRecord =
+                    MAPPER.readValue(
+                        r.getEventInherited(),
+                        org.gbif.pipelines.io.avro.json.EventInheritedRecord.class);
+              }
+              if (locationInherited != null) {
+                locationInheritedRecord =
+                    MAPPER.readValue(
+                        r.getLocationInherited(),
+                        org.gbif.pipelines.io.avro.json.LocationInheritedRecord.class);
+              }
+              if (temporalInherited != null) {
+                temporalInheritedRecord =
+                    MAPPER.readValue(
+                        r.getTemporalInherited(),
+                        org.gbif.pipelines.io.avro.json.TemporalInheritedRecord.class);
+              }
+
               ParentJsonConverter c =
                   ParentJsonConverter.builder()
                       .metadata(metadata)
@@ -238,18 +283,9 @@ public class EventInterpretationPipeline {
                       .location(MAPPER.readValue(r.getLocation(), LocationRecord.class))
                       .humboldtRecord(MAPPER.readValue(r.getHumboldt(), HumboldtRecord.class))
                       .multimedia(MAPPER.readValue(r.getMultimedia(), MultimediaRecord.class))
-                      .eventInheritedRecord(
-                          MAPPER.readValue(
-                              r.getEventInherited(),
-                              org.gbif.pipelines.io.avro.json.EventInheritedRecord.class))
-                      .locationInheritedRecord(
-                          MAPPER.readValue(
-                              r.getLocationInherited(),
-                              org.gbif.pipelines.io.avro.json.LocationInheritedRecord.class))
-                      .temporalInheritedRecord(
-                          MAPPER.readValue(
-                              r.getTemporalInherited(),
-                              org.gbif.pipelines.io.avro.json.TemporalInheritedRecord.class))
+                      .eventInheritedRecord(eventInheritedRecord)
+                      .locationInheritedRecord(locationInheritedRecord)
+                      .temporalInheritedRecord(temporalInheritedRecord)
                       .derivedMetadata(
                           MAPPER.readValue(
                               r.getDerivedMetadata(),
@@ -283,6 +319,10 @@ public class EventInterpretationPipeline {
               return c.convert();
             },
         Encoders.bean(EventHdfsRecord.class));
+  }
+
+  public static void sparkLog(SparkSession spark, String groupId, String message) {
+    spark.sparkContext().setJobGroup(groupId, message, true);
   }
 
   public static Dataset<Event> runTransforms(
