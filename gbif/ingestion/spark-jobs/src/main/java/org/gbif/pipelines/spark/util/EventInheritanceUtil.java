@@ -50,6 +50,7 @@ public class EventInheritanceUtil {
     log.info("Creating temp view Event");
 
     sparkLog(spark, "event-interpretation", "Creating temp view Event");
+
     // load simple event
     Dataset<Event> events =
         spark.read().parquet(inputPath + "/" + SIMPLE_EVENT).as(Encoders.bean(Event.class));
@@ -280,7 +281,11 @@ public class EventInheritanceUtil {
         .mode(SaveMode.Overwrite)
         .parquet(inputPath + "/" + SIMPLE_EVENT_WITH_INHERITED);
 
-    log.info("Event inheritance process finished");
+    log.info(
+        "Event inheritance process finished. Output written to "
+            + inputPath
+            + "/"
+            + SIMPLE_EVENT_WITH_INHERITED);
 
     return spark
         .read()
