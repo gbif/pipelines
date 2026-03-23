@@ -1,6 +1,6 @@
 package org.gbif.pipelines.spark.util;
 
-import static org.apache.spark.sql.functions.col;
+import static org.apache.spark.sql.functions.*;
 import static org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser.PRECISION;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.EventInterpretationPipeline.sparkLog;
@@ -18,6 +18,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.function.*;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.converters.JsonConverter;
@@ -63,7 +66,11 @@ public class DerivedMetadataUtil implements Serializable {
    * @throws IOException
    */
   public static Dataset<Event> addCalculateDerivedMetadata(
-      SparkSession spark, PipelinesConfig config, FileSystem fs, String outputPath)
+      SparkSession spark,
+      PipelinesConfig config,
+      FileSystem fs,
+      String outputPath,
+      String simpleEventDirectory)
       throws IOException {
 
     Dataset<DerivedMetadataRecord> derivedRecords =
@@ -73,7 +80,7 @@ public class DerivedMetadataUtil implements Serializable {
     Dataset<Event> events =
         spark
             .read()
-            .parquet(outputPath + "/" + SIMPLE_EVENT_WITH_INHERITED)
+            .parquet(outputPath + "/" + simpleEventDirectory)
             .as(Encoders.bean(Event.class));
 
     // join events and derived metadata
@@ -141,21 +148,22 @@ public class DerivedMetadataUtil implements Serializable {
     Dataset<Tuple2<String, String>> taxonomicCoverages =
         calculateTaxonomicCoverage(spark, outputPath, config, occurrence);
 
-    cleanupTemporaryDIrectories(fileSystem, outputPath);
+    cleanupTemporaryDirectories(fileSystem, outputPath);
 
     log.info("creating derived data");
     return createDerivedDataRecords(
         spark, outputPath, events, eventIdConvexHull, temporalCoverages, taxonomicCoverages);
   }
 
-  public static void cleanupTemporaryDIrectories(FileSystem fileSystem, String outputPath) {
-      FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_coordinates_joined");
-      FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_convex_hull");
-
-
+  public static void cleanupTemporaryDirectories(FileSystem fileSystem, String outputPath) {
+    FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_convex_hull");
+    FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_coordinates_joined");
+    FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_event_id_coordinates");
+    FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_partial_hulls");
+    FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_partial_merged_taxonomic_coverages");
+    FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_taxonomic_coverages");
+    FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_union_event_dates");
   }
-
-
 
   public static Dataset<Tuple2<String, String>> calculateTaxonomicCoverage(
       SparkSession spark,
@@ -220,11 +228,13 @@ public class DerivedMetadataUtil implements Serializable {
                 Encoders.bean(EventTaxonCoverage.class))
             .dropDuplicates();
 
-    sparkLog(spark, "CalculateTaxonomicCoverage", "Write taxonomicCoverages and reload");
+    sparkLog(spark, "CalculateTaxonomicCoverage", "Write taxonomicCoverages");
     taxonomicCoverages
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/temp_taxonomic_coverages");
+
+    sparkLog(spark, "CalculateTaxonomicCoverage", "Reload taxonomicCoverages");
     taxonomicCoverages =
         spark
             .read()
@@ -311,7 +321,9 @@ public class DerivedMetadataUtil implements Serializable {
     partialMergedCoverages
         .write()
         .mode(SaveMode.Overwrite)
-        .parquet(outputPath + "/temp_taxonomic_coverages");
+        .parquet(outputPath + "/temp_partial_merged_taxonomic_coverages");
+
+    sparkLog(spark, "CalculateTaxonomicCoverage", "Reload partial merged and reload");
     partialMergedCoverages =
         spark
             .read()
@@ -319,6 +331,7 @@ public class DerivedMetadataUtil implements Serializable {
             .as(Encoders.bean(EventTaxonCoverage.class));
 
     // group by eventID to prepare for final merge
+    sparkLog(spark, "CalculateTaxonomicCoverage", "EventTaxonCoverage::getEventId");
     KeyValueGroupedDataset<String, EventTaxonCoverage> groupedPartial =
         partialMergedCoverages.groupByKey(
             (MapFunction<EventTaxonCoverage, String>) EventTaxonCoverage::getEventId,
@@ -330,7 +343,6 @@ public class DerivedMetadataUtil implements Serializable {
             .reduceGroups(
                 (ReduceFunction<EventTaxonCoverage>)
                     (a, b) -> {
-                      EventTaxonCoverage merged = new EventTaxonCoverage(a.getEventId(), null);
                       TaxonCoverage taxonCoverageA =
                           MAPPER.readValue(a.getTaxonCoverage(), TaxonCoverage.class);
                       TaxonCoverage taxonCoverageB =
@@ -369,13 +381,14 @@ public class DerivedMetadataUtil implements Serializable {
                     },
                 Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
 
-    sparkLog(spark, "CalculateTaxonomicCoverage", "Write and reload");
+    sparkLog(spark, "CalculateTaxonomicCoverage", "Write derived taxon coverage");
     grouped
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + EVENT_DERIVED_TAXON_COVERAGE);
 
     // reload
+    sparkLog(spark, "CalculateTaxonomicCoverage", "Reload derived taxon coverage");
     return spark
         .read()
         .parquet(outputPath + "/" + EVENT_DERIVED_TAXON_COVERAGE)
@@ -589,6 +602,7 @@ public class DerivedMetadataUtil implements Serializable {
     Dataset<EventCoordinate> coreIdOccurrenceCoordinates = getCoreIdCoordinates(occurrence);
     log.info("coreIdOccurrenceCoordinates {}", coreIdOccurrenceCoordinates.count());
 
+    sparkLog(spark, "CalculateConvexHull", "core select of distinct coordinates at precision");
     // round coordinates to PRECISION to reduce near-duplicate floats, then dedupe by the three
     // columns
     // build the three selected datasets and trim/dedupe them independently
@@ -601,6 +615,7 @@ public class DerivedMetadataUtil implements Serializable {
             .dropDuplicates("eventId", "longitude", "latitude");
     log.info("coreSel {}", coreSel.count());
 
+    sparkLog(spark, "CalculateConvexHull", "event select of distinct coordinates at precision");
     Dataset<Row> eventSel =
         eventIdToCoordinates
             .selectExpr(
@@ -610,6 +625,8 @@ public class DerivedMetadataUtil implements Serializable {
             .dropDuplicates("eventId", "longitude", "latitude");
     log.info("eventSel {}", eventSel.count());
 
+    sparkLog(
+        spark, "CalculateConvexHull", "core event select of distinct coordinates at precision");
     Dataset<Row> coreEventSel =
         coreIdEventCoordinates
             .selectExpr(
@@ -620,6 +637,7 @@ public class DerivedMetadataUtil implements Serializable {
     log.info("coreEventSel {}", coreEventSel.count());
 
     // union the already-deduped smaller datasets
+    sparkLog(spark, "CalculateConvexHull", "union of coordinates at precision");
     Dataset<Row> unioned = coreSel.union(eventSel).union(coreEventSel);
 
     // write to disk and reload
@@ -627,7 +645,7 @@ public class DerivedMetadataUtil implements Serializable {
     unioned.write().mode(SaveMode.Overwrite).parquet(outputPath + "/temp_coordinates_joined");
     unioned = spark.read().parquet(outputPath + "/temp_coordinates_joined");
 
-    log.info("distinct coordinates - unioned {}", unioned.count());
+    log.info("distinct coordinates - union-ed {}", unioned.count());
 
     // drop duplicates using explicit columns (faster/clearer than distinct())
     Dataset<EventCoordinate> eventIdEventCoordinates =
@@ -736,35 +754,46 @@ public class DerivedMetadataUtil implements Serializable {
   public static Dataset<Tuple2<String, EventDate>> gatherEventDatesFromChildEvents(
       SparkSession spark, Dataset<Event> events) {
     events.createOrReplaceTempView("simple_event");
-    return spark
-        .sql(
-            """
-                    SELECT
-                           parent_event.id as eventId,
-                           child_event.temporal
-                    FROM simple_event parent_event
-                    LEFT OUTER JOIN simple_event child_event
-                    ON array_contains(child_event.lineage, parent_event.id)
-                """)
-        .filter(
-            (FilterFunction<Row>)
-                row -> {
-                  String temporalJson = row.getAs("temporal");
-                  if (temporalJson == null) {
-                    return false;
-                  }
-                  TemporalRecord temporalRecord =
-                      MAPPER.readValue(temporalJson, TemporalRecord.class);
-                  return temporalRecord != null && temporalRecord.getEventDate() != null;
-                })
+
+    // Explode lineage to get parent-child relations and use vectorized JSON parsing for temporal
+    StructType eventDateSchema =
+        new StructType(
+            new StructField[] {
+              DataTypes.createStructField(
+                  "eventDate",
+                  DataTypes.createStructType(
+                      new StructField[] {
+                        DataTypes.createStructField("gte", DataTypes.StringType, true),
+                        DataTypes.createStructField("lte", DataTypes.StringType, true)
+                      }),
+                  true)
+            });
+
+    Dataset<Row> exploded =
+        events
+            .select(
+                col("id").as("childId"),
+                explode_outer(col("lineage")).as("parentId"),
+                col("temporal"))
+            .filter(col("parentId").isNotNull().and(col("temporal").isNotNull()));
+
+    Dataset<Row> parsed = exploded.withColumn("tmp", from_json(col("temporal"), eventDateSchema));
+
+    Dataset<Row> valid = parsed.filter(col("tmp.eventDate").isNotNull());
+
+    return valid
+        .select(
+            col("parentId").as("eventId"),
+            col("tmp.eventDate.gte").as("gte"),
+            col("tmp.eventDate.lte").as("lte"))
         .map(
             (MapFunction<Row, Tuple2<String, EventDate>>)
-                row -> {
-                  String eventId = row.getAs("eventId");
-                  String temporalJson = row.getAs("temporal");
-                  TemporalRecord temporalRecord =
-                      MAPPER.readValue(temporalJson, TemporalRecord.class);
-                  return new Tuple2(eventId, temporalRecord.getEventDate());
+                r -> {
+                  String eventId = r.getAs("eventId");
+                  String gte = r.getAs("gte");
+                  String lte = r.getAs("lte");
+                  EventDate eventDate = new EventDate(gte, lte, null);
+                  return new Tuple2<>(eventId, eventDate);
                 },
             Encoders.tuple(Encoders.STRING(), Encoders.bean(EventDate.class)));
   }
@@ -773,45 +802,49 @@ public class DerivedMetadataUtil implements Serializable {
   public static Dataset<EventCoordinate> gatherCoordinatesFromChildEvents(
       SparkSession spark, Dataset<Event> events) {
     events.createOrReplaceTempView("simple_event");
-    return spark
-        .sql(
-            """
-                    SELECT
-                           parent_event.id as eventId,
-                           child_event.location
-                    FROM simple_event parent_event
-                    LEFT OUTER JOIN simple_event child_event
-                    ON array_contains(child_event.lineage, parent_event.id)
-                """)
-        .filter(
-            (FilterFunction<Row>)
-                row -> {
-                  String locationJson = row.getAs("location");
-                  if (locationJson == null) {
-                    return false;
-                  }
-                  LocationRecord locationRecord =
-                      MAPPER.readValue(locationJson, LocationRecord.class);
-                  return locationRecord.getHasCoordinate()
-                      && locationRecord.getDecimalLatitude() != null
-                      && locationRecord.getDecimalLongitude() != null
-                      && locationRecord.getDecimalLatitude() >= -90.0
-                      && locationRecord.getDecimalLatitude() <= 90.0
-                      && locationRecord.getDecimalLongitude() >= -180.0
-                      && locationRecord.getDecimalLongitude() <= 180.0;
-                })
+    // Use explode on lineage to generate parentId -> child location mappings
+    // then parse location JSON with from_json (vectorized) and filter using Catalyst expressions.
+
+    StructType locationSchema =
+        new StructType(
+            new StructField[] {
+              DataTypes.createStructField("hasCoordinate", DataTypes.BooleanType, true),
+              DataTypes.createStructField("decimalLatitude", DataTypes.DoubleType, true),
+              DataTypes.createStructField("decimalLongitude", DataTypes.DoubleType, true)
+            });
+
+    Dataset<Row> exploded =
+        events
+            .select(
+                col("id").as("childId"),
+                explode_outer(col("lineage")).as("parentId"),
+                col("location"))
+            .filter(col("parentId").isNotNull().and(col("location").isNotNull()));
+
+    Dataset<Row> parsed = exploded.withColumn("loc", from_json(col("location"), locationSchema));
+
+    Dataset<Row> valid =
+        parsed.filter(
+            col("loc")
+                .isNotNull()
+                .and(col("loc.hasCoordinate").equalTo(true))
+                .and(col("loc.decimalLatitude").isNotNull())
+                .and(col("loc.decimalLongitude").isNotNull())
+                .and(col("loc.decimalLatitude").geq(-90.0))
+                .and(col("loc.decimalLatitude").leq(90.0))
+                .and(col("loc.decimalLongitude").geq(-180.0))
+                .and(col("loc.decimalLongitude").leq(180.0)));
+
+    return valid
+        .select(
+            col("parentId").as("eventId"),
+            col("loc.decimalLongitude").as("longitude"),
+            col("loc.decimalLatitude").as("latitude"))
         .map(
             (MapFunction<Row, EventCoordinate>)
-                row -> {
-                  String eventId = row.getAs("eventId");
-                  String locationJson = row.getAs("location");
-                  LocationRecord locationRecord =
-                      MAPPER.readValue(locationJson, LocationRecord.class);
-                  return new EventCoordinate(
-                      eventId,
-                      locationRecord.getDecimalLongitude(),
-                      locationRecord.getDecimalLatitude());
-                },
+                r ->
+                    new EventCoordinate(
+                        r.getAs("eventId"), r.getAs("longitude"), r.getAs("latitude")),
             Encoders.bean(EventCoordinate.class));
   }
 
@@ -830,62 +863,110 @@ public class DerivedMetadataUtil implements Serializable {
   }
 
   private static Dataset<EventCoordinate> getEventCoordinates(Dataset<Event> events) {
-    return events
+    StructType locationSchema =
+        new StructType(
+            new StructField[] {
+              DataTypes.createStructField("hasCoordinate", DataTypes.BooleanType, true),
+              DataTypes.createStructField("decimalLatitude", DataTypes.DoubleType, true),
+              DataTypes.createStructField("decimalLongitude", DataTypes.DoubleType, true)
+            });
+
+    Dataset<Row> parsed =
+        events
+            .select(col("id").as("eventId"), col("location"))
+            .filter(col("location").isNotNull())
+            .withColumn("loc", from_json(col("location"), locationSchema));
+
+    Dataset<Row> valid =
+        parsed.filter(
+            col("loc")
+                .isNotNull()
+                .and(col("loc.decimalLatitude").isNotNull())
+                .and(col("loc.decimalLongitude").isNotNull()));
+
+    return valid
+        .select(
+            col("eventId"),
+            col("loc.decimalLongitude").as("longitude"),
+            col("loc.decimalLatitude").as("latitude"))
         .map(
-            (MapFunction<Event, Tuple3<String, Double, Double>>)
-                event -> {
-                  LocationRecord lir = MAPPER.readValue(event.getLocation(), LocationRecord.class);
-                  return new Tuple3<>(
-                      event.getId(), lir.getDecimalLongitude(), lir.getDecimalLatitude());
-                },
-            Encoders.tuple(Encoders.STRING(), Encoders.DOUBLE(), Encoders.DOUBLE()))
-        .filter(
-            (FilterFunction<Tuple3<String, Double, Double>>)
-                t -> {
-                  return (t._2() != null) && (t._3() != null);
-                })
-        .map(
-            (MapFunction<Tuple3<String, Double, Double>, EventCoordinate>)
-                t -> {
-                  return new EventCoordinate(t._1(), t._2(), t._3());
-                },
+            (MapFunction<Row, EventCoordinate>)
+                r ->
+                    new EventCoordinate(
+                        r.getAs("eventId"), r.getAs("longitude"), r.getAs("latitude")),
             Encoders.bean(EventCoordinate.class));
   }
 
   private static Dataset<Tuple2<String, EventDate>> getCoreIdEventDates(
       Dataset<Occurrence> occurrence) {
-    return occurrence
+    StructType eventDateSchema =
+        new StructType(
+            new StructField[] {
+              DataTypes.createStructField(
+                  "eventDate",
+                  DataTypes.createStructType(
+                      new StructField[] {
+                        DataTypes.createStructField("gte", DataTypes.StringType, true),
+                        DataTypes.createStructField("lte", DataTypes.StringType, true)
+                      }),
+                  true)
+            });
+
+    Dataset<Row> parsed =
+        occurrence
+            .select(col("coreId"), col("temporal"))
+            .filter(col("temporal").isNotNull())
+            .withColumn("tmp", from_json(col("temporal"), eventDateSchema));
+
+    Dataset<Row> valid = parsed.filter(col("tmp.eventDate").isNotNull());
+
+    return valid
+        .select(
+            col("coreId"), col("tmp.eventDate.gte").as("gte"), col("tmp.eventDate.lte").as("lte"))
         .map(
-            (MapFunction<Occurrence, Tuple2<String, EventDate>>)
-                occ -> {
-                  TemporalRecord lr = MAPPER.readValue(occ.getTemporal(), TemporalRecord.class);
-                  String coreId = occ.getCoreId();
-                  return new Tuple2<>(coreId, lr.getEventDate());
+            (MapFunction<Row, Tuple2<String, EventDate>>)
+                r -> {
+                  String coreId = r.getAs("coreId");
+                  String gte = r.getAs("gte");
+                  String lte = r.getAs("lte");
+                  return new Tuple2<>(coreId, new EventDate(gte, lte, null));
                 },
             Encoders.tuple(Encoders.STRING(), Encoders.bean(EventDate.class)))
         .distinct();
   }
 
   private static Dataset<EventCoordinate> getCoreIdCoordinates(Dataset<Occurrence> occurrence) {
-    return occurrence
+    StructType locationSchema =
+        new StructType(
+            new StructField[] {
+              DataTypes.createStructField("hasCoordinate", DataTypes.BooleanType, true),
+              DataTypes.createStructField("decimalLatitude", DataTypes.DoubleType, true),
+              DataTypes.createStructField("decimalLongitude", DataTypes.DoubleType, true)
+            });
+
+    Dataset<Row> parsed =
+        occurrence
+            .select(col("coreId"), col("location"))
+            .filter(col("location").isNotNull())
+            .withColumn("loc", from_json(col("location"), locationSchema));
+
+    Dataset<Row> valid =
+        parsed.filter(
+            col("loc")
+                .isNotNull()
+                .and(col("loc.decimalLatitude").isNotNull())
+                .and(col("loc.decimalLongitude").isNotNull()));
+
+    return valid
+        .select(
+            col("coreId"),
+            col("loc.decimalLongitude").as("longitude"),
+            col("loc.decimalLatitude").as("latitude"))
         .map(
-            (MapFunction<Occurrence, Tuple3<String, Double, Double>>)
-                occ -> {
-                  LocationRecord lir = MAPPER.readValue(occ.getLocation(), LocationRecord.class);
-                  String coreId = occ.getCoreId();
-                  return new Tuple3<>(coreId, lir.getDecimalLongitude(), lir.getDecimalLatitude());
-                },
-            Encoders.tuple(Encoders.STRING(), Encoders.DOUBLE(), Encoders.DOUBLE()))
-        .filter(
-            (FilterFunction<Tuple3<String, Double, Double>>)
-                t -> {
-                  return (t._2() != null) && (t._3() != null);
-                })
-        .map(
-            (MapFunction<Tuple3<String, Double, Double>, EventCoordinate>)
-                t -> {
-                  return new EventCoordinate(t._1(), t._2(), t._3());
-                },
+            (MapFunction<Row, EventCoordinate>)
+                r ->
+                    new EventCoordinate(
+                        r.getAs("coreId"), r.getAs("longitude"), r.getAs("latitude")),
             Encoders.bean(EventCoordinate.class))
         .distinct();
   }
