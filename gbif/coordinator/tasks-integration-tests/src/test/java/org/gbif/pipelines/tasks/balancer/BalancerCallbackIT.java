@@ -37,7 +37,7 @@ public class BalancerCallbackIT {
   public void verbatimMessageHandlerStandaloneTest() {
     // State
     BalancerConfiguration config = createConfig();
-    config.switchRecordsNumber = 100;
+    config.switchFileSizeMb = 100;
 
     BalancerCallback callback = new BalancerCallback(config, PUBLISHER);
 
@@ -65,7 +65,7 @@ public class BalancerCallbackIT {
   public void verbatimMessageHandlerDistributedTest() {
     // State
     BalancerConfiguration config = createConfig2();
-    config.switchRecordsNumber = 1;
+    config.switchFileSizeMb = 0;
 
     BalancerCallback callback = new BalancerCallback(config, PUBLISHER);
 
@@ -93,7 +93,7 @@ public class BalancerCallbackIT {
   public void verbatimMessageHandlerNullRecordsTest() {
     // State
     BalancerConfiguration config = createConfig();
-    config.switchRecordsNumber = 100;
+    config.switchFileSizeMb = 100;
 
     BalancerCallback callback = new BalancerCallback(config, PUBLISHER);
 
@@ -147,9 +147,7 @@ public class BalancerCallbackIT {
     BalancerConfiguration config = new BalancerConfiguration();
 
     // Main
-    config.switchFilesNumber = 1;
     config.switchFileSizeMb = 1;
-    config.switchRecordsNumber = 1;
     config.validatorSwitchRecordsNumber = 1;
 
     // Step config
@@ -165,9 +163,7 @@ public class BalancerCallbackIT {
     BalancerConfiguration config = new BalancerConfiguration();
 
     // Main
-    config.switchFilesNumber = 1;
-    config.switchFileSizeMb = 0;
-    config.switchRecordsNumber = 1;
+    config.switchFileSizeMb = 1;
     config.validatorSwitchRecordsNumber = 1;
 
     // Step config
