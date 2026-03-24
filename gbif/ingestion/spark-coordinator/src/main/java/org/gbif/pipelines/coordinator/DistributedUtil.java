@@ -96,6 +96,7 @@ public class DistributedUtil {
   public static Long getRecordsNumber(
       PipelinesConfig pipelinesConfig, PipelineBasedMessage message, FileSystem fileSystem)
       throws IOException {
+
     String metaPath =
         String.join(
             "/",
@@ -107,15 +108,9 @@ public class DistributedUtil {
     log.debug("Reading path for record number {}", metaPath);
 
     // archiveToOccurrenceCount
-    long occCount =
-        Long.parseLong(
-            getValueByKey(fileSystem, metaPath, PipelinesVariables.Metrics.ARCHIVE_TO_OCC_COUNT)
-                .orElse("0"));
-
-    long erCount =
-        Long.parseLong(
-            getValueByKey(fileSystem, metaPath, PipelinesVariables.Metrics.ARCHIVE_TO_ER_COUNT)
-                .orElse("0"));
-    return Math.max(occCount, erCount);
+    return Long.parseLong(
+        getValueByKey(
+                fileSystem, metaPath, PipelinesVariables.Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT)
+            .orElse("0"));
   }
 }

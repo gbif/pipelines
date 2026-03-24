@@ -980,6 +980,8 @@ public class DerivedMetadataUtil implements Serializable {
     }
 
     private void setMinDate(String date) {
+      if (date == null) return;
+
       if (Objects.isNull(minDate)) {
         minDate = date;
       } else {
@@ -996,6 +998,7 @@ public class DerivedMetadataUtil implements Serializable {
     }
 
     private void setMaxDate(String date) {
+      if (date == null) return;
       if (Objects.isNull(maxDate)) {
         maxDate = date;
       } else {
