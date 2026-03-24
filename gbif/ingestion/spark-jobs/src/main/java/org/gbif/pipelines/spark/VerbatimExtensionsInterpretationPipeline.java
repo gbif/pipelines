@@ -2,7 +2,6 @@ package org.gbif.pipelines.spark;
 
 import static org.apache.spark.sql.functions.*;
 import static org.gbif.pipelines.spark.ArgsConstants.*;
-import static org.gbif.pipelines.spark.Directories.VERBATIM_EXT_FILTERED;
 import static org.gbif.pipelines.spark.TableBuildPipeline.createExtensionTable;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
@@ -81,13 +80,18 @@ public class VerbatimExtensionsInterpretationPipeline {
 
   /** Read extended records and explode extensions into separate rows. */
   private static Dataset<Row> readExtendedRecords(
-      SparkSession spark, String inputPath, String datasetId) {
+      SparkSession spark, DatasetType datasetType, String inputPath, String datasetId) {
+
+    String verbatimDirectory =
+        datasetType == DatasetType.OCCURRENCE
+            ? Directories.VERBATIM_EXT_FILTERED
+            : Directories.VERBATIM_EVENT_EXT_FILTERED;
 
     // Load extended records that have been filtered to only allowed extensions
     Dataset<ExtendedRecord> extendedRecords =
         spark
             .read()
-            .parquet(inputPath + "/" + VERBATIM_EXT_FILTERED)
+            .parquet(inputPath + "/" + verbatimDirectory)
             .as(Encoders.bean(ExtendedRecord.class));
 
     spark.sparkContext().setJobGroup("explode-extensions", "Exploding extensions", true);
@@ -143,7 +147,7 @@ public class VerbatimExtensionsInterpretationPipeline {
     registerUdfs(spark);
 
     // Normalize the directory name
-    Dataset<Row> normalizedKeys = readExtendedRecords(spark, inputPath, datasetId);
+    Dataset<Row> normalizedKeys = readExtendedRecords(spark, datasetType, inputPath, datasetId);
 
     // Dynamically create flattened columns
     Dataset<Row> flattened = selectColumnsForExtension(spark, normalizedKeys);
