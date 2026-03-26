@@ -41,4 +41,4 @@ ENTRYPOINT ["/usr/bin/tini", "--", "sh", "-c", "exec java $JVM_OPTIONS \
   --add-opens java.base/java.util=ALL-UNNAMED \
   --add-opens java.base/sun.nio.ch=ALL-UNNAMED \
   -cp /opt/spark/jars/*:/jobs/ingest-spark-coordinator.jar \
-  org.gbif.pipelines.coordinator.Coordinator \"$@\""]
+  org.gbif.pipelines.coordinator.Coordinator \"$@\"", "--"]
