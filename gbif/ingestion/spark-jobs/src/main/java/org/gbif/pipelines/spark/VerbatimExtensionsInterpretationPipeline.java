@@ -242,10 +242,19 @@ public class VerbatimExtensionsInterpretationPipeline {
   @NotNull
   private static Column[] getColsToSelect(StructType tblSchema, Set<String> dfCols) {
     List<Column> colsToSelect = new ArrayList<>();
+
+    // create a map of normalized column names to original column names
+    // for matching against the table schema
+    Map<String, String> dfColsNormalised =
+        dfCols.stream().collect(Collectors.toMap(c -> c.toLowerCase().replaceAll("_", ""), c -> c));
+
     for (StructField f : tblSchema.fields()) {
       String fieldName = f.name();
       if (dfCols.contains(fieldName)) {
         colsToSelect.add(col(fieldName));
+      } else if (dfColsNormalised.containsKey(fieldName)) {
+        String originalFieldName = dfColsNormalised.get(fieldName);
+        colsToSelect.add(col(originalFieldName).alias(fieldName));
       } else {
         colsToSelect.add(lit(null).cast(f.dataType()).alias(fieldName));
       }

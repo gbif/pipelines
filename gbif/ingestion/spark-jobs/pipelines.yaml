@@ -1,6 +1,6 @@
-inputPath: file:///Users/djtfmartin/dev/pipelines/gbif/ingestion/ingest-gbif-spark/test-data
-outputPath: file:///Users/djtfmartin/dev/pipelines/gbif/ingestion/ingest-gbif-spark/test-data
-rebuildPath: file:///Users/djtfmartin/dev/pipelines/gbif/ingestion/ingest-gbif-spark/rebuild-path
+inputPath: file:///Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/test-data
+outputPath: file:///Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/test-data
+rebuildPath: file:///Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/rebuild-path
 zkConnectionString:
 gbifApi:
   wsUrl: https://api.gbif-dev.org/v1/
