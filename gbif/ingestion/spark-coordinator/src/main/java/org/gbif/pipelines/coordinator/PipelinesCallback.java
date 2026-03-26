@@ -167,6 +167,8 @@ public abstract class PipelinesCallback<
     }
   }
 
+  public void close() throws IOException {}
+
   public void shutdown() throws IOException {
     log.info("Closing Spark Session and FileSystem connections");
     if (sparkSession != null) {
