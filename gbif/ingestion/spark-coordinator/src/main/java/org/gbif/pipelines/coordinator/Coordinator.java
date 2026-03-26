@@ -229,8 +229,8 @@ public class Coordinator {
               new Thread(
                   () -> {
                     log.info(
-                        "Shutting down coordinator listener. Waiting for current datasets ({}) to complete...",
-                        PrometheusMetrics.CONCURRENT_DATASETS.get());
+                        "Shutting down coordinator listener. Will not take more messages from queue. Waiting for current datasets ({}) to complete...",
+                        (int) PrometheusMetrics.CONCURRENT_DATASETS.get());
                     running = false;
                     try {
                       finalListener.close();
@@ -252,7 +252,7 @@ public class Coordinator {
                     }
                     log.info(
                         "Shutdown wait complete. Active datasets remaining: {}",
-                        PrometheusMetrics.CONCURRENT_DATASETS.get());
+                        (int) PrometheusMetrics.CONCURRENT_DATASETS.get());
                   }));
 
       // start the listener
