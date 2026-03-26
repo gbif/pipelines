@@ -259,7 +259,7 @@ public class Coordinator {
       listener.listen(queueName, routingKey, exchange, threads, callback);
 
       // 5. Keep running until shutdown
-      while (running) {
+      while (running || PrometheusMetrics.CONCURRENT_DATASETS.get() > 0) {
         try {
           Thread.sleep(threadSleepMillis);
         } catch (InterruptedException e) {
