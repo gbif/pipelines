@@ -272,7 +272,7 @@ public class Coordinator {
       // Close resources in reverse order
       try {
         if (callback != null) {
-          callback.close();
+          callback.shutdown();
         }
       } catch (Exception e) {
         log.warn("Failed to close callback", e);
