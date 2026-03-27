@@ -156,7 +156,7 @@ public class TableUtil {
         hdfsColumn.setIcebergCol("ext_humboldt");
         hdfsColumn.setSelect("base64_decode(extHumboldt) AS `ext_humboldt`");
 
-      } else if (parquetColumn.equalsIgnoreCase("VClass")) {
+      } else if (parquetColumn.equalsIgnoreCase("VClass_")) {
 
         hdfsColumn.setIcebergCol("v_class");
         hdfsColumn.setSelect("`" + parquetColumn + "` AS v_class");
