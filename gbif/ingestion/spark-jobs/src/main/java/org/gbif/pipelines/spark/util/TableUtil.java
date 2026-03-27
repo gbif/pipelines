@@ -161,14 +161,7 @@ public class TableUtil {
         // Handles names like VSomething → v_something
         // normalisedName is parquetColumn.toLowerCase().replace("$", "")
         // remove the leading 'v' that comes from the original parquet column
-        String normalized;
-        if (!normalisedName.isEmpty() && normalisedName.charAt(0) == 'V') {
-          normalized = "v_" + normalisedName.substring(1);
-        } else {
-          // Fallback: if for some reason the normalized name doesn't start with 'v',
-          // preserve previous behavior
-          normalized = "v_" + normalisedName;
-        }
+        String normalized = "v_" + parquetColumn.substring(1).toLowerCase();
         hdfsColumn.setIcebergCol(normalized);
         hdfsColumn.setSelect("`" + parquetColumn + "` AS " + normalized);
 
