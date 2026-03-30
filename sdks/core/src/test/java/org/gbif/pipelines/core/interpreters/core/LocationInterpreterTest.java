@@ -73,7 +73,7 @@ public class LocationInterpreterTest {
   private static GeocodeResponse toGeocodeCentroidResponse(Country country, Double distanceMeters) {
     Location location = new Location();
     location.setType("Centroids");
-    location.setDistanceMeters(distanceMeters);
+    location.setDistance(distanceMeters);
     location.setIsoCountryCode2Digit(country.getIso2LetterCode());
     return new GeocodeResponse(Collections.singletonList(location));
   }

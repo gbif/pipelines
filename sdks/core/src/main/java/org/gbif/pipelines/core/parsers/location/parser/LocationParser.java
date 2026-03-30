@@ -1,9 +1,9 @@
 package org.gbif.pipelines.core.parsers.location.parser;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_MISMATCH;
-import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
+import static org.gbif.api.vocabulary.OccurrenceIssue.*;
+import static org.gbif.pipelines.core.utils.ModelUtils.*;
 
+import com.google.common.base.Strings;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
@@ -13,6 +13,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.core.ParseResult;
+import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.kvs.KeyValueStore;
@@ -30,6 +31,14 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocationParser {
+
+  // COORDINATE_UNCERTAINTY_METERS bounds are exclusive bounds
+  public static final double COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND = 0d;
+  // https://github.com/gbif/pipelines/issues/449
+  public static final double COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND = 20_037_509d;
+  public static final double COORDINATE_PRECISION_LOWER_BOUND = 0d;
+  // 45 close to 5000 km
+  public static final double COORDINATE_PRECISION_UPPER_BOUND = 1d;
 
   public static ParsedField<ParsedLocation> parse(
       ExtendedRecord er, KeyValueStore<GeocodeRequest, GeocodeResponse> kvStore) {
@@ -159,10 +168,27 @@ public class LocationParser {
     Set<String> issues = parsedLatLon.getIssues();
     issues.addAll(projectedLatLng.getIssues());
 
+    // add the uncertainty
+    projectedLatLng.getResult().setUncertaintyMeters(extractUncertainty(er));
+
     return ParsedField.<GeocodeRequest>builder()
         .successful(true)
         .result(projectedLatLng.getResult())
         .issues(issues)
         .build();
+  }
+
+  public static Double extractUncertainty(ExtendedRecord er) {
+    String value = extractNullAwareValue(er, DwcTerm.coordinateUncertaintyInMeters);
+    if (!Strings.isNullOrEmpty(value)) {
+      ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
+      Double result = parseResult.isSuccessful() ? Math.abs(parseResult.getPayload()) : null;
+      if (result != null
+          && result > COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND
+          && result < COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND) {
+        return result;
+      }
+    }
+    return null;
   }
 }
