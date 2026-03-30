@@ -106,7 +106,7 @@
     <gbif-api.version>2.4.0</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
     <dwc-api.version>2.1.10</dwc-api.version>
-    <kvs.version>3.1.1-geocodeopt-SNAPSHOT</kvs.version>
+    <kvs.version>3.1.0</kvs.version>
     <gbif-kvs.version>3.1.0</gbif-kvs.version>
     <hbase-utils.version>1.0.0</hbase-utils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
