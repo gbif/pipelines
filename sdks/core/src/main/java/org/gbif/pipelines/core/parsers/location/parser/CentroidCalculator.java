@@ -48,11 +48,11 @@ public class CentroidCalculator {
                 .filter(
                     l ->
                         "Centroids".equals(l.getType())
-                            && l.getDistance() != null
-                            && l.getDistance() <= MAXIMUM_DISTANCE_FROM_CENTROID_METRES)
-                .sorted(Comparator.comparingDouble(GeocodeResponse.Location::getDistance))
+                            && l.getDistanceMeters() != null
+                            && l.getDistanceMeters() <= MAXIMUM_DISTANCE_FROM_CENTROID_METRES)
+                .sorted(Comparator.comparingDouble(GeocodeResponse.Location::getDistanceMeters))
                 .findFirst()
-                .map(GeocodeResponse.Location::getDistance);
+                .map(GeocodeResponse.Location::getDistanceMeters);
         return centroidDistance;
       }
     }
