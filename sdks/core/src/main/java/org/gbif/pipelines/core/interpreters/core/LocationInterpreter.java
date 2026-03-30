@@ -4,6 +4,8 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVAL
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_SRS_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.FOOTPRINT_WKT_MISMATCH;
+import static org.gbif.pipelines.core.parsers.location.parser.LocationParser.COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND;
+import static org.gbif.pipelines.core.parsers.location.parser.LocationParser.COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND;
 import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractListValue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareOptValue;
@@ -49,15 +51,6 @@ import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocationInterpreter {
 
-  // COORDINATE_UNCERTAINTY_METERS bounds are exclusive bounds
-  private static final double COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND = 0d;
-  // https://github.com/gbif/pipelines/issues/449
-  private static final double COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND = 20_037_509d;
-
-  private static final double COORDINATE_PRECISION_LOWER_BOUND = 0d;
-  // 45 close to 5000 km
-  private static final double COORDINATE_PRECISION_UPPER_BOUND = 1d;
-
   // List of Geospatial Issues
   private static final Set<String> SPATIAL_ISSUES =
       OccurrenceIssue.GEOSPATIAL_RULES.stream()
@@ -98,6 +91,7 @@ public class LocationInterpreter {
         if (Objects.nonNull(latLng)) {
           lr.setDecimalLatitude(latLng.getLat());
           lr.setDecimalLongitude(latLng.getLng());
+          lr.setCoordinateUncertaintyInMeters(latLng.getUncertaintyMeters());
           lr.setHasCoordinate(Boolean.TRUE);
         } else {
           lr.setHasCoordinate(Boolean.FALSE);
@@ -333,9 +327,12 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#coordinateUncertaintyInMeters} interpretation. */
   public static void interpretCoordinateUncertaintyInMeters(ExtendedRecord er, LocationRecord lr) {
-    String value = extractNullAwareValue(er, DwcTerm.coordinateUncertaintyInMeters);
-    if (!Strings.isNullOrEmpty(value)) {
-      ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
+
+    // there is a degree of reparsing here, but we reuse the same parsing
+    // and validation raise issues here.
+    String valueStr = extractNullAwareValue(er, DwcTerm.coordinateUncertaintyInMeters);
+    if (!Strings.isNullOrEmpty(valueStr)) {
+      ParseResult<Double> parseResult = MeterRangeParser.parseMeters(valueStr);
       Double result = parseResult.isSuccessful() ? Math.abs(parseResult.getPayload()) : null;
       if (result != null
           && result > COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND
@@ -365,8 +362,8 @@ public class LocationInterpreter {
         parseResult -> {
           Double result = parseResult.orElse(null);
           if (result != null
-              && result >= COORDINATE_PRECISION_LOWER_BOUND
-              && result <= COORDINATE_PRECISION_UPPER_BOUND) {
+              && result >= LocationParser.COORDINATE_PRECISION_LOWER_BOUND
+              && result <= LocationParser.COORDINATE_PRECISION_UPPER_BOUND) {
             lr.setCoordinatePrecision(result);
           } else {
             addIssue(lr, COORDINATE_PRECISION_INVALID);

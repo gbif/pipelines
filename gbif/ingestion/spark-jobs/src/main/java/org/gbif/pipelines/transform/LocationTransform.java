@@ -40,12 +40,24 @@ public class LocationTransform implements Serializable {
   }
 
   public LocationRecord convert(ExtendedRecord source, MetadataRecord mdr) throws Exception {
-    if (source == null || source.getCoreTerms().isEmpty()) {
-      throw new IllegalArgumentException("ExtendedRecord is null or empty");
+    if (source == null || source.getCoreTerms() == null || source.getCoreTerms().isEmpty()) {
+      throw new IllegalArgumentException("ExtendedRecord is null or has null/empty core terms");
     }
 
     KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore =
         GeocodeKVSFactory.getKvStore(config);
+    return convert(source, mdr, geocodeKvStore);
+  }
+
+  public LocationRecord convert(
+      ExtendedRecord source,
+      MetadataRecord mdr,
+      KeyValueStore<GeocodeRequest, GeocodeResponse> geocodeKvStore)
+      throws Exception {
+
+    if (source == null || source.getCoreTerms() == null || source.getCoreTerms().isEmpty()) {
+      throw new IllegalArgumentException("ExtendedRecord is null or has null/empty core terms");
+    }
 
     LocationRecord record =
         LocationRecord.newBuilder()
