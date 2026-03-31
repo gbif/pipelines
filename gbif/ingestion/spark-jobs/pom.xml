@@ -289,12 +289,10 @@
         <dependency>
             <groupId>org.gbif.download</groupId>
             <artifactId>hdfs-tables</artifactId>
-            <version>${gbif-hdfs-tables.version}</version>
         </dependency>
         <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>gbif-api</artifactId>
-            <version>${gbif-api.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.fasterxml.jackson.core</groupId>

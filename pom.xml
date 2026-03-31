@@ -106,8 +106,7 @@
     <gbif-api.version>2.4.0</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
     <dwc-api.version>2.1.10</dwc-api.version>
-    <kvs.version>3.1.0</kvs.version>
-    <gbif-kvs.version>3.1.0</gbif-kvs.version>
+    <gbif-kvs.version>3.1.1</gbif-kvs.version>
     <hbase-utils.version>1.0.0</hbase-utils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
     <vocabulary-lookup.version>2.0.4</vocabulary-lookup.version>
@@ -219,7 +218,7 @@
     <jakarta-annotation.version>3.0.0</jakarta-annotation.version>
     <super-csv.version>2.4.0</super-csv.version>
     <lz4.version>1.3.0</lz4.version>
-    <hdfs-tables.version>1.0-SNAPSHOT</hdfs-tables.version>
+    <hdfs-tables.version>1.3.0</hdfs-tables.version>
   </properties>
 
   <build>
@@ -421,12 +420,12 @@
       <dependency>
         <groupId>org.gbif.kvs</groupId>
         <artifactId>kvs-common</artifactId>
-        <version>${kvs.version}</version>
+        <version>${gbif-kvs.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.kvs</groupId>
         <artifactId>kvs-gbif</artifactId>
-        <version>${kvs.version}</version>
+        <version>${gbif-kvs.version}</version>
         <exclusions>
           <exclusion>
             <groupId>ch.qos.logback</groupId>
@@ -449,7 +448,7 @@
       <dependency>
         <groupId>org.gbif.kvs</groupId>
         <artifactId>kvs-core</artifactId>
-        <version>${kvs.version}</version>
+        <version>${gbif-kvs.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
