@@ -253,10 +253,7 @@ public class Coordinator {
                     log.info(
                         "Shutdown wait complete. Active datasets remaining: {}",
                         (int) PrometheusMetrics.CONCURRENT_DATASETS.get());
-                  }
-              )
-          )
-      ;
+                  }));
 
       // Start the listener
       listener.listen(queueName, routingKey, exchange, threads, callback);
@@ -269,7 +266,10 @@ public class Coordinator {
           Thread.currentThread().interrupt();
         }
       }
-      log.info("Running status {}, datasets running {}", running, PrometheusMetrics.CONCURRENT_DATASETS.get());
+      log.info(
+          "Running status {}, datasets running {}",
+          running,
+          PrometheusMetrics.CONCURRENT_DATASETS.get());
       log.info("No longer running and no active datasets. Proceeding to shutdown.");
 
     } catch (IOException e) {
