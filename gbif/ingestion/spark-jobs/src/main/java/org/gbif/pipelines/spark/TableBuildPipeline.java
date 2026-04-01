@@ -26,6 +26,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.config.model.TableBuildConfig;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
 import org.gbif.pipelines.spark.udf.Base64DecodeUDF;
 import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
@@ -199,7 +200,7 @@ public class TableBuildPipeline {
       log.info("Table {} does not exist and will be created", coreDwcTerm);
 
       // Create or populate the core table SQL
-      spark.sql(getCreateTableSQL(datasetType, coreDwcTerm));
+      spark.sql(getCreateTableSQL(config.getTableBuildConfig(), datasetType, coreDwcTerm));
 
       log.info("Table {} created. Creating extension tables", coreDwcTerm);
 
@@ -210,7 +211,7 @@ public class TableBuildPipeline {
           log.info("Extension table {} exists", extTableName);
         } else {
           log.info("Extension table {} does not exist and will be created", extTableName);
-          createExtensionTable(spark, extTable, coreDwcTerm);
+          createExtensionTable(config.getTableBuildConfig(), spark, extTable, coreDwcTerm);
         }
       }
     }
@@ -251,7 +252,7 @@ public class TableBuildPipeline {
     // Create multimedia table if it does not exist
     if (!spark.catalog().tableExists(coreDwcTerm + "_multimedia")) {
       log.info("Multimedia table does not exist and will be created");
-      spark.sql(getCreateMultimediaTableSQL(coreDwcTerm));
+      spark.sql(getCreateMultimediaTableSQL(config.getTableBuildConfig(), coreDwcTerm));
     }
 
     // write to the multimedia table
@@ -263,7 +264,7 @@ public class TableBuildPipeline {
       String humboldtTableName = coreDwcTerm + "_humboldt";
       if (!spark.catalog().tableExists(humboldtTableName)) {
         // populate the event table
-        spark.sql(getCreateIfNotExistsHumboldt(humboldtTableName));
+        spark.sql(getCreateIfNotExistsHumboldt(config.getTableBuildConfig(), humboldtTableName));
       }
       insertOverwriteHumboldtTableFromTemp(spark, tempCoreTable, humboldtTableName);
     }
@@ -284,13 +285,16 @@ public class TableBuildPipeline {
   }
 
   public static void createExtensionTable(
-      SparkSession spark, ExtensionTable extensionTable, String coreDwcTerm) {
+      TableBuildConfig config,
+      SparkSession spark,
+      ExtensionTable extensionTable,
+      String coreDwcTerm) {
     log.info("Create extension table: {}", verbatimExtensionTableName(extensionTable, coreDwcTerm));
     spark
         .sparkContext()
         .setJobDescription("Create " + verbatimExtensionTableName(extensionTable, coreDwcTerm));
 
-    String extensionTableSql = createVerbatimExtensionTableSQL(extensionTable, coreDwcTerm);
+    String extensionTableSql = createVerbatimExtensionTableSQL(config, extensionTable, coreDwcTerm);
     log.info("Creating extension table SQL {}", extensionTableSql);
     spark.sql(extensionTableSql);
   }

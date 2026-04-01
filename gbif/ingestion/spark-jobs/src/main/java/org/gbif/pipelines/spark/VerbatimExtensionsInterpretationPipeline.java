@@ -205,7 +205,7 @@ public class VerbatimExtensionsInterpretationPipeline {
             normalisedDir,
             extensionTable.getSchema());
         // creating table
-        createExtensionTable(spark, extensionTable, dwcCoreTerm);
+        createExtensionTable(config.getTableBuildConfig(), spark, extensionTable, dwcCoreTerm);
       }
 
       log.info("Processing extension directory '{}' into table '{}'", dir, table);

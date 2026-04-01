@@ -19,6 +19,7 @@ import org.gbif.occurrence.download.hive.EventHDFSTableDefinition;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.occurrence.download.hive.HiveDataTypes;
 import org.gbif.occurrence.download.hive.OccurrenceHDFSTableDefinition;
+import org.gbif.pipelines.core.config.model.TableBuildConfig;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
 import org.jetbrains.annotations.NotNull;
 
@@ -54,24 +55,17 @@ public class TableUtil {
     }
   }
 
-  public static String getCreateTableSQL(DatasetType datasetType, String prefix, String tableName) {
+  public static String getCreateTableSQL(
+      TableBuildConfig config, DatasetType datasetType, String prefix, String tableName) {
     return String.format(
         """
           CREATE TABLE IF NOT EXISTS %s%s
           (%s)
           USING iceberg
           PARTITIONED BY (datasetkey)
-          TBLPROPERTIES (
-            'write.format.default' = 'parquet',
-            'parquet.compression' = 'ZSTD',
-            'auto.purge' = 'true',
-            'write.merge.isolation-level' = 'snapshot',
-            'commit.retry.num-retries' = '10',
-            'commit.retry.min-wait-ms' = '1000',
-            'commit.retry.max-wait-ms' = '10000'
-          )
+          TBLPROPERTIES (%s)
         """,
-        prefix, tableName, getFieldDefinitions(datasetType));
+        prefix, tableName, getFieldDefinitions(datasetType), generateTblProperties(config));
   }
 
   static String getFieldDefinitions(DatasetType datasetType) {
@@ -89,7 +83,8 @@ public class TableUtil {
     throw new IllegalArgumentException("Unsupported dataset type: " + datasetType);
   }
 
-  public static String getCreateMultimediaTableSQL(String prefix, String coreDwcTerm) {
+  public static String getCreateMultimediaTableSQL(
+      TableBuildConfig config, String prefix, String coreDwcTerm) {
     return String.format(
         """
           CREATE TABLE IF NOT EXISTS %s%s_multimedia
@@ -113,17 +108,9 @@ public class TableUtil {
           )
           USING iceberg
           PARTITIONED BY (datasetkey)
-          TBLPROPERTIES (
-            'write.format.default' = 'parquet',
-            'parquet.compression' = 'ZSTD',
-            'auto.purge' = 'true',
-            'write.merge.isolation-level' = 'snapshot',
-            'commit.retry.num-retries' = '10',
-            'commit.retry.min-wait-ms' = '1000',
-            'commit.retry.max-wait-ms' = '10000'
-          )
+          TBLPROPERTIES (%s)
         """,
-        prefix, coreDwcTerm);
+        prefix, coreDwcTerm, generateTblProperties(config));
   }
 
   /**
@@ -192,11 +179,12 @@ public class TableUtil {
     return hdfsColumnList;
   }
 
-  public static String getCreateTableSQL(DatasetType datasetType, String tableName) {
-    return getCreateTableSQL(datasetType, "", tableName);
+  public static String getCreateTableSQL(
+      TableBuildConfig config, DatasetType datasetType, String tableName) {
+    return getCreateTableSQL(config, datasetType, "", tableName);
   }
 
-  public static String getCreateMultimediaTableSQL(String coreDwcTerm) {
+  public static String getCreateMultimediaTableSQL(TableBuildConfig config, String coreDwcTerm) {
     return String.format(
         """
           CREATE TABLE IF NOT EXISTS %s_multimedia
@@ -220,17 +208,9 @@ public class TableUtil {
           )
           USING iceberg
           PARTITIONED BY (datasetkey)
-          TBLPROPERTIES (
-            'write.format.default' = 'parquet',
-            'parquet.compression' = 'ZSTD',
-            'auto.purge' = 'true',
-            'write.merge.isolation-level' = 'snapshot',
-            'commit.retry.num-retries' = '10',
-            'commit.retry.min-wait-ms' = '1000',
-            'commit.retry.max-wait-ms' = '10000'
-          )
+          TBLPROPERTIES (%s)
         """,
-        coreDwcTerm);
+        coreDwcTerm, generateTblProperties(config));
   }
 
   public static void insertOverwriteMultimediaTable(
@@ -407,7 +387,7 @@ public class TableUtil {
             multimediaTable));
   }
 
-  public static String getCreateIfNotExistsHumboldt(String tableName) {
+  public static String getCreateIfNotExistsHumboldt(TableBuildConfig config, String tableName) {
 
     String selectTerms =
         INTERPRETED_HUMBOLDT_TERMS.stream()
@@ -420,17 +400,33 @@ public class TableUtil {
              (gbifid STRING, %s, datasetkey STRING)
              USING iceberg
              PARTITIONED BY (datasetkey)
-             TBLPROPERTIES (
-                'write.format.default' = 'parquet',
-                'parquet.compression' = 'ZSTD',
-                'auto.purge' = 'true',
-                'write.merge.isolation-level' = 'snapshot',
-                'commit.retry.num-retries' = '10',
-                'commit.retry.min-wait-ms' = '1000',
-                'commit.retry.max-wait-ms' = '10000'
-             )
+             TBLPROPERTIES (%s)
         """,
-        tableName, selectTerms);
+        tableName, selectTerms, generateTblProperties(config));
+  }
+
+  private static Object generateTblProperties(TableBuildConfig config) {
+    return String.format(
+        """
+              'write.format.default' = '%s',
+              'parquet.compression' = '%s',
+              'auto.purge' = '%s',
+              'write.merge.isolation-level' = '%s',
+              'commit.retry.num-retries' = '%s',
+              'commit.retry.min-wait-ms' = '%s',
+              'commit.retry.max-wait-ms' = '%s',
+              'history.expire.max-snapshot-age-ms' = '%s',
+              'history.expire.min-snapshots-to-keep' = '%s'
+            """,
+        config.getWrite_format_default(),
+        config.getParquet_compression(),
+        config.getAuto_purge(),
+        config.getWrite_merge_isolation_level(),
+        config.getCommit_retry_num_retries(),
+        config.getCommit_retry_min_wait_ms(),
+        config.getCommit_retry_max_wait_ms(),
+        config.getHistory_expire_max_snapshot_age_ms(),
+        config.getHistory_expire_min_snapshots_to_keep());
   }
 
   public static void insertOverwriteHumboldtTable(
@@ -526,7 +522,7 @@ public class TableUtil {
   }
 
   public static String createVerbatimExtensionTableSQL(
-      ExtensionTable extensionTable, String coreDwcTerm) {
+      TableBuildConfig config, ExtensionTable extensionTable, String coreDwcTerm) {
 
     // generate field list
     String fieldList =
@@ -536,21 +532,15 @@ public class TableUtil {
 
     return String.format(
         """
-                    CREATE TABLE IF NOT EXISTS %s
-                    (%s)
-                    USING iceberg
-                    PARTITIONED BY (datasetkey)
-                    TBLPROPERTIES (
-                    'write.format.default' = 'parquet',
-                    'parquet.compression' = 'ZSTD',
-                    'auto.purge' = 'true',
-                    'write.merge.isolation-level' = 'snapshot',
-                    'commit.retry.num-retries' = '10',
-                    'commit.retry.min-wait-ms' = '1000',
-                    'commit.retry.max-wait-ms' = '10000'
-                )
-                """,
-        verbatimExtensionTableName(extensionTable, coreDwcTerm), fieldList);
+          CREATE TABLE IF NOT EXISTS %s
+          (%s)
+          USING iceberg
+          PARTITIONED BY (datasetkey)
+          TBLPROPERTIES (%s)
+        """,
+        verbatimExtensionTableName(extensionTable, coreDwcTerm),
+        fieldList,
+        generateTblProperties(config));
   }
 
   public static String verbatimExtensionTableName(

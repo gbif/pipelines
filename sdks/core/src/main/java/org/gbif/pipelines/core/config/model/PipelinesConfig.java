@@ -102,4 +102,6 @@ public class PipelinesConfig implements Serializable {
   private IndexConfig indexConfig;
 
   private DerivedMetadataConfig derivedMetadataConfig;
+
+  private TableBuildConfig tableBuildConfig;
 }

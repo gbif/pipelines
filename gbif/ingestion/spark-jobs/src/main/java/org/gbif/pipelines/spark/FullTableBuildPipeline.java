@@ -168,7 +168,8 @@ public class FullTableBuildPipeline {
     String prefix = "rebuild_" + start + "_";
 
     // Create the occurrence table SQL
-    spark.sql(getCreateTableSQL(args.datasetType, prefix, coreDwcTerm));
+    spark.sql(
+        getCreateTableSQL(config.getTableBuildConfig(), args.datasetType, prefix, coreDwcTerm));
 
     // get the hdfs columns from the parquet with mappings to iceberg columns
     Map<String, HdfsColumn> hdfsColumnList = getHdfsColumns(hdfs);
@@ -204,7 +205,7 @@ public class FullTableBuildPipeline {
     spark.sql("DROP TABLE " + tempLoadingTable);
 
     // Create occurrence_multimedia table
-    spark.sql(getCreateMultimediaTableSQL(prefix, coreDwcTerm));
+    spark.sql(getCreateMultimediaTableSQL(config.getTableBuildConfig(), prefix, coreDwcTerm));
 
     // Insert multimedia data into the occurrence_multimedia table
     insertOverwriteMultimediaTable(
@@ -215,7 +216,7 @@ public class FullTableBuildPipeline {
       // For event table, also create the event_humboldt table and insert data
       // Create event_humboldt table
       String tableName = prefix + "event_humboldt";
-      spark.sql(getCreateIfNotExistsHumboldt(tableName));
+      spark.sql(getCreateIfNotExistsHumboldt(config.getTableBuildConfig(), tableName));
       insertOverwriteHumboldtTable(spark, prefix + "event", tableName);
     }
 
