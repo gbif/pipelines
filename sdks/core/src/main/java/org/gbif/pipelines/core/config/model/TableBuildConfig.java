@@ -5,11 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TableBuildConfig {
+public class TableBuildConfig implements Serializable {
   String write_format_default = "parquet";
   String parquet_compression = "ZSTD";
   String auto_purge = "true";
