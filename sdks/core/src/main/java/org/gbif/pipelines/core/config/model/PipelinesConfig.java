@@ -71,7 +71,7 @@ public class PipelinesConfig implements Serializable {
 
   private EsConfig elastic;
 
-  private VocabularyConfig vocabularyConfig;
+  private VocabularyConfig vocabularyConfig = new VocabularyConfig();
 
   private WsConfig vocabularyService;
 
@@ -93,15 +93,15 @@ public class PipelinesConfig implements Serializable {
 
   private String fragmentHfileStagingPath = "hfile-staging";
 
-  private StandaloneConfig standalone;
+  private StandaloneConfig standalone = new StandaloneConfig();
 
-  private AirflowConfig airflowConfig;
+  private AirflowConfig airflowConfig = new AirflowConfig();
 
   private Map<String, SparkJobConfig> processingConfigs;
 
-  private IndexConfig indexConfig;
+  private IndexConfig indexConfig = new IndexConfig();
 
-  private DerivedMetadataConfig derivedMetadataConfig;
+  private DerivedMetadataConfig derivedMetadataConfig = new DerivedMetadataConfig();
 
-  private TableBuildConfig tableBuildConfig;
+  private TableBuildConfig tableBuildConfig = new TableBuildConfig();
 }

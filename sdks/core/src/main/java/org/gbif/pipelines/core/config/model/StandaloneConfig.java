@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StandaloneConfig implements Serializable {
 
-  RegistryConfig registry;
-  MessagingConfig messaging;
+  RegistryConfig registry = new RegistryConfig();
+  MessagingConfig messaging = new MessagingConfig();
   Integer numberOfShards = 1;
   Double idThresholdPercent = 50d;
   boolean idThresholdSkip = false;
