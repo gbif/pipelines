@@ -75,7 +75,7 @@ public class VerbatimMessageHandler {
               m.getPipelineSteps(),
               m.getValidationResult().getNumberOfEventRecords(),
               m.getValidationResult().getNumberOfRecords(),
-              StepRunner.DISTRIBUTED.name(),
+              computeRunner(config, m).name(),
               false,
               m.getResetPrefix(),
               m.getExecutionId(),
