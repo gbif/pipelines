@@ -90,9 +90,10 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         message.getDatasetType() != null && message.getValidationReport().isValid();
     if (!isMessageValid) {
       log.info(
-          "Skipping the task, because of the message is not valid, data type is {}, validation report is valid = {}",
+          "Skipping the task, because of the message is not valid, data type is {}, validation report is valid = {}, reason = {}",
           message.getDatasetType(),
-          message.getValidationReport().isValid());
+          message.getValidationReport().isValid(),
+          message.getValidationReport().getInvalidationReason());
     }
     boolean isReportValid = isReportValid(message);
     if (!isReportValid) {
