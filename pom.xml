@@ -158,7 +158,7 @@
     <pipelines.lucene.version>8.6.2</pipelines.lucene.version>
     <apache.httpcomponents.version>4.4.13</apache.httpcomponents.version>
 
-    <jackson.version>2.19.4</jackson.version>
+    <jackson.version>2.21.1</jackson.version>
     <snake-yaml-version>2.5</snake-yaml-version>
 
     <!-- Additional libs introduced by spark-jobs -->
