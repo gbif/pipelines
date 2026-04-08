@@ -6,8 +6,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -29,63 +27,65 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 public class MetadataInterpreter {
 
   /** Gets information from GBIF API by datasetId */
-  public static BiConsumer<String, MetadataRecord> interpret(MetadataServiceClient client) {
-    return (datasetId, mdr) -> {
+  public static MetadataRecord interpret(
+      MetadataServiceClient client, String datasetId, Integer attempt, MetadataRecord mdr) {
 
-      // Set required metadata properties
-      mdr.setDatasetKey(datasetId);
+    if (client == null) {
+      throw new IllegalStateException("MetadataServiceClient is not initialized!");
+    }
 
-      if (client != null) {
+    // Set required metadata properties
+    mdr.setDatasetKey(datasetId);
 
-        Dataset dataset = client.getDataset(datasetId);
+    Dataset dataset = client.getDataset(datasetId);
 
-        // https://github.com/gbif/pipelines/issues/401
-        License license = getLicense(dataset.getLicense());
-        if (license == null || license == License.UNSPECIFIED || license == License.UNSUPPORTED) {
-          throw new IllegalArgumentException(
-              "Dataset licence can't be UNSPECIFIED or UNSUPPORTED!");
-        } else {
-          mdr.setLicense(license.name());
-        }
+    // https://github.com/gbif/pipelines/issues/401
+    License license = getLicense(dataset.getLicense());
+    if (license == null || license == License.UNSPECIFIED || license == License.UNSUPPORTED) {
+      throw new IllegalArgumentException("Dataset licence can't be UNSPECIFIED or UNSUPPORTED!");
+    } else {
+      mdr.setLicense(license.name());
+    }
 
-        mdr.setDatasetTitle(dataset.getTitle());
-        mdr.setInstallationKey(dataset.getInstallationKey());
-        mdr.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
+    mdr.setDatasetTitle(dataset.getTitle());
+    mdr.setInstallationKey(dataset.getInstallationKey());
+    mdr.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
 
-        List<Endpoint> endpoints = prioritySortEndpoints(dataset.getEndpoints());
-        if (!endpoints.isEmpty()) {
-          mdr.setProtocol(endpoints.get(0).getType().name());
-        }
+    List<Endpoint> endpoints = prioritySortEndpoints(dataset.getEndpoints());
+    if (!endpoints.isEmpty()) {
+      mdr.setProtocol(endpoints.get(0).getType().name());
+    }
 
-        List<Network> networkList = client.getNetworkFromDataset(datasetId);
-        if (networkList != null && !networkList.isEmpty()) {
-          mdr.setNetworkKeys(
-              networkList.stream()
-                  .map(Network::getKey)
-                  .filter(Objects::nonNull)
-                  .collect(Collectors.toList()));
-        }
+    List<Network> networkList = client.getNetworkFromDataset(datasetId);
+    if (networkList != null && !networkList.isEmpty()) {
+      mdr.setNetworkKeys(
+          networkList.stream()
+              .map(Network::getKey)
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList()));
+    }
 
-        Organization organization = client.getOrganization(dataset.getPublishingOrganizationKey());
-        mdr.setEndorsingNodeKey(organization.getEndorsingNodeKey());
-        mdr.setPublisherTitle(organization.getTitle());
-        mdr.setDatasetPublishingCountry(organization.getCountry());
+    Organization organization = client.getOrganization(dataset.getPublishingOrganizationKey());
+    mdr.setEndorsingNodeKey(organization.getEndorsingNodeKey());
+    mdr.setPublisherTitle(organization.getTitle());
+    mdr.setDatasetPublishingCountry(organization.getCountry());
 
-        getLastCrawledDate(dataset.getMachineTags())
-            .ifPresent(d -> mdr.setLastCrawled(d.getTime()));
-        if (Objects.nonNull(dataset.getProject())) {
-          mdr.setProjectId(dataset.getProject().getIdentifier());
-          if (Objects.nonNull(dataset.getProject().getProgramme())) {
-            mdr.setProgrammeAcronym(dataset.getProject().getProgramme().getAcronym());
-          }
-        }
-
-        Installation installation = client.getInstallation(dataset.getInstallationKey());
-        mdr.setHostingOrganizationKey(installation.getOrganizationKey());
-
-        copyMachineTags(dataset.getMachineTags(), mdr);
+    getLastCrawledDate(dataset.getMachineTags()).ifPresent(d -> mdr.setLastCrawled(d.getTime()));
+    if (Objects.nonNull(dataset.getProject())) {
+      mdr.setProjectId(dataset.getProject().getIdentifier());
+      if (Objects.nonNull(dataset.getProject().getProgramme())) {
+        mdr.setProgrammeAcronym(dataset.getProject().getProgramme().getAcronym());
       }
-    };
+    }
+
+    Installation installation = client.getInstallation(dataset.getInstallationKey());
+    mdr.setHostingOrganizationKey(installation.getOrganizationKey());
+
+    mdr.setCrawlId(attempt);
+
+    copyMachineTags(dataset.getMachineTags(), mdr);
+
+    return mdr;
   }
 
   /** Returns ENUM instead of url string */
@@ -107,7 +107,7 @@ public class MetadataInterpreter {
   }
 
   // Copied from CrawlerCoordinatorServiceImpl
-  private static List<Endpoint> prioritySortEndpoints(List<Endpoint> endpoints) {
+  public static List<Endpoint> prioritySortEndpoints(List<Endpoint> endpoints) {
     // Filter out all Endpoints that we can't crawl
     return endpoints.stream()
         .filter(endpoint -> EndpointPriorityComparator.PRIORITIES.contains(endpoint.getType()))
@@ -115,13 +115,8 @@ public class MetadataInterpreter {
         .collect(Collectors.toList());
   }
 
-  /** Sets attempt number as crawlId */
-  public static Consumer<MetadataRecord> interpretCrawlId(Integer attempt) {
-    return mdr -> Optional.ofNullable(attempt).ifPresent(mdr::setCrawlId);
-  }
-
   /** Gets the latest crawl attempt time, if exists. */
-  private static Optional<Date> getLastCrawledDate(List<MachineTag> machineTags) {
+  public static Optional<Date> getLastCrawledDate(List<MachineTag> machineTags) {
     return Optional.ofNullable(machineTags)
         .flatMap(
             x ->
@@ -139,7 +134,7 @@ public class MetadataInterpreter {
   }
 
   /** Copy MachineTags into the Avro Metadata record. */
-  private static void copyMachineTags(List<MachineTag> machineTags, MetadataRecord mdr) {
+  public static void copyMachineTags(List<MachineTag> machineTags, MetadataRecord mdr) {
     if (Objects.nonNull(machineTags) && !machineTags.isEmpty()) {
       mdr.setMachineTags(
           machineTags.stream()

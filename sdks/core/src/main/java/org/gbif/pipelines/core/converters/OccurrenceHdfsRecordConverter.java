@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.converters.ConverterUtils.base64Encode;
+import static org.gbif.pipelines.core.converters.ConverterUtils.mapTerm;
 import static org.gbif.pipelines.core.utils.ExtensionUtils.convertMoFFromVerbatim;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
@@ -13,13 +15,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.gbif.api.vocabulary.License;
 import org.gbif.dwc.terms.*;
-import org.gbif.occurrence.common.TermUtils;
-import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.pojo.MoFData;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
@@ -464,7 +462,7 @@ public class OccurrenceHdfsRecordConverter {
                     occurrenceHdfsRecord.setPhylumkey(rankedName.getKey());
                     break;
                   case "CLASS":
-                    occurrenceHdfsRecord.setClass$(rankedName.getName());
+                    occurrenceHdfsRecord.setClass_(rankedName.getName());
                     occurrenceHdfsRecord.setClasskey(rankedName.getKey());
                     break;
                   case "ORDER":
@@ -831,55 +829,6 @@ public class OccurrenceHdfsRecordConverter {
     }
   }
 
-  /**
-   * From a {@link Schema.Field} copies it value into a the {@link OccurrenceHdfsRecord} field using
-   * the recognized data type.
-   *
-   * @param occurrenceHdfsRecord target record
-   * @param avroField field to be copied
-   * @param fieldName {@link OccurrenceHdfsRecord} field/property name
-   * @param value field data/value
-   */
-  private static void setHdfsRecordField(
-      OccurrenceHdfsRecord occurrenceHdfsRecord,
-      Schema.Field avroField,
-      String fieldName,
-      String value) {
-    try {
-      Schema.Type fieldType = avroField.schema().getType();
-      if (Schema.Type.UNION == avroField.schema().getType()) {
-        fieldType = avroField.schema().getTypes().get(0).getType();
-      }
-      switch (fieldType) {
-        case INT:
-          PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Integer.valueOf(value));
-          break;
-        case LONG:
-          PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Long.valueOf(value));
-          break;
-        case BOOLEAN:
-          PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Boolean.valueOf(value));
-          break;
-        case DOUBLE:
-          PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Double.valueOf(value));
-          break;
-        case FLOAT:
-          PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, Float.valueOf(value));
-          break;
-        default:
-          PropertyUtils.setProperty(occurrenceHdfsRecord, fieldName, value);
-          break;
-      }
-    } catch (Exception ex) {
-      log.error(
-          "Ignoring error setting field {}, field name {}, value. Exception: {}",
-          avroField,
-          fieldName,
-          value,
-          ex);
-    }
-  }
-
   /** Copies the {@link ExtendedRecord} data into the {@link OccurrenceHdfsRecord}. */
   private void mapExtendedRecord(OccurrenceHdfsRecord occurrenceHdfsRecord) {
     if (extendedRecord == null) {
@@ -906,49 +855,6 @@ public class OccurrenceHdfsRecordConverter {
     }
   }
 
-  private void mapTerm(String k, String v, OccurrenceHdfsRecord occurrenceHdfsRecord) {
-    Term term = TERM_FACTORY.findTerm(k);
-
-    if (term == null) {
-      return;
-    }
-
-    if (TermUtils.verbatimTerms().contains(term)) {
-      Optional.ofNullable(verbatimSchemaField(term))
-          .ifPresent(
-              field -> {
-                String verbatimField =
-                    "V" + field.name().substring(2, 3).toUpperCase() + field.name().substring(3);
-                setHdfsRecordField(occurrenceHdfsRecord, field, verbatimField, v);
-              });
-    }
-
-    if (!TermUtils.isInterpretedSourceTerm(term)) {
-      Optional.ofNullable(interpretedSchemaField(term))
-          .ifPresent(
-              field -> {
-                // Fields that were set by other mappers are ignored
-                if (Objects.isNull(occurrenceHdfsRecord.get(field.name()))) {
-                  String interpretedFieldname = field.name();
-                  if (DcTerm.abstract_ == term) {
-                    interpretedFieldname = "abstract$";
-                  } else if (DwcTerm.class_ == term) {
-                    interpretedFieldname = "class$";
-                  } else if (DwcTerm.group == term) {
-                    interpretedFieldname = "group";
-                  } else if (DwcTerm.order == term) {
-                    interpretedFieldname = "order";
-                  } else if (DcTerm.date == term) {
-                    interpretedFieldname = "date";
-                  } else if (DcTerm.format == term) {
-                    interpretedFieldname = "format";
-                  }
-                  setHdfsRecordField(occurrenceHdfsRecord, field, interpretedFieldname, v);
-                }
-              });
-    }
-  }
-
   /**
    * Collects the {@link MultimediaRecord} mediaTypes data into the {@link
    * OccurrenceHdfsRecord#setMediatype(List)}.
@@ -966,7 +872,7 @@ public class OccurrenceHdfsRecordConverter {
             .map(TextNode::asText)
             .collect(Collectors.toList());
     occurrenceHdfsRecord.setExtMultimedia(
-        MediaSerDeser.multimediaToJson(multimediaRecord.getMultimediaItems()));
+        base64Encode(MediaSerDeser.multimediaToJson(multimediaRecord.getMultimediaItems())));
 
     setCreatedIfGreater(occurrenceHdfsRecord, multimediaRecord.getCreated());
     occurrenceHdfsRecord.setMediatype(mediaTypes);
@@ -987,15 +893,5 @@ public class OccurrenceHdfsRecordConverter {
                   .map(DnaDerivedData::getDnaSequenceID)
                   .collect(Collectors.toSet())));
     }
-  }
-
-  /** Gets the {@link Schema.Field} associated to a verbatim term. */
-  private static Schema.Field verbatimSchemaField(Term term) {
-    return OccurrenceHdfsRecord.SCHEMA$.getField("v_" + term.simpleName().toLowerCase());
-  }
-
-  /** Gets the {@link Schema.Field} associated to a interpreted term. */
-  private static Schema.Field interpretedSchemaField(Term term) {
-    return OccurrenceHdfsRecord.SCHEMA$.getField(HiveColumns.columnFor(term));
   }
 }

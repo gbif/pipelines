@@ -343,16 +343,6 @@ public class OccurrenceJsonConverterTest {
             .setMatchType(org.gbif.pipelines.io.avro.MatchType.EXACT)
             .setNote("note")
             .setLineage(Collections.singletonList("setLineage"))
-            .setAlternatives(
-                Collections.singletonList(
-                    TaxonRecord.newBuilder()
-                        .setId("888")
-                        .setAcceptedUsage(au)
-                        .setClassification(rankedNameList)
-                        .setUsage(synonym)
-                        .setSynonym(true)
-                        .setIucnRedListCategoryCode("setIucnRedListCategoryCode")
-                        .build()))
             .build();
 
     TaxonRecord tr =

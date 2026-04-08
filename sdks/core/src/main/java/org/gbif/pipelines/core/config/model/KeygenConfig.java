@@ -17,4 +17,5 @@ public class KeygenConfig implements Serializable {
   private String lookupTable;
   private String zkConnectionString;
   private String hbaseZnode;
+  private Integer parallelism = 10;
 }

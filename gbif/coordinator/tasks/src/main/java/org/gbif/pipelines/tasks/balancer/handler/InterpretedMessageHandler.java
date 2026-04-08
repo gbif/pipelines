@@ -5,7 +5,6 @@ import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -72,6 +71,9 @@ public class InterpretedMessageHandler {
       interpretationTypes.add(RecordType.EVENT.name());
       interpretationTypes.remove(RecordType.OCCURRENCE.name());
 
+      // get the step runner
+      StepRunner stepRunner = computeRunner(config, m);
+
       PipelinesEventsMessage eventsMessage =
           new PipelinesEventsMessage(
               m.getDatasetUuid(),
@@ -79,7 +81,7 @@ public class InterpretedMessageHandler {
               m.getPipelineSteps(),
               m.getNumberOfEventRecords(),
               m.getNumberOfRecords(),
-              StepRunner.DISTRIBUTED.name(),
+              stepRunner.name(),
               m.isRepeatAttempt(),
               m.getResetPrefix(),
               m.getExecutionId(),
@@ -89,37 +91,28 @@ public class InterpretedMessageHandler {
               DatasetType.SAMPLING_EVENT);
 
       publisher.send(eventsMessage);
-      log.info("The events message has been sent - {}", eventsMessage);
+      if (log.isTraceEnabled()) {
+        log.trace("The message has been sent - {}", outputMessage);
+      }
+
+      log.info(
+          "Outgoing dataset: {}, executionID: {}, routingKey: {}, attempt: {}, runner: {}",
+          outputMessage.getDatasetUuid(),
+          outputMessage.getExecutionId(),
+          outputMessage.getRoutingKey(),
+          outputMessage.getAttempt(),
+          outputMessage.getRunner());
     }
   }
 
-  /**
-   * Computes runner type: Strategy 1 - Chooses a runner type by number of records in a dataset
-   * Strategy 2 - Chooses a runner type by calculating verbatim.avro file size
-   */
+  /** Chooses a runner type by calculating verbatim.avro file size */
   private static StepRunner computeRunner(
       BalancerConfiguration config, PipelinesInterpretedMessage message) throws IOException {
 
     String datasetId = message.getDatasetUuid().toString();
     String attempt = message.getAttempt().toString();
 
-    StepRunner runner;
-    long recordsNumber = Optional.ofNullable(message.getNumberOfRecords()).orElse(0L);
-
-    // Strategy 1: Chooses a runner type by number of records in a dataset
-    if (recordsNumber > 0) {
-
-      int switchRecord = config.switchRecordsNumber;
-      if (isValidator(message.getPipelineSteps())) {
-        switchRecord = config.validatorSwitchRecordsNumber;
-      }
-
-      runner = recordsNumber >= switchRecord ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
-      log.info("Records number - {}, Spark Runner type - {}", recordsNumber, runner);
-      return runner;
-    }
-
-    // Strategy 2: Chooses a runner type by calculating verbatim.avro file size
+    // Chooses a runner type by calculating verbatim.avro file size
     String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
     StepConfiguration stepConfig = config.stepConfig;
     String repositoryPath =
@@ -132,7 +125,8 @@ public class InterpretedMessageHandler {
     long fileSizeByte = HdfsUtils.getFileSizeByte(hdfsConfigs, verbatimPath);
     if (fileSizeByte > 0) {
       long switchFileSizeByte = config.switchFileSizeMb * 1024L * 1024L;
-      runner = fileSizeByte > switchFileSizeByte ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
+      StepRunner runner =
+          fileSizeByte > switchFileSizeByte ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
       log.info("File size - {}, Spark Runner type - {}", fileSizeByte, runner);
       return runner;
     }

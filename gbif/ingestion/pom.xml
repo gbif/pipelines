@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>gbif</artifactId>
-   <version>3.2.25-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -13,15 +13,13 @@
   <packaging>pom</packaging>
 
   <name>Pipelines :: GBIF :: Ingestion</name>
-  <description>Apache Beam pipelines</description>
+  <description>Spark pipelines and coordination</description>
 
   <modules>
-    <module>ingest-gbif-beam</module>
-    <module>ingest-gbif-fragmenter</module>
-    <module>ingest-gbif-java</module>
-    <module>ingestion-integration-tests</module>
-    <module>ingestion-integration-tests-hbase</module>
-    <module>pre-backbone-release</module>
+    <module>healthcheck</module>
+    <module>spark-jobs</module>
+    <module>spark-coordinator</module>
+      <!--    <module>pre-backbone-release</module>-->
   </modules>
 
 </project>

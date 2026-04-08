@@ -1,0 +1,76 @@
+{
+  "usage": {
+    "key": "5219404",
+    "name": "Panthera leo (Linnaeus, 1758)",
+    "canonicalName": "Panthera leo",
+    "authorship": "(Linnaeus, 1758)",
+    "rank": "SPECIES",
+    "code": "ZOOLOGICAL",
+    "status": "ACCEPTED",
+    "genericName": "Panthera",
+    "specificEpithet": "leo",
+    "type": "SCIENTIFIC",
+    "formattedName": "<i>Panthera</i> <i>leo</i> (Linnaeus, 1758)"
+  },
+  "classification": [
+    {
+      "key": "1",
+      "name": "Animalia",
+      "rank": "KINGDOM"
+    },
+    {
+      "key": "44",
+      "name": "Chordata",
+      "rank": "PHYLUM"
+    },
+    {
+      "key": "359",
+      "name": "Mammalia",
+      "rank": "CLASS"
+    },
+    {
+      "key": "732",
+      "name": "Carnivora",
+      "rank": "ORDER"
+    },
+    {
+      "key": "9703",
+      "name": "Felidae",
+      "rank": "FAMILY"
+    },
+    {
+      "key": "2435194",
+      "name": "Panthera",
+      "rank": "GENUS"
+    },
+    {
+      "key": "5219404",
+      "name": "Panthera leo",
+      "rank": "SPECIES"
+    }
+  ],
+  "diagnostics": {
+    "matchType": "EXACT",
+    "confidence": 99,
+    "timeTaken": 4,
+    "timings": {
+      "nameNRank": 0,
+      "sciNameMatch": 5,
+      "nameParse": 1,
+      "luceneMatch": 4
+    }
+  },
+  "additionalStatus": [
+    {
+      "clbDatasetKey": "53131",
+      "datasetAlias": "IUCN",
+      "datasetKey": "19491596-35ae-4a91-9a98-85cf505f1bd3",
+      "status": "VULNERABLE",
+      "statusCode": "VU",
+      "sourceId": "15951"
+    }
+  ],
+  "synonym": false,
+  "left": 743377,
+  "right": 743387
+}

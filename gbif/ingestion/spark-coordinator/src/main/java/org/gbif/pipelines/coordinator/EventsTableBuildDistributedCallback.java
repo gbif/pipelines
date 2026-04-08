@@ -1,0 +1,44 @@
+package org.gbif.pipelines.coordinator;
+
+import static org.gbif.pipelines.spark.ArgsConstants.DATASET_TYPE_ARG;
+import static org.gbif.pipelines.spark.ArgsConstants.SOURCE_DIRECTORY_ARG;
+import static org.gbif.pipelines.spark.Directories.EVENT_HDFS;
+
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
+
+@Slf4j
+public class EventsTableBuildDistributedCallback extends EventsTableBuildCallback {
+
+  public EventsTableBuildDistributedCallback(
+      PipelinesConfig pipelinesConfig,
+      MessagePublisher publisher,
+      String tableName,
+      String sourceDirectory) {
+    super(pipelinesConfig, publisher, null, tableName, sourceDirectory);
+  }
+
+  @Override
+  protected void runPipeline(PipelinesEventsInterpretedMessage message) throws Exception {
+    DistributedUtil.runPipeline(
+        pipelinesConfig,
+        message,
+        "event-tablebuild",
+        fileSystem,
+        pipelinesConfig.getAirflowConfig().eventsTableBuildDag,
+        StepType.EVENTS_HDFS_VIEW,
+        List.of(
+            DATASET_TYPE_ARG + "=" + DatasetType.SAMPLING_EVENT,
+            SOURCE_DIRECTORY_ARG + "=" + EVENT_HDFS));
+  }
+
+  @Override
+  protected boolean isStandalone() {
+    return false;
+  }
+}

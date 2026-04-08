@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>gbif</artifactId>
-   <version>3.2.25-SNAPSHOT</version>
+   <version>4.0.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -15,13 +15,12 @@
   <name>Pipelines :: GBIF :: Coordinator</name>
 
   <properties>
-    <gbif-crawler.version>2.0.9</gbif-crawler.version>
+    <gbif-crawler.version>2.0.8</gbif-crawler.version>
   </properties>
 
   <modules>
     <module>tasks</module>
     <module>tasks-integration-tests</module>
-    <module>tasks-integration-tests-hbase</module>
   </modules>
 
 

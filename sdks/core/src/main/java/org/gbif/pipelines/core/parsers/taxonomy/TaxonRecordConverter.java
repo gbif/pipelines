@@ -99,7 +99,6 @@ public class TaxonRecordConverter {
 
     Diagnostic.Builder builder =
         Diagnostic.newBuilder()
-            .setAlternatives(alternatives)
             .setConfidence(diagnosticsApi.getConfidence())
             .setMatchType(MatchType.valueOf(diagnosticsApi.getMatchType().name()))
             .setNote(diagnosticsApi.getNote())

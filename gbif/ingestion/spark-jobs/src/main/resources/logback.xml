@@ -1,0 +1,39 @@
+<configuration>
+    <!-- Console appender -->
+    <conversionRule conversionWord="highlight"
+                    converterClass="ch.qos.logback.classic.pattern.color.HighlightingCompositeConverter" />
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>
+                %highlight(%boldGreen([%date{'yyyy-MM-dd HH:mm:ss'}]) [%magenta([%X{datasetKey}])][%red([%X{attempt}]] %boldCyan([%logger{0}]) %boldYellow(%msg%n))
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!-- Root logger at WARN (default for everything) -->
+    <root level="WARN">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+    <!-- Spark internals -->
+    <logger name="org.apache.spark" level="WARN" />
+
+    <!-- Hadoop libraries -->
+    <logger name="org.apache.hadoop" level="WARN" />
+    <logger name="org.apache.hbase" level="WARN" />
+    <logger name="org.elasticsearch.hadoop" level="WARN" />
+    <logger name="org.apache.zookeeper" level="ERROR" />
+
+    <!-- Jetty (Spark UI / web server) -->
+    <logger name="org.eclipse.jetty" level="WARN" />
+
+    <!-- Your application logs (adjust package to yours) -->
+    <logger name="org.gbif.pipelines" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+    <logger name="org.gbif" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+
+</configuration>

@@ -4,17 +4,44 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PipelinesConfig implements Serializable {
 
   private static final long serialVersionUID = 8102560635064341713L;
+
+  /** The directory where the input files are located */
+  private String inputPath;
+
+  /** The directory where the output files are written to */
+  private String outputPath;
+
+  /**
+   * The directory where the intermediate files & debug outputs are written to as part of the
+   * rebuild jobs
+   */
+  private String rebuildPath;
+
+  private String hdfsSiteConfig = "/etc/hadoop/conf/hdfs-site.xml";
+
+  private String coreSiteConfig = "/etc/hadoop/conf/core-site.xml";
+
+  private String hbaseSiteConfig = "/etc/hadoop/conf/hbase-site.xml";
+
+  private String hiveDB;
+
+  private String hdfsWarehousePath;
+
+  private String hiveMetastoreUris;
 
   private String zkConnectionString;
 
@@ -42,7 +69,11 @@ public class PipelinesConfig implements Serializable {
 
   private LockConfig hdfsLock;
 
-  private VocabularyConfig vocabularyConfig;
+  private EsConfig elastic;
+
+  private VocabularyConfig vocabularyConfig = new VocabularyConfig();
+
+  private WsConfig vocabularyService;
 
   private ClusteringRelationshipConfig clusteringRelationshipConfig;
 
@@ -57,4 +88,20 @@ public class PipelinesConfig implements Serializable {
   private Set<String> extensionsAllowedForVerbatimSet;
 
   private String fragmentsTable;
+
+  private String fragmentHfilePath = "fragment";
+
+  private String fragmentHfileStagingPath = "hfile-staging";
+
+  private StandaloneConfig standalone = new StandaloneConfig();
+
+  private AirflowConfig airflowConfig = new AirflowConfig();
+
+  private Map<String, SparkJobConfig> processingConfigs;
+
+  private IndexConfig indexConfig = new IndexConfig();
+
+  private DerivedMetadataConfig derivedMetadataConfig = new DerivedMetadataConfig();
+
+  private TableBuildConfig tableBuildConfig = new TableBuildConfig();
 }

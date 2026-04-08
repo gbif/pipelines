@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,14 +13,11 @@ import org.junit.Test;
 public class DnaDerivedDataInterpreterTest {
 
   @Test
-  public void dnaDerivedDataTest() {
+  public void dnaDerivedDataTest() throws JsonProcessingException {
 
     // Expected
     String expected =
-        "{\"id\": \"id\", \"created\": null, \"dnaDerivedDataItems\": "
-            + "[{\"dnaSequenceID\": \"24ade1fd08fa4338480211bb33fe6202\"},"
-            + " {\"dnaSequenceID\": \"a6bf0d942fd67916f50079e5c44a41b0\"}], "
-            + "\"issues\": {\"issueList\": []}}";
+        "{\"id\":\"id\",\"created\":null,\"dnaDerivedDataItems\":[{\"dnaSequenceID\":\"24ade1fd08fa4338480211bb33fe6202\"},{\"dnaSequenceID\":\"a6bf0d942fd67916f50079e5c44a41b0\"}],\"issues\":{\"issueList\":[]}}";
 
     // State
     Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
@@ -41,6 +40,6 @@ public class DnaDerivedDataInterpreterTest {
     DnaDerivedDataInterpreter.builder().create().interpret(er, dr);
 
     // Should
-    Assert.assertEquals(expected, dr.toString());
+    Assert.assertEquals(expected, new ObjectMapper().writeValueAsString(dr));
   }
 }

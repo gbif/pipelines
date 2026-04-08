@@ -30,6 +30,16 @@ public class EventsInterpretedMessageHandler {
         MAPPER.readValue(message.getPayload(), PipelinesEventsInterpretedMessage.class);
 
     publisher.send(outputMessage);
-    log.info("The message has been sent - {}", outputMessage);
+    if (log.isTraceEnabled()) {
+      log.trace("The message has been sent - {}", outputMessage);
+    }
+
+    log.info(
+        "Outgoing dataset: {}, executionID: {}, routingKey: {}, attempt: {}, runner: {}",
+        outputMessage.getDatasetUuid(),
+        outputMessage.getExecutionId(),
+        outputMessage.getRoutingKey(),
+        outputMessage.getAttempt(),
+        outputMessage.getRunner());
   }
 }

@@ -33,6 +33,10 @@ public class KvConfig implements Serializable {
 
   private long cacheExpiryTimeInSeconds = 300L;
 
+  private long cacheCacheCapacity = 25_000L;
+
+  private Integer parallelism = 10;
+
   private LoaderRetryConfig loaderRetryConfig;
 
   @Data

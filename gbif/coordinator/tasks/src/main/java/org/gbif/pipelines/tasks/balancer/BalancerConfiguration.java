@@ -14,20 +14,10 @@ public class BalancerConfiguration {
 
   @ParametersDelegate @Valid @NotNull public StepConfiguration stepConfig = new StepConfiguration();
 
-  @Parameter(names = "--switch-files-number")
-  @NotNull
-  @Min(1)
-  public int switchFilesNumber;
-
   @Parameter(names = "--switch-file-size-mb")
   @NotNull
   @Min(1)
   public int switchFileSizeMb;
-
-  @Parameter(names = "--switch-records-number")
-  @NotNull
-  @Min(1)
-  public int switchRecordsNumber;
 
   @Parameter(names = "--validator-switch-records-number")
   @NotNull

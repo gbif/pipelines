@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.converters.ConverterUtils.base64Encode;
+import static org.gbif.pipelines.core.converters.ConverterUtils.mapTerm;
 import static org.gbif.pipelines.core.utils.ExtensionUtils.convertMoFFromVerbatim;
 
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -16,26 +18,12 @@ import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.gbif.dwc.terms.*;
-import org.gbif.occurrence.common.TermUtils;
-import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.pojo.HumboldtJsonView;
 import org.gbif.pipelines.core.pojo.MoFData;
 import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.core.utils.TemporalConverter;
-import org.gbif.pipelines.io.avro.EventCoreRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.HumboldtRecord;
-import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.io.avro.IssueRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaxonHumboldtRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.VocabularyConcept;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.event.EventHdfsRecord;
 import org.gbif.pipelines.io.avro.event.EventType;
 import org.gbif.pipelines.io.avro.event.ParentEventGbifId;
@@ -442,49 +430,6 @@ public class EventHdfsRecordConverter {
     }
   }
 
-  private void mapTerm(String k, String v, EventHdfsRecord eventHdfsRecord) {
-    Term term = TERM_FACTORY.findTerm(k);
-
-    if (term == null) {
-      return;
-    }
-
-    if (TermUtils.verbatimTerms().contains(term)) {
-      Optional.ofNullable(verbatimSchemaField(term))
-          .ifPresent(
-              field -> {
-                String verbatimField =
-                    "V" + field.name().substring(2, 3).toUpperCase() + field.name().substring(3);
-                setHdfsRecordField(eventHdfsRecord, field, verbatimField, v);
-              });
-    }
-
-    if (!TermUtils.isInterpretedSourceTerm(term)) {
-      Optional.ofNullable(interpretedSchemaField(term))
-          .ifPresent(
-              field -> {
-                // Fields that were set by other mappers are ignored
-                if (Objects.isNull(eventHdfsRecord.get(field.name()))) {
-                  String interpretedFieldname = field.name();
-                  if (DcTerm.abstract_ == term) {
-                    interpretedFieldname = "abstract$";
-                  } else if (DwcTerm.class_ == term) {
-                    interpretedFieldname = "class$";
-                  } else if (DwcTerm.group == term) {
-                    interpretedFieldname = "group";
-                  } else if (DwcTerm.order == term) {
-                    interpretedFieldname = "order";
-                  } else if (DcTerm.date == term) {
-                    interpretedFieldname = "date";
-                  } else if (DcTerm.format == term) {
-                    interpretedFieldname = "format";
-                  }
-                  setHdfsRecordField(eventHdfsRecord, field, interpretedFieldname, v);
-                }
-              });
-    }
-  }
-
   /**
    * Collects the {@link MultimediaRecord} mediaTypes data into the {@link
    * EventHdfsRecord#setMediatype(List)}.
@@ -641,7 +586,7 @@ public class EventHdfsRecordConverter {
                   })
               .collect(Collectors.toList());
 
-      eventHdfsRecord.setExtHumboldt(MediaSerDeser.humboldtToJson(jsonViews));
+      eventHdfsRecord.setExtHumboldt(base64Encode(MediaSerDeser.humboldtToJson(jsonViews)));
     }
 
     addNonTaxonIssues(humboldtRecord.getIssues(), eventHdfsRecord);
@@ -653,15 +598,5 @@ public class EventHdfsRecordConverter {
             h ->
                 h.getTargetTaxonomicScope()
                     .forEach(ir -> addTaxonIssues(ir.getIssues(), eventHdfsRecord)));
-  }
-
-  /** Gets the {@link Schema.Field} associated to a verbatim term. */
-  private static Schema.Field verbatimSchemaField(Term term) {
-    return EventHdfsRecord.SCHEMA$.getField("v_" + term.simpleName().toLowerCase());
-  }
-
-  /** Gets the {@link Schema.Field} associated to a interpreted term. */
-  private static Schema.Field interpretedSchemaField(Term term) {
-    return EventHdfsRecord.SCHEMA$.getField(HiveColumns.columnFor(term));
   }
 }

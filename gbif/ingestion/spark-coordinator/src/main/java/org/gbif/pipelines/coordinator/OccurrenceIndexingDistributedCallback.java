@@ -1,0 +1,64 @@
+package org.gbif.pipelines.coordinator;
+
+import static org.gbif.pipelines.spark.ArgsConstants.DATASET_TYPE_ARG;
+import static org.gbif.pipelines.spark.ArgsConstants.SOURCE_DIRECTORY_ARG;
+
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.spark.Directories;
+import org.gbif.pipelines.spark.IndexingPipeline;
+import org.gbif.pipelines.spark.util.IndexSettings;
+
+@Slf4j
+public class OccurrenceIndexingDistributedCallback extends OccurrenceIndexingCallback {
+
+  public OccurrenceIndexingDistributedCallback(
+      PipelinesConfig pipelinesConfig, MessagePublisher publisher) {
+    super(pipelinesConfig, publisher, null);
+  }
+
+  @Override
+  protected void runPipeline(PipelinesInterpretedMessage message) throws Exception {
+
+    Long recordsNumber = DistributedUtil.getRecordsNumber(pipelinesConfig, message, fileSystem);
+
+    IndexSettings indexSettings =
+        IndexSettings.create(
+            DatasetType.OCCURRENCE,
+            pipelinesConfig.getIndexConfig(),
+            httpClient,
+            message.getDatasetUuid().toString(),
+            message.getAttempt(),
+            recordsNumber);
+
+    log.info("Start the process. Message - {}", message);
+    List<String> extraArgs =
+        List.of(
+            IndexingPipeline.ES_INDEX_NAME_ARG + "=" + indexSettings.getIndexName(),
+            IndexingPipeline.ES_INDEX_NUMBER_OF_SHARDS_ARG
+                + "="
+                + indexSettings.getNumberOfShards(),
+            IndexingPipeline.ES_INDEX_ALIAS_ARG + "=" + indexSettings.getIndexAlias(),
+            DATASET_TYPE_ARG + "=" + DatasetType.OCCURRENCE,
+            SOURCE_DIRECTORY_ARG + "=" + Directories.OCCURRENCE_JSON);
+
+    DistributedUtil.runPipeline(
+        pipelinesConfig,
+        message,
+        "indexing",
+        fileSystem,
+        pipelinesConfig.getAirflowConfig().indexingDag,
+        StepType.INTERPRETED_TO_INDEX,
+        extraArgs);
+  }
+
+  @Override
+  protected boolean isStandalone() {
+    return false;
+  }
+}

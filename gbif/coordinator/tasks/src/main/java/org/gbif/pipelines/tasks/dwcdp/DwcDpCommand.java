@@ -21,7 +21,7 @@ public class DwcDpCommand extends ServiceCommand {
 
   @Override
   protected Service getService() {
-    return new DwcDpService(config);
+    return null; // new DwcDpService(config);
   }
 
   @Override

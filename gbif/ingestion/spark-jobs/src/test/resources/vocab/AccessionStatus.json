@@ -1,0 +1,81 @@
+{
+  "metadata" : {
+    "createdDate" : "2024-09-12T08:38:44.393",
+    "version" : "1.0.1"
+  },
+  "vocabulary" : {
+    "key" : 17,
+    "name" : "AccessionStatus",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-03-21T14:54:50.110551",
+    "createdBy" : "mgrosjean",
+    "modified" : "2024-03-21T20:15:40.267242",
+    "modifiedBy" : "mgrosjean",
+    "namespace" : null,
+    "definition" : {
+      "en" : "The status of a collection and how its content can be accessed."
+    },
+    "label" : {
+      "en" : "Accession status",
+      "fr-FR" : "Statut d'accession",
+      "es-ES" : "Status de accesidiblidad"
+    }
+  },
+  "concepts" : [ {
+    "key" : 866,
+    "name" : "Project",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-03-21T14:55:57.976307",
+    "createdBy" : "mgrosjean",
+    "modified" : "2024-03-26T13:07:35.395781",
+    "modifiedBy" : "mgrosjean",
+    "vocabularyKey" : 17,
+    "parentKey" : null,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A collection with a \"project\" accession status has a restricted access. One can ask to collaborate and join a team working on a collection registered as a project but the collection isn't part of an institutional loan program. This is particularly relevant in the context of heal-related collections."
+    },
+    "label" : {
+      "en" : "Project",
+      "fr-FR" : "Projet",
+      "es-ES" : "Proyecto"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "PROJECT" ],
+    "tags" : [ ]
+  }, {
+    "key" : 865,
+    "name" : "Institutional",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-03-21T14:55:48.213161",
+    "createdBy" : "mgrosjean",
+    "modified" : "2024-03-26T13:07:22.992385",
+    "modifiedBy" : "mgrosjean",
+    "vocabularyKey" : 17,
+    "parentKey" : null,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "The collection is registered with an institution and its specimens are accessible, for example the collection may be part of a loan program."
+    },
+    "label" : {
+      "en" : "Institutional",
+      "fr-FR" : "Institutionnel",
+      "es-ES" : "Institucional"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "INSTITUTIONAL" ],
+    "tags" : [ ]
+  } ]
+}

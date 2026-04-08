@@ -172,11 +172,6 @@ public class TaxonomyInterpreter {
     Optional.ofNullable(er.getCoreId()).ifPresent(tr::setCoreId);
   }
 
-  /** Sets the parentEventId field. */
-  public static void setParentEventId(ExtendedRecord er, TaxonRecord tr) {
-    extractOptValue(er, DwcTerm.parentEventID).ifPresent(tr::setParentId);
-  }
-
   /**
    * To be able to return NONE, if response is FUZZY and higher taxa is null or empty Fix for
    * https://github.com/gbif/pipelines/issues/254
@@ -193,36 +188,6 @@ public class TaxonomyInterpreter {
             && Strings.isNullOrEmpty(identification.getOrder())
             && Strings.isNullOrEmpty(identification.getFamily());
     return isFuzzy && isEmptyTaxa;
-  }
-
-  /**
-   * Converts a {@link org.gbif.nameparser.api.ParsedName} into {@link
-   * org.gbif.pipelines.io.avro.ParsedName}.
-   */
-  private static ParsedName toParsedNameAvro(NameUsageMatchResponse.Usage pn) {
-    ParsedName.Builder builder =
-        ParsedName.newBuilder()
-            .setGenus(pn.getGenericName())
-            .setInfragenericEpithet(pn.getInfragenericEpithet())
-            .setInfraspecificEpithet(pn.getInfraspecificEpithet())
-            .setSpecificEpithet(pn.getSpecificEpithet());
-
-    // Nullable fields
-    Optional.ofNullable(pn.getCode())
-        .ifPresent(code -> builder.setCode(convertToEnum(NomCode.class, code)));
-    Optional.ofNullable(pn.getType())
-        .ifPresent(type -> builder.setType(convertToEnum(NameType.class, type)));
-    Optional.ofNullable(pn.getRank())
-        .ifPresent(rank -> builder.setRank(convertToEnum(NameRank.class, rank)));
-    return builder.build();
-  }
-
-  public static <T extends Enum<T>> T convertToEnum(Class<T> enumClass, String value) {
-    try {
-      return Enum.valueOf(enumClass, value.toUpperCase());
-    } catch (IllegalArgumentException | NullPointerException e) {
-      return null; // Return null if conversion fails
-    }
   }
 
   private static boolean isEmpty(NameUsageMatchResponse response) {

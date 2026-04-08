@@ -66,7 +66,7 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
       for (Entry<Extension, String> extension : extensions.entrySet()) {
         try {
           URL url = new URL(extension.getValue());
-          String name = normalizeClassNmae(extension.getKey().name());
+          String name = normalizeClassName(extension.getKey().name());
 
           Path classPath = Paths.get(finalPath, name + POSTFIX_CLASS_NAME);
           if (!Files.exists(classPath)) {
@@ -156,7 +156,7 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
     return cfg;
   }
 
-  private String normalizeClassNmae(String name) {
+  private String normalizeClassName(String name) {
     return Arrays.stream(name.split("_"))
             .map(String::toLowerCase)
             .map(x -> x.substring(0, 1).toUpperCase() + x.substring(1))

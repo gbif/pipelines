@@ -137,6 +137,14 @@ public class VocabularyInterpreter {
     return interpretVocabulary(term, extractNullAwareValue(er, term), vocabularyService, issueFn);
   }
 
+  /** {@link DwcTerm#degreeOfEstablishment} interpretation. */
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretOccurrenceStatus(
+      VocabularyService vocabularyService) {
+    return (er, br) ->
+        interpretVocabulary(er, DwcTerm.occurrenceStatus, vocabularyService)
+            .ifPresent(value -> br.setOccurrenceStatus(value.getConcept()));
+  }
+
   public static Optional<VocabularyConcept> interpretVocabulary(
       Term term, String value, VocabularyService vocabularyService, Consumer<String> issueFn) {
     if (vocabularyService == null) {

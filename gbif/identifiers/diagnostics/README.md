@@ -10,7 +10,7 @@ Keys:
 Example:
 ```shell
 cd utils
-./pipelines-gbif-id-migrator -f DATSET_KEY -t DATSET_KEY -p PATH/TO/CSV/FILE.csv
+./pipelines-gbif-id-migrator -f DATASET_KEY -t DATASET_KEY -p PATH/TO/CSV/FILE.csv
 ```
 
 ### The diagnostics tool
@@ -34,13 +34,16 @@ java -jar target/diagnostics-VERSION-SNAPSHOT-shaded.jar --help
 
 ### MIGRATOR
 
-**Migrator source file** - By defualt file format is CSV, the file must be without header and contain two rows with values, where first value is old_occurrence_id, second is the new_occurrence_id, exaple:
+**Migrator source file** - By default file format is CSV, the file must be without header and contain two columns
+with values, where first value is old_occurrence_id, second is the new_occurrence_id, example:
+
 ```csv
 0000001,GLM-P-0000001
 0000002,GLM-P-0000002
 0000003,GLM-P-0000003
 ```
-_Note:_ that it is possible to migrate GBIF identifiers using triplet value, the file must have the following format, including _null_ at the end:
+_Note:_ that it is possible to migrate GBIF identifiers using triplet value, the file must have the following format, 
+including _null_ at the end:
 ```csv
 old_institutionCode|old_collectionCode|old_catalogNumber|null,new_institutionCode|new_collectionCode|new_catalogNumber|null
 ```

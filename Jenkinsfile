@@ -20,9 +20,11 @@ pipeline {
     disableConcurrentBuilds()
   }
   triggers {
+    githubPush()
     snapshotDependencies()
   }
   stages {
+
     stage('Validate') {
       when {
         allOf {
@@ -38,6 +40,7 @@ pipeline {
         }
       }
     }
+
     stage('Setup') {
       steps {
         script {
@@ -50,7 +53,11 @@ pipeline {
         }
       }
     }
-    stage('Quick build') {
+
+    stage('Quick build - snapshot to nexus') {
+      environment {
+        PROFILES = getProfiles()
+      }
       tools {
         jdk 'OpenJDK17'
       }
@@ -61,7 +68,9 @@ pipeline {
       }
       steps {
         withMaven () {
-          sh 'mvn clean verify -U -T 3 -P skip-release-it,pre-backbone-release-artifact'
+            configFileProvider([configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS')]) {
+              sh 'mvn -s $MAVEN_SETTINGS deploy -B -P ${PROFILES}'
+            }
         }
       }
     }
@@ -79,25 +88,11 @@ pipeline {
         sh 'mvn clean verify -U'
       }
     }
-    stage('Snapshots to nexus') {
-      environment {
-        PROFILES = getProfiles()
-      }
-      when {
-        expression {
-          env.RELEASE == 'false'
-        }
-      }
-      steps {
-        configFileProvider([configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS')]) {
-          sh 'mvn -s $MAVEN_SETTINGS deploy -B -DskipTests -P ${PROFILES}'
-        }
-      }
-    }
+
     stage('Release version to nexus') {
       environment {
         PROFILES = getProfiles()
-    }
+      }
       when {
         allOf {
           expression { params.RELEASE }
@@ -111,34 +106,30 @@ pipeline {
         }
       }
     }
-    stage('Build and publish Docker image') {
-      when {
-        expression {
-          env.DRY_RUN == 'false'
-        }
-      }
+
+    stage('Build Spark Docker image') {
       steps {
-        sh 'build/ingestion-docker-build.sh ${RELEASE} ${VERSION}'
+        sh 'build/spark-jobs-docker-build.sh false ${VERSION}'
       }
     }
-
-    stage('Build and push Docker images: GBIF Impact') {
-      when {
-        expression {
-          env.DRY_RUN == 'false'
-        }
-      }
+    stage('Build Standalone Spark Docker image') {
       steps {
-        sh 'build/gbif-impact-docker-build.sh ${RELEASE} ${VERSION}'
+        sh 'build/spark-coordinator-docker-build.sh false ${VERSION}'
+      }
+    }
+    stage('Build Healthcheck Docker image') {
+      steps {
+        sh 'build/healthcheck-docker-build.sh false ${VERSION}'
       }
     }
   }
-    post {
-      success {
-        echo 'Pipeline executed successfully!'
-      }
-      failure {
-        echo 'Pipeline execution failed!'
+
+  post {
+    success {
+      echo 'Pipeline executed successfully!'
+    }
+    failure {
+      echo 'Pipeline execution failed!'
     }
     cleanup {
       deleteDir()
@@ -147,7 +138,7 @@ pipeline {
 }
 
 def getProfiles() {
-  def profiles = "skip-release-it,gbif-artifacts,pre-backbone-release-artifact"
+  def profiles = "skip-release-it,gbif-artifacts"
   if (env.BUILD_TYPE == 'FULL') {
       profiles += ",extra-artifacts"
   }

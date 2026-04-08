@@ -18,6 +18,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ComparatorUtil;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Assert;
 import org.junit.Test;
@@ -149,7 +150,7 @@ public class BasicInterpreterTest {
                     .setType(AgentIdentifierType.OTHER.name())
                     .setValue("someid")
                     .build())
-            .sorted()
+            .sorted(ComparatorUtil.AGENT_ID_COMPARATOR)
             .collect(Collectors.toList());
 
     List<AgentIdentifier> expectedIdentified =
@@ -166,7 +167,7 @@ public class BasicInterpreterTest {
                     .setType(AgentIdentifierType.OTHER.name())
                     .setValue("http://www.somelink.org/id/idid")
                     .build())
-            .sorted()
+            .sorted(ComparatorUtil.AGENT_ID_COMPARATOR)
             .collect(Collectors.toList());
 
     // State
@@ -187,9 +188,15 @@ public class BasicInterpreterTest {
 
     // Should
     Assert.assertEquals(
-        expectedIdentified, br.getIdentifiedByIds().stream().sorted().collect(Collectors.toList()));
+        expectedIdentified,
+        br.getIdentifiedByIds().stream()
+            .sorted(ComparatorUtil.AGENT_ID_COMPARATOR)
+            .collect(Collectors.toList()));
     Assert.assertEquals(
-        expectedRecorded, br.getRecordedByIds().stream().sorted().collect(Collectors.toList()));
+        expectedRecorded,
+        br.getRecordedByIds().stream()
+            .sorted(ComparatorUtil.AGENT_ID_COMPARATOR)
+            .collect(Collectors.toList()));
   }
 
   @Test

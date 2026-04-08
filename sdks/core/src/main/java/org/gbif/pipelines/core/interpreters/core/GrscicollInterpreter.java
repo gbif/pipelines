@@ -35,7 +35,7 @@ public class GrscicollInterpreter {
       KeyValueStore<GrscicollLookupRequest, GrscicollLookupResponse> kvStore, MetadataRecord mdr) {
     return (er, gr) -> {
       if (kvStore == null || mdr == null) {
-        return;
+        throw new IllegalArgumentException("KvStore and MetadataRecord can't be null");
       }
 
       checkNullOrEmpty(er);

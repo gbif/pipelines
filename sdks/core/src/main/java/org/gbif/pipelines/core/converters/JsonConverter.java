@@ -17,13 +17,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.apache.avro.specific.SpecificRecordBase;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.utils.ModelUtils;
@@ -74,13 +72,11 @@ public class JsonConverter {
   }
 
   /** Gets the maximum/latest created date of all the records. */
-  public static Optional<String> getMaxCreationDate(SpecificRecordBase... recordBases) {
+  public static Optional<String> getMaxCreationDate(Created... recordBases) {
     return Arrays.stream(recordBases)
         .filter(Objects::nonNull)
-        .filter(r -> Objects.nonNull(r.getSchema().getField(Indexing.CREATED)))
-        .map(r -> r.get(Indexing.CREATED))
+        .map(Created::getCreated)
         .filter(Objects::nonNull)
-        .map(Long.class::cast)
         .max(Long::compareTo)
         .flatMap(JsonConverter::convertToDate);
   }
@@ -416,8 +412,7 @@ public class JsonConverter {
     return classificationBuilder.build();
   }
 
-  public static Classification convertToClassificationFromMultiTaxon(
-      ExtendedRecord verbatim, MultiTaxonRecord multiTaxon) {
+  public static Classification convertToClassificationFromMultiTaxon(MultiTaxonRecord multiTaxon) {
     if (multiTaxon != null
         && multiTaxon.getTaxonRecords() != null
         && !multiTaxon.getTaxonRecords().isEmpty()) {
@@ -430,6 +425,54 @@ public class JsonConverter {
       return gbifRecord.map(JsonConverter::convertToClassification).orElse(null);
     }
     return null;
+  }
+
+  public static DerivedClassification convertTaxonRecordToDerivedClassification(TaxonRecord tr) {
+
+    DerivedClassification.Builder derivedTaxon = DerivedClassification.newBuilder();
+
+    DerivedTaxonUsage usage = null;
+
+    if (tr.getUsage() != null) {
+
+      usage =
+          DerivedTaxonUsage.newBuilder()
+              .setKey(tr.getUsage().getKey())
+              .setRank(tr.getUsage().getRank())
+              .setName(tr.getUsage().getName())
+              .build();
+      derivedTaxon.setUsage(usage).setStatus(tr.getUsage().getStatus());
+    }
+
+    if (tr.getAcceptedUsage() != null) {
+      derivedTaxon.setAcceptedUsage(
+          DerivedTaxonUsage.newBuilder()
+              .setKey(tr.getAcceptedUsage().getKey())
+              .setRank(tr.getAcceptedUsage().getRank())
+              .setName(tr.getAcceptedUsage().getName())
+              .build());
+    } else {
+      // Usage is set as the accepted usage if the accepted usage is null
+      derivedTaxon.setAcceptedUsage(usage);
+    }
+
+    derivedTaxon.setIucnRedListCategoryCode(tr.getIucnRedListCategoryCode());
+
+    if (tr.getClassification() != null) {
+      List<String> taxonKeys = new ArrayList<>();
+      tr.getClassification()
+          .forEach(
+              cl -> {
+                taxonKeys.add(cl.getKey());
+              });
+
+      derivedTaxon.setTaxonKeys(taxonKeys);
+    }
+
+    if (tr.getIssues() != null) {
+      derivedTaxon.setIssues(tr.getIssues().getIssueList());
+    }
+    return derivedTaxon.build();
   }
 
   /**

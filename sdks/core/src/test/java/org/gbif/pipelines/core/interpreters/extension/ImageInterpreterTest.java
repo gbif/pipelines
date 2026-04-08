@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +17,7 @@ import org.junit.Test;
 public class ImageInterpreterTest {
 
   @Test
-  public void imageTest() {
+  public void imageTest() throws JsonProcessingException {
     // State
     Map<String, String> ext1 = new HashMap<>();
     ext1.put(DcTerm.identifier.qualifiedName(), "http://www.gbif.org/tmp.jpg");
@@ -62,17 +64,7 @@ public class ImageInterpreterTest {
     ExtendedRecord record = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
 
     String result =
-        "{\"id\": \"id\", \"created\": 0, \"imageItems\": [{\"identifier\": \"http://www.gbif.org/tmp.jpg\", "
-            + "\"references\": \"http://www.gbif.org/tmp.jpg\", \"title\": \"Tt1\", \"description\": \"Desc1\", "
-            + "\"spatial\": \"Sp1\", \"latitude\": 60.4, \"longitude\": -131.3, \"format\": \"jpeg\", \"created\": "
-            + "\"2010\", \"creator\": \"Cr1\", \"contributor\": \"Cont1\", \"publisher\": \"Pub1\", \"audience\": "
-            + "\"Aud1\", \"license\": \"Lic1\", \"rights\": null, \"rightsHolder\": \"Rh1\", \"datasetId\": \"1\"}, "
-            + "{\"identifier\": \"http://www.gbif.org/tmp.jpg\", \"references\": \"http://www.gbif.org/tmp.jpg\", "
-            + "\"title\": \"Tt2\", \"description\": \"Desc2\", \"spatial\": \"Sp2\", \"latitude\": -131.3, "
-            + "\"longitude\": 360.4, \"format\": \"jpeg\", \"created\": \"2010-12-12\", \"creator\": \"Cr2\", "
-            + "\"contributor\": \"Cont2\", \"publisher\": \"Pub2\", \"audience\": \"Aud2\", \"license\": \"Lic2\", "
-            + "\"rights\": null, \"rightsHolder\": \"Rh2\", \"datasetId\": \"1\"}], \"issues\": {\"issueList\": "
-            + "[\"MULTIMEDIA_DATE_INVALID\", \"MULTIMEDIA_URI_INVALID\"]}}";
+        "{\"id\":\"id\",\"created\":0,\"imageItems\":[{\"identifier\":\"http://www.gbif.org/tmp.jpg\",\"references\":\"http://www.gbif.org/tmp.jpg\",\"title\":\"Tt1\",\"description\":\"Desc1\",\"spatial\":\"Sp1\",\"latitude\":60.4,\"longitude\":-131.3,\"format\":\"jpeg\",\"created\":\"2010\",\"creator\":\"Cr1\",\"contributor\":\"Cont1\",\"publisher\":\"Pub1\",\"audience\":\"Aud1\",\"license\":\"Lic1\",\"rights\":null,\"rightsHolder\":\"Rh1\",\"datasetId\":\"1\"},{\"identifier\":\"http://www.gbif.org/tmp.jpg\",\"references\":\"http://www.gbif.org/tmp.jpg\",\"title\":\"Tt2\",\"description\":\"Desc2\",\"spatial\":\"Sp2\",\"latitude\":-131.3,\"longitude\":360.4,\"format\":\"jpeg\",\"created\":\"2010-12-12\",\"creator\":\"Cr2\",\"contributor\":\"Cont2\",\"publisher\":\"Pub2\",\"audience\":\"Aud2\",\"license\":\"Lic2\",\"rights\":null,\"rightsHolder\":\"Rh2\",\"datasetId\":\"1\"}],\"issues\":{\"issueList\":[\"MULTIMEDIA_DATE_INVALID\",\"MULTIMEDIA_URI_INVALID\"]}}";
 
     ImageRecord ir = ImageRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
 
@@ -80,6 +72,6 @@ public class ImageInterpreterTest {
     ImageInterpreter.builder().create().interpret(record, ir);
 
     // Should
-    Assert.assertEquals(result, ir.toString());
+    Assert.assertEquals(result, new ObjectMapper().writeValueAsString(ir));
   }
 }

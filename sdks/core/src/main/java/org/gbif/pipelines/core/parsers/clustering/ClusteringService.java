@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.time.Duration;
@@ -18,7 +19,7 @@ import org.gbif.pipelines.core.config.model.ClusteringRelationshipConfig;
 
 @Slf4j
 @SuppressWarnings("all")
-public class ClusteringService implements Serializable {
+public class ClusteringService implements Serializable, Closeable {
 
   private final Connection connection;
   private final ClusteringRelationshipConfig config;
@@ -69,5 +70,12 @@ public class ClusteringService implements Serializable {
         };
 
     return retry.executeSupplier(fn);
+  }
+
+  @Override
+  public void close() throws IOException {
+    if (connection != null) {
+      connection.close();
+    }
   }
 }

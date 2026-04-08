@@ -1,0 +1,1030 @@
+package org.gbif.pipelines.spark.util;
+
+import static org.apache.spark.sql.functions.*;
+import static org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser.PRECISION;
+import static org.gbif.pipelines.spark.Directories.*;
+import static org.gbif.pipelines.spark.EventInterpretationPipeline.sparkLog;
+import static org.gbif.pipelines.spark.util.ConvexHullUtil.*;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.spark.api.java.function.*;
+import org.apache.spark.sql.*;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.converters.JsonConverter;
+import org.gbif.pipelines.core.parsers.location.parser.ConvexHullParser;
+import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
+import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.core.utils.ModelUtils;
+import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.json.DerivedClassification;
+import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
+import org.gbif.pipelines.io.avro.json.TaxonCoverage;
+import org.gbif.pipelines.spark.pojo.Event;
+import org.gbif.pipelines.spark.pojo.EventCoordinate;
+import org.gbif.pipelines.spark.pojo.EventTaxonCoverage;
+import org.gbif.pipelines.spark.pojo.Occurrence;
+import org.jetbrains.annotations.NotNull;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.io.WKTReader;
+import org.locationtech.jts.io.WKTWriter;
+import scala.Tuple2;
+import scala.Tuple3;
+
+/**
+ * Utilities for generate derived metadata. This includes: 1) Calculating a convex hull from child
+ * events and related occurrence data 2) Calculating temporal coverage (min/max eventDate) from
+ * child events and related occurrence data 3) Calculating taxonomic coverage from related
+ * occurrence data.
+ */
+@Slf4j
+public class DerivedMetadataUtil implements Serializable {
+
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+
+  /**
+   * Adds DerivedMetadataRecord to the events.
+   *
+   * @param spark
+   * @param fs
+   * @param outputPath
+   * @return
+   * @throws IOException
+   */
+  public static Dataset<Event> addCalculateDerivedMetadata(
+      SparkSession spark, PipelinesConfig config, FileSystem fs, String outputPath)
+      throws IOException {
+
+    Dataset<DerivedMetadataRecord> derivedRecords =
+        runCalculateDerivedMetadata(spark, config, fs, outputPath);
+
+    // load simple event with inherited fields (output from EventInheritance)
+    Dataset<Event> events =
+        spark
+            .read()
+            .parquet(outputPath + "/" + SIMPLE_EVENT_WITH_INHERITED)
+            .as(Encoders.bean(Event.class));
+
+    // join events and derived metadata
+    events
+        .joinWith(derivedRecords, events.col("id").equalTo(derivedRecords.col("id")), "left_outer")
+        .map(
+            (MapFunction<Tuple2<Event, DerivedMetadataRecord>, Event>)
+                row -> {
+                  Event event = row._1();
+                  DerivedMetadataRecord derived = row._2();
+                  if (derived != null) {
+                    event.setDerivedMetadata(MAPPER.writeValueAsString(derived));
+                  }
+                  return event;
+                },
+            Encoders.bean(Event.class))
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + SIMPLE_EVENT_WITH_DERIVED);
+
+    return spark
+        .read()
+        .parquet(outputPath + "/" + SIMPLE_EVENT_WITH_DERIVED)
+        .as(Encoders.bean(Event.class));
+  }
+
+  /**
+   * Main method that calculates derived metadata for events based on occurrences and child events.
+   *
+   * <p>This includes calculating spatial convex hulls and temporal coverage.
+   *
+   * @param spark Spark session
+   * @param fileSystem Hadoop file system
+   * @param outputPath Path to the dataset output
+   * @return Dataset of DerivedMetadataRecord
+   * @throws IOException if there is an error reading or writing data
+   */
+  public static Dataset<DerivedMetadataRecord> runCalculateDerivedMetadata(
+      SparkSession spark, PipelinesConfig config, FileSystem fileSystem, String outputPath)
+      throws IOException {
+
+    // loads events with inherited fields (output from EventInheritance)
+    Dataset<Event> events =
+        spark
+            .read()
+            .parquet(outputPath + "/" + SIMPLE_EVENT_WITH_INHERITED)
+            .as(Encoders.bean(Event.class));
+
+    // load occurrences (handling datasets without occurrences)
+    Dataset<Occurrence> occurrence = loadOccurrences(spark, fileSystem, outputPath);
+    log.info("occurrences {}", occurrence.count());
+
+    // Calculate Convex Hull
+    log.info("calculating convex hulls");
+    Dataset<Tuple2<String, String>> eventIdConvexHull =
+        calculateConvexHull(spark, outputPath, events, occurrence);
+
+    // Calculate Temporal Coverage
+    log.info("calculating temporal Coverages");
+    Dataset<Tuple3<String, String, String>> temporalCoverages =
+        calculateTemporalCoverage(spark, outputPath, events, occurrence);
+
+    // Calculate Taxonomic Coverage
+    log.info("calculating taxonomic Coverages");
+    Dataset<Tuple2<String, String>> taxonomicCoverages =
+        calculateTaxonomicCoverage(spark, outputPath, config, occurrence);
+
+    cleanupTemporaryDirectories(fileSystem, outputPath);
+
+    log.info("creating derived data");
+    return createDerivedDataRecords(
+        spark, outputPath, events, eventIdConvexHull, temporalCoverages, taxonomicCoverages);
+  }
+
+  public static void cleanupTemporaryDirectories(FileSystem fileSystem, String outputPath) {
+    FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_convex_hull");
+    FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_coordinates_joined");
+    FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_event_id_coordinates");
+    FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_partial_hulls");
+    FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_partial_merged_taxonomic_coverages");
+    FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_taxonomic_coverages");
+    FsUtils.deleteIfExists(fileSystem, outputPath + "/temp_union_event_dates");
+  }
+
+  public static Dataset<Tuple2<String, String>> calculateTaxonomicCoverage(
+      SparkSession spark,
+      String outputPath,
+      PipelinesConfig config,
+      Dataset<Occurrence> occurrence) {
+
+    final Integer maxTaxonCoveragePerEvent =
+        config.getDerivedMetadataConfig().getMaxTaxonCoveragePerEvent();
+
+    sparkLog(
+        spark,
+        "CalculateTaxonomicCoverage",
+        "with maxTaxonCoveragePerEvent:" + maxTaxonCoveragePerEvent);
+
+    // creates a EventID -> TaxonCoverage map
+    Dataset<EventTaxonCoverage> taxonomicCoverages =
+        occurrence
+            .map(
+                (MapFunction<Occurrence, EventTaxonCoverage>)
+                    occ -> {
+                      String eventId = occ.getCoreId();
+                      Set<String> taxonIDs = new HashSet<>();
+                      Map<String, List<DerivedClassification>> classifications = new HashMap<>();
+
+                      // retrieve taxonID from verbatim
+                      ExtendedRecord verbatim =
+                          MAPPER.readValue(occ.getVerbatim(), ExtendedRecord.class);
+                      ModelUtils.extractOptValue(verbatim, DwcTerm.taxonID)
+                          .ifPresent(taxonIDs::add);
+
+                      // map taxon records to classifications
+                      String taxonJson = occ.getTaxon();
+                      if (taxonJson != null) {
+
+                        MultiTaxonRecord multiTaxonRecord =
+                            MAPPER.readValue(taxonJson, MultiTaxonRecord.class);
+
+                        if (multiTaxonRecord.getTaxonRecords() != null) {
+
+                          multiTaxonRecord
+                              .getTaxonRecords()
+                              .forEach(
+                                  tr -> {
+                                    DerivedClassification classification =
+                                        JsonConverter.convertTaxonRecordToDerivedClassification(tr);
+                                    classifications.put(
+                                        tr.getDatasetKey(), List.of(classification));
+                                  });
+                        }
+                      }
+
+                      TaxonCoverage taxonCoverage =
+                          TaxonCoverage.newBuilder()
+                              .setTaxonIDs(taxonIDs.stream().toList())
+                              .setClassifications(classifications)
+                              .build();
+
+                      return new EventTaxonCoverage(
+                          eventId, MAPPER.writeValueAsString(taxonCoverage));
+                    },
+                Encoders.bean(EventTaxonCoverage.class))
+            .dropDuplicates();
+
+    sparkLog(spark, "CalculateTaxonomicCoverage", "Write taxonomicCoverages");
+    taxonomicCoverages
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/temp_taxonomic_coverages");
+
+    sparkLog(spark, "CalculateTaxonomicCoverage", "Reload taxonomicCoverages");
+    taxonomicCoverages =
+        spark
+            .read()
+            .parquet(outputPath + "/temp_taxonomic_coverages")
+            .as(Encoders.bean(EventTaxonCoverage.class));
+
+    // Merge partial - from the previous stage we have multiple taxonomic coverages per event
+    // EVENT1 -> TC1
+    // EVENT1 -> TC2
+    // EVENT2 -> TC3
+    // Consolidate to EVENT1 -> TC1 + TC2
+    Dataset<EventTaxonCoverage> partialMergedCoverages =
+        taxonomicCoverages.mapPartitions(
+            (MapPartitionsFunction<EventTaxonCoverage, EventTaxonCoverage>)
+                iter -> {
+
+                  // Eventid -> list of taxonomic coverages
+                  Map<String, TaxonCoverage> acc = new HashMap<>();
+
+                  while (iter.hasNext()) {
+
+                    EventTaxonCoverage tc = iter.next();
+
+                    // get existed taxon coverage in the map for eventID
+                    TaxonCoverage existedForEventID = acc.get(tc.getEventId());
+
+                    if (existedForEventID == null) {
+                      TaxonCoverage newTaxonCoverage =
+                          MAPPER.readValue(tc.getTaxonCoverage(), TaxonCoverage.class);
+                      acc.put(tc.getEventId(), newTaxonCoverage);
+                    } else {
+                      TaxonCoverage newTaxonCoverage =
+                          MAPPER.readValue(tc.getTaxonCoverage(), TaxonCoverage.class);
+
+                      // merge taxonIDs
+                      Set<String> mergedTaxonIDs = new HashSet<>(existedForEventID.getTaxonIDs());
+                      mergedTaxonIDs.addAll(newTaxonCoverage.getTaxonIDs());
+                      existedForEventID.setTaxonIDs(new ArrayList<>(mergedTaxonIDs));
+
+                      // merge classifications
+                      Map<String, List<DerivedClassification>> mergedClassifications =
+                          existedForEventID.getClassifications();
+
+                      newTaxonCoverage
+                          .getClassifications()
+                          .forEach(
+                              (key, value) -> {
+                                mergedClassifications.merge(
+                                    key,
+                                    value,
+                                    (oldList, newList) -> {
+                                      Set<DerivedClassification> set = new HashSet<>(oldList);
+                                      set.addAll(newList);
+
+                                      // limit the number of classifications
+                                      return set.stream()
+                                          .limit(maxTaxonCoveragePerEvent)
+                                          .distinct()
+                                          .collect(Collectors.toList());
+                                    });
+                              });
+                      existedForEventID.setClassifications(mergedClassifications);
+                    }
+                  }
+
+                  return acc.entrySet().stream()
+                      .map(
+                          e -> {
+                            try {
+                              return new EventTaxonCoverage(
+                                  e.getKey(), // eventID
+                                  MAPPER.writeValueAsString(
+                                      e.getValue()) // merged TaxonCoverage as JSON
+                                  );
+                            } catch (Exception ex) {
+                              throw new RuntimeException(ex);
+                            }
+                          })
+                      .iterator();
+                },
+            Encoders.bean(EventTaxonCoverage.class));
+
+    sparkLog(spark, "CalculateTaxonomicCoverage", "Write partial merged and reload");
+    partialMergedCoverages
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/temp_partial_merged_taxonomic_coverages");
+
+    sparkLog(spark, "CalculateTaxonomicCoverage", "Reload partial merged and reload");
+    partialMergedCoverages =
+        spark
+            .read()
+            .parquet(outputPath + "/temp_partial_merged_taxonomic_coverages")
+            .as(Encoders.bean(EventTaxonCoverage.class));
+
+    // group by eventID to prepare for final merge
+    sparkLog(spark, "CalculateTaxonomicCoverage", "EventTaxonCoverage::getEventId");
+    KeyValueGroupedDataset<String, EventTaxonCoverage> groupedPartial =
+        partialMergedCoverages.groupByKey(
+            (MapFunction<EventTaxonCoverage, String>) EventTaxonCoverage::getEventId,
+            Encoders.STRING());
+
+    sparkLog(spark, "CalculateTaxonomicCoverage", "final merge down");
+    Dataset<Tuple2<String, String>> grouped =
+        groupedPartial
+            .reduceGroups(
+                (ReduceFunction<EventTaxonCoverage>)
+                    (a, b) -> {
+                      TaxonCoverage taxonCoverageA =
+                          MAPPER.readValue(a.getTaxonCoverage(), TaxonCoverage.class);
+                      TaxonCoverage taxonCoverageB =
+                          MAPPER.readValue(b.getTaxonCoverage(), TaxonCoverage.class);
+
+                      taxonCoverageA.getTaxonIDs().addAll(taxonCoverageB.getTaxonIDs());
+
+                      // checklistKey -> DerivedClassification
+                      Map<String, List<DerivedClassification>> classificationsA =
+                          taxonCoverageA.getClassifications();
+                      Map<String, List<DerivedClassification>> classificationsB =
+                          taxonCoverageB.getClassifications();
+
+                      Map<String, List<DerivedClassification>> mergedClassifications =
+                          new HashMap<>(classificationsA);
+
+                      classificationsA.forEach(
+                          (checklistKey, classListA) -> {
+                            if (classificationsB.containsKey(checklistKey)) {
+                              List<DerivedClassification> classListB =
+                                  classificationsB.get(checklistKey);
+                              Set<DerivedClassification> mergedSet = new HashSet<>(classListA);
+                              mergedSet.addAll(classListB);
+                              mergedClassifications.put(checklistKey, new ArrayList<>(mergedSet));
+                            }
+                          });
+                      taxonCoverageA.setClassifications(mergedClassifications);
+
+                      return new EventTaxonCoverage(
+                          a.getEventId(), MAPPER.writeValueAsString(taxonCoverageA));
+                    })
+            .map(
+                (MapFunction<Tuple2<String, EventTaxonCoverage>, Tuple2<String, String>>)
+                    row -> {
+                      return new Tuple2<>(row._1, row._2.getTaxonCoverage());
+                    },
+                Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
+
+    sparkLog(spark, "CalculateTaxonomicCoverage", "Write derived taxon coverage");
+    grouped
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + EVENT_DERIVED_TAXON_COVERAGE);
+
+    // reload
+    sparkLog(spark, "CalculateTaxonomicCoverage", "Reload derived taxon coverage");
+    return spark
+        .read()
+        .parquet(outputPath + "/" + EVENT_DERIVED_TAXON_COVERAGE)
+        .as(Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
+  }
+
+  /**
+   * Creates derived metadata records by joining convex hulls and temporal coverages.
+   *
+   * @param outputPath path to save the derived metadata
+   * @param eventIdConvexHull
+   * @param temporalCoverages
+   * @return
+   */
+  @NotNull
+  public static Dataset<DerivedMetadataRecord> createDerivedDataRecords(
+      SparkSession spark,
+      String outputPath,
+      Dataset<Event> events,
+      Dataset<Tuple2<String, String>> eventIdConvexHull,
+      Dataset<Tuple3<String, String, String>> temporalCoverages,
+      Dataset<Tuple2<String, String>> taxonomicCoverages) {
+
+    events.select(col("id").as("eventId")).toDF("eventId").createOrReplaceTempView("events");
+    eventIdConvexHull.toDF("eventId", "convexHull").createOrReplaceTempView("hulls");
+    temporalCoverages.toDF("eventId", "lte", "gte").createOrReplaceTempView("temporal");
+    taxonomicCoverages.toDF("eventId", "taxonCoverage").createOrReplaceTempView("taxonomic");
+
+    Dataset<Row> df1 =
+        spark
+            .sql(
+                """
+                SELECT
+                       e.eventId as eventId,
+                       h.convexHull as convexHull,
+                       te.lte as lte,
+                       te.gte as gte,
+                       ta.taxonCoverage as taxonCoverage
+                FROM events e
+                LEFT OUTER JOIN hulls h
+                ON e.eventId = h.eventId
+                LEFT OUTER JOIN temporal te
+                ON h.eventId = te.eventId
+                LEFT OUTER JOIN taxonomic ta
+                ON h.eventId = ta.eventId
+                """)
+            .cache();
+
+    Dataset<DerivedMetadataRecord> derivedMetadataRecordDataset =
+        df1.map(
+            (MapFunction<Row, DerivedMetadataRecord>)
+                row -> {
+                  String eventId = row.getAs("eventId");
+                  String convexHull = row.getAs("convexHull");
+                  String lte = row.getAs("lte");
+                  String gte = row.getAs("gte");
+                  String taxonCoverageJson = row.getAs("taxonCoverage");
+
+                  TaxonCoverage taxonCoverage = null;
+
+                  if (taxonCoverageJson != null) {
+                    taxonCoverage = MAPPER.readValue(taxonCoverageJson, TaxonCoverage.class);
+                  }
+
+                  // create derived metadata record
+                  DerivedMetadataRecord.Builder builder =
+                      DerivedMetadataRecord.newBuilder().setId(eventId);
+                  builder.setWktConvexHull(convexHull);
+                  builder.setTemporalCoverage(
+                      org.gbif.pipelines.io.avro.json.EventDate.newBuilder()
+                          .setGte(gte)
+                          .setLte(lte)
+                          .build());
+                  builder.setTaxonomicCoverage(taxonCoverage);
+                  return builder.build();
+                },
+            Encoders.bean(DerivedMetadataRecord.class));
+
+    derivedMetadataRecordDataset
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + EVENT_DERIVED_METADATA);
+
+    return derivedMetadataRecordDataset;
+  }
+
+  @NotNull
+  public static Dataset<Tuple3<String, String, String>> calculateTemporalCoverage(
+      SparkSession spark,
+      String outputPath,
+      Dataset<Event> events,
+      Dataset<Occurrence> occurrence) {
+
+    sparkLog(spark, "CalculateTemporalCoverage", "gatherEventDatesFromChildEvents");
+    Dataset<Tuple2<String, EventDate>> eventIdToEventDate =
+        gatherEventDatesFromChildEvents(spark, events);
+    log.info("eventIdToEventDate {}", eventIdToEventDate.count());
+
+    // get unique occurrence temporal - coreId -> eventDate
+    sparkLog(spark, "CalculateTemporalCoverage", "getCoreIdEventDates");
+    Dataset<Tuple2<String, EventDate>> coredIdOccurrenceEventDates =
+        getCoreIdEventDates(occurrence);
+    log.info("coredIdOccurrenceEventDates {}", coredIdOccurrenceEventDates.count());
+
+    Dataset<Row> coreOccEventSel =
+        coredIdOccurrenceEventDates
+            .selectExpr("_1 as eventId", "_2.gte as gte", "_2.lte as lte", "_2.lte as interval")
+            .dropDuplicates("eventId", "gte", "lte", "interval");
+    log.info("coreEventSel {}", coreOccEventSel.count());
+
+    Dataset<Row> eventIdToEventDateSel =
+        eventIdToEventDate
+            .selectExpr("_1 as eventId", "_2.gte as gte", "_2.lte as lte", "_2.lte as interval")
+            .dropDuplicates("eventId", "gte", "lte", "interval");
+    log.info("coreEventSel {}", eventIdToEventDateSel.count());
+
+    sparkLog(spark, "CalculateTemporalCoverage", "Union event dates");
+    Dataset<Tuple2<String, EventDate>> unionEventDates =
+        coreOccEventSel
+            .union(eventIdToEventDateSel)
+            .dropDuplicates("eventId", "gte", "lte", "interval")
+            .map(
+                (MapFunction<Row, Tuple2<String, EventDate>>)
+                    row -> {
+                      String eventId = row.getAs("eventId");
+                      String gte = row.getAs("gte");
+                      String lte = row.getAs("lte");
+                      String interval = row.getAs("interval");
+                      EventDate eventDate = new EventDate(gte, lte, interval);
+                      return new Tuple2<>(eventId, eventDate);
+                    },
+                Encoders.tuple(Encoders.STRING(), Encoders.bean(EventDate.class)));
+
+    sparkLog(spark, "CalculateTemporalCoverage", "Write union event dates and reload");
+    unionEventDates
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/temp_union_event_dates");
+    unionEventDates =
+        spark
+            .read()
+            .parquet(outputPath + "/temp_union_event_dates")
+            .as(Encoders.tuple(Encoders.STRING(), Encoders.bean(EventDate.class)));
+
+    sparkLog(spark, "CalculateTemporalCoverage", "unionEventDates.groupByKey");
+    KeyValueGroupedDataset<String, Tuple2<String, EventDate>> groupedByIdDates =
+        unionEventDates.groupByKey(
+            (MapFunction<Tuple2<String, EventDate>, String>) Tuple2::_1, Encoders.STRING());
+
+    log.info("groupedByIdDates {}", groupedByIdDates.count());
+    sparkLog(spark, "CalculateTemporalCoverage", "temporalCoverages with accumulators");
+    Dataset<Tuple3<String, String, String>> temporalCoverages =
+        groupedByIdDates
+            .mapGroups(
+                (MapGroupsFunction<
+                        String, Tuple2<String, EventDate>, Tuple3<String, String, String>>)
+                    (eventId, eventIter) -> {
+                      TemporalAccum accum = new TemporalAccum();
+                      eventIter.forEachRemaining(
+                          eventDate -> {
+                            if (eventDate != null && eventDate._2() != null) {
+                              accum.setMinDate(eventDate._2().getGte());
+                              accum.setMaxDate(eventDate._2().getLte());
+                            }
+                          });
+
+                      if (accum.toEventDate().isEmpty()) {
+                        return new Tuple3<String, String, String>(eventId, null, null);
+                      }
+                      return new Tuple3<String, String, String>(
+                          eventId,
+                          accum.toEventDate().get().getLte(),
+                          accum.toEventDate().get().getGte());
+                    },
+                Encoders.tuple(Encoders.STRING(), Encoders.STRING(), Encoders.STRING()))
+            .filter(
+                (FilterFunction<Tuple3<String, String, String>>)
+                    t -> t._2() != null || t._3() != null);
+
+    temporalCoverages
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + EVENT_DERIVED_TEMPORAL_COVERAGE);
+
+    // reload from disk
+    return spark
+        .read()
+        .parquet(outputPath + "/" + EVENT_DERIVED_TEMPORAL_COVERAGE)
+        .as(Encoders.tuple(Encoders.STRING(), Encoders.STRING(), Encoders.STRING()));
+  }
+
+  @NotNull
+  private static Dataset<Tuple2<String, String>> calculateConvexHull(
+      SparkSession spark,
+      String outputPath,
+      Dataset<Event> events,
+      Dataset<Occurrence> occurrence) {
+
+    // join to child events to get all coordinates associated with parent event
+    sparkLog(spark, "CalculateConvexHull", "gatherCoordinatesFromChildEvents");
+    Dataset<EventCoordinate> eventIdToCoordinates = gatherCoordinatesFromChildEvents(spark, events);
+    log.info("eventIdToCoordinates {}", eventIdToCoordinates.count());
+
+    // join child events ?
+    sparkLog(spark, "CalculateConvexHull", "getEventCoordinates");
+    Dataset<EventCoordinate> coreIdEventCoordinates = getEventCoordinates(events);
+    log.info("coreIdEventCoordinates {}", coreIdEventCoordinates.count());
+
+    // get unique occurrence locations - coredId -> "lat||long"
+    sparkLog(spark, "CalculateConvexHull", "getCoreIdCoordinates");
+    Dataset<EventCoordinate> coreIdOccurrenceCoordinates = getCoreIdCoordinates(occurrence);
+    log.info("coreIdOccurrenceCoordinates {}", coreIdOccurrenceCoordinates.count());
+
+    sparkLog(spark, "CalculateConvexHull", "core select of distinct coordinates at precision");
+    // round coordinates to PRECISION to reduce near-duplicate floats, then dedupe by the three
+    // columns
+    // build the three selected datasets and trim/dedupe them independently
+    Dataset<Row> coreSel =
+        coreIdOccurrenceCoordinates
+            .selectExpr(
+                "eventId",
+                "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
+                "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude")
+            .dropDuplicates("eventId", "longitude", "latitude");
+    log.info("coreSel {}", coreSel.count());
+
+    sparkLog(spark, "CalculateConvexHull", "event select of distinct coordinates at precision");
+    Dataset<Row> eventSel =
+        eventIdToCoordinates
+            .selectExpr(
+                "eventId",
+                "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
+                "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude")
+            .dropDuplicates("eventId", "longitude", "latitude");
+    log.info("eventSel {}", eventSel.count());
+
+    sparkLog(
+        spark, "CalculateConvexHull", "core event select of distinct coordinates at precision");
+    Dataset<Row> coreEventSel =
+        coreIdEventCoordinates
+            .selectExpr(
+                "eventId",
+                "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
+                "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude")
+            .dropDuplicates("eventId", "longitude", "latitude");
+    log.info("coreEventSel {}", coreEventSel.count());
+
+    // union the already-deduped smaller datasets
+    sparkLog(spark, "CalculateConvexHull", "union of coordinates at precision");
+    Dataset<Row> unioned = coreSel.union(eventSel).union(coreEventSel);
+
+    // write to disk and reload
+    sparkLog(spark, "CalculateConvexHull", "write coordinates joined and reload");
+    unioned.write().mode(SaveMode.Overwrite).parquet(outputPath + "/temp_coordinates_joined");
+    unioned = spark.read().parquet(outputPath + "/temp_coordinates_joined");
+
+    log.info("distinct coordinates - union-ed {}", unioned.count());
+
+    // drop duplicates using explicit columns (faster/clearer than distinct())
+    Dataset<EventCoordinate> eventIdEventCoordinates =
+        unioned
+            .dropDuplicates("eventId", "longitude", "latitude")
+            .map(
+                (MapFunction<Row, EventCoordinate>)
+                    r ->
+                        new EventCoordinate(
+                            r.getAs("eventId"), r.getAs("longitude"), r.getAs("latitude")),
+                Encoders.bean(EventCoordinate.class));
+
+    // write and reload
+    sparkLog(spark, "CalculateConvexHull", "write eventID coordinates joined and reload");
+    eventIdEventCoordinates
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/temp_event_id_coordinates");
+    eventIdEventCoordinates =
+        spark
+            .read()
+            .parquet(outputPath + "/temp_event_id_coordinates")
+            .as(Encoders.bean(EventCoordinate.class));
+    ;
+
+    log.info("distinct coordinates {}", eventIdEventCoordinates.count());
+    sparkLog(spark, "CalculateConvexHull", "Calculate partial hulls");
+    // Warning - this has the potential to OOM if there are too many coordinates for an event
+    Dataset<Tuple2<String, String>> partialHulls =
+        eventIdEventCoordinates.mapPartitions(
+            (MapPartitionsFunction<EventCoordinate, Tuple2<String, String>>)
+                iter -> {
+
+                  // eventid -> list of coordinates
+                  Map<String, Set<Coordinate>> acc = new HashMap<>();
+
+                  Function<Double, Double> round = v -> Math.round(v * PRECISION) / PRECISION;
+
+                  while (iter.hasNext()) {
+                    EventCoordinate ec = iter.next();
+                    acc.computeIfAbsent(ec.getEventId(), k -> new HashSet<>())
+                        .add(
+                            new Coordinate(
+                                round.apply(ec.getLongitude()), round.apply(ec.getLatitude())));
+                  }
+
+                  List<Tuple2<String, String>> out = new ArrayList<>();
+                  for (Map.Entry<String, Set<Coordinate>> e : acc.entrySet()) {
+                    if (!e.getValue().isEmpty()) {
+                      Geometry hull =
+                          ConvexHullParser.fromCoordinates(e.getValue()).getConvexHull();
+                      if (hull.isValid() && !hull.isEmpty()) {
+                        String partialHull = new WKTWriter().write(hull);
+                        out.add(new Tuple2<>(e.getKey(), partialHull));
+                      }
+                    }
+                  }
+
+                  return out.iterator();
+                },
+            Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
+
+    // write and reload
+    sparkLog(spark, "CalculateConvexHull", "Write partial hulls and reload");
+    partialHulls.write().mode(SaveMode.Overwrite).parquet(outputPath + "/temp_partial_hulls");
+    partialHulls =
+        spark
+            .read()
+            .parquet(outputPath + "/temp_partial_hulls")
+            .as(Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
+
+    KeyValueGroupedDataset<String, Tuple2<String, String>> groupedPartial =
+        partialHulls.groupByKey(
+            (MapFunction<Tuple2<String, String>, String>) Tuple2::_1, Encoders.STRING());
+
+    // merge partial hulls
+    Dataset<Tuple2<String, String>> hulls =
+        groupedPartial.flatMapGroups(
+            (FlatMapGroupsFunction<String, Tuple2<String, String>, Tuple2<String, String>>)
+                (eventId, geometries) -> {
+                  Set<Coordinate> mergedCoords = new HashSet<>();
+                  GeometryFactory geometryFactory = new GeometryFactory();
+                  WKTReader reader = new WKTReader(geometryFactory);
+                  while (geometries.hasNext()) {
+                    Geometry geometry = reader.read(geometries.next()._2());
+                    mergedCoords.addAll(Arrays.asList(geometry.getCoordinates()));
+                  }
+
+                  return calculateGeometry(mergedCoords)
+                      .map(s -> Collections.singletonList(new Tuple2<>(eventId, s)).iterator())
+                      .orElse(Collections.emptyIterator());
+                },
+            Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
+
+    log.info("Writing out convex hulls {}", hulls.count());
+    sparkLog(spark, "CalculateConvexHull", "Write completed hulls and reload");
+    hulls.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + EVENT_DERIVED_CONVEX_HULL);
+
+    // reload
+    return spark
+        .read()
+        .parquet(outputPath + "/" + EVENT_DERIVED_CONVEX_HULL)
+        .as(Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
+  }
+
+  public static Dataset<Tuple2<String, EventDate>> gatherEventDatesFromChildEvents(
+      SparkSession spark, Dataset<Event> events) {
+    events.createOrReplaceTempView("simple_event");
+
+    // Explode lineage to get parent-child relations and use vectorized JSON parsing for temporal
+    StructType eventDateSchema =
+        new StructType(
+            new StructField[] {
+              DataTypes.createStructField(
+                  "eventDate",
+                  DataTypes.createStructType(
+                      new StructField[] {
+                        DataTypes.createStructField("gte", DataTypes.StringType, true),
+                        DataTypes.createStructField("lte", DataTypes.StringType, true)
+                      }),
+                  true)
+            });
+
+    Dataset<Row> exploded =
+        events
+            .select(
+                col("id").as("childId"),
+                explode_outer(col("lineage")).as("parentId"),
+                col("temporal"))
+            .filter(col("parentId").isNotNull().and(col("temporal").isNotNull()));
+
+    Dataset<Row> parsed = exploded.withColumn("tmp", from_json(col("temporal"), eventDateSchema));
+
+    Dataset<Row> valid = parsed.filter(col("tmp.eventDate").isNotNull());
+
+    return valid
+        .select(
+            col("parentId").as("eventId"),
+            col("tmp.eventDate.gte").as("gte"),
+            col("tmp.eventDate.lte").as("lte"))
+        .map(
+            (MapFunction<Row, Tuple2<String, EventDate>>)
+                r -> {
+                  String eventId = r.getAs("eventId");
+                  String gte = r.getAs("gte");
+                  String lte = r.getAs("lte");
+                  EventDate eventDate = new EventDate(gte, lte, null);
+                  return new Tuple2<>(eventId, eventDate);
+                },
+            Encoders.tuple(Encoders.STRING(), Encoders.bean(EventDate.class)));
+  }
+
+  // taking 25mins for a small-ish dataset
+  public static Dataset<EventCoordinate> gatherCoordinatesFromChildEvents(
+      SparkSession spark, Dataset<Event> events) {
+    events.createOrReplaceTempView("simple_event");
+    // Use explode on lineage to generate parentId -> child location mappings
+    // then parse location JSON with from_json (vectorized) and filter using Catalyst expressions.
+
+    StructType locationSchema =
+        new StructType(
+            new StructField[] {
+              DataTypes.createStructField("hasCoordinate", DataTypes.BooleanType, true),
+              DataTypes.createStructField("decimalLatitude", DataTypes.DoubleType, true),
+              DataTypes.createStructField("decimalLongitude", DataTypes.DoubleType, true)
+            });
+
+    Dataset<Row> exploded =
+        events
+            .select(
+                col("id").as("childId"),
+                explode_outer(col("lineage")).as("parentId"),
+                col("location"))
+            .filter(col("parentId").isNotNull().and(col("location").isNotNull()));
+
+    Dataset<Row> parsed = exploded.withColumn("loc", from_json(col("location"), locationSchema));
+
+    Dataset<Row> valid =
+        parsed.filter(
+            col("loc")
+                .isNotNull()
+                .and(col("loc.hasCoordinate").equalTo(true))
+                .and(col("loc.decimalLatitude").isNotNull())
+                .and(col("loc.decimalLongitude").isNotNull())
+                .and(col("loc.decimalLatitude").geq(-90.0))
+                .and(col("loc.decimalLatitude").leq(90.0))
+                .and(col("loc.decimalLongitude").geq(-180.0))
+                .and(col("loc.decimalLongitude").leq(180.0)));
+
+    return valid
+        .select(
+            col("parentId").as("eventId"),
+            col("loc.decimalLongitude").as("longitude"),
+            col("loc.decimalLatitude").as("latitude"))
+        .map(
+            (MapFunction<Row, EventCoordinate>)
+                r ->
+                    new EventCoordinate(
+                        r.getAs("eventId"), r.getAs("longitude"), r.getAs("latitude")),
+            Encoders.bean(EventCoordinate.class));
+  }
+
+  private static Dataset<Occurrence> loadOccurrences(
+      SparkSession spark, FileSystem fs, String outputPath) throws IOException {
+
+    Encoder<Occurrence> encoder = Encoders.bean(Occurrence.class);
+    Path occurrencePath = new Path(outputPath, SIMPLE_OCCURRENCE);
+    Path successMarker = new Path(occurrencePath, "_SUCCESS");
+
+    if (fs.exists(occurrencePath) && fs.exists(successMarker)) {
+      return spark.read().parquet(occurrencePath.toString()).as(encoder);
+    }
+
+    return spark.emptyDataset(encoder);
+  }
+
+  private static Dataset<EventCoordinate> getEventCoordinates(Dataset<Event> events) {
+    StructType locationSchema =
+        new StructType(
+            new StructField[] {
+              DataTypes.createStructField("hasCoordinate", DataTypes.BooleanType, true),
+              DataTypes.createStructField("decimalLatitude", DataTypes.DoubleType, true),
+              DataTypes.createStructField("decimalLongitude", DataTypes.DoubleType, true)
+            });
+
+    Dataset<Row> parsed =
+        events
+            .select(col("id").as("eventId"), col("location"))
+            .filter(col("location").isNotNull())
+            .withColumn("loc", from_json(col("location"), locationSchema));
+
+    Dataset<Row> valid =
+        parsed.filter(
+            col("loc")
+                .isNotNull()
+                .and(col("loc.decimalLatitude").isNotNull())
+                .and(col("loc.decimalLongitude").isNotNull()));
+
+    return valid
+        .select(
+            col("eventId"),
+            col("loc.decimalLongitude").as("longitude"),
+            col("loc.decimalLatitude").as("latitude"))
+        .map(
+            (MapFunction<Row, EventCoordinate>)
+                r ->
+                    new EventCoordinate(
+                        r.getAs("eventId"), r.getAs("longitude"), r.getAs("latitude")),
+            Encoders.bean(EventCoordinate.class));
+  }
+
+  private static Dataset<Tuple2<String, EventDate>> getCoreIdEventDates(
+      Dataset<Occurrence> occurrence) {
+    StructType eventDateSchema =
+        new StructType(
+            new StructField[] {
+              DataTypes.createStructField(
+                  "eventDate",
+                  DataTypes.createStructType(
+                      new StructField[] {
+                        DataTypes.createStructField("gte", DataTypes.StringType, true),
+                        DataTypes.createStructField("lte", DataTypes.StringType, true)
+                      }),
+                  true)
+            });
+
+    Dataset<Row> parsed =
+        occurrence
+            .select(col("coreId"), col("temporal"))
+            .filter(col("temporal").isNotNull())
+            .withColumn("tmp", from_json(col("temporal"), eventDateSchema));
+
+    Dataset<Row> valid = parsed.filter(col("tmp.eventDate").isNotNull());
+
+    return valid
+        .select(
+            col("coreId"), col("tmp.eventDate.gte").as("gte"), col("tmp.eventDate.lte").as("lte"))
+        .map(
+            (MapFunction<Row, Tuple2<String, EventDate>>)
+                r -> {
+                  String coreId = r.getAs("coreId");
+                  String gte = r.getAs("gte");
+                  String lte = r.getAs("lte");
+                  return new Tuple2<>(coreId, new EventDate(gte, lte, null));
+                },
+            Encoders.tuple(Encoders.STRING(), Encoders.bean(EventDate.class)))
+        .distinct();
+  }
+
+  private static Dataset<EventCoordinate> getCoreIdCoordinates(Dataset<Occurrence> occurrence) {
+    StructType locationSchema =
+        new StructType(
+            new StructField[] {
+              DataTypes.createStructField("hasCoordinate", DataTypes.BooleanType, true),
+              DataTypes.createStructField("decimalLatitude", DataTypes.DoubleType, true),
+              DataTypes.createStructField("decimalLongitude", DataTypes.DoubleType, true)
+            });
+
+    Dataset<Row> parsed =
+        occurrence
+            .select(col("coreId"), col("location"))
+            .filter(col("location").isNotNull())
+            .withColumn("loc", from_json(col("location"), locationSchema));
+
+    Dataset<Row> valid =
+        parsed.filter(
+            col("loc")
+                .isNotNull()
+                .and(col("loc.decimalLatitude").isNotNull())
+                .and(col("loc.decimalLongitude").isNotNull()));
+
+    return valid
+        .select(
+            col("coreId"),
+            col("loc.decimalLongitude").as("longitude"),
+            col("loc.decimalLatitude").as("latitude"))
+        .map(
+            (MapFunction<Row, EventCoordinate>)
+                r ->
+                    new EventCoordinate(
+                        r.getAs("coreId"), r.getAs("longitude"), r.getAs("latitude")),
+            Encoders.bean(EventCoordinate.class))
+        .distinct();
+  }
+
+  @Data
+  public static class TemporalAccum implements Serializable {
+
+    private String minDate;
+    private String maxDate;
+
+    public TemporalAccum acc(EventDate eventDate) {
+      Optional.ofNullable(eventDate.getGte()).ifPresent(this::setMinDate);
+      Optional.ofNullable(eventDate.getLte()).ifPresent(this::setMaxDate);
+      return this;
+    }
+
+    private void setMinDate(String date) {
+      if (date == null) return;
+
+      if (Objects.isNull(minDate)) {
+        minDate = date;
+      } else {
+        minDate =
+            StringToDateFunctions.getStringToEarliestEpochSeconds(false)
+                        .apply(date)
+                        .compareTo(
+                            StringToDateFunctions.getStringToEarliestEpochSeconds(false)
+                                .apply(minDate))
+                    < 0
+                ? date
+                : minDate;
+      }
+    }
+
+    private void setMaxDate(String date) {
+      if (date == null) return;
+      if (Objects.isNull(maxDate)) {
+        maxDate = date;
+      } else {
+        maxDate =
+            StringToDateFunctions.getStringToLatestEpochSeconds(false)
+                        .apply(date)
+                        .compareTo(
+                            StringToDateFunctions.getStringToLatestEpochSeconds(false)
+                                .apply(maxDate))
+                    > 0
+                ? date
+                : maxDate;
+      }
+    }
+
+    public Optional<EventDate> toEventDate() {
+      return Objects.isNull(minDate) && Objects.isNull(maxDate)
+          ? Optional.empty()
+          : Optional.of(getEventDate());
+    }
+
+    private EventDate getEventDate() {
+      EventDate.Builder evenDate = EventDate.newBuilder();
+      Optional.ofNullable(minDate).ifPresent(evenDate::setGte);
+      Optional.ofNullable(maxDate).ifPresent(evenDate::setLte);
+      return evenDate.build();
+    }
+  }
+}
