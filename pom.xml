@@ -294,6 +294,11 @@
         <version>${hdfs-tables.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.gbif.download</groupId>
+        <artifactId>maven-extension-avsc-schema-generator</artifactId>
+        <version>${hdfs-tables.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>models</artifactId>
         <version>${project.version}</version>
