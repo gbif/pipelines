@@ -236,6 +236,14 @@ public class EsIndexUtils {
       Integer attempt)
       throws IOException {
 
+    // check if the index exists, if not create it with the default name and alias
+    String defaultIndexPrefix = createDefaultIndexNamePrefix(pipelinesConfig, datasetType);
+
+    // does the default index exist already ?
+    Optional<String> indexName =
+        IndexSettings.getIndexName(
+            pipelinesConfig.getIndexConfig(), httpClient, defaultIndexPrefix);
+
     String defaultIndexName;
     log.info("Initialising the index..");
 
@@ -253,14 +261,6 @@ public class EsIndexUtils {
         datasetType.equals(DatasetType.OCCURRENCE)
             ? pipelinesConfig.getStandalone().getOccurrenceIndexNumberOfShards()
             : pipelinesConfig.getStandalone().getEventIndexNumberOfShards();
-
-    // check if the index exists, if not create it with the default name and alias
-    String defaultIndexPrefix = createDefaultIndexNamePrefix(pipelinesConfig, datasetType);
-
-    // does the default index exist already ?
-    Optional<String> indexName =
-        IndexSettings.getIndexName(
-            pipelinesConfig.getIndexConfig(), httpClient, defaultIndexPrefix);
 
     if (indexName.isEmpty()) {
 

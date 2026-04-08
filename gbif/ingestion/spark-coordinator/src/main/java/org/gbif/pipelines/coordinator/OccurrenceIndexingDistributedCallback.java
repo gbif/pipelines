@@ -15,9 +15,10 @@ import org.gbif.pipelines.spark.IndexingPipeline;
 import org.gbif.pipelines.spark.util.IndexSettings;
 
 @Slf4j
-public class IndexingDistributedCallback extends IndexingCallback {
+public class OccurrenceIndexingDistributedCallback extends OccurrenceIndexingCallback {
 
-  public IndexingDistributedCallback(PipelinesConfig pipelinesConfig, MessagePublisher publisher) {
+  public OccurrenceIndexingDistributedCallback(
+      PipelinesConfig pipelinesConfig, MessagePublisher publisher) {
     super(pipelinesConfig, publisher, null);
   }
 

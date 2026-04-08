@@ -1,6 +1,5 @@
 package org.gbif.pipelines.coordinator;
 
-import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.StepType;
@@ -16,26 +15,13 @@ import org.gbif.pipelines.spark.IndexingPipeline;
 import org.gbif.pipelines.spark.util.EsIndexUtils;
 
 @Slf4j
-public class IndexingCallback
+public class OccurrenceIndexingCallback
     extends PipelinesCallback<PipelinesInterpretedMessage, PipelinesIndexedMessage>
     implements MessageCallback<PipelinesInterpretedMessage> {
 
-  private static final Object LOCK = new Object();
-  private String defaultIndexName = null;
-
-  public IndexingCallback(
+  public OccurrenceIndexingCallback(
       PipelinesConfig pipelinesConfig, MessagePublisher publisher, String master) {
     super(pipelinesConfig, publisher, master);
-
-    if (isStandalone()) {
-      log.info("Running in standalone mode, initialising index");
-      try {
-        initialiseIndex();
-      } catch (IOException e) {
-        log.error("Error initialising index", e);
-        throw new RuntimeException(e);
-      }
-    }
   }
 
   @Override
@@ -50,6 +36,13 @@ public class IndexingCallback
 
   @Override
   protected void runPipeline(PipelinesInterpretedMessage message) throws Exception {
+
+    // lookup the default index name for the dataset, this will be used as the index name for the
+    // indexing pipeline
+    String defaultIndexName =
+        EsIndexUtils.initialiseDefaultIndex(
+            pipelinesConfig, httpClient, DatasetType.OCCURRENCE, "NOT_USED", -1);
+
     IndexingPipeline.runIndexing(
         sparkSession,
         fileSystem,
@@ -62,22 +55,6 @@ public class IndexingCallback
         pipelinesConfig.getStandalone().getOccurrenceIndexNumberOfShards(),
         OccurrenceJsonRecord.class,
         Directories.OCCURRENCE_JSON);
-  }
-
-  private void initialiseIndex() throws IOException {
-
-    if (defaultIndexName != null) {
-      return;
-    }
-
-    synchronized (LOCK) {
-      if (defaultIndexName != null) {
-        return;
-      }
-      defaultIndexName =
-          EsIndexUtils.initialiseDefaultIndex(
-              pipelinesConfig, httpClient, DatasetType.OCCURRENCE, "NOT_USED", 1);
-    }
   }
 
   @Override

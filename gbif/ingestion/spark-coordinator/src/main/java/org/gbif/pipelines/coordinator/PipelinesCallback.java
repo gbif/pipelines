@@ -6,7 +6,6 @@ import static org.gbif.pipelines.coordinator.PrometheusMetrics.*;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
 import feign.Contract;
 import feign.Feign;
 import feign.auth.BasicAuthRequestInterceptor;
@@ -29,6 +28,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -497,7 +497,7 @@ public abstract class PipelinesCallback<
             new BufferedReader(new InputStreamReader(fs.open(fsPath), UTF_8))) {
           return br.lines()
               .map(x -> x.replace("\u0000", ""))
-              .filter(s -> !Strings.isNullOrEmpty(s))
+              .filter(s -> !StringUtils.isAllBlank(s))
               .map(z -> z.split(":"))
               .filter(s -> s.length > 1)
               .map(v -> new PipelineStep.MetricInfo(v[0].trim(), v[1].trim()))

@@ -11,6 +11,7 @@ import io.prometheus.metrics.exporter.httpserver.HTTPServer;
 import io.prometheus.metrics.instrumentation.jvm.JvmMetrics;
 import java.io.IOException;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -86,7 +87,21 @@ public class Coordinator {
                 args.exchange,
                 args.master,
                 args.threads,
-                args.listenerThreadSleepMillis);
+                args.listenerThreadSleepMillis,
+                () -> {
+                  try {
+                    return createListener(config);
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                },
+                () -> {
+                  try {
+                    return createPublisher(config);
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                });
       }
     } else {
       log.info("Prometheus HTTP server disabled");
@@ -99,7 +114,21 @@ public class Coordinator {
               args.exchange,
               args.master,
               args.threads,
-              args.listenerThreadSleepMillis);
+              args.listenerThreadSleepMillis,
+              () -> {
+                try {
+                  return createListener(config);
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
+              },
+              () -> {
+                try {
+                  return createPublisher(config);
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
+              });
     }
   }
 
@@ -111,7 +140,9 @@ public class Coordinator {
       String exchange,
       String master,
       int threads,
-      long threadSleepMillis) {
+      long threadSleepMillis,
+      Supplier<MessageListener> listenerSupplier,
+      Supplier<DefaultMessagePublisher> publisherSupplier) {
 
     Function<MessagePublisher, PipelinesCallback> callbackFn = null;
 
@@ -168,11 +199,13 @@ public class Coordinator {
                     config, messagePublisher, "event", EVENT_HDFS));
         break;
       case INDEXING:
-        callbackFn = (messagePublisher -> new IndexingCallback(config, messagePublisher, master));
+        callbackFn =
+            (messagePublisher -> new OccurrenceIndexingCallback(config, messagePublisher, master));
         break;
       case INDEXING_DISTRIBUTED:
         callbackFn =
-            (messagePublisher -> new IndexingDistributedCallback(config, messagePublisher));
+            (messagePublisher ->
+                new OccurrenceIndexingDistributedCallback(config, messagePublisher));
         break;
       case EVENTS_INDEXING:
         callbackFn =
@@ -204,8 +237,8 @@ public class Coordinator {
         config.getStandalone().getMessaging().getVirtualHost());
     setupShutdown();
 
-    try (MessageListener listener = createListener(config);
-        DefaultMessagePublisher publisher = createPublisher(config);
+    try (MessageListener listener = listenerSupplier.get();
+        DefaultMessagePublisher publisher = publisherSupplier.get();
         PipelinesCallback callback = callbackFn.apply(publisher)) {
 
       // initialise spark session & filesystem

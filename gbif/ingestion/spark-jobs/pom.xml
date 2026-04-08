@@ -171,7 +171,6 @@
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
-            <version>1.12.1</version>
         </dependency>
         <dependency>
             <groupId>com.beust</groupId>
@@ -181,7 +180,6 @@
         <dependency>
             <groupId>org.gbif.identifiers</groupId>
             <artifactId>keygen</artifactId>
-            <version>${gbif-keygen.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.hbase</groupId>
@@ -641,17 +639,14 @@
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>prometheus-metrics-core</artifactId>
-            <version>${prometheus-metrics.version}</version>
         </dependency>
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>prometheus-metrics-instrumentation-jvm</artifactId>
-            <version>${prometheus-metrics.version}</version>
         </dependency>
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>prometheus-metrics-exporter-httpserver</artifactId>
-            <version>${prometheus-metrics.version}</version>
         </dependency>
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
