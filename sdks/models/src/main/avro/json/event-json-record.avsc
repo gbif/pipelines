@@ -188,7 +188,7 @@
       {"name":"mediaTypes","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"mediaLicenses","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"multimediaItems","type":{"type":"array","items":"Multimedia"},"default":[],"doc":""},
-      // MeasurementOrFact(needed for ALA only)
+      // MeasurementOrFact
       {"name":"measurementOrFactTypes","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"measurementOrFactMethods","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"measurementOrFactCount","type":["null","int"],"default":null,"doc":""},

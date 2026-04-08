@@ -12,7 +12,7 @@
     <field index="5" term="http://rs.tdwg.org/dwc/terms/collectionCode"/>
     <field index="6" term="http://rs.tdwg.org/dwc/terms/family"/>
   </core>
-  <extension encoding="utf-8" fieldsTerminatedBy="," linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="0"
+  <extension encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="0"
              rowType="http://rs.gbif.org/terms/1.0/Identifier">
     <files>
       <location>identifier.txt</location>

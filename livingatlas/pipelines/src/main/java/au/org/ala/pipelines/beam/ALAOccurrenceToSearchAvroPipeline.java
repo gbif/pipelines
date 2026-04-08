@@ -94,9 +94,7 @@ public class ALAOccurrenceToSearchAvroPipeline {
     BasicTransform basicTransform = BasicTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
     ALASensitiveDataRecordTransform sensitiveTransform =
-        options.getIncludeSensitiveDataChecks()
-            ? ALASensitiveDataRecordTransform.builder().create()
-            : null;
+        ALASensitiveDataRecordTransform.builder().create();
     // Taxonomy transform for loading occurrence taxonomy info
     ALATaxonomyTransform alaTaxonomyTransform = ALATaxonomyTransform.builder().create();
     ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder().create();
@@ -134,18 +132,15 @@ public class ALAOccurrenceToSearchAvroPipeline {
             .apply("Map taxa to KV", alaTaxonomyTransform.toKv());
 
     PCollection<KV<String, ALASensitivityRecord>> sensitiveCollection =
-        options.getIncludeSensitiveDataChecks()
-            ? p.apply("Read taxa", sensitiveTransform.read(occurrencesPathFn))
-                .apply("Map taxa to KV", sensitiveTransform.toKv())
-            : null;
+        p.apply("Read taxa", sensitiveTransform.read(occurrencesPathFn))
+            .apply("Map taxa to KV", sensitiveTransform.toKv());
 
     log.info("Adding step 3: Converting into a json object");
     ParDo.SingleOutput<KV<String, CoGbkResult>, OccurrenceSearchRecord> occSearchAvroFn =
         ALAOccurrenceToSearchTransform.builder()
             .basicRecordTag(basicTransform.getTag())
             .locationRecordTag(locationTransform.getTag())
-            .sensitivityRecordTag(
-                options.getIncludeSensitiveDataChecks() ? sensitiveTransform.getTag() : null)
+            .sensitivityRecordTag(sensitiveTransform.getTag())
             .taxonRecordTag(alaTaxonomyTransform.getTag())
             .temporalRecordTag(temporalTransform.getTag())
             .alaAttributionTag(alaAttributionTransform.getTag())
@@ -154,24 +149,17 @@ public class ALAOccurrenceToSearchAvroPipeline {
             .build()
             .converter();
 
-    var occurrenceSearchCollectionSources =
+    PCollection<OccurrenceSearchRecord> occurrenceSearchCollection =
         KeyedPCollectionTuple
             // Core
             .of(basicTransform.getTag(), basicCollection)
             .and(alaTaxonomyTransform.getTag(), taxonCollection)
             .and(locationTransform.getTag(), locationCollection)
+            .and(sensitiveTransform.getTag(), sensitiveCollection)
             .and(temporalTransform.getTag(), temporalCollection)
             .and(alaAttributionTransform.getTag(), attributionCollection)
             .and(alaUuidTransform.getTag(), uuidCollection)
-            .and(verbatimTransform.getTag(), verbatimCollection);
-
-    if (options.getIncludeSensitiveDataChecks()) {
-      occurrenceSearchCollectionSources =
-          occurrenceSearchCollectionSources.and(sensitiveTransform.getTag(), sensitiveCollection);
-    }
-
-    PCollection<OccurrenceSearchRecord> occurrenceSearchCollection =
-        occurrenceSearchCollectionSources
+            .and(verbatimTransform.getTag(), verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", occSearchAvroFn);

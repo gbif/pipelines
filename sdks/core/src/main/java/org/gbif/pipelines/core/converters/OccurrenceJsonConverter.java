@@ -454,14 +454,4 @@ public class OccurrenceJsonConverter {
       builder.setMeasurementTypeIDs(new ArrayList<>(moFData.getMeasurementTypeIDs()));
     }
   }
-
-  private void mapMoFFromVerbatim(OccurrenceJsonRecord.Builder builder) {
-    MoFData moFData = convertMoFFromVerbatim(verbatim);
-    if (!moFData.getMeasurementTypes().isEmpty()) {
-      builder.setMeasurementTypes(new ArrayList<>(moFData.getMeasurementTypes()));
-    }
-    if (!moFData.getMeasurementTypeIDs().isEmpty()) {
-      builder.setMeasurementTypeIDs(new ArrayList<>(moFData.getMeasurementTypeIDs()));
-    }
-  }
 }
