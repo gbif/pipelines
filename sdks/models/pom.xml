@@ -53,6 +53,7 @@
       <plugin>
         <groupId>org.gbif.download</groupId>
         <artifactId>maven-extension-avsc-schema-generator</artifactId>
+        <version>${hdfs-tables.version}</version>
         <executions>
           <execution>
             <id>avroschemageneration</id>
