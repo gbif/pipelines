@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
 import org.apache.commons.beanutils.PropertyUtils;
@@ -23,12 +24,22 @@ import org.gbif.terms.utils.TermUtils;
 @Slf4j
 public class ConverterUtils {
 
+  public static final String CLEANING_MATCH_REGEX =
+      "\\t|\\n|\\r|(?:(?>\\u000D\\u000A)|[\\u000A\\u000B\\u000C\\u000D\\u0085\\u2028\\u2029\\u0000])";
+
+  public static final Pattern CLEANING_MATCH_PATTERN = Pattern.compile(CLEANING_MATCH_REGEX);
+
+  private static String cleanVerbatim(String value) {
+    if (value == null) return null;
+    return CLEANING_MATCH_PATTERN.matcher(value).replaceAll(" ").trim();
+  }
+
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
-  public static void mapTerm(String k, String v, Object hdfsRecord) {
+  public static void mapTerm(String k, String value, Object hdfsRecord) {
     Term term = TERM_FACTORY.findTerm(k);
 
-    if (term == null) {
+    if (term == null || value == null) {
       return;
     }
 
@@ -44,8 +55,10 @@ public class ConverterUtils {
                   if (DwcTerm.class_ == term) {
                     verbatimField = "VClass_";
                   }
-
-                  PropertyUtils.setProperty(hdfsRecord, verbatimField, v);
+                  String normalized =
+                      StringUtils.trimToEmpty(
+                          cleanVerbatim(value).replaceAll("[\\p{Z}\\p{Cc}\\p{Cf}]+", " "));
+                  PropertyUtils.setProperty(hdfsRecord, verbatimField, normalized);
                 } catch (Exception e) {
                   throw new RuntimeException(e);
                 }
