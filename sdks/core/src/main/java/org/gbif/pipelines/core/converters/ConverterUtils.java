@@ -93,7 +93,7 @@ public class ConverterUtils {
                     } else if (DcTerm.format == term) {
                       interpretedFieldname = "format";
                     }
-                    setHdfsRecordField(hdfsRecord, field, interpretedFieldname, v);
+                    setHdfsRecordField(hdfsRecord, field, interpretedFieldname, value);
                   }
                 } catch (IllegalAccessException
                     | InvocationTargetException
