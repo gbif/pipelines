@@ -19,9 +19,34 @@ public class OccurrenceIndexingCallback
     extends PipelinesCallback<PipelinesInterpretedMessage, PipelinesIndexedMessage>
     implements MessageCallback<PipelinesInterpretedMessage> {
 
+  private static final Object LOCK = new Object();
+  private boolean initialized = false;
+
   public OccurrenceIndexingCallback(
       PipelinesConfig pipelinesConfig, MessagePublisher publisher, String master) {
     super(pipelinesConfig, publisher, master);
+
+    if (isStandalone()) {
+      initialiseIndex();
+    }
+  }
+
+  private void initialiseIndex() {
+    synchronized (LOCK) {
+      if (!initialized) {
+        try {
+          log.info("Initializing index...");
+          String defaultIndexName =
+              EsIndexUtils.initialiseDefaultIndex(
+                  pipelinesConfig, httpClient, DatasetType.OCCURRENCE, "NOT_USED", -1);
+          log.info("Using default index: {}", defaultIndexName);
+          initialized = true;
+        } catch (Exception e) {
+          log.error("Error initialising default index for standalone mode", e);
+          throw new RuntimeException("Error initialising default index for standalone mode", e);
+        }
+      }
+    }
   }
 
   @Override
