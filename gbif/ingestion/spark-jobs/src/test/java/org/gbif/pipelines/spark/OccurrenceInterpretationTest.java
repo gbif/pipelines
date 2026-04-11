@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.reflect.ReflectData;
@@ -128,39 +129,42 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
       // JsonPath assertions
       assertEquals(
           List.of(
-              "East Africa Mammal Survey",
-              "Animalia",
-              "Panthera leo",
-              "Chordata",
-              "A. Taxonomist",
-              "Maasai Mara National Reserve",
-              "leo",
-              "KE",
-              "Felidae",
-              "30",
-              "96",
-              "Panthera",
-              "Carnivora",
-              "Narok",
-              "14",
-              "2023",
-              "Kenya",
-              "Mammals",
-              "NMK",
-              "occ-123456",
-              "J. Smith",
-              "Mammalia",
-              "3",
-              "event-98765",
-              "HumanObservation",
-              "species",
-              "2023-01-01",
-              "7",
-              "-1.4061",
-              "adult",
-              "male",
-              "35.0128"),
-          JsonPath.<List<String>>read(json, "$.all"));
+                  "East Africa Mammal Survey",
+                  "Animalia",
+                  "Panthera leo",
+                  "Chordata",
+                  "A. Taxonomist",
+                  "Maasai Mara National Reserve",
+                  "leo",
+                  "KE",
+                  "Felidae",
+                  "30",
+                  "96",
+                  "Panthera",
+                  "Carnivora",
+                  "Narok",
+                  "14",
+                  "2023",
+                  "Kenya",
+                  "Mammals",
+                  "NMK",
+                  "occ-123456",
+                  "J. Smith",
+                  "Mammalia",
+                  "3",
+                  "event-98765",
+                  "HumanObservation",
+                  "species",
+                  "2023-01-01",
+                  "7",
+                  "-1.4061",
+                  "adult",
+                  "male",
+                  "35.0128")
+              .stream()
+              .sorted()
+              .toList(),
+          JsonPath.<List<String>>read(json, "$.all").stream().sorted().toList());
 
       assertEquals(0, JsonPath.<List<?>>read(json, "$.associatedSequences").size());
       assertEquals("HUMAN_OBSERVATION", JsonPath.read(json, "$.basisOfRecord"));
@@ -229,11 +233,13 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
       assertEquals(false, JsonPath.<Boolean>read(json, "$.isSequenced"));
 
       assertEquals(
-          List.of(
-              "OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT",
-              "RECORDED_DATE_MISMATCH",
-              "GEODETIC_DATUM_ASSUMED_WGS84",
-              "CONTINENT_DERIVED_FROM_COORDINATES"),
+          Stream.of(
+                  "OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT",
+                  "RECORDED_DATE_MISMATCH",
+                  "GEODETIC_DATUM_ASSUMED_WGS84",
+                  "CONTINENT_DERIVED_FROM_COORDINATES")
+              .sorted()
+              .toList(),
           JsonPath.<List<String>>read(json, "$.issues"));
 
       assertEquals("2026-01-30T10:01:03.422", JsonPath.read(json, "$.lastCrawled"));
@@ -248,11 +254,13 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
       assertEquals(0, JsonPath.<List<?>>read(json, "$.networkKeys").size());
 
       assertEquals(
-          List.of(
-              "OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT",
-              "RECORDED_DATE_MISMATCH",
-              "GEODETIC_DATUM_ASSUMED_WGS84",
-              "CONTINENT_DERIVED_FROM_COORDINATES"),
+          Stream.of(
+                  "OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT",
+                  "RECORDED_DATE_MISMATCH",
+                  "GEODETIC_DATUM_ASSUMED_WGS84",
+                  "CONTINENT_DERIVED_FROM_COORDINATES")
+              .sorted()
+              .toList(),
           JsonPath.<List<String>>read(json, "$.nonTaxonomicIssues"));
 
       assertEquals("occ-123456", JsonPath.read(json, "$.occurrenceId"));

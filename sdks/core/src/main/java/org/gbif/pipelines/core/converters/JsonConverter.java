@@ -41,19 +41,19 @@ import org.gbif.pipelines.io.avro.json.VocabularyConceptList;
 public class JsonConverter {
 
   private static final Set<String> EXCLUDE_ALL =
-      new HashSet<>(
+      new LinkedHashSet<>(
           Arrays.asList(
               DwcTerm.footprintWKT.qualifiedName(),
               DwcTerm.previousIdentifications.qualifiedName()));
 
   private static final Set<String> INCLUDE_EXT_ALL =
-      new HashSet<>(
+      new LinkedHashSet<>(
           Arrays.asList(
               Extension.MULTIMEDIA.getRowType(),
               Extension.AUDUBON.getRowType(),
               Extension.IMAGE.getRowType()));
 
-  private static final Map<Character, Character> CHAR_MAP = new HashMap<>(2);
+  private static final Map<Character, Character> CHAR_MAP = new LinkedHashMap<>(2);
 
   static {
     CHAR_MAP.put('\u001E', ',');
@@ -91,7 +91,7 @@ public class JsonConverter {
 
   public static List<String> convertFieldAll(
       ExtendedRecord extendedRecord, boolean includeExtensions) {
-    Set<String> result = new HashSet<>();
+    Set<String> result = new LinkedHashSet<>();
 
     extendedRecord.getCoreTerms().entrySet().stream()
         .filter(term -> !EXCLUDE_ALL.contains(term.getKey()))
@@ -147,7 +147,7 @@ public class JsonConverter {
       Map<String, List<Map<String, String>>> exts, List<String> excludedExtensions) {
     return exts.entrySet().stream()
         .filter(e -> !excludedExtensions.contains(e.getKey()))
-        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue, (a, b) -> a, LinkedHashMap::new));
   }
 
   public static Optional<String> convertToMultivalue(List<String> list) {
@@ -208,15 +208,15 @@ public class JsonConverter {
     Set<String> issues =
         records.stream()
             .flatMap(x -> x.getIssues().getIssueList().stream())
-            .collect(Collectors.toSet());
-    issueFn.accept(new ArrayList<>(issues));
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+    issueFn.accept(new ArrayList<>(issues.stream().sorted().collect(Collectors.toList())));
 
     Set<String> notIssues =
         Arrays.stream(OccurrenceIssue.values())
             .map(Enum::name)
             .filter(x -> !issues.contains(x))
-            .collect(Collectors.toSet());
-    notIssueFn.accept(new ArrayList<>(notIssues));
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+    notIssueFn.accept(new ArrayList<>(notIssues.stream().sorted().collect(Collectors.toList())));
   }
 
   public static List<String> convertMultimediaType(MultimediaRecord multimediaRecord) {
@@ -359,7 +359,11 @@ public class JsonConverter {
                 tr.getUsage() != null
                     && !TaxonomyInterpreter.INCERTAE_SEDIS_KEY.equals(tr.getUsage().getKey()))
         .collect(
-            Collectors.toMap(TaxonRecord::getDatasetKey, JsonConverter::convertToClassification));
+            Collectors.toMap(
+                TaxonRecord::getDatasetKey,
+                JsonConverter::convertToClassification,
+                (a, b) -> a,
+                LinkedHashMap::new));
   }
 
   private static LinkedHashMap<String, String> convertToMap(

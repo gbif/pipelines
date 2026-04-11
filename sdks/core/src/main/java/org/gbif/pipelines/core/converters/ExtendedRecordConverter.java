@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.converters;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,7 +21,7 @@ public class ExtendedRecordConverter {
 
   // Function that removes all the empty elements of a record
   private static Map<String, String> convertToMap(Record record) {
-    Map<String, String> map = new HashMap<>(record.terms().size() / 2);
+    Map<String, String> map = new LinkedHashMap<>(record.terms().size() / 2);
     for (Term term : record.terms()) {
       String qn = term.qualifiedName();
       if (qn != null) {
@@ -47,7 +47,9 @@ public class ExtendedRecordConverter {
                     entry ->
                         entry.getValue().stream()
                             .map(ExtendedRecordConverter::convertToMap)
-                            .collect(Collectors.toList()))));
+                            .collect(Collectors.toList()),
+                    (a, b) -> a,
+                    LinkedHashMap::new)));
 
     builder.setId(getId(core, builder));
     return builder.build();

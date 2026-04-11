@@ -201,7 +201,7 @@ public class EventHdfsRecordConverter {
   }
 
   private void mapProjectIds(EventHdfsRecord eventHdfsRecord) {
-    Set<String> projectIds = new HashSet<>();
+    Set<String> projectIds = new LinkedHashSet<>();
 
     if (metadataRecord != null) {
       projectIds.add(metadataRecord.getProjectId());
@@ -431,7 +431,7 @@ public class EventHdfsRecordConverter {
       Function<List<TaxonHumboldtRecord>, Map<String, Map<String, List<String>>>>
           convertToTaxonMap =
               r -> {
-                Map<String, Map<String, List<String>>> valuesAsList = new HashMap<>();
+                Map<String, Map<String, List<String>>> valuesAsList = new LinkedHashMap<>();
 
                 r.stream()
                     .filter(v -> v.getChecklistKey() != null)
@@ -439,7 +439,7 @@ public class EventHdfsRecordConverter {
                         t -> {
                           Map<String, List<String>> values =
                               valuesAsList.computeIfAbsent(
-                                  t.getChecklistKey(), k -> new HashMap<>());
+                                  t.getChecklistKey(), k -> new LinkedHashMap<>());
 
                           if (t.getUsage() != null) {
                             values
@@ -473,7 +473,7 @@ public class EventHdfsRecordConverter {
                               .addAll(
                                   t.getClassification().stream()
                                       .map(RankedName::getKey)
-                                      .collect(Collectors.toSet()));
+                                      .collect(Collectors.toCollection(LinkedHashSet::new)));
                           values
                               .computeIfAbsent("issues", k -> new ArrayList<>())
                               .addAll(t.getIssues().getIssueList());
