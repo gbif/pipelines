@@ -171,10 +171,9 @@ public class MultimediaConverterTest {
             .setMultimediaItems(
                 Arrays.asList(
                     Multimedia.newBuilder()
-                        .setIdentifier("http://url-i1")
-                        .setReferences("http://url-r1")
-                        .setCreated("2010-10-10")
-                        .setLicense("license1")
+                        .setIdentifier("http://url-i3")
+                        .setCreated("2010-09-09")
+                        .setLicense("license3")
                         .build(),
                     Multimedia.newBuilder()
                         .setType(MediaType.StillImage.name())
@@ -184,12 +183,13 @@ public class MultimediaConverterTest {
                         .setLicense("license2")
                         .build(),
                     Multimedia.newBuilder()
-                        .setIdentifier("http://url-i3")
-                        .setCreated("2010-09-09")
-                        .setLicense("license3")
+                        .setIdentifier("http://url-i1")
+                        .setReferences("http://url-r1")
+                        .setCreated("2010-10-10")
+                        .setLicense("license1")
                         .build()))
             .setIssues(
-                IssueRecord.newBuilder().setIssueList(Arrays.asList("ONE", "TWO", "THREE")).build())
+                IssueRecord.newBuilder().setIssueList(Arrays.asList("ONE", "THREE", "TWO")).build())
             .build();
 
     // When

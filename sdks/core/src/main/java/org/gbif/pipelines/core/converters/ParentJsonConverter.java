@@ -205,7 +205,7 @@ public class ParentJsonConverter {
   }
 
   private void mapProjectIds(EventJsonRecord.Builder builder) {
-    Set<String> projectIdsSet = new HashSet<>();
+    Set<String> projectIdsSet = new LinkedHashSet<>();
 
     if (metadata.getProjectId() != null) {
       projectIdsSet.add(metadata.getProjectId());
@@ -414,7 +414,7 @@ public class ParentJsonConverter {
                             if (taxonRecords == null || taxonRecords.isEmpty()) return null;
 
                             Map<String, List<HumboldtTaxonClassification>> classifications =
-                                new HashMap<>();
+                                new LinkedHashMap<>();
                             taxonRecords.forEach(
                                 t -> {
                                   HumboldtTaxonClassification.Builder taxonBuilder =
@@ -441,8 +441,8 @@ public class ParentJsonConverter {
                                   taxonBuilder.setIucnRedListCategoryCode(
                                       t.getIucnRedListCategoryCode());
 
-                                  Map<String, String> classification = new HashMap<>();
-                                  Map<String, String> classificationKeys = new HashMap<>();
+                                  Map<String, String> classification = new LinkedHashMap<>();
+                                  Map<String, String> classificationKeys = new LinkedHashMap<>();
                                   List<String> taxonKeys = new ArrayList<>();
 
                                   t.getClassification()
