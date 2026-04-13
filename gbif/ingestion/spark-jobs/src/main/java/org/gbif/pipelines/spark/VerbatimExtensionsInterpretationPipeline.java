@@ -173,9 +173,7 @@ public class VerbatimExtensionsInterpretationPipeline {
         ExtensionTable.tableExtensions().stream()
             .collect(Collectors.toMap(ExtensionTable::getHiveTableName, et -> et));
 
-    log.debug(
-        "Available extension tables: {}",
-        extensionTableMap.keySet().stream().collect(Collectors.joining(", ")));
+    log.debug("Available extension tables: {}", String.join(", ", extensionTableMap.keySet()));
 
     // Write partitioned Parquet output (flat schema)
     for (String dir : directories) {
@@ -248,15 +246,22 @@ public class VerbatimExtensionsInterpretationPipeline {
     Map<String, String> dfColsNormalised =
         dfCols.stream().collect(Collectors.toMap(c -> c.toLowerCase().replaceAll("_", ""), c -> c));
 
-    for (StructField f : tblSchema.fields()) {
-      String fieldName = f.name();
-      if (dfCols.contains(fieldName)) {
+    for (StructField structField : tblSchema.fields()) {
+      String fieldName = structField.name();
+      // look for verbatim fields
+      if (fieldName.startsWith("v_")) {
+        String nonVerbatimFieldName = fieldName.substring(2);
+        if (dfColsNormalised.containsKey(nonVerbatimFieldName)) {
+          String dfFieldName = dfColsNormalised.get(nonVerbatimFieldName);
+          colsToSelect.add(col(dfFieldName).alias(fieldName));
+        }
+      } else if (dfCols.contains(fieldName)) {
         colsToSelect.add(col(fieldName));
       } else if (dfColsNormalised.containsKey(fieldName)) {
         String originalFieldName = dfColsNormalised.get(fieldName);
         colsToSelect.add(col(originalFieldName).alias(fieldName));
       } else {
-        colsToSelect.add(lit(null).cast(f.dataType()).alias(fieldName));
+        colsToSelect.add(lit(null).cast(structField.dataType()).alias(fieldName));
       }
     }
     return colsToSelect.toArray(new Column[0]);

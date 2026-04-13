@@ -29,7 +29,7 @@ public class ConverterUtils {
 
   public static final Pattern CLEANING_MATCH_PATTERN = Pattern.compile(CLEANING_MATCH_REGEX);
 
-  private static String cleanVerbatim(String value) {
+  public static String cleanVerbatim(String value) {
     if (value == null) return null;
     return CLEANING_MATCH_PATTERN.matcher(value).replaceAll(" ").trim();
   }

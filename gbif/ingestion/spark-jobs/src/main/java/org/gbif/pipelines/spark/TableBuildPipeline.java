@@ -120,9 +120,9 @@ public class TableBuildPipeline {
   }
 
   public static void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
-    sparkBuilder
-        .enableHiveSupport()
-        .config("spark.hadoop.hive.metastore.uris", config.getHiveMetastoreUris());
+    //    sparkBuilder
+    //        .enableHiveSupport()
+    //        .config("spark.hadoop.hive.metastore.uris", config.getHiveMetastoreUris());
   }
 
   /**

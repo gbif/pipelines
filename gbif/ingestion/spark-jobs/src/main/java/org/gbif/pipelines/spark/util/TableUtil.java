@@ -146,13 +146,13 @@ public class TableUtil {
     // normalize column names
     final String normalisedName = parquetColumn.toLowerCase().replace("$", "");
 
-    if (EXTENSION_COLUMNS.contains(parquetColumn)) {
+    if (EXTENSION_COLUMNS.contains(normalisedName)) {
 
       hdfsColumn.setIcebergCol(parquetColumn);
       hdfsColumn.setSelect(
-          String.format("base64_decode(%s) AS `%s`", parquetColumn, parquetColumn));
+          String.format("base64_decode(%s) AS `%s`", parquetColumn, normalisedName));
 
-    } else if (parquetColumn.equalsIgnoreCase("class_")) {
+    } else if (normalisedName.equalsIgnoreCase("class_")) {
 
       hdfsColumn.setIcebergCol("class");
       hdfsColumn.setSelect("`" + parquetColumn + "` AS class");
