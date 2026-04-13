@@ -3,10 +3,7 @@ package org.gbif.pipelines.spark.util;
 import static org.apache.spark.sql.functions.*;
 import static org.gbif.terms.utils.TermUtils.INTERPRETED_HUMBOLDT_TERMS;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
@@ -22,9 +19,12 @@ import org.gbif.occurrence.download.hive.OccurrenceHDFSTableDefinition;
 import org.gbif.pipelines.core.config.model.TableBuildConfig;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 @Slf4j
 public class TableUtil {
+
+  public static final Set<String> EXTENSION_COLUMNS = Set.of("ext_multimedia", "ext_humboldt");
 
   /**
    * Check for records without a datasetKey or gbifId.
@@ -128,46 +128,7 @@ public class TableUtil {
 
     for (String parquetColumn : hdfs.columns()) {
 
-      HdfsColumn hdfsColumn = new HdfsColumn();
-
-      // normalize column names
-      final String normalisedName = parquetColumn.toLowerCase().replace("$", "");
-
-      if (parquetColumn.equalsIgnoreCase("extMultimedia")) {
-
-        hdfsColumn.setIcebergCol("ext_multimedia");
-        hdfsColumn.setSelect("base64_decode(extMultimedia) AS `ext_multimedia`");
-
-      } else if (parquetColumn.equalsIgnoreCase("extHumboldt")) {
-
-        hdfsColumn.setIcebergCol("ext_humboldt");
-        hdfsColumn.setSelect("base64_decode(extHumboldt) AS `ext_humboldt`");
-
-      } else if (parquetColumn.equalsIgnoreCase("VClass_")) {
-
-        hdfsColumn.setIcebergCol("v_class");
-        hdfsColumn.setSelect("`" + parquetColumn + "` AS v_class");
-
-      } else if (parquetColumn.equalsIgnoreCase("class_")) {
-
-        hdfsColumn.setIcebergCol("class");
-        hdfsColumn.setSelect("`" + parquetColumn + "` AS class");
-
-      } else if (parquetColumn.matches("^[vV][A-Z].*")) {
-
-        // Handles names like VSomething → v_something
-        // normalisedName is parquetColumn.toLowerCase().replace("$", "")
-        // remove the leading 'v' that comes from the original parquet column
-        String normalized = "v_" + parquetColumn.substring(1).toLowerCase();
-        hdfsColumn.setIcebergCol(normalized);
-        hdfsColumn.setSelect("`" + parquetColumn + "` AS " + normalized);
-
-      } else {
-
-        hdfsColumn.setIcebergCol(normalisedName);
-        hdfsColumn.setSelect("`" + parquetColumn + "` AS " + normalisedName);
-      }
-
+      HdfsColumn hdfsColumn = getHdfsColumn(parquetColumn);
       hdfsColumnList.put(hdfsColumn.getIcebergCol(), hdfsColumn);
       log.debug(
           "Mapped HDFS column '{}' to Iceberg column '{}' with select '{}'",
@@ -177,6 +138,31 @@ public class TableUtil {
     }
 
     return hdfsColumnList;
+  }
+
+  private static @NonNull HdfsColumn getHdfsColumn(String parquetColumn) {
+    HdfsColumn hdfsColumn = new HdfsColumn();
+
+    // normalize column names
+    final String normalisedName = parquetColumn.toLowerCase().replace("$", "");
+
+    if (EXTENSION_COLUMNS.contains(parquetColumn)) {
+
+      hdfsColumn.setIcebergCol(parquetColumn);
+      hdfsColumn.setSelect(
+          String.format("base64_decode(%s) AS `%s`", parquetColumn, parquetColumn));
+
+    } else if (parquetColumn.equalsIgnoreCase("class_")) {
+
+      hdfsColumn.setIcebergCol("class");
+      hdfsColumn.setSelect("`" + parquetColumn + "` AS class");
+
+    } else {
+
+      hdfsColumn.setIcebergCol(normalisedName);
+      hdfsColumn.setSelect("`" + parquetColumn + "` AS " + normalisedName);
+    }
+    return hdfsColumn;
   }
 
   public static String getCreateTableSQL(
