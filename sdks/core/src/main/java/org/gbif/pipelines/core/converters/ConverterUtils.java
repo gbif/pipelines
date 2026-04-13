@@ -48,12 +48,11 @@ public class ConverterUtils {
           .ifPresent(
               field -> {
                 try {
-                  String verbatimField =
-                      "V" + StringUtils.capitalize(term.simpleName().toLowerCase());
+                  String verbatimField = "v_" + term.simpleName().toLowerCase();
 
                   // special case for class, as always
                   if (DwcTerm.class_ == term) {
-                    verbatimField = "VClass_";
+                    verbatimField = "v_class";
                   }
                   String normalized =
                       StringUtils.trimToEmpty(
@@ -109,11 +108,10 @@ public class ConverterUtils {
     try {
 
       if (term == DwcTerm.class_) {
-        return OccurrenceHdfsRecord.class.getDeclaredField("vClass_");
+        return OccurrenceHdfsRecord.class.getDeclaredField("v_class");
       }
 
-      return OccurrenceHdfsRecord.class.getDeclaredField(
-          "v" + StringUtils.capitalize(term.simpleName().toLowerCase()));
+      return OccurrenceHdfsRecord.class.getDeclaredField("v_" + term.simpleName().toLowerCase());
     } catch (NoSuchFieldException e) {
       return null; // Field not found
     }

@@ -122,26 +122,26 @@ public class EventInterpretationTest extends MockedServicesTest {
 
         // convert to JSON
         String json = toJson(record);
-        String verbatimEventID = JsonPath.read(json, "$.VEventid.string");
+        String verbatimEventID = JsonPath.read(json, "$.v_eventid.string");
 
         if ("EVT-000".equals(verbatimEventID)) {
           // Parent record checks
-          assertEquals("EVT-000", JsonPath.read(json, "$.VEventid.string"));
-          assertEquals("Project", JsonPath.read(json, "$.VEventtype.string"));
+          assertEquals("EVT-000", JsonPath.read(json, "$.v_eventid.string"));
+          assertEquals("Project", JsonPath.read(json, "$.v_eventtype.string"));
         } else if ("EVT-001".equals(verbatimEventID)) {
           // Child record checks
-          assertEquals("EVT-001", JsonPath.read(json, "$.VEventid.string"));
-          assertEquals("Survey", JsonPath.read(json, "$.VEventtype.string"));
-          assertEquals("EVT-000", JsonPath.read(json, "$.VParenteventid.string"));
-          assertEquals("2024-06-15", JsonPath.read(json, "$.VEventdate.string"));
-          assertEquals("10:30:00Z", JsonPath.read(json, "$.VEventtime.string"));
-          assertEquals("visual survey", JsonPath.read(json, "$.VSamplingprotocol.string"));
-          assertEquals("2 hours", JsonPath.read(json, "$.VSamplingeffort.string"));
-          assertEquals("Dummy event for testing", JsonPath.read(json, "$.VEventremarks.string"));
-          assertEquals("Kenya", JsonPath.read(json, "$.VCountry.string"));
+          assertEquals("EVT-001", JsonPath.read(json, "$.v_eventid.string"));
+          assertEquals("Survey", JsonPath.read(json, "$.v_eventtype.string"));
+          assertEquals("EVT-000", JsonPath.read(json, "$.v_parenteventid.string"));
+          assertEquals("2024-06-15", JsonPath.read(json, "$.v_eventdate.string"));
+          assertEquals("10:30:00Z", JsonPath.read(json, "$.v_eventtime.string"));
+          assertEquals("visual survey", JsonPath.read(json, "$.v_samplingprotocol.string"));
+          assertEquals("2 hours", JsonPath.read(json, "$.v_samplingeffort.string"));
+          assertEquals("Dummy event for testing", JsonPath.read(json, "$.v_eventremarks.string"));
+          assertEquals("Kenya", JsonPath.read(json, "$.v_country.string"));
           assertEquals("KE", JsonPath.read(json, "$.countrycode.string"));
           assertEquals("Narok", JsonPath.read(json, "$.stateprovince.string"));
-          assertEquals("Maasai Mara National Reserve", JsonPath.read(json, "$.VLocality.string"));
+          assertEquals("Maasai Mara National Reserve", JsonPath.read(json, "$.v_locality.string"));
           assertEquals(-1.4061d, JsonPath.<Double>read(json, "$.decimallatitude.double"), 0.0001);
           assertEquals(35.0128d, JsonPath.<Double>read(json, "$.decimallongitude.double"), 0.0001);
         } else {

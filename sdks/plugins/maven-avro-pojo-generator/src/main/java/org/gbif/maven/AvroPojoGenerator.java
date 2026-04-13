@@ -143,8 +143,7 @@ public class AvroPojoGenerator extends AbstractMojo {
       String name = field.get("name").asText();
       name = normalizeName(name);
       String type = resolveType(field.get("type"), namespace, imports);
-      if ("class".equals(name) || "v_class".equals(name) || "v_class".equals(name))
-        name = name + "_";
+      if ("class".equals(name)) name = name + "_";
       if (type.equals("IssueRecord")) body.append("    @lombok.Builder.Default\n");
       if (type.equals("org.gbif.pipelines.io.avro.IssueRecord"))
         body.append("    @lombok.Builder.Default\n");
@@ -319,34 +318,8 @@ public class AvroPojoGenerator extends AbstractMojo {
     return BOXED_MAP.getOrDefault(type, type);
   }
 
-  protected String normalizeName2(String name) {
-    if (name.startsWith("v_")) {
-      return "v" + name.substring(2, 3).toUpperCase() + name.substring(3);
-    } else return name;
-  }
-
   // e.g. vDc_type -> vDcType
   public static String normalizeName(String input) {
-    if (input.startsWith("v_")) {
-      input = "v" + input.substring(2, 3).toUpperCase() + input.substring(3);
-    }
-
-    // hack (DnaDerivedDataTable)
-    boolean startsWithUnderscore = input.startsWith("_"); // _16srecover become _16srecover
-
-    while (input.contains("_")) {
-      int idx = input.indexOf('_');
-      if (idx < input.length() - 1) {
-        String replacement = input.substring(idx + 1, idx + 2).toUpperCase();
-        input = input.substring(0, idx) + replacement + input.substring(idx + 2);
-      } else {
-        input = input.substring(0, idx);
-      }
-    }
-    if (input.equals("vClass")) {
-      return "vClass_";
-    } else {
-      return startsWithUnderscore ? "_" + input : input;
-    }
+    return input;
   }
 }

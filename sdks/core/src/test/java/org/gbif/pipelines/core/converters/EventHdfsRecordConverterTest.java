@@ -168,27 +168,27 @@ public class EventHdfsRecordConverterTest {
     // Should
     // Test common fields
     Assert.assertEquals("C1", hdfsRecord.getCollectioncode());
-    Assert.assertEquals("C1", hdfsRecord.getVCollectioncode());
+    Assert.assertEquals("C1", hdfsRecord.getV_collectioncode());
     Assert.assertEquals("I1", hdfsRecord.getInstitutioncode());
-    Assert.assertEquals("I1", hdfsRecord.getVInstitutioncode());
-    Assert.assertEquals("unit", hdfsRecord.getVSamplesizeunit());
-    Assert.assertEquals("value", hdfsRecord.getVSamplesizevalue());
-    Assert.assertEquals("2000/2010", hdfsRecord.getVEventdate());
-    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVDatasetid());
+    Assert.assertEquals("I1", hdfsRecord.getV_institutioncode());
+    Assert.assertEquals("unit", hdfsRecord.getV_samplesizeunit());
+    Assert.assertEquals("value", hdfsRecord.getV_samplesizevalue());
+    Assert.assertEquals("2000/2010", hdfsRecord.getV_eventdate());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getV_datasetid());
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getDatasetid());
-    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVDatasetname());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getV_datasetname());
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getDatasetname());
-    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVSamplingprotocol());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getV_samplingprotocol());
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getSamplingprotocol());
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getProjectid());
     Assert.assertEquals(
         Arrays.asList(multiValue1, multiValue2), hdfsRecord.getFundingattributionid());
-    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVFundingattributionid());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getV_fundingattributionid());
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getProjecttitle());
-    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVProjecttitle());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getV_projecttitle());
     Assert.assertEquals("Event", hdfsRecord.getEventtype().getConcept());
-    Assert.assertEquals("event", hdfsRecord.getVEventtype());
-    Assert.assertEquals("parent", hdfsRecord.getVParenteventid());
+    Assert.assertEquals("event", hdfsRecord.getV_eventtype());
+    Assert.assertEquals("parent", hdfsRecord.getV_parenteventid());
     Assert.assertEquals("Parent", hdfsRecord.getParenteventid());
 
     // Test temporal fields
@@ -207,7 +207,7 @@ public class EventHdfsRecordConverterTest {
     Assert.assertEquals(
         metadataRecord.getHostingOrganizationKey(), hdfsRecord.getHostingorganizationkey());
 
-    Assert.assertEquals("v_previousIdentifications", hdfsRecord.getVPreviousidentifications());
+    Assert.assertEquals("v_previousIdentifications", hdfsRecord.getV_previousidentifications());
 
     // extensions
     Assert.assertEquals(4, hdfsRecord.getDwcaextension().size());
@@ -226,7 +226,7 @@ public class EventHdfsRecordConverterTest {
     Assert.assertTrue(
         new String(
                 Base64.getDecoder()
-                    .decode(hdfsRecord.getExtHumboldt().getBytes(StandardCharsets.UTF_8)))
+                    .decode(hdfsRecord.getExt_humboldt().getBytes(StandardCharsets.UTF_8)))
             .contains(
                 "\"targetLifeStageScope\" : {\n"
                     + "    \"concepts\" : [ \"c1\", \"c11\" ],\n"
@@ -260,7 +260,7 @@ public class EventHdfsRecordConverterTest {
     // Testing de-serialization
     List<Multimedia> media =
         MediaSerDeser.multimediaFromJson(
-            new String(Base64.getDecoder().decode(hdfsRecord.getExtMultimedia())));
+            new String(Base64.getDecoder().decode(hdfsRecord.getExt_multimedia())));
     Assert.assertEquals(media.get(0), multimedia);
     Assert.assertTrue(hdfsRecord.getMediatype().contains(MediaType.StillImage.name()));
     Assert.assertTrue(

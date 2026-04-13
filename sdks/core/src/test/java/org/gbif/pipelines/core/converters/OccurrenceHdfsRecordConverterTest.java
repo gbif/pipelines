@@ -233,38 +233,38 @@ public class OccurrenceHdfsRecordConverterTest {
     // Test common fields
     Assert.assertEquals("1.0", hdfsRecord.getVerbatimdepth());
     Assert.assertEquals("C1", hdfsRecord.getCollectioncode());
-    Assert.assertEquals("C1", hdfsRecord.getVCollectioncode());
+    Assert.assertEquals("C1", hdfsRecord.getV_collectioncode());
     Assert.assertEquals("I1", hdfsRecord.getInstitutioncode());
-    Assert.assertEquals("I1", hdfsRecord.getVInstitutioncode());
+    Assert.assertEquals("I1", hdfsRecord.getV_institutioncode());
     Assert.assertEquals("CN1", hdfsRecord.getCatalognumber());
-    Assert.assertEquals("CN1", hdfsRecord.getVCatalognumber());
-    Assert.assertEquals("quantity", hdfsRecord.getVOrganismquantity());
-    Assert.assertEquals("type", hdfsRecord.getVOrganismquantitytype());
-    Assert.assertEquals("unit", hdfsRecord.getVSamplesizeunit());
-    Assert.assertEquals("value", hdfsRecord.getVSamplesizevalue());
-    Assert.assertEquals("13123|21312", hdfsRecord.getVIdentifiedbyid());
-    Assert.assertEquals("53453|5785", hdfsRecord.getVRecordedbyid());
-    Assert.assertEquals(OccurrenceStatus.ABSENT.name(), hdfsRecord.getVOccurrencestatus());
-    Assert.assertEquals("0", hdfsRecord.getVIndividualcount());
-    Assert.assertEquals("2000/2010", hdfsRecord.getVEventdate());
+    Assert.assertEquals("CN1", hdfsRecord.getV_catalognumber());
+    Assert.assertEquals("quantity", hdfsRecord.getV_organismquantity());
+    Assert.assertEquals("type", hdfsRecord.getV_organismquantitytype());
+    Assert.assertEquals("unit", hdfsRecord.getV_samplesizeunit());
+    Assert.assertEquals("value", hdfsRecord.getV_samplesizevalue());
+    Assert.assertEquals("13123|21312", hdfsRecord.getV_identifiedbyid());
+    Assert.assertEquals("53453|5785", hdfsRecord.getV_recordedbyid());
+    Assert.assertEquals(OccurrenceStatus.ABSENT.name(), hdfsRecord.getV_occurrencestatus());
+    Assert.assertEquals("0", hdfsRecord.getV_individualcount());
+    Assert.assertEquals("2000/2010", hdfsRecord.getV_eventdate());
     Assert.assertEquals(
         ThreatStatus.CRITICALLY_ENDANGERED.getCode(), hdfsRecord.getIucnredlistcategory());
-    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVDatasetid());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getV_datasetid());
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getDatasetid());
-    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVDatasetname());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getV_datasetname());
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getDatasetname());
-    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVOthercatalognumbers());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getV_othercatalognumbers());
     Assert.assertEquals(
         Arrays.asList(multiValue1, multiValue2), hdfsRecord.getOthercatalognumbers());
-    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVRecordedby());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getV_recordedby());
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getRecordedby());
-    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVIdentifiedby());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getV_identifiedby());
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getIdentifiedby());
-    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVPreparations());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getV_preparations());
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getPreparations());
-    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getVSamplingprotocol());
+    Assert.assertEquals(multiValue1 + "|" + multiValue2, hdfsRecord.getV_samplingprotocol());
     Assert.assertEquals(Arrays.asList(multiValue1, multiValue2), hdfsRecord.getSamplingprotocol());
-    Assert.assertEquals("Type|TypeSpecies", hdfsRecord.getVTypestatus());
+    Assert.assertEquals("Type|TypeSpecies", hdfsRecord.getV_typestatus());
     Assert.assertEquals(
         org.gbif.pipelines.io.avro.TypeStatus.newBuilder()
             .setConcepts(Arrays.asList("Type", "TypeSpecies"))
@@ -275,28 +275,28 @@ public class OccurrenceHdfsRecordConverterTest {
 
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass_());
-    Assert.assertEquals("classs", hdfsRecord.getVClass_());
+    Assert.assertEquals("classs", hdfsRecord.getV_class());
 
     Assert.assertEquals("ORDER", hdfsRecord.getOrder());
-    Assert.assertEquals("order", hdfsRecord.getVOrder());
+    Assert.assertEquals("order", hdfsRecord.getV_order());
 
     Assert.assertEquals("group", hdfsRecord.getGroup());
-    Assert.assertEquals("v_group", hdfsRecord.getVGroup());
+    Assert.assertEquals("v_group", hdfsRecord.getV_group());
 
     Assert.assertEquals("v_taxonConceptID", hdfsRecord.getTaxonconceptid());
-    Assert.assertEquals("v_taxonConceptID", hdfsRecord.getVTaxonconceptid());
+    Assert.assertEquals("v_taxonConceptID", hdfsRecord.getV_taxonconceptid());
 
     Assert.assertEquals("formation", hdfsRecord.getFormation());
-    Assert.assertEquals("v_formation", hdfsRecord.getVFormation());
+    Assert.assertEquals("v_formation", hdfsRecord.getV_formation());
 
     Assert.assertEquals("bed", hdfsRecord.getBed());
-    Assert.assertEquals("v_bed", hdfsRecord.getVBed());
+    Assert.assertEquals("v_bed", hdfsRecord.getV_bed());
 
     Assert.assertEquals("member", hdfsRecord.getMember());
-    Assert.assertEquals("v_member", hdfsRecord.getVMember());
+    Assert.assertEquals("v_member", hdfsRecord.getV_member());
 
     Assert.assertEquals(Collections.singletonList("ad"), hdfsRecord.getAssociatedsequences());
-    Assert.assertEquals("v_ad", hdfsRecord.getVAssociatedsequences());
+    Assert.assertEquals("v_ad", hdfsRecord.getV_associatedsequences());
 
     // Test temporal fields
     Assert.assertNotNull(hdfsRecord.getDateidentified());
@@ -305,9 +305,9 @@ public class OccurrenceHdfsRecordConverterTest {
 
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(
-        BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase(), hdfsRecord.getVBasisofrecord());
+        BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase(), hdfsRecord.getV_basisofrecord());
     Assert.assertNull(hdfsRecord.getLifestage());
-    Assert.assertEquals("adultss", hdfsRecord.getVLifestage());
+    Assert.assertEquals("adultss", hdfsRecord.getV_lifestage());
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastparsed());
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastinterpreted());
     Assert.assertEquals(License.CC0_1_0.name(), hdfsRecord.getLicense());
@@ -326,14 +326,14 @@ public class OccurrenceHdfsRecordConverterTest {
         metadataRecord.getHostingOrganizationKey(), hdfsRecord.getHostingorganizationkey());
     Assert.assertEquals(basicRecord.getIsSequenced(), hdfsRecord.getIssequenced());
 
-    Assert.assertEquals("v_" + basicRecord.getGeologicalContext().getBed(), hdfsRecord.getVBed());
+    Assert.assertEquals("v_" + basicRecord.getGeologicalContext().getBed(), hdfsRecord.getV_bed());
     Assert.assertEquals(basicRecord.getGeologicalContext().getBed(), hdfsRecord.getBed());
     Assert.assertEquals(
-        "v_" + basicRecord.getGeologicalContext().getFormation(), hdfsRecord.getVFormation());
+        "v_" + basicRecord.getGeologicalContext().getFormation(), hdfsRecord.getV_formation());
     Assert.assertEquals(
         basicRecord.getGeologicalContext().getFormation(), hdfsRecord.getFormation());
     Assert.assertEquals("v_previousIdentifications", hdfsRecord.getPreviousidentifications());
-    Assert.assertEquals("v_previousIdentifications", hdfsRecord.getVPreviousidentifications());
+    Assert.assertEquals("v_previousIdentifications", hdfsRecord.getV_previousidentifications());
 
     // extensions
     Assert.assertEquals(4, hdfsRecord.getDwcaextension().size());
@@ -380,7 +380,7 @@ public class OccurrenceHdfsRecordConverterTest {
     // Testing de-serialization
     List<Multimedia> media =
         MediaSerDeser.multimediaFromJson(
-            new String(Base64.getDecoder().decode(hdfsRecord.getExtMultimedia())));
+            new String(Base64.getDecoder().decode(hdfsRecord.getExt_multimedia())));
     Assert.assertEquals(media.get(0), multimedia);
     Assert.assertTrue(hdfsRecord.getMediatype().contains(MediaType.StillImage.name()));
     Assert.assertTrue(
