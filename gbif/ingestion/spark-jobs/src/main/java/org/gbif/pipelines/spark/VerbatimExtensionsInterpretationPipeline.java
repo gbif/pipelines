@@ -22,6 +22,8 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.dwc.terms.DcElement;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -156,6 +158,8 @@ public class VerbatimExtensionsInterpretationPipeline {
     spark.sparkContext().setJobGroup("repartitioning", "Repartitioning by extension", true);
     Dataset<Row> optimized = flattened.repartition(col("directory"));
 
+    log.info(String.join(", ", optimized.columns()));
+
     // collect distinct directories
     List<String> directories =
         optimized.select(col("directory")).distinct().as(Encoders.STRING()).collectAsList();
@@ -277,7 +281,15 @@ public class VerbatimExtensionsInterpretationPipeline {
   private static String normalizeFieldName(String name) {
     String[] parts = name.split("/");
     String rawName = parts[parts.length - 1];
-    return rawName.trim();
+    String prefix = "";
+    if (!rawName.equalsIgnoreCase(DcTerm.identifier.simpleName())) {
+      if (name.startsWith(DcTerm.identifier.namespace().toString())) {
+        prefix = DcTerm.identifier.prefix() + "_";
+      } else if (name.startsWith(DcElement.identifier.namespace().toString())) {
+        prefix = DcElement.identifier.prefix() + "_";
+      }
+    }
+    return prefix + rawName.toLowerCase().trim();
   }
 
   @SneakyThrows
