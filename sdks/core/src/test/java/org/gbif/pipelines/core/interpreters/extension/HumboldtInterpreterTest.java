@@ -1,11 +1,12 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
+import static org.gbif.pipelines.core.interpreters.NameUsageMatchKeyValueTestStore.*;
+import static org.gbif.pipelines.core.interpreters.NameUsageMatchKeyValueTestStore.ANOTHER_CHECKLIST_KEY;
 import static org.junit.Assert.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import org.gbif.api.vocabulary.DurationUnit;
 import org.gbif.api.vocabulary.EventIssue;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -20,8 +21,6 @@ import org.gbif.pipelines.io.avro.HumboldtRecord;
 import org.junit.Test;
 
 public class HumboldtInterpreterTest {
-
-  private static final String DEFAULT_CHECKLIST_KEY = UUID.randomUUID().toString();
 
   @Test
   public void humboldtTest() {
@@ -65,7 +64,7 @@ public class HumboldtInterpreterTest {
                     new MockVocabularyLookups.GenericMockVocabularyLookup())
                 .build())
         .kvStore(new NameUsageMatchKeyValueTestStore())
-        .checklistKeys(List.of(DEFAULT_CHECKLIST_KEY))
+        .checklistKeys(List.of(DEFAULT_CHECKLIST_KEY, ANOTHER_CHECKLIST_KEY))
         .create()
         .interpret(er, hr);
 
@@ -91,14 +90,14 @@ public class HumboldtInterpreterTest {
         humboldt.getTargetDegreeOfEstablishmentScope().stream()
             .anyMatch(c -> c.getConcept().equals("td1")));
     assertEquals(1, humboldt.getExcludedDegreeOfEstablishmentScope().size());
-    assertEquals(2, humboldt.getTargetTaxonomicScope().size());
+    assertEquals(4, humboldt.getTargetTaxonomicScope().size());
     assertEquals(
         2,
         humboldt.getTargetTaxonomicScope().stream()
             .filter(ts -> ts.getChecklistKey().equals(DEFAULT_CHECKLIST_KEY))
             .count());
     assertEquals(
-        1,
+        2,
         humboldt.getTargetTaxonomicScope().stream()
             .filter(
                 ts ->
@@ -108,7 +107,7 @@ public class HumboldtInterpreterTest {
                         && ts.getUsage().getKey() != null)
             .count());
     assertEquals(
-        1,
+        2,
         humboldt.getTargetTaxonomicScope().stream()
             .filter(
                 ts ->
@@ -121,6 +120,14 @@ public class HumboldtInterpreterTest {
                             .contains(OccurrenceIssue.TAXON_MATCH_NONE.name()))
             .count());
     assertFalse(hr.getIssues().getIssueList().contains(OccurrenceIssue.TAXON_MATCH_NONE.name()));
+
+    assertEquals(
+        2,
+        humboldt.getTargetTaxonomicScope().stream()
+            .filter(ts -> ts.getUsage().getName().equalsIgnoreCase("Aves"))
+            .map(ts -> ts.getUsage().getKey())
+            .distinct()
+            .count());
 
     assertTrue(
         hr.getIssues()

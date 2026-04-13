@@ -408,7 +408,10 @@ public class HumboldtInterpreter {
 
                 for (String checklistKey : checklistKeys) {
                   final NameUsageMatchRequest nameUsageMatchRequest =
-                      NameUsageMatchRequest.builder().withScientificName(value).build();
+                      NameUsageMatchRequest.builder()
+                          .withChecklistKey(checklistKey)
+                          .withScientificName(value)
+                          .build();
 
                   TaxonHumboldtRecord thr =
                       TaxonHumboldtRecord.newBuilder().setChecklistKey(checklistKey).build();
