@@ -252,6 +252,8 @@ public class VerbatimExtensionsInterpretationPipeline {
         String nonVerbatimFieldName = fieldName.substring(2);
         if (dfCols.contains(nonVerbatimFieldName)) {
           colsToSelect.add(col(nonVerbatimFieldName).alias(fieldName));
+        } else {
+          colsToSelect.add(lit(null).cast(structField.dataType()).alias(fieldName));
         }
       } else if (dfCols.contains(fieldName)) {
         colsToSelect.add(col(fieldName));
