@@ -398,7 +398,7 @@ public class EventHdfsRecordConverter {
             .map(TextNode::valueOf)
             .map(TextNode::asText)
             .collect(Collectors.toList());
-    eventHdfsRecord.setExtMultimedia(
+    eventHdfsRecord.setExt_multimedia(
         MediaSerDeser.multimediaToJson(multimediaRecord.getMultimediaItems()));
 
     setCreatedIfGreater(eventHdfsRecord, multimediaRecord.getCreated());
@@ -538,7 +538,7 @@ public class EventHdfsRecordConverter {
                   })
               .collect(Collectors.toList());
 
-      eventHdfsRecord.setExtHumboldt(base64Encode(MediaSerDeser.humboldtToJson(jsonViews)));
+      eventHdfsRecord.setExt_humboldt(base64Encode(MediaSerDeser.humboldtToJson(jsonViews)));
     }
 
     addNonTaxonIssues(humboldtRecord.getIssues(), eventHdfsRecord);

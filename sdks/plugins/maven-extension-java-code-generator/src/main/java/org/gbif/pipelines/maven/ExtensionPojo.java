@@ -64,28 +64,38 @@ public class ExtensionPojo {
       this.qualifier = qualifier;
 
       // name
-      if (name.equals("Class") || name.equals("Class_")) {
+      if (name.equalsIgnoreCase("Class") || name.equalsIgnoreCase("Class_")) {
         this.name = "Class_";
       } else {
         String clearedName = name;
+        // _16_recover
         if (Character.isDigit(name.charAt(0))) {
           clearedName = "_" + name;
         }
-        if (clearedName.contains(":")) {
-          int i = clearedName.indexOf(":");
-          clearedName =
-              clearedName.substring(0, i)
-                  + clearedName.substring(i + 1, i + 2).toUpperCase()
-                  + clearedName.substring(i + 2);
+
+        if (clearedName.indexOf(":") > 0) {
+
+          int firstSemicolon = clearedName.indexOf(":");
+
+          String firstPart = clearedName.substring(0, firstSemicolon);
+          firstPart = Character.toUpperCase(firstPart.charAt(0)) + firstPart.substring(1);
+
+          String secondPart = clearedName.substring(firstSemicolon + 1).replaceAll("[:\\-]", "_");
+
+          this.name = firstPart + "_" + secondPart;
+        } else {
+          this.name =
+              Character.toUpperCase(clearedName.charAt(0))
+                  + name.substring(1).replaceAll("[_\\-]", "");
         }
-        this.name = clearedName;
       }
 
-      // v_name
-      if (this.name.contains("_") && !this.name.contains("Class_")) {
-        this.vName = "V" + this.name.substring(1);
+      if (this.name.toLowerCase().startsWith("_")) {
+        this.vName = "V" + this.name.toLowerCase();
+      } else if (this.name.toLowerCase().equals("class_")) {
+        this.vName = "V_class";
       } else {
-        this.vName = "V" + this.name;
+        this.vName = "V_" + this.name.toLowerCase();
       }
     }
 

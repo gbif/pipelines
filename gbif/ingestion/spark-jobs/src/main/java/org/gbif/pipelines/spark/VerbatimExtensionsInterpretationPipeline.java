@@ -22,6 +22,8 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.dwc.terms.DcElement;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -173,9 +175,7 @@ public class VerbatimExtensionsInterpretationPipeline {
         ExtensionTable.tableExtensions().stream()
             .collect(Collectors.toMap(ExtensionTable::getHiveTableName, et -> et));
 
-    log.debug(
-        "Available extension tables: {}",
-        extensionTableMap.keySet().stream().collect(Collectors.joining(", ")));
+    log.debug("Available extension tables: {}", String.join(", ", extensionTableMap.keySet()));
 
     // Write partitioned Parquet output (flat schema)
     for (String dir : directories) {
@@ -242,21 +242,20 @@ public class VerbatimExtensionsInterpretationPipeline {
   @NotNull
   private static Column[] getColsToSelect(StructType tblSchema, Set<String> dfCols) {
     List<Column> colsToSelect = new ArrayList<>();
-
-    // create a map of normalized column names to original column names
-    // for matching against the table schema
-    Map<String, String> dfColsNormalised =
-        dfCols.stream().collect(Collectors.toMap(c -> c.toLowerCase().replaceAll("_", ""), c -> c));
-
-    for (StructField f : tblSchema.fields()) {
-      String fieldName = f.name();
-      if (dfCols.contains(fieldName)) {
+    for (StructField structField : tblSchema.fields()) {
+      String fieldName = structField.name();
+      // look for verbatim fields
+      if (fieldName.startsWith("v_")) {
+        String nonVerbatimFieldName = fieldName.substring(2);
+        if (dfCols.contains(nonVerbatimFieldName)) {
+          colsToSelect.add(col(nonVerbatimFieldName).alias(fieldName));
+        } else {
+          colsToSelect.add(lit(null).cast(structField.dataType()).alias(fieldName));
+        }
+      } else if (dfCols.contains(fieldName)) {
         colsToSelect.add(col(fieldName));
-      } else if (dfColsNormalised.containsKey(fieldName)) {
-        String originalFieldName = dfColsNormalised.get(fieldName);
-        colsToSelect.add(col(originalFieldName).alias(fieldName));
       } else {
-        colsToSelect.add(lit(null).cast(f.dataType()).alias(fieldName));
+        colsToSelect.add(lit(null).cast(structField.dataType()).alias(fieldName));
       }
     }
     return colsToSelect.toArray(new Column[0]);
@@ -272,7 +271,15 @@ public class VerbatimExtensionsInterpretationPipeline {
   private static String normalizeFieldName(String name) {
     String[] parts = name.split("/");
     String rawName = parts[parts.length - 1];
-    return rawName.trim();
+    String prefix = "";
+    if (!rawName.equalsIgnoreCase(DcTerm.identifier.simpleName())) {
+      if (name.startsWith(DcTerm.identifier.namespace().toString())) {
+        prefix = DcTerm.identifier.prefix() + "_";
+      } else if (name.startsWith(DcElement.identifier.namespace().toString())) {
+        prefix = DcElement.identifier.prefix() + "_";
+      }
+    }
+    return prefix + rawName.toLowerCase().trim();
   }
 
   @SneakyThrows

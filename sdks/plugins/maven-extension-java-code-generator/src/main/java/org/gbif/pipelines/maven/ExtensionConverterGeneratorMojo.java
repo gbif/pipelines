@@ -171,10 +171,10 @@ public class ExtensionConverterGeneratorMojo extends AbstractMojo {
     return factory.build(url.openStream(), url, false);
   }
 
-  /** Normalize name and retun result like - Normalizename */
+  /** Normalize name and return result like - Normalize name */
   protected String normalizeName(String name) {
-    String replace = name.toLowerCase().trim().replace("-", "").replace("_", "");
-    return replace.substring(0, 1).toUpperCase() + replace.substring(1);
+    String lc = name.toLowerCase();
+    return lc.substring(0, 1).toUpperCase() + lc.substring(1);
   }
 
   private static class EmptyVocabulariesManager implements VocabulariesManager {

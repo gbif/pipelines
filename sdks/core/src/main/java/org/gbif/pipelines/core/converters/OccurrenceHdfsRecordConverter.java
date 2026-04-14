@@ -880,7 +880,7 @@ public class OccurrenceHdfsRecordConverter {
             .map(TextNode::valueOf)
             .map(TextNode::asText)
             .collect(Collectors.toList());
-    occurrenceHdfsRecord.setExtMultimedia(
+    occurrenceHdfsRecord.setExt_multimedia(
         base64Encode(MediaSerDeser.multimediaToJson(multimediaRecord.getMultimediaItems())));
 
     setCreatedIfGreater(occurrenceHdfsRecord, multimediaRecord.getCreated());

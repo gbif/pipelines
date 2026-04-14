@@ -65,20 +65,20 @@ public class MeasurementOrFactTableConverterTest {
 
     result.forEach(
         table -> {
-          String id = table.getVMeasurementid();
+          String id = table.getV_measurementid();
 
           Assert.assertEquals("777", table.getGbifid());
           Assert.assertEquals("dataset_key", table.getDatasetkey());
           // Verbatim
-          Assert.assertNotNull(table.getVMeasurementid());
-          Assert.assertEquals("Type" + id, table.getVMeasurementtype());
-          Assert.assertEquals("1.5", table.getVMeasurementvalue());
-          Assert.assertEquals("Accurancy" + id, table.getVMeasurementaccuracy());
-          Assert.assertEquals("Unit" + id, table.getVMeasurementunit());
-          Assert.assertEquals("By" + id, table.getVMeasurementdeterminedby());
-          Assert.assertEquals("Method" + id, table.getVMeasurementmethod());
-          Assert.assertEquals("Remarks" + id, table.getVMeasurementremarks());
-          Assert.assertEquals("201" + id, table.getVMeasurementdetermineddate());
+          Assert.assertNotNull(table.getV_measurementid());
+          Assert.assertEquals("Type" + id, table.getV_measurementtype());
+          Assert.assertEquals("1.5", table.getV_measurementvalue());
+          Assert.assertEquals("Accurancy" + id, table.getV_measurementaccuracy());
+          Assert.assertEquals("Unit" + id, table.getV_measurementunit());
+          Assert.assertEquals("By" + id, table.getV_measurementdeterminedby());
+          Assert.assertEquals("Method" + id, table.getV_measurementmethod());
+          Assert.assertEquals("Remarks" + id, table.getV_measurementremarks());
+          Assert.assertEquals("201" + id, table.getV_measurementdetermineddate());
           // Interpreted
           Assert.assertNotNull(table.getMeasurementid());
           Assert.assertEquals("Type" + id, table.getMeasurementtype());

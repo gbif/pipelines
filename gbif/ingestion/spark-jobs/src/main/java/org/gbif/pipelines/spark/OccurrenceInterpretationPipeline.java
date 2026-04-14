@@ -13,6 +13,7 @@
  */
 package org.gbif.pipelines.spark;
 
+import static org.gbif.pipelines.core.converters.ConverterUtils.cleanVerbatim;
 import static org.gbif.pipelines.spark.ArgsConstants.*;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.util.LogUtil.timeAndRecPerSecond;
@@ -528,7 +529,24 @@ public class OccurrenceInterpretationPipeline {
                       er.getExtensions().entrySet().stream()
                           .filter(es -> allowExtensions.contains(es.getKey()))
                           .filter(es -> !es.getValue().isEmpty())
-                          .forEach(es -> extensions.put(es.getKey(), es.getValue()));
+                          .forEach(
+                              es -> {
+                                // data cleaning here
+                                String key = es.getKey();
+                                List<Map<String, String>> values = es.getValue();
+                                List<Map<String, String>> cleanedValues = new ArrayList<>();
+                                for (Map<String, String> record : values) {
+                                  Map<String, String> recordCleaned = new HashMap<>();
+                                  for (Map.Entry<String, String> field : record.entrySet()) {
+                                    if (field.getValue() != null) {
+                                      String cleanedValue = cleanVerbatim(field.getValue());
+                                      recordCleaned.put(field.getKey(), cleanedValue);
+                                    }
+                                  }
+                                  cleanedValues.add(recordCleaned);
+                                }
+                                extensions.put(key, cleanedValues);
+                              });
                       return ExtendedRecord.newBuilder()
                           .setId(er.getId())
                           .setCoreId(er.getId())
