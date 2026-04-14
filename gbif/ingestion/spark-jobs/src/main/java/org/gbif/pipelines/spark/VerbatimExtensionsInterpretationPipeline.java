@@ -158,8 +158,6 @@ public class VerbatimExtensionsInterpretationPipeline {
     spark.sparkContext().setJobGroup("repartitioning", "Repartitioning by extension", true);
     Dataset<Row> optimized = flattened.repartition(col("directory"));
 
-    log.info(String.join(", ", optimized.columns()));
-
     // collect distinct directories
     List<String> directories =
         optimized.select(col("directory")).distinct().as(Encoders.STRING()).collectAsList();
@@ -221,7 +219,6 @@ public class VerbatimExtensionsInterpretationPipeline {
       // build select list that matches target schema: use existing columns or nulls cast to the
       // target type
       var colsToSelect = getColsToSelect(tblSchema, dfCols);
-      log.info("Selecting {}", Arrays.stream(colsToSelect).toList());
 
       // filter rows for this extension and select aligned columns
       Dataset<Row> toWrite =

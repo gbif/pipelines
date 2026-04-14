@@ -534,7 +534,7 @@ public class OccurrenceInterpretationPipeline {
                                 // data cleaning here
                                 String key = es.getKey();
                                 List<Map<String, String>> values = es.getValue();
-                                List<Map<String, String>> cleanedValues = new ArrayList<>(values);
+                                List<Map<String, String>> cleanedValues = new ArrayList<>();
                                 for (Map<String, String> record : values) {
                                   Map<String, String> recordCleaned = new HashMap<>();
                                   for (Map.Entry<String, String> field : record.entrySet()) {

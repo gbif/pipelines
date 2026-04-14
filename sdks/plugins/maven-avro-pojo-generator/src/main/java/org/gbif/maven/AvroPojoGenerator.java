@@ -141,7 +141,6 @@ public class AvroPojoGenerator extends AbstractMojo {
     StringBuilder body = new StringBuilder();
     for (JsonNode field : fields) {
       String name = field.get("name").asText();
-      name = normalizeName(name);
       String type = resolveType(field.get("type"), namespace, imports);
       if ("class".equals(name)) name = name + "_";
       if (type.equals("IssueRecord")) body.append("    @lombok.Builder.Default\n");
@@ -316,10 +315,5 @@ public class AvroPojoGenerator extends AbstractMojo {
 
   private String boxIfPrimitive(String type) {
     return BOXED_MAP.getOrDefault(type, type);
-  }
-
-  // e.g. vDc_type -> vDcType
-  public static String normalizeName(String input) {
-    return input;
   }
 }

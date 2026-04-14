@@ -15,11 +15,11 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.occurrence.download.hive.EventHDFSTableDefinition;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.occurrence.download.hive.HiveDataTypes;
+import org.gbif.occurrence.download.hive.InitializableField;
 import org.gbif.occurrence.download.hive.OccurrenceHDFSTableDefinition;
 import org.gbif.pipelines.core.config.model.TableBuildConfig;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
 import org.jetbrains.annotations.NotNull;
-import org.jspecify.annotations.NonNull;
 
 @Slf4j
 public class TableUtil {
@@ -69,18 +69,19 @@ public class TableUtil {
   }
 
   static String getFieldDefinitions(DatasetType datasetType) {
+    List<InitializableField> definition;
 
     if (datasetType == DatasetType.OCCURRENCE) {
-      return OccurrenceHDFSTableDefinition.definition().stream()
-          .map(field -> field.getHiveField() + " " + field.getHiveDataType())
-          .collect(Collectors.joining(", \n"));
+      definition = OccurrenceHDFSTableDefinition.definition();
+    } else if (datasetType == DatasetType.SAMPLING_EVENT) {
+      definition = EventHDFSTableDefinition.definition();
+    } else {
+      throw new IllegalArgumentException("Unsupported dataset type: " + datasetType);
     }
-    if (datasetType == DatasetType.SAMPLING_EVENT) {
-      return EventHDFSTableDefinition.definition().stream()
-          .map(field -> field.getHiveField() + " " + field.getHiveDataType())
-          .collect(Collectors.joining(", \n"));
-    }
-    throw new IllegalArgumentException("Unsupported dataset type: " + datasetType);
+
+    return definition.stream()
+        .map(field -> field.getHiveField() + " " + field.getHiveDataType())
+        .collect(Collectors.joining(", \n"));
   }
 
   public static String getCreateMultimediaTableSQL(
@@ -140,7 +141,7 @@ public class TableUtil {
     return hdfsColumnList;
   }
 
-  private static @NonNull HdfsColumn getHdfsColumn(String parquetColumn) {
+  private static HdfsColumn getHdfsColumn(String parquetColumn) {
     HdfsColumn hdfsColumn = new HdfsColumn();
 
     // normalize column names

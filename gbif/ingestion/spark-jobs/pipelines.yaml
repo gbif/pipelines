@@ -1,3 +1,7 @@
+# This file is for local development and testing. It should not be used in production.
+# It is not included in the .gitignore file because it contains some configuration that is needed for local
+# development and testing.
+# Change inputPath, outputPath and vocabulariesPath to absolute paths to suit your local environment.
 inputPath: file:///Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/test-data
 outputPath: file:///Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/test-data
 rebuildPath: file:///Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/rebuild-path
