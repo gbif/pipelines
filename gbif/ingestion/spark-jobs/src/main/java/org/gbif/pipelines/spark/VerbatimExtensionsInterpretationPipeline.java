@@ -245,27 +245,16 @@ public class VerbatimExtensionsInterpretationPipeline {
   @NotNull
   private static Column[] getColsToSelect(StructType tblSchema, Set<String> dfCols) {
     List<Column> colsToSelect = new ArrayList<>();
-
-    // create a map of normalized column names to original column names
-    // for matching against the table schema
-    //    Map<String, String> dfColsNormalised =
-    //        dfCols.stream().collect(Collectors.toMap(c -> c.toLowerCase().replaceAll("_", ""), c
-    // -> c));
-
     for (StructField structField : tblSchema.fields()) {
       String fieldName = structField.name();
       // look for verbatim fields
       if (fieldName.startsWith("v_")) {
         String nonVerbatimFieldName = fieldName.substring(2);
         if (dfCols.contains(nonVerbatimFieldName)) {
-          //          String dfFieldName = dfColsNormalised.get(nonVerbatimFieldName);
           colsToSelect.add(col(nonVerbatimFieldName).alias(fieldName));
         }
       } else if (dfCols.contains(fieldName)) {
         colsToSelect.add(col(fieldName));
-        //      } else if (dfColsNormalised.containsKey(fieldName)) {
-        //        String originalFieldName = dfColsNormalised.get(fieldName);
-        //        colsToSelect.add(col(originalFieldName).alias(fieldName));
       } else {
         colsToSelect.add(lit(null).cast(structField.dataType()).alias(fieldName));
       }
