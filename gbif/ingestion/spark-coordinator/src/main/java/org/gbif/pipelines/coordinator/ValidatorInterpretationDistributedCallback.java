@@ -19,7 +19,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 
 @Slf4j
-public class ValidatorInterpretationDistributedCallback extends OccurrenceInterpretationCallback {
+public class ValidatorInterpretationDistributedCallback extends ValidatorInterpretationCallback {
 
   public ValidatorInterpretationDistributedCallback(
       PipelinesConfig pipelinesConfig, MessagePublisher publisher) {
