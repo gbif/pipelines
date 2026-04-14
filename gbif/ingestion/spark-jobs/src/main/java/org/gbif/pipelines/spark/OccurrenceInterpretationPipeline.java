@@ -36,7 +36,6 @@ import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
-import org.gbif.api.model.pipelines.InterpretationType;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -53,6 +52,7 @@ import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.spark.pojo.Occurrence;
+import org.gbif.pipelines.spark.pojo.OccurrenceInterpretType;
 import org.gbif.pipelines.transform.*;
 import org.gbif.pipelines.transform.factory.KeygenServiceFactory;
 import scala.Tuple2;
@@ -122,7 +122,7 @@ public class OccurrenceInterpretationPipeline {
         names = "--interpretTypes",
         description = "Use checkpoints where possible",
         arity = 1)
-    private List<InterpretationType.RecordType> interpretTypes = null;
+    private List<String> interpretTypes = null;
 
     @Parameter(
         names = {"--help", "-h"},
@@ -156,20 +156,32 @@ public class OccurrenceInterpretationPipeline {
     FileSystem fileSystem = getFileSystem(spark, config);
     /* ############ standard init block - end ########## */
 
-    if (args.interpretTypes != null
-        && args.interpretTypes.size() == 1
-        && args.interpretTypes.get(0) == InterpretationType.RecordType.MULTI_TAXONOMY) {
-      log.info("Running only taxonomy interpretation");
-      TaxonomyRefreshPipeline.runTaxonomy(
-          spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
+    // If a single interpret type was passed, parse it and run the requested sub-run
+    Optional<OccurrenceInterpretType> interpretTypeOpt =
+        (args.interpretTypes != null && args.interpretTypes.size() == 1)
+            ? OccurrenceInterpretType.fromString(args.interpretTypes.get(0))
+            : Optional.empty();
 
-    } else if (args.interpretTypes != null
-        && args.interpretTypes.size() == 1
-        && args.interpretTypes.get(0) == InterpretationType.RecordType.CLUSTERING) {
-      log.info("Running only clustering interpretation");
-      ClusteringRefreshPipeline.runClustering(
-          spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
-
+    if (interpretTypeOpt.isPresent()) {
+      OccurrenceInterpretType it = interpretTypeOpt.get();
+      switch (it) {
+        case MULTI_TAXONOMY:
+          log.info("Running only taxonomy interpretation");
+          TaxonomyRefreshPipeline.runTaxonomy(
+              spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
+          break;
+        case CLUSTERING:
+          log.info("Running only clustering interpretation");
+          ClusteringRefreshPipeline.runClustering(
+              spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
+          break;
+        case REGEN_OUTPUTS:
+          log.info("Running output regeneration");
+          regenOutput(spark, config, datasetId, attempt, args.numberOfShards);
+          break;
+        default:
+          throw new IllegalArgumentException("Unsupported interpretation type: " + it);
+      }
     } else {
       runInterpretation(
           spark,
@@ -194,6 +206,46 @@ public class OccurrenceInterpretationPipeline {
   public static void configSparkSession(
       SparkSession.Builder sparkBuilder, PipelinesConfig config) {}
 
+  public static void regenOutput(
+      SparkSession spark,
+      PipelinesConfig config,
+      String datasetId,
+      int attempt,
+      int numberOfShards) {
+
+    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
+    final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
+
+    Dataset<Occurrence> interpreted =
+        spark
+            .read()
+            .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
+            .as(Encoders.bean(Occurrence.class));
+
+    generateOutputs(spark, numberOfShards, interpreted, metadata, outputPath);
+  }
+
+  private static void generateOutputs(
+      SparkSession spark,
+      int numberOfShards,
+      Dataset<Occurrence> interpreted,
+      MetadataRecord metadata,
+      String outputPath) {
+    // write parquet for elastic
+    sparkLog(spark, "toJson", "Writing JSON output");
+    toJson(interpreted, metadata, numberOfShards)
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + OCCURRENCE_JSON);
+
+    // write parquet for hdfs view
+    sparkLog(spark, "toHdfs", "Writing HDFS output");
+    toHdfs(interpreted, metadata, numberOfShards)
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + OCCURRENCE_HDFS);
+  }
+
   /**
    * Runs the interpretation pipeline.
    *
@@ -216,24 +268,33 @@ public class OccurrenceInterpretationPipeline {
       int numberOfShards,
       Boolean tripletValid,
       Boolean occurrenceIdValid,
-      List<InterpretationType.RecordType> interpretTypes)
+      List<String> interpretTypes)
       throws Exception {
 
-    if (interpretTypes != null
-        && interpretTypes.size() == 1
-        && interpretTypes.get(0) == InterpretationType.RecordType.MULTI_TAXONOMY) {
-      log.info("Running only taxonomy interpretation");
-      TaxonomyRefreshPipeline.runTaxonomy(spark, fs, config, datasetId, attempt, numberOfShards);
-      return;
-    }
+    Optional<OccurrenceInterpretType> interpretTypeOpt =
+        (interpretTypes != null && interpretTypes.size() == 1)
+            ? OccurrenceInterpretType.fromString(interpretTypes.get(0))
+            : Optional.empty();
 
-    if (interpretTypes != null
-        && interpretTypes.size() == 1
-        && interpretTypes.get(0) == InterpretationType.RecordType.CLUSTERING) {
-      log.info("Running only clustering interpretation");
-      ClusteringRefreshPipeline.runClustering(
-          spark, fs, config, datasetId, attempt, numberOfShards);
-      return;
+    if (interpretTypeOpt.isPresent()) {
+      switch (interpretTypeOpt.get()) {
+        case MULTI_TAXONOMY:
+          log.info("Running only taxonomy interpretation");
+          TaxonomyRefreshPipeline.runTaxonomy(
+              spark, fs, config, datasetId, attempt, numberOfShards);
+          return;
+        case CLUSTERING:
+          log.info("Running only clustering interpretation");
+          ClusteringRefreshPipeline.runClustering(
+              spark, fs, config, datasetId, attempt, numberOfShards);
+          return;
+        case REGEN_OUTPUTS:
+          log.info("Running only output regeneration");
+          regenOutput(spark, config, datasetId, attempt, numberOfShards);
+          return;
+        default:
+          // no-op
+      }
     }
 
     long start = System.currentTimeMillis();
@@ -290,18 +351,7 @@ public class OccurrenceInterpretationPipeline {
     }
 
     // write parquet for elastic
-    sparkLog(spark, "toJson", "Writing JSON output");
-    toJson(interpreted, metadata, numberOfOutputShards)
-        .write()
-        .mode(SaveMode.Overwrite)
-        .parquet(outputPath + "/" + OCCURRENCE_JSON);
-
-    // write parquet for hdfs view
-    sparkLog(spark, "toHdfs", "Writing HDFS output");
-    toHdfs(interpreted, metadata, numberOfOutputShards)
-        .write()
-        .mode(SaveMode.Overwrite)
-        .parquet(outputPath + "/" + OCCURRENCE_HDFS);
+    generateOutputs(spark, numberOfOutputShards, interpreted, metadata, outputPath);
 
     // cleanup intermediate parquet outputs
     HdfsConfigs hdfsConfigs =

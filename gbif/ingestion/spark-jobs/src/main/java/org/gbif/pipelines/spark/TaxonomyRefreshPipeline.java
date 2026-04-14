@@ -16,7 +16,6 @@ package org.gbif.pipelines.spark;
 import static org.gbif.pipelines.spark.ArgsConstants.*;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.OccurrenceInterpretationPipeline.*;
-import static org.gbif.pipelines.spark.util.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
@@ -25,7 +24,6 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.logging.log4j.ThreadContext;
@@ -34,7 +32,6 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
-import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.spark.pojo.Occurrence;
@@ -142,12 +139,6 @@ public class TaxonomyRefreshPipeline {
         .parquet(outputPath + "/" + OCCURRENCE_HDFS);
 
     long recordCount = simpleRecords.count();
-
-    // write metrics to yaml
-    writeMetricsYaml(
-        fs,
-        Map.of(PipelinesVariables.Metrics.CLUSTERING_RECORDS_COUNT, recordCount),
-        outputPath + "/" + METRICS_FILENAME);
 
     // replace directories
     fs.delete(new org.apache.hadoop.fs.Path(outputPath + "/" + SIMPLE_OCCURRENCE), true);
