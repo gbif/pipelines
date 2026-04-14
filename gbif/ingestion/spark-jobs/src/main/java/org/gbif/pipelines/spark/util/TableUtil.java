@@ -243,7 +243,7 @@ public class TableUtil {
             callUDF("cleanDelimiters", col("mm_record.contributor")).alias("contributor"),
             callUDF("cleanDelimiters", col("mm_record.publisher")).alias("publisher"),
             callUDF("cleanDelimiters", col("mm_record.license")).alias("license"),
-            callUDF("cleanDelimiters", col("mm_record.rightsHolder")).alias("rightsHolder"),
+            callUDF("cleanDelimiters", col("mm_record.rightsHolder")).alias("rightsholder"),
             col("datasetkey"))
         .createOrReplaceTempView("mm_records");
     spark.sql(
@@ -265,7 +265,7 @@ public class TableUtil {
                    contributor,
                    publisher,
                    license,
-                   rightsHolder,
+                   rightsholder,
                    datasetkey
                FROM mm_records
             """,
@@ -344,7 +344,7 @@ public class TableUtil {
             callUDF("cleanDelimiters", col("mm_record.contributor")).alias("contributor"),
             callUDF("cleanDelimiters", col("mm_record.publisher")).alias("publisher"),
             callUDF("cleanDelimiters", col("mm_record.license")).alias("license"),
-            callUDF("cleanDelimiters", col("mm_record.rightsHolder")).alias("rightsHolder"),
+            callUDF("cleanDelimiters", col("mm_record.rightsHolder")).alias("rightsholder"),
             col("datasetkey"))
         .createOrReplaceTempView("mm_records");
     spark.sql(
@@ -366,7 +366,7 @@ public class TableUtil {
                    contributor,
                    publisher,
                    license,
-                   rightsHolder,
+                   rightsholder,
                    datasetkey
                FROM mm_records
             """,
