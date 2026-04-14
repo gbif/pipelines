@@ -44,6 +44,8 @@ public interface Directories {
   String SIMPLE_EVENT_WITH_DERIVED = "simple_event_with_derived";
   /** Directory for simple occurrence parquet files used as input for interpretation */
   String SIMPLE_OCCURRENCE = "simple_occurrence";
+  /** Temp directory for simple occurrence parquet files used for taxonomy refresh */
+  String SIMPLE_OCCURRENCE_REFRESH_TEMP = "simple_occurrence_refresh_temp";
   /** Directory for extended verbatim files after filtering out records with missing core ID */
   String VERBATIM_EXT_FILTERED = "verbatim_ext_filtered";
 

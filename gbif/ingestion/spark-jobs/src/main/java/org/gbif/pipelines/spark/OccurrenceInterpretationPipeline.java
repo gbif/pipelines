@@ -217,7 +217,7 @@ public class OccurrenceInterpretationPipeline {
       Boolean tripletValid,
       Boolean occurrenceIdValid,
       List<InterpretationType.RecordType> interpretTypes)
-      throws IOException {
+      throws Exception {
 
     if (interpretTypes != null
         && interpretTypes.size() == 1
