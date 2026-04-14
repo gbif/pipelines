@@ -43,7 +43,8 @@ public class AirflowConfFactory {
     if (baseConf == null) {
       throw new RuntimeException(
           String.format(
-              "No base configuration found for dataset {}, records {}", datasetId, recordsNumber));
+              "No base configuration found for dataset {%s}, records {%d}",
+              datasetId, recordsNumber));
     }
 
     List<String> combinedArgs = new ArrayList<>(extraArgs);
@@ -108,8 +109,20 @@ public class AirflowConfFactory {
     }
 
     boolean ok = true;
-    if (lower != null) ok &= lowerInclusive ? (lower <= value) : (lower < value);
-    if (upper != null) ok &= upperInclusive ? (value <= upper) : (value < upper);
+    if (lower != null) {
+      if (lowerInclusive) {
+        ok = ok && (lower <= value);
+      } else {
+        ok = ok && (lower < value);
+      }
+    }
+    if (upper != null) {
+      if (upperInclusive) {
+        ok = ok && (value <= upper);
+      } else {
+        ok = ok && (value < upper);
+      }
+    }
 
     return ok;
   }
