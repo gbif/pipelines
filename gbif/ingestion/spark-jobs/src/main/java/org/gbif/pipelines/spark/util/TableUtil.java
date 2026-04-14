@@ -279,7 +279,7 @@ public class TableUtil {
         .select(
             col("gbifid"),
             from_json(
-                    expr("cast(base64_decode(extHumboldt) as string)"),
+                    expr("cast(base64_decode(ext_humboldt) as string)"),
                     new ArrayType(
                         createHumboldtStructTypeFromJson(INTERPRETED_HUMBOLDT_TERMS), true))
                 .alias("h_record"),
@@ -308,7 +308,7 @@ public class TableUtil {
         .select(
             col("gbifid"),
             from_json(
-                    expr("cast(base64_decode(extMultimedia) as string)"),
+                    expr("cast(base64_decode(ext_multimedia) as string)"),
                     new ArrayType(
                         new StructType()
                             .add("type", "string", false)
