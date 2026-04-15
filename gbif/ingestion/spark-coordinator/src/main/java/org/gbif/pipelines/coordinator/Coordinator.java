@@ -245,13 +245,9 @@ public class Coordinator {
         config.getStandalone().getMessaging().getVirtualHost());
 
     // create listener and publisher up-front so we can reference them from the shutdown hook
-    MessageListener listener = null;
-    DefaultMessagePublisher publisher = null;
-    PipelinesCallback callback = null;
-    try {
-      listener = createListener(config);
-      publisher = createPublisher(config);
-      callback = callbackFn.apply(publisher);
+    try (MessageListener listener = createListener(config);
+        DefaultMessagePublisher publisher = createPublisher(config);
+        PipelinesCallback callback = callbackFn.apply(publisher)) {
 
       // initialise spark session & filesystem
       callback.init();
@@ -262,15 +258,16 @@ public class Coordinator {
       // Keep running until shutdown
       while (callback.isRunning() || callback.getRunningCounter() > 0) {
         try {
-
           if (!callback.isRunning()) {
-            log.info("Pausing queue listener....will not take more messages from processing queue");
+            log.info(
+                "Pausing queue listener....will not take more messages from processing queue {}",
+                queueName);
             listener.pauseQueue(queueName);
           }
           log.debug(
-              "Waiting for queue to finish. Sleeping {}. Running: {}, Count: {}",
+              "Waiting for queue to finish. Sleeping {}. Accepting new datasets: {}, Executing now count: {}",
               threadSleepMillis,
-              running,
+              callback.isRunning(),
               callback.getRunningCounter());
           Thread.sleep(threadSleepMillis);
         } catch (InterruptedException e) {
@@ -283,35 +280,8 @@ public class Coordinator {
           callback.getRunningCounter());
       log.info("No longer running and no active datasets. Proceeding to shutdown.");
 
-      // Explicitly close the callback (stops Spark session and filesystem) from the main
-      // control flow rather than from the shutdown hook. This reduces the race with
-      // Spark's internal shutdown hook which may otherwise close the SparkSession early.
-      //      try {
-      //        if (callback != null) {
-      //          log.info("Closing callback (stopping Spark session)");
-      //          callback.close();
-      //        }
-      //      } catch (Exception e) {
-      //        log.warn("Failed to close callback cleanly", e);
-      //      }
-
     } catch (IOException e) {
       log.error("Error starting standalone", e);
-    } finally {
-      //      try {
-      //        if (publisher != null) {
-      //          publisher.close();
-      //        }
-      //      } catch (Exception e) {
-      //        log.warn("Failed to close publisher", e);
-      //      }
-      //      try {
-      //        if (listener != null) {
-      //          listener.close();
-      //        }
-      //      } catch (Exception e) {
-      //        log.warn("Failed to close listener", e);
-      //      }
     }
 
     log.info("Exiting Standalone.");
