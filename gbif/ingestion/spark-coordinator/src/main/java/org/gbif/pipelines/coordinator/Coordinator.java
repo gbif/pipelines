@@ -234,9 +234,9 @@ public class Coordinator {
         queueName,
         config.getStandalone().getMessaging().getVirtualHost());
 
-    // create listener and publisher up-front so we can reference them from the shutdown hook
-    try (MessageListener listener = createListener(config);
-        DefaultMessagePublisher publisher = createPublisher(config);
+    // create listener and publisher up-front using the supplied factories
+    try (MessageListener listener = listenerSupplier.get();
+        DefaultMessagePublisher publisher = publisherSupplier.get();
         PipelinesCallback callback = callbackFn.apply(publisher)) {
 
       // initialise spark session & filesystem
