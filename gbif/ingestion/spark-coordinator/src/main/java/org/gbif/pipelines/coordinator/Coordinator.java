@@ -27,8 +27,6 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class Coordinator {
 
-  private volatile boolean running = true;
-
   @Parameters(separators = "=")
   private static class Args {
 
@@ -58,7 +56,7 @@ public class Coordinator {
     @Parameter(
         names = "--listenerThreadSleepMillis",
         description = "Number of millis to sleep for the listener thread")
-    private long listenerThreadSleepMillis = 2000;
+    private long listenerThreadSleepMillis = 1000;
 
     @Parameter(names = "--prometheusPort", description = "metrics port. Set to 0 to disable")
     private int prometheusPort = 9404;
@@ -235,8 +233,8 @@ public class Coordinator {
         mode,
         queueName,
         config.getStandalone().getMessaging().getVirtualHost());
-    setupShutdown();
 
+    // create listener and publisher up-front using the supplied factories
     try (MessageListener listener = listenerSupplier.get();
         DefaultMessagePublisher publisher = publisherSupplier.get();
         PipelinesCallback callback = callbackFn.apply(publisher)) {
@@ -244,17 +242,41 @@ public class Coordinator {
       // initialise spark session & filesystem
       callback.init();
 
-      // start the listener
+      // Start the listener
       listener.listen(queueName, routingKey, exchange, threads, callback);
 
-      // 5. Keep running until shutdown
-      while (running) {
+      boolean listening = true;
+
+      // Keep running until shutdown
+      while (callback.isRunning() || callback.getRunningCounter() > 0) {
         try {
+          if (listening && !callback.isRunning()) {
+            log.info(
+                "Pausing queue listener....will not take more messages from processing queue {}. Waiting for {} dataset to finish",
+                queueName,
+                callback.getRunningCounter());
+            listener.pauseQueue(queueName);
+            listening = false;
+          }
+          if (log.isTraceEnabled()) {
+            log.trace(
+                "Waiting for queue to finish. Sleeping {}. Accepting new datasets: {}, Executing now count: {}",
+                threadSleepMillis,
+                callback.isRunning(),
+                callback.getRunningCounter());
+          }
+
           Thread.sleep(threadSleepMillis);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
         }
       }
+
+      log.info(
+          "Running status {}, datasets running {}",
+          callback.isRunning(),
+          callback.getRunningCounter());
+      log.info("No longer running and no active datasets. Proceeding to shutdown.");
 
     } catch (IOException e) {
       log.error("Error starting standalone", e);
@@ -288,17 +310,6 @@ public class Coordinator {
             messagingConfig.getUsername(),
             messagingConfig.getPassword(),
             messagingConfig.getVirtualHost()));
-  }
-
-  private void setupShutdown() {
-    Runtime.getRuntime()
-        .addShutdownHook(
-            new Thread(
-                () -> {
-                  log.info("Shutdown signal received. Cleaning up...");
-                  running = false;
-                  log.info("Graceful shutdown complete.");
-                }));
   }
 
   public enum Mode {

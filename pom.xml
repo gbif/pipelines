@@ -110,7 +110,7 @@
     <vocabulary-lookup.version>2.0.4</vocabulary-lookup.version>
     <registry.version>4.2.11</registry.version>
     <gbif-common-ws.version>2.1.1</gbif-common-ws.version>
-    <gbif-postal-service.version>2.1.4</gbif-postal-service.version>
+    <gbif-postal-service.version>2.1.5</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
     <keygen.version>1.0.0</keygen.version>
 
