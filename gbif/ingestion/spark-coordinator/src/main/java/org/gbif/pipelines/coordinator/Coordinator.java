@@ -58,7 +58,7 @@ public class Coordinator {
     @Parameter(
         names = "--listenerThreadSleepMillis",
         description = "Number of millis to sleep for the listener thread")
-    private long listenerThreadSleepMillis = 2000;
+    private long listenerThreadSleepMillis = 5000;
 
     @Parameter(names = "--prometheusPort", description = "metrics port. Set to 0 to disable")
     private int prometheusPort = 9404;
@@ -288,7 +288,11 @@ public class Coordinator {
       // Keep running until shutdown
       while (running || finalCallback.getRunningCounter() > 0) {
         try {
-          log.info("Waiting for queue to finish. Sleeping {}", threadSleepMillis);
+          log.debug(
+              "Waiting for queue to finish. Sleeping {}. RunningL {}, CountL {}",
+              threadSleepMillis,
+              running,
+              finalCallback.getRunningCounter());
           Thread.sleep(threadSleepMillis);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
