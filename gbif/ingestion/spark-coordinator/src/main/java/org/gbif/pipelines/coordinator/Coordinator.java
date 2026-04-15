@@ -255,25 +255,33 @@ public class Coordinator {
       // Start the listener
       listener.listen(queueName, routingKey, exchange, threads, callback);
 
+      boolean listening = true;
+
       // Keep running until shutdown
       while (callback.isRunning() || callback.getRunningCounter() > 0) {
         try {
-          if (!callback.isRunning()) {
+          if (listening && !callback.isRunning()) {
             log.info(
                 "Pausing queue listener....will not take more messages from processing queue {}. Waiting for {} dataset to finish",
-                queueName, callback.getRunningCounter());
+                queueName,
+                callback.getRunningCounter());
             listener.pauseQueue(queueName);
+            listening = false;
           }
-          log.trace(
-              "Waiting for queue to finish. Sleeping {}. Accepting new datasets: {}, Executing now count: {}",
-              threadSleepMillis,
-              callback.isRunning(),
-              callback.getRunningCounter());
+          if (log.isTraceEnabled()) {
+            log.trace(
+                "Waiting for queue to finish. Sleeping {}. Accepting new datasets: {}, Executing now count: {}",
+                threadSleepMillis,
+                callback.isRunning(),
+                callback.getRunningCounter());
+          }
+
           Thread.sleep(threadSleepMillis);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
         }
       }
+
       log.info(
           "Running status {}, datasets running {}",
           callback.isRunning(),
