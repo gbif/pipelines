@@ -29,6 +29,7 @@ public class ValidatorInterpretationDistributedCallback extends ValidatorInterpr
   @Override
   protected void runPipeline(PipelinesVerbatimMessage message) throws Exception {
     // TODO: implement
+    log.info("ValidatorInterpretationDistributedCallback#runPipeline");
   }
 
   @Override
