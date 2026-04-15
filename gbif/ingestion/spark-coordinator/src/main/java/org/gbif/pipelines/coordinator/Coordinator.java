@@ -260,11 +260,11 @@ public class Coordinator {
         try {
           if (!callback.isRunning()) {
             log.info(
-                "Pausing queue listener....will not take more messages from processing queue {}",
-                queueName);
+                "Pausing queue listener....will not take more messages from processing queue {}. Waiting for {} dataset to finish",
+                queueName, callback.getRunningCounter());
             listener.pauseQueue(queueName);
           }
-          log.debug(
+          log.trace(
               "Waiting for queue to finish. Sleeping {}. Accepting new datasets: {}, Executing now count: {}",
               threadSleepMillis,
               callback.isRunning(),

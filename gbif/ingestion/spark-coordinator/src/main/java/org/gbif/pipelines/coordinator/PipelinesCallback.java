@@ -173,14 +173,14 @@ public abstract class PipelinesCallback<
   }
 
   public void close() throws IOException {
-    log.info("NOT Closing Spark Session and FileSystem connections");
+    log.info("Closing Spark Session and FileSystem connections");
     if (sparkSession != null) {
       sparkSession.close();
     }
     if (fileSystem != null) {
       fileSystem.close();
     }
-    log.info("NOT Closed Spark Session and FileSystem connections");
+    log.info("Closed Spark Session and FileSystem connections");
   }
 
   protected boolean isStandalone() {
