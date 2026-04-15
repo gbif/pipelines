@@ -103,7 +103,7 @@
     <dwca-io.version>3.0.1</dwca-io.version>
     <gbif-api.version>2.4.5-dna-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
-    <dwc-api.version>2.1.11-SNAPSHOT</dwc-api.version>
+    <dwc-api.version>2.1.11-dna-SNAPSHOT</dwc-api.version>
     <gbif-kvs.version>3.1.1</gbif-kvs.version>
     <hbase-utils.version>1.0.0</hbase-utils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
@@ -211,7 +211,7 @@
     <jakarta-annotation.version>3.0.0</jakarta-annotation.version>
     <super-csv.version>2.4.0</super-csv.version>
     <lz4.version>1.3.0</lz4.version>
-    <hdfs-tables.version>1.3.1-SNAPSHOT</hdfs-tables.version>
+    <hdfs-tables.version>1.3.1-dna-SNAPSHOT</hdfs-tables.version>
   </properties>
 
   <build>
