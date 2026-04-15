@@ -139,6 +139,7 @@ public abstract class PipelinesCallback<
 
     Configuration hadoopConf = null;
     if (isStandalone()) {
+      log.info("Initialising spark session for standalone pipelines");
 
       SparkSession.Builder sparkBuilder = SparkSession.builder().appName("pipelines_standalone");
       sparkBuilder = sparkBuilder.master(sparkMaster);
