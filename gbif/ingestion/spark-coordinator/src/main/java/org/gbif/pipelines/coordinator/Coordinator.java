@@ -27,8 +27,6 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class Coordinator {
 
-  private volatile boolean running = true;
-
   @Parameters(separators = "=")
   private static class Args {
 
