@@ -288,6 +288,7 @@ public class Coordinator {
       // Keep running until shutdown
       while (running || finalCallback.getRunningCounter() > 0) {
         try {
+          log.info("Waiting for queue to finish. Sleeping {}", threadSleepMillis);
           Thread.sleep(threadSleepMillis);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
