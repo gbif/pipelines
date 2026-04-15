@@ -54,8 +54,7 @@ public abstract class PipelinesCallback<
         I extends PipelineBasedMessage, O extends PipelineBasedMessage>
     implements MessageCallback<I>, AutoCloseable {
 
-  public static AtomicInteger runningCounter = new AtomicInteger(0);
-
+  private static final AtomicInteger runningCounter = new AtomicInteger(0);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   public static final String PAUSE_FILE_PATH = "/tmp/pause_message_processing";
   public static final String SHUTDOWN_FILE_PATH = "/tmp/shutdown_now";
@@ -291,13 +290,6 @@ public abstract class PipelinesCallback<
           log.error(
               "Failed to update tracking status for datasetKey - " + message.getDatasetUuid(), e);
         }
-        //
-        //                // update validator info
-        //                String errorMessage = null;
-        //                if (ex.getCause() instanceof PipelinesException) {
-        //                    errorMessage = ((PipelinesException) ex.getCause()).getShortMessage();
-        //                }
-        //                updateValidatorInfoStatus(Status.FAILED, errorMessage);
       } finally {
 
         CONCURRENT_DATASETS.dec();

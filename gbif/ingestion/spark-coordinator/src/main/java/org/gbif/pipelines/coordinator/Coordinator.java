@@ -62,11 +62,6 @@ public class Coordinator {
 
     @Parameter(names = "--prometheusPort", description = "metrics port. Set to 0 to disable")
     private int prometheusPort = 9404;
-
-    @Parameter(
-        names = "--terminationGracePeriodSeconds",
-        description = "Termination period in seconds")
-    private int terminationGracePeriodSeconds = 300;
   }
 
   public static void main(String[] argsv) throws Exception {
