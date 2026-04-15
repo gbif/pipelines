@@ -301,32 +301,32 @@ public class Coordinator {
       // Explicitly close the callback (stops Spark session and filesystem) from the main
       // control flow rather than from the shutdown hook. This reduces the race with
       // Spark's internal shutdown hook which may otherwise close the SparkSession early.
-      try {
-        if (callback != null) {
-          log.info("Closing callback (stopping Spark session)");
-          callback.close();
-        }
-      } catch (Exception e) {
-        log.warn("Failed to close callback cleanly", e);
-      }
+      //      try {
+      //        if (callback != null) {
+      //          log.info("Closing callback (stopping Spark session)");
+      //          callback.close();
+      //        }
+      //      } catch (Exception e) {
+      //        log.warn("Failed to close callback cleanly", e);
+      //      }
 
     } catch (IOException e) {
       log.error("Error starting standalone", e);
     } finally {
-      try {
-        if (publisher != null) {
-          publisher.close();
-        }
-      } catch (Exception e) {
-        log.warn("Failed to close publisher", e);
-      }
-      try {
-        if (listener != null) {
-          listener.close();
-        }
-      } catch (Exception e) {
-        log.warn("Failed to close listener", e);
-      }
+      //      try {
+      //        if (publisher != null) {
+      //          publisher.close();
+      //        }
+      //      } catch (Exception e) {
+      //        log.warn("Failed to close publisher", e);
+      //      }
+      //      try {
+      //        if (listener != null) {
+      //          listener.close();
+      //        }
+      //      } catch (Exception e) {
+      //        log.warn("Failed to close listener", e);
+      //      }
     }
 
     log.info("Exiting Standalone.");
