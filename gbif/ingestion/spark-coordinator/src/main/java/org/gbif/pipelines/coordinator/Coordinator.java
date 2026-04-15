@@ -93,7 +93,6 @@ public class Coordinator {
                 args.master,
                 args.threads,
                 args.listenerThreadSleepMillis,
-                args.terminationGracePeriodSeconds,
                 () -> {
                   try {
                     return createListener(config);
@@ -121,7 +120,6 @@ public class Coordinator {
               args.master,
               args.threads,
               args.listenerThreadSleepMillis,
-              args.terminationGracePeriodSeconds,
               () -> {
                 try {
                   return createListener(config);
@@ -148,7 +146,6 @@ public class Coordinator {
       String master,
       int threads,
       long threadSleepMillis,
-      int terminationGracePeriodSeconds,
       Supplier<MessageListener> listenerSupplier,
       Supplier<DefaultMessagePublisher> publisherSupplier) {
 
