@@ -58,6 +58,7 @@ public abstract class PipelinesCallback<
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   public static final String PAUSE_FILE_PATH = "/tmp/pause_message_processing";
+  public static final String SHUTDOWN_FILE_PATH = "/tmp/shutdown_now";
   protected final PipelinesConfig pipelinesConfig;
   protected final PipelinesHistoryClient historyClient;
   protected final MessagePublisher publisher;
@@ -454,6 +455,10 @@ public abstract class PipelinesCallback<
         throw new RuntimeException(e);
       }
     }
+  }
+
+  public boolean isRunning() {
+    return !new File(SHUTDOWN_FILE_PATH).exists();
   }
 
   private boolean isProcessingStopped(I message) {

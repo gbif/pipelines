@@ -58,7 +58,7 @@ public class Coordinator {
     @Parameter(
         names = "--listenerThreadSleepMillis",
         description = "Number of millis to sleep for the listener thread")
-    private long listenerThreadSleepMillis = 5000;
+    private long listenerThreadSleepMillis = 1000;
 
     @Parameter(names = "--prometheusPort", description = "metrics port. Set to 0 to disable")
     private int prometheusPort = 9404;
@@ -256,50 +256,31 @@ public class Coordinator {
       // initialise spark session & filesystem
       callback.init();
 
-      // setup a simple shutdown hook: quickly stop listening and signal the main thread to
-      // perform graceful shutdown. DO NOT block here because shutdown hooks run concurrently
-      // with other hooks (notably Spark's own shutdown hook) which may stop the SparkSession
-      // immediately. Long waits in the shutdown hook race with Spark and are unreliable.
-      final MessageListener finalListener = listener;
-      final PipelinesCallback finalCallback = callback;
-      Runtime.getRuntime()
-          .addShutdownHook(
-              new Thread(
-                  () -> {
-                    log.info(
-                        "Shutting down coordinator listener. Signalling main thread to stop accepting new messages (active datasets: {})...",
-                        (int) finalCallback.getRunningCounter());
-                    // signal main loop to stop accepting new work
-                    running = false;
-                    try {
-                      // pause consuming from the queue but keep the listener resources open so
-                      // we can resume later if needed. This avoids tearing down connections and
-                      // executors while in-flight tasks complete.
-                      finalListener.pauseQueue(queueName);
-                      log.info("Listener paused");
-                    } catch (Exception e) {
-                      log.warn("Failed to pause listener during shutdown", e);
-                    }
-                  }));
-
       // Start the listener
       listener.listen(queueName, routingKey, exchange, threads, callback);
 
       // Keep running until shutdown
-      while (running || finalCallback.getRunningCounter() > 0) {
+      while (callback.isRunning() || callback.getRunningCounter() > 0) {
         try {
+
+          if (!callback.isRunning()) {
+            log.info("Pausing queue listener....will not take more messages from processing queue");
+            listener.pauseQueue(queueName);
+          }
           log.debug(
               "Waiting for queue to finish. Sleeping {}. RunningL {}, CountL {}",
               threadSleepMillis,
               running,
-              finalCallback.getRunningCounter());
+              callback.getRunningCounter());
           Thread.sleep(threadSleepMillis);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
         }
       }
       log.info(
-          "Running status {}, datasets running {}", running, finalCallback.getRunningCounter());
+          "Running status {}, datasets running {}",
+          callback.isRunning(),
+          callback.getRunningCounter());
       log.info("No longer running and no active datasets. Proceeding to shutdown.");
 
       // Explicitly close the callback (stops Spark session and filesystem) from the main
