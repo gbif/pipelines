@@ -62,6 +62,11 @@ public class Coordinator {
 
     @Parameter(names = "--prometheusPort", description = "metrics port. Set to 0 to disable")
     private int prometheusPort = 9404;
+
+    @Parameter(
+        names = "--terminationGracePeriodSeconds",
+        description = "Termination period in seconds")
+    private int terminationGracePeriodSeconds = 300;
   }
 
   public static void main(String[] argsv) throws Exception {
@@ -88,6 +93,7 @@ public class Coordinator {
                 args.master,
                 args.threads,
                 args.listenerThreadSleepMillis,
+                args.terminationGracePeriodSeconds,
                 () -> {
                   try {
                     return createListener(config);
@@ -115,6 +121,7 @@ public class Coordinator {
               args.master,
               args.threads,
               args.listenerThreadSleepMillis,
+              args.terminationGracePeriodSeconds,
               () -> {
                 try {
                   return createListener(config);
@@ -141,6 +148,7 @@ public class Coordinator {
       String master,
       int threads,
       long threadSleepMillis,
+      int terminationGracePeriodSeconds,
       Supplier<MessageListener> listenerSupplier,
       Supplier<DefaultMessagePublisher> publisherSupplier) {
 
@@ -235,29 +243,86 @@ public class Coordinator {
         mode,
         queueName,
         config.getStandalone().getMessaging().getVirtualHost());
-    setupShutdown();
 
-    try (MessageListener listener = listenerSupplier.get();
-        DefaultMessagePublisher publisher = publisherSupplier.get();
-        PipelinesCallback callback = callbackFn.apply(publisher)) {
+    // create listener and publisher up-front so we can reference them from the shutdown hook
+    MessageListener listener = null;
+    DefaultMessagePublisher publisher = null;
+    PipelinesCallback callback = null;
+    try {
+      listener = createListener(config);
+      publisher = createPublisher(config);
+      callback = callbackFn.apply(publisher);
 
       // initialise spark session & filesystem
       callback.init();
 
-      // start the listener
+      // setup a simple shutdown hook: stop listening and wait (up to the configured grace period)
+      final MessageListener finalListener = listener;
+      Runtime.getRuntime()
+          .addShutdownHook(
+              new Thread(
+                  () -> {
+                    log.info(
+                        "Shutting down coordinator listener. Will not take more messages from queue. Waiting for current datasets ({}) to complete...",
+                        (int) PrometheusMetrics.CONCURRENT_DATASETS.get());
+                    running = false;
+                    try {
+                      finalListener.close();
+                      log.info("Listener closed");
+                    } catch (Exception e) {
+                      log.warn("Failed to close listener during shutdown", e);
+                    }
+
+                    long start = System.currentTimeMillis();
+                    long timeoutMs = terminationGracePeriodSeconds * 1000L; // seconds -> ms
+                    while (PrometheusMetrics.CONCURRENT_DATASETS.get() > 0
+                        && (System.currentTimeMillis() - start) < timeoutMs) {
+                      try {
+                        Thread.sleep(1000);
+                      } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                      }
+                    }
+                    log.info(
+                        "Shutdown wait complete. Active datasets remaining: {}",
+                        (int) PrometheusMetrics.CONCURRENT_DATASETS.get());
+                  }));
+
+      // Start the listener
       listener.listen(queueName, routingKey, exchange, threads, callback);
 
-      // 5. Keep running until shutdown
-      while (running) {
+      // Keep running until shutdown
+      while (running || PrometheusMetrics.CONCURRENT_DATASETS.get() > 0) {
         try {
           Thread.sleep(threadSleepMillis);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
         }
       }
+      log.info(
+          "Running status {}, datasets running {}",
+          running,
+          PrometheusMetrics.CONCURRENT_DATASETS.get());
+      log.info("No longer running and no active datasets. Proceeding to shutdown.");
 
     } catch (IOException e) {
       log.error("Error starting standalone", e);
+    } finally {
+      try {
+        if (publisher != null) {
+          publisher.close();
+        }
+      } catch (Exception e) {
+        log.warn("Failed to close publisher", e);
+      }
+      try {
+        if (listener != null) {
+          listener.close();
+        }
+      } catch (Exception e) {
+        log.warn("Failed to close listener", e);
+      }
     }
 
     log.info("Exiting Standalone.");
@@ -288,17 +353,6 @@ public class Coordinator {
             messagingConfig.getUsername(),
             messagingConfig.getPassword(),
             messagingConfig.getVirtualHost()));
-  }
-
-  private void setupShutdown() {
-    Runtime.getRuntime()
-        .addShutdownHook(
-            new Thread(
-                () -> {
-                  log.info("Shutdown signal received. Cleaning up...");
-                  running = false;
-                  log.info("Graceful shutdown complete.");
-                }));
   }
 
   public enum Mode {
