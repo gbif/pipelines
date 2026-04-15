@@ -46,6 +46,7 @@ public class ValidatorIndexingCallback
   @Override
   protected void runPipeline(PipelinesInterpretedMessage message) throws Exception {
     // TODO: implement
+    log.info("ValidatorIndexingCallback#runPipeline");
   }
 
   @Override
@@ -61,6 +62,7 @@ public class ValidatorIndexingCallback
   @Override
   public PipelinesIndexedMessage createOutgoingMessage(PipelinesInterpretedMessage message) {
     // TODO: implement
+    log.info("ValidatorIndexingCallback#createOutgoingMessage");
     return null;
   }
 }

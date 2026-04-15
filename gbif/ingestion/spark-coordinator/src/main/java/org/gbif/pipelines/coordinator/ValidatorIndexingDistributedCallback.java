@@ -29,6 +29,7 @@ public class ValidatorIndexingDistributedCallback extends ValidatorIndexingCallb
   @Override
   protected void runPipeline(PipelinesInterpretedMessage message) throws Exception {
     // TODO: implement
+    log.info("ValidatorIndexingDistributedCallback#runPipeline");
   }
 
   @Override

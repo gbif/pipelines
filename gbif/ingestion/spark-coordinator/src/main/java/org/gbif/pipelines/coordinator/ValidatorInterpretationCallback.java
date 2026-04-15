@@ -46,6 +46,7 @@ public class ValidatorInterpretationCallback
   @Override
   protected void runPipeline(PipelinesVerbatimMessage message) throws Exception {
     // TODO: implement
+    log.info("ValidatorInterpretationCallback#runPipeline");
   }
 
   @Override
@@ -55,6 +56,7 @@ public class ValidatorInterpretationCallback
 
   public PipelinesInterpretedMessage createOutgoingMessage(PipelinesVerbatimMessage message) {
     // TODO: implement
+    log.info("ValidatorInterpretationCallback#createOutgoingMessage");
     return null;
   }
 
