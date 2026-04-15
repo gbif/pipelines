@@ -742,7 +742,7 @@ public abstract class PipelinesCallback<
         .build();
   }
 
-  public Integer getRunningCounter() {
+  public int getRunningCounter() {
     return runningCounter.get();
   }
 
