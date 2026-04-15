@@ -40,6 +40,7 @@ import org.gbif.pipelines.io.avro.grscicoll.Match;
 import org.gbif.pipelines.io.avro.json.Classification;
 import org.gbif.pipelines.io.avro.json.GeologicalContext;
 import org.gbif.pipelines.io.avro.json.GeologicalRange;
+import org.gbif.pipelines.io.avro.json.NucleotideSequenceObject;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 
 @Slf4j
@@ -361,8 +362,35 @@ public class OccurrenceJsonConverter {
       builder.setDnaSequenceID(
           new ArrayList<>(
               dnaDerivedData.getDnaDerivedDataItems().stream()
-                  .map(DnaDerivedData::getDnaSequenceID)
+                  .map(DnaDerivedData::getNucleotideSequenceID)
                   .collect(Collectors.toCollection(LinkedHashSet::new))));
+
+      builder.setNucleotideSequence(
+          dnaDerivedData.getDnaDerivedDataItems().stream()
+              .map(
+                  d -> {
+                    NucleotideSequenceObject nucleotideSequenceObject =
+                        new NucleotideSequenceObject();
+
+                    nucleotideSequenceObject.setNucleotideSequenceID(d.getNucleotideSequenceID());
+                    nucleotideSequenceObject.setSequence(d.getSequence());
+                    nucleotideSequenceObject.setSequenceLength(d.getSequenceLength());
+                    nucleotideSequenceObject.setGcContent(d.getGcContent());
+                    nucleotideSequenceObject.setNonIupacFraction(d.getNonIupacFraction());
+                    nucleotideSequenceObject.setNonACGTNFraction(d.getNonACGTNFraction());
+                    nucleotideSequenceObject.setNFraction(d.getNFraction());
+                    nucleotideSequenceObject.setNRunsCapped(d.getNRunsCapped());
+                    nucleotideSequenceObject.setNaturalLanguageDetected(d.getNaturalLanguageDetected());
+                    nucleotideSequenceObject.setEndsTrimmed(d.getEndsTrimmed());
+                    nucleotideSequenceObject.setGapsOrWhitespaceRemoved(d.getGapsOrWhitespaceRemoved());
+                    nucleotideSequenceObject.setInvalid(d.getInvalid());
+
+                    JsonConverter.convertVocabularyConcept(d.getTargetGene())
+                        .ifPresent(nucleotideSequenceObject::setTargetGene);
+
+                    return nucleotideSequenceObject;
+                  })
+              .collect(Collectors.toList()));
     }
   }
 

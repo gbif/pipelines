@@ -14,6 +14,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificData;
 import org.gbif.pipelines.core.pojo.HumboldtJsonView;
+import org.gbif.pipelines.io.avro.DnaDerivedData;
 import org.gbif.pipelines.io.avro.Humboldt;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
@@ -94,6 +95,14 @@ public class MediaSerDeser {
   @SneakyThrows
   public static String multimediaToJson(List<Multimedia> media) {
     return media != null && !media.isEmpty() ? objectToJson(media) : null;
+  }
+
+  /** Converts the list of DNA Derived Data objects into a JSON string. */
+  @SneakyThrows
+  public static String dnaDerivedDataToJson(List<DnaDerivedData> dnaDerivedData) {
+    return dnaDerivedData != null && !dnaDerivedData.isEmpty()
+        ? objectToJson(dnaDerivedData)
+        : null;
   }
 
   /** Converts the list of humboldt objects into a JSON string. */

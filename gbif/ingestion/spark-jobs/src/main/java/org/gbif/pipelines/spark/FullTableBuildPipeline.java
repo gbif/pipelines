@@ -211,6 +211,15 @@ public class FullTableBuildPipeline {
     insertOverwriteMultimediaTable(
         spark, prefix + coreDwcTerm, prefix + coreDwcTerm + "_multimedia");
 
+    if (coreDwcTerm.equalsIgnoreCase("occurrence")) {
+      // Create dna table
+      String dnaTableName = coreDwcTerm + "_dna_derived_data";
+      spark.sql(getCreateDnaDerivedDataTableSQL(config.getTableBuildConfig(), dnaTableName));
+
+      // Insert data into the dna table
+      insertOverwriteDnaDerivedDataTable(spark, prefix + "occurrence", dnaTableName, false);
+    }
+
     // if its the event table, also create the event_humboldt table and insert data
     if (coreDwcTerm.equalsIgnoreCase("event")) {
       // For event table, also create the event_humboldt table and insert data

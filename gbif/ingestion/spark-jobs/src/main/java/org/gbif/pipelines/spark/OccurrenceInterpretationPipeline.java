@@ -477,7 +477,7 @@ public class OccurrenceInterpretationPipeline {
     GrscicollTransform grscicollTransform = GrscicollTransform.create(config);
     TemporalTransform temporalTransform = TemporalTransform.create(config);
     BasicTransform basicTransform = BasicTransform.create(config);
-    DnDerivedDataTransform dnDerivedDataTransform = DnDerivedDataTransform.create();
+    DnDerivedDataTransform dnDerivedDataTransform = DnDerivedDataTransform.create(config);
     MultimediaTransform multimediaTransform = MultimediaTransform.create(config);
     ImageTransform imageTransform = ImageTransform.create(config);
     AudubonTransform audubonTransform = AudubonTransform.create(config);

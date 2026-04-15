@@ -686,6 +686,60 @@
     "taxonConceptID": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
     "verbatimScientificName": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"},
     "dnaSequenceID":  {"type": "keyword"},
+
+    "nucleotideSequence": {
+      "type": "nested",
+      "properties": {
+        "nucleotideSequenceID": {
+          "type": "keyword"
+        },
+        "targetGene": {
+          "type": "object",
+          "properties": {
+            "concept": {
+              "type": "keyword"
+            },
+            "lineage": {
+              "type": "keyword"
+            }
+          }
+        },
+        "sequence": {
+          "type": "keyword"
+        },
+        "sequenceLength": {
+          "type": "integer"
+        },
+        "gcContent": {
+          "type": "double"
+        },
+        "nonIupacFraction": {
+          "type": "double"
+        },
+        "nonACGTNFraction": {
+          "type": "double"
+        },
+        "nFraction": {
+          "type": "double"
+        },
+        "nRunsCapped": {
+          "type": "int"
+        },
+        "naturalLanguageDetected": {
+          "type": "boolean"
+        },
+        "endsTrimmed": {
+          "type": "boolean"
+        },
+        "gapsOrWhitespaceRemoved": {
+          "type": "boolean"
+        },
+        "invalid": {
+          "type": "boolean"
+        }
+      }
+    },
+
     "footprintWKT":  {"type": "keyword", "index": false, "doc_values": false},
 
     "measurementTypes": {"type": "keyword", "copy_to": "all"},

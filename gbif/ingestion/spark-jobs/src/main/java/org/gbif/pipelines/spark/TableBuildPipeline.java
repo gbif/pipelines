@@ -258,6 +258,18 @@ public class TableBuildPipeline {
     // write to the multimedia table
     insertOverwriteMultimediaTableFromTemp(spark, tempCoreTable, coreDwcTerm + "_multimedia");
 
+    if (datasetType == DatasetType.OCCURRENCE) {
+      // Create dna table if it does not exist
+      String dnaTableName = coreDwcTerm + "_dna_derived_data";
+      if (!spark.catalog().tableExists(dnaTableName)) {
+        log.info("DNA derived data table does not exist and will be created");
+        spark.sql(getCreateDnaDerivedDataTableSQL(config.getTableBuildConfig(), dnaTableName));
+      }
+
+      // write to the dna table
+      insertOverwriteDnaDerivedDataTable(spark, tempCoreTable, coreDwcTerm + "_multimedia", true);
+    }
+
     // if a sampling event dataset, create the humboldt_event table if it does not exist and
     // populate it
     if (datasetType == DatasetType.SAMPLING_EVENT) {

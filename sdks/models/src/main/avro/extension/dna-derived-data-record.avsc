@@ -8,7 +8,19 @@
     "namespace":"org.gbif.pipelines.io.avro",
     "type":"record",
     "fields":[
-      {"name": "dnaSequenceID", "type": ["null", "string"], "default" : null}
+      {"name": "nucleotideSequenceID", "type": ["null", "string"], "default" : null},
+      {"name": "targetGene", "type": ["null", "VocabularyConcept"], "default" : null},
+      {"name": "sequence", "type": ["null", "string"], "default" : null},
+      {"name": "sequenceLength", "type": ["null", "int"], "default" : null},
+      {"name": "gcContent", "type": ["null", "double"], "default" : null},
+      {"name": "nonIupacFraction", "type": ["null", "double"], "default" : null},
+      {"name": "nonACGTNFraction", "type": ["null", "double"], "default" : null},
+      {"name": "nFraction", "type": ["null", "double"], "default" : null},
+      {"name": "nRunsCapped", "type": ["null", "int"], "default" : null},
+      {"name": "naturalLanguageDetected", "type": ["null", "boolean"], "default" : null},
+      {"name": "endsTrimmed", "type": ["null", "boolean"], "default" : null},
+      {"name": "gapsOrWhitespaceRemoved", "type": ["null", "boolean"], "default" : null},
+      {"name": "invalid", "type": ["null", "boolean"], "default" : null}
     ]
   },
   {

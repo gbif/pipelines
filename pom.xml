@@ -101,9 +101,9 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.68</gbif-parsers.version>
     <dwca-io.version>3.0.1</dwca-io.version>
-    <gbif-api.version>2.4.3</gbif-api.version>
+    <gbif-api.version>2.4.5-dna-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
-    <dwc-api.version>2.1.10</dwc-api.version>
+    <dwc-api.version>2.1.11-SNAPSHOT</dwc-api.version>
     <gbif-kvs.version>3.1.1</gbif-kvs.version>
     <hbase-utils.version>1.0.0</hbase-utils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
@@ -113,6 +113,7 @@
     <gbif-postal-service.version>2.1.4</gbif-postal-service.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
     <keygen.version>1.0.0</keygen.version>
+    <gbif-dna.version>1.0-SNAPSHOT</gbif-dna.version>
 
     <!-- Main distributed libraries (overrides from spark-jobs where applicable) -->
     <avro.version>1.11.3</avro.version>
@@ -210,7 +211,7 @@
     <jakarta-annotation.version>3.0.0</jakarta-annotation.version>
     <super-csv.version>2.4.0</super-csv.version>
     <lz4.version>1.3.0</lz4.version>
-    <hdfs-tables.version>1.3.0</hdfs-tables.version>
+    <hdfs-tables.version>1.3.1-SNAPSHOT</hdfs-tables.version>
   </properties>
 
   <build>
@@ -496,6 +497,11 @@
         <groupId>org.gbif.crawler</groupId>
         <artifactId>crawler-coordinator</artifactId>
         <version>${gbif-crawler.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.dna</groupId>
+        <artifactId>gbif-dna-core</artifactId>
+        <version>${gbif-dna.version}</version>
       </dependency>
 
       <!-- Avro -->

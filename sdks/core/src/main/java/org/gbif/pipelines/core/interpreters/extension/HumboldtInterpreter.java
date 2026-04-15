@@ -98,11 +98,9 @@ public class HumboldtInterpreter {
                 interpretDouble(
                     Humboldt::setEventDurationValue, EventIssue.EVENT_DURATION_VALUE_INVALID))
             .map(EcoTerm.eventDurationUnit, HumboldtInterpreter::interpretEventDurationUnit)
+            .map(EcoTerm.targetTaxonomicScope, interpretTaxon(Humboldt::setTargetTaxonomicScope))
             .map(
-                EcoTerm.targetTaxonomicScope, interpretTaxon(hr, Humboldt::setTargetTaxonomicScope))
-            .map(
-                EcoTerm.excludedTaxonomicScope,
-                interpretTaxon(hr, Humboldt::setExcludedTaxonomicScope))
+                EcoTerm.excludedTaxonomicScope, interpretTaxon(Humboldt::setExcludedTaxonomicScope))
             .map(
                 EcoTerm.taxonCompletenessProtocols,
                 interpretStringList(Humboldt::setTaxonCompletenessProtocols))
@@ -115,12 +113,12 @@ public class HumboldtInterpreter {
                 EcoTerm.isAbsenceReported,
                 interpretBoolean(
                     Humboldt::setIsAbsenceReported, EventIssue.IS_ABSENCE_REPORTED_INVALID))
-            .map(EcoTerm.absentTaxa, interpretTaxon(hr, Humboldt::setAbsentTaxa))
+            .map(EcoTerm.absentTaxa, interpretTaxon(Humboldt::setAbsentTaxa))
             .map(
                 EcoTerm.hasNonTargetTaxa,
                 interpretBoolean(
                     Humboldt::setHasNonTargetTaxa, EventIssue.HAS_NON_TARGET_TAXA_INVALID))
-            .map(EcoTerm.nonTargetTaxa, interpretTaxon(hr, Humboldt::setNonTargetTaxa))
+            .map(EcoTerm.nonTargetTaxa, interpretTaxon(Humboldt::setNonTargetTaxa))
             .map(
                 EcoTerm.areNonTargetTaxaFullyReported,
                 interpretBoolean(
@@ -396,7 +394,7 @@ public class HumboldtInterpreter {
   }
 
   private BiConsumer<Humboldt, String> interpretTaxon(
-      HumboldtRecord humboldtRecord, BiConsumer<Humboldt, List<TaxonHumboldtRecord>> setter) {
+      BiConsumer<Humboldt, List<TaxonHumboldtRecord>> setter) {
     return (humboldt, rawValue) -> {
       final List<TaxonHumboldtRecord> taxonRecords = new ArrayList<>();
       extractListValue(rawValue)

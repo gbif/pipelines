@@ -24,7 +24,8 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class TableUtil {
 
-  public static final Set<String> EXTENSION_COLUMNS = Set.of("ext_multimedia", "ext_humboldt");
+  public static final Set<String> EXTENSION_COLUMNS =
+      Set.of("ext_multimedia", "ext_humboldt", "ext_dnaderiveddata");
 
   /**
    * Check for records without a datasetKey or gbifId.
@@ -271,6 +272,79 @@ public class TableUtil {
                FROM mm_records
             """,
             multimediaTable));
+  }
+
+  public static String getCreateDnaDerivedDataTableSQL(TableBuildConfig config, String tableName) {
+    return String.format(
+        """
+        CREATE TABLE IF NOT EXISTS %s
+        (
+           gbifid STRING,
+           nucleotidesequenceid STRING,
+           targetgene %s ,
+           sequence STRING,
+           sequencelength INT,
+           gccontent DOUBLE,
+           noniupacfraction DOUBLE,
+           nonacgtnfraction DOUBLE,
+           nfraction DOUBLE,
+           nrunscapped INT,
+           naturallanguagedetected BOOLEAN,
+           endstrimmed BOOLEAN,
+           gapsorwhitespaceremoved BOOLEAN,
+           invalid BOOLEAN,
+           datasetkey STRING
+        )
+        USING iceberg
+        PARTITIONED BY (datasetkey)
+        TBLPROPERTIES (%s)
+      """,
+        tableName, HiveDataTypes.TYPE_VOCABULARY_STRUCT, generateTblProperties(config));
+  }
+
+  public static void insertOverwriteDnaDerivedDataTable(
+      SparkSession spark,
+      String occurrenceTable,
+      String dnaDerivedDataTable,
+      boolean encodedExtData) {
+
+    StructType dnaTableSchema = spark.read().format("iceberg").load(dnaDerivedDataTable).schema();
+    StructType dnaStructType =
+        new StructType(
+            Arrays.stream(dnaTableSchema.fields())
+                .filter(
+                    f ->
+                        !f.name().equalsIgnoreCase("gbifid")
+                            && !f.name().equalsIgnoreCase("datasetkey"))
+                .toArray(StructField[]::new));
+
+    spark
+        .table(occurrenceTable)
+        .select(
+            col("gbifid"),
+            from_json(
+                    encodedExtData
+                        ? expr("cast(base64_decode(ext_dnaderiveddata) as string)")
+                        : col("ext_dnaderiveddata"),
+                    new ArrayType(dnaStructType, true))
+                .alias("dna_record"),
+            col("datasetkey"))
+        .select(col("gbifid"), explode(col("dna_record")).alias("dna_record"), col("datasetkey"))
+        .createOrReplaceTempView("dna_records");
+
+    String dnaColsSelect =
+        Arrays.stream(dnaStructType.fields())
+            .map(f -> "dna_record." + f.name())
+            .collect(Collectors.joining(","));
+
+    spark.sql(
+        String.format(
+            """
+           INSERT OVERWRITE TABLE %s
+           SELECT gbifid, %s, datasetkey
+           FROM dna_records
+        """,
+            dnaDerivedDataTable, dnaColsSelect));
   }
 
   public static void insertOverwriteHumboldtTableFromTemp(
