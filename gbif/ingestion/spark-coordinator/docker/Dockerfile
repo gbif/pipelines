@@ -15,6 +15,8 @@ ADD https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-extensions-3
 RUN chmod 777 /opt/spark/jars/iceberg-spark-extensions-3.5_2.12-1.6.1.jar
 RUN chmod 777 /opt/spark/jars/iceberg-spark-runtime-3.5_2.12-1.6.1.jar
 RUN chmod 777 /opt/spark/work-dir
+# Install tini so we have a proper PID 1 that reaps children and forwards signals
+RUN apt-get update && apt-get install -y --no-install-recommends tini && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd -r stackable && useradd -r -g stackable -m stackable
 USER stackable:stackable
@@ -28,8 +30,7 @@ CMD ["MODE", "PATH_TO_CONFIG", "1"]
 
 # Prometheus metrics port
 EXPOSE 9404
-
-ENTRYPOINT ["sh", "-c", "java $JVM_OPTIONS \
+ENTRYPOINT ["/usr/bin/tini", "--", "sh", "-c", "exec java $JVM_OPTIONS \
   -DpipelinesVersion $VERSION \
   --add-exports java.base/sun.nio.ch=ALL-UNNAMED \
   --add-exports java.base/sun.security.action=ALL-UNNAMED \
@@ -40,4 +41,4 @@ ENTRYPOINT ["sh", "-c", "java $JVM_OPTIONS \
   --add-opens java.base/java.util=ALL-UNNAMED \
   --add-opens java.base/sun.nio.ch=ALL-UNNAMED \
   -cp /opt/spark/jars/*:/jobs/ingest-spark-coordinator.jar \
-  org.gbif.pipelines.coordinator.Coordinator \"$@\"", "sh"]
+  org.gbif.pipelines.coordinator.Coordinator \"$@\"", "--"]
