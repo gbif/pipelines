@@ -261,13 +261,14 @@ public class Coordinator {
       // with other hooks (notably Spark's own shutdown hook) which may stop the SparkSession
       // immediately. Long waits in the shutdown hook race with Spark and are unreliable.
       final MessageListener finalListener = listener;
+      final PipelinesCallback finalCallback = callback;
       Runtime.getRuntime()
           .addShutdownHook(
               new Thread(
                   () -> {
                     log.info(
                         "Shutting down coordinator listener. Signalling main thread to stop accepting new messages (active datasets: {})...",
-                        (int) PrometheusMetrics.CONCURRENT_DATASETS.get());
+                        (int) finalCallback.getRunningCounter());
                     // signal main loop to stop accepting new work
                     running = false;
                     try {
@@ -285,7 +286,7 @@ public class Coordinator {
       listener.listen(queueName, routingKey, exchange, threads, callback);
 
       // Keep running until shutdown
-      while (running || PrometheusMetrics.CONCURRENT_DATASETS.get() > 0) {
+      while (running || finalCallback.getRunningCounter() > 0) {
         try {
           Thread.sleep(threadSleepMillis);
         } catch (InterruptedException e) {
@@ -293,9 +294,7 @@ public class Coordinator {
         }
       }
       log.info(
-          "Running status {}, datasets running {}",
-          running,
-          PrometheusMetrics.CONCURRENT_DATASETS.get());
+          "Running status {}, datasets running {}", running, finalCallback.getRunningCounter());
       log.info("No longer running and no active datasets. Proceeding to shutdown.");
 
       // Explicitly close the callback (stops Spark session and filesystem) from the main
