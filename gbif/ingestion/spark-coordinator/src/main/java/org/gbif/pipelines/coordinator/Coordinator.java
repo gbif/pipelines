@@ -268,7 +268,7 @@ public class Coordinator {
             listener.pauseQueue(queueName);
           }
           log.debug(
-              "Waiting for queue to finish. Sleeping {}. RunningL {}, CountL {}",
+              "Waiting for queue to finish. Sleeping {}. Running: {}, Count: {}",
               threadSleepMillis,
               running,
               callback.getRunningCounter());
