@@ -319,6 +319,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     return validationMapper.get(validation.getKey());
   }
 
+  private boolean isStandalone(DataFile dataFile) {
+    return dataFile.getSize() != null && dataFile.getSize() < 10L * 1024 * 1024;
+  }
+
   /** Notifies when the file is submitted. */
   @SneakyThrows
   private void notify(UUID key, DataFile dataFile, Set<String> pipelinesSteps) {
@@ -329,6 +333,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     message.setExecutionId(1L);
     message.setPipelineSteps(pipelinesSteps);
     message.setFileFormat(dataFile.getFileFormat().name());
+    message.setRunnerType(
+        isStandalone(dataFile)
+            ? PipelinesArchiveValidatorMessage.RunnerType.STANDALONE
+            : PipelinesArchiveValidatorMessage.RunnerType.DISTRIBUTED);
 
     log.info("Send the MQ message to the validator queue for key - {}", key);
     messagePublisher.send(message);
