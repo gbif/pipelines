@@ -9,6 +9,7 @@
     "type":"record",
     "fields":[
       {"name": "nucleotideSequenceID", "type": ["null", "string"], "default" : null},
+      {"name": "rawSequence", "type": ["null", "string"], "default" : null},
       {"name": "targetGene", "type": ["null", "VocabularyConcept"], "default" : null},
       {"name": "sequence", "type": ["null", "string"], "default" : null},
       {"name": "sequenceLength", "type": ["null", "int"], "default" : null},

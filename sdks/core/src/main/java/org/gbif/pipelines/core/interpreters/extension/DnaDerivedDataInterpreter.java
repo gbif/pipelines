@@ -62,6 +62,7 @@ public class DnaDerivedDataInterpreter {
       SequenceProcessor sequenceProcessor = new SequenceProcessor();
       SequenceProcessor.Result result = sequenceProcessor.processOneSequence(rawValue);
 
+      dnaDerivedData.setRawSequence(rawValue);
       dnaDerivedData.setNucleotideSequenceID(result.nucleotideSequenceID());
       dnaDerivedData.setSequence(result.sequence());
       dnaDerivedData.setSequenceLength(result.sequenceLength());
