@@ -1,5 +1,10 @@
 package org.gbif.validator.api;
 
+import org.gbif.api.vocabulary.InterpretationRemarkSeverity;
+import org.gbif.dwc.terms.GbifDnaTerm;
+import org.gbif.dwc.terms.MixsTerm;
+import org.gbif.dwc.terms.Term;
+
 /**
  * Enumeration of all possible types for an evaluation. OccurrenceIssue are copied here to access
  * all evaluation types by a single enum.
@@ -130,6 +135,14 @@ public enum EvaluationType {
   INSTITUTION_COLLECTION_MISMATCH(EvaluationCategory.OCC_INTERPRETATION_BASED),
   POSSIBLY_ON_LOAN(EvaluationCategory.OCC_INTERPRETATION_BASED),
   DIFFERENT_OWNER_INSTITUTION(EvaluationCategory.OCC_INTERPRETATION_BASED),
+  // DNA
+  NUCLEOTIDE_SEQUENCE_NATURAL_LANGUAGE(EvaluationCategory.OCC_INTERPRETATION_BASED),
+  NUCLEOTIDE_SEQUENCE_ENDS_TRIMMED(EvaluationCategory.OCC_INTERPRETATION_BASED),
+  NUCLEOTIDE_SEQUENCE_GAPS_REMOVED(EvaluationCategory.OCC_INTERPRETATION_BASED),
+  NUCLEOTIDE_SEQUENCE_INVALID(EvaluationCategory.OCC_INTERPRETATION_BASED),
+  NUCLEOTIDE_SEQUENCE_HIGH_N_FRACTION(EvaluationCategory.OCC_INTERPRETATION_BASED),
+  NUCLEOTIDE_SEQUENCE_HIGH_AMBIGUITY(EvaluationCategory.OCC_INTERPRETATION_BASED),
+  TARGET_GENE_INVALID(EvaluationCategory.OCC_INTERPRETATION_BASED),
 
   PARENT_NAME_USAGE_ID_INVALID(EvaluationCategory.CLB_INTERPRETATION_BASED),
   ACCEPTED_NAME_USAGE_ID_INVALID(EvaluationCategory.CLB_INTERPRETATION_BASED),
