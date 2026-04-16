@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
@@ -58,7 +59,7 @@ public class ChecklistValidatorCallbackIT {
 
     PipelinesChecklistValidatorMessage message =
         new PipelinesChecklistValidatorMessage(
-            uuid, 1, Collections.singleton("VALIDATOR_COLLECT_METRICS"), 1L, "dwca");
+            uuid, 1, Collections.singleton("VALIDATOR_COLLECT_METRICS"), 1L, "dwca", PipelinesArchiveValidatorMessage.RunnerType.STANDALONE);
 
     // When
     ChecklistValidatorCallback callback =
