@@ -1,10 +1,5 @@
 package org.gbif.validator.api;
 
-import org.gbif.api.vocabulary.InterpretationRemarkSeverity;
-import org.gbif.dwc.terms.GbifDnaTerm;
-import org.gbif.dwc.terms.MixsTerm;
-import org.gbif.dwc.terms.Term;
-
 /**
  * Enumeration of all possible types for an evaluation. OccurrenceIssue are copied here to access
  * all evaluation types by a single enum.
