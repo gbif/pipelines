@@ -14,6 +14,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.dwc.Archive;
@@ -70,7 +71,8 @@ public class DwcaMetricsCollector implements MetricsCollector {
               message.getAttempt(),
               message.getPipelineSteps(),
               message.getExecutionId(),
-              FileFormat.DWCA.name());
+              FileFormat.DWCA.name(),
+              PipelinesArchiveValidatorMessage.RunnerType.STANDALONE);
 
       // Set status to QUEUED before sending the message
       org.gbif.pipelines.tasks.Validations.updateStatus(
