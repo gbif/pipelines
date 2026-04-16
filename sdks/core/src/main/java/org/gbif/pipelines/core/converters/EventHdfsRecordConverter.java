@@ -14,9 +14,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.gbif.dwc.terms.*;
 import org.gbif.pipelines.core.parsers.temporal.StringToDateFunctions;
 import org.gbif.pipelines.core.pojo.HumboldtJsonView;
@@ -203,7 +201,7 @@ public class EventHdfsRecordConverter {
   }
 
   private void mapProjectIds(EventHdfsRecord eventHdfsRecord) {
-    Set<String> projectIds = new HashSet<>();
+    Set<String> projectIds = new LinkedHashSet<>();
 
     if (metadataRecord != null) {
       projectIds.add(metadataRecord.getProjectId());
@@ -319,52 +317,6 @@ public class EventHdfsRecordConverter {
     addNonTaxonIssues(identifierRecord.getIssues(), eventHdfsRecord);
   }
 
-  /**
-   * From a {@link Schema.Field} copies it value into a the {@link EventHdfsRecord} field using the
-   * recognized data type.
-   *
-   * @param eventHdfsRecord target record
-   * @param avroField field to be copied
-   * @param fieldName {@link EventHdfsRecord} field/property name
-   * @param value field data/value
-   */
-  private static void setHdfsRecordField(
-      EventHdfsRecord eventHdfsRecord, Schema.Field avroField, String fieldName, String value) {
-    try {
-      Schema.Type fieldType = avroField.schema().getType();
-      if (Schema.Type.UNION == avroField.schema().getType()) {
-        fieldType = avroField.schema().getTypes().get(0).getType();
-      }
-      switch (fieldType) {
-        case INT:
-          PropertyUtils.setProperty(eventHdfsRecord, fieldName, Integer.valueOf(value));
-          break;
-        case LONG:
-          PropertyUtils.setProperty(eventHdfsRecord, fieldName, Long.valueOf(value));
-          break;
-        case BOOLEAN:
-          PropertyUtils.setProperty(eventHdfsRecord, fieldName, Boolean.valueOf(value));
-          break;
-        case DOUBLE:
-          PropertyUtils.setProperty(eventHdfsRecord, fieldName, Double.valueOf(value));
-          break;
-        case FLOAT:
-          PropertyUtils.setProperty(eventHdfsRecord, fieldName, Float.valueOf(value));
-          break;
-        default:
-          PropertyUtils.setProperty(eventHdfsRecord, fieldName, value);
-          break;
-      }
-    } catch (Exception ex) {
-      log.error(
-          "Ignoring error setting field {}, field name {}, value. Exception: {}",
-          avroField,
-          fieldName,
-          value,
-          ex);
-    }
-  }
-
   /** Copies the {@link ExtendedRecord} data into the {@link EventHdfsRecord}. */
   private void mapExtendedRecord(EventHdfsRecord eventHdfsRecord) {
     if (extendedRecord == null) {
@@ -446,7 +398,7 @@ public class EventHdfsRecordConverter {
             .map(TextNode::valueOf)
             .map(TextNode::asText)
             .collect(Collectors.toList());
-    eventHdfsRecord.setExtMultimedia(
+    eventHdfsRecord.setExt_multimedia(
         MediaSerDeser.multimediaToJson(multimediaRecord.getMultimediaItems()));
 
     setCreatedIfGreater(eventHdfsRecord, multimediaRecord.getCreated());
@@ -479,7 +431,7 @@ public class EventHdfsRecordConverter {
       Function<List<TaxonHumboldtRecord>, Map<String, Map<String, List<String>>>>
           convertToTaxonMap =
               r -> {
-                Map<String, Map<String, List<String>>> valuesAsList = new HashMap<>();
+                Map<String, Map<String, List<String>>> valuesAsList = new LinkedHashMap<>();
 
                 r.stream()
                     .filter(v -> v.getChecklistKey() != null)
@@ -487,7 +439,7 @@ public class EventHdfsRecordConverter {
                         t -> {
                           Map<String, List<String>> values =
                               valuesAsList.computeIfAbsent(
-                                  t.getChecklistKey(), k -> new HashMap<>());
+                                  t.getChecklistKey(), k -> new LinkedHashMap<>());
 
                           if (t.getUsage() != null) {
                             values
@@ -521,7 +473,7 @@ public class EventHdfsRecordConverter {
                               .addAll(
                                   t.getClassification().stream()
                                       .map(RankedName::getKey)
-                                      .collect(Collectors.toSet()));
+                                      .collect(Collectors.toCollection(LinkedHashSet::new)));
                           values
                               .computeIfAbsent("issues", k -> new ArrayList<>())
                               .addAll(t.getIssues().getIssueList());
@@ -586,7 +538,7 @@ public class EventHdfsRecordConverter {
                   })
               .collect(Collectors.toList());
 
-      eventHdfsRecord.setExtHumboldt(base64Encode(MediaSerDeser.humboldtToJson(jsonViews)));
+      eventHdfsRecord.setExt_humboldt(base64Encode(MediaSerDeser.humboldtToJson(jsonViews)));
     }
 
     addNonTaxonIssues(humboldtRecord.getIssues(), eventHdfsRecord);

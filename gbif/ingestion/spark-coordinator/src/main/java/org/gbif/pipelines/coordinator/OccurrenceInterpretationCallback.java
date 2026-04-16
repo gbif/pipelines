@@ -1,6 +1,6 @@
 package org.gbif.pipelines.coordinator;
 
-import java.util.stream.Collectors;
+import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.*;
@@ -44,9 +44,7 @@ public class OccurrenceInterpretationCallback
         pipelinesConfig.getStandalone().getNumberOfShards(),
         message.getValidationResult().isTripletValid(),
         message.getValidationResult().isOccurrenceIdValid(),
-        message.getInterpretTypes().stream()
-            .map(InterpretationType.RecordType::valueOf)
-            .collect(Collectors.toList())); // map to enum
+        new ArrayList<>(message.getInterpretTypes())); // map to enum
   }
 
   @Override

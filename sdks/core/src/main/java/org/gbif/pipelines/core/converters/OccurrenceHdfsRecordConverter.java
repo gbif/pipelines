@@ -212,7 +212,7 @@ public class OccurrenceHdfsRecordConverter {
   }
 
   private void mapProjectIds(OccurrenceHdfsRecord occurrenceHdfsRecord) {
-    Set<String> projectIds = new HashSet<>();
+    Set<String> projectIds = new LinkedHashSet<>();
 
     if (metadataRecord != null) {
       projectIds.add(metadataRecord.getProjectId());
@@ -317,7 +317,7 @@ public class OccurrenceHdfsRecordConverter {
     if (multiTaxonRecord == null
         || multiTaxonRecord.getTaxonRecords() == null
         || multiTaxonRecord.getTaxonRecords().isEmpty()) {
-      occurrenceHdfsRecord.setClassifications(new HashMap<>());
+      occurrenceHdfsRecord.setClassifications(new LinkedHashMap<>());
       return;
     }
     occurrenceHdfsRecord.setChecklistkey(
@@ -333,7 +333,9 @@ public class OccurrenceHdfsRecordConverter {
                     tr ->
                         tr.getClassification().stream()
                             .map(RankedName::getKey)
-                            .collect(Collectors.toList()))));
+                            .collect(Collectors.toList()),
+                    (a, b) -> a,
+                    LinkedHashMap::new)));
 
     occurrenceHdfsRecord.setTaxonomicstatuses(
         multiTaxonRecord.getTaxonRecords().stream()
@@ -343,7 +345,9 @@ public class OccurrenceHdfsRecordConverter {
                     tr ->
                         tr.getUsage() != null && tr.getUsage().getStatus() != null
                             ? tr.getUsage().getStatus()
-                            : "")));
+                            : "",
+                    (a, b) -> a,
+                    LinkedHashMap::new)));
 
     occurrenceHdfsRecord.setTaxonomicissue(
         multiTaxonRecord.getTaxonRecords().stream()
@@ -353,7 +357,9 @@ public class OccurrenceHdfsRecordConverter {
                     tr ->
                         tr.getIssues() != null && tr.getIssues().getIssueList() != null
                             ? tr.getIssues().getIssueList()
-                            : List.of())));
+                            : List.of(),
+                    (a, b) -> a,
+                    LinkedHashMap::new)));
 
     occurrenceHdfsRecord.setClassificationdetails(
         multiTaxonRecord.getTaxonRecords().stream()
@@ -361,7 +367,10 @@ public class OccurrenceHdfsRecordConverter {
             .filter(tr -> tr.getUsage() != null)
             .collect(
                 Collectors.toMap(
-                    TaxonRecord::getDatasetKey, tr -> classificationToMap(extendedRecord, tr))));
+                    TaxonRecord::getDatasetKey,
+                    tr -> classificationToMap(extendedRecord, tr),
+                    (a, b) -> a,
+                    LinkedHashMap::new)));
 
     // find the GBIF taxonomy
     Optional<TaxonRecord> gbifRecord =
@@ -376,7 +385,7 @@ public class OccurrenceHdfsRecordConverter {
   private static Map<String, String> classificationToMap(
       ExtendedRecord verbatim, TaxonRecord taxonRecord) {
 
-    Map<String, String> map = new HashMap<>();
+    Map<String, String> map = new LinkedHashMap<>();
 
     // Get usage and accepted usage
     RankedNameWithAuthorship usage = taxonRecord.getUsage();
@@ -871,7 +880,7 @@ public class OccurrenceHdfsRecordConverter {
             .map(TextNode::valueOf)
             .map(TextNode::asText)
             .collect(Collectors.toList());
-    occurrenceHdfsRecord.setExtMultimedia(
+    occurrenceHdfsRecord.setExt_multimedia(
         base64Encode(MediaSerDeser.multimediaToJson(multimediaRecord.getMultimediaItems())));
 
     setCreatedIfGreater(occurrenceHdfsRecord, multimediaRecord.getCreated());
@@ -891,7 +900,7 @@ public class OccurrenceHdfsRecordConverter {
           new ArrayList<>(
               dnaDerivedDataRecord.getDnaDerivedDataItems().stream()
                   .map(DnaDerivedData::getDnaSequenceID)
-                  .collect(Collectors.toSet())));
+                  .collect(Collectors.toCollection(LinkedHashSet::new))));
     }
   }
 }

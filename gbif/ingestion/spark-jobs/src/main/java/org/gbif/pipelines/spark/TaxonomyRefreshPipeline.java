@@ -16,7 +16,6 @@ package org.gbif.pipelines.spark;
 import static org.gbif.pipelines.spark.ArgsConstants.*;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.OccurrenceInterpretationPipeline.*;
-import static org.gbif.pipelines.spark.util.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
@@ -25,7 +24,6 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.logging.log4j.ThreadContext;
@@ -34,7 +32,6 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
-import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.spark.pojo.Occurrence;
@@ -93,8 +90,7 @@ public class TaxonomyRefreshPipeline {
 
     /* ############ standard init block ########## */
     SparkSession spark =
-        getSparkSession(
-            args.master, args.appName, config, TaxonomyRefreshPipeline::configSparkSession);
+        getSparkSession(args.master, args.appName, config, (builder, pipelinesConfig) -> {});
     FileSystem fileSystem = getFileSystem(spark, config);
     /* ############ standard init block - end ########## */
 
@@ -106,20 +102,19 @@ public class TaxonomyRefreshPipeline {
     System.exit(0);
   }
 
-  public static void configSparkSession(
-      SparkSession.Builder sparkBuilder, PipelinesConfig config) {}
-
   public static void runTaxonomy(
       SparkSession spark,
       FileSystem fs,
       PipelinesConfig config,
       String datasetId,
       int attempt,
-      int numOfShards) {
+      int numOfShards)
+      throws Exception {
 
     long start = System.currentTimeMillis();
 
     ThreadContext.put("datasetKey", datasetId);
+    log.info("Starting taxonomy refresh");
 
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
 
@@ -145,11 +140,11 @@ public class TaxonomyRefreshPipeline {
 
     long recordCount = simpleRecords.count();
 
-    // write metrics to yaml
-    writeMetricsYaml(
-        fs,
-        Map.of(PipelinesVariables.Metrics.CLUSTERING_RECORDS_COUNT, recordCount),
-        outputPath + "/" + METRICS_FILENAME);
+    // replace directories
+    fs.delete(new org.apache.hadoop.fs.Path(outputPath + "/" + SIMPLE_OCCURRENCE), true);
+    fs.rename(
+        new org.apache.hadoop.fs.Path(outputPath + "/" + SIMPLE_OCCURRENCE_REFRESH_TEMP),
+        new org.apache.hadoop.fs.Path(outputPath + "/" + SIMPLE_OCCURRENCE));
 
     log.info(
         "Finished taxonomy re-interpretation in {} secs, records: {}",
@@ -208,12 +203,15 @@ public class TaxonomyRefreshPipeline {
             Encoders.bean(Occurrence.class));
 
     // write simple interpreted records to disk
-    interpreted.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + SIMPLE_OCCURRENCE);
+    interpreted
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE_REFRESH_TEMP);
 
     // re-load
     return spark
         .read()
-        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
+        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE_REFRESH_TEMP)
         .as(Encoders.bean(Occurrence.class));
   }
 }

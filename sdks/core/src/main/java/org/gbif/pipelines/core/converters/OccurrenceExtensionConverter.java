@@ -5,7 +5,7 @@ import static org.gbif.dwc.terms.DwcTerm.Occurrence;
 import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -62,7 +62,7 @@ public class OccurrenceExtensionConverter {
   private static Map<String, Map<String, List<Map<String, String>>>> collectExtensions(
       ExtendedRecord er) {
 
-    Map<String, Map<String, List<Map<String, String>>>> result = new HashMap<>();
+    Map<String, Map<String, List<Map<String, String>>>> result = new LinkedHashMap<>();
 
     // Go through all extensions lists
     for (Entry<String, List<Map<String, String>>> entry : er.getExtensions().entrySet()) {
@@ -88,7 +88,8 @@ public class OccurrenceExtensionConverter {
 
         // If the map is null we create new map for the extension
         if (parsedExtensions == null) {
-          Map<String, List<Map<String, String>>> m = new HashMap<>(er.getExtensions().size() - 1);
+          Map<String, List<Map<String, String>>> m =
+              new LinkedHashMap<>(er.getExtensions().size() - 1);
           m.put(extensionName, createList(rawExtensionData));
           result.put(occurrenceId, m);
 

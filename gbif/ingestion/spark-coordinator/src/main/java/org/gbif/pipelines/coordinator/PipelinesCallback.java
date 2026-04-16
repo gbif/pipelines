@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -53,8 +54,10 @@ public abstract class PipelinesCallback<
         I extends PipelineBasedMessage, O extends PipelineBasedMessage>
     implements MessageCallback<I>, AutoCloseable {
 
+  private static final AtomicInteger runningCounter = new AtomicInteger(0);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   public static final String PAUSE_FILE_PATH = "/tmp/pause_message_processing";
+  public static final String SHUTDOWN_FILE_PATH = "/tmp/shutdown_now";
   protected final PipelinesConfig pipelinesConfig;
   protected final PipelinesHistoryClient historyClient;
   protected final MessagePublisher publisher;
@@ -139,6 +142,7 @@ public abstract class PipelinesCallback<
 
     Configuration hadoopConf = null;
     if (isStandalone()) {
+      log.info("Initialising spark session for standalone pipelines");
 
       SparkSession.Builder sparkBuilder = SparkSession.builder().appName("pipelines_standalone");
       sparkBuilder = sparkBuilder.master(sparkMaster);
@@ -168,12 +172,14 @@ public abstract class PipelinesCallback<
   }
 
   public void close() throws IOException {
+    log.info("Closing Spark Session and FileSystem connections");
     if (sparkSession != null) {
       sparkSession.close();
     }
     if (fileSystem != null) {
       fileSystem.close();
     }
+    log.info("Closed Spark Session and FileSystem connections");
   }
 
   protected boolean isStandalone() {
@@ -209,104 +215,104 @@ public abstract class PipelinesCallback<
 
   public void handleMessage(I message) {
 
-    checkIfPaused();
-
-    LAST_CONSUMED_MESSAGE_FROM_QUEUE_MS.set(System.currentTimeMillis());
-    MESSAGES_READ_FROM_QUEUE.inc();
-
-    ThreadContext.put(
-        "datasetKey",
-        message.getDatasetUuid() != null ? message.getDatasetUuid().toString() : "NO_DATASET");
-    log.debug("Received message: {}", message);
-
-    if (!isMessageCorrect(message) || isProcessingStopped(message)) {
-
-      log.debug(
-          "Returning message correct: {} isProcessingStopped: {}",
-          isMessageCorrect(message),
-          isProcessingStopped(message));
-      return;
-    }
-
-    TrackingInfo trackingInfo = null;
-    ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
-    ThreadContext.put("attempt", message.getAttempt().toString());
-    ThreadContext.put("step", getStepType().name());
+    runningCounter.incrementAndGet();
 
     try {
-      log.info(
-          "Processing executionId {}, step {} attempt {}",
-          message.getExecutionId(),
-          message.getAttempt(),
-          getStepType().name());
 
-      trackingInfo = trackPipelineStep(message);
+      checkIfPaused();
 
-      CONCURRENT_DATASETS.inc();
+      LAST_CONSUMED_MESSAGE_FROM_QUEUE_MS.set(System.currentTimeMillis());
+      MESSAGES_READ_FROM_QUEUE.inc();
 
-      // Run pipeline for this callback
-      runPipeline(message);
+      ThreadContext.put(
+          "datasetKey",
+          message.getDatasetUuid() != null ? message.getDatasetUuid().toString() : "NO_DATASET");
+      log.debug("Received message: {}", message);
 
-      COMPLETED_DATASETS.inc();
+      if (!isMessageCorrect(message) || isProcessingStopped(message)) {
 
-      // Acknowledge message processing
-      updateTrackingStatus(trackingInfo, message, PipelineStep.Status.COMPLETED);
+        log.debug(
+            "Returning message correct: {} isProcessingStopped: {}",
+            isMessageCorrect(message),
+            isProcessingStopped(message));
+        return;
+      }
 
-      // set outgoing message to the queue for the next step
-      sendOutgoingMessage(trackingInfo, message);
-
-      log.info("Finished processing datasetKey: {}", message.getDatasetUuid());
-
-    } catch (Exception ex) {
+      TrackingInfo trackingInfo = null;
+      ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
+      ThreadContext.put("attempt", message.getAttempt().toString());
+      ThreadContext.put("step", getStepType().name());
 
       try {
+        log.info(
+            "Processing executionId {}, step {} attempt {}",
+            message.getExecutionId(),
+            message.getAttempt(),
+            getStepType().name());
 
-        DATASETS_ERRORED_COUNT.inc();
-        LAST_DATASETS_ERROR.set(System.currentTimeMillis());
+        trackingInfo = trackPipelineStep(message);
 
-        // FIXMETrackingInfo trackingInfo = trackPipelineStep(message);
-        ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
-        String error =
-            "Error for datasetKey - " + message.getDatasetUuid() + " : " + ex.getMessage();
-        log.error(error, ex);
+        CONCURRENT_DATASETS.inc();
 
-        // update tracking status
-        if (trackingInfo != null) {
-          updateTrackingStatus(trackingInfo, message, PipelineStep.Status.FAILED);
+        // Run pipeline for this callback
+        runPipeline(message);
+
+        COMPLETED_DATASETS.inc();
+
+        // Acknowledge message processing
+        updateTrackingStatus(trackingInfo, message, PipelineStep.Status.COMPLETED);
+
+        // set outgoing message to the queue for the next step
+        sendOutgoingMessage(trackingInfo, message);
+
+        log.info("Finished processing datasetKey: {}", message.getDatasetUuid());
+
+      } catch (Exception ex) {
+
+        try {
+
+          DATASETS_ERRORED_COUNT.inc();
+          LAST_DATASETS_ERROR.set(System.currentTimeMillis());
+
+          // FIXMETrackingInfo trackingInfo = trackPipelineStep(message);
+          ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
+          String error =
+              "Error for datasetKey - " + message.getDatasetUuid() + " : " + ex.getMessage();
+          log.error(error, ex);
+
+          // update tracking status
+          if (trackingInfo != null) {
+            updateTrackingStatus(trackingInfo, message, PipelineStep.Status.FAILED);
+          }
+
+        } catch (Exception e) {
+          ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
+          log.error(
+              "Failed to update tracking status for datasetKey - " + message.getDatasetUuid(), e);
         }
+      } finally {
 
-      } catch (Exception e) {
-        ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
-        log.error(
-            "Failed to update tracking status for datasetKey - " + message.getDatasetUuid(), e);
+        CONCURRENT_DATASETS.dec();
+
+        if (message.getExecutionId() != null) {
+          ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
+          log.debug("Mark execution as FINISHED if all steps are FINISHED");
+          Runnable r =
+              () -> {
+                log.debug(
+                    "History client: mark pipeline execution if finished, executionId {}",
+                    message.getExecutionId());
+                historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
+              };
+          Retry.decorateRunnable(RETRY, r).run();
+        } else {
+          log.warn(
+              "Execution id is null for datasetKey {}, can't mark execution as FINISHED if all steps are FINISHED",
+              message.getDatasetUuid());
+        }
       }
-      //
-      //                // update validator info
-      //                String errorMessage = null;
-      //                if (ex.getCause() instanceof PipelinesException) {
-      //                    errorMessage = ((PipelinesException) ex.getCause()).getShortMessage();
-      //                }
-      //                updateValidatorInfoStatus(Status.FAILED, errorMessage);
     } finally {
-
-      CONCURRENT_DATASETS.dec();
-
-      if (message.getExecutionId() != null) {
-        ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
-        log.debug("Mark execution as FINISHED if all steps are FINISHED");
-        Runnable r =
-            () -> {
-              log.debug(
-                  "History client: mark pipeline execution if finished, executionId {}",
-                  message.getExecutionId());
-              historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
-            };
-        Retry.decorateRunnable(RETRY, r).run();
-      } else {
-        log.warn(
-            "Execution id is null for datasetKey {}, can't mark execution as FINISHED if all steps are FINISHED",
-            message.getDatasetUuid());
-      }
+      runningCounter.decrementAndGet();
     }
   }
 
@@ -441,6 +447,10 @@ public abstract class PipelinesCallback<
         throw new RuntimeException(e);
       }
     }
+  }
+
+  public boolean isRunning() {
+    return !new File(SHUTDOWN_FILE_PATH).exists();
   }
 
   private boolean isProcessingStopped(I message) {
@@ -730,6 +740,10 @@ public abstract class PipelinesCallback<
         .datasetId(datasetUuid.toString())
         .attempt(attempt.toString())
         .build();
+  }
+
+  public int getRunningCounter() {
+    return runningCounter.get();
   }
 
   @Builder

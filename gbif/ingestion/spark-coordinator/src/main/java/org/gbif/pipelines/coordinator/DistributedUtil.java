@@ -108,9 +108,27 @@ public class DistributedUtil {
     log.debug("Reading path for record number {}", metaPath);
 
     // archiveToOccurrenceCount
-    return Long.parseLong(
-        getValueByKey(
-                fileSystem, metaPath, PipelinesVariables.Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT)
-            .orElse("0"));
+    long recordCount =
+        Long.parseLong(
+            getValueByKey(
+                    fileSystem, metaPath, PipelinesVariables.Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT)
+                .orElse("0"));
+
+    if (recordCount > 0) {
+      return recordCount;
+    }
+
+    // fall back to older counts
+    long occRecordCount =
+        Long.parseLong(
+            getValueByKey(fileSystem, metaPath, PipelinesVariables.Metrics.ARCHIVE_TO_OCC_COUNT)
+                .orElse("0"));
+
+    long erRecordCount =
+        Long.parseLong(
+            getValueByKey(fileSystem, metaPath, PipelinesVariables.Metrics.ARCHIVE_TO_ER_COUNT)
+                .orElse("0"));
+
+    return Math.max(occRecordCount, erRecordCount);
   }
 }

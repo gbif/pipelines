@@ -1,0 +1,267 @@
+inputPath: hdfs://gbif-hdfs/data/ingest
+outputPath: hdfs://gbif-hdfs/data/ingest
+rebuildPath: hdfs://gbif-hdfs/data/rebuild
+hiveDB: test
+hdfsWarehousePath: /test
+hiveMetastoreUris: thrift://localhost:9083
+hdfsSiteConfig: /etc/hadoop/conf/hdfs-site.xml
+coreSiteConfig: /etc/hadoop/conf/core-site.xml
+zkConnectionString:
+gbifApi:
+  wsUrl: https://api.gbif-test.org/v1/
+nameUsageMatchingService:
+  checklistKeys:
+    - d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
+    - 7ddf754f-d193-4cc9-b351-99906754a03b
+  ws:
+    numOfKeyBuckets: 10
+    zkConnectionString:
+    tableName: test_name_usage_kv
+    api:
+      wsUrl: http://api.gbif-test.org/
+    hbaseZnode: /znode/hbase
+    cacheExpiryTimeInSeconds: 600
+    maxConnections: 10
+vocabularyConfig:
+  vocabulariesPath: hdfs://gbif-hdfs/pipelines/vocabularies
+  vocabulariesNames:
+    http://rs.tdwg.org/dwc/terms/degreeOfEstablishment: DegreeOfEstablishment
+    http://rs.tdwg.org/dwc/terms/lifeStage: LifeStage
+    http://rs.tdwg.org/dwc/terms/establishmentMeans: EstablishmentMeans
+    http://rs.tdwg.org/dwc/terms/pathway: Pathway
+    http://rs.tdwg.org/dwc/terms/eventType: EventType
+    GeologicalContext: GeoTime
+    http://rs.tdwg.org/dwc/terms/typeStatus: TypeStatus
+    http://rs.tdwg.org/dwc/terms/sex: Sex
+grscicollLookup:
+  numOfKeyBuckets: 5
+  zkConnectionString:
+  tableName: test_grscicoll_lookup_kv
+  api:
+    wsUrl: http://api.gbif-test.org/v1/
+  hbaseZnode: /znode/hbase
+  cacheExpiryTimeInSeconds: 600
+  maxConnections: 10
+geocode:
+  numOfKeyBuckets: 10
+  zkConnectionString:
+  tableName: test_geocode_kv
+  wsCacheSizeMb: 128
+  cacheExpiryTimeInSeconds: 600
+  loaderRetryConfig:
+    maxAttempts: 10
+  api:
+    wsUrl: http://api.gbif-test.org/v1/
+  hbaseZnode: /znode/hbase
+  maxConnections: 10
+imageCachePath:
+amplification:
+  wsUrl: http://blast.gbif-test.org
+keygen:
+  occurrenceTable: test_occurrence
+  counterTable: test_occurrence_counter
+  lookupTable: test_occurrence_lookup
+  zkConnectionString:
+  hbaseZnode: /znode/hbase
+derivedMetadataConfig:
+  maxTaxonCoveragePerEvent: 2000
+extensionsAllowedForVerbatimSet:
+  - http://rs.tdwg.org/dwc/terms/Occurrence
+  - http://rs.tdwg.org/ac/terms/Multimedia
+  - http://data.ggbn.org/schemas/ggbn/terms/Amplification
+  - http://data.ggbn.org/schemas/ggbn/terms/Cloning
+  - http://data.ggbn.org/schemas/ggbn/terms/GelImage
+  - http://data.ggbn.org/schemas/ggbn/terms/Loan
+  - http://data.ggbn.org/schemas/ggbn/terms/MaterialSample
+  - http://data.ggbn.org/schemas/ggbn/terms/Permit
+  - http://data.ggbn.org/schemas/ggbn/terms/Preparation
+  - http://data.ggbn.org/schemas/ggbn/terms/Preservation
+  - http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact
+  - http://rs.tdwg.org/chrono/terms/ChronometricAge
+  - http://purl.org/germplasm/germplasmTerm#GermplasmAccession
+  - http://purl.org/germplasm/germplasmTerm#MeasurementScore
+  - http://purl.org/germplasm/germplasmTerm#MeasurementTrait
+  - http://purl.org/germplasm/germplasmTerm#MeasurementTrial
+  - http://rs.tdwg.org/dwc/terms/Identification
+  - http://rs.gbif.org/terms/1.0/Identifier
+  - http://rs.gbif.org/terms/1.0/Image
+  - http://rs.tdwg.org/dwc/terms/MeasurementOrFact
+  - http://rs.gbif.org/terms/1.0/Multimedia
+  - http://rs.gbif.org/terms/1.0/Reference
+  - http://rs.tdwg.org/dwc/terms/ResourceRelationship
+  - http://rs.gbif.org/terms/1.0/DNADerivedData
+  - https://tdwg.github.io/attribution/people/dwc/AgentActions
+  - http://rs.tdwg.org/eco/terms/Event
+clusteringRelationshipConfig:
+  relationshipTableSalt: 100
+  relationshipTableName: test_occurrence_relationships_experimental
+  retryMaxAttempts: 6
+  retryDuration: 6
+fragmentsTable: test_occurrence_fragment
+standalone:
+  occurrenceIndexName: occurrence_test_a
+  occurrenceIndexAlias: occurrence_test
+  occurrenceIndexNumberOfShards: 12
+  eventIndexName: event_test_a
+  eventIndexAlias: event_test
+  eventIndexNumberOfShards: 12
+  numberOfShards: 24
+  idThresholdSkip: false
+  ignoreChecklists: true
+elastic:
+  esHosts: http://localhost:9200
+  esMaxBatchSizeBytes: 10_485_760
+  esMaxBatchSize: 1_700
+  indexNumberReplicas: 1
+indexConfig:
+  numberReplicas: 1
+  recordsPerShard: 5000000
+  bigIndexIfRecordsMoreThan: 1000000
+  defaultPrefixName: default
+  defaultSize: 24000000
+  defaultNewIfSize: 23500000
+  defaultSmallestIndexCatUrl: http://locahost:9200/_cat/indices/%s*?v&h=docs.count,index&s=docs.count:asc&format=json
+  occurrenceAlias: occurrence_test
+  occurrenceVersion: test_occurrence_a
+  eventAlias: event_test
+  eventVersion: test_event_i
+tableBuildConfig:
+  write_format_default: parquet
+  parquet_compression: ZSTD
+  auto_purge: true
+  write_merge_isolation_level: snapshot
+  commit_retry_num_retries: 10
+  commit_retry_min_wait_ms: 1000
+  commit_retry_max_wait_ms: 10000
+  history_expire_max_snapshot_age_ms: 3888000000
+  history_expire_min_snapshots_to_keep: 10
+processingConfigs:
+  # simple support for expressions in the format a < x < b
+  "recordCount < 100_000":
+    description: "less than 100k"
+    args:
+      - "--numberOfShards=1"
+    driverMemoryOverheadFactor: "0.10"
+    executorMemoryOverheadFactor: "0.15"
+    driverCores: 1
+    executorInstances: 2
+    executorCores: 10
+    defaultParallelism: 10
+    driverMinCpu: "2000m"
+    driverMaxCpu: "8000m"
+    driverLimitMemory: "4Gi"
+    executorMinCpu: "1000m"
+    executorMaxCpu: "8000m"
+    executorLimitMemory: "30Gi"
+  "100_000 <= recordCount < 250_000":
+    description: "100_000 to 250_000"
+    args:
+      - "--numberOfShards=10"
+    driverMemoryOverheadFactor: "0.10"
+    executorMemoryOverheadFactor: "0.15"
+    driverCores: 4
+    executorInstances: 10
+    executorCores: 10
+    defaultParallelism: 100
+    driverMinCpu: "2000m"
+    driverMaxCpu: "8000m"
+    driverLimitMemory: "4Gi"
+    executorMinCpu: "1000m"
+    executorMaxCpu: "8000m"
+    executorLimitMemory: "30Gi"
+  "250_000 <= recordCount < 500_000":
+    description: "250_000 to 500_000"
+    args:
+      - "--numberOfShards=20"
+    driverMemoryOverheadFactor: "0.10"
+    executorMemoryOverheadFactor: "0.15"
+    driverCores: 4
+    executorInstances: 10
+    executorCores: 10
+    defaultParallelism: 100
+    driverMinCpu: "2000m"
+    driverMaxCpu: "8000m"
+    driverLimitMemory: "4Gi"
+    executorMinCpu: "1000m"
+    executorMaxCpu: "8000m"
+    executorLimitMemory: "30Gi"
+  "500_000 <= recordCount < 1_000_000":
+    description: "500_000 to 10 1_000_000"
+    args:
+      - "--numberOfShards=30"
+    driverMemoryOverheadFactor: "0.10"
+    executorMemoryOverheadFactor: "0.15"
+    driverCores: 4
+    executorInstances: 10
+    executorCores: 10
+    defaultParallelism: 100
+    driverMinCpu: "2000m"
+    driverMaxCpu: "8000m"
+    driverLimitMemory: "4Gi"
+    executorMinCpu: "1000m"
+    executorMaxCpu: "8000m"
+    executorLimitMemory: "30Gi"
+  "1_000_000 <= recordCount < 10_000_000":
+    description: "1_000_000 to 10_000_000"
+    args:
+      - "--numberOfShards=300"
+    driverMemoryOverheadFactor: "0.10"
+    executorMemoryOverheadFactor: "0.15"
+    driverCores: 4
+    executorInstances: 15
+    executorCores: 10
+    defaultParallelism: 300
+    driverMinCpu: "2000m"
+    driverMaxCpu: "8000m"
+    driverLimitMemory: "4Gi"
+    executorMinCpu: "1000m"
+    executorMaxCpu: "8000m"
+    executorLimitMemory: "30Gi"
+  "10_000_000 <= recordCount < 50_000_000":
+    description: "10 million to 50 million"
+    args:
+      - "--numberOfShards=200"
+    driverMemoryOverheadFactor: "0.10"
+    executorMemoryOverheadFactor: "0.15"
+    driverCores: 4
+    executorInstances: 25
+    executorCores: 10
+    defaultParallelism: 600
+    driverMinCpu: "2000m"
+    driverMaxCpu: "8000m"
+    driverLimitMemory: "4Gi"
+    executorMinCpu: "1000m"
+    executorMaxCpu: "8000m"
+    executorLimitMemory: "30Gi"
+  "50_000_000 <= recordCount < 500_000_000":
+    description: "50 million to 500 million - iNaturalist"
+    args:
+      - "--numberOfShards=1200"
+    driverMemoryOverheadFactor: "0.10"
+    executorMemoryOverheadFactor: "0.15"
+    driverCores: 4
+    executorInstances: 30
+    executorCores: 10
+    defaultParallelism: 1200
+    driverMinCpu: "2000m"
+    driverMaxCpu: "8000m"
+    driverLimitMemory: "4Gi"
+    executorMinCpu: "1000m"
+    executorMaxCpu: "8000m"
+    executorLimitMemory: "30Gi"
+  "500_000_000 <= recordCount":
+    description: "500 million+ (eBird)"
+    args:
+      - "--numberOfShards=2000"
+    driverMemoryOverheadFactor: "0.10"
+    executorMemoryOverheadFactor: "0.15"
+    driverCores: 4
+    executorInstances: 50
+    executorCores: 10
+    defaultParallelism: 2000
+    driverMinCpu: "2000m"
+    driverMaxCpu: "8000m"
+    driverLimitMemory: "4Gi"
+    executorMinCpu: "1000m"
+    executorMaxCpu: "8000m"
+    executorLimitMemory: "30Gi"

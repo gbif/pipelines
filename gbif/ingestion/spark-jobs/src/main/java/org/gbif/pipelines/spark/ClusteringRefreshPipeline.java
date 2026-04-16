@@ -108,12 +108,13 @@ public class ClusteringRefreshPipeline {
       PipelinesConfig config,
       String datasetId,
       int attempt,
-      int numOfShards) {
+      int numOfShards)
+      throws Exception {
 
     long start = System.currentTimeMillis();
 
     ThreadContext.put("datasetKey", datasetId);
-    log.info("Starting clustering");
+    log.info("Starting clustering refresh");
 
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
 
@@ -144,6 +145,12 @@ public class ClusteringRefreshPipeline {
         fs,
         Map.of(PipelinesVariables.Metrics.CLUSTERING_RECORDS_COUNT, recordCount),
         outputPath + "/" + METRICS_FILENAME);
+
+    // replace directories
+    fs.delete(new org.apache.hadoop.fs.Path(outputPath + "/" + SIMPLE_OCCURRENCE), true);
+    fs.rename(
+        new org.apache.hadoop.fs.Path(outputPath + "/" + SIMPLE_OCCURRENCE_REFRESH_TEMP),
+        new org.apache.hadoop.fs.Path(outputPath + "/" + SIMPLE_OCCURRENCE));
 
     log.info(
         "Finished clustering in {} secs, records: {}",
@@ -208,12 +215,15 @@ public class ClusteringRefreshPipeline {
     }
 
     // write simple interpreted records to disk
-    interpreted.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + SIMPLE_OCCURRENCE);
+    interpreted
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE_REFRESH_TEMP);
 
     // re-load
     return spark
         .read()
-        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
+        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE_REFRESH_TEMP)
         .as(Encoders.bean(Occurrence.class));
   }
 }

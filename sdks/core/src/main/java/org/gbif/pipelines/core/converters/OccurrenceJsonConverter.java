@@ -6,7 +6,7 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractOptValue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -94,7 +94,7 @@ public class OccurrenceJsonConverter {
   }
 
   private void mapProjectIds(OccurrenceJsonRecord.Builder builder) {
-    Set<String> projectIdsSet = new HashSet<>();
+    Set<String> projectIdsSet = new LinkedHashSet<>();
 
     if (metadata.getProjectId() != null) {
       projectIdsSet.add(metadata.getProjectId());
@@ -362,7 +362,7 @@ public class OccurrenceJsonConverter {
           new ArrayList<>(
               dnaDerivedData.getDnaDerivedDataItems().stream()
                   .map(DnaDerivedData::getDnaSequenceID)
-                  .collect(Collectors.toSet())));
+                  .collect(Collectors.toCollection(LinkedHashSet::new))));
     }
   }
 

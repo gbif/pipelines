@@ -2,7 +2,6 @@ package org.gbif.pipelines.coordinator;
 
 import static org.gbif.pipelines.spark.Directories.EVENT_JSON;
 
-import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.StepType;
@@ -22,20 +21,14 @@ public class EventsIndexingCallback
     implements MessageCallback<PipelinesEventsInterpretedMessage> {
 
   private static final Object LOCK = new Object();
-  private String defaultIndexName = null;
+  private boolean initialized = false;
 
   public EventsIndexingCallback(
       PipelinesConfig pipelinesConfig, MessagePublisher publisher, String master) {
     super(pipelinesConfig, publisher, master);
 
     if (isStandalone()) {
-      log.info("Running in standalone mode, initialising index");
-      try {
-        initialiseIndex();
-      } catch (IOException e) {
-        log.error("Error initialising index", e);
-        throw new RuntimeException(e);
-      }
+      initialiseIndex();
     }
   }
 
@@ -52,6 +45,12 @@ public class EventsIndexingCallback
   @Override
   protected void runPipeline(PipelinesEventsInterpretedMessage message) throws Exception {
 
+    // lookup the default index name for the dataset, this will be used as the index name for the
+    // indexing pipeline
+    String defaultIndexName =
+        EsIndexUtils.initialiseDefaultIndex(
+            pipelinesConfig, httpClient, DatasetType.SAMPLING_EVENT, "NOT_USED", -1);
+
     IndexingPipeline.runIndexing(
         sparkSession,
         fileSystem,
@@ -66,14 +65,21 @@ public class EventsIndexingCallback
         EVENT_JSON);
   }
 
-  private void initialiseIndex() throws IOException {
-    if (defaultIndexName != null) {
-      return;
-    }
+  private void initialiseIndex() {
     synchronized (LOCK) {
-      defaultIndexName =
-          EsIndexUtils.initialiseDefaultIndex(
-              pipelinesConfig, httpClient, DatasetType.SAMPLING_EVENT, "NOT_USED", -1);
+      if (!initialized) {
+        try {
+          log.info("Initializing index...");
+          String defaultIndexName =
+              EsIndexUtils.initialiseDefaultIndex(
+                  pipelinesConfig, httpClient, DatasetType.SAMPLING_EVENT, "NOT_USED", -1);
+          log.info("Using default index: {}", defaultIndexName);
+          initialized = true;
+        } catch (Exception e) {
+          log.error("Error initialising default index for standalone mode", e);
+          throw new RuntimeException("Error initialising default index for standalone mode", e);
+        }
+      }
     }
   }
 

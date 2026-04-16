@@ -2,8 +2,8 @@ package org.gbif.pipelines.core.converters;
 
 import com.google.common.base.Strings;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -33,12 +33,12 @@ public class MultimediaConverter {
       return record;
     }
 
-    Set<String> issues = new HashSet<>();
+    Set<String> issues = new LinkedHashSet<>();
     issues.addAll(mr.getIssues().getIssueList());
     issues.addAll(ir.getIssues().getIssueList());
     issues.addAll(ar.getIssues().getIssueList());
 
-    Map<String, Multimedia> multimediaMap = new HashMap<>();
+    Map<String, Multimedia> multimediaMap = new LinkedHashMap<>();
     // The orders of puts is important
     putAllAudubonRecord(multimediaMap, ar);
     putAllImageRecord(multimediaMap, ir);
