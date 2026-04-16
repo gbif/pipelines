@@ -1,11 +1,9 @@
 package org.gbif.pipelines.core.config.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
+import java.io.Serializable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
 
 @Data
 @NoArgsConstructor
@@ -14,5 +12,4 @@ public class DnaConfig implements Serializable {
 
   float nucleotideSequenceHighNFractionThreshold = 0.05f;
   float nucleotideSequenceHighAmbiguityThreshold = 0.05f;
-
 }

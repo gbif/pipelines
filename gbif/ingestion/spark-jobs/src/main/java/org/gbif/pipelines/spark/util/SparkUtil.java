@@ -7,16 +7,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.types.ArrayType;
-import org.apache.spark.sql.types.StructType;
-
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-
-import static org.apache.spark.sql.functions.callUDF;
-import static org.apache.spark.sql.functions.col;
-import static org.apache.spark.sql.functions.explode;
-import static org.apache.spark.sql.functions.expr;
-import static org.apache.spark.sql.functions.from_json;
 
 /** Common spark utility methods for creating SparkSession and FileSystem instances. */
 @Slf4j

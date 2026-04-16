@@ -6,7 +6,6 @@ import java.util.Objects;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.Strings;
-import org.gbif.api.util.DnaUtils;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dna.core.SequenceProcessor;

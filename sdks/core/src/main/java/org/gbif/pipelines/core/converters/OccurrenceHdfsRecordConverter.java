@@ -880,7 +880,7 @@ public class OccurrenceHdfsRecordConverter {
             .map(TextNode::valueOf)
             .map(TextNode::asText)
             .collect(Collectors.toList());
-    occurrenceHdfsRecord.setExtMultimedia(
+    occurrenceHdfsRecord.setExt_multimedia(
         base64Encode(MediaSerDeser.multimediaToJson(multimediaRecord.getMultimediaItems())));
 
     setCreatedIfGreater(occurrenceHdfsRecord, multimediaRecord.getCreated());
@@ -901,7 +901,7 @@ public class OccurrenceHdfsRecordConverter {
               dnaDerivedDataRecord.getDnaDerivedDataItems().stream()
                   .map(DnaDerivedData::getNucleotideSequenceID)
                   .collect(Collectors.toCollection(LinkedHashSet::new))));
-      occurrenceHdfsRecord.setExtDnaDerivedData(
+      occurrenceHdfsRecord.setExt_dna_derived_data(
           base64Encode(
               MediaSerDeser.dnaDerivedDataToJson(dnaDerivedDataRecord.getDnaDerivedDataItems())));
     }
