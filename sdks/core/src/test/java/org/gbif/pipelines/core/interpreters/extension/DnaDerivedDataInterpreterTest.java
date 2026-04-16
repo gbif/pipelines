@@ -46,6 +46,7 @@ public class DnaDerivedDataInterpreterTest {
             .filter(d -> d.getRawSequence().equalsIgnoreCase(seq1))
             .findFirst()
             .get();
+    assertEquals(seq1, interpreted1.getRawSequence());
     assertTrue(interpreted1.getInvalid());
     assertTrue(interpreted1.getGapsOrWhitespaceRemoved());
 
@@ -54,6 +55,7 @@ public class DnaDerivedDataInterpreterTest {
             .filter(d -> d.getRawSequence().equalsIgnoreCase(seq2))
             .findFirst()
             .get();
+    assertEquals(seq2, interpreted2.getRawSequence());
     assertFalse(interpreted2.getInvalid());
     assertFalse(interpreted2.getGapsOrWhitespaceRemoved());
   }
