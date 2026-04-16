@@ -59,7 +59,12 @@ public class ChecklistValidatorCallbackIT {
 
     PipelinesChecklistValidatorMessage message =
         new PipelinesChecklistValidatorMessage(
-            uuid, 1, Collections.singleton("VALIDATOR_COLLECT_METRICS"), 1L, "dwca", PipelinesArchiveValidatorMessage.RunnerType.STANDALONE);
+            uuid,
+            1,
+            Collections.singleton("VALIDATOR_COLLECT_METRICS"),
+            1L,
+            "dwca",
+            PipelinesArchiveValidatorMessage.RunnerType.STANDALONE);
 
     // When
     ChecklistValidatorCallback callback =
