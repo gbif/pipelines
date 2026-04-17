@@ -257,11 +257,6 @@ public class EsIndexUtils {
             ? pipelinesConfig.getIndexConfig().getOccurrenceSchemaPath()
             : pipelinesConfig.getIndexConfig().getEventSchemaPath();
 
-    final String esAlias =
-        datasetType.equals(DatasetType.OCCURRENCE)
-            ? pipelinesConfig.getIndexConfig().getOccurrenceAlias()
-            : pipelinesConfig.getIndexConfig().getEventAlias();
-
     final Integer numberOfShards =
         datasetType.equals(DatasetType.OCCURRENCE)
             ? pipelinesConfig.getStandalone().getOccurrenceIndexNumberOfShards()
@@ -274,7 +269,7 @@ public class EsIndexUtils {
     EsIndexUtils.createIndexAndAliasForDefault(
         IndexingPipeline.ElasticOptions.fromArgsAndConfig(
             pipelinesConfig,
-            esAlias,
+            indexAlias,
             indexToBeCreated,
             schemaPath,
             datasetId,
