@@ -198,7 +198,9 @@ public class FullIndexBuildPipeline {
 
     // new default name for this rebuild
     final String defaultIndexName =
-        createDefaultIndexNamePrefix(config, args.datasetType) + "_" + indexCreationTimestamp;
+        createDefaultIndexNamePrefix(config.getIndexConfig(), args.datasetType)
+            + "_"
+            + indexCreationTimestamp;
 
     // create the empty indexes with the schema
     for (Map.Entry<String, Long> entry : datasetCounts.entrySet()) {

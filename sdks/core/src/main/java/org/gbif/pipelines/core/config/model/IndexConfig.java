@@ -13,11 +13,11 @@ public class IndexConfig implements Serializable {
   public Integer numberReplicas;
   public Integer recordsPerShard;
   public Integer bigIndexIfRecordsMoreThan;
-  public String defaultPrefixName;
+  public String defaultPrefixName = "default";
   public Integer defaultSize;
-  public Integer defaultNewIfSize;
+  public Integer defaultNewIfSize = 23500000;
   public boolean defaultExtraShard = true;
-  public String defaultSmallestIndexCatUrl;
+  public String defaultIndexCatUrl = "http://localhost:9200";
 
   // index aliases
   public String occurrenceAlias = "occurrence";
