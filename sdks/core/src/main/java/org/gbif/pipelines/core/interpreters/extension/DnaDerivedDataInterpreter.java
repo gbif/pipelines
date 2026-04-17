@@ -92,11 +92,13 @@ public class DnaDerivedDataInterpreter {
         issues.add(OccurrenceIssue.NUCLEOTIDE_SEQUENCE_INVALID.name());
       }
 
-      if (result.nFraction() > dnaConfig.getNucleotideSequenceHighNFractionThreshold()) {
+      if (result.nFraction() != null
+          && result.nFraction() > dnaConfig.getNucleotideSequenceHighNFractionThreshold()) {
         issues.add(OccurrenceIssue.NUCLEOTIDE_SEQUENCE_HIGH_N_FRACTION.name());
       }
 
-      if (result.nonACGTNFraction() > dnaConfig.getNucleotideSequenceHighAmbiguityThreshold()) {
+      if (result.nonACGTNFraction() != null
+          && result.nonACGTNFraction() > dnaConfig.getNucleotideSequenceHighAmbiguityThreshold()) {
         issues.add(OccurrenceIssue.NUCLEOTIDE_SEQUENCE_HIGH_AMBIGUITY.name());
       }
     }
