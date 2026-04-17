@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>ingestion</artifactId>
-        <version>4.0.2-SNAPSHOT</version>
+        <version>4.0.2-issue1319-SNAPSHOT</version>
     </parent>
 
     <artifactId>spark-coordinator</artifactId>
