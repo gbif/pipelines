@@ -3,6 +3,8 @@ package org.gbif.pipelines.spark.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
@@ -102,5 +104,35 @@ public class IndexSettingsTest {
         IndexSettings.getExistingDefaultIndexName(config, httpClient, "alias", defaultPrefix);
 
     assertThat(res).isEmpty();
+  }
+
+  @Test
+  public void testGetExistingDefaultIndexName_emptyAliasSkipsIndicesCall() throws Exception {
+    IndexConfig config = new IndexConfig();
+    config.defaultIndexCatUrl = "http://es-host:9200";
+
+    String defaultPrefix = config.defaultPrefixName + "_occurrence_a";
+
+    // alias API returns no matching default index names
+    String aliasJson = "[]";
+
+    HttpClient httpClient = mock(HttpClient.class);
+    HttpResponse respAlias = mock(HttpResponse.class);
+    StatusLine okStatus = mock(StatusLine.class);
+    HttpEntity entityAlias = mock(HttpEntity.class);
+
+    when(okStatus.getStatusCode()).thenReturn(200);
+    when(respAlias.getStatusLine()).thenReturn(okStatus);
+    when(entityAlias.getContent())
+        .thenReturn(new ByteArrayInputStream(aliasJson.getBytes(StandardCharsets.UTF_8)));
+    when(respAlias.getEntity()).thenReturn(entityAlias);
+
+    when(httpClient.execute(any(HttpUriRequest.class))).thenReturn(respAlias);
+
+    Optional<String> res =
+        IndexSettings.getExistingDefaultIndexName(config, httpClient, "alias", defaultPrefix);
+
+    assertThat(res).isEmpty();
+    verify(httpClient, times(1)).execute(any(HttpUriRequest.class));
   }
 }

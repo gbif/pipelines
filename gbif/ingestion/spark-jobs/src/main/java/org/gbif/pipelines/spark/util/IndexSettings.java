@@ -10,6 +10,8 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -194,14 +196,18 @@ public class IndexSettings {
     }
 
     // gets a list of all indexes in this alias
-    List<String> defaultIndexes =
+    Set<String> defaultIndexes =
         MAPPER
             .readValue(
                 responseByAlias.getEntity().getContent(), new TypeReference<List<EsCatIndex>>() {})
             .stream()
             .map(EsCatIndex::getName)
             .filter(name -> name.startsWith(defaultNamePrefix))
-            .toList();
+            .collect(Collectors.toSet());
+
+    if (defaultIndexes.isEmpty()) {
+      return Optional.empty();
+    }
 
     // get a list of indexes matching
     String getByNamePrefix =
