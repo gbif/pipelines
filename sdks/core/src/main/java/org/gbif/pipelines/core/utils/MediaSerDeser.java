@@ -92,7 +92,7 @@ public class MediaSerDeser {
       MAPPER.getTypeFactory().constructCollectionType(List.class, Multimedia.class);
 
   private static final CollectionType LIST_DNA_TYPE =
-    MAPPER.getTypeFactory().constructCollectionType(List.class, DnaDerivedData.class);
+      MAPPER.getTypeFactory().constructCollectionType(List.class, DnaDerivedData.class);
 
   /** Converts the list of media objects into a JSON string. */
   @SneakyThrows
