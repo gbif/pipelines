@@ -352,6 +352,13 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(2, hdfsRecord.getDnasequenceid().size());
     Assert.assertTrue(hdfsRecord.getDnasequenceid().contains("foo1"));
     Assert.assertTrue(hdfsRecord.getDnasequenceid().contains("foo2"));
+    Assert.assertNotNull(hdfsRecord.getExt_dna_derived_data());
+
+    List<DnaDerivedData> dnaDerivedData =
+        MediaSerDeser.dnaDerivedDataFromJson(
+            new String(Base64.getDecoder().decode(hdfsRecord.getExt_dna_derived_data())));
+    Assert.assertEquals(2, dnaDerivedData.size());
+    dnaDerivedData.forEach(d -> Assert.assertNotNull(d.getNucleotideSequenceID()));
   }
 
   @Test

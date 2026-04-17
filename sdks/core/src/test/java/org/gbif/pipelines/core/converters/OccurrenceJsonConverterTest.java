@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.converters;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -676,6 +677,10 @@ public class OccurrenceJsonConverterTest {
             + "\"lithostratigraphy\":[\"test16\",\"test14\",\"test13\",\"test15\"],"
             + "\"biostratigraphy\":[\"test11\",\"test12\"]}";
     assertEquals(geologicalContextExpected, result.path("geologicalContext").toString());
+
+    JsonNode nucleotideSequence = result.path("nucleotideSequence");
+    assertEquals(2, nucleotideSequence.size());
+    nucleotideSequence.forEach(n -> assertNotNull(n.path("nucleotideSequenceID")));
   }
 
   @Test

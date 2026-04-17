@@ -91,6 +91,9 @@ public class MediaSerDeser {
   private static final CollectionType LIST_MEDIA_TYPE =
       MAPPER.getTypeFactory().constructCollectionType(List.class, Multimedia.class);
 
+  private static final CollectionType LIST_DNA_TYPE =
+    MAPPER.getTypeFactory().constructCollectionType(List.class, DnaDerivedData.class);
+
   /** Converts the list of media objects into a JSON string. */
   @SneakyThrows
   public static String multimediaToJson(List<Multimedia> media) {
@@ -131,6 +134,16 @@ public class MediaSerDeser {
   public static List<Multimedia> multimediaFromJson(String mediaJson) {
     try {
       return MAPPER.readValue(mediaJson, LIST_MEDIA_TYPE);
+    } catch (IOException ex) {
+      log.error(DESER_ERROR_MSG, ex);
+      throw ex;
+    }
+  }
+
+  @SneakyThrows
+  public static List<DnaDerivedData> dnaDerivedDataFromJson(String dnaJson) {
+    try {
+      return MAPPER.readValue(dnaJson, LIST_DNA_TYPE);
     } catch (IOException ex) {
       log.error(DESER_ERROR_MSG, ex);
       throw ex;
