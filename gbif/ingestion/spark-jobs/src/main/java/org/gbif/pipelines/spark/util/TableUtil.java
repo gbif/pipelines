@@ -25,7 +25,7 @@ import org.jetbrains.annotations.NotNull;
 public class TableUtil {
 
   public static final Set<String> EXTENSION_COLUMNS =
-      Set.of("ext_multimedia", "ext_humboldt", "ext_dnaderiveddata");
+      Set.of("ext_multimedia", "ext_humboldt", "ext_dna_derived_data");
 
   /**
    * Check for records without a datasetKey or gbifId.
@@ -324,8 +324,8 @@ public class TableUtil {
             col("gbifid"),
             from_json(
                     encodedExtData
-                        ? expr("cast(base64_decode(ext_dnaderiveddata) as string)")
-                        : col("ext_dnaderiveddata"),
+                        ? expr("cast(base64_decode(ext_dna_derived_data) as string)")
+                        : col("ext_dna_derived_data"),
                     new ArrayType(dnaStructType, true))
                 .alias("dna_record"),
             col("datasetkey"))
