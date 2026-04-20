@@ -184,8 +184,14 @@ public class OccurrenceHdfsRecordConverterTest {
             .setId("1")
             .setDnaDerivedDataItems(
                 Arrays.asList(
-                    DnaDerivedData.newBuilder().setNucleotideSequenceID("foo1").build(),
-                    DnaDerivedData.newBuilder().setNucleotideSequenceID("foo2").build()))
+                    DnaDerivedData.newBuilder()
+                        .setDnaSequenceID("foo1")
+                        .setNucleotideSequenceID("foo1")
+                        .build(),
+                    DnaDerivedData.newBuilder()
+                        .setDnaSequenceID("foo2")
+                        .setNucleotideSequenceID("foo2")
+                        .build()))
             .build();
 
     Humboldt humboldt =

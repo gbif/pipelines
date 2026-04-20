@@ -460,8 +460,14 @@ public class OccurrenceJsonConverterTest {
             .setId("777")
             .setDnaDerivedDataItems(
                 Arrays.asList(
-                    DnaDerivedData.newBuilder().setNucleotideSequenceID("foo1").build(),
-                    DnaDerivedData.newBuilder().setNucleotideSequenceID("foo2").build()))
+                    DnaDerivedData.newBuilder()
+                        .setDnaSequenceID("foo1")
+                        .setNucleotideSequenceID("foo1")
+                        .build(),
+                    DnaDerivedData.newBuilder()
+                        .setDnaSequenceID("foo2")
+                        .setNucleotideSequenceID("foo2")
+                        .build()))
             .build();
 
     // When
@@ -681,6 +687,10 @@ public class OccurrenceJsonConverterTest {
     JsonNode nucleotideSequence = result.path("nucleotideSequence");
     assertEquals(2, nucleotideSequence.size());
     nucleotideSequence.forEach(n -> assertNotNull(n.path("nucleotideSequenceID")));
+
+    JsonNode dnaSequenceID = result.path("dnaSequenceID");
+    assertEquals(2, dnaSequenceID.size());
+    dnaSequenceID.forEach(n -> assertNotNull(n.path("dnaSequenceID")));
   }
 
   @Test
