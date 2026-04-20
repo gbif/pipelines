@@ -899,7 +899,7 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setDnasequenceid(
           new ArrayList<>(
               dnaDerivedDataRecord.getDnaDerivedDataItems().stream()
-                  .map(DnaDerivedData::getNucleotideSequenceID)
+                  .map(DnaDerivedData::getDnaSequenceID)
                   .collect(Collectors.toCollection(LinkedHashSet::new))));
       occurrenceHdfsRecord.setExt_dna_derived_data(
           base64Encode(

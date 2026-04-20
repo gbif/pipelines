@@ -6,6 +6,7 @@ import java.util.Objects;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.Strings;
+import org.gbif.api.util.DnaUtils;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dna.core.SequenceProcessor;
@@ -62,6 +63,7 @@ public class DnaDerivedDataInterpreter {
       SequenceProcessor sequenceProcessor = new SequenceProcessor();
       SequenceProcessor.Result result = sequenceProcessor.processOneSequence(rawValue);
 
+      dnaDerivedData.setDnaSequenceID(DnaUtils.convertDnaSequenceToID(rawValue));
       dnaDerivedData.setRawSequence(rawValue);
       dnaDerivedData.setNucleotideSequenceID(result.nucleotideSequenceID());
       dnaDerivedData.setSequence(result.sequence());

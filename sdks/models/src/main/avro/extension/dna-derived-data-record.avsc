@@ -8,6 +8,7 @@
     "namespace":"org.gbif.pipelines.io.avro",
     "type":"record",
     "fields":[
+      {"name": "dnaSequenceID", "type": ["null", "string"], "default" : null},
       {"name": "nucleotideSequenceID", "type": ["null", "string"], "default" : null},
       {"name": "rawSequence", "type": ["null", "string"], "default" : null},
       {"name": "targetGene", "type": ["null", "VocabularyConcept"], "default" : null},

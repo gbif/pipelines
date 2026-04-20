@@ -362,7 +362,7 @@ public class OccurrenceJsonConverter {
       builder.setDnaSequenceID(
           new ArrayList<>(
               dnaDerivedData.getDnaDerivedDataItems().stream()
-                  .map(DnaDerivedData::getNucleotideSequenceID)
+                  .map(DnaDerivedData::getDnaSequenceID)
                   .collect(Collectors.toCollection(LinkedHashSet::new))));
 
       builder.setNucleotideSequence(
