@@ -324,6 +324,7 @@
             "verbatim": {"type": "keyword", "ignore_above": 1024}
           }
         },
+        "locationID": {"type": "keyword", "copy_to": "all"},
         "datasetID": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
         "datasetName": {"type": "keyword", "copy_to": "all"},
 
