@@ -74,8 +74,8 @@ public class AirflowClient {
         delete.setHeaders(getHeaders(config));
         HttpResponse response = checkUnavailableService(client.execute(delete));
         if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK
-            || response.getStatusLine().getStatusCode() != HttpStatus.SC_ACCEPTED
-            || response.getStatusLine().getStatusCode() != HttpStatus.SC_NO_CONTENT) {
+            && response.getStatusLine().getStatusCode() != HttpStatus.SC_ACCEPTED
+            && response.getStatusLine().getStatusCode() != HttpStatus.SC_NO_CONTENT) {
           Log.warn(
               "Failed to delete existing DAG run. Response code: "
                   + response.getStatusLine().getStatusCode()
