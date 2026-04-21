@@ -122,24 +122,33 @@ public class FragmenterPipeline {
 
     // get config, spark session and filesystem initialised
     PipelinesConfig config = loadConfig(args.config);
-    SparkSession spark =
-        getSparkSession(args.master, args.appName, config, FragmenterPipeline::configSparkSession);
-    FileSystem fileSystem = getFileSystem(spark, config);
+    SparkSession spark = null;
+    FileSystem fileSystem = null;
 
-    // run main pipeline
-    runFragmenter(
-        spark,
-        fileSystem,
-        config,
-        args.datasetId,
-        args.attempt,
-        args.tripletValid,
-        args.occurrenceIdValid);
+    try {
+      spark =
+          getSparkSession(
+              args.master, args.appName, config, FragmenterPipeline::configSparkSession);
+      fileSystem = getFileSystem(spark, config);
 
-    // shutdown
-    spark.stop();
-    spark.close();
-    fileSystem.close();
+      // run main pipeline
+      runFragmenter(
+          spark,
+          fileSystem,
+          config,
+          args.datasetId,
+          args.attempt,
+          args.tripletValid,
+          args.occurrenceIdValid);
+    } finally {
+      if (fileSystem != null) {
+        fileSystem.close();
+      }
+      if (spark != null) {
+        spark.stop();
+        spark.close();
+      }
+    }
   }
 
   public static void configSparkSession(

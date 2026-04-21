@@ -113,22 +113,31 @@ public class EventInterpretationPipeline {
     PipelinesConfig config = loadConfig(args.config);
     String datasetId = args.datasetId;
     int attempt = args.attempt;
+    SparkSession spark = null;
+    FileSystem fileSystem = null;
 
-    /* ############ standard init block ########## */
-    SparkSession spark =
-        getSparkSession(
-            args.master,
-            args.appName,
-            config,
-            OccurrenceInterpretationPipeline::configSparkSession);
-    FileSystem fileSystem = getFileSystem(spark, config);
-    /* ############ standard init block - end ########## */
+    try {
+      /* ############ standard init block ########## */
+      spark =
+          getSparkSession(
+              args.master,
+              args.appName,
+              config,
+              OccurrenceInterpretationPipeline::configSparkSession);
+      fileSystem = getFileSystem(spark, config);
+      /* ############ standard init block - end ########## */
 
-    runEventInterpretation(spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
+      runEventInterpretation(spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
+    } finally {
+      if (fileSystem != null) {
+        fileSystem.close();
+      }
+      if (spark != null) {
+        spark.stop();
+        spark.close();
+      }
+    }
 
-    fileSystem.close();
-    spark.stop();
-    spark.close();
     if (args.useSystemExit) {
       System.exit(0);
     }

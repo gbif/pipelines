@@ -145,59 +145,67 @@ public class OccurrenceInterpretationPipeline {
     PipelinesConfig config = loadConfig(args.config);
     String datasetId = args.datasetId;
     int attempt = args.attempt;
+    SparkSession spark = null;
+    FileSystem fileSystem = null;
 
-    /* ############ standard init block ########## */
-    SparkSession spark =
-        getSparkSession(
-            args.master,
-            args.appName,
+    try {
+      // init spark and filesystem
+      spark =
+          getSparkSession(
+              args.master,
+              args.appName,
+              config,
+              OccurrenceInterpretationPipeline::configSparkSession);
+      fileSystem = getFileSystem(spark, config);
+
+      // If a single interpret type was passed, parse it and run the requested sub-run
+      Optional<OccurrenceInterpretType> interpretTypeOpt =
+          (args.interpretTypes != null && args.interpretTypes.size() == 1)
+              ? OccurrenceInterpretType.fromString(args.interpretTypes.get(0))
+              : Optional.empty();
+
+      if (interpretTypeOpt.isPresent()) {
+        OccurrenceInterpretType it = interpretTypeOpt.get();
+        switch (it) {
+          case MULTI_TAXONOMY:
+            log.info("Running only taxonomy interpretation");
+            TaxonomyRefreshPipeline.runTaxonomy(
+                spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
+            break;
+          case CLUSTERING:
+            log.info("Running only clustering interpretation");
+            ClusteringRefreshPipeline.runClustering(
+                spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
+            break;
+          case REGEN_OUTPUTS:
+            log.info("Running output regeneration");
+            regenOutput(spark, config, datasetId, attempt, args.numberOfShards);
+            break;
+          default:
+            throw new IllegalArgumentException("Unsupported interpretation type: " + it);
+        }
+      } else {
+        runInterpretation(
+            spark,
+            fileSystem,
             config,
-            OccurrenceInterpretationPipeline::configSparkSession);
-    FileSystem fileSystem = getFileSystem(spark, config);
-    /* ############ standard init block - end ########## */
-
-    // If a single interpret type was passed, parse it and run the requested sub-run
-    Optional<OccurrenceInterpretType> interpretTypeOpt =
-        (args.interpretTypes != null && args.interpretTypes.size() == 1)
-            ? OccurrenceInterpretType.fromString(args.interpretTypes.get(0))
-            : Optional.empty();
-
-    if (interpretTypeOpt.isPresent()) {
-      OccurrenceInterpretType it = interpretTypeOpt.get();
-      switch (it) {
-        case MULTI_TAXONOMY:
-          log.info("Running only taxonomy interpretation");
-          TaxonomyRefreshPipeline.runTaxonomy(
-              spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
-          break;
-        case CLUSTERING:
-          log.info("Running only clustering interpretation");
-          ClusteringRefreshPipeline.runClustering(
-              spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
-          break;
-        case REGEN_OUTPUTS:
-          log.info("Running output regeneration");
-          regenOutput(spark, config, datasetId, attempt, args.numberOfShards);
-          break;
-        default:
-          throw new IllegalArgumentException("Unsupported interpretation type: " + it);
+            datasetId,
+            attempt,
+            args.numberOfShards,
+            args.tripletValid,
+            args.occurrenceIdValid,
+            args.interpretTypes);
       }
-    } else {
-      runInterpretation(
-          spark,
-          fileSystem,
-          config,
-          datasetId,
-          attempt,
-          args.numberOfShards,
-          args.tripletValid,
-          args.occurrenceIdValid,
-          args.interpretTypes);
+    } finally {
+      if (fileSystem != null) {
+        fileSystem.close();
+      }
+      if (spark != null) {
+        spark.stop();
+        spark.close();
+      }
     }
 
-    fileSystem.close();
-    spark.stop();
-    spark.close();
     if (args.useSystemExit) {
       System.exit(0);
     }

@@ -6,6 +6,7 @@ import static org.gbif.pipelines.spark.TableBuildPipeline.createExtensionTable;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
+import static org.gbif.pipelines.spark.util.TableUtil.createVerbatimExtensionTableSQL;
 import static org.gbif.pipelines.spark.util.TableUtil.verbatimExtensionTableName;
 
 import com.beust.jcommander.JCommander;
@@ -62,6 +63,9 @@ public class VerbatimExtensionsInterpretationPipeline {
 
     @Parameter(names = NUMBER_OF_SHARDS_ARG, description = "Number of shards")
     private int numberOfShards = 10;
+
+    @Parameter(names = "--outputSchemasOnly", description = "Output schemas for extensions")
+    private boolean outputSchemasOnly = false;
 
     @Parameter(
         names = {"--help", "-h"},
@@ -300,6 +304,23 @@ public class VerbatimExtensionsInterpretationPipeline {
     }
 
     PipelinesConfig config = loadConfig(args.config);
+
+    if (args.outputSchemasOnly) {
+      String dwcCoreTerm = args.datasetType == DatasetType.OCCURRENCE ? "occurrence" : "event";
+      log.info("Outputting schemas for all supported extensions:");
+      ExtensionTable.tableExtensions()
+          .forEach(
+              extensionTable -> {
+                String sql =
+                    createVerbatimExtensionTableSQL(
+                        config.getTableBuildConfig(), extensionTable, dwcCoreTerm);
+                System.out.println("--- " + extensionTable.getHiveTableName());
+                System.out.println(sql);
+                System.out.println("--- ");
+              });
+      return;
+    }
+
     String datasetId = args.datasetId;
     int attempt = args.attempt;
 
