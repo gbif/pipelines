@@ -20,6 +20,7 @@
       // Internal
       {"name":"type","type":["null","string"],"default":null,"doc":""},
       {"name":"id","type":["null","string"],"default":null,"doc":""},
+      {"name":"datasetKey","type":["null","string"],"default":null,"doc":""},
       {"name":"internalId","type":["null","string"],"default":null,"doc":""},
       {"name":"uniqueKey","type":["null","string"],"default":null,"doc":""},
       {"name":"firstLoaded","type":["null","string"],"default":null,"doc":""},
