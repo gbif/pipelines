@@ -89,10 +89,10 @@ public class TableUtil {
     }
 
     return definition.stream()
-        .filter(field -> !field.getTerm().equals(GbifTerm.datasetKey))
-        .map(field -> field.getHiveField() + " " + field.getHiveDataType())
-        .collect(Collectors.joining(", \n")
-     ) + ", datasetkey STRING";
+            .filter(field -> !field.getTerm().equals(GbifTerm.datasetKey))
+            .map(field -> field.getHiveField() + " " + field.getHiveDataType())
+            .collect(Collectors.joining(", \n"))
+        + ", datasetkey STRING";
   }
 
   public static String getCreateMultimediaTableSQL(
