@@ -183,8 +183,10 @@ public class FullTableBuildPipeline {
     String prefix = "rebuild_" + start + "_";
 
     // Create the occurrence table SQL
-    spark.sql(
-        getCreateTableSQL(config.getTableBuildConfig(), args.datasetType, prefix, coreDwcTerm));
+    String createSQL =
+        getCreateTableSQL(config.getTableBuildConfig(), args.datasetType, prefix, coreDwcTerm);
+    log.debug("Create table SQL: {}", createSQL);
+    spark.sql(createSQL);
 
     // get the hdfs columns from the parquet with mappings to iceberg columns
     Map<String, HdfsColumn> hdfsColumnList = getHdfsColumns(hdfs);
