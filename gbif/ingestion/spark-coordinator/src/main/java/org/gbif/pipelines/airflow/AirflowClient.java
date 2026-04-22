@@ -13,7 +13,6 @@
  */
 package org.gbif.pipelines.airflow;
 
-import com.esotericsoftware.minlog.Log;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -76,7 +75,7 @@ public class AirflowClient {
         if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK
             && response.getStatusLine().getStatusCode() != HttpStatus.SC_ACCEPTED
             && response.getStatusLine().getStatusCode() != HttpStatus.SC_NO_CONTENT) {
-          Log.warn(
+          log.warn(
               "Failed to delete existing DAG run. Response code: "
                   + response.getStatusLine().getStatusCode()
                   + ", reason: "
@@ -97,7 +96,6 @@ public class AirflowClient {
           body.getDagRunId(),
           response.getStatusLine().getStatusCode(),
           response.getStatusLine().getReasonPhrase());
-
       if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK
           && response.getStatusLine().getStatusCode() != HttpStatus.SC_CREATED) {
         throw new PipelinesException(

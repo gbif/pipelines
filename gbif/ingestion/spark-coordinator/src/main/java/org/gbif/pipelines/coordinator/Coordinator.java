@@ -283,7 +283,6 @@ public class Coordinator {
     }
 
     log.info("Exiting Standalone.");
-    System.exit(0);
   }
 
   @NotNull
