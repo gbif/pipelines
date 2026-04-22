@@ -52,6 +52,7 @@ public class ParentJsonConverter {
         convertToParentRecord()
             .setId(verbatim.getId())
             .setInternalId(identifier.getInternalId())
+            .setDatasetKey(metadata.getDatasetKey())
             .setUniqueKey(identifier.getUniqueKey())
             .setType(ConverterConstants.EVENT)
             .setEvent(convertToEvent())
