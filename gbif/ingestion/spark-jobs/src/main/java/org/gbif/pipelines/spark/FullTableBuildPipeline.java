@@ -135,8 +135,11 @@ public class FullTableBuildPipeline {
     }
 
     if (log.isDebugEnabled()) {
-      log.info("Number of successful parquet files to process: {}", scanResult.successfulPaths().size());
-      scanResult.successfulPaths().forEach(path -> log.debug("Successful parquet file path: {}", path));
+      log.info(
+          "Number of successful parquet files to process: {}", scanResult.successfulPaths().size());
+      scanResult
+          .successfulPaths()
+          .forEach(path -> log.debug("Successful parquet file path: {}", path));
     }
 
     // load hdfs view
