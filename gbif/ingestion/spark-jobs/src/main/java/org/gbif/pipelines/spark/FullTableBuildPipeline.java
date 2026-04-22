@@ -153,7 +153,7 @@ public class FullTableBuildPipeline {
 
     String coreDwcTerm = args.datasetType == DatasetType.OCCURRENCE ? "occurrence" : "event";
 
-    String tempLoadingTable = String.format("%s_%s_%d", coreDwcTerm, "rebuild", BUILD_TIME);
+    String tempLoadingTable = String.format("%s_%s_%d_temp", "rebuild", coreDwcTerm, BUILD_TIME);
 
     // Switch to the configured Hive database
     spark.sql("USE " + config.getHiveDB());
