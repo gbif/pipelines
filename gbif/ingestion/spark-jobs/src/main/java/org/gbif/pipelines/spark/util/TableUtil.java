@@ -519,11 +519,13 @@ public class TableUtil {
 
     return String.format(
         """
-          CREATE TABLE IF NOT EXISTS %s
-          (%s)
-          USING iceberg
-          PARTITIONED BY (datasetkey)
-          TBLPROPERTIES (%s)
+        CREATE TABLE IF NOT EXISTS %s (
+        %s
+        )
+        USING iceberg
+        PARTITIONED BY (datasetkey)
+        TBLPROPERTIES (
+        %s)
         """,
         verbatimExtensionTableName(extensionTable, coreDwcTerm),
         fieldList,

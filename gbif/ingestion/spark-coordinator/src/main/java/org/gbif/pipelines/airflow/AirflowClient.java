@@ -71,7 +71,16 @@ public class AirflowClient {
             "dag_run_id {} exists. Deleting the run to avoid caching issues", body.getDagRunId());
         HttpDelete delete = new HttpDelete(getUri(config, body.getDagRunId()));
         delete.setHeaders(getHeaders(config));
-        checkUnavailableService(client.execute(delete));
+        HttpResponse response = checkUnavailableService(client.execute(delete));
+        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK
+            && response.getStatusLine().getStatusCode() != HttpStatus.SC_ACCEPTED
+            && response.getStatusLine().getStatusCode() != HttpStatus.SC_NO_CONTENT) {
+          log.warn(
+              "Failed to delete existing DAG run. Response code: "
+                  + response.getStatusLine().getStatusCode()
+                  + ", reason: "
+                  + response.getStatusLine().getReasonPhrase());
+        }
       }
 
       log.debug("Submit dag_run_id {}", body.getDagRunId());
@@ -83,11 +92,18 @@ public class AirflowClient {
 
       HttpResponse response = checkUnavailableService(client.execute(post));
       log.debug(
-          "Submit dag_run_id {} response code {}, reason {}",
+          "Submit response dag_run_id {} response code {}, reason {}",
           body.getDagRunId(),
           response.getStatusLine().getStatusCode(),
           response.getStatusLine().getReasonPhrase());
-
+      if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK
+          && response.getStatusLine().getStatusCode() != HttpStatus.SC_CREATED) {
+        throw new PipelinesException(
+            "Failed to create DAG run. Response code: "
+                + response.getStatusLine().getStatusCode()
+                + ", reason: "
+                + response.getStatusLine().getReasonPhrase());
+      }
       return MAPPER.readTree(response.getEntity().getContent());
     }
   }
