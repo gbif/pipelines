@@ -129,6 +129,16 @@ public class FullTableBuildPipeline {
 
     log.info("Starting table build");
 
+    if (scanResult.successfulPaths().isEmpty()) {
+      log.warn("No parquet files found to process. Exiting.");
+      return;
+    }
+
+    if (log.isDebugEnabled()) {
+      log.info("Number of successful parquet files to process: {}", scanResult.successfulPaths().size());
+      scanResult.successfulPaths().forEach(path -> log.debug("Successful parquet file path: {}", path));
+    }
+
     // load hdfs view
     Dataset<Row> hdfs =
         spark
