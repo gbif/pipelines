@@ -101,7 +101,7 @@ public class FullTableBuildPipeline {
     // check dataset type supported
     checkDatasetTypeSupported(args.datasetType);
 
-    long start = System.currentTimeMillis();
+    long BUILD_TIME = System.currentTimeMillis();
 
     PipelinesConfig config = loadConfig(args.config);
 
@@ -154,7 +154,7 @@ public class FullTableBuildPipeline {
     String coreDwcTerm = args.datasetType == DatasetType.OCCURRENCE ? "occurrence" : "event";
 
     String tempLoadingTable =
-        String.format("%s_%s_%d", coreDwcTerm, "rebuild", System.currentTimeMillis());
+        String.format("%s_%s_%d", coreDwcTerm, "rebuild", BUILD_TIME);
 
     // Switch to the configured Hive database
     spark.sql("USE " + config.getHiveDB());
@@ -180,7 +180,7 @@ public class FullTableBuildPipeline {
 
     checkForOrphanedRecord(spark, tempLoadingTable);
 
-    String prefix = "rebuild_" + start + "_";
+    String prefix = "rebuild_" + BUILD_TIME + "_";
 
     // Create the occurrence table SQL
     String createSQL =
@@ -242,7 +242,7 @@ public class FullTableBuildPipeline {
       switchLiveTables(coreDwcTerm, spark, config, prefix);
     }
 
-    log.info(timeAndRecPerSecond("full-table-build", start, avroToHdfsCountAttempted));
+    log.info(timeAndRecPerSecond("full-table-build", BUILD_TIME, avroToHdfsCountAttempted));
   }
 
   /**
