@@ -2,6 +2,7 @@ package org.gbif.pipelines.spark.util;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.Serial;
@@ -9,6 +10,8 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +26,6 @@ import org.gbif.pipelines.core.config.model.IndexConfig;
 @Getter
 public class IndexSettings {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
   private final Integer numberOfShards;
   private final String indexName;
   private final String indexAlias;
@@ -92,7 +94,8 @@ public class IndexSettings {
       long timestamp)
       throws IOException {
 
-    String indexVersion = resolveIndexVersion(datasetType, indexConfig);
+    String indexVersion = resolveIndexVersion(indexConfig, datasetType);
+    String indexAlias = resolveIndexAlias(indexConfig, datasetType);
 
     if (recordsNumber >= indexConfig.getBigIndexIfRecordsMoreThan()) {
       return buildIndependentIndexName(datasetId, attempt, indexVersion, timestamp);
@@ -100,7 +103,7 @@ public class IndexSettings {
 
     String defaultPrefix = indexConfig.defaultPrefixName + "_" + indexVersion;
     String indexName =
-        getIndexName(indexConfig, httpClient, defaultPrefix)
+        getExistingDefaultIndexName(indexConfig, httpClient, indexAlias, defaultPrefix)
             .orElse(defaultPrefix + "_" + timestamp);
 
     log.info("ES Index name - {}", indexName);
@@ -115,14 +118,22 @@ public class IndexSettings {
       int attempt,
       long timestamp) {
 
-    String indexVersion = resolveIndexVersion(datasetType, indexConfig);
+    String indexVersion = resolveIndexVersion(indexConfig, datasetType);
     return buildIndependentIndexName(datasetId, attempt, indexVersion, timestamp);
   }
 
-  private static String resolveIndexVersion(DatasetType datasetType, IndexConfig config) {
+  private static String resolveIndexVersion(IndexConfig config, DatasetType datasetType) {
     return switch (datasetType) {
       case OCCURRENCE -> config.occurrenceVersion;
       case SAMPLING_EVENT -> config.eventVersion;
+      default -> throw new IllegalStateException("Unexpected value: " + datasetType);
+    };
+  }
+
+  public static String resolveIndexAlias(IndexConfig config, DatasetType datasetType) {
+    return switch (datasetType) {
+      case OCCURRENCE -> config.occurrenceAlias;
+      case SAMPLING_EVENT -> config.eventAlias;
       default -> throw new IllegalStateException("Unexpected value: " + datasetType);
     };
   }
@@ -156,18 +167,75 @@ public class IndexSettings {
     return isCeil ? (int) Math.ceil(shards) : (int) Math.floor(shards);
   }
 
-  public static Optional<String> getIndexName(
-      IndexConfig indexConfig, HttpClient httpClient, String prefix) throws IOException {
-    String url = String.format(indexConfig.defaultSmallestIndexCatUrl, prefix);
-    HttpUriRequest httpGet = new HttpGet(url);
-    HttpResponse response = httpClient.execute(httpGet);
-    if (response.getStatusLine().getStatusCode() != 200) {
-      throw new IOException("ES _cat API exception " + response.getStatusLine().getReasonPhrase());
+  /**
+   * Returns the name of the default index to use that is available to write to and is below the
+   * size threshold. Will return Optional.empty() if a new index is required.
+   *
+   * @param indexConfig
+   * @param httpClient
+   * @param alias
+   * @return
+   * @throws IOException
+   */
+  public static Optional<String> getExistingDefaultIndexName(
+      IndexConfig indexConfig, HttpClient httpClient, String alias, String defaultNamePrefix)
+      throws IOException {
+
+    ObjectMapper MAPPER = new ObjectMapper();
+    // ignore unrecognised
+    MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+    // "http://localhost:9200/_cat/aliases/%s?format=json",
+    String getByAlias =
+        String.format(indexConfig.defaultIndexCatUrl + "/_cat/aliases/%s?format=json", alias);
+    HttpUriRequest httpGetByAlias = new HttpGet(getByAlias);
+    HttpResponse responseByAlias = httpClient.execute(httpGetByAlias);
+    if (responseByAlias.getStatusLine().getStatusCode() != 200) {
+      throw new IOException(
+          "ES _cat/aliases API exception " + responseByAlias.getStatusLine().getReasonPhrase());
     }
-    List<EsCatIndex> indices =
-        MAPPER.readValue(response.getEntity().getContent(), new TypeReference<>() {});
-    if (!indices.isEmpty() && indices.get(0).getCount() <= indexConfig.defaultNewIfSize) {
-      return Optional.of(indices.get(0).getName());
+
+    // gets a list of all indexes in this alias
+    Set<String> defaultIndexes =
+        MAPPER
+            .readValue(
+                responseByAlias.getEntity().getContent(), new TypeReference<List<EsCatIndex>>() {})
+            .stream()
+            .map(EsCatIndex::getName)
+            .filter(name -> name.startsWith(defaultNamePrefix))
+            .collect(Collectors.toSet());
+
+    if (defaultIndexes.isEmpty()) {
+      return Optional.empty();
+    }
+
+    // get a list of indexes matching
+    String getByNamePrefix =
+        String.format(
+            indexConfig.defaultIndexCatUrl
+                + "/_cat/indices/%s*?v&h=docs.count,index&s=docs.count:asc&format=json",
+            defaultNamePrefix);
+    HttpUriRequest httpGetByPrefix = new HttpGet(getByNamePrefix);
+    HttpResponse responseByPrefix = httpClient.execute(httpGetByPrefix);
+    if (responseByPrefix.getStatusLine().getStatusCode() != 200) {
+      throw new IOException(
+          "ES _cat/indices API exception " + responseByPrefix.getStatusLine().getReasonPhrase());
+    }
+
+    // look for indices matching the default prefix and with size less than the threshold
+    List<EsCatIndex> defaultIndices =
+        MAPPER
+            .readValue(
+                responseByPrefix.getEntity().getContent(), new TypeReference<List<EsCatIndex>>() {})
+            .stream()
+            .filter(
+                index ->
+                    defaultIndexes.contains(index.getName())
+                        && index.getCount() <= indexConfig.defaultNewIfSize)
+            .toList();
+
+    if (!defaultIndices.isEmpty()) {
+      return Optional.of(defaultIndices.get(0).getName());
     }
     return Optional.empty();
   }
