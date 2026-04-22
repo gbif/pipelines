@@ -11,6 +11,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.*;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.occurrence.download.hive.EventHDFSTableDefinition;
 import org.gbif.occurrence.download.hive.ExtensionTable;
@@ -25,6 +26,14 @@ import org.jetbrains.annotations.NotNull;
 public class TableUtil {
 
   public static final Set<String> EXTENSION_COLUMNS = Set.of("ext_multimedia", "ext_humboldt");
+
+  public static void main(String[] args) {
+
+    TableBuildConfig config = new TableBuildConfig();
+
+    System.out.println(getCreateTableSQL(config, DatasetType.SAMPLING_EVENT, "", "event"));
+    System.out.println(getCreateTableSQL(config, DatasetType.OCCURRENCE, "", "occurrence"));
+  }
 
   /**
    * Check for records without a datasetKey or gbifId.
@@ -80,6 +89,7 @@ public class TableUtil {
     }
 
     return definition.stream()
+        .filter(field -> !field.getTerm().equals(GbifTerm.datasetKey))
         .map(field -> field.getHiveField() + " " + field.getHiveDataType())
         .collect(Collectors.joining(", \n"));
   }
@@ -530,6 +540,31 @@ public class TableUtil {
         verbatimExtensionTableName(extensionTable, coreDwcTerm),
         fieldList,
         generateTblProperties(config));
+  }
+
+  public static String createMigrationVerbatimExtensionTableSQL(
+      TableBuildConfig config,
+      String sourceSchema,
+      String targetSchema,
+      ExtensionTable extensionTable,
+      String coreDwcTerm) {
+
+    // generate field list
+    String fieldList =
+        extensionTable.getSchema().getFields().stream()
+            .map(f -> "`" + f.name() + "`")
+            .collect(Collectors.joining(",\n "));
+    return String.format(
+        """
+            INSERT INTO %s.%s (%s)
+            SELECT %s FROM %s.%s
+            """,
+        targetSchema,
+        verbatimExtensionTableName(extensionTable, coreDwcTerm),
+        fieldList,
+        fieldList,
+        sourceSchema,
+        verbatimExtensionTableName(extensionTable, coreDwcTerm));
   }
 
   public static String verbatimExtensionTableName(
