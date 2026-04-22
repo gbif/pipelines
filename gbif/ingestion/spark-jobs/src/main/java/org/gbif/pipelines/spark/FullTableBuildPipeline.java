@@ -130,7 +130,9 @@ public class FullTableBuildPipeline {
     log.info("Starting table build");
 
     if (scanResult.successfulPaths().isEmpty()) {
-      log.warn("No parquet files found to process. Exiting.");
+      log.warn("No parquet files found to process for {}", args.sourceDirectory);
+      fileSystem.close();
+      spark.close();
       return;
     }
 

@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -13,6 +14,7 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.jetbrains.annotations.NotNull;
 
+@Slf4j
 public class FullBuildUtils {
 
   public static final String MISSING = "MISSING";
@@ -57,6 +59,8 @@ public class FullBuildUtils {
     }
 
     List<String> hdfsPaths = new ArrayList<>();
+
+    log.info("Reading from base paths for source directory: {}", config.getOutputPath() + "/*");
     FileStatus[] fileStatuses = fileSystem.globStatus(new Path(config.getOutputPath() + "/*"));
     if (fileStatuses == null) {
       throw new IOException("Failed to list directories in " + config.getOutputPath());
@@ -72,9 +76,9 @@ public class FullBuildUtils {
         String datasetId = fileStatus.getPath().getName();
 
         // look for _SUCCESS files in the subdirectories of the dataset directory
-        FileStatus[] successFiles =
-            fileSystem.globStatus(
-                new Path(fileStatus.getPath() + "/*/" + sourceDirectory + "/_SUCCESS"));
+        String pathToCheck = fileStatus.getPath() + "/*/" + sourceDirectory + "/_SUCCESS";
+        log.info("Checking for dataset id {} for path {}", datasetId, pathToCheck);
+        FileStatus[] successFiles = fileSystem.globStatus(new Path(pathToCheck));
 
         if (successFiles != null && successFiles.length > 0) {
           // find the newest _SUCCESS file
@@ -123,6 +127,10 @@ public class FullBuildUtils {
     }
 
     // write unsuccessful datasets to a hdfs file for later review
+    log.info(
+        "Unsuccessful datasets: {}, tooOldDatasets: {} ",
+        unsuccessfulDatasets.size(),
+        tooOldDatasets.size());
     Path unsuccessfulFilePath = new Path(unsuccessfulFileDumpPath);
     try (org.apache.hadoop.fs.FSDataOutputStream outputStream =
         fileSystem.create(unsuccessfulFilePath, true)) {
@@ -133,6 +141,7 @@ public class FullBuildUtils {
         outputStream.writeBytes(datasetId + "," + OUT_OF_SYNC + "\n");
       }
     }
+    log.info("Unsuccessful datasets written to {}", unsuccessfulFileDumpPath);
 
     return new DirectoryScanResult(hdfsPaths, datasetAttemptMap);
   }
