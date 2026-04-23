@@ -28,6 +28,7 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -101,8 +102,30 @@ public class VerbatimExtensionsInterpretationPipeline {
             .as(Encoders.bean(ExtendedRecord.class));
 
     spark.sparkContext().setJobGroup("explode-extensions", "Exploding extensions", true);
-    // Convert to DataFrame and rename id to gbifid
-    Dataset<Row> df = extendedRecords.toDF().withColumnRenamed("id", "gbifid");
+
+    Dataset<Row> df = null;
+    if (datasetType == DatasetType.OCCURRENCE) {
+      log.info(
+          "Loaded {} extended records for dataset {} of type OCCURRENCE",
+          extendedRecords.count(),
+          datasetId);
+      // need to load the identifiers
+      Dataset<Row> idGbifIdTuple =
+          spark
+              .read()
+              .parquet(inputPath + "/" + Directories.IDENTIFIERS)
+              .as(Encoders.bean(IdentifierRecord.class))
+              .select(col("id"), col("internalId").alias("gbifid"));
+
+      Dataset<Row> joined = extendedRecords.join(idGbifIdTuple, "id");
+      df = joined.drop("id").toDF();
+    } else {
+      log.info(
+          "Loaded {} extended records for dataset {} of type SAMPLING_EVENT",
+          extendedRecords.count(),
+          datasetId);
+      df = extendedRecords.toDF().withColumnRenamed("id", "gbifid");
+    }
 
     // Explode extensions into separate rows
     Dataset<Row> exploded =
