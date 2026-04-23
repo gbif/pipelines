@@ -723,7 +723,7 @@
           "type": "double"
         },
         "nRunsCapped": {
-          "type": "int"
+          "type": "integer"
         },
         "naturalLanguageDetected": {
           "type": "boolean"
