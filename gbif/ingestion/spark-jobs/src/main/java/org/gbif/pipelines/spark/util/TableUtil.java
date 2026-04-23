@@ -532,6 +532,28 @@ public class TableUtil {
         generateTblProperties(config));
   }
 
+  public static String createMigrationVerbatimExtensionTableSQL(
+          TableBuildConfig config, String sourceSchema, String targetSchema, ExtensionTable extensionTable, String coreDwcTerm) {
+
+    // generate field list
+    String fieldList =
+            extensionTable.getSchema().getFields().stream()
+                    .map(f -> "`" + f.name()+"`")
+                    .collect(Collectors.joining(",\n "));
+    return String.format(
+            """
+            INSERT INTO %s.%s (%s)
+            SELECT %s FROM %s.%s
+            """,
+            targetSchema,
+            verbatimExtensionTableName(extensionTable, coreDwcTerm),
+            fieldList,
+            fieldList,
+            sourceSchema,
+            verbatimExtensionTableName(extensionTable, coreDwcTerm)
+    );
+  }
+
   public static String verbatimExtensionTableName(
       ExtensionTable extensionTable, String coreDwcTerm) {
     return String.format(

@@ -6,8 +6,7 @@ import static org.gbif.pipelines.spark.TableBuildPipeline.createExtensionTable;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
-import static org.gbif.pipelines.spark.util.TableUtil.createVerbatimExtensionTableSQL;
-import static org.gbif.pipelines.spark.util.TableUtil.verbatimExtensionTableName;
+import static org.gbif.pipelines.spark.util.TableUtil.*;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -308,6 +307,8 @@ public class VerbatimExtensionsInterpretationPipeline {
     if (args.outputSchemasOnly) {
       String dwcCoreTerm = args.datasetType == DatasetType.OCCURRENCE ? "occurrence" : "event";
       log.info("Outputting schemas for all supported extensions:");
+
+      List<ExtensionTable> extensionTables = ExtensionTable.tableExtensions();
       ExtensionTable.tableExtensions()
           .forEach(
               extensionTable -> {
@@ -315,9 +316,19 @@ public class VerbatimExtensionsInterpretationPipeline {
                     createVerbatimExtensionTableSQL(
                         config.getTableBuildConfig(), extensionTable, dwcCoreTerm);
                 System.out.println("--- " + extensionTable.getHiveTableName());
-                System.out.println(sql);
+                System.out.println(sql + ";");
                 System.out.println("--- ");
               });
+
+      extensionTables.forEach(
+          extensionTable -> {
+            String migrateSQL =
+                createMigrationVerbatimExtensionTableSQL(
+                    config.getTableBuildConfig(), "prod", "prod_b", extensionTable, dwcCoreTerm);
+            System.out.println("--- " + extensionTable.getHiveTableName());
+            System.out.println(migrateSQL + ";");
+            System.out.println("--- ");
+          });
       return;
     }
 
