@@ -275,9 +275,10 @@ public class EventInterpretationPipeline {
               }
 
               if (r.getDerivedMetadata() != null && !r.getDerivedMetadata().isEmpty()) {
-                MAPPER.readValue(
-                    r.getDerivedMetadata(),
-                    org.gbif.pipelines.io.avro.json.DerivedMetadataRecord.class);
+                derivedMetadataRecord =
+                    MAPPER.readValue(
+                        r.getDerivedMetadata(),
+                        org.gbif.pipelines.io.avro.json.DerivedMetadataRecord.class);
               } else {
                 derivedMetadataRecord = new DerivedMetadataRecord();
                 derivedMetadataRecord.setId(r.getId());
