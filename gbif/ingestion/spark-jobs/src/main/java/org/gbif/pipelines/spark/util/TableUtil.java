@@ -334,6 +334,9 @@ public class TableUtil {
         .select(col("gbifid"), explode(col("dna_record")).alias("dna_record"), col("datasetkey"))
         .createOrReplaceTempView("dna_records");
 
+    // TODO: remove
+    spark.sql("SELECT * FROM dna_records").show(false);
+
     String dnaColsSelect =
         Arrays.stream(dnaStructType.fields())
             .map(f -> "dna_record." + f.name())
