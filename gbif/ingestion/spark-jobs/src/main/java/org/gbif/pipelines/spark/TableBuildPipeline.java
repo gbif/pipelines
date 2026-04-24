@@ -267,7 +267,7 @@ public class TableBuildPipeline {
       }
 
       // write to the dna table
-      insertOverwriteDnaDerivedDataTable(spark, tempCoreTable, coreDwcTerm + "_multimedia", true);
+      insertOverwriteDnaDerivedDataTable(spark, tempCoreTable, dnaTableName, true);
     }
 
     // if a sampling event dataset, create the humboldt_event table if it does not exist and
