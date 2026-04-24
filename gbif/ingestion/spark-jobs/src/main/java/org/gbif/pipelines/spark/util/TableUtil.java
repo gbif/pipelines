@@ -318,6 +318,8 @@ public class TableUtil {
                             && !f.name().equalsIgnoreCase("datasetkey"))
                 .toArray(StructField[]::new));
 
+    log.info("DNA Struct type: {}", dnaStructType);
+
     spark
         .table(occurrenceTable)
         .select(
@@ -336,6 +338,8 @@ public class TableUtil {
         Arrays.stream(dnaStructType.fields())
             .map(f -> "dna_record." + f.name())
             .collect(Collectors.joining(","));
+
+    log.info("DNA COLS: {}", dnaColsSelect);
 
     spark.sql(
         String.format(
