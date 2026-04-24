@@ -477,7 +477,7 @@ public class OccurrenceInterpretationPipeline {
     GrscicollTransform grscicollTransform = GrscicollTransform.create(config);
     TemporalTransform temporalTransform = TemporalTransform.create(config);
     BasicTransform basicTransform = BasicTransform.create(config);
-    DnDerivedDataTransform dnDerivedDataTransform = DnDerivedDataTransform.create(config);
+    DnaDerivedDataTransform dnaDerivedDataTransform = DnaDerivedDataTransform.create(config);
     MultimediaTransform multimediaTransform = MultimediaTransform.create(config);
     ImageTransform imageTransform = ImageTransform.create(config);
     AudubonTransform audubonTransform = AudubonTransform.create(config);
@@ -500,7 +500,7 @@ public class OccurrenceInterpretationPipeline {
                   GrscicollRecord gr = grscicollTransform.convert(er, metadata);
                   TemporalRecord ter = temporalTransform.convert(er);
                   BasicRecord br = basicTransform.convert(er);
-                  DnaDerivedDataRecord dr = dnDerivedDataTransform.convert(er);
+                  DnaDerivedDataRecord dr = dnaDerivedDataTransform.convert(er);
                   MultimediaRecord mr = multimediaTransform.convert(er);
                   ImageRecord ir = imageTransform.convert(er);
                   AudubonRecord ar = audubonTransform.convert(er);

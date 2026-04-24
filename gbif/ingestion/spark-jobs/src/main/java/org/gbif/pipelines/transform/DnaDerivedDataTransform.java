@@ -15,16 +15,16 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transform.factory.VocabularyServiceFactory;
 
 @Slf4j
-public class DnDerivedDataTransform implements Serializable {
+public class DnaDerivedDataTransform implements Serializable {
 
   private final PipelinesConfig config;
 
-  private DnDerivedDataTransform(PipelinesConfig config) {
+  private DnaDerivedDataTransform(PipelinesConfig config) {
     this.config = config;
   }
 
-  public static DnDerivedDataTransform create(PipelinesConfig config) {
-    return new DnDerivedDataTransform(config);
+  public static DnaDerivedDataTransform create(PipelinesConfig config) {
+    return new DnaDerivedDataTransform(config);
   }
 
   public DnaDerivedDataRecord convert(ExtendedRecord source) {
