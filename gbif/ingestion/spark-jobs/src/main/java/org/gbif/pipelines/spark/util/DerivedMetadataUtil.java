@@ -127,26 +127,26 @@ public class DerivedMetadataUtil implements Serializable {
 
     // load occurrences (handling datasets without occurrences)
     Dataset<Occurrence> occurrence = loadOccurrences(spark, fileSystem, outputPath);
-    log.info("occurrences {}", occurrence.count());
+    log.debug("occurrences {}", occurrence.count());
 
     // Calculate Convex Hull
-    log.info("calculating convex hulls");
+    log.debug("calculating convex hulls");
     Dataset<Tuple2<String, String>> eventIdConvexHull =
         calculateConvexHull(spark, outputPath, events, occurrence);
 
     // Calculate Temporal Coverage
-    log.info("calculating temporal Coverages");
+    log.debug("calculating temporal Coverages");
     Dataset<Tuple3<String, String, String>> temporalCoverages =
         calculateTemporalCoverage(spark, outputPath, events, occurrence);
 
     // Calculate Taxonomic Coverage
-    log.info("calculating taxonomic Coverages");
+    log.debug("calculating taxonomic Coverages");
     Dataset<Tuple2<String, String>> taxonomicCoverages =
         calculateTaxonomicCoverage(spark, outputPath, config, occurrence);
 
     cleanupTemporaryDirectories(fileSystem, outputPath);
 
-    log.info("creating derived data");
+    log.debug("creating derived data");
     return createDerivedDataRecords(
         spark, outputPath, events, eventIdConvexHull, temporalCoverages, taxonomicCoverages);
   }
@@ -481,25 +481,25 @@ public class DerivedMetadataUtil implements Serializable {
     sparkLog(spark, "CalculateTemporalCoverage", "gatherEventDatesFromChildEvents");
     Dataset<Tuple2<String, EventDate>> eventIdToEventDate =
         gatherEventDatesFromChildEvents(spark, events);
-    log.info("eventIdToEventDate {}", eventIdToEventDate.count());
+    log.debug("eventIdToEventDate {}", eventIdToEventDate.count());
 
     // get unique occurrence temporal - coreId -> eventDate
     sparkLog(spark, "CalculateTemporalCoverage", "getCoreIdEventDates");
     Dataset<Tuple2<String, EventDate>> coredIdOccurrenceEventDates =
         getCoreIdEventDates(occurrence);
-    log.info("coredIdOccurrenceEventDates {}", coredIdOccurrenceEventDates.count());
+    log.debug("coredIdOccurrenceEventDates {}", coredIdOccurrenceEventDates.count());
 
     Dataset<Row> coreOccEventSel =
         coredIdOccurrenceEventDates
             .selectExpr("_1 as eventId", "_2.gte as gte", "_2.lte as lte", "_2.lte as interval")
             .dropDuplicates("eventId", "gte", "lte", "interval");
-    log.info("coreEventSel {}", coreOccEventSel.count());
+    log.debug("coreEventSel {}", coreOccEventSel.count());
 
     Dataset<Row> eventIdToEventDateSel =
         eventIdToEventDate
             .selectExpr("_1 as eventId", "_2.gte as gte", "_2.lte as lte", "_2.lte as interval")
             .dropDuplicates("eventId", "gte", "lte", "interval");
-    log.info("coreEventSel {}", eventIdToEventDateSel.count());
+    log.debug("coreEventSel {}", eventIdToEventDateSel.count());
 
     sparkLog(spark, "CalculateTemporalCoverage", "Union event dates");
     Dataset<Tuple2<String, EventDate>> unionEventDates =
@@ -534,7 +534,7 @@ public class DerivedMetadataUtil implements Serializable {
         unionEventDates.groupByKey(
             (MapFunction<Tuple2<String, EventDate>, String>) Tuple2::_1, Encoders.STRING());
 
-    log.info("groupedByIdDates {}", groupedByIdDates.count());
+    log.debug("groupedByIdDates {}", groupedByIdDates.count());
     sparkLog(spark, "CalculateTemporalCoverage", "temporalCoverages with accumulators");
     Dataset<Tuple3<String, String, String>> temporalCoverages =
         groupedByIdDates
@@ -586,17 +586,17 @@ public class DerivedMetadataUtil implements Serializable {
     // join to child events to get all coordinates associated with parent event
     sparkLog(spark, "CalculateConvexHull", "gatherCoordinatesFromChildEvents");
     Dataset<EventCoordinate> eventIdToCoordinates = gatherCoordinatesFromChildEvents(spark, events);
-    log.info("eventIdToCoordinates {}", eventIdToCoordinates.count());
+    log.debug("eventIdToCoordinates {}", eventIdToCoordinates.count());
 
     // join child events ?
     sparkLog(spark, "CalculateConvexHull", "getEventCoordinates");
     Dataset<EventCoordinate> coreIdEventCoordinates = getEventCoordinates(events);
-    log.info("coreIdEventCoordinates {}", coreIdEventCoordinates.count());
+    log.debug("coreIdEventCoordinates {}", coreIdEventCoordinates.count());
 
     // get unique occurrence locations - coredId -> "lat||long"
     sparkLog(spark, "CalculateConvexHull", "getCoreIdCoordinates");
     Dataset<EventCoordinate> coreIdOccurrenceCoordinates = getCoreIdCoordinates(occurrence);
-    log.info("coreIdOccurrenceCoordinates {}", coreIdOccurrenceCoordinates.count());
+    log.debug("coreIdOccurrenceCoordinates {}", coreIdOccurrenceCoordinates.count());
 
     sparkLog(spark, "CalculateConvexHull", "core select of distinct coordinates at precision");
     // round coordinates to PRECISION to reduce near-duplicate floats, then dedupe by the three
@@ -609,7 +609,7 @@ public class DerivedMetadataUtil implements Serializable {
                 "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
                 "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude")
             .dropDuplicates("eventId", "longitude", "latitude");
-    log.info("coreSel {}", coreSel.count());
+    log.debug("coreSel {}", coreSel.count());
 
     sparkLog(spark, "CalculateConvexHull", "event select of distinct coordinates at precision");
     Dataset<Row> eventSel =
@@ -619,7 +619,7 @@ public class DerivedMetadataUtil implements Serializable {
                 "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
                 "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude")
             .dropDuplicates("eventId", "longitude", "latitude");
-    log.info("eventSel {}", eventSel.count());
+    log.debug("eventSel {}", eventSel.count());
 
     sparkLog(
         spark, "CalculateConvexHull", "core event select of distinct coordinates at precision");
@@ -630,7 +630,7 @@ public class DerivedMetadataUtil implements Serializable {
                 "round(longitude * " + PRECISION + ") / " + PRECISION + " as longitude",
                 "round(latitude * " + PRECISION + ") / " + PRECISION + " as latitude")
             .dropDuplicates("eventId", "longitude", "latitude");
-    log.info("coreEventSel {}", coreEventSel.count());
+    log.debug("coreEventSel {}", coreEventSel.count());
 
     // union the already-deduped smaller datasets
     sparkLog(spark, "CalculateConvexHull", "union of coordinates at precision");
@@ -641,7 +641,7 @@ public class DerivedMetadataUtil implements Serializable {
     unioned.write().mode(SaveMode.Overwrite).parquet(outputPath + "/temp_coordinates_joined");
     unioned = spark.read().parquet(outputPath + "/temp_coordinates_joined");
 
-    log.info("distinct coordinates - union-ed {}", unioned.count());
+    log.debug("distinct coordinates - union-ed {}", unioned.count());
 
     // drop duplicates using explicit columns (faster/clearer than distinct())
     Dataset<EventCoordinate> eventIdEventCoordinates =
@@ -667,7 +667,7 @@ public class DerivedMetadataUtil implements Serializable {
             .as(Encoders.bean(EventCoordinate.class));
     ;
 
-    log.info("distinct coordinates {}", eventIdEventCoordinates.count());
+    log.debug("distinct coordinates {}", eventIdEventCoordinates.count());
     sparkLog(spark, "CalculateConvexHull", "Calculate partial hulls");
     // Warning - this has the potential to OOM if there are too many coordinates for an event
     Dataset<Tuple2<String, String>> partialHulls =
@@ -736,7 +736,7 @@ public class DerivedMetadataUtil implements Serializable {
                 },
             Encoders.tuple(Encoders.STRING(), Encoders.STRING()));
 
-    log.info("Writing out convex hulls {}", hulls.count());
+    log.debug("Writing out convex hulls {}", hulls.count());
     sparkLog(spark, "CalculateConvexHull", "Write completed hulls and reload");
     hulls.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + EVENT_DERIVED_CONVEX_HULL);
 

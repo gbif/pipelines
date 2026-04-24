@@ -38,11 +38,9 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.converters.*;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.Parent;
 import org.gbif.pipelines.io.avro.event.EventHdfsRecord;
-import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
-import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
-import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
-import org.gbif.pipelines.io.avro.json.TemporalInheritedRecord;
+import org.gbif.pipelines.io.avro.json.*;
 import org.gbif.pipelines.spark.pojo.Event;
 import org.gbif.pipelines.spark.pojo.EventLineage;
 import org.gbif.pipelines.spark.util.DerivedMetadataUtil;
@@ -255,6 +253,7 @@ public class EventInterpretationPipeline {
               EventInheritedRecord eventInheritedRecord = null;
               LocationInheritedRecord locationInheritedRecord = null;
               TemporalInheritedRecord temporalInheritedRecord = null;
+              DerivedMetadataRecord derivedMetadataRecord = null;
 
               if (eventCoreInherited != null) {
                 eventInheritedRecord =
@@ -275,6 +274,15 @@ public class EventInterpretationPipeline {
                         org.gbif.pipelines.io.avro.json.TemporalInheritedRecord.class);
               }
 
+              if (r.getDerivedMetadata() != null && !r.getDerivedMetadata().isEmpty()) {
+                MAPPER.readValue(
+                    r.getDerivedMetadata(),
+                    org.gbif.pipelines.io.avro.json.DerivedMetadataRecord.class);
+              } else {
+                derivedMetadataRecord = new DerivedMetadataRecord();
+                derivedMetadataRecord.setId(r.getId());
+              }
+
               ParentJsonConverter c =
                   ParentJsonConverter.builder()
                       .metadata(metadata)
@@ -288,10 +296,7 @@ public class EventInterpretationPipeline {
                       .eventInheritedRecord(eventInheritedRecord)
                       .locationInheritedRecord(locationInheritedRecord)
                       .temporalInheritedRecord(temporalInheritedRecord)
-                      .derivedMetadata(
-                          MAPPER.readValue(
-                              r.getDerivedMetadata(),
-                              org.gbif.pipelines.io.avro.json.DerivedMetadataRecord.class))
+                      .derivedMetadata(derivedMetadataRecord)
                       .build();
               return c.convertToParent();
             },
