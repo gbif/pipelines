@@ -4,7 +4,6 @@ import static org.gbif.pipelines.core.utils.ModelUtils.hasExtension;
 
 import java.io.Serializable;
 import java.time.Instant;
-import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.interpreters.extension.DnaDerivedDataInterpreter;
@@ -12,7 +11,6 @@ import org.gbif.pipelines.io.avro.DnaDerivedDataRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transform.factory.VocabularyServiceFactory;
 
-@Slf4j
 public class DnaDerivedDataTransform implements Serializable {
 
   private final PipelinesConfig config;
@@ -30,8 +28,6 @@ public class DnaDerivedDataTransform implements Serializable {
       throw new IllegalArgumentException("ExtendedRecord is null");
     }
 
-    log.info("Processing DNA extension");
-
     DnaDerivedDataRecord dr =
         DnaDerivedDataRecord.newBuilder()
             .setId(source.getId())
@@ -39,12 +35,10 @@ public class DnaDerivedDataTransform implements Serializable {
             .build();
 
     if (source.getExtensions() == null || source.getExtensions().isEmpty()) {
-      log.info("No extensions found");
       return dr;
     }
 
     if (!hasExtension(source, Extension.DNA_DERIVED_DATA)) {
-      log.info("No DNA extension found");
       return dr;
     }
 
@@ -54,8 +48,6 @@ public class DnaDerivedDataTransform implements Serializable {
         DnaDerivedDataInterpreter.builder().vocabularyService(vocabularyService).create();
 
     dnaDerivedDataInterpreter.interpret(source, dr);
-
-    log.info("DNA record interpreted: {}", dr.toString());
 
     return dr;
   }
