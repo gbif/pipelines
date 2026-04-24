@@ -230,7 +230,7 @@ public abstract class PipelinesCallback<
       log.debug("Received message: {}", message);
 
       if (!isMessageCorrect(message) || isProcessingStopped(message)) {
-        if (log.isTraceEnabled()) {
+        if (log.isDebugEnabled()) {
           log.debug(
               "Returning message correct: {} isProcessingStopped: {}",
               isMessageCorrect(message),
