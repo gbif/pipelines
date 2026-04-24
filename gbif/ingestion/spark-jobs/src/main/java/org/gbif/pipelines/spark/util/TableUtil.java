@@ -328,7 +328,25 @@ public class TableUtil {
                     encodedExtData
                         ? expr("cast(base64_decode(ext_dna_derived_data) as string)")
                         : col("ext_dna_derived_data"),
-                    new ArrayType(dnaStructType, true))
+                    new ArrayType(
+                        new StructType()
+                            .add("nucleotidesequenceid", "string", false)
+                            .add(
+                                "targetgene",
+                                "STRUCT<concept: STRING,lineage: ARRAY<STRING>>",
+                                false)
+                            .add("sequence", "string", false)
+                            .add("sequencelength", "int", false)
+                            .add("gccontent", "double", false)
+                            .add("noniupacfraction", "double", false)
+                            .add("nonacgtnfraction", "double", false)
+                            .add("nfraction", "double", false)
+                            .add("nrunscapped", "int", false)
+                            .add("naturallanguagedetected", "boolean", false)
+                            .add("endstrimmed", "boolean", false)
+                            .add("gapsorwhitespaceremoved", "boolean", false)
+                            .add("invalid", "boolean", false),
+                        true))
                 .alias("dna_record"),
             col("datasetkey"))
         .select(col("gbifid"), explode(col("dna_record")).alias("dna_record"), col("datasetkey"))
