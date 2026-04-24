@@ -4,9 +4,7 @@ import static org.gbif.pipelines.core.utils.ModelUtils.hasExtension;
 
 import java.io.Serializable;
 import java.time.Instant;
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.interpreters.extension.DnaDerivedDataInterpreter;
