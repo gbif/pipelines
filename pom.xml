@@ -115,7 +115,7 @@
     <keygen.version>1.0.0</keygen.version>
 
     <!-- Main distributed libraries (overrides from spark-jobs where applicable) -->
-    <avro.version>1.11.3</avro.version>
+    <avro.version>1.11.4</avro.version>
 
     <hadoop.version>3.3.6</hadoop.version>
     <hbase.version>2.5.13-hadoop3</hbase.version>
