@@ -191,6 +191,8 @@ public class FullIndexBuildPipeline {
       Long count = row.getAs("count");
       datasetCounts.put(key, count);
 
+      // if its a small dataset, it'll be written to the default index
+      // track the size of this for shard calc.
       if (count < config.getIndexConfig().getBigIndexIfRecordsMoreThan()) {
         defaultIndexPredictedSize += count;
       }
