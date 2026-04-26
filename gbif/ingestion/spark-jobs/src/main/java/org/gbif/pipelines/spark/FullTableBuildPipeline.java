@@ -207,24 +207,47 @@ public class FullTableBuildPipeline {
               .load(String.format("%s.%s%s", config.getHiveDB(), prefix, coreDwcTerm))
               .schema();
 
+      String targetTable = config.getHiveDB() + "." + prefix + coreDwcTerm;
+      String sourceTable = config.getHiveDB() + "." + tempLoadingTable;
+
+      // -------------------do eBird first
+      spark.sparkContext().setJobGroup("insert-into-core", "Loading eBird into core", true);
       // Build the insert query
-      String insertQuery =
+      String insertEbirdQuery =
           String.format(
-              "INSERT INTO TABLE %s.%s%s (%s) SELECT %s FROM %s.%s",
-              config.getHiveDB(),
-              prefix,
-              coreDwcTerm,
+              "INSERT INTO TABLE %s (%s) SELECT %s FROM %s WHERE datasetkey = '4fa7b334-ce0d-4e88-aaae-2e0c138d049e'",
+              targetTable,
               Arrays.stream(tblSchema.fields())
                   .map(StructField::name)
                   .collect(Collectors.joining(", ")),
               generateSelectColumns(tblSchema, hdfsColumnList),
-              config.getHiveDB(),
-              tempLoadingTable);
+              sourceTable);
 
-      log.debug("Inserting data into {} table: {}", coreDwcTerm, insertQuery);
+      log.debug("Inserting data into {} table: {}", coreDwcTerm, insertEbirdQuery);
 
       // Execute the insert
-      spark.sql(insertQuery);
+      spark.sql(insertEbirdQuery);
+
+      // -------------------do rest
+
+      spark
+          .sparkContext()
+          .setJobGroup("insert-into-core", "Loading everything else into core", true);
+      // Build the insert query
+      String insertAllElseQuery =
+          String.format(
+              "INSERT INTO TABLE %s (%s) SELECT %s FROM %s WHERE datasetkey != '4fa7b334-ce0d-4e88-aaae-2e0c138d049e'",
+              targetTable,
+              Arrays.stream(tblSchema.fields())
+                  .map(StructField::name)
+                  .collect(Collectors.joining(", ")),
+              generateSelectColumns(tblSchema, hdfsColumnList),
+              sourceTable);
+
+      log.debug("Inserting data into {} table: {}", coreDwcTerm, insertAllElseQuery);
+
+      // Execute the insert
+      spark.sql(insertAllElseQuery);
 
       if (args.dropTempTableOnSuccess) {
         log.info("Dropping temporary loading table {}", tempLoadingTable);
@@ -239,6 +262,9 @@ public class FullTableBuildPipeline {
 
     if (args.loadMultimediaTable) {
       log.info("Loading Multimedia Table");
+      spark
+          .sparkContext()
+          .setJobGroup("insert-into-multimedia", "Loading everything else into multimedia", true);
       // Create occurrence_multimedia table
       spark.sql(getCreateMultimediaTableSQL(config.getTableBuildConfig(), prefix, coreDwcTerm));
 
@@ -252,6 +278,9 @@ public class FullTableBuildPipeline {
     // if its the event table, also create the event_humboldt table and insert data
     if (args.loadHumboldtTable && coreDwcTerm.equalsIgnoreCase("event")) {
       log.info("Loading Humboldt Table");
+      spark
+          .sparkContext()
+          .setJobGroup("insert-into-multimedia", "Loading everything else into humboldt", true);
       // For event table, also create the event_humboldt table and insert data
       // Create event_humboldt table
       String tableName = prefix + "event_humboldt";
