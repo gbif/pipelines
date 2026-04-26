@@ -81,6 +81,29 @@ public class FullTableBuildPipeline {
     private boolean switchOnSuccess = false;
 
     @Parameter(
+        names = "--existingTempLoadingTable",
+        description =
+            "Existing Temporary loading table. Can be used for re-runs where the load step fails")
+    private String existingTempLoadingTable = null;
+
+    @Parameter(names = "--loadCoreTable", description = "Load core table")
+    private boolean loadCoreTable = true;
+
+    @Parameter(names = "--loadMultimediaTable", description = "Load multimedia table")
+    private boolean loadMultimediaTable = true;
+
+    @Parameter(names = "--loadHumboldtTable", description = "Load humboldt table")
+    private boolean loadHumboldtTable = true;
+
+    @Parameter(
+        names = "--dropTempTableOnSuccess",
+        description =
+            "Drop the temporary loading table after successful load into final tables. "
+                + "Should be true for normal runs, but can be set to false for "
+                + "debugging to keep the temp table around for inspection.")
+    private boolean dropTempTableOnSuccess = true;
+
+    @Parameter(
         names = {"--help", "-h"},
         help = true,
         description = "Show usage")
@@ -138,12 +161,117 @@ public class FullTableBuildPipeline {
 
     String coreDwcTerm = args.datasetType == DatasetType.OCCURRENCE ? "occurrence" : "event";
 
-    String tempLoadingTable =
-        String.format("%s_%s_%d", coreDwcTerm, "rebuild", System.currentTimeMillis());
-
     // Switch to the configured Hive database
     spark.sql("USE " + config.getHiveDB());
 
+    Long avroToHdfsCountAttempted = -1L;
+    String tempLoadingTable = null;
+
+    if (args.existingTempLoadingTable != null && !args.existingTempLoadingTable.isEmpty()) {
+      log.info("Using provided temp loading table: {}", args.existingTempLoadingTable);
+      tempLoadingTable = args.existingTempLoadingTable;
+      avroToHdfsCountAttempted =
+          spark.sql("SELECT COUNT(*) FROM " + tempLoadingTable).collectAsList().get(0).getLong(0);
+      log.info(
+          "Count of records in provided temp loading table {} is {}",
+          tempLoadingTable,
+          avroToHdfsCountAttempted);
+    } else {
+      tempLoadingTable =
+          String.format("%s_%s_%d", coreDwcTerm, "rebuild", System.currentTimeMillis());
+
+      log.info("No temp loading table provided, will create table {}", tempLoadingTable);
+      avroToHdfsCountAttempted = loadTempLoadingTable(spark, tempLoadingTable, hdfs);
+      log.info(
+          "Loaded data into temp loading table {} with {} records",
+          tempLoadingTable,
+          avroToHdfsCountAttempted);
+    }
+
+    String prefix = "rebuild_" + start + "_";
+
+    if (args.loadCoreTable) {
+      log.info("Loading Core Table");
+      // Create the occurrence table SQL
+      spark.sql(
+          getCreateTableSQL(config.getTableBuildConfig(), args.datasetType, prefix, coreDwcTerm));
+
+      // get the hdfs columns from the parquet with mappings to iceberg columns
+      Map<String, HdfsColumn> hdfsColumnList = getHdfsColumns(hdfs);
+
+      // Read the target table i.e. 'occurrence' or 'event' schema to ensure it exists
+      StructType tblSchema =
+          spark
+              .read()
+              .format("iceberg")
+              .load(String.format("%s.%s%s", config.getHiveDB(), prefix, coreDwcTerm))
+              .schema();
+
+      // Build the insert query
+      String insertQuery =
+          String.format(
+              "INSERT OVERWRITE TABLE %s.%s%s (%s) SELECT %s FROM %s.%s",
+              config.getHiveDB(),
+              prefix,
+              coreDwcTerm,
+              Arrays.stream(tblSchema.fields())
+                  .map(StructField::name)
+                  .collect(Collectors.joining(", ")),
+              generateSelectColumns(tblSchema, hdfsColumnList),
+              config.getHiveDB(),
+              tempLoadingTable);
+
+      log.debug("Inserting data into {} table: {}", coreDwcTerm, insertQuery);
+
+      // Execute the insert
+      spark.sql(insertQuery);
+
+      if (args.dropTempTableOnSuccess) {
+        log.info("Dropping temporary loading table {}", tempLoadingTable);
+        // Drop the temporary table
+        spark.sql("DROP TABLE " + tempLoadingTable);
+      } else {
+        log.info("Not dropping temporary loading table {}", tempLoadingTable);
+      }
+    } else {
+      log.warn("Skipping load of core table as the flag is set to false.");
+    }
+
+    if (args.loadMultimediaTable) {
+      log.info("Loading Multimedia Table");
+      // Create occurrence_multimedia table
+      spark.sql(getCreateMultimediaTableSQL(config.getTableBuildConfig(), prefix, coreDwcTerm));
+
+      // Insert multimedia data into the occurrence_multimedia table
+      insertOverwriteMultimediaTable(
+          spark, prefix + coreDwcTerm, prefix + coreDwcTerm + "_multimedia");
+    } else {
+      log.warn("Skipping load of Multimedia Table as the flag is set to false.");
+    }
+
+    // if its the event table, also create the event_humboldt table and insert data
+    if (args.loadHumboldtTable && coreDwcTerm.equalsIgnoreCase("event")) {
+      log.info("Loading Humboldt Table");
+      // For event table, also create the event_humboldt table and insert data
+      // Create event_humboldt table
+      String tableName = prefix + "event_humboldt";
+      spark.sql(getCreateIfNotExistsHumboldt(config.getTableBuildConfig(), tableName));
+      insertOverwriteHumboldtTable(spark, prefix + "event", tableName);
+    } else {
+      log.info(
+          "Skipping load of Humboldt Table as the flag is set to false or the dataset type is not event.");
+    }
+
+    log.info("Renaming tables to final names if the flag is set: {}", args.switchOnSuccess);
+    if (args.switchOnSuccess) {
+      switchLiveTables(coreDwcTerm, spark, config, prefix);
+    }
+
+    log.info(timeAndRecPerSecond("full-table-build", start, avroToHdfsCountAttempted));
+  }
+
+  private static long loadTempLoadingTable(
+      SparkSession spark, String tempLoadingTable, Dataset<Row> hdfs) {
     // Drop the table if it already exists
     spark.sql("DROP TABLE IF EXISTS " + tempLoadingTable);
 
@@ -164,68 +292,7 @@ public class FullTableBuildPipeline {
     }
 
     checkForOrphanedRecord(spark, tempLoadingTable);
-
-    String prefix = "rebuild_" + start + "_";
-
-    // Create the occurrence table SQL
-    spark.sql(
-        getCreateTableSQL(config.getTableBuildConfig(), args.datasetType, prefix, coreDwcTerm));
-
-    // get the hdfs columns from the parquet with mappings to iceberg columns
-    Map<String, HdfsColumn> hdfsColumnList = getHdfsColumns(hdfs);
-
-    // Read the target table i.e. 'occurrence' or 'event' schema to ensure it exists
-    StructType tblSchema =
-        spark
-            .read()
-            .format("iceberg")
-            .load(String.format("%s.%s%s", config.getHiveDB(), prefix, coreDwcTerm))
-            .schema();
-
-    // Build the insert query
-    String insertQuery =
-        String.format(
-            "INSERT OVERWRITE TABLE %s.%s%s (%s) SELECT %s FROM %s.%s",
-            config.getHiveDB(),
-            prefix,
-            coreDwcTerm,
-            Arrays.stream(tblSchema.fields())
-                .map(StructField::name)
-                .collect(Collectors.joining(", ")),
-            generateSelectColumns(tblSchema, hdfsColumnList),
-            config.getHiveDB(),
-            tempLoadingTable);
-
-    log.debug("Inserting data into {} table: {}", coreDwcTerm, insertQuery);
-
-    // Execute the insert
-    spark.sql(insertQuery);
-
-    // Drop the temporary table
-    spark.sql("DROP TABLE " + tempLoadingTable);
-
-    // Create occurrence_multimedia table
-    spark.sql(getCreateMultimediaTableSQL(config.getTableBuildConfig(), prefix, coreDwcTerm));
-
-    // Insert multimedia data into the occurrence_multimedia table
-    insertOverwriteMultimediaTable(
-        spark, prefix + coreDwcTerm, prefix + coreDwcTerm + "_multimedia");
-
-    // if its the event table, also create the event_humboldt table and insert data
-    if (coreDwcTerm.equalsIgnoreCase("event")) {
-      // For event table, also create the event_humboldt table and insert data
-      // Create event_humboldt table
-      String tableName = prefix + "event_humboldt";
-      spark.sql(getCreateIfNotExistsHumboldt(config.getTableBuildConfig(), tableName));
-      insertOverwriteHumboldtTable(spark, prefix + "event", tableName);
-    }
-
-    log.info("Renaming tables to final names if the flag is set: {}", args.switchOnSuccess);
-    if (args.switchOnSuccess) {
-      switchLiveTables(coreDwcTerm, spark, config, prefix);
-    }
-
-    log.info(timeAndRecPerSecond("full-table-build", start, avroToHdfsCountAttempted));
+    return avroToHdfsCountAttempted;
   }
 
   /**
