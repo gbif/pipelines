@@ -210,7 +210,7 @@ public class FullTableBuildPipeline {
       // Build the insert query
       String insertQuery =
           String.format(
-              "INSERT OVERWRITE TABLE %s.%s%s (%s) SELECT %s FROM %s.%s",
+              "INSERT INTO TABLE %s.%s%s (%s) SELECT %s FROM %s.%s",
               config.getHiveDB(),
               prefix,
               coreDwcTerm,
