@@ -288,6 +288,8 @@ public class FullIndexBuildPipeline {
         .mode(SaveMode.Overwrite)
         .parquet(config.getRebuildPath() + "/elastic");
 
+    String esMappingId = args.datasetType == DatasetType.OCCURRENCE ? "gbifId" : "internalId";
+
     // Write to Elasticsearch
     spark
         .read()
@@ -298,7 +300,7 @@ public class FullIndexBuildPipeline {
         .mode(SaveMode.Append)
         .option("es.batch.size.entries", config.getElastic().getEsMaxBatchSize())
         .option("es.batch.size.bytes", config.getElastic().getEsMaxBatchSizeBytes())
-        .option("es.mapping.id", "gbifId")
+        .option("es.mapping.id", esMappingId)
         .option("es.nodes.wan.only", "true")
         .option("es.batch.write.refresh", "false")
         .save();
