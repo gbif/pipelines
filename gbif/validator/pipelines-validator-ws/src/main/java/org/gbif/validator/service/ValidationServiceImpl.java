@@ -333,10 +333,6 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     message.setExecutionId(1L);
     message.setPipelineSteps(pipelinesSteps);
     message.setFileFormat(dataFile.getFileFormat().name());
-    message.setRunnerType(
-        isStandalone(dataFile)
-            ? PipelinesArchiveValidatorMessage.RunnerType.STANDALONE
-            : PipelinesArchiveValidatorMessage.RunnerType.DISTRIBUTED);
 
     log.info("Send the MQ message to the validator queue for key - {}", key);
     messagePublisher.send(message);
