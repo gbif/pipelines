@@ -70,8 +70,7 @@ public class ArchiveValidatorCallbackIT {
                 Arrays.asList(
                     VALIDATOR_VALIDATE_ARCHIVE.name(), VALIDATOR_VERBATIM_TO_INTERPRETED.name())),
             EXECUTION_ID,
-            FileFormat.DWCA.name(),
-            PipelinesArchiveValidatorMessage.RunnerType.STANDALONE);
+            FileFormat.DWCA.name());
 
     // When
     callback.handleMessage(message);
@@ -141,8 +140,7 @@ public class ArchiveValidatorCallbackIT {
                 Arrays.asList(
                     VALIDATOR_VALIDATE_ARCHIVE.name(), VALIDATOR_VERBATIM_TO_INTERPRETED.name())),
             EXECUTION_ID,
-            FileFormat.DWCA.name(),
-            PipelinesArchiveValidatorMessage.RunnerType.STANDALONE);
+            FileFormat.DWCA.name());
 
     // When
     callback.handleMessage(message);
@@ -206,8 +204,7 @@ public class ArchiveValidatorCallbackIT {
                 Arrays.asList(
                     VALIDATOR_VALIDATE_ARCHIVE.name(), VALIDATOR_VERBATIM_TO_INTERPRETED.name())),
             EXECUTION_ID,
-            FileFormat.DWCA.name(),
-            PipelinesArchiveValidatorMessage.RunnerType.STANDALONE);
+            FileFormat.DWCA.name());
 
     // When
     callback.handleMessage(message);
@@ -270,8 +267,7 @@ public class ArchiveValidatorCallbackIT {
             attempt,
             Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
             EXECUTION_ID,
-            FileFormat.DWCA.name(),
-            PipelinesArchiveValidatorMessage.RunnerType.STANDALONE);
+            FileFormat.DWCA.name());
 
     // When
     callback.handleMessage(message);
@@ -303,8 +299,7 @@ public class ArchiveValidatorCallbackIT {
             attempt,
             Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
             EXECUTION_ID,
-            FileFormat.DWCA.name(),
-            PipelinesArchiveValidatorMessage.RunnerType.STANDALONE);
+            FileFormat.DWCA.name());
 
     // When
     callback.handleMessage(message);
@@ -336,8 +331,7 @@ public class ArchiveValidatorCallbackIT {
             attempt,
             Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
             EXECUTION_ID,
-            FileFormat.DWCA.name(),
-            PipelinesArchiveValidatorMessage.RunnerType.STANDALONE);
+            FileFormat.DWCA.name());
 
     // When
     callback.handleMessage(message);
@@ -369,8 +363,7 @@ public class ArchiveValidatorCallbackIT {
             attempt,
             Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
             EXECUTION_ID,
-            FileFormat.DWCA.name(),
-            PipelinesArchiveValidatorMessage.RunnerType.STANDALONE);
+            FileFormat.DWCA.name());
 
     // When
     callback.handleMessage(message);
