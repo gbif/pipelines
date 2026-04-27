@@ -71,8 +71,7 @@ public class DwcaMetricsCollector implements MetricsCollector {
               message.getAttempt(),
               message.getPipelineSteps(),
               message.getExecutionId(),
-              FileFormat.DWCA.name(),
-              PipelinesArchiveValidatorMessage.RunnerType.STANDALONE);
+              FileFormat.DWCA.name());
 
       // Set status to QUEUED before sending the message
       org.gbif.pipelines.tasks.Validations.updateStatus(
