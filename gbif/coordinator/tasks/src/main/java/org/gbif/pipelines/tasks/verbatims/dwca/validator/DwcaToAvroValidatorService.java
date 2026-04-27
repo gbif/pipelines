@@ -25,8 +25,8 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 /**
- * A service which listens to the {@link org.gbif.common.messaging.api.messages.PipelinesValidatorDwcaMessage
- * } and perform conversion
+ * A service which listens to the {@link
+ * org.gbif.common.messaging.api.messages.PipelinesValidatorDwcaMessage } and perform conversion
  */
 @Slf4j
 public class DwcaToAvroValidatorService extends AbstractIdleService {

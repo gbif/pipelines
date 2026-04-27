@@ -22,7 +22,8 @@ import org.kohsuke.MetaInfServices;
  * Entry class for cli command, to start service to convert downloaded DwCA Archive to Avro. This
  * command starts a service which listens to the {@link
  * org.gbif.common.messaging.api.messages.PipelinesValidatorDwcaMessage } and perform conversion.
- * Similar to {@link org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroCommand} but for Pipelines Validator.
+ * Similar to {@link org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroCommand} but for Pipelines
+ * Validator.
  */
 @MetaInfServices(Command.class)
 public class DwcaToAvroValidatorCommand extends ServiceCommand {
