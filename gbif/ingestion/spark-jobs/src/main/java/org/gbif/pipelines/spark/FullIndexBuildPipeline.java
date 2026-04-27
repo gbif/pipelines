@@ -26,6 +26,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.service.EsService;
+import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.spark.util.EsIndexUtils;
 import org.gbif.pipelines.spark.util.FullBuildUtils;
 import org.gbif.pipelines.spark.util.IndexSettings;
@@ -288,6 +289,8 @@ public class FullIndexBuildPipeline {
         .mode(SaveMode.Overwrite)
         .parquet(config.getRebuildPath() + "/elastic");
 
+    String esMappingId = args.datasetType == DatasetType.OCCURRENCE ? "gbifId" : "internalId";
+
     // Write to Elasticsearch
     spark
         .read()
@@ -298,7 +301,7 @@ public class FullIndexBuildPipeline {
         .mode(SaveMode.Append)
         .option("es.batch.size.entries", config.getElastic().getEsMaxBatchSize())
         .option("es.batch.size.bytes", config.getElastic().getEsMaxBatchSizeBytes())
-        .option("es.mapping.id", isOccurrence ? "gbifId" : "id")
+        .option("es.mapping.id", esMappingId)
         .option("es.nodes.wan.only", "true")
         .option("es.batch.write.refresh", "false")
         .save();
