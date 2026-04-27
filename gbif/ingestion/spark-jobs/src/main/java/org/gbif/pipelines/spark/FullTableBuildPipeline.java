@@ -86,6 +86,12 @@ public class FullTableBuildPipeline {
             "Existing Temporary loading table. Can be used for re-runs where the load step fails")
     private String existingTempLoadingTable = null;
 
+    @Parameter(
+        names = "--existingCoreOutputTable",
+        description =
+            "Existing Core output loading table. Can be used for re-runs where the load step fails")
+    private String existingCoreOutputTable = null;
+
     @Parameter(names = "--loadCoreTable", description = "Load core table")
     private boolean loadCoreTable = true;
 
@@ -94,6 +100,9 @@ public class FullTableBuildPipeline {
 
     @Parameter(names = "--loadHumboldtTable", description = "Load humboldt table")
     private boolean loadHumboldtTable = true;
+
+    @Parameter(names = "--skipEbird", description = "Skip ebird")
+    private boolean skipEbird = false;
 
     @Parameter(
         names = "--dropTempTableOnSuccess",
@@ -139,6 +148,11 @@ public class FullTableBuildPipeline {
 
     /* ############ standard init block - end ########## */
 
+    spark.udf().register("base64_decode", new Base64DecodeUDF(), DataTypes.StringType);
+    spark.udf().register("cleanDelimiters", new CleanDelimiterCharsUdf(), DataTypes.StringType);
+
+    log.info("Starting table build");
+
     FullBuildUtils.DirectoryScanResult scanResult =
         FullBuildUtils.getSuccessfulParquetFilePaths(
             fileSystem,
@@ -146,11 +160,6 @@ public class FullTableBuildPipeline {
             args.sourceDirectory,
             config.getRebuildPath() + "/" + args.unsuccessfulDumpFilename,
             args.earliestModificationTime);
-
-    spark.udf().register("base64_decode", new Base64DecodeUDF(), DataTypes.StringType);
-    spark.udf().register("cleanDelimiters", new CleanDelimiterCharsUdf(), DataTypes.StringType);
-
-    log.info("Starting table build");
 
     // load hdfs view
     Dataset<Row> hdfs =
@@ -192,9 +201,18 @@ public class FullTableBuildPipeline {
 
     if (args.loadCoreTable) {
       log.info("Loading Core Table");
-      // Create the occurrence table SQL
-      spark.sql(
-          getCreateTableSQL(config.getTableBuildConfig(), args.datasetType, prefix, coreDwcTerm));
+
+      String targetTable = null;
+
+      if (args.existingCoreOutputTable != null && !args.existingCoreOutputTable.isEmpty()) {
+        targetTable = args.existingCoreOutputTable;
+        log.info("Using provided core output table: {}", targetTable);
+      } else {
+        // Create the occurrence table SQL
+        spark.sql(
+            getCreateTableSQL(config.getTableBuildConfig(), args.datasetType, prefix, coreDwcTerm));
+        targetTable = config.getHiveDB() + "." + prefix + coreDwcTerm;
+      }
 
       // get the hdfs columns from the parquet with mappings to iceberg columns
       Map<String, HdfsColumn> hdfsColumnList = getHdfsColumns(hdfs);
@@ -207,26 +225,27 @@ public class FullTableBuildPipeline {
               .load(String.format("%s.%s%s", config.getHiveDB(), prefix, coreDwcTerm))
               .schema();
 
-      String targetTable = config.getHiveDB() + "." + prefix + coreDwcTerm;
       String sourceTable = config.getHiveDB() + "." + tempLoadingTable;
 
       // -------------------do eBird first
-      spark.sparkContext().setJobGroup("insert-into-core", "Loading eBird into core", true);
-      // Build the insert query
-      String insertEbirdQuery =
-          String.format(
-              "INSERT INTO TABLE %s (%s) SELECT %s FROM %s WHERE datasetkey = '4fa7b334-ce0d-4e88-aaae-2e0c138d049e'",
-              targetTable,
-              Arrays.stream(tblSchema.fields())
-                  .map(StructField::name)
-                  .collect(Collectors.joining(", ")),
-              generateSelectColumns(tblSchema, hdfsColumnList),
-              sourceTable);
+      if (!args.skipEbird) {
+        spark.sparkContext().setJobGroup("insert-into-core", "Loading eBird into core", true);
+        // Build the insert query
+        String insertEbirdQuery =
+            String.format(
+                "INSERT INTO TABLE %s (%s) SELECT %s FROM %s WHERE datasetkey = '4fa7b334-ce0d-4e88-aaae-2e0c138d049e'",
+                targetTable,
+                Arrays.stream(tblSchema.fields())
+                    .map(StructField::name)
+                    .collect(Collectors.joining(", ")),
+                generateSelectColumns(tblSchema, hdfsColumnList),
+                sourceTable);
 
-      log.debug("Inserting data into {} table: {}", coreDwcTerm, insertEbirdQuery);
+        log.debug("Inserting data into {} table: {}", coreDwcTerm, insertEbirdQuery);
 
-      // Execute the insert
-      spark.sql(insertEbirdQuery);
+        // Execute the insert
+        spark.sql(insertEbirdQuery);
+      }
 
       // -------------------do rest
 
