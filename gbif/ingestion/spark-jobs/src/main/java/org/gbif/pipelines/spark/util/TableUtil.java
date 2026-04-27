@@ -330,21 +330,21 @@ public class TableUtil {
                         : col("ext_dna_derived_data"),
                     new ArrayType(
                         new StructType()
-                            .add("nucleotidesequenceid", "string", false)
+                            .add("nucleotideSequenceID", "string", false)
                             .add(
-                                "targetgene",
+                                "targetGene",
                                 "STRUCT<concept: STRING,lineage: ARRAY<STRING>>",
                                 false)
                             .add("sequence", "string", false)
-                            .add("sequencelength", "int", false)
-                            .add("gccontent", "double", false)
-                            .add("noniupacfraction", "double", false)
-                            .add("nonacgtnfraction", "double", false)
+                            .add("sequenceLength", "int", false)
+                            .add("gcContent", "double", false)
+                            .add("nonIupacFraction", "double", false)
+                            .add("nonACGTNFraction", "double", false)
                             .add("nfraction", "double", false)
-                            .add("nrunscapped", "int", false)
-                            .add("naturallanguagedetected", "boolean", false)
-                            .add("endstrimmed", "boolean", false)
-                            .add("gapsorwhitespaceremoved", "boolean", false)
+                            .add("nrunsCapped", "int", false)
+                            .add("naturalLanguageDetected", "boolean", false)
+                            .add("endsTrimmed", "boolean", false)
+                            .add("gapsOrWhitespaceRemoved", "boolean", false)
                             .add("invalid", "boolean", false),
                         true))
                 .alias("dna_record"),
@@ -352,18 +352,18 @@ public class TableUtil {
         .select(col("gbifid"), explode(col("dna_record")).alias("dna_record"), col("datasetkey"))
         .select(
             col("gbifid"),
-            col("dna_record.nucleotidesequenceid").alias("nucleotidesequenceid"),
-            col("dna_record.targetgene").alias("targetgene"),
+            col("dna_record.nucleotideSequenceID").alias("nucleotidesequenceid"),
+            col("dna_record.targetGene").alias("targetgene"),
             col("dna_record.sequence").alias("sequence"),
-            col("dna_record.sequencelength").alias("sequencelength"),
-            col("dna_record.gccontent").alias("gccontent"),
-            col("dna_record.noniupacfraction").alias("noniupacfraction"),
-            col("dna_record.nonacgtnfraction").alias("nonacgtnfraction"),
+            col("dna_record.sequenceLength").alias("sequencelength"),
+            col("dna_record.gcContent").alias("gccontent"),
+            col("dna_record.nonIupacFraction").alias("noniupacfraction"),
+            col("dna_record.nonACGTNFraction").alias("nonacgtnfraction"),
             col("dna_record.nfraction").alias("nfraction"),
-            col("dna_record.nrunscapped").alias("nrunscapped"),
-            col("dna_record.naturallanguagedetected").alias("naturallanguagedetected"),
-            col("dna_record.endstrimmed").alias("endstrimmed"),
-            col("dna_record.gapsorwhitespaceremoved").alias("gapsorwhitespaceremoved"),
+            col("dna_record.nrunsCapped").alias("nrunscapped"),
+            col("dna_record.naturalLanguageDetected").alias("naturallanguagedetected"),
+            col("dna_record.endsTrimmed").alias("endstrimmed"),
+            col("dna_record.gapsOrWhitespaceRemoved").alias("gapsorwhitespaceremoved"),
             col("dna_record.invalid").alias("invalid"),
             col("datasetkey"))
         .createOrReplaceTempView("dna_records");
