@@ -373,7 +373,7 @@ public class TableUtil {
 
     String dnaColsSelect =
         Arrays.stream(dnaStructType.fields())
-            .map(f -> "dna_record." + f.name())
+            .map(StructField::name)
             .collect(Collectors.joining(","));
 
     log.info("DNA COLS: {}", dnaColsSelect);
