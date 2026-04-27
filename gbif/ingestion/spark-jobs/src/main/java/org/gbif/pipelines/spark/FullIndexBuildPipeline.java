@@ -298,7 +298,7 @@ public class FullIndexBuildPipeline {
         .mode(SaveMode.Append)
         .option("es.batch.size.entries", config.getElastic().getEsMaxBatchSize())
         .option("es.batch.size.bytes", config.getElastic().getEsMaxBatchSizeBytes())
-        .option("es.mapping.id", "gbifId")
+        .option("es.mapping.id", isOccurrence ? "gbifId" : "id")
         .option("es.nodes.wan.only", "true")
         .option("es.batch.write.refresh", "false")
         .save();
