@@ -63,8 +63,7 @@ public class ChecklistValidatorCallbackIT {
             1,
             Collections.singleton("VALIDATOR_COLLECT_METRICS"),
             1L,
-            "dwca",
-            PipelinesArchiveValidatorMessage.RunnerType.STANDALONE);
+            "dwca");
 
     // When
     ChecklistValidatorCallback callback =
