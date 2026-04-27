@@ -1,14 +1,18 @@
-package org.gbif.pipelines.tasks.verbatims.dwca;
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.gbif.pipelines.tasks.verbatims.dwca.validator;
 
-import static org.gbif.api.model.pipelines.InterpretationType.RecordType.getAllInterpretationAsString;
-import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
-
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -16,20 +20,16 @@ import org.apache.avro.file.CodecFactory;
 import org.gbif.api.model.crawler.DwcaValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.model.pipelines.PipelinesWorkflow;
-import org.gbif.api.model.pipelines.PipelinesWorkflow.Graph;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
+import org.gbif.common.messaging.api.messages.PipelinesValidatorDwcaMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
-import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.converters.DwcaToAvroConverter;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.UnsupportedArchiveException;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.process.RecordCountReader;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
@@ -40,26 +40,37 @@ import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
-/** Callback which is called when the {@link PipelinesDwcaMessage} is received. */
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.getAllValidatorInterpretationAsString;
+import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
+
+/** Callback which is called when the {@link PipelinesValidatorDwcaMessage} is received. */
 @Slf4j
 @Builder
-public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMessage>
-    implements StepHandler<PipelinesDwcaMessage, PipelinesVerbatimMessage> {
+public class DwcaToAvroValidatorCallback extends AbstractMessageCallback<PipelinesValidatorDwcaMessage>
+    implements StepHandler<PipelinesValidatorDwcaMessage, PipelinesVerbatimMessage> {
 
-  private final DwcaToAvroConfiguration config;
+  private final DwcaToAvroValidatorConfiguration config;
   private final MessagePublisher publisher;
   private final PipelinesHistoryClient historyClient;
   private final DatasetClient datasetClient;
   private final ValidationWsClient validationClient;
 
   @Override
-  public void handleMessage(PipelinesDwcaMessage message) {
-    PipelinesCallback.<PipelinesDwcaMessage, PipelinesVerbatimMessage>builder()
+  public void handleMessage(PipelinesValidatorDwcaMessage message) {
+    PipelinesCallback.<PipelinesValidatorDwcaMessage, PipelinesVerbatimMessage>builder()
         .historyClient(historyClient)
         .datasetClient(datasetClient)
         .validationClient(validationClient)
         .config(config)
-        .stepType(StepType.DWCA_TO_VERBATIM)
+        .stepType(StepType.VALIDATOR_DWCA_TO_VERBATIM)
+        .isValidator(true)
         .publisher(publisher)
         .message(message)
         .handler(this)
@@ -69,12 +80,12 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
   @Override
   public String getRouting() {
-    return PipelinesDwcaMessage.ROUTING_KEY;
+    return PipelinesValidatorDwcaMessage.ROUTING_KEY;
   }
 
   /** Only correct messages can be handled, by now is only OCCURRENCE type messages */
   @Override
-  public boolean isMessageCorrect(PipelinesDwcaMessage message) {
+  public boolean isMessageCorrect(PipelinesValidatorDwcaMessage message) {
     boolean isMessageValid =
         message.getDatasetType() != null && message.getValidationReport().isValid();
     if (!isMessageValid) {
@@ -92,13 +103,13 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     return isMessageValid && isReportValid;
   }
 
-  private boolean isReportValid(PipelinesDwcaMessage message) {
+  private boolean isReportValid(PipelinesValidatorDwcaMessage message) {
     DwcaValidationReport report = message.getValidationReport();
 
     boolean isValidOccurrenceReport =
         report.getOccurrenceReport() != null
             && (report.getOccurrenceReport().getUniqueOccurrenceIds() > 0
-                || report.getOccurrenceReport().getUniqueTriplets() > 0);
+            || report.getOccurrenceReport().getUniqueTriplets() > 0);
 
     boolean isValidGenericReport =
         message.getValidationReport().getGenericReport() != null
@@ -115,7 +126,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
   /** Main message processing logic converts a DwCA archive to an avro file. */
   @Override
-  public Runnable createRunnable(PipelinesDwcaMessage message) {
+  public Runnable createRunnable(PipelinesValidatorDwcaMessage message) {
     return () -> {
       UUID datasetId = message.getDatasetUuid();
       String attempt = String.valueOf(message.getAttempt());
@@ -143,35 +154,27 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
           .inputPath(inputPath)
           .outputPath(outputPath)
           .metaPath(metaPath)
-          .skipDeletion(false) // don't skip here (skip if validator)
+          .skipDeletion(true)
           .convert();
     };
   }
 
   @SneakyThrows
   @Override
-  public PipelinesVerbatimMessage createOutgoingMessage(PipelinesDwcaMessage message) {
+  public PipelinesVerbatimMessage createOutgoingMessage(PipelinesValidatorDwcaMessage message) {
     Objects.requireNonNull(message.getEndpointType(), "endpointType can't be NULL!");
 
     Set<String> interpretedTypes = config.interpretTypes;
 
     try {
       Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
-      Archive archive = DwcaUtils.fromLocation(inputPath);
+      Archive archive = DwcaUtils.fromLocationSkipValidation(inputPath);
 
       if (message.getPipelineSteps().isEmpty()) {
-        Graph<StepType> workflow;
+        PipelinesWorkflow.Graph<StepType> workflow;
+        workflow = PipelinesWorkflow.getValidatorWorkflow();
 
-        Term coreType = archive.getCore().getRowType();
-        boolean hasOccurrenceExtension =
-            archive.getExtensions().stream().anyMatch(x -> x.getRowType() == DwcTerm.Occurrence);
-
-        boolean hasOccurrences = coreType == DwcTerm.Occurrence || hasOccurrenceExtension;
-        boolean hasEvents = coreType == DwcTerm.Event && config.stepConfig.eventsEnabled;
-
-        workflow = PipelinesWorkflow.getWorkflow(hasOccurrences, hasEvents);
-
-        StepType type = StepType.DWCA_TO_VERBATIM;
+        StepType type = StepType.VALIDATOR_DWCA_TO_VERBATIM;
 
         Set<String> steps =
             workflow.getAllNodesFor(Collections.singleton(type)).stream()
@@ -182,7 +185,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
       }
 
       // Calculates and checks the existence of DwC Archive
-      Set<String> allInterpretationAsString = getAllInterpretationAsString();
+      Set<String> allInterpretationAsString = getAllValidatorInterpretationAsString();
 
       interpretedTypes = DwcaUtils.getExtensionAsTerms(archive);
       interpretedTypes.addAll(allInterpretationAsString);
@@ -207,7 +210,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
               .datasetKey(message.getDatasetUuid().toString())
               .attempt(message.getAttempt().toString())
               .metaFileName(config.metaFileName)
-              .metricName(Metrics.ARCHIVE_TO_ER_COUNT)
+              .metricName(PipelinesVariables.Metrics.ARCHIVE_TO_ER_COUNT)
               .build()
               .get();
     }
@@ -218,12 +221,12 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
             .datasetKey(message.getDatasetUuid().toString())
             .attempt(message.getAttempt().toString())
             .metaFileName(config.metaFileName)
-            .metricName(Metrics.ARCHIVE_TO_OCC_COUNT)
+            .metricName(PipelinesVariables.Metrics.ARCHIVE_TO_OCC_COUNT)
             .build()
             .get();
 
-    ValidationResult validationResult =
-        new ValidationResult(
+    PipelinesVerbatimMessage.ValidationResult validationResult =
+        new PipelinesVerbatimMessage.ValidationResult(
             tripletsValid(report),
             occurrenceIdsValid(report),
             null,
@@ -258,7 +261,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     }
     return report.getUniqueTriplets() > 0
         && report.getCheckedRecords() - report.getRecordsWithInvalidTriplets()
-            == report.getUniqueTriplets();
+        == report.getUniqueTriplets();
   }
 
   /**
