@@ -307,19 +307,6 @@ public class TableUtil {
       String occurrenceTable,
       String dnaDerivedDataTable,
       boolean encodedExtData) {
-
-    StructType dnaTableSchema = spark.read().format("iceberg").load(dnaDerivedDataTable).schema();
-    StructType dnaStructType =
-        new StructType(
-            Arrays.stream(dnaTableSchema.fields())
-                .filter(
-                    f ->
-                        !f.name().equalsIgnoreCase("gbifid")
-                            && !f.name().equalsIgnoreCase("datasetkey"))
-                .toArray(StructField[]::new));
-
-    log.info("DNA Struct type: {}", dnaStructType);
-
     spark
         .table(occurrenceTable)
         .select(
@@ -368,24 +355,28 @@ public class TableUtil {
             col("datasetkey"))
         .createOrReplaceTempView("dna_records");
 
-    // TODO: remove
-    spark.sql("SELECT * FROM dna_records").show(false);
-
-    String dnaColsSelect =
-        Arrays.stream(dnaStructType.fields())
-            .map(StructField::name)
-            .collect(Collectors.joining(","));
-
-    log.info("DNA COLS: {}", dnaColsSelect);
-
     spark.sql(
         String.format(
             """
            INSERT OVERWRITE TABLE %s
-           SELECT gbifid, %s, datasetkey
+           SELECT gbifid,
+                  nucleotidesequenceid,
+                  targetgene,
+                  sequence,
+                  sequencelength,
+                  gccontent,
+                  noniupacfraction,
+                  nonacgtnfraction,
+                  nfraction,
+                  nrunscapped,
+                  naturallanguagedetected,
+                  endstrimmed,
+                  gapsorwhitespaceremoved,
+                  invalid,
+                  datasetkey
            FROM dna_records
         """,
-            dnaDerivedDataTable, dnaColsSelect));
+            dnaDerivedDataTable));
   }
 
   public static void insertOverwriteHumboldtTableFromTemp(
