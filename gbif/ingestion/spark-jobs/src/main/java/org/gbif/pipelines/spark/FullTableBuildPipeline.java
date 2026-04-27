@@ -176,6 +176,7 @@ public class FullTableBuildPipeline {
     Long avroToHdfsCountAttempted = -1L;
     String tempLoadingTable = null;
 
+
     if (args.existingTempLoadingTable != null && !args.existingTempLoadingTable.isEmpty()) {
       log.info("Using provided temp loading table: {}", args.existingTempLoadingTable);
       tempLoadingTable = args.existingTempLoadingTable;
@@ -197,7 +198,7 @@ public class FullTableBuildPipeline {
           avroToHdfsCountAttempted);
     }
 
-    String prefix = "rebuild_" + start + "_";
+    String prefix = null;
 
     if (args.loadCoreTable) {
       log.info("Loading Core Table");
@@ -206,8 +207,10 @@ public class FullTableBuildPipeline {
 
       if (args.existingCoreOutputTable != null && !args.existingCoreOutputTable.isEmpty()) {
         targetTable = args.existingCoreOutputTable;
+        prefix = targetTable.replace(coreDwcTerm, "");
         log.info("Using provided core output table: {}", targetTable);
       } else {
+        prefix = "rebuild_" + System.currentTimeMillis() + "_";
         // Create the occurrence table SQL
         spark.sql(
             getCreateTableSQL(config.getTableBuildConfig(), args.datasetType, prefix, coreDwcTerm));
@@ -222,7 +225,7 @@ public class FullTableBuildPipeline {
           spark
               .read()
               .format("iceberg")
-              .load(String.format("%s.%s%s", config.getHiveDB(), prefix, coreDwcTerm))
+              .load(targetTable)
               .schema();
 
       String sourceTable = config.getHiveDB() + "." + tempLoadingTable;
