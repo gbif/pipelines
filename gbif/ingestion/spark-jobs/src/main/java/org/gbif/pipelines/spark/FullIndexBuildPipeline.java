@@ -26,7 +26,6 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.service.EsService;
-import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.spark.util.EsIndexUtils;
 import org.gbif.pipelines.spark.util.FullBuildUtils;
 import org.gbif.pipelines.spark.util.IndexSettings;
