@@ -176,7 +176,6 @@ public class FullTableBuildPipeline {
     Long avroToHdfsCountAttempted = -1L;
     String tempLoadingTable = null;
 
-
     if (args.existingTempLoadingTable != null && !args.existingTempLoadingTable.isEmpty()) {
       log.info("Using provided temp loading table: {}", args.existingTempLoadingTable);
       tempLoadingTable = args.existingTempLoadingTable;
@@ -221,12 +220,7 @@ public class FullTableBuildPipeline {
       Map<String, HdfsColumn> hdfsColumnList = getHdfsColumns(hdfs);
 
       // Read the target table i.e. 'occurrence' or 'event' schema to ensure it exists
-      StructType tblSchema =
-          spark
-              .read()
-              .format("iceberg")
-              .load(targetTable)
-              .schema();
+      StructType tblSchema = spark.read().format("iceberg").load(targetTable).schema();
 
       String sourceTable = config.getHiveDB() + "." + tempLoadingTable;
 
