@@ -350,6 +350,22 @@ public class TableUtil {
                 .alias("dna_record"),
             col("datasetkey"))
         .select(col("gbifid"), explode(col("dna_record")).alias("dna_record"), col("datasetkey"))
+        .select(
+            col("gbifid"),
+            col("dna_record.nucleotidesequenceid").alias("nucleotidesequenceid"),
+            col("dna_record.targetgene").alias("targetgene"),
+            col("dna_record.sequence").alias("sequence"),
+            col("dna_record.sequencelength").alias("sequencelength"),
+            col("dna_record.gccontent").alias("gccontent"),
+            col("dna_record.noniupacfraction").alias("noniupacfraction"),
+            col("dna_record.nonacgtnfraction").alias("nonacgtnfraction"),
+            col("dna_record.nfraction").alias("nfraction"),
+            col("dna_record.nrunscapped").alias("nrunscapped"),
+            col("dna_record.naturallanguagedetected").alias("naturallanguagedetected"),
+            col("dna_record.endstrimmed").alias("endstrimmed"),
+            col("dna_record.gapsorwhitespaceremoved").alias("gapsorwhitespaceremoved"),
+            col("dna_record.invalid").alias("invalid"),
+            col("datasetkey"))
         .createOrReplaceTempView("dna_records");
 
     // TODO: remove
