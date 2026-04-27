@@ -13,6 +13,15 @@
  */
 package org.gbif.pipelines.tasks.verbatims.dwca.validator;
 
+import static org.gbif.api.model.pipelines.InterpretationType.RecordType.getAllValidatorInterpretationAsString;
+import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
+
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -40,20 +49,11 @@ import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static org.gbif.api.model.pipelines.InterpretationType.RecordType.getAllValidatorInterpretationAsString;
-import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
-
 /** Callback which is called when the {@link PipelinesValidatorDwcaMessage} is received. */
 @Slf4j
 @Builder
-public class DwcaToAvroValidatorCallback extends AbstractMessageCallback<PipelinesValidatorDwcaMessage>
+public class DwcaToAvroValidatorCallback
+    extends AbstractMessageCallback<PipelinesValidatorDwcaMessage>
     implements StepHandler<PipelinesValidatorDwcaMessage, PipelinesVerbatimMessage> {
 
   private final DwcaToAvroValidatorConfiguration config;
@@ -109,7 +109,7 @@ public class DwcaToAvroValidatorCallback extends AbstractMessageCallback<Pipelin
     boolean isValidOccurrenceReport =
         report.getOccurrenceReport() != null
             && (report.getOccurrenceReport().getUniqueOccurrenceIds() > 0
-            || report.getOccurrenceReport().getUniqueTriplets() > 0);
+                || report.getOccurrenceReport().getUniqueTriplets() > 0);
 
     boolean isValidGenericReport =
         message.getValidationReport().getGenericReport() != null
@@ -261,7 +261,7 @@ public class DwcaToAvroValidatorCallback extends AbstractMessageCallback<Pipelin
     }
     return report.getUniqueTriplets() > 0
         && report.getCheckedRecords() - report.getRecordsWithInvalidTriplets()
-        == report.getUniqueTriplets();
+            == report.getUniqueTriplets();
   }
 
   /**
