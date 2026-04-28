@@ -27,7 +27,7 @@ public class ExtendedRecordConverter {
       String qn = term.qualifiedName();
       if (qn != null) {
         String value = record.value(term);
-        if (value != null) {
+        if (StringUtils.isNotEmpty(value)) {
           map.put(qn, value);
         }
       }
