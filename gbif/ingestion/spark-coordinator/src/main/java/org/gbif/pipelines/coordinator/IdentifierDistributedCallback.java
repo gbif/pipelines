@@ -1,5 +1,6 @@
 package org.gbif.pipelines.coordinator;
 
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -22,7 +23,14 @@ public class IdentifierDistributedCallback extends IdentifierCallback {
         "identifiers",
         fileSystem,
         pipelinesConfig.getAirflowConfig().identifierDag,
-        StepType.VERBATIM_TO_IDENTIFIER);
+        StepType.VERBATIM_TO_IDENTIFIER,
+        List.of(
+            "--tripletValid=" + message.getValidationResult().isTripletValid(),
+            "--occurrenceIdValid=" + message.getValidationResult().isOccurrenceIdValid(),
+            "--useExtendedRecordId="
+                + (message.getValidationResult().isUseExtendedRecordId() != null
+                    ? message.getValidationResult().isUseExtendedRecordId()
+                    : false)));
   }
 
   @Override
