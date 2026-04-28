@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.DwcTerm;
@@ -57,7 +58,7 @@ public class ExtendedRecordConverter {
 
   /** If id is null, use triplet as an id */
   private static String getId(Record core, ExtendedRecord.Builder builder) {
-    if (core.id() != null) {
+    if (StringUtils.isNotBlank(core.id())) {
       return core.id();
     }
 
