@@ -438,7 +438,8 @@ public class OccurrenceInterpretationPipeline {
                     },
                 Encoders.bean(Occurrence.class))
             // only include records with ids
-            .filter((FilterFunction<Occurrence>) occurrence -> occurrence.getInternalId() != null);
+            .filter((FilterFunction<Occurrence>) occurrence -> occurrence.getInternalId() != null)
+            .dropDuplicates("internalId");
 
     occurrences.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + EXTENDED_IDENTIFIERS);
     return spark
