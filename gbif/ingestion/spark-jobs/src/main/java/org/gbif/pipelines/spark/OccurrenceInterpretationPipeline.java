@@ -437,9 +437,13 @@ public class OccurrenceInterpretationPipeline {
                           .build();
                     },
                 Encoders.bean(Occurrence.class))
-            // only include records with ids
             .filter((FilterFunction<Occurrence>) occurrence -> occurrence.getInternalId() != null)
-            .dropDuplicates("internalId");
+            .groupByKey((MapFunction<Occurrence, String>) o -> o.getInternalId(), Encoders.STRING())
+            .reduceGroups(
+                (org.apache.spark.api.java.function.ReduceFunction<Occurrence>) (o1, o2) -> o1)
+            .map(
+                (MapFunction<Tuple2<String, Occurrence>, Occurrence>) t -> t._2,
+                Encoders.bean(Occurrence.class));
 
     occurrences.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + EXTENDED_IDENTIFIERS);
     return spark
