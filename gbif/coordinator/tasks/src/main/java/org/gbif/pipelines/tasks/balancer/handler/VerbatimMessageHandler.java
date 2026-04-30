@@ -123,8 +123,10 @@ public class VerbatimMessageHandler {
       String runner = computeRunner(config, m).name();
 
       ValidationResult result = m.getValidationResult();
-      if (result.getNumberOfRecords() == null || isValidator(m.getPipelineSteps())) {
-        result.setNumberOfRecords(recordsNumber);
+      if (result != null) {
+        if (result.getNumberOfRecords() == null || isValidator(m.getPipelineSteps())) {
+          result.setNumberOfRecords(recordsNumber);
+        }
       }
 
       PipelinesVerbatimMessage outputMessage =
