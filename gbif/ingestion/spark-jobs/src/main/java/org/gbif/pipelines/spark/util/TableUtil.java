@@ -6,6 +6,7 @@ import static org.gbif.terms.utils.TermUtils.INTERPRETED_HUMBOLDT_TERMS;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -129,7 +130,16 @@ public class TableUtil {
 
     for (String parquetColumn : hdfs.columns()) {
 
-      HdfsColumn hdfsColumn = getHdfsColumn(parquetColumn);
+      Column column = hdfs.col(parquetColumn); // ensure column exists in the dataset
+      // determine the parquet column data type from the dataset schema
+      DataType dataType = null;
+      try {
+        dataType = hdfs.schema().apply(parquetColumn).dataType();
+      } catch (Exception ex) {
+        // fallback: leave dataType null, we'll treat as non-string
+      }
+
+      HdfsColumn hdfsColumn = getHdfsColumn(parquetColumn, dataType);
       hdfsColumnList.put(hdfsColumn.getIcebergCol(), hdfsColumn);
       log.debug(
           "Mapped HDFS column '{}' to Iceberg column '{}' with select '{}'",
@@ -141,7 +151,7 @@ public class TableUtil {
     return hdfsColumnList;
   }
 
-  private static HdfsColumn getHdfsColumn(String parquetColumn) {
+  private static HdfsColumn getHdfsColumn(String parquetColumn, DataType dataType) {
     HdfsColumn hdfsColumn = new HdfsColumn();
 
     // normalize column names
@@ -161,7 +171,14 @@ public class TableUtil {
     } else {
 
       hdfsColumn.setIcebergCol(normalisedName);
-      hdfsColumn.setSelect("`" + parquetColumn + "` AS " + normalisedName);
+      if (dataType instanceof StringType) {
+        hdfsColumn.setSelect("cleanDelimiters(`" + parquetColumn + "`) AS " + normalisedName);
+      } else if (dataType instanceof ArrayType
+          && ((ArrayType) dataType).elementType() instanceof StringType) {
+        hdfsColumn.setSelect("cleanDelimitersArray(`" + parquetColumn + "`) AS " + normalisedName);
+      } else {
+        hdfsColumn.setSelect("`" + parquetColumn + "` AS " + normalisedName);
+      }
     }
     return hdfsColumn;
   }

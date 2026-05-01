@@ -23,6 +23,7 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
 import org.gbif.pipelines.spark.udf.Base64DecodeUDF;
+import org.gbif.pipelines.spark.udf.CleanDelimiterArraysUdf;
 import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
 import org.gbif.pipelines.spark.util.FullBuildUtils;
 
@@ -150,6 +151,12 @@ public class FullTableBuildPipeline {
 
     spark.udf().register("base64_decode", new Base64DecodeUDF(), DataTypes.StringType);
     spark.udf().register("cleanDelimiters", new CleanDelimiterCharsUdf(), DataTypes.StringType);
+    spark
+        .udf()
+        .register(
+            "cleanDelimitersArray",
+            new CleanDelimiterArraysUdf(),
+            DataTypes.createArrayType(DataTypes.StringType));
 
     log.info("Starting table build");
 

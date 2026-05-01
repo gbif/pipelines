@@ -29,6 +29,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.TableBuildConfig;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
 import org.gbif.pipelines.spark.udf.Base64DecodeUDF;
+import org.gbif.pipelines.spark.udf.CleanDelimiterArraysUdf;
 import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
 import org.jetbrains.annotations.NotNull;
 
@@ -158,6 +159,12 @@ public class TableBuildPipeline {
 
     spark.udf().register("base64_decode", new Base64DecodeUDF(), DataTypes.StringType);
     spark.udf().register("cleanDelimiters", new CleanDelimiterCharsUdf(), DataTypes.StringType);
+    spark
+        .udf()
+        .register(
+            "cleanDelimitersArray",
+            new CleanDelimiterArraysUdf(),
+            DataTypes.createArrayType(DataTypes.StringType));
 
     long start = System.currentTimeMillis();
     ThreadContext.put("datasetKey", datasetId);
