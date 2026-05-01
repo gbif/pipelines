@@ -46,7 +46,7 @@
     <mybatis-spring-boot-starter.version>3.0.5</mybatis-spring-boot-starter.version>
     <spring-cloud-sleuth.version>3.1.11</spring-cloud-sleuth.version>
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
-    <spring.version>6.2.14</spring.version>
+    <spring.version>6.2.17</spring.version>
     <spring-security.version>6.5.7</spring-security.version>
     <mybatis-spring.version>3.0.5</mybatis-spring.version>
     <feign.version>13.6</feign.version>
