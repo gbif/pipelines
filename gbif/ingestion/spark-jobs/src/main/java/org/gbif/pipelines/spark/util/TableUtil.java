@@ -166,7 +166,7 @@ public class TableUtil {
     } else if (normalisedName.equalsIgnoreCase("class_")) {
 
       hdfsColumn.setIcebergCol("class");
-      hdfsColumn.setSelect("`" + parquetColumn + "` AS class");
+      hdfsColumn.setSelect("cleanDelimiters(`" + parquetColumn + "`) AS class");
 
     } else {
 
