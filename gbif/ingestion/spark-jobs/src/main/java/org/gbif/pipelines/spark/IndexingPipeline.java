@@ -108,47 +108,55 @@ public class IndexingPipeline {
     }
 
     PipelinesConfig config = loadConfig(args.config);
+    SparkSession spark = null;
+    FileSystem fileSystem = null;
 
-    /* ############ standard init block ########## */
-    SparkSession spark =
-        getSparkSession(args.master, args.appName, config, IndexingPipeline::configSparkSession);
-    FileSystem fileSystem = getFileSystem(spark, config);
-    /* ############ standard init block - end ########## */
+    try {
+      /* ############ standard init block ########## */
+      spark =
+          getSparkSession(args.master, args.appName, config, IndexingPipeline::configSparkSession);
+      fileSystem = getFileSystem(spark, config);
+      /* ############ standard init block - end ########## */
 
-    if (args.datasetType == DatasetType.OCCURRENCE) {
-      runIndexing(
-          spark,
-          fileSystem,
-          config,
-          args.datasetId,
-          args.attempt,
-          args.esIndexAlias,
-          args.esIndexName,
-          config.getIndexConfig().getOccurrenceSchemaPath(),
-          args.indexNumberShards,
-          OccurrenceJsonRecord.class,
-          args.sourceDirectory);
-    } else if (args.datasetType == DatasetType.SAMPLING_EVENT) {
-      runIndexing(
-          spark,
-          fileSystem,
-          config,
-          args.datasetId,
-          args.attempt,
-          args.esIndexAlias,
-          args.esIndexName,
-          config.getIndexConfig().getEventSchemaPath(),
-          args.indexNumberShards,
-          ParentJsonRecord.class,
-          args.sourceDirectory);
-    } else {
-      log.error("Unsupported dataset type: {}", args.datasetType);
-      throw new IllegalArgumentException("Invalid dataset type: " + args.datasetType);
+      if (args.datasetType == DatasetType.OCCURRENCE) {
+        runIndexing(
+            spark,
+            fileSystem,
+            config,
+            args.datasetId,
+            args.attempt,
+            args.esIndexAlias,
+            args.esIndexName,
+            config.getIndexConfig().getOccurrenceSchemaPath(),
+            args.indexNumberShards,
+            OccurrenceJsonRecord.class,
+            args.sourceDirectory);
+      } else if (args.datasetType == DatasetType.SAMPLING_EVENT) {
+        runIndexing(
+            spark,
+            fileSystem,
+            config,
+            args.datasetId,
+            args.attempt,
+            args.esIndexAlias,
+            args.esIndexName,
+            config.getIndexConfig().getEventSchemaPath(),
+            args.indexNumberShards,
+            ParentJsonRecord.class,
+            args.sourceDirectory);
+      } else {
+        log.error("Unsupported dataset type: {}", args.datasetType);
+        throw new IllegalArgumentException("Invalid dataset type: " + args.datasetType);
+      }
+    } finally {
+      if (fileSystem != null) {
+        fileSystem.close();
+      }
+      if (spark != null) {
+        spark.stop();
+        spark.close();
+      }
     }
-
-    spark.stop();
-    spark.close();
-    fileSystem.close();
     System.exit(0);
   }
 

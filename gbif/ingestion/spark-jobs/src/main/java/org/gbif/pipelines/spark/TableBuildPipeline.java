@@ -29,6 +29,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.TableBuildConfig;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
 import org.gbif.pipelines.spark.udf.Base64DecodeUDF;
+import org.gbif.pipelines.spark.udf.CleanDelimiterArraysUdf;
 import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
 import org.jetbrains.annotations.NotNull;
 
@@ -98,24 +99,33 @@ public class TableBuildPipeline {
     PipelinesConfig config = loadConfig(args.config);
     String datasetId = args.datasetId;
     int attempt = args.attempt;
+    SparkSession spark = null;
+    FileSystem fileSystem = null;
 
-    /* ############ standard init block ########## */
-    SparkSession spark =
-        getSparkSession(args.master, args.appName, config, TableBuildPipeline::configSparkSession);
-    FileSystem fileSystem = getFileSystem(spark, config);
+    try {
+      /* ############ standard init block ########## */
+      spark =
+          getSparkSession(
+              args.master, args.appName, config, TableBuildPipeline::configSparkSession);
+      fileSystem = getFileSystem(spark, config);
 
-    /* ############ standard init block - end ########## */
-    if (args.datasetType != DatasetType.OCCURRENCE
-        && args.datasetType != DatasetType.SAMPLING_EVENT) {
-      throw new IllegalArgumentException("Invalid dataset type: " + args.datasetType);
+      /* ############ standard init block - end ########## */
+      if (args.datasetType != DatasetType.OCCURRENCE
+          && args.datasetType != DatasetType.SAMPLING_EVENT) {
+        throw new IllegalArgumentException("Invalid dataset type: " + args.datasetType);
+      }
+
+      runTableBuild(
+          spark, fileSystem, config, args.datasetType, datasetId, attempt, args.sourceDirectory);
+    } finally {
+      if (fileSystem != null) {
+        fileSystem.close();
+      }
+      if (spark != null) {
+        spark.stop();
+        spark.close();
+      }
     }
-
-    runTableBuild(
-        spark, fileSystem, config, args.datasetType, datasetId, attempt, args.sourceDirectory);
-
-    spark.stop();
-    spark.close();
-    fileSystem.close();
     System.exit(0);
   }
 
@@ -149,6 +159,12 @@ public class TableBuildPipeline {
 
     spark.udf().register("base64_decode", new Base64DecodeUDF(), DataTypes.StringType);
     spark.udf().register("cleanDelimiters", new CleanDelimiterCharsUdf(), DataTypes.StringType);
+    spark
+        .udf()
+        .register(
+            "cleanDelimitersArray",
+            new CleanDelimiterArraysUdf(),
+            DataTypes.createArrayType(DataTypes.StringType));
 
     long start = System.currentTimeMillis();
     ThreadContext.put("datasetKey", datasetId);

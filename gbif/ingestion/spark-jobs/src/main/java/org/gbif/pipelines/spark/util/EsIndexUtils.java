@@ -2,6 +2,7 @@ package org.gbif.pipelines.spark.util;
 
 import static org.gbif.pipelines.estools.service.EsService.swapIndexes;
 import static org.gbif.pipelines.estools.service.EsService.swapIndexesWithoutDeletion;
+import static org.gbif.pipelines.spark.util.IndexSettings.resolveIndexAlias;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -14,6 +15,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.pipelines.core.config.model.IndexConfig;
 import org.gbif.pipelines.core.config.model.LockConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.estools.EsIndex;
@@ -237,61 +239,51 @@ public class EsIndexUtils {
       throws IOException {
 
     // check if the index exists, if not create it with the default name and alias
-    String defaultIndexPrefix = createDefaultIndexNamePrefix(pipelinesConfig, datasetType);
+    String defaultIndexPrefix =
+        createDefaultIndexNamePrefix(pipelinesConfig.getIndexConfig(), datasetType);
+    String indexAlias = resolveIndexAlias(pipelinesConfig.getIndexConfig(), datasetType);
 
     // does the default index exist already ?
-    Optional<String> indexName =
-        IndexSettings.getIndexName(
-            pipelinesConfig.getIndexConfig(), httpClient, defaultIndexPrefix);
+    Optional<String> defaultIndexNameOpt =
+        IndexSettings.getExistingDefaultIndexName(
+            pipelinesConfig.getIndexConfig(), httpClient, indexAlias, defaultIndexPrefix);
 
-    String defaultIndexName;
-    log.info("Initialising the index..");
+    if (defaultIndexNameOpt.isPresent()) {
+      return defaultIndexNameOpt.get();
+    }
 
     final String schemaPath =
         datasetType.equals(DatasetType.OCCURRENCE)
             ? pipelinesConfig.getIndexConfig().getOccurrenceSchemaPath()
             : pipelinesConfig.getIndexConfig().getEventSchemaPath();
 
-    final String esAlias =
-        datasetType.equals(DatasetType.OCCURRENCE)
-            ? pipelinesConfig.getIndexConfig().getOccurrenceAlias()
-            : pipelinesConfig.getIndexConfig().getEventAlias();
-
     final Integer numberOfShards =
         datasetType.equals(DatasetType.OCCURRENCE)
             ? pipelinesConfig.getStandalone().getOccurrenceIndexNumberOfShards()
             : pipelinesConfig.getStandalone().getEventIndexNumberOfShards();
 
-    if (indexName.isEmpty()) {
+    String indexToBeCreated = defaultIndexPrefix + "_" + System.currentTimeMillis();
+    log.info("create the default index for small datasets {}", indexToBeCreated);
 
-      String indexToBeCreated = defaultIndexPrefix + "_" + System.currentTimeMillis();
-      log.info("create the default index for small datasets {}", indexToBeCreated);
-
-      // create the default index, and add the alias to it, if the index doesn't exist
-      EsIndexUtils.createIndexAndAliasForDefault(
-          IndexingPipeline.ElasticOptions.fromArgsAndConfig(
-              pipelinesConfig,
-              esAlias,
-              indexToBeCreated,
-              schemaPath,
-              datasetId,
-              attempt,
-              numberOfShards));
-      defaultIndexName = indexToBeCreated;
-    } else {
-      defaultIndexName = indexName.get();
-      log.info("index with the default name already exists {}", defaultIndexName);
-    }
-
-    return defaultIndexName;
+    // create the default index, and add the alias to it, if the index doesn't exist
+    EsIndexUtils.createIndexAndAliasForDefault(
+        IndexingPipeline.ElasticOptions.fromArgsAndConfig(
+            pipelinesConfig,
+            indexAlias,
+            indexToBeCreated,
+            schemaPath,
+            datasetId,
+            attempt,
+            numberOfShards));
+    return indexToBeCreated;
   }
 
   public static String createDefaultIndexNamePrefix(
-      PipelinesConfig pipelinesConfig, DatasetType datasetType) {
-    return pipelinesConfig.getIndexConfig().defaultPrefixName
+      IndexConfig indexConfig, DatasetType datasetType) {
+    return indexConfig.defaultPrefixName
         + "_"
         + (datasetType.equals(DatasetType.OCCURRENCE)
-            ? pipelinesConfig.getIndexConfig().getOccurrenceVersion()
-            : pipelinesConfig.getIndexConfig().getEventVersion());
+            ? indexConfig.getOccurrenceVersion()
+            : indexConfig.getEventVersion());
   }
 }

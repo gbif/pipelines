@@ -230,11 +230,12 @@ public abstract class PipelinesCallback<
       log.debug("Received message: {}", message);
 
       if (!isMessageCorrect(message) || isProcessingStopped(message)) {
-
-        log.debug(
-            "Returning message correct: {} isProcessingStopped: {}",
-            isMessageCorrect(message),
-            isProcessingStopped(message));
+        if (log.isDebugEnabled()) {
+          log.debug(
+              "Returning message correct: {} isProcessingStopped: {}",
+              isMessageCorrect(message),
+              isProcessingStopped(message));
+        }
         return;
       }
 
@@ -331,13 +332,15 @@ public abstract class PipelinesCallback<
         trackingInfo.executionId,
         executionPipelineSteps);
 
-    log.debug(
-        "Execution ID {}, steps size: {}, steps: {}",
-        trackingInfo.executionId,
-        executionPipelineSteps.size(),
-        executionPipelineSteps.stream()
-            .map(ps -> ps.getType().name())
-            .collect(Collectors.joining(", ")));
+    if (log.isDebugEnabled()) {
+      log.debug(
+          "Execution ID {}, steps size: {}, steps: {}",
+          trackingInfo.executionId,
+          executionPipelineSteps.size(),
+          executionPipelineSteps.stream()
+              .map(ps -> ps.getType().name())
+              .collect(Collectors.joining(", ")));
+    }
 
     List<PipelineStep> thisPipelineStep =
         executionPipelineSteps.stream().filter(ps -> ps.getType() == getStepType()).toList();

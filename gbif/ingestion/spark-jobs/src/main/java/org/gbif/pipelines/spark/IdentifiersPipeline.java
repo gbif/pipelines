@@ -122,29 +122,38 @@ public class IdentifiersPipeline {
     }
 
     PipelinesConfig config = loadConfig(args.config);
+    SparkSession spark = null;
+    FileSystem fileSystem = null;
 
-    /* ############ standard init block ########## */
-    SparkSession spark =
-        getSparkSession(args.master, args.appName, config, IdentifiersPipeline::configSparkSession);
-    FileSystem fileSystem = getFileSystem(spark, config);
-    /* ############ standard init block - end ########## */
+    try {
+      /* ############ standard init block ########## */
+      spark =
+          getSparkSession(
+              args.master, args.appName, config, IdentifiersPipeline::configSparkSession);
+      fileSystem = getFileSystem(spark, config);
+      /* ############ standard init block - end ########## */
 
-    String datasetID = args.datasetId;
-    int attempt = args.attempt;
-    runValidation(
-        spark,
-        fileSystem,
-        config,
-        datasetID,
-        attempt,
-        args.numberOfShards,
-        args.tripletValid,
-        args.occurrenceIdValid,
-        args.useExtendedRecordId);
-
-    spark.stop();
-    spark.close();
-    fileSystem.close();
+      String datasetID = args.datasetId;
+      int attempt = args.attempt;
+      runValidation(
+          spark,
+          fileSystem,
+          config,
+          datasetID,
+          attempt,
+          args.numberOfShards,
+          args.tripletValid,
+          args.occurrenceIdValid,
+          args.useExtendedRecordId);
+    } finally {
+      if (fileSystem != null) {
+        fileSystem.close();
+      }
+      if (spark != null) {
+        spark.stop();
+        spark.close();
+      }
+    }
     System.exit(0);
   }
 

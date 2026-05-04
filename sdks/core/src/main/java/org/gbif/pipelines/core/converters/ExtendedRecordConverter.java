@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.DwcTerm;
@@ -26,7 +27,7 @@ public class ExtendedRecordConverter {
       String qn = term.qualifiedName();
       if (qn != null) {
         String value = record.value(term);
-        if (value != null) {
+        if (StringUtils.isNotEmpty(value)) {
           map.put(qn, value);
         }
       }
@@ -38,7 +39,8 @@ public class ExtendedRecordConverter {
   public static ExtendedRecord from(Record core, Map<Term, List<Record>> extensions) {
     ExtendedRecord.Builder builder = ExtendedRecord.newBuilder();
     Optional.ofNullable(core.rowType()).ifPresent(x -> builder.setCoreRowType(x.qualifiedName()));
-    builder.setCoreTerms(convertToMap(core));
+    Map<String, String> coreTerms = convertToMap(core);
+    builder.setCoreTerms(coreTerms);
     builder.setExtensions(
         extensions.entrySet().stream()
             .collect(
@@ -51,20 +53,19 @@ public class ExtendedRecordConverter {
                     (a, b) -> a,
                     LinkedHashMap::new)));
 
-    builder.setId(getId(core, builder));
+    builder.setId(getId(core, coreTerms));
     return builder.build();
   }
 
   /** If id is null, use triplet as an id */
-  private static String getId(Record core, ExtendedRecord.Builder builder) {
-    if (core.id() != null) {
+  private static String getId(Record core, Map<String, String> coreTerms) {
+    if (StringUtils.isNotBlank(core.id())) {
       return core.id();
     }
 
-    ExtendedRecord partial = builder.build(); // build the partial record to access core terms
-    String institutionCode = partial.getCoreTerms().get(DwcTerm.institutionCode.qualifiedName());
-    String collectionCode = partial.getCoreTerms().get(DwcTerm.collectionCode.qualifiedName());
-    String catalogNumber = partial.getCoreTerms().get(DwcTerm.catalogNumber.qualifiedName());
+    String institutionCode = coreTerms.get(DwcTerm.institutionCode.qualifiedName());
+    String collectionCode = coreTerms.get(DwcTerm.collectionCode.qualifiedName());
+    String catalogNumber = coreTerms.get(DwcTerm.catalogNumber.qualifiedName());
 
     if (institutionCode == null || collectionCode == null || catalogNumber == null) {
       return RECORD_ID_ERROR;

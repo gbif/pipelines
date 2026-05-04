@@ -330,10 +330,18 @@ public class OccurrenceHdfsRecordConverter {
             .collect(
                 Collectors.toMap(
                     TaxonRecord::getDatasetKey,
-                    tr ->
-                        tr.getClassification().stream()
-                            .map(RankedName::getKey)
-                            .collect(Collectors.toList()),
+                    tr -> {
+                      Set<String> taxonKeys =
+                          Optional.ofNullable(tr.getClassification())
+                              .orElse(Collections.emptyList())
+                              .stream()
+                              .map(RankedName::getKey)
+                              .collect(Collectors.toCollection(LinkedHashSet::new));
+                      if (tr.getSynonym() != null && tr.getSynonym() && tr.getUsage() != null) {
+                        taxonKeys.add(tr.getUsage().getKey());
+                      }
+                      return new ArrayList<>(taxonKeys);
+                    },
                     (a, b) -> a,
                     LinkedHashMap::new)));
 
