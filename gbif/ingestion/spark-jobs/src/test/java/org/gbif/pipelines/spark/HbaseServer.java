@@ -49,6 +49,12 @@ public class HbaseServer extends ExternalResource {
   @Override
   protected void before() throws Exception {
     log.info("Create hbase mini-cluster");
+
+    TEST_UTIL.getConfiguration().set("hbase.master.ipc.address", "127.0.0.1");
+    TEST_UTIL.getConfiguration().set("hbase.regionserver.ipc.address", "127.0.0.1");
+    TEST_UTIL.getConfiguration().set("hbase.master.hostname", "127.0.0.1");
+    TEST_UTIL.getConfiguration().set("hbase.regionserver.hostname", "127.0.0.1");
+
     TEST_UTIL.startMiniCluster(1);
     TEST_UTIL.createTable(FRAGMENT_TABLE, FF_BYTES);
     TEST_UTIL.createTable(LOOKUP_TABLE, CF);
