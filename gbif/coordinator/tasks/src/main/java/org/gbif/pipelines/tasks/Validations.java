@@ -1,56 +1,38 @@
 package org.gbif.pipelines.tasks;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import io.github.resilience4j.core.IntervalFunction;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import java.io.IOException;
 import java.sql.Timestamp;
-import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.PipelinesWorkflow;
 import org.gbif.api.model.pipelines.PipelinesWorkflow.Graph;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.tasks.client.RetryingValidationClient;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.ValidationStep;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
-import org.gbif.validator.ws.client.ValidationWsClient;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Validations {
 
-  private static final Retry RETRY =
-      Retry.of(
-          "validatorCall",
-          RetryConfig.custom()
-              .maxAttempts(15)
-              .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
-              .intervalFunction(
-                  IntervalFunction.ofExponentialBackoff(
-                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(30)))
-              .build());
-
   public static void updateStatus(
-      ValidationWsClient validationClient, UUID key, StepType stepType, Status status) {
+      RetryingValidationClient validationClient, UUID key, StepType stepType, Status status) {
     updateStatus(validationClient, key, stepType, status, null);
   }
 
   public static void updateStatus(
-      ValidationWsClient validationClient,
+      RetryingValidationClient validationClient,
       UUID key,
       StepType stepType,
       Status status,
       String message) {
 
-    Validation validation = Retry.decorateFunction(RETRY, validationClient::get).apply(key);
+    Validation validation = validationClient.get(key);
     if (validation == null) {
       log.warn("Can't find validation data key {}, please check that record exists", key);
       return;
@@ -114,6 +96,6 @@ public class Validations {
         mainStatus,
         newStatus,
         message);
-    Retry.decorateRunnable(RETRY, () -> validationClient.update(key, validation)).run();
+    validationClient.update(key, validation);
   }
 }

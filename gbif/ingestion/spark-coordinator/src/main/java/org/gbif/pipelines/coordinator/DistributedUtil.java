@@ -42,9 +42,23 @@ public class DistributedUtil {
       List<String> extraArgs)
       throws Exception {
 
+    Long recordsNumber = getRecordsNumber(pipelinesConfig, message, fileSystem);
+
+    runSparkDag(pipelinesConfig, message, jobName, dagName, stepType, recordsNumber, extraArgs);
+  }
+
+  public static void runSparkDag(
+      PipelinesConfig pipelinesConfig,
+      PipelineBasedMessage message,
+      String jobName,
+      String dagName,
+      StepType stepType,
+      long recordsNumber,
+      List<String> extraArgs) {
+
     ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
     long start = System.currentTimeMillis();
-    Long recordsNumber = getRecordsNumber(pipelinesConfig, message, fileSystem);
+
     log.info("Starting distributed {}, records count {}", jobName, recordsNumber);
 
     // App name

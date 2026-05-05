@@ -13,7 +13,9 @@
  */
 package org.gbif.pipelines.coordinator;
 
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -28,8 +30,20 @@ public class ValidatorInterpretationDistributedCallback extends ValidatorInterpr
 
   @Override
   protected void runPipeline(PipelinesVerbatimMessage message) throws Exception {
-    // TODO: implement
-    log.info("ValidatorInterpretationDistributedCallback#runPipeline");
+    Long recordsNumber =
+        message.getValidationResult() != null
+                && message.getValidationResult().getNumberOfRecords() != null
+            ? message.getValidationResult().getNumberOfRecords()
+            : DistributedUtil.getRecordsNumber(pipelinesConfig, message, fileSystem);
+
+    DistributedUtil.runSparkDag(
+        pipelinesConfig,
+        message,
+        "validator-interpretation",
+        pipelinesConfig.getAirflowConfig().interpretationDag,
+        StepType.VALIDATOR_VERBATIM_TO_INTERPRETED,
+        recordsNumber,
+        List.of());
   }
 
   @Override

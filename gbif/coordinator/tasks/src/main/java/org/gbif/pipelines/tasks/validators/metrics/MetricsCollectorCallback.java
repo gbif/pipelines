@@ -8,7 +8,9 @@ import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesMetricsCollectedMessage;
+import org.gbif.pipelines.tasks.modes.CallbackModeType;
 import org.gbif.pipelines.tasks.PipelinesCallback;
+import org.gbif.pipelines.tasks.client.RetryingValidationClient;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.validators.metrics.collector.MetricsCollectorFactory;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -34,7 +36,8 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
         .validationClient(validationClient)
         .config(config)
         .stepType(TYPE)
-        .isValidator(config.validatorOnly)
+        .callbackModeType(
+            config.validatorOnly ? CallbackModeType.VALIDATOR : CallbackModeType.PIPELINES)
         .publisher(publisher)
         .message(message)
         .handler(this)
@@ -64,6 +67,7 @@ public class MetricsCollectorCallback extends AbstractMessageCallback<PipelinesI
           .config(config)
           .publisher(publisher)
           .validationClient(validationClient)
+          .retryingValidationClient(new RetryingValidationClient(validationClient))
           .message(message)
           .stepType(TYPE)
           .build()
