@@ -49,13 +49,16 @@ public class ValidatorMode implements CallbackMode {
   }
 
   /** Marks eligible downstream validator steps as queued using the validator workflow. */
+  @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   @Override
   public void updateQueuedStatus(
-      TrackingInfo info, PipelinesCallbackContext<? extends PipelineBasedMessage> context) {
-    context
-        .getQueuedStepUpdater()
-        .updateQueuedStatus(
-            info, context.getStepType(), context.getWorkflowResolver().validatorWorkflow());
+      Optional<TrackingInfo> info, PipelinesCallbackContext<? extends PipelineBasedMessage> context) {
+    info.ifPresent(
+        i ->
+            context
+                .getQueuedStepUpdater()
+                .updateQueuedStatus(
+                    i, context.getStepType(), context.getWorkflowResolver().validatorWorkflow()));
   }
 
   /** Marks validation as finished after successful validator processing. */

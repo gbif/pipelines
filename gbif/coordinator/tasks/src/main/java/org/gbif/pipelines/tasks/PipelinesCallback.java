@@ -195,7 +195,7 @@ public class PipelinesCallback<In extends PipelineBasedMessage, Out extends Pipe
       checkIfDatasetIsDeleted(context);
       log.info("Handler has been finished, datasetKey - {}", datasetKey);
 
-      info.ifPresent(i -> context.getTracker().updateStatus(i, PipelineStep.Status.COMPLETED));
+      context.getTracker().updateStatus(info, PipelineStep.Status.COMPLETED);
 
       Out outgoingMessage = handler.createOutgoingMessage(message);
       if (outgoingMessage != null) {
@@ -210,7 +210,7 @@ public class PipelinesCallback<In extends PipelineBasedMessage, Out extends Pipe
             outgoingMessage.getClass().getSimpleName(),
             outgoingMessage);
 
-        info.ifPresent(i -> callbackMode.updateQueuedStatus(i, context));
+        callbackMode.updateQueuedStatus(info, context);
       }
 
       callbackMode.onSuccess(context);
@@ -218,7 +218,7 @@ public class PipelinesCallback<In extends PipelineBasedMessage, Out extends Pipe
       String error = "Error for datasetKey - " + datasetKey + " : " + ex.getMessage();
       log.error(error, ex);
 
-      info.ifPresent(i -> context.getTracker().updateStatus(i, PipelineStep.Status.FAILED));
+      context.getTracker().updateStatus(info, PipelineStep.Status.FAILED);
 
       String errorMessage = null;
       if (ex.getCause() instanceof PipelinesException) {

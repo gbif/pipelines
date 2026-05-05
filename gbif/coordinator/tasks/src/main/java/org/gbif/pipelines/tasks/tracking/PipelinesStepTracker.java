@@ -157,7 +157,12 @@ public class PipelinesStepTracker {
    * unchanged. That protects terminal states from being overwritten by late or duplicate callback
    * updates.
    */
-  public void updateStatus(TrackingInfo trackingInfo, PipelineStep.Status status) {
+  @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+  public void updateStatus(Optional<TrackingInfo> trackingInfoOpt, PipelineStep.Status status) {
+    if (trackingInfoOpt.isEmpty()) {
+      return;
+    }
+    TrackingInfo trackingInfo = trackingInfoOpt.get();
     String path =
         HdfsUtils.buildOutputPathAsString(
             config.getRepositoryPath(),
