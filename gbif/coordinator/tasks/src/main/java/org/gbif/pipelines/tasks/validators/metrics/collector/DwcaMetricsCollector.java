@@ -23,6 +23,7 @@ import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.DwcaUtils;
+import org.gbif.pipelines.tasks.client.RetryingValidationClient;
 import org.gbif.pipelines.tasks.validators.metrics.MetricsCollectorConfiguration;
 import org.gbif.pipelines.validator.DwcaFileTermCounter;
 import org.gbif.pipelines.validator.IndexMetricsCollector;
@@ -43,6 +44,7 @@ public class DwcaMetricsCollector implements MetricsCollector {
   private final MetricsCollectorConfiguration config;
   private final MessagePublisher publisher;
   private final ValidationWsClient validationClient;
+  private final RetryingValidationClient retryingValidationClient;
   private final PipelinesIndexedMessage message;
   private final StepType stepType;
 
@@ -74,7 +76,7 @@ public class DwcaMetricsCollector implements MetricsCollector {
 
       // Set status to QUEUED before sending the message
       org.gbif.pipelines.tasks.Validations.updateStatus(
-          validationClient, message.getDatasetUuid(), stepType, Status.QUEUED);
+          retryingValidationClient, message.getDatasetUuid(), stepType, Status.QUEUED);
 
       log.info("Send checklist validation message and waiting for the response...");
       Object response =

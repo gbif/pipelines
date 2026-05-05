@@ -10,6 +10,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
+import org.gbif.pipelines.tasks.modes.CallbackModeType;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.validators.validator.validate.ArchiveValidatorFactory;
@@ -36,7 +37,8 @@ public class ArchiveValidatorCallback
         .validationClient(validationClient)
         .config(config)
         .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
-        .isValidator(config.validatorOnly)
+        .callbackModeType(
+            config.validatorOnly ? CallbackModeType.VALIDATOR : CallbackModeType.PIPELINES)
         .publisher(publisher)
         .message(message)
         .handler(this)

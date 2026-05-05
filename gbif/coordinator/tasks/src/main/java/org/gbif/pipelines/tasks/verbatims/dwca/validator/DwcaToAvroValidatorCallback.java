@@ -43,6 +43,7 @@ import org.gbif.pipelines.common.process.RecordCountReader;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.DwcaUtils;
+import org.gbif.pipelines.tasks.modes.CallbackModeType;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.registry.ws.client.DatasetClient;
@@ -70,7 +71,7 @@ public class DwcaToAvroValidatorCallback
         .validationClient(validationClient)
         .config(config)
         .stepType(StepType.VALIDATOR_DWCA_TO_VERBATIM)
-        .isValidator(true)
+        .callbackModeType(CallbackModeType.VALIDATOR)
         .publisher(publisher)
         .message(message)
         .handler(this)
