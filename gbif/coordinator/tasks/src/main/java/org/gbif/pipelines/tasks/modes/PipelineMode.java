@@ -45,15 +45,18 @@ public class PipelineMode implements CallbackMode {
   }
 
   /** Marks eligible downstream pipeline steps as queued using the regular pipeline workflow. */
+  @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   @Override
   public void updateQueuedStatus(
-      TrackingInfo info, PipelinesCallbackContext<? extends PipelineBasedMessage> context) {
-    context
-        .getQueuedStepUpdater()
-        .updateQueuedStatus(
-            info,
-            context.getStepType(),
-            context.getWorkflowResolver().pipelineWorkflow(context.getMessage()));
+      Optional<TrackingInfo> info, PipelinesCallbackContext<? extends PipelineBasedMessage> context) {
+    info.ifPresent(
+        i ->
+            context
+                .getQueuedStepUpdater()
+                .updateQueuedStatus(
+                    i,
+                    context.getStepType(),
+                    context.getWorkflowResolver().pipelineWorkflow(context.getMessage())));
   }
 
   /** Regular ingestion does not require additional success handling. */

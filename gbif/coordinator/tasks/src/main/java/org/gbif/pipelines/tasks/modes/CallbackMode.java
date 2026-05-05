@@ -72,8 +72,9 @@ public interface CallbackMode {
    * <p>The selected mode decides which workflow graph should be used: regular ingestion uses the
    * occurrence/event workflow, while validation uses the validator workflow.
    */
+  @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   void updateQueuedStatus(
-      TrackingInfo info, PipelinesCallbackContext<? extends PipelineBasedMessage> context);
+      Optional<TrackingInfo> info, PipelinesCallbackContext<? extends PipelineBasedMessage> context);
 
   /**
    * Performs mode-specific success handling after the message has been processed.
