@@ -35,6 +35,7 @@ import org.gbif.dwc.terms.EcoTerm;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
+import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -55,13 +56,9 @@ public class EventInterpretationTest extends MockedServicesTest {
   public static void setUp() throws Exception {
     sparkTmp = Files.createTempDirectory("spark-local");
     spark =
-        SparkSession.builder()
-            .master("local[1]")
+        SparkTestSession.createBuilder()
             .config("spark.jars.packages", "org.apache.spark:spark-avro_2.12:3.5.1")
             .config("spark.ui.enabled", "false")
-            .config("spark.driver.host", "localhost")
-            .config("spark.driver.bindAddress", "127.0.0.1")
-            .config("spark.sql.shuffle.partitions", "1")
             .config("spark.local.dir", sparkTmp.toAbsolutePath().toString())
             .getOrCreate();
   }
