@@ -1,7 +1,7 @@
 package org.gbif.pipelines.core.converters;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import org.elasticsearch.common.Strings;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.License;
@@ -686,11 +687,11 @@ public class OccurrenceJsonConverterTest {
 
     JsonNode nucleotideSequence = result.path("nucleotideSequence");
     assertEquals(2, nucleotideSequence.size());
-    nucleotideSequence.forEach(n -> assertNotNull(n.path("nucleotideSequenceID")));
+    nucleotideSequence.forEach(n -> assertTrue(n.hasNonNull("nucleotideSequenceID")));
 
     JsonNode dnaSequenceID = result.path("dnaSequenceID");
     assertEquals(2, dnaSequenceID.size());
-    dnaSequenceID.forEach(n -> assertNotNull(n.path("dnaSequenceID")));
+    dnaSequenceID.forEach(n -> assertFalse(Strings.isNullOrEmpty(n.asText())));
   }
 
   @Test

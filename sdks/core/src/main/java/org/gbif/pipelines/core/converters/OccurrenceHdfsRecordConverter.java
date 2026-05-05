@@ -912,6 +912,8 @@ public class OccurrenceHdfsRecordConverter {
       occurrenceHdfsRecord.setExt_dna_derived_data(
           base64Encode(
               MediaSerDeser.dnaDerivedDataToJson(dnaDerivedDataRecord.getDnaDerivedDataItems())));
+
+      addNonTaxonIssues(dnaDerivedDataRecord.getIssues(), occurrenceHdfsRecord);
     }
   }
 }

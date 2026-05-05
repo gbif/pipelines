@@ -344,8 +344,8 @@ public class TableUtil {
                             .add("gcContent", "double", false)
                             .add("nonIupacFraction", "double", false)
                             .add("nonACGTNFraction", "double", false)
-                            .add("nfraction", "double", false)
-                            .add("nrunsCapped", "int", false)
+                            .add("nFraction", "double", false)
+                            .add("nRunsCapped", "int", false)
                             .add("naturalLanguageDetected", "boolean", false)
                             .add("endsTrimmed", "boolean", false)
                             .add("gapsOrWhitespaceRemoved", "boolean", false)
@@ -363,8 +363,8 @@ public class TableUtil {
             col("dna_record.gcContent").alias("gccontent"),
             col("dna_record.nonIupacFraction").alias("noniupacfraction"),
             col("dna_record.nonACGTNFraction").alias("nonacgtnfraction"),
-            col("dna_record.nfraction").alias("nfraction"),
-            col("dna_record.nrunsCapped").alias("nrunscapped"),
+            col("dna_record.nFraction").alias("nfraction"),
+            col("dna_record.nRunsCapped").alias("nrunscapped"),
             col("dna_record.naturalLanguageDetected").alias("naturallanguagedetected"),
             col("dna_record.endsTrimmed").alias("endstrimmed"),
             col("dna_record.gapsOrWhitespaceRemoved").alias("gapsorwhitespaceremoved"),

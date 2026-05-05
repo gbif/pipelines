@@ -25,7 +25,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 public class DnaDerivedDataInterpreter {
 
   private final VocabularyService vocabularyService;
-  private final DnaConfig dnaConfig;
+  @Builder.Default private final DnaConfig dnaConfig = new DnaConfig();
 
   /**
    * Interprets DNA data of a {@link ExtendedRecord} and populates a {@link DnaDerivedDataRecord}
@@ -43,6 +43,9 @@ public class DnaDerivedDataInterpreter {
             .convert(er);
 
     dr.setDnaDerivedDataItems(result.getList());
+    if (result.getIssues() != null) {
+      dr.getIssues().getIssueList().addAll(result.getIssuesAsList());
+    }
   }
 
   private List<String> interpretTargetGene(DnaDerivedData dnaDerivedData, String rawValue) {
