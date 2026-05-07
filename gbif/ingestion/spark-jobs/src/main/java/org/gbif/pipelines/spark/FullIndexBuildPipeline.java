@@ -90,6 +90,12 @@ public class FullIndexBuildPipeline {
     private boolean switchOnSuccess = false;
 
     @Parameter(
+        names = "--deleteTempParquetOnSuccess",
+        description =
+            "Delete the temporary parquet files used for writing to Elastic after a successful build. ")
+    private boolean deleteTempParquetOnSuccess = true;
+
+    @Parameter(
         names = {"--help", "-h"},
         help = true,
         description = "Show usage")
@@ -319,6 +325,11 @@ public class FullIndexBuildPipeline {
         EsService.refreshIndex(esClient, indexName);
       }
     }
+
+    if (args.deleteTempParquetOnSuccess) {
+      fileSystem.delete(new org.apache.hadoop.fs.Path(config.getRebuildPath() + "/elastic"), true);
+    }
+
     fileSystem.close();
     spark.stop();
     spark.close();
@@ -326,6 +337,7 @@ public class FullIndexBuildPipeline {
     if (args.switchOnSuccess) {
       EsIndexUtils.swapIndices(rebuildAlias, esAlias, hosts);
     }
+
     log.info("Full index build completed");
   }
 

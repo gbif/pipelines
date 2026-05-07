@@ -1,6 +1,7 @@
 package org.gbif.pipelines.coordinator;
 
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -26,6 +27,13 @@ public class OccurrenceInterpretationDistributedCallback extends OccurrenceInter
         pipelinesConfig.getAirflowConfig().interpretationDag,
         StepType.VERBATIM_TO_INTERPRETED,
         List.of("--interpretTypes=" + String.join(",", message.getInterpretTypes())));
+
+    // After a successful run, cleanup previous attempts
+    CleanupUtil.cleanupPreviousOnSuccess(
+        pipelinesConfig,
+        fileSystem,
+        message.getDatasetUuid().toString(),
+        Set.of(message.getAttempt().toString()));
   }
 
   @Override
