@@ -254,6 +254,10 @@
             <artifactId>prometheus-metrics-exporter-httpserver</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.gbif.pipelines</groupId>
+            <artifactId>elasticsearch-tools</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
