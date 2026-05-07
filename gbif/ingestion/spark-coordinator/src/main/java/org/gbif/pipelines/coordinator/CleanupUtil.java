@@ -28,28 +28,31 @@ public class CleanupUtil {
    * @throws Exception
    */
   public static void cleanupPreviousOnSuccess(
-      PipelinesConfig config, FileSystem fileSystem, String datasetId, Set<String> exclude)
-      throws Exception {
+      PipelinesConfig config, FileSystem fileSystem, String datasetId, Set<String> exclude) {
 
-    log.info("Deleting old attempts directories");
-    String pathToDelete = String.join("/", config.getInputPath(), datasetId);
+    try {
+      log.debug("Deleting old attempts directories");
+      String pathToDelete = String.join("/", config.getInputPath(), datasetId);
 
-    LocalDateTime limitDate = LocalDateTime.now().minusDays(config.getDeleteAfterDays());
+      LocalDateTime limitDate = LocalDateTime.now().minusDays(config.getDeleteAfterDays());
 
-    getSubDirList(fileSystem, pathToDelete).stream()
-        .filter(x -> !exclude.contains(x.getPath().getName()))
-        .filter(
-            fileStatus ->
-                LocalDateTime.ofInstant(
-                        Instant.ofEpochMilli(fileStatus.getModificationTime()),
-                        ZoneId.systemDefault())
-                    .isBefore(limitDate))
-        .map(fileStatus -> fileStatus.getPath().toString())
-        .forEach(
-            attemptToDelete -> {
-              boolean deleted = deleteDirectory(fileSystem, attemptToDelete);
-              log.info("Tried to delete directory {}, is deleted? {}", attemptToDelete, deleted);
-            });
+      getSubDirList(fileSystem, pathToDelete).stream()
+          .filter(x -> !exclude.contains(x.getPath().getName()))
+          .filter(
+              fileStatus ->
+                  LocalDateTime.ofInstant(
+                          Instant.ofEpochMilli(fileStatus.getModificationTime()),
+                          ZoneId.systemDefault())
+                      .isBefore(limitDate))
+          .map(fileStatus -> fileStatus.getPath().toString())
+          .forEach(
+              attemptToDelete -> {
+                boolean deleted = deleteDirectory(fileSystem, attemptToDelete);
+                log.info("Tried to delete directory {}, is deleted? {}", attemptToDelete, deleted);
+              });
+    } catch (IOException ex) {
+      log.error("Failed to delete old attempts", ex);
+    }
   }
 
   public static boolean deleteDirectory(FileSystem fs, String filePath) {
