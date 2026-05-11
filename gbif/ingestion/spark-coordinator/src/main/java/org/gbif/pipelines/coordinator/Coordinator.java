@@ -15,6 +15,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.ConnectionParameters;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
@@ -142,7 +143,7 @@ public class Coordinator {
       Supplier<MessageListener> listenerSupplier,
       Supplier<DefaultMessagePublisher> publisherSupplier) {
 
-    Function<MessagePublisher, PipelinesCallback> callbackFn = null;
+    Function<MessagePublisher, CloseableMessageCallback> callbackFn = null;
 
     switch (mode) {
       case IDENTIFIER:
@@ -220,6 +221,16 @@ public class Coordinator {
         callbackFn =
             (messagePublisher -> new FragmenterDistributedCallback(config, messagePublisher));
         break;
+      case OCCURRENCE_DELETION:
+        callbackFn =
+            (messagePublisher -> new DatasetDeleteCallback(config, master, DatasetType.OCCURRENCE));
+        break;
+      case EVENT_DELETION:
+        callbackFn =
+            (messagePublisher ->
+                new DatasetDeleteCallback(config, master, DatasetType.SAMPLING_EVENT));
+        break;
+
       default:
         throw new IllegalArgumentException(
             "Unknown mode: "
@@ -237,7 +248,7 @@ public class Coordinator {
     // create listener and publisher up-front using the supplied factories
     try (MessageListener listener = listenerSupplier.get();
         DefaultMessagePublisher publisher = publisherSupplier.get();
-        PipelinesCallback callback = callbackFn.apply(publisher)) {
+        CloseableMessageCallback callback = callbackFn.apply(publisher)) {
 
       // initialise spark session & filesystem
       callback.init();
@@ -278,7 +289,7 @@ public class Coordinator {
           callback.getRunningCounter());
       log.info("No longer running and no active datasets. Proceeding to shutdown.");
 
-    } catch (IOException e) {
+    } catch (Exception e) {
       log.error("Error starting standalone", e);
     }
 
@@ -328,6 +339,8 @@ public class Coordinator {
     EVENTS_INDEXING,
     EVENTS_INDEXING_DISTRIBUTED,
     FRAGMENTER,
-    FRAGMENTER_DISTRIBUTED
+    FRAGMENTER_DISTRIBUTED,
+    OCCURRENCE_DELETION,
+    EVENT_DELETION
   }
 }
