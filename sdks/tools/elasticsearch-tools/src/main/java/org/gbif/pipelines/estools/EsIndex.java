@@ -199,12 +199,34 @@ public class EsIndex {
       String query = String.format(DELETE_BY_DATASET_QUERY, datasetKey);
 
       // we only delete by query for the indexes specified
-      String indexes =
-          existingDatasetIndexes.stream().filter(indexesToDelete).collect(Collectors.joining(","));
+      List<String> indexesToDeleteFrom =
+          existingDatasetIndexes.stream().filter(indexesToDelete).collect(Collectors.toList());
 
-      if (!Strings.isNullOrEmpty(indexes)) {
-        log.info("Deleting records from ES indexes {} with query {}", indexes, query);
-        deleteRecordsByQueryAndWaitTillCompletion(esClient, indexes, query, timeoutSec, attempts);
+      if (!indexesToDeleteFrom.isEmpty()) {
+
+        // either delete th dataset sepcific index or from indicies containing the dataset
+        List<String> datasetSpecificIndicies =
+            indexesToDeleteFrom.stream()
+                .filter(i -> i.startsWith(datasetKey))
+                .collect(Collectors.toList());
+        List<String> nonDatasetSpecificIndicies =
+            indexesToDeleteFrom.stream()
+                .filter(i -> !i.startsWith(datasetKey))
+                .collect(Collectors.toList());
+
+        if (!nonDatasetSpecificIndicies.isEmpty()) {
+          String indexes = String.join(",", nonDatasetSpecificIndicies);
+          log.info("Deleting records from ES indexes {} with query {}", indexes, query);
+          deleteRecordsByQueryAndWaitTillCompletion(esClient, indexes, query, timeoutSec, attempts);
+        }
+
+        if (!datasetSpecificIndicies.isEmpty()) {
+          log.info(
+              "Deleting ES indexes {} because they are dataset specific", datasetSpecificIndicies);
+          datasetSpecificIndicies.stream()
+              .filter(i -> i.startsWith(datasetKey))
+              .forEach(indexName -> EsService.deleteIndex(esClient, indexName));
+        }
       }
 
       return existingDatasetIndexes;

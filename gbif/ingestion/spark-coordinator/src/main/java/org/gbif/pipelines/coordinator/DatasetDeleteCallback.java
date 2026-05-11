@@ -85,11 +85,12 @@ public class DatasetDeleteCallback extends AbstractMessageCallback<DeleteDataset
           "Deleting dataset {} from elastic indexes for {}", message.getDatasetUuid(), datasetType);
       EsConfig esConfig = EsConfig.from(pipelinesConfig.getIndexConfig().getDefaultIndexCatUrl());
 
+      // remove the dataset from Es indexes
       EsIndex.deleteRecordsByDatasetId(
           esConfig,
           new String[] {esAlias},
           message.getDatasetUuid().toString(),
-          idxName -> !idxName.startsWith(message.getDatasetUuid().toString()),
+          idxName -> true,
           60,
           5);
 
