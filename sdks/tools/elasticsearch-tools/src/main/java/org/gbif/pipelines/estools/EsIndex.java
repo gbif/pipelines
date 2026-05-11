@@ -204,7 +204,7 @@ public class EsIndex {
 
       if (!indexesToDeleteFrom.isEmpty()) {
 
-        // either delete th dataset specific index or from indicies containing the dataset
+        // either delete the dataset specific index or from indices containing the dataset
         List<String> datasetSpecificIndices =
             indexesToDeleteFrom.stream()
                 .filter(i -> i.startsWith(datasetKey))
