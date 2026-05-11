@@ -223,8 +223,7 @@ public class EsIndex {
         if (!datasetSpecificIndices.isEmpty()) {
           log.info(
               "Deleting ES indexes {} because they are dataset specific", datasetSpecificIndices);
-          datasetSpecificIndices
-              .forEach(indexName -> EsService.deleteIndex(esClient, indexName));
+          datasetSpecificIndices.forEach(indexName -> EsService.deleteIndex(esClient, indexName));
         }
       }
 
