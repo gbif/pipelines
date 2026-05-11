@@ -31,6 +31,7 @@ import org.gbif.pipelines.spark.pojo.HdfsColumn;
 import org.gbif.pipelines.spark.udf.Base64DecodeUDF;
 import org.gbif.pipelines.spark.udf.CleanDelimiterArraysUdf;
 import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
+import org.gbif.pipelines.spark.util.TableUtil;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -235,10 +236,9 @@ public class TableBuildPipeline {
     // get the hdfs columns from the parquet with mappings to iceberg columns
     Map<String, HdfsColumn> hdfsColumnList = getHdfsColumns(hdfs);
 
-    // FIXME - limit concurrent writes to the iceberg table
     // May need to use zookeeper or similar for distributed locking
+    // The lock solves problems with standalone CLIs
     synchronized (LOCK) {
-
       // Read the target table i.e. 'occurrence' or 'event' schema to ensure it exists
       StructType tblSchema = spark.read().format("iceberg").load(coreDwcTerm).schema();
 
@@ -256,9 +256,12 @@ public class TableBuildPipeline {
               tempCoreTable);
 
       log.debug("Inserting data into {} table: {}", coreDwcTerm, insertQuery);
-
-      // Execute the insert
-      spark.sql(insertQuery);
+      TableUtil.runSQLWithRetries(
+          spark,
+          insertQuery,
+          config.getHiveDB() + "." + coreDwcTerm,
+          config.getTableBuildConfig().getMaxRetriesWithRefresh(),
+          config.getTableBuildConfig().getBaseSleepMs());
     }
 
     // process verbatim extensions
