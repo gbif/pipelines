@@ -96,15 +96,10 @@ public class CleanerCallback extends AbstractMessageCallback<PipelinesCleanerMes
             config.esSearchQueryTimeoutSec,
             config.esSearchQueryAttempts);
 
-    // Delete index by name, must be only one index name in the list
-    indices.stream()
-        .filter(idxName -> idxName.startsWith(datasetUuid.toString()))
-        .forEach(idxName -> EsIndex.deleteIndex(esConfig, idxName));
-
     if (indices.isEmpty()) {
-      log.warn("Dataset index/records was NOT deleted from elasticseach!");
+      log.warn("Dataset index/records was NOT deleted from elasticsearch!");
     } else {
-      log.info("Dataset index/records was deleted successfully from elasticseach!");
+      log.info("Dataset index/records was deleted successfully from elasticsearch!");
     }
   }
 
