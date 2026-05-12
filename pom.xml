@@ -86,6 +86,7 @@
   <properties>
     <!-- Common variables -->
     <jdkLevel>17</jdkLevel>
+    <java.version>${jdkLevel}</java.version>
     <maven.compiler.source>${jdkLevel}</maven.compiler.source>
     <maven.compiler.target>${jdkLevel}</maven.compiler.target>
     <maven.compiler.release>${jdkLevel}</maven.compiler.release>
@@ -176,6 +177,7 @@
 
     <!-- Java / Test -->
     <junit4.version>4.13.2</junit4.version>
+    <junit5.version>5.12.2</junit5.version>
     <mockwebserver.version>5.3.2</mockwebserver.version>
     <hamcrest-core.version>3.0</hamcrest-core.version>
     <hamcrest-java.version>2.0.0.0</hamcrest-java.version>
@@ -1027,9 +1029,15 @@
 
       <!-- Test -->
       <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>${junit4.version}</version>
+        <groupId>org.junit.vintage</groupId>
+        <artifactId>junit-vintage-engine</artifactId>
+        <scope>test</scope>
+        <version>${junit5.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>${junit5.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
