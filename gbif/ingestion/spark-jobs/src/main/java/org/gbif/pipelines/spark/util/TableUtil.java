@@ -119,6 +119,19 @@ public class TableUtil {
               config.getHiveDB(), multimediaTable, datasetId));
     }
 
+    // delete from DNA Derived Data table
+    String dnaTableName = coreDwcTerm + "_dna_derived_data";
+    if (spark.catalog().tableExists(dnaTableName)) {
+      log.info("DNA Derived Data table {} exists", dnaTableName);
+      spark.sql(
+        String.format(
+          """
+            DELETE FROM %s.%s
+            WHERE datasetkey = '%s'
+          """,
+          config.getHiveDB(), dnaTableName, datasetId));
+    }
+
     // delete from humboldt table
     if (datasetType == DatasetType.SAMPLING_EVENT) {
       String humboldtTableName = coreDwcTerm + "_humboldt";
