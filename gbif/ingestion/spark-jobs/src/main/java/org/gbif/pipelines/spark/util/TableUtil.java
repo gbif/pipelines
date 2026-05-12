@@ -124,12 +124,12 @@ public class TableUtil {
     if (spark.catalog().tableExists(dnaTableName)) {
       log.info("DNA Derived Data table {} exists", dnaTableName);
       spark.sql(
-        String.format(
-          """
+          String.format(
+              """
             DELETE FROM %s.%s
             WHERE datasetkey = '%s'
           """,
-          config.getHiveDB(), dnaTableName, datasetId));
+              config.getHiveDB(), dnaTableName, datasetId));
     }
 
     // delete from humboldt table
