@@ -154,17 +154,4 @@ public class AirflowConfFactory {
 
     public final String executorLimitMemory;
   }
-
-  public static void main(String[] args) throws Exception {
-    int recordNumber = 1234;
-
-    System.out.println(evaluate("0 <= recordNumber < 5000", recordNumber)); // true
-    System.out.println(evaluate("5000 <= recordNumber < 50_000", recordNumber)); // false
-    System.out.println(evaluate("1000 <= recordNumber", recordNumber)); // true
-    System.out.println(evaluate("recordNumber < 2000", recordNumber)); // true
-    System.out.println(evaluate("recordNumber > 1000", recordNumber)); // true
-    System.out.println(evaluate("recordNumber > 2000", recordNumber)); // false
-    System.out.println(evaluate("recordCount < 100_000", 99999)); // false
-    System.out.println(evaluate("recordCount < 100_000", 100_001)); // false
-  }
 }

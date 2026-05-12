@@ -1,14 +1,30 @@
 package org.gbif.pipelines.coordinator;
 
+import static org.gbif.pipelines.airflow.AirflowConfFactory.evaluate;
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 import org.gbif.pipelines.airflow.AirflowConfFactory;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.util.PipelinesConfigUtil;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class AirflowFactoryConfTest {
+
+  @Test
+  public void testBoundaries() {
+    int recordNumber = 1234;
+
+    Assert.assertTrue(evaluate("0 <= recordNumber < 5000", recordNumber));
+    Assert.assertFalse(evaluate("5000 <= recordNumber < 50_000", recordNumber));
+    Assert.assertTrue(evaluate("1000 <= recordNumber", recordNumber));
+    Assert.assertTrue(evaluate("recordNumber < 2000", recordNumber));
+    Assert.assertTrue(evaluate("recordNumber > 1000", recordNumber));
+    Assert.assertFalse(evaluate("recordNumber > 2000", recordNumber));
+    Assert.assertTrue(evaluate("recordCount < 100_000", 99999));
+    Assert.assertFalse(evaluate("recordCount < 100_000", 100_001));
+  }
 
   @Test
   public void test() {
