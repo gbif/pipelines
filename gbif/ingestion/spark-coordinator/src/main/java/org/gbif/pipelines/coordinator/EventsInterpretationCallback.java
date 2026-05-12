@@ -3,6 +3,7 @@ package org.gbif.pipelines.coordinator;
 import static org.gbif.pipelines.spark.Directories.EVENT_JSON;
 
 import java.io.IOException;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.StepType;
@@ -53,6 +54,13 @@ public class EventsInterpretationCallback
         message.getDatasetUuid().toString(),
         message.getAttempt(),
         pipelinesConfig.getStandalone().getNumberOfShards());
+
+    // After a successful run, cleanup previous attempts
+    CleanupUtil.cleanupPreviousOnSuccess(
+        pipelinesConfig,
+        fileSystem,
+        message.getDatasetUuid().toString(),
+        Set.of(message.getAttempt().toString()));
   }
 
   @Override

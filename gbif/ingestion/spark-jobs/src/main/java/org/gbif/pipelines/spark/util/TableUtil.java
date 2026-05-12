@@ -6,6 +6,7 @@ import static org.gbif.terms.utils.TermUtils.INTERPRETED_HUMBOLDT_TERMS;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.iceberg.exceptions.CommitFailedException;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -18,6 +19,7 @@ import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.occurrence.download.hive.HiveDataTypes;
 import org.gbif.occurrence.download.hive.InitializableField;
 import org.gbif.occurrence.download.hive.OccurrenceHDFSTableDefinition;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.TableBuildConfig;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +29,126 @@ public class TableUtil {
 
   public static final Set<String> EXTENSION_COLUMNS =
       Set.of("ext_multimedia", "ext_humboldt", "ext_dna_derived_data");
+
+  /**
+   * Run sql with retries and table refresh if we have failures.
+   *
+   * @param spark
+   * @param sql
+   * @param targetTable
+   */
+  public static void runSQLWithRetries(
+      SparkSession spark, String sql, String targetTable, int maxRetries, int baseSleepMs) {
+
+    if (maxRetries <= 0) {
+      throw new IllegalArgumentException("maxRetries must be greater than 0");
+    }
+    if (baseSleepMs < 0) {
+      throw new IllegalArgumentException("baseSleepMs must be greater than or equal to 0");
+    }
+
+    // Execute the insert with retries to handle transient Iceberg commit conflicts.
+    // Iceberg uses optimistic concurrency control and will throw CommitFailedException
+    // when the table metadata has changed between planning and commit.
+    // table metadata changes with each INSERT
+    boolean success = false;
+    for (int attemptNum = 1; attemptNum <= maxRetries && !success; attemptNum++) {
+      try {
+        spark.sql(sql);
+        success = true;
+      } catch (CommitFailedException cfe) {
+        log.warn(
+            "Attempt {}/{}: Commit failed for table {}. Will retry after refresh. Error: {}",
+            attemptNum,
+            maxRetries,
+            targetTable,
+            cfe.getMessage());
+        if (attemptNum == maxRetries) {
+          throw cfe;
+        }
+        // Refresh table metadata in the catalog and wait a bit before retrying
+        try {
+          spark.catalog().refreshTable(targetTable);
+        } catch (Exception ex) {
+          log.warn("Failed to refresh table metadata for {}: {}", targetTable, ex.getMessage());
+        }
+        try {
+          Thread.sleep(baseSleepMs * attemptNum);
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          throw new RuntimeException("Interrupted while waiting to retry insert", ie);
+        }
+      }
+    }
+  }
+
+  /**
+   * Delete the dataset from core and extension tables.
+   *
+   * @param spark
+   * @param config
+   * @param datasetId
+   * @param datasetType
+   */
+  public static void deleteRecordsForDataset(
+      SparkSession spark, PipelinesConfig config, String datasetId, DatasetType datasetType) {
+
+    // Switch to the configured Hive database
+    spark.sql("USE " + config.getHiveDB());
+
+    String coreDwcTerm = datasetType == DatasetType.OCCURRENCE ? "occurrence" : "event";
+    log.info("Deleting records for dataset {}", datasetId);
+    spark.sql(
+        String.format(
+            """
+              DELETE FROM %s.%s
+              WHERE datasetkey = '%s'
+            """,
+            config.getHiveDB(), coreDwcTerm, datasetId));
+
+    // delete from multimedia
+    String multimediaTable = coreDwcTerm + "_multimedia";
+    if (spark.catalog().tableExists(multimediaTable)) {
+      log.info("Multimedia table {} exists", multimediaTable);
+      spark.sql(
+          String.format(
+              """
+                DELETE FROM %s.%s
+                WHERE datasetkey = '%s'
+              """,
+              config.getHiveDB(), multimediaTable, datasetId));
+    }
+
+    // delete from humboldt table
+    if (datasetType == DatasetType.SAMPLING_EVENT) {
+      String humboldtTableName = coreDwcTerm + "_humboldt";
+      if (spark.catalog().tableExists(humboldtTableName)) {
+        // delete from humboldt table
+        spark.sql(
+            String.format(
+                """
+                  DELETE FROM %s.%s
+                  WHERE datasetkey = '%s'
+                """,
+                config.getHiveDB(), humboldtTableName, datasetId));
+      }
+    }
+
+    // delete from  extension tables
+    for (ExtensionTable extTable : ExtensionTable.tableExtensions()) {
+      String extTableName = verbatimExtensionTableName(extTable, coreDwcTerm);
+      if (spark.catalog().tableExists(extTableName)) {
+        log.info("Extension table {} exists", extTableName);
+        spark.sql(
+            String.format(
+                """
+                  DELETE FROM %s.%s
+                  WHERE datasetkey = '%s'
+                """,
+                config.getHiveDB(), extTableName, datasetId));
+      }
+    }
+  }
 
   /**
    * Check for records without a datasetKey or gbifId.

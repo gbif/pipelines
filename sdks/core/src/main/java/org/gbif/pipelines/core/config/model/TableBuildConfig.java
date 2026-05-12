@@ -20,4 +20,7 @@ public class TableBuildConfig implements Serializable {
   String commit_retry_max_wait_ms = "10000";
   String history_expire_max_snapshot_age_ms = "3888000000";
   String history_expire_min_snapshots_to_keep = "10";
+
+  int maxRetriesWithRefresh = 5;
+  int baseSleepMs = 10000;
 }

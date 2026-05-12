@@ -1,6 +1,6 @@
 package org.gbif.pipelines.coordinator;
 
-import java.util.ArrayList;
+import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.*;
@@ -45,6 +45,13 @@ public class OccurrenceInterpretationCallback
         message.getValidationResult().isTripletValid(),
         message.getValidationResult().isOccurrenceIdValid(),
         new ArrayList<>(message.getInterpretTypes())); // map to enum
+
+    // After a successful run, cleanup previous attempts
+    CleanupUtil.cleanupPreviousOnSuccess(
+        pipelinesConfig,
+        fileSystem,
+        message.getDatasetUuid().toString(),
+        Set.of(message.getAttempt().toString()));
   }
 
   @Override
