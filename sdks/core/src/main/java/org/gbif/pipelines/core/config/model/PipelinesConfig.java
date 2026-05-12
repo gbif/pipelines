@@ -105,5 +105,7 @@ public class PipelinesConfig implements Serializable {
 
   private DerivedMetadataConfig derivedMetadataConfig = new DerivedMetadataConfig();
 
+  private DnaConfig dnaConfig = new DnaConfig();
+
   private TableBuildConfig tableBuildConfig = new TableBuildConfig();
 }

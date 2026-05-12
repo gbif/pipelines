@@ -1,6 +1,7 @@
 package org.gbif.pipelines.tasks;
 
 import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -114,6 +115,45 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
 
   @Override
   public void markPipelineStatusAsAborted(long l) {}
+
+  @Override
+  public RunPipelineResponse runAll(
+      @NotBlank(message = "Steps parameter is required") String s,
+      @NotBlank(message = "Reason parameter is required") String s1,
+      boolean b,
+      boolean b1,
+      @org.jspecify.annotations.Nullable RunAllParams runAllParams,
+      @org.jspecify.annotations.Nullable Set<String> set,
+      boolean b2,
+      boolean b3) {
+    throw new UnsupportedOperationException("The method is not implemented!");
+  }
+
+  @Override
+  public RunPipelineResponse runPipelineAttempt(
+      @NotNull UUID uuid,
+      @NotBlank(message = "Steps parameter is required") String s,
+      @NotBlank(message = "Reason parameter is required") String s1,
+      boolean b,
+      boolean b1,
+      @org.jspecify.annotations.Nullable Set<String> set,
+      boolean b2,
+      boolean b3) {
+    throw new UnsupportedOperationException("The method is not implemented!");
+  }
+
+  @Override
+  public RunPipelineResponse runPipelineAttempt(
+      @NotNull UUID uuid,
+      int i,
+      @NotBlank(message = "Steps parameter is required") String s,
+      @NotBlank(message = "Reason parameter is required") String s1,
+      boolean b,
+      @org.jspecify.annotations.Nullable Set<String> set,
+      boolean b1,
+      boolean b2) {
+    throw new UnsupportedOperationException("The method is not implemented!");
+  }
 
   @Override
   public long updatePipelineStep(PipelineStep pipelineStep) {

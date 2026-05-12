@@ -27,7 +27,8 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class TableUtil {
 
-  public static final Set<String> EXTENSION_COLUMNS = Set.of("ext_multimedia", "ext_humboldt");
+  public static final Set<String> EXTENSION_COLUMNS =
+      Set.of("ext_multimedia", "ext_humboldt", "ext_dna_derived_data");
 
   /**
    * Run sql with retries and table refresh if we have failures.
@@ -116,6 +117,19 @@ public class TableUtil {
                 WHERE datasetkey = '%s'
               """,
               config.getHiveDB(), multimediaTable, datasetId));
+    }
+
+    // delete from DNA Derived Data table
+    String dnaTableName = coreDwcTerm + "_dna_derived_data";
+    if (spark.catalog().tableExists(dnaTableName)) {
+      log.info("DNA Derived Data table {} exists", dnaTableName);
+      spark.sql(
+          String.format(
+              """
+            DELETE FROM %s.%s
+            WHERE datasetkey = '%s'
+          """,
+              config.getHiveDB(), dnaTableName, datasetId));
     }
 
     // delete from humboldt table
@@ -410,6 +424,111 @@ public class TableUtil {
                FROM mm_records
             """,
             multimediaTable));
+  }
+
+  public static String getCreateDnaDerivedDataTableSQL(TableBuildConfig config, String tableName) {
+    return String.format(
+        """
+        CREATE TABLE IF NOT EXISTS %s
+        (
+           gbifid STRING,
+           nucleotidesequenceid STRING,
+           targetgene %s ,
+           sequence STRING,
+           sequencelength INT,
+           gccontent DOUBLE,
+           noniupacfraction DOUBLE,
+           nonacgtnfraction DOUBLE,
+           nfraction DOUBLE,
+           nrunscapped INT,
+           naturallanguagedetected BOOLEAN,
+           endstrimmed BOOLEAN,
+           gapsorwhitespaceremoved BOOLEAN,
+           invalid BOOLEAN,
+           datasetkey STRING
+        )
+        USING iceberg
+        PARTITIONED BY (datasetkey)
+        TBLPROPERTIES (%s)
+      """,
+        tableName, HiveDataTypes.TYPE_VOCABULARY_STRUCT, generateTblProperties(config));
+  }
+
+  public static void insertOverwriteDnaDerivedDataTable(
+      SparkSession spark,
+      String occurrenceTable,
+      String dnaDerivedDataTable,
+      boolean encodedExtData) {
+    spark
+        .table(occurrenceTable)
+        .select(
+            col("gbifid"),
+            from_json(
+                    encodedExtData
+                        ? expr("cast(base64_decode(ext_dna_derived_data) as string)")
+                        : col("ext_dna_derived_data"),
+                    new ArrayType(
+                        new StructType()
+                            .add("nucleotideSequenceID", "string", false)
+                            .add(
+                                "targetGene",
+                                "STRUCT<concept: STRING,lineage: ARRAY<STRING>>",
+                                false)
+                            .add("sequence", "string", false)
+                            .add("sequenceLength", "int", false)
+                            .add("gcContent", "double", false)
+                            .add("nonIupacFraction", "double", false)
+                            .add("nonACGTNFraction", "double", false)
+                            .add("nFraction", "double", false)
+                            .add("nRunsCapped", "int", false)
+                            .add("naturalLanguageDetected", "boolean", false)
+                            .add("endsTrimmed", "boolean", false)
+                            .add("gapsOrWhitespaceRemoved", "boolean", false)
+                            .add("invalid", "boolean", false),
+                        true))
+                .alias("dna_record"),
+            col("datasetkey"))
+        .select(col("gbifid"), explode(col("dna_record")).alias("dna_record"), col("datasetkey"))
+        .select(
+            col("gbifid"),
+            col("dna_record.nucleotideSequenceID").alias("nucleotidesequenceid"),
+            col("dna_record.targetGene").alias("targetgene"),
+            col("dna_record.sequence").alias("sequence"),
+            col("dna_record.sequenceLength").alias("sequencelength"),
+            col("dna_record.gcContent").alias("gccontent"),
+            col("dna_record.nonIupacFraction").alias("noniupacfraction"),
+            col("dna_record.nonACGTNFraction").alias("nonacgtnfraction"),
+            col("dna_record.nFraction").alias("nfraction"),
+            col("dna_record.nRunsCapped").alias("nrunscapped"),
+            col("dna_record.naturalLanguageDetected").alias("naturallanguagedetected"),
+            col("dna_record.endsTrimmed").alias("endstrimmed"),
+            col("dna_record.gapsOrWhitespaceRemoved").alias("gapsorwhitespaceremoved"),
+            col("dna_record.invalid").alias("invalid"),
+            col("datasetkey"))
+        .createOrReplaceTempView("dna_records");
+
+    spark.sql(
+        String.format(
+            """
+           INSERT OVERWRITE TABLE %s
+           SELECT gbifid,
+                  nucleotidesequenceid,
+                  targetgene,
+                  sequence,
+                  sequencelength,
+                  gccontent,
+                  noniupacfraction,
+                  nonacgtnfraction,
+                  nfraction,
+                  nrunscapped,
+                  naturallanguagedetected,
+                  endstrimmed,
+                  gapsorwhitespaceremoved,
+                  invalid,
+                  datasetkey
+           FROM dna_records
+        """,
+            dnaDerivedDataTable));
   }
 
   public static void insertOverwriteHumboldtTableFromTemp(

@@ -14,6 +14,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificData;
 import org.gbif.pipelines.core.pojo.HumboldtJsonView;
+import org.gbif.pipelines.io.avro.DnaDerivedData;
 import org.gbif.pipelines.io.avro.Humboldt;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
@@ -90,10 +91,21 @@ public class MediaSerDeser {
   private static final CollectionType LIST_MEDIA_TYPE =
       MAPPER.getTypeFactory().constructCollectionType(List.class, Multimedia.class);
 
+  private static final CollectionType LIST_DNA_TYPE =
+      MAPPER.getTypeFactory().constructCollectionType(List.class, DnaDerivedData.class);
+
   /** Converts the list of media objects into a JSON string. */
   @SneakyThrows
   public static String multimediaToJson(List<Multimedia> media) {
     return media != null && !media.isEmpty() ? objectToJson(media) : null;
+  }
+
+  /** Converts the list of DNA Derived Data objects into a JSON string. */
+  @SneakyThrows
+  public static String dnaDerivedDataToJson(List<DnaDerivedData> dnaDerivedData) {
+    return dnaDerivedData != null && !dnaDerivedData.isEmpty()
+        ? objectToJson(dnaDerivedData)
+        : null;
   }
 
   /** Converts the list of humboldt objects into a JSON string. */
@@ -122,6 +134,16 @@ public class MediaSerDeser {
   public static List<Multimedia> multimediaFromJson(String mediaJson) {
     try {
       return MAPPER.readValue(mediaJson, LIST_MEDIA_TYPE);
+    } catch (IOException ex) {
+      log.error(DESER_ERROR_MSG, ex);
+      throw ex;
+    }
+  }
+
+  @SneakyThrows
+  public static List<DnaDerivedData> dnaDerivedDataFromJson(String dnaJson) {
+    try {
+      return MAPPER.readValue(dnaJson, LIST_DNA_TYPE);
     } catch (IOException ex) {
       log.error(DESER_ERROR_MSG, ex);
       throw ex;

@@ -298,6 +298,15 @@ public class FullTableBuildPipeline {
       log.warn("Skipping load of Multimedia Table as the flag is set to false.");
     }
 
+    if (coreDwcTerm.equalsIgnoreCase("occurrence")) {
+      // Create dna table
+      String dnaTableName = coreDwcTerm + "_dna_derived_data";
+      spark.sql(getCreateDnaDerivedDataTableSQL(config.getTableBuildConfig(), dnaTableName));
+
+      // Insert data into the dna table
+      insertOverwriteDnaDerivedDataTable(spark, prefix + "occurrence", dnaTableName, false);
+    }
+
     // if its the event table, also create the event_humboldt table and insert data
     if (args.loadHumboldtTable && coreDwcTerm.equalsIgnoreCase("event")) {
       log.info("Loading Humboldt Table");
