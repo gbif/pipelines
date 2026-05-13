@@ -1,15 +1,15 @@
 version: 2
 updates:
-- package-ecosystem: "maven"
-directory: "/"
-schedule:
-interval: "weekly"
-allow:
-- dependency-name: "org.gbif:*"
-- dependency-name: "org.gbif.crawler:*"
-- dependency-name: "org.gbif.dna:*"
-- dependency-name: "org.gbif.download:*"
-- dependency-name: "org.gbif.identifiers:*"
-- dependency-name: "org.gbif.kvs:*"
-- dependency-name: "org.gbif.registry:*"
-- dependency-name: "org.gbif.vocabulary:*"
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    allow:
+      - dependency-name: "org.gbif:*"
+      - dependency-name: "org.gbif.crawler:*"
+      - dependency-name: "org.gbif.dna:*"
+      - dependency-name: "org.gbif.download:*"
+      - dependency-name: "org.gbif.identifiers:*"
+      - dependency-name: "org.gbif.kvs:*"
+      - dependency-name: "org.gbif.registry:*"
+      - dependency-name: "org.gbif.vocabulary:*"
