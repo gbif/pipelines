@@ -130,32 +130,6 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
   }
 
   @Override
-  public RunPipelineResponse runPipelineAttempt(
-      @NotNull UUID uuid,
-      @NotBlank(message = "Steps parameter is required") String s,
-      @NotBlank(message = "Reason parameter is required") String s1,
-      boolean b,
-      boolean b1,
-      @org.jspecify.annotations.Nullable Set<String> set,
-      boolean b2,
-      boolean b3) {
-    throw new UnsupportedOperationException("The method is not implemented!");
-  }
-
-  @Override
-  public RunPipelineResponse runPipelineAttempt(
-      @NotNull UUID uuid,
-      int i,
-      @NotBlank(message = "Steps parameter is required") String s,
-      @NotBlank(message = "Reason parameter is required") String s1,
-      boolean b,
-      @org.jspecify.annotations.Nullable Set<String> set,
-      boolean b1,
-      boolean b2) {
-    throw new UnsupportedOperationException("The method is not implemented!");
-  }
-
-  @Override
   public long updatePipelineStep(PipelineStep pipelineStep) {
     return updatePipelineStep(pipelineStep.getKey(), pipelineStep);
   }
@@ -172,18 +146,6 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
   }
 
   @Override
-  public RunPipelineResponse runAll(
-      String s,
-      String s1,
-      boolean b,
-      boolean b1,
-      RunAllParams runAllParams,
-      Set<String> set,
-      boolean excludeEventSteps) {
-    throw new UnsupportedOperationException("The method is not implemented!");
-  }
-
-  @Override
   public RunPipelineResponse runPipelineAttempt(
       UUID uuid,
       String s,
@@ -191,7 +153,8 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
       boolean b,
       boolean b1,
       Set<String> set,
-      boolean excludeEventSteps) {
+      boolean excludeEventSteps,
+      boolean onlyIncludeRequestedStep) {
     throw new UnsupportedOperationException("The method is not implemented!");
   }
 
@@ -203,7 +166,8 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
       String s1,
       boolean b,
       Set<String> set,
-      boolean excludeEventSteps) {
+      boolean excludeEventSteps,
+      boolean onlyIncludeRequestedStep) {
     throw new UnsupportedOperationException("The method is not implemented!");
   }
 
