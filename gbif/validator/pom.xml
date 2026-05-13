@@ -38,7 +38,7 @@
     <lucene-analyzers.version>5.4.1</lucene-analyzers.version>
 
     <!-- Spring -->
-    <spring-boot.version>3.5.8</spring-boot.version>
+    <spring-boot.version>3.5.14</spring-boot.version>
     <spring-boot-admin.version>3.5.6</spring-boot-admin.version>
     <spring-cloud-openfeign.version>4.3.0</spring-cloud-openfeign.version>
     <spring-cloud-zookeeper.version>4.3.0</spring-cloud-zookeeper.version>
