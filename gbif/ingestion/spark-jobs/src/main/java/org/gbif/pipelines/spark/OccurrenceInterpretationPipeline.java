@@ -730,7 +730,7 @@ public class OccurrenceInterpretationPipeline {
         .as(Encoders.bean(IdentifierRecord.class));
   }
 
-  public static Dataset<OccurrenceJsonRecord> toJson(
+  public static Dataset<Row> toJson(
       Dataset<Occurrence> records, MetadataRecord metadataRecord, int numOfShards) {
 
     Dataset<OccurrenceJsonRecord> dataset =
@@ -771,7 +771,7 @@ public class OccurrenceInterpretationPipeline {
         (StructType)
             ((ArrayType) dataset.schema().apply("nucleotideSequence").dataType()).elementType();
 
-    dataset.withColumn(
+    return dataset.withColumn(
         "nucleotideSequence",
         transform(
             col("nucleotideSequence"),
@@ -789,8 +789,6 @@ public class OccurrenceInterpretationPipeline {
                       .toArray(Column[]::new);
               return struct(fields);
             }));
-
-    return dataset;
   }
 
   public static Dataset<OccurrenceHdfsRecord> toHdfs(
