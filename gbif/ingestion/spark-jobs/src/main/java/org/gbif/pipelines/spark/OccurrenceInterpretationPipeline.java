@@ -766,7 +766,7 @@ public class OccurrenceInterpretationPipeline {
     dataset = dataset.coalesce(numOfShards);
 
     // hack to serialize these 2 DNA fields with the proper casing. The getter of these fields is
-    // like getNFraction and that seems to be interpreted as an acronym:
+    // like getNFraction and that is interpreted as an acronym following the java beans conventions:
     // https://github.com/gbif/pipelines/issues/1374
     StructType nucleotideSchema =
         (StructType)
