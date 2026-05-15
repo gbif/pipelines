@@ -2,10 +2,12 @@ package org.gbif.pipelines.core.utils;
 
 import java.util.List;
 import org.gbif.pipelines.core.pojo.HumboldtJsonView;
+import org.gbif.pipelines.io.avro.DnaDerivedData;
 import org.gbif.pipelines.io.avro.Humboldt;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonHumboldtRecord;
 import org.gbif.pipelines.io.avro.VocabularyConcept;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class MediaSerDeserTest {
@@ -42,5 +44,18 @@ public class MediaSerDeserTest {
     jsonView.setTargetLifeStageScope(lifeStage);
 
     System.out.println(MediaSerDeser.humboldtToJson(List.of(jsonView)));
+  }
+
+  @Test
+  public void dnaDerivedDataUsesStableCasingForNFields() {
+    DnaDerivedData dna = DnaDerivedData.newBuilder().setNFraction(0.1d).setNRunsCapped(2).build();
+
+    String json = MediaSerDeser.dnaDerivedDataToJson(List.of(dna));
+
+    Assert.assertNotNull(json);
+    Assert.assertTrue(json.contains("\"nFraction\""));
+    Assert.assertTrue(json.contains("\"nRunsCapped\""));
+    Assert.assertFalse(json.contains("\"NFraction\""));
+    Assert.assertFalse(json.contains("\"NRunsCapped\""));
   }
 }

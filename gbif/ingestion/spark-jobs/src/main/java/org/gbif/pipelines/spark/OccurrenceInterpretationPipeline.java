@@ -13,6 +13,7 @@
  */
 package org.gbif.pipelines.spark;
 
+import static org.apache.spark.sql.functions.*;
 import static org.gbif.pipelines.core.converters.ConverterUtils.cleanVerbatim;
 import static org.gbif.pipelines.spark.ArgsConstants.*;
 import static org.gbif.pipelines.spark.Directories.*;
@@ -36,6 +37,8 @@ import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.types.ArrayType;
+import org.apache.spark.sql.types.StructType;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -727,7 +730,7 @@ public class OccurrenceInterpretationPipeline {
         .as(Encoders.bean(IdentifierRecord.class));
   }
 
-  public static Dataset<OccurrenceJsonRecord> toJson(
+  public static Dataset<Row> toJson(
       Dataset<Occurrence> records, MetadataRecord metadataRecord, int numOfShards) {
 
     Dataset<OccurrenceJsonRecord> dataset =
@@ -761,7 +764,32 @@ public class OccurrenceInterpretationPipeline {
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
     dataset = dataset.coalesce(numOfShards);
-    return dataset;
+
+    // hack to serialize these 2 DNA fields with the proper casing. The getter of these fields is
+    // like getNFraction and that is interpreted as an acronym following the java beans conventions:
+    // https://github.com/gbif/pipelines/issues/1374
+    StructType nucleotideSchema =
+        (StructType)
+            ((ArrayType) dataset.schema().apply("nucleotideSequence").dataType()).elementType();
+
+    return dataset.withColumn(
+        "nucleotideSequence",
+        transform(
+            col("nucleotideSequence"),
+            element -> {
+              Column[] fields =
+                  Arrays.stream(nucleotideSchema.fieldNames())
+                      .map(
+                          name -> {
+                            if (name.equals("NFraction"))
+                              return element.getField(name).alias("nFraction");
+                            if (name.equals("NRunsCapped"))
+                              return element.getField(name).alias("nRunsCapped");
+                            return element.getField(name).alias(name);
+                          })
+                      .toArray(Column[]::new);
+              return struct(fields);
+            }));
   }
 
   public static Dataset<OccurrenceHdfsRecord> toHdfs(
