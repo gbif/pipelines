@@ -13,6 +13,7 @@
  */
 package org.gbif.pipelines.spark;
 
+import static org.apache.spark.sql.functions.*;
 import static org.gbif.pipelines.core.converters.ConverterUtils.cleanVerbatim;
 import static org.gbif.pipelines.spark.ArgsConstants.*;
 import static org.gbif.pipelines.spark.Directories.*;
@@ -36,6 +37,8 @@ import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.types.ArrayType;
+import org.apache.spark.sql.types.StructType;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -762,10 +765,30 @@ public class OccurrenceInterpretationPipeline {
     // shard
     dataset = dataset.coalesce(numOfShards);
 
-    // hack to serialize these 2 fields with the proper casing
-    dataset
-        .withColumnRenamed("NFraction", "nFraction")
-        .withColumnRenamed("NRunsCapped", "nRunsCapped");
+    // hack to serialize these 2 DNA fields with the proper casing. The getter of these fields is
+    // like getNFraction and that seems to be interpreted as an acronym
+    StructType nucleotideSchema =
+        (StructType)
+            ((ArrayType) dataset.schema().apply("nucleotideSequence").dataType()).elementType();
+
+    dataset.withColumn(
+        "nucleotideSequence",
+        transform(
+            col("nucleotideSequence"),
+            element -> {
+              Column[] fields =
+                  Arrays.stream(nucleotideSchema.fieldNames())
+                      .map(
+                          name -> {
+                            if (name.equals("NFraction"))
+                              return element.getField(name).alias("nFraction");
+                            if (name.equals("NRunsCapped"))
+                              return element.getField(name).alias("nRunsCapped");
+                            return element.getField(name).alias(name);
+                          })
+                      .toArray(Column[]::new);
+              return struct(fields);
+            }));
 
     return dataset;
   }
