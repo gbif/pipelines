@@ -761,6 +761,12 @@ public class OccurrenceInterpretationPipeline {
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
     dataset = dataset.coalesce(numOfShards);
+
+    // hack to serialize these 2 fields with the proper casing
+    dataset
+        .withColumnRenamed("NFraction", "nFraction")
+        .withColumnRenamed("NRunsCapped", "nRunsCapped");
+
     return dataset;
   }
 
@@ -802,11 +808,6 @@ public class OccurrenceInterpretationPipeline {
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
     dataset = dataset.coalesce(numshards);
-
-    // hack to serialize these 2 fields with the proper casing
-    dataset
-        .withColumnRenamed("NFraction", "nFraction")
-        .withColumnRenamed("NRunsCapped", "nRunsCapped");
 
     return dataset;
   }
