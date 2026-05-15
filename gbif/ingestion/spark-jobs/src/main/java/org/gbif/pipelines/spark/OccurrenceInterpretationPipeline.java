@@ -46,6 +46,7 @@ import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.core.interpreters.metadata.MetadataInterpreter;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.core.utils.SerDeUtils;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
@@ -73,7 +74,9 @@ import scala.Tuple2;
 public class OccurrenceInterpretationPipeline {
 
   static final ObjectMapper MAPPER =
-      new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+      new ObjectMapper()
+          .setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
+          .addMixIn(DnaDerivedData.class, SerDeUtils.DnaDerivedDataMixin.class);
 
   public static final String METRICS_FILENAME = "verbatim-to-occurrence.yml";
 

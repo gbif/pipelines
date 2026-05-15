@@ -49,6 +49,8 @@ public class DnaDerivedDataInterpreterTest {
     assertEquals(seq1, interpreted1.getRawSequence());
     assertTrue(interpreted1.getInvalid());
     assertTrue(interpreted1.getGapsOrWhitespaceRemoved());
+    assertNotNull(interpreted1.getNFraction());
+    assertNotNull(interpreted1.getNRunsCapped());
 
     DnaDerivedData interpreted2 =
         dr.getDnaDerivedDataItems().stream()

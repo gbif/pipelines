@@ -86,6 +86,7 @@ public class MediaSerDeser {
     MAPPER.addMixIn(VocabularyConcept.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(RankedName.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(IssueRecord.class, IgnoreSchemaProperty.class);
+    MAPPER.addMixIn(DnaDerivedData.class, SerDeUtils.DnaDerivedDataMixin.class);
   }
 
   private static final CollectionType LIST_MEDIA_TYPE =
