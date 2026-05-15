@@ -830,7 +830,6 @@ public class OccurrenceInterpretationPipeline {
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
     dataset = dataset.coalesce(numshards);
-
     return dataset;
   }
 }
