@@ -2,6 +2,7 @@ package org.gbif.pipelines.core.utils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -70,6 +71,21 @@ public class MediaSerDeser {
     abstract java.util.List<org.gbif.pipelines.io.avro.TaxonHumboldtRecord> getNonTargetTaxa();
   }
 
+  public interface DnaDerivedDataMixin {
+
+    @JsonProperty("nFraction")
+    Double getNFraction();
+
+    @JsonProperty("nFraction")
+    void setNFraction(Double nFraction);
+
+    @JsonProperty("nRunsCapped")
+    Integer getNRunsCapped();
+
+    @JsonProperty("nRunsCapped")
+    void setNRunsCapped(Integer nRunsCapped);
+  }
+
   private static final String SER_ERROR_MSG = "Unable to serialize %s objects to JSON";
   private static final String DESER_ERROR_MSG = "Unable to deserialize String into media objects";
 
@@ -86,6 +102,7 @@ public class MediaSerDeser {
     MAPPER.addMixIn(VocabularyConcept.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(RankedName.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(IssueRecord.class, IgnoreSchemaProperty.class);
+    MAPPER.addMixIn(DnaDerivedData.class, DnaDerivedDataMixin.class);
   }
 
   private static final CollectionType LIST_MEDIA_TYPE =
