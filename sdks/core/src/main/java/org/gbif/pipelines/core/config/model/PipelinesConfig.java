@@ -77,6 +77,8 @@ public class PipelinesConfig implements Serializable {
 
   private ClusteringRelationshipConfig clusteringRelationshipConfig;
 
+  private long deleteAfterDays = 7L;
+
   /**
    * Provide recommended formats to parse ambiguous dates, e.g. 2/3/2008. If the field is empty or
    * invalid, only accepts standard ISO date format. Parsing 2/3/2008 will fail . <code>DMY</code>
@@ -102,6 +104,8 @@ public class PipelinesConfig implements Serializable {
   private IndexConfig indexConfig = new IndexConfig();
 
   private DerivedMetadataConfig derivedMetadataConfig = new DerivedMetadataConfig();
+
+  private DnaConfig dnaConfig = new DnaConfig();
 
   private TableBuildConfig tableBuildConfig = new TableBuildConfig();
 }

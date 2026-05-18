@@ -41,7 +41,6 @@ import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.*;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.common.messaging.api.MessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
@@ -52,7 +51,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 @Slf4j
 public abstract class PipelinesCallback<
         I extends PipelineBasedMessage, O extends PipelineBasedMessage>
-    implements MessageCallback<I>, AutoCloseable {
+    implements CloseableMessageCallback<I> {
 
   private static final AtomicInteger runningCounter = new AtomicInteger(0);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -230,11 +229,12 @@ public abstract class PipelinesCallback<
       log.debug("Received message: {}", message);
 
       if (!isMessageCorrect(message) || isProcessingStopped(message)) {
-
-        log.debug(
-            "Returning message correct: {} isProcessingStopped: {}",
-            isMessageCorrect(message),
-            isProcessingStopped(message));
+        if (log.isDebugEnabled()) {
+          log.debug(
+              "Returning message correct: {} isProcessingStopped: {}",
+              isMessageCorrect(message),
+              isProcessingStopped(message));
+        }
         return;
       }
 
@@ -331,13 +331,15 @@ public abstract class PipelinesCallback<
         trackingInfo.executionId,
         executionPipelineSteps);
 
-    log.debug(
-        "Execution ID {}, steps size: {}, steps: {}",
-        trackingInfo.executionId,
-        executionPipelineSteps.size(),
-        executionPipelineSteps.stream()
-            .map(ps -> ps.getType().name())
-            .collect(Collectors.joining(", ")));
+    if (log.isDebugEnabled()) {
+      log.debug(
+          "Execution ID {}, steps size: {}, steps: {}",
+          trackingInfo.executionId,
+          executionPipelineSteps.size(),
+          executionPipelineSteps.stream()
+              .map(ps -> ps.getType().name())
+              .collect(Collectors.joining(", ")));
+    }
 
     List<PipelineStep> thisPipelineStep =
         executionPipelineSteps.stream().filter(ps -> ps.getType() == getStepType()).toList();

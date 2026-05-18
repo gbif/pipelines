@@ -54,7 +54,19 @@ public class VerbatimMessageHandler {
     if (m.getAttempt() == null) {
       Integer attempt = getLatestAttempt(config, m);
       log.info("Message attempt is null, HDFS parsed attempt - {}", attempt);
-      m.setAttempt(attempt);
+      m =
+          new PipelinesVerbatimMessage(
+              m.getDatasetUuid(),
+              attempt,
+              m.getInterpretTypes(),
+              m.getPipelineSteps(),
+              m.getRunner(),
+              m.getEndpointType(),
+              m.getExtraPath(),
+              m.getValidationResult(),
+              m.getResetPrefix(),
+              m.getExecutionId(),
+              m.getDatasetType());
     }
 
     // case of sampling event dataset without occurrences. We only run the events pipelines
@@ -123,8 +135,10 @@ public class VerbatimMessageHandler {
       String runner = computeRunner(config, m).name();
 
       ValidationResult result = m.getValidationResult();
-      if (result.getNumberOfRecords() == null || isValidator(m.getPipelineSteps())) {
-        result.setNumberOfRecords(recordsNumber);
+      if (result != null) {
+        if (result.getNumberOfRecords() == null || isValidator(m.getPipelineSteps())) {
+          result.setNumberOfRecords(recordsNumber);
+        }
       }
 
       PipelinesVerbatimMessage outputMessage =

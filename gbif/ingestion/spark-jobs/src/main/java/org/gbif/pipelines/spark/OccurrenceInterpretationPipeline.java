@@ -13,6 +13,7 @@
  */
 package org.gbif.pipelines.spark;
 
+import static org.apache.spark.sql.functions.*;
 import static org.gbif.pipelines.core.converters.ConverterUtils.cleanVerbatim;
 import static org.gbif.pipelines.spark.ArgsConstants.*;
 import static org.gbif.pipelines.spark.Directories.*;
@@ -36,6 +37,8 @@ import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.types.ArrayType;
+import org.apache.spark.sql.types.StructType;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -145,59 +148,67 @@ public class OccurrenceInterpretationPipeline {
     PipelinesConfig config = loadConfig(args.config);
     String datasetId = args.datasetId;
     int attempt = args.attempt;
+    SparkSession spark = null;
+    FileSystem fileSystem = null;
 
-    /* ############ standard init block ########## */
-    SparkSession spark =
-        getSparkSession(
-            args.master,
-            args.appName,
+    try {
+      // init spark and filesystem
+      spark =
+          getSparkSession(
+              args.master,
+              args.appName,
+              config,
+              OccurrenceInterpretationPipeline::configSparkSession);
+      fileSystem = getFileSystem(spark, config);
+
+      // If a single interpret type was passed, parse it and run the requested sub-run
+      Optional<OccurrenceInterpretType> interpretTypeOpt =
+          (args.interpretTypes != null && args.interpretTypes.size() == 1)
+              ? OccurrenceInterpretType.fromString(args.interpretTypes.get(0))
+              : Optional.empty();
+
+      if (interpretTypeOpt.isPresent()) {
+        OccurrenceInterpretType it = interpretTypeOpt.get();
+        switch (it) {
+          case MULTI_TAXONOMY:
+            log.info("Running only taxonomy interpretation");
+            TaxonomyRefreshPipeline.runTaxonomy(
+                spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
+            break;
+          case CLUSTERING:
+            log.info("Running only clustering interpretation");
+            ClusteringRefreshPipeline.runClustering(
+                spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
+            break;
+          case REGEN_OUTPUTS:
+            log.info("Running output regeneration");
+            regenOutput(spark, config, datasetId, attempt, args.numberOfShards);
+            break;
+          default:
+            throw new IllegalArgumentException("Unsupported interpretation type: " + it);
+        }
+      } else {
+        runInterpretation(
+            spark,
+            fileSystem,
             config,
-            OccurrenceInterpretationPipeline::configSparkSession);
-    FileSystem fileSystem = getFileSystem(spark, config);
-    /* ############ standard init block - end ########## */
-
-    // If a single interpret type was passed, parse it and run the requested sub-run
-    Optional<OccurrenceInterpretType> interpretTypeOpt =
-        (args.interpretTypes != null && args.interpretTypes.size() == 1)
-            ? OccurrenceInterpretType.fromString(args.interpretTypes.get(0))
-            : Optional.empty();
-
-    if (interpretTypeOpt.isPresent()) {
-      OccurrenceInterpretType it = interpretTypeOpt.get();
-      switch (it) {
-        case MULTI_TAXONOMY:
-          log.info("Running only taxonomy interpretation");
-          TaxonomyRefreshPipeline.runTaxonomy(
-              spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
-          break;
-        case CLUSTERING:
-          log.info("Running only clustering interpretation");
-          ClusteringRefreshPipeline.runClustering(
-              spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
-          break;
-        case REGEN_OUTPUTS:
-          log.info("Running output regeneration");
-          regenOutput(spark, config, datasetId, attempt, args.numberOfShards);
-          break;
-        default:
-          throw new IllegalArgumentException("Unsupported interpretation type: " + it);
+            datasetId,
+            attempt,
+            args.numberOfShards,
+            args.tripletValid,
+            args.occurrenceIdValid,
+            args.interpretTypes);
       }
-    } else {
-      runInterpretation(
-          spark,
-          fileSystem,
-          config,
-          datasetId,
-          attempt,
-          args.numberOfShards,
-          args.tripletValid,
-          args.occurrenceIdValid,
-          args.interpretTypes);
+    } finally {
+      if (fileSystem != null) {
+        fileSystem.close();
+      }
+      if (spark != null) {
+        spark.stop();
+        spark.close();
+      }
     }
 
-    fileSystem.close();
-    spark.stop();
-    spark.close();
     if (args.useSystemExit) {
       System.exit(0);
     }
@@ -430,7 +441,8 @@ public class OccurrenceInterpretationPipeline {
                     },
                 Encoders.bean(Occurrence.class))
             // only include records with ids
-            .filter((FilterFunction<Occurrence>) occurrence -> occurrence.getInternalId() != null);
+            .filter((FilterFunction<Occurrence>) occurrence -> occurrence.getInternalId() != null)
+            .dropDuplicates("internalId");
 
     occurrences.write().mode(SaveMode.Overwrite).parquet(outputPath + "/" + EXTENDED_IDENTIFIERS);
     return spark
@@ -477,7 +489,7 @@ public class OccurrenceInterpretationPipeline {
     GrscicollTransform grscicollTransform = GrscicollTransform.create(config);
     TemporalTransform temporalTransform = TemporalTransform.create(config);
     BasicTransform basicTransform = BasicTransform.create(config);
-    DnDerivedDataTransform dnDerivedDataTransform = DnDerivedDataTransform.create();
+    DnaDerivedDataTransform dnaDerivedDataTransform = DnaDerivedDataTransform.create(config);
     MultimediaTransform multimediaTransform = MultimediaTransform.create(config);
     ImageTransform imageTransform = ImageTransform.create(config);
     AudubonTransform audubonTransform = AudubonTransform.create(config);
@@ -500,7 +512,7 @@ public class OccurrenceInterpretationPipeline {
                   GrscicollRecord gr = grscicollTransform.convert(er, metadata);
                   TemporalRecord ter = temporalTransform.convert(er);
                   BasicRecord br = basicTransform.convert(er);
-                  DnaDerivedDataRecord dr = dnDerivedDataTransform.convert(er);
+                  DnaDerivedDataRecord dr = dnaDerivedDataTransform.convert(er);
                   MultimediaRecord mr = multimediaTransform.convert(er);
                   ImageRecord ir = imageTransform.convert(er);
                   AudubonRecord ar = audubonTransform.convert(er);
@@ -718,7 +730,7 @@ public class OccurrenceInterpretationPipeline {
         .as(Encoders.bean(IdentifierRecord.class));
   }
 
-  public static Dataset<OccurrenceJsonRecord> toJson(
+  public static Dataset<Row> toJson(
       Dataset<Occurrence> records, MetadataRecord metadataRecord, int numOfShards) {
 
     Dataset<OccurrenceJsonRecord> dataset =
@@ -752,7 +764,32 @@ public class OccurrenceInterpretationPipeline {
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
     dataset = dataset.coalesce(numOfShards);
-    return dataset;
+
+    // hack to serialize these 2 DNA fields with the proper casing. The getter of these fields is
+    // like getNFraction and that is interpreted as an acronym following the java beans conventions:
+    // https://github.com/gbif/pipelines/issues/1374
+    StructType nucleotideSchema =
+        (StructType)
+            ((ArrayType) dataset.schema().apply("nucleotideSequence").dataType()).elementType();
+
+    return dataset.withColumn(
+        "nucleotideSequence",
+        transform(
+            col("nucleotideSequence"),
+            element -> {
+              Column[] fields =
+                  Arrays.stream(nucleotideSchema.fieldNames())
+                      .map(
+                          name -> {
+                            if (name.equals("NFraction"))
+                              return element.getField(name).alias("nFraction");
+                            if (name.equals("NRunsCapped"))
+                              return element.getField(name).alias("nRunsCapped");
+                            return element.getField(name).alias(name);
+                          })
+                      .toArray(Column[]::new);
+              return struct(fields);
+            }));
   }
 
   public static Dataset<OccurrenceHdfsRecord> toHdfs(

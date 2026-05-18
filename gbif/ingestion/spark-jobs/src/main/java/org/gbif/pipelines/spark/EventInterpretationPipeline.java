@@ -38,7 +38,9 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.converters.*;
 import org.gbif.pipelines.core.utils.ModelUtils;
 import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.Parent;
 import org.gbif.pipelines.io.avro.event.EventHdfsRecord;
+import org.gbif.pipelines.io.avro.json.DerivedMetadataRecord;
 import org.gbif.pipelines.io.avro.json.EventInheritedRecord;
 import org.gbif.pipelines.io.avro.json.LocationInheritedRecord;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
@@ -113,22 +115,31 @@ public class EventInterpretationPipeline {
     PipelinesConfig config = loadConfig(args.config);
     String datasetId = args.datasetId;
     int attempt = args.attempt;
+    SparkSession spark = null;
+    FileSystem fileSystem = null;
 
-    /* ############ standard init block ########## */
-    SparkSession spark =
-        getSparkSession(
-            args.master,
-            args.appName,
-            config,
-            OccurrenceInterpretationPipeline::configSparkSession);
-    FileSystem fileSystem = getFileSystem(spark, config);
-    /* ############ standard init block - end ########## */
+    try {
+      /* ############ standard init block ########## */
+      spark =
+          getSparkSession(
+              args.master,
+              args.appName,
+              config,
+              OccurrenceInterpretationPipeline::configSparkSession);
+      fileSystem = getFileSystem(spark, config);
+      /* ############ standard init block - end ########## */
 
-    runEventInterpretation(spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
+      runEventInterpretation(spark, fileSystem, config, datasetId, attempt, args.numberOfShards);
+    } finally {
+      if (fileSystem != null) {
+        fileSystem.close();
+      }
+      if (spark != null) {
+        spark.stop();
+        spark.close();
+      }
+    }
 
-    fileSystem.close();
-    spark.stop();
-    spark.close();
     if (args.useSystemExit) {
       System.exit(0);
     }
@@ -246,6 +257,7 @@ public class EventInterpretationPipeline {
               EventInheritedRecord eventInheritedRecord = null;
               LocationInheritedRecord locationInheritedRecord = null;
               TemporalInheritedRecord temporalInheritedRecord = null;
+              DerivedMetadataRecord derivedMetadataRecord = null;
 
               if (eventCoreInherited != null) {
                 eventInheritedRecord =
@@ -266,6 +278,16 @@ public class EventInterpretationPipeline {
                         org.gbif.pipelines.io.avro.json.TemporalInheritedRecord.class);
               }
 
+              if (r.getDerivedMetadata() != null && !r.getDerivedMetadata().isEmpty()) {
+                derivedMetadataRecord =
+                    MAPPER.readValue(
+                        r.getDerivedMetadata(),
+                        org.gbif.pipelines.io.avro.json.DerivedMetadataRecord.class);
+              } else {
+                derivedMetadataRecord = new DerivedMetadataRecord();
+                derivedMetadataRecord.setId(r.getId());
+              }
+
               ParentJsonConverter c =
                   ParentJsonConverter.builder()
                       .metadata(metadata)
@@ -279,10 +301,7 @@ public class EventInterpretationPipeline {
                       .eventInheritedRecord(eventInheritedRecord)
                       .locationInheritedRecord(locationInheritedRecord)
                       .temporalInheritedRecord(temporalInheritedRecord)
-                      .derivedMetadata(
-                          MAPPER.readValue(
-                              r.getDerivedMetadata(),
-                              org.gbif.pipelines.io.avro.json.DerivedMetadataRecord.class))
+                      .derivedMetadata(derivedMetadataRecord)
                       .build();
               return c.convertToParent();
             },

@@ -38,6 +38,27 @@
     ]
   },
   {
+      "name":"NucleotideSequenceObject",
+      "namespace":"org.gbif.pipelines.io.avro.json",
+      "type":"record",
+      "doc":"NucleotideSequence object",
+      "fields":[
+        {"name": "nucleotideSequenceID","type":["null","string"],"default":null,"doc":""},
+        {"name": "targetGene", "type": ["null", "VocabularyConcept"], "default" : null},
+        {"name": "sequence", "type": ["null", "string"], "default" : null},
+        {"name": "sequenceLength", "type": ["null", "int"], "default" : null},
+        {"name": "gcContent", "type": ["null", "double"], "default" : null},
+        {"name": "nonIupacFraction", "type": ["null", "double"], "default" : null},
+        {"name": "nonACGTNFraction", "type": ["null", "double"], "default" : null},
+        {"name": "nFraction", "type": ["null", "double"], "default" : null},
+        {"name": "nRunsCapped", "type": ["null", "int"], "default" : null},
+        {"name": "naturalLanguageDetected", "type": ["null", "boolean"], "default" : null},
+        {"name": "endsTrimmed", "type": ["null", "boolean"], "default" : null},
+        {"name": "gapsOrWhitespaceRemoved", "type": ["null", "boolean"], "default" : null},
+        {"name": "invalid", "type": ["null", "boolean"], "default" : null}
+      ]
+  },
+  {
     "name":"OccurrenceJsonRecord",
     "namespace":"org.gbif.pipelines.io.avro.json",
     "type":"record",
@@ -192,7 +213,9 @@
       {"name":"measurementOrFacts","type":{"type":"array","items":"org.gbif.pipelines.io.avro.json.MeasurementOrFactJsonRecord"},"default":[],"doc":""},
       {"name":"taxonomy","type":{"type":"array","items":"org.gbif.pipelines.io.avro.json.Taxonomy"},"default":[],"doc":""},
       // DNA
-      {"name":"dnaSequenceID","type":{"type":"array","items":"string"},"default":[],"doc":""}
+      // Deprecated: kept for backwards compatibility
+      {"name":"dnaSequenceID","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"nucleotideSequence","type":{"type":"array","items":"NucleotideSequenceObject"},"default":[],"doc":""}
     ]
   }
 ]

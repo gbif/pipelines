@@ -2,6 +2,7 @@ package org.gbif.pipelines.core.utils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -14,6 +15,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificData;
 import org.gbif.pipelines.core.pojo.HumboldtJsonView;
+import org.gbif.pipelines.io.avro.DnaDerivedData;
 import org.gbif.pipelines.io.avro.Humboldt;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
@@ -69,6 +71,21 @@ public class MediaSerDeser {
     abstract java.util.List<org.gbif.pipelines.io.avro.TaxonHumboldtRecord> getNonTargetTaxa();
   }
 
+  public interface DnaDerivedDataMixin {
+
+    @JsonProperty("nFraction")
+    Double getNFraction();
+
+    @JsonProperty("nFraction")
+    void setNFraction(Double nFraction);
+
+    @JsonProperty("nRunsCapped")
+    Integer getNRunsCapped();
+
+    @JsonProperty("nRunsCapped")
+    void setNRunsCapped(Integer nRunsCapped);
+  }
+
   private static final String SER_ERROR_MSG = "Unable to serialize %s objects to JSON";
   private static final String DESER_ERROR_MSG = "Unable to deserialize String into media objects";
 
@@ -85,15 +102,27 @@ public class MediaSerDeser {
     MAPPER.addMixIn(VocabularyConcept.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(RankedName.class, IgnoreSchemaProperty.class);
     MAPPER.addMixIn(IssueRecord.class, IgnoreSchemaProperty.class);
+    MAPPER.addMixIn(DnaDerivedData.class, DnaDerivedDataMixin.class);
   }
 
   private static final CollectionType LIST_MEDIA_TYPE =
       MAPPER.getTypeFactory().constructCollectionType(List.class, Multimedia.class);
 
+  private static final CollectionType LIST_DNA_TYPE =
+      MAPPER.getTypeFactory().constructCollectionType(List.class, DnaDerivedData.class);
+
   /** Converts the list of media objects into a JSON string. */
   @SneakyThrows
   public static String multimediaToJson(List<Multimedia> media) {
     return media != null && !media.isEmpty() ? objectToJson(media) : null;
+  }
+
+  /** Converts the list of DNA Derived Data objects into a JSON string. */
+  @SneakyThrows
+  public static String dnaDerivedDataToJson(List<DnaDerivedData> dnaDerivedData) {
+    return dnaDerivedData != null && !dnaDerivedData.isEmpty()
+        ? objectToJson(dnaDerivedData)
+        : null;
   }
 
   /** Converts the list of humboldt objects into a JSON string. */
@@ -122,6 +151,16 @@ public class MediaSerDeser {
   public static List<Multimedia> multimediaFromJson(String mediaJson) {
     try {
       return MAPPER.readValue(mediaJson, LIST_MEDIA_TYPE);
+    } catch (IOException ex) {
+      log.error(DESER_ERROR_MSG, ex);
+      throw ex;
+    }
+  }
+
+  @SneakyThrows
+  public static List<DnaDerivedData> dnaDerivedDataFromJson(String dnaJson) {
+    try {
+      return MAPPER.readValue(dnaJson, LIST_DNA_TYPE);
     } catch (IOException ex) {
       log.error(DESER_ERROR_MSG, ex);
       throw ex;

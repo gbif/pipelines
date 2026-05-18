@@ -21,6 +21,7 @@ import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.pipelines.core.config.model.IndexConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
@@ -87,6 +88,12 @@ public class FullIndexBuildPipeline {
             "Switch the new tables to the final names (e.g. 'occurrence' or 'event') after successful build. "
                 + "If false, the new tables will have a prefix and the old tables will not be overwritten.")
     private boolean switchOnSuccess = false;
+
+    @Parameter(
+        names = "--deleteTempParquetOnSuccess",
+        description =
+            "Delete the temporary parquet files used for writing to Elastic after a successful build. ")
+    private boolean deleteTempParquetOnSuccess = true;
 
     @Parameter(
         names = {"--help", "-h"},
@@ -182,10 +189,19 @@ public class FullIndexBuildPipeline {
 
     final Map<String, Long> datasetCounts = new HashMap<>();
 
+    // sum up the expected size of the default index
+    Long defaultIndexPredictedSize = 0L;
+
     for (Row row : datasetCountsDF.collectAsList()) {
       String key = row.getAs("datasetkey");
       Long count = row.getAs("count");
       datasetCounts.put(key, count);
+
+      // if its a small dataset, it'll be written to the default index
+      // track the size of this for shard calc.
+      if (count < config.getIndexConfig().getBigIndexIfRecordsMoreThan()) {
+        defaultIndexPredictedSize += count;
+      }
     }
 
     long indexCreationTimestamp = Instant.now().toEpochMilli();
@@ -209,6 +225,9 @@ public class FullIndexBuildPipeline {
       Long recordCount = entry.getValue();
       Integer attempt = scanResult.datasetAttemptMap().get(datasetKey);
 
+      boolean useDefaultIndex =
+          recordCount < config.getIndexConfig().getBigIndexIfRecordsMoreThan();
+
       // avoid trying to create a new index if the record count is low
       // and we already created a default index for another dataset with low record count
       if (recordCount < config.getIndexConfig().getBigIndexIfRecordsMoreThan()
@@ -218,7 +237,7 @@ public class FullIndexBuildPipeline {
       }
 
       String esIndexName =
-          recordCount < config.getIndexConfig().getBigIndexIfRecordsMoreThan()
+          useDefaultIndex
               ? defaultIndexName
               : IndexSettings.computeLargeIndexName(
                   args.datasetType,
@@ -228,8 +247,8 @@ public class FullIndexBuildPipeline {
                   indexCreationTimestamp);
 
       Integer indexNumberShards =
-          IndexSettings.computeNumberOfShards(
-              config.getIndexConfig(), esIndexName, recordCount.intValue());
+          getIndexNumberShards(
+              useDefaultIndex, config, esIndexName, defaultIndexPredictedSize, recordCount);
 
       IndexingPipeline.ElasticOptions options =
           IndexingPipeline.ElasticOptions.fromArgsAndConfig(
@@ -245,7 +264,7 @@ public class FullIndexBuildPipeline {
       EsIndexUtils.createIndexAndAliasForDefault(options);
       datasetToIndexNameMap.put(datasetKey, esIndexName);
 
-      if (recordCount < config.getIndexConfig().getBigIndexIfRecordsMoreThan()) {
+      if (useDefaultIndex) {
         defaultIndexCreated = true;
       } else {
         EsConfig esConfig = EsConfig.from(options.getEsHosts());
@@ -275,6 +294,8 @@ public class FullIndexBuildPipeline {
         .mode(SaveMode.Overwrite)
         .parquet(config.getRebuildPath() + "/elastic");
 
+    String esMappingId = args.datasetType == DatasetType.OCCURRENCE ? "gbifId" : "internalId";
+
     // Write to Elasticsearch
     spark
         .read()
@@ -285,7 +306,7 @@ public class FullIndexBuildPipeline {
         .mode(SaveMode.Append)
         .option("es.batch.size.entries", config.getElastic().getEsMaxBatchSize())
         .option("es.batch.size.bytes", config.getElastic().getEsMaxBatchSizeBytes())
-        .option("es.mapping.id", "gbifId")
+        .option("es.mapping.id", esMappingId)
         .option("es.nodes.wan.only", "true")
         .option("es.batch.write.refresh", "false")
         .save();
@@ -304,6 +325,11 @@ public class FullIndexBuildPipeline {
         EsService.refreshIndex(esClient, indexName);
       }
     }
+
+    if (args.deleteTempParquetOnSuccess) {
+      fileSystem.delete(new org.apache.hadoop.fs.Path(config.getRebuildPath() + "/elastic"), true);
+    }
+
     fileSystem.close();
     spark.stop();
     spark.close();
@@ -311,6 +337,32 @@ public class FullIndexBuildPipeline {
     if (args.switchOnSuccess) {
       EsIndexUtils.swapIndices(rebuildAlias, esAlias, hosts);
     }
+
     log.info("Full index build completed");
+  }
+
+  private static Integer getIndexNumberShards(
+      boolean useDefaultIndex,
+      PipelinesConfig config,
+      String esIndexName,
+      Long defaultIndexPredictedSize,
+      Long recordCount) {
+
+    IndexConfig indexConfig = config.getIndexConfig();
+
+    if (useDefaultIndex) {
+      int computedShards =
+          IndexSettings.computeNumberOfShards(indexConfig, esIndexName, defaultIndexPredictedSize);
+
+      int toUse = Math.max(indexConfig.defaultIndexMinShards, computedShards);
+      log.info(
+          "Computed shards for default index {}, min {}, will use {}",
+          computedShards,
+          indexConfig.defaultIndexMinShards,
+          toUse);
+      return toUse;
+    }
+
+    return IndexSettings.computeNumberOfShards(indexConfig, esIndexName, recordCount.intValue());
   }
 }

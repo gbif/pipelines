@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.converters;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import org.elasticsearch.common.Strings;
 import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.License;
@@ -459,8 +461,14 @@ public class OccurrenceJsonConverterTest {
             .setId("777")
             .setDnaDerivedDataItems(
                 Arrays.asList(
-                    DnaDerivedData.newBuilder().setDnaSequenceID("foo1").build(),
-                    DnaDerivedData.newBuilder().setDnaSequenceID("foo2").build()))
+                    DnaDerivedData.newBuilder()
+                        .setDnaSequenceID("foo1")
+                        .setNucleotideSequenceID("foo1")
+                        .build(),
+                    DnaDerivedData.newBuilder()
+                        .setDnaSequenceID("foo2")
+                        .setNucleotideSequenceID("foo2")
+                        .build()))
             .build();
 
     // When
@@ -676,6 +684,14 @@ public class OccurrenceJsonConverterTest {
             + "\"lithostratigraphy\":[\"test16\",\"test14\",\"test13\",\"test15\"],"
             + "\"biostratigraphy\":[\"test11\",\"test12\"]}";
     assertEquals(geologicalContextExpected, result.path("geologicalContext").toString());
+
+    JsonNode nucleotideSequence = result.path("nucleotideSequence");
+    assertEquals(2, nucleotideSequence.size());
+    nucleotideSequence.forEach(n -> assertTrue(n.hasNonNull("nucleotideSequenceID")));
+
+    JsonNode dnaSequenceID = result.path("dnaSequenceID");
+    assertEquals(2, dnaSequenceID.size());
+    dnaSequenceID.forEach(n -> assertFalse(Strings.isNullOrEmpty(n.asText())));
   }
 
   @Test

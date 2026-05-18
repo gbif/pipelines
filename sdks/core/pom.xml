@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>sdks</artifactId>
-    <version>4.0.4-SNAPSHOT</version>
+    <version>4.0.18-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -197,6 +197,10 @@
       <artifactId>vocabulary-lookup</artifactId>
       <classifier>shaded</classifier>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.dna</groupId>
+      <artifactId>gbif-dna-core</artifactId>
+    </dependency>
 
     <!-- Geotools -->
     <dependency>
@@ -330,8 +334,12 @@
 
     <!-- Test -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
     </dependency>
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>

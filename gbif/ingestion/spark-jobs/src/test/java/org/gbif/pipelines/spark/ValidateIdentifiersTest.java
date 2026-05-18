@@ -11,6 +11,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -21,7 +22,7 @@ public class ValidateIdentifiersTest {
 
   @BeforeClass
   public static void setUp() {
-    spark = SparkSession.builder().appName("test").master("local[*]").getOrCreate();
+    spark = SparkTestSession.createBuilder().appName("test").getOrCreate();
   }
 
   @AfterClass

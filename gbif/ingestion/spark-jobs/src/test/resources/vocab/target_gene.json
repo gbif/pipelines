@@ -1,0 +1,2031 @@
+{
+  "metadata" : {
+    "createdDate" : "2026-04-14T09:38:57.516515038Z",
+    "version" : null
+  },
+  "vocabulary" : {
+    "key" : 39,
+    "name" : "target_gene",
+    "externalDefinitions" : [ "https://genomicsstandardsconsortium.github.io/mixs/0000044/" ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:21.275356Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:17:54.862699Z",
+    "modifiedBy" : "hvalli",
+    "namespace" : null,
+    "definition" : {
+      "en" : "Targeted gene or locus name for marker gene studies."
+    },
+    "label" : {
+      "en" : "Target gene"
+    }
+  },
+  "concepts" : [ {
+    "key" : 1736,
+    "name" : "SSU_rRNA_16S_prokaryotic",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:51.496045Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:51.707987Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1732,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "16S ribosomal small subunit RNA (prokaryotic) (pro16S)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "16SproRNA", "16Spro", "16S prokariotic" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1735,
+    "name" : "SSU_rRNA_18S_eukaryotic",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:50.865387Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:51.412958Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1732,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "18S ribosomal small subunit RNA (eukaryotic) (18S)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "RNA18S", "18Seuk", "18SrRNA", "18SeukRNA", "18S" ]
+    },
+    "hiddenLabels" : [ "18S_rRNA_gene", "18S-5P", "18S-V4", "18S rRNA", "18S-3P", "18S" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1734,
+    "name" : "SSU_rRNA_12S_mitochondrial",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:50.009588Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:50.785537Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1732,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "12S ribosomal small subunit RNA (mitochondrial) (12S)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "12S", "12Smt", "12SmtRNA", "MT-RNR1", "RNA12S", "mt12S", "12SrRNA" ]
+    },
+    "hiddenLabels" : [ "12S", "portions of hyper-variable regions of the mitochondrial 12S ribosomal RNA (rRNA) gene", "12S mtDNA", "12S rDNA", "12S rRNA", "mtSSU", "12S rRNA (SSU mitochondria)", "ARNr 12S" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1733,
+    "name" : "SSU_rRNA_16S_plastid",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:49.606112Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:49.885118Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1732,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "16S ribosomal small subunit RNA (plastid) (cp16S)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "16S chloroplast", "16S plastid", "16SplaRNA", "cp16S", "16Spla" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1732,
+    "name" : "SSU_rRNA",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:49.27809Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:49.516564Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1722,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Small subunit ribosomal RNA (SSU)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "SSU" ]
+    },
+    "hiddenLabels" : [ "Small Ribosomal Subunit" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1731,
+    "name" : "LSU_rRNA_23S_prokaryotic",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:48.943486Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:49.15697Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1727,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "23S ribosomal large subunit RNA (prokaryotic) (23S)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "23Spro", "23SproRNA", "23S prokariotic" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1730,
+    "name" : "LSU_rRNA_28S_eukaryotic",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:48.193579Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:48.871495Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1727,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "28S ribosomal large subunit RNA (eukaryotic) (28S)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "28Seuk", "28SeukRNA", "28S", "28SrRNA", "RNA28S" ]
+    },
+    "hiddenLabels" : [ "nucLSU", "28S-D3", "28S-D2", "28S-D9-D10", "28S-D2-D3", "28S-D3-D5", "28S", "28S-D1-D2", "28S-D7" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1729,
+    "name" : "LSU_rRNA_16S_mitochondrial",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:47.564543Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:48.098595Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1727,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "16S ribosomal large subunit RNA (mitochondrial) (mt16S)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "16SmtRNA", "mt16S", "MT-RNR2", "16Smt" ]
+    },
+    "hiddenLabels" : [ "16S mtDNA", "16SF/D", "16S rRNA (LSU mitochondria)", "16S-ND2", "16S Fish" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1728,
+    "name" : "LSU_rRNA_23S_plastid",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:47.049725Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:47.481292Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1727,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "23S ribosomal large subunit RNA (plastid) (cp23S)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "cp23S", "23S plastid", "UPS", "23Spla", "23S chloroplast", "23SplaRNA" ]
+    },
+    "hiddenLabels" : [ "UPA" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1727,
+    "name" : "LSU_rRNA",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:46.661492Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:46.976391Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1722,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Large subunit ribosomal RNA (LSU)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "LSU" ]
+    },
+    "hiddenLabels" : [ "Large Ribosomal Subunit RNA", "23S", "LSU" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1726,
+    "name" : "ITS1",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:46.488535Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:46.53556Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1724,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Internal Transcribed Spacer 1 (ITS1)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1725,
+    "name" : "ITS2",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:46.336744Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:46.379339Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1724,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Internal Transcribed Spacer 2 (ITS2)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1724,
+    "name" : "ITS_region",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:45.343989Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:46.266996Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1722,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Internal Transcribed Spacer region (ITS)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "nrITS", "ITS", "ITS1+5.8S+ITS2" ]
+    },
+    "hiddenLabels" : [ "28S-18S-5.8S-ITS1-ITS2", "LSU D1, LSU D2, LSU D3, ITS1, 5.8S, ITS2", "ITS", "SSU rDNA, ITS1, 5.8S, ITS2", "5-8S", "16S-5.8S-ITS1-ITS2", "ITS2, ITS1, 5.8S", "5.8S-ITS1-ITS2", "ITS|LSU rRNA", "ITS1;ITS2", "5.8S, ITS1, LSU rDNA, ITS2", "5.8S, ITS2, ITS1", "ITS2, 5.8S, ITS1", "ITS2, 5.8S, ITS1, LSU rDNA", "ITS1, 5.8S, ITS2", "5.8S, ITS1, ITS2" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1723,
+    "name" : "5S_rRNA",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:44.984214Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:45.253178Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1722,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "5S ribosomal RNA (5S)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "RNA5S", "5SrRNA", "5S" ]
+    },
+    "hiddenLabels" : [ "5S" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1722,
+    "name" : "Ribosomal_RNA",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:44.379773Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:44.894147Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : null,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Ribosomal RNA (rRNA)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "rRNA" ]
+    },
+    "hiddenLabels" : [ "16S rRNA", "16S ADNr", "5S-23S", "rRNA", "16s rRN", "16S_rRNA_gene", "16S" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1721,
+    "name" : "tufA",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:44.224146Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:44.267427Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Elongation factor Tu (tufA)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1720,
+    "name" : "rpoB",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:44.083907Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:44.123583Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "RNA polymerase subunit B (rpoB)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1719,
+    "name" : "rpoC1",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:43.881482Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:43.929129Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "RNA polymerase subunit C1 (rpoC1)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1718,
+    "name" : "rpoC2",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:43.726017Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:43.778254Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "RNA polymerase subunit C2 (rpoC2)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1717,
+    "name" : "matK",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:43.536485Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:43.610937Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Maturase K (matK)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1716,
+    "name" : "trnH",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:43.340129Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:43.389103Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "tRNA-His (trnH)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1715,
+    "name" : "trnL",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:43.17002Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:43.222066Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "tRNA-Leu (trnL)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1714,
+    "name" : "psbA",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:42.718474Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:43.088644Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Photosystem II protein D1 (psbA)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "PsbA", "psbA", "PSBA" ]
+    },
+    "hiddenLabels" : [ "psbA-3P", "PSBA" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1713,
+    "name" : "psbK",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:42.553124Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:42.592541Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Photosystem II protein K (psbK)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1712,
+    "name" : "trnK",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:42.376788Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:42.447198Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "tRNA-Lys (TrnK)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1711,
+    "name" : "trnH_psbA_spacer",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:42.115465Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:42.291052Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "trnH-psbA intergenic spacer (trnH-psbA)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "trnH-psbA" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1710,
+    "name" : "atpB_rbcL_spacer",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:41.814889Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:42.028917Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "atpB-rbcL intergenic spacer (atpB-rbcL)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "atpB-rbcL" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1709,
+    "name" : "trnL_trnF_spacer",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:41.575585Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:41.737028Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "trnL-trnF intergenic spacer (trnL-trnF)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "trnL-F" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1708,
+    "name" : "rbcL",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:41.248196Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:41.495885Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Ribulose-bisphosphate carboxylase large chain (rbcL)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "rbcL-like", "rbcLa", "RBCL-5P" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1707,
+    "name" : "ycf1",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:40.929505Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:41.104514Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Hypothetical chloroplast reading frame 1 (ycf1)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "hypothetical chloroplast ORF1", "YCF1", "ycf1" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1706,
+    "name" : "ndhF",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:40.654124Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:40.813338Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "NADH dehydrogenase subunit F (ndhF)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "NDHF", "ndhF" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1705,
+    "name" : "psaB",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:40.351976Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:40.528847Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Photosystem I P700 chlorophyll a apoprotein A2 (psaB)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "psaB", "PSAB" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1704,
+    "name" : "psbB",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:39.984039Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:40.234837Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Photosystem II CP47 protein (psbB)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "PSBB", "psbB", "CP47" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1703,
+    "name" : "psbC",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:39.682839Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:39.871007Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Photosystem II CP43 protein (psbC)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "psbC", "PSBC", "CP43" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1702,
+    "name" : "atpF_atpH_spacer",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:39.283788Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:39.606915Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "atpF-atpH intergenic spacer (atpF-atpH)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "atpF-atpH", "atpF-atpH spacer", "atpF/atpH" ]
+    },
+    "hiddenLabels" : [ "atpF-atpH" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1701,
+    "name" : "psbK_psbI_spacer",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:38.842217Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:39.189877Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "psbK-psbI intergenic spacer (psbK-psbI)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "psbK-psbI spacer", "psbK/psbI", "psbK-psbI" ]
+    },
+    "hiddenLabels" : [ "psbK-psbI" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1700,
+    "name" : "petD",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:38.705085Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:38.747414Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1699,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Cytochrome b6/f complex subunit 4 (petD)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1699,
+    "name" : "Chloroplast_protein_coding_gene",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:38.457303Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:38.625762Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1651,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Chloroplast protein-coding gene"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "psbE-petL" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1698,
+    "name" : "CytB",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:37.96319Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:38.377896Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Cytochrome b (CytB)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "cytochromeb", "cyt-B", "CYTB", "CYB" ]
+    },
+    "hiddenLabels" : [ "cyt-B", "CYTB", "CYTB-NUMT" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1697,
+    "name" : "COI",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:37.169775Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:37.889627Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Cytochrome c oxidase subunit I (COI)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "CO1", "MT-CO1", "COX1", "cox1" ]
+    },
+    "hiddenLabels" : [ "FL-COI", "COI-3P", "Cytochrome Oxidase Subunit I (COI)", "COI-5P", "Co1", "COI-NUMT", "COI-PSEUDO", "COI-5P3P", "mitochondrial cytochrome c oxidase subunit I gene (COI)", "COI-LIKE" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1696,
+    "name" : "COII",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:36.793038Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:37.052055Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Cytochrome c oxidase subunit II (COII)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "CO2", "cox2", "COX2", "MT-CO2" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1695,
+    "name" : "COIII",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:36.345978Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:36.719004Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Cytochrome c oxidase subunit III (COIII)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "CO3", "COX3", "cox3", "MT-CO3" ]
+    },
+    "hiddenLabels" : [ "COXIII" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1694,
+    "name" : "ND1",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:36.066079Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:36.228257Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "NADH dehydrogenase subunit 1 (ND1)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "NAD1", "MT-ND1" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1693,
+    "name" : "ND2",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:35.783595Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:35.948917Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "NADH dehydrogenase subunit 2 (ND2)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "NAD2", "MT-ND2" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1692,
+    "name" : "ND3",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:35.485285Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:35.658995Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "NADH dehydrogenase subunit 3 (ND3)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "NAD3", "MT-ND3" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1691,
+    "name" : "ND4",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:35.196062Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:35.370393Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "NADH dehydrogenase subunit 4 (ND4)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "MT-ND4", "NAD4" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1690,
+    "name" : "ND5",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:34.85463Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:35.120634Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "NADH dehydrogenase subunit 5 (ND5)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "NAD5", "MT-ND5" ]
+    },
+    "hiddenLabels" : [ "ND5-0" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1689,
+    "name" : "ND6",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:34.578348Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:34.747185Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "NADH dehydrogenase subunit 6 (ND6)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "MT-ND6", "NAD6" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1688,
+    "name" : "ND4L",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:34.317812Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:34.461169Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "NADH dehydrogenase subunit 4L (ND4L)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "NAD4L", "MT-ND4L" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1687,
+    "name" : "Dloop",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:33.946854Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:34.241781Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Mitochondrial control region (Dloop)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "ControlRegion", "D-loop" ]
+    },
+    "hiddenLabels" : [ "D-loop" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1686,
+    "name" : "atp6",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:33.70173Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:33.833498Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "ATP synthase F0 subunit 6 (atp6)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "ATP6", "MT-AP6" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1685,
+    "name" : "atp8",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:33.381411Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:33.639881Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "ATP synthase F0 subunit 8 (atp8)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "ATP8", "MT-ATP8" ]
+    },
+    "hiddenLabels" : [ "ATP8" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1684,
+    "name" : "matR",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:33.244723Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:33.285356Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Maturase R (matR)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1683,
+    "name" : "MutS_like",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:32.898073Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:33.17522Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1682,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "MutS-like protein (MutS-like)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "mtMutS" ]
+    },
+    "hiddenLabels" : [ "MutS-like" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1682,
+    "name" : "Mitochondrial_protein_coding_gene",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:32.598671Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:32.823345Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1651,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Mitochondrial protein-coding gene"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "atp6-atp8", "COII-COI", "COII-COIII", "ND6-ND3" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1681,
+    "name" : "nifH",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:32.417882Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:32.457787Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1670,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Nitrogenase reductase (nifH)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1680,
+    "name" : "amoA",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:32.279645Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:32.306875Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1670,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Ammonia monooxygenase subunit A (amoA)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1679,
+    "name" : "fbpA",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:31.983834Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:32.160725Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1670,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Fructose-bisphosphate aldolase class II (fbpA)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "fbpA", "FBPA" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1678,
+    "name" : "hcpA",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:31.675213Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:31.865169Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1670,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Hcp family protein A (hcpA)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "hcpA", "HCPA" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1677,
+    "name" : "ftsZ",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:31.353656Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:31.557864Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1670,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Cell division protein FtsZ (ftsZ)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "FTSZ", "ftsZ" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1676,
+    "name" : "coxA",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:31.050792Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:31.227742Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1670,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Cytochrome c oxidase subunit A (coxA)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "COXA", "coxA" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1675,
+    "name" : "gatB",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:30.893245Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:30.933317Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1670,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Glutamyl-tRNA amidotransferase subunit B (gatB)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1674,
+    "name" : "Msp4",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:30.735772Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:30.789352Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1670,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Major surface protein 4 (Msp4)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1673,
+    "name" : "ntcA",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:30.558354Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:30.592983Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1670,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Global nitrogen regulator NtcA (ntcA)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1672,
+    "name" : "sca4",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:30.373051Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:30.424045Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1670,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Surface cell antigen 4 (sca4)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1671,
+    "name" : "WSP",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:30.208125Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:30.239086Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1670,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Wolbachia surface protein (WSP)"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1670,
+    "name" : "Prokaryotic_protein_coding_gene",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:30.035077Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:30.083757Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1651,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Prokaryotic protein-coding gene"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1669,
+    "name" : "TEF1",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:29.406381Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:29.952081Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Translation elongation factor 1-alpha (TEF1)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "tef1-α", "EF-1α", "EF1a", "EF1-alpha", "tef1" ]
+    },
+    "hiddenLabels" : [ "TEF", "EF1-alpha", "EF-1alpha", "EF1-alpha-5P" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1668,
+    "name" : "RPB1",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:29.141071Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:29.281669Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "RNA polymerase II subunit 1 (RPB1)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "POLR2A" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1667,
+    "name" : "RPB2",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:28.847748Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:29.008641Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "RNA polymerase II subunit 2 (RPB2)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "POLR2B" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1666,
+    "name" : "beta_tubulin",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:28.311878Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:28.746577Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Beta-tubulin (beta_tubilin)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "tub2", "benA", "β-tubulin" ]
+    },
+    "hiddenLabels" : [ "Beta-tubulin", "BenA" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1665,
+    "name" : "ACT",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:28.033035Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:28.176309Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Actin (ACT)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "act" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1664,
+    "name" : "HSP90",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:27.774325Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:27.893219Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Heat shock protein 90 (HSP90)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "hsp90" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1663,
+    "name" : "H3",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:27.468276Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:27.637132Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Histone H3 (H3)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "histone3", "Histone H3" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1662,
+    "name" : "H4",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:27.164698Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:27.344595Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Histone H4 (H4)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "Histone H4", "H4", "histone4" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1661,
+    "name" : "GAPDH",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:26.826812Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:27.018265Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Glyceraldehyde-3-phosphate dehydrogenase (GAPDH)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "gapdh", "GAPDH" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1660,
+    "name" : "RAG1",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:26.51367Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:26.700025Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Recombination activating gene 1 (RAG1)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "rag1", "RAG1" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1659,
+    "name" : "RAG2",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:26.198706Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:26.381828Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Recombination activating gene 2 (RAG2)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "RAG2", "rag2" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1658,
+    "name" : "Wnt1",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:25.887333Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:26.06705Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Wingless-type MMTV integration site family member 1 (Wnt1)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "WNT1", "Wnt1" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1657,
+    "name" : "S7",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:25.562414Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:25.74506Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Ribosomal protein S7 (S7)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "S7", "RPS7" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1656,
+    "name" : "RHO",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:25.096364Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:25.473075Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Rhodopsin (RHO)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "rhodopsin", "Rho", "RHO" ]
+    },
+    "hiddenLabels" : [ "Rho" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1655,
+    "name" : "c_mos",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:24.664639Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:24.988522Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Proto-oncogene c-mos (c-mos)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "cmos", "c-mos" ]
+    },
+    "hiddenLabels" : [ "c-mos" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1654,
+    "name" : "IRBP",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:24.343608Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:24.528807Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1653,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Interphotoreceptor retinoid-binding protein (IRBP)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "IRBP", "RBP3" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1653,
+    "name" : "Nuclear_protein_coding_gene",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:22.715451Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:24.256509Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1651,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Nuclear protein-coding gene"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "DDC", "MCM7", "DDX23", "CK1", "CAD-5P", "EPRS", "CaM", "NGFB", "RNF213", "ATP1A", "ENC1", "DYN", "DBY-EX7-8", "PLAGL2", "Cct8", "RPL37", "CHD-Z", "Ca-ATPase", "TULP", "RBM15", "CAD", "TYR", "EF2", "ACE2", "MC1R", "VDAC", "PaxC", "Tsr1", "TOP1", "PER", "MYH6" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1652,
+    "name" : "E_gene",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:22.229332Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:22.60911Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : 1651,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : {
+      "en" : "Envelope protein gene (E gene)"
+    },
+    "alternativeLabels" : {
+      "en" : [ "E gene", "Envelope gene", "e-gene" ]
+    },
+    "hiddenLabels" : [ "e-gene" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1651,
+    "name" : "Protein_coding_gene",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2026-03-11T13:15:21.733662Z",
+    "createdBy" : "gbif-vocabulary-importer",
+    "modified" : "2026-03-11T13:15:22.122888Z",
+    "modifiedBy" : "gbif-vocabulary-importer",
+    "vocabularyKey" : 39,
+    "parentKey" : null,
+    "sameAsUris" : [ ],
+    "definition" : { },
+    "label" : { },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "MDH", "ENO", "AOX-fmt", "IDH", "PGD", "TPI" ],
+    "tags" : [ ]
+  } ]
+}
