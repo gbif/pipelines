@@ -102,6 +102,9 @@ public class FullTableBuildPipeline {
     @Parameter(names = "--loadHumboldtTable", description = "Load humboldt table")
     private boolean loadHumboldtTable = true;
 
+    @Parameter(names = "--loadDnaDerivedDataTable", description = "Load DNA Derived Data table")
+    private boolean loadDnaDerivedDataTable = true;
+
     @Parameter(names = "--skipEbird", description = "Skip ebird")
     private boolean skipEbird = false;
 
@@ -298,7 +301,7 @@ public class FullTableBuildPipeline {
       log.warn("Skipping load of Multimedia Table as the flag is set to false.");
     }
 
-    if (coreDwcTerm.equalsIgnoreCase("occurrence")) {
+    if (args.loadDnaDerivedDataTable && coreDwcTerm.equalsIgnoreCase("occurrence")) {
       // Create dna table
       String dnaTableName = coreDwcTerm + "_dna_derived_data";
       spark.sql(getCreateDnaDerivedDataTableSQL(config.getTableBuildConfig(), dnaTableName));
