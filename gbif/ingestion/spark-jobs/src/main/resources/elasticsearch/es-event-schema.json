@@ -2,7 +2,10 @@
   "_source": {
     "excludes": [
       "derivedMetadata.taxonomicCoverage",
-      "all"
+      "all",
+      "index_name",
+      "datasetKey",
+      "count"
     ]
   },
   "dynamic_templates": [
@@ -170,6 +173,22 @@
     "uniqueKey": {"type": "keyword"},
     "firstLoaded": {"type": "date"},
 
+    "index_name": {
+      "type": "keyword",
+      "index": false,
+      "doc_values": false
+    },
+    "datasetKey": {
+      "type": "keyword",
+      "index": false,
+      "doc_values": false
+    },
+    "count": {
+      "type": "long",
+      "index": false,
+      "doc_values": false
+    },
+
     "metadata": {
       "type": "object",
       "properties": {
@@ -204,6 +223,44 @@
             "taxonIDs": {"type": "keyword", "boost": 100.0, "copy_to": "all", "normalizer": "lowercase_normalizer"}
           }
         }
+      }
+    },
+
+    "locationInherited": {
+      "type": "object",
+      "properties": {
+        "id": {"type":"keyword"},
+        "inheritedFrom": {"type":"keyword"},
+        "countryCode": {"type":"keyword"},
+        "stateProvince": {
+          "type": "keyword",  "normalizer": "lowercase_normalizer", "ignore_above": 1024,
+          "fields": {
+            "suggest": {"type": "completion", "analyzer": "lowercase_analyzer", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50},
+            "verbatim": {"type": "keyword", "ignore_above": 1024}
+          }
+        },
+        "decimalLatitude": {"type":"double"},
+        "decimalLongitude": {"type":"double"}
+      }
+    },
+
+    "temporalInherited": {
+      "type": "object",
+      "properties": {
+        "id": {"type":"keyword"},
+        "inheritedFrom": {"type":"keyword"},
+        "year": {"type":"integer"},
+        "month": {"type":"integer"},
+        "day": {"type":"integer"}
+      }
+    },
+
+    "eventInherited": {
+      "type": "object",
+      "properties": {
+        "id": {"type":"keyword"},
+        "locationID": {"type":"keyword"},
+        "eventType": {"type":"keyword"}
       }
     },
 
@@ -324,6 +381,7 @@
             "verbatim": {"type": "keyword", "ignore_above": 1024}
           }
         },
+        "locationID": {"type": "keyword", "copy_to": "all"},
         "datasetID": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
         "datasetName": {"type": "keyword", "copy_to": "all"},
 
