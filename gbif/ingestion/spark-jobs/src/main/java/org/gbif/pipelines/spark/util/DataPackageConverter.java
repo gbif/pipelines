@@ -9,22 +9,29 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.sql.*;
 import org.gbif.dp.descriptor.*;
+import org.jspecify.annotations.NonNull;
 
+@Slf4j
 public class DataPackageConverter {
 
   private final DataPackageParser parser;
   private final ObjectMapper mapper;
+  private final long targetPartitionByteSize;
 
-  public DataPackageConverter(DataPackageParser parser, ObjectMapper mapper) {
+  public DataPackageConverter(
+      DataPackageParser parser, ObjectMapper mapper, long targetPartitionByteSize) {
     this.parser = parser;
     this.mapper = mapper;
+    this.targetPartitionByteSize = targetPartitionByteSize;
   }
 
   public void convert(SparkSession spark, Path source, String destination) throws IOException {
-    Path descriptorPath = Files.isDirectory(source) ? source.resolve("datapackage.json") : source;
+    Path descriptorPath = getDescriptorPath(source);
     Path sourceBase = descriptorPath.getParent();
 
     DataPackageDescriptor descriptor = parser.parse(descriptorPath);
@@ -37,7 +44,7 @@ public class DataPackageConverter {
       String outputRelative = swapExtension(inputRelative.toString(), "parquet");
       String outputUri = destination + "/" + outputRelative;
 
-      readAndWrite(spark, resource, inputAbsolute, outputUri);
+      readAndWrite(spark, resource, resource.paths(), outputUri);
 
       converted.add(
           new ResourceDescriptor(
@@ -54,13 +61,61 @@ public class DataPackageConverter {
     writeDescriptor(spark, outputDescriptor, destination);
   }
 
+  private static @NonNull Path getDescriptorPath(Path source) {
+    if (!Files.isDirectory(source)) {
+      if (source.toString().toLowerCase(Locale.ROOT).endsWith("datapackage.json")) {
+        return source;
+      }
+      throw new RuntimeException(
+          String.format(
+              "Source was %s, expected either folder for 'datapackage.json, or directly datapackage.json path",
+              source));
+    }
+    Path resolved = source.resolve("datapackage.json");
+    if (!Files.exists(resolved)) {
+      throw new RuntimeException(
+          String.format(
+              "Tried resolving %s from %s, but %s does not exist, expected datapackage.json at root of datasetId directory",
+              resolved, source, resolved));
+    }
+    return resolved;
+  }
+
+  public static int calculatePartitions(List<Path> paths, long targetPartitionBytes) {
+    long totalBytes =
+        paths.stream()
+            .filter(Files::exists)
+            .filter(Files::isRegularFile)
+            .mapToLong(
+                path -> {
+                  try {
+                    return Files.size(path);
+                  } catch (IOException e) {
+                    throw new RuntimeException("Unable to get size for: " + path, e);
+                  }
+                })
+            .sum();
+    return Math.max(1, (int) (totalBytes / targetPartitionBytes));
+  }
+
   private void readAndWrite(
-      SparkSession spark, ResourceDescriptor resource, Path inputAbsolute, String outputUri) {
+      SparkSession spark, ResourceDescriptor resource, List<Path> inputs, String outputUri) {
+
+    int partitions = calculatePartitions(inputs, targetPartitionByteSize);
+
+    String[] paths =
+        inputs.stream().map(Path::toString).map(p -> "file://" + p).toArray(String[]::new);
+    log.info(
+        "Created filepaths [{}] from [{}]",
+        paths,
+        inputs.stream().map(Path::toString).toArray(String[]::new));
+
     Dataset<Row> df;
-    String filename = inputAbsolute.getFileName().toString();
+    // check first file to determine format — mixed formats per resource not supported
+    String filename = inputs.get(0).getFileName().toString();
 
     if (filename.endsWith(".parquet")) {
-      df = spark.read().parquet(inputAbsolute.toString());
+      df = spark.read().parquet(paths);
     } else {
       DialectDescriptor dialect =
           resource.dialect() != null
@@ -87,10 +142,10 @@ public class DataPackageConverter {
         reader = reader.option("ignoreLeadingWhiteSpace", true);
       }
 
-      df = reader.csv(inputAbsolute.toString());
+      df = reader.csv(paths);
     }
 
-    df.write().mode(SaveMode.Overwrite).parquet(outputUri);
+    df.coalesce(partitions).write().mode(SaveMode.Overwrite).parquet(outputUri);
   }
 
   private void writeDescriptor(

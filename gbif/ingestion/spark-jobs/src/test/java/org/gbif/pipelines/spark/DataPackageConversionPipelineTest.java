@@ -21,6 +21,7 @@ import org.junit.jupiter.api.io.TempDir;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DataPackageConversionPipelineTest {
 
+  private static final long TARGET_PARTITION_BYTE_SIZE = 256 * 1024 * 1024;
   SparkSession spark;
   Path fixtures;
 
@@ -35,12 +36,19 @@ class DataPackageConversionPipelineTest {
     spark.stop();
   }
 
+  DataPackageConversionPipeline.CopyConfig createPipeline(
+      String inputBasePath, String outputBasePath, String datasetId, int attempt) {
+    return new DataPackageConversionPipeline.CopyConfig(
+        spark, inputBasePath, outputBasePath, datasetId, attempt, TARGET_PARTITION_BYTE_SIZE);
+  }
+
   @Test
   void tsvPackageIsCopied(@TempDir Path destination) throws Exception {
-    PipelinesConfig config =
-        minimalConfig(fixtures.resolve("tsv-package").toString(), "file://" + destination);
+    String inputBasePath = fixtures.toString();
+    String outputBasePath = "file://" + destination;
 
-    DataPackageConversionPipeline.runCopy(spark, config, "tsv-package", 0);
+    DataPackageConversionPipeline.runCopy(
+        createPipeline(inputBasePath, outputBasePath, "tsv-package", 0));
 
     Dataset<Row> df =
         spark.read().parquet("file://" + destination + "/tsv-package/0/occurrences.parquet");
@@ -49,10 +57,11 @@ class DataPackageConversionPipelineTest {
 
   @Test
   void outputDescriptorIsWritten(@TempDir Path destination) throws Exception {
-    PipelinesConfig config =
-        minimalConfig(fixtures.resolve("tsv-package").toString(), "file://" + destination);
+    String inputBasePath = fixtures.toString();
+    String outputBasePath = "file://" + destination;
 
-    DataPackageConversionPipeline.runCopy(spark, config, "tsv-package", 0);
+    DataPackageConversionPipeline.runCopy(
+        createPipeline(inputBasePath, outputBasePath, "tsv-package", 0));
 
     DataPackageDescriptor out =
         new JacksonDataPackageParser().parse(destination.resolve("tsv-package/0/datapackage.json"));
