@@ -3,9 +3,7 @@
     "excludes": [
       "derivedMetadata.taxonomicCoverage",
       "all",
-      "index_name",
-      "datasetKey",
-      "count"
+      "datasetKey"
     ]
   },
   "dynamic_templates": [
@@ -173,18 +171,8 @@
     "uniqueKey": {"type": "keyword"},
     "firstLoaded": {"type": "date"},
 
-    "index_name": {
-      "type": "keyword",
-      "index": false,
-      "doc_values": false
-    },
     "datasetKey": {
       "type": "keyword",
-      "index": false,
-      "doc_values": false
-    },
-    "count": {
-      "type": "long",
       "index": false,
       "doc_values": false
     },

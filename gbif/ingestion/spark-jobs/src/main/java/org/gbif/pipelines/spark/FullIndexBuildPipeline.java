@@ -303,6 +303,7 @@ public class FullIndexBuildPipeline {
         .write()
         .format("org.elasticsearch.spark.sql")
         .option("es.resource", "{index_name}/_doc")
+        .option("es.mapping.exclude", "index_name,count")
         .mode(SaveMode.Append)
         .option("es.batch.size.entries", config.getElastic().getEsMaxBatchSize())
         .option("es.batch.size.bytes", config.getElastic().getEsMaxBatchSizeBytes())
