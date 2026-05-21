@@ -4,8 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -21,6 +23,7 @@ import org.junit.jupiter.api.io.TempDir;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DataPackageConverterTest {
 
+  private static final long TARGET_PARTITION_BYTE_SIZE = 256 * 1024 * 1024;
   SparkSession spark;
   DataPackageConverter converter;
   Path fixtures;
@@ -28,7 +31,9 @@ class DataPackageConverterTest {
   @BeforeAll
   void setup() throws URISyntaxException {
     spark = SparkTestSession.createBuilder().appName("converter-test").getOrCreate();
-    converter = new DataPackageConverter(new JacksonDataPackageParser(), new ObjectMapper());
+    converter =
+        new DataPackageConverter(
+            new JacksonDataPackageParser(), new ObjectMapper(), TARGET_PARTITION_BYTE_SIZE);
     fixtures = Paths.get(getClass().getClassLoader().getResource("fixtures").toURI());
   }
 
@@ -42,7 +47,7 @@ class DataPackageConverterTest {
     converter.convert(spark, fixtures.resolve("tsv-package"), "file://" + destination);
 
     Dataset<Row> occ = spark.read().parquet("file://" + destination + "/occurrences.parquet");
-    assertEquals(3, occ.count());
+    assertEquals(100, occ.count());
     assertEquals("Puma concolor", occ.filter("id = '1'").first().getAs("scientificName"));
 
     Dataset<Row> taxa = spark.read().parquet("file://" + destination + "/taxa.parquet");
@@ -88,7 +93,7 @@ class DataPackageConverterTest {
         spark, fixtures.resolve("tsv-package/datapackage.json"), "file://" + destination);
 
     Dataset<Row> df = spark.read().parquet("file://" + destination + "/occurrences.parquet");
-    assertEquals(3, df.count());
+    assertEquals(100, df.count());
   }
 
   @Test
@@ -123,5 +128,67 @@ class DataPackageConverterTest {
 
     assertFalse(media.foreignKeys().isEmpty());
     assertEquals("occurrences", media.foreignKeys().get(0).reference().resource());
+  }
+
+  @Test
+  void multiPartitionResourceIsCoalescedToSingleFile(@TempDir Path destination) throws Exception {
+    converter.convert(spark, fixtures.resolve("multi-partition-package"), "file://" + destination);
+
+    // count actual parquet part files written
+    List<Path> paths =
+        Files.list(destination)
+            .filter(p -> p.getFileName().toString().startsWith("part-"))
+            .toList();
+    int fileCount = paths.size();
+
+    assertEquals(1, fileCount);
+
+    // data integrity — all rows from all partitions present
+    Dataset<Row> df = spark.read().parquet("file://" + paths.get(0).toString());
+    assertEquals(6, df.count()); // 2 rows × 3 files
+  }
+
+  @Test
+  void multiPartitionResourceDescriptorHasSinglePath(@TempDir Path destination) throws Exception {
+    converter.convert(spark, fixtures.resolve("multi-partition-package"), "file://" + destination);
+
+    DataPackageDescriptor out =
+        new JacksonDataPackageParser().parse(destination.resolve("datapackage.json"));
+
+    ResourceDescriptor occ =
+        out.resources().stream()
+            .filter(r -> r.name().equals("occurrences"))
+            .findFirst()
+            .orElseThrow();
+
+    // multiple input files → single output path in descriptor
+    assertEquals(1, occ.paths().size());
+    assertEquals("part-0.parquet", occ.paths().get(0).getFileName().toString());
+    assertNull(occ.dialect());
+  }
+
+  @Test
+  void largeResourceDescriptorHasSinglePath(@TempDir Path destination) throws Exception {
+    DataPackageConverter smallPartitionConverter =
+        new DataPackageConverter(new JacksonDataPackageParser(), new ObjectMapper(), 10L);
+
+    smallPartitionConverter.convert(
+        spark, fixtures.resolve("tsv-package"), "file://" + destination);
+
+    DataPackageDescriptor out =
+        new JacksonDataPackageParser().parse(destination.resolve("datapackage.json"));
+
+    ResourceDescriptor occ =
+        out.resources().stream()
+            .filter(r -> r.name().equals("occurrences"))
+            .findFirst()
+            .orElseThrow();
+
+    // regardless of how many parquet part files were written, descriptor
+    // always points to the directory as a single logical resource path
+    assertEquals(1, occ.paths().size());
+    assertEquals("occurrences.parquet", occ.paths().get(0).getFileName().toString());
+    assertNull(occ.dialect());
+    assertFalse(occ.fields().isEmpty());
   }
 }
