@@ -17,6 +17,7 @@ import org.gbif.common.messaging.api.messages.PipelinesFragmenterMessage;
 import org.gbif.common.messaging.api.messages.PipelinesHdfsViewMessage;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesValidatorDwcaMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.pipelines.tasks.balancer.handler.EventsIndexedMessageHandler;
@@ -29,6 +30,7 @@ import org.gbif.pipelines.tasks.balancer.handler.PipelinesEventsHdfsViewMessageH
 import org.gbif.pipelines.tasks.balancer.handler.PipelinesFragmenterMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.PipelinesHdfsViewMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.PipelinesIndexedMessageHandler;
+import org.gbif.pipelines.tasks.balancer.handler.PipelinesValidatorDwcaMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.PipelinesXmlMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.VerbatimMessageHandler;
 
@@ -66,6 +68,8 @@ public class BalancerCallback extends AbstractMessageCallback<PipelinesBalancerM
         PipelinesHdfsViewMessageHandler.handle(publisher, message);
       } else if (PipelinesDwcaMessage.class.getSimpleName().equals(className)) {
         PipelinesDwcaMessageHandler.handle(publisher, message);
+      } else if (PipelinesValidatorDwcaMessage.class.getSimpleName().equals(className)) {
+        PipelinesValidatorDwcaMessageHandler.handle(publisher, message);
       } else if (PipelinesXmlMessage.class.getSimpleName().equals(className)) {
         PipelinesXmlMessageHandler.handle(publisher, message);
       } else if (PipelinesAbcdMessage.class.getSimpleName().equals(className)) {
