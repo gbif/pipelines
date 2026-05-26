@@ -100,6 +100,5 @@ public interface CallbackMode {
    * @param context context
    */
   void markPipelineExecutionIfFinished(
-      Long executionId,
-      PipelinesCallbackContext<? extends PipelineBasedMessage> context);
+      Long executionId, PipelinesCallbackContext<? extends PipelineBasedMessage> context);
 }
