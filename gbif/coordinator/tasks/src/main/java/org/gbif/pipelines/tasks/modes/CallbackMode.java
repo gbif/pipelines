@@ -74,7 +74,8 @@ public interface CallbackMode {
    */
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   void updateQueuedStatus(
-      Optional<TrackingInfo> info, PipelinesCallbackContext<? extends PipelineBasedMessage> context);
+      Optional<TrackingInfo> info,
+      PipelinesCallbackContext<? extends PipelineBasedMessage> context);
 
   /**
    * Performs mode-specific success handling after the message has been processed.
