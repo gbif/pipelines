@@ -14,7 +14,6 @@
 package org.gbif.pipelines.tasks.modes;
 
 import java.util.Optional;
-
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.pipelines.tasks.PipelinesCallbackContext;
@@ -78,13 +77,10 @@ public class PipelineMode implements CallbackMode {
 
   @Override
   public void markPipelineExecutionIfFinished(
-      Long executionId,
-      PipelinesCallbackContext<? extends PipelineBasedMessage> context) {
+      Long executionId, PipelinesCallbackContext<? extends PipelineBasedMessage> context) {
     if (executionId != null) {
       log.info("Mark execution as FINISHED if all steps are FINISHED");
-      context
-          .getRetryingHistoryClient()
-          .markPipelineExecutionIfFinished(executionId);
+      context.getRetryingHistoryClient().markPipelineExecutionIfFinished(executionId);
     }
   }
 }

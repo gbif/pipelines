@@ -83,8 +83,7 @@ public class ValidatorMode implements CallbackMode {
   /** Validator callbacks do not create regular pipeline execution records. */
   @Override
   public void markPipelineExecutionIfFinished(
-      Long executionId,
-      PipelinesCallbackContext<? extends PipelineBasedMessage> context) {
+      Long executionId, PipelinesCallbackContext<? extends PipelineBasedMessage> context) {
     // NOP
   }
 }
