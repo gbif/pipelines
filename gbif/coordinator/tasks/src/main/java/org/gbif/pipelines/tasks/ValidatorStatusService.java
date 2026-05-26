@@ -70,7 +70,10 @@ public class ValidatorStatusService {
         || status == Status.DOWNLOADING;
   }
 
-  /** Equivalent to {@link #updateStatus(PipelineBasedMessage, StepType, Status, String)} with no message text. */
+  /**
+   * Equivalent to {@link #updateStatus(PipelineBasedMessage, StepType, Status, String)} with no
+   * message text.
+   */
   public void updateStatus(PipelineBasedMessage message, StepType stepType, Status status) {
     updateStatus(message, stepType, status, null);
   }
@@ -82,7 +85,8 @@ public class ValidatorStatusService {
    * Status#FINISHED} only when all other steps are also finished; otherwise it remains {@link
    * Status#QUEUED}.
    */
-  public void updateStatus(PipelineBasedMessage message, StepType stepType, Status status, String text) {
+  public void updateStatus(
+      PipelineBasedMessage message, StepType stepType, Status status, String text) {
     Validation validation = validationClient.get(message.getDatasetUuid());
     if (validation == null) {
       log.warn(

@@ -52,7 +52,8 @@ public class ValidatorMode implements CallbackMode {
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   @Override
   public void updateQueuedStatus(
-      Optional<TrackingInfo> info, PipelinesCallbackContext<? extends PipelineBasedMessage> context) {
+      Optional<TrackingInfo> info,
+      PipelinesCallbackContext<? extends PipelineBasedMessage> context) {
     info.ifPresent(
         i ->
             context
