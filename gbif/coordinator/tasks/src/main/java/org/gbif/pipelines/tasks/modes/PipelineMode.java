@@ -14,6 +14,8 @@
 package org.gbif.pipelines.tasks.modes;
 
 import java.util.Optional;
+
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.pipelines.tasks.PipelinesCallbackContext;
 import org.gbif.pipelines.tasks.tracking.TrackingInfo;
@@ -24,6 +26,7 @@ import org.gbif.pipelines.tasks.tracking.TrackingInfo;
  * <p>This mode uses the pipeline execution guard, creates tracking records for pipeline steps, and
  * queues downstream steps according to the regular occurrence/event workflow.
  */
+@Slf4j
 public class PipelineMode implements CallbackMode {
 
   /**
@@ -71,5 +74,17 @@ public class PipelineMode implements CallbackMode {
   public void onFailure(
       PipelinesCallbackContext<? extends PipelineBasedMessage> context, String errorMessage) {
     // NOP
+  }
+
+  @Override
+  public void markPipelineExecutionIfFinished(
+      Long executionId,
+      PipelinesCallbackContext<? extends PipelineBasedMessage> context) {
+    if (executionId != null) {
+      log.info("Mark execution as FINISHED if all steps are FINISHED");
+      context
+          .getRetryingHistoryClient()
+          .markPipelineExecutionIfFinished(executionId);
+    }
   }
 }
