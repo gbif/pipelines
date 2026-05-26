@@ -92,4 +92,14 @@ public interface CallbackMode {
    */
   void onFailure(
       PipelinesCallbackContext<? extends PipelineBasedMessage> context, String errorMessage);
+
+  /**
+   * Marks execution as finished.
+   *
+   * @param executionId execution id
+   * @param context context
+   */
+  void markPipelineExecutionIfFinished(
+      Long executionId,
+      PipelinesCallbackContext<? extends PipelineBasedMessage> context);
 }

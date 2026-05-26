@@ -226,12 +226,7 @@ public class PipelinesCallback<In extends PipelineBasedMessage, Out extends Pipe
       }
       callbackMode.onFailure(context, errorMessage);
     } finally {
-      if (message.getExecutionId() != null) {
-        log.info("Mark execution as FINISHED if all steps are FINISHED");
-        context
-            .getRetryingHistoryClient()
-            .markPipelineExecutionIfFinished(message.getExecutionId());
-      }
+      callbackMode.markPipelineExecutionIfFinished(message.getExecutionId(), context);
     }
 
     log.info("Message handler ended - {}", message);

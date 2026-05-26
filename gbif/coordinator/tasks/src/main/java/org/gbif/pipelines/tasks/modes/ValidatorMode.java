@@ -79,4 +79,12 @@ public class ValidatorMode implements CallbackMode {
         .updateStatus(
             context.getMessage(), context.getStepType(), Validation.Status.FAILED, errorMessage);
   }
+
+  /** Validator callbacks do not create regular pipeline execution records. */
+  @Override
+  public void markPipelineExecutionIfFinished(
+      Long executionId,
+      PipelinesCallbackContext<? extends PipelineBasedMessage> context) {
+    // NOP
+  }
 }
