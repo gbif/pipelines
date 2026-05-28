@@ -3,8 +3,6 @@ package org.gbif.pipelines.tasks.validators.validator.validate;
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 import static org.gbif.validator.api.DwcFileType.CORE;
 
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -14,12 +12,8 @@ import java.util.Optional;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.model.crawler.DwcaValidationReport;
-import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
-import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
+import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.UnsupportedArchiveException;
 import org.gbif.dwc.terms.DwcTerm;
@@ -47,23 +41,13 @@ public class DwcaArchiveValidator implements ArchiveValidator {
   private final ArchiveValidatorConfiguration config;
   private final ValidationWsClient validationClient;
   private final SchemaValidatorFactory schemaValidatorFactory;
-  private final PipelinesArchiveValidatorMessage message;
+  private final PipelineBasedMessage message;
+  private final DwcaArchiveValidatorOutgoingMessageCreator outgoingMessageCreator;
 
   @Override
   @SneakyThrows
-  public PipelinesDwcaMessage createOutgoingMessage() {
-    PipelinesDwcaMessage m = new PipelinesDwcaMessage();
-    m.setDatasetUuid(message.getDatasetUuid());
-    m.setAttempt(message.getAttempt());
-    m.setSource(new URI(config.stepConfig.registry.wsUrl));
-    m.setValidationReport(
-        new DwcaValidationReport(
-            message.getDatasetUuid(), new OccurrenceValidationReport(1, 1, 0, 1, 0, true)));
-    m.setPipelineSteps(message.getPipelineSteps());
-    m.setExecutionId(message.getExecutionId());
-    getDatasetType().ifPresent(m::setDatasetType);
-    m.setEndpointType(EndpointType.DWC_ARCHIVE);
-    return m;
+  public PipelineBasedMessage createOutgoingMessage() {
+    return outgoingMessageCreator.createOutgoingMessage(config, message);
   }
 
   @Override
@@ -103,7 +87,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
 
     FileInfoBuilder fileInfoBuilder = FileInfo.builder().fileType(DwcFileType.METADATA);
 
-    if (!emlPath.isPresent()) {
+    if (emlPath.isEmpty()) {
       return fileInfoBuilder
           .issues(
               Collections.singletonList(
@@ -115,7 +99,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     }
 
     try {
-      String xmlDoc = new String(Files.readAllBytes(emlPath.get()), StandardCharsets.UTF_8);
+      String xmlDoc = Files.readString(emlPath.get());
 
       List<IssueInfo> issueInfos = new ArrayList<>();
       // Validate XML file
@@ -197,15 +181,5 @@ public class DwcaArchiveValidator implements ArchiveValidator {
       return DatasetType.CHECKLIST;
     }
     throw new IllegalArgumentException("DatasetType is not valid");
-  }
-
-  /** Gets the dataset type form the current archive data. */
-  private Optional<DatasetType> getDatasetType() {
-    try {
-      Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
-      return Optional.of(getDatasetType(DwcaUtils.fromLocation(inputPath)));
-    } catch (Exception ex) {
-      return Optional.empty();
-    }
   }
 }

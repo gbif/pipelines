@@ -5,7 +5,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
+import org.gbif.common.messaging.api.messages.AbstractPipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.tasks.verbatims.xml.XmlToAvroCallback;
@@ -17,7 +17,7 @@ public class XmlArchiveValidator implements ArchiveValidator {
 
   private final ArchiveValidatorConfiguration config;
   private final ValidationWsClient validationClient;
-  private final PipelinesArchiveValidatorMessage message;
+  private final AbstractPipelinesArchiveValidatorMessage message;
 
   @Override
   @SneakyThrows
