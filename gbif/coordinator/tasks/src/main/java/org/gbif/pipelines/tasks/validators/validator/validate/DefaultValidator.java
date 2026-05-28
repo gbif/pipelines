@@ -2,8 +2,8 @@ package org.gbif.pipelines.tasks.validators.validator.validate;
 
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.common.messaging.api.messages.AbstractPipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -13,7 +13,7 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 public class DefaultValidator implements ArchiveValidator {
 
   private final ValidationWsClient validationClient;
-  private final PipelinesArchiveValidatorMessage message;
+  private final AbstractPipelinesArchiveValidatorMessage message;
 
   @Override
   public PipelineBasedMessage createOutgoingMessage() {
