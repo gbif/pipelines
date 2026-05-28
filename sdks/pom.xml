@@ -18,6 +18,7 @@
   </description>
 
   <modules>
+    <module>config</module>
     <module>plugins</module>
     <module>models</module>
     <module>models-pojo</module>
