@@ -21,7 +21,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
+import org.gbif.common.messaging.api.messages.PipelinesValidatorArchiveValidatorMessage;
 import org.gbif.dwca.validation.MetadataPath;
 import org.gbif.mail.validator.ValidatorEmailService;
 import org.gbif.metadata.eml.parse.DatasetEmlParser;
@@ -327,7 +327,8 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
   @SneakyThrows
   private void notify(UUID key, DataFile dataFile, Set<String> pipelinesSteps) {
 
-    PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
+    PipelinesValidatorArchiveValidatorMessage message =
+        new PipelinesValidatorArchiveValidatorMessage();
     message.setDatasetUuid(key);
     message.setAttempt(1);
     message.setExecutionId(1L);
