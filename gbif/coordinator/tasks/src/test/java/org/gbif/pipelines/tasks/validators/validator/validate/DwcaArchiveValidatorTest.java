@@ -7,6 +7,7 @@ import java.net.URI;
 import java.util.UUID;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
@@ -69,13 +70,19 @@ public class DwcaArchiveValidatorTest {
     message.setDatasetUuid(key);
     message.setExecutionId(1L);
 
+    DwcaArchiveValidatorOutgoingMessageCreator messageCreator =
+        new PipelinesArchiveValidatorOutgoingMessageCreator();
+
     // When
-    PipelinesDwcaMessage result =
+    PipelineBasedMessage result =
         DwcaArchiveValidator.builder()
             .message(message)
             .config(config)
+            .outgoingMessageCreator(messageCreator)
             .build()
             .createOutgoingMessage();
+
+    PipelinesDwcaMessage converted = (PipelinesDwcaMessage) result;
 
     PipelinesDwcaMessage dValue =
         new ObjectMapper().readValue(result.toString(), PipelinesDwcaMessage.class);
@@ -86,9 +93,9 @@ public class DwcaArchiveValidatorTest {
     assertEquals(result.toString(), dValue.toString());
     assertEquals(key, result.getDatasetUuid());
     assertEquals(Integer.valueOf(1), result.getAttempt());
-    assertEquals(new URI(config.stepConfig.registry.wsUrl), result.getSource());
+    assertEquals(new URI(config.stepConfig.registry.wsUrl), converted.getSource());
     assertEquals(message.getExecutionId(), result.getExecutionId());
-    assertEquals(DatasetType.OCCURRENCE, result.getDatasetType());
-    assertEquals(EndpointType.DWC_ARCHIVE, result.getEndpointType());
+    assertEquals(DatasetType.OCCURRENCE, converted.getDatasetType());
+    assertEquals(EndpointType.DWC_ARCHIVE, converted.getEndpointType());
   }
 }
