@@ -44,7 +44,8 @@ geocode:
 imageCachePath:
 content:
   esHosts:
-    - http://cms-search.gbif-dev.org:9200/
+    - http://core-search-1.gbif-dev.org:32329/
+    - http://core-search-2.gbif-dev.org:30766/
 amplification:
   wsUrl: http://blast.gbif-dev.org
 fragmentsTable: dev_occurrence_fragment

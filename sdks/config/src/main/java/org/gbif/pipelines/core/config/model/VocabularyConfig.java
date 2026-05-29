@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.gbif.dwc.terms.Term;
 
 @Data
 @NoArgsConstructor
@@ -19,12 +18,4 @@ public class VocabularyConfig implements Serializable {
   private String vocabulariesPath;
 
   private Map<String, String> vocabulariesNames = Collections.emptyMap();
-
-  public String getVocabularyFileName(Term term) {
-    return vocabulariesNames.computeIfAbsent(
-        term.qualifiedName(),
-        t -> {
-          throw new IllegalArgumentException("Can't find associated vocabulary for term " + t);
-        });
-  }
 }
