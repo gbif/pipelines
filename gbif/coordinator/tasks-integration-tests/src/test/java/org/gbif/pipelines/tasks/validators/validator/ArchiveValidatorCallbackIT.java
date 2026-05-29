@@ -17,7 +17,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.ValidationWsClientStub;
-import org.gbif.pipelines.tasks.validators.validator.validator.PipelinesValidatorArchiveValidatorCallback;
+import org.gbif.pipelines.tasks.validators.validator.validator.ValidatorArchiveValidatorCallback;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
@@ -56,8 +56,8 @@ public class ArchiveValidatorCallbackIT {
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
-    PipelinesValidatorArchiveValidatorCallback callback =
-        new PipelinesValidatorArchiveValidatorCallback(
+    ValidatorArchiveValidatorCallback callback =
+        new ValidatorArchiveValidatorCallback(
             config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_OCCURRENCR_UUID);
@@ -126,8 +126,8 @@ public class ArchiveValidatorCallbackIT {
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
-    PipelinesValidatorArchiveValidatorCallback callback =
-        new PipelinesValidatorArchiveValidatorCallback(
+    ValidatorArchiveValidatorCallback callback =
+        new ValidatorArchiveValidatorCallback(
             config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_SAMPLING_UUID);
@@ -190,8 +190,8 @@ public class ArchiveValidatorCallbackIT {
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
-    PipelinesValidatorArchiveValidatorCallback callback =
-        new PipelinesValidatorArchiveValidatorCallback(
+    ValidatorArchiveValidatorCallback callback =
+        new ValidatorArchiveValidatorCallback(
             config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_CLB_UUID);
@@ -255,8 +255,8 @@ public class ArchiveValidatorCallbackIT {
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
-    PipelinesValidatorArchiveValidatorCallback callback =
-        new PipelinesValidatorArchiveValidatorCallback(
+    ValidatorArchiveValidatorCallback callback =
+        new ValidatorArchiveValidatorCallback(
             config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_OCCURRENCR_UUID);
@@ -287,8 +287,8 @@ public class ArchiveValidatorCallbackIT {
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
-    PipelinesValidatorArchiveValidatorCallback callback =
-        new PipelinesValidatorArchiveValidatorCallback(
+    ValidatorArchiveValidatorCallback callback =
+        new ValidatorArchiveValidatorCallback(
             config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.randomUUID(); // Use wrong datasetKey
@@ -319,8 +319,8 @@ public class ArchiveValidatorCallbackIT {
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
-    PipelinesValidatorArchiveValidatorCallback callback =
-        new PipelinesValidatorArchiveValidatorCallback(
+    ValidatorArchiveValidatorCallback callback =
+        new ValidatorArchiveValidatorCallback(
             config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.randomUUID(); // Use wrong datasetKey
@@ -351,8 +351,8 @@ public class ArchiveValidatorCallbackIT {
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
-    PipelinesValidatorArchiveValidatorCallback callback =
-        new PipelinesValidatorArchiveValidatorCallback(
+    ValidatorArchiveValidatorCallback callback =
+        new ValidatorArchiveValidatorCallback(
             config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString("b578802e-f1ca-4e5b-acf8-4d45306e6b48");

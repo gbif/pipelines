@@ -13,7 +13,6 @@
  */
 package org.gbif.pipelines.tasks.validators.validator.validator;
 
-import java.util.Collections;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -29,14 +28,14 @@ import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.modes.CallbackModeType;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 import org.gbif.pipelines.tasks.validators.validator.validate.ArchiveValidatorFactory;
-import org.gbif.pipelines.tasks.validators.validator.validate.PipelinesValidatorDwcaArchiveValidatorOutgoingMessageCreator;
+import org.gbif.pipelines.tasks.validators.validator.validate.ValidatorDwcaArchiveValidatorOutgoingMessageCreator;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback which is called when the {@link PipelinesArchiveValidatorMessage} is received. */
 @Slf4j
 @AllArgsConstructor
-public class PipelinesValidatorArchiveValidatorCallback
+public class ValidatorArchiveValidatorCallback
     extends AbstractMessageCallback<PipelinesValidatorArchiveValidatorMessage>
     implements StepHandler<PipelinesValidatorArchiveValidatorMessage, PipelineBasedMessage> {
 
@@ -63,11 +62,7 @@ public class PipelinesValidatorArchiveValidatorCallback
 
   @Override
   public String getRouting() {
-    PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
-    if (config.validatorOnly) {
-      message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_VALIDATE_ARCHIVE.name()));
-    }
-    return message.getRoutingKey();
+    return PipelinesValidatorArchiveValidatorMessage.ROUTING_KEY;
   }
 
   @Override
@@ -84,8 +79,7 @@ public class PipelinesValidatorArchiveValidatorCallback
           .config(config)
           .message(message)
           .schemaValidatorFactory(schemaValidatorFactory)
-          .outgoingMessageCreator(
-              new PipelinesValidatorDwcaArchiveValidatorOutgoingMessageCreator())
+          .outgoingMessageCreator(new ValidatorDwcaArchiveValidatorOutgoingMessageCreator())
           .build()
           .create()
           .validate();
@@ -99,7 +93,7 @@ public class PipelinesValidatorArchiveValidatorCallback
     return ArchiveValidatorFactory.builder()
         .message(message)
         .config(config)
-        .outgoingMessageCreator(new PipelinesValidatorDwcaArchiveValidatorOutgoingMessageCreator())
+        .outgoingMessageCreator(new ValidatorDwcaArchiveValidatorOutgoingMessageCreator())
         .build()
         .create()
         .createOutgoingMessage();

@@ -23,7 +23,7 @@ import org.gbif.common.messaging.api.messages.PipelinesValidatorArchiveValidator
 import org.gbif.common.messaging.api.messages.PipelinesValidatorDwcaMessage;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 
-public class PipelinesValidatorDwcaArchiveValidatorOutgoingMessageCreator
+public class ValidatorDwcaArchiveValidatorOutgoingMessageCreator
     implements DwcaArchiveValidatorOutgoingMessageCreator {
 
   @SneakyThrows
