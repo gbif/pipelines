@@ -115,12 +115,9 @@ public class ConfigFactoryTest {
         extensionsAllowedForVerbatimSet.contains(
             "http://data.ggbn.org/schemas/ggbn/terms/Amplification"));
 
-    org.gbif.pipelines.core.config.model.VocabularyConfig vocabularyConfig =
-        config.getVocabularyConfig();
-    assertTrue(
-        vocabularyConfig
-            .getVocabulariesNames()
-            .containsKey("http://rs.tdwg.org/dwc/terms/degreeOfEstablishment"));
-    assertTrue(vocabularyConfig.getVocabulariesNames().containsValue("degreeOfEstablishment"));
+    org.gbif.pipelines.core.config.model.VocabularyConfig vocabularyConfig = config.getVocabularyConfig();
+    assertEquals(
+        "degreeOfEstablishment",
+        vocabularyConfig.getVocabulariesNames().get("http://rs.tdwg.org/dwc/terms/degreeOfEstablishment"));
   }
 }
