@@ -84,12 +84,9 @@ public class DistributedUtil {
     validatePositive("numberOfShards", conf.getNumberOfShards(), conf, sparkAppName);
 
     validateNonBlank(
-            "driverMemoryOverheadFactor", conf.getDriverMemoryOverheadFactor(), conf, sparkAppName);
+        "driverMemoryOverheadFactor", conf.getDriverMemoryOverheadFactor(), conf, sparkAppName);
     validateNonBlank(
-            "executorMemoryOverheadFactor",
-            conf.getExecutorMemoryOverheadFactor(),
-            conf,
-            sparkAppName);
+        "executorMemoryOverheadFactor", conf.getExecutorMemoryOverheadFactor(), conf, sparkAppName);
 
     validateNonBlank("driverMinCpu", conf.getDriverMinCpu(), conf, sparkAppName);
     validateNonBlank("driverMaxCpu", conf.getDriverMaxCpu(), conf, sparkAppName);
@@ -105,25 +102,25 @@ public class DistributedUtil {
   }
 
   private static void validatePositive(
-          String fieldName, int value, SparkConfUtil.Conf conf, String sparkAppName) {
+      String fieldName, int value, SparkConfUtil.Conf conf, String sparkAppName) {
     if (value <= 0) {
       throw invalidConf(fieldName + " must be > 0, but was " + value, conf, sparkAppName);
     }
   }
 
   private static void validateNonBlank(
-          String fieldName, String value, SparkConfUtil.Conf conf, String sparkAppName) {
+      String fieldName, String value, SparkConfUtil.Conf conf, String sparkAppName) {
     if (value == null || value.trim().isEmpty()) {
       throw invalidConf(fieldName + " must not be null/blank", conf, sparkAppName);
     }
   }
 
   private static IllegalStateException invalidConf(
-          String reason, SparkConfUtil.Conf conf, String sparkAppName) {
+      String reason, SparkConfUtil.Conf conf, String sparkAppName) {
     return new IllegalStateException(
-            String.format(
-                    "Invalid Spark config for %s: %s. Config: %s",
-                    sparkAppName, reason, conf.getDescription()));
+        String.format(
+            "Invalid Spark config for %s: %s. Config: %s",
+            sparkAppName, reason, conf.getDescription()));
   }
 
   public static String timeAndRecPerSecond(String jobName, long start, long recordsNumber) {

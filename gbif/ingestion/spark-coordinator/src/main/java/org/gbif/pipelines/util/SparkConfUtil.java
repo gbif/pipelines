@@ -10,8 +10,8 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.SparkJobConfig;
 
 /**
- * Loads config for Spark jobs based on the number of records to process.
- * The config is defined in pipelines-config.yaml
+ * Loads config for Spark jobs based on the number of records to process. The config is defined in
+ * pipelines-config.yaml
  */
 public class SparkConfUtil {
 
@@ -149,9 +149,12 @@ public class SparkConfUtil {
       validatePositive("defaultParallelism", conf.getDefaultParallelism(), conf, sparkAppName);
 
       validateNonBlank(
-              "driverMemoryOverheadFactor", conf.getDriverMemoryOverheadFactor(), conf, sparkAppName);
+          "driverMemoryOverheadFactor", conf.getDriverMemoryOverheadFactor(), conf, sparkAppName);
       validateNonBlank(
-              "executorMemoryOverheadFactor", conf.getExecutorMemoryOverheadFactor(), conf, sparkAppName);
+          "executorMemoryOverheadFactor",
+          conf.getExecutorMemoryOverheadFactor(),
+          conf,
+          sparkAppName);
 
       validateNonBlank("driverMinCpu", conf.getDriverMinCpu(), conf, sparkAppName);
       validateNonBlank("driverMaxCpu", conf.getDriverMaxCpu(), conf, sparkAppName);
