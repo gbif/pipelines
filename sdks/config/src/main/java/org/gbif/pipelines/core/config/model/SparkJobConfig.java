@@ -2,6 +2,7 @@ package org.gbif.pipelines.core.config.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,7 +13,10 @@ import lombok.NoArgsConstructor;
 public class SparkJobConfig implements Serializable {
 
   // command line args
-  private List<String> args;
+  private List<String> args = new ArrayList<>();
+
+  // number of shards on disk that should be created
+  public int numberOfShards;
 
   // spark settings
   public String driverMemoryOverheadFactor;

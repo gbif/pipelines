@@ -1,5 +1,7 @@
 package org.gbif.pipelines.coordinator;
 
+import static org.gbif.pipelines.util.DistributedUtil.getRecordsNumber;
+
 import java.util.HashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +13,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.IdentifiersPipeline;
+import org.gbif.pipelines.util.SparkConfUtil;
 
 @Slf4j
 public class IdentifierCallback
@@ -35,6 +38,9 @@ public class IdentifierCallback
   @Override
   protected void runPipeline(PipelinesVerbatimMessage message) throws Exception {
 
+    Long recordsNumber = getRecordsNumber(pipelinesConfig, message, fileSystem);
+    int numberOfShards = SparkConfUtil.getNumberOfShards(pipelinesConfig, recordsNumber);
+
     // run pipeline
     IdentifiersPipeline.runValidation(
         sparkSession,
@@ -42,7 +48,7 @@ public class IdentifierCallback
         pipelinesConfig,
         message.getDatasetUuid().toString(),
         message.getAttempt(),
-        pipelinesConfig.getStandalone().getNumberOfShards(),
+        numberOfShards,
         message.getValidationResult().isTripletValid(),
         message.getValidationResult().isOccurrenceIdValid(),
         message.getValidationResult().isUseExtendedRecordId() != null

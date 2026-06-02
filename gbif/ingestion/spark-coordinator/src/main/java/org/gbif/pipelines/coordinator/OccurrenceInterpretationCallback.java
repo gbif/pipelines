@@ -1,5 +1,7 @@
 package org.gbif.pipelines.coordinator;
 
+import static org.gbif.pipelines.util.DistributedUtil.getRecordsNumber;
+
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;
@@ -10,6 +12,8 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.OccurrenceInterpretationPipeline;
+import org.gbif.pipelines.util.CleanupUtil;
+import org.gbif.pipelines.util.SparkConfUtil;
 
 @Slf4j
 public class OccurrenceInterpretationCallback
@@ -34,6 +38,9 @@ public class OccurrenceInterpretationCallback
   @Override
   protected void runPipeline(PipelinesVerbatimMessage message) throws Exception {
 
+    Long recordsNumber = getRecordsNumber(pipelinesConfig, message, fileSystem);
+    int numberOfShards = SparkConfUtil.getNumberOfShards(pipelinesConfig, recordsNumber);
+
     // Run interpretation
     OccurrenceInterpretationPipeline.runInterpretation(
         sparkSession,
@@ -41,7 +48,7 @@ public class OccurrenceInterpretationCallback
         pipelinesConfig,
         message.getDatasetUuid().toString(),
         message.getAttempt(),
-        pipelinesConfig.getStandalone().getNumberOfShards(),
+        numberOfShards,
         message.getValidationResult().isTripletValid(),
         message.getValidationResult().isOccurrenceIdValid(),
         new ArrayList<>(message.getInterpretTypes())); // map to enum

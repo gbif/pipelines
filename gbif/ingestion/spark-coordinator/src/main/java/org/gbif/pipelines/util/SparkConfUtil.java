@@ -1,4 +1,4 @@
-package org.gbif.pipelines.airflow;
+package org.gbif.pipelines.util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,70 +6,10 @@ import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.SparkJobConfig;
 
-@Getter
-@Slf4j
-public class AirflowConfFactory {
-
-  public static Conf createConf(
-      PipelinesConfig pipelinesConfig,
-      String datasetId,
-      int attempt,
-      String sparkAppName,
-      long recordsNumber,
-      List<String> extraArgs) {
-
-    Map<String, SparkJobConfig> configs = pipelinesConfig.getProcessingConfigs();
-
-    SparkJobConfig baseConf = null;
-    String confDescription = null;
-    if (recordsNumber < 0) {
-      throw new IllegalArgumentException("Number of records must be greater than zero");
-    }
-
-    Set<String> expressions = configs.keySet();
-    for (String expression : expressions) {
-      if (evaluate(expression, recordsNumber)) {
-        baseConf = configs.get(expression);
-        confDescription = expression;
-        break;
-      }
-    }
-
-    if (baseConf == null) {
-      throw new RuntimeException(
-          String.format(
-              "No base configuration found for dataset {%s}, records {%d}",
-              datasetId, recordsNumber));
-    }
-
-    List<String> combinedArgs = new ArrayList<>(extraArgs);
-    combinedArgs.add("--datasetId=" + datasetId);
-    combinedArgs.add("--attempt=" + attempt);
-    combinedArgs.add("--appName=" + sparkAppName);
-    combinedArgs.addAll(baseConf.getArgs());
-
-    return Conf.builder()
-        .description(confDescription)
-        .args(combinedArgs)
-        .driverMemoryOverheadFactor(baseConf.driverMemoryOverheadFactor)
-        .driverCores(baseConf.driverCores)
-        .executorMemoryOverheadFactor(baseConf.executorMemoryOverheadFactor)
-        .executorInstances(baseConf.executorInstances)
-        .executorCores(baseConf.executorCores)
-        .defaultParallelism(baseConf.defaultParallelism)
-        .driverMinCpu(baseConf.driverMinCpu)
-        .driverMaxCpu(baseConf.driverMaxCpu)
-        .driverLimitMemory(baseConf.driverLimitMemory)
-        .executorMinCpu(baseConf.executorMinCpu)
-        .executorMaxCpu(baseConf.executorMaxCpu)
-        .executorLimitMemory(baseConf.executorLimitMemory)
-        .build();
-  }
+public class SparkConfUtil {
 
   public static boolean evaluate(String expression, long value) {
     // Remove spaces
@@ -127,6 +67,88 @@ public class AirflowConfFactory {
     return ok;
   }
 
+  public static Conf createConf(
+      PipelinesConfig pipelinesConfig,
+      String datasetId,
+      int attempt,
+      String sparkAppName,
+      long recordsNumber,
+      List<String> extraArgs) {
+
+    Map<String, SparkJobConfig> configs = pipelinesConfig.getProcessingConfigs();
+
+    SparkJobConfig baseConf = null;
+    String confDescription = null;
+    if (recordsNumber < 0) {
+      throw new IllegalArgumentException("Number of records must be greater than zero");
+    }
+
+    Set<String> expressions = configs.keySet();
+    for (String expression : expressions) {
+      if (evaluate(expression, recordsNumber)) {
+        baseConf = configs.get(expression);
+        confDescription = expression;
+        break;
+      }
+    }
+
+    if (baseConf == null) {
+      throw new RuntimeException(
+          String.format(
+              "No base configuration found for dataset {%s}, records {%d}",
+              datasetId, recordsNumber));
+    }
+
+    List<String> combinedArgs = new ArrayList<>(extraArgs);
+    combinedArgs.add("--datasetId=" + datasetId);
+    combinedArgs.add("--attempt=" + attempt);
+    combinedArgs.add("--appName=" + sparkAppName);
+    combinedArgs.add("--numberOfShards=" + baseConf.numberOfShards);
+    combinedArgs.addAll(baseConf.getArgs());
+
+    return Conf.builder()
+        .description(confDescription)
+        .args(combinedArgs)
+        .numberOfShards(baseConf.numberOfShards)
+        .driverMemoryOverheadFactor(baseConf.driverMemoryOverheadFactor)
+        .driverCores(baseConf.driverCores)
+        .executorMemoryOverheadFactor(baseConf.executorMemoryOverheadFactor)
+        .executorInstances(baseConf.executorInstances)
+        .executorCores(baseConf.executorCores)
+        .defaultParallelism(baseConf.defaultParallelism)
+        .driverMinCpu(baseConf.driverMinCpu)
+        .driverMaxCpu(baseConf.driverMaxCpu)
+        .driverLimitMemory(baseConf.driverLimitMemory)
+        .executorMinCpu(baseConf.executorMinCpu)
+        .executorMaxCpu(baseConf.executorMaxCpu)
+        .executorLimitMemory(baseConf.executorLimitMemory)
+        .build();
+  }
+
+  public static int getNumberOfShards(PipelinesConfig pipelinesConfig, Long recordsNumber) {
+    Map<String, SparkJobConfig> configs = pipelinesConfig.getProcessingConfigs();
+
+    SparkJobConfig baseConf = null;
+    if (recordsNumber < 0) {
+      throw new IllegalArgumentException("Number of records must be greater than zero");
+    }
+
+    Set<String> expressions = configs.keySet();
+    for (String expression : expressions) {
+      if (evaluate(expression, recordsNumber)) {
+        baseConf = configs.get(expression);
+        break;
+      }
+    }
+
+    if (baseConf == null) {
+      throw new RuntimeException(
+          String.format("No base configuration found for  records {%d}", recordsNumber));
+    }
+
+    return baseConf.numberOfShards;
+  }
+
   @Data
   @Builder
   public static class Conf {
@@ -135,6 +157,8 @@ public class AirflowConfFactory {
 
     // command line args
     private final List<String> args;
+
+    public int numberOfShards;
 
     // spark settings
     public final String driverMemoryOverheadFactor;
