@@ -12,12 +12,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
-import org.gbif.common.messaging.api.messages.PipelinesValidatorArchiveValidatorMessage;
+import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.ValidationWsClientStub;
-import org.gbif.pipelines.tasks.validators.validator.validator.ValidatorArchiveValidatorCallback;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
@@ -56,15 +55,15 @@ public class ArchiveValidatorCallbackIT {
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
-    ValidatorArchiveValidatorCallback callback =
-        new ValidatorArchiveValidatorCallback(
+    ArchiveValidatorCallback callback =
+        new ArchiveValidatorCallback(
             config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_OCCURRENCR_UUID);
     int attempt = 2;
 
-    PipelinesValidatorArchiveValidatorMessage message =
-        new PipelinesValidatorArchiveValidatorMessage(
+    PipelinesArchiveValidatorMessage message =
+        new PipelinesArchiveValidatorMessage(
             uuid,
             attempt,
             new HashSet<>(
@@ -126,15 +125,15 @@ public class ArchiveValidatorCallbackIT {
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
-    ValidatorArchiveValidatorCallback callback =
-        new ValidatorArchiveValidatorCallback(
+    ArchiveValidatorCallback callback =
+        new ArchiveValidatorCallback(
             config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_SAMPLING_UUID);
     int attempt = 3;
 
-    PipelinesValidatorArchiveValidatorMessage message =
-        new PipelinesValidatorArchiveValidatorMessage(
+    PipelinesArchiveValidatorMessage message =
+        new PipelinesArchiveValidatorMessage(
             uuid,
             attempt,
             new HashSet<>(
@@ -190,15 +189,15 @@ public class ArchiveValidatorCallbackIT {
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
-    ValidatorArchiveValidatorCallback callback =
-        new ValidatorArchiveValidatorCallback(
+    ArchiveValidatorCallback callback =
+        new ArchiveValidatorCallback(
             config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_CLB_UUID);
     int attempt = 3;
 
-    PipelinesValidatorArchiveValidatorMessage message =
-        new PipelinesValidatorArchiveValidatorMessage(
+    PipelinesArchiveValidatorMessage message =
+        new PipelinesArchiveValidatorMessage(
             uuid,
             attempt,
             new HashSet<>(
@@ -255,15 +254,15 @@ public class ArchiveValidatorCallbackIT {
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
-    ValidatorArchiveValidatorCallback callback =
-        new ValidatorArchiveValidatorCallback(
+    ArchiveValidatorCallback callback =
+        new ArchiveValidatorCallback(
             config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString(DATASET_OCCURRENCR_UUID);
     int attempt = 2;
 
-    PipelinesValidatorArchiveValidatorMessage message =
-        new PipelinesValidatorArchiveValidatorMessage(
+    PipelinesArchiveValidatorMessage message =
+        new PipelinesArchiveValidatorMessage(
             uuid,
             attempt,
             Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
@@ -287,15 +286,15 @@ public class ArchiveValidatorCallbackIT {
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
-    ValidatorArchiveValidatorCallback callback =
-        new ValidatorArchiveValidatorCallback(
+    ArchiveValidatorCallback callback =
+        new ArchiveValidatorCallback(
             config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.randomUUID(); // Use wrong datasetKey
     int attempt = 2;
 
-    PipelinesValidatorArchiveValidatorMessage message =
-        new PipelinesValidatorArchiveValidatorMessage(
+    PipelinesArchiveValidatorMessage message =
+        new PipelinesArchiveValidatorMessage(
             uuid,
             attempt,
             Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
@@ -319,15 +318,15 @@ public class ArchiveValidatorCallbackIT {
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
-    ValidatorArchiveValidatorCallback callback =
-        new ValidatorArchiveValidatorCallback(
+    ArchiveValidatorCallback callback =
+        new ArchiveValidatorCallback(
             config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.randomUUID(); // Use wrong datasetKey
     int attempt = 2;
 
-    PipelinesValidatorArchiveValidatorMessage message =
-        new PipelinesValidatorArchiveValidatorMessage(
+    PipelinesArchiveValidatorMessage message =
+        new PipelinesArchiveValidatorMessage(
             uuid,
             attempt,
             Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
@@ -351,15 +350,15 @@ public class ArchiveValidatorCallbackIT {
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
-    ValidatorArchiveValidatorCallback callback =
-        new ValidatorArchiveValidatorCallback(
+    ArchiveValidatorCallback callback =
+        new ArchiveValidatorCallback(
             config, PUBLISHER, historyClient, validationClient, new SchemaValidatorFactory());
 
     UUID uuid = UUID.fromString("b578802e-f1ca-4e5b-acf8-4d45306e6b48");
     int attempt = 1;
 
-    PipelinesValidatorArchiveValidatorMessage message =
-        new PipelinesValidatorArchiveValidatorMessage(
+    PipelinesArchiveValidatorMessage message =
+        new PipelinesArchiveValidatorMessage(
             uuid,
             attempt,
             Collections.singleton(VALIDATOR_VALIDATE_ARCHIVE.name()),
