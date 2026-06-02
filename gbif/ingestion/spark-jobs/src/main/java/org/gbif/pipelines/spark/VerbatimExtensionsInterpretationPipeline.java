@@ -240,18 +240,27 @@ public class VerbatimExtensionsInterpretationPipeline {
       // get target table schema (table must exist)
       StructType tblSchema = spark.read().format("iceberg").load(table).schema();
 
-      // drop non-unique columns. First one wins https://github.com/gbif/pipelines/issues/1386
+      // ensure unique column names (keep first occurrence) to avoid ambiguous references
       var sourceDF = optimized.filter(col("directory").equalTo(dir));
       String[] columnList = sourceDF.columns();
-      Set<String> uniqueList = new HashSet<>();
-      for (String col : columnList) {
-        if (uniqueList.contains(col)) {
-          log.warn("Duplicate column found for extension directory '{}'", dir);
-          sourceDF = sourceDF.drop(col);
+      Map<String, Integer> seen = new HashMap<>();
+      String[] renamed = new String[columnList.length];
+      for (int i = 0; i < columnList.length; i++) {
+        String name = columnList[i];
+        int n = seen.getOrDefault(name, 0);
+        if (n == 0) {
+          renamed[i] = name;
         } else {
-          uniqueList.add(col);
+          renamed[i] = name + "__dup" + (n + 1);
+          log.warn(
+              "Duplicate column '{}' found for extension directory '{}'; renaming to '{}'",
+              name,
+              dir,
+              renamed[i]);
         }
+        seen.put(name, n + 1);
       }
+      sourceDF = sourceDF.toDF(renamed);
 
       // build select list that matches target schema: use existing columns or nulls cast to the
       // target type
