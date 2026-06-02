@@ -16,7 +16,8 @@ public class SparkJobConfig implements Serializable {
   private List<String> args = new ArrayList<>();
 
   // number of shards on disk that should be created
-  public int numberOfShards = 1;
+  public int numberOfShards;
+  public boolean standalone = false;
 
   // spark settings
   public String driverMemoryOverheadFactor;

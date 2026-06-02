@@ -71,14 +71,12 @@ public class SparkConfTest {
     assertEquals(50, conf6.getExecutorInstances());
   }
 
-
   @Test
   public void testSmallDatasets() {
 
     String testRoot = SparkConfTest.class.getResource("/").getFile();
     PipelinesConfig pipelinesConfig =
-            PipelinesConfigUtil.loadConfig(testRoot + "pipelines-configmap-test.yaml");
-
+        PipelinesConfigUtil.loadConfig(testRoot + "pipelines-configmap-test.yaml");
     assertEquals(1, SparkConfUtil.getNumberOfShards(pipelinesConfig, 0L));
     assertEquals(1, SparkConfUtil.getNumberOfShards(pipelinesConfig, 4_999L));
     assertEquals(3, SparkConfUtil.getNumberOfShards(pipelinesConfig, 9_999L));

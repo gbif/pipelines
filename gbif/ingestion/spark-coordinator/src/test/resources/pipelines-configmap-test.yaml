@@ -137,14 +137,20 @@ tableBuildConfig:
   history_expire_min_snapshots_to_keep: 10
 processingConfigs:
   # simple support for expressions in the format a < x < b
+  # standalone configs
   "0 <= recordCount < 5_000":
     numberOfShards: 1
+    standalone: true
   "5_000 <= recordCount < 10_000":
     numberOfShards: 3
+    standalone: true
   "10_000 <= recordCount < 50_000":
     numberOfShards: 5
+    standalone: true
   "50_000 <= recordCount < 100_000":
     numberOfShards: 8
+    standalone: true
+  # distributed configs
   "100_000 <= recordCount < 250_000":
     description: "100_000 to 250_000"
     numberOfShards: 10

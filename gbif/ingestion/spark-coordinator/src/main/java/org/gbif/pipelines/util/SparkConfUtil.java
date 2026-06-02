@@ -9,6 +9,10 @@ import lombok.Data;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.SparkJobConfig;
 
+/**
+ * Loads config for Spark jobs based on the number of records to process.
+ * The config is defined in pipelines-config.yaml
+ */
 public class SparkConfUtil {
 
   public static boolean evaluate(String expression, long value) {
@@ -76,6 +80,7 @@ public class SparkConfUtil {
       List<String> extraArgs) {
 
     Map<String, SparkJobConfig> configs = pipelinesConfig.getProcessingConfigs();
+    validateConfigs(configs);
 
     SparkJobConfig baseConf = null;
     String confDescription = null;
@@ -123,6 +128,59 @@ public class SparkConfUtil {
         .executorMaxCpu(baseConf.executorMaxCpu)
         .executorLimitMemory(baseConf.executorLimitMemory)
         .build();
+  }
+
+  private static void validateConfigs(Map<String, SparkJobConfig> configs) {
+    for (SparkJobConfig config : configs.values()) {
+      validateSparkJobConf(config, "config with description: " + config.getArgs());
+    }
+  }
+
+  private static void validateSparkJobConf(SparkJobConfig conf, String sparkAppName) {
+
+    validatePositive("numberOfShards", conf.getNumberOfShards(), conf, sparkAppName);
+
+    if (!conf.standalone) {
+
+      // check sensible values for spark properties
+      validatePositive("executorInstances", conf.getExecutorInstances(), conf, sparkAppName);
+      validatePositive("driverCores", conf.getDriverCores(), conf, sparkAppName);
+      validatePositive("executorCores", conf.getExecutorCores(), conf, sparkAppName);
+      validatePositive("defaultParallelism", conf.getDefaultParallelism(), conf, sparkAppName);
+
+      validateNonBlank(
+              "driverMemoryOverheadFactor", conf.getDriverMemoryOverheadFactor(), conf, sparkAppName);
+      validateNonBlank(
+              "executorMemoryOverheadFactor", conf.getExecutorMemoryOverheadFactor(), conf, sparkAppName);
+
+      validateNonBlank("driverMinCpu", conf.getDriverMinCpu(), conf, sparkAppName);
+      validateNonBlank("driverMaxCpu", conf.getDriverMaxCpu(), conf, sparkAppName);
+      validateNonBlank("driverLimitMemory", conf.getDriverLimitMemory(), conf, sparkAppName);
+
+      validateNonBlank("executorMinCpu", conf.getExecutorMinCpu(), conf, sparkAppName);
+      validateNonBlank("executorMaxCpu", conf.getExecutorMaxCpu(), conf, sparkAppName);
+      validateNonBlank("executorLimitMemory", conf.getExecutorLimitMemory(), conf, sparkAppName);
+    }
+  }
+
+  private static void validatePositive(
+      String fieldName, int value, SparkJobConfig conf, String sparkAppName) {
+    if (value <= 0) {
+      throw invalidConf(fieldName + " must be > 0, but was " + value, conf, sparkAppName);
+    }
+  }
+
+  private static void validateNonBlank(
+      String fieldName, String value, SparkJobConfig conf, String sparkAppName) {
+    if (value == null || value.trim().isEmpty()) {
+      throw invalidConf(fieldName + " must not be null/blank", conf, sparkAppName);
+    }
+  }
+
+  private static IllegalStateException invalidConf(
+      String reason, SparkJobConfig conf, String confName) {
+    return new IllegalStateException(
+        String.format("Invalid Spark config for %s. Config: %s", reason, confName));
   }
 
   public static int getNumberOfShards(PipelinesConfig pipelinesConfig, Long recordsNumber) {
