@@ -29,13 +29,13 @@ import org.gbif.validator.ws.client.ValidationWsClient;
  * org.gbif.common.messaging.api.messages.PipelinesValidatorDwcaMessage } and perform conversion
  */
 @Slf4j
-public class DwcaToAvroValidatorService extends AbstractIdleService {
+public class ValidatorDwcaToAvroService extends AbstractIdleService {
 
-  private final DwcaToAvroValidatorConfiguration config;
+  private final ValidatorDwcaToAvroConfiguration config;
   private MessageListener listener;
   private MessagePublisher publisher;
 
-  public DwcaToAvroValidatorService(DwcaToAvroValidatorConfiguration config) {
+  public ValidatorDwcaToAvroService(ValidatorDwcaToAvroConfiguration config) {
     this.config = config;
   }
 
@@ -55,8 +55,8 @@ public class DwcaToAvroValidatorService extends AbstractIdleService {
 
     DatasetClient datasetClient = ServiceFactory.createDatasetClient(config.stepConfig);
 
-    DwcaToAvroValidatorCallback validatorCallback =
-        DwcaToAvroValidatorCallback.builder()
+    ValidatorDwcaToAvroCallback validatorCallback =
+        ValidatorDwcaToAvroCallback.builder()
             .config(config)
             .publisher(publisher)
             .historyClient(historyClient)
