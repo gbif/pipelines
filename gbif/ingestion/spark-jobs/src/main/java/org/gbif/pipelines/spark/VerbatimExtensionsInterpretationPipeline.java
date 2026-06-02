@@ -194,9 +194,6 @@ public class VerbatimExtensionsInterpretationPipeline {
         directories.size(),
         String.join(", ", directories));
 
-    // cache columns for later use
-    Set<String> dfCols = new HashSet<>(Arrays.asList(optimized.columns()));
-
     // Check if we can create the table schema
     Map<String, ExtensionTable> extensionTableMap =
         ExtensionTable.tableExtensions().stream()
@@ -243,15 +240,26 @@ public class VerbatimExtensionsInterpretationPipeline {
       // get target table schema (table must exist)
       StructType tblSchema = spark.read().format("iceberg").load(table).schema();
 
+      // drop non-unique columns. First one wins https://github.com/gbif/pipelines/issues/1386
+      var sourceDF = optimized.filter(col("directory").equalTo(dir));
+      String[] columnList = sourceDF.columns();
+      Set<String> uniqueList = new HashSet<>();
+      for (String col : columnList) {
+        if (uniqueList.contains(col)) {
+          log.warn("Duplicate column found for extension directory '{}'", dir);
+          sourceDF = sourceDF.drop(col);
+        } else {
+          uniqueList.add(col);
+        }
+      }
+
       // build select list that matches target schema: use existing columns or nulls cast to the
       // target type
-      var colsToSelect = getColsToSelect(tblSchema, dfCols);
+      var colsToSelect =
+          getColsToSelect(tblSchema, new HashSet<>(Arrays.asList(sourceDF.columns())));
 
       // filter rows for this extension and select aligned columns
-      Dataset<Row> toWrite =
-          optimized
-              .filter(col("directory").equalTo(dir)) // select data in the extension
-              .select(colsToSelect); // align columns to target schema
+      Dataset<Row> toWrite = sourceDF.select(colsToSelect); // align columns to target schema
 
       // ensure partition column exists in the DataFrame if the table is partitioned by datasetKey
       if (!Arrays.asList(toWrite.columns()).contains("datasetKey")) {
