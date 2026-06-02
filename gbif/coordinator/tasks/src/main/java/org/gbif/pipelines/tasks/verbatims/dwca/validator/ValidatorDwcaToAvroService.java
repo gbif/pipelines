@@ -25,8 +25,8 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 /**
- * A service which listens to the {@link
- * org.gbif.common.messaging.api.messages.PipelinesValidatorDwcaMessage } and perform conversion
+ * A service that listens to the {@link
+ * org.gbif.common.messaging.api.messages.PipelinesDwcaMessage } and perform conversion
  */
 @Slf4j
 public class ValidatorDwcaToAvroService extends AbstractIdleService {
@@ -41,7 +41,7 @@ public class ValidatorDwcaToAvroService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    log.info("Started pipelines-validator-verbatim-to-avro-from-dwca service");
+    log.info("Started validator-verbatim-to-avro-from-dwca service");
     // Prefetch is one, since this is a long-running process.
     StepConfiguration c = config.stepConfig;
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
