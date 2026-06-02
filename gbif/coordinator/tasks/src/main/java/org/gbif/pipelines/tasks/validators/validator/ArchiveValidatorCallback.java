@@ -14,11 +14,10 @@ import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.modes.CallbackModeType;
 import org.gbif.pipelines.tasks.validators.validator.validate.ArchiveValidatorFactory;
-import org.gbif.pipelines.tasks.validators.validator.validate.PipelinesArchiveValidatorOutgoingMessageCreator;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
-/** Callback which is called when the {@link PipelinesArchiveValidatorMessage} is received. */
+/** Callback that is called when the {@link PipelinesArchiveValidatorMessage} is received. */
 @Slf4j
 @AllArgsConstructor
 public class ArchiveValidatorCallback
@@ -38,7 +37,7 @@ public class ArchiveValidatorCallback
         .validationClient(validationClient)
         .config(config)
         .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
-        .callbackModeType(CallbackModeType.PIPELINES)
+        .callbackModeType(CallbackModeType.VALIDATOR)
         .publisher(publisher)
         .message(message)
         .handler(this)
@@ -69,7 +68,6 @@ public class ArchiveValidatorCallback
           .config(config)
           .message(message)
           .schemaValidatorFactory(schemaValidatorFactory)
-          .outgoingMessageCreator(new PipelinesArchiveValidatorOutgoingMessageCreator())
           .build()
           .create()
           .validate();
@@ -82,7 +80,6 @@ public class ArchiveValidatorCallback
     return ArchiveValidatorFactory.builder()
         .message(message)
         .config(config)
-        .outgoingMessageCreator(new PipelinesArchiveValidatorOutgoingMessageCreator())
         .build()
         .create()
         .createOutgoingMessage();

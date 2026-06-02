@@ -8,7 +8,7 @@ import org.gbif.api.model.crawler.DwcaValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.common.messaging.api.messages.AbstractPipelinesArchiveValidatorMessage;
+import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -19,7 +19,7 @@ public class SingleFileArchiveValidator implements ArchiveValidator {
 
   private final ArchiveValidatorConfiguration config;
   private final ValidationWsClient validationClient;
-  private final AbstractPipelinesArchiveValidatorMessage message;
+  private final PipelinesArchiveValidatorMessage message;
 
   @Override
   @SneakyThrows

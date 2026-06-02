@@ -32,7 +32,7 @@ import org.gbif.pipelines.common.configs.StepConfiguration;
  * Validator.
  */
 @ToString
-public class DwcaToAvroValidatorConfiguration implements BaseConfiguration {
+public class ValidatorDwcaToAvroConfiguration implements BaseConfiguration {
 
   @ParametersDelegate @Valid @NotNull public StepConfiguration stepConfig = new StepConfiguration();
 

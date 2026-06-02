@@ -33,7 +33,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesValidatorDwcaMessage;
+import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.converters.DwcaToAvroConverter;
 import org.gbif.dwc.Archive;
@@ -50,22 +50,22 @@ import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
-/** Callback which is called when the {@link PipelinesValidatorDwcaMessage} is received. */
+/** Callback that is called when the {@link PipelinesDwcaMessage} is received. */
 @Slf4j
 @Builder
-public class DwcaToAvroValidatorCallback
-    extends AbstractMessageCallback<PipelinesValidatorDwcaMessage>
-    implements StepHandler<PipelinesValidatorDwcaMessage, PipelinesVerbatimMessage> {
+public class ValidatorDwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMessage>
+    implements StepHandler<PipelinesDwcaMessage, PipelinesVerbatimMessage> {
 
-  private final DwcaToAvroValidatorConfiguration config;
+  private final ValidatorDwcaToAvroConfiguration config;
   private final MessagePublisher publisher;
   private final PipelinesHistoryClient historyClient;
   private final DatasetClient datasetClient;
   private final ValidationWsClient validationClient;
 
   @Override
-  public void handleMessage(PipelinesValidatorDwcaMessage message) {
-    PipelinesCallback.<PipelinesValidatorDwcaMessage, PipelinesVerbatimMessage>builder()
+  public void handleMessage(PipelinesDwcaMessage message) {
+    log.debug("Handling DwcaToAvroValidatorCallback for message: {}", message);
+    PipelinesCallback.<PipelinesDwcaMessage, PipelinesVerbatimMessage>builder()
         .historyClient(historyClient)
         .datasetClient(datasetClient)
         .validationClient(validationClient)
@@ -81,12 +81,12 @@ public class DwcaToAvroValidatorCallback
 
   @Override
   public String getRouting() {
-    return PipelinesValidatorDwcaMessage.ROUTING_KEY;
+    return PipelinesDwcaMessage.VALIDATOR_ROUTING_KEY;
   }
 
   /** Only correct messages can be handled, by now is only OCCURRENCE type messages */
   @Override
-  public boolean isMessageCorrect(PipelinesValidatorDwcaMessage message) {
+  public boolean isMessageCorrect(PipelinesDwcaMessage message) {
     boolean isMessageValid =
         message.getDatasetType() != null && message.getValidationReport().isValid();
     if (!isMessageValid) {
@@ -104,7 +104,7 @@ public class DwcaToAvroValidatorCallback
     return isMessageValid && isReportValid;
   }
 
-  private boolean isReportValid(PipelinesValidatorDwcaMessage message) {
+  private boolean isReportValid(PipelinesDwcaMessage message) {
     DwcaValidationReport report = message.getValidationReport();
 
     boolean isValidOccurrenceReport =
@@ -127,7 +127,7 @@ public class DwcaToAvroValidatorCallback
 
   /** Main message processing logic converts a DwCA archive to an avro file. */
   @Override
-  public Runnable createRunnable(PipelinesValidatorDwcaMessage message) {
+  public Runnable createRunnable(PipelinesDwcaMessage message) {
     return () -> {
       UUID datasetId = message.getDatasetUuid();
       String attempt = String.valueOf(message.getAttempt());
@@ -162,7 +162,7 @@ public class DwcaToAvroValidatorCallback
 
   @SneakyThrows
   @Override
-  public PipelinesVerbatimMessage createOutgoingMessage(PipelinesValidatorDwcaMessage message) {
+  public PipelinesVerbatimMessage createOutgoingMessage(PipelinesDwcaMessage message) {
     Objects.requireNonNull(message.getEndpointType(), "endpointType can't be NULL!");
 
     Set<String> interpretedTypes = config.interpretTypes;
