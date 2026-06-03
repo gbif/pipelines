@@ -99,6 +99,9 @@
     <!-- Tools-->
     <lombok.version>1.18.42</lombok.version>
 
+    <!-- Reflections -->
+    <reflections.version>0.10.2</reflections.version>
+
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.68</gbif-parsers.version>
     <dwca-io.version>3.0.1</dwca-io.version>
