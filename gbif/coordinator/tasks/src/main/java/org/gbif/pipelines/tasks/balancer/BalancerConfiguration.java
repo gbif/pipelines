@@ -26,4 +26,7 @@ public class BalancerConfiguration {
 
   @Parameter(names = "--validator-repository-path")
   public String validatorRepositoryPath;
+
+  @Parameter(names = "--dwcdp-repository-path")
+  public String dwcdpRepositoryPath;
 }
