@@ -57,6 +57,7 @@ public class DwcDpNfsToHdfsStandaloneCallback
   @Override
   public PipelineBasedMessage createOutgoingMessage(DwcDpNfsToHdfsMessage message) {
     // TODO add next message in process
+    log.info("Would send out message for ingestion");
     return null; // no downstream message yet; add when next step exists
   }
 }
