@@ -10,6 +10,7 @@ import org.gbif.common.messaging.api.messages.DwcDpNfsToHdfsMessage;
 import org.gbif.pipelines.airflow.*;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.SparkJobConfig;
+import org.gbif.pipelines.util.SparkConfUtil;
 
 @Slf4j
 public class DwcDpNfsToHdfsDistributedCallback
@@ -43,8 +44,8 @@ public class DwcDpNfsToHdfsDistributedCallback
 
       String sparkAppName = datasetId + "-" + attempt + "-dwcdp-nfs-to-hdfs";
 
-      AirflowConfFactory.Conf conf =
-          AirflowConfFactory.Conf.builder()
+      SparkConfUtil.Conf conf =
+          SparkConfUtil.Conf.builder()
               .description("dwcdp-nfs-to-hdfs")
               .args(args)
               .driverMemoryOverheadFactor(jobConfig.driverMemoryOverheadFactor)
