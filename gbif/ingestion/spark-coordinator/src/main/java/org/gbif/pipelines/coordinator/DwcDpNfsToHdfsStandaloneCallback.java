@@ -37,7 +37,7 @@ public class DwcDpNfsToHdfsStandaloneCallback
     DataPackageConversionPipeline.runCopy(
         new DataPackageConversionPipeline.CopyConfig(
             sparkSession,
-            pipelinesConfig.getInputPath(),
+            pipelinesConfig.getDwcdpNfsRepository(),
             pipelinesConfig.getOutputPath(),
             datasetId,
             attempt,
