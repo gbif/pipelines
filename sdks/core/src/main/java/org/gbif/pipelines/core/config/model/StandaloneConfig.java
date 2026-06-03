@@ -14,7 +14,6 @@ public class StandaloneConfig implements Serializable {
 
   RegistryConfig registry = new RegistryConfig();
   MessagingConfig messaging = new MessagingConfig();
-  Integer numberOfShards = 1;
   Double idThresholdPercent = 50d;
   boolean idThresholdSkip = false;
   List<String> skipInstallationsList = new ArrayList<>();

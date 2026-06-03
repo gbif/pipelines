@@ -11,6 +11,7 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.util.DistributedUtil;
 
 @Slf4j
 public class EventsTableBuildDistributedCallback extends EventsTableBuildCallback {

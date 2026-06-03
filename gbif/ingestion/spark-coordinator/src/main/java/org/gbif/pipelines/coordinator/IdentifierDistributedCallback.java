@@ -6,6 +6,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.util.DistributedUtil;
 
 @Slf4j
 public class IdentifierDistributedCallback extends IdentifierCallback {
