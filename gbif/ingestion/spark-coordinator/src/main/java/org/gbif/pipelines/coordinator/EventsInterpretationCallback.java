@@ -1,6 +1,7 @@
 package org.gbif.pipelines.coordinator;
 
 import static org.gbif.pipelines.spark.Directories.EVENT_JSON;
+import static org.gbif.pipelines.util.DistributedUtil.getRecordsNumber;
 
 import java.io.IOException;
 import java.util.Set;
@@ -15,6 +16,8 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.EventInterpretationPipeline;
 import org.gbif.pipelines.spark.OccurrenceInterpretationPipeline;
+import org.gbif.pipelines.util.CleanupUtil;
+import org.gbif.pipelines.util.SparkConfUtil;
 
 @Slf4j
 public class EventsInterpretationCallback
@@ -46,6 +49,9 @@ public class EventsInterpretationCallback
   @Override
   protected void runPipeline(PipelinesEventsMessage message) throws Exception {
 
+    Long recordsNumber = getRecordsNumber(pipelinesConfig, message, fileSystem);
+    int numberOfShards = SparkConfUtil.getNumberOfShards(pipelinesConfig, recordsNumber);
+
     // Run interpretation
     EventInterpretationPipeline.runEventInterpretation(
         sparkSession,
@@ -53,7 +59,7 @@ public class EventsInterpretationCallback
         pipelinesConfig,
         message.getDatasetUuid().toString(),
         message.getAttempt(),
-        pipelinesConfig.getStandalone().getNumberOfShards());
+        numberOfShards);
 
     // After a successful run, cleanup previous attempts
     CleanupUtil.cleanupPreviousOnSuccess(

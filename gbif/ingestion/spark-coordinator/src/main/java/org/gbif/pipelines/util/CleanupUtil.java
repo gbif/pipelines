@@ -1,4 +1,4 @@
-package org.gbif.pipelines.coordinator;
+package org.gbif.pipelines.util;
 
 import java.io.IOException;
 import java.time.Instant;
