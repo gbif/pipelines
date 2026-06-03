@@ -249,6 +249,7 @@ public class SparkConfUtil {
 
   public static int getNumberOfShards(PipelinesConfig pipelinesConfig, Long recordsNumber) {
     Map<String, SparkJobConfig> configs = pipelinesConfig.getProcessingConfigs();
+    validateConfigs(configs);
 
     SparkJobConfig baseConf = null;
     if (recordsNumber < 0) {

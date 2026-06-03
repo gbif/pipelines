@@ -69,7 +69,6 @@ public class SparkConfTest {
   public void test() {
 
     String testRoot = SparkConfTest.class.getResource("/").getFile();
-    ;
     PipelinesConfig pipelinesConfig =
         PipelinesConfigUtil.loadConfig(testRoot + "pipelines-configmap-test.yaml");
 
