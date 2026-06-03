@@ -25,6 +25,9 @@ public class PipelinesConfig implements Serializable {
   /** The directory where the output files are written to */
   private String outputPath;
 
+  /** NFS mount for dwcdp nfs-to-hdfs */
+  private String dwcdpNfsRepository;
+
   /**
    * The directory where the intermediate files & debug outputs are written to as part of the
    * rebuild jobs
