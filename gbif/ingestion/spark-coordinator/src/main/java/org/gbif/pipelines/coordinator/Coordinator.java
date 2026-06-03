@@ -230,6 +230,15 @@ public class Coordinator {
             (messagePublisher ->
                 new DatasetDeleteCallback(config, master, DatasetType.SAMPLING_EVENT));
         break;
+      case DWCDP_NFS_TO_HDFS_STANDALONE:
+        callbackFn =
+            messagePublisher ->
+                new DwcDpNfsToHdfsStandaloneCallback(config, messagePublisher, master);
+        break;
+      case DWCDP_NFS_TO_HDFS_DISTRIBUTED:
+        callbackFn =
+            messagePublisher -> new DwcDpNfsToHdfsDistributedCallback(config, messagePublisher);
+        break;
 
       default:
         throw new IllegalArgumentException(
@@ -341,6 +350,8 @@ public class Coordinator {
     FRAGMENTER,
     FRAGMENTER_DISTRIBUTED,
     OCCURRENCE_DELETION,
-    EVENT_DELETION
+    EVENT_DELETION,
+    DWCDP_NFS_TO_HDFS_STANDALONE,
+    DWCDP_NFS_TO_HDFS_DISTRIBUTED
   }
 }
