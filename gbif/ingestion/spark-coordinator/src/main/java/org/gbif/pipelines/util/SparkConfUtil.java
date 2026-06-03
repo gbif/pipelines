@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.Builder;
 import lombok.Data;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -12,8 +14,21 @@ import org.gbif.pipelines.core.config.model.SparkJobConfig;
 /**
  * Loads config for Spark jobs based on the number of records to process. The config is defined in
  * pipelines-config.yaml
+ *
+ * <p>Supported expression formats:
+ *
+ * <ul>
+ *   <li>Compound: {@code A <= x < B}, {@code A < x < B}, {@code A <= x <= B}, {@code A < x <= B}
+ *   <li>Compound (reversed): {@code B > x > A}, {@code B >= x > A}, {@code B > x >= A}, {@code B >=
+ *       x >= A}
+ *   <li>Single lower: {@code A <= x}, {@code A < x}, {@code x >= A}, {@code x > A}
+ *   <li>Single upper: {@code x < B}, {@code x <= B}, {@code A > x}, {@code A >= x}
+ * </ul>
  */
 public class SparkConfUtil {
+
+  // Matches <=, >=, <, > in that precedence order
+  private static final Pattern OP_PATTERN = Pattern.compile("<=|>=|<|>");
 
   public static boolean evaluate(String expression, long value) {
     // Remove spaces
@@ -21,33 +36,69 @@ public class SparkConfUtil {
 
     Long lower = null;
     Long upper = null;
-    boolean lowerInclusive = true;
+    boolean lowerInclusive = false;
     boolean upperInclusive = false;
 
-    if (expression.contains("<=")
-        && expression.contains("<")
-        && expression.indexOf("<=") < expression.lastIndexOf("<")) {
-      // A <= x < B
-      String[] parts = expression.split("<=|<");
-      lower = Long.parseLong(parts[0].replace("_", ""));
-      upper = Long.parseLong(parts[2].replace("_", ""));
-      lowerInclusive = true;
-      upperInclusive = false;
-    } else if (expression.contains("<=")) {
-      // A <= x
-      String[] parts = expression.split("<=");
-      lower = Long.parseLong(parts[0].replace("_", ""));
-      lowerInclusive = true;
-    } else if (expression.contains("<")) {
-      // x < B
-      String[] parts = expression.split("<");
-      upper = Long.parseLong(parts[1].replace("_", ""));
-      upperInclusive = false;
-    } else if (expression.contains(">")) {
-      // x > B
-      String[] parts = expression.split(">");
-      lower = Long.parseLong(parts[1].replace("_", ""));
-      lowerInclusive = false;
+    // Collect all operators
+    Matcher matcher = OP_PATTERN.matcher(expression);
+    List<String> ops = new ArrayList<>();
+    while (matcher.find()) {
+      ops.add(matcher.group());
+    }
+
+    // Split into operands (numeric values or variable placeholder)
+    String[] parts = expression.split("<=|>=|<|>");
+
+    if (ops.size() == 2) {
+      // Compound expression: A OP x OP B  or  B OP x OP A
+      String leftOp = ops.get(0);
+      String rightOp = ops.get(1);
+      boolean leftOpIsLess = leftOp.equals("<") || leftOp.equals("<=");
+      boolean rightOpIsLess = rightOp.equals("<") || rightOp.equals("<=");
+
+      if (leftOpIsLess && rightOpIsLess) {
+        // A <= x < B  /  A < x < B  /  A <= x <= B  /  A < x <= B
+        lower = Long.parseLong(parts[0].replace("_", ""));
+        upper = Long.parseLong(parts[2].replace("_", ""));
+        lowerInclusive = leftOp.equals("<=");
+        upperInclusive = rightOp.equals("<=");
+      } else if (!leftOpIsLess && !rightOpIsLess) {
+        // B > x > A  /  B >= x > A  /  B > x >= A  /  B >= x >= A
+        upper = Long.parseLong(parts[0].replace("_", ""));
+        lower = Long.parseLong(parts[2].replace("_", ""));
+        upperInclusive = leftOp.equals(">=");
+        lowerInclusive = rightOp.equals(">=");
+      } else {
+        throw new IllegalArgumentException(
+            "Mixed operator directions in compound expression: " + expression);
+      }
+    } else if (ops.size() == 1) {
+      String op = ops.get(0);
+      boolean leftIsNumber = isNumber(parts[0]);
+
+      if (op.equals("<") || op.equals("<=")) {
+        if (leftIsNumber) {
+          // A < x  or  A <= x  → lower bound
+          lower = Long.parseLong(parts[0].replace("_", ""));
+          lowerInclusive = op.equals("<=");
+        } else {
+          // x < B  or  x <= B  → upper bound
+          upper = Long.parseLong(parts[1].replace("_", ""));
+          upperInclusive = op.equals("<=");
+        }
+      } else if (op.equals(">") || op.equals(">=")) {
+        if (leftIsNumber) {
+          // A > x  or  A >= x  → upper bound  (equivalent to x < A or x <= A)
+          upper = Long.parseLong(parts[0].replace("_", ""));
+          upperInclusive = op.equals(">=");
+        } else {
+          // x > A  or  x >= A  → lower bound
+          lower = Long.parseLong(parts[1].replace("_", ""));
+          lowerInclusive = op.equals(">=");
+        }
+      } else {
+        throw new IllegalArgumentException("Invalid expression: " + expression);
+      }
     } else {
       throw new IllegalArgumentException("Invalid expression: " + expression);
     }
@@ -184,6 +235,16 @@ public class SparkConfUtil {
       String reason, SparkJobConfig conf, String confName) {
     return new IllegalStateException(
         String.format("Invalid Spark config for %s. Config: %s", reason, confName));
+  }
+
+  /** Returns true if the string (after removing underscore separators) represents a valid long. */
+  private static boolean isNumber(String s) {
+    try {
+      Long.parseLong(s.replace("_", ""));
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
   }
 
   public static int getNumberOfShards(PipelinesConfig pipelinesConfig, Long recordsNumber) {

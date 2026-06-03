@@ -27,6 +27,45 @@ public class SparkConfTest {
   }
 
   @Test
+  public void testExclusiveBoundaries() {
+    // Both exclusive: A < x < B
+    Assert.assertTrue(evaluate("0 < x < 5000", 1));
+    Assert.assertFalse(evaluate("0 < x < 5000", 0)); // lower boundary excluded
+    Assert.assertFalse(evaluate("0 < x < 5000", 5000)); // upper boundary excluded
+    Assert.assertTrue(evaluate("0 < x < 5000", 4999));
+
+    // Lower exclusive, upper inclusive: A < x <= B
+    Assert.assertTrue(evaluate("0 < x <= 5000", 5000)); // upper boundary included
+    Assert.assertFalse(evaluate("0 < x <= 5000", 0)); // lower boundary excluded
+    Assert.assertTrue(evaluate("0 < x <= 5000", 1));
+
+    // Both inclusive: A <= x <= B
+    Assert.assertTrue(evaluate("0 <= x <= 5000", 0)); // lower boundary included
+    Assert.assertTrue(evaluate("0 <= x <= 5000", 5000)); // upper boundary included
+    Assert.assertFalse(evaluate("0 <= x <= 5000", 5001));
+
+    // Upper inclusive: x <= B
+    Assert.assertTrue(evaluate("x <= 5000", 5000));
+    Assert.assertFalse(evaluate("x <= 5000", 5001));
+    Assert.assertTrue(evaluate("x <= 5000", 4999));
+
+    // Lower inclusive via >=: x >= A
+    Assert.assertTrue(evaluate("x >= 1000", 1000));
+    Assert.assertFalse(evaluate("x >= 1000", 999));
+    Assert.assertTrue(evaluate("x >= 1000", 1001));
+
+    // Reversed compound: B > x > A (same as A < x < B)
+    Assert.assertTrue(evaluate("5000 > x > 0", 1));
+    Assert.assertFalse(evaluate("5000 > x > 0", 0));
+    Assert.assertFalse(evaluate("5000 > x > 0", 5000));
+
+    // Reversed compound both inclusive: B >= x >= A
+    Assert.assertTrue(evaluate("5000 >= x >= 0", 0));
+    Assert.assertTrue(evaluate("5000 >= x >= 0", 5000));
+    Assert.assertFalse(evaluate("5000 >= x >= 0", 5001));
+  }
+
+  @Test
   public void test() {
 
     String testRoot = SparkConfTest.class.getResource("/").getFile();
