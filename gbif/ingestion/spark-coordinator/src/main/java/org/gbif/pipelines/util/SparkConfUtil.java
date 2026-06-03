@@ -234,7 +234,7 @@ public class SparkConfUtil {
   private static IllegalStateException invalidConf(
       String reason, SparkJobConfig conf, String confName) {
     return new IllegalStateException(
-        String.format("Invalid Spark config for %s. Config: %s", reason, confName));
+        String.format("Invalid Spark config: %s. Config: %s", reason, confName));
   }
 
   /** Returns true if the string (after removing underscore separators) represents a valid long. */
