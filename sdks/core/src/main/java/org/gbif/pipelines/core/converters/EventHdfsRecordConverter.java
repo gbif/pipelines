@@ -229,6 +229,7 @@ public class EventHdfsRecordConverter {
     eventHdfsRecord.setInstallationkey(metadataRecord.getInstallationKey());
     eventHdfsRecord.setProtocol(metadataRecord.getProtocol());
     eventHdfsRecord.setNetworkkey(metadataRecord.getNetworkKeys());
+    eventHdfsRecord.setDatasetcategory(metadataRecord.getDatasetCategory());
     eventHdfsRecord.setPublisher(metadataRecord.getPublisherTitle());
     eventHdfsRecord.setPublishingorgkey(metadataRecord.getPublishingOrganizationKey());
     eventHdfsRecord.setLastcrawled(metadataRecord.getLastCrawled());

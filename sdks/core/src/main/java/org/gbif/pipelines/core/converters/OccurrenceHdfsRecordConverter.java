@@ -238,6 +238,7 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setInstallationkey(metadataRecord.getInstallationKey());
     occurrenceHdfsRecord.setProtocol(metadataRecord.getProtocol());
     occurrenceHdfsRecord.setNetworkkey(metadataRecord.getNetworkKeys());
+    occurrenceHdfsRecord.setDatasetcategory(metadataRecord.getDatasetCategory());
     occurrenceHdfsRecord.setPublisher(metadataRecord.getPublisherTitle());
     occurrenceHdfsRecord.setPublishingorgkey(metadataRecord.getPublishingOrganizationKey());
     occurrenceHdfsRecord.setLastcrawled(metadataRecord.getLastCrawled());

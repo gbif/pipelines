@@ -107,6 +107,9 @@ public class SerDeFactory {
     List<String> getNetworkKeys();
 
     @JsonIgnore
+    List<String> getDatasetCategory();
+
+    @JsonIgnore
     String getProjectId();
 
     @JsonIgnore

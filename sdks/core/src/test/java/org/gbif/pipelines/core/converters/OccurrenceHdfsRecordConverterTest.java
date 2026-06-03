@@ -690,6 +690,7 @@ public class OccurrenceHdfsRecordConverterTest {
     String installationKey = UUID.randomUUID().toString();
     String organizationKey = UUID.randomUUID().toString();
     List<String> networkKey = Collections.singletonList(UUID.randomUUID().toString());
+    List<String> datasetCategory = List.of("eDNA", "Observation");
 
     MetadataRecord metadataRecord =
         MetadataRecord.newBuilder()
@@ -699,6 +700,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setDatasetPublishingCountry(Country.COSTA_RICA.getIso2LetterCode())
             .setLicense(License.CC_BY_4_0.name())
             .setNetworkKeys(networkKey)
+            .setDatasetCategory(datasetCategory)
             .setDatasetTitle("TestDataset")
             .setEndorsingNodeKey(nodeKey)
             .setInstallationKey(installationKey)
@@ -715,6 +717,7 @@ public class OccurrenceHdfsRecordConverterTest {
     // Should
     Assert.assertEquals(datasetKey, hdfsRecord.getDatasetkey());
     Assert.assertEquals(networkKey, hdfsRecord.getNetworkkey());
+    Assert.assertEquals(datasetCategory, hdfsRecord.getDatasetcategory());
     Assert.assertEquals(installationKey, hdfsRecord.getInstallationkey());
     Assert.assertEquals(organizationKey, hdfsRecord.getPublishingorgkey());
     Assert.assertEquals(License.CC_BY_4_0.name(), hdfsRecord.getLicense());
