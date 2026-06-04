@@ -15,6 +15,7 @@ import org.gbif.pipelines.spark.util.DataPackageConverter;
 import org.gbif.pipelines.spark.util.PathUtil;
 import org.gbif.pipelines.spark.util.PipelineArgs;
 import org.gbif.pipelines.spark.util.PipelineRunner;
+import org.gbif.pipelines.spark.util.PipelinesConfigUtil;
 
 @Slf4j
 public class DataPackageConversionPipeline {
@@ -42,7 +43,7 @@ public class DataPackageConversionPipeline {
       long targetPartionByteSize) {}
 
   public static void main(String[] argsv) throws Exception {
-    DataPackageConversionArgs args = new DataPackageConversionArgs();
+    PipelineArgs args = new PipelineArgs();
     JCommander jCommander = new JCommander(args);
     jCommander.setAcceptUnknownOptions(true);
     jCommander.parse(argsv);
@@ -51,21 +52,22 @@ public class DataPackageConversionPipeline {
       return;
     }
 
-    long targetPartionByteSize = args.targetPartitionMb * 1024 * 1024;
+    PipelinesConfig config = PipelinesConfigUtil.loadConfig(args.config);
+    long targetPartitionByteSize = config.getPartitionSizeInMB() * 1024 * 1024;
 
     PipelineRunner.run(
         args,
-        null,
+        config,
         DataPackageConversionPipeline::sparkExtraBuildOptions,
         (spark) ->
             runCopy(
                 new CopyConfig(
                     spark,
-                    args.inputBasePath,
-                    args.outputBasePath,
+                    config.getDwcdpNfsRepository(),
+                    config.getOutputPath(),
                     args.datasetId,
                     args.attempt,
-                    targetPartionByteSize)));
+                    targetPartitionByteSize)));
   }
 
   public static void runCopy(CopyConfig copyConfig) throws IOException {

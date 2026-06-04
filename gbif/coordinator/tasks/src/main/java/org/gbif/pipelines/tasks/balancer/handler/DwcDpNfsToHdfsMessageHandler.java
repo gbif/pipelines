@@ -1,5 +1,7 @@
 package org.gbif.pipelines.tasks.balancer.handler;
 
+import static org.gbif.api.model.pipelines.StepType.NFS_TO_HDFS;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,13 +15,14 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.DwcDpMetadataSyncFinishedMessage;
 import org.gbif.common.messaging.api.messages.DwcDpNfsToHdfsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
+import org.gbif.dp.descriptor.DataPackageDescriptor;
+import org.gbif.dp.descriptor.JacksonDataPackageParser;
 import org.gbif.pipelines.tasks.balancer.BalancerConfiguration;
 
 @Slf4j
 public class DwcDpNfsToHdfsMessageHandler {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
-  public static final String NFS_TO_HDFS = "nfs-to-hdfs";
   public static final String DISTRIBUTED = ".distributed";
   public static final String STANDALONE = ".standalone";
 
@@ -34,11 +37,25 @@ public class DwcDpNfsToHdfsMessageHandler {
     log.info("Reading from {}/{}", config.dwcdpRepositoryPath, datasetKey);
     Path archivePath = Paths.get(config.dwcdpRepositoryPath, datasetKey);
 
+    DataPackageDescriptor descriptor =
+        new JacksonDataPackageParser(MAPPER)
+            .parse(Paths.get(config.dwcdpRepositoryPath, datasetKey, "datapackage.json"));
+    boolean containsOccurrences =
+        descriptor.resources().stream().anyMatch(r -> r.name().equalsIgnoreCase("occurrence"));
+    boolean containsEvents =
+        descriptor.resources().stream().anyMatch(r -> r.name().equalsIgnoreCase("event"));
+
     long fileSizeBytes = getFileSizeBytes(archivePath);
     long switchFileSizeBytes = config.switchFileSizeMb * 1024L * 1024L;
 
     DwcDpNfsToHdfsMessage out =
-        new DwcDpNfsToHdfsMessage(m.getDatasetUuid(), m.getAttempt(), Set.of(NFS_TO_HDFS), 0L);
+        new DwcDpNfsToHdfsMessage(
+            m.getDatasetUuid(),
+            m.getAttempt(),
+            Set.of(NFS_TO_HDFS.name()),
+            null,
+            containsOccurrences,
+            containsEvents);
     if (fileSizeBytes > switchFileSizeBytes) {
       publisher.send(out, ExchangeType.OCCURRENCE.getValue(), out.getRoutingKey() + DISTRIBUTED);
       log.info("Routing to DISTRIBUTED, dataset {}, size {} bytes", datasetKey, fileSizeBytes);
