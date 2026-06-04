@@ -55,7 +55,7 @@
         <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>dwc-dp-descriptor</artifactId>
-            <version>0.0.4-SNAPSHOT</version>
+            <version>${dwc-dp-analyser.version}</version>
         </dependency>
         <dependency>
             <groupId>org.gbif.pipelines</groupId>

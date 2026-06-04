@@ -232,12 +232,12 @@ public class Coordinator {
         break;
       case DWCDP_NFS_TO_HDFS_STANDALONE:
         callbackFn =
-            messagePublisher ->
-                new DwcDpNfsToHdfsStandaloneCallback(config, messagePublisher, master);
+            messagePublisher -> new DwcDpNfsToHdfsCallback(config, messagePublisher, master);
         break;
       case DWCDP_NFS_TO_HDFS_DISTRIBUTED:
         callbackFn =
-            messagePublisher -> new DwcDpNfsToHdfsDistributedCallback(config, messagePublisher);
+            messagePublisher ->
+                new DwcDpNfsToHdfsDistributedCallback(config, messagePublisher, master);
         break;
 
       default:

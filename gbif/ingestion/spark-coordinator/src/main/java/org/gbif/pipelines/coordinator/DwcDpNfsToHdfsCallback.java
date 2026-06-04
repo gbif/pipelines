@@ -10,24 +10,21 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.DataPackageConversionPipeline;
 
 @Slf4j
-public class DwcDpNfsToHdfsStandaloneCallback
+public class DwcDpNfsToHdfsCallback
     extends PipelinesCallback<DwcDpNfsToHdfsMessage, PipelineBasedMessage>
     implements CloseableMessageCallback<DwcDpNfsToHdfsMessage> {
 
-  public DwcDpNfsToHdfsStandaloneCallback(
-      PipelinesConfig config, MessagePublisher publisher, String master) {
+  public DwcDpNfsToHdfsCallback(PipelinesConfig config, MessagePublisher publisher, String master) {
     super(config, publisher, master);
   }
 
   @Override
   protected StepType getStepType() {
-    return StepType.TO_VERBATIM;
+    return StepType.NFS_TO_HDFS;
   }
 
   @Override
-  protected void configSparkSession(SparkSession.Builder builder, PipelinesConfig config) {
-    // no special spark config needed
-  }
+  protected void configSparkSession(SparkSession.Builder builder, PipelinesConfig config) {}
 
   @Override
   protected void runPipeline(DwcDpNfsToHdfsMessage message) throws Exception {
