@@ -162,6 +162,16 @@ public class Coordinator {
             (messagePublisher ->
                 new OccurrenceInterpretationDistributedCallback(config, messagePublisher));
         break;
+      case VALIDATOR_INTERPRETATION:
+        callbackFn =
+            (messagePublisher ->
+                new ValidatorInterpretationCallback(config, messagePublisher, master));
+        break;
+      case VALIDATOR_INTERPRETATION_DISTRIBUTED:
+        callbackFn =
+            (messagePublisher ->
+                new ValidatorInterpretationDistributedCallback(config, messagePublisher));
+        break;
       case EVENTS_INTERPRETATION:
         callbackFn =
             (messagePublisher ->
@@ -328,6 +338,8 @@ public class Coordinator {
     EVENTS_INDEXING,
     EVENTS_INDEXING_DISTRIBUTED,
     FRAGMENTER,
-    FRAGMENTER_DISTRIBUTED
+    FRAGMENTER_DISTRIBUTED,
+    VALIDATOR_INTERPRETATION,
+    VALIDATOR_INTERPRETATION_DISTRIBUTED,
   }
 }
