@@ -120,7 +120,7 @@ public class ValidatorInterpretationCallback
   /** Not applicable for this callback */
   @Override
   protected TrackingInfo trackPipelineStep(PipelinesVerbatimMessage message) {
-    return TrackingInfo.builder().executionId(message.getExecutionId()).build();
+    return TrackingInfo.builder().build();
   }
 
   /** Not applicable for this callback */
