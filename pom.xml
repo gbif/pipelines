@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>4.0.20-issue1257-SNAPSHOT</version>
+  <version>4.0.21-issue1257-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -319,6 +319,11 @@
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>elasticsearch-tools</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>config</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
