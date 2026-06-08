@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>validator</artifactId>
-   <version>4.0.4-issue1257-SNAPSHOT</version>
+   <version>4.0.20-issue1257-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -201,6 +201,10 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-metadata-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.dna</groupId>
+      <artifactId>gbif-dna-core</artifactId>
     </dependency>
 
     <!-- Spring dependencies -->

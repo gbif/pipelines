@@ -11,6 +11,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.Directories;
+import org.gbif.pipelines.util.DistributedUtil;
 
 @Slf4j
 public class OccurrenceTableBuildDistributedCallback extends OccurrenceTableBuildCallback {

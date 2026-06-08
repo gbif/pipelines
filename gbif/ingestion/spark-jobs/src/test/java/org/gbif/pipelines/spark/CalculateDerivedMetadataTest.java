@@ -18,6 +18,7 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.json.TaxonCoverage;
 import org.gbif.pipelines.spark.pojo.Occurrence;
 import org.gbif.pipelines.spark.util.DerivedMetadataUtil;
+import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.junit.Test;
 import scala.Tuple2;
 
@@ -26,7 +27,7 @@ public class CalculateDerivedMetadataTest {
   @Test
   public void testCalculateDerivedMetadataTaxonCoverage() throws Exception {
 
-    SparkSession spark = SparkSession.builder().master("local[*]").getOrCreate();
+    SparkSession spark = SparkTestSession.create();
 
     ObjectMapper mapper = new ObjectMapper();
 

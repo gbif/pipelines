@@ -3,12 +3,10 @@ package org.gbif.pipelines.spark.util;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.EventInterpretationPipeline.sparkLog;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.*;
@@ -54,39 +52,46 @@ public class EventInheritanceUtil {
     // load simple event
     Dataset<Event> events =
         spark.read().parquet(inputPath + "/" + SIMPLE_EVENT).as(Encoders.bean(Event.class));
-    events.createOrReplaceTempView("simple_event");
 
-    log.info("Created temp view Event count: {}", events.count());
+    // Create a unique temp view name to avoid clashes in multi-threaded runs
+    final String simpleEventView = "simple_event_" + UUID.randomUUID().toString().replace('-', '_');
+    events.createOrReplaceTempView(simpleEventView);
+
+    log.info("Created temp view {} Event count: {}", simpleEventView, events.count());
 
     sparkLog(spark, "event-interpretation", "Joining to parents to get inherited info");
 
     // Explode the lineage array to produce one row per parent id (use OUTER explode to
     // preserve events with no parents). This avoids using array_contains in the join
     // predicate which can cause heavy shuffles and OOMs.
-    Dataset<Row> joinedToParents =
-        spark.sql(
+    // Build SQL referencing the unique temp view name
+    String joinSql =
+        String.format(
             """
-            SELECT
-              e.id as id,
-              e.eventCore as eventCore,
-              e.location as location,
-              e.temporal as temporal,
-              pe.eventCore as eventCoreInfo,
-              pe.location as locationInfo,
-              pe.temporal as temporalInfo
-            FROM (
-              SELECT
-                se.id as id,
-                se.eventCore as eventCore,
-                se.location as location,
-                se.temporal as temporal,
-                parent_id
-              FROM simple_event se
-              LATERAL VIEW OUTER explode(se.lineage) as parent_id
-            ) e
-            LEFT OUTER JOIN simple_event pe
-              ON e.parent_id = pe.id
-        """);
+        SELECT
+          e.id as id,
+          e.eventCore as eventCore,
+          e.location as location,
+          e.temporal as temporal,
+          pe.eventCore as eventCoreInfo,
+          pe.location as locationInfo,
+          pe.temporal as temporalInfo
+        FROM (
+          SELECT
+            se.id as id,
+            se.eventCore as eventCore,
+            se.location as location,
+            se.temporal as temporal,
+            parent_id
+          FROM %1$s se
+          LATERAL VIEW OUTER explode(se.lineage) as parent_id
+        ) e
+        LEFT OUTER JOIN %1$s pe
+          ON e.parent_id = pe.id
+    """,
+            simpleEventView);
+
+    Dataset<Row> joinedToParents = spark.sql(joinSql);
 
     log.info("Joined to parents: {}", joinedToParents.count());
 
@@ -241,7 +246,7 @@ public class EventInheritanceUtil {
         .parquet(inputPath + "/" + EVENT_INHERITED_FIELDS);
 
     // Drop the temp view to release cached resources and file metadata
-    spark.catalog().dropTempView("simple_event");
+    spark.catalog().dropTempView(simpleEventView);
 
     // Clear the catalog cache to invalidate any stale file metadata
     spark.catalog().clearCache();
@@ -377,27 +382,5 @@ public class EventInheritanceUtil {
     }
 
     return record;
-  }
-
-  private static <T> List<T> deserializeFieldToList(
-      Row row, String field, ObjectMapper mapper, Class<T> clazz) throws JsonProcessingException {
-    String fieldValue = row.getAs(field);
-    List<T> results;
-
-    if (fieldValue == null) {
-      results = Collections.emptyList();
-    } else {
-      fieldValue = fieldValue.trim();
-
-      // If it starts with "{", it's a single object → wrap into array
-      if (fieldValue.startsWith("{")) {
-        fieldValue = "[" + fieldValue + "]";
-      }
-
-      JavaType listType = mapper.getTypeFactory().constructCollectionType(List.class, clazz);
-
-      results = mapper.readValue(fieldValue, listType);
-    }
-    return results;
   }
 }

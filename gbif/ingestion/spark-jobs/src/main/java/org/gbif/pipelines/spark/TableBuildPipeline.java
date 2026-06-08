@@ -29,7 +29,9 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.TableBuildConfig;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
 import org.gbif.pipelines.spark.udf.Base64DecodeUDF;
+import org.gbif.pipelines.spark.udf.CleanDelimiterArraysUdf;
 import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
+import org.gbif.pipelines.spark.util.TableUtil;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -98,24 +100,33 @@ public class TableBuildPipeline {
     PipelinesConfig config = loadConfig(args.config);
     String datasetId = args.datasetId;
     int attempt = args.attempt;
+    SparkSession spark = null;
+    FileSystem fileSystem = null;
 
-    /* ############ standard init block ########## */
-    SparkSession spark =
-        getSparkSession(args.master, args.appName, config, TableBuildPipeline::configSparkSession);
-    FileSystem fileSystem = getFileSystem(spark, config);
+    try {
+      /* ############ standard init block ########## */
+      spark =
+          getSparkSession(
+              args.master, args.appName, config, TableBuildPipeline::configSparkSession);
+      fileSystem = getFileSystem(spark, config);
 
-    /* ############ standard init block - end ########## */
-    if (args.datasetType != DatasetType.OCCURRENCE
-        && args.datasetType != DatasetType.SAMPLING_EVENT) {
-      throw new IllegalArgumentException("Invalid dataset type: " + args.datasetType);
+      /* ############ standard init block - end ########## */
+      if (args.datasetType != DatasetType.OCCURRENCE
+          && args.datasetType != DatasetType.SAMPLING_EVENT) {
+        throw new IllegalArgumentException("Invalid dataset type: " + args.datasetType);
+      }
+
+      runTableBuild(
+          spark, fileSystem, config, args.datasetType, datasetId, attempt, args.sourceDirectory);
+    } finally {
+      if (fileSystem != null) {
+        fileSystem.close();
+      }
+      if (spark != null) {
+        spark.stop();
+        spark.close();
+      }
     }
-
-    runTableBuild(
-        spark, fileSystem, config, args.datasetType, datasetId, attempt, args.sourceDirectory);
-
-    spark.stop();
-    spark.close();
-    fileSystem.close();
     System.exit(0);
   }
 
@@ -149,6 +160,12 @@ public class TableBuildPipeline {
 
     spark.udf().register("base64_decode", new Base64DecodeUDF(), DataTypes.StringType);
     spark.udf().register("cleanDelimiters", new CleanDelimiterCharsUdf(), DataTypes.StringType);
+    spark
+        .udf()
+        .register(
+            "cleanDelimitersArray",
+            new CleanDelimiterArraysUdf(),
+            DataTypes.createArrayType(DataTypes.StringType));
 
     long start = System.currentTimeMillis();
     ThreadContext.put("datasetKey", datasetId);
@@ -219,10 +236,9 @@ public class TableBuildPipeline {
     // get the hdfs columns from the parquet with mappings to iceberg columns
     Map<String, HdfsColumn> hdfsColumnList = getHdfsColumns(hdfs);
 
-    // FIXME - limit concurrent writes to the iceberg table
     // May need to use zookeeper or similar for distributed locking
+    // The lock solves problems with standalone CLIs
     synchronized (LOCK) {
-
       // Read the target table i.e. 'occurrence' or 'event' schema to ensure it exists
       StructType tblSchema = spark.read().format("iceberg").load(coreDwcTerm).schema();
 
@@ -240,9 +256,12 @@ public class TableBuildPipeline {
               tempCoreTable);
 
       log.debug("Inserting data into {} table: {}", coreDwcTerm, insertQuery);
-
-      // Execute the insert
-      spark.sql(insertQuery);
+      TableUtil.runSQLWithRetries(
+          spark,
+          insertQuery,
+          config.getHiveDB() + "." + coreDwcTerm,
+          config.getTableBuildConfig().getMaxRetriesWithRefresh(),
+          config.getTableBuildConfig().getBaseSleepMs());
     }
 
     // process verbatim extensions
@@ -257,6 +276,18 @@ public class TableBuildPipeline {
 
     // write to the multimedia table
     insertOverwriteMultimediaTableFromTemp(spark, tempCoreTable, coreDwcTerm + "_multimedia");
+
+    if (datasetType == DatasetType.OCCURRENCE) {
+      // Create dna table if it does not exist
+      String dnaTableName = coreDwcTerm + "_dna_derived_data";
+      if (!spark.catalog().tableExists(dnaTableName)) {
+        log.info("DNA derived data table does not exist and will be created");
+        spark.sql(getCreateDnaDerivedDataTableSQL(config.getTableBuildConfig(), dnaTableName));
+      }
+
+      // write to the dna table
+      insertOverwriteDnaDerivedDataTable(spark, tempCoreTable, dnaTableName, true);
+    }
 
     // if a sampling event dataset, create the humboldt_event table if it does not exist and
     // populate it

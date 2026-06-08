@@ -1,4 +1,4 @@
-package org.gbif.pipelines.coordinator;
+package org.gbif.pipelines.util;
 
 import static org.gbif.pipelines.coordinator.PostprocessValidation.getValueByKey;
 
@@ -11,7 +11,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.logging.log4j.ThreadContext;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
-import org.gbif.pipelines.airflow.AirflowConfFactory;
 import org.gbif.pipelines.airflow.AirflowSparkLauncher;
 import org.gbif.pipelines.airflow.AppName;
 import org.gbif.pipelines.common.PipelinesVariables;
@@ -65,14 +64,16 @@ public class DistributedUtil {
     String sparkAppName = AppName.get(stepType, message.getDatasetUuid(), message.getAttempt());
 
     // create the airflow conf
-    AirflowConfFactory.Conf conf =
-        AirflowConfFactory.createConf(
+    SparkConfUtil.Conf conf =
+        SparkConfUtil.createConf(
             pipelinesConfig,
             message.getDatasetUuid().toString(),
             message.getAttempt(),
             sparkAppName,
             recordsNumber,
             extraArgs);
+
+    validateSparkConf(conf, sparkAppName);
 
     log.debug("selected config {}", conf.getDescription());
 
@@ -87,6 +88,53 @@ public class DistributedUtil {
 
     ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
     log.info(timeAndRecPerSecond(jobName, start, recordsNumber));
+  }
+
+  private static void validateSparkConf(SparkConfUtil.Conf conf, String sparkAppName) {
+    validatePositive("executorInstances", conf.getExecutorInstances(), conf, sparkAppName);
+    validatePositive("driverCores", conf.getDriverCores(), conf, sparkAppName);
+    validatePositive("executorCores", conf.getExecutorCores(), conf, sparkAppName);
+    validatePositive("defaultParallelism", conf.getDefaultParallelism(), conf, sparkAppName);
+    validatePositive("numberOfShards", conf.getNumberOfShards(), conf, sparkAppName);
+
+    validateNonBlank(
+        "driverMemoryOverheadFactor", conf.getDriverMemoryOverheadFactor(), conf, sparkAppName);
+    validateNonBlank(
+        "executorMemoryOverheadFactor", conf.getExecutorMemoryOverheadFactor(), conf, sparkAppName);
+
+    validateNonBlank("driverMinCpu", conf.getDriverMinCpu(), conf, sparkAppName);
+    validateNonBlank("driverMaxCpu", conf.getDriverMaxCpu(), conf, sparkAppName);
+    validateNonBlank("driverLimitMemory", conf.getDriverLimitMemory(), conf, sparkAppName);
+
+    validateNonBlank("executorMinCpu", conf.getExecutorMinCpu(), conf, sparkAppName);
+    validateNonBlank("executorMaxCpu", conf.getExecutorMaxCpu(), conf, sparkAppName);
+    validateNonBlank("executorLimitMemory", conf.getExecutorLimitMemory(), conf, sparkAppName);
+
+    if (conf.getArgs() == null || conf.getArgs().isEmpty()) {
+      throw invalidConf("args must not be null/empty", conf, sparkAppName);
+    }
+  }
+
+  private static void validatePositive(
+      String fieldName, int value, SparkConfUtil.Conf conf, String sparkAppName) {
+    if (value <= 0) {
+      throw invalidConf(fieldName + " must be > 0, but was " + value, conf, sparkAppName);
+    }
+  }
+
+  private static void validateNonBlank(
+      String fieldName, String value, SparkConfUtil.Conf conf, String sparkAppName) {
+    if (value == null || value.trim().isEmpty()) {
+      throw invalidConf(fieldName + " must not be null/blank", conf, sparkAppName);
+    }
+  }
+
+  private static IllegalStateException invalidConf(
+      String reason, SparkConfUtil.Conf conf, String sparkAppName) {
+    return new IllegalStateException(
+        String.format(
+            "Invalid Spark config for %s: %s. Config: %s",
+            sparkAppName, reason, conf.getDescription()));
   }
 
   public static String timeAndRecPerSecond(String jobName, long start, long recordsNumber) {

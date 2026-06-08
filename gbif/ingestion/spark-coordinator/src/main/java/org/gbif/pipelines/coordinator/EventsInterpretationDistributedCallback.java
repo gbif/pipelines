@@ -1,10 +1,13 @@
 package org.gbif.pipelines.coordinator;
 
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.util.CleanupUtil;
+import org.gbif.pipelines.util.DistributedUtil;
 
 @Slf4j
 public class EventsInterpretationDistributedCallback extends EventsInterpretationCallback {
@@ -23,6 +26,13 @@ public class EventsInterpretationDistributedCallback extends EventsInterpretatio
         fileSystem,
         pipelinesConfig.getAirflowConfig().eventsInterpretationDag,
         StepType.EVENTS_VERBATIM_TO_INTERPRETED);
+
+    // After a successful run, cleanup previous attempts
+    CleanupUtil.cleanupPreviousOnSuccess(
+        pipelinesConfig,
+        fileSystem,
+        message.getDatasetUuid().toString(),
+        Set.of(message.getAttempt().toString()));
   }
 
   @Override

@@ -136,27 +136,24 @@ tableBuildConfig:
   history_expire_max_snapshot_age_ms: 3888000000
   history_expire_min_snapshots_to_keep: 10
 processingConfigs:
-  # simple support for expressions in the format a < x < b
-  "recordCount < 100_000":
-    description: "less than 100k"
-    args:
-      - "--numberOfShards=1"
-    driverMemoryOverheadFactor: "0.10"
-    executorMemoryOverheadFactor: "0.15"
-    driverCores: 1
-    executorInstances: 2
-    executorCores: 10
-    defaultParallelism: 10
-    driverMinCpu: "2000m"
-    driverMaxCpu: "8000m"
-    driverLimitMemory: "4Gi"
-    executorMinCpu: "1000m"
-    executorMaxCpu: "8000m"
-    executorLimitMemory: "30Gi"
+  # simple support for expressions in the format a <= x < b
+  # standalone configs
+  "0 <= recordCount < 5_000":
+    numberOfShards: 1
+    standalone: true
+  "5_000 <= recordCount < 10_000":
+    numberOfShards: 3
+    standalone: true
+  "10_000 <= recordCount < 50_000":
+    numberOfShards: 5
+    standalone: true
+  "50_000 <= recordCount < 100_000":
+    numberOfShards: 8
+    standalone: true
+  # distributed configs
   "100_000 <= recordCount < 250_000":
     description: "100_000 to 250_000"
-    args:
-      - "--numberOfShards=10"
+    numberOfShards: 10
     driverMemoryOverheadFactor: "0.10"
     executorMemoryOverheadFactor: "0.15"
     driverCores: 4
@@ -171,8 +168,7 @@ processingConfigs:
     executorLimitMemory: "30Gi"
   "250_000 <= recordCount < 500_000":
     description: "250_000 to 500_000"
-    args:
-      - "--numberOfShards=20"
+    numberOfShards: 20
     driverMemoryOverheadFactor: "0.10"
     executorMemoryOverheadFactor: "0.15"
     driverCores: 4
@@ -187,8 +183,7 @@ processingConfigs:
     executorLimitMemory: "30Gi"
   "500_000 <= recordCount < 1_000_000":
     description: "500_000 to 10 1_000_000"
-    args:
-      - "--numberOfShards=30"
+    numberOfShards: 30
     driverMemoryOverheadFactor: "0.10"
     executorMemoryOverheadFactor: "0.15"
     driverCores: 4
@@ -203,8 +198,7 @@ processingConfigs:
     executorLimitMemory: "30Gi"
   "1_000_000 <= recordCount < 10_000_000":
     description: "1_000_000 to 10_000_000"
-    args:
-      - "--numberOfShards=300"
+    numberOfShards: 100
     driverMemoryOverheadFactor: "0.10"
     executorMemoryOverheadFactor: "0.15"
     driverCores: 4
@@ -219,8 +213,7 @@ processingConfigs:
     executorLimitMemory: "30Gi"
   "10_000_000 <= recordCount < 50_000_000":
     description: "10 million to 50 million"
-    args:
-      - "--numberOfShards=200"
+    numberOfShards: 200
     driverMemoryOverheadFactor: "0.10"
     executorMemoryOverheadFactor: "0.15"
     driverCores: 4
@@ -235,8 +228,7 @@ processingConfigs:
     executorLimitMemory: "30Gi"
   "50_000_000 <= recordCount < 500_000_000":
     description: "50 million to 500 million - iNaturalist"
-    args:
-      - "--numberOfShards=1200"
+    numberOfShards: 1200
     driverMemoryOverheadFactor: "0.10"
     executorMemoryOverheadFactor: "0.15"
     driverCores: 4
@@ -251,8 +243,7 @@ processingConfigs:
     executorLimitMemory: "30Gi"
   "500_000_000 <= recordCount":
     description: "500 million+ (eBird)"
-    args:
-      - "--numberOfShards=2000"
+    numberOfShards: 2000
     driverMemoryOverheadFactor: "0.10"
     executorMemoryOverheadFactor: "0.15"
     driverCores: 4

@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.PipelineStep.Status;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.AirflowConfig;
+import org.gbif.pipelines.util.SparkConfUtil;
 
 @Slf4j
 public class AirflowSparkLauncher {
@@ -37,15 +38,12 @@ public class AirflowSparkLauncher {
 
   private final AirflowClient airflowClient;
   private final AirflowConfig airflowConfig;
-  private final AirflowConfFactory.Conf conf;
+  private final SparkConfUtil.Conf conf;
   private final String sparkAppName;
 
   @Builder
   public AirflowSparkLauncher(
-      AirflowConfig airflowConfig,
-      AirflowConfFactory.Conf conf,
-      String sparkAppName,
-      String dagName) {
+      AirflowConfig airflowConfig, SparkConfUtil.Conf conf, String sparkAppName, String dagName) {
     this.airflowConfig = airflowConfig;
     this.sparkAppName = sparkAppName;
     this.conf = conf;
@@ -53,7 +51,7 @@ public class AirflowSparkLauncher {
         AirflowClient.builder().config(this.airflowConfig).dagName(dagName).build();
   }
 
-  private AirflowBody getAirflowBody(String dagId, AirflowConfFactory.Conf conf) {
+  private AirflowBody getAirflowBody(String dagId, SparkConfUtil.Conf conf) {
     return AirflowBody.builder().conf(conf).dagRunId(dagId).build();
   }
 

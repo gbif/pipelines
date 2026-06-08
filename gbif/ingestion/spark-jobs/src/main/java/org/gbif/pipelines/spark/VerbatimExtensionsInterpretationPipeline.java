@@ -6,6 +6,7 @@ import static org.gbif.pipelines.spark.TableBuildPipeline.createExtensionTable;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
+import static org.gbif.pipelines.spark.util.TableUtil.createVerbatimExtensionTableSQL;
 import static org.gbif.pipelines.spark.util.TableUtil.verbatimExtensionTableName;
 
 import com.beust.jcommander.JCommander;
@@ -27,6 +28,7 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -63,6 +65,9 @@ public class VerbatimExtensionsInterpretationPipeline {
     @Parameter(names = NUMBER_OF_SHARDS_ARG, description = "Number of shards")
     private int numberOfShards = 10;
 
+    @Parameter(names = "--outputSchemasOnly", description = "Output schemas for extensions")
+    private boolean outputSchemasOnly = false;
+
     @Parameter(
         names = {"--help", "-h"},
         help = true,
@@ -97,8 +102,30 @@ public class VerbatimExtensionsInterpretationPipeline {
             .as(Encoders.bean(ExtendedRecord.class));
 
     spark.sparkContext().setJobGroup("explode-extensions", "Exploding extensions", true);
-    // Convert to DataFrame and rename id to gbifid
-    Dataset<Row> df = extendedRecords.toDF().withColumnRenamed("id", "gbifid");
+
+    Dataset<Row> df = null;
+    if (datasetType == DatasetType.OCCURRENCE) {
+      log.info(
+          "Loaded {} extended records for dataset {} of type OCCURRENCE",
+          extendedRecords.count(),
+          datasetId);
+      // need to load the identifiers
+      Dataset<Row> idGbifIdTuple =
+          spark
+              .read()
+              .parquet(inputPath + "/" + Directories.IDENTIFIERS)
+              .as(Encoders.bean(IdentifierRecord.class))
+              .select(col("id"), col("internalId").alias("gbifid"));
+
+      Dataset<Row> joined = extendedRecords.join(idGbifIdTuple, "id");
+      df = joined.drop("id").toDF();
+    } else {
+      log.info(
+          "Loaded {} extended records for dataset {} of type SAMPLING_EVENT",
+          extendedRecords.count(),
+          datasetId);
+      df = extendedRecords.toDF().withColumnRenamed("id", "gbifid");
+    }
 
     // Explode extensions into separate rows
     Dataset<Row> exploded =
@@ -167,9 +194,6 @@ public class VerbatimExtensionsInterpretationPipeline {
         directories.size(),
         String.join(", ", directories));
 
-    // cache columns for later use
-    Set<String> dfCols = new HashSet<>(Arrays.asList(optimized.columns()));
-
     // Check if we can create the table schema
     Map<String, ExtensionTable> extensionTableMap =
         ExtensionTable.tableExtensions().stream()
@@ -216,15 +240,35 @@ public class VerbatimExtensionsInterpretationPipeline {
       // get target table schema (table must exist)
       StructType tblSchema = spark.read().format("iceberg").load(table).schema();
 
+      // ensure unique column names (keep first occurrence) to avoid ambiguous references
+      var sourceDF = optimized.filter(col("directory").equalTo(dir));
+      String[] columnList = sourceDF.columns();
+      Map<String, Integer> seen = new HashMap<>();
+      String[] renamed = new String[columnList.length];
+      for (int i = 0; i < columnList.length; i++) {
+        String name = columnList[i];
+        int n = seen.getOrDefault(name, 0);
+        if (n == 0) {
+          renamed[i] = name;
+        } else {
+          renamed[i] = name + "__dup" + (n + 1);
+          log.warn(
+              "Duplicate column '{}' found for extension directory '{}'; renaming to '{}'",
+              name,
+              dir,
+              renamed[i]);
+        }
+        seen.put(name, n + 1);
+      }
+      sourceDF = sourceDF.toDF(renamed);
+
       // build select list that matches target schema: use existing columns or nulls cast to the
       // target type
-      var colsToSelect = getColsToSelect(tblSchema, dfCols);
+      var colsToSelect =
+          getColsToSelect(tblSchema, new HashSet<>(Arrays.asList(sourceDF.columns())));
 
       // filter rows for this extension and select aligned columns
-      Dataset<Row> toWrite =
-          optimized
-              .filter(col("directory").equalTo(dir)) // select data in the extension
-              .select(colsToSelect); // align columns to target schema
+      Dataset<Row> toWrite = sourceDF.select(colsToSelect); // align columns to target schema
 
       // ensure partition column exists in the DataFrame if the table is partitioned by datasetKey
       if (!Arrays.asList(toWrite.columns()).contains("datasetKey")) {
@@ -300,6 +344,23 @@ public class VerbatimExtensionsInterpretationPipeline {
     }
 
     PipelinesConfig config = loadConfig(args.config);
+
+    if (args.outputSchemasOnly) {
+      String dwcCoreTerm = args.datasetType == DatasetType.OCCURRENCE ? "occurrence" : "event";
+      log.info("Outputting schemas for all supported extensions:");
+      ExtensionTable.tableExtensions()
+          .forEach(
+              extensionTable -> {
+                String sql =
+                    createVerbatimExtensionTableSQL(
+                        config.getTableBuildConfig(), extensionTable, dwcCoreTerm);
+                System.out.println("--- " + extensionTable.getHiveTableName());
+                System.out.println(sql);
+                System.out.println("--- ");
+              });
+      return;
+    }
+
     String datasetId = args.datasetId;
     int attempt = args.attempt;
 

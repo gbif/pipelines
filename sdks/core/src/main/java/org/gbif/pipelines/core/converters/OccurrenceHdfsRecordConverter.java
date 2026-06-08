@@ -909,6 +909,11 @@ public class OccurrenceHdfsRecordConverter {
               dnaDerivedDataRecord.getDnaDerivedDataItems().stream()
                   .map(DnaDerivedData::getDnaSequenceID)
                   .collect(Collectors.toCollection(LinkedHashSet::new))));
+      occurrenceHdfsRecord.setExt_dna_derived_data(
+          base64Encode(
+              MediaSerDeser.dnaDerivedDataToJson(dnaDerivedDataRecord.getDnaDerivedDataItems())));
+
+      addNonTaxonIssues(dnaDerivedDataRecord.getIssues(), occurrenceHdfsRecord);
     }
   }
 }

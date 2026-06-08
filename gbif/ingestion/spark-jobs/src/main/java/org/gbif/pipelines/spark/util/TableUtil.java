@@ -6,6 +6,7 @@ import static org.gbif.terms.utils.TermUtils.INTERPRETED_HUMBOLDT_TERMS;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.iceberg.exceptions.CommitFailedException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -17,6 +18,7 @@ import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.occurrence.download.hive.HiveDataTypes;
 import org.gbif.occurrence.download.hive.InitializableField;
 import org.gbif.occurrence.download.hive.OccurrenceHDFSTableDefinition;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.config.model.TableBuildConfig;
 import org.gbif.pipelines.spark.pojo.HdfsColumn;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +26,141 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class TableUtil {
 
-  public static final Set<String> EXTENSION_COLUMNS = Set.of("ext_multimedia", "ext_humboldt");
+  public static final Set<String> EXTENSION_COLUMNS =
+      Set.of("ext_multimedia", "ext_humboldt", "ext_dna_derived_data");
+
+  /**
+   * Run sql with retries and table refresh if we have failures.
+   *
+   * @param spark
+   * @param sql
+   * @param targetTable
+   */
+  public static void runSQLWithRetries(
+      SparkSession spark, String sql, String targetTable, int maxRetries, int baseSleepMs) {
+
+    if (maxRetries <= 0) {
+      throw new IllegalArgumentException("maxRetries must be greater than 0");
+    }
+    if (baseSleepMs < 0) {
+      throw new IllegalArgumentException("baseSleepMs must be greater than or equal to 0");
+    }
+
+    // Execute the insert with retries to handle transient Iceberg commit conflicts.
+    // Iceberg uses optimistic concurrency control and will throw CommitFailedException
+    // when the table metadata has changed between planning and commit.
+    // table metadata changes with each INSERT
+    boolean success = false;
+    for (int attemptNum = 1; attemptNum <= maxRetries && !success; attemptNum++) {
+      try {
+        spark.sql(sql);
+        success = true;
+      } catch (CommitFailedException cfe) {
+        log.warn(
+            "Attempt {}/{}: Commit failed for table {}. Will retry after refresh. Error: {}",
+            attemptNum,
+            maxRetries,
+            targetTable,
+            cfe.getMessage());
+        if (attemptNum == maxRetries) {
+          throw cfe;
+        }
+        // Refresh table metadata in the catalog and wait a bit before retrying
+        try {
+          spark.catalog().refreshTable(targetTable);
+        } catch (Exception ex) {
+          log.warn("Failed to refresh table metadata for {}: {}", targetTable, ex.getMessage());
+        }
+        try {
+          Thread.sleep(baseSleepMs * attemptNum);
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          throw new RuntimeException("Interrupted while waiting to retry insert", ie);
+        }
+      }
+    }
+  }
+
+  /**
+   * Delete the dataset from core and extension tables.
+   *
+   * @param spark
+   * @param config
+   * @param datasetId
+   * @param datasetType
+   */
+  public static void deleteRecordsForDataset(
+      SparkSession spark, PipelinesConfig config, String datasetId, DatasetType datasetType) {
+
+    // Switch to the configured Hive database
+    spark.sql("USE " + config.getHiveDB());
+
+    String coreDwcTerm = datasetType == DatasetType.OCCURRENCE ? "occurrence" : "event";
+    log.info("Deleting records for dataset {}", datasetId);
+    spark.sql(
+        String.format(
+            """
+              DELETE FROM %s.%s
+              WHERE datasetkey = '%s'
+            """,
+            config.getHiveDB(), coreDwcTerm, datasetId));
+
+    // delete from multimedia
+    String multimediaTable = coreDwcTerm + "_multimedia";
+    if (spark.catalog().tableExists(multimediaTable)) {
+      log.info("Multimedia table {} exists", multimediaTable);
+      spark.sql(
+          String.format(
+              """
+                DELETE FROM %s.%s
+                WHERE datasetkey = '%s'
+              """,
+              config.getHiveDB(), multimediaTable, datasetId));
+    }
+
+    // delete from DNA Derived Data table
+    String dnaTableName = coreDwcTerm + "_dna_derived_data";
+    if (spark.catalog().tableExists(dnaTableName)) {
+      log.info("DNA Derived Data table {} exists", dnaTableName);
+      spark.sql(
+          String.format(
+              """
+            DELETE FROM %s.%s
+            WHERE datasetkey = '%s'
+          """,
+              config.getHiveDB(), dnaTableName, datasetId));
+    }
+
+    // delete from humboldt table
+    if (datasetType == DatasetType.SAMPLING_EVENT) {
+      String humboldtTableName = coreDwcTerm + "_humboldt";
+      if (spark.catalog().tableExists(humboldtTableName)) {
+        // delete from humboldt table
+        spark.sql(
+            String.format(
+                """
+                  DELETE FROM %s.%s
+                  WHERE datasetkey = '%s'
+                """,
+                config.getHiveDB(), humboldtTableName, datasetId));
+      }
+    }
+
+    // delete from  extension tables
+    for (ExtensionTable extTable : ExtensionTable.tableExtensions()) {
+      String extTableName = verbatimExtensionTableName(extTable, coreDwcTerm);
+      if (spark.catalog().tableExists(extTableName)) {
+        log.info("Extension table {} exists", extTableName);
+        spark.sql(
+            String.format(
+                """
+                  DELETE FROM %s.%s
+                  WHERE datasetkey = '%s'
+                """,
+                config.getHiveDB(), extTableName, datasetId));
+      }
+    }
+  }
 
   /**
    * Check for records without a datasetKey or gbifId.
@@ -129,7 +265,15 @@ public class TableUtil {
 
     for (String parquetColumn : hdfs.columns()) {
 
-      HdfsColumn hdfsColumn = getHdfsColumn(parquetColumn);
+      // determine the parquet column data type from the dataset schema
+      DataType dataType = null;
+      try {
+        dataType = hdfs.schema().apply(parquetColumn).dataType();
+      } catch (Exception ex) {
+        // fallback: leave dataType null, we'll treat as non-string
+      }
+
+      HdfsColumn hdfsColumn = getHdfsColumn(parquetColumn, dataType);
       hdfsColumnList.put(hdfsColumn.getIcebergCol(), hdfsColumn);
       log.debug(
           "Mapped HDFS column '{}' to Iceberg column '{}' with select '{}'",
@@ -141,7 +285,7 @@ public class TableUtil {
     return hdfsColumnList;
   }
 
-  private static HdfsColumn getHdfsColumn(String parquetColumn) {
+  private static HdfsColumn getHdfsColumn(String parquetColumn, DataType dataType) {
     HdfsColumn hdfsColumn = new HdfsColumn();
 
     // normalize column names
@@ -156,12 +300,19 @@ public class TableUtil {
     } else if (normalisedName.equalsIgnoreCase("class_")) {
 
       hdfsColumn.setIcebergCol("class");
-      hdfsColumn.setSelect("`" + parquetColumn + "` AS class");
+      hdfsColumn.setSelect("cleanDelimiters(`" + parquetColumn + "`) AS class");
 
     } else {
 
       hdfsColumn.setIcebergCol(normalisedName);
-      hdfsColumn.setSelect("`" + parquetColumn + "` AS " + normalisedName);
+      if (dataType instanceof StringType) {
+        hdfsColumn.setSelect("cleanDelimiters(`" + parquetColumn + "`) AS " + normalisedName);
+      } else if (dataType instanceof ArrayType
+          && ((ArrayType) dataType).elementType() instanceof StringType) {
+        hdfsColumn.setSelect("cleanDelimitersArray(`" + parquetColumn + "`) AS " + normalisedName);
+      } else {
+        hdfsColumn.setSelect("`" + parquetColumn + "` AS " + normalisedName);
+      }
     }
     return hdfsColumn;
   }
@@ -271,6 +422,111 @@ public class TableUtil {
                FROM mm_records
             """,
             multimediaTable));
+  }
+
+  public static String getCreateDnaDerivedDataTableSQL(TableBuildConfig config, String tableName) {
+    return String.format(
+        """
+        CREATE TABLE IF NOT EXISTS %s
+        (
+           gbifid STRING,
+           nucleotidesequenceid STRING,
+           targetgene %s ,
+           sequence STRING,
+           sequencelength INT,
+           gccontent DOUBLE,
+           noniupacfraction DOUBLE,
+           nonacgtnfraction DOUBLE,
+           nfraction DOUBLE,
+           nrunscapped INT,
+           naturallanguagedetected BOOLEAN,
+           endstrimmed BOOLEAN,
+           gapsorwhitespaceremoved BOOLEAN,
+           invalid BOOLEAN,
+           datasetkey STRING
+        )
+        USING iceberg
+        PARTITIONED BY (datasetkey)
+        TBLPROPERTIES (%s)
+      """,
+        tableName, HiveDataTypes.TYPE_VOCABULARY_STRUCT, generateTblProperties(config));
+  }
+
+  public static void insertOverwriteDnaDerivedDataTable(
+      SparkSession spark,
+      String occurrenceTable,
+      String dnaDerivedDataTable,
+      boolean encodedExtData) {
+    spark
+        .table(occurrenceTable)
+        .select(
+            col("gbifid"),
+            from_json(
+                    encodedExtData
+                        ? expr("cast(base64_decode(ext_dna_derived_data) as string)")
+                        : col("ext_dna_derived_data"),
+                    new ArrayType(
+                        new StructType()
+                            .add("nucleotideSequenceID", "string", false)
+                            .add(
+                                "targetGene",
+                                "STRUCT<concept: STRING,lineage: ARRAY<STRING>>",
+                                false)
+                            .add("sequence", "string", false)
+                            .add("sequenceLength", "int", false)
+                            .add("gcContent", "double", false)
+                            .add("nonIupacFraction", "double", false)
+                            .add("nonACGTNFraction", "double", false)
+                            .add("nFraction", "double", false)
+                            .add("nRunsCapped", "int", false)
+                            .add("naturalLanguageDetected", "boolean", false)
+                            .add("endsTrimmed", "boolean", false)
+                            .add("gapsOrWhitespaceRemoved", "boolean", false)
+                            .add("invalid", "boolean", false),
+                        true))
+                .alias("dna_record"),
+            col("datasetkey"))
+        .select(col("gbifid"), explode(col("dna_record")).alias("dna_record"), col("datasetkey"))
+        .select(
+            col("gbifid"),
+            col("dna_record.nucleotideSequenceID").alias("nucleotidesequenceid"),
+            col("dna_record.targetGene").alias("targetgene"),
+            col("dna_record.sequence").alias("sequence"),
+            col("dna_record.sequenceLength").alias("sequencelength"),
+            col("dna_record.gcContent").alias("gccontent"),
+            col("dna_record.nonIupacFraction").alias("noniupacfraction"),
+            col("dna_record.nonACGTNFraction").alias("nonacgtnfraction"),
+            col("dna_record.nFraction").alias("nfraction"),
+            col("dna_record.nRunsCapped").alias("nrunscapped"),
+            col("dna_record.naturalLanguageDetected").alias("naturallanguagedetected"),
+            col("dna_record.endsTrimmed").alias("endstrimmed"),
+            col("dna_record.gapsOrWhitespaceRemoved").alias("gapsorwhitespaceremoved"),
+            col("dna_record.invalid").alias("invalid"),
+            col("datasetkey"))
+        .createOrReplaceTempView("dna_records");
+
+    spark.sql(
+        String.format(
+            """
+           INSERT OVERWRITE TABLE %s
+           SELECT gbifid,
+                  nucleotidesequenceid,
+                  targetgene,
+                  sequence,
+                  sequencelength,
+                  gccontent,
+                  noniupacfraction,
+                  nonacgtnfraction,
+                  nfraction,
+                  nrunscapped,
+                  naturallanguagedetected,
+                  endstrimmed,
+                  gapsorwhitespaceremoved,
+                  invalid,
+                  datasetkey
+           FROM dna_records
+        """,
+            dnaDerivedDataTable));
   }
 
   public static void insertOverwriteHumboldtTableFromTemp(
@@ -519,11 +775,13 @@ public class TableUtil {
 
     return String.format(
         """
-          CREATE TABLE IF NOT EXISTS %s
-          (%s)
-          USING iceberg
-          PARTITIONED BY (datasetkey)
-          TBLPROPERTIES (%s)
+        CREATE TABLE IF NOT EXISTS %s (
+        %s
+        )
+        USING iceberg
+        PARTITIONED BY (datasetkey)
+        TBLPROPERTIES (
+        %s)
         """,
         verbatimExtensionTableName(extensionTable, coreDwcTerm),
         fieldList,

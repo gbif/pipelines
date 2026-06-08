@@ -13,6 +13,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.Directories;
 import org.gbif.pipelines.spark.IndexingPipeline;
 import org.gbif.pipelines.spark.util.IndexSettings;
+import org.gbif.pipelines.util.DistributedUtil;
 
 @Slf4j
 public class OccurrenceIndexingDistributedCallback extends OccurrenceIndexingCallback {

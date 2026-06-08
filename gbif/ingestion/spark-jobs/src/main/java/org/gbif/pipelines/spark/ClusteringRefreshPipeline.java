@@ -87,18 +87,25 @@ public class ClusteringRefreshPipeline {
     PipelinesConfig config = loadConfig(args.config);
     String datasetId = args.datasetId;
     int attempt = args.attempt;
+    SparkSession spark = null;
+    FileSystem fileSystem = null;
 
-    /* ############ standard init block ########## */
-    SparkSession spark =
-        getSparkSession(args.master, args.appName, config, (builder, pipelinesConfig) -> {});
-    FileSystem fileSystem = getFileSystem(spark, config);
-    /* ############ standard init block - end ########## */
+    try {
+      /* ############ standard init block ########## */
+      spark = getSparkSession(args.master, args.appName, config, (builder, pipelinesConfig) -> {});
+      fileSystem = getFileSystem(spark, config);
+      /* ############ standard init block - end ########## */
 
-    runClustering(spark, fileSystem, config, datasetId, attempt, 1);
-
-    fileSystem.close();
-    spark.stop();
-    spark.close();
+      runClustering(spark, fileSystem, config, datasetId, attempt, 1);
+    } finally {
+      if (fileSystem != null) {
+        fileSystem.close();
+      }
+      if (spark != null) {
+        spark.stop();
+        spark.close();
+      }
+    }
     System.exit(0);
   }
 

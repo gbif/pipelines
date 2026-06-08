@@ -19,6 +19,8 @@ public class IndexConfig implements Serializable {
   public boolean defaultExtraShard = true;
   public String defaultIndexCatUrl = "http://localhost:9200";
 
+  public Integer defaultIndexMinShards = 32;
+
   // index aliases
   public String occurrenceAlias = "occurrence";
   public String occurrenceVersion;
