@@ -13,6 +13,7 @@
  */
 package org.gbif.pipelines.coordinator;
 
+import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.StepType;
@@ -40,13 +41,24 @@ public class ValidatorInterpretationCallback
 
   @Override
   protected StepType getStepType() {
-    return StepType.VERBATIM_TO_INTERPRETED;
+    return StepType.VALIDATOR_VERBATIM_TO_INTERPRETED;
   }
 
   @Override
   protected void runPipeline(PipelinesVerbatimMessage message) throws Exception {
-    // TODO: implement
-    log.info("ValidatorInterpretationCallback#runPipeline");
+    log.debug("Run interpretation for validation: {}", message.getDatasetUuid());
+
+    // Run interpretation
+    OccurrenceInterpretationPipeline.runInterpretation(
+        sparkSession,
+        fileSystem,
+        pipelinesConfig,
+        message.getDatasetUuid().toString(),
+        message.getAttempt(),
+        pipelinesConfig.getStandalone().getNumberOfShards(),
+        message.getValidationResult().isTripletValid(),
+        message.getValidationResult().isOccurrenceIdValid(),
+        new ArrayList<>(message.getInterpretTypes())); // map to enum
   }
 
   @Override
@@ -55,13 +67,44 @@ public class ValidatorInterpretationCallback
   }
 
   public PipelinesInterpretedMessage createOutgoingMessage(PipelinesVerbatimMessage message) {
-    // TODO: implement
-    log.info("ValidatorInterpretationCallback#createOutgoingMessage");
-    return null;
+    log.debug("Create outgoing message for validation: {}", message.getDatasetUuid());
+
+    Long recordsNumber = null;
+    Long eventRecordsNumber = null;
+    if (message.getValidationResult() != null) {
+      recordsNumber = message.getValidationResult().getNumberOfRecords();
+      eventRecordsNumber = message.getValidationResult().getNumberOfEventRecords();
+    }
+
+    // boolean repeatAttempt = pathExists(message);
+    return new PipelinesInterpretedMessage(
+        message.getDatasetUuid(),
+        message.getAttempt(),
+        message.getPipelineSteps(),
+        recordsNumber,
+        eventRecordsNumber,
+        null, // Set in balancer cli
+        false, // repeatAttempt,
+        message.getResetPrefix(),
+        message.getExecutionId(),
+        message.getEndpointType(),
+        message.getValidationResult(),
+        message.getInterpretTypes(),
+        message.getDatasetType());
   }
 
   @Override
   public Class<PipelinesVerbatimMessage> getMessageClass() {
     return PipelinesVerbatimMessage.class;
+  }
+
+  /** Not applicable for this callback */
+  protected boolean isMessageCorrect(PipelinesVerbatimMessage message) {
+    return true;
+  }
+
+  /** Not applicable for this callback */
+  protected boolean isMessageCorrect(PipelinesInterpretedMessage message) {
+    return true;
   }
 }
