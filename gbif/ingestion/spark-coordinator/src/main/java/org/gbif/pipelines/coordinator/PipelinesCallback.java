@@ -455,7 +455,7 @@ public abstract class PipelinesCallback<
     return !new File(SHUTDOWN_FILE_PATH).exists();
   }
 
-  private boolean isProcessingStopped(I message) {
+  protected boolean isProcessingStopped(I message) {
 
     Long currentKey = message.getExecutionId();
     UUID datasetKey = message.getDatasetUuid();
@@ -522,7 +522,7 @@ public abstract class PipelinesCallback<
     return new ArrayList<>();
   }
 
-  private void updateTrackingStatus(
+  protected void updateTrackingStatus(
       TrackingInfo trackingInfo, I message, PipelineStep.Status status) {
 
     String path =
@@ -635,7 +635,7 @@ public abstract class PipelinesCallback<
     return containsEvents;
   }
 
-  private TrackingInfo trackPipelineStep(I message) throws Exception {
+  protected TrackingInfo trackPipelineStep(I message) throws Exception {
 
     // create pipeline process. If it already exists it returns the existing one (the db query
     // does an upsert).

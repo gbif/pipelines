@@ -16,6 +16,7 @@ package org.gbif.pipelines.coordinator;
 import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;
+import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -99,12 +100,25 @@ public class ValidatorInterpretationCallback
   }
 
   /** Not applicable for this callback */
+  @Override
   protected boolean isMessageCorrect(PipelinesVerbatimMessage message) {
     return true;
   }
 
   /** Not applicable for this callback */
-  protected boolean isMessageCorrect(PipelinesInterpretedMessage message) {
+  @Override
+  protected boolean isProcessingStopped(PipelinesVerbatimMessage message) {
     return true;
   }
+
+  /** Not applicable for this callback */
+  @Override
+  protected TrackingInfo trackPipelineStep(PipelinesVerbatimMessage message) {
+    return TrackingInfo.builder().executionId(message.getExecutionId()).build();
+  }
+
+  /** Not applicable for this callback */
+  @Override
+  protected void updateTrackingStatus(
+      TrackingInfo trackingInfo, PipelinesVerbatimMessage message, PipelineStep.Status status) {}
 }
