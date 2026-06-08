@@ -108,7 +108,7 @@ public class ValidatorInterpretationCallback
   /** Not applicable for this callback */
   @Override
   protected boolean isProcessingStopped(PipelinesVerbatimMessage message) {
-    return true;
+    return false;
   }
 
   /** Not applicable for this callback */
