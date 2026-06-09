@@ -17,6 +17,8 @@ import static org.gbif.pipelines.util.DistributedUtil.getRecordsNumber;
 
 import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
@@ -25,6 +27,8 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.spark.Directories;
 import org.gbif.pipelines.spark.OccurrenceInterpretationPipeline;
 import org.gbif.pipelines.util.SparkConfUtil;
 
@@ -52,6 +56,12 @@ public class ValidatorInterpretationCallback
   protected void runPipeline(PipelinesVerbatimMessage message) throws Exception {
     log.debug("Run interpretation for validation: {}", message.getDatasetUuid());
 
+    // The validator workflow has no identifiers step, so the verbatim parquet directory that
+    // OccurrenceInterpretationPipeline reads as its input is never produced (in the occurrence
+    // workflow IdentifiersPipeline writes it). Convert the verbatim.avro file produced by the
+    // validator dwca/xml-to-avro step into that verbatim parquet directory before interpreting.
+    convertVerbatimAvroToParquet(message);
+
     Long recordsNumber = getRecordsNumber(pipelinesConfig, message, fileSystem);
     int numberOfShards = SparkConfUtil.getNumberOfShards(pipelinesConfig, recordsNumber);
 
@@ -66,6 +76,32 @@ public class ValidatorInterpretationCallback
         message.getValidationResult().isTripletValid(),
         message.getValidationResult().isOccurrenceIdValid(),
         new ArrayList<>(message.getInterpretTypes())); // map to enum
+  }
+
+  /**
+   * Converts the {@code verbatim.avro} file written by the validator dwca/xml-to-avro step into the
+   * {@code verbatim} parquet directory expected by {@link OccurrenceInterpretationPipeline}. In the
+   * occurrence workflow this directory is produced by {@code IdentifiersPipeline}, but the
+   * validator workflow doesn't run that step.
+   */
+  private void convertVerbatimAvroToParquet(PipelinesVerbatimMessage message) {
+    String basePath =
+        String.format(
+            "%s/%s/%d",
+            pipelinesConfig.getInputPath(), message.getDatasetUuid(), message.getAttempt());
+
+    String avroPath = basePath + "/verbatim.avro";
+    String parquetPath = basePath + "/" + Directories.OCCURRENCE_VERBATIM;
+
+    log.info("Converting verbatim avro {} to parquet {}", avroPath, parquetPath);
+    sparkSession
+        .read()
+        .format("avro")
+        .load(avroPath)
+        .as(Encoders.bean(ExtendedRecord.class))
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(parquetPath);
   }
 
   @Override
