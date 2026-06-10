@@ -12,8 +12,6 @@ import org.gbif.pipelines.util.DistributedUtil;
 @Slf4j
 public class DwcDpNfsToHdfsDistributedCallback extends DwcDpNfsToHdfsCallback {
 
-  private static final String DAG_NAME = "gbif-dwc-dp-nfs-to-hdfs";
-
   public DwcDpNfsToHdfsDistributedCallback(
       PipelinesConfig config, MessagePublisher publisher, String master) {
     super(config, publisher, master);
@@ -21,14 +19,14 @@ public class DwcDpNfsToHdfsDistributedCallback extends DwcDpNfsToHdfsCallback {
 
   @Override
   protected void runPipeline(DwcDpNfsToHdfsMessage message) throws Exception {
+    String jobname = "nfs-to-hdfs";
+    String dagName = getDagName(pipelinesConfig);
     DistributedUtil.runPipeline(
-        pipelinesConfig,
-        message,
-        DAG_NAME,
-        fileSystem,
-        pipelinesConfig.getAirflowConfig().tableBuildDag,
-        StepType.NFS_TO_HDFS,
-        List.of());
+        pipelinesConfig, message, jobname, fileSystem, dagName, StepType.NFS_TO_HDFS, List.of());
+  }
+
+  private static String getDagName(PipelinesConfig config) {
+    return config.getAirflowConfig().getDwcDpNfsToHdfsDag();
   }
 
   @Override

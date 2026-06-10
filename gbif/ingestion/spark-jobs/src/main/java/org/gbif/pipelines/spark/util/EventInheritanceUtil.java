@@ -96,7 +96,7 @@ public class EventInheritanceUtil {
     log.info("Joined to parents: {}", joinedToParents.count());
 
     sparkLog(spark, "event-interpretation", "Consolidating...");
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = MapperUtil.MAPPER;
 
     // one row per id
     // Use groupByKey + mapGroups to stream rows per group and build parent lists incrementally

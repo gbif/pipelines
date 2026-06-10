@@ -1,4 +1,4 @@
-package org.gbif.pipelines.spark.util;
+package org.gbif.pipelines.transform;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -63,6 +63,7 @@ public class DataPackageConverter {
 
   private static @NonNull Path getDescriptorPath(Path source) {
     if (!Files.isDirectory(source)) {
+      log.debug("Source path is not a directory: {}", source);
       if (source.toString().toLowerCase(Locale.ROOT).endsWith("datapackage.json")) {
         return source;
       }
@@ -105,47 +106,47 @@ public class DataPackageConverter {
 
     String[] paths =
         inputs.stream().map(Path::toString).map(p -> "file://" + p).toArray(String[]::new);
-    log.info(
-        "Created filepaths [{}] from [{}]",
+    log.debug(
+        "Added hdfs file protocol [{}] => [{}]",
         paths,
         inputs.stream().map(Path::toString).toArray(String[]::new));
 
-    Dataset<Row> df;
-    // check first file to determine format — mixed formats per resource not supported
-    String filename = inputs.get(0).getFileName().toString();
-
-    if (filename.endsWith(".parquet")) {
-      df = spark.read().parquet(paths);
-    } else {
-      DialectDescriptor dialect =
-          resource.dialect() != null
-              ? resource.dialect()
-              : DialectDescriptor.fromExtension(filename);
-
-      DataFrameReader reader =
-          spark
-              .read()
-              .option("header", true)
-              .option("delimiter", dialect.delimiter())
-              .option("inferSchema", false);
-
-      if (dialect.quoteChar() != null && !dialect.quoteChar().isEmpty()) {
-        reader = reader.option("quote", dialect.quoteChar());
-      }
-      if (dialect.escapeChar() != null) {
-        reader = reader.option("escape", dialect.escapeChar());
-      }
-      if (dialect.nullSequence() != null) {
-        reader = reader.option("nullValue", dialect.nullSequence());
-      }
-      if (dialect.skipInitialSpace()) {
-        reader = reader.option("ignoreLeadingWhiteSpace", true);
-      }
-
-      df = reader.csv(paths);
-    }
+    Dataset<Row> df = createReader(spark, resource, inputs, paths);
 
     df.coalesce(partitions).write().mode(SaveMode.Overwrite).parquet(outputUri);
+  }
+
+  private static Dataset<Row> createReader(
+      SparkSession spark, ResourceDescriptor resource, List<Path> inputs, String[] paths) {
+    String filename = inputs.get(0).getFileName().toString();
+    if (filename.endsWith(".parquet")) {
+      return spark.read().parquet(paths);
+    }
+
+    DialectDescriptor dialect =
+        resource.dialect() != null ? resource.dialect() : DialectDescriptor.fromExtension(filename);
+
+    DataFrameReader reader =
+        spark
+            .read()
+            .option("header", true)
+            .option("delimiter", dialect.delimiter())
+            .option("inferSchema", false);
+
+    if (dialect.quoteChar() != null && !dialect.quoteChar().isEmpty()) {
+      reader = reader.option("quote", dialect.quoteChar());
+    }
+    if (dialect.escapeChar() != null) {
+      reader = reader.option("escape", dialect.escapeChar());
+    }
+    if (dialect.nullSequence() != null) {
+      reader = reader.option("nullValue", dialect.nullSequence());
+    }
+    if (dialect.skipInitialSpace()) {
+      reader = reader.option("ignoreLeadingWhiteSpace", true);
+    }
+
+    return reader.csv(paths);
   }
 
   private void writeDescriptor(
@@ -162,7 +163,6 @@ public class DataPackageConverter {
       ObjectNode r = resources.addObject();
       r.put("name", resource.name());
 
-      // paths are relative strings — just use as-is
       List<Path> paths = resource.paths();
       if (paths.size() == 1) {
         r.put("path", paths.get(0).toString());

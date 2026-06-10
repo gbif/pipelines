@@ -1,7 +1,6 @@
 package org.gbif.pipelines.spark;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
-import static org.gbif.pipelines.spark.ArgsConstants.*;
 import static org.gbif.pipelines.spark.util.LogUtil.timeAndRecPerSecond;
 import static org.gbif.pipelines.spark.util.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
@@ -11,6 +10,7 @@ import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
@@ -39,7 +39,6 @@ import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.dwc.terms.DwcTerm;
@@ -53,6 +52,8 @@ import org.gbif.pipelines.keygen.Keygen;
 import org.gbif.pipelines.keygen.OccurrenceRecord;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.gbif.pipelines.spark.pojo.RawRecord;
+import org.gbif.pipelines.spark.util.MapperUtil;
+import org.gbif.pipelines.spark.util.PipelineArgs;
 import org.gbif.pipelines.transform.factory.KeygenServiceFactory;
 import org.jetbrains.annotations.NotNull;
 import scala.Tuple2;
@@ -63,20 +64,11 @@ public class FragmenterPipeline {
 
   public static final String METRICS_FILENAME = "fragmenter.yml";
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = MapperUtil.MAPPER;
   public static final String FRAGMENT_COLUMN_FAMILY = "fragment";
 
   @Parameters(separators = "=")
-  private static class Args {
-
-    @Parameter(names = APP_NAME_ARG, description = "Application name", required = true)
-    private String appName;
-
-    @Parameter(names = DATASET_ID_ARG, description = "Dataset ID", required = true)
-    private String datasetId;
-
-    @Parameter(names = ATTEMPT_ID_ARG, description = "Attempt number", required = true)
-    private int attempt;
+  private static class Args extends PipelineArgs {
 
     @Parameter(
         names = "--tripletValid",
@@ -91,21 +83,6 @@ public class FragmenterPipeline {
         required = false,
         arity = 1)
     private boolean occurrenceIdValid = true;
-
-    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
-    private String config = "/tmp/pipelines-spark.yaml";
-
-    @Parameter(
-        names = SPARK_MASTER_ARG,
-        description = "Spark master - there for local dev only",
-        required = false)
-    private String master;
-
-    @Parameter(
-        names = {"--help", "-h"},
-        help = true,
-        description = "Show usage")
-    boolean help;
   }
 
   public static void main(String[] argsv) throws Exception {
