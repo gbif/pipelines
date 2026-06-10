@@ -1,8 +1,6 @@
 package org.gbif.pipelines.spark;
 
 import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,28 +9,18 @@ import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.dp.descriptor.JacksonDataPackageParser;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.spark.util.DataPackageConverter;
+import org.gbif.pipelines.spark.util.MapperUtil;
 import org.gbif.pipelines.spark.util.PathUtil;
 import org.gbif.pipelines.spark.util.PipelineArgs;
 import org.gbif.pipelines.spark.util.PipelineRunner;
 import org.gbif.pipelines.spark.util.PipelinesConfigUtil;
+import org.gbif.pipelines.transform.DataPackageConverter;
 
 @Slf4j
 public class DataPackageConversionPipeline {
 
   private static void sparkExtraBuildOptions(
       SparkSession.Builder builder, PipelinesConfig pipelineConfig) {}
-
-  public static class DataPackageConversionArgs extends PipelineArgs {
-    @Parameter(names = "--targetPartitionMb", description = "Target partition size in MB")
-    public long targetPartitionMb = 256;
-
-    @Parameter(names = "--inputBasePath", description = "Base path for input files")
-    public String inputBasePath;
-
-    @Parameter(names = "--outputBasePath", description = "Base path for output files")
-    public String outputBasePath;
-  }
 
   public record CopyConfig(
       SparkSession spark,
@@ -94,10 +82,11 @@ public class DataPackageConversionPipeline {
     }
     log.info("Copying from {} to {}", source, destination);
 
-    ObjectMapper mapper = new ObjectMapper();
     DataPackageConverter converter =
         new DataPackageConverter(
-            new JacksonDataPackageParser(mapper), mapper, copyConfig.targetPartionByteSize);
+            new JacksonDataPackageParser(MapperUtil.MAPPER),
+            MapperUtil.MAPPER,
+            copyConfig.targetPartionByteSize);
 
     converter.convert(copyConfig.spark(), Path.of(source), destination);
 

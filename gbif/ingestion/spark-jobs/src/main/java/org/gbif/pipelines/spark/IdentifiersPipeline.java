@@ -34,6 +34,7 @@ import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
+import org.gbif.pipelines.spark.util.PipelineArgs;
 import org.gbif.pipelines.transform.GbifIdTransform;
 import org.gbif.pipelines.transform.factory.KeygenServiceFactory;
 
@@ -58,16 +59,7 @@ public class IdentifiersPipeline {
   public static final String METRICS_FILENAME = "verbatim-to-identifier.yml";
 
   @Parameters(separators = "=")
-  private static class Args {
-
-    @Parameter(names = APP_NAME_ARG, description = "Application name", required = true)
-    private String appName;
-
-    @Parameter(names = DATASET_ID_ARG, description = "Dataset ID", required = true)
-    private String datasetId;
-
-    @Parameter(names = ATTEMPT_ID_ARG, description = "Attempt number", required = true)
-    private int attempt;
+  private static class Args extends PipelineArgs {
 
     @Parameter(
         names = "--tripletValid",

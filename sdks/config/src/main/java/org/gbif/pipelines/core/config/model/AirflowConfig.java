@@ -23,4 +23,5 @@ public class AirflowConfig implements Serializable {
   public String eventsInterpretationDag = "gbif_pipelines_event_interpretation_dag";
   public String eventsIndexingDag = "gbif_pipelines_event_indexing_dag";
   public String eventsTableBuildDag = "gbif_pipelines_event_hdfs_view_dag";
+  public String dwcDpNfsToHdfsDag = "gbif_pipelines_dwc_dp_nfs_to_hdfs";
 }

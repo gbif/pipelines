@@ -1,4 +1,4 @@
-package org.gbif.pipelines.spark.util;
+package org.gbif.pipelines.transform;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,6 +14,7 @@ import org.apache.spark.sql.SparkSession;
 import org.gbif.dp.descriptor.DataPackageDescriptor;
 import org.gbif.dp.descriptor.JacksonDataPackageParser;
 import org.gbif.dp.descriptor.ResourceDescriptor;
+import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
