@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transform;
+package org.gbif.pipelines.spark.dwcdp;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -9,12 +9,12 @@ import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.dp.descriptor.JacksonDataPackageParser;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.spark.dwcdp.DataPackageConverter;
 import org.gbif.pipelines.spark.util.MapperUtil;
 import org.gbif.pipelines.spark.util.PathUtil;
 import org.gbif.pipelines.spark.util.PipelineArgs;
 import org.gbif.pipelines.spark.util.PipelineRunner;
 import org.gbif.pipelines.spark.util.PipelinesConfigUtil;
-import org.gbif.pipelines.transform.DataPackageConverter;
 
 @Slf4j
 public class DataPackageConversionPipeline {
