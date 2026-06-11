@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transform;
+package org.gbif.pipelines.spark.dwcdp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
