@@ -4,6 +4,8 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.spark.sql.SparkSession;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.dwcdp.DwcDpVerbatimConverter;
 import org.gbif.pipelines.spark.util.PipelineArgs;
@@ -44,6 +46,11 @@ public class DwcDpToVerbatimPipeline {
       return;
     }
 
+    run(args);
+  }
+
+  /** Entry point for CLI / Airflow — owns Spark session lifecycle. */
+  public static void run(Args args) throws Exception {
     PipelinesConfig config = PipelinesConfigUtil.loadConfig(args.config);
 
     PipelineRunner.run(
@@ -59,5 +66,22 @@ public class DwcDpToVerbatimPipeline {
                 args.attempt,
                 args.containsEvents,
                 args.containsOccurrences));
+  }
+
+  /**
+   * Entry point for callbacks — Spark session and FileSystem already initialised by {@link
+   * PipelinesCallback}. Mirrors the pattern of {@link DataPackageConversionPipeline#runCopy}.
+   */
+  public static void run(
+      SparkSession spark,
+      FileSystem fileSystem,
+      PipelinesConfig config,
+      String datasetId,
+      int attempt,
+      boolean containsEvents,
+      boolean containsOccurrences)
+      throws Exception {
+    DwcDpVerbatimConverter.convert(
+        spark, fileSystem, config, datasetId, attempt, containsEvents, containsOccurrences);
   }
 }
