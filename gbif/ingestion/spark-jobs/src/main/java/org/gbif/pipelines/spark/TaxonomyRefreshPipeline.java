@@ -195,6 +195,7 @@ public class TaxonomyRefreshPipeline {
 
                   return Occurrence.builder()
                       .id(simpleRecord.getId())
+                      .coreId(simpleRecord.getCoreId())
                       .identifier(simpleRecord.getIdentifier())
                       .verbatim(simpleRecord.getVerbatim())
                       .basic(simpleRecord.getBasic())
