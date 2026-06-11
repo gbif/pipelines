@@ -5,6 +5,7 @@ import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.DwcDpNfsToHdfsMessage;
+import org.gbif.common.messaging.api.messages.DwcDpToVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.DataPackageConversionPipeline;
@@ -54,8 +55,13 @@ public class DwcDpNfsToHdfsCallback
 
   @Override
   public PipelineBasedMessage createOutgoingMessage(DwcDpNfsToHdfsMessage message) {
-    // TODO add next message in process
-    log.info("Would send out message for ingestion");
-    return null; // no downstream message yet; add when next step exists
+    return new DwcDpToVerbatimMessage(
+        message.getDatasetUuid(),
+        message.getAttempt(),
+        message.getPipelineSteps(),
+        message.getExecutionId(),
+        message.isContainsOccurrences(),
+        message.isContainsEvents(),
+        isStandalone());
   }
 }
