@@ -21,7 +21,6 @@ public class DwcDpNfsToHdfsCallback
 
   @Override
   protected StepType getStepType() {
-    StepType dwcdpToVerbatim = StepType.DWCDP_TO_VERBATIM;
     return StepType.NFS_TO_HDFS;
   }
 
