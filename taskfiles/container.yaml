@@ -1,0 +1,72 @@
+version: '3'
+
+vars:
+  CONTAINER_CLI:
+    sh: which docker 2>/dev/null || which podman 2>/dev/null || echo "docker"
+
+tasks:
+  _push:dist:docker:
+    internal: true
+    requires:
+      vars: [FULL_IMAGE, IMAGE, JAR_FILE, POM_VERSION, DOCKERFILE, CONTEXT]
+    cmds:
+      - docker buildx build
+          --platform linux/amd64,linux/arm64
+          -f {{.DOCKERFILE}}
+          --build-arg VERSION={{.POM_VERSION}}
+          --build-arg JAR_FILE={{.JAR_FILE}}
+          -t {{.FULL_IMAGE}}
+          --push {{.CONTEXT}}
+      - cmd: |
+          if [ "{{.IS_RELEASE}}" = "true" ]; then
+            docker buildx build
+              --platform linux/amd64,linux/arm64
+              --build-arg VERSION={{.POM_VERSION}}
+              --build-arg JAR_FILE={{.JAR_FILE}}
+              -t {{.IMAGE}}:latest
+              --push {{.CONTEXT}}
+          fi
+
+  _push:dist:podman:
+    internal: true
+    requires:
+      vars: [FULL_IMAGE, IMAGE, JAR_FILE, POM_VERSION, DOCKERFILE, CONTEXT]
+    cmds:
+      - podman build --platform linux/amd64 -f {{.DOCKERFILE}} --build-arg VERSION={{.POM_VERSION}} --build-arg JAR_FILE={{.JAR_FILE}} -t {{.FULL_IMAGE}}-amd64 {{.CONTEXT}}
+      - podman build --platform linux/arm64 -f {{.DOCKERFILE}} --build-arg VERSION={{.POM_VERSION}} --build-arg JAR_FILE={{.JAR_FILE}} -t {{.FULL_IMAGE}}-arm64 {{.CONTEXT}}
+      - podman push {{.FULL_IMAGE}}-amd64
+      - podman push {{.FULL_IMAGE}}-arm64
+      - podman image rm {{.FULL_IMAGE}} || true
+      - podman manifest create {{.FULL_IMAGE}}
+      - podman manifest add {{.FULL_IMAGE}} {{.FULL_IMAGE}}-amd64
+      - podman manifest add {{.FULL_IMAGE}} {{.FULL_IMAGE}}-arm64
+      - podman manifest push {{.FULL_IMAGE}}
+      - cmd: |
+          if [ "{{.IS_RELEASE}}" = "true" ]; then
+            podman image rm {{.IMAGE}}:latest || true
+            podman manifest create {{.IMAGE}}:latest
+            podman manifest add {{.IMAGE}}:latest {{.FULL_IMAGE}}-amd64
+            podman manifest add {{.IMAGE}}:latest {{.FULL_IMAGE}}-arm64
+            podman manifest push {{.IMAGE}}:latest
+          fi
+
+  push:dist:
+    desc: Build and push multi-arch image
+    prompt: Do you want to build and push the multi-arch image to the registry?
+    requires:
+      vars: [REGISTRY, IMAGE_NAME, POM_VERSION, JAR_FILE]
+    vars:
+      IMAGE: '{{.REGISTRY}}/{{.IMAGE_NAME}}'
+      FULL_IMAGE: '{{.IMAGE}}:{{.POM_VERSION}}'
+      DOCKERFILE: '{{.DOCKERFILE | default "Dockerfile"}}'
+      CONTEXT: '{{.CONTEXT | default "."}}'
+    cmds:
+      - task: '_push:dist:{{if eq .CONTAINER_CLI "docker"}}docker{{else}}podman{{end}}'
+        vars:
+          FULL_IMAGE: '{{.FULL_IMAGE}}'
+          IMAGE: '{{.IMAGE}}'
+          JAR_FILE: '{{.JAR_FILE}}'
+          POM_VERSION: '{{.POM_VERSION}}'
+          IS_RELEASE: '{{.IS_RELEASE | default "false"}}'
+          DOCKERFILE: '{{.DOCKERFILE}}'
+          CONTEXT: '{{.CONTEXT}}'
