@@ -62,7 +62,7 @@
 
     <!-- Match Checklistbank versions -->
     <gbif-cli.version>3.0.1</gbif-cli.version>
-    <gbif-api.version>2.0.0</gbif-api.version>
+    <gbif-api.version>2.4.6</gbif-api.version>
     <guava.version>32.1.2-jre</guava.version>
     <jcommander.version>1.60</jcommander.version>
     <jsr305.version>3.0.2</jsr305.version>
