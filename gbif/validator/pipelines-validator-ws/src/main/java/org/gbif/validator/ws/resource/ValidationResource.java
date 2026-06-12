@@ -5,6 +5,9 @@ import static org.gbif.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.ws.security.UserRoles.IPT_ROLE;
 import static org.gbif.ws.security.UserRoles.USER_ROLE;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.servers.Server;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -35,6 +38,15 @@ import org.springframework.web.multipart.MultipartFile;
  * Validation resource services, it allows validating files (synchronous) and url (asynchronously).
  * Aditional it provides services to list and retrieve validations statuses.
  */
+@OpenAPIDefinition(
+  info = @Info(
+    title = "Validator API",
+    version = "v1",
+    termsOfService = "https://www.gbif.org/terms"),
+  servers = {
+    @Server(url = "https://api.gbif.org/v1/", description = "Production"),
+    @Server(url = "https://api.gbif-uat.org/v1/", description = "User testing")
+  })
 @Slf4j
 @RestController
 @RequestMapping(value = "validation", produces = MediaType.APPLICATION_JSON_VALUE)

@@ -379,7 +379,7 @@ public class OccurrenceJsonConverter {
                     nucleotideSequenceObject.setNonIupacFraction(d.getNonIupacFraction());
                     nucleotideSequenceObject.setNonACGTNFraction(d.getNonACGTNFraction());
                     nucleotideSequenceObject.setNFraction(d.getNFraction());
-                    nucleotideSequenceObject.setNRunsCapped(d.getNRunsCapped());
+                    nucleotideSequenceObject.setNNrunsCapped(d.getNNrunsCapped());
                     nucleotideSequenceObject.setNaturalLanguageDetected(
                         d.getNaturalLanguageDetected());
                     nucleotideSequenceObject.setEndsTrimmed(d.getEndsTrimmed());

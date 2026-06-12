@@ -722,7 +722,7 @@
         "nFraction": {
           "type": "double"
         },
-        "nRunsCapped": {
+        "nNrunsCapped": {
           "type": "integer"
         },
         "naturalLanguageDetected": {

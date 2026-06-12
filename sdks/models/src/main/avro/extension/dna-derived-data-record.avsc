@@ -18,7 +18,7 @@
       {"name": "nonIupacFraction", "type": ["null", "double"], "default" : null},
       {"name": "nonACGTNFraction", "type": ["null", "double"], "default" : null},
       {"name": "nFraction", "type": ["null", "double"], "default" : null},
-      {"name": "nRunsCapped", "type": ["null", "int"], "default" : null},
+      {"name": "nNrunsCapped", "type": ["null", "int"], "default" : null},
       {"name": "naturalLanguageDetected", "type": ["null", "boolean"], "default" : null},
       {"name": "endsTrimmed", "type": ["null", "boolean"], "default" : null},
       {"name": "gapsOrWhitespaceRemoved", "type": ["null", "boolean"], "default" : null},

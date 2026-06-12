@@ -48,14 +48,14 @@ public class MediaSerDeserTest {
 
   @Test
   public void dnaDerivedDataUsesStableCasingForNFields() {
-    DnaDerivedData dna = DnaDerivedData.newBuilder().setNFraction(0.1d).setNRunsCapped(2).build();
+    DnaDerivedData dna = DnaDerivedData.newBuilder().setNFraction(0.1d).setNNrunsCapped(2).build();
 
     String json = MediaSerDeser.dnaDerivedDataToJson(List.of(dna));
 
     Assert.assertNotNull(json);
     Assert.assertTrue(json.contains("\"nFraction\""));
-    Assert.assertTrue(json.contains("\"nRunsCapped\""));
+    Assert.assertTrue(json.contains("\"nNrunsCapped\""));
     Assert.assertFalse(json.contains("\"NFraction\""));
-    Assert.assertFalse(json.contains("\"NRunsCapped\""));
+    Assert.assertFalse(json.contains("\"NNrunsCapped\""));
   }
 }

@@ -75,7 +75,7 @@ public class DnaDerivedDataInterpreter {
       dnaDerivedData.setNonIupacFraction(result.nonIupacFraction());
       dnaDerivedData.setNonACGTNFraction(result.nonACGTNFraction());
       dnaDerivedData.setNFraction(result.nFraction());
-      dnaDerivedData.setNRunsCapped(result.nNrunsCapped());
+      dnaDerivedData.setNNrunsCapped(result.nNrunsCapped());
       dnaDerivedData.setNaturalLanguageDetected(result.naturalLanguageDetected());
       dnaDerivedData.setEndsTrimmed(result.endsTrimmed());
       dnaDerivedData.setGapsOrWhitespaceRemoved(result.gapsOrWhitespaceRemoved());

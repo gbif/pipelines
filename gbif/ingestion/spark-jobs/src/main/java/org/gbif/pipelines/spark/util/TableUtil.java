@@ -438,7 +438,7 @@ public class TableUtil {
            noniupacfraction DOUBLE,
            nonacgtnfraction DOUBLE,
            nfraction DOUBLE,
-           nrunscapped INT,
+           nnrunscapped INT,
            naturallanguagedetected BOOLEAN,
            endstrimmed BOOLEAN,
            gapsorwhitespaceremoved BOOLEAN,
@@ -478,7 +478,7 @@ public class TableUtil {
                             .add("nonIupacFraction", "double", false)
                             .add("nonACGTNFraction", "double", false)
                             .add("nFraction", "double", false)
-                            .add("nRunsCapped", "int", false)
+                            .add("nNrunsCapped", "int", false)
                             .add("naturalLanguageDetected", "boolean", false)
                             .add("endsTrimmed", "boolean", false)
                             .add("gapsOrWhitespaceRemoved", "boolean", false)
@@ -497,7 +497,7 @@ public class TableUtil {
             col("dna_record.nonIupacFraction").alias("noniupacfraction"),
             col("dna_record.nonACGTNFraction").alias("nonacgtnfraction"),
             col("dna_record.nFraction").alias("nfraction"),
-            col("dna_record.nRunsCapped").alias("nrunscapped"),
+            col("dna_record.nNrunsCapped").alias("nNrunsCapped"),
             col("dna_record.naturalLanguageDetected").alias("naturallanguagedetected"),
             col("dna_record.endsTrimmed").alias("endstrimmed"),
             col("dna_record.gapsOrWhitespaceRemoved").alias("gapsorwhitespaceremoved"),
@@ -518,7 +518,7 @@ public class TableUtil {
                   noniupacfraction,
                   nonacgtnfraction,
                   nfraction,
-                  nrunscapped,
+                  nnrunscapped,
                   naturallanguagedetected,
                   endstrimmed,
                   gapsorwhitespaceremoved,

@@ -50,7 +50,7 @@ public class DnaDerivedDataInterpreterTest {
     assertTrue(interpreted1.getInvalid());
     assertTrue(interpreted1.getGapsOrWhitespaceRemoved());
     assertNotNull(interpreted1.getNFraction());
-    assertNotNull(interpreted1.getNRunsCapped());
+    assertNotNull(interpreted1.getNNrunsCapped());
 
     DnaDerivedData interpreted2 =
         dr.getDnaDerivedDataItems().stream()

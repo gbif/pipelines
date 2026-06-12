@@ -79,11 +79,11 @@ public class MediaSerDeser {
     @JsonProperty("nFraction")
     void setNFraction(Double nFraction);
 
-    @JsonProperty("nRunsCapped")
-    Integer getNRunsCapped();
+    @JsonProperty("nNrunsCapped")
+    Integer getNNrunsCapped();
 
-    @JsonProperty("nRunsCapped")
-    void setNRunsCapped(Integer nRunsCapped);
+    @JsonProperty("nNrunsCapped")
+    void setNNrunsCapped(Integer nNrunsCapped);
   }
 
   private static final String SER_ERROR_MSG = "Unable to serialize %s objects to JSON";

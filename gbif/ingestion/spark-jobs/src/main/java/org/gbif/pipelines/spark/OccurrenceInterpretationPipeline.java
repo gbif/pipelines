@@ -783,8 +783,8 @@ public class OccurrenceInterpretationPipeline {
                           name -> {
                             if (name.equals("NFraction"))
                               return element.getField(name).alias("nFraction");
-                            if (name.equals("NRunsCapped"))
-                              return element.getField(name).alias("nRunsCapped");
+                            if (name.equals("NNrunsCapped"))
+                              return element.getField(name).alias("nNrunsCapped");
                             return element.getField(name).alias(name);
                           })
                       .toArray(Column[]::new);
