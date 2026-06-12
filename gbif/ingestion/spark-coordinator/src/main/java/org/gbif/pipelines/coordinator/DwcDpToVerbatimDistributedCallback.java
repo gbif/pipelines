@@ -31,7 +31,9 @@ public class DwcDpToVerbatimDistributedCallback extends DwcDpToVerbatimCallback 
         fileSystem,
         dagName,
         StepType.DWCDP_TO_VERBATIM,
-        List.of());
+        List.of(
+            "--containsEvents=" + message.isContainsEvents(),
+            "--containsOccurrences=" + message.isContainsOccurrences()));
   }
 
   private static String getDagName(PipelinesConfig config) {

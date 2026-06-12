@@ -8,8 +8,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.model.pipelines.PipelinesWorkflow;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.ExchangeType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.DwcDpMetadataSyncFinishedMessage;
@@ -48,11 +51,18 @@ public class DwcDpNfsToHdfsMessageHandler {
     long fileSizeBytes = getFileSizeBytes(archivePath);
     long switchFileSizeBytes = config.switchFileSizeMb * 1024L * 1024L;
 
+    Set<String> pipelineSteps =
+        PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents)
+            .getAllNodesFor(Set.of(NFS_TO_HDFS))
+            .stream()
+            .map(StepType::name)
+            .collect(Collectors.toSet());
+
     DwcDpNfsToHdfsMessage out =
         new DwcDpNfsToHdfsMessage(
             m.getDatasetUuid(),
             m.getAttempt(),
-            Set.of(NFS_TO_HDFS.name()),
+            pipelineSteps,
             null,
             containsOccurrences,
             containsEvents);
@@ -65,7 +75,7 @@ public class DwcDpNfsToHdfsMessageHandler {
     }
   }
 
-  private static long getFileSizeBytes(Path archivePath) throws IOException {
+  static long getFileSizeBytes(Path archivePath) throws IOException {
     try (Stream<Path> stream = Files.walk(archivePath)) {
       return stream.filter(Files::isRegularFile).mapToLong(p -> p.toFile().length()).sum();
     }

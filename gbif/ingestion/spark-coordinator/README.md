@@ -69,6 +69,39 @@ session on startup; distributed only needs a connection to Airflow and HDFS.
 | `EVENT_DELETION` | Deletes event dataset from Iceberg + ES + HDFS | Yes |
 | `DWCDP_NFS_TO_HDFS_STANDALONE` | `DataPackageConversionPipeline` | Yes |
 | `DWCDP_NFS_TO_HDFS_DISTRIBUTED` | `DataPackageConversionPipeline` via Airflow | No |
+| `DWCDP_TO_VERBATIM_STANDALONE` | `DwcDpToVerbatimPipeline` | Yes |
+| `DWCDP_TO_VERBATIM_DISTRIBUTED` | `DwcDpToVerbatimPipeline` via Airflow | No |
+
+## DwC-DP pipeline flow
+
+DwC-DP datasets follow a two-step ingestion path before joining the standard interpretation pipeline:
+
+```
+DwcDpMetadataSyncFinishedMessage
+      │
+      ▼ balancer (DwcDpNfsToHdfsMessageHandler)
+      │   reads datapackage.json from NFS, determines workflow graph from
+      │   containsOccurrences/containsEvents, resolves full step set via
+      │   PipelinesWorkflow.getWorkflow().getAllNodesFor(NFS_TO_HDFS)
+      │
+      ▼ DWCDP_NFS_TO_HDFS_{STANDALONE|DISTRIBUTED}
+      │   DataPackageConversionPipeline: copies DwC-DP CSV/TSV/Parquet
+      │   from NFS to HDFS as partitioned Parquet
+      │
+      ▼ balancer (DwcDpToVerbatimMessageHandler)
+      │   reads NFS archive size to decide standalone vs distributed
+      │
+      ▼ DWCDP_TO_VERBATIM_{STANDALONE|DISTRIBUTED}
+      │   DwcDpToVerbatimPipeline: joins event/occurrence/media tables
+      │   from HDFS Parquet, writes verbatim.avro
+      │
+      ▼ balancer (VerbatimMessageHandler or EventsMessageHandler)
+      │   depending on containsOccurrences/containsEvents:
+      │     occurrence (± events) → PipelinesVerbatimMessage → VERBATIM_TO_IDENTIFIER
+      │     events only           → PipelinesEventsMessage   → EVENTS_VERBATIM_TO_INTERPRETED
+      │
+      ▼ standard GBIF interpretation pipeline continues...
+```
 
 ## CLI arguments
 
@@ -148,6 +181,8 @@ airflowConfig:
   indexingDag: gbif-occurrence-indexing
   eventsIndexingDag: gbif-events-indexing
   fragmenterDag: gbif-fragmenter
+  dwcDpNfsToHdfsDag: gbif-pipelines-dwc-dp-nfs-to-hdfs
+  dwcDpToVerbatimDag: gbif-pipelines-dwc-dp-to-verbatim
 
 # Spark resource configs keyed by record count expression.
 # Used by distributed modes to select executor sizing.

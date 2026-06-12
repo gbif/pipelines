@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.DwcDpMetadataSyncFinishedMessage;
+import org.gbif.common.messaging.api.messages.DwcDpToVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
@@ -21,6 +22,7 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.pipelines.tasks.balancer.handler.DwcDpNfsToHdfsMessageHandler;
+import org.gbif.pipelines.tasks.balancer.handler.DwcDpToVerbatimMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.EventsIndexedMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.EventsInterpretedMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.EventsMessageHandler;
@@ -84,6 +86,8 @@ public class BalancerCallback extends AbstractMessageCallback<PipelinesBalancerM
         EventsMessageHandler.handle(config, publisher, message);
       } else if (DwcDpMetadataSyncFinishedMessage.class.getSimpleName().equals(className)) {
         DwcDpNfsToHdfsMessageHandler.handle(config, publisher, message);
+      } else if (DwcDpToVerbatimMessage.class.getSimpleName().equals(className)) {
+        DwcDpToVerbatimMessageHandler.handle(config, publisher, message);
       } else {
         log.error("Handler for {} wasn't found!", className);
       }

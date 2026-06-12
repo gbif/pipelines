@@ -4,7 +4,7 @@ The balancer listens to the `PipelinesBalancerMessage` queue and routes each dat
 
 ## How it works
 
-1. A message arrives on the configured queue 
+1. A message arrives on the configured queue
 2. The balancer inspects the message type and applies the relevant handler
 3. Each handler checks a size threshold (file size in bytes, or record count) against the dataset
 4. The message is re-published to either a `*.standalone` or `*.distributed` routing key on the `occurrence` exchange
@@ -82,7 +82,7 @@ The registry is used to report pipeline step status back to the GBIF registry AP
 |--------------------------------|-------------------------------------|---|---|
 | `switchFileSizeMb`             | `--switch-file-size-mb`             | Yes | File size threshold in MB. Datasets whose unpacked NFS archive exceeds this are routed to distributed execution |
 | `validatorSwitchRecordsNumber` | `--validator-switch-records-number` | Yes | Record count threshold for validator datasets |
-| `validatorRepositoryPath`      | `--validator-repository-path`       | No | NFS path where the validator looks for archives to validate (e.g. DwC-A). <!-- TODO: confirm exact usage in ArchiveValidator handler --> |
+| `validatorRepositoryPath`      | `--validator-repository-path`       | No | NFS path where the validator looks for archives to validate (e.g. DwC-A) |
 | `dwcDpRepositoryPath`          | `--dwcdp-repository-path`           | No | NFS path containing unpacked DwC-DP archives, used for file size inspection |
 
 ## Message handlers
@@ -100,12 +100,26 @@ Routes based on record count read from a metrics YAML on HDFS (`archive-to-verba
 
 ### DwC-DP NFS to HDFS (`DwcDpMetadataSyncFinishedMessage`)
 
-Routes based on total file size of the unpacked archive on NFS (`repositoryPath/<datasetKey>`), walked recursively.
+Routes based on total file size of the unpacked archive on NFS (`dwcDpRepositoryPath/<datasetKey>`),
+walked recursively. The full pipeline step set for the execution is resolved from the workflow
+graph at this point via `PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents)
+.getAllNodesFor(NFS_TO_HDFS)`, so downstream steps are registered in the registry from the start.
 
 | Routing key (outbound) | Condition |
 |---|---|
 | `occurrence.dwcdp.nfs-to-hdfs.standalone` | total file size ≤ `switchFileSizeMb` |
 | `occurrence.dwcdp.nfs-to-hdfs.distributed` | total file size > `switchFileSizeMb` |
+
+### DwC-DP verbatim conversion (`DwcDpToVerbatimMessage`)
+
+Routes based on total file size of the same NFS archive (`dwcDpRepositoryPath/<datasetKey>`).
+Emits a `DwcDpToVerbatimMessage` with the `standalone` flag set, whose `getRoutingKey()` appends
+the correct suffix automatically.
+
+| Routing key (outbound) | Condition |
+|---|---|
+| `occurrence.dwcdp.to-verbatim.standalone` | total file size ≤ `switchFileSizeMb` |
+| `occurrence.dwcdp.to-verbatim.distributed` | total file size > `switchFileSizeMb` |
 
 ### Validator (`PipelinesBalancerMessage` with validator step)
 
