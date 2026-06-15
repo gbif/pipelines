@@ -8,6 +8,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.dwcdp.DwcDpVerbatimConverter;
+import org.gbif.pipelines.spark.dwcdp.DwcDpVerbatimConverter.VerbatimConversionMetrics;
 import org.gbif.pipelines.spark.util.PipelineArgs;
 import org.gbif.pipelines.spark.util.PipelineRunner;
 import org.gbif.pipelines.spark.util.PipelinesConfigUtil;
@@ -71,8 +72,11 @@ public class DwcDpToVerbatimPipeline {
   /**
    * Entry point for callbacks — Spark session and FileSystem already initialised by {@link
    * PipelinesCallback}. Mirrors the pattern of {@link DataPackageConversionPipeline#runCopy}.
+   *
+   * @return record counts gathered during conversion, for the callback to forward in the outgoing
+   *     message's validation result / event and occurrence counts.
    */
-  public static void run(
+  public static VerbatimConversionMetrics run(
       SparkSession spark,
       FileSystem fileSystem,
       PipelinesConfig config,
@@ -81,7 +85,7 @@ public class DwcDpToVerbatimPipeline {
       boolean containsEvents,
       boolean containsOccurrences)
       throws Exception {
-    DwcDpVerbatimConverter.convert(
+    return DwcDpVerbatimConverter.convert(
         spark, fileSystem, config, datasetId, attempt, containsEvents, containsOccurrences);
   }
 }

@@ -1,5 +1,6 @@
 package org.gbif.pipelines.coordinator;
 
+import java.io.IOException;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;
@@ -12,8 +13,11 @@ import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
+import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.DwcDpToVerbatimPipeline;
+import org.gbif.pipelines.spark.util.PathUtil;
 
 /**
  * Standalone callback for the DWCDP_TO_VERBATIM step. Runs {@link DwcDpToVerbatimPipeline}
@@ -22,6 +26,13 @@ import org.gbif.pipelines.spark.DwcDpToVerbatimPipeline;
  * <p>On success emits either a {@link PipelinesVerbatimMessage} (occurrence or event+occurrence
  * datasets) or a {@link PipelinesEventsMessage} (event-only datasets) to the balancer, following
  * the same branching logic as the workflow graphs in {@code PipelinesWorkflow}.
+ *
+ * <p>Record counts are read back from {@code archive-to-verbatim.yml} (written during {@code
+ * runPipeline}) rather than carried via instance state — {@link PipelinesCallback} instances may be
+ * shared across {@code --listenerThreads}, so any state set in {@code runPipeline} and read in
+ * {@link #createOutgoingMessage} would be a cross-message race. Re-reading from HDFS keyed only by
+ * {@code datasetUuid}/{@code attempt} from the message is stateless and safe, mirroring how {@code
+ * VerbatimMessageHandler} reads the same file in the balancer.
  */
 @Slf4j
 public class DwcDpToVerbatimCallback
@@ -73,16 +84,23 @@ public class DwcDpToVerbatimCallback
    *       (EVENT_WF_GRAPH)
    * </ul>
    *
-   * Runner is left null — the balancer decides standalone vs distributed for the next step.
+   * Record counts are read back from {@code archive-to-verbatim.yml}, written during {@code
+   * runPipeline} for this same dataset/attempt. Runner is left null — the balancer decides
+   * standalone vs distributed for the next step.
    */
   @Override
   public PipelineBasedMessage createOutgoingMessage(DwcDpToVerbatimMessage message) {
+    String datasetId = message.getDatasetUuid().toString();
+    long occurrenceCount =
+        readMetric(datasetId, message.getAttempt(), Metrics.ARCHIVE_TO_OCC_COUNT);
+    long eventCount = readMetric(datasetId, message.getAttempt(), Metrics.EVENT_CORE_RECORDS_COUNT);
+
     if (message.isContainsOccurrences()) {
       // OCCURRENCE_WF_GRAPH or EVENT_OCCURRENCE_WF_GRAPH
       // tripletValid=false: DwC-DP uses occurrenceID, not triplets
       // occurrenceIdValid=true: occurrenceID is the primary key in DwC-DP
-      // record counts unknown at this point — balancer will route on verbatim.avro size
-      ValidationResult validationResult = new ValidationResult(false, true, true, null, null);
+      ValidationResult validationResult =
+          new ValidationResult(false, true, true, occurrenceCount, eventCount);
 
       DatasetType datasetType =
           message.isContainsEvents() ? DatasetType.SAMPLING_EVENT : DatasetType.OCCURRENCE;
@@ -101,20 +119,52 @@ public class DwcDpToVerbatimCallback
           datasetType);
     } else {
       // EVENT_WF_GRAPH — events only, no occurrences
+      // Same ValidationResult shape as the occurrence branch — InterpretedMessageHandler
+      // passes this type straight through to PipelinesEventsMessage, so it's expected here too.
+      ValidationResult validationResult =
+          new ValidationResult(false, true, true, occurrenceCount, eventCount);
+
       return new PipelinesEventsMessage(
           message.getDatasetUuid(),
           message.getAttempt(),
           message.getPipelineSteps(),
-          null, // numberOfEventRecords — unknown at this point
-          null, // numberOfOccurrenceRecords
+          eventCount,
+          occurrenceCount,
           null, // runner — balancer decides
           false, // repeatAttempt
           null, // resetPrefix
           message.getExecutionId(),
           null, // endpointType — not applicable for DwC-DP
-          null, // validationResult
+          validationResult,
           Set.of(RecordType.ALL.name()),
           DatasetType.SAMPLING_EVENT);
+    }
+  }
+
+  /**
+   * Reads a single Long metric from {@code archive-to-verbatim.yml}, written during {@code
+   * runPipeline} via {@code DwcDpVerbatimConverter.writeMetrics}. Returns 0 if the file or key is
+   * missing rather than failing the whole step — a missing count shouldn't block routing the next
+   * message.
+   */
+  private long readMetric(String datasetId, int attempt, String key) {
+    String metricsPath =
+        PathUtil.interpretedAttemptPath(pipelinesConfig.getInputPath(), datasetId, attempt)
+            + "/"
+            + Pipeline.ARCHIVE_TO_VERBATIM
+            + ".yml";
+    try {
+      return PostprocessValidation.getValueByKey(fileSystem, metricsPath, key)
+          .map(Long::parseLong)
+          .orElse(0L);
+    } catch (IOException e) {
+      log.warn(
+          "Could not read metric {} from {} for dataset {}, defaulting to 0: {}",
+          key,
+          metricsPath,
+          datasetId,
+          e.getMessage());
+      return 0L;
     }
   }
 }

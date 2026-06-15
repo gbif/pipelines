@@ -27,9 +27,12 @@ import org.apache.spark.sql.types.StructField;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
+import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.util.MapperUtil;
+import org.gbif.pipelines.spark.util.MetricsUtil;
 import org.gbif.pipelines.spark.util.PathUtil;
 
 /**
@@ -76,7 +79,16 @@ public class DwcDpVerbatimConverter {
 
   // ---- public entry point ----
 
-  public static void convert(
+  /**
+   * Result of {@link #convert}, carrying the record counts gathered while building and writing
+   * verbatim.avro. Used by {@code DwcDpToVerbatimCallback} to populate the outgoing message's
+   * {@code validationResult} / event and occurrence counts, so the next step's balancer handler has
+   * accurate routing information without re-reading HDFS.
+   */
+  public record VerbatimConversionMetrics(
+      long erCount, long occurrenceCount, long eventCount, long largestFileCount) {}
+
+  public static VerbatimConversionMetrics convert(
       SparkSession spark,
       FileSystem fileSystem,
       PipelinesConfig config,
@@ -121,13 +133,133 @@ public class DwcDpVerbatimConverter {
       records = spark.emptyDataset(Encoders.bean(ExtendedRecord.class));
     }
 
-    records.write().mode(SaveMode.Overwrite).format("avro").save(verbatimOutputPath);
+    // Write to a temporary directory to avoid naming conflict with the final single-file target.
+    // Spark always writes a directory of part files; we then rename the single part file to
+    // the final path so verbatim.avro is a literal file, matching the DwC-A pipeline convention.
+    String tempOutputPath = verbatimOutputPath + ".parts";
+    records.coalesce(1).write().mode(SaveMode.Overwrite).format("avro").save(tempOutputPath);
+
+    mergeToSingleFile(fileSystem, tempOutputPath, verbatimOutputPath);
+
+    VerbatimConversionMetrics metrics =
+        writeMetrics(spark, dataPackage, parquetBasePath, fileSystem, datasetId);
 
     log.info(
-        "DwcDpVerbatimConverter completed for dataset {} attempt {} in {}ms",
+        "DwcDpVerbatimConverter completed for dataset {} attempt {} in {}ms, metrics: {}",
         datasetId,
         attempt,
-        System.currentTimeMillis() - start);
+        System.currentTimeMillis() - start,
+        metrics);
+
+    return metrics;
+  }
+
+  /**
+   * Writes {@code archive-to-verbatim.yml} to the attempt directory under the configured input
+   * path, in the same format and encoding as {@code DwcaToAvroPipeline} so that {@code
+   * VerbatimMessageHandler} in the balancer can read the record counts via {@link
+   * HdfsUtils#getLongByKey}.
+   *
+   * <p>{@code archiveToErCount} is always 0 for DwC-DP — the ExtendedRecord/verbatim distinction
+   * from DwC-A doesn't apply here. {@code archiveToOccurrenceCount} is the total number of
+   * occurrence rows in the data package (core or extension). {@code eventCoreRecordsCount} is the
+   * total number of event rows (0 if no event table). {@code archiveToLargestFileCount} is the row
+   * count of the largest table present, used by the balancer as a fallback signal for runner sizing
+   * on the next step.
+   *
+   * <p>Resulting layout under the attempt directory:
+   *
+   * <pre>{@code
+   * {inputPath}/{datasetId}/{attempt}/
+   * ├── verbatim.avro/
+   * │   ├── part-00000-....avro
+   * │   └── ...
+   * └── archive-to-verbatim.yml   <-- written here
+   * }</pre>
+   *
+   * @return the same counts written to the file, for the caller to forward in outgoing messages
+   */
+  static VerbatimConversionMetrics writeMetrics(
+      SparkSession spark,
+      DataPackage dataPackage,
+      String datasetBasePath,
+      FileSystem fileSystem,
+      String datasetId) {
+
+    long occurrenceCount =
+        dataPackage
+            .findResource(TABLE_OCCURRENCE)
+            .map(r -> countResourceRows(spark, datasetBasePath, r))
+            .orElse(0L);
+
+    long eventCount =
+        dataPackage
+            .findResource(TABLE_EVENT)
+            .map(r -> countResourceRows(spark, datasetBasePath, r))
+            .orElse(0L);
+
+    long largestFileCount =
+        dataPackage.getResources().stream()
+            .mapToLong(r -> countResourceRows(spark, datasetBasePath, r))
+            .max()
+            .orElse(0L);
+
+    Map<String, Long> metrics =
+        Map.of(
+            Metrics.ARCHIVE_TO_ER_COUNT, 0L,
+            Metrics.ARCHIVE_TO_OCC_COUNT, occurrenceCount,
+            Metrics.EVENT_CORE_RECORDS_COUNT, eventCount,
+            Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT, largestFileCount);
+
+    String metricsPath = datasetBasePath + "/" + Pipeline.ARCHIVE_TO_VERBATIM + ".yml";
+
+    log.info("Writing verbatim metrics for dataset {}: {}", datasetId, metrics);
+    MetricsUtil.writeMetricsYaml(fileSystem, metrics, metricsPath);
+
+    return new VerbatimConversionMetrics(0L, occurrenceCount, eventCount, largestFileCount);
+  }
+
+  /**
+   * Renames the single {@code .avro} part file produced by {@code coalesce(1)} from the temporary
+   * parts directory to the final target path as a literal file, then deletes the temporary
+   * directory ({@code _SUCCESS}, {@code .crc} files, etc.).
+   *
+   * <pre>{@code
+   * Before:
+   *   verbatim.avro.parts/
+   *     part-00000-xxxx.avro
+   *     _SUCCESS
+   *
+   * After:
+   *   verbatim.avro           <-- literal file, not a directory
+   * }</pre>
+   */
+  static void mergeToSingleFile(FileSystem fileSystem, String tempPath, String targetPath)
+      throws IOException {
+    org.apache.hadoop.fs.Path temp = new org.apache.hadoop.fs.Path(tempPath);
+    org.apache.hadoop.fs.Path target = new org.apache.hadoop.fs.Path(targetPath);
+
+    // Delete any pre-existing target file from a previous attempt
+    if (fileSystem.exists(target)) {
+      fileSystem.delete(target, false);
+    }
+
+    org.apache.hadoop.fs.FileStatus partFile =
+        Arrays.stream(fileSystem.listStatus(temp))
+            .filter(s -> s.getPath().getName().endsWith(".avro"))
+            .findFirst()
+            .orElseThrow(
+                () -> new IOException("No .avro part file found in temp directory: " + tempPath));
+
+    fileSystem.rename(partFile.getPath(), target);
+    fileSystem.delete(temp, true);
+
+    log.info("Merged single avro part file to {}", targetPath);
+  }
+
+  private static long countResourceRows(
+      SparkSession spark, String datasetBasePath, DataPackageResource resource) {
+    return spark.read().parquet(datasetBasePath + "/" + resource.getPath()).count();
   }
 
   // ---- event-core path ----
