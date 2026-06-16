@@ -184,6 +184,14 @@ public class OccurrenceInterpretationPipeline {
             log.info("Running output regeneration");
             regenOutput(spark, config, datasetId, attempt, args.numberOfShards);
             break;
+          case REGEN_JSON_OUTPUTS:
+            log.info("Running JSON output regeneration");
+            regenJsonOutput(spark, config, datasetId, attempt, args.numberOfShards);
+            break;
+          case REGEN_HDFS_OUTPUTS:
+            log.info("Running HDFS output regeneration");
+            regenHdfsOutput(spark, config, datasetId, attempt, args.numberOfShards);
+            break;
           default:
             throw new IllegalArgumentException("Unsupported interpretation type: " + it);
         }
@@ -227,13 +235,55 @@ public class OccurrenceInterpretationPipeline {
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
     final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
 
-    Dataset<Occurrence> interpreted =
-        spark
-            .read()
-            .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
-            .as(Encoders.bean(Occurrence.class));
-
+    Dataset<Occurrence> interpreted = loadSimpleInterpreted(spark, outputPath);
     generateOutputs(spark, numberOfShards, interpreted, metadata, outputPath);
+  }
+
+  public static void regenJsonOutput(
+      SparkSession spark,
+      PipelinesConfig config,
+      String datasetId,
+      int attempt,
+      int numberOfShards) {
+
+    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
+    final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
+
+    Dataset<Occurrence> interpreted = loadSimpleInterpreted(spark, outputPath);
+
+    sparkLog(spark, "toJson", "Writing JSON output");
+    toJson(interpreted, metadata, numberOfShards)
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + OCCURRENCE_JSON);
+  }
+
+  public static void regenHdfsOutput(
+      SparkSession spark,
+      PipelinesConfig config,
+      String datasetId,
+      int attempt,
+      int numberOfShards) {
+
+    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
+    final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
+
+    Dataset<Occurrence> interpreted = loadSimpleInterpreted(spark, outputPath);
+
+    // write parquet for hdfs view
+    sparkLog(spark, "toHdfs", "Writing HDFS output");
+    toHdfs(interpreted, metadata, numberOfShards)
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + OCCURRENCE_HDFS);
+  }
+
+  /** Helper to load the simple interpreted occurrences from disk. */
+  private static Dataset<Occurrence> loadSimpleInterpreted(SparkSession spark, String outputPath) {
+    return spark
+        .read()
+        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
+        .as(Encoders.bean(Occurrence.class));
   }
 
   private static void generateOutputs(

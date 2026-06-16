@@ -7,7 +7,9 @@ import java.util.Optional;
 public enum OccurrenceInterpretType {
   MULTI_TAXONOMY,
   CLUSTERING,
-  REGEN_OUTPUTS;
+  REGEN_OUTPUTS,
+  REGEN_JSON_OUTPUTS,
+  REGEN_HDFS_OUTPUTS;
 
   /**
    * Parse a string into an {@link OccurrenceInterpretType} in a case-insensitive manner.
@@ -24,12 +26,5 @@ public enum OccurrenceInterpretType {
     } catch (IllegalArgumentException e) {
       return Optional.empty();
     }
-  }
-
-  /**
-   * Convenience to test whether the provided string equals this enum constant (case-insensitive).
-   */
-  public boolean matches(String value) {
-    return fromString(value).map(v -> v == this).orElse(false);
   }
 }
