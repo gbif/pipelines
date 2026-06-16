@@ -353,6 +353,14 @@ public class OccurrenceInterpretationPipeline {
           log.info("Running only output regeneration");
           regenOutput(spark, config, datasetId, attempt, numberOfShards);
           return;
+        case REGEN_HDFS_OUTPUTS:
+          log.info("Running only hdfs output regeneration");
+          regenHdfsOutput(spark, config, datasetId, attempt, numberOfShards);
+          return;
+        case REGEN_JSON_OUTPUTS:
+          log.info("Running only jsonoutput regeneration");
+          regenJsonOutput(spark, config, datasetId, attempt, numberOfShards);
+          return;
         default:
           // no-op
       }
