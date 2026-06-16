@@ -65,7 +65,10 @@ public class VerbatimExtensionsInterpretationPipeline {
     @Parameter(names = NUMBER_OF_SHARDS_ARG, description = "Number of shards")
     private int numberOfShards = 10;
 
-    @Parameter(names = "--outputSchemasOnly", description = "Output schemas for extensions")
+    @Parameter(
+        names = "--outputSchemasOnly",
+        description = "Output schemas for extensions",
+        arity = 1)
     private boolean outputSchemasOnly = false;
 
     @Parameter(
