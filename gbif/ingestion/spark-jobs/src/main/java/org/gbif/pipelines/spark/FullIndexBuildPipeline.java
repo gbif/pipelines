@@ -86,7 +86,8 @@ public class FullIndexBuildPipeline {
         names = SWITCH_ON_SUCCESS,
         description =
             "Switch the new tables to the final names (e.g. 'occurrence' or 'event') after successful build. "
-                + "If false, the new tables will have a prefix and the old tables will not be overwritten.")
+                + "If false, the new tables will have a prefix and the old tables will not be overwritten.",
+        arity = 1)
     private boolean switchOnSuccess = false;
 
     @Parameter(
