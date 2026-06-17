@@ -285,7 +285,7 @@ class DwcDpVerbatimConverterTest {
 
     // id and coreRowType
     assertEquals("EVT001", r.getId());
-    assertEquals("EVT001", r.getCoreId());
+    assertEquals(null, r.getCoreId());
     assertEquals(DwcDpVerbatimConverter.CORE_ROW_TYPE_EVENT, r.getCoreRowType());
 
     // core terms
@@ -331,7 +331,7 @@ class DwcDpVerbatimConverterTest {
     ExtendedRecord r = records.get(0);
 
     assertEquals("OCC001", r.getId());
-    assertEquals("OCC001", r.getCoreId());
+    assertEquals(null, r.getCoreId());
     assertEquals(DwcDpVerbatimConverter.CORE_ROW_TYPE_OCCURRENCE, r.getCoreRowType());
     assertEquals("Pinus sylvestris", r.getCoreTerms().get(DwcTerm.scientificName.qualifiedName()));
     assertEquals("60.2", r.getCoreTerms().get(DwcTerm.decimalLatitude.qualifiedName()));

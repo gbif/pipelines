@@ -72,7 +72,32 @@ public class DwcDpVerbatimConverter {
   // Extension row type for occurrences attached to an event core
   public static final String ROW_TYPE_OCCURRENCE = DwcTerm.Occurrence.qualifiedName();
 
+  private static final org.apache.avro.Schema EXTENDED_RECORD_SCHEMA = loadExtendedRecordSchema();
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
+  public static final String AVRO_EXTENDED_RECORD_AVSC = "avro/extended-record.avsc";
+
+  /**
+   * Returns the ExtendedRecord Avro schema JSON string, used by Spark's avroSchema write option.
+   */
+  static String extendedRecordSchemaJson() {
+    return EXTENDED_RECORD_SCHEMA.toString();
+  }
+
+  private static org.apache.avro.Schema loadExtendedRecordSchema() {
+    try (var stream =
+        DwcDpVerbatimConverter.class
+            .getClassLoader()
+            .getResourceAsStream(AVRO_EXTENDED_RECORD_AVSC)) {
+      if (stream == null) {
+        throw new IllegalStateException(
+            "extended-record.avsc not found on classpath — copy it to src/main/resources/");
+      }
+      return new org.apache.avro.Schema.Parser().parse(stream);
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to load extended-record.avsc", e);
+    }
+  }
+
   private static final ObjectMapper MAPPER = MapperUtil.MAPPER;
 
   private DwcDpVerbatimConverter() {}
@@ -137,7 +162,13 @@ public class DwcDpVerbatimConverter {
     // Spark always writes a directory of part files; we then rename the single part file to
     // the final path so verbatim.avro is a literal file, matching the DwC-A pipeline convention.
     String tempOutputPath = verbatimOutputPath + ".parts";
-    records.coalesce(1).write().mode(SaveMode.Overwrite).format("avro").save(tempOutputPath);
+    records
+        .coalesce(1)
+        .write()
+        .mode(SaveMode.Overwrite)
+        .format("avro")
+        .option("avroSchema", EXTENDED_RECORD_SCHEMA.toString())
+        .save(tempOutputPath);
 
     mergeToSingleFile(fileSystem, tempOutputPath, verbatimOutputPath);
 
@@ -334,7 +365,7 @@ public class DwcDpVerbatimConverter {
 
                   return ExtendedRecord.newBuilder()
                       .setId(eventId)
-                      .setCoreId(eventId)
+                      .setCoreId(null)
                       .setCoreRowType(CORE_ROW_TYPE_EVENT)
                       .setCoreTerms(coreTerms)
                       .setExtensions(extensions)
@@ -390,7 +421,7 @@ public class DwcDpVerbatimConverter {
 
                   return ExtendedRecord.newBuilder()
                       .setId(occurrenceId)
-                      .setCoreId(occurrenceId)
+                      .setCoreId(null)
                       .setCoreRowType(CORE_ROW_TYPE_OCCURRENCE)
                       .setCoreTerms(coreTerms)
                       .setExtensions(extensions)
