@@ -270,6 +270,9 @@ public class VerbatimExtensionsInterpretationPipeline {
       var colsToSelect =
           getColsToSelect(tblSchema, new HashSet<>(Arrays.asList(sourceDF.columns())));
 
+      // TODO: remove
+      log.info("ColsToSelect for table {}, {}", table, colsToSelect);
+
       // filter rows for this extension and select aligned columns
       Dataset<Row> toWrite = sourceDF.select(colsToSelect); // align columns to target schema
 
