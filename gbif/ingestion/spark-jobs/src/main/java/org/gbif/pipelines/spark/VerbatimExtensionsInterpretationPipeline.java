@@ -245,7 +245,6 @@ public class VerbatimExtensionsInterpretationPipeline {
 
       // ensure unique column names (keep first occurrence) to avoid ambiguous references
       var sourceDF = optimized.filter(col("directory").equalTo(dir));
-
       String[] columnList = sourceDF.columns();
       Map<String, Integer> seen = new HashMap<>();
       String[] renamed = new String[columnList.length];
@@ -327,7 +326,7 @@ public class VerbatimExtensionsInterpretationPipeline {
         prefix = DcElement.identifier.prefix() + "_";
       }
     }
-    return (prefix + rawName.toLowerCase().trim()).replace("_", "");
+    return prefix + rawName.toLowerCase().trim().replace("_", "");
   }
 
   @SneakyThrows
