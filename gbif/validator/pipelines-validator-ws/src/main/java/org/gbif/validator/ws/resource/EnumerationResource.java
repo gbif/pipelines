@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
             termsOfService = "https://www.gbif.org/terms"),
     servers = {
       @Server(url = "https://api.gbif.org/v1/", description = "Production"),
-      @Server(url = "https://api.gbif-uat.org/v1/", description = "User testing")
+      @Server(url = "https://api.gbif-test.org/v1/", description = "User testing")
     })
 @RestController
 @RequestMapping(value = "validation/enumeration", produces = MediaType.APPLICATION_JSON_VALUE)
