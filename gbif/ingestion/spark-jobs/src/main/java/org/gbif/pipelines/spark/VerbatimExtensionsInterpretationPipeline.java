@@ -329,7 +329,7 @@ public class VerbatimExtensionsInterpretationPipeline {
         prefix = DcElement.identifier.prefix() + "_";
       }
     }
-    return prefix + rawName.toLowerCase().trim();
+    return (prefix + rawName.toLowerCase().trim()).replace("_", "");
   }
 
   @SneakyThrows
