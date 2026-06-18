@@ -276,6 +276,8 @@ public class VerbatimExtensionsInterpretationPipeline {
       // filter rows for this extension and select aligned columns
       Dataset<Row> toWrite = sourceDF.select(colsToSelect); // align columns to target schema
 
+      toWrite.show();
+
       // ensure partition column exists in the DataFrame if the table is partitioned by datasetKey
       if (!Arrays.asList(toWrite.columns()).contains("datasetKey")) {
         toWrite = toWrite.withColumn("datasetKey", lit(datasetId));
