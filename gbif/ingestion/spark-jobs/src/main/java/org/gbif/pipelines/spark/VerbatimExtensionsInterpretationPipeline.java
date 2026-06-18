@@ -148,6 +148,13 @@ public class VerbatimExtensionsInterpretationPipeline {
 
     List<String> allKeys = keysDf.distinct().as(Encoders.STRING()).collectAsList();
 
+    log.info("========== selectColumnsForExtension ==========");
+    log.info("Found {} distinct keys in extension records", allKeys.size());
+    for (String key : allKeys) {
+      String normalized = normalizeFieldName(key);
+      log.info("  Key: '{}' -> Normalized: '{}'", key, normalized);
+    }
+
     // Dynamically create flattened columns
     List<Column> selectCols = new ArrayList<>();
     selectCols.add(col("gbifid"));
@@ -162,7 +169,11 @@ public class VerbatimExtensionsInterpretationPipeline {
         "Selecting [{}] columns for extension",
         selectCols.stream().map(Column::toString).collect(Collectors.joining(", ")));
 
-    return df.select(selectCols.toArray(new Column[0]));
+    Dataset<Row> result = df.select(selectCols.toArray(new Column[0]));
+    log.info("Columns after selectColumnsForExtension: {}", String.join(", ", result.columns()));
+    log.info("==========================================");
+
+    return result;
   }
 
   @SneakyThrows
@@ -245,6 +256,12 @@ public class VerbatimExtensionsInterpretationPipeline {
 
       // ensure unique column names (keep first occurrence) to avoid ambiguous references
       var sourceDF = optimized.filter(col("directory").equalTo(dir));
+
+      log.info(
+          "Columns in sourceDF after filtering for directory '{}': {}",
+          dir,
+          String.join(", ", sourceDF.columns()));
+
       String[] columnList = sourceDF.columns();
       Map<String, Integer> seen = new HashMap<>();
       String[] renamed = new String[columnList.length];
@@ -264,6 +281,8 @@ public class VerbatimExtensionsInterpretationPipeline {
         seen.put(name, n + 1);
       }
       sourceDF = sourceDF.toDF(renamed);
+
+      log.info("Columns in sourceDF after renaming: {}", String.join(", ", sourceDF.columns()));
 
       // build select list that matches target schema: use existing columns or nulls cast to the
       // target type
@@ -293,6 +312,10 @@ public class VerbatimExtensionsInterpretationPipeline {
    */
   @NotNull
   private static Column[] getColsToSelect(StructType tblSchema, Set<String> dfCols) {
+    log.info("========== getColsToSelect ==========");
+    log.info("Target table schema fields: {}", tblSchema.fieldNames());
+    log.info("Available DataFrame columns: {}", dfCols);
+
     List<Column> colsToSelect = new ArrayList<>();
     for (StructField structField : tblSchema.fields()) {
       String fieldName = structField.name();
@@ -300,16 +323,27 @@ public class VerbatimExtensionsInterpretationPipeline {
       if (fieldName.startsWith("v_")) {
         String nonVerbatimFieldName = fieldName.substring(2);
         if (dfCols.contains(nonVerbatimFieldName)) {
+          log.info(
+              "  Field '{}': FOUND as non-verbatim '{}' in DataFrame",
+              fieldName,
+              nonVerbatimFieldName);
           colsToSelect.add(col(nonVerbatimFieldName).alias(fieldName));
         } else {
+          log.info(
+              "  Field '{}': NOT FOUND (non-verbatim '{}' not in DataFrame) -> NULL",
+              fieldName,
+              nonVerbatimFieldName);
           colsToSelect.add(lit(null).cast(structField.dataType()).alias(fieldName));
         }
       } else if (dfCols.contains(fieldName)) {
+        log.info("  Field '{}': FOUND in DataFrame", fieldName);
         colsToSelect.add(col(fieldName));
       } else {
+        log.info("  Field '{}': NOT FOUND in DataFrame -> NULL", fieldName);
         colsToSelect.add(lit(null).cast(structField.dataType()).alias(fieldName));
       }
     }
+    log.info("====================================");
     return colsToSelect.toArray(new Column[0]);
   }
 
@@ -331,7 +365,16 @@ public class VerbatimExtensionsInterpretationPipeline {
         prefix = DcElement.identifier.prefix() + "_";
       }
     }
-    return (prefix + rawName.toLowerCase().trim()).replace("_", "");
+    String result = (prefix + rawName.toLowerCase().trim()).replace("_", "");
+    if (name.contains("dna")) {
+      log.debug(
+          "normalizeFieldName: '{}' -> prefix='{}', rawName='{}', final='{}'",
+          name,
+          prefix,
+          rawName,
+          result);
+    }
+    return result;
   }
 
   @SneakyThrows
