@@ -12,6 +12,7 @@ import static org.gbif.pipelines.spark.util.TableUtil.verbatimExtensionTableName
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -315,7 +316,8 @@ public class VerbatimExtensionsInterpretationPipeline {
   }
 
   /** Extracts the last part of the url as the field name and normalizes it. */
-  private static String normalizeFieldName(String name) {
+  @VisibleForTesting
+  static String normalizeFieldName(String name) {
     String[] parts = name.split("/");
     String rawName = parts[parts.length - 1];
     String prefix = "";
