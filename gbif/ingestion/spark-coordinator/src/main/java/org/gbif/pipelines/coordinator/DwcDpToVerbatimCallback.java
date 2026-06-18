@@ -97,10 +97,13 @@ public class DwcDpToVerbatimCallback
 
     if (message.isContainsOccurrences()) {
       // OCCURRENCE_WF_GRAPH or EVENT_OCCURRENCE_WF_GRAPH
-      // tripletValid=false: DwC-DP uses occurrenceID, not triplets
-      // occurrenceIdValid=true: occurrenceID is the primary key in DwC-DP
+      // tripletValid=false: DwC-DP occurrences use occurrenceID not
+      // catalogNumber/institutionCode/collectionCode triplets
+      // occurrenceIdValid=true: occurrenceID is the primary identifier in DwC-DP occurrence records
+      // useExtendedRecordId=false: DwC-DP occurrenceIDs are UUIDs, not numeric GBIF IDs —
+      //   must go through HBase keygen to generate/look up stable numeric GBIF IDs
       ValidationResult validationResult =
-          new ValidationResult(false, true, true, occurrenceCount, eventCount);
+          new ValidationResult(false, true, false, occurrenceCount, eventCount);
 
       DatasetType datasetType =
           message.isContainsEvents() ? DatasetType.SAMPLING_EVENT : DatasetType.OCCURRENCE;
@@ -119,10 +122,9 @@ public class DwcDpToVerbatimCallback
           datasetType);
     } else {
       // EVENT_WF_GRAPH — events only, no occurrences
-      // Same ValidationResult shape as the occurrence branch — InterpretedMessageHandler
-      // passes this type straight through to PipelinesEventsMessage, so it's expected here too.
+      // useExtendedRecordId=false: same reasoning as occurrence branch
       ValidationResult validationResult =
-          new ValidationResult(false, true, true, occurrenceCount, eventCount);
+          new ValidationResult(false, true, false, occurrenceCount, eventCount);
 
       return new PipelinesEventsMessage(
           message.getDatasetUuid(),
