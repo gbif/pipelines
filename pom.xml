@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>4.0.22-ingest-dwcdp-SNAPSHOT</version>
+  <version>4.0.23-ingest-dwcdp-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
