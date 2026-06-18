@@ -4,6 +4,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.servers.Server;
+
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.EvaluationType;
@@ -17,6 +22,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** Resource to list the vocabularies/enums used by the validation services. */
+@OpenAPIDefinition(
+  info = @Info(
+    title = "Validator API",
+    version = "v1",
+    termsOfService = "https://www.gbif.org/terms"),
+  servers = {
+    @Server(url = "https://api.gbif.org/v1/", description = "Production"),
+    @Server(url = "https://api.gbif-uat.org/v1/", description = "User testing")
+  })
 @RestController
 @RequestMapping(value = "validation/enumeration", produces = MediaType.APPLICATION_JSON_VALUE)
 public class EnumerationResource {
