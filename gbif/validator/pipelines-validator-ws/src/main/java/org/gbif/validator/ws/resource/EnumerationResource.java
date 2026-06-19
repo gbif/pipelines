@@ -1,5 +1,8 @@
 package org.gbif.validator.ws.resource;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.servers.Server;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -17,6 +20,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** Resource to list the vocabularies/enums used by the validation services. */
+@OpenAPIDefinition(
+    info =
+        @Info(
+            title = "Validator API",
+            version = "v1",
+            description =
+                "This API allows to validate datasets, EMLs and sequences. It may be of interest to those coding "
+                    + "against the API, and can be found in the "
+                    + "[validator-ws-client](https://github.com/gbif/pipelines/tree/master/gbif/validator/validator-ws-client) project.",
+            termsOfService = "https://www.gbif.org/terms"),
+    servers = {
+      @Server(url = "https://api.gbif.org/v1/", description = "Production"),
+      @Server(url = "https://api.gbif-test.org/v1/", description = "User testing")
+    })
 @RestController
 @RequestMapping(value = "validation/enumeration", produces = MediaType.APPLICATION_JSON_VALUE)
 public class EnumerationResource {
