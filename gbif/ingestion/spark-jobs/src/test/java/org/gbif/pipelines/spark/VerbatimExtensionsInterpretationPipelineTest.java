@@ -15,27 +15,25 @@ public class VerbatimExtensionsInterpretationPipelineTest {
     assertEquals(
         "dnasequence",
         VerbatimExtensionsInterpretationPipeline.normalizeFieldName(
-          GbifDnaTerm.dna_sequence.qualifiedName()));
+            GbifDnaTerm.dna_sequence.qualifiedName()));
     assertEquals(
-      "targetgene",
-      VerbatimExtensionsInterpretationPipeline.normalizeFieldName(
-        MixsTerm.target_gene.qualifiedName()));
+        "targetgene",
+        VerbatimExtensionsInterpretationPipeline.normalizeFieldName(
+            MixsTerm.target_gene.qualifiedName()));
     assertEquals(
-      "_16srecover",
-      VerbatimExtensionsInterpretationPipeline.normalizeFieldName(
-        MixsTerm._16s_recover.qualifiedName()));
+        "_16srecover",
+        VerbatimExtensionsInterpretationPipeline.normalizeFieldName(
+            MixsTerm._16s_recover.qualifiedName()));
   }
 
   @Test
   public void audubonExtensionTermsTest() {
     assertEquals(
-      "dc_type",
-      VerbatimExtensionsInterpretationPipeline.normalizeFieldName(
-        DcElement.type.qualifiedName()));
+        "dc_type",
+        VerbatimExtensionsInterpretationPipeline.normalizeFieldName(
+            DcElement.type.qualifiedName()));
     assertEquals(
-      "dcterms_type",
-      VerbatimExtensionsInterpretationPipeline.normalizeFieldName(
-        DcTerm.type.qualifiedName()));
-
+        "dcterms_type",
+        VerbatimExtensionsInterpretationPipeline.normalizeFieldName(DcTerm.type.qualifiedName()));
   }
 }
