@@ -1,0 +1,66 @@
+package org.gbif.pipelines.coordinator;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.spark.sql.SparkSession;
+import org.gbif.api.model.pipelines.StepType;
+import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.DwcDpNfsToHdfsMessage;
+import org.gbif.common.messaging.api.messages.DwcDpToVerbatimMessage;
+import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.spark.DataPackageConversionPipeline;
+
+@Slf4j
+public class DwcDpNfsToHdfsCallback
+    extends PipelinesCallback<DwcDpNfsToHdfsMessage, PipelineBasedMessage>
+    implements CloseableMessageCallback<DwcDpNfsToHdfsMessage> {
+
+  public DwcDpNfsToHdfsCallback(PipelinesConfig config, MessagePublisher publisher, String master) {
+    super(config, publisher, master);
+  }
+
+  @Override
+  protected StepType getStepType() {
+    return StepType.NFS_TO_HDFS;
+  }
+
+  @Override
+  protected void configSparkSession(SparkSession.Builder builder, PipelinesConfig config) {}
+
+  @Override
+  protected void runPipeline(DwcDpNfsToHdfsMessage message) throws Exception {
+    String datasetId = message.getDatasetUuid().toString();
+    int attempt = message.getAttempt();
+
+    DataPackageConversionPipeline.runCopy(
+        new DataPackageConversionPipeline.CopyConfig(
+            sparkSession,
+            pipelinesConfig.getDwcdpNfsRepository(),
+            pipelinesConfig.getOutputPath(),
+            datasetId,
+            attempt,
+            pipelinesConfig.getPartitionSizeInMB() * 1024L * 1024L));
+  }
+
+  @Override
+  protected String getMetaFileName() {
+    return null; // no metrics file for this step yet
+  }
+
+  @Override
+  public Class<DwcDpNfsToHdfsMessage> getMessageClass() {
+    return DwcDpNfsToHdfsMessage.class;
+  }
+
+  @Override
+  public PipelineBasedMessage createOutgoingMessage(DwcDpNfsToHdfsMessage message) {
+    return new DwcDpToVerbatimMessage(
+        message.getDatasetUuid(),
+        message.getAttempt(),
+        message.getPipelineSteps(),
+        message.getExecutionId(),
+        message.isContainsOccurrences(),
+        message.isContainsEvents(),
+        isStandalone());
+  }
+}

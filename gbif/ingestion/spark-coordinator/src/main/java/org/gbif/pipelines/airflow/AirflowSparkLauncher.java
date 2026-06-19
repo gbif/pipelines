@@ -59,7 +59,11 @@ public class AirflowSparkLauncher {
     try {
       AirflowBody airflowBody = getAirflowBody(sparkAppName, conf);
 
-      log.info("Running Airflow DAG ID {}: {}", airflowBody.getDagRunId(), airflowBody);
+      log.info(
+          "Running Airflow DAG name {}, DAG run ID {}: {}",
+          airflowClient.getDagName(),
+          airflowBody.getDagRunId(),
+          airflowBody);
       Retry.decorateFunction(AIRFLOW_RETRY, airflowClient::createRun).apply(airflowBody);
 
       Optional<Status> status = getStatusByName(sparkAppName);
