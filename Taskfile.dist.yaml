@@ -6,7 +6,10 @@ includes:
 
 vars:
   CONTAINER_CLI:
-    sh: which docker 2>/dev/null || which podman 2>/dev/null || echo "docker"
+    sh: |
+      if command -v docker >/dev/null 2>&1; then echo docker;
+      elif command -v podman >/dev/null 2>&1; then echo podman;
+      else echo docker; fi
   MODULES:
     sh: find ./gbif/ingestion -name "Dockerfile" -not -path "*/target/*" | xargs -I{} dirname {} | xargs -I{} dirname {} | xargs -I{} basename {}
 

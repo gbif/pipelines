@@ -151,7 +151,7 @@ public class DwcDpToVerbatimCallback
    */
   private long readMetric(String datasetId, int attempt, String key) {
     String metricsPath =
-        PathUtil.interpretedAttemptPath(pipelinesConfig.getInputPath(), datasetId, attempt)
+        PathUtil.interpretedAttemptPath(pipelinesConfig.getOutputPath(), datasetId, attempt)
             + "/"
             + Pipeline.ARCHIVE_TO_VERBATIM
             + ".yml";

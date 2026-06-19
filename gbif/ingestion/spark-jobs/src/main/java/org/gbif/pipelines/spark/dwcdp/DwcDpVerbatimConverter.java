@@ -272,7 +272,7 @@ public class DwcDpVerbatimConverter {
 
     // Delete any pre-existing target file from a previous attempt
     if (fileSystem.exists(target)) {
-      fileSystem.delete(target, false);
+      fileSystem.delete(target, true);
     }
 
     org.apache.hadoop.fs.FileStatus partFile =
@@ -282,7 +282,9 @@ public class DwcDpVerbatimConverter {
             .orElseThrow(
                 () -> new IOException("No .avro part file found in temp directory: " + tempPath));
 
-    fileSystem.rename(partFile.getPath(), target);
+    if (!fileSystem.rename(partFile.getPath(), target)) {
+      throw new IOException("Failed to rename avro part file " + partFile.getPath() + " to " + target);
+    }
     fileSystem.delete(temp, true);
 
     log.info("Merged single avro part file to {}", targetPath);
