@@ -25,6 +25,10 @@ import org.springframework.web.bind.annotation.RestController;
         @Info(
             title = "Validator API",
             version = "v1",
+            description =
+                "This API allows to validate datasets, EMLs and sequences. It may be of interest to those coding "
+                    + "against the API, and can be found in the "
+                    + "[validator-ws-client](https://github.com/gbif/pipelines/tree/master/gbif/validator/validator-ws-client) project.",
             termsOfService = "https://www.gbif.org/terms"),
     servers = {
       @Server(url = "https://api.gbif.org/v1/", description = "Production"),
