@@ -1,43 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.gbif.pipelines</groupId>
-    <version>4.0.23-nucleotide-SNAPSHOT</version>
+    <parent>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>ingestion</artifactId>
+        <version>4.0.23-SNAPSHOT</version>
+    </parent>
     <artifactId>healthcheck</artifactId>
     <packaging>jar</packaging>
     <name>Pipelines :: GBIF :: Ingestion :: Health check</name>
     <description>Health checker for CLIs running in k8s</description>
-    <repositories>
-        <repository>
-            <id>gbif-all</id>
-            <url>https://repository.gbif.org/content/groups/gbif/</url>
-        </repository>
-        <repository>
-            <id>gbif-thirdparty</id>
-            <url>https://repository.gbif.org/content/repositories/thirdparty/</url>
-        </repository>
-        <repository>
-            <id>cloudera-repos</id>
-            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-    <distributionManagement>
-        <site>
-            <id>gh-pages</id>
-            <url>https://gbif.github.io/pipelines/</url>
-        </site>
-        <repository>
-            <id>gbif-release</id>
-            <url>https://repository.gbif.org/content/repositories/releases</url>
-        </repository>
-        <snapshotRepository>
-            <id>gbif-deploy</id>
-            <url>https://repository.gbif.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
     <build>
         <plugins>
             <plugin>
