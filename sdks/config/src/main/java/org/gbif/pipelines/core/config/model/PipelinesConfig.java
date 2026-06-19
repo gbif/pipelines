@@ -25,6 +25,9 @@ public class PipelinesConfig implements Serializable {
   /** The directory where the output files are written to */
   private String outputPath;
 
+  /** NFS mount for dwcdp nfs-to-hdfs */
+  private String dwcdpNfsRepository;
+
   /**
    * The directory where the intermediate files & debug outputs are written to as part of the
    * rebuild jobs
@@ -78,6 +81,8 @@ public class PipelinesConfig implements Serializable {
   private ClusteringRelationshipConfig clusteringRelationshipConfig;
 
   private long deleteAfterDays = 7L;
+
+  private long partitionSizeInMB = 256L;
 
   /**
    * Provide recommended formats to parse ambiguous dates, e.g. 2/3/2008. If the field is empty or

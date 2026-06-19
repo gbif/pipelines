@@ -28,6 +28,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 import org.gbif.pipelines.spark.util.EsIndexUtils;
+import org.gbif.pipelines.spark.util.PipelineArgs;
 
 /**
  * Main class for indexing occurrence data to Elasticsearch. It reads Parquet files from HDFS,
@@ -44,16 +45,7 @@ public class IndexingPipeline {
   public static final String ES_INDEX_NUMBER_OF_SHARDS_ARG = "--indexNumberShards";
 
   @Parameters(separators = "=")
-  private static class Args {
-
-    @Parameter(names = APP_NAME_ARG, description = "Application name", required = true)
-    private String appName;
-
-    @Parameter(names = DATASET_ID_ARG, description = "Dataset ID", required = true)
-    private String datasetId;
-
-    @Parameter(names = ATTEMPT_ID_ARG, description = "Attempt number", required = true)
-    private int attempt;
+  private static class Args extends PipelineArgs {
 
     @Parameter(
         names = ES_INDEX_NAME_ARG,
@@ -78,21 +70,6 @@ public class IndexingPipeline {
         description = "Source directory for parquet files",
         required = true)
     private String sourceDirectory = "json";
-
-    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
-    private String config = "/tmp/pipelines-spark.yaml";
-
-    @Parameter(
-        names = SPARK_MASTER_ARG,
-        description = "Spark master - there for local dev only",
-        required = false)
-    private String master;
-
-    @Parameter(
-        names = {"--help", "-h"},
-        help = true,
-        description = "Show usage")
-    boolean help;
   }
 
   public static void main(String[] argsv) throws IOException {
