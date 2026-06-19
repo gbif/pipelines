@@ -27,6 +27,7 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DcElement;
 import org.gbif.dwc.terms.DcTerm;
+import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -319,7 +320,7 @@ public class VerbatimExtensionsInterpretationPipeline {
     return extension.name().toLowerCase();
   }
 
-  /** Extracts the last part of the url as the field name and normalizes it. */
+  /** Extracts and normalizes the field name. */
   @VisibleForTesting
   static String normalizeFieldName(String name) {
     // FIXME: this block is for terms that are duplicated within an extension but should be handled
@@ -336,7 +337,9 @@ public class VerbatimExtensionsInterpretationPipeline {
       }
     }
 
-    return TermNormalizationUtils.normalizeFieldName(TERM_FACTORY.findTerm(name).simpleName());
+    Term term = TERM_FACTORY.findTerm(name);
+    String simpleName = term != null ? term.simpleName() : rawName;
+    return TermNormalizationUtils.normalizeFieldName(simpleName);
   }
 
   @SneakyThrows

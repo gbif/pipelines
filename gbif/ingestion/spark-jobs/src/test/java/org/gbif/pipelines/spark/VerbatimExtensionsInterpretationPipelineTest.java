@@ -11,7 +11,7 @@ import org.junit.Test;
 public class VerbatimExtensionsInterpretationPipelineTest {
 
   @Test
-  public void dnaExtensionTermsTest() {
+  public void testDnaExtensionTerms() {
     assertEquals(
         "dnasequence",
         VerbatimExtensionsInterpretationPipeline.normalizeFieldName(
@@ -27,7 +27,7 @@ public class VerbatimExtensionsInterpretationPipelineTest {
   }
 
   @Test
-  public void audubonExtensionTermsTest() {
+  public void testAudubonExtensionTerms() {
     assertEquals(
         "dc_type",
         VerbatimExtensionsInterpretationPipeline.normalizeFieldName(
