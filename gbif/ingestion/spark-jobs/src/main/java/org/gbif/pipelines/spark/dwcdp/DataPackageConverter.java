@@ -98,6 +98,7 @@ public class DataPackageConverter {
             .sum();
     long partitions = (totalBytes + targetPartitionBytes - 1) / targetPartitionBytes;
     return Math.max(1, (int) partitions);
+  }
 
   private void readAndWrite(
       SparkSession spark, ResourceDescriptor resource, List<Path> inputs, String outputUri) {

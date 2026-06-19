@@ -102,8 +102,6 @@ public class DwcDpVerbatimConverter {
 
   private DwcDpVerbatimConverter() {}
 
-  // ---- public entry point ----
-
   /**
    * Result of {@link #convert}, carrying the record counts gathered while building and writing
    * verbatim.avro. Used by {@code DwcDpToVerbatimCallback} to populate the outgoing message's
@@ -283,7 +281,8 @@ public class DwcDpVerbatimConverter {
                 () -> new IOException("No .avro part file found in temp directory: " + tempPath));
 
     if (!fileSystem.rename(partFile.getPath(), target)) {
-      throw new IOException("Failed to rename avro part file " + partFile.getPath() + " to " + target);
+      throw new IOException(
+          "Failed to rename avro part file " + partFile.getPath() + " to " + target);
     }
     fileSystem.delete(temp, true);
 
