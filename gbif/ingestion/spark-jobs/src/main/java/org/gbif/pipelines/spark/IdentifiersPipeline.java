@@ -84,21 +84,6 @@ public class IdentifiersPipeline {
 
     @Parameter(names = NUMBER_OF_SHARDS_ARG, description = "Number of shards", required = false)
     private int numberOfShards;
-
-    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
-    private String config = "/tmp/pipelines-spark.yaml";
-
-    @Parameter(
-        names = SPARK_MASTER_ARG,
-        description = "Spark master - there for local dev only",
-        required = false)
-    private String master;
-
-    @Parameter(
-        names = {"--help", "-h"},
-        help = true,
-        description = "Show usage")
-    boolean help;
   }
 
   public static void main(String[] argsv) throws Exception {
