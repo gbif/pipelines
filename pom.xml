@@ -111,7 +111,7 @@
     <gbif-kvs.version>3.1.2</gbif-kvs.version>
     <hbase-utils.version>1.0.0</hbase-utils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
-    <vocabulary-lookup.version>2.0.10</vocabulary-lookup.version>
+    <vocabulary-lookup.version>2.0.12</vocabulary-lookup.version>
     <registry.version>4.2.19</registry.version>
     <gbif-common-ws.version>2.1.1</gbif-common-ws.version>
     <gbif-postal-service.version>2.1.10</gbif-postal-service.version>
