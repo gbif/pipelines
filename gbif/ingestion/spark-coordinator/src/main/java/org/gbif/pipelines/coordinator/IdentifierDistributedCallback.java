@@ -6,6 +6,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.util.DistributedUtil;
 
 @Slf4j
 public class IdentifierDistributedCallback extends IdentifierCallback {
@@ -28,8 +29,8 @@ public class IdentifierDistributedCallback extends IdentifierCallback {
             "--tripletValid=" + message.getValidationResult().isTripletValid(),
             "--occurrenceIdValid=" + message.getValidationResult().isOccurrenceIdValid(),
             "--useExtendedRecordId="
-                + (message.getValidationResult().isUseExtendedRecordId() != null
-                    ? message.getValidationResult().isUseExtendedRecordId()
+                + (message.getValidationResult().getUseExtendedRecordId() != null
+                    ? message.getValidationResult().getUseExtendedRecordId()
                     : false)));
   }
 

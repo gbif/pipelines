@@ -26,7 +26,6 @@ import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.*;
@@ -56,6 +55,8 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.spark.pojo.Occurrence;
 import org.gbif.pipelines.spark.pojo.OccurrenceInterpretType;
+import org.gbif.pipelines.spark.util.MapperUtil;
+import org.gbif.pipelines.spark.util.PipelineArgs;
 import org.gbif.pipelines.transform.*;
 import org.gbif.pipelines.transform.factory.KeygenServiceFactory;
 import scala.Tuple2;
@@ -75,31 +76,12 @@ import scala.Tuple2;
 @Slf4j
 public class OccurrenceInterpretationPipeline {
 
-  static final ObjectMapper MAPPER =
-      new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+  static final ObjectMapper MAPPER = MapperUtil.MAPPER_NON_EMPTY;
 
   public static final String METRICS_FILENAME = "verbatim-to-occurrence.yml";
 
   @Parameters(separators = "=")
-  private static class Args {
-
-    @Parameter(names = APP_NAME_ARG, description = "Application name", required = true)
-    private String appName;
-
-    @Parameter(names = DATASET_ID_ARG, description = "Dataset ID", required = true)
-    private String datasetId;
-
-    @Parameter(names = ATTEMPT_ID_ARG, description = "Attempt number", required = true)
-    private int attempt;
-
-    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
-    private String config = "/tmp/pipelines-spark.yaml";
-
-    @Parameter(
-        names = SPARK_MASTER_ARG,
-        description = "Spark master - there for local dev only",
-        required = false)
-    private String master;
+  private static class Args extends PipelineArgs {
 
     @Parameter(
         names = "--tripletValid",
@@ -118,20 +100,11 @@ public class OccurrenceInterpretationPipeline {
     @Parameter(names = NUMBER_OF_SHARDS_ARG, description = "Number of shards")
     private int numberOfShards = 1;
 
-    @Parameter(names = "--useSystemExit", description = "Use checkpoints where possible", arity = 1)
-    private boolean useSystemExit = true;
-
     @Parameter(
         names = "--interpretTypes",
         description = "Use checkpoints where possible",
         arity = 1)
     private List<String> interpretTypes = null;
-
-    @Parameter(
-        names = {"--help", "-h"},
-        help = true,
-        description = "Show usage")
-    private boolean help;
   }
 
   public static void main(String[] argsv) throws Exception {
@@ -184,6 +157,14 @@ public class OccurrenceInterpretationPipeline {
             log.info("Running output regeneration");
             regenOutput(spark, config, datasetId, attempt, args.numberOfShards);
             break;
+          case REGEN_JSON_OUTPUTS:
+            log.info("Running JSON output regeneration");
+            regenJsonOutput(spark, config, datasetId, attempt, args.numberOfShards);
+            break;
+          case REGEN_HDFS_OUTPUTS:
+            log.info("Running HDFS output regeneration");
+            regenHdfsOutput(spark, config, datasetId, attempt, args.numberOfShards);
+            break;
           default:
             throw new IllegalArgumentException("Unsupported interpretation type: " + it);
         }
@@ -227,13 +208,55 @@ public class OccurrenceInterpretationPipeline {
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
     final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
 
-    Dataset<Occurrence> interpreted =
-        spark
-            .read()
-            .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
-            .as(Encoders.bean(Occurrence.class));
-
+    Dataset<Occurrence> interpreted = loadSimpleInterpreted(spark, outputPath);
     generateOutputs(spark, numberOfShards, interpreted, metadata, outputPath);
+  }
+
+  public static void regenJsonOutput(
+      SparkSession spark,
+      PipelinesConfig config,
+      String datasetId,
+      int attempt,
+      int numberOfShards) {
+
+    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
+    final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
+
+    Dataset<Occurrence> interpreted = loadSimpleInterpreted(spark, outputPath);
+
+    sparkLog(spark, "toJson", "Writing JSON output");
+    toJson(interpreted, metadata, numberOfShards)
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + OCCURRENCE_JSON);
+  }
+
+  public static void regenHdfsOutput(
+      SparkSession spark,
+      PipelinesConfig config,
+      String datasetId,
+      int attempt,
+      int numberOfShards) {
+
+    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
+    final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
+
+    Dataset<Occurrence> interpreted = loadSimpleInterpreted(spark, outputPath);
+
+    // write parquet for hdfs view
+    sparkLog(spark, "toHdfs", "Writing HDFS output");
+    toHdfs(interpreted, metadata, numberOfShards)
+        .write()
+        .mode(SaveMode.Overwrite)
+        .parquet(outputPath + "/" + OCCURRENCE_HDFS);
+  }
+
+  /** Helper to load the simple interpreted occurrences from disk. */
+  private static Dataset<Occurrence> loadSimpleInterpreted(SparkSession spark, String outputPath) {
+    return spark
+        .read()
+        .parquet(outputPath + "/" + SIMPLE_OCCURRENCE)
+        .as(Encoders.bean(Occurrence.class));
   }
 
   private static void generateOutputs(
@@ -302,6 +325,14 @@ public class OccurrenceInterpretationPipeline {
         case REGEN_OUTPUTS:
           log.info("Running only output regeneration");
           regenOutput(spark, config, datasetId, attempt, numberOfShards);
+          return;
+        case REGEN_HDFS_OUTPUTS:
+          log.info("Running only hdfs output regeneration");
+          regenHdfsOutput(spark, config, datasetId, attempt, numberOfShards);
+          return;
+        case REGEN_JSON_OUTPUTS:
+          log.info("Running only json output regeneration");
+          regenJsonOutput(spark, config, datasetId, attempt, numberOfShards);
           return;
         default:
           // no-op

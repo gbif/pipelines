@@ -144,6 +144,11 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>dwc-dp-descriptor</artifactId>
+      <version>${dwc-dp-analyser.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.gbif.common</groupId>
       <artifactId>gbif-postal-service</artifactId>
       <version>${gbif-postal-service.version}</version>

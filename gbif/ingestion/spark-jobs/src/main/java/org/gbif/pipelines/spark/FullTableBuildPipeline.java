@@ -26,6 +26,7 @@ import org.gbif.pipelines.spark.udf.Base64DecodeUDF;
 import org.gbif.pipelines.spark.udf.CleanDelimiterArraysUdf;
 import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
 import org.gbif.pipelines.spark.util.FullBuildUtils;
+import org.gbif.pipelines.spark.util.PipelineArgs;
 
 /**
  * This class performs a full rebuild of the Iceberg table from the parquet files in HDFS. It reads
@@ -38,16 +39,7 @@ import org.gbif.pipelines.spark.util.FullBuildUtils;
 public class FullTableBuildPipeline {
 
   @Parameters(separators = "=")
-  private static class Args {
-
-    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
-    private String config = "/tmp/pipelines-spark.yaml";
-
-    @Parameter(
-        names = SPARK_MASTER_ARG,
-        description = "Spark master - there for local dev only",
-        required = false)
-    private String master;
+  private static class Args extends PipelineArgs {
 
     @Parameter(names = NUMBER_OF_SHARDS_ARG, description = "Number of shards")
     private int numberOfShards = 2400;
@@ -78,7 +70,8 @@ public class FullTableBuildPipeline {
         names = SWITCH_ON_SUCCESS,
         description =
             "Switch the new tables to the final names (e.g. 'occurrence' or 'event') after successful build. "
-                + "If false, the new tables will have a prefix and the old tables will not be overwritten.")
+                + "If false, the new tables will have a prefix and the old tables will not be overwritten.",
+        arity = 1)
     private boolean switchOnSuccess = false;
 
     @Parameter(
@@ -93,19 +86,22 @@ public class FullTableBuildPipeline {
             "Existing Core output loading table. Can be used for re-runs where the load step fails")
     private String existingCoreOutputTable = null;
 
-    @Parameter(names = "--loadCoreTable", description = "Load core table")
+    @Parameter(names = "--loadCoreTable", description = "Load core table", arity = 1)
     private boolean loadCoreTable = true;
 
-    @Parameter(names = "--loadMultimediaTable", description = "Load multimedia table")
+    @Parameter(names = "--loadMultimediaTable", description = "Load multimedia table", arity = 1)
     private boolean loadMultimediaTable = true;
 
-    @Parameter(names = "--loadHumboldtTable", description = "Load humboldt table")
+    @Parameter(names = "--loadHumboldtTable", description = "Load humboldt table", arity = 1)
     private boolean loadHumboldtTable = true;
 
-    @Parameter(names = "--loadDnaDerivedDataTable", description = "Load DNA Derived Data table")
+    @Parameter(
+        names = "--loadDnaDerivedDataTable",
+        description = "Load DNA Derived Data table",
+        arity = 1)
     private boolean loadDnaDerivedDataTable = true;
 
-    @Parameter(names = "--skipEbird", description = "Skip ebird")
+    @Parameter(names = "--skipEbird", description = "Skip ebird", arity = 1)
     private boolean skipEbird = false;
 
     @Parameter(
@@ -113,14 +109,9 @@ public class FullTableBuildPipeline {
         description =
             "Drop the temporary loading table after successful load into final tables. "
                 + "Should be true for normal runs, but can be set to false for "
-                + "debugging to keep the temp table around for inspection.")
+                + "debugging to keep the temp table around for inspection.",
+        arity = 1)
     private boolean dropTempTableOnSuccess = true;
-
-    @Parameter(
-        names = {"--help", "-h"},
-        help = true,
-        description = "Show usage")
-    private boolean help;
   }
 
   public static void main(String[] argsv) throws Exception {

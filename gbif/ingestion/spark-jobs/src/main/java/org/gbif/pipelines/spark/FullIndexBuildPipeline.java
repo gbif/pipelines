@@ -29,6 +29,7 @@ import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.spark.util.EsIndexUtils;
 import org.gbif.pipelines.spark.util.FullBuildUtils;
 import org.gbif.pipelines.spark.util.IndexSettings;
+import org.gbif.pipelines.spark.util.PipelineArgs;
 
 /**
  * This class performs a full rebuild of the elastic search index for a given core Darwin Core term
@@ -42,16 +43,7 @@ import org.gbif.pipelines.spark.util.IndexSettings;
 public class FullIndexBuildPipeline {
 
   @Parameters(separators = "=")
-  private static class Args {
-
-    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
-    private String config = "/tmp/pipelines-spark.yaml";
-
-    @Parameter(
-        names = SPARK_MASTER_ARG,
-        description = "Spark master - there for local dev only",
-        required = false)
-    private String master;
+  private static class Args extends PipelineArgs {
 
     @Parameter(names = NUMBER_OF_SHARDS_ARG, description = "Number of shards")
     private int numberOfShards = 2400;
@@ -86,20 +78,16 @@ public class FullIndexBuildPipeline {
         names = SWITCH_ON_SUCCESS,
         description =
             "Switch the new tables to the final names (e.g. 'occurrence' or 'event') after successful build. "
-                + "If false, the new tables will have a prefix and the old tables will not be overwritten.")
+                + "If false, the new tables will have a prefix and the old tables will not be overwritten.",
+        arity = 1)
     private boolean switchOnSuccess = false;
 
     @Parameter(
         names = "--deleteTempParquetOnSuccess",
         description =
-            "Delete the temporary parquet files used for writing to Elastic after a successful build. ")
+            "Delete the temporary parquet files used for writing to Elastic after a successful build. ",
+        arity = 1)
     private boolean deleteTempParquetOnSuccess = true;
-
-    @Parameter(
-        names = {"--help", "-h"},
-        help = true,
-        description = "Show usage")
-    private boolean help;
   }
 
   public static void main(String[] argsv) throws Exception {

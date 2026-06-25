@@ -12,7 +12,6 @@ import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,6 +49,8 @@ import org.gbif.pipelines.spark.pojo.EventLineage;
 import org.gbif.pipelines.spark.util.DerivedMetadataUtil;
 import org.gbif.pipelines.spark.util.EventInheritanceUtil;
 import org.gbif.pipelines.spark.util.LineageUtil;
+import org.gbif.pipelines.spark.util.MapperUtil;
+import org.gbif.pipelines.spark.util.PipelineArgs;
 import org.gbif.pipelines.transform.*;
 import scala.Tuple2;
 
@@ -57,8 +58,7 @@ import scala.Tuple2;
 @Slf4j
 public class EventInterpretationPipeline {
 
-  static final ObjectMapper MAPPER =
-      new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+  static final ObjectMapper MAPPER = MapperUtil.MAPPER_NON_EMPTY;
 
   public static final String METRICS_FILENAME = "verbatim-to-event.yml";
 
@@ -68,37 +68,9 @@ public class EventInterpretationPipeline {
           Extension.DNA_DERIVED_DATA.getRowType());
 
   @Parameters(separators = "=")
-  private static class Args {
-
-    @Parameter(names = APP_NAME_ARG, description = "Application name", required = true)
-    private String appName;
-
-    @Parameter(names = DATASET_ID_ARG, description = "Dataset ID", required = true)
-    private String datasetId;
-
-    @Parameter(names = ATTEMPT_ID_ARG, description = "Attempt number", required = true)
-    private int attempt;
-
-    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
-    private String config = "/tmp/pipelines-spark.yaml";
-
-    @Parameter(
-        names = SPARK_MASTER_ARG,
-        description = "Spark master - there for local dev only",
-        required = false)
-    private String master;
-
+  private static class Args extends PipelineArgs {
     @Parameter(names = NUMBER_OF_SHARDS_ARG, description = "Number of shards", required = false)
     private int numberOfShards = 10;
-
-    @Parameter(
-        names = {"--help", "-h"},
-        help = true,
-        description = "Show usage")
-    private boolean help;
-
-    @Parameter(names = "--useSystemExit", description = "Use checkpoints where possible", arity = 1)
-    private boolean useSystemExit = true;
   }
 
   public static void main(String[] argsv) throws Exception {

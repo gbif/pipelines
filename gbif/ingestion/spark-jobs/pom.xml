@@ -53,6 +53,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.gbif</groupId>
+            <artifactId>dwc-dp-descriptor</artifactId>
+            <version>${dwc-dp-analyser.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.gbif.pipelines</groupId>
             <artifactId>elasticsearch-tools</artifactId>
             <version>${project.version}</version>
@@ -522,6 +527,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-hive_2.12</artifactId>
+            <version>${spark.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.iceberg</groupId>
             <artifactId>iceberg-spark-runtime-3.4_2.12</artifactId>
             <scope>provided</scope>
@@ -586,9 +597,15 @@
             <version>${old-jackson.version}</version>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit4.version}</version>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <scope>test</scope>
+            <version>${junit5.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit5.version}</version>
             <scope>test</scope>
         </dependency>
 

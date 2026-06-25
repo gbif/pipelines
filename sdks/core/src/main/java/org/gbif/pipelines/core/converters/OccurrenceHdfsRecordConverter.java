@@ -70,6 +70,7 @@ public class OccurrenceHdfsRecordConverter {
           DwcTerm.phylum.simpleName().toLowerCase(),
           GbifTerm.phylumKey.simpleName().toLowerCase(),
           GbifTerm.species.simpleName().toLowerCase(),
+          GbifTerm.speciesKey.simpleName().toLowerCase(),
           DwcTerm.subfamily.simpleName().toLowerCase(),
           GbifTerm.subfamilyKey.simpleName().toLowerCase(),
           DwcTerm.superfamily.simpleName().toLowerCase(),

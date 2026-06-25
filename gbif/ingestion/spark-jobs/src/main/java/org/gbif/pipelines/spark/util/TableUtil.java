@@ -7,7 +7,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.iceberg.exceptions.CommitFailedException;
-import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -266,7 +265,6 @@ public class TableUtil {
 
     for (String parquetColumn : hdfs.columns()) {
 
-      Column column = hdfs.col(parquetColumn); // ensure column exists in the dataset
       // determine the parquet column data type from the dataset schema
       DataType dataType = null;
       try {
