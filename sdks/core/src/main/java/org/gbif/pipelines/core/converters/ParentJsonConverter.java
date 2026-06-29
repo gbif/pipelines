@@ -111,6 +111,7 @@ public class ParentJsonConverter {
         .setInstallationKey(metadata.getInstallationKey())
         .setHostingOrganizationKey(metadata.getHostingOrganizationKey())
         .setNetworkKeys(metadata.getNetworkKeys())
+        .setDatasetCategory(metadata.getDatasetCategory())
         .setProgrammeAcronym(metadata.getProgrammeAcronym())
         .setProtocol(metadata.getProtocol())
         .setPublisherTitle(metadata.getPublisherTitle())

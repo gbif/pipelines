@@ -94,6 +94,7 @@ public class OccurrenceJsonConverterTest {
             .setPublishingOrganizationKey("setPublishingOrganizationKey")
             .setInstallationKey("setInstallationKey")
             .setNetworkKeys(Collections.singletonList("setNetworkKeys"))
+            .setDatasetCategory(Arrays.asList("eDNA", "Observation"))
             .setMachineTags(
                 Collections.singletonList(
                     MachineTag.newBuilder()
@@ -497,6 +498,7 @@ public class OccurrenceJsonConverterTest {
 
     assertEquals(mr.getDatasetKey(), result.path(Indexing.DATASET_KEY).asText());
     assertEquals(mr.getCrawlId(), (Integer) result.path(Indexing.CRAWL_ID).asInt());
+    assertEquals("[\"eDNA\",\"Observation\"]", result.path("datasetCategory").toString());
     assertEquals("CC_BY_NC_4_0", result.path(Indexing.LICENSE).asText());
     assertEquals(
         mr.getHostingOrganizationKey(), result.path(Indexing.HOSTING_ORGANIZATION_KEY).asText());

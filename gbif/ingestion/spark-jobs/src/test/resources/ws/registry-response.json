@@ -1290,6 +1290,7 @@
   "pubDate": "2026-01-30T00:00:00.000+00:00",
   "maintenanceUpdateFrequency": "ANNUALLY",
   "maintenanceDescription": "",
+  "category": ["eDNA", "Observation"],
   "license": "http://creativecommons.org/licenses/by-nc/4.0/legalcode",
   "dwca": {
     "coreType": "http://rs.tdwg.org/dwc/terms/Occurrence",

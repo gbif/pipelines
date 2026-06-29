@@ -105,14 +105,14 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.68</gbif-parsers.version>
     <dwca-io.version>3.0.1</dwca-io.version>
-    <gbif-api.version>2.4.11</gbif-api.version>
+    <gbif-api.version>2.4.12-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
-    <dwc-api.version>2.1.11</dwc-api.version>
+    <dwc-api.version>2.1.12-SNAPSHOT</dwc-api.version>
     <gbif-kvs.version>3.1.2</gbif-kvs.version>
     <hbase-utils.version>1.0.0</hbase-utils.version>
     <gbif-wrangler.version>1.0.0</gbif-wrangler.version>
     <vocabulary-lookup.version>2.0.10</vocabulary-lookup.version>
-    <registry.version>4.2.19</registry.version>
+    <registry.version>4.2.24-SNAPSHOT</registry.version>
     <gbif-common-ws.version>2.1.1</gbif-common-ws.version>
     <gbif-postal-service.version>2.1.10</gbif-postal-service.version>
     <dwc-dp-analyser.version>0.0.6</dwc-dp-analyser.version>
@@ -217,7 +217,7 @@
     <jakarta-annotation.version>3.0.0</jakarta-annotation.version>
     <super-csv.version>2.4.0</super-csv.version>
     <lz4.version>1.3.0</lz4.version>
-    <hdfs-tables.version>1.3.6</hdfs-tables.version>
+    <hdfs-tables.version>1.3.7-SNAPSHOT</hdfs-tables.version>
   </properties>
 
   <build>
