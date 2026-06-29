@@ -13,7 +13,6 @@
  */
 package org.gbif.pipelines.spark;
 
-import static org.gbif.pipelines.spark.ArgsConstants.*;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.OccurrenceInterpretationPipeline.*;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
@@ -35,7 +34,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.spark.pojo.Occurrence;
 import org.gbif.pipelines.spark.util.MapperUtil;
-import org.gbif.pipelines.spark.util.PipelineArgs;
+import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.transform.MultiTaxonomyTransform;
 
 /** Main class for the Spark pipeline that just reruns taxonomy interpretation. */
@@ -47,7 +46,7 @@ public class TaxonomyRefreshPipeline {
   public static final String METRICS_FILENAME = "taxonomy.yml";
 
   @Parameters(separators = "=")
-  private static class Args extends PipelineArgs {}
+  private static class Args extends SingleDatasetPipelineArgs {}
 
   public static void main(String[] argsv) throws Exception {
     Args args = new Args();

@@ -37,7 +37,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.spark.pojo.Occurrence;
 import org.gbif.pipelines.spark.util.MapperUtil;
-import org.gbif.pipelines.spark.util.PipelineArgs;
+import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.transform.*;
 
 /** Main class for the Spark pipeline that just reruns clustering interpretation. */
@@ -49,7 +49,7 @@ public class ClusteringRefreshPipeline {
   public static final String METRICS_FILENAME = "clustering.yml";
 
   @Parameters(separators = "=")
-  private static class Args extends PipelineArgs {}
+  private static class Args extends SingleDatasetPipelineArgs {}
 
   public static void main(String[] argsv) throws Exception {
     Args args = new Args();

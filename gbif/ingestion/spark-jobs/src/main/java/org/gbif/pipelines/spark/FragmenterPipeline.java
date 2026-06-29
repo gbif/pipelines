@@ -53,7 +53,7 @@ import org.gbif.pipelines.keygen.OccurrenceRecord;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.gbif.pipelines.spark.pojo.RawRecord;
 import org.gbif.pipelines.spark.util.MapperUtil;
-import org.gbif.pipelines.spark.util.PipelineArgs;
+import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.transform.factory.KeygenServiceFactory;
 import org.jetbrains.annotations.NotNull;
 import scala.Tuple2;
@@ -68,7 +68,7 @@ public class FragmenterPipeline {
   public static final String FRAGMENT_COLUMN_FAMILY = "fragment";
 
   @Parameters(separators = "=")
-  private static class Args extends PipelineArgs {
+  private static class Args extends SingleDatasetPipelineArgs {
 
     @Parameter(
         names = "--tripletValid",

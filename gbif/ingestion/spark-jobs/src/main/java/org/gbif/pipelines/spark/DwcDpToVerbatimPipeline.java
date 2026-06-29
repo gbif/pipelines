@@ -9,9 +9,9 @@ import org.apache.spark.sql.SparkSession;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.dwcdp.DwcDpVerbatimConverter;
 import org.gbif.pipelines.spark.dwcdp.DwcDpVerbatimConverter.VerbatimConversionMetrics;
-import org.gbif.pipelines.spark.util.PipelineArgs;
 import org.gbif.pipelines.spark.util.PipelineRunner;
 import org.gbif.pipelines.spark.util.PipelinesConfigUtil;
+import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 
 /**
  * Spark pipeline entry point that converts DwC-DP Parquet files into a verbatim.avro file
@@ -27,7 +27,7 @@ import org.gbif.pipelines.spark.util.PipelinesConfigUtil;
 public class DwcDpToVerbatimPipeline {
 
   @Parameters(separators = "=")
-  static class Args extends PipelineArgs {
+  static class Args extends SingleDatasetPipelineArgs {
 
     @Parameter(names = "--containsEvents", arity = 1)
     boolean containsEvents = false;

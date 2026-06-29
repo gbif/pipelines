@@ -31,7 +31,7 @@ import org.gbif.pipelines.spark.pojo.HdfsColumn;
 import org.gbif.pipelines.spark.udf.Base64DecodeUDF;
 import org.gbif.pipelines.spark.udf.CleanDelimiterArraysUdf;
 import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
-import org.gbif.pipelines.spark.util.PipelineArgs;
+import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.spark.util.TableUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -47,7 +47,7 @@ public class TableBuildPipeline {
   private static final Object LOCK = new Object();
 
   @Parameters(separators = "=")
-  private static class Args extends PipelineArgs {
+  private static class Args extends SingleDatasetPipelineArgs {
 
     @Parameter(
         names = DATASET_TYPE_ARG,
