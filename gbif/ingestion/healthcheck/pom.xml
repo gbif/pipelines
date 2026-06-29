@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>ingestion</artifactId>
-        <version>4.0.19-dataset-category-SNAPSHOT</version>
+        <version>4.0.24-SNAPSHOT</version>
     </parent>
     <artifactId>healthcheck</artifactId>
     <packaging>jar</packaging>
