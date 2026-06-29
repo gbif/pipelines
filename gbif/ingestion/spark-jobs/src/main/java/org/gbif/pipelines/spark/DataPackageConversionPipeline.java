@@ -12,9 +12,9 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.dwcdp.DataPackageConverter;
 import org.gbif.pipelines.spark.util.MapperUtil;
 import org.gbif.pipelines.spark.util.PathUtil;
-import org.gbif.pipelines.spark.util.PipelineArgs;
 import org.gbif.pipelines.spark.util.PipelineRunner;
 import org.gbif.pipelines.spark.util.PipelinesConfigUtil;
+import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 
 @Slf4j
 public class DataPackageConversionPipeline {
@@ -31,7 +31,7 @@ public class DataPackageConversionPipeline {
       long targetPartionByteSize) {}
 
   public static void main(String[] argsv) throws Exception {
-    PipelineArgs args = new PipelineArgs();
+    SingleDatasetPipelineArgs args = new SingleDatasetPipelineArgs();
     JCommander jCommander = new JCommander(args);
     jCommander.setAcceptUnknownOptions(true);
     jCommander.parse(argsv);

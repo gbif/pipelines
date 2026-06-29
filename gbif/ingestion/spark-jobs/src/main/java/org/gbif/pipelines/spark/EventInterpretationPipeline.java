@@ -50,7 +50,7 @@ import org.gbif.pipelines.spark.util.DerivedMetadataUtil;
 import org.gbif.pipelines.spark.util.EventInheritanceUtil;
 import org.gbif.pipelines.spark.util.LineageUtil;
 import org.gbif.pipelines.spark.util.MapperUtil;
-import org.gbif.pipelines.spark.util.PipelineArgs;
+import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.transform.*;
 import scala.Tuple2;
 
@@ -68,7 +68,7 @@ public class EventInterpretationPipeline {
           Extension.DNA_DERIVED_DATA.getRowType());
 
   @Parameters(separators = "=")
-  private static class Args extends PipelineArgs {
+  private static class Args extends SingleDatasetPipelineArgs {
     @Parameter(names = NUMBER_OF_SHARDS_ARG, description = "Number of shards", required = false)
     private int numberOfShards = 10;
   }

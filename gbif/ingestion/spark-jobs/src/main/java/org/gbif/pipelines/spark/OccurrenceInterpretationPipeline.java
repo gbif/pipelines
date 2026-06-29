@@ -56,7 +56,7 @@ import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.spark.pojo.Occurrence;
 import org.gbif.pipelines.spark.pojo.OccurrenceInterpretType;
 import org.gbif.pipelines.spark.util.MapperUtil;
-import org.gbif.pipelines.spark.util.PipelineArgs;
+import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.transform.*;
 import org.gbif.pipelines.transform.factory.KeygenServiceFactory;
 import scala.Tuple2;
@@ -81,7 +81,7 @@ public class OccurrenceInterpretationPipeline {
   public static final String METRICS_FILENAME = "verbatim-to-occurrence.yml";
 
   @Parameters(separators = "=")
-  private static class Args extends PipelineArgs {
+  private static class Args extends SingleDatasetPipelineArgs {
 
     @Parameter(
         names = "--tripletValid",

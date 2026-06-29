@@ -33,7 +33,7 @@ import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
-import org.gbif.pipelines.spark.util.PipelineArgs;
+import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -46,7 +46,7 @@ public class VerbatimExtensionsInterpretationPipeline {
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
   @Parameters(separators = "=")
-  private static class Args extends PipelineArgs {
+  private static class Args extends SingleDatasetPipelineArgs {
 
     @Parameter(
         names = DATASET_TYPE_ARG,

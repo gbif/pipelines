@@ -28,7 +28,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.io.avro.json.ParentJsonRecord;
 import org.gbif.pipelines.spark.util.EsIndexUtils;
-import org.gbif.pipelines.spark.util.PipelineArgs;
+import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 
 /**
  * Main class for indexing occurrence data to Elasticsearch. It reads Parquet files from HDFS,
@@ -45,7 +45,7 @@ public class IndexingPipeline {
   public static final String ES_INDEX_NUMBER_OF_SHARDS_ARG = "--indexNumberShards";
 
   @Parameters(separators = "=")
-  private static class Args extends PipelineArgs {
+  private static class Args extends SingleDatasetPipelineArgs {
 
     @Parameter(
         names = ES_INDEX_NAME_ARG,
