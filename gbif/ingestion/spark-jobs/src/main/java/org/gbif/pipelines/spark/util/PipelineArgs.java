@@ -13,10 +13,10 @@ public class PipelineArgs {
   @Parameter(names = APP_NAME_ARG, description = "Application name", required = false)
   public String appName;
 
-  @Parameter(names = DATASET_ID_ARG, description = "Dataset ID", required = true)
+  @Parameter(names = DATASET_ID_ARG, description = "Dataset ID", required = false)
   public String datasetId;
 
-  @Parameter(names = ATTEMPT_ID_ARG, description = "Attempt number", required = true)
+  @Parameter(names = ATTEMPT_ID_ARG, description = "Attempt number", required = false)
   public int attempt;
 
   @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
