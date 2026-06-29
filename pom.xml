@@ -217,7 +217,7 @@
     <jakarta-annotation.version>3.0.0</jakarta-annotation.version>
     <super-csv.version>2.4.0</super-csv.version>
     <lz4.version>1.3.0</lz4.version>
-    <hdfs-tables.version>1.3.5-dataset-category-SNAPSHOT</hdfs-tables.version>
+    <hdfs-tables.version>1.3.7-SNAPSHOT</hdfs-tables.version>
   </properties>
 
   <build>
