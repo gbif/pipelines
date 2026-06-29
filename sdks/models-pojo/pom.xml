@@ -16,7 +16,7 @@
   <description>Data models represented in POJOs, generated from Avro schemas</description>
 
   <properties>
-    <jackson.version>2.17.2</jackson.version>
+    <jackson.version>2.22.0</jackson.version>
 
     <!-- Reuse schemas from the normal location -->
     <schemas-path>${project.basedir}/../models/src/main/avro</schemas-path>
