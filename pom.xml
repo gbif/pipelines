@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>4.0.22</version>
+  <version>4.0.22-null-keys-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>

@@ -451,7 +451,7 @@ public class OccurrenceHdfsRecordConverter {
             : "");
 
     for (String field : REQUIRED_TAXONOMIC_FIELDS) {
-      map.putIfAbsent(field, "");
+      map.putIfAbsent(field, null);
     }
 
     return map;
