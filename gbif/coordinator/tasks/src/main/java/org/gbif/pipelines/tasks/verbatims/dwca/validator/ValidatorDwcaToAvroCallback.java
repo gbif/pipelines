@@ -175,7 +175,7 @@ public class ValidatorDwcaToAvroCallback extends AbstractMessageCallback<Pipelin
         PipelinesWorkflow.Graph<StepType> workflow;
         workflow = PipelinesWorkflow.getValidatorWorkflow();
 
-        StepType type = StepType.VALIDATOR_DWCA_TO_VERBATIM;
+        StepType type = StepType.VALIDATOR_VERBATIM_TO_IDENTIFIER;
 
         Set<String> steps =
             workflow.getAllNodesFor(Collections.singleton(type)).stream()
