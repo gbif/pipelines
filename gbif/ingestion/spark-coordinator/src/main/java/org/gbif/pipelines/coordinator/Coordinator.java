@@ -163,6 +163,15 @@ public class Coordinator {
             (messagePublisher ->
                 new OccurrenceInterpretationDistributedCallback(config, messagePublisher));
         break;
+      case VALIDATOR_IDENTIFIER:
+        callbackFn =
+            (messagePublisher -> new ValidatorIdentifierCallback(config, messagePublisher, master));
+        break;
+      case VALIDATOR_IDENTIFIER_DISTRIBUTED:
+        callbackFn =
+            (messagePublisher ->
+                new ValidatorIdentifierDistributedCallback(config, messagePublisher));
+        break;
       case VALIDATOR_INTERPRETATION:
         callbackFn =
             (messagePublisher ->
@@ -352,6 +361,8 @@ public class Coordinator {
     FRAGMENTER_DISTRIBUTED,
     OCCURRENCE_DELETION,
     EVENT_DELETION,
+    VALIDATOR_IDENTIFIER,
+    VALIDATOR_IDENTIFIER_DISTRIBUTED,
     VALIDATOR_INTERPRETATION,
     VALIDATOR_INTERPRETATION_DISTRIBUTED
   }
