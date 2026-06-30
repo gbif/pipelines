@@ -36,13 +36,18 @@ public class Metrics {
   @NoArgsConstructor
   @AllArgsConstructor
   @JsonDeserialize(builder = ValidationStep.ValidationStepBuilder.class)
-  public static class ValidationStep {
+  public static class ValidationStep implements Comparable<ValidationStep> {
 
     // Keep stepType as String to prevent a clash between validation-api and gbif-api StepType enums
     private String stepType;
     private Status status;
     private String message;
     private int executionOrder;
+
+    @Override
+    public int compareTo(ValidationStep other) {
+      return Integer.compare(this.executionOrder, other.executionOrder);
+    }
   }
 
   @Data
