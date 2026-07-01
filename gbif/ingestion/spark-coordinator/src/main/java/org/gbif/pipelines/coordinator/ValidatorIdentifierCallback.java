@@ -75,6 +75,7 @@ public class ValidatorIdentifierCallback
             .fileSystem(this.fileSystem)
             .config(pipelinesConfig.getStandalone())
             .outputPath(pipelinesConfig.getOutputPath())
+            .bypassRegistry(isRegistryBypassed())
             .build()
             .validate();
 
