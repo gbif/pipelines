@@ -294,7 +294,9 @@ public abstract class PipelinesCallback<
 
         CONCURRENT_DATASETS.dec();
 
-        if (message.getExecutionId() != null) {
+        if (isRegistryBypassed()) {
+          log.debug("Registry bypassed, skip marking execution as FINISHED");
+        } else if (message.getExecutionId() != null) {
           ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
           log.debug("Mark execution as FINISHED if all steps are FINISHED");
           Runnable r =
@@ -317,61 +319,66 @@ public abstract class PipelinesCallback<
   }
 
   private void sendOutgoingMessage(TrackingInfo trackingInfo, I message) throws IOException {
-    Function<Long, List<PipelineStep>> getStepsByExecutionKeyFn =
-        ek -> {
-          log.debug("History client: get steps by execution key {}", ek);
-          return historyClient.getPipelineStepsByExecutionKey(ek);
-        };
+    // Validator runs are not tracked in the registry, so the "next step" is driven purely by the
+    // message's pipelineSteps (see createOutgoingMessage). Skip the registry-based gating below,
+    // which would otherwise drop the outgoing message (trackingInfo.executionId is 0).
+    if (!isRegistryBypassed()) {
+      Function<Long, List<PipelineStep>> getStepsByExecutionKeyFn =
+          ek -> {
+            log.debug("History client: get steps by execution key {}", ek);
+            return historyClient.getPipelineStepsByExecutionKey(ek);
+          };
 
-    List<PipelineStep> executionPipelineSteps =
-        Retry.decorateFunction(RETRY, getStepsByExecutionKeyFn).apply(trackingInfo.executionId);
+      List<PipelineStep> executionPipelineSteps =
+          Retry.decorateFunction(RETRY, getStepsByExecutionKeyFn).apply(trackingInfo.executionId);
 
-    log.info(
-        "Execution steps for execution key {}: {}",
-        trackingInfo.executionId,
-        executionPipelineSteps);
-
-    if (log.isDebugEnabled()) {
-      log.debug(
-          "Execution ID {}, steps size: {}, steps: {}",
+      log.info(
+          "Execution steps for execution key {}: {}",
           trackingInfo.executionId,
-          executionPipelineSteps.size(),
-          executionPipelineSteps.stream()
-              .map(ps -> ps.getType().name())
-              .collect(Collectors.joining(", ")));
-    }
+          executionPipelineSteps);
 
-    List<PipelineStep> thisPipelineStep =
-        executionPipelineSteps.stream().filter(ps -> ps.getType() == getStepType()).toList();
-
-    if (thisPipelineStep.isEmpty()) {
-      // expected when we opt to only execute one step with &onlyRequestedStep=true
-      log.warn(
-          "Execution ID {}, current step {} is not found in the execution steps, won't send outgoing message. Available steps: {}",
-          trackingInfo.executionId,
-          getStepType(),
-          executionPipelineSteps.stream()
-              .map(ps -> ps.getType().name())
-              .collect(Collectors.joining(", ")));
-      return;
-    }
-
-    // if there is no more steps in the execution to run, dont send messages
-    if (!executionPipelineSteps.isEmpty()) {
-      // are there any incomplete steps left in the execution? if not,
-      // don't send message to balancer, just mark execution as finished
-      Set<PipelineStep> unprocessed =
-          executionPipelineSteps.stream()
-              .filter(ps -> !PROCESSED_STATE_SET.contains(ps.getState()))
-              .collect(Collectors.toSet());
-      if (unprocessed.isEmpty()) {
-        log.info(
-            "Execution ID {}, all steps are processed for execution, won't send outgoing message. Steps: {}",
+      if (log.isDebugEnabled()) {
+        log.debug(
+            "Execution ID {}, steps size: {}, steps: {}",
             trackingInfo.executionId,
+            executionPipelineSteps.size(),
             executionPipelineSteps.stream()
-                .map(ps -> ps.getType().name() + ":" + ps.getState().name())
+                .map(ps -> ps.getType().name())
+                .collect(Collectors.joining(", ")));
+      }
+
+      List<PipelineStep> thisPipelineStep =
+          executionPipelineSteps.stream().filter(ps -> ps.getType() == getStepType()).toList();
+
+      if (thisPipelineStep.isEmpty()) {
+        // expected when we opt to only execute one step with &onlyRequestedStep=true
+        log.warn(
+            "Execution ID {}, current step {} is not found in the execution steps, won't send outgoing message. Available steps: {}",
+            trackingInfo.executionId,
+            getStepType(),
+            executionPipelineSteps.stream()
+                .map(ps -> ps.getType().name())
                 .collect(Collectors.joining(", ")));
         return;
+      }
+
+      // if there is no more steps in the execution to run, dont send messages
+      if (!executionPipelineSteps.isEmpty()) {
+        // are there any incomplete steps left in the execution? if not,
+        // don't send message to balancer, just mark execution as finished
+        Set<PipelineStep> unprocessed =
+            executionPipelineSteps.stream()
+                .filter(ps -> !PROCESSED_STATE_SET.contains(ps.getState()))
+                .collect(Collectors.toSet());
+        if (unprocessed.isEmpty()) {
+          log.info(
+              "Execution ID {}, all steps are processed for execution, won't send outgoing message. Steps: {}",
+              trackingInfo.executionId,
+              executionPipelineSteps.stream()
+                  .map(ps -> ps.getType().name() + ":" + ps.getState().name())
+                  .collect(Collectors.joining(", ")));
+          return;
+        }
       }
     }
 
@@ -455,7 +462,19 @@ public abstract class PipelinesCallback<
     return !new File(SHUTDOWN_FILE_PATH).exists();
   }
 
+  /**
+   * When {@code bypassRegistry} is enabled (validator runs), no calls are made to the GBIF registry
+   * pipelines-history service. Validator datasets are ephemeral validation UUIDs that are not
+   * registered and therefore have no history to track.
+   */
+  protected boolean isRegistryBypassed() {
+    return pipelinesConfig.isBypassRegistry();
+  }
+
   protected boolean isProcessingStopped(I message) {
+    if (isRegistryBypassed()) {
+      return false;
+    }
 
     Long currentKey = message.getExecutionId();
     UUID datasetKey = message.getDatasetUuid();
@@ -524,6 +543,9 @@ public abstract class PipelinesCallback<
 
   protected void updateTrackingStatus(
       TrackingInfo trackingInfo, I message, PipelineStep.Status status) {
+    if (isRegistryBypassed()) {
+      return;
+    }
 
     String path =
         String.join(
@@ -586,26 +608,25 @@ public abstract class PipelinesCallback<
   public abstract O createOutgoingMessage(I message);
 
   private void updateQueuedStatus(TrackingInfo info, I message) {
+    if (isRegistryBypassed()) {
+      return;
+    }
 
     List<PipelinesWorkflow.Graph<StepType>.Edge> nodeEdges;
-    if (false /* isValidator*/) {
-      nodeEdges = PipelinesWorkflow.getValidatorWorkflow().getNodeEdges(getStepType());
-    } else {
-      boolean containsEvents = containsEvents(message);
-      boolean containsOccurrences = message.getDatasetInfo().isContainsOccurrences();
-      PipelinesWorkflow.Graph<StepType> workflow =
-          PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents);
-      nodeEdges = workflow.getNodeEdges(getStepType());
+    boolean containsEvents = containsEvents(message);
+    boolean containsOccurrences = message.getDatasetInfo().isContainsOccurrences();
+    PipelinesWorkflow.Graph<StepType> workflow =
+        PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents);
+    nodeEdges = workflow.getNodeEdges(getStepType());
 
-      if (log.isDebugEnabled() && nodeEdges != null) {
-        log.debug(
-            "Workflow for {} {} containsOccurrences: {}, containsEvents: {} has nodes {} ",
-            message.getDatasetInfo().getDatasetType(),
-            message.getDatasetUuid(),
-            containsOccurrences,
-            containsEvents,
-            nodeEdges.stream().map(e -> e.getNode().name()).collect(Collectors.joining(", ")));
-      }
+    if (log.isDebugEnabled() && nodeEdges != null) {
+      log.debug(
+          "Workflow for {} {} containsOccurrences: {}, containsEvents: {} has nodes {} ",
+          message.getDatasetInfo().getDatasetType(),
+          message.getDatasetUuid(),
+          containsOccurrences,
+          containsEvents,
+          nodeEdges.stream().map(e -> e.getNode().name()).collect(Collectors.joining(", ")));
     }
 
     if (nodeEdges == null || nodeEdges.isEmpty()) {
@@ -636,6 +657,10 @@ public abstract class PipelinesCallback<
   }
 
   protected TrackingInfo trackPipelineStep(I message) throws Exception {
+    if (isRegistryBypassed()) {
+      // Validator runs are not tracked in the registry pipelines-history service.
+      return TrackingInfo.builder().build();
+    }
 
     // create pipeline process. If it already exists it returns the existing one (the db query
     // does an upsert).

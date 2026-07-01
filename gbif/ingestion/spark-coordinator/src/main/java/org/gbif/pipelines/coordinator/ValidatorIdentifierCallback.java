@@ -81,13 +81,16 @@ public class ValidatorIdentifierCallback
     if (validationResult.isResultValid()) {
       log.info(validationResult.validationMessage());
     } else {
-      historyClient.notifyAbsentIdentifiers(
-          message.getDatasetUuid(),
-          message.getAttempt(),
-          message.getExecutionId(),
-          validationResult.validationMessage());
+      // Registry notifications don't apply to validator runs (no registered dataset/execution).
+      if (!isRegistryBypassed()) {
+        historyClient.notifyAbsentIdentifiers(
+            message.getDatasetUuid(),
+            message.getAttempt(),
+            message.getExecutionId(),
+            validationResult.validationMessage());
+        historyClient.markPipelineStatusAsAborted(message.getExecutionId());
+      }
       log.error(validationResult.validationMessage());
-      historyClient.markPipelineStatusAsAborted(message.getExecutionId());
       throw new PipelinesException(validationResult.validationMessage());
     }
   }

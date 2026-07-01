@@ -97,6 +97,13 @@ public class PipelinesConfig implements Serializable {
 
   private StandaloneConfig standalone = new StandaloneConfig();
 
+  /**
+   * When true, no calls are made to the GBIF registry pipelines-history service. Used by validator
+   * runs, whose datasets are validation UUIDs that are not registered and therefore have no history
+   * to track.
+   */
+  private boolean bypassRegistry = false;
+
   private AirflowConfig airflowConfig = new AirflowConfig();
 
   private Map<String, SparkJobConfig> processingConfigs;
