@@ -518,9 +518,15 @@ public class OccurrenceInterpretationPipeline {
    */
   static MetadataRecord getMetadataRecord(
       PipelinesConfig config, String datasetId, Integer attempt) {
+    final MetadataRecord metadata = MetadataRecord.newBuilder().setDatasetKey(datasetId).build();
+    if (config.isBypassRegistry()) {
+      // Validator runs use validation UUIDs that are not registered datasets, so there
+      // is no registry metadata to fetch (the call would 404). Use the minimal record.
+      log.info("Registry bypassed, skip dataset metadata interpretation for {}", datasetId);
+      return metadata;
+    }
     MetadataServiceClient metadataServiceClient =
         MetadataServiceClient.create(config.getGbifApi(), config.getContent());
-    final MetadataRecord metadata = MetadataRecord.newBuilder().setDatasetKey(datasetId).build();
     MetadataInterpreter.interpret(metadataServiceClient, datasetId, attempt, metadata);
     return metadata;
   }
