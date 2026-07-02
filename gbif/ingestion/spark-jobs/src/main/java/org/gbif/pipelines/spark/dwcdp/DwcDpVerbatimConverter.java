@@ -61,9 +61,24 @@ public class DwcDpVerbatimConverter {
   public static final String TABLE_MEDIA = "media";
   public static final String TABLE_EVENT_MEDIA = "event-media";
   public static final String TABLE_OCCURRENCE_MEDIA = "occurrence-media";
+  public static final String TABLE_EVENT_ASSERTION = "event-assertion";
+  public static final String TABLE_OCCURRENCE_ASSERTION = "occurrence-assertion";
+  public static final String TABLE_PROTOCOL = "protocol";
+  public static final String TABLE_SURVEY = "survey";
+  public static final String TABLE_SURVEY_SURVEY_TARGET = "survey-survey-target";
+  public static final String TABLE_SURVEY_TARGET = "survey-target";
 
   // Extension row type URI for multimedia
   public static final String ROW_TYPE_MULTIMEDIA = "http://rs.tdwg.org/ac/terms/Multimedia";
+
+  // Extension row type URIs for MeasurementOrFact and ExtendedMeasurementOrFact
+  public static final String ROW_TYPE_MEASUREMENT_OR_FACT =
+      "http://rs.tdwg.org/dwc/terms/MeasurementOrFact";
+  public static final String ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT =
+      "http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact";
+
+  // Extension row type URI for the Humboldt Ecological Inventory Extension
+  public static final String ROW_TYPE_HUMBOLDT = "http://rs.tdwg.org/eco/terms/Event";
 
   // Core row type URIs
   public static final String CORE_ROW_TYPE_EVENT = DwcTerm.Event.qualifiedName();
@@ -99,6 +114,86 @@ public class DwcDpVerbatimConverter {
   }
 
   private static final ObjectMapper MAPPER = MapperUtil.MAPPER;
+
+  // DwC-DP assertion column names → DwC-A eMoF term names.
+  // The FK columns (event_fk / occurrence_fk) are handled separately in remapAssertionColumns.
+  // assertionProtocol_fk → measurementMethod is lossy: the FK value (an ID string) is stored as
+  // free text because a protocol lookup table is not available at this stage.
+  private static final Map<String, String> ASSERTION_TO_EMOF_COLUMNS =
+      Map.ofEntries(
+          Map.entry("assertionID", "measurementID"),
+          Map.entry("assertionType", "measurementType"),
+          Map.entry("assertionTypeIRI", "measurementTypeID"),
+          Map.entry("assertionValue", "measurementValue"),
+          Map.entry("assertionValueIRI", "measurementValueID"),
+          Map.entry("assertionUnit", "measurementUnit"),
+          Map.entry("assertionUnitIRI", "measurementUnitID"),
+          Map.entry("assertionError", "measurementAccuracy"),
+          Map.entry("assertionBy", "measurementDeterminedBy"),
+          Map.entry("assertionMadeDate", "measurementDeterminedDate"),
+          Map.entry("assertionRemarks", "measurementRemarks"),
+          Map.entry("assertionProtocol_fk", "measurementMethod"));
+
+  /**
+   * Joins an assertion Dataset against its parent entity table to replace the internal FK ({@code
+   * event_fk} or {@code occurrence_fk}) with the natural DwC identifier ({@code eventID} or {@code
+   * occurrenceID}). Optionally joins the {@code protocol} table — if present — to resolve {@code
+   * assertionProtocol_fk} into a human-readable {@code measurementMethod} string using {@code
+   * protocolDescription}; when the protocol table is absent the raw FK value is kept under {@code
+   * assertionProtocol_fk} and {@link #remapAssertionColumns} will rename it to {@code
+   * measurementMethod} as a fallback.
+   */
+  private static Dataset<Row> resolveAssertionLinks(
+      SparkSession spark,
+      DataPackage dataPackage,
+      String basePath,
+      Dataset<Row> assertionDf,
+      String fkColumn,
+      Dataset<Row> parentDf,
+      String parentPkColumn,
+      String parentIdColumn) {
+
+    Dataset<Row> result =
+        assertionDf
+            .join(
+                parentDf.select(parentPkColumn, parentIdColumn),
+                assertionDf.col(fkColumn).equalTo(parentDf.col(parentPkColumn)),
+                "left_outer")
+            .drop(parentDf.col(parentPkColumn))
+            .drop(assertionDf.col(fkColumn));
+
+    Optional<DataPackageResource> protocolResource = dataPackage.findResource(TABLE_PROTOCOL);
+    if (protocolResource.isPresent()
+        && Arrays.asList(result.columns()).contains("assertionProtocol_fk")) {
+      Dataset<Row> protocolDf =
+          spark
+              .read()
+              .parquet(basePath + "/" + protocolResource.get().getPath())
+              .select("protocol_pk", "protocolDescription");
+      result =
+          result
+              .join(
+                  protocolDf,
+                  result.col("assertionProtocol_fk").equalTo(protocolDf.col("protocol_pk")),
+                  "left_outer")
+              .drop(protocolDf.col("protocol_pk"))
+              .drop("assertionProtocol_fk")
+              .withColumnRenamed("protocolDescription", "measurementMethod");
+    }
+
+    return result;
+  }
+
+  /** Renames DwC-DP assertion column names to their DwC-A eMoF equivalents. */
+  private static Dataset<Row> remapAssertionColumns(Dataset<Row> df) {
+    Dataset<Row> result = df;
+    for (Map.Entry<String, String> e : ASSERTION_TO_EMOF_COLUMNS.entrySet()) {
+      if (Arrays.asList(result.columns()).contains(e.getKey())) {
+        result = result.withColumnRenamed(e.getKey(), e.getValue());
+      }
+    }
+    return result;
+  }
 
   private DwcDpVerbatimConverter() {}
 
@@ -314,6 +409,10 @@ public class DwcDpVerbatimConverter {
     Optional<Dataset<Row>> occurrenceExtDf =
         buildOccurrenceExtensionDf(spark, dataPackage, basePath);
     Optional<Dataset<Row>> mediaExtDf = buildEventMediaExtensionDf(spark, dataPackage, basePath);
+    Optional<Dataset<Row>> assertionExtDf =
+        buildEventAssertionExtensionDf(spark, dataPackage, basePath);
+    Optional<Dataset<Row>> humboldtExtDf =
+        buildHumboldtExtensionDf(spark, dataPackage, basePath);
 
     Dataset<Row> joined = eventDf;
     if (occurrenceExtDf.isPresent()) {
@@ -334,10 +433,30 @@ public class DwcDpVerbatimConverter {
                   "left_outer")
               .drop(mediaExtDf.get().col("eventID"));
     }
+    if (assertionExtDf.isPresent()) {
+      joined =
+          joined
+              .join(
+                  assertionExtDf.get(),
+                  joined.col("eventID").equalTo(assertionExtDf.get().col("eventID")),
+                  "left_outer")
+              .drop(assertionExtDf.get().col("eventID"));
+    }
+    if (humboldtExtDf.isPresent()) {
+      joined =
+          joined
+              .join(
+                  humboldtExtDf.get(),
+                  joined.col("eventID").equalTo(humboldtExtDf.get().col("eventID")),
+                  "left_outer")
+              .drop(humboldtExtDf.get().col("eventID"));
+    }
 
     final String[] eventColumns = eventDf.columns();
     final boolean hasOccExt = occurrenceExtDf.isPresent();
     final boolean hasMediaExt = mediaExtDf.isPresent();
+    final boolean hasAssertionExt = assertionExtDf.isPresent();
+    final boolean hasHumboldtExt = humboldtExtDf.isPresent();
 
     return joined
         .map(
@@ -363,6 +482,19 @@ public class DwcDpVerbatimConverter {
                       extensions.put(ROW_TYPE_MULTIMEDIA, jsonToTermMapList(mediaJson));
                     }
                   }
+                  if (hasAssertionExt) {
+                    String assertionJson = safeGetString(row, "assertionExtJson");
+                    if (assertionJson != null) {
+                      extensions.put(
+                          ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT, jsonToTermMapList(assertionJson));
+                    }
+                  }
+                  if (hasHumboldtExt) {
+                    String humboldtJson = safeGetString(row, "humboldtExtJson");
+                    if (humboldtJson != null) {
+                      extensions.put(ROW_TYPE_HUMBOLDT, jsonToTermMapList(humboldtJson));
+                    }
+                  }
 
                   return ExtendedRecord.newBuilder()
                       .setId(eventId)
@@ -386,6 +518,8 @@ public class DwcDpVerbatimConverter {
 
     Optional<Dataset<Row>> mediaExtDf =
         buildOccurrenceMediaExtensionDf(spark, dataPackage, basePath);
+    Optional<Dataset<Row>> assertionExtDf =
+        buildOccurrenceAssertionExtensionDf(spark, dataPackage, basePath);
 
     Dataset<Row> joined = occurrenceDf;
     if (mediaExtDf.isPresent()) {
@@ -397,9 +531,21 @@ public class DwcDpVerbatimConverter {
                   "left_outer")
               .drop(mediaExtDf.get().col("occurrenceID"));
     }
+    if (assertionExtDf.isPresent()) {
+      joined =
+          joined
+              .join(
+                  assertionExtDf.get(),
+                  occurrenceDf
+                      .col("occurrenceID")
+                      .equalTo(assertionExtDf.get().col("occurrenceID")),
+                  "left_outer")
+              .drop(assertionExtDf.get().col("occurrenceID"));
+    }
 
     final String[] occColumns = occurrenceDf.columns();
     final boolean hasMediaExt = mediaExtDf.isPresent();
+    final boolean hasAssertionExt = assertionExtDf.isPresent();
 
     return joined
         .map(
@@ -417,6 +563,13 @@ public class DwcDpVerbatimConverter {
                     String mediaJson = safeGetString(row, "mediaExtJson");
                     if (mediaJson != null) {
                       extensions.put(ROW_TYPE_MULTIMEDIA, jsonToTermMapList(mediaJson));
+                    }
+                  }
+                  if (hasAssertionExt) {
+                    String assertionJson = safeGetString(row, "assertionExtJson");
+                    if (assertionJson != null) {
+                      extensions.put(
+                          ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT, jsonToTermMapList(assertionJson));
                     }
                   }
 
@@ -508,6 +661,150 @@ public class DwcDpVerbatimConverter {
 
     return Optional.of(
         aggregateAsJsonByKey(spark, joined, joined.columns(), "occurrenceID", "mediaExtJson"));
+  }
+
+  /**
+   * Returns a two-column Dataset {@code (eventID, assertionExtJson)} built from the {@code
+   * event-assertion} table. {@code event_fk} is resolved to the natural {@code eventID} from the
+   * {@code event} table; {@code assertionProtocol_fk} is resolved to {@code measurementMethod} via
+   * the {@code protocol} table when available. Assertion column names are remapped to their DwC-A
+   * eMoF equivalents before serialisation. Empty if the table is absent.
+   */
+  static Optional<Dataset<Row>> buildEventAssertionExtensionDf(
+      SparkSession spark, DataPackage dataPackage, String basePath) {
+
+    Optional<DataPackageResource> resource = dataPackage.findResource(TABLE_EVENT_ASSERTION);
+    if (resource.isEmpty()) {
+      return Optional.empty();
+    }
+
+    DataPackageResource eventResource = dataPackage.findResource(TABLE_EVENT).orElseThrow();
+    Dataset<Row> assertionDf = spark.read().parquet(basePath + "/" + resource.get().getPath());
+    Dataset<Row> eventDf = spark.read().parquet(basePath + "/" + eventResource.getPath());
+
+    Dataset<Row> df =
+        remapAssertionColumns(
+            resolveAssertionLinks(
+                spark,
+                dataPackage,
+                basePath,
+                assertionDf,
+                "event_fk",
+                eventDf,
+                "event_pk",
+                "eventID"));
+    return Optional.of(
+        aggregateAsJsonByKey(spark, df, df.columns(), "eventID", "assertionExtJson"));
+  }
+
+  /**
+   * Returns a two-column Dataset {@code (occurrenceID, assertionExtJson)} built from the {@code
+   * occurrence-assertion} table. {@code occurrence_fk} is resolved to the natural {@code
+   * occurrenceID} from the {@code occurrence} table; {@code assertionProtocol_fk} is resolved to
+   * {@code measurementMethod} via the {@code protocol} table when available. Assertion column names
+   * are remapped to their DwC-A eMoF equivalents before serialisation. Empty if the table is
+   * absent.
+   */
+  static Optional<Dataset<Row>> buildOccurrenceAssertionExtensionDf(
+      SparkSession spark, DataPackage dataPackage, String basePath) {
+
+    Optional<DataPackageResource> resource = dataPackage.findResource(TABLE_OCCURRENCE_ASSERTION);
+    if (resource.isEmpty()) {
+      return Optional.empty();
+    }
+
+    DataPackageResource occResource = dataPackage.findResource(TABLE_OCCURRENCE).orElseThrow();
+    Dataset<Row> assertionDf = spark.read().parquet(basePath + "/" + resource.get().getPath());
+    Dataset<Row> occurrenceDf = spark.read().parquet(basePath + "/" + occResource.getPath());
+
+    Dataset<Row> df =
+        remapAssertionColumns(
+            resolveAssertionLinks(
+                spark,
+                dataPackage,
+                basePath,
+                assertionDf,
+                "occurrence_fk",
+                occurrenceDf,
+                "occurrence_pk",
+                "occurrenceID"));
+    return Optional.of(
+        aggregateAsJsonByKey(spark, df, df.columns(), "occurrenceID", "assertionExtJson"));
+  }
+
+  /**
+   * Returns a two-column Dataset {@code (eventID, humboldtExtJson)} for the Humboldt Ecological
+   * Inventory Extension, built from the {@code survey} table.
+   *
+   * <p>Join strategy:
+   *
+   * <ol>
+   *   <li>{@code survey.event_fk} is resolved to the natural {@code eventID} via the {@code event}
+   *       table ({@code event_fk → event_pk → eventID}).
+   *   <li>When both {@code survey-survey-target} and {@code survey-target} are present, the survey
+   *       rows are fanned out — one output row per linked survey-target — so each survey-target's
+   *       fields ({@code surveyTargetDescription}, etc.) appear as a separate Humboldt extension
+   *       row under the same {@code eventID}. Surveys with no survey-target produce a single row.
+   * </ol>
+   *
+   * <p>All internal PK/FK columns ({@code survey_pk}, {@code event_fk}, {@code survey_fk},
+   * {@code surveyTarget_fk}, {@code surveyTarget_pk}, {@code samplingProtocol_fk},
+   * {@code samplingEffortProtocol_fk}) are dropped before serialisation. Survey field names match
+   * Humboldt Extension term names directly so no column renaming is needed. Empty if the {@code
+   * survey} table is absent.
+   */
+  static Optional<Dataset<Row>> buildHumboldtExtensionDf(
+      SparkSession spark, DataPackage dataPackage, String basePath) {
+
+    Optional<DataPackageResource> surveyResource = dataPackage.findResource(TABLE_SURVEY);
+    if (surveyResource.isEmpty()) {
+      return Optional.empty();
+    }
+
+    DataPackageResource eventResource = dataPackage.findResource(TABLE_EVENT).orElseThrow();
+    Dataset<Row> surveyDf = spark.read().parquet(basePath + "/" + surveyResource.get().getPath());
+    Dataset<Row> eventDf = spark.read().parquet(basePath + "/" + eventResource.getPath());
+
+    // Resolve event_fk → natural eventID; keep survey_pk for the survey-target join below
+    Dataset<Row> df =
+        surveyDf
+            .join(
+                eventDf.select("event_pk", "eventID"),
+                surveyDf.col("event_fk").equalTo(eventDf.col("event_pk")),
+                "left_outer")
+            .drop(eventDf.col("event_pk"))
+            .drop(surveyDf.col("event_fk"))
+            .drop("samplingProtocol_fk")
+            .drop("samplingEffortProtocol_fk");
+
+    // Fan-out to survey-target rows via the junction table (1:many per survey)
+    Optional<DataPackageResource> junctionResource =
+        dataPackage.findResource(TABLE_SURVEY_SURVEY_TARGET);
+    Optional<DataPackageResource> targetResource = dataPackage.findResource(TABLE_SURVEY_TARGET);
+
+    if (junctionResource.isPresent() && targetResource.isPresent()) {
+      Dataset<Row> junctionDf =
+          spark.read().parquet(basePath + "/" + junctionResource.get().getPath());
+      Dataset<Row> targetDf =
+          spark.read().parquet(basePath + "/" + targetResource.get().getPath());
+
+      Dataset<Row> targets =
+          junctionDf
+              .join(
+                  targetDf,
+                  junctionDf.col("surveyTarget_fk").equalTo(targetDf.col("surveyTarget_pk")),
+                  "inner")
+              .drop(targetDf.col("surveyTarget_pk"))
+              .drop(junctionDf.col("surveyTarget_fk"));
+
+      df =
+          df.join(targets, df.col("survey_pk").equalTo(targets.col("survey_fk")), "left_outer")
+              .drop(targets.col("survey_fk"));
+    }
+
+    df = df.drop("survey_pk");
+
+    return Optional.of(aggregateAsJsonByKey(spark, df, df.columns(), "eventID", "humboldtExtJson"));
   }
 
   /**

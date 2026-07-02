@@ -331,7 +331,7 @@ class DwcDpVerbatimConverterTest {
     ExtendedRecord r = records.get(0);
 
     assertEquals("OCC001", r.getId());
-    assertEquals(null, r.getCoreId());
+    assertNull(r.getCoreId());
     assertEquals(DwcDpVerbatimConverter.CORE_ROW_TYPE_OCCURRENCE, r.getCoreRowType());
     assertEquals("Pinus sylvestris", r.getCoreTerms().get(DwcTerm.scientificName.qualifiedName()));
     assertEquals("60.2", r.getCoreTerms().get(DwcTerm.decimalLatitude.qualifiedName()));
@@ -519,6 +519,412 @@ class DwcDpVerbatimConverterTest {
             .toList();
     assertEquals("https://example.com/img1.jpg", uris.get(0));
     assertEquals("https://example.com/img2.jpg", uris.get(1));
+  }
+
+  // ---- assertion (eMoF) extension ----
+
+  @Test
+  void eventAssertionFieldsRemappedToEmofTermsInExtension(@TempDir Path dir) throws Exception {
+    // event table uses internal surrogate PK; eventID is the natural DwC identifier
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", "EVT001")));
+
+    // assertion links via event_fk (surrogate), not via eventID
+    writeParquet(
+        dir,
+        "data/event-assertion.parquet",
+        schema("assertionID", "event_fk", "assertionType", "assertionValue", "assertionUnit"),
+        List.of(RowFactory.create("A001", "EPK-001", "Temperature", "25.0", "Celsius")));
+
+    DataPackage dp = DataPackageFixtures.withEventAndAssertion(dir);
+
+    List<ExtendedRecord> records =
+        DwcDpVerbatimConverter.buildEventCoreDataset(spark, dp, "file://" + dir).collectAsList();
+
+    assertEquals(1, records.size());
+    ExtendedRecord r = records.get(0);
+    assertEquals("EVT001", r.getId());
+
+    List<Map<String, String>> emof =
+        r.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
+    assertNotNull(emof, "eMoF extension should be present");
+    assertEquals(1, emof.size());
+
+    Map<String, String> row = emof.get(0);
+    // DP assertion fields must be stored under their DwC-A eMoF term URIs
+    assertEquals("A001", row.get(DwcTerm.measurementID.qualifiedName()));
+    assertEquals("Temperature", row.get(DwcTerm.measurementType.qualifiedName()));
+    assertEquals("25.0", row.get(DwcTerm.measurementValue.qualifiedName()));
+    assertEquals("Celsius", row.get(DwcTerm.measurementUnit.qualifiedName()));
+
+    // raw DP column names must NOT appear in the extension
+    assertFalse(row.containsKey("assertionType"), "raw assertionType must not appear");
+    assertFalse(row.containsKey("assertionValue"), "raw assertionValue must not appear");
+    assertFalse(row.containsKey("event_fk"), "internal FK must not appear");
+  }
+
+  @Test
+  void occurrenceAssertionFieldsRemappedToEmofTermsInExtension(@TempDir Path dir) throws Exception {
+    writeParquet(
+        dir,
+        "data/occurrence.parquet",
+        schema("occurrence_pk", "occurrenceID", "scientificName"),
+        List.of(RowFactory.create("OPK-001", "OCC001", "Quercus robur")));
+
+    writeParquet(
+        dir,
+        "data/occurrence-assertion.parquet",
+        schema("assertionID", "occurrence_fk", "assertionType", "assertionValue", "assertionUnit"),
+        List.of(RowFactory.create("A001", "OPK-001", "Mass", "3.2", "g")));
+
+    DataPackage dp = DataPackageFixtures.withOccurrenceAndAssertion(dir);
+
+    List<ExtendedRecord> records =
+        DwcDpVerbatimConverter.buildOccurrenceCoreDataset(spark, dp, "file://" + dir)
+            .collectAsList();
+
+    assertEquals(1, records.size());
+    ExtendedRecord r = records.get(0);
+    assertEquals("OCC001", r.getId());
+
+    List<Map<String, String>> emof =
+        r.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
+    assertNotNull(emof);
+    assertEquals(1, emof.size());
+
+    Map<String, String> row = emof.get(0);
+    assertEquals("A001", row.get(DwcTerm.measurementID.qualifiedName()));
+    assertEquals("Mass", row.get(DwcTerm.measurementType.qualifiedName()));
+    assertEquals("3.2", row.get(DwcTerm.measurementValue.qualifiedName()));
+    assertEquals("g", row.get(DwcTerm.measurementUnit.qualifiedName()));
+    assertFalse(row.containsKey("occurrence_fk"), "internal FK must not appear");
+  }
+
+  @Test
+  void assertionProtocolFkResolvedToMeasurementMethodViaProtocolTable(@TempDir Path dir)
+      throws Exception {
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", "EVT001")));
+
+    writeParquet(
+        dir,
+        "data/event-assertion.parquet",
+        schema(
+            "assertionID", "event_fk", "assertionType", "assertionValue", "assertionProtocol_fk"),
+        List.of(RowFactory.create("A001", "EPK-001", "Count", "42", "PROTO-001")));
+
+    writeParquet(
+        dir,
+        "data/protocol.parquet",
+        schema("protocol_pk", "protocolDescription"),
+        List.of(RowFactory.create("PROTO-001", "Point count survey")));
+
+    DataPackage dp = DataPackageFixtures.withEventAssertionAndProtocol(dir);
+
+    List<ExtendedRecord> records =
+        DwcDpVerbatimConverter.buildEventCoreDataset(spark, dp, "file://" + dir).collectAsList();
+
+    assertEquals(1, records.size());
+    List<Map<String, String>> emof =
+        records
+            .get(0)
+            .getExtensions()
+            .get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
+    assertNotNull(emof);
+
+    Map<String, String> row = emof.get(0);
+    // protocol description, not the raw FK value
+    assertEquals("Point count survey", row.get(DwcTerm.measurementMethod.qualifiedName()));
+    assertFalse(row.containsKey("assertionProtocol_fk"), "protocol FK must not appear");
+  }
+
+  @Test
+  void assertionProtocolFkUsedAsFallbackMeasurementMethodWhenProtocolTableAbsent(@TempDir Path dir)
+      throws Exception {
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", "EVT001")));
+
+    // Parquet includes assertionProtocol_fk; fixture does not declare a protocol table
+    writeParquet(
+        dir,
+        "data/event-assertion.parquet",
+        schema("assertionID", "event_fk", "assertionType", "assertionProtocol_fk"),
+        List.of(RowFactory.create("A001", "EPK-001", "Count", "PROTO-001")));
+
+    DataPackage dp = DataPackageFixtures.withEventAndAssertion(dir);
+
+    List<ExtendedRecord> records =
+        DwcDpVerbatimConverter.buildEventCoreDataset(spark, dp, "file://" + dir).collectAsList();
+
+    assertEquals(1, records.size());
+    List<Map<String, String>> emof =
+        records
+            .get(0)
+            .getExtensions()
+            .get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
+    assertNotNull(emof);
+
+    Map<String, String> row = emof.get(0);
+    // raw FK value is kept as measurementMethod when no protocol table is available
+    assertEquals("PROTO-001", row.get(DwcTerm.measurementMethod.qualifiedName()));
+  }
+
+  // ---- Humboldt Ecological Inventory Extension ----
+
+  @Test
+  void surveyFieldsAttachedAsHumboldtExtensionToEventCore(@TempDir Path dir) throws Exception {
+    // event table uses internal surrogate PK; eventID is the natural DwC identifier
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", "EVT001")));
+
+    // survey links via event_fk (surrogate); siteCount and reportedWeather are Humboldt terms
+    writeParquet(
+        dir,
+        "data/survey.parquet",
+        schema("survey_pk", "event_fk", "siteCount", "reportedWeather"),
+        List.of(RowFactory.create("SPK-001", "EPK-001", "3", "Clear")));
+
+    DataPackage dp = DataPackageFixtures.withEventAndSurvey(dir);
+
+    List<ExtendedRecord> records =
+        DwcDpVerbatimConverter.buildEventCoreDataset(spark, dp, "file://" + dir).collectAsList();
+
+    assertEquals(1, records.size());
+    ExtendedRecord r = records.get(0);
+    assertEquals("EVT001", r.getId());
+
+    List<Map<String, String>> humboldt =
+        r.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_HUMBOLDT);
+    assertNotNull(humboldt, "Humboldt extension should be present");
+    assertEquals(1, humboldt.size());
+
+    Map<String, String> hRow = humboldt.get(0);
+    // Survey field names match Humboldt term names directly
+    assertEquals("3", hRow.get(DwcDpVerbatimConverter.resolveTermUri("siteCount")));
+    assertEquals("Clear", hRow.get(DwcDpVerbatimConverter.resolveTermUri("reportedWeather")));
+
+    // Internal FK/PK columns must NOT appear in the extension
+    assertFalse(hRow.containsKey("event_fk"), "event_fk must not appear");
+    assertFalse(hRow.containsKey("survey_pk"), "survey_pk must not appear");
+  }
+
+  @Test
+  void surveyTargetsFanOutToSeparateHumboldtRowsPerTarget(@TempDir Path dir) throws Exception {
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", "EVT001")));
+
+    writeParquet(
+        dir,
+        "data/survey.parquet",
+        schema("survey_pk", "event_fk", "siteCount"),
+        List.of(RowFactory.create("SPK-001", "EPK-001", "5")));
+
+    // Two survey-target rows linked to the same survey → expect 2 Humboldt extension rows
+    writeParquet(
+        dir,
+        "data/survey-target.parquet",
+        schema("surveyTarget_pk", "surveyTargetDescription"),
+        List.of(
+            RowFactory.create("STP-001", "All birds"),
+            RowFactory.create("STP-002", "All mammals")));
+
+    writeParquet(
+        dir,
+        "data/survey-survey-target.parquet",
+        schema("survey_fk", "surveyTarget_fk"),
+        List.of(
+            RowFactory.create("SPK-001", "STP-001"),
+            RowFactory.create("SPK-001", "STP-002")));
+
+    DataPackage dp = DataPackageFixtures.withEventSurveyAndTarget(dir);
+
+    List<ExtendedRecord> records =
+        DwcDpVerbatimConverter.buildEventCoreDataset(spark, dp, "file://" + dir).collectAsList();
+
+    assertEquals(1, records.size());
+    List<Map<String, String>> humboldt =
+        records.get(0).getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_HUMBOLDT);
+    assertNotNull(humboldt);
+    // One Humboldt row per survey-target
+    assertEquals(2, humboldt.size());
+
+    // Both rows carry the survey-level siteCount
+    humboldt.forEach(
+        hRow -> assertEquals("5", hRow.get(DwcDpVerbatimConverter.resolveTermUri("siteCount"))));
+
+    // Each row carries one survey-target description
+    List<String> descriptions =
+        humboldt.stream()
+            .map(hRow -> hRow.get(DwcDpVerbatimConverter.resolveTermUri("surveyTargetDescription")))
+            .sorted()
+            .toList();
+    assertEquals("All birds", descriptions.get(0));
+    assertEquals("All mammals", descriptions.get(1));
+
+    // Junction/PK columns must not appear
+    humboldt.forEach(
+        hRow -> {
+          assertFalse(hRow.containsKey("survey_fk"));
+          assertFalse(hRow.containsKey("surveyTarget_pk"));
+          assertFalse(hRow.containsKey("survey_pk"));
+        });
+  }
+
+  @Test
+  void surveyWithNoLinkedTargetsProducesOneHumboldtRowWithSurveyFieldsOnly(@TempDir Path dir)
+      throws Exception {
+    // Survey-target tables ARE declared in the DataPackage, but no junction entry links
+    // SPK-001 to any target. The left-outer join must still produce one Humboldt row
+    // carrying the survey-level fields (siteCount) without any survey-target fields.
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", "EVT001")));
+
+    writeParquet(
+        dir,
+        "data/survey.parquet",
+        schema("survey_pk", "event_fk", "siteCount"),
+        List.of(RowFactory.create("SPK-001", "EPK-001", "7")));
+
+    // A survey-target exists but is NOT linked to SPK-001
+    writeParquet(
+        dir,
+        "data/survey-target.parquet",
+        schema("surveyTarget_pk", "surveyTargetDescription"),
+        List.of(RowFactory.create("STP-001", "All birds")));
+
+    // Junction links a *different* survey key — SPK-001 has no junction rows
+    writeParquet(
+        dir,
+        "data/survey-survey-target.parquet",
+        schema("survey_fk", "surveyTarget_fk"),
+        List.of(RowFactory.create("SPK-OTHER", "STP-001")));
+
+    DataPackage dp = DataPackageFixtures.withEventSurveyAndTarget(dir);
+
+    List<ExtendedRecord> records =
+        DwcDpVerbatimConverter.buildEventCoreDataset(spark, dp, "file://" + dir).collectAsList();
+
+    assertEquals(1, records.size());
+    List<Map<String, String>> humboldt =
+        records.get(0).getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_HUMBOLDT);
+    assertNotNull(humboldt);
+    // One row even though no target is linked — the survey itself is the source
+    assertEquals(1, humboldt.size());
+
+    Map<String, String> hRow = humboldt.get(0);
+    assertEquals("7", hRow.get(DwcDpVerbatimConverter.resolveTermUri("siteCount")));
+    // No survey-target fields: null values are omitted by rowToTermMap
+    assertNull(hRow.get(DwcDpVerbatimConverter.resolveTermUri("surveyTargetDescription")));
+  }
+
+  @Test
+  void mixedSurveys_someWithTargetsSomeWithout_produceCorrectHumboldtRowCounts(
+      @TempDir Path dir) throws Exception {
+    // Two events: EVT001's survey has 2 linked targets (→ 2 Humboldt rows),
+    //             EVT002's survey has no linked targets (→ 1 Humboldt row).
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(
+            RowFactory.create("EPK-001", "EVT001"),
+            RowFactory.create("EPK-002", "EVT002")));
+
+    writeParquet(
+        dir,
+        "data/survey.parquet",
+        schema("survey_pk", "event_fk", "siteCount"),
+        List.of(
+            RowFactory.create("SPK-001", "EPK-001", "5"),
+            RowFactory.create("SPK-002", "EPK-002", "2")));
+
+    writeParquet(
+        dir,
+        "data/survey-target.parquet",
+        schema("surveyTarget_pk", "surveyTargetDescription"),
+        List.of(
+            RowFactory.create("STP-001", "All birds"),
+            RowFactory.create("STP-002", "All mammals")));
+
+    // Only SPK-001 is linked to targets; SPK-002 has no junction entries
+    writeParquet(
+        dir,
+        "data/survey-survey-target.parquet",
+        schema("survey_fk", "surveyTarget_fk"),
+        List.of(
+            RowFactory.create("SPK-001", "STP-001"),
+            RowFactory.create("SPK-001", "STP-002")));
+
+    DataPackage dp = DataPackageFixtures.withEventSurveyAndTarget(dir);
+
+    List<ExtendedRecord> records =
+        DwcDpVerbatimConverter.buildEventCoreDataset(spark, dp, "file://" + dir).collectAsList();
+
+    assertEquals(2, records.size());
+
+    Map<String, List<ExtendedRecord>> byId =
+        records.stream().collect(java.util.stream.Collectors.groupingBy(ExtendedRecord::getId));
+
+    // EVT001: 2 survey-targets → 2 Humboldt rows, each with siteCount=5
+    List<Map<String, String>> hEVT001 =
+        byId.get("EVT001").get(0).getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_HUMBOLDT);
+    assertNotNull(hEVT001);
+    assertEquals(2, hEVT001.size());
+    hEVT001.forEach(
+        hRow -> assertEquals("5", hRow.get(DwcDpVerbatimConverter.resolveTermUri("siteCount"))));
+    List<String> descriptions =
+        hEVT001.stream()
+            .map(hRow -> hRow.get(DwcDpVerbatimConverter.resolveTermUri("surveyTargetDescription")))
+            .sorted()
+            .toList();
+    assertEquals("All birds", descriptions.get(0));
+    assertEquals("All mammals", descriptions.get(1));
+
+    // EVT002: no survey-targets → 1 Humboldt row with survey fields only
+    List<Map<String, String>> hEVT002 =
+        byId.get("EVT002").get(0).getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_HUMBOLDT);
+    assertNotNull(hEVT002);
+    assertEquals(1, hEVT002.size());
+    assertEquals("2", hEVT002.get(0).get(DwcDpVerbatimConverter.resolveTermUri("siteCount")));
+    assertNull(hEVT002.get(0).get(DwcDpVerbatimConverter.resolveTermUri("surveyTargetDescription")));
+  }
+
+  @Test
+  void humboldtExtensionAbsentWhenNoSurveyTable(@TempDir Path dir) throws Exception {
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", "EVT001")));
+
+    // DataPackage has no survey table
+    DataPackage dp = DataPackageFixtures.withEvent(dir, "event_pk", "eventID");
+
+    List<ExtendedRecord> records =
+        DwcDpVerbatimConverter.buildEventCoreDataset(spark, dp, "file://" + dir).collectAsList();
+
+    assertEquals(1, records.size());
+    assertNull(
+        records.get(0).getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_HUMBOLDT),
+        "Humboldt extension must be absent when survey table is not in the DataPackage");
   }
 
   // ---- avro output structure ----
