@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -20,29 +19,12 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.DwcDpRowTypes;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 import org.gbif.pipelines.spark.util.SparkTestSession;
-import org.gbif.pipelines.spark.util.TableLoader;
+import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-/**
- * Unit tests for {@link EventCoreBuilder}.
- *
- * <p>Covers routing, extension wiring, and null filtering using in-memory {@link TableLoader}
- * lambdas. Join logic internals are covered at the appropriate layer:
- *
- * <ul>
- *   <li>Organism join: {@link
- *       org.gbif.pipelines.spark.dwcdp.builder.extension.OrganismJoinBuilderTest}
- *   <li>Occurrence extension aggregation: {@link
- *       org.gbif.pipelines.spark.dwcdp.builder.extension.OccurrenceExtensionBuilderTest}
- *   <li>Media extension: {@link
- *       org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder}
- *   <li>Full stack including Avro: {@link
- *       org.gbif.pipelines.spark.dwcdp.DwcDpVerbatimConverterTest}
- * </ul>
- */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EventCoreBuilderTest {
 
@@ -92,39 +74,13 @@ class EventCoreBuilderTest {
     return spark.createDataFrame(rows, schema);
   }
 
-  private TableLoader loaderEventOnly(Dataset<Row> eventDf) {
-    return tableName -> "event".equals(tableName) ? Optional.of(eventDf) : Optional.empty();
-  }
-
-  private TableLoader loaderEventAndOccurrence(Dataset<Row> eventDf, Dataset<Row> occurrenceDf) {
-    return tableName ->
-        switch (tableName) {
-          case "event" -> Optional.of(eventDf);
-          case "occurrence" -> Optional.of(occurrenceDf);
-          default -> Optional.empty();
-        };
-  }
-
-  private TableLoader loaderEventAndMedia(
-      Dataset<Row> eventDf, Dataset<Row> mediaDf, Dataset<Row> eventMediaDf) {
-    return tableName ->
-        switch (tableName) {
-          case "event" -> Optional.of(eventDf);
-          case "media" -> Optional.of(mediaDf);
-          case MediaExtensionBuilder.TABLE_EVENT_MEDIA -> Optional.of(eventMediaDf);
-          default -> Optional.empty();
-        };
-  }
-
   // ---- routing ----
 
   @Test
   void missingEventTable_throws() {
-    TableLoader emptyLoader = tableName -> Optional.empty();
-
     assertThrows(
         IllegalStateException.class,
-        () -> EventCoreBuilder.build(spark, emptyLoader),
+        () -> EventCoreBuilder.build(spark, TestTableLoader.of()),
         "Should throw when event table is absent — routing error in orchestrator");
   }
 
@@ -135,7 +91,7 @@ class EventCoreBuilderTest {
     Dataset<Row> eventDf = eventDf(List.of(RowFactory.create("EVT001", "2024-06-01", "DK")));
 
     List<ExtendedRecord> records =
-        EventCoreBuilder.build(spark, loaderEventOnly(eventDf)).collectAsList();
+        EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf)).collectAsList();
 
     assertEquals(1, records.size());
     ExtendedRecord r = records.get(0);
@@ -149,7 +105,7 @@ class EventCoreBuilderTest {
     Dataset<Row> eventDf = eventDf(List.of(RowFactory.create("EVT001", "2024-06-01", "DK")));
 
     List<ExtendedRecord> records =
-        EventCoreBuilder.build(spark, loaderEventOnly(eventDf)).collectAsList();
+        EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf)).collectAsList();
 
     Map<String, String> coreTerms = records.get(0).getCoreTerms();
     assertEquals("2024-06-01", coreTerms.get(DwcTerm.eventDate.qualifiedName()));
@@ -165,7 +121,7 @@ class EventCoreBuilderTest {
                 RowFactory.create(null, "2024-06-02", "DK")));
 
     List<ExtendedRecord> records =
-        EventCoreBuilder.build(spark, loaderEventOnly(eventDf)).collectAsList();
+        EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf)).collectAsList();
 
     assertEquals(1, records.size());
     assertEquals("EVT001", records.get(0).getId());
@@ -176,7 +132,7 @@ class EventCoreBuilderTest {
     Dataset<Row> eventDf = eventDf(List.of(RowFactory.create("EVT001", "2024-06-01", "DK")));
 
     List<ExtendedRecord> records =
-        EventCoreBuilder.build(spark, loaderEventOnly(eventDf)).collectAsList();
+        EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf)).collectAsList();
 
     assertTrue(records.get(0).getExtensions().isEmpty());
   }
@@ -190,7 +146,8 @@ class EventCoreBuilderTest {
         occurrenceDf(List.of(RowFactory.create("OCC001", "EVT001", "Parus major")));
 
     List<ExtendedRecord> records =
-        EventCoreBuilder.build(spark, loaderEventAndOccurrence(eventDf, occurrenceDf))
+        EventCoreBuilder.build(
+                spark, TestTableLoader.of("event", eventDf, "occurrence", occurrenceDf))
             .collectAsList();
 
     List<Map<String, String>> occExt =
@@ -212,7 +169,8 @@ class EventCoreBuilderTest {
                 RowFactory.create("OCC003", "EVT001", "Pinus sylvestris")));
 
     List<ExtendedRecord> records =
-        EventCoreBuilder.build(spark, loaderEventAndOccurrence(eventDf, occurrenceDf))
+        EventCoreBuilder.build(
+                spark, TestTableLoader.of("event", eventDf, "occurrence", occurrenceDf))
             .collectAsList();
 
     List<Map<String, String>> occExt =
@@ -224,12 +182,12 @@ class EventCoreBuilderTest {
   @Test
   void eventWithNoMatchingOccurrences_occurrenceExtensionAbsent() {
     Dataset<Row> eventDf = eventDf(List.of(RowFactory.create("EVT001", "2024-06-01", "DK")));
-    // occurrence references a different eventID — left join produces null, extension absent
     Dataset<Row> occurrenceDf =
         occurrenceDf(List.of(RowFactory.create("OCC001", "EVT999", "Parus major")));
 
     List<ExtendedRecord> records =
-        EventCoreBuilder.build(spark, loaderEventAndOccurrence(eventDf, occurrenceDf))
+        EventCoreBuilder.build(
+                spark, TestTableLoader.of("event", eventDf, "occurrence", occurrenceDf))
             .collectAsList();
 
     assertNull(
@@ -247,7 +205,15 @@ class EventCoreBuilderTest {
     Dataset<Row> eventMediaDf = eventMediaDf(List.of(RowFactory.create("MED001", "EVT001")));
 
     List<ExtendedRecord> records =
-        EventCoreBuilder.build(spark, loaderEventAndMedia(eventDf, mediaDf, eventMediaDf))
+        EventCoreBuilder.build(
+                spark,
+                TestTableLoader.of(
+                    "event",
+                    eventDf,
+                    MediaExtensionBuilder.TABLE_MEDIA,
+                    mediaDf,
+                    MediaExtensionBuilder.TABLE_EVENT_MEDIA,
+                    eventMediaDf))
             .collectAsList();
 
     List<Map<String, String>> mediaExt =
@@ -263,7 +229,7 @@ class EventCoreBuilderTest {
     Dataset<Row> eventDf = eventDf(List.of(RowFactory.create("EVT001", "2024-06-01", "DK")));
 
     List<ExtendedRecord> records =
-        EventCoreBuilder.build(spark, loaderEventOnly(eventDf)).collectAsList();
+        EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf)).collectAsList();
 
     assertNull(records.get(0).getExtensions().get(DwcDpRowTypes.ROW_TYPE_MULTIMEDIA));
   }
@@ -280,7 +246,7 @@ class EventCoreBuilderTest {
                 RowFactory.create("EVT003", "2024-06-03", "NO")));
 
     List<ExtendedRecord> records =
-        EventCoreBuilder.build(spark, loaderEventOnly(eventDf)).collectAsList();
+        EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf)).collectAsList();
 
     assertEquals(3, records.size());
     records.forEach(r -> assertEquals(DwcDpRowTypes.CORE_ROW_TYPE_EVENT, r.getCoreRowType()));
@@ -300,7 +266,8 @@ class EventCoreBuilderTest {
                 RowFactory.create("OCC002", "EVT002", "Quercus robur")));
 
     List<ExtendedRecord> records =
-        EventCoreBuilder.build(spark, loaderEventAndOccurrence(eventDf, occurrenceDf))
+        EventCoreBuilder.build(
+                spark, TestTableLoader.of("event", eventDf, "occurrence", occurrenceDf))
             .collectAsList();
     records.sort((a, b) -> a.getId().compareTo(b.getId()));
 

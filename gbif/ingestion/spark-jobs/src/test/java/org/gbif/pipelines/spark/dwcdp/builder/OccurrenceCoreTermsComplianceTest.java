@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -17,49 +16,15 @@ import org.apache.spark.sql.types.StructType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.util.SparkTestSession;
-import org.gbif.pipelines.spark.util.TableLoader;
+import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-/**
- * Verifies that the {@code coreTerms} map on occurrence-core {@link ExtendedRecord}s produced by
- * {@link OccurrenceCoreBuilder} satisfies schema compliance requirements after an organism join.
- *
- * <p>The DwC-DP organism table defines 6 organism-specific fields, mapped as follows:
- *
- * <table>
- *   <tr><th>Field</th><th>In DwcTerm enum?</th><th>coreTerms key</th></tr>
- *   <tr><td>organismID</td><td>Yes</td><td>{@link DwcTerm#organismID}.qualifiedName()</td></tr>
- *   <tr><td>organismScope</td><td>Yes</td><td>{@link DwcTerm#organismScope}.qualifiedName()</td></tr>
- *   <tr><td>organismName</td><td>Yes</td><td>{@link DwcTerm#organismName}.qualifiedName()</td></tr>
- *   <tr><td>associatedOrganisms</td><td>Yes</td><td>{@link DwcTerm#associatedOrganisms}.qualifiedName()</td></tr>
- *   <tr><td>organismRemarks</td><td>Yes</td><td>{@link DwcTerm#organismRemarks}.qualifiedName()</td></tr>
- *   <tr><td>causeOfDeath</td><td><b>No</b></td><td>raw string {@code "causeOfDeath"}</td></tr>
- * </table>
- *
- * <p>{@code causeOfDeath} is present in the DwC-DP organism schema (with a {@code
- * dcterms:isVersionOf} URI indicating it is a newer term) but is absent from the {@code DwcTerm}
- * enum in the version of {@code dwc-api} used by this project. {@link
- * org.gbif.pipelines.spark.dwcdp.builder.TermResolver} therefore cannot resolve it to a qualified
- * URI and falls back to the raw column name. This is intentional and correct behaviour — the raw
- * name is preserved rather than silently dropped. This test pins that behaviour explicitly so that
- * if a future upgrade of {@code dwc-api} adds {@code causeOfDeath} to the enum, the key in {@code
- * coreTerms} will change to the qualified URI and this test will fail, prompting a conscious
- * update.
- */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@SuppressWarnings("unchecked")
 class OccurrenceCoreTermsComplianceTest {
-
-  /**
-   * causeOfDeath is not in the DwcTerm enum — TermResolver falls back to the raw column name.
-   * Pinned as a constant so usages are self-documenting and easy to update if dwc-api is upgraded.
-   */
-  static final String CAUSE_OF_DEATH_RAW = "causeOfDeath";
-
-  private static final Set<String> FORBIDDEN_CORE_TERMS_KEYS =
-      Set.of("_corrupt_record", "mediaExtJson", "occurrenceExtJson", "__null_mask");
 
   SparkSession spark;
 
@@ -74,12 +39,13 @@ class OccurrenceCoreTermsComplianceTest {
     spark.stop();
   }
 
+  static final String CAUSE_OF_DEATH_RAW = "causeOfDeath";
+
+  private static final Set<String> FORBIDDEN_CORE_TERMS_KEYS =
+      Set.of("_corrupt_record", "mediaExtJson", "occurrenceExtJson", "__null_mask");
+
   // ---- fixtures ----
 
-  /**
-   * Occurrence schema including all organism fields that are denormalized directly onto occurrence
-   * per the DwC-DP occurrence schema specification.
-   */
   private Dataset<Row> occurrenceDf(List<Row> rows) {
     StructType schema =
         new StructType()
@@ -89,63 +55,43 @@ class OccurrenceCoreTermsComplianceTest {
             .add("scientificName", DataTypes.StringType)
             .add("organismScope", DataTypes.StringType)
             .add("organismName", DataTypes.StringType)
-            .add("causeOfDeath", DataTypes.StringType) // not in DwcTerm enum — raw key
+            .add(CAUSE_OF_DEATH_RAW, DataTypes.StringType)
             .add("organismRemarks", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
-  /**
-   * Organism schema with all organism-table fields. The overlapping fields carry deliberately
-   * different values so that precedence tests can verify which value appears in coreTerms.
-   */
   private Dataset<Row> organismDf(List<Row> rows) {
     StructType schema =
         new StructType()
             .add("organismID", DataTypes.StringType)
             .add("organismScope", DataTypes.StringType)
             .add("organismName", DataTypes.StringType)
-            .add("causeOfDeath", DataTypes.StringType) // not in DwcTerm enum — raw key
+            .add(CAUSE_OF_DEATH_RAW, DataTypes.StringType)
             .add("organismRemarks", DataTypes.StringType)
             .add("associatedOrganisms", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
-  private TableLoader loaderWithOrganism(Dataset<Row> occurrenceDf, Dataset<Row> orgDf) {
-    return tableName ->
-        switch (tableName) {
-          case "occurrence" -> Optional.of(occurrenceDf);
-          case "organism" -> Optional.of(orgDf);
-          default -> Optional.empty();
-        };
-  }
-
-  private TableLoader loaderOccurrenceOnly(Dataset<Row> occurrenceDf) {
-    return tableName ->
-        "occurrence".equals(tableName) ? Optional.of(occurrenceDf) : Optional.empty();
-  }
-
-  /** Occurrence row with distinct values for each organism field. */
   private Row occurrenceRow(String occId) {
     return RowFactory.create(
         occId,
         "evt-1",
         "org-1",
         "Parus major",
-        "multicellular organism", // organismScope — occurrence value
-        "Great tit", // organismName — occurrence value
-        "old age", // causeOfDeath — raw key, occurrence value
-        "healthy individual"); // organismRemarks — occurrence value
+        "multicellular organism",
+        "Blue tit",
+        "old age",
+        "healthy individual");
   }
 
-  /** Organism row with deliberately different values for all overlapping fields. */
   private Row organismRow() {
     return RowFactory.create(
         "org-1",
-        "DIFFERENT scope", // must NOT appear in coreTerms
-        "DIFFERENT name", // must NOT appear in coreTerms
-        "DIFFERENT cause", // must NOT appear in coreTerms
-        "DIFFERENT remarks", // must NOT appear in coreTerms
-        "sibling of:org-2"); // only on organism — must be added
+        "DIFFERENT scope",
+        "DIFFERENT name",
+        "DIFFERENT cause",
+        "DIFFERENT remarks",
+        "sibling of:org-2");
   }
 
   // ---- baseline without organism join ----
@@ -155,7 +101,7 @@ class OccurrenceCoreTermsComplianceTest {
     Dataset<Row> occ = occurrenceDf(List.of(occurrenceRow("occ-1")));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderOccurrenceOnly(occ)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ)).collectAsList();
 
     assertEquals(1, records.size());
     assertNoForbiddenKeys(records.get(0).getCoreTerms(), "no-organism-join");
@@ -166,10 +112,8 @@ class OccurrenceCoreTermsComplianceTest {
     Dataset<Row> occ = occurrenceDf(List.of(occurrenceRow("occ-1")));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderOccurrenceOnly(occ)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ)).collectAsList();
 
-    // causeOfDeath appears as its raw column name — not a qualified URI — because it is absent
-    // from the DwcTerm enum in the current version of dwc-api
     Set<String> expectedKeys =
         Set.of(
             DwcTerm.occurrenceID.qualifiedName(),
@@ -192,7 +136,8 @@ class OccurrenceCoreTermsComplianceTest {
     Dataset<Row> orgDf = organismDf(List.of(organismRow()));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderWithOrganism(occ, orgDf)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ, "organism", orgDf))
+            .collectAsList();
 
     assertEquals(1, records.size());
     assertNoForbiddenKeys(records.get(0).getCoreTerms(), "after-organism-join");
@@ -204,7 +149,8 @@ class OccurrenceCoreTermsComplianceTest {
     Dataset<Row> orgDf = organismDf(List.of(organismRow()));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderWithOrganism(occ, orgDf)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ, "organism", orgDf))
+            .collectAsList();
 
     Map<String, String> coreTerms = records.get(0).getCoreTerms();
     long distinctKeyCount = coreTerms.keySet().stream().distinct().count();
@@ -217,7 +163,8 @@ class OccurrenceCoreTermsComplianceTest {
     Dataset<Row> orgDf = organismDf(List.of(organismRow()));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderWithOrganism(occ, orgDf)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ, "organism", orgDf))
+            .collectAsList();
 
     Set<String> expectedKeys =
         Set.of(
@@ -227,14 +174,14 @@ class OccurrenceCoreTermsComplianceTest {
             DwcTerm.organismID.qualifiedName(),
             DwcTerm.organismScope.qualifiedName(),
             DwcTerm.organismName.qualifiedName(),
-            CAUSE_OF_DEATH_RAW, // raw — not in DwcTerm enum
+            CAUSE_OF_DEATH_RAW,
             DwcTerm.organismRemarks.qualifiedName(),
-            DwcTerm.associatedOrganisms.qualifiedName()); // contributed by organism table
+            DwcTerm.associatedOrganisms.qualifiedName());
 
     assertExactKeys(expectedKeys, records.get(0).getCoreTerms(), "after-organism-join");
   }
 
-  // ---- organism join: per-field correctness ----
+  // ---- per-field organism join correctness ----
 
   @Test
   void afterOrganismJoin_organismIdRetainedAsTermUri() {
@@ -242,7 +189,8 @@ class OccurrenceCoreTermsComplianceTest {
     Dataset<Row> orgDf = organismDf(List.of(organismRow()));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderWithOrganism(occ, orgDf)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ, "organism", orgDf))
+            .collectAsList();
 
     assertEquals(
         "org-1",
@@ -256,7 +204,8 @@ class OccurrenceCoreTermsComplianceTest {
     Dataset<Row> orgDf = organismDf(List.of(organismRow()));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderWithOrganism(occ, orgDf)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ, "organism", orgDf))
+            .collectAsList();
 
     assertEquals(
         "multicellular organism",
@@ -270,30 +219,28 @@ class OccurrenceCoreTermsComplianceTest {
     Dataset<Row> orgDf = organismDf(List.of(organismRow()));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderWithOrganism(occ, orgDf)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ, "organism", orgDf))
+            .collectAsList();
 
     assertEquals(
-        "Great tit",
+        "Blue tit",
         records.get(0).getCoreTerms().get(DwcTerm.organismName.qualifiedName()),
         "occurrence.organismName must win over organism.organismName");
   }
 
   @Test
   void afterOrganismJoin_causeOfDeathOccurrenceValueWins() {
-    // causeOfDeath is not in DwcTerm enum — key is the raw column name, not a qualified URI.
-    // If dwc-api is upgraded and causeOfDeath is added to the enum, this test will fail because
-    // the key will change to DwcTerm.causeOfDeath.qualifiedName() — update CAUSE_OF_DEATH_RAW
-    // and this assertion accordingly.
     Dataset<Row> occ = occurrenceDf(List.of(occurrenceRow("occ-1")));
     Dataset<Row> orgDf = organismDf(List.of(organismRow()));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderWithOrganism(occ, orgDf)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ, "organism", orgDf))
+            .collectAsList();
 
     assertEquals(
         "old age",
         records.get(0).getCoreTerms().get(CAUSE_OF_DEATH_RAW),
-        "occurrence.causeOfDeath must win over organism.causeOfDeath (key is raw — not in DwcTerm enum)");
+        "occurrence.causeOfDeath must win (raw key — not yet in dwc-api enum)");
   }
 
   @Test
@@ -302,7 +249,8 @@ class OccurrenceCoreTermsComplianceTest {
     Dataset<Row> orgDf = organismDf(List.of(organismRow()));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderWithOrganism(occ, orgDf)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ, "organism", orgDf))
+            .collectAsList();
 
     assertEquals(
         "healthy individual",
@@ -316,7 +264,8 @@ class OccurrenceCoreTermsComplianceTest {
     Dataset<Row> orgDf = organismDf(List.of(organismRow()));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderWithOrganism(occ, orgDf)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ, "organism", orgDf))
+            .collectAsList();
 
     assertEquals(
         "sibling of:org-2",
@@ -333,7 +282,8 @@ class OccurrenceCoreTermsComplianceTest {
     Dataset<Row> orgDf = organismDf(List.of(organismRow()));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderWithOrganism(occ, orgDf)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ, "organism", orgDf))
+            .collectAsList();
 
     Map<String, String> coreTerms = records.get(0).getCoreTerms();
     assertFalse(
@@ -341,7 +291,7 @@ class OccurrenceCoreTermsComplianceTest {
         "associatedOrganisms must be absent when no organism match");
     assertFalse(
         coreTerms.containsKey(DwcTerm.organismID.qualifiedName()),
-        "organismID must be absent when null — null omitted by RowTermMapper");
+        "organismID must be absent when null");
   }
 
   // ---- helpers ----

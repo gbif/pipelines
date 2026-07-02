@@ -35,7 +35,7 @@ import org.gbif.pipelines.spark.dwcdp.builder.TermResolver;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TableLoader;
-import org.gbif.pipelines.spark.util.TableLoaders;
+import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -163,7 +163,7 @@ class DwcDpVerbatimConverterTest {
         List.of(RowFactory.create("MED001", "EVT001"), RowFactory.create("MED002", "EVT001")));
 
     DataPackage dp = DataPackageFixtures.withEventOccurrenceOrganismAndMedia();
-    TableLoader loader = TableLoaders.parquetLoader(spark, dp, "file://" + dir);
+    TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String verbatimPath = "file://" + dir + "/verbatim.avro";
     EventCoreBuilder.build(spark, loader)
@@ -324,7 +324,7 @@ class DwcDpVerbatimConverterTest {
         List.of(RowFactory.create("MED001", "OCC001"), RowFactory.create("MED002", "OCC001")));
 
     DataPackage dp = DataPackageFixtures.withOccurrenceOrganismAndMedia();
-    TableLoader loader = TableLoaders.parquetLoader(spark, dp, "file://" + dir);
+    TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String verbatimPath = "file://" + dir + "/verbatim.avro";
     OccurrenceCoreBuilder.build(spark, loader)
@@ -404,7 +404,7 @@ class DwcDpVerbatimConverterTest {
             RowFactory.create("EVT001", "2024-06-15"), RowFactory.create("EVT002", "2024-06-16")));
 
     DataPackage dp = DataPackageFixtures.withEvent("eventID", "eventDate");
-    TableLoader loader = TableLoaders.parquetLoader(spark, dp, "file://" + dir);
+    TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
     EventCoreBuilder.build(spark, loader)
@@ -435,7 +435,7 @@ class DwcDpVerbatimConverterTest {
             RowFactory.create("EVT001", "2024-06-15"), RowFactory.create("EVT002", "2024-06-16")));
 
     DataPackage dp = DataPackageFixtures.withEvent("eventID", "eventDate");
-    TableLoader loader = TableLoaders.parquetLoader(spark, dp, "file://" + dir);
+    TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
     String targetPath = "file://" + dir + "/verbatim.avro";

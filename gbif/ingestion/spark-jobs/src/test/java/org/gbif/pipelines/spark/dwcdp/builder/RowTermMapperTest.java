@@ -9,9 +9,8 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructType;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.spark.util.SparkTest;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,11 +34,9 @@ class RowTermMapperTest {
 
   @Test
   void nullValues_areOmittedFromTermMap() {
-    StructType schema =
-        new StructType()
-            .add("eventID", DataTypes.StringType)
-            .add("eventDate", DataTypes.StringType);
-    Dataset<Row> ds = spark.createDataFrame(List.of(RowFactory.create("EVT001", null)), schema);
+    Dataset<Row> ds =
+        spark.createDataFrame(
+            List.of(RowFactory.create("EVT001", null)), SparkTest.schema("eventID", "eventDate"));
 
     Row row = ds.collectAsList().get(0);
     Map<String, String> terms = RowTermMapper.toTermMap(row, new String[] {"eventID", "eventDate"});
@@ -51,9 +48,9 @@ class RowTermMapperTest {
 
   @Test
   void columnNames_areResolvedToQualifiedUris() {
-    StructType schema =
-        new StructType().add("eventID", DataTypes.StringType).add("country", DataTypes.StringType);
-    Dataset<Row> ds = spark.createDataFrame(List.of(RowFactory.create("EVT001", "DK")), schema);
+    Dataset<Row> ds =
+        spark.createDataFrame(
+            List.of(RowFactory.create("EVT001", "DK")), SparkTest.schema("eventID", "country"));
 
     Row row = ds.collectAsList().get(0);
     Map<String, String> terms = RowTermMapper.toTermMap(row, new String[] {"eventID", "country"});
@@ -64,8 +61,9 @@ class RowTermMapperTest {
 
   @Test
   void unresolvableColumnName_keptAsRawKey() {
-    StructType schema = new StructType().add("somePublisherColumn", DataTypes.StringType);
-    Dataset<Row> ds = spark.createDataFrame(List.of(RowFactory.create("value")), schema);
+    Dataset<Row> ds =
+        spark.createDataFrame(
+            List.of(RowFactory.create("value")), SparkTest.schema("somePublisherColumn"));
 
     Row row = ds.collectAsList().get(0);
     Map<String, String> terms = RowTermMapper.toTermMap(row, new String[] {"somePublisherColumn"});

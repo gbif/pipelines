@@ -30,7 +30,7 @@ import org.gbif.pipelines.spark.dwcdp.builder.EventCoreBuilder;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TableLoader;
-import org.gbif.pipelines.spark.util.TableLoaders;
+import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -80,7 +80,7 @@ class DwcDpVerbatimConverterIntegrationTest {
         List.of(RowFactory.create("EVT001", "2024-06-15", "59.0")));
 
     DataPackage dp = DataPackageFixtures.withEvent("eventID", "eventDate", "decimalLatitude");
-    TableLoader loader = TableLoaders.parquetLoader(spark, dp, "file://" + dir);
+    TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
     String targetPath = "file://" + dir + "/verbatim.avro";
@@ -158,7 +158,7 @@ class DwcDpVerbatimConverterIntegrationTest {
             RowFactory.create("OCC002", "EVT002", "Pinus sylvestris")));
 
     DataPackage dp = DataPackageFixtures.withEventAndOccurrence();
-    TableLoader loader = TableLoaders.parquetLoader(spark, dp, "file://" + dir);
+    TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
     String verbatimPath = "file://" + dir + "/verbatim.avro";
@@ -252,7 +252,7 @@ class DwcDpVerbatimConverterIntegrationTest {
             RowFactory.create("OCC002", "EVT001", "Pinus sylvestris")));
 
     DataPackage dp = DataPackageFixtures.withEventAndOccurrence();
-    TableLoader loader = TableLoaders.parquetLoader(spark, dp, "file://" + dir);
+    TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
     String verbatimPath = "file://" + dir + "/verbatim.avro";

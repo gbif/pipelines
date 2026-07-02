@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -17,7 +16,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.DwcDpRowTypes;
 import org.gbif.pipelines.spark.util.SparkTestSession;
-import org.gbif.pipelines.spark.util.TableLoader;
+import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -59,29 +58,13 @@ class OccurrenceCoreBuilderTest {
     return spark.createDataFrame(rows, schema);
   }
 
-  private static TableLoader loaderOccurrenceOnly(Dataset<Row> occurrenceDf) {
-    return tableName ->
-        "occurrence".equals(tableName) ? Optional.of(occurrenceDf) : Optional.empty();
-  }
-
-  private static TableLoader loaderWithOrganism(Dataset<Row> occurrenceDf, Dataset<Row> orgDf) {
-    return tableName ->
-        switch (tableName) {
-          case "occurrence" -> Optional.of(occurrenceDf);
-          case "organism" -> Optional.of(orgDf);
-          default -> Optional.empty();
-        };
-  }
-
   // ---- tests ----
 
   @Test
   void missingOccurrenceTable_throws() {
-    TableLoader emptyLoader = tableName -> Optional.empty();
-
     assertThrows(
         IllegalStateException.class,
-        () -> OccurrenceCoreBuilder.build(spark, emptyLoader),
+        () -> OccurrenceCoreBuilder.build(spark, TestTableLoader.of()),
         "Should throw when occurrence table is absent — routing error in orchestrator");
   }
 
@@ -91,7 +74,7 @@ class OccurrenceCoreBuilderTest {
         occurrenceDf(List.of(RowFactory.create("occ-1", "evt-1", null, "Parus major")));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderOccurrenceOnly(occ)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ)).collectAsList();
 
     assertEquals(1, records.size());
     ExtendedRecord er = records.get(0);
@@ -109,7 +92,7 @@ class OccurrenceCoreBuilderTest {
                 RowFactory.create("occ-2", "evt-1", null, "Parus minor")));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderOccurrenceOnly(occ)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ)).collectAsList();
 
     assertEquals(1, records.size());
     assertEquals("occ-2", records.get(0).getId());
@@ -120,10 +103,11 @@ class OccurrenceCoreBuilderTest {
     Dataset<Row> occ =
         occurrenceDf(List.of(RowFactory.create("occ-1", "evt-1", "org-1", "Parus major")));
     Dataset<Row> orgDf =
-        organismDf(List.of(RowFactory.create("org-1", "Great tit", "sibling of:org-2")));
+        organismDf(List.of(RowFactory.create("org-1", "Blue tit", "sibling of:org-2")));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderWithOrganism(occ, orgDf)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ, "organism", orgDf))
+            .collectAsList();
 
     assertEquals(1, records.size());
     Map<String, String> coreTerms = records.get(0).getCoreTerms();
@@ -140,15 +124,16 @@ class OccurrenceCoreBuilderTest {
             List.of(
                 RowFactory.create("occ-1", "evt-1", "org-1", "Parus major"),
                 RowFactory.create("occ-2", "evt-2", "org-1", "Parus major")));
-    Dataset<Row> orgDf = organismDf(List.of(RowFactory.create("org-1", "Great tit", null)));
+    Dataset<Row> orgDf = organismDf(List.of(RowFactory.create("org-1", "Blue tit", null)));
 
     List<ExtendedRecord> records =
-        OccurrenceCoreBuilder.build(spark, loaderWithOrganism(occ, orgDf)).collectAsList();
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ, "organism", orgDf))
+            .collectAsList();
 
     assertEquals(2, records.size());
     for (ExtendedRecord er : records) {
       assertEquals(
-          "Great tit",
+          "Blue tit",
           er.getCoreTerms().get(DwcTerm.organismName.qualifiedName()),
           "Each occurrence should carry the organism name — many:1 collapse");
     }
