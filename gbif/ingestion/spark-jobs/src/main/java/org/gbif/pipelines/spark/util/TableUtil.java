@@ -648,7 +648,7 @@ public class TableUtil {
         tableName, selectTerms, generateTblProperties(config));
   }
 
-  private static Object generateTblProperties(TableBuildConfig config) {
+  public static Object generateTblProperties(TableBuildConfig config) {
     return String.format(
         """
               'write.format.default' = '%s',
