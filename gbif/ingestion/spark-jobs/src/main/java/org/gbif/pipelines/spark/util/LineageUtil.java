@@ -182,13 +182,15 @@ public class LineageUtil {
                               }
                             }
                           });
-                      return RowFactory.create(val.getName(), parentRowsBuffer.toSeq());
+                      return RowFactory.create(
+                          val.getName(), parentRowsBuffer.toSeq(), val.isCyclic());
                     }),
             DataTypes.createStructType(
                 Arrays.asList(
                     DataTypes.createStructField("eventId", DataTypes.StringType, false),
                     DataTypes.createStructField(
-                        "lineage", DataTypes.createArrayType(parentSchema), false))))
+                        "lineage", DataTypes.createArrayType(parentSchema), false),
+                    DataTypes.createStructField("hasCycle", DataTypes.BooleanType, true))))
         .map(
             (MapFunction<Row, EventLineage>)
                 row -> {
@@ -205,7 +207,13 @@ public class LineageUtil {
                             .build();
                     parents.add(parent);
                   }
-                  return new EventLineage(eventId, parents);
+                  boolean hasCycle = false;
+                  try {
+                    hasCycle = row.getBoolean(2);
+                  } catch (Exception e) {
+                    // ignore it
+                  }
+                  return new EventLineage(eventId, parents, hasCycle);
                 },
             Encoders.bean(EventLineage.class));
   }

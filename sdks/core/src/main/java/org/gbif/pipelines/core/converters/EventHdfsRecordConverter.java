@@ -98,8 +98,19 @@ public class EventHdfsRecordConverter {
     mapHumboldtRecord(eventHdfsRecord);
     mapMetadataRecord(eventHdfsRecord);
     mapMoFFromVerbatim(eventHdfsRecord);
+    checkLineageLoop(eventHdfsRecord);
 
     return eventHdfsRecord;
+  }
+
+  // if eventId and parentEventID are the same we set the parent to null to avoid an infinite loop
+  private void checkLineageLoop(EventHdfsRecord eventHdfsRecord) {
+    String eventId = eventHdfsRecord.getEventid();
+    String parentEventId = eventHdfsRecord.getParenteventid();
+
+    if (eventId != null && !eventId.isEmpty() && eventId.equals(parentEventId)) {
+      eventHdfsRecord.setParenteventid(null);
+    }
   }
 
   /**
@@ -380,6 +391,8 @@ public class EventHdfsRecordConverter {
       eventHdfsRecord.setLicense(eventCoreRecord.getLicense());
       eventHdfsRecord.setLicense(eventCoreRecord.getLicense());
       eventHdfsRecord.setLocationid(eventCoreRecord.getLocationID());
+
+      addNonTaxonIssues(eventCoreRecord.getIssues(), eventHdfsRecord);
     }
   }
 

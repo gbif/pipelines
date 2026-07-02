@@ -23,6 +23,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.UrlParser;
@@ -92,8 +93,19 @@ public class CoreInterpreter {
   }
 
   /** {@link DwcTerm#parentEventID} interpretation. */
-  public static void interpretParentEventID(ExtendedRecord er, Consumer<String> consumer) {
-    extractNullAwareOptValue(er, DwcTerm.parentEventID).ifPresent(consumer);
+  public static BiConsumer<ExtendedRecord, EventCoreRecord> interpretParentEventID(
+      Consumer<String> consumer) {
+    return (er, evr) -> {
+      extractNullAwareOptValue(er, DwcTerm.parentEventID)
+          .ifPresent(
+              p -> {
+                if (p.equals(extractValue(er, DwcTerm.eventID))) {
+                  addIssue(evr, OccurrenceIssue.PARENT_EVENT_ID_INFINITE_LINEAGE);
+                } else {
+                  consumer.accept(p);
+                }
+              });
+    };
   }
 
   public static BiConsumer<ExtendedRecord, EventCoreRecord> interpretLineages(

@@ -31,6 +31,7 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -360,6 +361,17 @@ public class EventInterpretationPipeline {
                   // add the lineage
                   if (eventLineage != null) {
                     ecr.setParentsLineage(eventLineage.getLineage());
+                    // Add issue if cyclic lineage detected
+                    if (Boolean.TRUE.equals(eventLineage.getHasCycle())) {
+                      ModelUtils.addIssue(ecr, OccurrenceIssue.PARENT_EVENT_ID_INFINITE_LINEAGE);
+                    }
+                  }
+
+                  // Prevent self-referencing events from creating lineage loops.
+                  String eventId = ModelUtils.extractValue(verbatim, DwcTerm.eventID);
+                  String parentEventId = ModelUtils.extractValue(verbatim, DwcTerm.parentEventID);
+                  if (eventId != null && eventId.equals(parentEventId)) {
+                    ecr.setParentEventID(null);
                   }
 
                   // merge the multimedia records
