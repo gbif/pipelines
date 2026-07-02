@@ -1,61 +1,112 @@
 package org.gbif.pipelines.spark.dwcdp;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Collectors;
-import org.gbif.pipelines.spark.dwcdp.DwcDpVerbatimConverter.DataPackage;
-import org.gbif.pipelines.spark.dwcdp.DwcDpVerbatimConverter.DataPackageField;
-import org.gbif.pipelines.spark.dwcdp.DwcDpVerbatimConverter.DataPackageResource;
-import org.gbif.pipelines.spark.dwcdp.DwcDpVerbatimConverter.DataPackageSchema;
+import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
+import org.gbif.pipelines.spark.dwcdp.model.DataPackageField;
+import org.gbif.pipelines.spark.dwcdp.model.DataPackageResource;
+import org.gbif.pipelines.spark.dwcdp.model.DataPackageSchema;
+import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
  * Builds {@link DataPackage} descriptors for use in tests, mirroring the structure that
  * DataPackageConverter writes to {@code datapackage.json}.
+ *
+ * <p>Paths in the returned descriptors are relative (e.g. {@code data/event.parquet}) and must be
+ * combined with the test's base path when constructing a {@link TableLoader}.
  */
 class DataPackageFixtures {
 
   private DataPackageFixtures() {}
 
-  static DataPackage withEvent(Path dir, String... fieldNames) {
+  static DataPackage withEvent(String... fieldNames) {
     return build(resource("event", "data/event.parquet", fieldNames));
   }
 
-  static DataPackage withOccurrence(Path dir, String... fieldNames) {
+  static DataPackage withOccurrence(String... fieldNames) {
     String[] fields =
         fieldNames.length > 0 ? fieldNames : new String[] {"occurrenceID", "scientificName"};
     return build(resource("occurrence", "data/occurrence.parquet", fields));
   }
 
-  static DataPackage withEventAndOccurrence(Path dir) {
+  static DataPackage withEventAndOccurrence() {
     return build(
         resource("event", "data/event.parquet", "eventID"),
         resource(
             "occurrence", "data/occurrence.parquet", "occurrenceID", "eventID", "scientificName"));
   }
 
-  static DataPackage withEventAndMedia(Path dir) {
+  static DataPackage withEventOccurrenceOrganismAndMedia() {
     return build(
-        resource("event", "data/event.parquet", "eventID"),
-        resource("media", "data/media.parquet", "mediaID", "accessURI", "mediaType"),
-        resource("event-media", "data/event-media.parquet", "mediaID", "eventID"));
-  }
-
-  static DataPackage withEventOccurrenceAndMedia(Path dir) {
-    return build(
-        resource("event", "data/event.parquet", "eventID"),
         resource(
-            "occurrence", "data/occurrence.parquet", "occurrenceID", "eventID", "scientificName"),
+            "event",
+            "data/event.parquet",
+            "eventID",
+            "parentEventID",
+            "eventDate",
+            "country",
+            "decimalLatitude",
+            "decimalLongitude"),
+        // associatedOrganisms is not a DwC-DP occurrence field — contributed by organism join
+        resource(
+            "occurrence",
+            "data/occurrence.parquet",
+            "occurrenceID",
+            "eventID",
+            "organismID",
+            "scientificName",
+            "organismScope",
+            "organismName",
+            "organismRemarks",
+            "occurrenceStatus",
+            "sex"),
+        resource(
+            "organism",
+            "data/organism.parquet",
+            "organismID",
+            "organismName",
+            "organismScope",
+            "organismRemarks",
+            "associatedOrganisms"),
         resource("media", "data/media.parquet", "mediaID", "accessURI", "mediaType"),
-        resource("event-media", "data/event-media.parquet", "mediaID", "eventID"));
+        resource(
+            "event-media", "data/event-media.parquet",
+            "mediaID", "eventID"));
   }
 
-  static DataPackage withOccurrenceAndMedia(Path dir) {
+  static DataPackage withOccurrenceOrganismAndMedia() {
     return build(
-        resource("occurrence", "data/occurrence.parquet", "occurrenceID", "scientificName"),
+        // associatedOrganisms is not a DwC-DP occurrence field — contributed by organism join
+        resource(
+            "occurrence",
+            "data/occurrence.parquet",
+            "occurrenceID",
+            "eventID",
+            "organismID",
+            "scientificName",
+            "organismScope",
+            "organismName",
+            "organismRemarks",
+            "occurrenceStatus",
+            "sex",
+            "decimalLatitude",
+            "decimalLongitude"),
+        resource(
+            "organism",
+            "data/organism.parquet",
+            "organismID",
+            "organismName",
+            "organismScope",
+            "organismRemarks",
+            "associatedOrganisms"),
         resource("media", "data/media.parquet", "mediaID", "accessURI", "mediaType"),
-        resource("occurrence-media", "data/occurrence-media.parquet", "mediaID", "occurrenceID"));
+        resource(
+            "occurrence-media", "data/occurrence-media.parquet",
+            "mediaID", "occurrenceID"));
   }
+
+  // ---- internals ----
 
   private static DataPackage build(DataPackageResource... resources) {
     DataPackage dp = new DataPackage();

@@ -15,7 +15,6 @@ import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.vocabulary.lookup.InMemoryVocabularyLookup;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -174,9 +173,10 @@ public class VocabularyInterpreterTest {
     // Should
     Assert.assertEquals(4, br.getTypeStatus().size());
     Assert.assertEquals(
-        3, br.getTypeStatus().stream().filter(v -> v.getConcept().equals(expectedHolotype)).count());
+        3,
+        br.getTypeStatus().stream().filter(v -> v.getConcept().equals(expectedHolotype)).count());
     Assert.assertEquals(
-      1, br.getTypeStatus().stream().filter(v -> v.getConcept().equals("Type")).count());
+        1, br.getTypeStatus().stream().filter(v -> v.getConcept().equals("Type")).count());
     assertIssueSize(br, 0);
   }
 

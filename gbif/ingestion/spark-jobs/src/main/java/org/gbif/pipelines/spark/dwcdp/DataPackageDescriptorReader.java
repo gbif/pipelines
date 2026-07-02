@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.util.MapperUtil;
 
 /**
@@ -20,23 +21,19 @@ public class DataPackageDescriptorReader {
 
   private DataPackageDescriptorReader() {}
 
-  public static DwcDpVerbatimConverter.DataPackage read(FileSystem fileSystem, String path)
-      throws IOException {
-
+  public static DataPackage read(FileSystem fileSystem, String path) throws IOException {
     Path hdfsPath = new Path(path);
     if (fileSystem.exists(hdfsPath)) {
       log.debug("Reading datapackage.json from HDFS: {}", path);
       try (var inputStream = fileSystem.open(hdfsPath)) {
-        return MAPPER.readValue(
-            inputStream.getWrappedStream(), DwcDpVerbatimConverter.DataPackage.class);
+        return MAPPER.readValue(inputStream.getWrappedStream(), DataPackage.class);
       }
     }
 
-    // Local filesystem fallback for local development
     java.nio.file.Path localPath = Paths.get(path);
     if (Files.exists(localPath)) {
       log.debug("Reading datapackage.json from local path: {}", path);
-      return MAPPER.readValue(localPath.toFile(), DwcDpVerbatimConverter.DataPackage.class);
+      return MAPPER.readValue(localPath.toFile(), DataPackage.class);
     }
 
     throw new IOException("datapackage.json not found at: " + path);
