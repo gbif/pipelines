@@ -1,0 +1,1471 @@
+{
+  "metadata" : {
+    "createdDate" : "2026-07-02T08:04:04.8625479Z",
+    "version" : null
+  },
+  "vocabulary" : {
+    "key" : 28,
+    "name" : "TypeStatus",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:05.310812Z",
+    "createdBy" : "hvalli",
+    "modified" : "2024-05-24T11:03:05.678067Z",
+    "modifiedBy" : "hvalli",
+    "namespace" : null,
+    "definition" : {
+      "en" : "A vocabulary to be used for a nomenclatural type status of a specimen or name."
+    },
+    "label" : {
+      "en" : "TypeStatus"
+    }
+  },
+  "concepts" : [ {
+    "key" : 1197,
+    "name" : "Isosyntype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:18.389132Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:52.329452Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1155,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A duplicate of a syntype, compare isotype = duplicate of holotype."
+    },
+    "label" : {
+      "ar" : "isosyntype",
+      "da-DK" : "Isosyntype",
+      "en" : "isosyntype",
+      "fr-FR" : "Isosyntype",
+      "de-DE" : "Isosyntypus",
+      "pt-PT" : "Isosíntipo",
+      "es-ES" : "Isosintipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "ISOSYNTYPUS", "Isosintipo", "Isosintipo, Isosintipo" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1196,
+    "name" : "Isoparatype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:18.156916Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:51.847714Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1156,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A duplicate of a paratype, compare paratype."
+    },
+    "label" : {
+      "en" : "isoparatype",
+      "fr-FR" : "Isoparatype",
+      "de-DE" : "Isoparatypus",
+      "pt-PT" : "Isoparatipo",
+      "es-ES" : "Isoparatipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Isoparatypus", "Isoparatipo" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1195,
+    "name" : "Isoneotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:17.918472Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:52.088014Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1154,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A duplicate of a neotype, compare neotype."
+    },
+    "label" : {
+      "da-DK" : "Isoneotype",
+      "en" : "isoneotype",
+      "fr-FR" : "Isoneotype",
+      "de-DE" : "Isoneotypus",
+      "pt-PT" : "Isoneótipo",
+      "es-ES" : "Isoneotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "ISONEOTYPUS", "Isoneotipo" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1194,
+    "name" : "Isolectotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:17.643946Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:51.615266Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1153,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A duplicate of a lectotype, compare lectotype."
+    },
+    "label" : {
+      "da-DK" : "Isolectotype",
+      "en" : "isolectotype",
+      "fr-FR" : "Isolectotype",
+      "de-DE" : "Isolectotypus",
+      "pt-PT" : "Isolectótipo",
+      "es-ES" : "Isolectotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Isolectotipo, Isolectotipo", "Isolectotypus", "isolectotypes", "isolecto-", "Isolectotipo", "IsolectÃ³tipo" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1193,
+    "name" : "Isoepitype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:17.404764Z",
+    "createdBy" : "hvalli",
+    "modified" : "2024-07-09T13:58:45.683344Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1181,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A duplicate of an epitype, compare epitype."
+    },
+    "label" : {
+      "en" : "isoepitype"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "ISOEPITYPUS" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1192,
+    "name" : "Iconotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:17.153293Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:51.379856Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A drawing or photograph (also called 'phototype') of a type specimen."
+    },
+    "label" : {
+      "da-DK" : "Iconotype",
+      "en" : "iconotype",
+      "fr-FR" : "Iconotype",
+      "de-DE" : "Iconotypus",
+      "pt-PT" : "Iconotipo",
+      "es-ES" : "Iconotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Figuré(s) + Cité(s)", "FIGURÉ", "FIGURÃ", "Figured", "photograph/-copy of the Holotype", "figured specimen", "DRAWINGOFTYPE" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1191,
+    "name" : "Hypotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:16.928344Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:56.518759Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A specimen that was not part of the original type series of the species, but is known from a published description, figure, or listing."
+    },
+    "label" : {
+      "nl-NL" : "Hypotype",
+      "en" : "hypotype",
+      "fr-FR" : "Hypotype",
+      "pl-PL" : "Hypotyp",
+      "es-ES" : "Hipotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "HIPOTIPO" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1190,
+    "name" : "Hapantotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:16.707061Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:50.774506Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "One or more preparations of directly related individuals representing distinct stages in the life cycle, which together form the type in an extant species of protistan [ICZN Article 72.5.4]."
+    },
+    "label" : {
+      "ar" : "Hapanatotype",
+      "da-DK" : "Hapantotype",
+      "en" : "hapantotype",
+      "fr-FR" : "Hapantotype",
+      "de-DE" : "Hapantotypus",
+      "pt-PT" : "Hapantótipo",
+      "es-ES" : "Hapantotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1189,
+    "name" : "Extype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:16.457228Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:50.543347Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A strain or cultivation derived from some kind of type material."
+    },
+    "label" : {
+      "da-DK" : "Extype",
+      "en" : "extype",
+      "fr-FR" : "Extype",
+      "de-DE" : "ExTypus",
+      "pt-PT" : "Extipo",
+      "es-ES" : "Extipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1188,
+    "name" : "Exsyntype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:16.231794Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:50.238112Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1155,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A strain or cultivation derived from neotype material."
+    },
+    "label" : {
+      "da-DK" : "Exsyntype",
+      "en" : "exsyntype",
+      "fr-FR" : "Exsyntype",
+      "de-DE" : "ExSyntypus",
+      "pt-PT" : "Exsintipo",
+      "es-ES" : "Exsintipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1187,
+    "name" : "Exparatype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:15.985298Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:49.956845Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1156,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A strain or cultivation derived from paratype material."
+    },
+    "label" : {
+      "da-DK" : "Exparatype",
+      "en" : "exparatype",
+      "fr-FR" : "Exparatype",
+      "de-DE" : "ExParatypus",
+      "pt-PT" : "Exparátipo",
+      "es-ES" : "Exparatipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1186,
+    "name" : "Exneotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:15.743253Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:49.692369Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1154,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A strain or cultivation derived from neotype material."
+    },
+    "label" : {
+      "da-DK" : "Exneotype",
+      "en" : "exneotype",
+      "fr-FR" : "Exnéotype",
+      "de-DE" : "ExNeotypus",
+      "pt-PT" : "Exneótipo",
+      "es-ES" : "Exneotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1185,
+    "name" : "Exlectotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:15.523429Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:49.424601Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1153,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A strain or cultivation derived from lectotype material."
+    },
+    "label" : {
+      "da-DK" : "Exlectotype",
+      "en" : "exlectotype",
+      "fr-FR" : "Exlectotype",
+      "de-DE" : "ExLectotypus",
+      "pt-PT" : "Exlectótipo",
+      "es-ES" : "Exlectotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1184,
+    "name" : "Exisotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:15.29124Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:49.171456Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1152,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A strain or cultivation derived from isotype material."
+    },
+    "label" : {
+      "da-DK" : "Exisotype",
+      "en" : "exisotype",
+      "fr-FR" : "Exisotype",
+      "de-DE" : "ExIsotypus",
+      "pt-PT" : "Exisótipo",
+      "es-ES" : "Exisotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1183,
+    "name" : "Exholotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:15.034451Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:48.902618Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1157,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A strain or cultivation derived from holotype material."
+    },
+    "label" : {
+      "da-DK" : "Exholotype",
+      "en" : "exholotype",
+      "fr-FR" : "Exholotype",
+      "de-DE" : "ExHolotypus",
+      "pt-PT" : "Exholótipo",
+      "es-ES" : "Exholotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1182,
+    "name" : "Exepitype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:14.809715Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:48.673565Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1181,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A strain or cultivation derived from epitype material."
+    },
+    "label" : {
+      "da-DK" : "Exepitype",
+      "en" : "exepitype",
+      "fr-FR" : "Exepitype",
+      "de-DE" : "ExEpitypus",
+      "pt-PT" : "Exepitipo",
+      "es-ES" : "Exepitipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1181,
+    "name" : "Epitype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:14.574279Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:48.401228Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A specimen or illustration selected to serve as an interpretative type when the holotype, lectotype, or previously designated neotype, or all original material associated with a validly published name, is demonstrably ambiguous and cannot be critically identified for purposes of the precise application of the name of a taxon (see ICBN Ch. 2, Sec. 2, Art. 9.7). An epitype supplements, rather than replaces existing types. [Bot./Bio.]"
+    },
+    "label" : {
+      "da-DK" : "Epitype",
+      "en" : "epitype",
+      "fr-FR" : "Epitype",
+      "de-DE" : "Epitypus",
+      "pt-PT" : "Epitipo",
+      "es-ES" : "Epitipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "EPITYPUS", "Epitipo" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1180,
+    "name" : "Cotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:14.341589Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:48.124217Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A deprecated term no longer recognized in the ICZN; formerly used for either syntype or paratype [see ICZN Recommendation 73E]."
+    },
+    "label" : {
+      "ca-ES" : "cotip",
+      "da-DK" : "Cotype",
+      "en" : "cotype",
+      "fr-FR" : "Cotype",
+      "de-DE" : "Cotypus",
+      "pt-PT" : "CoTipo",
+      "es-ES" : "Cotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "COTYPES", "Co-Type", "Cotipo", "Cotype(s)", "Cotypus" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1179,
+    "name" : "Allotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:14.079534Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:47.843431Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A paratype specimen designated from the type series by the original author that is the opposite sex of the holotype."
+    },
+    "label" : {
+      "ca-ES" : "al·lotip",
+      "da-DK" : "Allotype",
+      "en" : "allotype",
+      "fr-FR" : "Allotype",
+      "de-DE" : "Allotypus",
+      "pt-PT" : "Alótipo",
+      "es-ES" : "Alotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "AlÃ³tipo", "Alotipo", "Alótipo" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1178,
+    "name" : "Alloneotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:13.844869Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:47.535478Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1154,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A paraneotype specimen that is the opposite sex of the neotype."
+    },
+    "label" : {
+      "da-DK" : "Alloneotype",
+      "en" : "alloneotype",
+      "fr-FR" : "Alloneotype",
+      "de-DE" : "Alloneotypus",
+      "pt-PT" : "Aloneotipo",
+      "es-ES" : "Aloneotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1177,
+    "name" : "Allolectotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:13.584934Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:47.25684Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1153,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A paralectotype specimen that is the opposite sex of the lectotype."
+    },
+    "label" : {
+      "da-DK" : "Allolectotype",
+      "en" : "allolectotype",
+      "fr-FR" : "Allolectotype",
+      "de-DE" : "Allolectotypus",
+      "pt-PT" : "Alolectotipo",
+      "es-ES" : "Alolectotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1176,
+    "name" : "Paratopotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:13.352918Z",
+    "createdBy" : "hvalli",
+    "modified" : "2024-07-09T14:00:25.360583Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1156,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A paratype found in the same locality as the holotype (biology)"
+    },
+    "label" : {
+      "en" : "paratopotype"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Paratopotipo", "Paratopotypes" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1175,
+    "name" : "TypeSeries",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:13.113758Z",
+    "createdBy" : "hvalli",
+    "modified" : "2024-07-09T14:00:50.655579Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A group of representatives of a taxon (as a subspecies or species) selected to demonstrate the extent of variation of that unit"
+    },
+    "label" : {
+      "en" : "type series"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "type series", "Type Collection" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1174,
+    "name" : "Homeotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:12.894908Z",
+    "createdBy" : "hvalli",
+    "modified" : "2024-07-09T13:58:42.268613Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A biological specimen that has been carefully compared with and identified with an original or primary type"
+    },
+    "label" : {
+      "en" : "homeotype"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Homeótipo", "Homotype" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1173,
+    "name" : "Metatype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:12.646619Z",
+    "createdBy" : "hvalli",
+    "modified" : "2024-07-09T13:59:05.328016Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A topotype or homeotype determined by the original author of its species"
+    },
+    "label" : {
+      "en" : "metatype"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Metatype" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1172,
+    "name" : "Clonotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:12.415133Z",
+    "createdBy" : "hvalli",
+    "modified" : "2024-05-24T11:03:12.572205Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "Herbarium specimens made from plants vegetatively propagated from (thus clones of) the same plant from which a type specimen was made. Clonotypes are of some use in documenting a type collection but have no status under the International Code of Botanical Nomenclature. The term is sometimes also used to refer to the living plants themselves (botany) ."
+    },
+    "label" : {
+      "en" : "clonotype"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1171,
+    "name" : "TypeStrain",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:12.166863Z",
+    "createdBy" : "hvalli",
+    "modified" : "2024-07-09T14:00:51.854689Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A living cell culture derived from the originally described organism sample"
+    },
+    "label" : {
+      "en" : "type strain"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Type Strain" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1170,
+    "name" : "Topotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:11.872948Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:56.263196Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "One or more specimens collected at the same location as the type series (type locality), regardless of whether they are part of the type series."
+    },
+    "label" : {
+      "ca-ES" : "topotip",
+      "da-DK" : "Topotype",
+      "en" : "topotype",
+      "fr-FR" : "Topotype",
+      "de-DE" : "Topotypus",
+      "pt-PT" : "Topótipo",
+      "es-ES" : "Topotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Topotypus", "Topótipo", "Topotipo", "TopÃ³tipo", "topotypes", "locotype" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1169,
+    "name" : "SupplementaryType",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:11.629307Z",
+    "createdBy" : "hvalli",
+    "modified" : "2024-07-09T14:00:37.92497Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A referred, described, measured or figured specimen in a revision of a previously described taxon."
+    },
+    "label" : {
+      "en" : "supplementary type"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Supplementary Type" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1168,
+    "name" : "SecondaryType",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:11.388043Z",
+    "createdBy" : "hvalli",
+    "modified" : "2024-07-09T14:00:33.325799Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A referred, described, measured or figured specimen in the original publication (including a neo/lectotypification publication) that is not a primary type."
+    },
+    "label" : {
+      "en" : "secondary type"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Secondary Type" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1167,
+    "name" : "Plesiotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:11.137031Z",
+    "createdBy" : "hvalli",
+    "modified" : "2024-05-24T11:03:11.31068Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A specimen that is both a homeotype and a hypotype."
+    },
+    "label" : {
+      "en" : "plesiotype"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1166,
+    "name" : "Plastotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:10.884315Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:55.597529Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A copy or cast of type material, esp."
+    },
+    "label" : {
+      "da-DK" : "Plastotype",
+      "en" : "plastotype",
+      "fr-FR" : "Plastotype",
+      "de-DE" : "Plastotypus",
+      "pt-PT" : "Plastótipo",
+      "es-ES" : "Plastotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1165,
+    "name" : "Plastosyntype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:10.636414Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:55.342421Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1155,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A copy or cast of syntype material (compare Plastotype)."
+    },
+    "label" : {
+      "da-DK" : "Plastosyntype",
+      "en" : "plastosyntype",
+      "fr-FR" : "Plastosyntype",
+      "de-DE" : "Plastosyntypus",
+      "pt-PT" : "Plastosíntipo",
+      "es-ES" : "Plastosintipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1164,
+    "name" : "Plastoparatype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:10.404349Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:55.032464Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1156,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A copy or cast of paratype material (compare Plastotype)."
+    },
+    "label" : {
+      "ar" : "Plastopatatype",
+      "da-DK" : "Plastoparatype",
+      "en" : "plastoparatype",
+      "fr-FR" : "Plastoparatype",
+      "de-DE" : "Plastoparatypus",
+      "pt-PT" : "Plastoparátipo",
+      "es-ES" : "Plastoparatipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1163,
+    "name" : "Plastoneotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:10.188362Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:54.75307Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1154,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A copy or cast of neotype material (compare Plastotype)."
+    },
+    "label" : {
+      "da-DK" : "Plastoneotype",
+      "en" : "plastoneotype",
+      "fr-FR" : "Plastoneotype",
+      "de-DE" : "Plastoneotypus",
+      "pt-PT" : "Plastoneótipo",
+      "es-ES" : "Plastoneotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1162,
+    "name" : "Plastolectotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:09.952579Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:54.541495Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1153,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A copy or cast of lectotype material (compare Plastotype)."
+    },
+    "label" : {
+      "da-DK" : "Plastolectotype",
+      "en" : "plastolectotype",
+      "fr-FR" : "Plastolectotype",
+      "de-DE" : "Plastolectotypus",
+      "pt-PT" : "Plastolectótipo",
+      "es-ES" : "Plastolectotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1161,
+    "name" : "Plastoisotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:09.715007Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:54.300548Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1152,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A copy or cast of isotype material (compare Plastotype)."
+    },
+    "label" : {
+      "da-DK" : "Plastoisotype",
+      "en" : "plastoisotype",
+      "fr-FR" : "Plastoisotype",
+      "de-DE" : "Plastoisotypus",
+      "pt-PT" : "Palstoisótipo",
+      "es-ES" : "Plastoisotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1160,
+    "name" : "Plastoholotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:09.46649Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:54.0782Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1157,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A copy or cast of holotype material (compare Plastotype)."
+    },
+    "label" : {
+      "da-DK" : "Plastoholotype",
+      "en" : "plastoholotype",
+      "fr-FR" : "Plastoholotype",
+      "de-DE" : "Plastoholotypus",
+      "pt-PT" : "Plastoholótipo",
+      "es-ES" : "Plastoholotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1159,
+    "name" : "Paraneotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:09.152657Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:53.611173Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1154,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "All of the specimens in the syntype series of a species or infraspecific taxon other than the neotype itself."
+    },
+    "label" : {
+      "da-DK" : "Paraneotype",
+      "en" : "paraneotype",
+      "fr-FR" : "Paraneotype",
+      "de-DE" : "Paraneotypus",
+      "pt-PT" : "Paraneótipo",
+      "es-ES" : "Paraneotipo"
+    },
+    "alternativeLabels" : {
+      "en" : [ "Neoparatype" ]
+    },
+    "hiddenLabels" : [ "Neoparatype" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1158,
+    "name" : "Paralectotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:08.841288Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:53.353793Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1153,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "All of the specimens in the syntype series of a species or infraspecific taxon other than the lectotype itself."
+    },
+    "label" : {
+      "ca-ES" : "paralectotip",
+      "da-DK" : "Paralectotype",
+      "en" : "paralectotype",
+      "fr-FR" : "Paralectotype",
+      "de-DE" : "Paralektotypus",
+      "pt-PT" : "Paralectótipo",
+      "es-ES" : "Paralectotipo"
+    },
+    "alternativeLabels" : {
+      "en" : [ "Lectoparatype" ]
+    },
+    "hiddenLabels" : [ "Paralectotype(s)", "Paralectótipo", "Paralectotipo", "Lectoparatype", "Paralectotypus", "paralectotypes" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1157,
+    "name" : "Holotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:08.585964Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:51.094179Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "The one specimen or other element used or designated by the original author at the time of publication of the original description as the nomenclatural type of a species or infraspecific taxon."
+    },
+    "label" : {
+      "ca-ES" : "holotip",
+      "da-DK" : "Holotype",
+      "en" : "holotype",
+      "fr-FR" : "Holotype",
+      "de-DE" : "Holotypus",
+      "pt-PT" : "Holótipo",
+      "es-ES" : "Holotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Holotype of", "FHOLOTYPE", "HOLÓTIPO", "Holotypus", "H", "HOLO", "Holotype.", "HolÃ³tipo", "holo-", "HOLOTYPEPROPARTE", "HOLOTIPO" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1156,
+    "name" : "Paratype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:08.328007Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:53.894719Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "All of the specimens in the type series of a species or infraspecific taxon other than the holotype (and, in botany, isotypes)."
+    },
+    "label" : {
+      "ca-ES" : "paratip",
+      "da-DK" : "Paratype",
+      "en" : "paratype",
+      "fr-FR" : "Paratype",
+      "de-DE" : "Paratypus",
+      "pt-PT" : "Parátipo",
+      "es-ES" : "Paratipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Paratype of", "paratipo", "PARÃTIPO", "PARATIPOS", "PARATIP", "Paratype.", "Parátipo", "P", "paratypes", "para", "Paratypus", "ParÃ¡tipos", "paratipo/s", "Paratype(s)", "ParÃ¡tipo", "Parátipos" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1155,
+    "name" : "Syntype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:08.092787Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:55.927304Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "One of the series of specimens used to describe a species or infraspecific taxon when neither a single holotype nor a lectotype has been designated."
+    },
+    "label" : {
+      "ca-ES" : "sintip",
+      "da-DK" : "Syntype",
+      "en" : "syntype",
+      "fr-FR" : "Syntype",
+      "de-DE" : "Syntypus",
+      "pt-PT" : "Síntipo",
+      "es-ES" : "Sintipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "syntype(s)", "Syntypus", "Syntypes", "PRIMARY SYNTYPE", "SINTIPOS", "sintipo/s", "SINTIP", "Syntype of", "Sintipo", "Síntipo", "SÃ­ntipo" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1154,
+    "name" : "Neotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:07.854402Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:53.102741Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A specimen designated as nomenclatural type subsequent to the publication of the original description in cases where the original holotype, lectotype, all paratypes and syntypes are lost or destroyed, or suppressed by the (botanical or zoological) commission on nomenclature."
+    },
+    "label" : {
+      "ca-ES" : "neotip",
+      "da-DK" : "Neotype",
+      "en" : "neotype",
+      "fr-FR" : "Néotype",
+      "de-DE" : "Neotypus",
+      "pt-PT" : "Neótipo",
+      "es-ES" : "Neotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "NÃ©otype", "Neótipo", "Neotypus", "NeÃ³tipo", "neotype", "Neotipo", "Néotype" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1153,
+    "name" : "Lectotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:07.617149Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:52.872891Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "A specimen or other element designated subsequent to the publication of the original description from the original material (syntypes or paratypes) to serve as nomenclatural type."
+    },
+    "label" : {
+      "ca-ES" : "lectotip",
+      "da-DK" : "Lectotype",
+      "en" : "lectotype",
+      "fr-FR" : "Lectotype",
+      "de-DE" : "Lectotypes",
+      "pt-PT" : "Lectótipo",
+      "es-ES" : "Lectotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Lectotype of", "Lectótipo", "lecto", "LectÃ³tipo", "Lectotipo", "Lectotypus" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1152,
+    "name" : "Isotype",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:07.352483Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:52.550981Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : 1147,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "An isotype is any duplicate of the holotype"
+    },
+    "label" : {
+      "da-DK" : "Isotype",
+      "en" : "isotype",
+      "fr-FR" : "Isotype",
+      "de-DE" : "Isotypus",
+      "pt-PT" : "Isótipo",
+      "es-ES" : "Isotipo"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Isotypus", "iso", "Isótipo", "isotipo", "Isotipo, Isotipo", "isotypes", "iso-", "I", "IsÃ³tipo", "Isotype of" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1151,
+    "name" : "OriginalMaterial",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:07.103119Z",
+    "createdBy" : "hvalli",
+    "modified" : "2024-07-09T14:00:58.878709Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : null,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "Type-suspicious' material."
+    },
+    "label" : {
+      "en" : "original material"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "Type material", "Original material", "Additional Material", "Unknown type material", "authentic specimen", "authentic material" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1150,
+    "name" : "NotAType",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:06.886986Z",
+    "createdBy" : "hvalli",
+    "modified" : "2024-07-09T14:00:05.757717Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : null,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "For specimens erroneously labelled as types an explicit negative statement may be desirable."
+    },
+    "label" : {
+      "en" : "not a type"
+    },
+    "alternativeLabels" : { },
+    "hiddenLabels" : [ "No", "not typematerial", "Nontype", "Not type", "Non", "otros NO tipos o dudosos", "Not a type", "None", "NO APLICA", "Non-type" ],
+    "tags" : [ ]
+  }, {
+    "key" : 1149,
+    "name" : "TypeGenus",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:06.544959Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:47.016341Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : null,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "For designating a type record as a reference to type information tied to a Family"
+    },
+    "label" : {
+      "da-DK" : "Typeslægt",
+      "nl-NL" : "Typegenus",
+      "en" : "type genus",
+      "fr-FR" : "Genretype",
+      "de-DE" : "Typusgattung",
+      "pt-PT" : "Gênerotipo",
+      "es-ES" : "Génerotipo"
+    },
+    "alternativeLabels" : {
+      "en" : [ "typus familiaris" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1148,
+    "name" : "TypeSpecies",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:06.216305Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:46.682681Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : null,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "For designating a type record as a reference to type information tied to a genus"
+    },
+    "label" : {
+      "da-DK" : "Typeart",
+      "nl-NL" : "Typesoort",
+      "en" : "type species",
+      "fr-FR" : "Espècetype",
+      "de-DE" : "Typusart",
+      "pt-PT" : "Espécietipo",
+      "es-ES" : "Especiestipo"
+    },
+    "alternativeLabels" : {
+      "en" : [ "typus generis" ]
+    },
+    "hiddenLabels" : [ ],
+    "tags" : [ ]
+  }, {
+    "key" : 1147,
+    "name" : "Type",
+    "externalDefinitions" : [ ],
+    "editorialNotes" : [ ],
+    "replacedByKey" : null,
+    "deprecated" : null,
+    "deprecatedBy" : null,
+    "created" : "2024-05-24T11:03:05.809119Z",
+    "createdBy" : "hvalli",
+    "modified" : "2025-06-30T13:32:46.308006Z",
+    "modifiedBy" : "hvalli",
+    "vocabularyKey" : 28,
+    "parentKey" : null,
+    "sameAsUris" : [ ],
+    "definition" : {
+      "en" : "General type designation."
+    },
+    "label" : {
+      "cs-CZ" : "Typ",
+      "da-DK" : "Type",
+      "nl-NL" : "Type",
+      "en" : "type",
+      "fr-FR" : "Type ",
+      "de-DE" : "Typus",
+      "pl-PL" : "Typ",
+      "pt-PT" : "Tipo",
+      "es-ES" : "Tipo"
+    },
+    "alternativeLabels" : {
+      "en" : [ "typus" ]
+    },
+    "hiddenLabels" : [ "Type of", "holotype + paratype(s)", "Holotype, Paratype", "unspec. Type", "UNSPECIFIEDKINDOFTYPE", "holotype + paratype", "T", "otros tipos", "Type [status unknown]", "part of type", "types", "type(s)", "unspecified kind of type", "lectotype + paralectotype(s)", "holotype; paratype", "typen", "typus", "Tipo", "Tipo sin especificar", "typotype", "fragment of a Type specimen", "Holotype, Paratypes", "PhysicalObject", "Holotype + Allotype", "Type specimen (basionym and status not recorded).", "Type Fragment", "Holotype and Paratype" ],
+    "tags" : [ ]
+  } ]
+}
