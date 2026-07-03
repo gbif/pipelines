@@ -17,6 +17,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import scala.Tuple3;
+import scala.Tuple4;
 
 public class CalculateLineageTest {
 
@@ -47,19 +48,24 @@ public class CalculateLineageTest {
   @Test
   public void testCalculateLineage() throws Exception {
 
-    java.util.List<Tuple3<String, String, String>> events =
+    java.util.List<Tuple4<String, String, String, String>> events =
         java.util.List.of(
-            new Tuple3<>("Event1", "TypeA", null),
-            new Tuple3<>("Event2", "TypeB", "Event1"),
-            new Tuple3<>("Event3", "TypeC", "Event1"),
-            new Tuple3<>("Event4", "TypeD", "Event2"));
+            new Tuple4<>("Event1", "TypeA", null, null),
+            new Tuple4<>("Event2", "TypeB", "Event1", ""),
+            new Tuple4<>("Event3", "TypeC", "Event1", "verb"),
+            new Tuple4<>("Event4", "TypeD", "Event2", "verb"));
 
     Dataset<Row> eventDf =
         spark
             .createDataset(
-                events, Encoders.tuple(Encoders.STRING(), Encoders.STRING(), Encoders.STRING()))
+                events,
+                Encoders.tuple(
+                    Encoders.STRING(), Encoders.STRING(), Encoders.STRING(), Encoders.STRING()))
             .select(
-                col("_1").as("eventId"), col("_2").as("eventType"), col("_3").as("parentEventId"))
+                col("_1").as("eventId"),
+                col("_2").as("eventType"),
+                col("_3").as("parentEventId"),
+                col("_4").as("verbatimEventType"))
             .toDF();
     Dataset<EventLineage> lineagesDf = LineageUtil.calculateLineage(spark, eventDf);
 
