@@ -16,7 +16,6 @@ import org.gbif.pipelines.spark.util.LineageUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import scala.Tuple3;
 import scala.Tuple4;
 
 public class CalculateLineageTest {
