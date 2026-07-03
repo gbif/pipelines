@@ -21,7 +21,7 @@ import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
-import org.gbif.pipelines.tasks.balancer.handler.DwcDpNfsToHdfsMessageHandler;
+import org.gbif.pipelines.tasks.balancer.handler.DwcDpStageMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.DwcDpToVerbatimMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.EventsIndexedMessageHandler;
 import org.gbif.pipelines.tasks.balancer.handler.EventsInterpretedMessageHandler;
@@ -85,7 +85,7 @@ public class BalancerCallback extends AbstractMessageCallback<PipelinesBalancerM
       } else if (PipelinesEventsMessage.class.getSimpleName().equals(className)) {
         EventsMessageHandler.handle(config, publisher, message);
       } else if (DwcDpMetadataSyncFinishedMessage.class.getSimpleName().equals(className)) {
-        DwcDpNfsToHdfsMessageHandler.handle(config, publisher, message);
+        DwcDpStageMessageHandler.handle(config, publisher, message);
       } else if (DwcDpToVerbatimMessage.class.getSimpleName().equals(className)) {
         DwcDpToVerbatimMessageHandler.handle(config, publisher, message);
       } else {

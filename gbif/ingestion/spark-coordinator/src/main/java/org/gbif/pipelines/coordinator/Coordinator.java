@@ -230,14 +230,8 @@ public class Coordinator {
             (messagePublisher ->
                 new DatasetDeleteCallback(config, master, DatasetType.SAMPLING_EVENT));
         break;
-      case DWCDP_NFS_TO_HDFS_STANDALONE:
-        callbackFn =
-            messagePublisher -> new DwcDpNfsToHdfsCallback(config, messagePublisher, master);
-        break;
-      case DWCDP_NFS_TO_HDFS_DISTRIBUTED:
-        callbackFn =
-            messagePublisher ->
-                new DwcDpNfsToHdfsDistributedCallback(config, messagePublisher, master);
+      case DWCDP_STAGE_STANDALONE:
+        callbackFn = messagePublisher -> new DwcDpStageCallback(config, messagePublisher, master);
         break;
       case DWCDP_TO_VERBATIM_STANDALONE:
         callbackFn =
@@ -360,8 +354,8 @@ public class Coordinator {
     FRAGMENTER_DISTRIBUTED,
     OCCURRENCE_DELETION,
     EVENT_DELETION,
-    DWCDP_NFS_TO_HDFS_STANDALONE,
-    DWCDP_NFS_TO_HDFS_DISTRIBUTED,
+    DWCDP_STAGE_STANDALONE,
+    DWCDP_STAGE_DISTRIBUTED,
     DWCDP_TO_VERBATIM_STANDALONE,
     DWCDP_TO_VERBATIM_DISTRIBUTED
   }
