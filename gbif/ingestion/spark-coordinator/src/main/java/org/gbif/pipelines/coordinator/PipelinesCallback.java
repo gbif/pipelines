@@ -138,7 +138,9 @@ public abstract class PipelinesCallback<
     if (pipelinesConfig.isBypassRegistry()) {
       ValidationClient validationClient =
           Feign.builder()
-              .client(new ApacheHttpClient())
+              // Reuse the timeout-configured http client (60s connect/socket) so a slow or
+              // unreachable validation service fails instead of blocking the consumer thread.
+              .client(new ApacheHttpClient(httpClient))
               .decoder(new JacksonDecoder(mapper))
               .encoder(new JacksonEncoder(mapper))
               .contract(new Contract.Default())
@@ -505,8 +507,20 @@ public abstract class PipelinesCallback<
   protected boolean isProcessingStopped(I message) {
     if (isRegistryBypassed()) {
       // Validator runs are not tracked in the registry; consult the validation service instead to
-      // decide whether the validation has already reached a terminal/non-resumable state.
-      return validatorStatusService != null && validatorStatusService.isValidatorAborted(message);
+      // decide whether the validation has already reached a terminal/non-resumable state. A failure
+      // here must not block or crash the consumer, so it is logged and we continue processing.
+      if (validatorStatusService == null) {
+        return false;
+      }
+      try {
+        return validatorStatusService.isValidatorAborted(message);
+      } catch (Exception e) {
+        log.error(
+            "Couldn't check validation status for dataset {}, continuing processing",
+            message.getDatasetUuid(),
+            e);
+        return false;
+      }
     }
 
     Long currentKey = message.getExecutionId();
@@ -647,9 +661,11 @@ public abstract class PipelinesCallback<
    */
   protected void updateValidatorStatus(I message, Validation.Status status, String errorMessage) {
     if (!isRegistryBypassed() || validatorStatusService == null) {
+      log.debug("Registry is not bypassed, skipping validation status update");
       return;
     }
     try {
+      log.debug("Updating validation status for dataset {}", message.getDatasetUuid());
       validatorStatusService.updateStatus(message, getStepType(), status, errorMessage);
     } catch (Exception ex) {
       log.error("Couldn't update validation status for dataset {}", message.getDatasetUuid(), ex);
