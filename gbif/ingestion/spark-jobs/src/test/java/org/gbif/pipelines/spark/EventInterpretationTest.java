@@ -251,8 +251,13 @@ public class EventInterpretationTest extends MockedServicesTest {
 
         // project & publishing info
         assertEquals(
-            List.of("nlbif2022.015"), JsonPath.<List<String>>read(json, "$.event.projectID"));
-        assertEquals("nlbif2022.015", JsonPath.read(json, "$.event.projectIDJoined"));
+            List.of("nlbif2022.015", "ProjectID"),
+            JsonPath.<List<String>>read(json, "$.event.projectID"));
+        assertEquals("nlbif2022.015|ProjectID", JsonPath.read(json, "$.event.projectIDJoined"));
+        assertEquals(
+            List.of("FA1"), JsonPath.<List<String>>read(json, "$.event.fundingAttribution"));
+        assertEquals(
+            List.of("FA1-ID"), JsonPath.<List<String>>read(json, "$.event.fundingAttributionID"));
         assertEquals("EUROPE", JsonPath.read(json, "$.event.publishedByGbifRegion"));
         assertEquals("BG", JsonPath.read(json, "$.event.publishingCountry"));
         assertTrue(JsonPath.<Boolean>read(json, "$.event.repatriated"));
@@ -610,6 +615,10 @@ public class EventInterpretationTest extends MockedServicesTest {
     eventCoreTerms.put(DwcTerm.locality.qualifiedName(), "Maasai Mara National Reserve");
     eventCoreTerms.put(DwcTerm.decimalLatitude.qualifiedName(), "-1.4061");
     eventCoreTerms.put(DwcTerm.decimalLongitude.qualifiedName(), "35.0128");
+    eventCoreTerms.put(DwcTerm.fundingAttribution.qualifiedName(), "FA1");
+    eventCoreTerms.put(DwcTerm.fundingAttributionID.qualifiedName(), "FA1-ID");
+    eventCoreTerms.put(DwcTerm.projectID.qualifiedName(), "ProjectID");
+    eventCoreTerms.put(DwcTerm.projectTitle.qualifiedName(), "Project title");
 
     er.setCoreTerms(eventCoreTerms);
 

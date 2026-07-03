@@ -47,6 +47,10 @@ public class EventCoreTransform implements Serializable {
     CoreInterpreter.interpretSamplingProtocol(source, r::setSamplingProtocol);
     CoreInterpreter.interpretParentEventID(r::setParentEventID).accept(source, r);
     CoreInterpreter.interpretLocationID(source, r::setLocationID);
+    CoreInterpreter.interpretProjectID(source, r::setProjectID);
+    CoreInterpreter.interpretProjectTitle(source, r::setProjectTitle);
+    CoreInterpreter.interpretFundingAttribution(source, r::setFundingAttribution);
+    CoreInterpreter.interpretFundingAttributionID(source, r::setFundingAttributionID);
 
     return r;
   }

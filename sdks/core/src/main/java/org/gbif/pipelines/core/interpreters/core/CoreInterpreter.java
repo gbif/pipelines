@@ -10,8 +10,6 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 import com.google.common.base.Strings;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -29,12 +27,9 @@ import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.UrlParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
-import org.gbif.pipelines.core.utils.VocabularyConceptFactory;
 import org.gbif.pipelines.io.avro.EventCoreRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
-import org.gbif.pipelines.io.avro.Parent;
 
 /**
  * Interpreting function that receives a ExtendedRecord instance and applies an interpretation to
@@ -105,65 +100,6 @@ public class CoreInterpreter {
                   consumer.accept(p);
                 }
               });
-    };
-  }
-
-  public static BiConsumer<ExtendedRecord, EventCoreRecord> interpretLineages(
-      Map<String, Map<String, String>> erWithParents, VocabularyService vocabularyService) {
-    return (er, evr) -> {
-      String parentEventID = extractValue(er, DwcTerm.parentEventID);
-
-      if (parentEventID == null) {
-        return;
-      }
-
-      // Users can use the same eventId for parentEventID creating infinite loop
-      if (infinitLoopCheck(parentEventID, erWithParents)) {
-        addIssue(evr, "EVENT_ID_TO_PARENT_ID_LOOPING_ISSUE");
-        return;
-      }
-
-      // parent event IDs
-      List<Parent> parents = new ArrayList<>();
-      int order = 1;
-      while (parentEventID != null) {
-        Map<String, String> parentValues = erWithParents.get(parentEventID);
-
-        if (parentValues == null) {
-          // case when there is no event with that parentEventID
-          break;
-        }
-
-        Parent.Builder parentBuilder = Parent.newBuilder().setId(parentEventID);
-        parentBuilder.setEventType(
-            VocabularyInterpreter.interpretVocabulary(
-                    DwcTerm.eventType,
-                    parentValues.get(DwcTerm.eventType.name()),
-                    vocabularyService)
-                .orElseGet(
-                    // allow the raw event type value through if not matched to vocab
-                    // this is useful as vocab is a WIP
-                    () ->
-                        VocabularyInterpreter.interpretVocabulary(
-                                DwcTerm.eventType, DEFAULT_EVENT_TYPE, vocabularyService)
-                            .orElse(
-                                VocabularyConceptFactory.createConcept(
-                                    DEFAULT_EVENT_TYPE,
-                                    Collections.emptyList(),
-                                    Collections.emptyMap())))
-                .getConcept());
-
-        parentBuilder.setVerbatimEventType(
-            Optional.ofNullable(parentValues.get(DwcTerm.eventType.name()))
-                .orElse(DEFAULT_EVENT_TYPE));
-
-        parentBuilder.setOrder(order++);
-        parents.add(parentBuilder.build());
-
-        parentEventID = parentValues.get(DwcTerm.parentEventID.name());
-      }
-
-      evr.setParentsLineage(parents);
     };
   }
 
