@@ -774,7 +774,7 @@ public class EventInterpretationTest extends MockedServicesTest {
 
     String testUuid = "1d5fe649-f85e-43cc-a19c-2a9979a741ac";
     int attempt = 1;
-    generateVerbatimAvroWitInfiniteLoop(testUuid, 1);
+    generateVerbatimAvroWithInfiniteLoop(testUuid, 1);
 
     PipelinesConfig config = loadConfig(testResourcesRoot + "/pipelines.yaml");
 
@@ -912,7 +912,7 @@ public class EventInterpretationTest extends MockedServicesTest {
     }
   }
 
-  private void generateVerbatimAvroWitInfiniteLoop(String uuid, int attempt) throws IOException {
+  private void generateVerbatimAvroWithInfiniteLoop(String uuid, int attempt) throws IOException {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").build();
     er.setCoreRowType(DwcTerm.Event.qualifiedName());
 
