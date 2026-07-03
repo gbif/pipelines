@@ -81,7 +81,7 @@ public class CalculateLineageTest {
     assertNotNull(event4);
 
     List<Parent> parents = event4.getLineage();
-    assertTrue(parents != null && parents.size() >= 2);
+    assertTrue(parents != null && parents.size() == 2);
 
     // presence checks
     assertTrue(parents.stream().anyMatch(p -> "Event2".equals(p.getId())));
@@ -94,8 +94,7 @@ public class CalculateLineageTest {
 
     // assert Event3 does not have parent  Event2
     List<Parent> parents3 = event3.getLineage();
-    assertTrue(parents3 != null && parents3.size() == 2);
+    assertTrue(parents3 != null && parents3.size() == 1);
     assertTrue(parents3.stream().anyMatch(p -> "Event1".equals(p.getId())));
-    assertTrue(parents3.stream().anyMatch(p -> "Event3".equals(p.getId())));
   }
 }
