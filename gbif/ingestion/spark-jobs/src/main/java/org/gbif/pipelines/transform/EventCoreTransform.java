@@ -50,4 +50,23 @@ public class EventCoreTransform implements Serializable {
 
     return r;
   }
+
+  public EventCoreRecord convertEventTypeOnly(
+      ExtendedRecord source, Map<String, Map<String, String>> erWithParents) {
+    if (source == null || source.getCoreTerms().isEmpty()) {
+      throw new IllegalArgumentException("ExtendedRecord is null or empty");
+    }
+
+    var vocabularyService = VocabularyServiceFactory.getInstance(config);
+
+    EventCoreRecord r =
+        EventCoreRecord.newBuilder()
+            .setId(source.getId())
+            .setCreated(Instant.now().toEpochMilli())
+            .build();
+
+    VocabularyInterpreter.interpretEventType(vocabularyService).accept(source, r);
+
+    return r;
+  }
 }

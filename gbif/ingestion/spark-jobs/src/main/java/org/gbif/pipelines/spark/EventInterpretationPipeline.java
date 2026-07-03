@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark;
 
+import static org.gbif.pipelines.core.utils.EventsUtils.DEFAULT_EVENT_TYPE;
 import static org.gbif.pipelines.spark.ArgsConstants.*;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.OccurrenceInterpretationPipeline.getMetadataRecord;
@@ -145,7 +146,7 @@ public class EventInterpretationPipeline {
         loadExtendedRecords(spark, config, inputPath, outputPath, numberOfShards);
 
     sparkLog(spark, "event-interpretation", "Generating event lineage");
-    Dataset<EventLineage> lineage = generateLineage(spark, extendedRecords);
+    Dataset<EventLineage> lineage = generateLineage(spark, extendedRecords, config);
 
     // run the record by record transformations
     sparkLog(spark, "event-interpretation", "Running record by record transformations");
@@ -192,13 +193,15 @@ public class EventInterpretationPipeline {
   }
 
   private static Dataset<EventLineage> generateLineage(
-      SparkSession spark, Dataset<ExtendedRecord> extendedRecords) {
+      SparkSession spark, Dataset<ExtendedRecord> extendedRecords, PipelinesConfig config) {
+    EventCoreTransform eventCoreTransform = EventCoreTransform.create(config);
 
     StructType schema =
         DataTypes.createStructType(
             new StructField[] {
               DataTypes.createStructField("eventId", DataTypes.StringType, true),
               DataTypes.createStructField("eventType", DataTypes.StringType, true),
+              DataTypes.createStructField("verbatimEventType", DataTypes.StringType, true),
               DataTypes.createStructField("parentEventId", DataTypes.StringType, true)
             });
 
@@ -207,12 +210,21 @@ public class EventInterpretationPipeline {
             (MapFunction<ExtendedRecord, Row>)
                 record -> {
                   String eventID = ModelUtils.extractValue(record, DwcTerm.eventID);
-                  Optional<String> eventTypeOpt =
+                  Optional<String> verbatimEventTypeOpt =
                       ModelUtils.extractOptValue(record, DwcTerm.eventType);
+                  EventCoreRecord ecr = eventCoreTransform.convertEventTypeOnly(record, null);
+                  String interpretedEventType =
+                      Optional.ofNullable(ecr.getEventType())
+                          .map(VocabularyConcept::getConcept)
+                          .orElse(DEFAULT_EVENT_TYPE);
+
                   Optional<String> parentEventIDOpt =
                       ModelUtils.extractOptValue(record, DwcTerm.parentEventID);
                   return RowFactory.create(
-                      eventID, eventTypeOpt.orElse(null), parentEventIDOpt.orElse(null));
+                      eventID,
+                      interpretedEventType,
+                      verbatimEventTypeOpt.orElse(null),
+                      parentEventIDOpt.orElse(null));
                 },
             Encoders.row(schema));
 

@@ -121,7 +121,7 @@ public class EventInterpretationTest extends MockedServicesTest {
         if ("EVT-000".equals(verbatimEventID)) {
           // Parent record checks
           assertEquals("EVT-000", JsonPath.read(json, "$.v_eventid.string"));
-          assertEquals("Project", JsonPath.read(json, "$.v_eventtype.string"));
+          assertEquals("habitat", JsonPath.read(json, "$.v_eventtype.string"));
         } else if ("EVT-001".equals(verbatimEventID)) {
           // Child record checks
           assertEquals("EVT-001", JsonPath.read(json, "$.v_eventid.string"));
@@ -166,7 +166,11 @@ public class EventInterpretationTest extends MockedServicesTest {
       if ("EVT-000".equals(eventId)) {
         // Parent record checks
         assertEquals("EVT-000", JsonPath.read(json, "$.event.eventID"));
-        assertEquals("Project", JsonPath.read(json, "$.event.eventType.concept"));
+        assertEquals("Event", JsonPath.read(json, "$.event.eventType.concept"));
+        assertEquals("habitat", JsonPath.read(json, "$.event.verbatimEventType"));
+        assertEquals(
+            List.of("habitat"),
+            JsonPath.<List<String>>read(json, "$.event.verbatimEventTypeHierarchy"));
       } else if ("EVT-001".equals(eventId)) {
         // Child record checks
         assertEquals("EVT-001", JsonPath.read(json, "$.event.eventID"));
@@ -204,9 +208,9 @@ public class EventInterpretationTest extends MockedServicesTest {
             List.of("Event", "Project", "Survey"),
             JsonPath.<List<String>>read(json, "$.event.eventType.lineage"));
         assertEquals(
-            List.of("Project", "Survey"),
+            List.of("Event", "Survey"),
             JsonPath.<List<String>>read(json, "$.event.eventTypeHierarchy"));
-        assertEquals("Project / Survey", JsonPath.read(json, "$.event.eventTypeHierarchyJoined"));
+        assertEquals("Event / Survey", JsonPath.read(json, "$.event.eventTypeHierarchyJoined"));
 
         // extensions & flags
         List<String> exts = JsonPath.<List<String>>read(json, "$.event.extensions");
@@ -242,7 +246,7 @@ public class EventInterpretationTest extends MockedServicesTest {
         assertEquals("EVT-000", JsonPath.read(json, "$.event.parentEventID"));
         int lineageSize = JsonPath.read(json, "$.event.parentsLineage.length()");
         assertEquals(1, lineageSize);
-        assertEquals("Project", JsonPath.read(json, "$.event.parentsLineage[0].eventType"));
+        assertEquals("Event", JsonPath.read(json, "$.event.parentsLineage[0].eventType"));
         assertEquals("EVT-000", JsonPath.read(json, "$.event.parentsLineage[0].id"));
 
         // project & publishing info
@@ -265,10 +269,10 @@ public class EventInterpretationTest extends MockedServicesTest {
         assertEquals("EVT-001", JsonPath.read(json, "$.event.surveyID"));
         assertEquals("Survey", JsonPath.read(json, "$.event.verbatimEventType"));
         assertEquals(
-            List.of("Project", "Survey"),
+            List.of("habitat", "Survey"),
             JsonPath.<List<String>>read(json, "$.event.verbatimEventTypeHierarchy"));
         assertEquals(
-            "Project / Survey", JsonPath.read(json, "$.event.verbatimEventTypeHierarchyJoined"));
+            "habitat / Survey", JsonPath.read(json, "$.event.verbatimEventTypeHierarchyJoined"));
 
         // humboldt
         assertEquals(
@@ -331,7 +335,7 @@ public class EventInterpretationTest extends MockedServicesTest {
 
         // eventInherited
         assertEquals(
-            List.of("Project"), JsonPath.<List<String>>read(json, "$.eventInherited.eventType"));
+            List.of("Event"), JsonPath.<List<String>>read(json, "$.eventInherited.eventType"));
         assertEquals("2", JsonPath.read(json, "$.eventInherited.id"));
 
         // top-level ids & timing (exact match to test resource)
@@ -584,7 +588,7 @@ public class EventInterpretationTest extends MockedServicesTest {
             .setCoreTerms(
                 Map.of(
                     DwcTerm.eventID.qualifiedName(), "EVT-000",
-                    DwcTerm.eventType.qualifiedName(), "Project"))
+                    DwcTerm.eventType.qualifiedName(), "habitat"))
             .build();
     parentEr.setCoreRowType(DwcTerm.Event.qualifiedName());
 
@@ -929,7 +933,6 @@ public class EventInterpretationTest extends MockedServicesTest {
     Map<String, String> eventCoreTerms2 = new HashMap<>();
     eventCoreTerms2.put(DwcTerm.eventID.qualifiedName(), EVT_001);
     eventCoreTerms2.put(DwcTerm.parentEventID.qualifiedName(), EVT_000);
-    eventCoreTerms2.put(DwcTerm.eventType.qualifiedName(), "Survey");
 
     er2.setCoreTerms(eventCoreTerms2);
 

@@ -55,8 +55,8 @@ public class LineageUtil {
     String sqlQuery =
         """
             SELECT
-                concat(l.eventId, '||', coalesce(l.eventType,'')) AS eventId,
-                concat(l.parentEventId, '||', coalesce(r.eventType,'')) AS parentEventId,
+                concat(l.eventId, '||', coalesce(l.eventType,''), '||', coalesce(l.verbatimEventType,'')) AS eventId,
+                concat(l.parentEventId, '||', coalesce(r.eventType,''), '||', coalesce(r.verbatimEventType,'')) AS parentEventId,
                 l.vertexId AS vertexId,
                 r.vertexId AS parentVertexId
             FROM events l
@@ -172,13 +172,17 @@ public class LineageUtil {
                               String[] parts = node.split("\\|\\|");
                               if (parts.length >= 2) {
                                 String nodeEventId = parts[0];
+                                // there is always a default value for the interpreted
+                                String interpretedEventType = parts[1];
+                                // the verbatim event type might not exist
+                                String verbatimEventType = parts.length > 2 ? parts[2] : "";
                                 if (!selfEventId.equals(
                                     nodeEventId)) { // exclude self from parents lineage
                                   parentRowsBuffer.$plus$eq(
                                       RowFactory.create(
-                                          parts[0], // id
-                                          parts[1], // eventType
-                                          parts[1], // verbatimEventType
+                                          nodeEventId, // id
+                                          interpretedEventType, // eventType
+                                          verbatimEventType, // verbatimEventType
                                           order.getAndIncrement() // order
                                           ));
                                 }
