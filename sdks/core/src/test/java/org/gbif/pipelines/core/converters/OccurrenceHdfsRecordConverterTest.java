@@ -783,7 +783,8 @@ public class OccurrenceHdfsRecordConverterTest {
     String[] issues = {
       OccurrenceIssue.IDENTIFIED_DATE_INVALID.name(),
       OccurrenceIssue.MODIFIED_DATE_INVALID.name(),
-      OccurrenceIssue.RECORDED_DATE_UNLIKELY.name()
+      OccurrenceIssue.RECORDED_DATE_UNLIKELY.name(),
+      OccurrenceIssue.NUCLEOTIDE_SEQUENCE_INVALID.name()
     };
 
     TemporalRecord temporalRecord =
@@ -793,12 +794,34 @@ public class OccurrenceHdfsRecordConverterTest {
             .setYear(2019)
             .setMonth(1)
             .setStartDayOfYear(1)
-            .setIssues(IssueRecord.newBuilder().setIssueList(Arrays.asList(issues)).build())
+            .setIssues(
+                IssueRecord.newBuilder()
+                    .setIssueList(
+                        Arrays.asList(
+                            OccurrenceIssue.IDENTIFIED_DATE_INVALID.name(),
+                            OccurrenceIssue.MODIFIED_DATE_INVALID.name(),
+                            OccurrenceIssue.RECORDED_DATE_UNLIKELY.name()))
+                    .build())
+            .build();
+
+    DnaDerivedDataRecord dnaDerivedDataRecord =
+        DnaDerivedDataRecord.newBuilder()
+            .setId("1")
+            .setDnaDerivedDataItems(
+                List.of(DnaDerivedData.newBuilder().setDnaSequenceID("DASFF").build()))
+            .setIssues(
+                IssueRecord.newBuilder()
+                    .setIssueList(List.of(OccurrenceIssue.NUCLEOTIDE_SEQUENCE_INVALID.name()))
+                    .build())
             .build();
 
     // When
     OccurrenceHdfsRecord hdfsRecord =
-        OccurrenceHdfsRecordConverter.builder().temporalRecord(temporalRecord).build().convert();
+        OccurrenceHdfsRecordConverter.builder()
+            .temporalRecord(temporalRecord)
+            .dnaDerivedDataRecord(dnaDerivedDataRecord)
+            .build()
+            .convert();
 
     // Should
     Assert.assertArrayEquals(issues, hdfsRecord.getIssue().toArray(new String[issues.length]));
