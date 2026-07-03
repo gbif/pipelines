@@ -3,6 +3,7 @@ package org.gbif.validator.api;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Set;
@@ -37,6 +38,9 @@ public class Validation {
     FAILED,
     QUEUED
   }
+
+  @JsonPOJOBuilder(withPrefix = "")
+  public static class ValidationBuilder {}
 
   /** Validation key/identifier. */
   private UUID key;
