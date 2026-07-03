@@ -85,7 +85,8 @@ class DwcDpVerbatimConverterTest {
 
   /**
    * Full event-core round-trip through Avro covering all currently implemented tables: event,
-   * occurrence (with organism join), and media (via event-media).
+   * occurrence (with organism join), media (via event-media), event assertions, and Humboldt survey
+   * data.
    *
    * <p>When new tables are added to the pipeline (e.g. identification), extend the fixture data and
    * add assertions here rather than adding a new permutation test.
@@ -97,6 +98,7 @@ class DwcDpVerbatimConverterTest {
         dir,
         "data/event.parquet",
         schema(
+            "event_pk",
             "eventID",
             "parentEventID",
             "eventDate",
@@ -104,8 +106,8 @@ class DwcDpVerbatimConverterTest {
             "decimalLatitude",
             "decimalLongitude"),
         List.of(
-            RowFactory.create("EVT001", null, "2024-06-01", "DK", "55.6", "12.5"),
-            RowFactory.create("EVT002", "EVT001", "2024-06-02", "DK", "55.7", "12.6")));
+            RowFactory.create("EPK-001", "EVT001", null, "2024-06-01", "DK", "55.6", "12.5"),
+            RowFactory.create("EPK-002", "EVT002", "EVT001", "2024-06-02", "DK", "55.7", "12.6")));
 
     // associatedOrganisms is NOT a DwC-DP occurrence field — contributed by organism join only
     writeParquet(
@@ -162,7 +164,33 @@ class DwcDpVerbatimConverterTest {
         schema("mediaID", "eventID"),
         List.of(RowFactory.create("MED001", "EVT001"), RowFactory.create("MED002", "EVT001")));
 
-    DataPackage dp = DataPackageFixtures.withEventOccurrenceOrganismAndMedia();
+    writeParquet(
+        dir,
+        "data/event-assertion.parquet",
+        schema("assertionID", "event_fk", "assertionType", "assertionValue", "assertionUnit"),
+        List.of(RowFactory.create("A001", "EPK-001", "Temperature", "25.0", "Celsius")));
+
+    writeParquet(
+        dir,
+        "data/survey.parquet",
+        schema("survey_pk", "event_fk", "siteCount", "reportedWeather"),
+        List.of(RowFactory.create("SPK-001", "EPK-001", "3", "Clear")));
+
+    writeParquet(
+        dir,
+        "data/survey-target.parquet",
+        schema("surveyTarget_pk", "surveyTargetDescription"),
+        List.of(
+            RowFactory.create("STP-001", "All birds"),
+            RowFactory.create("STP-002", "All mammals")));
+
+    writeParquet(
+        dir,
+        "data/survey-survey-target.parquet",
+        schema("survey_fk", "surveyTarget_fk"),
+        List.of(RowFactory.create("SPK-001", "STP-001"), RowFactory.create("SPK-001", "STP-002")));
+
+    DataPackage dp = DataPackageFixtures.withEventOccurrenceOrganismMediaAssertionAndSurvey();
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String verbatimPath = "file://" + dir + "/verbatim.avro";
@@ -238,10 +266,35 @@ class DwcDpVerbatimConverterTest {
     assertEquals("https://example.com/img1.jpg", mediaUris.get(0));
     assertEquals("https://example.com/img2.jpg", mediaUris.get(1));
 
+    List<Map<String, String>> emof =
+        evt001.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
+    assertNotNull(emof, "eMoF extension must be present");
+    assertEquals(1, emof.size());
+    assertEquals("A001", emof.get(0).get(DwcTerm.measurementID.qualifiedName()));
+    assertEquals("Temperature", emof.get(0).get(DwcTerm.measurementType.qualifiedName()));
+
+    List<Map<String, String>> humboldt =
+        evt001.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_HUMBOLDT);
+    assertNotNull(humboldt, "Humboldt extension must be present");
+    assertEquals(2, humboldt.size());
+    List<String> surveyTargets =
+        humboldt.stream()
+            .map(h -> h.get(DwcDpVerbatimConverter.resolveTermUri("surveyTargetDescription")))
+            .sorted()
+            .toList();
+    assertEquals("All birds", surveyTargets.get(0));
+    assertEquals("All mammals", surveyTargets.get(1));
+
     assertNull(
         evt002.getExtensions().get(DwcDpRowTypes.ROW_TYPE_OCCURRENCE), "EVT002 has no occurrences");
     assertNull(
         evt002.getExtensions().get(DwcDpRowTypes.ROW_TYPE_MULTIMEDIA), "EVT002 has no media");
+    assertNull(
+        evt002.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT),
+        "EVT002 has no eMoF");
+    assertNull(
+        evt002.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_HUMBOLDT),
+        "EVT002 has no Humboldt");
   }
 
   // ---- round-trip: write via Spark Avro, read back as IdentifiersPipeline would ----
@@ -306,10 +359,16 @@ class DwcDpVerbatimConverterTest {
     writeParquet(
         dir,
         "data/occurrence.parquet",
-        schema("occurrenceID", "scientificName", "decimalLatitude"),
-        List.of(RowFactory.create("OCC001", "Pinus sylvestris", "60.2")));
+        schema("occurrence_pk", "occurrenceID", "scientificName", "decimalLatitude"),
+        List.of(RowFactory.create("OPK-001", "OCC001", "Pinus sylvestris", "60.2")));
 
-    DataPackage dp = DataPackageFixtures.withOccurrence();
+    writeParquet(
+        dir,
+        "data/occurrence-assertion.parquet",
+        schema("assertionID", "occurrence_fk", "assertionType", "assertionValue", "assertionUnit"),
+        List.of(RowFactory.create("A001", "OPK-001", "Mass", "3.2", "g")));
+
+    DataPackage dp = DataPackageFixtures.withOccurrenceAndAssertion();
 
     String verbatimPath = "file://" + dir + "/verbatim.avro";
     DwcDpVerbatimConverter.buildOccurrenceCoreDataset(spark, dp, "file://" + dir)
@@ -334,14 +393,19 @@ class DwcDpVerbatimConverterTest {
     assertEquals(DwcDpVerbatimConverter.CORE_ROW_TYPE_OCCURRENCE, r.getCoreRowType());
     assertEquals("Pinus sylvestris", r.getCoreTerms().get(DwcTerm.scientificName.qualifiedName()));
     assertEquals("60.2", r.getCoreTerms().get(DwcTerm.decimalLatitude.qualifiedName()));
-    assertTrue(r.getExtensions().isEmpty());
+    List<Map<String, String>> emof =
+        r.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
+    assertNotNull(emof, "eMoF extension must be present");
+    assertEquals(1, emof.size());
+    assertEquals("A001", emof.get(0).get(DwcTerm.measurementID.qualifiedName()));
+    assertEquals("Mass", emof.get(0).get(DwcTerm.measurementType.qualifiedName()));
   }
 
   // ---- comprehensive round-trip: occurrence-core ----
 
   /**
    * Full occurrence-core round-trip through Avro covering all currently implemented tables:
-   * occurrence (with organism join) and media (via occurrence-media).
+   * occurrence (with organism join), media (via occurrence-media), and occurrence assertions.
    *
    * <p>When new tables are added to the pipeline, extend the fixture and assertions here.
    */
@@ -352,6 +416,7 @@ class DwcDpVerbatimConverterTest {
         dir,
         "data/occurrence.parquet",
         schema(
+            "occurrence_pk",
             "occurrenceID",
             "eventID",
             "organismID",
@@ -365,6 +430,7 @@ class DwcDpVerbatimConverterTest {
             "decimalLongitude"),
         List.of(
             RowFactory.create(
+                "OPK-001",
                 "OCC001",
                 "EVT001",
                 "org-1",
@@ -377,6 +443,7 @@ class DwcDpVerbatimConverterTest {
                 "55.6",
                 "12.5"),
             RowFactory.create(
+                "OPK-002",
                 "OCC002",
                 "EVT001",
                 null,
@@ -416,7 +483,13 @@ class DwcDpVerbatimConverterTest {
         schema("mediaID", "occurrenceID"),
         List.of(RowFactory.create("MED001", "OCC001"), RowFactory.create("MED002", "OCC001")));
 
-    DataPackage dp = DataPackageFixtures.withOccurrenceOrganismAndMedia();
+    writeParquet(
+        dir,
+        "data/occurrence-assertion.parquet",
+        schema("assertionID", "occurrence_fk", "assertionType", "assertionValue", "assertionUnit"),
+        List.of(RowFactory.create("A001", "OPK-001", "Mass", "3.2", "g")));
+
+    DataPackage dp = DataPackageFixtures.withOccurrenceOrganismMediaAndAssertion();
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String verbatimPath = "file://" + dir + "/verbatim.avro";
@@ -462,6 +535,13 @@ class DwcDpVerbatimConverterTest {
         occ001.getCoreTerms().get(DwcTerm.associatedOrganisms.qualifiedName()),
         "associatedOrganisms contributed by organism table must survive Avro round-trip");
 
+    List<Map<String, String>> emof =
+        occ001.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
+    assertNotNull(emof, "eMoF extension must be present on OCC001");
+    assertEquals(1, emof.size());
+    assertEquals("A001", emof.get(0).get(DwcTerm.measurementID.qualifiedName()));
+    assertEquals("Mass", emof.get(0).get(DwcTerm.measurementType.qualifiedName()));
+
     List<Map<String, String>> mediaExt =
         occ001.getExtensions().get(DwcDpRowTypes.ROW_TYPE_MULTIMEDIA);
     assertNotNull(mediaExt, "media extension must be present on OCC001");
@@ -483,6 +563,12 @@ class DwcDpVerbatimConverterTest {
         "associatedOrganisms must be absent when occurrence has no organism link");
     assertNull(
         occ002.getExtensions().get(DwcDpRowTypes.ROW_TYPE_MULTIMEDIA), "OCC002 has no media");
+    assertNull(
+        occ002.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT),
+        "OCC002 has no eMoF");
+    assertNull(
+        occ002.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT),
+        "OCC002 has no eMoF");
   }
 
   // ---- assertion (eMoF) extension ----
