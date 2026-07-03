@@ -8,18 +8,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.dp.descriptor.DataPackageDescriptor;
 import org.gbif.dp.descriptor.JacksonDataPackageParser;
 import org.gbif.dp.descriptor.ResourceDescriptor;
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.io.TempDir;
+import org.yaml.snakeyaml.Yaml;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DataPackageConverterTest {
@@ -191,5 +194,23 @@ class DataPackageConverterTest {
     assertEquals("occurrences.parquet", occ.paths().get(0).getFileName().toString());
     assertNull(occ.dialect());
     assertFalse(occ.fields().isEmpty());
+  }
+
+  @Test
+  void metricsAreWrittenAfterConversion(@TempDir Path destination) throws Exception {
+    converter.convert(spark, fixtures.resolve("tsv-package"), "file://" + destination);
+
+    Path metricsFile = destination.resolve(PipelinesVariables.Pipeline.DWCDP_STAGE + ".yml");
+    assertTrue(Files.exists(metricsFile));
+
+    // NOTE: due to native use of Yaml(), the file reads the values as `Integer`
+    // Despite them being written as Longs, and changing signature of Map to Map<String, Long>
+    // Yields a class Cast exception on .get(key)... So for now asserts are with int
+    Yaml yaml = new Yaml();
+    Map<String, Integer> metrics = yaml.load(Files.readString(metricsFile));
+
+    assertEquals(100, metrics.get("COUNT_OCCURRENCES"));
+    assertEquals(3, metrics.get("COUNT_TAXA"));
+    assertEquals(100, metrics.get("COUNT_MAX"));
   }
 }

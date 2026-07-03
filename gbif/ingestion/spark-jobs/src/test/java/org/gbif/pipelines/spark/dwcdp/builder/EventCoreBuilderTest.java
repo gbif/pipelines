@@ -17,6 +17,8 @@ import org.apache.spark.sql.types.StructType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.DwcDpRowTypes;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.HumboldtExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TestTableLoader;
@@ -51,6 +53,12 @@ class EventCoreBuilderTest {
     return spark.createDataFrame(rows, schema);
   }
 
+  private Dataset<Row> eventPkDf(List<Row> rows) {
+    StructType schema =
+        new StructType().add("event_pk", DataTypes.StringType).add("eventID", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
   private Dataset<Row> occurrenceDf(List<Row> rows) {
     StructType schema =
         new StructType()
@@ -71,6 +79,43 @@ class EventCoreBuilderTest {
   private Dataset<Row> eventMediaDf(List<Row> rows) {
     StructType schema =
         new StructType().add("mediaID", DataTypes.StringType).add("eventID", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> eventAssertionDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("assertionID", DataTypes.StringType)
+            .add("event_fk", DataTypes.StringType)
+            .add("assertionType", DataTypes.StringType)
+            .add("assertionValue", DataTypes.StringType)
+            .add("assertionUnit", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> surveyDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("survey_pk", DataTypes.StringType)
+            .add("event_fk", DataTypes.StringType)
+            .add("siteCount", DataTypes.StringType)
+            .add("reportedWeather", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> surveyTargetDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("surveyTarget_pk", DataTypes.StringType)
+            .add("surveyTargetDescription", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> surveyLinkDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("survey_fk", DataTypes.StringType)
+            .add("surveyTarget_fk", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
@@ -222,6 +267,66 @@ class EventCoreBuilderTest {
     assertEquals(1, mediaExt.size());
     assertEquals(
         "https://example.com/img.jpg", mediaExt.get(0).get(TermResolver.resolve("accessURI")));
+  }
+
+  @Test
+  void eventAssertionTable_attachedAsEmofExtension() {
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> assertionDf =
+        eventAssertionDf(List.of(RowFactory.create("A001", "EPK-001", "Temperature", "25.0", "C")));
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(
+                spark, TestTableLoader.of("event", eventDf, "event-assertion", assertionDf))
+            .collectAsList();
+
+    List<Map<String, String>> emof =
+        records
+            .get(0)
+            .getExtensions()
+            .get(AssertionExtensionBuilder.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
+    assertNotNull(emof, "eMoF extension must be present");
+    assertEquals(1, emof.size());
+    assertEquals("A001", emof.get(0).get(DwcTerm.measurementID.qualifiedName()));
+    assertEquals("Temperature", emof.get(0).get(DwcTerm.measurementType.qualifiedName()));
+    assertEquals("25.0", emof.get(0).get(DwcTerm.measurementValue.qualifiedName()));
+    assertEquals("C", emof.get(0).get(DwcTerm.measurementUnit.qualifiedName()));
+  }
+
+  @Test
+  void surveyTables_attachedAsHumboldtExtension() {
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> surveyTable =
+        surveyDf(List.of(RowFactory.create("SPK-001", "EPK-001", "3", "Clear")));
+    Dataset<Row> surveyTargetTable =
+        surveyTargetDf(
+            List.of(
+                RowFactory.create("STP-001", "All birds"),
+                RowFactory.create("STP-002", "All mammals")));
+    Dataset<Row> surveyLinkTable =
+        surveyLinkDf(
+            List.of(
+                RowFactory.create("SPK-001", "STP-001"), RowFactory.create("SPK-001", "STP-002")));
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(
+                spark,
+                TestTableLoader.of(
+                    "event",
+                    eventDf,
+                    "survey",
+                    surveyTable,
+                    "survey-target",
+                    surveyTargetTable,
+                    "survey-survey-target",
+                    surveyLinkTable))
+            .collectAsList();
+
+    List<Map<String, String>> humboldt =
+        records.get(0).getExtensions().get(HumboldtExtensionBuilder.ROW_TYPE_HUMBOLDT);
+    assertNotNull(humboldt, "Humboldt extension must be present");
+    assertEquals(2, humboldt.size());
+    assertEquals("3", humboldt.get(0).get(TermResolver.resolve("siteCount")));
   }
 
   @Test

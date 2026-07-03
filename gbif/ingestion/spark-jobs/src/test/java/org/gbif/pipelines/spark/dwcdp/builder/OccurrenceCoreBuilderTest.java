@@ -1,6 +1,7 @@
 package org.gbif.pipelines.spark.dwcdp.builder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -15,6 +16,7 @@ import org.apache.spark.sql.types.StructType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.DwcDpRowTypes;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
@@ -49,12 +51,32 @@ class OccurrenceCoreBuilderTest {
     return spark.createDataFrame(rows, schema);
   }
 
+  private Dataset<Row> occurrencePkDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("occurrence_pk", DataTypes.StringType)
+            .add("occurrenceID", DataTypes.StringType)
+            .add("scientificName", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
   private Dataset<Row> organismDf(List<Row> rows) {
     StructType schema =
         new StructType()
             .add("organismID", DataTypes.StringType)
             .add("organismName", DataTypes.StringType)
             .add("associatedOrganisms", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> occurrenceAssertionDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("assertionID", DataTypes.StringType)
+            .add("occurrence_fk", DataTypes.StringType)
+            .add("assertionType", DataTypes.StringType)
+            .add("assertionValue", DataTypes.StringType)
+            .add("assertionUnit", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
@@ -137,5 +159,30 @@ class OccurrenceCoreBuilderTest {
           er.getCoreTerms().get(DwcTerm.organismName.qualifiedName()),
           "Each occurrence should carry the organism name — many:1 collapse");
     }
+  }
+
+  @Test
+  void occurrenceAssertionTable_attachedAsEmofExtension() {
+    Dataset<Row> occ =
+        occurrencePkDf(List.of(RowFactory.create("OPK-001", "OCC001", "Quercus robur")));
+    Dataset<Row> assertionDf =
+        occurrenceAssertionDf(List.of(RowFactory.create("A001", "OPK-001", "Mass", "3.2", "g")));
+
+    List<ExtendedRecord> records =
+        OccurrenceCoreBuilder.build(
+                spark, TestTableLoader.of("occurrence", occ, "occurrence-assertion", assertionDf))
+            .collectAsList();
+
+    List<Map<String, String>> emof =
+        records
+            .get(0)
+            .getExtensions()
+            .get(AssertionExtensionBuilder.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
+    assertNotNull(emof, "eMoF extension must be present");
+    assertEquals(1, emof.size());
+    assertEquals("A001", emof.get(0).get(DwcTerm.measurementID.qualifiedName()));
+    assertEquals("Mass", emof.get(0).get(DwcTerm.measurementType.qualifiedName()));
+    assertEquals("3.2", emof.get(0).get(DwcTerm.measurementValue.qualifiedName()));
+    assertEquals("g", emof.get(0).get(DwcTerm.measurementUnit.qualifiedName()));
   }
 }

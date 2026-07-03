@@ -13,9 +13,9 @@
  */
 package org.gbif.pipelines.spark;
 
+import static org.gbif.pipelines.core.utils.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.OccurrenceInterpretationPipeline.*;
-import static org.gbif.pipelines.spark.util.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;

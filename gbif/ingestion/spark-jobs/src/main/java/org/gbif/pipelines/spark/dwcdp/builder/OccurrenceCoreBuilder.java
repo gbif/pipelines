@@ -1,6 +1,5 @@
 package org.gbif.pipelines.spark.dwcdp.builder;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -15,9 +14,9 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.OrganismJoinBuilder;
-import org.gbif.pipelines.spark.util.MapperUtil;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
@@ -31,6 +30,8 @@ import org.gbif.pipelines.spark.util.TableLoader;
  *   <li>Left-join {@code organism} via {@link OrganismJoinBuilder} — skipped if absent.
  *   <li>Left-join {@code occurrence-media} + {@code media} via {@link MediaExtensionBuilder} and
  *       attach as Multimedia extension — skipped if either table is absent.
+ *   <li>Build the eMoF extension via {@link AssertionExtensionBuilder} — skipped if {@code
+ *       occurrence-assertion} is absent.
  *   <li>Map each enriched row to an {@link ExtendedRecord} with {@code coreRowType =
  *       dwc:Occurrence}.
  * </ol>
@@ -39,7 +40,6 @@ import org.gbif.pipelines.spark.util.TableLoader;
 public class OccurrenceCoreBuilder {
 
   private static final String CORE_ROW_TYPE = DwcTerm.Occurrence.qualifiedName();
-  private static final ObjectMapper MAPPER = MapperUtil.MAPPER;
 
   private OccurrenceCoreBuilder() {}
 
@@ -65,30 +65,27 @@ public class OccurrenceCoreBuilder {
 
     Optional<Dataset<Row>> mediaExtDf =
         MediaExtensionBuilder.buildOccurrenceMediaExtension(spark, loader);
+    Optional<Dataset<Row>> assertionExtDf =
+        AssertionExtensionBuilder.buildOccurrenceAssertionExtension(spark, loader);
 
     Dataset<Row> joined = enriched;
-    if (mediaExtDf.isPresent()) {
-      joined =
-          joined
-              .join(
-                  mediaExtDf.get(),
-                  enriched.col("occurrenceID").equalTo(mediaExtDf.get().col("occurrenceID")),
-                  "left_outer")
-              .drop(mediaExtDf.get().col("occurrenceID"));
-    }
+    joined = CoreBuilderSupport.joinIfPresent(joined, mediaExtDf, "occurrenceID");
+    joined = CoreBuilderSupport.joinIfPresent(joined, assertionExtDf, "occurrenceID");
 
     final String[] occColumns = enriched.columns();
     final boolean hasMediaExt = mediaExtDf.isPresent();
+    final boolean hasAssertionExt = assertionExtDf.isPresent();
 
     return joined
         .map(
             (MapFunction<Row, ExtendedRecord>)
-                row -> toExtendedRecord(row, occColumns, hasMediaExt),
+                row -> toExtendedRecord(row, occColumns, hasMediaExt, hasAssertionExt),
             Encoders.bean(ExtendedRecord.class))
         .filter((FilterFunction<ExtendedRecord>) r -> r != null);
   }
 
-  private static ExtendedRecord toExtendedRecord(Row row, String[] occColumns, boolean hasMediaExt)
+  private static ExtendedRecord toExtendedRecord(
+      Row row, String[] occColumns, boolean hasMediaExt, boolean hasAssertionExt)
       throws IOException {
 
     String occurrenceId = RowTermMapper.safeGet(row, "occurrenceID");
@@ -99,12 +96,18 @@ public class OccurrenceCoreBuilder {
     Map<String, String> coreTerms = RowTermMapper.toTermMap(row, occColumns);
     Map<String, List<Map<String, String>>> extensions = new HashMap<>();
 
-    if (hasMediaExt) {
-      String mediaJson = RowTermMapper.safeGet(row, MediaExtensionBuilder.COL_MEDIA_EXT_JSON);
-      if (mediaJson != null) {
-        extensions.put(MediaExtensionBuilder.ROW_TYPE_MULTIMEDIA, fromJson(mediaJson));
-      }
-    }
+    CoreBuilderSupport.addExtensionIfPresent(
+        row,
+        extensions,
+        hasMediaExt,
+        MediaExtensionBuilder.COL_MEDIA_EXT_JSON,
+        MediaExtensionBuilder.ROW_TYPE_MULTIMEDIA);
+    CoreBuilderSupport.addExtensionIfPresent(
+        row,
+        extensions,
+        hasAssertionExt,
+        AssertionExtensionBuilder.COL_ASSERTION_EXT_JSON,
+        AssertionExtensionBuilder.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
 
     return ExtendedRecord.newBuilder()
         .setId(occurrenceId)
@@ -113,10 +116,5 @@ public class OccurrenceCoreBuilder {
         .setCoreTerms(coreTerms)
         .setExtensions(extensions)
         .build();
-  }
-
-  @SuppressWarnings("unchecked")
-  private static List<Map<String, String>> fromJson(String json) throws IOException {
-    return MAPPER.readValue(json, List.class);
   }
 }
