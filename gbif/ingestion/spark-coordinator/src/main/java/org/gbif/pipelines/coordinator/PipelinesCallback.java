@@ -47,6 +47,7 @@ import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.validator.api.Validation;
 
 @Slf4j
 public abstract class PipelinesCallback<
@@ -61,6 +62,7 @@ public abstract class PipelinesCallback<
   protected final PipelinesHistoryClient historyClient;
   protected final MessagePublisher publisher;
   protected final CloseableHttpClient httpClient;
+  protected final ValidatorStatusService validatorStatusService;
   protected SparkSession sparkSession;
   protected FileSystem fileSystem;
   protected String sparkMaster;
@@ -130,6 +132,29 @@ public abstract class PipelinesCallback<
             .setDefaultRequestConfig(
                 RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
             .build();
+
+    // Validator runs (bypassRegistry) track progress through the validation service instead of the
+    // pipelines-history service.
+    if (pipelinesConfig.isBypassRegistry()) {
+      ValidationClient validationClient =
+          Feign.builder()
+              .client(new ApacheHttpClient())
+              .decoder(new JacksonDecoder(mapper))
+              .encoder(new JacksonEncoder(mapper))
+              .contract(new Contract.Default())
+              .requestInterceptor(
+                  new BasicAuthRequestInterceptor(
+                      pipelinesConfig.getStandalone().getRegistry().getUser(),
+                      pipelinesConfig.getStandalone().getRegistry().getPassword()))
+              .decode404()
+              .target(
+                  ValidationClient.class, pipelinesConfig.getStandalone().getRegistry().getWsUrl());
+      this.validatorStatusService =
+          new ValidatorStatusService(new RetryingValidationClient(validationClient));
+    } else {
+      this.validatorStatusService = null;
+    }
+
     this.sparkMaster = sparkMaster;
   }
 
@@ -265,6 +290,9 @@ public abstract class PipelinesCallback<
         // set outgoing message to the queue for the next step
         sendOutgoingMessage(trackingInfo, message);
 
+        // Mark this validator step as finished (no-op for regular ingestion runs)
+        updateValidatorStatus(message, Validation.Status.FINISHED, null);
+
         log.info("Finished processing datasetKey: {}", message.getDatasetUuid());
 
       } catch (Exception ex) {
@@ -284,6 +312,9 @@ public abstract class PipelinesCallback<
           if (trackingInfo != null) {
             updateTrackingStatus(trackingInfo, message, PipelineStep.Status.FAILED);
           }
+
+          // Mark this validator step as failed (no-op for regular ingestion runs)
+          updateValidatorStatus(message, Validation.Status.FAILED, ex.getMessage());
 
         } catch (Exception e) {
           ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
@@ -473,7 +504,9 @@ public abstract class PipelinesCallback<
 
   protected boolean isProcessingStopped(I message) {
     if (isRegistryBypassed()) {
-      return false;
+      // Validator runs are not tracked in the registry; consult the validation service instead to
+      // decide whether the validation has already reached a terminal/non-resumable state.
+      return validatorStatusService != null && validatorStatusService.isValidatorAborted(message);
     }
 
     Long currentKey = message.getExecutionId();
@@ -602,6 +635,24 @@ public abstract class PipelinesCallback<
     } catch (Exception ex) {
       // we don't want to break the crawling if the tracking fails
       log.error("Couldn't update tracking status for dataset {}", message.getDatasetUuid(), ex);
+    }
+  }
+
+  /**
+   * Updates the validation status through the validation service for validator runs.
+   *
+   * <p>Only applies when the registry is bypassed (validator runs); regular ingestion tracks
+   * progress in the pipelines-history service through {@link #updateTrackingStatus}. Failures are
+   * logged and swallowed so that a validation-status update never breaks message processing.
+   */
+  protected void updateValidatorStatus(I message, Validation.Status status, String errorMessage) {
+    if (!isRegistryBypassed() || validatorStatusService == null) {
+      return;
+    }
+    try {
+      validatorStatusService.updateStatus(message, getStepType(), status, errorMessage);
+    } catch (Exception ex) {
+      log.error("Couldn't update validation status for dataset {}", message.getDatasetUuid(), ex);
     }
   }
 
