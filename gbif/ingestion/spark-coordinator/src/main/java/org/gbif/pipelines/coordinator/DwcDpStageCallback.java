@@ -1,34 +1,30 @@
 package org.gbif.pipelines.coordinator;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.DwcDpNfsToHdfsMessage;
+import org.gbif.common.messaging.api.messages.DwcDpStageMessage;
 import org.gbif.common.messaging.api.messages.DwcDpToVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.DataPackageConversionPipeline;
 
 @Slf4j
-public class DwcDpNfsToHdfsCallback
-    extends PipelinesCallback<DwcDpNfsToHdfsMessage, PipelineBasedMessage>
-    implements CloseableMessageCallback<DwcDpNfsToHdfsMessage> {
+public class DwcDpStageCallback extends PipelinesCallback<DwcDpStageMessage, PipelineBasedMessage>
+    implements CloseableMessageCallback<DwcDpStageMessage> {
 
-  public DwcDpNfsToHdfsCallback(PipelinesConfig config, MessagePublisher publisher, String master) {
+  public DwcDpStageCallback(PipelinesConfig config, MessagePublisher publisher, String master) {
     super(config, publisher, master);
   }
 
   @Override
   protected StepType getStepType() {
-    return StepType.NFS_TO_HDFS;
+    return StepType.DWCDP_STAGE;
   }
 
   @Override
-  protected void configSparkSession(SparkSession.Builder builder, PipelinesConfig config) {}
-
-  @Override
-  protected void runPipeline(DwcDpNfsToHdfsMessage message) throws Exception {
+  protected void runPipeline(DwcDpStageMessage message) throws Exception {
     String datasetId = message.getDatasetUuid().toString();
     int attempt = message.getAttempt();
 
@@ -44,16 +40,16 @@ public class DwcDpNfsToHdfsCallback
 
   @Override
   protected String getMetaFileName() {
-    return null; // no metrics file for this step yet
+    return PipelinesVariables.Pipeline.DWCDP_STAGE + ".yml";
   }
 
   @Override
-  public Class<DwcDpNfsToHdfsMessage> getMessageClass() {
-    return DwcDpNfsToHdfsMessage.class;
+  public Class<DwcDpStageMessage> getMessageClass() {
+    return DwcDpStageMessage.class;
   }
 
   @Override
-  public PipelineBasedMessage createOutgoingMessage(DwcDpNfsToHdfsMessage message) {
+  public PipelineBasedMessage createOutgoingMessage(DwcDpStageMessage message) {
     return new DwcDpToVerbatimMessage(
         message.getDatasetUuid(),
         message.getAttempt(),

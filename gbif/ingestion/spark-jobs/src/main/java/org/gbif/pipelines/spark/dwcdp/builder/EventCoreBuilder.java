@@ -1,6 +1,5 @@
 package org.gbif.pipelines.spark.dwcdp.builder;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -15,9 +14,10 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.HumboldtExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.OccurrenceExtensionBuilder;
-import org.gbif.pipelines.spark.util.MapperUtil;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
@@ -32,6 +32,10 @@ import org.gbif.pipelines.spark.util.TableLoader;
  *       denormalized onto occurrence rows inside that builder.
  *   <li>Build the Multimedia extension via {@link MediaExtensionBuilder} — skipped if either {@code
  *       event-media} or {@code media} is absent.
+ *   <li>Build the eMoF extension via {@link AssertionExtensionBuilder} — skipped if {@code
+ *       event-assertion} is absent.
+ *   <li>Build the Humboldt extension via {@link HumboldtExtensionBuilder} — skipped if {@code
+ *       survey} is absent.
  *   <li>Map each joined row to an {@link ExtendedRecord} with {@code coreRowType = dwc:Event}.
  * </ol>
  */
@@ -40,7 +44,6 @@ public class EventCoreBuilder {
 
   private static final String CORE_ROW_TYPE = DwcTerm.Event.qualifiedName();
   private static final String ROW_TYPE_OCCURRENCE = DwcTerm.Occurrence.qualifiedName();
-  private static final ObjectMapper MAPPER = MapperUtil.MAPPER;
 
   private EventCoreBuilder() {}
 
@@ -65,41 +68,40 @@ public class EventCoreBuilder {
     Optional<Dataset<Row>> occurrenceExtDf = OccurrenceExtensionBuilder.build(spark, loader);
     Optional<Dataset<Row>> mediaExtDf =
         MediaExtensionBuilder.buildEventMediaExtension(spark, loader);
+    Optional<Dataset<Row>> assertionExtDf =
+        AssertionExtensionBuilder.buildEventAssertionExtension(spark, loader);
+    Optional<Dataset<Row>> humboldtExtDf = HumboldtExtensionBuilder.build(spark, loader);
 
     Dataset<Row> joined = eventDf;
-    if (occurrenceExtDf.isPresent()) {
-      joined =
-          joined
-              .join(
-                  occurrenceExtDf.get(),
-                  joined.col("eventID").equalTo(occurrenceExtDf.get().col("eventID")),
-                  "left_outer")
-              .drop(occurrenceExtDf.get().col("eventID"));
-    }
-    if (mediaExtDf.isPresent()) {
-      joined =
-          joined
-              .join(
-                  mediaExtDf.get(),
-                  joined.col("eventID").equalTo(mediaExtDf.get().col("eventID")),
-                  "left_outer")
-              .drop(mediaExtDf.get().col("eventID"));
-    }
+    joined = CoreBuilderSupport.joinIfPresent(joined, occurrenceExtDf, "eventID");
+    joined = CoreBuilderSupport.joinIfPresent(joined, mediaExtDf, "eventID");
+    joined = CoreBuilderSupport.joinIfPresent(joined, assertionExtDf, "eventID");
+    joined = CoreBuilderSupport.joinIfPresent(joined, humboldtExtDf, "eventID");
 
     final String[] eventColumns = eventDf.columns();
     final boolean hasOccExt = occurrenceExtDf.isPresent();
     final boolean hasMediaExt = mediaExtDf.isPresent();
+    final boolean hasAssertionExt = assertionExtDf.isPresent();
+    final boolean hasHumboldtExt = humboldtExtDf.isPresent();
 
     return joined
         .map(
             (MapFunction<Row, ExtendedRecord>)
-                row -> toExtendedRecord(row, eventColumns, hasOccExt, hasMediaExt),
+                row ->
+                    toExtendedRecord(
+                        row, eventColumns, hasOccExt, hasMediaExt, hasAssertionExt, hasHumboldtExt),
             Encoders.bean(ExtendedRecord.class))
         .filter((FilterFunction<ExtendedRecord>) r -> r != null);
   }
 
   private static ExtendedRecord toExtendedRecord(
-      Row row, String[] eventColumns, boolean hasOccExt, boolean hasMediaExt) throws IOException {
+      Row row,
+      String[] eventColumns,
+      boolean hasOccExt,
+      boolean hasMediaExt,
+      boolean hasAssertionExt,
+      boolean hasHumboldtExt)
+      throws IOException {
 
     String eventId = RowTermMapper.safeGet(row, "eventID");
     if (eventId == null || eventId.isEmpty()) {
@@ -109,19 +111,30 @@ public class EventCoreBuilder {
     Map<String, String> coreTerms = RowTermMapper.toTermMap(row, eventColumns);
     Map<String, List<Map<String, String>>> extensions = new HashMap<>();
 
-    if (hasOccExt) {
-      String occJson =
-          RowTermMapper.safeGet(row, OccurrenceExtensionBuilder.COL_OCCURRENCE_EXT_JSON);
-      if (occJson != null) {
-        extensions.put(ROW_TYPE_OCCURRENCE, fromJson(occJson));
-      }
-    }
-    if (hasMediaExt) {
-      String mediaJson = RowTermMapper.safeGet(row, MediaExtensionBuilder.COL_MEDIA_EXT_JSON);
-      if (mediaJson != null) {
-        extensions.put(MediaExtensionBuilder.ROW_TYPE_MULTIMEDIA, fromJson(mediaJson));
-      }
-    }
+    CoreBuilderSupport.addExtensionIfPresent(
+        row,
+        extensions,
+        hasOccExt,
+        OccurrenceExtensionBuilder.COL_OCCURRENCE_EXT_JSON,
+        ROW_TYPE_OCCURRENCE);
+    CoreBuilderSupport.addExtensionIfPresent(
+        row,
+        extensions,
+        hasMediaExt,
+        MediaExtensionBuilder.COL_MEDIA_EXT_JSON,
+        MediaExtensionBuilder.ROW_TYPE_MULTIMEDIA);
+    CoreBuilderSupport.addExtensionIfPresent(
+        row,
+        extensions,
+        hasAssertionExt,
+        AssertionExtensionBuilder.COL_ASSERTION_EXT_JSON,
+        AssertionExtensionBuilder.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
+    CoreBuilderSupport.addExtensionIfPresent(
+        row,
+        extensions,
+        hasHumboldtExt,
+        HumboldtExtensionBuilder.COL_HUMBOLDT_EXT_JSON,
+        HumboldtExtensionBuilder.ROW_TYPE_HUMBOLDT);
 
     return ExtendedRecord.newBuilder()
         .setId(eventId)
@@ -130,10 +143,5 @@ public class EventCoreBuilder {
         .setCoreTerms(coreTerms)
         .setExtensions(extensions)
         .build();
-  }
-
-  @SuppressWarnings("unchecked")
-  private static List<Map<String, String>> fromJson(String json) throws IOException {
-    return MAPPER.readValue(json, List.class);
   }
 }

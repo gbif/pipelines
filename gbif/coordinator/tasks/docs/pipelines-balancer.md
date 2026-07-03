@@ -98,12 +98,12 @@ Routes based on record count read from a metrics YAML on HDFS (`archive-to-verba
 | `pipelines.verbatim-to-interpreted.standalone` | record count ≤ threshold |
 | `pipelines.verbatim-to-interpreted.distributed` | record count > threshold |
 
-### DwC-DP NFS to HDFS (`DwcDpMetadataSyncFinishedMessage`)
+### DwC-DP STAGE (`DwcDpMetadataSyncFinishedMessage`)
 
 Routes based on total file size of the unpacked archive on NFS (`dwcDpRepositoryPath/<datasetKey>`),
 walked recursively. The full pipeline step set for the execution is resolved from the workflow
 graph at this point via `PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents)
-.getAllNodesFor(NFS_TO_HDFS)`, so downstream steps are registered in the registry from the start.
+.getAllNodesFor(DWCDP_STAGE)`, so downstream steps are registered in the registry from the start.
 
 | Routing key (outbound) | Condition |
 |---|---|

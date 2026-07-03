@@ -8,12 +8,16 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.sql.*;
 import org.gbif.dp.descriptor.*;
+import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.core.utils.MetricsUtil;
 import org.jspecify.annotations.NonNull;
 
 @Slf4j
@@ -37,6 +41,8 @@ public class DataPackageConverter {
     DataPackageDescriptor descriptor = parser.parse(descriptorPath);
     List<ResourceDescriptor> converted = new ArrayList<>();
 
+    Map<String, Long> metrics = new HashMap<>();
+
     for (ResourceDescriptor resource : descriptor.resources()) {
       Path inputAbsolute = resource.paths().get(0);
       Path inputRelative = sourceBase.relativize(inputAbsolute);
@@ -44,7 +50,8 @@ public class DataPackageConverter {
       String outputRelative = swapExtension(inputRelative.toString(), "parquet");
       String outputUri = destination + "/" + outputRelative;
 
-      readAndWrite(spark, resource, resource.paths(), outputUri);
+      long count = readAndWrite(spark, resource, resource.paths(), outputUri);
+      metrics.put("COUNT_" + resource.name().toUpperCase(), count);
 
       converted.add(
           new ResourceDescriptor(
@@ -55,6 +62,14 @@ public class DataPackageConverter {
               resource.primaryKey(),
               null));
     }
+
+    metrics.put("COUNT_MAX", metrics.values().stream().mapToLong(Long::longValue).max().orElse(0));
+
+    org.apache.hadoop.fs.Path hadoopPath = new org.apache.hadoop.fs.Path(destination);
+    FileSystem fs = hadoopPath.getFileSystem(spark.sparkContext().hadoopConfiguration());
+
+    MetricsUtil.writeMetricsYaml(
+        fs, metrics, destination + "/" + PipelinesVariables.Pipeline.DWCDP_STAGE + ".yml");
 
     DataPackageDescriptor outputDescriptor =
         new DataPackageDescriptor(descriptor.name(), converted);
@@ -100,7 +115,7 @@ public class DataPackageConverter {
     return Math.max(1, (int) partitions);
   }
 
-  private void readAndWrite(
+  private long readAndWrite(
       SparkSession spark, ResourceDescriptor resource, List<Path> inputs, String outputUri) {
 
     int partitions = calculatePartitions(inputs, targetPartitionByteSize);
@@ -115,6 +130,8 @@ public class DataPackageConverter {
     Dataset<Row> df = createReader(spark, resource, inputs, paths);
 
     df.coalesce(partitions).write().mode(SaveMode.Overwrite).parquet(outputUri);
+    long count = spark.read().parquet(outputUri).count();
+    return count;
   }
 
   private static Dataset<Row> createReader(

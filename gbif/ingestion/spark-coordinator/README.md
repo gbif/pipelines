@@ -47,30 +47,30 @@ java --add-opens java.base/java.lang=ALL-UNNAMED \
 Each mode has a standalone and distributed variant. Standalone initialises an embedded Spark
 session on startup; distributed only needs a connection to Airflow and HDFS.
 
-| Mode | Pipeline | Standalone Spark |
-|---|---|---|
-| `IDENTIFIER` | `IdentifiersPipeline` | Yes |
-| `IDENTIFIER_DISTRIBUTED` | `IdentifiersPipeline` via Airflow | No |
-| `INTERPRETATION` | `OccurrenceInterpretationPipeline` | Yes |
-| `INTERPRETATION_DISTRIBUTED` | `OccurrenceInterpretationPipeline` via Airflow | No |
-| `EVENTS_INTERPRETATION` | `EventInterpretationPipeline` | Yes |
+| Mode                                | Pipeline | Standalone Spark |
+|-------------------------------------|---|---|
+| `IDENTIFIER`                        | `IdentifiersPipeline` | Yes |
+| `IDENTIFIER_DISTRIBUTED`            | `IdentifiersPipeline` via Airflow | No |
+| `INTERPRETATION`                    | `OccurrenceInterpretationPipeline` | Yes |
+| `INTERPRETATION_DISTRIBUTED`        | `OccurrenceInterpretationPipeline` via Airflow | No |
+| `EVENTS_INTERPRETATION`             | `EventInterpretationPipeline` | Yes |
 | `EVENTS_INTERPRETATION_DISTRIBUTED` | `EventInterpretationPipeline` via Airflow | No |
-| `TABLEBUILD` | `TableBuildPipeline` (occurrence) | Yes |
-| `TABLEBUILD_DISTRIBUTED` | `TableBuildPipeline` (occurrence) via Airflow | No |
-| `EVENTS_TABLEBUILD` | `TableBuildPipeline` (event) | Yes |
-| `EVENTS_TABLEBUILD_DISTRIBUTED` | `TableBuildPipeline` (event) via Airflow | No |
-| `INDEXING` | `IndexingPipeline` (occurrence) | Yes |
-| `INDEXING_DISTRIBUTED` | `IndexingPipeline` (occurrence) via Airflow | No |
-| `EVENTS_INDEXING` | `IndexingPipeline` (event) | Yes |
-| `EVENTS_INDEXING_DISTRIBUTED` | `IndexingPipeline` (event) via Airflow | No |
-| `FRAGMENTER` | `FragmenterPipeline` | Yes |
-| `FRAGMENTER_DISTRIBUTED` | `FragmenterPipeline` via Airflow | No |
-| `OCCURRENCE_DELETION` | Deletes occurrence dataset from Iceberg + ES + HDFS | Yes |
-| `EVENT_DELETION` | Deletes event dataset from Iceberg + ES + HDFS | Yes |
-| `DWCDP_NFS_TO_HDFS_STANDALONE` | `DataPackageConversionPipeline` | Yes |
-| `DWCDP_NFS_TO_HDFS_DISTRIBUTED` | `DataPackageConversionPipeline` via Airflow | No |
-| `DWCDP_TO_VERBATIM_STANDALONE` | `DwcDpToVerbatimPipeline` | Yes |
-| `DWCDP_TO_VERBATIM_DISTRIBUTED` | `DwcDpToVerbatimPipeline` via Airflow | No |
+| `TABLEBUILD`                        | `TableBuildPipeline` (occurrence) | Yes |
+| `TABLEBUILD_DISTRIBUTED`            | `TableBuildPipeline` (occurrence) via Airflow | No |
+| `EVENTS_TABLEBUILD`                 | `TableBuildPipeline` (event) | Yes |
+| `EVENTS_TABLEBUILD_DISTRIBUTED`     | `TableBuildPipeline` (event) via Airflow | No |
+| `INDEXING`                          | `IndexingPipeline` (occurrence) | Yes |
+| `INDEXING_DISTRIBUTED`              | `IndexingPipeline` (occurrence) via Airflow | No |
+| `EVENTS_INDEXING`                   | `IndexingPipeline` (event) | Yes |
+| `EVENTS_INDEXING_DISTRIBUTED`       | `IndexingPipeline` (event) via Airflow | No |
+| `FRAGMENTER`                        | `FragmenterPipeline` | Yes |
+| `FRAGMENTER_DISTRIBUTED`            | `FragmenterPipeline` via Airflow | No |
+| `OCCURRENCE_DELETION`               | Deletes occurrence dataset from Iceberg + ES + HDFS | Yes |
+| `EVENT_DELETION`                    | Deletes event dataset from Iceberg + ES + HDFS | Yes |
+| `DWCDP_STAGE_STANDALONE`            | `DataPackageConversionPipeline` | Yes |
+| `DWCDP_STAGE_DISTRIBUTED`           | `DataPackageConversionPipeline` via Airflow | No |
+| `DWCDP_TO_VERBATIM_STANDALONE`      | `DwcDpToVerbatimPipeline` | Yes |
+| `DWCDP_TO_VERBATIM_DISTRIBUTED`     | `DwcDpToVerbatimPipeline` via Airflow | No |
 
 ## DwC-DP pipeline flow
 
@@ -79,12 +79,12 @@ DwC-DP datasets follow a two-step ingestion path before joining the standard int
 ```
 DwcDpMetadataSyncFinishedMessage
       │
-      ▼ balancer (DwcDpNfsToHdfsMessageHandler)
+      ▼ balancer (DwcDpStageMessageHandler)
       │   reads datapackage.json from NFS, determines workflow graph from
       │   containsOccurrences/containsEvents, resolves full step set via
-      │   PipelinesWorkflow.getWorkflow().getAllNodesFor(NFS_TO_HDFS)
+      │   PipelinesWorkflow.getWorkflow().getAllNodesFor(DWCDP_STAGE)
       │
-      ▼ DWCDP_NFS_TO_HDFS_{STANDALONE|DISTRIBUTED}
+      ▼ DWCDP_STAGE_{STANDALONE|DISTRIBUTED}
       │   DataPackageConversionPipeline: copies DwC-DP CSV/TSV/Parquet
       │   from NFS to HDFS as partitioned Parquet
       │
