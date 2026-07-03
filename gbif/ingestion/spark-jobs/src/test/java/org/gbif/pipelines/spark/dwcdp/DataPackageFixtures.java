@@ -52,6 +52,7 @@ class DataPackageFixtures {
         resource(
             "occurrence",
             "data/occurrence.parquet",
+            "occurrence_pk",
             "occurrenceID",
             "eventID",
             "organismID",
@@ -106,7 +107,178 @@ class DataPackageFixtures {
             "mediaID", "occurrenceID"));
   }
 
+  static DataPackage withOccurrenceOrganismMediaAndAssertion() {
+    return build(
+        // associatedOrganisms is not a DwC-DP occurrence field — contributed by organism join
+        resource(
+            "occurrence",
+            "data/occurrence.parquet",
+            "occurrenceID",
+            "eventID",
+            "organismID",
+            "scientificName",
+            "organismScope",
+            "organismName",
+            "organismRemarks",
+            "occurrenceStatus",
+            "sex",
+            "decimalLatitude",
+            "decimalLongitude"),
+        resource(
+            "organism",
+            "data/organism.parquet",
+            "organismID",
+            "organismName",
+            "organismScope",
+            "organismRemarks",
+            "associatedOrganisms"),
+        resource("media", "data/media.parquet", "mediaID", "accessURI", "mediaType"),
+        resource(
+            "occurrence-media", "data/occurrence-media.parquet",
+            "mediaID", "occurrenceID"),
+        resource(
+            "occurrence-assertion",
+            "data/occurrence-assertion.parquet",
+            "assertionID",
+            "occurrence_fk",
+            "assertionType",
+            "assertionValue",
+            "assertionUnit"));
+  }
+
+  static DataPackage withEventOccurrenceOrganismMediaAssertionAndSurvey() {
+    return build(
+        resource(
+            "event",
+            "data/event.parquet",
+            "event_pk",
+            "eventID",
+            "parentEventID",
+            "eventDate",
+            "country",
+            "decimalLatitude",
+            "decimalLongitude"),
+        resource(
+            "occurrence",
+            "data/occurrence.parquet",
+            "occurrenceID",
+            "eventID",
+            "organismID",
+            "scientificName",
+            "organismScope",
+            "organismName",
+            "organismRemarks",
+            "occurrenceStatus",
+            "sex"),
+        resource(
+            "organism",
+            "data/organism.parquet",
+            "organismID",
+            "organismName",
+            "organismScope",
+            "organismRemarks",
+            "associatedOrganisms"),
+        resource("media", "data/media.parquet", "mediaID", "accessURI", "mediaType"),
+        resource("event-media", "data/event-media.parquet", "mediaID", "eventID"),
+        resource(
+            "event-assertion",
+            "data/event-assertion.parquet",
+            "assertionID",
+            "event_fk",
+            "assertionType",
+            "assertionValue",
+            "assertionUnit"),
+        resource(
+            "survey",
+            "data/survey.parquet",
+            "survey_pk",
+            "event_fk",
+            "siteCount",
+            "reportedWeather"),
+        resource(
+            "survey-survey-target", "data/survey-survey-target.parquet",
+            "survey_fk", "surveyTarget_fk"),
+        resource(
+            "survey-target", "data/survey-target.parquet",
+            "surveyTarget_pk", "surveyTargetDescription"));
+  }
+
   // ---- internals ----
+
+  static DataPackage withEventAndAssertion() {
+    return build(
+        resource("event", "data/event.parquet", "event_pk", "eventID"),
+        resource(
+            "event-assertion",
+            "data/event-assertion.parquet",
+            "assertionID",
+            "event_fk",
+            "assertionType",
+            "assertionValue",
+            "assertionUnit"));
+  }
+
+  static DataPackage withOccurrenceAndAssertion() {
+    return build(
+        resource(
+            "occurrence",
+            "data/occurrence.parquet",
+            "occurrence_pk",
+            "occurrenceID",
+            "scientificName"),
+        resource(
+            "occurrence-assertion",
+            "data/occurrence-assertion.parquet",
+            "assertionID",
+            "occurrence_fk",
+            "assertionType",
+            "assertionValue",
+            "assertionUnit"));
+  }
+
+  static DataPackage withEventAssertionAndProtocol() {
+    return build(
+        resource("event", "data/event.parquet", "event_pk", "eventID"),
+        resource(
+            "event-assertion",
+            "data/event-assertion.parquet",
+            "assertionID",
+            "event_fk",
+            "assertionType",
+            "assertionValue",
+            "assertionProtocol_fk"),
+        resource("protocol", "data/protocol.parquet", "protocol_pk", "protocolDescription"));
+  }
+
+  static DataPackage withEventAndSurvey() {
+    return build(
+        resource("event", "data/event.parquet", "event_pk", "eventID"),
+        resource(
+            "survey",
+            "data/survey.parquet",
+            "survey_pk",
+            "event_fk",
+            "siteCount",
+            "reportedWeather"));
+  }
+
+  static DataPackage withEventSurveyAndTarget() {
+    return build(
+        resource("event", "data/event.parquet", "event_pk", "eventID"),
+        resource(
+            "survey",
+            "data/survey.parquet",
+            "survey_pk",
+            "event_fk",
+            "siteCount",
+            "reportedWeather"),
+        resource(
+            "survey-survey-target", "data/survey-survey-target.parquet",
+            "survey_fk", "surveyTarget_fk"),
+        resource(
+            "survey-target", "data/survey-target.parquet",
+            "surveyTarget_pk", "surveyTargetDescription"));
+  }
 
   private static DataPackage build(DataPackageResource... resources) {
     DataPackage dp = new DataPackage();

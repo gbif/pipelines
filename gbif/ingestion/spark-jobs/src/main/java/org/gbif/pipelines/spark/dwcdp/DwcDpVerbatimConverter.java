@@ -10,12 +10,16 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.builder.EventCoreBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.TermResolver;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.HumboldtExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackageResource;
 import org.gbif.pipelines.spark.util.MetricsUtil;
@@ -41,6 +45,20 @@ import org.gbif.pipelines.spark.util.TableLoader;
  */
 @Slf4j
 public class DwcDpVerbatimConverter {
+
+  // Core row type URIs
+  public static final String CORE_ROW_TYPE_EVENT = DwcTerm.Event.qualifiedName();
+  public static final String CORE_ROW_TYPE_OCCURRENCE = DwcTerm.Occurrence.qualifiedName();
+
+  // Extension row type for occurrences attached to an event core
+  public static final String ROW_TYPE_OCCURRENCE = DwcTerm.Occurrence.qualifiedName();
+
+  // Extension row type URIs — forwarded from builder classes for callers that import this class
+  public static final String ROW_TYPE_MULTIMEDIA =
+      org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder.ROW_TYPE_MULTIMEDIA;
+  public static final String ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT =
+      AssertionExtensionBuilder.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT;
+  public static final String ROW_TYPE_HUMBOLDT = HumboldtExtensionBuilder.ROW_TYPE_HUMBOLDT;
 
   private static final org.apache.avro.Schema EXTENDED_RECORD_SCHEMA = loadExtendedRecordSchema();
   static final String AVRO_EXTENDED_RECORD_AVSC = "avro/extended-record.avsc";
@@ -127,6 +145,36 @@ public class DwcDpVerbatimConverter {
     return metrics;
   }
 
+  /**
+   * Convenience method for tests and callers that have a {@link DataPackage} descriptor and a base
+   * path but no pre-built {@link TableLoader}. Constructs a loader that reads Parquet files via
+   * {@code spark.read().parquet()}, then delegates to {@link EventCoreBuilder#build}.
+   */
+  static Dataset<ExtendedRecord> buildEventCoreDataset(
+      SparkSession spark, DataPackage dataPackage, String basePath) {
+    TableLoader loader =
+        tableName ->
+            dataPackage
+                .findResource(tableName)
+                .map(r -> spark.read().parquet(basePath + "/" + r.getPath()));
+    return EventCoreBuilder.build(spark, loader);
+  }
+
+  /**
+   * Convenience method for tests and callers that have a {@link DataPackage} descriptor and a base
+   * path but no pre-built {@link TableLoader}. Constructs a loader that reads Parquet files via
+   * {@code spark.read().parquet()}, then delegates to {@link OccurrenceCoreBuilder#build}.
+   */
+  static Dataset<ExtendedRecord> buildOccurrenceCoreDataset(
+      SparkSession spark, DataPackage dataPackage, String basePath) {
+    TableLoader loader =
+        tableName ->
+            dataPackage
+                .findResource(tableName)
+                .map(r -> spark.read().parquet(basePath + "/" + r.getPath()));
+    return OccurrenceCoreBuilder.build(spark, loader);
+  }
+
   static VerbatimConversionMetrics writeMetrics(
       SparkSession spark,
       DataPackage dataPackage,
@@ -195,6 +243,11 @@ public class DwcDpVerbatimConverter {
 
   static String extendedRecordSchemaJson() {
     return EXTENDED_RECORD_SCHEMA.toString();
+  }
+
+  /** Resolves a column name to a qualified term URI. Delegates to {@link TermResolver#resolve}. */
+  static String resolveTermUri(String columnName) {
+    return TermResolver.resolve(columnName);
   }
 
   private static org.apache.avro.Schema loadExtendedRecordSchema() {
