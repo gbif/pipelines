@@ -165,20 +165,23 @@ public class LineageUtil {
 
                       List<String> path = val.getPath();
                       Collections.reverse(path);
+                      String selfEventId = val.getName().split("\\|\\|")[0];
                       path.forEach(
                           node -> {
                             if (node != null && !node.equals("EMPTY")) {
                               String[] parts = node.split("\\|\\|");
-                              if (parts.length < 2) {
-                                // parts = new String[] {parts[0], ""};
-                              } else {
-                                parentRowsBuffer.$plus$eq(
-                                    RowFactory.create(
-                                        parts[0], // id
-                                        parts[1], // eventType
-                                        parts[1], // verbatimEventType
-                                        order.getAndIncrement() // order
-                                        ));
+                              if (parts.length >= 2) {
+                                String nodeEventId = parts[0];
+                                if (!selfEventId.equals(
+                                    nodeEventId)) { // exclude self from parents lineage
+                                  parentRowsBuffer.$plus$eq(
+                                      RowFactory.create(
+                                          parts[0], // id
+                                          parts[1], // eventType
+                                          parts[1], // verbatimEventType
+                                          order.getAndIncrement() // order
+                                          ));
+                                }
                               }
                             }
                           });

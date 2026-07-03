@@ -32,6 +32,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.EcoTerm;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -50,6 +51,9 @@ import org.junit.Test;
  * hierarchies, and metadata.
  */
 public class EventInterpretationTest extends MockedServicesTest {
+
+  private static final String EVT_000 = "EVT-000";
+  private static final String EVT_001 = "EVT-001";
 
   private static SparkSession spark;
   private static java.nio.file.Path sparkTmp = null;
@@ -73,7 +77,7 @@ public class EventInterpretationTest extends MockedServicesTest {
   }
 
   @Test
-  public void test() throws Exception {
+  public void basicTest() throws Exception {
 
     URL testRootUrl = getClass().getResource("/");
     assert testRootUrl != null;
@@ -226,6 +230,7 @@ public class EventInterpretationTest extends MockedServicesTest {
         assertTrue(issues.contains("HAS_MATERIAL_SAMPLES_MISMATCH"));
         assertTrue(issues.contains("GEODETIC_DATUM_ASSUMED_WGS84"));
         assertTrue(issues.contains("CONTINENT_DERIVED_FROM_COORDINATES"));
+        assertFalse(issues.contains(OccurrenceIssue.PARENT_EVENT_ID_INFINITE_LINEAGE.name()));
 
         // locality & temporal fields
         assertEquals("Maasai Mara National Reserve", JsonPath.read(json, "$.event.locality"));
@@ -235,10 +240,10 @@ public class EventInterpretationTest extends MockedServicesTest {
 
         // parent & parentsLineage
         assertEquals("EVT-000", JsonPath.read(json, "$.event.parentEventID"));
+        int lineageSize = JsonPath.read(json, "$.event.parentsLineage.length()");
+        assertEquals(1, lineageSize);
         assertEquals("Project", JsonPath.read(json, "$.event.parentsLineage[0].eventType"));
         assertEquals("EVT-000", JsonPath.read(json, "$.event.parentsLineage[0].id"));
-        assertEquals("Survey", JsonPath.read(json, "$.event.parentsLineage[1].eventType"));
-        assertEquals("EVT-001", JsonPath.read(json, "$.event.parentsLineage[1].id"));
 
         // project & publishing info
         assertEquals(
@@ -326,8 +331,7 @@ public class EventInterpretationTest extends MockedServicesTest {
 
         // eventInherited
         assertEquals(
-            List.of("Project", "Survey"),
-            JsonPath.<List<String>>read(json, "$.eventInherited.eventType"));
+            List.of("Project"), JsonPath.<List<String>>read(json, "$.eventInherited.eventType"));
         assertEquals("2", JsonPath.read(json, "$.eventInherited.id"));
 
         // top-level ids & timing (exact match to test resource)
@@ -720,13 +724,13 @@ public class EventInterpretationTest extends MockedServicesTest {
     for (String json : jsonRecord) {
       Object document =
           com.jayway.jsonpath.Configuration.defaultConfiguration().jsonProvider().parse(json);
-      assertNotNull(JsonPath.read(document, "$.event.eventID"));
+      assertEquals(EVT_000, JsonPath.read(document, "$.event.eventID"));
       assertThrows(
           PathNotFoundException.class, () -> JsonPath.read(document, "$.event.parentEventID"));
       List<Map<String, String>> parentsLineage = JsonPath.read(document, "$.event.parentsLineage");
-      assertEquals(1, parentsLineage.size());
+      assertEquals(0, parentsLineage.size());
       List<String> issues = JsonPath.read(document, "$.event.issues");
-      assertTrue(issues.contains("PARENT_EVENT_ID_INFINITE_LINEAGE"));
+      assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_ID_INFINITE_LINEAGE.name()));
     }
 
     // assert hdfs output
@@ -754,10 +758,10 @@ public class EventInterpretationTest extends MockedServicesTest {
             PathNotFoundException.class, () -> JsonPath.read(document, "$.parenteventid.string"));
         assertFalse(eventId.isEmpty());
         List<Object> lineage = JsonPath.read(document, "$.parenteventgbifid.array[*]");
-        assertEquals(1, lineage.size());
+        assertEquals(0, lineage.size());
 
         List<String> issues = JsonPath.read(document, "$.issue.array[*].element.string");
-        assertTrue(issues.contains("PARENT_EVENT_ID_INFINITE_LINEAGE"));
+        assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_ID_INFINITE_LINEAGE.name()));
       }
     }
   }
@@ -802,9 +806,16 @@ public class EventInterpretationTest extends MockedServicesTest {
       assertFalse(parentEventId.isEmpty());
 
       List<Map<String, String>> parentsLineage = JsonPath.read(document, "$.event.parentsLineage");
-      assertEquals(2, parentsLineage.size());
+      assertEquals(1, parentsLineage.size());
+
+      if (eventId.equals(EVT_000)) {
+        assertEquals(EVT_001, parentsLineage.get(0).get("id"));
+      } else if (eventId.equals(EVT_001)) {
+        assertEquals(EVT_000, parentsLineage.get(0).get("id"));
+      }
+
       List<String> issues = JsonPath.read(document, "$.event.issues");
-      assertTrue(issues.contains("PARENT_EVENT_ID_INFINITE_LINEAGE"));
+      assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_ID_INFINITE_LINEAGE.name()));
     }
 
     // assert hdfs output
@@ -835,10 +846,10 @@ public class EventInterpretationTest extends MockedServicesTest {
         assertFalse(parentEentId.isEmpty());
 
         List<Object> lineage = JsonPath.read(document, "$.parenteventgbifid.array[*]");
-        assertEquals(2, lineage.size());
+        assertEquals(1, lineage.size());
 
         List<String> issues = JsonPath.read(document, "$.issue.array[*].element.string");
-        assertTrue(issues.contains("PARENT_EVENT_ID_INFINITE_LINEAGE"));
+        assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_ID_INFINITE_LINEAGE.name()));
       }
     }
   }
@@ -863,8 +874,8 @@ public class EventInterpretationTest extends MockedServicesTest {
     er.setCoreRowType(DwcTerm.Event.qualifiedName());
 
     Map<String, String> eventCoreTerms = new HashMap<>();
-    eventCoreTerms.put(DwcTerm.eventID.qualifiedName(), "EVT-000");
-    eventCoreTerms.put(DwcTerm.parentEventID.qualifiedName(), "EVT-000");
+    eventCoreTerms.put(DwcTerm.eventID.qualifiedName(), EVT_000);
+    eventCoreTerms.put(DwcTerm.parentEventID.qualifiedName(), EVT_000);
     eventCoreTerms.put(DwcTerm.eventType.qualifiedName(), "Survey");
 
     er.setCoreTerms(eventCoreTerms);
@@ -900,12 +911,12 @@ public class EventInterpretationTest extends MockedServicesTest {
   }
 
   private void generateVerbatimAvroWitInfiniteLoop(String uuid, int attempt) throws IOException {
-    ExtendedRecord er = ExtendedRecord.newBuilder().setId("2").build();
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").build();
     er.setCoreRowType(DwcTerm.Event.qualifiedName());
 
     Map<String, String> eventCoreTerms = new HashMap<>();
-    eventCoreTerms.put(DwcTerm.eventID.qualifiedName(), "EVT-000");
-    eventCoreTerms.put(DwcTerm.parentEventID.qualifiedName(), "EVT-001");
+    eventCoreTerms.put(DwcTerm.eventID.qualifiedName(), EVT_000);
+    eventCoreTerms.put(DwcTerm.parentEventID.qualifiedName(), EVT_001);
     eventCoreTerms.put(DwcTerm.eventType.qualifiedName(), "Survey");
 
     er.setCoreTerms(eventCoreTerms);
@@ -914,8 +925,8 @@ public class EventInterpretationTest extends MockedServicesTest {
     er2.setCoreRowType(DwcTerm.Event.qualifiedName());
 
     Map<String, String> eventCoreTerms2 = new HashMap<>();
-    eventCoreTerms2.put(DwcTerm.eventID.qualifiedName(), "EVT-001");
-    eventCoreTerms2.put(DwcTerm.parentEventID.qualifiedName(), "EVT-000");
+    eventCoreTerms2.put(DwcTerm.eventID.qualifiedName(), EVT_001);
+    eventCoreTerms2.put(DwcTerm.parentEventID.qualifiedName(), EVT_000);
     eventCoreTerms2.put(DwcTerm.eventType.qualifiedName(), "Survey");
 
     er2.setCoreTerms(eventCoreTerms2);
