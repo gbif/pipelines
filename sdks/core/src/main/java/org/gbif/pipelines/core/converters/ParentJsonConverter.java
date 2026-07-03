@@ -154,11 +154,15 @@ public class ParentJsonConverter {
 
     if (eventCore.getParentsLineage() != null && !eventCore.getParentsLineage().isEmpty()) {
       List<String> eventTypes = getParentsLineageEventTypes();
-      eventTypes.add(eventCore.getEventType().getConcept());
+      if (eventCore.getEventType() != null && eventCore.getEventType().getConcept() != null) {
+        eventTypes.add(eventCore.getEventType().getConcept());
+      }
       List<String> verbatimEventTypes = getParentsLineageVerbatimEventTypes();
       verbatimEventTypes.add(verbatimEventType);
       List<String> eventIDs = getLineageEventIDs();
-      eventIDs.add(eventID);
+      if (eventID != null) {
+        eventIDs.add(eventID);
+      }
 
       builder
           .setEventTypeHierarchy(eventTypes)

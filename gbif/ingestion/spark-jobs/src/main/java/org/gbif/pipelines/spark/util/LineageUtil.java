@@ -210,12 +210,7 @@ public class LineageUtil {
                             .build();
                     parents.add(parent);
                   }
-                  boolean hasCycle = false;
-                  try {
-                    hasCycle = row.getBoolean(2);
-                  } catch (Exception e) {
-                    // ignore it
-                  }
+                  boolean hasCycle = !row.isNullAt(2) && row.getBoolean(2);
                   return new EventLineage(eventId, parents, hasCycle);
                 },
             Encoders.bean(EventLineage.class));

@@ -230,7 +230,7 @@ public class EventInterpretationTest extends MockedServicesTest {
         assertTrue(issues.contains("HAS_MATERIAL_SAMPLES_MISMATCH"));
         assertTrue(issues.contains("GEODETIC_DATUM_ASSUMED_WGS84"));
         assertTrue(issues.contains("CONTINENT_DERIVED_FROM_COORDINATES"));
-        assertFalse(issues.contains(OccurrenceIssue.PARENT_EVENT_ID_INFINITE_LINEAGE.name()));
+        assertFalse(issues.contains(OccurrenceIssue.PARENT_EVENT_INFINITE_LINEAGE.name()));
 
         // locality & temporal fields
         assertEquals("Maasai Mara National Reserve", JsonPath.read(json, "$.event.locality"));
@@ -730,7 +730,7 @@ public class EventInterpretationTest extends MockedServicesTest {
       List<Map<String, String>> parentsLineage = JsonPath.read(document, "$.event.parentsLineage");
       assertEquals(0, parentsLineage.size());
       List<String> issues = JsonPath.read(document, "$.event.issues");
-      assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_ID_INFINITE_LINEAGE.name()));
+      assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_INFINITE_LINEAGE.name()));
     }
 
     // assert hdfs output
@@ -761,7 +761,7 @@ public class EventInterpretationTest extends MockedServicesTest {
         assertEquals(0, lineage.size());
 
         List<String> issues = JsonPath.read(document, "$.issue.array[*].element.string");
-        assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_ID_INFINITE_LINEAGE.name()));
+        assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_INFINITE_LINEAGE.name()));
       }
     }
   }
@@ -815,7 +815,7 @@ public class EventInterpretationTest extends MockedServicesTest {
       }
 
       List<String> issues = JsonPath.read(document, "$.event.issues");
-      assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_ID_INFINITE_LINEAGE.name()));
+      assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_INFINITE_LINEAGE.name()));
     }
 
     // assert hdfs output
@@ -841,15 +841,15 @@ public class EventInterpretationTest extends MockedServicesTest {
         assertNotNull(eventId);
         assertFalse(eventId.isEmpty());
 
-        String parentEentId = JsonPath.read(document, "$.parenteventid.string");
-        assertNotNull(parentEentId);
-        assertFalse(parentEentId.isEmpty());
+        String parentEventId = JsonPath.read(document, "$.parenteventid.string");
+        assertNotNull(parentEventId);
+        assertFalse(parentEventId.isEmpty());
 
         List<Object> lineage = JsonPath.read(document, "$.parenteventgbifid.array[*]");
         assertEquals(1, lineage.size());
 
         List<String> issues = JsonPath.read(document, "$.issue.array[*].element.string");
-        assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_ID_INFINITE_LINEAGE.name()));
+        assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_INFINITE_LINEAGE.name()));
       }
     }
   }
@@ -862,10 +862,12 @@ public class EventInterpretationTest extends MockedServicesTest {
             .resolve(String.valueOf(attempt))
             .resolve(directory);
 
-    return Files.list(dir)
-        .filter(path -> path.getFileName().toString().endsWith(".parquet"))
-        .findFirst()
-        .get();
+    try (java.util.stream.Stream<java.nio.file.Path> paths = Files.list(dir)) {
+      return paths
+          .filter(path -> path.getFileName().toString().endsWith(".parquet"))
+          .findFirst()
+          .orElseThrow();
+    }
   }
 
   private void generateVerbatimAvroWithEqualEventIdAndParentLoop(String uuid, int attempt)

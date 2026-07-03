@@ -363,7 +363,7 @@ public class EventInterpretationPipeline {
                     ecr.setParentsLineage(eventLineage.getLineage());
                     // Add issue if cyclic lineage detected
                     if (Boolean.TRUE.equals(eventLineage.getHasCycle())) {
-                      ModelUtils.addIssue(ecr, OccurrenceIssue.PARENT_EVENT_ID_INFINITE_LINEAGE);
+                      ModelUtils.addIssue(ecr, OccurrenceIssue.PARENT_EVENT_INFINITE_LINEAGE);
                     }
                   }
 

@@ -100,7 +100,7 @@ public class CoreInterpreter {
           .ifPresent(
               p -> {
                 if (p.equals(extractValue(er, DwcTerm.eventID))) {
-                  addIssue(evr, OccurrenceIssue.PARENT_EVENT_ID_INFINITE_LINEAGE);
+                  addIssue(evr, OccurrenceIssue.PARENT_EVENT_INFINITE_LINEAGE);
                 } else {
                   consumer.accept(p);
                 }

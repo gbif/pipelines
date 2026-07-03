@@ -389,7 +389,6 @@ public class EventHdfsRecordConverter {
       eventHdfsRecord.setParenteventid(eventCoreRecord.getParentEventID());
       eventHdfsRecord.setReferences(eventCoreRecord.getReferences());
       eventHdfsRecord.setLicense(eventCoreRecord.getLicense());
-      eventHdfsRecord.setLicense(eventCoreRecord.getLicense());
       eventHdfsRecord.setLocationid(eventCoreRecord.getLocationID());
 
       addNonTaxonIssues(eventCoreRecord.getIssues(), eventHdfsRecord);
