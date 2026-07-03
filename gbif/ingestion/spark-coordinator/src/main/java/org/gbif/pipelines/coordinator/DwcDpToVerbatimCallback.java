@@ -1,6 +1,6 @@
 package org.gbif.pipelines.coordinator;
 
-import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.SparkSession;
@@ -16,6 +16,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.Validatio
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.utils.MetricsUtil;
 import org.gbif.pipelines.spark.DwcDpToVerbatimPipeline;
 import org.gbif.pipelines.spark.util.PathUtil;
 
@@ -66,7 +67,7 @@ public class DwcDpToVerbatimCallback
 
   @Override
   protected String getMetaFileName() {
-    return null;
+    return Pipeline.ARCHIVE_TO_VERBATIM + ".yml";
   }
 
   @Override
@@ -155,18 +156,7 @@ public class DwcDpToVerbatimCallback
             + "/"
             + Pipeline.ARCHIVE_TO_VERBATIM
             + ".yml";
-    try {
-      return PostprocessValidation.getValueByKey(fileSystem, metricsPath, key)
-          .map(Long::parseLong)
-          .orElse(0L);
-    } catch (IOException e) {
-      log.warn(
-          "Could not read metric {} from {} for dataset {}, defaulting to 0: {}",
-          key,
-          metricsPath,
-          datasetId,
-          e.getMessage());
-      return 0L;
-    }
+    Map<String, Long> metrics = MetricsUtil.readMetricsYaml(fileSystem, metricsPath);
+    return metrics.getOrDefault(key, 0L);
   }
 }
