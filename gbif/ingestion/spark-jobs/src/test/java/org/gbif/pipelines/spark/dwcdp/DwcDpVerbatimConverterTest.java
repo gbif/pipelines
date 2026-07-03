@@ -23,8 +23,6 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
@@ -33,6 +31,7 @@ import org.gbif.pipelines.spark.dwcdp.builder.EventCoreBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.TermResolver;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
+import org.gbif.pipelines.spark.util.SparkTest;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TableLoader;
 import org.gbif.pipelines.spark.util.TestTableLoader;
@@ -1117,14 +1116,10 @@ class DwcDpVerbatimConverterTest {
   // ---- helpers ----
 
   private void writeParquet(Path dir, String relativePath, StructType schema, List<Row> rows) {
-    spark.createDataFrame(rows, schema).write().parquet("file://" + dir.resolve(relativePath));
+    SparkTest.writeParquet(spark, dir, relativePath, schema, rows);
   }
 
   private static StructType schema(String... names) {
-    StructField[] fields = new StructField[names.length];
-    for (int i = 0; i < names.length; i++) {
-      fields[i] = DataTypes.createStructField(names[i], DataTypes.StringType, true);
-    }
-    return DataTypes.createStructType(fields);
+    return SparkTest.schema(names);
   }
 }
