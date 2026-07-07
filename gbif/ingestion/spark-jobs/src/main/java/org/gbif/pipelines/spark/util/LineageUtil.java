@@ -174,7 +174,7 @@ public class LineageUtil {
                                 String nodeEventId = parts[0];
                                 // there is always a default value for the interpreted
                                 String interpretedEventType = parts[1];
-                                // the verbatim event type might not exist
+                                // the verbatim event type could be null
                                 String verbatimEventType = parts.length > 2 ? parts[2] : "";
                                 if (!selfEventId.equals(
                                     nodeEventId)) { // exclude self from parents lineage
