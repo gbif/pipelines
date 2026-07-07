@@ -156,7 +156,10 @@ public class TaxonomyTablePipeline {
 
   static Dataset<Row> buildOccurrenceTaxonomy(Dataset<Row> occ) {
     return occ.withColumn("cld", explode(map_entries(col("classificationdetails"))))
-        .select(col("cld.key").alias("checklistkey"), col("cld.value").alias("classification"))
+        .select(
+            col("cld.key").alias("checklistkey"),
+            col("cld.value").alias("classification"),
+            col("classifications"))
         .withColumn(
             "taxonkeys", element_at(col("classifications"), col("checklistkey"))) // key columns
         .withColumn("taxonkey", col("classification").getItem("taxonkey"))
