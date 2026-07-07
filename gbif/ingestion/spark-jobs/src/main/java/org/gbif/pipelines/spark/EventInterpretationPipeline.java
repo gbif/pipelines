@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark;
 
+import static org.gbif.pipelines.core.utils.EventsUtils.DEFAULT_EVENT_TYPE;
 import static org.gbif.pipelines.core.utils.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.spark.ArgsConstants.*;
 import static org.gbif.pipelines.spark.Directories.*;
@@ -31,6 +32,7 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -144,7 +146,7 @@ public class EventInterpretationPipeline {
         loadExtendedRecords(spark, config, inputPath, outputPath, numberOfShards);
 
     sparkLog(spark, "event-interpretation", "Generating event lineage");
-    Dataset<EventLineage> lineage = generateLineage(spark, extendedRecords);
+    Dataset<EventLineage> lineage = generateLineage(spark, extendedRecords, config);
 
     // run the record by record transformations
     sparkLog(spark, "event-interpretation", "Running record by record transformations");
@@ -191,13 +193,15 @@ public class EventInterpretationPipeline {
   }
 
   private static Dataset<EventLineage> generateLineage(
-      SparkSession spark, Dataset<ExtendedRecord> extendedRecords) {
+      SparkSession spark, Dataset<ExtendedRecord> extendedRecords, PipelinesConfig config) {
+    EventCoreTransform eventCoreTransform = EventCoreTransform.create(config);
 
     StructType schema =
         DataTypes.createStructType(
             new StructField[] {
               DataTypes.createStructField("eventId", DataTypes.StringType, true),
               DataTypes.createStructField("eventType", DataTypes.StringType, true),
+              DataTypes.createStructField("verbatimEventType", DataTypes.StringType, true),
               DataTypes.createStructField("parentEventId", DataTypes.StringType, true)
             });
 
@@ -206,12 +210,21 @@ public class EventInterpretationPipeline {
             (MapFunction<ExtendedRecord, Row>)
                 record -> {
                   String eventID = ModelUtils.extractValue(record, DwcTerm.eventID);
-                  Optional<String> eventTypeOpt =
+                  Optional<String> verbatimEventTypeOpt =
                       ModelUtils.extractOptValue(record, DwcTerm.eventType);
+                  EventCoreRecord ecr = eventCoreTransform.convertEventTypeOnly(record, null);
+                  String interpretedEventType =
+                      Optional.ofNullable(ecr.getEventType())
+                          .map(VocabularyConcept::getConcept)
+                          .orElse(DEFAULT_EVENT_TYPE);
+
                   Optional<String> parentEventIDOpt =
                       ModelUtils.extractOptValue(record, DwcTerm.parentEventID);
                   return RowFactory.create(
-                      eventID, eventTypeOpt.orElse(null), parentEventIDOpt.orElse(null));
+                      eventID,
+                      interpretedEventType,
+                      verbatimEventTypeOpt.orElse(null),
+                      parentEventIDOpt.orElse(null));
                 },
             Encoders.row(schema));
 
@@ -360,6 +373,17 @@ public class EventInterpretationPipeline {
                   // add the lineage
                   if (eventLineage != null) {
                     ecr.setParentsLineage(eventLineage.getLineage());
+                    // Add issue if cyclic lineage detected
+                    if (Boolean.TRUE.equals(eventLineage.getHasCycle())) {
+                      ModelUtils.addIssue(ecr, OccurrenceIssue.PARENT_EVENT_INFINITE_LINEAGE);
+                    }
+                  }
+
+                  // Prevent self-referencing events from creating lineage loops.
+                  String eventId = ModelUtils.extractValue(verbatim, DwcTerm.eventID);
+                  String parentEventId = ModelUtils.extractValue(verbatim, DwcTerm.parentEventID);
+                  if (eventId != null && eventId.equals(parentEventId)) {
+                    ecr.setParentEventID(null);
                   }
 
                   // merge the multimedia records

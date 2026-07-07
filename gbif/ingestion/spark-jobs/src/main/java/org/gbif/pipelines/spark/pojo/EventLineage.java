@@ -14,4 +14,5 @@ import org.gbif.pipelines.io.avro.Parent;
 public class EventLineage {
   String id;
   List<Parent> lineage;
+  Boolean hasCycle;
 }

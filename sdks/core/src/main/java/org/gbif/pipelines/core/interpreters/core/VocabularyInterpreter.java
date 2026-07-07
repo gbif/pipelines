@@ -127,7 +127,7 @@ public class VocabularyInterpreter {
     return interpretVocabulary(term, extractNullAwareValue(er, term), vocabularyService, null);
   }
 
-  static Optional<VocabularyConcept> interpretVocabulary(
+  public static Optional<VocabularyConcept> interpretVocabulary(
       Term term, String value, VocabularyService vocabularyService) {
     return interpretVocabulary(term, value, vocabularyService, null);
   }
