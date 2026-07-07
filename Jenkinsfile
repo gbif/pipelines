@@ -47,8 +47,10 @@ pipeline {
           // NEW: branch-qualified version, workspace only, never committed
           if (env.BRANCH_NAME != 'dev' && env.BRANCH_NAME != 'master' && !params.RELEASE) {
             def suffix = env.BRANCH_NAME.replaceAll('[^a-zA-Z0-9.-]', '-').toUpperCase()
-            sh "mvn versions:set -DnewVersion=\\\${project.version}-${suffix} -DgenerateBackupPoms=false " +
-               "-DprocessAllModules=true"
+            sh """
+              BASE_VERSION=\$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
+              mvn versions:set -DnewVersion=\${BASE_VERSION}-${suffix}-SNAPSHOT -DgenerateBackupPoms=false -DprocessAllModules=true
+            """
           }
           env.VERSION = """${sh(returnStdout: true, script: './build/get-version.sh ${RELEASE}')}"""
           if (params.RELEASE) {
