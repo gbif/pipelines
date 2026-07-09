@@ -57,27 +57,30 @@ public class OccurrenceHdfsRecordConverter {
           DwcTerm.specificEpithet.simpleName().toLowerCase(),
           DwcTerm.infraspecificEpithet.simpleName().toLowerCase(),
           DwcTerm.taxonRank.simpleName().toLowerCase(),
-          DwcTerm.class_.simpleName().toLowerCase(),
-          GbifTerm.classKey.simpleName().toLowerCase(),
-          DwcTerm.family.simpleName().toLowerCase(),
-          GbifTerm.familyKey.simpleName().toLowerCase(),
-          DwcTerm.genus.simpleName().toLowerCase(),
-          GbifTerm.genusKey.simpleName().toLowerCase(),
           DwcTerm.kingdom.simpleName().toLowerCase(),
           GbifTerm.kingdomKey.simpleName().toLowerCase(),
-          DwcTerm.order.simpleName().toLowerCase(),
-          GbifTerm.orderKey.simpleName().toLowerCase(),
           DwcTerm.phylum.simpleName().toLowerCase(),
           GbifTerm.phylumKey.simpleName().toLowerCase(),
-          GbifTerm.species.simpleName().toLowerCase(),
-          GbifTerm.speciesKey.simpleName().toLowerCase(),
+          DwcTerm.class_.simpleName().toLowerCase(),
+          GbifTerm.classKey.simpleName().toLowerCase(),
+          DwcTerm.order.simpleName().toLowerCase(),
+          GbifTerm.orderKey.simpleName().toLowerCase(),
+          DwcTerm.superfamily.simpleName().toLowerCase(),
+          GbifTerm.superfamilyKey.simpleName().toLowerCase(),
+          DwcTerm.family.simpleName().toLowerCase(),
+          GbifTerm.familyKey.simpleName().toLowerCase(),
           DwcTerm.subfamily.simpleName().toLowerCase(),
           GbifTerm.subfamilyKey.simpleName().toLowerCase(),
-          DwcTerm.superfamily.simpleName().toLowerCase(),
           DwcTerm.tribe.simpleName().toLowerCase(),
           GbifTerm.tribeKey.simpleName().toLowerCase(),
           DwcTerm.subtribe.simpleName().toLowerCase(),
           GbifTerm.subtribeKey.simpleName().toLowerCase(),
+          DwcTerm.genus.simpleName().toLowerCase(),
+          GbifTerm.genusKey.simpleName().toLowerCase(),
+          DwcTerm.subgenus.simpleName().toLowerCase(),
+          GbifTerm.subgenusKey.simpleName().toLowerCase(),
+          GbifTerm.species.simpleName().toLowerCase(),
+          GbifTerm.speciesKey.simpleName().toLowerCase(),
           IucnTerm.iucnRedListCategory.simpleName().toLowerCase(),
           GbifTerm.verbatimScientificName.simpleName().toLowerCase());
 
@@ -347,17 +350,14 @@ public class OccurrenceHdfsRecordConverter {
                     (a, b) -> a,
                     LinkedHashMap::new)));
 
-    occurrenceHdfsRecord.setTaxonomicstatuses(
-        multiTaxonRecord.getTaxonRecords().stream()
-            .collect(
-                Collectors.toMap(
-                    TaxonRecord::getDatasetKey,
-                    tr ->
-                        tr.getUsage() != null && tr.getUsage().getStatus() != null
-                            ? tr.getUsage().getStatus()
-                            : "",
-                    (a, b) -> a,
-                    LinkedHashMap::new)));
+    Map<String, String> statuses = new LinkedHashMap<>();
+    multiTaxonRecord
+        .getTaxonRecords()
+        .forEach(
+            tr ->
+                statuses.put(
+                    tr.getDatasetKey(), tr.getUsage() == null ? null : tr.getUsage().getStatus()));
+    occurrenceHdfsRecord.setTaxonomicstatuses(statuses);
 
     occurrenceHdfsRecord.setTaxonomicissue(
         multiTaxonRecord.getTaxonRecords().stream()
@@ -383,13 +383,12 @@ public class OccurrenceHdfsRecordConverter {
                     LinkedHashMap::new)));
 
     // find the GBIF taxonomy
-    Optional<TaxonRecord> gbifRecord =
+    Optional<TaxonRecord> defaultTaxonomyRecord =
         multiTaxonRecord.getTaxonRecords().stream()
-            .filter(
-                tr -> OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
+            .filter(tr -> OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY.equals(tr.getDatasetKey()))
             .findFirst();
 
-    gbifRecord.ifPresent(tr -> mapLegacyGbifTaxonRecord(occurrenceHdfsRecord, tr));
+    defaultTaxonomyRecord.ifPresent(tr -> mapLegacyGbifTaxonRecord(occurrenceHdfsRecord, tr));
   }
 
   private static Map<String, String> classificationToMap(
@@ -420,17 +419,17 @@ public class OccurrenceHdfsRecordConverter {
       // Optional taxonomic fields
       map.put(
           DwcTerm.genericName.simpleName().toLowerCase(),
-          usage.getGenericName() != null ? usage.getGenericName() : "");
+          usage.getGenericName() != null ? usage.getGenericName() : null);
       map.put(
           DwcTerm.specificEpithet.simpleName().toLowerCase(),
-          usage.getSpecificEpithet() != null ? usage.getSpecificEpithet() : "");
+          usage.getSpecificEpithet() != null ? usage.getSpecificEpithet() : null);
       map.put(
           DwcTerm.infraspecificEpithet.simpleName().toLowerCase(),
-          usage.getInfraspecificEpithet() != null ? usage.getInfraspecificEpithet() : "");
+          usage.getInfraspecificEpithet() != null ? usage.getInfraspecificEpithet() : null);
 
       map.put(
           DwcTerm.taxonRank.simpleName().toLowerCase(),
-          usage.getRank() != null ? usage.getRank() : "");
+          usage.getRank() != null ? usage.getRank() : null);
     }
 
     extractOptValue(verbatim, DwcTerm.scientificName)
@@ -449,10 +448,10 @@ public class OccurrenceHdfsRecordConverter {
         IucnTerm.iucnRedListCategory.simpleName().toLowerCase(),
         taxonRecord.getIucnRedListCategoryCode() != null
             ? taxonRecord.getIucnRedListCategoryCode()
-            : "");
+            : null);
 
     for (String field : REQUIRED_TAXONOMIC_FIELDS) {
-      map.putIfAbsent(field, "");
+      map.putIfAbsent(field, null);
     }
 
     return map;
@@ -488,9 +487,25 @@ public class OccurrenceHdfsRecordConverter {
                     occurrenceHdfsRecord.setOrder(rankedName.getName());
                     occurrenceHdfsRecord.setOrderkey(rankedName.getKey());
                     break;
+                  case "SUPERFAMILY":
+                    occurrenceHdfsRecord.setSuperfamily(rankedName.getName());
+                    occurrenceHdfsRecord.setSuperfamilykey(rankedName.getKey());
+                    break;
                   case "FAMILY":
                     occurrenceHdfsRecord.setFamily(rankedName.getName());
                     occurrenceHdfsRecord.setFamilykey(rankedName.getKey());
+                    break;
+                  case "SUBFAMILY":
+                    occurrenceHdfsRecord.setSubfamily(rankedName.getName());
+                    occurrenceHdfsRecord.setSubfamilykey(rankedName.getKey());
+                    break;
+                  case "TRIBE":
+                    occurrenceHdfsRecord.setTribe(rankedName.getName());
+                    occurrenceHdfsRecord.setTribekey(rankedName.getKey());
+                    break;
+                  case "SUBTRIBE":
+                    occurrenceHdfsRecord.setSubtribe(rankedName.getName());
+                    occurrenceHdfsRecord.setSubtribekey(rankedName.getKey());
                     break;
                   case "GENUS":
                     occurrenceHdfsRecord.setGenus(rankedName.getName());
@@ -533,7 +548,7 @@ public class OccurrenceHdfsRecordConverter {
       Optional.ofNullable(taxonRecord.getUsage().getRank())
           .ifPresent(occurrenceHdfsRecord::setTaxonrank);
       occurrenceHdfsRecord.setTaxonomicstatus(
-          taxonRecord.getUsage().getStatus() != null ? taxonRecord.getUsage().getStatus() : "");
+          taxonRecord.getUsage().getStatus() != null ? taxonRecord.getUsage().getStatus() : null);
     }
 
     if (Objects.nonNull(taxonRecord.getUsageParsedName())

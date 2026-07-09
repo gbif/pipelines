@@ -30,6 +30,7 @@ import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
+import org.gbif.api.model.Constants;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -166,7 +167,7 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
       assertEquals(0, JsonPath.<List<?>>read(json, "$.associatedSequences").size());
       assertEquals("HUMAN_OBSERVATION", JsonPath.read(json, "$.basisOfRecord"));
       assertEquals(
-          List.of("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c"),
+          List.of("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c", "7ddf754f-d193-4cc9-b351-99906754a03b"),
           JsonPath.<List<String>>read(json, "$.checklistKey"));
 
       assertEquals("Mammals", JsonPath.read(json, "$.collectionCode"));
@@ -434,7 +435,7 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
           2245273112662769665L, JsonPath.<Long>read(json, "$.yearMonthGbifIdSort").longValue());
 
       // classifications assertions (by checklist key)
-      String ck = "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c";
+      String ck = Constants.COL_DATASET_KEY.toString();
       assertEquals(
           "5219404", JsonPath.read(json, "$.classifications['" + ck + "'].acceptedUsage.key"));
       assertEquals(

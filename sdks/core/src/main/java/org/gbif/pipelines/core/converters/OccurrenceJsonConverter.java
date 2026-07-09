@@ -47,7 +47,7 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 @Builder
 public class OccurrenceJsonConverter {
 
-  public static final String GBIF_BACKBONE_DATASET_KEY = Constants.NUB_DATASET_KEY.toString();
+  public static final String DEFAULT_TAXONOMY_KEY = Constants.COL_DATASET_KEY.toString();
 
   private final MetadataRecord metadata;
   private final IdentifierRecord identifier;
@@ -429,7 +429,7 @@ public class OccurrenceJsonConverter {
 
     Optional<TaxonRecord> gbifRecord =
         multiTaxon.getTaxonRecords().stream()
-            .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
+            .filter(tr -> DEFAULT_TAXONOMY_KEY.equals(tr.getDatasetKey()))
             .findFirst();
 
     // populate the legacy all issues field

@@ -155,7 +155,7 @@ public class OccurrenceHdfsRecordConverterTest {
         RankedName.newBuilder().setName("ORDER").setRank(Rank.ORDER.toString()).build());
     TaxonRecord taxonRecord =
         TaxonRecord.newBuilder()
-            .setDatasetKey(Constants.NUB_DATASET_KEY.toString())
+            .setDatasetKey(Constants.COL_DATASET_KEY.toString())
             .setCreated(
                 2L) // This value for lastParsed and lastInterpreted since is greater that the Basic
             // record created date
@@ -597,7 +597,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setName("Caldisphaera lagunensis Itoh & al., 2003")
             .build();
 
-    taxonRecord.setDatasetKey(Constants.NUB_DATASET_KEY.toString());
+    taxonRecord.setDatasetKey(Constants.COL_DATASET_KEY.toString());
     taxonRecord.setUsage(rankedName);
     taxonRecord.setAcceptedUsage(rankedName);
     taxonRecord.setSynonym(Boolean.FALSE);

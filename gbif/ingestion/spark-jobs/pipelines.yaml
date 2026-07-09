@@ -5,12 +5,17 @@
 inputPath: file:///Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/test-data
 outputPath: file:///Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/test-data
 rebuildPath: file:///Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/rebuild-path
+hiveDB: dev
+hiveMetastoreUris: thrift://localhost:9083
 zkConnectionString:
 gbifApi:
-  wsUrl: https://api.gbif-dev.org/v1/
+  wsUrl: https://api.gbif-test.org/v1/
 nameUsageMatchingService:
   checklistKeys:
     - d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
+    - 7ddf754f-d193-4cc9-b351-99906754a03b
+  countryChecklistKeyMap:
+    ZA: 668282c7-8d71-4c2b-b9ba-f9ab705c88d5
   ws:
     numOfKeyBuckets: 10
     tableName: dev_name_usage_kv
@@ -34,18 +39,18 @@ grscicollLookup:
   numOfKeyBuckets: 5
   tableName: dev_grscicoll_lookup_kv
   api:
-    wsUrl: https://api.gbif-dev.org/v1/
+    wsUrl: https://api.gbif-test.org/v1/
 geocode:
   numOfKeyBuckets: 10
   tableName: dev_geocode_kv
   wsCacheSizeMb: 128
   api:
-    wsUrl: https://api.gbif-dev.org/v1/
+    wsUrl: https://api.gbif-test.org/v1/
 imageCachePath:
-content:
-  esHosts:
-    - http://core-search-1.gbif-dev.org:32329/
-    - http://core-search-2.gbif-dev.org:30766/
+#content:
+#  esHosts:
+#    - http://core-search-1.gbif-dev.org:32329/
+#    - http://core-search-2.gbif-dev.org:30766/
 amplification:
   wsUrl: http://blast.gbif-dev.org
 fragmentsTable: dev_occurrence_fragment
@@ -98,3 +103,8 @@ extensionsAllowedForVerbatimSet:
   - http://rs.tdwg.org/dwc/terms/ResourceRelationship
   - http://rs.gbif.org/terms/1.0/DNADerivedData
   - https://tdwg.github.io/attribution/people/dwc/AgentActions
+tableBuildConfig:
+  classifications:
+    d7dddbf4-2cf0-4f39-9b2a-bb099caae36c: gbif
+    7ddf754f-d193-4cc9-b351-99906754a03b: col
+    668282c7-8d71-4c2b-b9ba-f9ab705c88d5: za
