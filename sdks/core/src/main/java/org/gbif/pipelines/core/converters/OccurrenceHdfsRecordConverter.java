@@ -57,27 +57,30 @@ public class OccurrenceHdfsRecordConverter {
           DwcTerm.specificEpithet.simpleName().toLowerCase(),
           DwcTerm.infraspecificEpithet.simpleName().toLowerCase(),
           DwcTerm.taxonRank.simpleName().toLowerCase(),
-          DwcTerm.class_.simpleName().toLowerCase(),
-          GbifTerm.classKey.simpleName().toLowerCase(),
-          DwcTerm.family.simpleName().toLowerCase(),
-          GbifTerm.familyKey.simpleName().toLowerCase(),
-          DwcTerm.genus.simpleName().toLowerCase(),
-          GbifTerm.genusKey.simpleName().toLowerCase(),
           DwcTerm.kingdom.simpleName().toLowerCase(),
           GbifTerm.kingdomKey.simpleName().toLowerCase(),
-          DwcTerm.order.simpleName().toLowerCase(),
-          GbifTerm.orderKey.simpleName().toLowerCase(),
           DwcTerm.phylum.simpleName().toLowerCase(),
           GbifTerm.phylumKey.simpleName().toLowerCase(),
-          GbifTerm.species.simpleName().toLowerCase(),
-          GbifTerm.speciesKey.simpleName().toLowerCase(),
+          DwcTerm.class_.simpleName().toLowerCase(),
+          GbifTerm.classKey.simpleName().toLowerCase(),
+          DwcTerm.order.simpleName().toLowerCase(),
+          GbifTerm.orderKey.simpleName().toLowerCase(),
+          DwcTerm.superfamily.simpleName().toLowerCase(),
+          GbifTerm.superfamilyKey.simpleName().toLowerCase(),
+          DwcTerm.family.simpleName().toLowerCase(),
+          GbifTerm.familyKey.simpleName().toLowerCase(),
           DwcTerm.subfamily.simpleName().toLowerCase(),
           GbifTerm.subfamilyKey.simpleName().toLowerCase(),
-          DwcTerm.superfamily.simpleName().toLowerCase(),
+          DwcTerm.genus.simpleName().toLowerCase(),
+          GbifTerm.genusKey.simpleName().toLowerCase(),
+          DwcTerm.subgenus.simpleName().toLowerCase(),
+          GbifTerm.subgenusKey.simpleName().toLowerCase(),
           DwcTerm.tribe.simpleName().toLowerCase(),
           GbifTerm.tribeKey.simpleName().toLowerCase(),
           DwcTerm.subtribe.simpleName().toLowerCase(),
           GbifTerm.subtribeKey.simpleName().toLowerCase(),
+          GbifTerm.species.simpleName().toLowerCase(),
+          GbifTerm.speciesKey.simpleName().toLowerCase(),
           IucnTerm.iucnRedListCategory.simpleName().toLowerCase(),
           GbifTerm.verbatimScientificName.simpleName().toLowerCase());
 
@@ -327,60 +330,61 @@ public class OccurrenceHdfsRecordConverter {
             .map(TaxonRecord::getDatasetKey)
             .collect(Collectors.toList()));
 
-    occurrenceHdfsRecord.setClassifications(
-        multiTaxonRecord.getTaxonRecords().stream()
-            .collect(
-                Collectors.toMap(
-                    TaxonRecord::getDatasetKey,
-                    tr -> {
-                      Set<String> taxonKeys =
-                          Optional.ofNullable(tr.getClassification())
-                              .orElse(Collections.emptyList())
-                              .stream()
-                              .map(RankedName::getKey)
-                              .collect(Collectors.toCollection(LinkedHashSet::new));
-                      if (tr.getSynonym() != null && tr.getSynonym() && tr.getUsage() != null) {
-                        taxonKeys.add(tr.getUsage().getKey());
-                      }
-                      return new ArrayList<>(taxonKeys);
-                    },
-                    (a, b) -> a,
-                    LinkedHashMap::new)));
+    //    occurrenceHdfsRecord.setClassifications(
+    //        multiTaxonRecord.getTaxonRecords().stream()
+    //            .collect(
+    //                Collectors.toMap(
+    //                    TaxonRecord::getDatasetKey,
+    //                    tr -> {
+    //                      Set<String> taxonKeys =
+    //                          Optional.ofNullable(tr.getClassification())
+    //                              .orElse(Collections.emptyList())
+    //                              .stream()
+    //                              .map(RankedName::getKey)
+    //                              .collect(Collectors.toCollection(LinkedHashSet::new));
+    //                      if (tr.getSynonym() != null && tr.getSynonym() && tr.getUsage() != null)
+    // {
+    //                        taxonKeys.add(tr.getUsage().getKey());
+    //                      }
+    //                      return new ArrayList<>(taxonKeys);
+    //                    },
+    //                    (a, b) -> a,
+    //                    LinkedHashMap::new)));
 
-    occurrenceHdfsRecord.setTaxonomicstatuses(
-        multiTaxonRecord.getTaxonRecords().stream()
-            .collect(
-                Collectors.toMap(
-                    TaxonRecord::getDatasetKey,
-                    tr ->
-                        tr.getUsage() != null && tr.getUsage().getStatus() != null
-                            ? tr.getUsage().getStatus()
-                            : "",
-                    (a, b) -> a,
-                    LinkedHashMap::new)));
-
-    occurrenceHdfsRecord.setTaxonomicissue(
-        multiTaxonRecord.getTaxonRecords().stream()
-            .collect(
-                Collectors.toMap(
-                    TaxonRecord::getDatasetKey,
-                    tr ->
-                        tr.getIssues() != null && tr.getIssues().getIssueList() != null
-                            ? tr.getIssues().getIssueList()
-                            : List.of(),
-                    (a, b) -> a,
-                    LinkedHashMap::new)));
-
-    occurrenceHdfsRecord.setClassificationdetails(
-        multiTaxonRecord.getTaxonRecords().stream()
-            .filter(tr -> tr.getDatasetKey() != null)
-            .filter(tr -> tr.getUsage() != null)
-            .collect(
-                Collectors.toMap(
-                    TaxonRecord::getDatasetKey,
-                    tr -> classificationToMap(extendedRecord, tr),
-                    (a, b) -> a,
-                    LinkedHashMap::new)));
+    //    occurrenceHdfsRecord.setTaxonomicstatuses(
+    //        multiTaxonRecord.getTaxonRecords().stream()
+    //            .collect(
+    //                Collectors.toMap(
+    //                    TaxonRecord::getDatasetKey,
+    //                    tr ->
+    //                        tr.getUsage() != null && tr.getUsage().getStatus() != null
+    //                            ? tr.getUsage().getStatus()
+    //                            : "",
+    //                    (a, b) -> a,
+    //                    LinkedHashMap::new)));
+    //
+    //    occurrenceHdfsRecord.setTaxonomicissue(
+    //        multiTaxonRecord.getTaxonRecords().stream()
+    //            .collect(
+    //                Collectors.toMap(
+    //                    TaxonRecord::getDatasetKey,
+    //                    tr ->
+    //                        tr.getIssues() != null && tr.getIssues().getIssueList() != null
+    //                            ? tr.getIssues().getIssueList()
+    //                            : List.of(),
+    //                    (a, b) -> a,
+    //                    LinkedHashMap::new)));
+    //
+    //    occurrenceHdfsRecord.setClassificationdetails(
+    //        multiTaxonRecord.getTaxonRecords().stream()
+    //            .filter(tr -> tr.getDatasetKey() != null)
+    //            .filter(tr -> tr.getUsage() != null)
+    //            .collect(
+    //                Collectors.toMap(
+    //                    TaxonRecord::getDatasetKey,
+    //                    tr -> classificationToMap(extendedRecord, tr),
+    //                    (a, b) -> a,
+    //                    LinkedHashMap::new)));
 
     // find the GBIF taxonomy
     Optional<TaxonRecord> gbifRecord =
@@ -449,10 +453,10 @@ public class OccurrenceHdfsRecordConverter {
         IucnTerm.iucnRedListCategory.simpleName().toLowerCase(),
         taxonRecord.getIucnRedListCategoryCode() != null
             ? taxonRecord.getIucnRedListCategoryCode()
-            : "");
+            : null);
 
     for (String field : REQUIRED_TAXONOMIC_FIELDS) {
-      map.putIfAbsent(field, "");
+      map.putIfAbsent(field, null);
     }
 
     return map;

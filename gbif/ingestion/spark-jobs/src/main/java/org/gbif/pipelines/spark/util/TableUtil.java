@@ -205,17 +205,20 @@ public class TableUtil {
   }
 
   static String getFieldDefinitions(DatasetType datasetType) {
-    List<InitializableField> definition;
+    List<InitializableField> fieldDefinitions;
 
     if (datasetType == DatasetType.OCCURRENCE) {
-      definition = OccurrenceHDFSTableDefinition.definition();
+      fieldDefinitions = OccurrenceHDFSTableDefinition.definition();
+
+      // add the classification fields
+
     } else if (datasetType == DatasetType.SAMPLING_EVENT) {
-      definition = EventHDFSTableDefinition.definition();
+      fieldDefinitions = EventHDFSTableDefinition.definition();
     } else {
       throw new IllegalArgumentException("Unsupported dataset type: " + datasetType);
     }
 
-    return definition.stream()
+    return fieldDefinitions.stream()
         .map(field -> field.getHiveField() + " " + field.getHiveDataType())
         .collect(Collectors.joining(", \n"));
   }
