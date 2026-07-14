@@ -1,0 +1,82 @@
+{
+  "datasetKey": 100000102,
+  "attempt": 1,
+  "job": "ImportJob",
+  "state": "finished",
+  "started": "2026-07-10T08:42:41.817882",
+  "finished": "2026-07-10T08:42:42.752508",
+  "createdBy": 955,
+  "bareNameCount": 0,
+  "distributionCount": 0,
+  "estimateCount": 0,
+  "mediaCount": 0,
+  "nameCount": 13,
+  "referenceCount": 0,
+  "synonymCount": 0,
+  "taxonCount": 13,
+  "treatmentCount": 0,
+  "typeMaterialCount": 0,
+  "vernacularCount": 0,
+  "issuesCount": {
+    "missing genus": 20,
+    "id not unique": 13,
+    "unusual name characters": 13,
+    "basionym id invalid": 13,
+    "duplicate name": 10,
+    "doubtful name": 9,
+    "blacklisted epithet": 9,
+    "indetermined": 9,
+    "not interpreted": 7,
+    "inconsistent name": 6,
+    "parent genus missing": 6
+  },
+  "namesByRankCount": {
+    "unranked": 7,
+    "species": 6
+  },
+  "namesByTypeCount": {
+    "placeholder": 7,
+    "informal": 6
+  },
+  "namesByMatchTypeCount": {
+    "exact": 6,
+    "variant": 4,
+    "canonical": 3
+  },
+  "taxaByRankCount": {
+    "unranked": 7,
+    "species": 6
+  },
+  "usagesByStatusCount": {
+    "accepted": 7,
+    "provisionally accepted": 6
+  },
+  "usagesByOriginCount": {
+    "source": 13
+  },
+  "maxClassificationDepth": 1,
+  "origin": "external",
+  "format": "dwca",
+  "download": "2026-07-10T08:42:41.803",
+  "md5": "8A4730E66AFF229F9ED867331A5073F2",
+  "verbatimCount": 20,
+  "verbatimByTermCount": {
+    "dwc:Taxon": 20
+  },
+  "verbatimByRowTypeCount": {
+    "dwc:Taxon": {
+      "dwca:ID": 20,
+      "dwc:taxonID": 15,
+      "dwc:scientificName": 20,
+      "dwc:parentNameUsageID": 4,
+      "dwc:originalNameUsageID": 20
+    }
+  },
+  "upload": true,
+  "nameMatchesCount": 13,
+  "nameMatchesMissingCount": 0,
+  "nameRelationsCount": 0,
+  "usagesCount": 13,
+  "taxonConceptRelationsCount": 0,
+  "speciesInteractionsCount": 0
+}

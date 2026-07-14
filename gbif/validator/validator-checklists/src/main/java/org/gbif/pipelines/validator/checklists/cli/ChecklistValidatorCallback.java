@@ -17,7 +17,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.checklistbank.cli.common.NeoConfiguration;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
@@ -52,22 +51,9 @@ public class ChecklistValidatorCallback
     this.config = config;
     this.validationClient = validationClient;
 
-    this.checklistValidator = new ChecklistValidator(toValidatorConfiguration(config));
+    this.checklistValidator =
+        new ChecklistValidator(config.clbApiUrl, config.clbApiUser, config.clbApiPassword);
     this.messagePublisher = messagePublisher;
-  }
-
-  /** Creates a NeoConfiguration from the pipeline configuration. */
-  private static ChecklistValidator.Configuration toValidatorConfiguration(
-      ChecklistValidatorConfiguration config) {
-    NeoConfiguration neoConfiguration = new NeoConfiguration();
-    neoConfiguration.mappedMemory = config.neoMappedMemory;
-    neoConfiguration.neoRepository = config.neoRepository;
-    neoConfiguration.port = config.neoPort;
-    neoConfiguration.batchSize = config.neoBatchSize;
-    return ChecklistValidator.Configuration.builder()
-        .neoConfiguration(neoConfiguration)
-        .apiUrl(config.gbifApiUrl)
-        .build();
   }
 
   /** Input path example - /mnt/auto/crawler/dwca/9bed66b3-4caa-42bb-9c93-71d7ba109dad */
@@ -217,6 +203,6 @@ public class ChecklistValidatorCallback
 
   @Override
   public void close() {
-    checklistValidator.close();
+    //    checklistValidator.close();
   }
 }

@@ -30,7 +30,8 @@ public class ChecklistValidatorCallbackIT {
     // State
     ChecklistValidatorConfiguration config = new ChecklistValidatorConfiguration();
     config.archiveRepository = getClass().getResource("/dwca/").getFile();
-    config.neoRepository = temp.resolve("neo").toFile();
+    // TODO
+    //    config.neoRepository = temp.resolve("neo").toFile();
 
     ValidationWsClient validationClient = ValidationWsClientStub.create();
     MessagePublisher messagePublisher = MessagePublisherStub.create();
