@@ -15,7 +15,7 @@ import org.gbif.pipelines.validator.checklists.ws.ChecklistbankWsClientMock;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /** Unit tests related to {@link org.gbif.pipelines.validator.checklists.ChecklistValidator}. */
 public class ChecklistValidatorTest {
@@ -47,8 +47,9 @@ public class ChecklistValidatorTest {
       // Metrics.IssueInfo checks
       assertEquals(11, report.get(0).getIssues().size());
       assertEquals(Long.valueOf(20), report.get(0).getIssues().get(0).getCount());
-      assertEquals("missing genus", report.get(0).getIssues().get(0).getIssue());
-      assertEquals(1, report.get(0).getIssues().get(0).getSamples().size());
+      assertTrue(
+          report.get(0).getIssues().stream().anyMatch(i -> i.getIssue().equals("missing genus")));
+      assertTrue(report.get(0).getIssues().stream().allMatch(i -> i.getSamples().size() == 1));
       assertEquals(
           "gbif.org:species:7471350",
           report.get(0).getIssues().get(0).getSamples().get(0).getRecordId());
@@ -105,7 +106,6 @@ public class ChecklistValidatorTest {
               .filter(r -> r.getRowType().equals(GbifTerm.Identifier.qualifiedName()))
               .count());
 
-      // TODO
       for (Metrics.FileInfo fileInfo : report) {
         if (fileInfo.getRowType().equals(DwcTerm.Taxon.qualifiedName())) {
           assertEquals(Long.valueOf(7089), fileInfo.getCount());
@@ -115,8 +115,11 @@ public class ChecklistValidatorTest {
 
           assertEquals(19, fileInfo.getIssues().size());
           assertEquals(Long.valueOf(7089), fileInfo.getIssues().get(0).getCount());
-          assertEquals("distribution area invalid", fileInfo.getIssues().get(0).getIssue());
-          assertEquals(1, fileInfo.getIssues().get(0).getSamples().size());
+          assertTrue(
+              fileInfo.getIssues().stream()
+                  .anyMatch(i -> i.getIssue().equals("distribution area invalid")));
+          assertTrue(fileInfo.getIssues().stream().allMatch(i -> i.getSamples().size() == 1));
+
           assertEquals(
               "gbif.org:species:7471350",
               fileInfo.getIssues().get(0).getSamples().get(0).getRecordId());

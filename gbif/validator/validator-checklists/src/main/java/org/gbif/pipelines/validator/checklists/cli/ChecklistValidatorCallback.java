@@ -1,6 +1,5 @@
 package org.gbif.pipelines.validator.checklists.cli;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,7 +32,7 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 /** Callback which is called when the {@link PipelinesChecklistValidatorMessage} is received. */
 @Slf4j
 public class ChecklistValidatorCallback
-    extends AbstractMessageCallback<PipelinesChecklistValidatorMessage> implements Closeable {
+    extends AbstractMessageCallback<PipelinesChecklistValidatorMessage> {
 
   // Use stepType as a String to keep validation api separate to gbif-api
   private static final String STEP_TYPE = "VALIDATOR_COLLECT_METRICS";
@@ -57,8 +56,8 @@ public class ChecklistValidatorCallback
   }
 
   /** Input path example - /mnt/auto/crawler/dwca/9bed66b3-4caa-42bb-9c93-71d7ba109dad */
-  public static Path buildDwcaInputPath(String archiveRepository, UUID dataSetUuid) {
-    Path directoryPath = Paths.get(archiveRepository, dataSetUuid.toString());
+  public static Path buildDwcaInputPath(String archiveRepository, UUID dataSetUuid, String file) {
+    Path directoryPath = Paths.get(archiveRepository, dataSetUuid.toString(), file);
     if (!directoryPath.toFile().exists()) {
       throw new IllegalStateException("Directory does not exist! - " + directoryPath);
     }
@@ -93,7 +92,8 @@ public class ChecklistValidatorCallback
       log.info("Validating checklist archive: {}", validation.getKey());
       List<FileInfo> report =
           checklistValidator.evaluate(
-              buildDwcaInputPath(config.archiveRepository, validation.getKey()));
+              buildDwcaInputPath(
+                  config.archiveRepository, validation.getKey(), validation.getFile()));
       updateValidationFinished(validation, report);
     } catch (Exception ex) {
       log.error("Error validating checklist", ex);
@@ -199,10 +199,5 @@ public class ChecklistValidatorCallback
 
     log.info("Validation {} change status to {} for {}", validation.getKey(), newStatus, STEP_TYPE);
     return validationClient.update(validation.getKey(), validation);
-  }
-
-  @Override
-  public void close() {
-    //    checklistValidator.close();
   }
 }

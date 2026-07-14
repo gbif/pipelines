@@ -77,7 +77,7 @@ public class ChecklistValidator {
 
     if (!importerResponse.getState().equalsIgnoreCase(FINISHED)) {
       throw new IllegalStateException(
-          "Validation failed with status " + importerResponse.getState() + "for " + archivePath);
+          "Validation failed with status " + importerResponse.getState() + " for " + archivePath);
     }
 
     for (Map.Entry<Term, Map<Term, Long>> entry :
