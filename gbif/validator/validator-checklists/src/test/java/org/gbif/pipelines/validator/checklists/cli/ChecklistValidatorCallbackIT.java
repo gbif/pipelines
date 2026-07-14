@@ -30,8 +30,6 @@ public class ChecklistValidatorCallbackIT {
     // State
     ChecklistValidatorConfiguration config = new ChecklistValidatorConfiguration();
     config.archiveRepository = getClass().getResource("/dwca/").getFile();
-    // TODO
-    //    config.neoRepository = temp.resolve("neo").toFile();
 
     ValidationWsClient validationClient = ValidationWsClientStub.create();
     MessagePublisher messagePublisher = MessagePublisherStub.create();
@@ -105,7 +103,6 @@ public class ChecklistValidatorCallbackIT {
     assertTerm(DwcTerm.occurrenceStatus, 475, 475, distribution);
     assertTerm(DwcTerm.establishmentMeans, 475, 0, distribution);
     assertTerm(DwcTerm.locationID, 0, 0, distribution);
-    callback.close();
   }
 
   private Optional<FileInfo> getFileInfoByName(Validation validation, String name) {
