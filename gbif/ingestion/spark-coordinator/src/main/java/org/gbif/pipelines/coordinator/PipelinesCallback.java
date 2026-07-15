@@ -351,7 +351,7 @@ public abstract class PipelinesCallback<
     }
 
     List<PipelineStep> thisPipelineStep =
-        executionPipelineSteps.stream().filter(ps -> ps.getType() == getStepType()).toList();
+        executionPipelineSteps.stream().filter(ps -> ps.getType() != getStepType()).toList();
 
     if (thisPipelineStep.isEmpty()) {
       // expected when we opt to only execute one step with &onlyRequestedStep=true
