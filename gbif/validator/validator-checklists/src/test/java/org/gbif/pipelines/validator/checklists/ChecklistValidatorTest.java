@@ -40,6 +40,7 @@ public class ChecklistValidatorTest {
       assertEquals(1, report.size());
       assertEquals(Long.valueOf(20), report.get(0).getCount());
       assertEquals(Long.valueOf(13), report.get(0).getIndexedCount());
+      assertEquals(5, report.get(0).getTerms().size());
       assertEquals(DwcFileType.CORE, report.get(0).getFileType());
       assertEquals(DwcTerm.Taxon.qualifiedName(), report.get(0).getRowType());
       assertEquals("taxon.txt", report.get(0).getFileName());

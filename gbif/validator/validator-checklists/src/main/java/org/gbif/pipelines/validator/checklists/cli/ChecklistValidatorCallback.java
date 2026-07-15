@@ -49,9 +49,20 @@ public class ChecklistValidatorCallback
       MessagePublisher messagePublisher) {
     this.config = config;
     this.validationClient = validationClient;
-
     this.checklistValidator =
         new ChecklistValidator(config.clbApiUrl, config.clbApiUser, config.clbApiPassword);
+    this.messagePublisher = messagePublisher;
+  }
+
+  // useful to mock the ChecklistbankWsClient in the ChecklistValidator for tests
+  public ChecklistValidatorCallback(
+      ChecklistValidatorConfiguration config,
+      ValidationWsClient validationClient,
+      MessagePublisher messagePublisher,
+      ChecklistValidator checklistValidator) {
+    this.config = config;
+    this.validationClient = validationClient;
+    this.checklistValidator = checklistValidator;
     this.messagePublisher = messagePublisher;
   }
 
