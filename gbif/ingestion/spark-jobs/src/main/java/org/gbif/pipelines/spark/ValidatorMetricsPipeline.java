@@ -35,14 +35,17 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
 import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
-import org.gbif.pipelines.spark.pojo.SparkValidatorMetrics;
 import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.validator.api.EvaluationCategory;
+import org.gbif.validator.api.Metrics;
+import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.IssueInfo;
 import org.gbif.validator.api.Metrics.IssueSample;
+import org.gbif.validator.api.Metrics.TermInfo;
 
 /**
  * Spark pipeline that computes validator metrics directly from interpreted occurrence Parquet
@@ -193,14 +196,19 @@ public class ValidatorMetricsPipeline {
       List<IssueInfo> issues = computeIssues(records);
       log.info("Computed {} distinct issues", issues.size());
 
-      Map<String, Long> interpretedFieldCounts = computeInterpretedFieldCounts(records);
-      log.info("Computed interpreted counts for {} terms", interpretedFieldCounts.size());
+      List<TermInfo> termInfos = computeInterpretedFieldCounts(records);
+      log.info("Computed interpreted counts for {} terms", termInfos.size());
 
-      SparkValidatorMetrics result =
-          SparkValidatorMetrics.builder()
-              .indexedCount(indexedCount)
-              .issues(issues)
-              .interpretedFieldCounts(interpretedFieldCounts)
+      Metrics result =
+          Metrics.builder()
+              .fileInfos(
+                  Collections.singletonList(
+                      FileInfo.builder()
+                          .rowType(DwcTerm.Occurrence.qualifiedName())
+                          .indexedCount(indexedCount)
+                          .issues(issues)
+                          .terms(termInfos)
+                          .build()))
               .build();
 
       String json = MAPPER.writeValueAsString(result);
@@ -285,16 +293,16 @@ public class ValidatorMetricsPipeline {
 
   /**
    * Counts non-null interpreted values for each term in {@link #TERM_TO_COLUMN} in a single Spark
-   * aggregation pass. Returns a map keyed by ES field path (matching {@code
-   * RawToInterpreted.getInterpretedField} values) so that {@code SparkMetricsCollector} can
-   * cross-reference without duplicating the mapping.
+   * aggregation pass. Returns a {@link TermInfo} per term with only {@code interpretedIndexed} set;
+   * {@code rawIndexed} is left null and filled in by {@code SparkMetricsCollector} from the
+   * archive.
    */
-  private static Map<String, Long> computeInterpretedFieldCounts(
+  private static List<TermInfo> computeInterpretedFieldCounts(
       Dataset<OccurrenceJsonRecord> records) {
 
     List<String> termQualifiedNames = new ArrayList<>(TERM_TO_COLUMN.keySet());
     if (termQualifiedNames.isEmpty()) {
-      return Collections.emptyMap();
+      return Collections.emptyList();
     }
 
     // Build one count(when(col.isNotNull, 1)) per term, aliased by ordinal index
@@ -313,9 +321,13 @@ public class ValidatorMetricsPipeline {
 
     Row countRow = records.agg(firstAgg, restAggs.toArray(new Column[0])).first();
 
-    Map<String, Long> result = new HashMap<>();
+    List<TermInfo> result = new ArrayList<>();
     for (int i = 0; i < termQualifiedNames.size(); i++) {
-      result.put(termQualifiedNames.get(i), countRow.getLong(i));
+      result.add(
+          TermInfo.builder()
+              .term(termQualifiedNames.get(i))
+              .interpretedIndexed(countRow.getLong(i))
+              .build());
     }
     return result;
   }
