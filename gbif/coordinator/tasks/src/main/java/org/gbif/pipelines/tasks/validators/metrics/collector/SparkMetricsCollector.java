@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +81,7 @@ public class SparkMetricsCollector implements MetricsCollector {
     List<FileInfo> fileInfos = DwcaFileTermCounter.process(archive);
 
     // Read Spark-computed metrics from HDFS
-    SparkMetrics sparkMetrics = readSparkMetrics();
+    Metrics sparkMetrics = readSparkMetrics();
 
     // Overlay Spark metrics onto the archive-derived file infos
     applySparkMetrics(fileInfos, sparkMetrics);
@@ -99,7 +100,7 @@ public class SparkMetricsCollector implements MetricsCollector {
     validationClient.update(validation);
   }
 
-  private SparkMetrics readSparkMetrics() throws IOException {
+  private Metrics readSparkMetrics() throws IOException {
     StepConfiguration stepConfig = config.stepConfig;
     String datasetId = message.getDatasetUuid().toString();
     String attempt = message.getAttempt().toString();
@@ -119,7 +120,7 @@ public class SparkMetricsCollector implements MetricsCollector {
                 + " — ensure ValidatorMetricsPipeline ran before this step.");
       }
       try (var in = fs.open(fsPath)) {
-        return MAPPER.readValue(in.getWrappedStream(), SparkMetrics.class);
+        return MAPPER.readValue(in.getWrappedStream(), Metrics.class);
       }
     }
   }
@@ -128,25 +129,37 @@ public class SparkMetricsCollector implements MetricsCollector {
    * Overlays Spark-computed indexed counts, issue info, and interpreted term counts onto {@code
    * fileInfos} produced by reading the archive.
    */
-  private void applySparkMetrics(List<FileInfo> fileInfos, SparkMetrics sparkMetrics) {
-    for (FileInfo fileInfo : fileInfos) {
-      if (fileInfo.getRowType() == null) continue;
+  private void applySparkMetrics(List<FileInfo> fileInfos, Metrics sparkMetrics) {
+    if (sparkMetrics.getFileInfos() == null) return;
 
-      if (DwcTerm.Occurrence.qualifiedName().equals(fileInfo.getRowType())) {
-        fileInfo.setIndexedCount(sparkMetrics.indexedCount);
-        fileInfo.setIssues(
-            sparkMetrics.issues != null ? sparkMetrics.issues : Collections.emptyList());
+    sparkMetrics.getFileInfos().stream()
+        .filter(sf -> DwcTerm.Occurrence.qualifiedName().equals(sf.getRowType()))
+        .findFirst()
+        .ifPresent(
+            sparkFileInfo -> {
+              Map<String, Long> interpretedCounts =
+                  sparkFileInfo.getTerms() == null
+                      ? Collections.emptyMap()
+                      : sparkFileInfo.getTerms().stream()
+                          .filter(t -> t.getInterpretedIndexed() != null)
+                          .collect(
+                              Collectors.toMap(TermInfo::getTerm, TermInfo::getInterpretedIndexed));
 
-        if (sparkMetrics.interpretedFieldCounts != null) {
-          for (TermInfo termInfo : fileInfo.getTerms()) {
-            Long count = sparkMetrics.interpretedFieldCounts.get(termInfo.getTerm());
-            if (count != null) {
-              termInfo.setInterpretedIndexed(count);
-            }
-          }
-        }
-      }
-    }
+              for (FileInfo fileInfo : fileInfos) {
+                if (!DwcTerm.Occurrence.qualifiedName().equals(fileInfo.getRowType())) continue;
+                fileInfo.setIndexedCount(sparkFileInfo.getIndexedCount());
+                fileInfo.setIssues(
+                    sparkFileInfo.getIssues() != null
+                        ? sparkFileInfo.getIssues()
+                        : Collections.emptyList());
+                for (TermInfo termInfo : fileInfo.getTerms()) {
+                  Long count = interpretedCounts.get(termInfo.getTerm());
+                  if (count != null) {
+                    termInfo.setInterpretedIndexed(count);
+                  }
+                }
+              }
+            });
   }
 
   @SneakyThrows
@@ -204,12 +217,5 @@ public class SparkMetricsCollector implements MetricsCollector {
               UUID.randomUUID().toString());
       log.info("Checklist validation completed, response: {}", response);
     }
-  }
-
-  /** Internal representation of the JSON file written by {@code ValidatorMetricsPipeline}. */
-  private static class SparkMetrics {
-    public long indexedCount;
-    public List<IssueInfo> issues;
-    public Map<String, Long> interpretedFieldCounts;
   }
 }
