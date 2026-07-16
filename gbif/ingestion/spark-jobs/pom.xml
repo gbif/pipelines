@@ -53,6 +53,17 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.gbif.pipelines</groupId>
+            <artifactId>validator-api</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>dwc-dp-descriptor</artifactId>
             <version>${dwc-dp-analyser.version}</version>

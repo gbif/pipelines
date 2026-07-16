@@ -19,8 +19,17 @@ public class MetricsCollectorFactory {
 
   public MetricsCollector create() {
 
-    // DWCA
+    // DWCA — use Spark-based collector when configured, otherwise fall back to Elasticsearch
     if (DatasetTypePredicate.isEndpointDwca(message.getEndpointType())) {
+      if (config.useSparkMetrics) {
+        return SparkMetricsCollector.builder()
+            .config(config)
+            .publisher(publisher)
+            .validationClient(validationClient)
+            .message(message)
+            .stepType(stepType)
+            .build();
+      }
       return DwcaMetricsCollector.builder()
           .config(config)
           .publisher(publisher)
@@ -35,7 +44,7 @@ public class MetricsCollectorFactory {
       return XmlMetricsCollector.builder().build();
     }
 
-    // Defualt
+    // Default
     return DefaultMetricsCollector.builder()
         .validationClient(validationClient)
         .message(message)
