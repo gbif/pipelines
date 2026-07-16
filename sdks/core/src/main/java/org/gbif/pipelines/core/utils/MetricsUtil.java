@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
@@ -49,7 +50,22 @@ public class MetricsUtil {
   public static Map<String, Long> readMetricsYaml(FileSystem fs, String fileName) {
     try (InputStream in = fs.open(new Path(fileName));
         InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-      return new Yaml().load(reader);
+
+      Map<String, Object> raw = new Yaml().load(reader);
+      if (raw == null || raw.isEmpty()) {
+        return Map.of();
+      }
+
+      Map<String, Long> result = new HashMap<>(raw.size());
+      for (Map.Entry<String, Object> e : raw.entrySet()) {
+        Object value = e.getValue();
+        if (value instanceof Number) {
+          result.put(e.getKey(), ((Number) value).longValue());
+        } else if (value != null) {
+          log.warn("Skipping non-numeric metric {} = {} in {}", e.getKey(), value, fileName);
+        }
+      }
+      return result;
     } catch (Exception e) {
       log.error("Failed to read metrics yaml from {}", fileName, e);
       return Map.of();
