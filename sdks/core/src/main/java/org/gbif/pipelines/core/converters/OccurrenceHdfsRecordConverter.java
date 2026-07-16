@@ -330,61 +330,60 @@ public class OccurrenceHdfsRecordConverter {
             .map(TaxonRecord::getDatasetKey)
             .collect(Collectors.toList()));
 
-    //    occurrenceHdfsRecord.setClassifications(
-    //        multiTaxonRecord.getTaxonRecords().stream()
-    //            .collect(
-    //                Collectors.toMap(
-    //                    TaxonRecord::getDatasetKey,
-    //                    tr -> {
-    //                      Set<String> taxonKeys =
-    //                          Optional.ofNullable(tr.getClassification())
-    //                              .orElse(Collections.emptyList())
-    //                              .stream()
-    //                              .map(RankedName::getKey)
-    //                              .collect(Collectors.toCollection(LinkedHashSet::new));
-    //                      if (tr.getSynonym() != null && tr.getSynonym() && tr.getUsage() != null)
-    // {
-    //                        taxonKeys.add(tr.getUsage().getKey());
-    //                      }
-    //                      return new ArrayList<>(taxonKeys);
-    //                    },
-    //                    (a, b) -> a,
-    //                    LinkedHashMap::new)));
+    occurrenceHdfsRecord.setClassifications(
+        multiTaxonRecord.getTaxonRecords().stream()
+            .collect(
+                Collectors.toMap(
+                    TaxonRecord::getDatasetKey,
+                    tr -> {
+                      Set<String> taxonKeys =
+                          Optional.ofNullable(tr.getClassification())
+                              .orElse(Collections.emptyList())
+                              .stream()
+                              .map(RankedName::getKey)
+                              .collect(Collectors.toCollection(LinkedHashSet::new));
+                      if (tr.getSynonym() != null && tr.getSynonym() && tr.getUsage() != null) {
+                        taxonKeys.add(tr.getUsage().getKey());
+                      }
+                      return new ArrayList<>(taxonKeys);
+                    },
+                    (a, b) -> a,
+                    LinkedHashMap::new)));
 
-    //    occurrenceHdfsRecord.setTaxonomicstatuses(
-    //        multiTaxonRecord.getTaxonRecords().stream()
-    //            .collect(
-    //                Collectors.toMap(
-    //                    TaxonRecord::getDatasetKey,
-    //                    tr ->
-    //                        tr.getUsage() != null && tr.getUsage().getStatus() != null
-    //                            ? tr.getUsage().getStatus()
-    //                            : "",
-    //                    (a, b) -> a,
-    //                    LinkedHashMap::new)));
-    //
-    //    occurrenceHdfsRecord.setTaxonomicissue(
-    //        multiTaxonRecord.getTaxonRecords().stream()
-    //            .collect(
-    //                Collectors.toMap(
-    //                    TaxonRecord::getDatasetKey,
-    //                    tr ->
-    //                        tr.getIssues() != null && tr.getIssues().getIssueList() != null
-    //                            ? tr.getIssues().getIssueList()
-    //                            : List.of(),
-    //                    (a, b) -> a,
-    //                    LinkedHashMap::new)));
-    //
-    //    occurrenceHdfsRecord.setClassificationdetails(
-    //        multiTaxonRecord.getTaxonRecords().stream()
-    //            .filter(tr -> tr.getDatasetKey() != null)
-    //            .filter(tr -> tr.getUsage() != null)
-    //            .collect(
-    //                Collectors.toMap(
-    //                    TaxonRecord::getDatasetKey,
-    //                    tr -> classificationToMap(extendedRecord, tr),
-    //                    (a, b) -> a,
-    //                    LinkedHashMap::new)));
+    occurrenceHdfsRecord.setTaxonomicstatuses(
+        multiTaxonRecord.getTaxonRecords().stream()
+            .collect(
+                Collectors.toMap(
+                    TaxonRecord::getDatasetKey,
+                    tr ->
+                        tr.getUsage() != null && tr.getUsage().getStatus() != null
+                            ? tr.getUsage().getStatus()
+                            : "",
+                    (a, b) -> a,
+                    LinkedHashMap::new)));
+
+    occurrenceHdfsRecord.setTaxonomicissue(
+        multiTaxonRecord.getTaxonRecords().stream()
+            .collect(
+                Collectors.toMap(
+                    TaxonRecord::getDatasetKey,
+                    tr ->
+                        tr.getIssues() != null && tr.getIssues().getIssueList() != null
+                            ? tr.getIssues().getIssueList()
+                            : List.of(),
+                    (a, b) -> a,
+                    LinkedHashMap::new)));
+
+    occurrenceHdfsRecord.setClassificationdetails(
+        multiTaxonRecord.getTaxonRecords().stream()
+            .filter(tr -> tr.getDatasetKey() != null)
+            .filter(tr -> tr.getUsage() != null)
+            .collect(
+                Collectors.toMap(
+                    TaxonRecord::getDatasetKey,
+                    tr -> classificationToMap(extendedRecord, tr),
+                    (a, b) -> a,
+                    LinkedHashMap::new)));
 
     // find the GBIF taxonomy
     Optional<TaxonRecord> gbifRecord =

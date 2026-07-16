@@ -760,8 +760,17 @@ public class TableUtil {
               if (hdfsColumn != null) {
                 return hdfsColumn.getSelect();
               } else {
-                // Column not found in HDFS, select NULL with alias
-                return "NULL AS `" + structField.name() + "`";
+                if (structField.dataType() instanceof ArrayType) {
+                  log.warn(
+                      "Column {} not found in HDFS, selecting empty array with alias",
+                      structField.name());
+                  return "array() AS `" + structField.name() + "`";
+                } else if (structField.dataType() instanceof MapType) {
+                  return "map() AS `" + structField.name() + "`";
+                } else {
+                  // Column not found in HDFS, select NULL with alias
+                  return "NULL AS `" + structField.name() + "`";
+                }
               }
             })
         .collect(Collectors.joining(", "));
