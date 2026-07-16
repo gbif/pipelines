@@ -861,7 +861,8 @@ public class OccurrenceInterpretationPipeline {
     Map<String, String> uuidToColumnPrefix =
         Map.of(
             "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c", "gbif",
-            "7ddf754f-d193-4cc9-b351-99906754a03b", "col");
+            "7ddf754f-d193-4cc9-b351-99906754a03b", "col",
+            "668282c7-8d71-4c2b-b9ba-f9ab705c88d5", "za");
 
     Dataset<Row> withClassifications = null;
 
@@ -924,9 +925,7 @@ public class OccurrenceInterpretationPipeline {
                   element_at(classification, lit("iucnredlistcategory")).as("iucnredlistcategory"),
                   taxonkeys.as("taxonkeys"),
                   taxonomicIssue.as("issue"),
-                  taxonomicStatus.as("taxonomicstatus")
-              )
-          );
+                  taxonomicStatus.as("taxonomicstatus")));
     }
 
     // for small datasets, to reduce the number of small files created, we coalesce to a single

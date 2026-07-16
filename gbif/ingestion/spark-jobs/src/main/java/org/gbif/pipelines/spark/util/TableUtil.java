@@ -209,18 +209,73 @@ public class TableUtil {
 
     if (datasetType == DatasetType.OCCURRENCE) {
       fieldDefinitions = OccurrenceHDFSTableDefinition.definition();
-
-      // add the classification fields
-
     } else if (datasetType == DatasetType.SAMPLING_EVENT) {
       fieldDefinitions = EventHDFSTableDefinition.definition();
     } else {
       throw new IllegalArgumentException("Unsupported dataset type: " + datasetType);
     }
 
-    return fieldDefinitions.stream()
-        .map(field -> field.getHiveField() + " " + field.getHiveDataType())
-        .collect(Collectors.joining(", \n"));
+    String fieldDefn =
+        fieldDefinitions.stream()
+            .map(field -> field.getHiveField() + " " + field.getHiveDataType())
+            .collect(Collectors.joining(",\n"));
+
+    if (datasetType == DatasetType.OCCURRENCE) {
+      // add the classification fields
+      String classificationStruct =
+          """
+              STRUCT<
+                taxonkey: STRING,
+                scientificname: STRING,
+                acceptedtaxonkey: STRING,
+                acceptednameusageid: STRING,
+                acceptedscientificname: STRING,
+                genericname: STRING,
+                specificepithet: STRING,
+                infraspecificepithet: STRING,
+                taxonrank: STRING,
+                kingdomkey: STRING,
+                phylumkey: STRING,
+                classkey: STRING,
+                orderkey: STRING,
+                superfamilykey: STRING,
+                familykey: STRING,
+                subfamilykey: STRING,
+                tribekey: STRING,
+                subtribekey: STRING,
+                genuskey: STRING,
+                subgenuskey: STRING,
+                specieskey: STRING,
+                kingdom: STRING,
+                phylum: STRING,
+                class: STRING,
+                order: STRING,
+                superfamily: STRING,
+                family: STRING,
+                subfamily: STRING,
+                tribe: STRING,
+                subtribe: STRING,
+                genus: STRING,
+                subgenus: STRING,
+                species: STRING,
+                iucnredlistcategory: STRING,
+                taxonkeys: ARRAY<STRING>,
+                issues: ARRAY<STRING>,
+                taxonomicstatus: STRING>
+              """;
+
+      Map<String, String> uuidToColumnPrefix =
+          Map.of(
+              "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c", "gbif",
+              "7ddf754f-d193-4cc9-b351-99906754a03b", "col",
+              "668282c7-8d71-4c2b-b9ba-f9ab705c88d5", "za");
+
+      for (String prefix : uuidToColumnPrefix.values()) {
+        fieldDefn += String.format(",\n%s_classification %s", prefix, classificationStruct);
+      }
+    }
+
+    return fieldDefn;
   }
 
   public static String getCreateMultimediaTableSQL(
