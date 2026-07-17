@@ -46,7 +46,7 @@ class MetricsUtilTest {
   }
 
   @Test
-  void readMetricsYaml_beforeFix_demonstratesTheBug() throws IOException {
+  void readMetricsYaml_regression_integerValuesAreNormalizedToLong() throws IOException {
     // Historical regression check: this is the exact failure mode from production.
     // Without the Number-normalization fix, this line would throw:
     //   ClassCastException: class java.lang.Integer cannot be cast to class java.lang.Long
