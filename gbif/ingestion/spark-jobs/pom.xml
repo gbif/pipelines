@@ -673,14 +673,6 @@
             <version>2.9.0</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.gbif</groupId>
-            <artifactId>gbif-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.gbif</groupId>
-            <artifactId>gbif-api</artifactId>
-        </dependency>
     </dependencies>
     <build>
         <plugins>

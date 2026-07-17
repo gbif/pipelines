@@ -358,7 +358,7 @@ public class OccurrenceHdfsRecordConverter {
                     tr ->
                         tr.getUsage() != null && tr.getUsage().getStatus() != null
                             ? tr.getUsage().getStatus()
-                            : "",
+                            : null,
                     (a, b) -> a,
                     LinkedHashMap::new)));
 
@@ -386,13 +386,12 @@ public class OccurrenceHdfsRecordConverter {
                     LinkedHashMap::new)));
 
     // find the GBIF taxonomy
-    Optional<TaxonRecord> gbifRecord =
+    Optional<TaxonRecord> defaultTaxonomyRecord =
         multiTaxonRecord.getTaxonRecords().stream()
-            .filter(
-                tr -> OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
+            .filter(tr -> OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY.equals(tr.getDatasetKey()))
             .findFirst();
 
-    gbifRecord.ifPresent(tr -> mapLegacyGbifTaxonRecord(occurrenceHdfsRecord, tr));
+    defaultTaxonomyRecord.ifPresent(tr -> mapLegacyGbifTaxonRecord(occurrenceHdfsRecord, tr));
   }
 
   private static Map<String, String> classificationToMap(
@@ -423,17 +422,17 @@ public class OccurrenceHdfsRecordConverter {
       // Optional taxonomic fields
       map.put(
           DwcTerm.genericName.simpleName().toLowerCase(),
-          usage.getGenericName() != null ? usage.getGenericName() : "");
+          usage.getGenericName() != null ? usage.getGenericName() : null);
       map.put(
           DwcTerm.specificEpithet.simpleName().toLowerCase(),
-          usage.getSpecificEpithet() != null ? usage.getSpecificEpithet() : "");
+          usage.getSpecificEpithet() != null ? usage.getSpecificEpithet() : null);
       map.put(
           DwcTerm.infraspecificEpithet.simpleName().toLowerCase(),
-          usage.getInfraspecificEpithet() != null ? usage.getInfraspecificEpithet() : "");
+          usage.getInfraspecificEpithet() != null ? usage.getInfraspecificEpithet() : null);
 
       map.put(
           DwcTerm.taxonRank.simpleName().toLowerCase(),
-          usage.getRank() != null ? usage.getRank() : "");
+          usage.getRank() != null ? usage.getRank() : null);
     }
 
     extractOptValue(verbatim, DwcTerm.scientificName)
@@ -491,9 +490,25 @@ public class OccurrenceHdfsRecordConverter {
                     occurrenceHdfsRecord.setOrder(rankedName.getName());
                     occurrenceHdfsRecord.setOrderkey(rankedName.getKey());
                     break;
+                  case "SUPERFAMILY":
+                    occurrenceHdfsRecord.setSuperfamily(rankedName.getName());
+                    occurrenceHdfsRecord.setSuperfamilykey(rankedName.getKey());
+                    break;
                   case "FAMILY":
                     occurrenceHdfsRecord.setFamily(rankedName.getName());
                     occurrenceHdfsRecord.setFamilykey(rankedName.getKey());
+                    break;
+                  case "SUBFAMILY":
+                    occurrenceHdfsRecord.setSubfamily(rankedName.getName());
+                    occurrenceHdfsRecord.setSubfamilykey(rankedName.getKey());
+                    break;
+                  case "TRIBE":
+                    occurrenceHdfsRecord.setTribe(rankedName.getName());
+                    occurrenceHdfsRecord.setTribekey(rankedName.getKey());
+                    break;
+                  case "SUBTRIBE":
+                    occurrenceHdfsRecord.setSubtribe(rankedName.getName());
+                    occurrenceHdfsRecord.setSubtribekey(rankedName.getKey());
                     break;
                   case "GENUS":
                     occurrenceHdfsRecord.setGenus(rankedName.getName());
@@ -536,7 +551,7 @@ public class OccurrenceHdfsRecordConverter {
       Optional.ofNullable(taxonRecord.getUsage().getRank())
           .ifPresent(occurrenceHdfsRecord::setTaxonrank);
       occurrenceHdfsRecord.setTaxonomicstatus(
-          taxonRecord.getUsage().getStatus() != null ? taxonRecord.getUsage().getStatus() : "");
+          taxonRecord.getUsage().getStatus() != null ? taxonRecord.getUsage().getStatus() : null);
     }
 
     if (Objects.nonNull(taxonRecord.getUsageParsedName())

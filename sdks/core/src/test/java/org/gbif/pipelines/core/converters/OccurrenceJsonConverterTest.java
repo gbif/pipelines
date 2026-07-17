@@ -351,7 +351,7 @@ public class OccurrenceJsonConverterTest {
     TaxonRecord tr =
         TaxonRecord.newBuilder()
             .setId("777")
-            .setDatasetKey(OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY)
+            .setDatasetKey(OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY)
             .setAcceptedUsage(au)
             .setClassification(rankedNameList)
             .setUsage(synonym)
@@ -713,7 +713,7 @@ public class OccurrenceJsonConverterTest {
     TaxonRecord tr =
         TaxonRecord.newBuilder()
             .setId("777")
-            .setDatasetKey(OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY)
+            .setDatasetKey(OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY)
             .build();
     GrscicollRecord gr = GrscicollRecord.newBuilder().setId("777").build();
     MultimediaRecord mmr = MultimediaRecord.newBuilder().setId("777").build();
