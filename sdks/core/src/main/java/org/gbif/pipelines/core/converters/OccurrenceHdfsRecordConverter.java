@@ -553,13 +553,8 @@ public class OccurrenceHdfsRecordConverter {
           taxonRecord.getUsage().getStatus() != null ? taxonRecord.getUsage().getStatus() : null);
 
       String rank = taxonRecord.getUsage().getRank();
-      if (Rank.GENUS.compareTo(Rank.valueOf(rank)) <= 0) {
-        occurrenceHdfsRecord.setGenericname(taxonRecord.getUsage().getGenericName());
-      }
-
-      if (Rank.SPECIES.compareTo(Rank.valueOf(rank)) <= 0) {
-        occurrenceHdfsRecord.setSpecificepithet(taxonRecord.getUsage().getSpecificEpithet());
-      }
+      occurrenceHdfsRecord.setGenericname(taxonRecord.getUsage().getGenericName());
+      occurrenceHdfsRecord.setSpecificepithet(taxonRecord.getUsage().getSpecificEpithet());
 
       if (Rank.INFRASPECIFIC_NAME.compareTo(Rank.valueOf(rank)) <= 0) {
         occurrenceHdfsRecord.setInfraspecificepithet(
