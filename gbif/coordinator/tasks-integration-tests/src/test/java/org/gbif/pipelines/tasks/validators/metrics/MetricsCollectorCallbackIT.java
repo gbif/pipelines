@@ -1,12 +1,13 @@
 package org.gbif.pipelines.tasks.validators.metrics;
 
-import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -20,12 +21,8 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.estools.EsIndex;
-import org.gbif.pipelines.estools.model.IndexParams;
-import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.ValidationWsClientStub;
-import org.gbif.pipelines.tasks.resources.EsServer;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
@@ -36,19 +33,27 @@ import org.gbif.validator.api.Metrics.ValidationStep;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
 import org.junit.After;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+/**
+ * Metrics are read from a {@code collect-metrics.json} fixture written to a private, per-test
+ * directory, mirroring what the {@code ValidatorMetricsPipeline} Spark job writes to HDFS.
+ * Elasticsearch is no longer part of this flow (see {@link
+ * org.gbif.pipelines.tasks.validators.metrics.collector.SparkMetricsCollector}), so no ES fixtures
+ * are needed here.
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class MetricsCollectorCallbackIT {
 
-  @ClassRule public static final EsServer ES_SERVER = EsServer.getInstance();
+  @Rule public TemporaryFolder folder = new TemporaryFolder();
+
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final long EXECUTION_ID = 1L;
-  private static final Path MAPPINGS_PATH = Paths.get("mappings/verbatim-mapping.json");
   private static final MessagePublisherStub PUBLISHER = MessagePublisherStub.create();
 
   private static final PipelinesWorkflow.Graph<StepType> WF =
@@ -62,9 +67,9 @@ public class MetricsCollectorCallbackIT {
   }
 
   @Test
-  public void successInterpretationTest() {
+  public void successInterpretationTest() throws IOException {
     // State
-    MetricsCollectorConfiguration config = createConfig("test-normal-case");
+    MetricsCollectorConfiguration config = createConfig();
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     MetricsCollectorCallback callback =
@@ -75,30 +80,18 @@ public class MetricsCollectorCallbackIT {
 
     PipelinesIndexedMessage message = createMessage(uuid, attempt);
 
-    // Index document
-    String document =
-        "{\"datasetKey\":\""
-            + DATASET_UUID
-            + "\",\"maximumElevationInMeters\":2.2,\"issues\":"
-            + "[\"GEODETIC_DATUM_ASSUMED_WGS84\",\"LICENSE_MISSING_OR_UNKNOWN\"],\"verbatim\":{\"core\":"
-            + "{\"http://rs.tdwg.org/dwc/terms/maximumElevationInMeters\":\"1150\","
-            + "\"http://rs.tdwg.org/dwc/terms/organismID\":\"251\",\"http://rs.tdwg.org/dwc/terms/bed\":\"251\"},\"extensions\":"
-            + "{\"http://rs.tdwg.org/dwc/terms/MeasurementOrFact\":[{\"http://rs.tdwg.org/dwc/terms/measurementValue\":"
-            + "\"1.7\"},{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"5.0\"},"
-            + "{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"5.83\"}]}}}";
-
-    EsIndex.createIndex(
-        ES_SERVER.getEsConfig(),
-        IndexParams.builder()
-            .indexName(config.indexName)
-            .settingsType(INDEXING)
-            .pathMappings(MAPPINGS_PATH)
-            .build());
-
-    EsService.indexDocument(ES_SERVER.getEsClient(), config.indexName, 1L, document);
-    EsService.refreshIndex(ES_SERVER.getEsClient(), config.indexName);
+    writeCollectMetricsFixture(
+        uuid,
+        attempt,
+        "{\"files\":[{\"rowType\":\""
+            + DwcTerm.Occurrence.qualifiedName()
+            + "\",\"indexedCount\":1,\"issues\":["
+            + "{\"issue\":\"GEODETIC_DATUM_ASSUMED_WGS84\",\"count\":1,\"issueCategory\":\"OCC_INTERPRETATION_BASED\"},"
+            + "{\"issue\":\"LICENSE_MISSING_OR_UNKNOWN\",\"count\":1,\"issueCategory\":\"OCC_INTERPRETATION_BASED\"}"
+            + "]}]}");
 
     validationClient.update(
+        UUID.randomUUID(),
         Validation.builder()
             .key(UUID.randomUUID())
             .metrics(
@@ -180,9 +173,9 @@ public class MetricsCollectorCallbackIT {
   }
 
   @Test
-  public void successSingleInterpretationTest() {
+  public void successSingleInterpretationTest() throws IOException {
     // State
-    MetricsCollectorConfiguration config = createConfig("test-normal-single-step-case");
+    MetricsCollectorConfiguration config = createConfig();
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     MetricsCollectorCallback callback =
@@ -194,28 +187,15 @@ public class MetricsCollectorCallbackIT {
     PipelinesIndexedMessage message = createMessage(uuid, attempt);
     message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_COLLECT_METRICS.name()));
 
-    // Index document
-    String document =
-        "{\"datasetKey\":\""
-            + DATASET_UUID
-            + "\",\"maximumElevationInMeters\":2.2,\"issues\":"
-            + "[\"GEODETIC_DATUM_ASSUMED_WGS84\",\"RANDOM_ISSUE\"],\"verbatim\":{\"core\":"
-            + "{\"http://rs.tdwg.org/dwc/terms/maximumElevationInMeters\":\"1150\","
-            + "\"http://rs.tdwg.org/dwc/terms/organismID\":\"251\",\"http://rs.tdwg.org/dwc/terms/bed\":\"251\"},\"extensions\":"
-            + "{\"http://rs.tdwg.org/dwc/terms/MeasurementOrFact\":[{\"http://rs.tdwg.org/dwc/terms/measurementValue\":"
-            + "\"1.7\"},{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"5.0\"},"
-            + "{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"5.83\"}]}}}";
-
-    EsIndex.createIndex(
-        ES_SERVER.getEsConfig(),
-        IndexParams.builder()
-            .indexName(config.indexName)
-            .settingsType(INDEXING)
-            .pathMappings(MAPPINGS_PATH)
-            .build());
-
-    EsService.indexDocument(ES_SERVER.getEsClient(), config.indexName, 1L, document);
-    EsService.refreshIndex(ES_SERVER.getEsClient(), config.indexName);
+    writeCollectMetricsFixture(
+        uuid,
+        attempt,
+        "{\"files\":[{\"rowType\":\""
+            + DwcTerm.Occurrence.qualifiedName()
+            + "\",\"indexedCount\":1,\"issues\":["
+            + "{\"issue\":\"GEODETIC_DATUM_ASSUMED_WGS84\",\"count\":1,\"issueCategory\":\"OCC_INTERPRETATION_BASED\"},"
+            + "{\"issue\":\"RANDOM_ISSUE\",\"count\":1}"
+            + "]}]}");
 
     // When
     callback.handleMessage(message);
@@ -232,8 +212,8 @@ public class MetricsCollectorCallbackIT {
 
   @Test
   public void failedCaseTest() {
-    // State
-    MetricsCollectorConfiguration config = createConfig("test-failed-case");
+    // State - no collect-metrics.json fixture is written, so the Spark collector fails to read it
+    MetricsCollectorConfiguration config = createConfig();
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     MetricsCollectorCallback callback =
@@ -253,9 +233,9 @@ public class MetricsCollectorCallbackIT {
   }
 
   @Test
-  public void successEventInterpretationTest() {
+  public void successEventInterpretationTest() throws IOException {
     // State
-    MetricsCollectorConfiguration config = createConfig("test-event-normal-case");
+    MetricsCollectorConfiguration config = createConfig();
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
     MetricsCollectorCallback callback =
@@ -267,30 +247,12 @@ public class MetricsCollectorCallbackIT {
 
     PipelinesIndexedMessage message = createMessage(uuid, attempt);
 
-    // Index document
-    String document =
-        "{\"datasetKey\":\""
-            + datasetUuid
-            + "\",\"maximumElevationInMeters\":2.2,\"issues\":"
-            + "[\"GEODETIC_DATUM_ASSUMED_WGS84\",\"LICENSE_MISSING_OR_UNKNOWN\"],\"verbatim\":{\"core\":"
-            + "{\"http://rs.tdwg.org/dwc/terms/maximumElevationInMeters\":\"1150\","
-            + "\"http://rs.tdwg.org/dwc/terms/organismID\":\"251\",\"http://rs.tdwg.org/dwc/terms/bed\":\"251\"},\"extensions\":"
-            + "{\"http://rs.tdwg.org/dwc/terms/MeasurementOrFact\":[{\"http://rs.tdwg.org/dwc/terms/measurementValue\":"
-            + "\"1.7\"},{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"5.0\"},"
-            + "{\"http://rs.tdwg.org/dwc/terms/measurementValue\":\"5.83\"}]}}}";
-
-    EsIndex.createIndex(
-        ES_SERVER.getEsConfig(),
-        IndexParams.builder()
-            .indexName(config.indexName)
-            .settingsType(INDEXING)
-            .pathMappings(MAPPINGS_PATH)
-            .build());
-
-    EsService.indexDocument(ES_SERVER.getEsClient(), config.indexName, 1L, document);
-    EsService.refreshIndex(ES_SERVER.getEsClient(), config.indexName);
+    // Event-core datasets don't have an Occurrence-rowType file to overlay Spark metrics onto,
+    // so the fixture only needs to exist for the collector to succeed reading it.
+    writeCollectMetricsFixture(uuid, attempt, "{\"files\":[]}");
 
     validationClient.update(
+        UUID.randomUUID(),
         Validation.builder()
             .key(UUID.randomUUID())
             .metrics(
@@ -341,6 +303,14 @@ public class MetricsCollectorCallbackIT {
     assertEquals(Long.valueOf(30L), core.getCount());
   }
 
+  private void writeCollectMetricsFixture(UUID datasetKey, int attempt, String json)
+      throws IOException {
+    Path attemptDir =
+        folder.getRoot().toPath().resolve(datasetKey.toString()).resolve(String.valueOf(attempt));
+    Files.createDirectories(attemptDir);
+    Files.write(attemptDir.resolve("collect-metrics.json"), json.getBytes(StandardCharsets.UTF_8));
+  }
+
   private PipelinesIndexedMessage createMessage(UUID uuid, int attempt) {
     PipelinesIndexedMessage message = new PipelinesIndexedMessage();
 
@@ -357,21 +327,17 @@ public class MetricsCollectorCallbackIT {
     return message;
   }
 
-  private MetricsCollectorConfiguration createConfig(String idxName) {
+  private MetricsCollectorConfiguration createConfig() {
     MetricsCollectorConfiguration config = new MetricsCollectorConfiguration();
     // Main
     config.archiveRepository =
         this.getClass().getClassLoader().getResource("dataset/dwca").getPath();
     config.validatorOnly = true;
 
-    // ES
-    config.esConfig.hosts = ES_SERVER.getEsConfig().getRawHosts();
-    // Step config
-    config.stepConfig.repositoryPath =
-        this.getClass().getClassLoader().getResource("data7/ingest").getPath();
+    // Step config - points at a private per-test directory holding collect-metrics.json fixtures
+    config.stepConfig.repositoryPath = folder.getRoot().getPath();
     config.stepConfig.coreSiteConfig = "";
     config.stepConfig.hdfsSiteConfig = "";
-    config.indexName = idxName;
     return config;
   }
 }
