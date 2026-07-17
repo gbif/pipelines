@@ -209,7 +209,7 @@ public class OccurrenceInterpretationPipeline {
     final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
 
     Dataset<Occurrence> interpreted = loadSimpleInterpreted(spark, outputPath);
-    generateOutputs(spark, numberOfShards, interpreted, metadata, outputPath);
+    generateOutputs(spark, config, numberOfShards, interpreted, metadata, outputPath);
   }
 
   public static void regenJsonOutput(
@@ -245,7 +245,7 @@ public class OccurrenceInterpretationPipeline {
 
     // write parquet for hdfs view
     sparkLog(spark, "toHdfs", "Writing HDFS output");
-    toHdfs(interpreted, metadata, numberOfShards)
+    toHdfs(config, interpreted, metadata, numberOfShards)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + OCCURRENCE_HDFS);
@@ -261,6 +261,7 @@ public class OccurrenceInterpretationPipeline {
 
   private static void generateOutputs(
       SparkSession spark,
+      PipelinesConfig config,
       int numberOfShards,
       Dataset<Occurrence> interpreted,
       MetadataRecord metadata,
@@ -274,7 +275,7 @@ public class OccurrenceInterpretationPipeline {
 
     // write parquet for hdfs view
     sparkLog(spark, "toHdfs", "Writing HDFS output");
-    toHdfs(interpreted, metadata, numberOfShards)
+    toHdfs(config, interpreted, metadata, numberOfShards)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + OCCURRENCE_HDFS);
@@ -393,7 +394,7 @@ public class OccurrenceInterpretationPipeline {
     }
 
     // write parquet for elastic
-    generateOutputs(spark, numberOfOutputShards, interpreted, metadata, outputPath);
+    generateOutputs(spark, config, numberOfOutputShards, interpreted, metadata, outputPath);
 
     // cleanup intermediate parquet outputs
     HdfsConfigs hdfsConfigs =
@@ -824,7 +825,10 @@ public class OccurrenceInterpretationPipeline {
   }
 
   public static Dataset<Row> toHdfs(
-      Dataset<Occurrence> records, MetadataRecord metadataRecord, int numshards) {
+      PipelinesConfig config,
+      Dataset<Occurrence> records,
+      MetadataRecord metadataRecord,
+      int numshards) {
     Dataset<OccurrenceHdfsRecord> dataset =
         records.map(
             (MapFunction<Occurrence, OccurrenceHdfsRecord>)
@@ -858,11 +862,7 @@ public class OccurrenceInterpretationPipeline {
                 },
             Encoders.bean(OccurrenceHdfsRecord.class));
 
-    Map<String, String> uuidToColumnPrefix =
-        Map.of(
-            "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c", "gbif",
-            "7ddf754f-d193-4cc9-b351-99906754a03b", "col",
-            "668282c7-8d71-4c2b-b9ba-f9ab705c88d5", "za");
+    Map<String, String> uuidToColumnPrefix = config.getTableBuildConfig().getClassifications();
 
     Dataset<Row> withClassifications = null;
 

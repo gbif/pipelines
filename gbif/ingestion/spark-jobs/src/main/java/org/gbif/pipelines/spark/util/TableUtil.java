@@ -201,10 +201,10 @@ public class TableUtil {
           PARTITIONED BY (datasetkey)
           TBLPROPERTIES (%s)
         """,
-        prefix, tableName, getFieldDefinitions(datasetType), generateTblProperties(config));
+        prefix, tableName, getFieldDefinitions(config, datasetType), generateTblProperties(config));
   }
 
-  static String getFieldDefinitions(DatasetType datasetType) {
+  static String getFieldDefinitions(TableBuildConfig config, DatasetType datasetType) {
     List<InitializableField> fieldDefinitions;
 
     if (datasetType == DatasetType.OCCURRENCE) {
@@ -264,11 +264,7 @@ public class TableUtil {
                 taxonomicstatus: STRING>
               """;
 
-      Map<String, String> uuidToColumnPrefix =
-          Map.of(
-              "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c", "gbif",
-              "7ddf754f-d193-4cc9-b351-99906754a03b", "col",
-              "668282c7-8d71-4c2b-b9ba-f9ab705c88d5", "za");
+      Map<String, String> uuidToColumnPrefix = config.getClassifications();
 
       for (String prefix : uuidToColumnPrefix.values()) {
         fieldDefn += String.format(",\n%s_classification %s", prefix, classificationStruct);
