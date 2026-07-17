@@ -58,6 +58,7 @@ public abstract class PipelinesCallback<
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   public static final String PAUSE_FILE_PATH = "/tmp/pause_message_processing";
   public static final String SHUTDOWN_FILE_PATH = "/tmp/shutdown_now";
+  public static final int ERROR_CONTEXT_MAX_SIZE = 10;
   protected final PipelinesConfig pipelinesConfig;
   protected final PipelinesHistoryClient historyClient;
   protected final MessagePublisher publisher;
@@ -216,7 +217,13 @@ public abstract class PipelinesCallback<
 
   protected boolean isMessageCorrect(I message) {
     if (!message.getPipelineSteps().contains(getStepType().name())) {
-      log.error("The message doesn't contain {} type", getStepType().name());
+      log.error(
+          "The message doesn't contain {} type, found [size:{}, types: [{}]]",
+          getStepType().name(),
+          message.getPipelineSteps().size(),
+          message.getPipelineSteps().stream()
+              .limit(ERROR_CONTEXT_MAX_SIZE)
+              .collect(Collectors.joining(", ")));
       return false;
     }
     return true;
@@ -346,6 +353,8 @@ public abstract class PipelinesCallback<
               message.getDatasetUuid());
         }
       }
+    } catch (Exception e) {
+      log.error("Error while processing execution", e);
     } finally {
       runningCounter.decrementAndGet();
     }

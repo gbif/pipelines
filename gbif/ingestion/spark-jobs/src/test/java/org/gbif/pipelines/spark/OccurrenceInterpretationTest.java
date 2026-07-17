@@ -249,6 +249,9 @@ public class OccurrenceInterpretationTest extends MockedServicesTest {
       assertEquals(0, JsonPath.<List<?>>read(json, "$.mediaTypes").size());
       assertEquals(0, JsonPath.<List<?>>read(json, "$.multimediaItems").size());
       assertEquals(0, JsonPath.<List<?>>read(json, "$.networkKeys").size());
+      assertEquals(
+          Stream.of("eDNA", "Observation").sorted().toList(),
+          JsonPath.<List<String>>read(json, "$.datasetCategory").stream().sorted().toList());
 
       assertEquals(
           Stream.of(

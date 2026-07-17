@@ -21,24 +21,29 @@ public class MetricsCollectorFactory {
 
   public MetricsCollector create() {
 
-    // DWCA
+    // DWCA — Spark-based collector, reads pre-computed metrics from HDFS
     if (DatasetTypePredicate.isEndpointDwca(message.getEndpointType())) {
-      return DwcaMetricsCollector.builder()
+      return SparkMetricsCollector.builder()
           .config(config)
           .publisher(publisher)
-          .validationClient(validationClient)
-          .retryingValidationClient(retryingValidationClient)
+          .validationClient(retryingValidationClient)
           .message(message)
           .stepType(stepType)
           .build();
     }
 
-    // XML
+    // XML — Spark-based collector, reads pre-computed metrics from HDFS
     if (DatasetTypePredicate.isEndpointXml(message.getEndpointType())) {
-      return XmlMetricsCollector.builder().build();
+      return XmlMetricsCollector.builder()
+          .config(config)
+          .publisher(publisher)
+          .validationClient(retryingValidationClient)
+          .message(message)
+          .stepType(stepType)
+          .build();
     }
 
-    // Defualt
+    // Default
     return DefaultMetricsCollector.builder()
         .validationClient(validationClient)
         .message(message)

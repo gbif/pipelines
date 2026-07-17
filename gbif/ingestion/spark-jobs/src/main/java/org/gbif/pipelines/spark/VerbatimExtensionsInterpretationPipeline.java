@@ -12,6 +12,7 @@ import static org.gbif.pipelines.spark.util.TableUtil.verbatimExtensionTableName
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -21,14 +22,18 @@ import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import org.gbif.api.util.TermNormalizationUtils;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DcElement;
 import org.gbif.dwc.terms.DcTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.TermFactory;
 import org.gbif.occurrence.download.hive.ExtensionTable;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
+import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -38,29 +43,16 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class VerbatimExtensionsInterpretationPipeline {
 
+  private static final TermFactory TERM_FACTORY = TermFactory.instance();
+
   @Parameters(separators = "=")
-  private static class Args {
-
-    @Parameter(names = APP_NAME_ARG, description = "Application name", required = true)
-    private String appName;
-
-    @Parameter(names = DATASET_ID_ARG, description = "Dataset ID", required = true)
-    private String datasetId;
-
-    @Parameter(names = ATTEMPT_ID_ARG, description = "Attempt number", required = true)
-    private int attempt;
+  private static class Args extends SingleDatasetPipelineArgs {
 
     @Parameter(
         names = DATASET_TYPE_ARG,
         description = "OCCURRENCE or SAMPLING_EVENT",
         required = true)
     private DatasetType datasetType;
-
-    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
-    private String config = "/tmp/pipelines-spark.yaml";
-
-    @Parameter(names = SPARK_MASTER_ARG, description = "Spark master - there for local dev only")
-    private String master;
 
     @Parameter(names = NUMBER_OF_SHARDS_ARG, description = "Number of shards")
     private int numberOfShards = 10;
@@ -70,12 +62,6 @@ public class VerbatimExtensionsInterpretationPipeline {
         description = "Output schemas for extensions",
         arity = 1)
     private boolean outputSchemasOnly = false;
-
-    @Parameter(
-        names = {"--help", "-h"},
-        help = true,
-        description = "Show usage")
-    private boolean help;
   }
 
   /** Register UDFs used in the processing. */
@@ -314,19 +300,26 @@ public class VerbatimExtensionsInterpretationPipeline {
     return extension.name().toLowerCase();
   }
 
-  /** Extracts the last part of the url as the field name and normalizes it. */
-  private static String normalizeFieldName(String name) {
+  /** Extracts and normalizes the field name. */
+  @VisibleForTesting
+  static String normalizeFieldName(String name) {
+    // FIXME: this block is for terms that are duplicated within an extension but should be handled
+    // differently https://github.com/gbif/pipelines/issues/1409
     String[] parts = name.split("/");
     String rawName = parts[parts.length - 1];
-    String prefix = "";
     if (!rawName.equalsIgnoreCase(DcTerm.identifier.simpleName())) {
       if (name.startsWith(DcTerm.identifier.namespace().toString())) {
-        prefix = DcTerm.identifier.prefix() + "_";
+        String prefix = DcTerm.identifier.prefix() + "_";
+        return prefix + rawName.toLowerCase().trim();
       } else if (name.startsWith(DcElement.identifier.namespace().toString())) {
-        prefix = DcElement.identifier.prefix() + "_";
+        String prefix = DcElement.identifier.prefix() + "_";
+        return prefix + rawName.toLowerCase().trim();
       }
     }
-    return prefix + rawName.toLowerCase().trim();
+
+    Term term = TERM_FACTORY.findTerm(name);
+    String simpleName = term != null ? term.simpleName() : rawName;
+    return TermNormalizationUtils.normalizeFieldName(simpleName);
   }
 
   @SneakyThrows

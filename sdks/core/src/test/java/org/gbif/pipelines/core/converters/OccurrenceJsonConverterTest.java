@@ -94,6 +94,7 @@ public class OccurrenceJsonConverterTest {
             .setPublishingOrganizationKey("setPublishingOrganizationKey")
             .setInstallationKey("setInstallationKey")
             .setNetworkKeys(Collections.singletonList("setNetworkKeys"))
+            .setDatasetCategory(Arrays.asList("eDNA", "Observation"))
             .setMachineTags(
                 Collections.singletonList(
                     MachineTag.newBuilder()
@@ -469,6 +470,10 @@ public class OccurrenceJsonConverterTest {
                         .setDnaSequenceID("foo2")
                         .setNucleotideSequenceID("foo2")
                         .build()))
+            .setIssues(
+                IssueRecord.newBuilder()
+                    .setIssueList(List.of(OccurrenceIssue.NUCLEOTIDE_SEQUENCE_INVALID.name()))
+                    .build())
             .build();
 
     // When
@@ -497,6 +502,7 @@ public class OccurrenceJsonConverterTest {
 
     assertEquals(mr.getDatasetKey(), result.path(Indexing.DATASET_KEY).asText());
     assertEquals(mr.getCrawlId(), (Integer) result.path(Indexing.CRAWL_ID).asInt());
+    assertEquals("[\"eDNA\",\"Observation\"]", result.path("datasetCategory").toString());
     assertEquals("CC_BY_NC_4_0", result.path(Indexing.LICENSE).asText());
     assertEquals(
         mr.getHostingOrganizationKey(), result.path(Indexing.HOSTING_ORGANIZATION_KEY).asText());
@@ -648,7 +654,7 @@ public class OccurrenceJsonConverterTest {
     assertTrue(result.path("yearMonthGbifIdSort").asLong() > 0);
 
     String expectedIssues =
-        "[\"BASIS_OF_RECORD_INVALID\",\"INSTITUTION_MATCH_FUZZY\",\"ZERO_COORDINATE\"]";
+        "[\"BASIS_OF_RECORD_INVALID\",\"INSTITUTION_MATCH_FUZZY\",\"NUCLEOTIDE_SEQUENCE_INVALID\",\"ZERO_COORDINATE\"]";
     assertEquals(expectedIssues, result.path(Indexing.ISSUES).toString());
     assertEquals(
         OccurrenceIssue.values().length - expectedIssues.split(",").length,
@@ -711,6 +717,7 @@ public class OccurrenceJsonConverterTest {
             .build();
     GrscicollRecord gr = GrscicollRecord.newBuilder().setId("777").build();
     MultimediaRecord mmr = MultimediaRecord.newBuilder().setId("777").build();
+    DnaDerivedDataRecord dnar = DnaDerivedDataRecord.newBuilder().setId("777").build();
 
     // When
     String json =
@@ -725,6 +732,7 @@ public class OccurrenceJsonConverterTest {
             .multiTaxon(MultiTaxonRecord.newBuilder().setTaxonRecords(List.of(tr)).build())
             .grscicoll(gr)
             .multimedia(mmr)
+            .dnaDerivedData(dnar)
             .indexLegacyTaxonomy(true)
             .indexMultiTaxonomy(true)
             .build()

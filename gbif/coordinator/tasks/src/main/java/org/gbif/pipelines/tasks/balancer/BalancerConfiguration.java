@@ -24,6 +24,14 @@ public class BalancerConfiguration {
   @Min(1)
   public int validatorSwitchRecordsNumber;
 
+  @Parameter(
+      names = "--switch-records-number",
+      description = "Amount of records before switching to use distributed processing")
+  public int switchRecordsNumber = 100_000;
+
   @Parameter(names = "--validator-repository-path")
   public String validatorRepositoryPath;
+
+  @Parameter(names = "--dwcdp-repository-path")
+  public String dwcdpRepositoryPath;
 }

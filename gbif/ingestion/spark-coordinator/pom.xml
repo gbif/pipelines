@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>ingestion</artifactId>
-        <version>4.0.23-issue1257-SNAPSHOT</version>
+        <version>4.0.26-SNAPSHOT</version>
     </parent>
 
     <artifactId>spark-coordinator</artifactId>
@@ -94,6 +94,11 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>${reflections.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>

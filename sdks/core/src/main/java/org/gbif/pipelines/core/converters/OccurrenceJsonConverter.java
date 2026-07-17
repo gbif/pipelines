@@ -122,6 +122,7 @@ public class OccurrenceJsonConverter {
         .setInstallationKey(metadata.getInstallationKey())
         .setHostingOrganizationKey(metadata.getHostingOrganizationKey())
         .setNetworkKeys(metadata.getNetworkKeys())
+        .setDatasetCategory(metadata.getDatasetCategory())
         .setLicense(metadata.getLicense())
         .setProgrammeAcronym(metadata.getProgrammeAcronym())
         .setProtocol(metadata.getProtocol())
@@ -442,6 +443,7 @@ public class OccurrenceJsonConverter {
             location,
             grscicoll,
             multimedia,
+            dnaDerivedData,
             gbifRecord.orElse(TaxonRecord.newBuilder().build())),
         builder::setIssues,
         builder::setNotIssues);
@@ -449,7 +451,15 @@ public class OccurrenceJsonConverter {
     // populate the non-taxonomic issues field
     JsonConverter.mapIssues(
         Arrays.asList(
-            metadata, identifier, clustering, basic, temporal, location, grscicoll, multimedia),
+            metadata,
+            identifier,
+            clustering,
+            basic,
+            temporal,
+            location,
+            grscicoll,
+            multimedia,
+            dnaDerivedData),
         builder::setNonTaxonomicIssues,
         v -> {});
   }

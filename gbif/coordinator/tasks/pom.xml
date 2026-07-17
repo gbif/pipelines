@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.pipelines</groupId>
     <artifactId>coordinator</artifactId>
-    <version>4.0.23-issue1257-SNAPSHOT</version>
+    <version>4.0.26-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -142,6 +142,11 @@
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>dwc-dp-descriptor</artifactId>
+      <version>${dwc-dp-analyser.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gbif.common</groupId>

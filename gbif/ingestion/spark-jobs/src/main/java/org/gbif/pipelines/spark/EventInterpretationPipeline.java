@@ -1,10 +1,11 @@
 package org.gbif.pipelines.spark;
 
+import static org.gbif.pipelines.core.utils.EventsUtils.DEFAULT_EVENT_TYPE;
+import static org.gbif.pipelines.core.utils.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.spark.ArgsConstants.*;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.OccurrenceInterpretationPipeline.getMetadataRecord;
 import static org.gbif.pipelines.spark.util.LogUtil.timeAndRecPerSecond;
-import static org.gbif.pipelines.spark.util.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
@@ -12,7 +13,6 @@ import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,6 +32,7 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -50,6 +51,8 @@ import org.gbif.pipelines.spark.pojo.EventLineage;
 import org.gbif.pipelines.spark.util.DerivedMetadataUtil;
 import org.gbif.pipelines.spark.util.EventInheritanceUtil;
 import org.gbif.pipelines.spark.util.LineageUtil;
+import org.gbif.pipelines.spark.util.MapperUtil;
+import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.transform.*;
 import scala.Tuple2;
 
@@ -57,8 +60,7 @@ import scala.Tuple2;
 @Slf4j
 public class EventInterpretationPipeline {
 
-  static final ObjectMapper MAPPER =
-      new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+  static final ObjectMapper MAPPER = MapperUtil.MAPPER_NON_EMPTY;
 
   public static final String METRICS_FILENAME = "verbatim-to-event.yml";
 
@@ -68,37 +70,9 @@ public class EventInterpretationPipeline {
           Extension.DNA_DERIVED_DATA.getRowType());
 
   @Parameters(separators = "=")
-  private static class Args {
-
-    @Parameter(names = APP_NAME_ARG, description = "Application name", required = true)
-    private String appName;
-
-    @Parameter(names = DATASET_ID_ARG, description = "Dataset ID", required = true)
-    private String datasetId;
-
-    @Parameter(names = ATTEMPT_ID_ARG, description = "Attempt number", required = true)
-    private int attempt;
-
-    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
-    private String config = "/tmp/pipelines-spark.yaml";
-
-    @Parameter(
-        names = SPARK_MASTER_ARG,
-        description = "Spark master - there for local dev only",
-        required = false)
-    private String master;
-
+  private static class Args extends SingleDatasetPipelineArgs {
     @Parameter(names = NUMBER_OF_SHARDS_ARG, description = "Number of shards", required = false)
     private int numberOfShards = 10;
-
-    @Parameter(
-        names = {"--help", "-h"},
-        help = true,
-        description = "Show usage")
-    private boolean help;
-
-    @Parameter(names = "--useSystemExit", description = "Use checkpoints where possible", arity = 1)
-    private boolean useSystemExit = true;
   }
 
   public static void main(String[] argsv) throws Exception {
@@ -172,7 +146,7 @@ public class EventInterpretationPipeline {
         loadExtendedRecords(spark, config, inputPath, outputPath, numberOfShards);
 
     sparkLog(spark, "event-interpretation", "Generating event lineage");
-    Dataset<EventLineage> lineage = generateLineage(spark, extendedRecords);
+    Dataset<EventLineage> lineage = generateLineage(spark, extendedRecords, config);
 
     // run the record by record transformations
     sparkLog(spark, "event-interpretation", "Running record by record transformations");
@@ -219,13 +193,15 @@ public class EventInterpretationPipeline {
   }
 
   private static Dataset<EventLineage> generateLineage(
-      SparkSession spark, Dataset<ExtendedRecord> extendedRecords) {
+      SparkSession spark, Dataset<ExtendedRecord> extendedRecords, PipelinesConfig config) {
+    EventCoreTransform eventCoreTransform = EventCoreTransform.create(config);
 
     StructType schema =
         DataTypes.createStructType(
             new StructField[] {
               DataTypes.createStructField("eventId", DataTypes.StringType, true),
               DataTypes.createStructField("eventType", DataTypes.StringType, true),
+              DataTypes.createStructField("verbatimEventType", DataTypes.StringType, true),
               DataTypes.createStructField("parentEventId", DataTypes.StringType, true)
             });
 
@@ -234,12 +210,21 @@ public class EventInterpretationPipeline {
             (MapFunction<ExtendedRecord, Row>)
                 record -> {
                   String eventID = ModelUtils.extractValue(record, DwcTerm.eventID);
-                  Optional<String> eventTypeOpt =
+                  Optional<String> verbatimEventTypeOpt =
                       ModelUtils.extractOptValue(record, DwcTerm.eventType);
+                  EventCoreRecord ecr = eventCoreTransform.convertEventTypeOnly(record, null);
+                  String interpretedEventType =
+                      Optional.ofNullable(ecr.getEventType())
+                          .map(VocabularyConcept::getConcept)
+                          .orElse(DEFAULT_EVENT_TYPE);
+
                   Optional<String> parentEventIDOpt =
                       ModelUtils.extractOptValue(record, DwcTerm.parentEventID);
                   return RowFactory.create(
-                      eventID, eventTypeOpt.orElse(null), parentEventIDOpt.orElse(null));
+                      eventID,
+                      interpretedEventType,
+                      verbatimEventTypeOpt.orElse(null),
+                      parentEventIDOpt.orElse(null));
                 },
             Encoders.row(schema));
 
@@ -388,6 +373,17 @@ public class EventInterpretationPipeline {
                   // add the lineage
                   if (eventLineage != null) {
                     ecr.setParentsLineage(eventLineage.getLineage());
+                    // Add issue if cyclic lineage detected
+                    if (Boolean.TRUE.equals(eventLineage.getHasCycle())) {
+                      ModelUtils.addIssue(ecr, OccurrenceIssue.PARENT_EVENT_INFINITE_LINEAGE);
+                    }
+                  }
+
+                  // Prevent self-referencing events from creating lineage loops.
+                  String eventId = ModelUtils.extractValue(verbatim, DwcTerm.eventID);
+                  String parentEventId = ModelUtils.extractValue(verbatim, DwcTerm.parentEventID);
+                  if (eventId != null && eventId.equals(parentEventId)) {
+                    ecr.setParentEventID(null);
                   }
 
                   // merge the multimedia records

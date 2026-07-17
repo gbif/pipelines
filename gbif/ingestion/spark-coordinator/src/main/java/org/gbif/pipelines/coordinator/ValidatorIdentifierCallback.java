@@ -64,8 +64,8 @@ public class ValidatorIdentifierCallback
         numberOfShards,
         message.getValidationResult().isTripletValid(),
         message.getValidationResult().isOccurrenceIdValid(),
-        message.getValidationResult().isUseExtendedRecordId() != null
-            ? message.getValidationResult().isUseExtendedRecordId()
+        message.getValidationResult().getUseExtendedRecordId() != null
+            ? message.getValidationResult().getUseExtendedRecordId()
             : false);
 
     IdentifierValidationResult validationResult =
