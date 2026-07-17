@@ -44,8 +44,7 @@ public class OccurrenceHdfsRecordConverter {
   private final MultimediaRecord multimediaRecord;
   private final DnaDerivedDataRecord dnaDerivedDataRecord;
 
-  // required taxonomic terms. These need to be populated at least with empty string
-  // to support SQL queries and avoid 'Key not found' errors.
+  // required taxonomic terms
   static final Set<String> REQUIRED_TAXONOMIC_FIELDS =
       Set.of(
           GbifTerm.taxonKey.simpleName().toLowerCase(),
