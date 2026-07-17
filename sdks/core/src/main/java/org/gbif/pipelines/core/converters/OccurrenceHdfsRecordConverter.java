@@ -24,6 +24,7 @@ import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.jspecify.annotations.NonNull;
 
 /** Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}. */
 @Slf4j
@@ -334,18 +335,7 @@ public class OccurrenceHdfsRecordConverter {
             .collect(
                 Collectors.toMap(
                     TaxonRecord::getDatasetKey,
-                    tr -> {
-                      Set<String> taxonKeys =
-                          Optional.ofNullable(tr.getClassification())
-                              .orElse(Collections.emptyList())
-                              .stream()
-                              .map(RankedName::getKey)
-                              .collect(Collectors.toCollection(LinkedHashSet::new));
-                      if (tr.getSynonym() != null && tr.getSynonym() && tr.getUsage() != null) {
-                        taxonKeys.add(tr.getUsage().getKey());
-                      }
-                      return new ArrayList<>(taxonKeys);
-                    },
+                    OccurrenceHdfsRecordConverter::getTaxonKeys,
                     (a, b) -> a,
                     LinkedHashMap::new)));
 
@@ -388,6 +378,17 @@ public class OccurrenceHdfsRecordConverter {
             .findFirst();
 
     defaultTaxonomyRecord.ifPresent(tr -> mapLegacyGbifTaxonRecord(occurrenceHdfsRecord, tr));
+  }
+
+  private static @NonNull ArrayList<String> getTaxonKeys(TaxonRecord tr) {
+    Set<String> taxonKeys =
+        Optional.ofNullable(tr.getClassification()).orElse(Collections.emptyList()).stream()
+            .map(RankedName::getKey)
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+    if (tr.getSynonym() != null && tr.getSynonym() && tr.getUsage() != null) {
+      taxonKeys.add(tr.getUsage().getKey());
+    }
+    return new ArrayList<>(taxonKeys);
   }
 
   private static Map<String, String> classificationToMap(
@@ -524,6 +525,9 @@ public class OccurrenceHdfsRecordConverter {
               });
     }
 
+    // set taxonkeys
+    occurrenceHdfsRecord.setTaxonkeys(getTaxonKeys(taxonRecord));
+
     if (Objects.nonNull(taxonRecord.getAcceptedUsage())) {
       occurrenceHdfsRecord.setAcceptedscientificname(taxonRecord.getAcceptedUsage().getName());
       occurrenceHdfsRecord.setAcceptednameusageid(taxonRecord.getAcceptedUsage().getKey());
@@ -532,8 +536,7 @@ public class OccurrenceHdfsRecordConverter {
       }
       Optional.ofNullable(taxonRecord.getAcceptedUsage().getRank())
           .ifPresent(occurrenceHdfsRecord::setTaxonrank);
-    } else if (Objects.nonNull(taxonRecord.getUsage())
-        && !taxonRecord.getUsage().getKey().equals("0")) {
+    } else if (Objects.nonNull(taxonRecord.getUsage())) {
       // if the acceptedUsage is null we use the usage as the accepted as longs as it's not
       // incertae sedis
       occurrenceHdfsRecord.setAcceptedtaxonkey(taxonRecord.getUsage().getKey());
@@ -548,26 +551,19 @@ public class OccurrenceHdfsRecordConverter {
           .ifPresent(occurrenceHdfsRecord::setTaxonrank);
       occurrenceHdfsRecord.setTaxonomicstatus(
           taxonRecord.getUsage().getStatus() != null ? taxonRecord.getUsage().getStatus() : null);
-    }
 
-    if (Objects.nonNull(taxonRecord.getUsageParsedName())
-        && Objects.nonNull(taxonRecord.getUsage())) {
       String rank = taxonRecord.getUsage().getRank();
       if (Rank.GENUS.compareTo(Rank.valueOf(rank)) <= 0) {
-        occurrenceHdfsRecord.setGenericname(
-            Objects.nonNull(taxonRecord.getUsageParsedName().getGenus())
-                ? taxonRecord.getUsageParsedName().getGenus()
-                : taxonRecord.getUsageParsedName().getUninomial());
+        occurrenceHdfsRecord.setGenericname(taxonRecord.getUsage().getGenericName());
       }
 
       if (Rank.SPECIES.compareTo(Rank.valueOf(rank)) <= 0) {
-        occurrenceHdfsRecord.setSpecificepithet(
-            taxonRecord.getUsageParsedName().getSpecificEpithet());
+        occurrenceHdfsRecord.setSpecificepithet(taxonRecord.getUsage().getSpecificEpithet());
       }
 
       if (Rank.INFRASPECIFIC_NAME.compareTo(Rank.valueOf(rank)) <= 0) {
         occurrenceHdfsRecord.setInfraspecificepithet(
-            taxonRecord.getUsageParsedName().getInfraspecificEpithet());
+            taxonRecord.getUsage().getInfraspecificEpithet());
       }
     }
 

@@ -594,6 +594,8 @@ public class OccurrenceHdfsRecordConverterTest {
         RankedNameWithAuthorship.newBuilder()
             .setKey(String.valueOf(2492483))
             .setRank(Rank.SPECIES.toString())
+            .setGenericName("Caldisphaera")
+            .setSpecificEpithet("lagunensis")
             .setName("Caldisphaera lagunensis Itoh & al., 2003")
             .build();
 
@@ -642,6 +644,10 @@ public class OccurrenceHdfsRecordConverterTest {
 
     Assert.assertEquals("Caldisphaera", hdfsRecord.getGenericname());
     Assert.assertEquals("lagunensis", hdfsRecord.getSpecificepithet());
+
+    Assert.assertEquals(
+        List.of("2", "79", "8016360", "292", "7785", "1000002", "1000003"),
+        hdfsRecord.getTaxonkeys());
   }
 
   @Test

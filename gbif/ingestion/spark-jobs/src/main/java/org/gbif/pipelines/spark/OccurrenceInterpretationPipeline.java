@@ -830,12 +830,6 @@ public class OccurrenceInterpretationPipeline {
       MetadataRecord metadataRecord,
       int numshards) {
 
-    if (config.getTableBuildConfig() == null
-        || config.getTableBuildConfig().getClassifications() == null
-        || config.getTableBuildConfig().getClassifications().isEmpty()) {
-      throw new IllegalArgumentException("Classifications configuration is missing");
-    }
-
     Dataset<OccurrenceHdfsRecord> dataset =
         records.map(
             (MapFunction<Occurrence, OccurrenceHdfsRecord>)
@@ -869,14 +863,21 @@ public class OccurrenceInterpretationPipeline {
                 },
             Encoders.bean(OccurrenceHdfsRecord.class));
 
+    if (config.getTableBuildConfig() == null
+        || config.getTableBuildConfig().getClassifications() == null
+        || config.getTableBuildConfig().getClassifications().isEmpty()) {
+      return dataset.toDF();
+    }
+
     Map<String, String> uuidToColumnPrefix = config.getTableBuildConfig().getClassifications();
 
-    Dataset<Row> withClassifications = null;
+    Dataset<Row> withClassifications = dataset.toDF();
+    ;
 
-    for (Map.Entry uuidToColumn : uuidToColumnPrefix.entrySet()) {
+    for (Map.Entry<String, String> uuidToColumn : uuidToColumnPrefix.entrySet()) {
 
-      String uuid = (String) uuidToColumn.getKey();
-      String columnPrefix = (String) uuidToColumn.getValue();
+      String uuid = uuidToColumn.getKey();
+      String columnPrefix = uuidToColumn.getValue();
 
       Column classification = element_at(col("classificationdetails"), lit(uuid));
       Column taxonomicStatus = element_at(col("taxonomicstatuses"), lit(uuid));
@@ -885,13 +886,8 @@ public class OccurrenceInterpretationPipeline {
 
       String newStructName = columnPrefix + "_classification";
 
-      Dataset toUse = dataset;
-      if (withClassifications != null) {
-        toUse = withClassifications;
-      }
-
       withClassifications =
-          toUse.withColumn(
+          withClassifications.withColumn(
               newStructName,
               struct(
                   element_at(classification, lit("taxonkey")).as("taxonkey"),
