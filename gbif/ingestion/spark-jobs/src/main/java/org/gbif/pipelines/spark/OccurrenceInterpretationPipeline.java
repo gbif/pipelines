@@ -209,7 +209,7 @@ public class OccurrenceInterpretationPipeline {
     final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
 
     Dataset<Occurrence> interpreted = loadSimpleInterpreted(spark, outputPath);
-    generateOutputs(spark, numberOfShards, interpreted, metadata, outputPath);
+    generateOutputs(spark, config, numberOfShards, interpreted, metadata, outputPath);
   }
 
   public static void regenJsonOutput(
@@ -245,7 +245,7 @@ public class OccurrenceInterpretationPipeline {
 
     // write parquet for hdfs view
     sparkLog(spark, "toHdfs", "Writing HDFS output");
-    toHdfs(interpreted, metadata, numberOfShards)
+    toHdfs(config, interpreted, metadata, numberOfShards)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + OCCURRENCE_HDFS);
@@ -261,6 +261,7 @@ public class OccurrenceInterpretationPipeline {
 
   private static void generateOutputs(
       SparkSession spark,
+      PipelinesConfig config,
       int numberOfShards,
       Dataset<Occurrence> interpreted,
       MetadataRecord metadata,
@@ -274,7 +275,7 @@ public class OccurrenceInterpretationPipeline {
 
     // write parquet for hdfs view
     sparkLog(spark, "toHdfs", "Writing HDFS output");
-    toHdfs(interpreted, metadata, numberOfShards)
+    toHdfs(config, interpreted, metadata, numberOfShards)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + OCCURRENCE_HDFS);
@@ -393,7 +394,7 @@ public class OccurrenceInterpretationPipeline {
     }
 
     // write parquet for elastic
-    generateOutputs(spark, numberOfOutputShards, interpreted, metadata, outputPath);
+    generateOutputs(spark, config, numberOfOutputShards, interpreted, metadata, outputPath);
 
     // cleanup intermediate parquet outputs
     HdfsConfigs hdfsConfigs =
@@ -823,8 +824,18 @@ public class OccurrenceInterpretationPipeline {
             }));
   }
 
-  public static Dataset<OccurrenceHdfsRecord> toHdfs(
-      Dataset<Occurrence> records, MetadataRecord metadataRecord, int numshards) {
+  public static Dataset<Row> toHdfs(
+      PipelinesConfig config,
+      Dataset<Occurrence> records,
+      MetadataRecord metadataRecord,
+      int numshards) {
+
+    if (config.getTableBuildConfig() == null
+        || config.getTableBuildConfig().getClassifications() == null
+        || config.getTableBuildConfig().getClassifications().isEmpty()) {
+      throw new IllegalArgumentException("Classifications configuration is missing");
+    }
+
     Dataset<OccurrenceHdfsRecord> dataset =
         records.map(
             (MapFunction<Occurrence, OccurrenceHdfsRecord>)
@@ -858,9 +869,75 @@ public class OccurrenceInterpretationPipeline {
                 },
             Encoders.bean(OccurrenceHdfsRecord.class));
 
+    Map<String, String> uuidToColumnPrefix = config.getTableBuildConfig().getClassifications();
+
+    Dataset<Row> withClassifications = null;
+
+    for (Map.Entry uuidToColumn : uuidToColumnPrefix.entrySet()) {
+
+      String uuid = (String) uuidToColumn.getKey();
+      String columnPrefix = (String) uuidToColumn.getValue();
+
+      Column classification = element_at(col("classificationdetails"), lit(uuid));
+      Column taxonomicStatus = element_at(col("taxonomicstatuses"), lit(uuid));
+      Column taxonomicIssue = element_at(col("taxonomicissue"), lit(uuid));
+      Column taxonkeys = element_at(col("classifications"), lit(uuid));
+
+      String newStructName = columnPrefix + "_classification";
+
+      Dataset toUse = dataset;
+      if (withClassifications != null) {
+        toUse = withClassifications;
+      }
+
+      withClassifications =
+          toUse.withColumn(
+              newStructName,
+              struct(
+                  element_at(classification, lit("taxonkey")).as("taxonkey"),
+                  element_at(classification, lit("scientificname")).as("scientificname"),
+                  element_at(classification, lit("acceptedtaxonkey")).as("acceptedtaxonkey"),
+                  element_at(classification, lit("acceptednameusageid")).as("acceptednameusageid"),
+                  element_at(classification, lit("acceptedscientificname"))
+                      .as("acceptedscientificname"),
+                  element_at(classification, lit("genericname")).as("genericname"),
+                  element_at(classification, lit("specificepithet")).as("specificepithet"),
+                  element_at(classification, lit("infraspecificepithet"))
+                      .as("infraspecificepithet"),
+                  element_at(classification, lit("taxonrank")).as("taxonrank"),
+                  element_at(classification, lit("kingdomkey")).as("kingdomkey"),
+                  element_at(classification, lit("phylumkey")).as("phylumkey"),
+                  element_at(classification, lit("classkey")).as("classkey"),
+                  element_at(classification, lit("orderkey")).as("orderkey"),
+                  element_at(classification, lit("superfamilykey")).as("superfamilykey"),
+                  element_at(classification, lit("familykey")).as("familykey"),
+                  element_at(classification, lit("subfamilykey")).as("subfamilykey"),
+                  element_at(classification, lit("tribekey")).as("tribekey"),
+                  element_at(classification, lit("subtribekey")).as("subtribekey"),
+                  element_at(classification, lit("genuskey")).as("genuskey"),
+                  element_at(classification, lit("subgenuskey")).as("subgenuskey"),
+                  element_at(classification, lit("specieskey")).as("specieskey"),
+                  element_at(classification, lit("kingdom")).as("kingdom"),
+                  element_at(classification, lit("phylum")).as("phylum"),
+                  element_at(classification, lit("class")).as("class"),
+                  element_at(classification, lit("order")).as("order"),
+                  element_at(classification, lit("superfamily")).as("superfamily"),
+                  element_at(classification, lit("family")).as("family"),
+                  element_at(classification, lit("subfamily")).as("subfamily"),
+                  element_at(classification, lit("tribe")).as("tribe"),
+                  element_at(classification, lit("subtribe")).as("subtribe"),
+                  element_at(classification, lit("genus")).as("genus"),
+                  element_at(classification, lit("subgenus")).as("subgenus"),
+                  element_at(classification, lit("species")).as("species"),
+                  element_at(classification, lit("iucnredlistcategory")).as("iucnredlistcategory"),
+                  taxonkeys.as("taxonkeys"),
+                  taxonomicIssue.as("issues"),
+                  taxonomicStatus.as("taxonomicstatus")));
+    }
+
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
-    dataset = dataset.coalesce(numshards);
-    return dataset;
+    withClassifications = withClassifications.coalesce(numshards);
+    return withClassifications;
   }
 }

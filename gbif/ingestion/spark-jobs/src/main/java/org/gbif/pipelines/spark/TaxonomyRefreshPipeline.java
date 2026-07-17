@@ -115,7 +115,7 @@ public class TaxonomyRefreshPipeline {
         .parquet(outputPath + "/" + OCCURRENCE_JSON);
 
     // write parquet for hdfs view
-    toHdfs(interpreted, metadata, numOfShards)
+    toHdfs(config, interpreted, metadata, numOfShards)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + OCCURRENCE_HDFS);

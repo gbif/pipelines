@@ -201,23 +201,77 @@ public class TableUtil {
           PARTITIONED BY (datasetkey)
           TBLPROPERTIES (%s)
         """,
-        prefix, tableName, getFieldDefinitions(datasetType), generateTblProperties(config));
+        prefix, tableName, getFieldDefinitions(config, datasetType), generateTblProperties(config));
   }
 
-  static String getFieldDefinitions(DatasetType datasetType) {
-    List<InitializableField> definition;
+  static String getFieldDefinitions(TableBuildConfig config, DatasetType datasetType) {
+    List<InitializableField> fieldDefinitions;
 
     if (datasetType == DatasetType.OCCURRENCE) {
-      definition = OccurrenceHDFSTableDefinition.definition();
+      fieldDefinitions = OccurrenceHDFSTableDefinition.definition();
     } else if (datasetType == DatasetType.SAMPLING_EVENT) {
-      definition = EventHDFSTableDefinition.definition();
+      fieldDefinitions = EventHDFSTableDefinition.definition();
     } else {
       throw new IllegalArgumentException("Unsupported dataset type: " + datasetType);
     }
 
-    return definition.stream()
-        .map(field -> field.getHiveField() + " " + field.getHiveDataType())
-        .collect(Collectors.joining(", \n"));
+    String fieldDefn =
+        fieldDefinitions.stream()
+            .map(field -> field.getHiveField() + " " + field.getHiveDataType())
+            .collect(Collectors.joining(",\n"));
+
+    if (datasetType == DatasetType.OCCURRENCE) {
+      // add the classification fields
+      String classificationStruct =
+          """
+              STRUCT<
+                taxonkey: STRING,
+                scientificname: STRING,
+                acceptedtaxonkey: STRING,
+                acceptednameusageid: STRING,
+                acceptedscientificname: STRING,
+                genericname: STRING,
+                specificepithet: STRING,
+                infraspecificepithet: STRING,
+                taxonrank: STRING,
+                kingdomkey: STRING,
+                phylumkey: STRING,
+                classkey: STRING,
+                orderkey: STRING,
+                superfamilykey: STRING,
+                familykey: STRING,
+                subfamilykey: STRING,
+                tribekey: STRING,
+                subtribekey: STRING,
+                genuskey: STRING,
+                subgenuskey: STRING,
+                specieskey: STRING,
+                kingdom: STRING,
+                phylum: STRING,
+                class: STRING,
+                order: STRING,
+                superfamily: STRING,
+                family: STRING,
+                subfamily: STRING,
+                tribe: STRING,
+                subtribe: STRING,
+                genus: STRING,
+                subgenus: STRING,
+                species: STRING,
+                iucnredlistcategory: STRING,
+                taxonkeys: ARRAY<STRING>,
+                issues: ARRAY<STRING>,
+                taxonomicstatus: STRING>
+              """;
+
+      Map<String, String> uuidToColumnPrefix = config.getClassifications();
+
+      for (String prefix : uuidToColumnPrefix.values()) {
+        fieldDefn += String.format(",\n%s_classification %s", prefix, classificationStruct);
+      }
+    }
+
+    return fieldDefn;
   }
 
   public static String getCreateMultimediaTableSQL(

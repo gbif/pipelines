@@ -188,7 +188,7 @@ public class FullTableBuildPipeline {
           avroToHdfsCountAttempted);
     } else {
       tempLoadingTable =
-          String.format("%s_%s_%d", coreDwcTerm, "rebuild", System.currentTimeMillis());
+          String.format("tmp_%s_%s_%d", "rebuild", coreDwcTerm, System.currentTimeMillis());
 
       log.info("No temp loading table provided, will create table {}", tempLoadingTable);
       avroToHdfsCountAttempted = loadTempLoadingTable(spark, tempLoadingTable, hdfs);
