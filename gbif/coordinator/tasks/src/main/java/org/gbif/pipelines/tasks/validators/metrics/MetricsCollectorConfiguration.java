@@ -38,13 +38,6 @@ public class MetricsCollectorConfiguration implements BaseConfiguration {
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
 
-  @Parameter(
-      names = "--use-spark-metrics",
-      description =
-          "When true, read pre-computed metrics from the Spark ValidatorMetricsPipeline output"
-              + " instead of querying Elasticsearch")
-  public boolean useSparkMetrics = false;
-
   @Parameter(names = "--validator-checklist-timeout-min")
   public long checklistTimeoutMin = 60;
 

@@ -19,8 +19,8 @@ import org.gbif.converters.utils.XmlFilesReader;
 import org.gbif.converters.utils.XmlTermExtractor;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.common.pojo.FileNameTerm;
+import org.gbif.pipelines.tasks.client.RetryingValidationClient;
 import org.gbif.pipelines.tasks.validators.metrics.MetricsCollectorConfiguration;
-import org.gbif.pipelines.validator.IndexMetricsCollector;
 import org.gbif.pipelines.validator.Validations;
 import org.gbif.pipelines.validator.rules.IndexableRules;
 import org.gbif.validator.api.DwcFileType;
@@ -28,15 +28,19 @@ import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.TermInfo;
 import org.gbif.validator.api.Validation;
-import org.gbif.validator.ws.client.ValidationWsClient;
 
+/**
+ * {@link MetricsCollector} for XML-based (e.g. ABCD) archives. Raw term counts come from the XML
+ * source files, and indexed counts / issues / interpreted term counts are overlaid from the {@code
+ * collect-metrics.json} written by the {@code ValidatorMetricsPipeline} Spark job.
+ */
 @Slf4j
 @Builder
 public class XmlMetricsCollector implements MetricsCollector {
 
   private final MetricsCollectorConfiguration config;
   private final MessagePublisher publisher;
-  private final ValidationWsClient validationClient;
+  private final RetryingValidationClient validationClient;
   private final PipelinesIndexedMessage message;
   private final StepType stepType;
 
@@ -55,21 +59,17 @@ public class XmlMetricsCollector implements MetricsCollector {
     // Extract all terms
     List<FileInfo> fileInfos = convertToFileInfo(files);
 
-    // Collect metrics from ES
-    Metrics metrics =
-        IndexMetricsCollector.builder()
-            .fileInfos(fileInfos)
-            .key(message.getDatasetUuid())
-            .index(config.indexName)
-            .corePrefix(config.corePrefix)
-            .extensionsPrefix(config.extensionsPrefix)
-            .esHost(config.esConfig.hosts)
-            .build()
-            .collect();
+    // Read Spark-computed metrics from HDFS
+    Metrics sparkMetrics = SparkMetricsReader.readSparkMetrics(config, message);
+
+    // Overlay Spark metrics onto the XML-derived file infos
+    SparkMetricsReader.applySparkMetrics(fileInfos, sparkMetrics);
 
     // Get saved metrics object and merge with the result
     Validation validation = validationClient.get(message.getDatasetUuid());
-    Validations.mergeWithValidation(validation, metrics);
+    Validations.mergeWithValidation(validation, Metrics.builder().fileInfos(fileInfos).build());
+
+    SparkMetricsReader.updateIssuesFromMetaInfos(config, message, validation);
 
     // Set isIndexable
     validation
@@ -77,7 +77,7 @@ public class XmlMetricsCollector implements MetricsCollector {
         .setIndexeable(IndexableRules.isIndexable(stepType, validation.getMetrics()));
 
     log.info("Update validation key {}", message.getDatasetUuid());
-    validationClient.update(validation);
+    validationClient.update(validation.getKey(), validation);
   }
 
   private List<FileInfo> convertToFileInfo(List<File> files) {

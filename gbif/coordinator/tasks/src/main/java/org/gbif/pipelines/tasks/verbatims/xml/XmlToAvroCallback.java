@@ -36,6 +36,7 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
+import org.gbif.pipelines.tasks.modes.CallbackModeType;
 import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroConfiguration;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -70,7 +71,8 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         .validationClient(validationClient)
         .config(config)
         .stepType(type)
-        .isValidator(isValidator)
+        .callbackModeType(
+            config.validatorOnly ? CallbackModeType.VALIDATOR : CallbackModeType.PIPELINES)
         .publisher(publisher)
         .message(message)
         .handler(this)

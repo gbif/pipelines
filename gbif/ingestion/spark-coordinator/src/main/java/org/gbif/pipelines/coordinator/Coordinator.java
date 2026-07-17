@@ -163,6 +163,25 @@ public class Coordinator {
             (messagePublisher ->
                 new OccurrenceInterpretationDistributedCallback(config, messagePublisher));
         break;
+      case VALIDATOR_IDENTIFIER:
+        callbackFn =
+            (messagePublisher -> new ValidatorIdentifierCallback(config, messagePublisher, master));
+        break;
+      case VALIDATOR_IDENTIFIER_DISTRIBUTED:
+        callbackFn =
+            (messagePublisher ->
+                new ValidatorIdentifierDistributedCallback(config, messagePublisher));
+        break;
+      case VALIDATOR_INTERPRETATION:
+        callbackFn =
+            (messagePublisher ->
+                new ValidatorInterpretationCallback(config, messagePublisher, master));
+        break;
+      case VALIDATOR_INTERPRETATION_DISTRIBUTED:
+        callbackFn =
+            (messagePublisher ->
+                new ValidatorInterpretationDistributedCallback(config, messagePublisher));
+        break;
       case EVENTS_INTERPRETATION:
         callbackFn =
             (messagePublisher ->
@@ -357,6 +376,10 @@ public class Coordinator {
     DWCDP_STAGE_STANDALONE,
     DWCDP_STAGE_DISTRIBUTED,
     DWCDP_TO_VERBATIM_STANDALONE,
-    DWCDP_TO_VERBATIM_DISTRIBUTED
+    DWCDP_TO_VERBATIM_DISTRIBUTED,
+    VALIDATOR_IDENTIFIER,
+    VALIDATOR_IDENTIFIER_DISTRIBUTED,
+    VALIDATOR_INTERPRETATION,
+    VALIDATOR_INTERPRETATION_DISTRIBUTED
   }
 }

@@ -1,112 +1,83 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.pipelines.tasks;
 
 import static org.gbif.common.messaging.api.messages.OccurrenceDeletionReason.NOT_SEEN_IN_LAST_CRAWL;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import io.github.resilience4j.core.IntervalFunction;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineStep;
-import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
-import org.gbif.api.model.pipelines.PipelinesWorkflow;
-import org.gbif.api.model.pipelines.PipelinesWorkflow.Graph;
-import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.DeleteDatasetOccurrencesMessage;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
-import org.gbif.common.messaging.api.messages.PipelineBasedMessage.DatasetInfo;
-import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
-import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
-import org.gbif.common.messaging.api.messages.PipelinesRunnerMessage;
-import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
-import org.gbif.pipelines.common.utils.HdfsUtils;
-import org.gbif.pipelines.core.pojo.HdfsConfigs;
+import org.gbif.pipelines.tasks.client.RetryingDatasetClient;
+import org.gbif.pipelines.tasks.client.RetryingPipelinesHistoryClient;
+import org.gbif.pipelines.tasks.client.RetryingValidationClient;
+import org.gbif.pipelines.tasks.modes.CallbackMode;
+import org.gbif.pipelines.tasks.modes.CallbackModeType;
+import org.gbif.pipelines.tasks.modes.CallbackModes;
+import org.gbif.pipelines.tasks.tracking.PipelinesStepTracker;
+import org.gbif.pipelines.tasks.tracking.QueuedStepUpdater;
+import org.gbif.pipelines.tasks.tracking.TrackingInfo;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.utils.file.properties.PropertiesUtil;
-import org.gbif.validator.api.Validation;
-import org.gbif.validator.api.Validation.Status;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
 
 /**
- * Common class for building and handling a pipeline step. Contains {@link Builder} to simplify the
- * creation process and main handling process. Please see the main method {@link
- * PipelinesCallback#handleMessage}
+ * Orchestrates the lifecycle of a single pipeline callback message.
+ *
+ * <p>This class contains the common message-handling flow used by pipeline tasks. It does not
+ * implement the task-specific processing itself; that responsibility belongs to the supplied {@link
+ * StepHandler}. Instead, this class coordinates the surrounding infrastructure:
+ *
+ * <ul>
+ *   <li>message validation through {@link StepHandler#isMessageCorrect(PipelineBasedMessage)}
+ *   <li>pipeline or validator mode behavior through {@link CallbackMode}
+ *   <li>pipeline step tracking through {@link PipelinesStepTracker}
+ *   <li>dataset-deletion checks before and after task execution
+ *   <li>publishing the next message to the balancer queue
+ *   <li>marking queued steps for downstream execution
+ *   <li>marking the pipeline execution as finished when all steps are complete
+ * </ul>
+ *
+ * <p>The class is generic over input and output message types:
+ *
+ * <ul>
+ *   <li>{@code In} is the message consumed by the current step
+ *   <li>{@code Out} is the message produced for the next step
+ * </ul>
+ *
+ * <p>Different callback modes are selected through {@link CallbackModeType}. Regular ingestion uses
+ * the pipeline mode, while validator callbacks use validator-specific behavior without spreading
+ * validator conditionals through this class.
  */
 @Slf4j
 @Builder
-public class PipelinesCallback<I extends PipelineBasedMessage, O extends PipelineBasedMessage> {
-
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-  private static final Retry RETRY =
-      Retry.of(
-          "registryCall",
-          RetryConfig.custom()
-              .maxAttempts(15)
-              .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
-              .intervalFunction(
-                  IntervalFunction.ofExponentialBackoff(
-                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(30)))
-              .build());
-
-  private static final Retry RUNNING_EXECUTION_CALL =
-      Retry.of(
-          "runningExecutionCall",
-          RetryConfig.custom()
-              .maxAttempts(15)
-              .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
-              .intervalFunction(
-                  IntervalFunction.ofExponentialBackoff(
-                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(30)))
-              .retryOnResult(Objects::isNull)
-              .build());
-
-  private static final Set<PipelineStep.Status> PROCESSED_STATE_SET =
-      new HashSet<>(
-          Arrays.asList(
-              PipelineStep.Status.RUNNING,
-              PipelineStep.Status.FAILED,
-              PipelineStep.Status.COMPLETED,
-              PipelineStep.Status.ABORTED));
-
-  private static final Set<PipelineStep.Status> FINISHED_STATE_SET =
-      new HashSet<>(
-          Arrays.asList(
-              PipelineStep.Status.COMPLETED,
-              PipelineStep.Status.ABORTED,
-              PipelineStep.Status.FAILED));
+public class PipelinesCallback<In extends PipelineBasedMessage, Out extends PipelineBasedMessage> {
 
   private static Properties properties;
   private final MessagePublisher publisher;
@@ -114,10 +85,10 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   @NonNull private final PipelinesHistoryClient historyClient;
   private final DatasetClient datasetClient;
   @NonNull private final BaseConfiguration config;
-  @NonNull private final I message;
-  @NonNull private final StepHandler<I, O> handler;
+  @NonNull private final In message;
+  @NonNull private final StepHandler<In, Out> handler;
   private final ValidationWsClient validationClient;
-  @Builder.Default private final boolean isValidator = false;
+  @Builder.Default private final CallbackModeType callbackModeType = CallbackModeType.PIPELINES;
 
   static {
     try {
@@ -127,400 +98,165 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     }
   }
 
+  private CallbackMode callbackMode() {
+    return CallbackModes.from(callbackModeType);
+  }
+
   /**
-   * The main process handling:
+   * Builds the internal callback context used by mode and helper classes.
    *
-   * <pre>
-   *   1) Receives a MQ message
-   *   2) Updates Zookeeper start date monitoring metrics
-   *   3) Create pipeline step in tracking service
-   *   4) Runs runnable function, which is the main message processing logic
-   *   5) Updates Zookeeper end date monitoring metrics
-   *   6) Update status in tracking service
-   *   7) Sends a wrapped message to Balancer microservice
-   *   8) Updates Zookeeper successful or error monitoring metrics
-   *   9) Cleans Zookeeper monitoring metrics if the received message is the
-   * last
-   * </pre>
+   * <p>The context groups the current message, callback configuration, clients, and helper services
+   * required during message processing. It keeps {@link CallbackMode} implementations independent
+   * from {@link PipelinesCallback} internals, so modes do not need to call package-private methods
+   * on this class.
+   */
+  private PipelinesCallbackContext<In> context() {
+    RetryingPipelinesHistoryClient retryingHistoryClient =
+        new RetryingPipelinesHistoryClient(historyClient);
+    RetryingDatasetClient retryingDatasetClient =
+        datasetClient == null ? null : new RetryingDatasetClient(datasetClient);
+    RetryingValidationClient retryingValidationClient =
+        validationClient == null ? null : new RetryingValidationClient(validationClient);
+
+    PipelinesStepTracker tracker = new PipelinesStepTracker(retryingHistoryClient, config);
+    PipelinesExecutionGuard executionGuard = new PipelinesExecutionGuard(historyClient);
+    ValidatorStatusService validatorStatusService =
+        new ValidatorStatusService(retryingValidationClient);
+    QueuedStepUpdater queuedStepUpdater = new QueuedStepUpdater(retryingHistoryClient);
+    WorkflowResolver workflowResolver = new WorkflowResolver(config);
+
+    return PipelinesCallbackContext.<In>builder()
+        .message(message)
+        .stepType(stepType)
+        .config(config)
+        .publisher(publisher)
+        .historyClient(historyClient)
+        .retryingHistoryClient(retryingHistoryClient)
+        .datasetClient(datasetClient)
+        .retryingDatasetClient(retryingDatasetClient)
+        .validationClient(validationClient)
+        .retryingValidationClient(retryingValidationClient)
+        .tracker(tracker)
+        .executionGuard(executionGuard)
+        .validatorStatusService(validatorStatusService)
+        .queuedStepUpdater(queuedStepUpdater)
+        .workflowResolver(workflowResolver)
+        .build();
+  }
+
+  /**
+   * Handles the configured input message.
+   *
+   * <p>The processing flow is:
+   *
+   * <ol>
+   *   <li>Attach dataset, attempt, and step information to the logging context.
+   *   <li>Skip the message if it is invalid or if the selected callback mode says processing should
+   *       stop.
+   *   <li>Track the pipeline step when the selected mode requires tracking.
+   *   <li>Create and run the task-specific {@link Runnable} from the configured {@link
+   *       StepHandler}.
+   *   <li>Update tracking status to {@link PipelineStep.Status#COMPLETED} after successful
+   *       processing.
+   *   <li>Create and publish the outgoing message for the next pipeline step if one exists.
+   *   <li>Update queued status for downstream steps.
+   *   <li>Notify the selected callback mode about success or failure.
+   *   <li>Ask the history service to mark the execution as finished if all steps are finished.
+   * </ol>
+   *
+   * <p>Any exception thrown by task execution or infrastructure calls is caught, logged, reflected
+   * in tracking status when possible, and forwarded to the callback mode for mode-specific failure
+   * handling.
    */
   public void handleMessage() {
-
     String datasetKey = message.getDatasetUuid().toString();
     Optional<TrackingInfo> info = Optional.empty();
+    PipelinesCallbackContext<In> context = context();
+    CallbackMode callbackMode = callbackMode();
 
-    try (MDCCloseable mdc = MDC.putCloseable("datasetKey", datasetKey);
-        MDCCloseable mdc1 = MDC.putCloseable("attempt", message.getAttempt().toString());
-        MDCCloseable mdc2 = MDC.putCloseable("step", stepType.name())) {
+    try (MDCCloseable datasetMdc = MDC.putCloseable("datasetKey", datasetKey);
+        MDCCloseable attemptMdc = MDC.putCloseable("attempt", message.getAttempt().toString());
+        MDCCloseable stepMdc = MDC.putCloseable("step", stepType.name())) {
 
-      if (!handler.isMessageCorrect(message) || isProcessingStopped() || isValidatorAborted()) {
+      if (!handler.isMessageCorrect(message) || callbackMode.shouldSkip(context)) {
         log.info(
             "Skip the message, please check that message is correct/runner/validation info/etc, exit from handler");
         return;
       }
 
-      // track the pipeline step
-      info = trackPipelineStep();
+      info = callbackMode.trackPipelineStep(context);
 
       log.info("Message handler began - {}", message);
       Runnable runnable = handler.createRunnable(message);
 
       log.info("Handler has been started, datasetKey - {}", datasetKey);
-      checkIfDatasetIsDeleted();
+      checkIfDatasetIsDeleted(context);
       runnable.run();
-      checkIfDatasetIsDeleted();
+      checkIfDatasetIsDeleted(context);
       log.info("Handler has been finished, datasetKey - {}", datasetKey);
 
-      // update tracking status
-      info.ifPresent(i -> updateTrackingStatus(i, PipelineStep.Status.COMPLETED));
+      context.getTracker().updateStatus(info, PipelineStep.Status.COMPLETED);
 
-      // Send a wrapped outgoing message to Balancer queue
-      O outgoingMessage = handler.createOutgoingMessage(message);
+      Out outgoingMessage = handler.createOutgoingMessage(message);
       if (outgoingMessage != null) {
-
-        // set the executionId
-        info.ifPresent(i -> outgoingMessage.setExecutionId(i.executionId));
+        info.ifPresent(i -> outgoingMessage.setExecutionId(i.getExecutionId()));
 
         String nextMessageClassName = outgoingMessage.getClass().getSimpleName();
         String messagePayload = outgoingMessage.toString();
         publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
 
-        String logInfo =
-            "Next message has been sent - "
-                + outgoingMessage.getClass().getSimpleName()
-                + ":"
-                + outgoingMessage;
-        log.info(logInfo);
-        info.ifPresent(this::updateQueuedStatus);
+        log.info(
+            "Next message has been sent - {}:{}",
+            outgoingMessage.getClass().getSimpleName(),
+            outgoingMessage);
+
+        callbackMode.updateQueuedStatus(info, context);
       }
 
-      updateValidatorInfoStatus(Status.FINISHED);
-
+      callbackMode.onSuccess(context);
     } catch (Exception ex) {
       String error = "Error for datasetKey - " + datasetKey + " : " + ex.getMessage();
       log.error(error, ex);
 
-      // update tracking status
-      info.ifPresent(i -> updateTrackingStatus(i, PipelineStep.Status.FAILED));
+      context.getTracker().updateStatus(info, PipelineStep.Status.FAILED);
 
-      // update validator info
       String errorMessage = null;
       if (ex.getCause() instanceof PipelinesException) {
         errorMessage = ((PipelinesException) ex.getCause()).getShortMessage();
       }
-      updateValidatorInfoStatus(Status.FAILED, errorMessage);
+      callbackMode.onFailure(context, errorMessage);
     } finally {
-      if (message.getExecutionId() != null) {
-        log.info("Mark execution as FINISHED if all steps are FINISHED");
-        Runnable r =
-            () -> {
-              log.info(
-                  "History client: mark pipeline execution if finished, executionId {}",
-                  message.getExecutionId());
-              historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
-            };
-        Retry.decorateRunnable(RETRY, r).run();
-      }
+      callbackMode.markPipelineExecutionIfFinished(message.getExecutionId(), context);
     }
 
     log.info("Message handler ended - {}", message);
   }
 
-  private boolean isValidatorAborted() {
-    if (isValidator) {
-      Function<UUID, Validation> getValidationFn =
-          key -> {
-            log.info("Validation client: get validation by datasetKey {}", key);
-            return validationClient.get(key);
-          };
-      Validation validation =
-          Retry.decorateFunction(RETRY, getValidationFn).apply(message.getDatasetUuid());
-      if (validation != null) {
-        Status status = validation.getStatus();
-        return status == Status.ABORTED
-            || status == Status.FINISHED
-            || status == Status.FAILED
-            || status == Status.DOWNLOADING;
-      } else {
-        log.warn(
-            "Can't find validation data key {}, please check that record exists",
-            message.getDatasetUuid());
-      }
-    }
-    return false;
-  }
-
-  private boolean isProcessingStopped() {
-    if (isValidator) {
-      return false;
-    }
-
-    Long currentKey = message.getExecutionId();
-
-    Supplier<Long> s = () -> historyClient.getRunningExecutionKey(message.getDatasetUuid());
-    Long runningKey;
-    if (currentKey == null) {
-      runningKey = s.get();
-    } else {
-      // if current key is not null, running key must not be null unless execution was aborted,
-      // check multiple times
-      runningKey = RUNNING_EXECUTION_CALL.executeSupplier(s);
-    }
-    if (currentKey == null && runningKey == null) {
-      log.info("Continue execution. New execution and no other running executions");
-      return false;
-    }
-    if (currentKey == null) {
-      log.warn("Can't run new execution if some other execution is running");
-      return true;
-    }
-    if (runningKey == null) {
-      log.warn("Stop execution. Execution is aborted");
-      return true;
-    }
-    // Stop the process if execution keys are different
-    return !currentKey.equals(runningKey);
-  }
-
-  private void updateValidatorInfoStatus(Status status) {
-    updateValidatorInfoStatus(status, null);
-  }
-
-  private void updateValidatorInfoStatus(Status status, String text) {
-    if (isValidator) {
-      Validations.updateStatus(validationClient, message.getDatasetUuid(), stepType, status, text);
-    }
-  }
-
-  private boolean containsEvents() {
-    DatasetInfo datasetInfo = message.getDatasetInfo();
-    boolean containsEvents = false;
-    if (config.eventsEnabled() && datasetInfo.getDatasetType() == DatasetType.SAMPLING_EVENT) {
-      containsEvents = datasetInfo.isContainsEvents();
-    }
-    return containsEvents;
-  }
-
-  private Optional<TrackingInfo> trackPipelineStep() {
-    try {
-
-      if (isValidator) {
-        log.info("Skiping status updating, isValidator {}", isValidator);
-        return Optional.empty();
-      }
-
-      // create pipeline process. If it already exists it returns the existing one (the db query
-      // does an upsert).
-      UUID datasetUuid = message.getDatasetUuid();
-      Integer attempt = message.getAttempt();
-
-      Supplier<Long> pkSupplier =
-          () -> {
-            log.info(
-                "History client: create pipeline process, datasetKey {}, attempt {}",
-                datasetUuid,
-                attempt);
-            return historyClient.createPipelineProcess(
-                new PipelineProcessParameters(datasetUuid, attempt));
-          };
-
-      long processKey = Retry.decorateSupplier(RETRY, pkSupplier).get();
-
-      Long executionId = message.getExecutionId();
-      if (executionId == null) {
-        log.info("executionId is empty, create initial pipelines execution");
-        // create execution
-        boolean containsEvents = containsEvents();
-        boolean containsOccurrences = message.getDatasetInfo().isContainsOccurrences();
-        Set<StepType> stepTypes =
-            PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents)
-                .getAllNodesFor(Collections.singleton(stepType));
-
-        PipelineExecution execution =
-            new PipelineExecution().setStepsToRun(stepTypes).setCreated(OffsetDateTime.now());
-
-        Supplier<Long> executionIdSupplier =
-            () -> {
-              log.info(
-                  "History client: add pipeline execution, processKey {}, execution {}",
-                  processKey,
-                  execution);
-              return historyClient.addPipelineExecution(processKey, execution);
-            };
-        executionId = Retry.decorateSupplier(RETRY, executionIdSupplier).get();
-
-        message.setExecutionId(executionId);
-      }
-
-      Function<Long, List<PipelineStep>> getStepsByExecutionKeyFn =
-          ek -> {
-            log.info("History client: get steps by execution key {}", ek);
-            return historyClient.getPipelineStepsByExecutionKey(ek);
-          };
-
-      List<PipelineStep> stepsByExecutionKey =
-          Retry.decorateFunction(RETRY, getStepsByExecutionKeyFn).apply(executionId);
-
-      // add step to the process
-      PipelineStep step =
-          stepsByExecutionKey.stream()
-              .filter(ps -> ps.getType() == stepType)
-              .findAny()
-              .orElseThrow(
-                  () ->
-                      new PipelinesException(
-                          "History service doesn't contain stepType: " + stepType));
-
-      if (PROCESSED_STATE_SET.contains(step.getState())) {
-        log.error(
-            "Dataset is in the queue, please check the pipeline-ingestion monitoring tool - {}",
-            datasetUuid);
-        throw new PipelinesException(
-            "Dataset is in the queue, please check the pipeline-ingestion monitoring tool");
-      }
-
-      step.setMessage(OBJECT_MAPPER.writeValueAsString(message))
-          .setState(PipelineStep.Status.RUNNING)
-          .setRunner(StepRunner.valueOf(getRunner()))
-          .setStarted(OffsetDateTime.now())
-          .setPipelinesVersion(getPipelinesVersion());
-
-      Function<PipelineStep, Long> pipelineStepFn =
-          s -> {
-            log.info("History client: update pipeline step: {}", s);
-            return historyClient.updatePipelineStep(s);
-          };
-      long stepKey = Retry.decorateFunction(RETRY, pipelineStepFn).apply(step);
-
-      Map<StepType, PipelineStep> pipelineStepMap =
-          stepsByExecutionKey.stream()
-              .collect(Collectors.toMap(PipelineStep::getType, Function.identity()));
-
-      TrackingInfo trackingInfo =
-          TrackingInfo.builder()
-              .processKey(processKey)
-              .executionId(executionId)
-              .pipelineStepMap(pipelineStepMap)
-              .stepKey(stepKey)
-              .datasetId(datasetUuid.toString())
-              .attempt(attempt.toString())
-              .build();
-
-      return Optional.of(trackingInfo);
-
-    } catch (Exception ex) {
-      // we don't want to break the crawling if the tracking fails
-      log.error("Couldn't track pipeline step for message {}", message, ex);
-      return Optional.empty();
-    }
-  }
-
-  private void updateQueuedStatus(TrackingInfo info) {
-    List<Graph<StepType>.Edge> nodeEdges;
-    if (isValidator) {
-      nodeEdges = PipelinesWorkflow.getValidatorWorkflow().getNodeEdges(stepType);
-    } else {
-      boolean containsEvents = containsEvents();
-      boolean containsOccurrences = message.getDatasetInfo().isContainsOccurrences();
-      Graph<StepType> workflow = PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents);
-      nodeEdges = workflow.getNodeEdges(stepType);
-    }
-
-    for (Graph<StepType>.Edge e : nodeEdges) {
-      PipelineStep step = info.pipelineStepMap.get(e.getNode());
-      if (step != null && !PROCESSED_STATE_SET.contains(step.getState())) {
-        // Call Registry to change the state to queued
-        log.info("History client: set pipeline step to QUEUED: {}", step);
-        Retry.decorateRunnable(
-                RETRY, () -> historyClient.setSubmittedPipelineStepToQueued(step.getKey()))
-            .run();
-        log.info("Step {} with step key {} as QUEUED", step.getType(), step.getKey());
-      }
-    }
-  }
-
-  private void updateTrackingStatus(TrackingInfo ti, PipelineStep.Status status) {
-    String path =
-        HdfsUtils.buildOutputPathAsString(
-            config.getRepositoryPath(), ti.datasetId, ti.attempt, config.getMetaFileName());
-    HdfsConfigs hdfsConfigs =
-        HdfsConfigs.create(config.getHdfsSiteConfig(), config.getCoreSiteConfig());
-    List<MetricInfo> metricInfos = HdfsUtils.readMetricsFromMetaFile(hdfsConfigs, path);
-
-    Function<Long, PipelineStep> getPipelineStepFn =
-        sk -> {
-          log.info("History client: get steps by execution key {}", sk);
-          return historyClient.getPipelineStep(sk);
-        };
-    PipelineStep pipelineStep = Retry.decorateFunction(RETRY, getPipelineStepFn).apply(ti.stepKey);
-
-    pipelineStep.setState(status);
-    pipelineStep.setMetrics(new HashSet<>(metricInfos));
-
-    if (metricInfos.size() == 1) {
-      Optional.ofNullable(metricInfos.get(0).getValue())
-          .filter(v -> !v.isEmpty())
-          .map(Long::parseLong)
-          .ifPresent(pipelineStep::setNumberRecords);
-    } else if (metricInfos.size() > 1) {
-      pipelineStep.setNumberRecords(-1L);
-    }
-
-    if (status == PipelineStep.Status.COMPLETED || status == PipelineStep.Status.ABORTED) {
-      pipelineStep.setFinished(OffsetDateTime.now());
-    }
-
-    try {
-      Function<PipelineStep, Long> pipelineStepFn =
-          s -> {
-            log.info("History client: update pipeline step: {}", s);
-            PipelineStep step = historyClient.getPipelineStep(s.getKey());
-            if (FINISHED_STATE_SET.contains(step.getState())) {
-              return step.getKey();
-            }
-            return historyClient.updatePipelineStep(s);
-          };
-      long stepKey = Retry.decorateFunction(RETRY, pipelineStepFn).apply(pipelineStep);
-      log.info(
-          "Step key {}, step type {} is {}",
-          stepKey,
-          pipelineStep.getType(),
-          pipelineStep.getState());
-
-    } catch (Exception ex) {
-      // we don't want to break the crawling if the tracking fails
-      log.error(
-          "Couldn't update tracking status for process {} and step {}",
-          ti.processKey,
-          ti.stepKey,
-          ex);
-    }
-  }
-
+  /**
+   * Returns the pipeline version loaded from {@code pipelines.properties}.
+   *
+   * <p>The version is stored with pipeline step tracking information to make processed records
+   * traceable to the application version that produced them.
+   */
   @VisibleForTesting
-  static String getPipelinesVersion() {
+  public static String getPipelinesVersion() {
     return properties == null ? null : properties.getProperty("pipelines.version");
   }
 
-  private String getRunner() {
-    if (message instanceof PipelinesAbcdMessage
-        || message instanceof PipelinesXmlMessage
-        || message instanceof PipelinesDwcaMessage) {
-      return StepRunner.STANDALONE.name();
-    }
-    if (message instanceof PipelinesRunnerMessage) {
-      return ((PipelinesRunnerMessage) message).getRunner();
-    }
-    return StepRunner.UNKNOWN.name();
-  }
-
-  private void checkIfDatasetIsDeleted() throws IOException {
-    if (datasetClient != null) {
-      Function<UUID, Dataset> getDatasetFn =
-          key -> {
-            log.info("Dataset client: get dataset by key: {}", key);
-            return datasetClient.get(key);
-          };
-      Dataset dataset = Retry.decorateFunction(RETRY, getDatasetFn).apply(message.getDatasetUuid());
+  /**
+   * Stops processing when the dataset has been deleted while the pipeline step is running.
+   *
+   * <p>The check is performed before and after the task-specific runnable. If the registry marks
+   * the dataset as deleted, a delete-occurrences message is published and processing fails with a
+   * {@link PipelinesException}. This prevents continuing ingestion for data that should no longer
+   * be indexed.
+   *
+   * <p>If no dataset client is configured, the check is skipped.
+   */
+  private void checkIfDatasetIsDeleted(PipelinesCallbackContext<In> context) throws IOException {
+    RetryingDatasetClient retryingDatasetClient = context.getRetryingDatasetClient();
+    if (retryingDatasetClient != null) {
+      Dataset dataset = retryingDatasetClient.get(message.getDatasetUuid());
       if (dataset != null && dataset.getDeleted() != null) {
         publisher.send(
             new DeleteDatasetOccurrencesMessage(message.getDatasetUuid(), NOT_SEEN_IN_LAST_CRAWL));
@@ -530,15 +266,5 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     } else {
       log.warn("datasetClient object is null, skip checkIfDatasetIsDeleted");
     }
-  }
-
-  @Builder
-  private static class TrackingInfo {
-    long processKey;
-    long executionId;
-    long stepKey;
-    String datasetId;
-    String attempt;
-    Map<StepType, PipelineStep> pipelineStepMap;
   }
 }

@@ -21,7 +21,8 @@ import org.gbif.validator.ws.client.ValidationWsClient;
 @NoArgsConstructor(staticName = "create")
 public class ValidationWsClientStub implements ValidationWsClient {
 
-  private Validation validation = Validation.builder().key(UUID.randomUUID()).build();
+  private Validation validation =
+      Validation.builder().key(UUID.randomUUID()).file("archive_without_extensions.zip").build();
 
   @Override
   public boolean reachedMaxRunningValidations(String userName) {

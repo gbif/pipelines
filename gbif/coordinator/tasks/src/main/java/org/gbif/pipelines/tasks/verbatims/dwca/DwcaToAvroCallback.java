@@ -1,8 +1,6 @@
 package org.gbif.pipelines.tasks.verbatims.dwca;
 
 import static org.gbif.api.model.pipelines.InterpretationType.RecordType.getAllInterpretationAsString;
-import static org.gbif.api.model.pipelines.InterpretationType.RecordType.getAllValidatorInterpretationAsString;
-import static org.gbif.pipelines.common.ValidatorPredicate.isValidator;
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
 import java.nio.file.Path;
@@ -56,17 +54,12 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
   @Override
   public void handleMessage(PipelinesDwcaMessage message) {
-
-    boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
-    StepType type = isValidator ? StepType.VALIDATOR_DWCA_TO_VERBATIM : StepType.DWCA_TO_VERBATIM;
-
     PipelinesCallback.<PipelinesDwcaMessage, PipelinesVerbatimMessage>builder()
         .historyClient(historyClient)
         .datasetClient(datasetClient)
         .validationClient(validationClient)
         .config(config)
-        .stepType(type)
-        .isValidator(isValidator)
+        .stepType(StepType.DWCA_TO_VERBATIM)
         .publisher(publisher)
         .message(message)
         .handler(this)
@@ -76,11 +69,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
   @Override
   public String getRouting() {
-    PipelinesDwcaMessage message = new PipelinesDwcaMessage();
-    if (config.validatorOnly) {
-      message.setPipelineSteps(Collections.singleton(StepType.VALIDATOR_DWCA_TO_VERBATIM.name()));
-    }
-    return message.getRoutingKey();
+    return PipelinesDwcaMessage.ROUTING_KEY;
   }
 
   /** Only correct messages can be handled, by now is only OCCURRENCE type messages */
@@ -124,29 +113,29 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     return isValidOccurrenceReport || isValidGenericReport;
   }
 
-  /** Main message processing logic, converts a DwCA archive to an avro file. */
+  /** Main message processing logic converts a DwCA archive to an avro file. */
   @Override
   public Runnable createRunnable(PipelinesDwcaMessage message) {
     return () -> {
       UUID datasetId = message.getDatasetUuid();
       String attempt = String.valueOf(message.getAttempt());
 
-      // Calculates and checks existence of DwC Archive
+      // Calculates and checks the existence of DwC Archive
       Path inputPath = buildDwcaInputPath(config.archiveRepository, datasetId);
 
-      // Calculates export path of avro as extended record
+      // Calculates the export path of avro as an extended record
       org.apache.hadoop.fs.Path outputPath =
           HdfsUtils.buildOutputPath(
               config.stepConfig.repositoryPath, datasetId.toString(), attempt, config.fileName);
 
-      // Calculates metadata path, the yaml file with total number of converted records
+      // Calculates the metadata path, the YAML file with the total number of converted records
       org.apache.hadoop.fs.Path metaPath =
           HdfsUtils.buildOutputPath(
               config.stepConfig.repositoryPath, datasetId.toString(), attempt, config.metaFileName);
 
       HdfsConfigs hdfsConfigs =
           HdfsConfigs.create(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig);
-      // Run main conversion process
+      // Run the main conversion process
       DwcaToAvroConverter.create()
           .codecFactory(CodecFactory.fromString(config.avroConfig.compressionType))
           .syncInterval(config.avroConfig.syncInterval)
@@ -154,7 +143,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
           .inputPath(inputPath)
           .outputPath(outputPath)
           .metaPath(metaPath)
-          .skipDeletion(isValidator(message.getPipelineSteps(), config.validatorOnly))
+          .skipDeletion(false) // don't skip here (skip if validator)
           .convert();
     };
   }
@@ -167,32 +156,22 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     Set<String> interpretedTypes = config.interpretTypes;
 
     try {
-      boolean isValidator = isValidator(message.getPipelineSteps(), config.validatorOnly);
-
       Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
-      Archive archive =
-          isValidator
-              ? DwcaUtils.fromLocationSkipValidation(inputPath)
-              : DwcaUtils.fromLocation(inputPath);
+      Archive archive = DwcaUtils.fromLocation(inputPath);
 
       if (message.getPipelineSteps().isEmpty()) {
-
         Graph<StepType> workflow;
-        if (isValidator) {
-          workflow = PipelinesWorkflow.getValidatorWorkflow();
-        } else {
-          Term coreType = archive.getCore().getRowType();
-          boolean hasOccurrenceExtension =
-              archive.getExtensions().stream().anyMatch(x -> x.getRowType() == DwcTerm.Occurrence);
 
-          boolean hasOccurrences = coreType == DwcTerm.Occurrence || hasOccurrenceExtension;
-          boolean hasEvents = coreType == DwcTerm.Event && config.stepConfig.eventsEnabled;
+        Term coreType = archive.getCore().getRowType();
+        boolean hasOccurrenceExtension =
+            archive.getExtensions().stream().anyMatch(x -> x.getRowType() == DwcTerm.Occurrence);
 
-          workflow = PipelinesWorkflow.getWorkflow(hasOccurrences, hasEvents);
-        }
+        boolean hasOccurrences = coreType == DwcTerm.Occurrence || hasOccurrenceExtension;
+        boolean hasEvents = coreType == DwcTerm.Event && config.stepConfig.eventsEnabled;
 
-        StepType type =
-            isValidator ? StepType.VALIDATOR_DWCA_TO_VERBATIM : StepType.DWCA_TO_VERBATIM;
+        workflow = PipelinesWorkflow.getWorkflow(hasOccurrences, hasEvents);
+
+        StepType type = StepType.DWCA_TO_VERBATIM;
 
         Set<String> steps =
             workflow.getAllNodesFor(Collections.singleton(type)).stream()
@@ -202,9 +181,8 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         message.setPipelineSteps(steps);
       }
 
-      // Calculates and checks existence of DwC Archive
-      Set<String> allInterpretationAsString =
-          isValidator ? getAllValidatorInterpretationAsString() : getAllInterpretationAsString();
+      // Calculates and checks the existence of DwC Archive
+      Set<String> allInterpretationAsString = getAllInterpretationAsString();
 
       interpretedTypes = DwcaUtils.getExtensionAsTerms(archive);
       interpretedTypes.addAll(allInterpretationAsString);
@@ -252,12 +230,8 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
             dwcaOccurrenceRecordsNumber,
             dwcaRecordsNumber);
 
-    // this is a deliberate hack(see issue https://github.com/gbif/pipelines/issues/885)
+    // this is a deliberate hack (see issue https://github.com/gbif/pipelines/issues/885)
     DatasetType datasetType = message.getDatasetType();
-    // TODO: can we remove this??
-    //    if (message.getDatasetType() == DatasetType.MATERIAL_ENTITY) {
-    //      datasetType = DatasetType.OCCURRENCE;
-    //    }
 
     return new PipelinesVerbatimMessage(
         message.getDatasetUuid(),

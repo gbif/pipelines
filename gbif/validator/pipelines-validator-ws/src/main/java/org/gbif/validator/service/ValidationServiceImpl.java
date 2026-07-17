@@ -319,6 +319,10 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     return validationMapper.get(validation.getKey());
   }
 
+  private boolean isStandalone(DataFile dataFile) {
+    return dataFile.getSize() != null && dataFile.getSize() < 10L * 1024 * 1024;
+  }
+
   /** Notifies when the file is submitted. */
   @SneakyThrows
   private void notify(UUID key, DataFile dataFile, Set<String> pipelinesSteps) {
@@ -351,6 +355,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     return Set.of(
         StepType.VALIDATOR_VALIDATE_ARCHIVE.name(),
         stepType,
+        StepType.VALIDATOR_VERBATIM_TO_IDENTIFIER.name(),
         StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name(),
         StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
         StepType.VALIDATOR_COLLECT_METRICS.name());

@@ -32,6 +32,14 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+        </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>validator-api</artifactId>
+      </dependency>
+        <dependency>
             <groupId>org.gbif.pipelines</groupId>
             <artifactId>spark-jobs</artifactId>
             <version>${project.version}</version>

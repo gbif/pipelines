@@ -105,7 +105,7 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.68</gbif-parsers.version>
     <dwca-io.version>3.0.1</dwca-io.version>
-    <gbif-api.version>2.4.13</gbif-api.version>
+    <gbif-api.version>2.4.14-issue205-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.60</gbif-common.version>
     <dwc-api.version>2.1.13</dwc-api.version>
     <gbif-kvs.version>3.1.2</gbif-kvs.version>
@@ -114,7 +114,7 @@
     <vocabulary-lookup.version>2.0.10</vocabulary-lookup.version>
     <registry.version>4.2.24</registry.version>
     <gbif-common-ws.version>2.1.1</gbif-common-ws.version>
-    <gbif-postal-service.version>2.1.11</gbif-postal-service.version>
+    <gbif-postal-service.version>2.1.12-FEATURE-24-PIPELINES-2-VALIDATOR-SNAPSHOT</gbif-postal-service.version>
     <dwc-dp-analyser.version>0.0.6</dwc-dp-analyser.version>
     <gbif-common-spreadsheet.version>0.2</gbif-common-spreadsheet.version>
     <keygen.version>1.0.0</keygen.version>
@@ -290,6 +290,11 @@
         <artifactId>lombok</artifactId>
         <version>${lombok.version}</version>
         <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.reflections</groupId>
+        <artifactId>reflections</artifactId>
+        <version>${reflections.version}</version>
       </dependency>
 
       <!-- This project -->
