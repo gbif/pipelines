@@ -103,7 +103,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
 
     FileInfoBuilder fileInfoBuilder = FileInfo.builder().fileType(DwcFileType.METADATA);
 
-    if (!emlPath.isPresent()) {
+    if (emlPath.isEmpty()) {
       return fileInfoBuilder
           .issues(
               Collections.singletonList(
@@ -115,12 +115,12 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     }
 
     try {
-      String xmlDoc = new String(Files.readAllBytes(emlPath.get()), StandardCharsets.UTF_8);
+      String xmlDoc = Files.readString(emlPath.get());
 
       List<IssueInfo> issueInfos = new ArrayList<>();
       // Validate XML file
       issueInfos.addAll(schemaValidatorFactory.validate(xmlDoc));
-      // Check licence, authors and etc
+      // Check license, authors and etc
       issueInfos.addAll(BasicMetadataEvaluator.evaluate(xmlDoc));
 
       return fileInfoBuilder

@@ -46,7 +46,7 @@ public class ArchiveValidatorFactory {
           .build();
     }
 
-    // Defualt
+    // Default
     return DefaultValidator.builder().validationClient(validationClient).message(message).build();
   }
 }
