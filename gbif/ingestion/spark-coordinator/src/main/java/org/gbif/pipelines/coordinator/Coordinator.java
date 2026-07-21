@@ -143,61 +143,61 @@ public class Coordinator {
       Supplier<MessageListener> listenerSupplier,
       Supplier<DefaultMessagePublisher> publisherSupplier) {
 
-    Function<MessagePublisher, CloseableMessageCallback> callbackFn = switch (mode) {
-      case IDENTIFIER ->
-          (messagePublisher -> new IdentifierCallback(config, messagePublisher, master));
-      case IDENTIFIER_DISTRIBUTED ->
-          (messagePublisher -> new IdentifierDistributedCallback(config, messagePublisher));
-      case INTERPRETATION -> (messagePublisher ->
-          new OccurrenceInterpretationCallback(config, messagePublisher, master));
-      case INTERPRETATION_DISTRIBUTED -> (messagePublisher ->
-          new OccurrenceInterpretationDistributedCallback(config, messagePublisher));
-      case VALIDATOR_IDENTIFIER ->
-          (messagePublisher -> new ValidatorIdentifierCallback(config, messagePublisher, master));
-      case VALIDATOR_IDENTIFIER_DISTRIBUTED -> (messagePublisher ->
-          new ValidatorIdentifierDistributedCallback(config, messagePublisher));
-      case VALIDATOR_INTERPRETATION -> (messagePublisher ->
-          new ValidatorInterpretationCallback(config, messagePublisher, master));
-      case VALIDATOR_INTERPRETATION_DISTRIBUTED -> (messagePublisher ->
-          new ValidatorInterpretationDistributedCallback(config, messagePublisher));
-      case EVENTS_INTERPRETATION -> (messagePublisher ->
-          new EventsInterpretationCallback(config, messagePublisher, master));
-      case EVENTS_INTERPRETATION_DISTRIBUTED -> (messagePublisher ->
-          new EventsInterpretationDistributedCallback(config, messagePublisher));
-      case TABLEBUILD -> (messagePublisher ->
-          new OccurrenceTableBuildCallback(
-              config, messagePublisher, master, "occurrence", OCCURRENCE_HDFS));
-      case TABLEBUILD_DISTRIBUTED -> (messagePublisher ->
-          new OccurrenceTableBuildDistributedCallback(
-              config, messagePublisher, "occurrence", OCCURRENCE_HDFS));
-      case EVENTS_TABLEBUILD -> (messagePublisher ->
-          new EventsTableBuildCallback(
-              config, messagePublisher, master, "event", EVENT_HDFS));
-      case EVENTS_TABLEBUILD_DISTRIBUTED -> (messagePublisher ->
-          new EventsTableBuildDistributedCallback(
-              config, messagePublisher, "event", EVENT_HDFS));
-      case INDEXING ->
-          (messagePublisher -> new OccurrenceIndexingCallback(config, messagePublisher, master));
-      case INDEXING_DISTRIBUTED -> (messagePublisher ->
-          new OccurrenceIndexingDistributedCallback(config, messagePublisher));
-      case EVENTS_INDEXING ->
-          (messagePublisher -> new EventsIndexingCallback(config, messagePublisher, master));
-      case EVENTS_INDEXING_DISTRIBUTED ->
-          (messagePublisher -> new EventsIndexingDistributedCallback(config, messagePublisher));
-      case FRAGMENTER ->
-          (messagePublisher -> new FragmenterCallback(config, messagePublisher, master));
-      case FRAGMENTER_DISTRIBUTED ->
-          (messagePublisher -> new FragmenterDistributedCallback(config, messagePublisher));
-      case OCCURRENCE_DELETION ->
-          (messagePublisher -> new DatasetDeleteCallback(config, master, DatasetType.OCCURRENCE));
-      case EVENT_DELETION -> (messagePublisher ->
-          new DatasetDeleteCallback(config, master, DatasetType.SAMPLING_EVENT));
-      default -> throw new IllegalArgumentException(
-          "Unknown mode: "
-              + mode
-              + ". Recognized modes are: "
-              + Stream.of(Mode.values()).map(Enum::name).collect(Collectors.joining(",")));
-    };
+    Function<MessagePublisher, CloseableMessageCallback> callbackFn =
+        switch (mode) {
+          case IDENTIFIER -> (messagePublisher ->
+              new IdentifierCallback(config, messagePublisher, master));
+          case IDENTIFIER_DISTRIBUTED -> (messagePublisher ->
+              new IdentifierDistributedCallback(config, messagePublisher));
+          case INTERPRETATION -> (messagePublisher ->
+              new OccurrenceInterpretationCallback(config, messagePublisher, master));
+          case INTERPRETATION_DISTRIBUTED -> (messagePublisher ->
+              new OccurrenceInterpretationDistributedCallback(config, messagePublisher));
+          case VALIDATOR_IDENTIFIER -> (messagePublisher ->
+              new ValidatorIdentifierCallback(config, messagePublisher, master));
+          case VALIDATOR_IDENTIFIER_DISTRIBUTED -> (messagePublisher ->
+              new ValidatorIdentifierDistributedCallback(config, messagePublisher));
+          case VALIDATOR_INTERPRETATION -> (messagePublisher ->
+              new ValidatorInterpretationCallback(config, messagePublisher, master));
+          case VALIDATOR_INTERPRETATION_DISTRIBUTED -> (messagePublisher ->
+              new ValidatorInterpretationDistributedCallback(config, messagePublisher));
+          case EVENTS_INTERPRETATION -> (messagePublisher ->
+              new EventsInterpretationCallback(config, messagePublisher, master));
+          case EVENTS_INTERPRETATION_DISTRIBUTED -> (messagePublisher ->
+              new EventsInterpretationDistributedCallback(config, messagePublisher));
+          case TABLEBUILD -> (messagePublisher ->
+              new OccurrenceTableBuildCallback(
+                  config, messagePublisher, master, "occurrence", OCCURRENCE_HDFS));
+          case TABLEBUILD_DISTRIBUTED -> (messagePublisher ->
+              new OccurrenceTableBuildDistributedCallback(
+                  config, messagePublisher, "occurrence", OCCURRENCE_HDFS));
+          case EVENTS_TABLEBUILD -> (messagePublisher ->
+              new EventsTableBuildCallback(config, messagePublisher, master, "event", EVENT_HDFS));
+          case EVENTS_TABLEBUILD_DISTRIBUTED -> (messagePublisher ->
+              new EventsTableBuildDistributedCallback(
+                  config, messagePublisher, "event", EVENT_HDFS));
+          case INDEXING -> (messagePublisher ->
+              new OccurrenceIndexingCallback(config, messagePublisher, master));
+          case INDEXING_DISTRIBUTED -> (messagePublisher ->
+              new OccurrenceIndexingDistributedCallback(config, messagePublisher));
+          case EVENTS_INDEXING -> (messagePublisher ->
+              new EventsIndexingCallback(config, messagePublisher, master));
+          case EVENTS_INDEXING_DISTRIBUTED -> (messagePublisher ->
+              new EventsIndexingDistributedCallback(config, messagePublisher));
+          case FRAGMENTER -> (messagePublisher ->
+              new FragmenterCallback(config, messagePublisher, master));
+          case FRAGMENTER_DISTRIBUTED -> (messagePublisher ->
+              new FragmenterDistributedCallback(config, messagePublisher));
+          case OCCURRENCE_DELETION -> (messagePublisher ->
+              new DatasetDeleteCallback(config, master, DatasetType.OCCURRENCE));
+          case EVENT_DELETION -> (messagePublisher ->
+              new DatasetDeleteCallback(config, master, DatasetType.SAMPLING_EVENT));
+          default -> throw new IllegalArgumentException(
+              "Unknown mode: "
+                  + mode
+                  + ". Recognized modes are: "
+                  + Stream.of(Mode.values()).map(Enum::name).collect(Collectors.joining(",")));
+        };
 
     log.info(
         "Running {}, listening to queue: {} on virtual host {}",
