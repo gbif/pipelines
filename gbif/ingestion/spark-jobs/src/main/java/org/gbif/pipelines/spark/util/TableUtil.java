@@ -364,6 +364,8 @@ public class TableUtil {
       } else if (dataType instanceof ArrayType
           && ((ArrayType) dataType).elementType() instanceof StringType) {
         hdfsColumn.setSelect("cleanDelimitersArray(`" + parquetColumn + "`) AS " + normalisedName);
+      } else if (normalisedName.contains("geologicaltime")) {
+        hdfsColumn.setSelect("CAST(CAST(`" + parquetColumn + "` AS STRING) AS DOUBLE) AS " + normalisedName);
       } else {
         hdfsColumn.setSelect("`" + parquetColumn + "` AS " + normalisedName);
       }
