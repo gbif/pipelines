@@ -369,10 +369,17 @@ public class TableUtil {
         String structFields =
             Arrays.stream(structType.fields())
                 .map(
-                    field ->
-                        String.format(
+                    field -> {
+                      String fName = field.name();
+                      DataType fType = field.dataType();
+                      if (fType instanceof FloatType) {
+                        return String.format(
                             "CAST(CAST(`%s`.`%s` AS STRING) AS DOUBLE) AS `%s`",
-                            parquetColumn, field.name(), field.name()))
+                            parquetColumn, fName, fName);
+                      } else {
+                        return String.format("`%s`.`%s` AS `%s`", parquetColumn, fName, fName);
+                      }
+                    })
                 .collect(Collectors.joining(", "));
 
         hdfsColumn.setSelect(String.format("struct(%s) AS `%s`", structFields, normalisedName));
