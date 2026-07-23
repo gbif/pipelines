@@ -108,13 +108,14 @@ class DwcDpVerbatimConverterTest {
             RowFactory.create("EPK-001", "EVT001", null, "2024-06-01", "DK", "55.6", "12.5"),
             RowFactory.create("EPK-002", "EVT002", "EVT001", "2024-06-02", "DK", "55.7", "12.6")));
 
+    // occurrence carries event_fk (surrogate ref to event.event_pk), never a literal eventID.
     // associatedOrganisms is NOT a DwC-DP occurrence field — contributed by organism join only
     writeParquet(
         dir,
         "data/occurrence.parquet",
         schema(
             "occurrenceID",
-            "eventID",
+            "event_fk",
             "organismID",
             "scientificName",
             "organismScope",
@@ -125,7 +126,7 @@ class DwcDpVerbatimConverterTest {
         List.of(
             RowFactory.create(
                 "OCC001",
-                "EVT001",
+                "EPK-001",
                 "org-1",
                 "Parus major",
                 "multicellular organism",
@@ -134,7 +135,7 @@ class DwcDpVerbatimConverterTest {
                 "detected",
                 "female"),
             RowFactory.create(
-                "OCC002", "EVT001", null, "Quercus robur", null, null, null, "detected", null)));
+                "OCC002", "EPK-001", null, "Quercus robur", null, null, null, "detected", null)));
 
     writeParquet(
         dir,
@@ -149,19 +150,21 @@ class DwcDpVerbatimConverterTest {
             RowFactory.create(
                 "org-1", "Blue tit", "multicellular organism", null, "sibling of:org-2")));
 
+    // media carries media_pk — the surrogate key event-media's media_fk resolves against
     writeParquet(
         dir,
         "data/media.parquet",
-        schema("mediaID", "accessURI", "mediaType"),
+        schema("media_pk", "accessURI", "mediaType"),
         List.of(
-            RowFactory.create("MED001", "https://example.com/img1.jpg", "StillImage"),
-            RowFactory.create("MED002", "https://example.com/img2.jpg", "StillImage")));
+            RowFactory.create("MPK-001", "https://example.com/img1.jpg", "StillImage"),
+            RowFactory.create("MPK-002", "https://example.com/img2.jpg", "StillImage")));
 
+    // event-media carries event_fk + media_fk — surrogate refs, never eventID/mediaID directly
     writeParquet(
         dir,
         "data/event-media.parquet",
-        schema("mediaID", "eventID"),
-        List.of(RowFactory.create("MED001", "EVT001"), RowFactory.create("MED002", "EVT001")));
+        schema("event_fk", "media_fk"),
+        List.of(RowFactory.create("EPK-001", "MPK-001"), RowFactory.create("EPK-001", "MPK-002")));
 
     writeParquet(
         dir,
@@ -300,17 +303,19 @@ class DwcDpVerbatimConverterTest {
 
   @Test
   void eventCoreRoundTripAvroWriteAndRead(@TempDir Path dir) throws Exception {
+    // event_pk added — OccurrenceExtensionBuilder resolves occurrence.event_fk against it
     writeParquet(
         dir,
         "data/event.parquet",
-        schema("eventID", "eventDate", "decimalLatitude", "decimalLongitude"),
-        List.of(RowFactory.create("EVT001", "2024-06-15", "51.5", "-0.1")));
+        schema("event_pk", "eventID", "eventDate", "decimalLatitude", "decimalLongitude"),
+        List.of(RowFactory.create("EPK-001", "EVT001", "2024-06-15", "51.5", "-0.1")));
 
+    // event_fk instead of eventID — occurrence never carries the natural key directly
     writeParquet(
         dir,
         "data/occurrence.parquet",
-        schema("occurrenceID", "eventID", "scientificName"),
-        List.of(RowFactory.create("OCC001", "EVT001", "Quercus robur")));
+        schema("occurrenceID", "event_fk", "scientificName"),
+        List.of(RowFactory.create("OCC001", "EPK-001", "Quercus robur")));
 
     DataPackage dp = DataPackageFixtures.withEventAndOccurrence();
 
@@ -410,6 +415,9 @@ class DwcDpVerbatimConverterTest {
    */
   @Test
   void occurrenceCore_fullPackage_roundTripAvroWriteAndRead(@TempDir Path dir) throws Exception {
+    // event_fk here is inert bystander data — occurrence-core never resolves back to event —
+    // kept as event_fk (rather than the old eventID) just for consistency with the rest of
+    // these fixtures.
     // associatedOrganisms is NOT a DwC-DP occurrence field — contributed by organism join only
     writeParquet(
         dir,
@@ -417,7 +425,7 @@ class DwcDpVerbatimConverterTest {
         schema(
             "occurrence_pk",
             "occurrenceID",
-            "eventID",
+            "event_fk",
             "organismID",
             "scientificName",
             "organismScope",
@@ -431,7 +439,7 @@ class DwcDpVerbatimConverterTest {
             RowFactory.create(
                 "OPK-001",
                 "OCC001",
-                "EVT001",
+                "EPK-001",
                 "org-1",
                 "Parus major",
                 "multicellular organism",
@@ -444,7 +452,7 @@ class DwcDpVerbatimConverterTest {
             RowFactory.create(
                 "OPK-002",
                 "OCC002",
-                "EVT001",
+                "EPK-001",
                 null,
                 "Quercus robur",
                 null,
@@ -468,19 +476,22 @@ class DwcDpVerbatimConverterTest {
             RowFactory.create(
                 "org-1", "Blue tit", "multicellular organism", null, "sibling of:org-2")));
 
+    // media carries media_pk — the surrogate key occurrence-media's media_fk resolves against
     writeParquet(
         dir,
         "data/media.parquet",
-        schema("mediaID", "accessURI", "mediaType"),
+        schema("media_pk", "accessURI", "mediaType"),
         List.of(
-            RowFactory.create("MED001", "https://example.com/img1.jpg", "StillImage"),
-            RowFactory.create("MED002", "https://example.com/img2.jpg", "StillImage")));
+            RowFactory.create("MPK-001", "https://example.com/img1.jpg", "StillImage"),
+            RowFactory.create("MPK-002", "https://example.com/img2.jpg", "StillImage")));
 
+    // occurrence-media carries occurrence_fk + media_fk — surrogate refs, never
+    // occurrenceID/mediaID directly
     writeParquet(
         dir,
         "data/occurrence-media.parquet",
-        schema("mediaID", "occurrenceID"),
-        List.of(RowFactory.create("MED001", "OCC001"), RowFactory.create("MED002", "OCC001")));
+        schema("occurrence_fk", "media_fk"),
+        List.of(RowFactory.create("OPK-001", "MPK-001"), RowFactory.create("OPK-001", "MPK-002")));
 
     writeParquet(
         dir,

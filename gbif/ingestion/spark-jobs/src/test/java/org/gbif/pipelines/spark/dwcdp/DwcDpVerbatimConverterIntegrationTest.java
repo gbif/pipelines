@@ -142,20 +142,22 @@ class DwcDpVerbatimConverterIntegrationTest {
 
   @Test
   void avroWrite_readableByEventInterpretationPipeline(@TempDir Path dir) throws Exception {
+    // event_pk added — OccurrenceExtensionBuilder resolves occurrence.event_fk against it
     writeParquet(
         dir,
         "data/event.parquet",
-        schema("eventID", "eventDate", "parentEventID", "decimalLatitude"),
+        schema("event_pk", "eventID", "eventDate", "parentEventID", "decimalLatitude"),
         List.of(
-            RowFactory.create("EVT001", "2024-06-15", null, "59.0"),
-            RowFactory.create("EVT002", "2024-06-16", "EVT001", "59.1")));
+            RowFactory.create("EPK-001", "EVT001", "2024-06-15", null, "59.0"),
+            RowFactory.create("EPK-002", "EVT002", "2024-06-16", "EVT001", "59.1")));
+    // event_fk instead of eventID — occurrence never carries the natural key directly
     writeParquet(
         dir,
         "data/occurrence.parquet",
-        schema("occurrenceID", "eventID", "scientificName"),
+        schema("occurrenceID", "event_fk", "scientificName"),
         List.of(
-            RowFactory.create("OCC001", "EVT001", "Quercus robur"),
-            RowFactory.create("OCC002", "EVT002", "Pinus sylvestris")));
+            RowFactory.create("OCC001", "EPK-001", "Quercus robur"),
+            RowFactory.create("OCC002", "EPK-002", "Pinus sylvestris")));
 
     DataPackage dp = DataPackageFixtures.withEventAndOccurrence();
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
@@ -238,18 +240,20 @@ class DwcDpVerbatimConverterIntegrationTest {
   @Test
   void avroWrite_occurrenceExtensionExtractableByIdentifiersPipeline(@TempDir Path dir)
       throws Exception {
+    // event_pk added — OccurrenceExtensionBuilder resolves occurrence.event_fk against it
     writeParquet(
         dir,
         "data/event.parquet",
-        schema("eventID", "eventDate"),
-        List.of(RowFactory.create("EVT001", "2024-06-15")));
+        schema("event_pk", "eventID", "eventDate"),
+        List.of(RowFactory.create("EPK-001", "EVT001", "2024-06-15")));
+    // event_fk instead of eventID — occurrence never carries the natural key directly
     writeParquet(
         dir,
         "data/occurrence.parquet",
-        schema("occurrenceID", "eventID", "scientificName"),
+        schema("occurrenceID", "event_fk", "scientificName"),
         List.of(
-            RowFactory.create("OCC001", "EVT001", "Quercus robur"),
-            RowFactory.create("OCC002", "EVT001", "Pinus sylvestris")));
+            RowFactory.create("OCC001", "EPK-001", "Quercus robur"),
+            RowFactory.create("OCC002", "EPK-001", "Pinus sylvestris")));
 
     DataPackage dp = DataPackageFixtures.withEventAndOccurrence();
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);

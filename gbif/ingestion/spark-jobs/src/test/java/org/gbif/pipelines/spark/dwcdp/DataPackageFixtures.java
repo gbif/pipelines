@@ -15,6 +15,14 @@ import org.gbif.pipelines.spark.util.TableLoader;
  *
  * <p>Paths in the returned descriptors are relative (e.g. {@code data/event.parquet}) and must be
  * combined with the test's base path when constructing a {@link TableLoader}.
+ *
+ * <p>Note: {@link TableLoader} resolves a resource purely by its {@code path} — it never reads the
+ * {@code fieldNames} declared here, Spark infers the real schema from the Parquet file itself. So
+ * the field lists below are documentation, not functional input; they're kept in sync with the
+ * actual Parquet fixtures anyway (surrogate {@code event_fk}/{@code occurrence_fk}/{@code media_fk}
+ * resolved against {@code event_pk}/{@code occurrence_pk}/{@code media_pk}, never a bare {@code
+ * eventID}/{@code occurrenceID}/{@code mediaID} on a child table) so this class doesn't silently
+ * describe a shape the pipeline no longer accepts.
  */
 class DataPackageFixtures {
 
@@ -32,9 +40,9 @@ class DataPackageFixtures {
 
   static DataPackage withEventAndOccurrence() {
     return build(
-        resource("event", "data/event.parquet", "eventID"),
+        resource("event", "data/event.parquet", "event_pk", "eventID"),
         resource(
-            "occurrence", "data/occurrence.parquet", "occurrenceID", "eventID", "scientificName"));
+            "occurrence", "data/occurrence.parquet", "occurrenceID", "event_fk", "scientificName"));
   }
 
   static DataPackage withEventOccurrenceOrganismAndMedia() {
@@ -42,6 +50,7 @@ class DataPackageFixtures {
         resource(
             "event",
             "data/event.parquet",
+            "event_pk",
             "eventID",
             "parentEventID",
             "eventDate",
@@ -54,7 +63,7 @@ class DataPackageFixtures {
             "data/occurrence.parquet",
             "occurrence_pk",
             "occurrenceID",
-            "eventID",
+            "event_fk",
             "organismID",
             "scientificName",
             "organismScope",
@@ -70,10 +79,10 @@ class DataPackageFixtures {
             "organismScope",
             "organismRemarks",
             "associatedOrganisms"),
-        resource("media", "data/media.parquet", "mediaID", "accessURI", "mediaType"),
+        resource("media", "data/media.parquet", "media_pk", "accessURI", "mediaType"),
         resource(
             "event-media", "data/event-media.parquet",
-            "mediaID", "eventID"));
+            "event_fk", "media_fk"));
   }
 
   static DataPackage withOccurrenceOrganismAndMedia() {
@@ -82,8 +91,9 @@ class DataPackageFixtures {
         resource(
             "occurrence",
             "data/occurrence.parquet",
+            "occurrence_pk",
             "occurrenceID",
-            "eventID",
+            "event_fk",
             "organismID",
             "scientificName",
             "organismScope",
@@ -101,10 +111,10 @@ class DataPackageFixtures {
             "organismScope",
             "organismRemarks",
             "associatedOrganisms"),
-        resource("media", "data/media.parquet", "mediaID", "accessURI", "mediaType"),
+        resource("media", "data/media.parquet", "media_pk", "accessURI", "mediaType"),
         resource(
             "occurrence-media", "data/occurrence-media.parquet",
-            "mediaID", "occurrenceID"));
+            "occurrence_fk", "media_fk"));
   }
 
   static DataPackage withOccurrenceOrganismMediaAndAssertion() {
@@ -113,8 +123,9 @@ class DataPackageFixtures {
         resource(
             "occurrence",
             "data/occurrence.parquet",
+            "occurrence_pk",
             "occurrenceID",
-            "eventID",
+            "event_fk",
             "organismID",
             "scientificName",
             "organismScope",
@@ -132,10 +143,10 @@ class DataPackageFixtures {
             "organismScope",
             "organismRemarks",
             "associatedOrganisms"),
-        resource("media", "data/media.parquet", "mediaID", "accessURI", "mediaType"),
+        resource("media", "data/media.parquet", "media_pk", "accessURI", "mediaType"),
         resource(
             "occurrence-media", "data/occurrence-media.parquet",
-            "mediaID", "occurrenceID"),
+            "occurrence_fk", "media_fk"),
         resource(
             "occurrence-assertion",
             "data/occurrence-assertion.parquet",
@@ -162,7 +173,7 @@ class DataPackageFixtures {
             "occurrence",
             "data/occurrence.parquet",
             "occurrenceID",
-            "eventID",
+            "event_fk",
             "organismID",
             "scientificName",
             "organismScope",
@@ -178,8 +189,8 @@ class DataPackageFixtures {
             "organismScope",
             "organismRemarks",
             "associatedOrganisms"),
-        resource("media", "data/media.parquet", "mediaID", "accessURI", "mediaType"),
-        resource("event-media", "data/event-media.parquet", "mediaID", "eventID"),
+        resource("media", "data/media.parquet", "media_pk", "accessURI", "mediaType"),
+        resource("event-media", "data/event-media.parquet", "event_fk", "media_fk"),
         resource(
             "event-assertion",
             "data/event-assertion.parquet",

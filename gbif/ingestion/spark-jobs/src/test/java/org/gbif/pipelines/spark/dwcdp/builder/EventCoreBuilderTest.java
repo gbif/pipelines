@@ -53,32 +53,51 @@ class EventCoreBuilderTest {
     return spark.createDataFrame(rows, schema);
   }
 
+  /**
+   * Event fixture carrying both the surrogate {@code event_pk} and the natural {@code eventID} —
+   * needed whenever a test also attaches a child table, since the extension builders now resolve
+   * their surrogate {@code _fk} columns against {@code event_pk} before grouping by {@code
+   * eventID}. {@link #eventDf} (natural key only) remains fine for tests that don't attach anything
+   * to the event.
+   */
   private Dataset<Row> eventPkDf(List<Row> rows) {
     StructType schema =
         new StructType().add("event_pk", DataTypes.StringType).add("eventID", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
+  /**
+   * {@code occurrence} carries {@code event_fk} (a surrogate reference to {@code event.event_pk}) —
+   * never a literal {@code eventID} — per the 1.0_DEV profile.
+   */
   private Dataset<Row> occurrenceDf(List<Row> rows) {
     StructType schema =
         new StructType()
             .add("occurrenceID", DataTypes.StringType)
-            .add("eventID", DataTypes.StringType)
+            .add("event_fk", DataTypes.StringType)
             .add("scientificName", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
+  /** {@code media} carries {@code media_pk} — never a literal {@code mediaID} for join purposes. */
   private Dataset<Row> mediaDf(List<Row> rows) {
     StructType schema =
         new StructType()
-            .add("mediaID", DataTypes.StringType)
+            .add("media_pk", DataTypes.StringType)
             .add("accessURI", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
+  /**
+   * {@code event-media} carries {@code event_fk} and {@code media_fk} — surrogate references to
+   * {@code event.event_pk} and {@code media.media_pk} — never {@code eventID}/{@code mediaID}
+   * directly.
+   */
   private Dataset<Row> eventMediaDf(List<Row> rows) {
     StructType schema =
-        new StructType().add("mediaID", DataTypes.StringType).add("eventID", DataTypes.StringType);
+        new StructType()
+            .add("event_fk", DataTypes.StringType)
+            .add("media_fk", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
@@ -186,9 +205,9 @@ class EventCoreBuilderTest {
 
   @Test
   void occurrenceTable_attachedAsExtension() {
-    Dataset<Row> eventDf = eventDf(List.of(RowFactory.create("EVT001", "2024-06-01", "DK")));
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
     Dataset<Row> occurrenceDf =
-        occurrenceDf(List.of(RowFactory.create("OCC001", "EVT001", "Parus major")));
+        occurrenceDf(List.of(RowFactory.create("OCC001", "EPK-001", "Parus major")));
 
     List<ExtendedRecord> records =
         EventCoreBuilder.build(
@@ -205,13 +224,13 @@ class EventCoreBuilderTest {
 
   @Test
   void multipleOccurrences_allAttachedToEvent() {
-    Dataset<Row> eventDf = eventDf(List.of(RowFactory.create("EVT001", "2024-06-01", "DK")));
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
     Dataset<Row> occurrenceDf =
         occurrenceDf(
             List.of(
-                RowFactory.create("OCC001", "EVT001", "Parus major"),
-                RowFactory.create("OCC002", "EVT001", "Quercus robur"),
-                RowFactory.create("OCC003", "EVT001", "Pinus sylvestris")));
+                RowFactory.create("OCC001", "EPK-001", "Parus major"),
+                RowFactory.create("OCC002", "EPK-001", "Quercus robur"),
+                RowFactory.create("OCC003", "EPK-001", "Pinus sylvestris")));
 
     List<ExtendedRecord> records =
         EventCoreBuilder.build(
@@ -226,9 +245,9 @@ class EventCoreBuilderTest {
 
   @Test
   void eventWithNoMatchingOccurrences_occurrenceExtensionAbsent() {
-    Dataset<Row> eventDf = eventDf(List.of(RowFactory.create("EVT001", "2024-06-01", "DK")));
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
     Dataset<Row> occurrenceDf =
-        occurrenceDf(List.of(RowFactory.create("OCC001", "EVT999", "Parus major")));
+        occurrenceDf(List.of(RowFactory.create("OCC001", "EPK-999", "Parus major")));
 
     List<ExtendedRecord> records =
         EventCoreBuilder.build(
@@ -244,10 +263,10 @@ class EventCoreBuilderTest {
 
   @Test
   void mediaTable_attachedAsMultimediaExtension() {
-    Dataset<Row> eventDf = eventDf(List.of(RowFactory.create("EVT001", "2024-06-01", "DK")));
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
     Dataset<Row> mediaDf =
-        mediaDf(List.of(RowFactory.create("MED001", "https://example.com/img.jpg")));
-    Dataset<Row> eventMediaDf = eventMediaDf(List.of(RowFactory.create("MED001", "EVT001")));
+        mediaDf(List.of(RowFactory.create("MPK-001", "https://example.com/img.jpg")));
+    Dataset<Row> eventMediaDf = eventMediaDf(List.of(RowFactory.create("EPK-001", "MPK-001")));
 
     List<ExtendedRecord> records =
         EventCoreBuilder.build(
@@ -360,15 +379,14 @@ class EventCoreBuilderTest {
   @Test
   void occurrencesRoutedToCorrectEvent() {
     Dataset<Row> eventDf =
-        eventDf(
+        eventPkDf(
             List.of(
-                RowFactory.create("EVT001", "2024-06-01", "DK"),
-                RowFactory.create("EVT002", "2024-06-02", "SE")));
+                RowFactory.create("EPK-001", "EVT001"), RowFactory.create("EPK-002", "EVT002")));
     Dataset<Row> occurrenceDf =
         occurrenceDf(
             List.of(
-                RowFactory.create("OCC001", "EVT001", "Parus major"),
-                RowFactory.create("OCC002", "EVT002", "Quercus robur")));
+                RowFactory.create("OCC001", "EPK-001", "Parus major"),
+                RowFactory.create("OCC002", "EPK-002", "Quercus robur")));
 
     List<ExtendedRecord> records =
         EventCoreBuilder.build(
