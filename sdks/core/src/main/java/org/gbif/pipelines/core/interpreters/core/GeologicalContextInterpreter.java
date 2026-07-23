@@ -204,15 +204,15 @@ public class GeologicalContextInterpreter {
       return Range.empty();
     }
 
-    Double earliestStartAge = null;
-    Double earliestEndAge = null;
+    Float earliestStartAge = null;
+    Float earliestEndAge = null;
     if (earliestVocabularyConceptOpt.isPresent()) {
       earliestStartAge = getAge(earliestVocabularyConceptOpt.get(), START_AGE_TAG);
       earliestEndAge = getAge(earliestVocabularyConceptOpt.get(), END_AGE_TAG);
     }
 
-    Double latestStartAge = null;
-    Double latestEndAge = null;
+    Float latestStartAge = null;
+    Float latestEndAge = null;
     if (latestVocabularyConceptOpt.isPresent()) {
       latestStartAge = getAge(latestVocabularyConceptOpt.get(), START_AGE_TAG);
       latestEndAge = getAge(latestVocabularyConceptOpt.get(), END_AGE_TAG);
@@ -248,10 +248,10 @@ public class GeologicalContextInterpreter {
   }
 
   @Nullable
-  private static Double getAge(VocabularyConcept earliestVocabularyConcept, String startAgeTag) {
+  private static Float getAge(VocabularyConcept earliestVocabularyConcept, String startAgeTag) {
     return earliestVocabularyConcept.getTags().stream()
         .filter(t -> t.getName().equals(startAgeTag))
-        .map(t -> Double.parseDouble(t.getValue()))
+        .map(t -> Float.parseFloat(t.getValue()))
         .findFirst()
         .orElse(null);
   }
@@ -358,8 +358,8 @@ public class GeologicalContextInterpreter {
 
   @AllArgsConstructor(staticName = "of")
   private static class Range {
-    Double start;
-    Double end;
+    Float start;
+    Float end;
 
     static Range empty() {
       return Range.of(null, null);

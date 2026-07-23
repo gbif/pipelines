@@ -205,8 +205,8 @@ public class OccurrenceJsonConverterTest {
                     .setFormation("test14")
                     .setMember("test15")
                     .setBed("test16")
-                    .setStartAge(350d)
-                    .setEndAge(300d)
+                    .setStartAge(350f)
+                    .setEndAge(300f)
                     .build())
             .build();
 
