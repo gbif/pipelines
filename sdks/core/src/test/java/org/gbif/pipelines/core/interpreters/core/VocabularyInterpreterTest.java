@@ -14,6 +14,7 @@ import org.gbif.pipelines.core.interpreters.MockVocabularyLookups;
 import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.vocabulary.lookup.InMemoryVocabularyLookup;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -31,6 +32,18 @@ public class VocabularyInterpreterTest {
               new MockVocabularyLookups.TypeStatusMockVocabularyLookup())
           .vocabularyLookup(
               DwcTerm.sex.qualifiedName(), new MockVocabularyLookups.SexMockVocabularyLookup())
+          .build();
+
+  private final VocabularyService vocabularyServiceFromFile =
+      VocabularyService.builder()
+          .vocabularyLookup(
+              DwcTerm.typeStatus.qualifiedName(),
+              InMemoryVocabularyLookup.newBuilder()
+                  .from(
+                      Thread.currentThread()
+                          .getContextClassLoader()
+                          .getResourceAsStream("vocabs/TypeStatus.json"))
+                  .build())
           .build();
 
   @Test
@@ -134,6 +147,36 @@ public class VocabularyInterpreterTest {
     Assert.assertEquals(2, br.getTypeStatus().size());
     Assert.assertTrue(br.getTypeStatus().stream().anyMatch(v -> v.getConcept().equals(tp1)));
     Assert.assertTrue(br.getTypeStatus().stream().anyMatch(v -> v.getConcept().equals(tp1)));
+    assertIssueSize(br, 0);
+  }
+
+  @Test
+  public void typeStatusParsingTest() {
+    final String tp1 =
+        "holotype of Ctenomys sociabilis. Pearson O. P., and M. I. Christie. 1985. Historia Natural, 5(37):388 ";
+    final String tp2 =
+        "holotype of Aus bus. Doe J. The discovery of a very important species. Journal of Invented Stuff, 1(38):5";
+    final String tp3 = "holotype";
+    final String tp4 = "UNSPECIFIEDKINDOFTYPE";
+    final String expectedHolotype = "Holotype";
+
+    // State
+    Map<String, String> coreMap = new HashMap<>(1);
+    coreMap.put(DwcTerm.typeStatus.qualifiedName(), tp1 + " | " + tp2 + " | " + tp3 + " | " + tp4);
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    VocabularyInterpreter.interpretTypeStatus(vocabularyServiceFromFile).accept(er, br);
+
+    // Should
+    Assert.assertEquals(4, br.getTypeStatus().size());
+    Assert.assertEquals(
+        3,
+        br.getTypeStatus().stream().filter(v -> v.getConcept().equals(expectedHolotype)).count());
+    Assert.assertEquals(
+        1, br.getTypeStatus().stream().filter(v -> v.getConcept().equals("Type")).count());
     assertIssueSize(br, 0);
   }
 
