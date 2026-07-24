@@ -6,8 +6,6 @@ pipeline {
       choices: ['QUICK', 'FULL'],
       description: 'Build types:<p>QUICK: Compile, Build, Deploy artifacts, Skip integration tests and extra artifacts, Multithread build<p>FULL: Compile, Build, Deploy artifacts, Run integration tests and extra artifacts, Singlethread build\n'
     )
-    // Parámetro para especificar la rama al hacer git clone en el stage de release
-    string(name: 'RELEASE_BRANCH', defaultValue: 'validator-from-3.2.24', description: 'Branch to use when running the release git checkout')
     booleanParam(name: 'RELEASE', defaultValue: false, description: 'Make a Maven release')
     booleanParam(name: 'DRY_RUN', defaultValue: false, description: 'Test run before release')
   }
