@@ -132,6 +132,45 @@ public class PipelinesHistoryClientTestStub implements PipelinesHistoryClient {
 
   @Override
   public RunPipelineResponse runAll(
+      String steps,
+      String reason,
+      boolean useLastSuccessful,
+      boolean markPreviousAttemptAsFailed,
+      RunAllParams runAllParams,
+      Set<String> interpretTypes,
+      boolean excludeEventSteps,
+      boolean onlyIncludeRequestedStep) {
+    return null;
+  }
+
+  @Override
+  public RunPipelineResponse runPipelineAttempt(
+      UUID datasetKey,
+      String steps,
+      String reason,
+      boolean useLastSuccessful,
+      boolean markPreviousAttemptAsFailed,
+      Set<String> interpretTypes,
+      boolean excludeEventSteps,
+      boolean onlyIncludeRequestedStep) {
+    return null;
+  }
+
+  @Override
+  public RunPipelineResponse runPipelineAttempt(
+      UUID datasetKey,
+      int attempt,
+      String steps,
+      String reason,
+      boolean markPreviousAttemptAsFailed,
+      Set<String> interpretTypes,
+      boolean excludeEventSteps,
+      boolean onlyIncludeRequestedStep) {
+    return null;
+  }
+
+  @Override
+  public RunPipelineResponse runAll(
       String s,
       String s1,
       boolean b,
