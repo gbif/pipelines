@@ -364,18 +364,6 @@ public class TableUtil {
       } else if (dataType instanceof ArrayType
           && ((ArrayType) dataType).elementType() instanceof StringType) {
         hdfsColumn.setSelect("cleanDelimitersArray(`" + parquetColumn + "`) AS " + normalisedName);
-      } else if (normalisedName.equals("geologicaltime")
-          && dataType instanceof StructType structType) {
-        String structFields =
-            Arrays.stream(structType.fields())
-                .map(
-                    field ->
-                        String.format(
-                            "CAST(CAST(`%s`.`%s` AS STRING) AS DOUBLE) AS `%s`",
-                            parquetColumn, field.name(), field.name()))
-                .collect(Collectors.joining(", "));
-
-        hdfsColumn.setSelect(String.format("struct(%s) AS `%s`", structFields, normalisedName));
       } else {
         hdfsColumn.setSelect("`" + parquetColumn + "` AS " + normalisedName);
       }
