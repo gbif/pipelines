@@ -7,6 +7,7 @@ import static org.junit.Assert.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.gbif.api.vocabulary.DurationUnit;
 import org.gbif.api.vocabulary.EventIssue;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -18,7 +19,10 @@ import org.gbif.pipelines.core.parsers.vocabulary.VocabularyService;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Humboldt;
 import org.gbif.pipelines.io.avro.HumboldtRecord;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public class HumboldtInterpreterTest {
 
@@ -146,6 +150,51 @@ public class HumboldtInterpreterTest {
             .contains(EventIssue.TARGET_DEGREE_OF_ESTABLISHMENT_EXCLUDED.name()));
     assertTrue(
         hr.getIssues().getIssueList().contains(EventIssue.HAS_NON_TARGET_TAXA_MISMATCH.name()));
+  }
+
+  @ParameterizedTest(
+      name = "[{index}] geoValue={0} geoUnit={1} totalValue={2} totalUnit={3} -> issue={4}")
+  @MethodSource("checkAreasCases")
+  void checkAreas_handlesValueUnitCombinations(
+      Double geoValue, String geoUnit, Double totalValue, String totalUnit, boolean expectIssue) {
+
+    Humboldt humboldt =
+        Humboldt.newBuilder()
+            .setGeospatialScopeAreaValue(geoValue)
+            .setGeospatialScopeAreaUnit(geoUnit)
+            .setTotalAreaSampledValue(totalValue)
+            .setTotalAreaSampledUnit(totalUnit)
+            .build();
+
+    List<String> issues = HumboldtInterpreter.checkAreas().apply(humboldt);
+
+    if (expectIssue) {
+      assertEquals(
+          List.of(EventIssue.GEOSPATIAL_SCOPE_AREA_LOWER_THAN_TOTAL_AREA_SAMPLED.name()), issues);
+    } else {
+      assertTrue(issues.isEmpty());
+    }
+  }
+
+  private static Stream<Arguments> checkAreasCases() {
+    return Stream.of(
+        // both values absent
+        Arguments.of(null, null, null, null, false),
+        // one value absent (unit state doesn't matter once a value is missing)
+        Arguments.of(10d, "m2", null, null, false),
+        Arguments.of(null, null, 10d, "m2", false),
+        // both values present, one or both units null — the original NPE case
+        Arguments.of(5d, null, 10d, "m2", false),
+        Arguments.of(5d, "m2", 10d, null, false),
+        Arguments.of(5d, null, 10d, null, false),
+        // both values present, units present but different
+        Arguments.of(5d, "m2", 10d, "ha", false),
+        // both values present, units match case-insensitively, value below total
+        Arguments.of(5d, "m2", 10d, "M2", true),
+        // both values present, units match, value equal to total
+        Arguments.of(10d, "m2", 10d, "m2", false),
+        // both values present, units match, value above total
+        Arguments.of(15d, "m2", 10d, "m2", false));
   }
 
   @Test
