@@ -28,13 +28,13 @@ pipeline {
         allOf {
           expression { params.RELEASE }
           not {
-             branch 'master'
+             branch 'validator-from-3.2.24'
           }
         }
       }
       steps {
         script {
-          error('Releases are only allowed from the master branch.')
+          error('Releases are only allowed from the validator-from-3.2.24 branch.')
         }
       }
     }
@@ -101,7 +101,7 @@ pipeline {
       when {
         allOf {
           expression { params.RELEASE }
-          branch 'master'
+          branch 'validator-from-3.2.24'
         }
       }
       steps {
