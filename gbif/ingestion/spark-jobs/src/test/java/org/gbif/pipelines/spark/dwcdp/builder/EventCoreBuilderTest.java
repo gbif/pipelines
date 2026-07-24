@@ -408,4 +408,55 @@ class EventCoreBuilderTest {
     assertEquals(1, evt002Occ.size());
     assertEquals("OCC002", evt002Occ.get(0).get(DwcTerm.occurrenceID.qualifiedName()));
   }
+
+  private Dataset<Row> occurrencePkAndMediaKeyDf(List<Row> rows) {
+    StructType schema =
+      new StructType()
+        .add("occurrence_pk", DataTypes.StringType)
+        .add("occurrenceID", DataTypes.StringType)
+        .add("event_fk", DataTypes.StringType)
+        .add("scientificName", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> occurrenceMediaDf(List<Row> rows) {
+    StructType schema =
+      new StructType()
+        .add("occurrence_fk", DataTypes.StringType)
+        .add("media_fk", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  @Test
+  void occurrenceMediaTable_nestedInsideOccurrenceExtension() throws Exception {
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> occurrenceDf =
+      occurrencePkAndMediaKeyDf(
+        List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "Parus major")));
+    Dataset<Row> mediaDf =
+      mediaDf(List.of(RowFactory.create("MPK-001", "https://example.com/img.jpg")));
+    Dataset<Row> occMediaDf = occurrenceMediaDf(List.of(RowFactory.create("OPK-001", "MPK-001")));
+
+    List<ExtendedRecord> records =
+      EventCoreBuilder.build(
+          spark,
+          TestTableLoader.of(
+            "event", eventDf,
+            "occurrence", occurrenceDf,
+            MediaExtensionBuilder.TABLE_MEDIA, mediaDf,
+            MediaExtensionBuilder.TABLE_OCCURRENCE_MEDIA, occMediaDf))
+        .collectAsList();
+
+    List<Map<String, String>> occExt =
+      records.get(0).getExtensions().get(DwcDpRowTypes.ROW_TYPE_OCCURRENCE);
+    assertNotNull(occExt, "occurrence extension must be present");
+    assertEquals(1, occExt.size());
+
+    String mediaJson = occExt.get(0).get(MediaExtensionBuilder.COL_MEDIA_EXT_JSON);
+    assertNotNull(
+      mediaJson,
+      "occurrence's own occurrence-media must survive nested inside the occurrence "
+      + "extension when occurrence is nested under event core — this was silently "
+      + "dropped before the OccurrenceExtensionBuilder fix");
+  }
 }

@@ -191,6 +191,7 @@ class DataPackageFixtures {
             "associatedOrganisms"),
         resource("media", "data/media.parquet", "media_pk", "accessURI", "mediaType"),
         resource("event-media", "data/event-media.parquet", "event_fk", "media_fk"),
+        resource("occurrence-media", "data/occurrence-media.parquet", "occurrence_fk", "media_fk"),
         resource(
             "event-assertion",
             "data/event-assertion.parquet",

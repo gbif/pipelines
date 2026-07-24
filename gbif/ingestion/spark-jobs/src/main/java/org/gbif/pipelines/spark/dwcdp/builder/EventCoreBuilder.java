@@ -18,6 +18,7 @@ import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilde
 import org.gbif.pipelines.spark.dwcdp.builder.extension.HumboldtExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.OccurrenceExtensionBuilder;
+import org.gbif.pipelines.spark.util.DatasetJoins;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
@@ -28,8 +29,9 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * <ol>
  *   <li>Load the required {@code event} table — throws if absent (routing error).
  *   <li>Build the Occurrence extension via {@link OccurrenceExtensionBuilder} — skipped if the
- *       occurrence table is absent or has no {@code eventID} column. Organism fields are already
- *       denormalized onto occurrence rows inside that builder.
+ *       occurrence table is absent or has no {@code eventID} column. Organism fields, and the
+ *       occurrence's own {@code occurrence-media}/{@code occurrence-assertion} rows, are already
+ *       denormalized/nested onto occurrence rows inside that builder.
  *   <li>Build the Multimedia extension via {@link MediaExtensionBuilder} — skipped if either {@code
  *       event-media} or {@code media} is absent.
  *   <li>Build the eMoF extension via {@link AssertionExtensionBuilder} — skipped if {@code
@@ -58,25 +60,25 @@ public class EventCoreBuilder {
   public static Dataset<ExtendedRecord> build(SparkSession spark, TableLoader loader) {
 
     Dataset<Row> eventDf =
-        loader
-            .load("event")
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "event table missing — orchestrator should not have routed here"));
+      loader
+        .load("event")
+        .orElseThrow(
+          () ->
+            new IllegalStateException(
+              "event table missing — orchestrator should not have routed here"));
 
     Optional<Dataset<Row>> occurrenceExtDf = OccurrenceExtensionBuilder.build(spark, loader);
     Optional<Dataset<Row>> mediaExtDf =
-        MediaExtensionBuilder.buildEventMediaExtension(spark, loader);
+      MediaExtensionBuilder.buildEventMediaExtension(spark, loader);
     Optional<Dataset<Row>> assertionExtDf =
-        AssertionExtensionBuilder.buildEventAssertionExtension(spark, loader);
+      AssertionExtensionBuilder.buildEventAssertionExtension(spark, loader);
     Optional<Dataset<Row>> humboldtExtDf = HumboldtExtensionBuilder.build(spark, loader);
 
     Dataset<Row> joined = eventDf;
-    joined = CoreBuilderSupport.joinIfPresent(joined, occurrenceExtDf, "eventID");
-    joined = CoreBuilderSupport.joinIfPresent(joined, mediaExtDf, "eventID");
-    joined = CoreBuilderSupport.joinIfPresent(joined, assertionExtDf, "eventID");
-    joined = CoreBuilderSupport.joinIfPresent(joined, humboldtExtDf, "eventID");
+    joined = DatasetJoins.leftJoinIfPresent(joined, occurrenceExtDf, "eventID");
+    joined = DatasetJoins.leftJoinIfPresent(joined, mediaExtDf, "eventID");
+    joined = DatasetJoins.leftJoinIfPresent(joined, assertionExtDf, "eventID");
+    joined = DatasetJoins.leftJoinIfPresent(joined, humboldtExtDf, "eventID");
 
     final String[] eventColumns = eventDf.columns();
     final boolean hasOccExt = occurrenceExtDf.isPresent();
@@ -85,23 +87,23 @@ public class EventCoreBuilder {
     final boolean hasHumboldtExt = humboldtExtDf.isPresent();
 
     return joined
-        .map(
-            (MapFunction<Row, ExtendedRecord>)
-                row ->
-                    toExtendedRecord(
-                        row, eventColumns, hasOccExt, hasMediaExt, hasAssertionExt, hasHumboldtExt),
-            Encoders.bean(ExtendedRecord.class))
-        .filter((FilterFunction<ExtendedRecord>) r -> r != null);
+      .map(
+        (MapFunction<Row, ExtendedRecord>)
+          row ->
+            toExtendedRecord(
+              row, eventColumns, hasOccExt, hasMediaExt, hasAssertionExt, hasHumboldtExt),
+        Encoders.bean(ExtendedRecord.class))
+      .filter((FilterFunction<ExtendedRecord>) r -> r != null);
   }
 
   private static ExtendedRecord toExtendedRecord(
-      Row row,
-      String[] eventColumns,
-      boolean hasOccExt,
-      boolean hasMediaExt,
-      boolean hasAssertionExt,
-      boolean hasHumboldtExt)
-      throws IOException {
+    Row row,
+    String[] eventColumns,
+    boolean hasOccExt,
+    boolean hasMediaExt,
+    boolean hasAssertionExt,
+    boolean hasHumboldtExt)
+    throws IOException {
 
     String eventId = RowTermMapper.safeGet(row, "eventID");
     if (eventId == null || eventId.isEmpty()) {
@@ -112,36 +114,36 @@ public class EventCoreBuilder {
     Map<String, List<Map<String, String>>> extensions = new HashMap<>();
 
     CoreBuilderSupport.addExtensionIfPresent(
-        row,
-        extensions,
-        hasOccExt,
-        OccurrenceExtensionBuilder.COL_OCCURRENCE_EXT_JSON,
-        ROW_TYPE_OCCURRENCE);
+      row,
+      extensions,
+      hasOccExt,
+      OccurrenceExtensionBuilder.COL_OCCURRENCE_EXT_JSON,
+      ROW_TYPE_OCCURRENCE);
     CoreBuilderSupport.addExtensionIfPresent(
-        row,
-        extensions,
-        hasMediaExt,
-        MediaExtensionBuilder.COL_MEDIA_EXT_JSON,
-        MediaExtensionBuilder.ROW_TYPE_MULTIMEDIA);
+      row,
+      extensions,
+      hasMediaExt,
+      MediaExtensionBuilder.COL_MEDIA_EXT_JSON,
+      MediaExtensionBuilder.ROW_TYPE_MULTIMEDIA);
     CoreBuilderSupport.addExtensionIfPresent(
-        row,
-        extensions,
-        hasAssertionExt,
-        AssertionExtensionBuilder.COL_ASSERTION_EXT_JSON,
-        AssertionExtensionBuilder.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
+      row,
+      extensions,
+      hasAssertionExt,
+      AssertionExtensionBuilder.COL_ASSERTION_EXT_JSON,
+      AssertionExtensionBuilder.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
     CoreBuilderSupport.addExtensionIfPresent(
-        row,
-        extensions,
-        hasHumboldtExt,
-        HumboldtExtensionBuilder.COL_HUMBOLDT_EXT_JSON,
-        HumboldtExtensionBuilder.ROW_TYPE_HUMBOLDT);
+      row,
+      extensions,
+      hasHumboldtExt,
+      HumboldtExtensionBuilder.COL_HUMBOLDT_EXT_JSON,
+      HumboldtExtensionBuilder.ROW_TYPE_HUMBOLDT);
 
     return ExtendedRecord.newBuilder()
-        .setId(eventId)
-        .setCoreId(null)
-        .setCoreRowType(CORE_ROW_TYPE)
-        .setCoreTerms(coreTerms)
-        .setExtensions(extensions)
-        .build();
+      .setId(eventId)
+      .setCoreId(null)
+      .setCoreRowType(CORE_ROW_TYPE)
+      .setCoreTerms(coreTerms)
+      .setExtensions(extensions)
+      .build();
   }
 }

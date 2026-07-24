@@ -17,6 +17,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.OrganismJoinBuilder;
+import org.gbif.pipelines.spark.util.DatasetJoins;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
@@ -54,39 +55,39 @@ public class OccurrenceCoreBuilder {
   public static Dataset<ExtendedRecord> build(SparkSession spark, TableLoader loader) {
 
     Dataset<Row> occurrenceDf =
-        loader
-            .load("occurrence")
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "occurrence table missing — orchestrator should not have routed here"));
+      loader
+        .load("occurrence")
+        .orElseThrow(
+          () ->
+            new IllegalStateException(
+              "occurrence table missing — orchestrator should not have routed here"));
 
     Dataset<Row> enriched = OrganismJoinBuilder.enrichOccurrences(loader, occurrenceDf);
 
     Optional<Dataset<Row>> mediaExtDf =
-        MediaExtensionBuilder.buildOccurrenceMediaExtension(spark, loader);
+      MediaExtensionBuilder.buildOccurrenceMediaExtension(spark, loader);
     Optional<Dataset<Row>> assertionExtDf =
-        AssertionExtensionBuilder.buildOccurrenceAssertionExtension(spark, loader);
+      AssertionExtensionBuilder.buildOccurrenceAssertionExtension(spark, loader);
 
     Dataset<Row> joined = enriched;
-    joined = CoreBuilderSupport.joinIfPresent(joined, mediaExtDf, "occurrenceID");
-    joined = CoreBuilderSupport.joinIfPresent(joined, assertionExtDf, "occurrenceID");
+    joined = DatasetJoins.leftJoinIfPresent(joined, mediaExtDf, "occurrenceID");
+    joined = DatasetJoins.leftJoinIfPresent(joined, assertionExtDf, "occurrenceID");
 
     final String[] occColumns = enriched.columns();
     final boolean hasMediaExt = mediaExtDf.isPresent();
     final boolean hasAssertionExt = assertionExtDf.isPresent();
 
     return joined
-        .map(
-            (MapFunction<Row, ExtendedRecord>)
-                row -> toExtendedRecord(row, occColumns, hasMediaExt, hasAssertionExt),
-            Encoders.bean(ExtendedRecord.class))
-        .filter((FilterFunction<ExtendedRecord>) r -> r != null);
+      .map(
+        (MapFunction<Row, ExtendedRecord>)
+          row -> toExtendedRecord(row, occColumns, hasMediaExt, hasAssertionExt),
+        Encoders.bean(ExtendedRecord.class))
+      .filter((FilterFunction<ExtendedRecord>) r -> r != null);
   }
 
   private static ExtendedRecord toExtendedRecord(
-      Row row, String[] occColumns, boolean hasMediaExt, boolean hasAssertionExt)
-      throws IOException {
+    Row row, String[] occColumns, boolean hasMediaExt, boolean hasAssertionExt)
+    throws IOException {
 
     String occurrenceId = RowTermMapper.safeGet(row, "occurrenceID");
     if (occurrenceId == null || occurrenceId.isEmpty()) {
@@ -97,24 +98,24 @@ public class OccurrenceCoreBuilder {
     Map<String, List<Map<String, String>>> extensions = new HashMap<>();
 
     CoreBuilderSupport.addExtensionIfPresent(
-        row,
-        extensions,
-        hasMediaExt,
-        MediaExtensionBuilder.COL_MEDIA_EXT_JSON,
-        MediaExtensionBuilder.ROW_TYPE_MULTIMEDIA);
+      row,
+      extensions,
+      hasMediaExt,
+      MediaExtensionBuilder.COL_MEDIA_EXT_JSON,
+      MediaExtensionBuilder.ROW_TYPE_MULTIMEDIA);
     CoreBuilderSupport.addExtensionIfPresent(
-        row,
-        extensions,
-        hasAssertionExt,
-        AssertionExtensionBuilder.COL_ASSERTION_EXT_JSON,
-        AssertionExtensionBuilder.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
+      row,
+      extensions,
+      hasAssertionExt,
+      AssertionExtensionBuilder.COL_ASSERTION_EXT_JSON,
+      AssertionExtensionBuilder.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
 
     return ExtendedRecord.newBuilder()
-        .setId(occurrenceId)
-        .setCoreId(null)
-        .setCoreRowType(CORE_ROW_TYPE)
-        .setCoreTerms(coreTerms)
-        .setExtensions(extensions)
-        .build();
+      .setId(occurrenceId)
+      .setCoreId(null)
+      .setCoreRowType(CORE_ROW_TYPE)
+      .setCoreTerms(coreTerms)
+      .setExtensions(extensions)
+      .build();
   }
 }

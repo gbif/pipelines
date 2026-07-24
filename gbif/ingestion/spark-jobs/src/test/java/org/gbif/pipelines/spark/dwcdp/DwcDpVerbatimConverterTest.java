@@ -111,31 +111,26 @@ class DwcDpVerbatimConverterTest {
     // occurrence carries event_fk (surrogate ref to event.event_pk), never a literal eventID.
     // associatedOrganisms is NOT a DwC-DP occurrence field — contributed by organism join only
     writeParquet(
-        dir,
-        "data/occurrence.parquet",
-        schema(
-            "occurrenceID",
-            "event_fk",
-            "organismID",
-            "scientificName",
-            "organismScope",
-            "organismName",
-            "organismRemarks",
-            "occurrenceStatus",
-            "sex"),
-        List.of(
-            RowFactory.create(
-                "OCC001",
-                "EPK-001",
-                "org-1",
-                "Parus major",
-                "multicellular organism",
-                "Blue tit",
-                null,
-                "detected",
-                "female"),
-            RowFactory.create(
-                "OCC002", "EPK-001", null, "Quercus robur", null, null, null, "detected", null)));
+      dir,
+      "data/occurrence.parquet",
+      schema(
+        "occurrence_pk",
+        "occurrenceID",
+        "event_fk",
+        "organismID",
+        "scientificName",
+        "organismScope",
+        "organismName",
+        "organismRemarks",
+        "occurrenceStatus",
+        "sex"),
+      List.of(
+        RowFactory.create(
+          "OPK-001", "OCC001", "EPK-001", "org-1", "Parus major",
+          "multicellular organism", "Blue tit", null, "detected", "female"),
+        RowFactory.create(
+          "OPK-002", "OCC002", "EPK-001", null, "Quercus robur",
+          null, null, null, "detected", null)));
 
     writeParquet(
         dir,
@@ -165,6 +160,12 @@ class DwcDpVerbatimConverterTest {
         "data/event-media.parquet",
         schema("event_fk", "media_fk"),
         List.of(RowFactory.create("EPK-001", "MPK-001"), RowFactory.create("EPK-001", "MPK-002")));
+
+    writeParquet(
+      dir,
+      "data/occurrence-media.parquet",
+      schema("occurrence_fk", "media_fk"),
+      List.of(RowFactory.create("OPK-001", "MPK-001")));
 
     writeParquet(
         dir,
