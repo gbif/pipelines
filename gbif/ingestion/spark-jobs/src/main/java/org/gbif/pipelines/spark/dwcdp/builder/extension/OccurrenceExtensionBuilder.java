@@ -18,8 +18,8 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * occurrence's own {@code occurrence-media} and {@code occurrence-assertion} rows are likewise
  * folded in as nested JSON columns ({@link MediaExtensionBuilder#COL_MEDIA_EXT_JSON}, {@link
  * AssertionExtensionBuilder#COL_ASSERTION_EXT_JSON}) before aggregation, so that a photo or
- * measurement attached directly to an occurrence isn't lost just because that occurrence is
- * nested under an event core rather than being core itself — {@link
+ * measurement attached directly to an occurrence isn't lost just because that occurrence is nested
+ * under an event core rather than being core itself — {@link
  * org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilder} already attaches both when
  * occurrence is core; this mirrors that for the nested case, using the same {@link
  * org.gbif.pipelines.spark.util.DatasetJoins#leftJoinIfPresent} helper both builders rely on.
@@ -76,26 +76,26 @@ public class OccurrenceExtensionBuilder {
     Dataset<Row> enriched = OrganismJoinBuilder.enrichOccurrences(loader, occurrenceDf);
 
     Optional<Dataset<Row>> occMediaExtDf =
-      MediaExtensionBuilder.buildOccurrenceMediaExtension(spark, loader);
+        MediaExtensionBuilder.buildOccurrenceMediaExtension(spark, loader);
     Optional<Dataset<Row>> occAssertionExtDf =
-      AssertionExtensionBuilder.buildOccurrenceAssertionExtension(spark, loader);
+        AssertionExtensionBuilder.buildOccurrenceAssertionExtension(spark, loader);
 
     Dataset<Row> withOwnExtensions =
-      DatasetJoins.leftJoinIfPresent(enriched, occMediaExtDf, OCCURRENCE_ID_COLUMN);
+        DatasetJoins.leftJoinIfPresent(enriched, occMediaExtDf, OCCURRENCE_ID_COLUMN);
     withOwnExtensions =
-      DatasetJoins.leftJoinIfPresent(withOwnExtensions, occAssertionExtDf, OCCURRENCE_ID_COLUMN);
+        DatasetJoins.leftJoinIfPresent(withOwnExtensions, occAssertionExtDf, OCCURRENCE_ID_COLUMN);
 
     Dataset<Row> withEventId =
-      withOwnExtensions
-        .join(
-          eventDfOpt.get().select("event_pk", "eventID"),
-          withOwnExtensions.col("event_fk").equalTo(eventDfOpt.get().col("event_pk")),
-          "left_outer")
-        .drop(eventDfOpt.get().col("event_pk"))
-        .drop(withOwnExtensions.col("event_fk"));
+        withOwnExtensions
+            .join(
+                eventDfOpt.get().select("event_pk", "eventID"),
+                withOwnExtensions.col("event_fk").equalTo(eventDfOpt.get().col("event_pk")),
+                "left_outer")
+            .drop(eventDfOpt.get().col("event_pk"))
+            .drop(withOwnExtensions.col("event_fk"));
 
     return Optional.of(
-      ExtensionAggregator.aggregateAsJsonByKey(
-        spark, withEventId, withEventId.columns(), "eventID", COL_OCCURRENCE_EXT_JSON));
+        ExtensionAggregator.aggregateAsJsonByKey(
+            spark, withEventId, withEventId.columns(), "eventID", COL_OCCURRENCE_EXT_JSON));
   }
 }

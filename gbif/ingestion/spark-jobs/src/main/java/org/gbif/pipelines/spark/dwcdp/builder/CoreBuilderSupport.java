@@ -8,9 +8,8 @@ import org.apache.spark.sql.Row;
 import org.gbif.pipelines.spark.util.MapperUtil;
 
 /**
- * Support for turning an extension builder's aggregated JSON column into the {@code
- * Map<rowType, List<Map<term, value>>>} shape {@link org.gbif.pipelines.io.avro.ExtendedRecord}
- * expects.
+ * Support for turning an extension builder's aggregated JSON column into the {@code Map<rowType,
+ * List<Map<term, value>>>} shape {@link org.gbif.pipelines.io.avro.ExtendedRecord} expects.
  */
 final class CoreBuilderSupport {
 
@@ -19,12 +18,12 @@ final class CoreBuilderSupport {
   private CoreBuilderSupport() {}
 
   static void addExtensionIfPresent(
-    Row row,
-    Map<String, List<Map<String, String>>> extensions,
-    boolean hasExtension,
-    String jsonColumn,
-    String rowType)
-    throws IOException {
+      Row row,
+      Map<String, List<Map<String, String>>> extensions,
+      boolean hasExtension,
+      String jsonColumn,
+      String rowType)
+      throws IOException {
     if (!hasExtension) {
       return;
     }

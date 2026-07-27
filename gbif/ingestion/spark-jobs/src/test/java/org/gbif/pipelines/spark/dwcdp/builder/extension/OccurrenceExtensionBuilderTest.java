@@ -27,12 +27,12 @@ import org.junit.jupiter.api.TestInstance;
 
 /**
  * Tests for {@link OccurrenceExtensionBuilder}, in particular the fix that folds a nested
- * occurrence's own {@code occurrence-media}/{@code occurrence-assertion} rows into its term map
- * (as {@code mediaExtJson}/{@code assertionExtJson}) before it gets aggregated into an event's
- * {@code occurrenceExtJson}. Before this fix, an occurrence's own photos/measurements were
- * silently dropped whenever that occurrence was nested under an event core rather than being core
- * itself — see {@link org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilderTest} for the
- * equivalent (already-covered) behavior on the occurrence-core path.
+ * occurrence's own {@code occurrence-media}/{@code occurrence-assertion} rows into its term map (as
+ * {@code mediaExtJson}/{@code assertionExtJson}) before it gets aggregated into an event's {@code
+ * occurrenceExtJson}. Before this fix, an occurrence's own photos/measurements were silently
+ * dropped whenever that occurrence was nested under an event core rather than being core itself —
+ * see {@link org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilderTest} for the equivalent
+ * (already-covered) behavior on the occurrence-core path.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OccurrenceExtensionBuilderTest {
@@ -42,7 +42,7 @@ class OccurrenceExtensionBuilderTest {
   @BeforeAll
   void setup() {
     spark =
-      SparkTestSession.createBuilder().appName("OccurrenceExtensionBuilderTest").getOrCreate();
+        SparkTestSession.createBuilder().appName("OccurrenceExtensionBuilderTest").getOrCreate();
   }
 
   @AfterAll
@@ -54,58 +54,58 @@ class OccurrenceExtensionBuilderTest {
 
   private Dataset<Row> eventPkDf(List<Row> rows) {
     StructType schema =
-      new StructType().add("event_pk", DataTypes.StringType).add("eventID", DataTypes.StringType);
+        new StructType().add("event_pk", DataTypes.StringType).add("eventID", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
   /**
    * {@code occurrence} carrying every surrogate key needed by every builder that resolves against
    * it in this test: {@code event_fk} (this class's own event resolution), {@code occurrence_pk}
-   * (what {@link MediaExtensionBuilder}/{@link AssertionExtensionBuilder} resolve their own
-   * {@code occurrence_fk} against when they independently reload the {@code occurrence} table).
+   * (what {@link MediaExtensionBuilder}/{@link AssertionExtensionBuilder} resolve their own {@code
+   * occurrence_fk} against when they independently reload the {@code occurrence} table).
    */
   private Dataset<Row> occurrencePkDf(List<Row> rows) {
     StructType schema =
-      new StructType()
-        .add("occurrence_pk", DataTypes.StringType)
-        .add("occurrenceID", DataTypes.StringType)
-        .add("event_fk", DataTypes.StringType)
-        .add("scientificName", DataTypes.StringType);
+        new StructType()
+            .add("occurrence_pk", DataTypes.StringType)
+            .add("occurrenceID", DataTypes.StringType)
+            .add("event_fk", DataTypes.StringType)
+            .add("scientificName", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
   private Dataset<Row> occurrenceNoEventFkDf(List<Row> rows) {
     StructType schema =
-      new StructType()
-        .add("occurrenceID", DataTypes.StringType)
-        .add("scientificName", DataTypes.StringType);
+        new StructType()
+            .add("occurrenceID", DataTypes.StringType)
+            .add("scientificName", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
   private Dataset<Row> mediaDf(List<Row> rows) {
     StructType schema =
-      new StructType()
-        .add("media_pk", DataTypes.StringType)
-        .add("accessURI", DataTypes.StringType);
+        new StructType()
+            .add("media_pk", DataTypes.StringType)
+            .add("accessURI", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
   private Dataset<Row> occurrenceMediaDf(List<Row> rows) {
     StructType schema =
-      new StructType()
-        .add("occurrence_fk", DataTypes.StringType)
-        .add("media_fk", DataTypes.StringType);
+        new StructType()
+            .add("occurrence_fk", DataTypes.StringType)
+            .add("media_fk", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
   private Dataset<Row> occurrenceAssertionDf(List<Row> rows) {
     StructType schema =
-      new StructType()
-        .add("assertionID", DataTypes.StringType)
-        .add("occurrence_fk", DataTypes.StringType)
-        .add("assertionType", DataTypes.StringType)
-        .add("assertionValue", DataTypes.StringType)
-        .add("assertionUnit", DataTypes.StringType);
+        new StructType()
+            .add("assertionID", DataTypes.StringType)
+            .add("occurrence_fk", DataTypes.StringType)
+            .add("assertionType", DataTypes.StringType)
+            .add("assertionValue", DataTypes.StringType)
+            .add("assertionUnit", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
@@ -133,7 +133,7 @@ class OccurrenceExtensionBuilderTest {
     Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
 
     Optional<Dataset<Row>> result =
-      OccurrenceExtensionBuilder.build(spark, TestTableLoader.of("event", eventDf));
+        OccurrenceExtensionBuilder.build(spark, TestTableLoader.of("event", eventDf));
 
     assertTrue(result.isEmpty());
   }
@@ -141,10 +141,10 @@ class OccurrenceExtensionBuilderTest {
   @Test
   void eventTableAbsent_returnsEmpty() {
     Dataset<Row> occDf =
-      occurrencePkDf(List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "Parus major")));
+        occurrencePkDf(List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "Parus major")));
 
     Optional<Dataset<Row>> result =
-      OccurrenceExtensionBuilder.build(spark, TestTableLoader.of("occurrence", occDf));
+        OccurrenceExtensionBuilder.build(spark, TestTableLoader.of("occurrence", occDf));
 
     assertTrue(result.isEmpty());
   }
@@ -152,12 +152,11 @@ class OccurrenceExtensionBuilderTest {
   @Test
   void occurrenceTableWithoutEventFkColumn_returnsEmpty() {
     Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
-    Dataset<Row> occDf =
-      occurrenceNoEventFkDf(List.of(RowFactory.create("OCC001", "Parus major")));
+    Dataset<Row> occDf = occurrenceNoEventFkDf(List.of(RowFactory.create("OCC001", "Parus major")));
 
     Optional<Dataset<Row>> result =
-      OccurrenceExtensionBuilder.build(
-        spark, TestTableLoader.of("event", eventDf, "occurrence", occDf));
+        OccurrenceExtensionBuilder.build(
+            spark, TestTableLoader.of("event", eventDf, "occurrence", occDf));
 
     assertTrue(result.isEmpty());
   }
@@ -168,11 +167,11 @@ class OccurrenceExtensionBuilderTest {
   void basicOccurrence_resolvesEventIdAndCarriesNoNestedExtensionKeys() throws Exception {
     Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
     Dataset<Row> occDf =
-      occurrencePkDf(List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "Parus major")));
+        occurrencePkDf(List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "Parus major")));
 
     Optional<Dataset<Row>> resultOpt =
-      OccurrenceExtensionBuilder.build(
-        spark, TestTableLoader.of("event", eventDf, "occurrence", occDf));
+        OccurrenceExtensionBuilder.build(
+            spark, TestTableLoader.of("event", eventDf, "occurrence", occDf));
 
     assertTrue(resultOpt.isPresent());
     List<Row> rows = resultOpt.get().collectAsList();
@@ -192,19 +191,19 @@ class OccurrenceExtensionBuilderTest {
   void occurrenceMedia_nestedInsideOccurrenceTermMap() throws Exception {
     Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
     Dataset<Row> occDf =
-      occurrencePkDf(List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "Parus major")));
+        occurrencePkDf(List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "Parus major")));
     Dataset<Row> mediaDf =
-      mediaDf(List.of(RowFactory.create("MPK-001", "https://example.com/img1.jpg")));
+        mediaDf(List.of(RowFactory.create("MPK-001", "https://example.com/img1.jpg")));
     Dataset<Row> occMediaDf = occurrenceMediaDf(List.of(RowFactory.create("OPK-001", "MPK-001")));
 
     Optional<Dataset<Row>> resultOpt =
-      OccurrenceExtensionBuilder.build(
-        spark,
-        TestTableLoader.of(
-          "event", eventDf,
-          "occurrence", occDf,
-          "media", mediaDf,
-          "occurrence-media", occMediaDf));
+        OccurrenceExtensionBuilder.build(
+            spark,
+            TestTableLoader.of(
+                "event", eventDf,
+                "occurrence", occDf,
+                "media", mediaDf,
+                "occurrence-media", occMediaDf));
 
     assertTrue(resultOpt.isPresent());
     Row eventRow = resultOpt.get().collectAsList().get(0);
@@ -216,7 +215,7 @@ class OccurrenceExtensionBuilderTest {
     List<Map<String, String>> mediaExt = parseNestedJson(mediaJson);
     assertEquals(1, mediaExt.size());
     assertEquals(
-      "https://example.com/img1.jpg", mediaExt.get(0).get(TermResolver.resolve("accessURI")));
+        "https://example.com/img1.jpg", mediaExt.get(0).get(TermResolver.resolve("accessURI")));
   }
 
   // ---- the fix: occurrence-assertion nested inside the occurrence's own term map ----
@@ -225,24 +224,25 @@ class OccurrenceExtensionBuilderTest {
   void occurrenceAssertion_nestedInsideOccurrenceTermMap() throws Exception {
     Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
     Dataset<Row> occDf =
-      occurrencePkDf(List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "Parus major")));
+        occurrencePkDf(List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "Parus major")));
     Dataset<Row> assertionDf =
-      occurrenceAssertionDf(List.of(RowFactory.create("A001", "OPK-001", "Mass", "3.2", "g")));
+        occurrenceAssertionDf(List.of(RowFactory.create("A001", "OPK-001", "Mass", "3.2", "g")));
 
     Optional<Dataset<Row>> resultOpt =
-      OccurrenceExtensionBuilder.build(
-        spark,
-        TestTableLoader.of(
-          "event", eventDf,
-          "occurrence", occDf,
-          "occurrence-assertion", assertionDf));
+        OccurrenceExtensionBuilder.build(
+            spark,
+            TestTableLoader.of(
+                "event", eventDf,
+                "occurrence", occDf,
+                "occurrence-assertion", assertionDf));
 
     assertTrue(resultOpt.isPresent());
     Row eventRow = resultOpt.get().collectAsList().get(0);
     Map<String, String> occ = singleOccurrence(eventRow);
 
     String assertionJson = occ.get(AssertionExtensionBuilder.COL_ASSERTION_EXT_JSON);
-    assertNotNull(assertionJson, "occurrence's own assertions must be nested under assertionExtJson");
+    assertNotNull(
+        assertionJson, "occurrence's own assertions must be nested under assertionExtJson");
 
     List<Map<String, String>> emof = parseNestedJson(assertionJson);
     assertEquals(1, emof.size());
@@ -260,32 +260,32 @@ class OccurrenceExtensionBuilderTest {
   void onlyOneOfTwoOccurrencesHasMedia_nestedMediaOnlyOnThatOccurrence() throws Exception {
     Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
     Dataset<Row> occDf =
-      occurrencePkDf(
-        List.of(
-          RowFactory.create("OPK-001", "OCC001", "EPK-001", "Parus major"),
-          RowFactory.create("OPK-002", "OCC002", "EPK-001", "Quercus robur")));
+        occurrencePkDf(
+            List.of(
+                RowFactory.create("OPK-001", "OCC001", "EPK-001", "Parus major"),
+                RowFactory.create("OPK-002", "OCC002", "EPK-001", "Quercus robur")));
     Dataset<Row> mediaDf =
-      mediaDf(List.of(RowFactory.create("MPK-001", "https://example.com/img1.jpg")));
+        mediaDf(List.of(RowFactory.create("MPK-001", "https://example.com/img1.jpg")));
     // Only OCC001 (OPK-001) has a linked media row
     Dataset<Row> occMediaDf = occurrenceMediaDf(List.of(RowFactory.create("OPK-001", "MPK-001")));
 
     Optional<Dataset<Row>> resultOpt =
-      OccurrenceExtensionBuilder.build(
-        spark,
-        TestTableLoader.of(
-          "event", eventDf,
-          "occurrence", occDf,
-          "media", mediaDf,
-          "occurrence-media", occMediaDf));
+        OccurrenceExtensionBuilder.build(
+            spark,
+            TestTableLoader.of(
+                "event", eventDf,
+                "occurrence", occDf,
+                "media", mediaDf,
+                "occurrence-media", occMediaDf));
 
     assertTrue(resultOpt.isPresent());
     Row eventRow = resultOpt.get().collectAsList().get(0);
     List<Map<String, String>> occExt = parseOccurrenceExtJson(eventRow);
     assertEquals(2, occExt.size());
     occExt.sort(
-      (a, b) ->
-        a.get(DwcTerm.occurrenceID.qualifiedName())
-          .compareTo(b.get(DwcTerm.occurrenceID.qualifiedName())));
+        (a, b) ->
+            a.get(DwcTerm.occurrenceID.qualifiedName())
+                .compareTo(b.get(DwcTerm.occurrenceID.qualifiedName())));
 
     Map<String, String> occ001 = occExt.get(0);
     assertEquals("OCC001", occ001.get(DwcTerm.occurrenceID.qualifiedName()));
@@ -294,8 +294,8 @@ class OccurrenceExtensionBuilderTest {
     Map<String, String> occ002 = occExt.get(1);
     assertEquals("OCC002", occ002.get(DwcTerm.occurrenceID.qualifiedName()));
     assertFalse(
-      occ002.containsKey(MediaExtensionBuilder.COL_MEDIA_EXT_JSON),
-      "an occurrence with no linked media must not carry a mediaExtJson key at all");
+        occ002.containsKey(MediaExtensionBuilder.COL_MEDIA_EXT_JSON),
+        "an occurrence with no linked media must not carry a mediaExtJson key at all");
   }
 
   // ---- organism enrichment composes correctly with the new nesting ----
@@ -305,38 +305,38 @@ class OccurrenceExtensionBuilderTest {
     Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
 
     StructType occSchema =
-      new StructType()
-        .add("occurrence_pk", DataTypes.StringType)
-        .add("occurrenceID", DataTypes.StringType)
-        .add("event_fk", DataTypes.StringType)
-        .add("organismID", DataTypes.StringType)
-        .add("scientificName", DataTypes.StringType);
+        new StructType()
+            .add("occurrence_pk", DataTypes.StringType)
+            .add("occurrenceID", DataTypes.StringType)
+            .add("event_fk", DataTypes.StringType)
+            .add("organismID", DataTypes.StringType)
+            .add("scientificName", DataTypes.StringType);
     Dataset<Row> occDf =
-      spark.createDataFrame(
-        List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "org-1", "Parus major")),
-        occSchema);
+        spark.createDataFrame(
+            List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "org-1", "Parus major")),
+            occSchema);
 
     StructType organismSchema =
-      new StructType()
-        .add("organismID", DataTypes.StringType)
-        .add("associatedOrganisms", DataTypes.StringType);
+        new StructType()
+            .add("organismID", DataTypes.StringType)
+            .add("associatedOrganisms", DataTypes.StringType);
     Dataset<Row> organismDf =
-      spark.createDataFrame(
-        List.of(RowFactory.create("org-1", "sibling of:org-2")), organismSchema);
+        spark.createDataFrame(
+            List.of(RowFactory.create("org-1", "sibling of:org-2")), organismSchema);
 
     Dataset<Row> mediaDf =
-      mediaDf(List.of(RowFactory.create("MPK-001", "https://example.com/img1.jpg")));
+        mediaDf(List.of(RowFactory.create("MPK-001", "https://example.com/img1.jpg")));
     Dataset<Row> occMediaDf = occurrenceMediaDf(List.of(RowFactory.create("OPK-001", "MPK-001")));
 
     Optional<Dataset<Row>> resultOpt =
-      OccurrenceExtensionBuilder.build(
-        spark,
-        TestTableLoader.of(
-          "event", eventDf,
-          "occurrence", occDf,
-          "organism", organismDf,
-          "media", mediaDf,
-          "occurrence-media", occMediaDf));
+        OccurrenceExtensionBuilder.build(
+            spark,
+            TestTableLoader.of(
+                "event", eventDf,
+                "occurrence", occDf,
+                "organism", organismDf,
+                "media", mediaDf,
+                "occurrence-media", occMediaDf));
 
     assertTrue(resultOpt.isPresent());
     Map<String, String> occ = singleOccurrence(resultOpt.get().collectAsList().get(0));

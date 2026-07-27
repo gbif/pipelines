@@ -4,9 +4,7 @@ import java.util.Optional;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
-/**
- * Small Spark {@link Dataset} join helpers shared across the DwC-DP builder packages.
- */
+/** Small Spark {@link Dataset} join helpers shared across the DwC-DP builder packages. */
 public final class DatasetJoins {
 
   private DatasetJoins() {}
@@ -22,12 +20,12 @@ public final class DatasetJoins {
    * @param joinColumn column name present on both sides to join on
    */
   public static Dataset<Row> leftJoinIfPresent(
-    Dataset<Row> left, Optional<Dataset<Row>> rightOpt, String joinColumn) {
+      Dataset<Row> left, Optional<Dataset<Row>> rightOpt, String joinColumn) {
     return rightOpt
-      .map(
-        right ->
-          left.join(right, left.col(joinColumn).equalTo(right.col(joinColumn)), "left_outer")
-            .drop(right.col(joinColumn)))
-      .orElse(left);
+        .map(
+            right ->
+                left.join(right, left.col(joinColumn).equalTo(right.col(joinColumn)), "left_outer")
+                    .drop(right.col(joinColumn)))
+        .orElse(left);
   }
 }

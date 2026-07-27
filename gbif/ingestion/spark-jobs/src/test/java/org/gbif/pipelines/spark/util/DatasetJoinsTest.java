@@ -37,17 +37,15 @@ class DatasetJoinsTest {
 
   private Dataset<Row> leftDf(List<Row> rows) {
     StructType schema =
-      new StructType()
-        .add("id", DataTypes.StringType)
-        .add("leftOnlyField", DataTypes.StringType);
+        new StructType().add("id", DataTypes.StringType).add("leftOnlyField", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
   private Dataset<Row> rightDf(List<Row> rows) {
     StructType schema =
-      new StructType()
-        .add("id", DataTypes.StringType)
-        .add("rightOnlyField", DataTypes.StringType);
+        new StructType()
+            .add("id", DataTypes.StringType)
+            .add("rightOnlyField", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
@@ -95,7 +93,7 @@ class DatasetJoinsTest {
     assertEquals(1L, result.count(), "left row must survive a left-outer join with no match");
     Row row = result.collectAsList().get(0);
     assertFalse(
-      result.filter(result.col("rightOnlyField").isNotNull()).count() > 0,
-      "unmatched right side must produce null, not drop the left row");
+        result.filter(result.col("rightOnlyField").isNotNull()).count() > 0,
+        "unmatched right side must produce null, not drop the left row");
   }
 }
