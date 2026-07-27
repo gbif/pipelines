@@ -37,6 +37,7 @@ import org.apache.spark.sql.expressions.WindowSpec;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
@@ -87,9 +88,7 @@ public class ValidatorMetricsPipeline {
       spark = getSparkSession(args.master, args.appName, config, (b, c) -> {});
       fileSystem = getFileSystem(spark, config);
 
-      String outputPath =
-          String.format("%s/%s/%d", config.getOutputPath(), args.datasetId, args.attempt);
-      run(spark, fileSystem, outputPath);
+      run(spark, fileSystem, config, args.datasetId, args.attempt);
     } finally {
       if (fileSystem != null) fileSystem.close();
       if (spark != null) {
@@ -179,7 +178,11 @@ public class ValidatorMetricsPipeline {
    * Runs the pipeline: reads interpreted occurrence JSON Parquet from {@code outputPath/json},
    * computes metrics, and writes them as JSON to {@code outputPath/collect-metrics.json}.
    */
-  public static void run(SparkSession spark, FileSystem fs, String outputPath) throws IOException {
+  public static void run(
+      SparkSession spark, FileSystem fs, PipelinesConfig config, String datasetId, Integer attempt)
+      throws IOException {
+
+    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
     log.info("Running ValidatorMetricsPipeline for {}", outputPath);
 
     Dataset<OccurrenceJsonRecord> records =

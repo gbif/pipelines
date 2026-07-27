@@ -22,6 +22,7 @@ import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.IndexingPipeline;
+import org.gbif.pipelines.spark.ValidatorMetricsPipeline;
 
 @Slf4j
 public class ValidatorMetricsCallback
@@ -35,7 +36,7 @@ public class ValidatorMetricsCallback
 
   @Override
   protected StepType getStepType() {
-    return StepType.INTERPRETED_TO_INDEX;
+    return StepType.VALIDATOR_COLLECT_METRICS;
   }
 
   @Override
@@ -45,8 +46,12 @@ public class ValidatorMetricsCallback
 
   @Override
   protected void runPipeline(PipelinesInterpretedMessage message) throws Exception {
-    // TODO: implement
-    log.info("ValidatorIndexingCallback#runPipeline");
+    ValidatorMetricsPipeline.run(
+        sparkSession,
+        fileSystem,
+        pipelinesConfig,
+        message.getDatasetUuid().toString(),
+        message.getAttempt());
   }
 
   @Override
@@ -61,8 +66,6 @@ public class ValidatorMetricsCallback
 
   @Override
   public PipelinesIndexedMessage createOutgoingMessage(PipelinesInterpretedMessage message) {
-    // TODO: implement
-    log.info("ValidatorIndexingCallback#createOutgoingMessage");
     return null;
   }
 }

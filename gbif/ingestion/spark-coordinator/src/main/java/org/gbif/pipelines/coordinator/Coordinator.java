@@ -161,6 +161,10 @@ public class Coordinator {
               new ValidatorInterpretationCallback(config, messagePublisher, master));
           case VALIDATOR_INTERPRETATION_DISTRIBUTED -> (messagePublisher ->
               new ValidatorInterpretationDistributedCallback(config, messagePublisher));
+          case VALIDATOR_METRICS -> (messagePublisher ->
+              new ValidatorMetricsCallback(config, messagePublisher, master));
+          case VALIDATOR_METRICS_DISTRIBUTED -> (messagePublisher ->
+              new ValidatorMetricsDistributedCallback(config, messagePublisher));
           case EVENTS_INTERPRETATION -> (messagePublisher ->
               new EventsInterpretationCallback(config, messagePublisher, master));
           case EVENTS_INTERPRETATION_DISTRIBUTED -> (messagePublisher ->
@@ -312,6 +316,8 @@ public class Coordinator {
     VALIDATOR_IDENTIFIER_DISTRIBUTED,
     VALIDATOR_INTERPRETATION,
     VALIDATOR_INTERPRETATION_DISTRIBUTED,
+    VALIDATOR_METRICS,
+    VALIDATOR_METRICS_DISTRIBUTED,
     DWCDP_STAGE_STANDALONE,
     DWCDP_STAGE_DISTRIBUTED,
     DWCDP_TO_VERBATIM_STANDALONE,

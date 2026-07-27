@@ -357,7 +357,6 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
         stepType,
         StepType.VALIDATOR_VERBATIM_TO_IDENTIFIER.name(),
         StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name(),
-        StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
         StepType.VALIDATOR_COLLECT_METRICS.name());
   }
 }
