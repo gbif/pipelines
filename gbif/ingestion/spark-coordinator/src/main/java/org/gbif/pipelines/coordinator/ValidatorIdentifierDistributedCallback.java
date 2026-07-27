@@ -36,7 +36,7 @@ public class ValidatorIdentifierDistributedCallback extends IdentifierCallback {
         message,
         "validator-identifiers",
         fileSystem,
-        pipelinesConfig.getAirflowConfig().identifierDag,
+        pipelinesConfig.getAirflowConfig().validatorIdentifiersDag,
         StepType.VALIDATOR_VERBATIM_TO_IDENTIFIER,
         List.of(
             "--tripletValid=" + message.getValidationResult().isTripletValid(),
