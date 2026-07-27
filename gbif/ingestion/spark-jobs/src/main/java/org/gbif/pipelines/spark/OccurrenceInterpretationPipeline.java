@@ -872,7 +872,6 @@ public class OccurrenceInterpretationPipeline {
     Map<String, String> uuidToColumnPrefix = config.getTableBuildConfig().getClassifications();
 
     Dataset<Row> withClassifications = dataset.toDF();
-    ;
 
     for (Map.Entry<String, String> uuidToColumn : uuidToColumnPrefix.entrySet()) {
 
