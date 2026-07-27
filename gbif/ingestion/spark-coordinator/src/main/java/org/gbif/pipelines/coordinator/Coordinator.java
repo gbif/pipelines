@@ -192,7 +192,22 @@ public class Coordinator {
               new DatasetDeleteCallback(config, master, DatasetType.OCCURRENCE));
           case EVENT_DELETION -> (messagePublisher ->
               new DatasetDeleteCallback(config, master, DatasetType.SAMPLING_EVENT));
-          default -> throw new IllegalArgumentException(
+            break;
+          case DWCDP_STAGE_STANDALONE:
+            callbackFn = messagePublisher -> new DwcDpStageCallback(config, messagePublisher, master);
+            break;
+          case DWCDP_TO_VERBATIM_STANDALONE:
+            callbackFn =
+                messagePublisher -> new DwcDpToVerbatimCallback(config, messagePublisher, master);
+            break;
+          case DWCDP_TO_VERBATIM_DISTRIBUTED:
+            callbackFn =
+                messagePublisher ->
+                    new DwcDpToVerbatimDistributedCallback(config, messagePublisher, master);
+            break;
+
+      default:
+        throw new IllegalArgumentException(
               "Unknown mode: "
                   + mode
                   + ". Recognized modes are: "
@@ -305,6 +320,10 @@ public class Coordinator {
     VALIDATOR_IDENTIFIER,
     VALIDATOR_IDENTIFIER_DISTRIBUTED,
     VALIDATOR_INTERPRETATION,
-    VALIDATOR_INTERPRETATION_DISTRIBUTED
+    VALIDATOR_INTERPRETATION_DISTRIBUTED,
+    DWCDP_STAGE_STANDALONE,
+    DWCDP_STAGE_DISTRIBUTED,
+    DWCDP_TO_VERBATIM_STANDALONE,
+    DWCDP_TO_VERBATIM_DISTRIBUTED
   }
 }

@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>ingestion</artifactId>
-        <version>4.0.26-SNAPSHOT</version>
+        <version>4.0.30-SNAPSHOT</version>
     </parent>
 
     <artifactId>spark-coordinator</artifactId>
@@ -31,14 +31,6 @@
             <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-        </dependency>
-      <dependency>
-        <groupId>org.gbif.pipelines</groupId>
-        <artifactId>validator-api</artifactId>
-      </dependency>
         <dependency>
             <groupId>org.gbif.pipelines</groupId>
             <artifactId>spark-jobs</artifactId>
@@ -94,6 +86,11 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>${reflections.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>

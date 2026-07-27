@@ -24,6 +24,7 @@ import org.gbif.pipelines.core.utils.MediaSerDeser;
 import org.gbif.pipelines.core.utils.TemporalConverter;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.jspecify.annotations.NonNull;
 
 /** Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}. */
 @Slf4j
@@ -44,8 +45,7 @@ public class OccurrenceHdfsRecordConverter {
   private final MultimediaRecord multimediaRecord;
   private final DnaDerivedDataRecord dnaDerivedDataRecord;
 
-  // required taxonomic terms. These need to be populated at least with empty string
-  // to support SQL queries and avoid 'Key not found' errors.
+  // required taxonomic terms
   static final Set<String> REQUIRED_TAXONOMIC_FIELDS =
       Set.of(
           GbifTerm.taxonKey.simpleName().toLowerCase(),
@@ -57,27 +57,30 @@ public class OccurrenceHdfsRecordConverter {
           DwcTerm.specificEpithet.simpleName().toLowerCase(),
           DwcTerm.infraspecificEpithet.simpleName().toLowerCase(),
           DwcTerm.taxonRank.simpleName().toLowerCase(),
-          DwcTerm.class_.simpleName().toLowerCase(),
-          GbifTerm.classKey.simpleName().toLowerCase(),
-          DwcTerm.family.simpleName().toLowerCase(),
-          GbifTerm.familyKey.simpleName().toLowerCase(),
-          DwcTerm.genus.simpleName().toLowerCase(),
-          GbifTerm.genusKey.simpleName().toLowerCase(),
           DwcTerm.kingdom.simpleName().toLowerCase(),
           GbifTerm.kingdomKey.simpleName().toLowerCase(),
-          DwcTerm.order.simpleName().toLowerCase(),
-          GbifTerm.orderKey.simpleName().toLowerCase(),
           DwcTerm.phylum.simpleName().toLowerCase(),
           GbifTerm.phylumKey.simpleName().toLowerCase(),
-          GbifTerm.species.simpleName().toLowerCase(),
-          GbifTerm.speciesKey.simpleName().toLowerCase(),
+          DwcTerm.class_.simpleName().toLowerCase(),
+          GbifTerm.classKey.simpleName().toLowerCase(),
+          DwcTerm.order.simpleName().toLowerCase(),
+          GbifTerm.orderKey.simpleName().toLowerCase(),
+          DwcTerm.superfamily.simpleName().toLowerCase(),
+          GbifTerm.superfamilyKey.simpleName().toLowerCase(),
+          DwcTerm.family.simpleName().toLowerCase(),
+          GbifTerm.familyKey.simpleName().toLowerCase(),
           DwcTerm.subfamily.simpleName().toLowerCase(),
           GbifTerm.subfamilyKey.simpleName().toLowerCase(),
-          DwcTerm.superfamily.simpleName().toLowerCase(),
           DwcTerm.tribe.simpleName().toLowerCase(),
           GbifTerm.tribeKey.simpleName().toLowerCase(),
           DwcTerm.subtribe.simpleName().toLowerCase(),
           GbifTerm.subtribeKey.simpleName().toLowerCase(),
+          DwcTerm.genus.simpleName().toLowerCase(),
+          GbifTerm.genusKey.simpleName().toLowerCase(),
+          DwcTerm.subgenus.simpleName().toLowerCase(),
+          GbifTerm.subgenusKey.simpleName().toLowerCase(),
+          GbifTerm.species.simpleName().toLowerCase(),
+          GbifTerm.speciesKey.simpleName().toLowerCase(),
           IucnTerm.iucnRedListCategory.simpleName().toLowerCase(),
           GbifTerm.verbatimScientificName.simpleName().toLowerCase());
 
@@ -239,6 +242,7 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setInstallationkey(metadataRecord.getInstallationKey());
     occurrenceHdfsRecord.setProtocol(metadataRecord.getProtocol());
     occurrenceHdfsRecord.setNetworkkey(metadataRecord.getNetworkKeys());
+    occurrenceHdfsRecord.setDatasetcategory(metadataRecord.getDatasetCategory());
     occurrenceHdfsRecord.setPublisher(metadataRecord.getPublisherTitle());
     occurrenceHdfsRecord.setPublishingorgkey(metadataRecord.getPublishingOrganizationKey());
     occurrenceHdfsRecord.setLastcrawled(metadataRecord.getLastCrawled());
@@ -331,32 +335,18 @@ public class OccurrenceHdfsRecordConverter {
             .collect(
                 Collectors.toMap(
                     TaxonRecord::getDatasetKey,
-                    tr -> {
-                      Set<String> taxonKeys =
-                          Optional.ofNullable(tr.getClassification())
-                              .orElse(Collections.emptyList())
-                              .stream()
-                              .map(RankedName::getKey)
-                              .collect(Collectors.toCollection(LinkedHashSet::new));
-                      if (tr.getSynonym() != null && tr.getSynonym() && tr.getUsage() != null) {
-                        taxonKeys.add(tr.getUsage().getKey());
-                      }
-                      return new ArrayList<>(taxonKeys);
-                    },
+                    OccurrenceHdfsRecordConverter::getTaxonKeys,
                     (a, b) -> a,
                     LinkedHashMap::new)));
 
-    occurrenceHdfsRecord.setTaxonomicstatuses(
-        multiTaxonRecord.getTaxonRecords().stream()
-            .collect(
-                Collectors.toMap(
-                    TaxonRecord::getDatasetKey,
-                    tr ->
-                        tr.getUsage() != null && tr.getUsage().getStatus() != null
-                            ? tr.getUsage().getStatus()
-                            : "",
-                    (a, b) -> a,
-                    LinkedHashMap::new)));
+    Map<String, String> statuses = new LinkedHashMap<>();
+    multiTaxonRecord
+        .getTaxonRecords()
+        .forEach(
+            tr ->
+                statuses.put(
+                    tr.getDatasetKey(), tr.getUsage() == null ? null : tr.getUsage().getStatus()));
+    occurrenceHdfsRecord.setTaxonomicstatuses(statuses);
 
     occurrenceHdfsRecord.setTaxonomicissue(
         multiTaxonRecord.getTaxonRecords().stream()
@@ -382,13 +372,23 @@ public class OccurrenceHdfsRecordConverter {
                     LinkedHashMap::new)));
 
     // find the GBIF taxonomy
-    Optional<TaxonRecord> gbifRecord =
+    Optional<TaxonRecord> defaultTaxonomyRecord =
         multiTaxonRecord.getTaxonRecords().stream()
-            .filter(
-                tr -> OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
+            .filter(tr -> OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY.equals(tr.getDatasetKey()))
             .findFirst();
 
-    gbifRecord.ifPresent(tr -> mapLegacyGbifTaxonRecord(occurrenceHdfsRecord, tr));
+    defaultTaxonomyRecord.ifPresent(tr -> mapLegacyGbifTaxonRecord(occurrenceHdfsRecord, tr));
+  }
+
+  private static @NonNull ArrayList<String> getTaxonKeys(TaxonRecord tr) {
+    Set<String> taxonKeys =
+        Optional.ofNullable(tr.getClassification()).orElse(Collections.emptyList()).stream()
+            .map(RankedName::getKey)
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+    if (tr.getSynonym() != null && tr.getSynonym() && tr.getUsage() != null) {
+      taxonKeys.add(tr.getUsage().getKey());
+    }
+    return new ArrayList<>(taxonKeys);
   }
 
   private static Map<String, String> classificationToMap(
@@ -419,17 +419,17 @@ public class OccurrenceHdfsRecordConverter {
       // Optional taxonomic fields
       map.put(
           DwcTerm.genericName.simpleName().toLowerCase(),
-          usage.getGenericName() != null ? usage.getGenericName() : "");
+          usage.getGenericName() != null ? usage.getGenericName() : null);
       map.put(
           DwcTerm.specificEpithet.simpleName().toLowerCase(),
-          usage.getSpecificEpithet() != null ? usage.getSpecificEpithet() : "");
+          usage.getSpecificEpithet() != null ? usage.getSpecificEpithet() : null);
       map.put(
           DwcTerm.infraspecificEpithet.simpleName().toLowerCase(),
-          usage.getInfraspecificEpithet() != null ? usage.getInfraspecificEpithet() : "");
+          usage.getInfraspecificEpithet() != null ? usage.getInfraspecificEpithet() : null);
 
       map.put(
           DwcTerm.taxonRank.simpleName().toLowerCase(),
-          usage.getRank() != null ? usage.getRank() : "");
+          usage.getRank() != null ? usage.getRank() : null);
     }
 
     extractOptValue(verbatim, DwcTerm.scientificName)
@@ -448,10 +448,10 @@ public class OccurrenceHdfsRecordConverter {
         IucnTerm.iucnRedListCategory.simpleName().toLowerCase(),
         taxonRecord.getIucnRedListCategoryCode() != null
             ? taxonRecord.getIucnRedListCategoryCode()
-            : "");
+            : null);
 
     for (String field : REQUIRED_TAXONOMIC_FIELDS) {
-      map.putIfAbsent(field, "");
+      map.putIfAbsent(field, null);
     }
 
     return map;
@@ -487,9 +487,25 @@ public class OccurrenceHdfsRecordConverter {
                     occurrenceHdfsRecord.setOrder(rankedName.getName());
                     occurrenceHdfsRecord.setOrderkey(rankedName.getKey());
                     break;
+                  case "SUPERFAMILY":
+                    occurrenceHdfsRecord.setSuperfamily(rankedName.getName());
+                    occurrenceHdfsRecord.setSuperfamilykey(rankedName.getKey());
+                    break;
                   case "FAMILY":
                     occurrenceHdfsRecord.setFamily(rankedName.getName());
                     occurrenceHdfsRecord.setFamilykey(rankedName.getKey());
+                    break;
+                  case "SUBFAMILY":
+                    occurrenceHdfsRecord.setSubfamily(rankedName.getName());
+                    occurrenceHdfsRecord.setSubfamilykey(rankedName.getKey());
+                    break;
+                  case "TRIBE":
+                    occurrenceHdfsRecord.setTribe(rankedName.getName());
+                    occurrenceHdfsRecord.setTribekey(rankedName.getKey());
+                    break;
+                  case "SUBTRIBE":
+                    occurrenceHdfsRecord.setSubtribe(rankedName.getName());
+                    occurrenceHdfsRecord.setSubtribekey(rankedName.getKey());
                     break;
                   case "GENUS":
                     occurrenceHdfsRecord.setGenus(rankedName.getName());
@@ -509,6 +525,9 @@ public class OccurrenceHdfsRecordConverter {
               });
     }
 
+    // set taxonkeys
+    occurrenceHdfsRecord.setTaxonkeys(getTaxonKeys(taxonRecord));
+
     if (Objects.nonNull(taxonRecord.getAcceptedUsage())) {
       occurrenceHdfsRecord.setAcceptedscientificname(taxonRecord.getAcceptedUsage().getName());
       occurrenceHdfsRecord.setAcceptednameusageid(taxonRecord.getAcceptedUsage().getKey());
@@ -517,8 +536,7 @@ public class OccurrenceHdfsRecordConverter {
       }
       Optional.ofNullable(taxonRecord.getAcceptedUsage().getRank())
           .ifPresent(occurrenceHdfsRecord::setTaxonrank);
-    } else if (Objects.nonNull(taxonRecord.getUsage())
-        && !taxonRecord.getUsage().getKey().equals("0")) {
+    } else if (Objects.nonNull(taxonRecord.getUsage())) {
       // if the acceptedUsage is null we use the usage as the accepted as longs as it's not
       // incertae sedis
       occurrenceHdfsRecord.setAcceptedtaxonkey(taxonRecord.getUsage().getKey());
@@ -532,28 +550,12 @@ public class OccurrenceHdfsRecordConverter {
       Optional.ofNullable(taxonRecord.getUsage().getRank())
           .ifPresent(occurrenceHdfsRecord::setTaxonrank);
       occurrenceHdfsRecord.setTaxonomicstatus(
-          taxonRecord.getUsage().getStatus() != null ? taxonRecord.getUsage().getStatus() : "");
-    }
+          taxonRecord.getUsage().getStatus() != null ? taxonRecord.getUsage().getStatus() : null);
 
-    if (Objects.nonNull(taxonRecord.getUsageParsedName())
-        && Objects.nonNull(taxonRecord.getUsage())) {
-      String rank = taxonRecord.getUsage().getRank();
-      if (Rank.GENUS.compareTo(Rank.valueOf(rank)) <= 0) {
-        occurrenceHdfsRecord.setGenericname(
-            Objects.nonNull(taxonRecord.getUsageParsedName().getGenus())
-                ? taxonRecord.getUsageParsedName().getGenus()
-                : taxonRecord.getUsageParsedName().getUninomial());
-      }
-
-      if (Rank.SPECIES.compareTo(Rank.valueOf(rank)) <= 0) {
-        occurrenceHdfsRecord.setSpecificepithet(
-            taxonRecord.getUsageParsedName().getSpecificEpithet());
-      }
-
-      if (Rank.INFRASPECIFIC_NAME.compareTo(Rank.valueOf(rank)) <= 0) {
-        occurrenceHdfsRecord.setInfraspecificepithet(
-            taxonRecord.getUsageParsedName().getInfraspecificEpithet());
-      }
+      occurrenceHdfsRecord.setGenericname(taxonRecord.getUsage().getGenericName());
+      occurrenceHdfsRecord.setSpecificepithet(taxonRecord.getUsage().getSpecificEpithet());
+      occurrenceHdfsRecord.setInfraspecificepithet(
+          taxonRecord.getUsage().getInfraspecificEpithet());
     }
 
     setCreatedIfGreater(occurrenceHdfsRecord, taxonRecord.getCreated());

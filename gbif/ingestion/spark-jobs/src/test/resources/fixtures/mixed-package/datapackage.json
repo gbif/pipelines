@@ -1,0 +1,35 @@
+{
+  "name": "mixed-package",
+  "resources": [
+    {
+      "name": "occurrences",
+      "path": "occurrences.tsv",
+      "dialect": {
+        "delimiter": "\t"
+      },
+      "schema": {
+        "fields": [
+          { "name": "id", "type": "integer" },
+          { "name": "scientificName", "type": "string" }
+        ],
+        "primaryKey": "id"
+      }
+    },
+    {
+      "name": "media",
+      "path": "media.parquet",
+      "schema": {
+        "fields": [
+          { "name": "occurrenceId", "type": "integer" },
+          { "name": "identifier", "type": "string" }
+        ],
+        "foreignKeys": [
+          {
+            "fields": ["occurrenceId"],
+            "reference": { "resource": "occurrences", "fields": ["id"] }
+          }
+        ]
+      }
+    }
+  ]
+}

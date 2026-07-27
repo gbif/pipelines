@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.converters;
 
-import static org.gbif.pipelines.core.converters.OccurrenceJsonConverter.GBIF_BACKBONE_DATASET_KEY;
+import static org.gbif.pipelines.core.converters.OccurrenceJsonConverter.DEFAULT_TAXONOMY_KEY;
 
 import com.google.common.base.Strings;
 import java.time.Instant;
@@ -423,7 +423,7 @@ public class JsonConverter {
 
       Optional<TaxonRecord> gbifRecord =
           multiTaxon.getTaxonRecords().stream()
-              .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
+              .filter(tr -> DEFAULT_TAXONOMY_KEY.equals(tr.getDatasetKey()))
               .findFirst();
 
       return gbifRecord.map(JsonConverter::convertToClassification).orElse(null);

@@ -1,0 +1,17 @@
+{
+  "name": "multi-partition-package",
+  "resources": [
+    {
+      "name": "occurrences",
+      "path": ["part-0.tsv", "part-1.tsv", "part-2.tsv"],
+      "dialect": { "delimiter": "\t" },
+      "schema": {
+        "fields": [
+          { "name": "id", "type": "integer" },
+          { "name": "scientificName", "type": "string" }
+        ],
+        "primaryKey": "id"
+      }
+    }
+  ]
+}

@@ -112,10 +112,18 @@ public class GbifIdInterpreter {
     };
   }
 
+  private static final java.util.regex.Pattern UUID_PATTERN =
+      java.util.regex.Pattern.compile(
+          "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          java.util.regex.Pattern.CASE_INSENSITIVE);
+
   /** Copies GBIF id from ExtendedRecord id */
   public static BiConsumer<ExtendedRecord, IdentifierRecord> interpretCopyGbifId() {
     return (er, gr) -> {
       if (StringUtils.isNumeric(er.getId())) {
+        gr.setInternalId(er.getId());
+      }
+      if (UUID_PATTERN.matcher(er.getId()).matches()) {
         gr.setInternalId(er.getId());
       }
     };

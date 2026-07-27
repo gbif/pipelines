@@ -1,0 +1,36 @@
+{
+  "name": "tsv-package",
+  "resources": [
+    {
+      "name": "occurrences",
+      "path": "occurrences.tsv",
+      "dialect": {
+        "delimiter": "\t"
+      },
+      "schema": {
+        "fields": [
+          { "name": "id", "type": "integer" },
+          { "name": "scientificName", "type": "string" },
+          { "name": "decimalLatitude", "type": "number" },
+          { "name": "decimalLongitude", "type": "number" }
+        ],
+        "primaryKey": "id"
+      }
+    },
+    {
+      "name": "taxa",
+      "path": "taxa.tsv",
+      "dialect": {
+        "delimiter": "\t"
+      },
+      "schema": {
+        "fields": [
+          { "name": "id", "type": "integer" },
+          { "name": "kingdom", "type": "string" },
+          { "name": "family", "type": "string" }
+        ],
+        "primaryKey": "id"
+      }
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+version: '3'
+
+includes:
+  container:
+    taskfile: taskfiles/container.yaml
+
+vars:
+  CONTAINER_CLI:
+    sh: |
+      if command -v docker >/dev/null 2>&1; then echo docker;
+      elif command -v podman >/dev/null 2>&1; then echo podman;
+      else echo docker; fi
+  MODULES:
+    sh: find ./gbif/ingestion -name "Dockerfile" -not -path "*/target/*" | xargs -I{} dirname {} | xargs -I{} dirname {} | xargs -I{} basename {}
+
+tasks:
+  modules:
+    silent: true
+    desc: List available modules
+    cmds:
+      - echo "{{.MODULES}}" | tr ' ' '\n'
+
+  _validate:module:
+    internal: true
+    requires:
+      vars: [MODULE]
+    cmds:
+      - cmd: |
+          if ! echo "{{.MODULES}}" | tr ' ' '\n' | grep -qx "{{.MODULE}}"; then
+            echo "Unknown MODULE '{{.MODULE}}'. Available modules:"
+            echo "{{.MODULES}}" | tr ' ' '\n' | sed 's/^/  - /'
+            exit 1
+          fi
+
+  clean:
+    desc: Run Maven clean
+    cmds:
+      - mvn clean
+
+  package:
+    desc: Build shaded jar
+    cmds:
+      - mvn package
+
+  verify:
+    desc: Run full Maven verify lifecycle including tests
+    cmds:
+      - mvn verify
+
+  docker:push:dist:
+    desc: Build and push multi-arch image (MODULE=name, REGISTRY=registry)
+    requires:
+      vars: [MODULE, REGISTRY]
+    vars:
+      POM_VERSION:
+        sh: mvn help:evaluate -Dexpression=project.version -q -DforceStdout -pl gbif/ingestion/{{.MODULE}}
+    cmds:
+      - task: _validate:module
+      - task: container:push:dist
+        vars:
+          REGISTRY: '{{.REGISTRY}}'
+          IMAGE_NAME: 'ingest-{{.MODULE}}'
+          POM_VERSION: '{{.POM_VERSION}}'
+          JAR_FILE: '{{.MODULE}}-{{.POM_VERSION}}-shaded.jar'
+          DOCKERFILE: './gbif/ingestion/{{.MODULE}}/docker/Dockerfile'
+          CONTEXT: './gbif/ingestion/{{.MODULE}}'
+          IS_RELEASE: '{{.IS_RELEASE | default "false"}}'
+
+  dist:
+    desc: Build jar and push multi-arch image (MODULE=name, REGISTRY=registry)
+    requires:
+      vars: [MODULE, REGISTRY]
+    cmds:
+      - task: package
+      - task: docker:push:dist

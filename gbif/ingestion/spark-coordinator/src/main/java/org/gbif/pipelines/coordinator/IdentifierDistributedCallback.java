@@ -29,8 +29,8 @@ public class IdentifierDistributedCallback extends IdentifierCallback {
             "--tripletValid=" + message.getValidationResult().isTripletValid(),
             "--occurrenceIdValid=" + message.getValidationResult().isOccurrenceIdValid(),
             "--useExtendedRecordId="
-                + (message.getValidationResult().isUseExtendedRecordId() != null
-                    ? message.getValidationResult().isUseExtendedRecordId()
+                + (message.getValidationResult().getUseExtendedRecordId() != null
+                    ? message.getValidationResult().getUseExtendedRecordId()
                     : false)));
   }
 

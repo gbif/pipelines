@@ -15,10 +15,10 @@ package org.gbif.pipelines.spark;
 
 import static org.apache.spark.sql.functions.*;
 import static org.gbif.pipelines.core.converters.ConverterUtils.cleanVerbatim;
+import static org.gbif.pipelines.core.utils.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.spark.ArgsConstants.*;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.util.LogUtil.timeAndRecPerSecond;
-import static org.gbif.pipelines.spark.util.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
@@ -26,7 +26,6 @@ import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.*;
@@ -56,6 +55,8 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
 import org.gbif.pipelines.spark.pojo.Occurrence;
 import org.gbif.pipelines.spark.pojo.OccurrenceInterpretType;
+import org.gbif.pipelines.spark.util.MapperUtil;
+import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.transform.*;
 import org.gbif.pipelines.transform.factory.KeygenServiceFactory;
 import scala.Tuple2;
@@ -75,31 +76,12 @@ import scala.Tuple2;
 @Slf4j
 public class OccurrenceInterpretationPipeline {
 
-  static final ObjectMapper MAPPER =
-      new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+  static final ObjectMapper MAPPER = MapperUtil.MAPPER_NON_EMPTY;
 
   public static final String METRICS_FILENAME = "verbatim-to-occurrence.yml";
 
   @Parameters(separators = "=")
-  private static class Args {
-
-    @Parameter(names = APP_NAME_ARG, description = "Application name", required = true)
-    private String appName;
-
-    @Parameter(names = DATASET_ID_ARG, description = "Dataset ID", required = true)
-    private String datasetId;
-
-    @Parameter(names = ATTEMPT_ID_ARG, description = "Attempt number", required = true)
-    private int attempt;
-
-    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
-    private String config = "/tmp/pipelines-spark.yaml";
-
-    @Parameter(
-        names = SPARK_MASTER_ARG,
-        description = "Spark master - there for local dev only",
-        required = false)
-    private String master;
+  private static class Args extends SingleDatasetPipelineArgs {
 
     @Parameter(
         names = "--tripletValid",
@@ -118,20 +100,11 @@ public class OccurrenceInterpretationPipeline {
     @Parameter(names = NUMBER_OF_SHARDS_ARG, description = "Number of shards")
     private int numberOfShards = 1;
 
-    @Parameter(names = "--useSystemExit", description = "Use checkpoints where possible", arity = 1)
-    private boolean useSystemExit = true;
-
     @Parameter(
         names = "--interpretTypes",
         description = "Use checkpoints where possible",
         arity = 1)
     private List<String> interpretTypes = null;
-
-    @Parameter(
-        names = {"--help", "-h"},
-        help = true,
-        description = "Show usage")
-    private boolean help;
   }
 
   public static void main(String[] argsv) throws Exception {
@@ -236,7 +209,7 @@ public class OccurrenceInterpretationPipeline {
     final MetadataRecord metadata = getMetadataRecord(config, datasetId, attempt);
 
     Dataset<Occurrence> interpreted = loadSimpleInterpreted(spark, outputPath);
-    generateOutputs(spark, numberOfShards, interpreted, metadata, outputPath);
+    generateOutputs(spark, config, numberOfShards, interpreted, metadata, outputPath);
   }
 
   public static void regenJsonOutput(
@@ -272,7 +245,7 @@ public class OccurrenceInterpretationPipeline {
 
     // write parquet for hdfs view
     sparkLog(spark, "toHdfs", "Writing HDFS output");
-    toHdfs(interpreted, metadata, numberOfShards)
+    toHdfs(config, interpreted, metadata, numberOfShards)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + OCCURRENCE_HDFS);
@@ -288,6 +261,7 @@ public class OccurrenceInterpretationPipeline {
 
   private static void generateOutputs(
       SparkSession spark,
+      PipelinesConfig config,
       int numberOfShards,
       Dataset<Occurrence> interpreted,
       MetadataRecord metadata,
@@ -301,7 +275,7 @@ public class OccurrenceInterpretationPipeline {
 
     // write parquet for hdfs view
     sparkLog(spark, "toHdfs", "Writing HDFS output");
-    toHdfs(interpreted, metadata, numberOfShards)
+    toHdfs(config, interpreted, metadata, numberOfShards)
         .write()
         .mode(SaveMode.Overwrite)
         .parquet(outputPath + "/" + OCCURRENCE_HDFS);
@@ -420,7 +394,7 @@ public class OccurrenceInterpretationPipeline {
     }
 
     // write parquet for elastic
-    generateOutputs(spark, numberOfOutputShards, interpreted, metadata, outputPath);
+    generateOutputs(spark, config, numberOfOutputShards, interpreted, metadata, outputPath);
 
     // cleanup intermediate parquet outputs
     HdfsConfigs hdfsConfigs =
@@ -856,8 +830,12 @@ public class OccurrenceInterpretationPipeline {
             }));
   }
 
-  public static Dataset<OccurrenceHdfsRecord> toHdfs(
-      Dataset<Occurrence> records, MetadataRecord metadataRecord, int numshards) {
+  public static Dataset<Row> toHdfs(
+      PipelinesConfig config,
+      Dataset<Occurrence> records,
+      MetadataRecord metadataRecord,
+      int numshards) {
+
     Dataset<OccurrenceHdfsRecord> dataset =
         records.map(
             (MapFunction<Occurrence, OccurrenceHdfsRecord>)
@@ -891,9 +869,77 @@ public class OccurrenceInterpretationPipeline {
                 },
             Encoders.bean(OccurrenceHdfsRecord.class));
 
+    if (config.getTableBuildConfig() == null
+        || config.getTableBuildConfig().getClassifications() == null
+        || config.getTableBuildConfig().getClassifications().isEmpty()) {
+      return dataset.toDF();
+    }
+
+    Map<String, String> uuidToColumnPrefix = config.getTableBuildConfig().getClassifications();
+
+    Dataset<Row> withClassifications = dataset.toDF();
+    ;
+
+    for (Map.Entry<String, String> uuidToColumn : uuidToColumnPrefix.entrySet()) {
+
+      String uuid = uuidToColumn.getKey();
+      String columnPrefix = uuidToColumn.getValue();
+
+      Column classification = element_at(col("classificationdetails"), lit(uuid));
+      Column taxonomicStatus = element_at(col("taxonomicstatuses"), lit(uuid));
+      Column taxonomicIssue = element_at(col("taxonomicissue"), lit(uuid));
+      Column taxonkeys = element_at(col("classifications"), lit(uuid));
+
+      String newStructName = columnPrefix + "_classification";
+
+      withClassifications =
+          withClassifications.withColumn(
+              newStructName,
+              struct(
+                  element_at(classification, lit("taxonkey")).as("taxonkey"),
+                  element_at(classification, lit("scientificname")).as("scientificname"),
+                  element_at(classification, lit("acceptedtaxonkey")).as("acceptedtaxonkey"),
+                  element_at(classification, lit("acceptednameusageid")).as("acceptednameusageid"),
+                  element_at(classification, lit("acceptedscientificname"))
+                      .as("acceptedscientificname"),
+                  element_at(classification, lit("genericname")).as("genericname"),
+                  element_at(classification, lit("specificepithet")).as("specificepithet"),
+                  element_at(classification, lit("infraspecificepithet"))
+                      .as("infraspecificepithet"),
+                  element_at(classification, lit("taxonrank")).as("taxonrank"),
+                  element_at(classification, lit("kingdomkey")).as("kingdomkey"),
+                  element_at(classification, lit("phylumkey")).as("phylumkey"),
+                  element_at(classification, lit("classkey")).as("classkey"),
+                  element_at(classification, lit("orderkey")).as("orderkey"),
+                  element_at(classification, lit("superfamilykey")).as("superfamilykey"),
+                  element_at(classification, lit("familykey")).as("familykey"),
+                  element_at(classification, lit("subfamilykey")).as("subfamilykey"),
+                  element_at(classification, lit("tribekey")).as("tribekey"),
+                  element_at(classification, lit("subtribekey")).as("subtribekey"),
+                  element_at(classification, lit("genuskey")).as("genuskey"),
+                  element_at(classification, lit("subgenuskey")).as("subgenuskey"),
+                  element_at(classification, lit("specieskey")).as("specieskey"),
+                  element_at(classification, lit("kingdom")).as("kingdom"),
+                  element_at(classification, lit("phylum")).as("phylum"),
+                  element_at(classification, lit("class")).as("class"),
+                  element_at(classification, lit("order")).as("order"),
+                  element_at(classification, lit("superfamily")).as("superfamily"),
+                  element_at(classification, lit("family")).as("family"),
+                  element_at(classification, lit("subfamily")).as("subfamily"),
+                  element_at(classification, lit("tribe")).as("tribe"),
+                  element_at(classification, lit("subtribe")).as("subtribe"),
+                  element_at(classification, lit("genus")).as("genus"),
+                  element_at(classification, lit("subgenus")).as("subgenus"),
+                  element_at(classification, lit("species")).as("species"),
+                  element_at(classification, lit("iucnredlistcategory")).as("iucnredlistcategory"),
+                  taxonkeys.as("taxonkeys"),
+                  taxonomicIssue.as("issues"),
+                  taxonomicStatus.as("taxonomicstatus")));
+    }
+
     // for small datasets, to reduce the number of small files created, we coalesce to a single
     // shard
-    dataset = dataset.coalesce(numshards);
-    return dataset;
+    withClassifications = withClassifications.coalesce(numshards);
+    return withClassifications;
   }
 }

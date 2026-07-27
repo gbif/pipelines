@@ -1,0 +1,17 @@
+stepConfig:
+  registry:
+    wsUrl: http://localhost:8080/v1
+  messaging:
+    host: localhost
+    virtualHost: /
+    username: guest
+    password: guest
+    port: 5672
+  queueName: pipelines-balancer
+  poolSize: 1
+  hdfsSiteConfig: /tmp/hadoop-dummy.xml
+  coreSiteConfig: /tmp/hadoop-dummy.xml
+  repositoryPath: /Users/wxm363/data/
+switchFileSizeMb: 100
+validatorSwitchRecordsNumber: 100000
+dwcdpRepositoryPath: /Users/wxm363/data/unpacked-dwc

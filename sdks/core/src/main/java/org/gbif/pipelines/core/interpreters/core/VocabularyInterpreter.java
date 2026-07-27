@@ -29,7 +29,7 @@ import org.gbif.pipelines.io.avro.VocabularyConcept;
 public class VocabularyInterpreter {
 
   private static final Pattern TYPE_STATUS_SEPARATOR =
-      Pattern.compile("^(.+) (OF|FOR) ", Pattern.CASE_INSENSITIVE);
+      Pattern.compile("^(.+?) (OF|FOR) ", Pattern.CASE_INSENSITIVE);
 
   /** Values taken from <a href="https://github.com/gbif/vocabulary/issues/87">here</a> */
   private static final Set<String> SUSPECTED_TYPE_STATUS_VALUES =
@@ -127,7 +127,7 @@ public class VocabularyInterpreter {
     return interpretVocabulary(term, extractNullAwareValue(er, term), vocabularyService, null);
   }
 
-  static Optional<VocabularyConcept> interpretVocabulary(
+  public static Optional<VocabularyConcept> interpretVocabulary(
       Term term, String value, VocabularyService vocabularyService) {
     return interpretVocabulary(term, value, vocabularyService, null);
   }

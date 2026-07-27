@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.Header;
@@ -44,7 +45,7 @@ public class AirflowClient {
 
   private final AirflowConfig config;
 
-  private final String dagName;
+  @Getter private final String dagName;
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 

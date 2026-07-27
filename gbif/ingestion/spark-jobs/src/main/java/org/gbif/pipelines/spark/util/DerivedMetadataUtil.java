@@ -54,7 +54,7 @@ import scala.Tuple3;
 @Slf4j
 public class DerivedMetadataUtil implements Serializable {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = MapperUtil.MAPPER;
 
   /**
    * Adds DerivedMetadataRecord to the events.

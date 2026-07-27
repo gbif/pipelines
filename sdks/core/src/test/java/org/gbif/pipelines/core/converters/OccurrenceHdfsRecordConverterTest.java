@@ -155,7 +155,7 @@ public class OccurrenceHdfsRecordConverterTest {
         RankedName.newBuilder().setName("ORDER").setRank(Rank.ORDER.toString()).build());
     TaxonRecord taxonRecord =
         TaxonRecord.newBuilder()
-            .setDatasetKey(Constants.NUB_DATASET_KEY.toString())
+            .setDatasetKey(Constants.COL_DATASET_KEY.toString())
             .setCreated(
                 2L) // This value for lastParsed and lastInterpreted since is greater that the Basic
             // record created date
@@ -594,10 +594,12 @@ public class OccurrenceHdfsRecordConverterTest {
         RankedNameWithAuthorship.newBuilder()
             .setKey(String.valueOf(2492483))
             .setRank(Rank.SPECIES.toString())
+            .setGenericName("Caldisphaera")
+            .setSpecificEpithet("lagunensis")
             .setName("Caldisphaera lagunensis Itoh & al., 2003")
             .build();
 
-    taxonRecord.setDatasetKey(Constants.NUB_DATASET_KEY.toString());
+    taxonRecord.setDatasetKey(Constants.COL_DATASET_KEY.toString());
     taxonRecord.setUsage(rankedName);
     taxonRecord.setAcceptedUsage(rankedName);
     taxonRecord.setSynonym(Boolean.FALSE);
@@ -642,6 +644,10 @@ public class OccurrenceHdfsRecordConverterTest {
 
     Assert.assertEquals("Caldisphaera", hdfsRecord.getGenericname());
     Assert.assertEquals("lagunensis", hdfsRecord.getSpecificepithet());
+
+    Assert.assertEquals(
+        List.of("2", "79", "8016360", "292", "7785", "1000002", "1000003"),
+        hdfsRecord.getTaxonkeys());
   }
 
   @Test
@@ -690,6 +696,7 @@ public class OccurrenceHdfsRecordConverterTest {
     String installationKey = UUID.randomUUID().toString();
     String organizationKey = UUID.randomUUID().toString();
     List<String> networkKey = Collections.singletonList(UUID.randomUUID().toString());
+    List<String> datasetCategory = List.of("eDNA", "Observation");
 
     MetadataRecord metadataRecord =
         MetadataRecord.newBuilder()
@@ -699,6 +706,7 @@ public class OccurrenceHdfsRecordConverterTest {
             .setDatasetPublishingCountry(Country.COSTA_RICA.getIso2LetterCode())
             .setLicense(License.CC_BY_4_0.name())
             .setNetworkKeys(networkKey)
+            .setDatasetCategory(datasetCategory)
             .setDatasetTitle("TestDataset")
             .setEndorsingNodeKey(nodeKey)
             .setInstallationKey(installationKey)
@@ -715,6 +723,7 @@ public class OccurrenceHdfsRecordConverterTest {
     // Should
     Assert.assertEquals(datasetKey, hdfsRecord.getDatasetkey());
     Assert.assertEquals(networkKey, hdfsRecord.getNetworkkey());
+    Assert.assertEquals(datasetCategory, hdfsRecord.getDatasetcategory());
     Assert.assertEquals(installationKey, hdfsRecord.getInstallationkey());
     Assert.assertEquals(organizationKey, hdfsRecord.getPublishingorgkey());
     Assert.assertEquals(License.CC_BY_4_0.name(), hdfsRecord.getLicense());
@@ -780,7 +789,8 @@ public class OccurrenceHdfsRecordConverterTest {
     String[] issues = {
       OccurrenceIssue.IDENTIFIED_DATE_INVALID.name(),
       OccurrenceIssue.MODIFIED_DATE_INVALID.name(),
-      OccurrenceIssue.RECORDED_DATE_UNLIKELY.name()
+      OccurrenceIssue.RECORDED_DATE_UNLIKELY.name(),
+      OccurrenceIssue.NUCLEOTIDE_SEQUENCE_INVALID.name()
     };
 
     TemporalRecord temporalRecord =
@@ -790,12 +800,34 @@ public class OccurrenceHdfsRecordConverterTest {
             .setYear(2019)
             .setMonth(1)
             .setStartDayOfYear(1)
-            .setIssues(IssueRecord.newBuilder().setIssueList(Arrays.asList(issues)).build())
+            .setIssues(
+                IssueRecord.newBuilder()
+                    .setIssueList(
+                        Arrays.asList(
+                            OccurrenceIssue.IDENTIFIED_DATE_INVALID.name(),
+                            OccurrenceIssue.MODIFIED_DATE_INVALID.name(),
+                            OccurrenceIssue.RECORDED_DATE_UNLIKELY.name()))
+                    .build())
+            .build();
+
+    DnaDerivedDataRecord dnaDerivedDataRecord =
+        DnaDerivedDataRecord.newBuilder()
+            .setId("1")
+            .setDnaDerivedDataItems(
+                List.of(DnaDerivedData.newBuilder().setDnaSequenceID("DASFF").build()))
+            .setIssues(
+                IssueRecord.newBuilder()
+                    .setIssueList(List.of(OccurrenceIssue.NUCLEOTIDE_SEQUENCE_INVALID.name()))
+                    .build())
             .build();
 
     // When
     OccurrenceHdfsRecord hdfsRecord =
-        OccurrenceHdfsRecordConverter.builder().temporalRecord(temporalRecord).build().convert();
+        OccurrenceHdfsRecordConverter.builder()
+            .temporalRecord(temporalRecord)
+            .dnaDerivedDataRecord(dnaDerivedDataRecord)
+            .build()
+            .convert();
 
     // Should
     Assert.assertArrayEquals(issues, hdfsRecord.getIssue().toArray(new String[issues.length]));

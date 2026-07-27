@@ -6,6 +6,7 @@ import static org.junit.Assert.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.PathNotFoundException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
@@ -26,10 +27,12 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.avro.AvroParquetReader;
 import org.apache.parquet.hadoop.ParquetReader;
+import org.apache.parquet.hadoop.util.HadoopInputFile;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.EcoTerm;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
@@ -48,6 +51,9 @@ import org.junit.Test;
  * hierarchies, and metadata.
  */
 public class EventInterpretationTest extends MockedServicesTest {
+
+  private static final String EVT_000 = "EVT-000";
+  private static final String EVT_001 = "EVT-001";
 
   private static SparkSession spark;
   private static java.nio.file.Path sparkTmp = null;
@@ -71,7 +77,7 @@ public class EventInterpretationTest extends MockedServicesTest {
   }
 
   @Test
-  public void test() throws Exception {
+  public void basicTest() throws Exception {
 
     URL testRootUrl = getClass().getResource("/");
     assert testRootUrl != null;
@@ -95,17 +101,8 @@ public class EventInterpretationTest extends MockedServicesTest {
   private void checkHdfsTableOutputs(String outputFile, String testUuid, int attempt)
       throws Exception {
 
-    java.nio.file.Path dir =
-        java.nio.file.Path.of(outputFile)
-            .resolve(testUuid)
-            .resolve(String.valueOf(attempt))
-            .resolve(Directories.EVENT_HDFS);
-
     java.nio.file.Path parquetFile =
-        Files.list(dir)
-            .filter(path -> path.getFileName().toString().endsWith(".parquet"))
-            .findFirst()
-            .get();
+        readParquet(outputFile, testUuid, attempt, Directories.EVENT_HDFS);
 
     Configuration conf = new Configuration();
 
@@ -124,7 +121,7 @@ public class EventInterpretationTest extends MockedServicesTest {
         if ("EVT-000".equals(verbatimEventID)) {
           // Parent record checks
           assertEquals("EVT-000", JsonPath.read(json, "$.v_eventid.string"));
-          assertEquals("Project", JsonPath.read(json, "$.v_eventtype.string"));
+          assertEquals("habitat", JsonPath.read(json, "$.v_eventtype.string"));
         } else if ("EVT-001".equals(verbatimEventID)) {
           // Child record checks
           assertEquals("EVT-001", JsonPath.read(json, "$.v_eventid.string"));
@@ -150,17 +147,8 @@ public class EventInterpretationTest extends MockedServicesTest {
 
   private void checkJsonOutputs(String outputFile, String testUuid, int attempt) throws Exception {
 
-    java.nio.file.Path dir =
-        java.nio.file.Path.of(outputFile)
-            .resolve(testUuid)
-            .resolve(String.valueOf(attempt))
-            .resolve(Directories.EVENT_JSON);
-
     java.nio.file.Path parquetFile =
-        Files.list(dir)
-            .filter(path -> path.getFileName().toString().endsWith(".parquet"))
-            .findFirst()
-            .get();
+        readParquet(outputFile, testUuid, attempt, Directories.EVENT_JSON);
 
     // load parquet into spark sql dataframe
     Dataset<ParentJsonRecord> jsonDf =
@@ -178,7 +166,11 @@ public class EventInterpretationTest extends MockedServicesTest {
       if ("EVT-000".equals(eventId)) {
         // Parent record checks
         assertEquals("EVT-000", JsonPath.read(json, "$.event.eventID"));
-        assertEquals("Project", JsonPath.read(json, "$.event.eventType.concept"));
+        assertEquals("Event", JsonPath.read(json, "$.event.eventType.concept"));
+        assertEquals("habitat", JsonPath.read(json, "$.event.verbatimEventType"));
+        assertEquals(
+            List.of("habitat"),
+            JsonPath.<List<String>>read(json, "$.event.verbatimEventTypeHierarchy"));
       } else if ("EVT-001".equals(eventId)) {
         // Child record checks
         assertEquals("EVT-001", JsonPath.read(json, "$.event.eventID"));
@@ -216,9 +208,9 @@ public class EventInterpretationTest extends MockedServicesTest {
             List.of("Event", "Project", "Survey"),
             JsonPath.<List<String>>read(json, "$.event.eventType.lineage"));
         assertEquals(
-            List.of("Project", "Survey"),
+            List.of("Event", "Survey"),
             JsonPath.<List<String>>read(json, "$.event.eventTypeHierarchy"));
-        assertEquals("Project / Survey", JsonPath.read(json, "$.event.eventTypeHierarchyJoined"));
+        assertEquals("Event / Survey", JsonPath.read(json, "$.event.eventTypeHierarchyJoined"));
 
         // extensions & flags
         List<String> exts = JsonPath.<List<String>>read(json, "$.event.extensions");
@@ -242,6 +234,7 @@ public class EventInterpretationTest extends MockedServicesTest {
         assertTrue(issues.contains("HAS_MATERIAL_SAMPLES_MISMATCH"));
         assertTrue(issues.contains("GEODETIC_DATUM_ASSUMED_WGS84"));
         assertTrue(issues.contains("CONTINENT_DERIVED_FROM_COORDINATES"));
+        assertFalse(issues.contains(OccurrenceIssue.PARENT_EVENT_INFINITE_LINEAGE.name()));
 
         // locality & temporal fields
         assertEquals("Maasai Mara National Reserve", JsonPath.read(json, "$.event.locality"));
@@ -251,15 +244,20 @@ public class EventInterpretationTest extends MockedServicesTest {
 
         // parent & parentsLineage
         assertEquals("EVT-000", JsonPath.read(json, "$.event.parentEventID"));
-        assertEquals("Project", JsonPath.read(json, "$.event.parentsLineage[0].eventType"));
+        int lineageSize = JsonPath.read(json, "$.event.parentsLineage.length()");
+        assertEquals(1, lineageSize);
+        assertEquals("Event", JsonPath.read(json, "$.event.parentsLineage[0].eventType"));
         assertEquals("EVT-000", JsonPath.read(json, "$.event.parentsLineage[0].id"));
-        assertEquals("Survey", JsonPath.read(json, "$.event.parentsLineage[1].eventType"));
-        assertEquals("EVT-001", JsonPath.read(json, "$.event.parentsLineage[1].id"));
 
         // project & publishing info
         assertEquals(
-            List.of("nlbif2022.015"), JsonPath.<List<String>>read(json, "$.event.projectID"));
-        assertEquals("nlbif2022.015", JsonPath.read(json, "$.event.projectIDJoined"));
+            List.of("nlbif2022.015", "ProjectID"),
+            JsonPath.<List<String>>read(json, "$.event.projectID"));
+        assertEquals("nlbif2022.015|ProjectID", JsonPath.read(json, "$.event.projectIDJoined"));
+        assertEquals(
+            List.of("FA1"), JsonPath.<List<String>>read(json, "$.event.fundingAttribution"));
+        assertEquals(
+            List.of("FA1-ID"), JsonPath.<List<String>>read(json, "$.event.fundingAttributionID"));
         assertEquals("EUROPE", JsonPath.read(json, "$.event.publishedByGbifRegion"));
         assertEquals("BG", JsonPath.read(json, "$.event.publishingCountry"));
         assertTrue(JsonPath.<Boolean>read(json, "$.event.repatriated"));
@@ -276,10 +274,10 @@ public class EventInterpretationTest extends MockedServicesTest {
         assertEquals("EVT-001", JsonPath.read(json, "$.event.surveyID"));
         assertEquals("Survey", JsonPath.read(json, "$.event.verbatimEventType"));
         assertEquals(
-            List.of("Project", "Survey"),
+            List.of("habitat", "Survey"),
             JsonPath.<List<String>>read(json, "$.event.verbatimEventTypeHierarchy"));
         assertEquals(
-            "Project / Survey", JsonPath.read(json, "$.event.verbatimEventTypeHierarchyJoined"));
+            "habitat / Survey", JsonPath.read(json, "$.event.verbatimEventTypeHierarchyJoined"));
 
         // humboldt
         assertEquals(
@@ -342,8 +340,7 @@ public class EventInterpretationTest extends MockedServicesTest {
 
         // eventInherited
         assertEquals(
-            List.of("Project", "Survey"),
-            JsonPath.<List<String>>read(json, "$.eventInherited.eventType"));
+            List.of("Event"), JsonPath.<List<String>>read(json, "$.eventInherited.eventType"));
         assertEquals("2", JsonPath.read(json, "$.eventInherited.id"));
 
         // top-level ids & timing (exact match to test resource)
@@ -596,7 +593,7 @@ public class EventInterpretationTest extends MockedServicesTest {
             .setCoreTerms(
                 Map.of(
                     DwcTerm.eventID.qualifiedName(), "EVT-000",
-                    DwcTerm.eventType.qualifiedName(), "Project"))
+                    DwcTerm.eventType.qualifiedName(), "habitat"))
             .build();
     parentEr.setCoreRowType(DwcTerm.Event.qualifiedName());
 
@@ -618,6 +615,10 @@ public class EventInterpretationTest extends MockedServicesTest {
     eventCoreTerms.put(DwcTerm.locality.qualifiedName(), "Maasai Mara National Reserve");
     eventCoreTerms.put(DwcTerm.decimalLatitude.qualifiedName(), "-1.4061");
     eventCoreTerms.put(DwcTerm.decimalLongitude.qualifiedName(), "35.0128");
+    eventCoreTerms.put(DwcTerm.fundingAttribution.qualifiedName(), "FA1");
+    eventCoreTerms.put(DwcTerm.fundingAttributionID.qualifiedName(), "FA1-ID");
+    eventCoreTerms.put(DwcTerm.projectID.qualifiedName(), "ProjectID");
+    eventCoreTerms.put(DwcTerm.projectTitle.qualifiedName(), "Project title");
 
     er.setCoreTerms(eventCoreTerms);
 
@@ -703,6 +704,275 @@ public class EventInterpretationTest extends MockedServicesTest {
       dataFileWriter.create(schema, new java.io.File(outputPath));
       dataFileWriter.append(parentEr);
       dataFileWriter.append(er);
+    }
+  }
+
+  @Test
+  public void eventsWithEqualEventIdAndParentLoopTest() throws Exception {
+    URL testRootUrl = getClass().getResource("/");
+    assert testRootUrl != null;
+    String testResourcesRoot = testRootUrl.getFile();
+
+    String testUuid = "1d5fe649-f85e-43cc-a19c-2a9979a741ac";
+    int attempt = 1;
+    generateVerbatimAvroWithEqualEventIdAndParentLoop(testUuid, 1);
+
+    PipelinesConfig config = loadConfig(testResourcesRoot + "/pipelines.yaml");
+
+    /* ############ standard init block ########## */
+    FileSystem fileSystem = getFileSystem(spark, config);
+
+    EventInterpretationPipeline.runEventInterpretation(
+        spark, fileSystem, config, testUuid, attempt, 1);
+
+    // assert json output
+    java.nio.file.Path jsonParquetFile =
+        readParquet(testResourcesRoot, testUuid, attempt, Directories.EVENT_JSON);
+
+    // load parquet into spark sql dataframe
+    Dataset<ParentJsonRecord> jsonDf =
+        spark.read().parquet(jsonParquetFile.toString()).as(Encoders.bean(ParentJsonRecord.class));
+    List<String> jsonRecord = jsonDf.toJSON().collectAsList();
+
+    for (String json : jsonRecord) {
+      Object document =
+          com.jayway.jsonpath.Configuration.defaultConfiguration().jsonProvider().parse(json);
+      assertEquals(EVT_000, JsonPath.read(document, "$.event.eventID"));
+      assertThrows(
+          PathNotFoundException.class, () -> JsonPath.read(document, "$.event.parentEventID"));
+      List<Map<String, String>> parentsLineage = JsonPath.read(document, "$.event.parentsLineage");
+      assertEquals(0, parentsLineage.size());
+      List<String> issues = JsonPath.read(document, "$.event.issues");
+      assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_INFINITE_LINEAGE.name()));
+    }
+
+    // assert hdfs output
+    java.nio.file.Path hdfsParquetFile =
+        readParquet(testResourcesRoot, testUuid, attempt, Directories.EVENT_HDFS);
+
+    Configuration conf = new Configuration();
+
+    try (ParquetReader<GenericRecord> reader =
+        AvroParquetReader.<GenericRecord>builder(
+                HadoopInputFile.fromPath(new Path(hdfsParquetFile.toString()), conf))
+            .withConf(conf)
+            .build()) {
+
+      GenericRecord record;
+      while ((record = reader.read()) != null) {
+        // convert to JSON
+        String json = toJson(record);
+
+        Object document =
+            com.jayway.jsonpath.Configuration.defaultConfiguration().jsonProvider().parse(json);
+        String eventId = JsonPath.read(document, "$.eventid.string");
+        assertNotNull(eventId);
+        assertThrows(
+            PathNotFoundException.class, () -> JsonPath.read(document, "$.parenteventid.string"));
+        assertFalse(eventId.isEmpty());
+        List<Object> lineage = JsonPath.read(document, "$.parenteventgbifid.array[*]");
+        assertEquals(0, lineage.size());
+
+        List<String> issues = JsonPath.read(document, "$.issue.array[*].element.string");
+        assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_INFINITE_LINEAGE.name()));
+      }
+    }
+  }
+
+  @Test
+  public void eventsWithInfiniteLoopTest() throws Exception {
+    URL testRootUrl = getClass().getResource("/");
+    assert testRootUrl != null;
+    String testResourcesRoot = testRootUrl.getFile();
+
+    String testUuid = "1d5fe649-f85e-43cc-a19c-2a9979a741ac";
+    int attempt = 1;
+    generateVerbatimAvroWithInfiniteLoop(testUuid, 1);
+
+    PipelinesConfig config = loadConfig(testResourcesRoot + "/pipelines.yaml");
+
+    /* ############ standard init block ########## */
+    FileSystem fileSystem = getFileSystem(spark, config);
+
+    EventInterpretationPipeline.runEventInterpretation(
+        spark, fileSystem, config, testUuid, attempt, 1);
+
+    // assert json output
+    java.nio.file.Path jsonParquetFile =
+        readParquet(testResourcesRoot, testUuid, attempt, Directories.EVENT_JSON);
+
+    // load parquet into spark sql dataframe
+    Dataset<ParentJsonRecord> jsonDf =
+        spark.read().parquet(jsonParquetFile.toString()).as(Encoders.bean(ParentJsonRecord.class));
+    List<String> jsonRecord = jsonDf.toJSON().collectAsList();
+
+    for (String json : jsonRecord) {
+      Object document =
+          com.jayway.jsonpath.Configuration.defaultConfiguration().jsonProvider().parse(json);
+
+      String eventId = JsonPath.read(document, "$.event.eventID");
+      assertNotNull(eventId);
+      assertFalse(eventId.isEmpty());
+
+      String parentEventId = JsonPath.read(document, "$.event.parentEventID");
+      assertNotNull(parentEventId);
+      assertFalse(parentEventId.isEmpty());
+
+      List<Map<String, String>> parentsLineage = JsonPath.read(document, "$.event.parentsLineage");
+      assertEquals(1, parentsLineage.size());
+
+      if (eventId.equals(EVT_000)) {
+        assertEquals(EVT_001, parentsLineage.get(0).get("id"));
+      } else if (eventId.equals(EVT_001)) {
+        assertEquals(EVT_000, parentsLineage.get(0).get("id"));
+      }
+
+      List<String> issues = JsonPath.read(document, "$.event.issues");
+      assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_INFINITE_LINEAGE.name()));
+    }
+
+    // assert hdfs output
+    java.nio.file.Path hdfsParquetFile =
+        readParquet(testResourcesRoot, testUuid, attempt, Directories.EVENT_HDFS);
+
+    Configuration conf = new Configuration();
+
+    try (ParquetReader<GenericRecord> reader =
+        AvroParquetReader.<GenericRecord>builder(
+                HadoopInputFile.fromPath(new Path(hdfsParquetFile.toString()), conf))
+            .withConf(conf)
+            .build()) {
+
+      GenericRecord record;
+      while ((record = reader.read()) != null) {
+        // convert to JSON
+        String json = toJson(record);
+
+        Object document =
+            com.jayway.jsonpath.Configuration.defaultConfiguration().jsonProvider().parse(json);
+        String eventId = JsonPath.read(document, "$.eventid.string");
+        assertNotNull(eventId);
+        assertFalse(eventId.isEmpty());
+
+        String parentEventId = JsonPath.read(document, "$.parenteventid.string");
+        assertNotNull(parentEventId);
+        assertFalse(parentEventId.isEmpty());
+
+        List<Object> lineage = JsonPath.read(document, "$.parenteventgbifid.array[*]");
+        assertEquals(1, lineage.size());
+
+        List<String> issues = JsonPath.read(document, "$.issue.array[*].element.string");
+        assertTrue(issues.contains(OccurrenceIssue.PARENT_EVENT_INFINITE_LINEAGE.name()));
+      }
+    }
+  }
+
+  private static java.nio.file.Path readParquet(
+      String testResourcesRoot, String testUuid, int attempt, String directory) throws IOException {
+    java.nio.file.Path dir =
+        java.nio.file.Path.of(testResourcesRoot)
+            .resolve(testUuid)
+            .resolve(String.valueOf(attempt))
+            .resolve(directory);
+
+    try (java.util.stream.Stream<java.nio.file.Path> paths = Files.list(dir)) {
+      return paths
+          .filter(path -> path.getFileName().toString().endsWith(".parquet"))
+          .findFirst()
+          .orElseThrow();
+    }
+  }
+
+  private void generateVerbatimAvroWithEqualEventIdAndParentLoop(String uuid, int attempt)
+      throws IOException {
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("2").build();
+    er.setCoreRowType(DwcTerm.Event.qualifiedName());
+
+    Map<String, String> eventCoreTerms = new HashMap<>();
+    eventCoreTerms.put(DwcTerm.eventID.qualifiedName(), EVT_000);
+    eventCoreTerms.put(DwcTerm.parentEventID.qualifiedName(), EVT_000);
+    eventCoreTerms.put(DwcTerm.eventType.qualifiedName(), "Survey");
+
+    er.setCoreTerms(eventCoreTerms);
+
+    // Avro schema for ExtendedRecord
+    Schema schema = ReflectData.AllowNull.get().getSchema(ExtendedRecord.class);
+
+    // Output Avro file path (use .avro)
+    URL outputRootUrl = getClass().getResource("/");
+    assert outputRootUrl != null;
+    String outputFile = outputRootUrl.getFile();
+    String outputPath = outputFile + "/" + uuid + "/" + attempt + "/verbatim.avro";
+
+    // Ensure parent directories exist
+    java.nio.file.Path parent = java.nio.file.Paths.get(outputPath).getParent();
+    if (parent != null) {
+      java.nio.file.Files.createDirectories(parent);
+    }
+
+    // Write Avro container file using ReflectDatumWriter and DataFileWriter
+    org.apache.avro.io.DatumWriter<ExtendedRecord> datumWriter =
+        new org.apache.avro.reflect.ReflectDatumWriter<>(ExtendedRecord.class);
+
+    try (org.apache.avro.file.DataFileWriter<ExtendedRecord> dataFileWriter =
+        new org.apache.avro.file.DataFileWriter<>(datumWriter)) {
+
+      // Use Snappy codec (optional)
+      dataFileWriter.setCodec(org.apache.avro.file.CodecFactory.snappyCodec());
+
+      dataFileWriter.create(schema, new java.io.File(outputPath));
+      dataFileWriter.append(er);
+    }
+  }
+
+  private void generateVerbatimAvroWithInfiniteLoop(String uuid, int attempt) throws IOException {
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").build();
+    er.setCoreRowType(DwcTerm.Event.qualifiedName());
+
+    Map<String, String> eventCoreTerms = new HashMap<>();
+    eventCoreTerms.put(DwcTerm.eventID.qualifiedName(), EVT_000);
+    eventCoreTerms.put(DwcTerm.parentEventID.qualifiedName(), EVT_001);
+    eventCoreTerms.put(DwcTerm.eventType.qualifiedName(), "Survey");
+
+    er.setCoreTerms(eventCoreTerms);
+
+    ExtendedRecord er2 = ExtendedRecord.newBuilder().setId("2").build();
+    er2.setCoreRowType(DwcTerm.Event.qualifiedName());
+
+    Map<String, String> eventCoreTerms2 = new HashMap<>();
+    eventCoreTerms2.put(DwcTerm.eventID.qualifiedName(), EVT_001);
+    eventCoreTerms2.put(DwcTerm.parentEventID.qualifiedName(), EVT_000);
+
+    er2.setCoreTerms(eventCoreTerms2);
+
+    // Avro schema for ExtendedRecord
+    Schema schema = ReflectData.AllowNull.get().getSchema(ExtendedRecord.class);
+
+    // Output Avro file path (use .avro)
+    URL outputRootUrl = getClass().getResource("/");
+    assert outputRootUrl != null;
+    String outputFile = outputRootUrl.getFile();
+    String outputPath = outputFile + "/" + uuid + "/" + attempt + "/verbatim.avro";
+
+    // Ensure parent directories exist
+    java.nio.file.Path parent = java.nio.file.Paths.get(outputPath).getParent();
+    if (parent != null) {
+      java.nio.file.Files.createDirectories(parent);
+    }
+
+    // Write Avro container file using ReflectDatumWriter and DataFileWriter
+    org.apache.avro.io.DatumWriter<ExtendedRecord> datumWriter =
+        new org.apache.avro.reflect.ReflectDatumWriter<>(ExtendedRecord.class);
+
+    try (org.apache.avro.file.DataFileWriter<ExtendedRecord> dataFileWriter =
+        new org.apache.avro.file.DataFileWriter<>(datumWriter)) {
+
+      // Use Snappy codec (optional)
+      dataFileWriter.setCodec(org.apache.avro.file.CodecFactory.snappyCodec());
+
+      dataFileWriter.create(schema, new java.io.File(outputPath));
+      dataFileWriter.append(er);
+      dataFileWriter.append(er2);
     }
   }
 }

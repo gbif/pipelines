@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.interpreters.metadata;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -63,6 +64,10 @@ public class MetadataInterpreter {
               .map(Network::getKey)
               .filter(Objects::nonNull)
               .collect(Collectors.toList()));
+    }
+
+    if (dataset.getCategory() != null && !dataset.getCategory().isEmpty()) {
+      mdr.setDatasetCategory(new ArrayList<>(dataset.getCategory()));
     }
 
     Organization organization = client.getOrganization(dataset.getPublishingOrganizationKey());

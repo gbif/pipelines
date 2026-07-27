@@ -45,8 +45,31 @@ public class EventCoreTransform implements Serializable {
     CoreInterpreter.interpretDatasetID(source, r::setDatasetID);
     CoreInterpreter.interpretDatasetName(source, r::setDatasetName);
     CoreInterpreter.interpretSamplingProtocol(source, r::setSamplingProtocol);
-    CoreInterpreter.interpretParentEventID(source, r::setParentEventID);
+    CoreInterpreter.interpretParentEventID(r::setParentEventID).accept(source, r);
     CoreInterpreter.interpretLocationID(source, r::setLocationID);
+    CoreInterpreter.interpretProjectID(source, r::setProjectID);
+    CoreInterpreter.interpretProjectTitle(source, r::setProjectTitle);
+    CoreInterpreter.interpretFundingAttribution(source, r::setFundingAttribution);
+    CoreInterpreter.interpretFundingAttributionID(source, r::setFundingAttributionID);
+
+    return r;
+  }
+
+  public EventCoreRecord convertEventTypeOnly(
+      ExtendedRecord source, Map<String, Map<String, String>> erWithParents) {
+    if (source == null || source.getCoreTerms().isEmpty()) {
+      throw new IllegalArgumentException("ExtendedRecord is null or empty");
+    }
+
+    var vocabularyService = VocabularyServiceFactory.getInstance(config);
+
+    EventCoreRecord r =
+        EventCoreRecord.newBuilder()
+            .setId(source.getId())
+            .setCreated(Instant.now().toEpochMilli())
+            .build();
+
+    VocabularyInterpreter.interpretEventType(vocabularyService).accept(source, r);
 
     return r;
   }

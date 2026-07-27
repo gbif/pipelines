@@ -47,7 +47,7 @@ import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 @Builder
 public class OccurrenceJsonConverter {
 
-  public static final String GBIF_BACKBONE_DATASET_KEY = Constants.NUB_DATASET_KEY.toString();
+  public static final String DEFAULT_TAXONOMY_KEY = Constants.COL_DATASET_KEY.toString();
 
   private final MetadataRecord metadata;
   private final IdentifierRecord identifier;
@@ -122,6 +122,7 @@ public class OccurrenceJsonConverter {
         .setInstallationKey(metadata.getInstallationKey())
         .setHostingOrganizationKey(metadata.getHostingOrganizationKey())
         .setNetworkKeys(metadata.getNetworkKeys())
+        .setDatasetCategory(metadata.getDatasetCategory())
         .setLicense(metadata.getLicense())
         .setProgrammeAcronym(metadata.getProgrammeAcronym())
         .setProtocol(metadata.getProtocol())
@@ -428,7 +429,7 @@ public class OccurrenceJsonConverter {
 
     Optional<TaxonRecord> gbifRecord =
         multiTaxon.getTaxonRecords().stream()
-            .filter(tr -> GBIF_BACKBONE_DATASET_KEY.equals(tr.getDatasetKey()))
+            .filter(tr -> DEFAULT_TAXONOMY_KEY.equals(tr.getDatasetKey()))
             .findFirst();
 
     // populate the legacy all issues field
@@ -442,6 +443,7 @@ public class OccurrenceJsonConverter {
             location,
             grscicoll,
             multimedia,
+            dnaDerivedData,
             gbifRecord.orElse(TaxonRecord.newBuilder().build())),
         builder::setIssues,
         builder::setNotIssues);
@@ -449,7 +451,15 @@ public class OccurrenceJsonConverter {
     // populate the non-taxonomic issues field
     JsonConverter.mapIssues(
         Arrays.asList(
-            metadata, identifier, clustering, basic, temporal, location, grscicoll, multimedia),
+            metadata,
+            identifier,
+            clustering,
+            basic,
+            temporal,
+            location,
+            grscicoll,
+            multimedia,
+            dnaDerivedData),
         builder::setNonTaxonomicIssues,
         v -> {});
   }

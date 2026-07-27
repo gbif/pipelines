@@ -120,6 +120,7 @@
       {"name":"datasetPublishingCountry","type":["null","string"],"default":null,"doc":""},
       {"name":"publishingOrganizationKey","type":["null","string"],"default":null,"doc":""},
       {"name":"networkKeys","type":{"type":"array","items":"string"},"default":[],"doc":""},
+      {"name":"datasetCategory","type":{"type":"array","items":"string"},"default":[],"doc":""},
       {"name":"projectId","type":["null","string"],"default":null,"doc":""},
       {"name":"programmeAcronym","type":["null","string"],"default":null,"doc":""}
     ]

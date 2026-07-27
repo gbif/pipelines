@@ -111,6 +111,7 @@ public class ParentJsonConverter {
         .setInstallationKey(metadata.getInstallationKey())
         .setHostingOrganizationKey(metadata.getHostingOrganizationKey())
         .setNetworkKeys(metadata.getNetworkKeys())
+        .setDatasetCategory(metadata.getDatasetCategory())
         .setProgrammeAcronym(metadata.getProgrammeAcronym())
         .setProtocol(metadata.getProtocol())
         .setPublisherTitle(metadata.getPublisherTitle())
@@ -153,8 +154,15 @@ public class ParentJsonConverter {
 
     if (eventCore.getParentsLineage() != null && !eventCore.getParentsLineage().isEmpty()) {
       List<String> eventTypes = getParentsLineageEventTypes();
+      if (eventCore.getEventType() != null && eventCore.getEventType().getConcept() != null) {
+        eventTypes.add(eventCore.getEventType().getConcept());
+      }
       List<String> verbatimEventTypes = getParentsLineageVerbatimEventTypes();
+      verbatimEventTypes.add(verbatimEventType);
       List<String> eventIDs = getLineageEventIDs();
+      if (eventID != null) {
+        eventIDs.add(eventID);
+      }
 
       builder
           .setEventTypeHierarchy(eventTypes)

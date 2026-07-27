@@ -13,6 +13,7 @@ public class PipelinesVariables {
     public static final String AVRO_EXTENSION = ".avro";
     public static final String ALL_AVRO = "*" + AVRO_EXTENSION;
 
+    public static final String DWCDP_STAGE = "dwcdp-stage";
     public static final String ARCHIVE_TO_VERBATIM = "archive-to-verbatim";
     public static final String CAMTRAPDP_TO_DWCA = "camtrapdp-to-dwca";
     public static final String VERBATIM_TO_OCCURRENCE = "verbatim-to-occurrence";
@@ -106,7 +107,7 @@ public class PipelinesVariables {
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static class Metrics {
-
+    // Avro
     public static final String AVRO_TO_JSON_COUNT = "avroToJsonCount";
 
     public static final String OCC_AVRO_TO_JSON_COUNT = "occAvroToJsonCount";

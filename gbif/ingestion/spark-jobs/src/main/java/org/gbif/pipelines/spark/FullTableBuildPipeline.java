@@ -26,6 +26,7 @@ import org.gbif.pipelines.spark.udf.Base64DecodeUDF;
 import org.gbif.pipelines.spark.udf.CleanDelimiterArraysUdf;
 import org.gbif.pipelines.spark.udf.CleanDelimiterCharsUdf;
 import org.gbif.pipelines.spark.util.FullBuildUtils;
+import org.gbif.pipelines.spark.util.PipelineArgs;
 
 /**
  * This class performs a full rebuild of the Iceberg table from the parquet files in HDFS. It reads
@@ -38,16 +39,7 @@ import org.gbif.pipelines.spark.util.FullBuildUtils;
 public class FullTableBuildPipeline {
 
   @Parameters(separators = "=")
-  private static class Args {
-
-    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
-    private String config = "/tmp/pipelines-spark.yaml";
-
-    @Parameter(
-        names = SPARK_MASTER_ARG,
-        description = "Spark master - there for local dev only",
-        required = false)
-    private String master;
+  private static class Args extends PipelineArgs {
 
     @Parameter(names = NUMBER_OF_SHARDS_ARG, description = "Number of shards")
     private int numberOfShards = 2400;
@@ -120,12 +112,6 @@ public class FullTableBuildPipeline {
                 + "debugging to keep the temp table around for inspection.",
         arity = 1)
     private boolean dropTempTableOnSuccess = true;
-
-    @Parameter(
-        names = {"--help", "-h"},
-        help = true,
-        description = "Show usage")
-    private boolean help;
   }
 
   public static void main(String[] argsv) throws Exception {
@@ -202,7 +188,7 @@ public class FullTableBuildPipeline {
           avroToHdfsCountAttempted);
     } else {
       tempLoadingTable =
-          String.format("%s_%s_%d", coreDwcTerm, "rebuild", System.currentTimeMillis());
+          String.format("tmp_%s_%s_%d", "rebuild", coreDwcTerm, System.currentTimeMillis());
 
       log.info("No temp loading table provided, will create table {}", tempLoadingTable);
       avroToHdfsCountAttempted = loadTempLoadingTable(spark, tempLoadingTable, hdfs);

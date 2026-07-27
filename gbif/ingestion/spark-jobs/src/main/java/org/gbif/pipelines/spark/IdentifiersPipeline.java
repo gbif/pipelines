@@ -4,10 +4,10 @@ import static org.apache.spark.sql.functions.sum;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.*;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_ABSENT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Identifier.GBIF_ID_INVALID;
+import static org.gbif.pipelines.core.utils.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.spark.ArgsConstants.*;
 import static org.gbif.pipelines.spark.Directories.*;
 import static org.gbif.pipelines.spark.util.LogUtil.timeAndRecPerSecond;
-import static org.gbif.pipelines.spark.util.MetricsUtil.writeMetricsYaml;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
 import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
@@ -34,6 +34,7 @@ import org.gbif.pipelines.core.functions.SerializableSupplier;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IdentifierRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKey;
+import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.transform.GbifIdTransform;
 import org.gbif.pipelines.transform.factory.KeygenServiceFactory;
 
@@ -58,16 +59,7 @@ public class IdentifiersPipeline {
   public static final String METRICS_FILENAME = "verbatim-to-identifier.yml";
 
   @Parameters(separators = "=")
-  private static class Args {
-
-    @Parameter(names = APP_NAME_ARG, description = "Application name", required = true)
-    private String appName;
-
-    @Parameter(names = DATASET_ID_ARG, description = "Dataset ID", required = true)
-    private String datasetId;
-
-    @Parameter(names = ATTEMPT_ID_ARG, description = "Attempt number", required = true)
-    private int attempt;
+  private static class Args extends SingleDatasetPipelineArgs {
 
     @Parameter(
         names = "--tripletValid",
@@ -92,21 +84,6 @@ public class IdentifiersPipeline {
 
     @Parameter(names = NUMBER_OF_SHARDS_ARG, description = "Number of shards", required = false)
     private int numberOfShards;
-
-    @Parameter(names = CONFIG_PATH_ARG, description = "Path to YAML configuration file")
-    private String config = "/tmp/pipelines-spark.yaml";
-
-    @Parameter(
-        names = SPARK_MASTER_ARG,
-        description = "Spark master - there for local dev only",
-        required = false)
-    private String master;
-
-    @Parameter(
-        names = {"--help", "-h"},
-        help = true,
-        description = "Show usage")
-    boolean help;
   }
 
   public static void main(String[] argsv) throws Exception {

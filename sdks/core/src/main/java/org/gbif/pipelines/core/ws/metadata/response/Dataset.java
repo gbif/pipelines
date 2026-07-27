@@ -3,6 +3,7 @@ package org.gbif.pipelines.core.ws.metadata.response;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,4 +30,5 @@ public class Dataset implements Serializable {
   private Project project;
   private List<MachineTag> machineTags;
   private List<Endpoint> endpoints;
+  private Set<String> category;
 }
