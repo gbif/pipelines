@@ -13,14 +13,13 @@
  */
 package org.gbif.pipelines.coordinator;
 
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.util.DistributedUtil;
-
-import java.util.List;
 
 @Slf4j
 public class ValidatorMetricsDistributedCallback extends ValidatorMetricsCallback {
@@ -34,19 +33,19 @@ public class ValidatorMetricsDistributedCallback extends ValidatorMetricsCallbac
   protected void runPipeline(PipelinesInterpretedMessage message) throws Exception {
 
     Long recordsNumber =
-            message.getValidationResult() != null
-                    && message.getValidationResult().getNumberOfRecords() != null
-                    ? message.getValidationResult().getNumberOfRecords()
-                    : DistributedUtil.getRecordsNumber(pipelinesConfig, message, fileSystem);
+        message.getValidationResult() != null
+                && message.getValidationResult().getNumberOfRecords() != null
+            ? message.getValidationResult().getNumberOfRecords()
+            : DistributedUtil.getRecordsNumber(pipelinesConfig, message, fileSystem);
 
     DistributedUtil.runSparkDag(
-            pipelinesConfig,
-            message,
-            "validator-metrics",
-            pipelinesConfig.getAirflowConfig().validatorInterpretationDag,
-            StepType.VALIDATOR_COLLECT_METRICS,
-            recordsNumber,
-            List.of());
+        pipelinesConfig,
+        message,
+        "validator-metrics",
+        pipelinesConfig.getAirflowConfig().validatorInterpretationDag,
+        StepType.VALIDATOR_COLLECT_METRICS,
+        recordsNumber,
+        List.of());
   }
 
   @Override
