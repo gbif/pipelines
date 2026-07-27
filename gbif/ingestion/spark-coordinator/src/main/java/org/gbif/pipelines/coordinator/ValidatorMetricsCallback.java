@@ -24,11 +24,11 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.IndexingPipeline;
 
 @Slf4j
-public class ValidatorIndexingCallback
+public class ValidatorMetricsCallback
     extends PipelinesCallback<PipelinesInterpretedMessage, PipelinesIndexedMessage>
     implements MessageCallback<PipelinesInterpretedMessage> {
 
-  public ValidatorIndexingCallback(
+  public ValidatorMetricsCallback(
       PipelinesConfig pipelinesConfig, MessagePublisher publisher, String master) {
     super(pipelinesConfig, publisher, master);
   }

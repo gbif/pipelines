@@ -19,9 +19,9 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 
 @Slf4j
-public class ValidatorIndexingDistributedCallback extends ValidatorIndexingCallback {
+public class ValidatorMetricsDistributedCallback extends ValidatorMetricsCallback {
 
-  public ValidatorIndexingDistributedCallback(
+  public ValidatorMetricsDistributedCallback(
       PipelinesConfig pipelinesConfig, MessagePublisher publisher) {
     super(pipelinesConfig, publisher, null);
   }
@@ -29,7 +29,7 @@ public class ValidatorIndexingDistributedCallback extends ValidatorIndexingCallb
   @Override
   protected void runPipeline(PipelinesInterpretedMessage message) throws Exception {
     // TODO: implement
-    log.info("ValidatorIndexingDistributedCallback#runPipeline");
+    log.info("ValidatorMetricsDistributedCallback#runPipeline");
   }
 
   @Override
