@@ -19,8 +19,8 @@ import org.gbif.converters.utils.XmlFilesReader;
 import org.gbif.converters.utils.XmlTermExtractor;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.common.pojo.FileNameTerm;
+import org.gbif.pipelines.tasks.client.RetryingValidationClient;
 import org.gbif.pipelines.tasks.validators.metrics.MetricsCollectorConfiguration;
-import org.gbif.pipelines.validator.IndexMetricsCollector;
 import org.gbif.pipelines.validator.Validations;
 import org.gbif.pipelines.validator.rules.IndexableRules;
 import org.gbif.validator.api.DwcFileType;
@@ -28,101 +28,101 @@ import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.TermInfo;
 import org.gbif.validator.api.Validation;
-import org.gbif.validator.ws.client.ValidationWsClient;
 
+/**
+ * {@link MetricsCollector} for XML-based (e.g. ABCD) archives. Raw term counts come from the XML
+ * source files, and indexed counts / issues / interpreted term counts are overlaid from the {@code
+ * collect-metrics.json} written by the {@code ValidatorMetricsPipeline} Spark job.
+ */
 @Slf4j
 @Builder
 public class XmlMetricsCollector implements MetricsCollector {
 
-  private final MetricsCollectorConfiguration config;
-  private final MessagePublisher publisher;
-  private final ValidationWsClient validationClient;
-  private final PipelinesIndexedMessage message;
-  private final StepType stepType;
+    private final MetricsCollectorConfiguration config;
+    private final MessagePublisher publisher;
+    private final RetryingValidationClient validationClient;
+    private final PipelinesIndexedMessage message;
+    private final StepType stepType;
 
-  @SneakyThrows
-  @Override
-  public void collect() {
-    log.info("Collect {} metrics for {}", message.getEndpointType(), message.getDatasetUuid());
-    collectMetrics(message);
-  }
+    @SneakyThrows
+    @Override
+    public void collect() {
+        log.info("Collect {} metrics for {}", message.getEndpointType(), message.getDatasetUuid());
+        collectMetrics(message);
+    }
 
-  @SneakyThrows
-  private void collectMetrics(PipelinesIndexedMessage message) {
-    Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
+    @SneakyThrows
+    private void collectMetrics(PipelinesIndexedMessage message) {
+        Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
 
-    List<File> files = XmlFilesReader.getInputFiles(inputPath.toFile());
-    // Extract all terms
-    List<FileInfo> fileInfos = convertToFileInfo(files);
+        List<File> files = XmlFilesReader.getInputFiles(inputPath.toFile());
+        // Extract all terms
+        List<FileInfo> fileInfos = convertToFileInfo(files);
 
-    // Collect metrics from ES
-    Metrics metrics =
-        IndexMetricsCollector.builder()
-            .fileInfos(fileInfos)
-            .key(message.getDatasetUuid())
-            .index(config.indexName)
-            .corePrefix(config.corePrefix)
-            .extensionsPrefix(config.extensionsPrefix)
-            .esHost(config.esConfig.hosts)
-            .build()
-            .collect();
+        // Read Spark-computed metrics from HDFS
+        Metrics sparkMetrics = SparkMetricsReader.readSparkMetrics(config, message);
 
-    // Get saved metrics object and merge with the result
-    Validation validation = validationClient.get(message.getDatasetUuid());
-    Validations.mergeWithValidation(validation, metrics);
+        // Overlay Spark metrics onto the XML-derived file infos
+        SparkMetricsReader.applySparkMetrics(fileInfos, sparkMetrics);
 
-    // Set isIndexable
-    validation
-        .getMetrics()
-        .setIndexeable(IndexableRules.isIndexable(stepType, validation.getMetrics()));
+        // Get saved metrics object and merge with the result
+        Validation validation = validationClient.get(message.getDatasetUuid());
+        Validations.mergeWithValidation(validation, Metrics.builder().fileInfos(fileInfos).build());
 
-    log.info("Update validation key {}", message.getDatasetUuid());
-    validationClient.update(validation);
-  }
+        SparkMetricsReader.updateIssuesFromMetaInfos(config, message, validation);
 
-  private List<FileInfo> convertToFileInfo(List<File> files) {
-    XmlTermExtractor extractor = XmlTermExtractor.extract(files);
-    Map<FileNameTerm, Set<Term>> coreTerms = extractor.getCore();
-    Map<FileNameTerm, Set<Term>> extensionsTerms = extractor.getExtenstionsTerms();
+        // Set isIndexable
+        validation
+                .getMetrics()
+                .setIndexeable(IndexableRules.isIndexable(stepType, validation.getMetrics()));
 
-    List<FileInfo> fileInfos = new ArrayList<>();
+        log.info("Update validation key {}", message.getDatasetUuid());
+        validationClient.update(validation.getKey(), validation);
+    }
 
-    // Core file
-    coreTerms.forEach(
-        (key, value) -> {
-          List<TermInfo> termInfoList =
-              value.stream()
-                  .map(x -> TermInfo.builder().term(x.qualifiedName()).build())
-                  .collect(Collectors.toList());
+    private List<FileInfo> convertToFileInfo(List<File> files) {
+        XmlTermExtractor extractor = XmlTermExtractor.extract(files);
+        Map<FileNameTerm, Set<Term>> coreTerms = extractor.getCore();
+        Map<FileNameTerm, Set<Term>> extensionsTerms = extractor.getExtenstionsTerms();
 
-          FileInfo info =
-              FileInfo.builder()
-                  .fileName(key.getFileName())
-                  .rowType(key.getTermQualifiedName())
-                  .fileType(DwcFileType.CORE)
-                  .terms(termInfoList)
-                  .build();
-          fileInfos.add(info);
-        });
+        List<FileInfo> fileInfos = new ArrayList<>();
 
-    // Extension file
-    extensionsTerms.forEach(
-        (key, value) -> {
-          List<TermInfo> termInfoList =
-              value.stream()
-                  .map(x -> TermInfo.builder().term(x.qualifiedName()).build())
-                  .collect(Collectors.toList());
+        // Core file
+        coreTerms.forEach(
+                (key, value) -> {
+                    List<TermInfo> termInfoList =
+                            value.stream()
+                                    .map(x -> TermInfo.builder().term(x.qualifiedName()).build())
+                                    .collect(Collectors.toList());
 
-          FileInfo info =
-              FileInfo.builder()
-                  .fileName(key.getFileName())
-                  .rowType(key.getTermQualifiedName())
-                  .fileType(DwcFileType.EXTENSION)
-                  .terms(termInfoList)
-                  .build();
-          fileInfos.add(info);
-        });
+                    FileInfo info =
+                            FileInfo.builder()
+                                    .fileName(key.getFileName())
+                                    .rowType(key.getTermQualifiedName())
+                                    .fileType(DwcFileType.CORE)
+                                    .terms(termInfoList)
+                                    .build();
+                    fileInfos.add(info);
+                });
 
-    return fileInfos;
-  }
+        // Extension file
+        extensionsTerms.forEach(
+                (key, value) -> {
+                    List<TermInfo> termInfoList =
+                            value.stream()
+                                    .map(x -> TermInfo.builder().term(x.qualifiedName()).build())
+                                    .collect(Collectors.toList());
+
+                    FileInfo info =
+                            FileInfo.builder()
+                                    .fileName(key.getFileName())
+                                    .rowType(key.getTermQualifiedName())
+                                    .fileType(DwcFileType.EXTENSION)
+                                    .terms(termInfoList)
+                                    .build();
+                    fileInfos.add(info);
+                });
+
+        return fileInfos;
+    }
 }
