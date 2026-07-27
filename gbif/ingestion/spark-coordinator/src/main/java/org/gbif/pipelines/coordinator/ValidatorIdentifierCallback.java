@@ -64,9 +64,8 @@ public class ValidatorIdentifierCallback
         numberOfShards,
         message.getValidationResult().isTripletValid(),
         message.getValidationResult().isOccurrenceIdValid(),
-        message.getValidationResult().isUseExtendedRecordId() != null
-            ? message.getValidationResult().isUseExtendedRecordId()
-            : false);
+        message.getValidationResult().getUseExtendedRecordId() != null
+            && message.getValidationResult().getUseExtendedRecordId());
 
     IdentifierValidationResult validationResult =
         PostprocessValidation.builder()
