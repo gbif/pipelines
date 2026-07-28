@@ -128,7 +128,7 @@ public abstract class ValidatorCallback<
   }
 
   public void handleMessage(I message) {
-
+    log.debug("Received message: {}", message);
     try {
       checkIfPaused();
       ThreadContext.put(
@@ -176,7 +176,7 @@ public abstract class ValidatorCallback<
         CONCURRENT_DATASETS.dec();
       }
     } catch (Exception e) {
-      log.error("Error while processing execution", e);
+      log.error("Error while processing validation", e);
     } finally {
       runningCounter.decrementAndGet();
     }
@@ -229,9 +229,8 @@ public abstract class ValidatorCallback<
     try {
       publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
       log.info(
-          "Message sent to balancer for {}, executionId: {}, step {}",
+          "Message sent to balancer for {} step {}",
           outgoingMessage.getDatasetUuid(),
-          outgoingMessage.getExecutionId(),
           this.getStepType().name());
     } catch (Exception e) {
       log.error(

@@ -43,12 +43,14 @@ public class ValidatorMetricsCallback
 
   @Override
   protected void runPipeline(PipelinesInterpretedMessage message) throws Exception {
+    log.info("Run metrics for validation: {}", message.getDatasetUuid());
     ValidatorMetricsPipeline.run(
         sparkSession,
         fileSystem,
         pipelinesConfig,
         message.getDatasetUuid().toString(),
         message.getAttempt());
+    log.info("Finished metrics for validation: {}", message.getDatasetUuid());
   }
 
   @Override
