@@ -1,6 +1,9 @@
 package org.gbif.pipelines.coordinator;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
@@ -19,12 +22,18 @@ public class OccurrenceIndexingCallback
     extends PipelinesCallback<PipelinesInterpretedMessage, PipelinesIndexedMessage>
     implements MessageCallback<PipelinesInterpretedMessage> {
 
+  protected final CloseableHttpClient httpClient;
   private static final Object LOCK = new Object();
   private boolean initialized = false;
 
   public OccurrenceIndexingCallback(
       PipelinesConfig pipelinesConfig, MessagePublisher publisher, String master) {
     super(pipelinesConfig, publisher, master);
+    this.httpClient =
+        HttpClients.custom()
+            .setDefaultRequestConfig(
+                RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
+            .build();
 
     if (isStandalone()) {
       initialiseIndex();

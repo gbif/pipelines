@@ -3,6 +3,7 @@ package org.gbif.pipelines.coordinator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.gbif.api.model.pipelines.PipelineStep.Status.RUNNING;
 import static org.gbif.pipelines.coordinator.PrometheusMetrics.*;
+import static org.gbif.pipelines.util.CallbackUtil.checkIfPaused;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +17,6 @@ import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.Duration;
@@ -33,9 +33,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.*;
@@ -47,7 +44,7 @@ import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.validator.api.Validation;
+import org.gbif.pipelines.util.CallbackUtil;
 
 @Slf4j
 public abstract class PipelinesCallback<
@@ -56,14 +53,11 @@ public abstract class PipelinesCallback<
 
   private static final AtomicInteger runningCounter = new AtomicInteger(0);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-  public static final String PAUSE_FILE_PATH = "/tmp/pause_message_processing";
-  public static final String SHUTDOWN_FILE_PATH = "/tmp/shutdown_now";
+
   public static final int ERROR_CONTEXT_MAX_SIZE = 10;
   protected final PipelinesConfig pipelinesConfig;
   protected final PipelinesHistoryClient historyClient;
   protected final MessagePublisher publisher;
-  protected final CloseableHttpClient httpClient;
-  protected final ValidatorStatusService validatorStatusService;
   protected SparkSession sparkSession;
   protected FileSystem fileSystem;
   protected String sparkMaster;
@@ -128,35 +122,6 @@ public abstract class PipelinesCallback<
             .target(
                 PipelinesHistoryClient.class,
                 pipelinesConfig.getStandalone().getRegistry().getWsUrl());
-    this.httpClient =
-        HttpClients.custom()
-            .setDefaultRequestConfig(
-                RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
-            .build();
-
-    // Validator runs (bypassRegistry) track progress through the validation service instead of the
-    // pipelines-history service.
-    if (pipelinesConfig.isBypassRegistry()) {
-      ValidationClient validationClient =
-          Feign.builder()
-              // Reuse the timeout-configured http client (60s connect/socket) so a slow or
-              // unreachable validation service fails instead of blocking the consumer thread.
-              .client(new ApacheHttpClient(httpClient))
-              .decoder(new JacksonDecoder(mapper))
-              .encoder(new JacksonEncoder(mapper))
-              .contract(new Contract.Default())
-              .requestInterceptor(
-                  new BasicAuthRequestInterceptor(
-                      pipelinesConfig.getStandalone().getRegistry().getUser(),
-                      pipelinesConfig.getStandalone().getRegistry().getPassword()))
-              .decode404()
-              .target(
-                  ValidationClient.class, pipelinesConfig.getStandalone().getRegistry().getWsUrl());
-      this.validatorStatusService =
-          new ValidatorStatusService(new RetryingValidationClient(validationClient));
-    } else {
-      this.validatorStatusService = null;
-    }
 
     this.sparkMaster = sparkMaster;
   }
@@ -299,9 +264,6 @@ public abstract class PipelinesCallback<
         // set outgoing message to the queue for the next step
         sendOutgoingMessage(trackingInfo, message);
 
-        // Mark this validator step as finished (no-op for regular ingestion runs)
-        updateValidatorStatus(message, Validation.Status.FINISHED, null);
-
         log.info("Finished processing datasetKey: {}", message.getDatasetUuid());
 
       } catch (Exception ex) {
@@ -322,9 +284,6 @@ public abstract class PipelinesCallback<
             updateTrackingStatus(trackingInfo, message, PipelineStep.Status.FAILED);
           }
 
-          // Mark this validator step as failed (no-op for regular ingestion runs)
-          updateValidatorStatus(message, Validation.Status.FAILED, ex.getMessage());
-
         } catch (Exception e) {
           ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
           log.error(
@@ -334,9 +293,7 @@ public abstract class PipelinesCallback<
 
         CONCURRENT_DATASETS.dec();
 
-        if (isRegistryBypassed()) {
-          log.debug("Registry bypassed, skip marking execution as FINISHED");
-        } else if (message.getExecutionId() != null) {
+        if (message.getExecutionId() != null) {
           ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
           log.debug("Mark execution as FINISHED if all steps are FINISHED");
           Runnable r =
@@ -361,33 +318,29 @@ public abstract class PipelinesCallback<
   }
 
   private void sendOutgoingMessage(TrackingInfo trackingInfo, I message) throws IOException {
-    // Validator runs are not tracked in the registry, so the "next step" is driven purely by the
-    // message's pipelineSteps (see createOutgoingMessage). Skip the registry-based gating below,
-    // which would otherwise drop the outgoing message (trackingInfo.executionId is 0).
-    if (!isRegistryBypassed()) {
-      Function<Long, List<PipelineStep>> getStepsByExecutionKeyFn =
-          ek -> {
-            log.debug("History client: get steps by execution key {}", ek);
-            return historyClient.getPipelineStepsByExecutionKey(ek);
-          };
+    Function<Long, List<PipelineStep>> getStepsByExecutionKeyFn =
+        ek -> {
+          log.debug("History client: get steps by execution key {}", ek);
+          return historyClient.getPipelineStepsByExecutionKey(ek);
+        };
 
-      List<PipelineStep> executionPipelineSteps =
-          Retry.decorateFunction(RETRY, getStepsByExecutionKeyFn).apply(trackingInfo.executionId);
+    List<PipelineStep> executionPipelineSteps =
+        Retry.decorateFunction(RETRY, getStepsByExecutionKeyFn).apply(trackingInfo.executionId);
 
-      log.info(
-          "Execution steps for execution key {}: {}",
-          trackingInfo.executionId,
-          executionPipelineSteps);
+    log.info(
+        "Execution steps for execution key {}: {}",
+        trackingInfo.executionId,
+        executionPipelineSteps);
 
-      if (log.isDebugEnabled()) {
-        log.debug(
-            "Execution ID {}, steps size: {}, steps: {}",
-            trackingInfo.executionId,
-            executionPipelineSteps.size(),
-            executionPipelineSteps.stream()
-                .map(ps -> ps.getType().name())
-                .collect(Collectors.joining(", ")));
-      }
+    if (log.isDebugEnabled()) {
+      log.debug(
+              "Execution ID {}, steps size: {}, steps: {}",
+              trackingInfo.executionId,
+              executionPipelineSteps.size(),
+              executionPipelineSteps.stream()
+                      .map(ps -> ps.getType().name())
+                      .collect(Collectors.joining(", ")));
+    }
 
       List<PipelineStep> thisPipelineStep =
           executionPipelineSteps.stream().filter(ps -> ps.getType() != getStepType()).toList();
@@ -404,7 +357,7 @@ public abstract class PipelinesCallback<
         return;
       }
 
-      // if there is no more steps in the execution to run, dont send messages
+      // if there is no more steps in the execution to run, don't send messages
       if (!executionPipelineSteps.isEmpty()) {
         // are there any incomplete steps left in the execution? if not,
         // don't send message to balancer, just mark execution as finished
@@ -422,7 +375,6 @@ public abstract class PipelinesCallback<
           return;
         }
       }
-    }
 
     // Create and send outgoing message
     O outgoingMessage;
@@ -486,51 +438,11 @@ public abstract class PipelinesCallback<
     }
   }
 
-  private static void checkIfPaused() {
-    while (new File(PAUSE_FILE_PATH).exists()) {
-      log.warn(
-          "Found "
-              + PAUSE_FILE_PATH
-              + " file, pausing processing new messages for 10s. Delete to resume.");
-      try {
-        Thread.sleep(30_000);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-    }
-  }
-
   public boolean isRunning() {
-    return !new File(SHUTDOWN_FILE_PATH).exists();
-  }
-
-  /**
-   * When {@code bypassRegistry} is enabled (validator runs), no calls are made to the GBIF registry
-   * pipelines-history service. Validator datasets are ephemeral validation UUIDs that are not
-   * registered and therefore have no history to track.
-   */
-  protected boolean isRegistryBypassed() {
-    return pipelinesConfig.isBypassRegistry();
+    return CallbackUtil.isRunning();
   }
 
   protected boolean isProcessingStopped(I message) {
-    if (isRegistryBypassed()) {
-      // Validator runs are not tracked in the registry; consult the validation service instead to
-      // decide whether the validation has already reached a terminal/non-resumable state. A failure
-      // here must not block or crash the consumer, so it is logged and we continue processing.
-      if (validatorStatusService == null) {
-        return false;
-      }
-      try {
-        return validatorStatusService.isValidatorAborted(message);
-      } catch (Exception e) {
-        log.error(
-            "Couldn't check validation status for dataset {}, continuing processing",
-            message.getDatasetUuid(),
-            e);
-        return false;
-      }
-    }
 
     Long currentKey = message.getExecutionId();
     UUID datasetKey = message.getDatasetUuid();
@@ -599,9 +511,6 @@ public abstract class PipelinesCallback<
 
   protected void updateTrackingStatus(
       TrackingInfo trackingInfo, I message, PipelineStep.Status status) {
-    if (isRegistryBypassed()) {
-      return;
-    }
 
     String path =
         String.join(
@@ -661,32 +570,9 @@ public abstract class PipelinesCallback<
     }
   }
 
-  /**
-   * Updates the validation status through the validation service for validator runs.
-   *
-   * <p>Only applies when the registry is bypassed (validator runs); regular ingestion tracks
-   * progress in the pipelines-history service through {@link #updateTrackingStatus}. Failures are
-   * logged and swallowed so that a validation-status update never breaks message processing.
-   */
-  protected void updateValidatorStatus(I message, Validation.Status status, String errorMessage) {
-    if (!isRegistryBypassed() || validatorStatusService == null) {
-      log.debug("Registry is not bypassed, skipping validation status update");
-      return;
-    }
-    try {
-      log.debug("Updating validation status for dataset {}", message.getDatasetUuid());
-      validatorStatusService.updateStatus(message, getStepType(), status, errorMessage);
-    } catch (Exception ex) {
-      log.error("Couldn't update validation status for dataset {}", message.getDatasetUuid(), ex);
-    }
-  }
-
   public abstract O createOutgoingMessage(I message);
 
   private void updateQueuedStatus(TrackingInfo info, I message) {
-    if (isRegistryBypassed()) {
-      return;
-    }
 
     List<PipelinesWorkflow.Graph<StepType>.Edge> nodeEdges;
     boolean containsEvents = containsEvents(message);
@@ -733,10 +619,6 @@ public abstract class PipelinesCallback<
   }
 
   protected TrackingInfo trackPipelineStep(I message) throws Exception {
-    if (isRegistryBypassed()) {
-      // Validator runs are not tracked in the registry pipelines-history service.
-      return TrackingInfo.builder().build();
-    }
 
     // create pipeline process. If it already exists it returns the existing one (the db query
     // does an upsert).

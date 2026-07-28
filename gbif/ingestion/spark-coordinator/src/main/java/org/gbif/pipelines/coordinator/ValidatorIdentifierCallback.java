@@ -23,14 +23,13 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
-import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.spark.IdentifiersPipeline;
 import org.gbif.pipelines.util.SparkConfUtil;
 
 @Slf4j
 public class ValidatorIdentifierCallback
-    extends PipelinesCallback<PipelinesVerbatimMessage, PipelinesVerbatimMessage>
+    extends ValidatorCallback<PipelinesVerbatimMessage, PipelinesVerbatimMessage>
     implements MessageCallback<PipelinesVerbatimMessage> {
 
   public ValidatorIdentifierCallback(
@@ -43,7 +42,6 @@ public class ValidatorIdentifierCallback
     return StepType.VALIDATOR_VERBATIM_TO_IDENTIFIER;
   }
 
-  @Override
   protected void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
     IdentifiersPipeline.configSparkSession(sparkBuilder, config);
   }
@@ -74,24 +72,12 @@ public class ValidatorIdentifierCallback
             .fileSystem(this.fileSystem)
             .config(pipelinesConfig.getStandalone())
             .outputPath(pipelinesConfig.getOutputPath())
-            .bypassRegistry(isRegistryBypassed())
+            .bypassRegistry(true)
             .build()
             .validate();
 
     if (validationResult.isResultValid()) {
       log.info(validationResult.validationMessage());
-    } else {
-      // Registry notifications don't apply to validator runs (no registered dataset/execution).
-      if (!isRegistryBypassed()) {
-        historyClient.notifyAbsentIdentifiers(
-            message.getDatasetUuid(),
-            message.getAttempt(),
-            message.getExecutionId(),
-            validationResult.validationMessage());
-        historyClient.markPipelineStatusAsAborted(message.getExecutionId());
-      }
-      log.error(validationResult.validationMessage());
-      throw new PipelinesException(validationResult.validationMessage());
     }
   }
 

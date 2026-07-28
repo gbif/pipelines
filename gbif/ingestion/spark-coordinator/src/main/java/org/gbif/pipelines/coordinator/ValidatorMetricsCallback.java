@@ -26,7 +26,7 @@ import org.gbif.pipelines.spark.ValidatorMetricsPipeline;
 
 @Slf4j
 public class ValidatorMetricsCallback
-    extends PipelinesCallback<PipelinesInterpretedMessage, PipelinesIndexedMessage>
+    extends ValidatorCallback<PipelinesInterpretedMessage, PipelinesIndexedMessage>
     implements MessageCallback<PipelinesInterpretedMessage> {
 
   public ValidatorMetricsCallback(
@@ -39,10 +39,7 @@ public class ValidatorMetricsCallback
     return StepType.VALIDATOR_COLLECT_METRICS;
   }
 
-  @Override
-  protected void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {
-    IndexingPipeline.configSparkSession(sparkBuilder, config);
-  }
+  protected void configSparkSession(SparkSession.Builder sparkBuilder, PipelinesConfig config) {}
 
   @Override
   protected void runPipeline(PipelinesInterpretedMessage message) throws Exception {

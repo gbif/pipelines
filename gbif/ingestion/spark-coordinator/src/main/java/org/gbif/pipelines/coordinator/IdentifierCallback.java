@@ -5,6 +5,9 @@ import static org.gbif.pipelines.util.DistributedUtil.getRecordsNumber;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessageCallback;
@@ -20,9 +23,16 @@ public class IdentifierCallback
     extends PipelinesCallback<PipelinesVerbatimMessage, PipelinesVerbatimMessage>
     implements MessageCallback<PipelinesVerbatimMessage> {
 
+  protected final CloseableHttpClient httpClient;
+
   public IdentifierCallback(
       PipelinesConfig pipelinesConfig, MessagePublisher publisher, String master) {
     super(pipelinesConfig, publisher, master);
+    this.httpClient =
+        HttpClients.custom()
+            .setDefaultRequestConfig(
+                RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
+            .build();
   }
 
   @Override
