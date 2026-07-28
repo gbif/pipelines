@@ -17,6 +17,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.OrganismJoinBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.ProtocolJoinBuilder;
 import org.gbif.pipelines.spark.util.DatasetJoins;
 import org.gbif.pipelines.spark.util.TableLoader;
 
@@ -29,6 +30,9 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * <ol>
  *   <li>Load the required {@code occurrence} table — throws if absent (routing error).
  *   <li>Left-join {@code organism} via {@link OrganismJoinBuilder} — skipped if absent.
+ *   <li>Resolve {@code occurrenceProtocol_fk} → new {@code samplingProtocol} column via {@link
+ *       ProtocolJoinBuilder} — previously leaked as a raw surrogate value under its own column
+ *       name.
  *   <li>Drop the bare {@code occurrence_pk} surrogate — it's needed only so {@link
  *       MediaExtensionBuilder}/{@link AssertionExtensionBuilder} can resolve their own {@code
  *       occurrence_fk} against it (each reloads {@code occurrence} fresh from the loader for that,
@@ -69,6 +73,9 @@ public class OccurrenceCoreBuilder {
                         "occurrence table missing — orchestrator should not have routed here"));
 
     Dataset<Row> enriched = OrganismJoinBuilder.enrichOccurrences(loader, occurrenceDf);
+    enriched =
+        ProtocolJoinBuilder.resolveProtocolFk(
+            loader, enriched, "occurrenceProtocol_fk", "samplingProtocol");
     enriched = enriched.drop(OCCURRENCE_PK_COLUMN);
 
     Optional<Dataset<Row>> mediaExtDf =

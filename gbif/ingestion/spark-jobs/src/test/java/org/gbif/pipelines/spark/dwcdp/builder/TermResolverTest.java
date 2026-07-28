@@ -102,4 +102,16 @@ class TermResolverTest {
   void termFactory_resolvesDcTermsToQualifiedUri(String input, String expected) {
     assertEquals(expected, TermResolver.resolve(input));
   }
+
+  static Stream<Arguments> samplingAndGeoreferenceProtocolCases() {
+    return Stream.of(
+        Arguments.of("samplingProtocol", DwcTerm.samplingProtocol.qualifiedName()),
+        Arguments.of("georeferenceProtocol", DwcTerm.georeferenceProtocol.qualifiedName()));
+  }
+
+  @ParameterizedTest(name = "{0} → {1}")
+  @MethodSource("samplingAndGeoreferenceProtocolCases")
+  void termFactory_resolvesProtocolColumnsToQualifiedUri(String input, String expected) {
+    assertEquals(expected, TermResolver.resolve(input));
+  }
 }

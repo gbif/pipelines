@@ -544,4 +544,27 @@ class EventCoreBuilderTest {
         records.get(0).getCoreTerms().containsKey("event_pk"),
         "event_pk is a surrogate key with no DwC term — it must never appear in coreTerms");
   }
+
+  @Test
+  void eventProtocolFkAndGeoreferenceProtocolFk_neverLeakAsRawSurrogates() {
+    StructType schema =
+        new StructType()
+            .add("eventID", DataTypes.StringType)
+            .add("eventProtocol_fk", DataTypes.StringType)
+            .add("georeferenceProtocol_fk", DataTypes.StringType);
+    Dataset<Row> eventDf =
+        spark.createDataFrame(
+            List.of(RowFactory.create("EVT001", "PROTO-001", "PROTO-002")), schema);
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf)).collectAsList();
+
+    assertEquals(1, records.size());
+    Map<String, String> coreTerms = records.get(0).getCoreTerms();
+    assertFalse(coreTerms.containsKey("eventProtocol_fk"));
+    assertFalse(coreTerms.containsKey("georeferenceProtocol_fk"));
+    // no protocol table in this fixture, so the raw FK values are the documented fallback
+    assertEquals("PROTO-001", coreTerms.get(DwcTerm.samplingProtocol.qualifiedName()));
+    assertEquals("PROTO-002", coreTerms.get(DwcTerm.georeferenceProtocol.qualifiedName()));
+  }
 }

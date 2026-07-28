@@ -20,6 +20,7 @@ import org.gbif.pipelines.spark.dwcdp.builder.extension.GeologicalContextJoinBui
 import org.gbif.pipelines.spark.dwcdp.builder.extension.HumboldtExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.OccurrenceExtensionBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.ProtocolJoinBuilder;
 import org.gbif.pipelines.spark.util.DatasetJoins;
 import org.gbif.pipelines.spark.util.TableLoader;
 
@@ -36,6 +37,10 @@ import org.gbif.pipelines.spark.util.TableLoader;
  *       something to read. See {@link #resolveParentEventId}.
  *   <li>Enrich with {@code geological-context} via {@link GeologicalContextJoinBuilder} — skipped
  *       if absent or {@code event} has no {@code geologicalContextID} column.
+ *   <li>Resolve {@code eventProtocol_fk} → new {@code samplingProtocol} column, and coalesce {@code
+ *       georeferenceProtocol_fk} into the existing {@code georeferenceProtocol} text field (only
+ *       where it's null) via {@link ProtocolJoinBuilder} — previously both FKs leaked as raw
+ *       surrogate values under their own column names.
  *   <li>Build the Occurrence extension via {@link OccurrenceExtensionBuilder} — skipped if the
  *       occurrence table is absent or has no {@code eventID} column. Organism fields, and the
  *       occurrence's own {@code occurrence-media}/{@code occurrence-assertion} rows, are already
@@ -82,6 +87,12 @@ public class EventCoreBuilder {
 
     eventDf = resolveParentEventId(eventDf);
     eventDf = GeologicalContextJoinBuilder.enrichEvents(loader, eventDf);
+    eventDf =
+        ProtocolJoinBuilder.resolveProtocolFk(
+            loader, eventDf, "eventProtocol_fk", "samplingProtocol");
+    eventDf =
+        ProtocolJoinBuilder.resolveProtocolFkCoalesceInto(
+            loader, eventDf, "georeferenceProtocol_fk", "georeferenceProtocol");
 
     Optional<Dataset<Row>> occurrenceExtDf = OccurrenceExtensionBuilder.build(spark, loader);
     Optional<Dataset<Row>> mediaExtDf =
