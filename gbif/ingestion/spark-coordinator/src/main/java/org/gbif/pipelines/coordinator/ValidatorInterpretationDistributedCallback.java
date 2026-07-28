@@ -41,7 +41,7 @@ public class ValidatorInterpretationDistributedCallback extends ValidatorInterpr
         pipelinesConfig,
         message,
         "validator-interpretation",
-        pipelinesConfig.getAirflowConfig().interpretationDag,
+        pipelinesConfig.getAirflowConfig().validatorInterpretationDag,
         StepType.VALIDATOR_VERBATIM_TO_INTERPRETED,
         recordsNumber,
         List.of());
