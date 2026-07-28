@@ -567,4 +567,35 @@ class EventCoreBuilderTest {
     assertEquals("PROTO-001", coreTerms.get(DwcTerm.samplingProtocol.qualifiedName()));
     assertEquals("PROTO-002", coreTerms.get(DwcTerm.georeferenceProtocol.qualifiedName()));
   }
+
+  @Test
+  void provenanceAttributionFields_aggregatedThroughFullEventCoreBuilder() {
+    StructType eventSchema =
+        new StructType()
+            .add("event_pk", DataTypes.StringType)
+            .add("eventID", DataTypes.StringType)
+            .add("provenance_fk", DataTypes.StringType);
+    Dataset<Row> eventDf =
+        spark.createDataFrame(
+            List.of(RowFactory.create("EPK-001", "EVT001", "PPK-1")), eventSchema);
+
+    StructType provenanceSchema =
+        new StructType()
+            .add("provenance_pk", DataTypes.StringType)
+            .add("provenanceID", DataTypes.StringType)
+            .add("fundingAttribution", DataTypes.StringType);
+    Dataset<Row> provenanceDf =
+        spark.createDataFrame(
+            List.of(RowFactory.create("PPK-1", "PROV-1", "NSF Grant 123")), provenanceSchema);
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(
+                spark, TestTableLoader.of("event", eventDf, "provenance", provenanceDf))
+            .collectAsList();
+
+    assertEquals(1, records.size());
+    Map<String, String> coreTerms = records.get(0).getCoreTerms();
+    assertEquals("NSF Grant 123", coreTerms.get(DwcTerm.fundingAttribution.qualifiedName()));
+    assertFalse(coreTerms.containsKey("provenance_fk"));
+  }
 }

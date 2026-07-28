@@ -21,6 +21,7 @@ import org.gbif.pipelines.spark.dwcdp.builder.extension.HumboldtExtensionBuilder
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.OccurrenceExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.ProtocolJoinBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.ProvenanceJoinBuilder;
 import org.gbif.pipelines.spark.util.DatasetJoins;
 import org.gbif.pipelines.spark.util.TableLoader;
 
@@ -41,6 +42,10 @@ import org.gbif.pipelines.spark.util.TableLoader;
  *       georeferenceProtocol_fk} into the existing {@code georeferenceProtocol} text field (only
  *       where it's null) via {@link ProtocolJoinBuilder} — previously both FKs leaked as raw
  *       surrogate values under their own column names.
+ *   <li>Enrich with {@code fundingAttribution}/{@code fundingAttributionID}/{@code projectID}/
+ *       {@code projectTitle} via {@link ProvenanceJoinBuilder} — aggregated, pipe-delimited, across
+ *       every linked {@code provenance} record (direct FK and/or {@code event-provenance} junction
+ *       table), sorted by {@code provenanceID} for deterministic output.
  *   <li>Build the Occurrence extension via {@link OccurrenceExtensionBuilder} — skipped if the
  *       occurrence table is absent or has no {@code eventID} column. Organism fields, and the
  *       occurrence's own {@code occurrence-media}/{@code occurrence-assertion} rows, are already
@@ -93,6 +98,7 @@ public class EventCoreBuilder {
     eventDf =
         ProtocolJoinBuilder.resolveProtocolFkCoalesceInto(
             loader, eventDf, "georeferenceProtocol_fk", "georeferenceProtocol");
+    eventDf = ProvenanceJoinBuilder.enrichEvents(loader, eventDf);
 
     Optional<Dataset<Row>> occurrenceExtDf = OccurrenceExtensionBuilder.build(spark, loader);
     Optional<Dataset<Row>> mediaExtDf =

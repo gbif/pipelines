@@ -114,4 +114,19 @@ class TermResolverTest {
   void termFactory_resolvesProtocolColumnsToQualifiedUri(String input, String expected) {
     assertEquals(expected, TermResolver.resolve(input));
   }
+
+  static Stream<Arguments> provenanceAttributionCases() {
+    return Stream.of(
+        Arguments.of("fundingAttribution", DwcTerm.fundingAttribution.qualifiedName()),
+        Arguments.of("fundingAttributionID", DwcTerm.fundingAttributionID.qualifiedName()),
+        Arguments.of("projectID", DwcTerm.projectID.qualifiedName()),
+        Arguments.of("projectTitle", DwcTerm.projectTitle.qualifiedName()));
+  }
+
+  @ParameterizedTest(name = "{0} → {1}")
+  @MethodSource("provenanceAttributionCases")
+  void termFactory_resolvesProvenanceAttributionFieldsToQualifiedUri(
+      String input, String expected) {
+    assertEquals(expected, TermResolver.resolve(input));
+  }
 }
