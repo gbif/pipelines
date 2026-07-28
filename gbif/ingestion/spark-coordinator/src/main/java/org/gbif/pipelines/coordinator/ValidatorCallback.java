@@ -170,6 +170,7 @@ public abstract class ValidatorCallback<
         ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
         log.error(
             "Failed to update tracking status for datasetKey - " + message.getDatasetUuid(), ex);
+        updateValidatorStatus(message, Validation.Status.FAILED, ex.getMessage());
       } finally {
         CONCURRENT_DATASETS.dec();
       }
