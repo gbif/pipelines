@@ -22,7 +22,7 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.util.DistributedUtil;
 
 @Slf4j
-public class ValidatorIdentifierDistributedCallback extends IdentifierCallback {
+public class ValidatorIdentifierDistributedCallback extends ValidatorIdentifierCallback {
 
   public ValidatorIdentifierDistributedCallback(
       PipelinesConfig pipelinesConfig, MessagePublisher publisher) {
