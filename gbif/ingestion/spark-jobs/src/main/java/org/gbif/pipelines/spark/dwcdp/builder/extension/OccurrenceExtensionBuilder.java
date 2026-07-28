@@ -15,8 +15,9 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * <p>When a DwC-DP dataset is ingested as event-core, occurrences become an extension rather than
  * the core. Organism fields are denormalized onto each occurrence row via {@link
  * OrganismJoinBuilder} before aggregation, so they are preserved on the extension rows. {@link
- * IdentificationJoinBuilder} likewise adds the taxonomic rank hierarchy for occurrences with
- * exactly one accepted identification. The occurrence's own {@code occurrence-media} and {@code
+ * IdentificationJoinBuilder} and {@link MaterialJoinBuilder} likewise add the taxonomic rank
+ * hierarchy and institution/collection/specimen fields respectively, each restricted to its own
+ * exactly-one-match rule. The occurrence's own {@code occurrence-media} and {@code
  * occurrence-assertion} rows are likewise folded in as nested JSON columns ({@link
  * MediaExtensionBuilder#COL_MEDIA_EXT_JSON}, {@link
  * AssertionExtensionBuilder#COL_ASSERTION_EXT_JSON}) before aggregation, so that a photo or
@@ -78,6 +79,7 @@ public class OccurrenceExtensionBuilder {
 
     Dataset<Row> enriched = OrganismJoinBuilder.enrichOccurrences(loader, occurrenceDf);
     enriched = IdentificationJoinBuilder.enrichOccurrences(loader, enriched);
+    enriched = MaterialJoinBuilder.enrichOccurrences(loader, enriched);
 
     // Attach the occurrence's own media/assertion extensions before resolving event_fk and
     // aggregating, so they ride along as nested JSON on each occurrence's term map — the same

@@ -200,4 +200,38 @@ class OccurrenceCoreBuilderTest {
         records.get(0).getCoreTerms().containsKey("occurrence_pk"),
         "occurrence_pk is a surrogate key with no DwC term — it must never appear in coreTerms");
   }
+
+  @Test
+  void materialFields_flowThroughToCoreTermsForGrscicollAndTripletId() {
+    StructType occSchema =
+        new StructType()
+            .add("occurrenceID", DataTypes.StringType)
+            .add("scientificName", DataTypes.StringType);
+    Dataset<Row> occ =
+        spark.createDataFrame(List.of(RowFactory.create("OCC001", "Parus major")), occSchema);
+
+    StructType materialSchema =
+        new StructType()
+            .add("materialEntity_pk", DataTypes.StringType)
+            .add("evidenceForOccurrenceID", DataTypes.StringType)
+            .add("institutionCode", DataTypes.StringType)
+            .add("collectionCode", DataTypes.StringType)
+            .add("catalogNumber", DataTypes.StringType);
+    Dataset<Row> material =
+        spark.createDataFrame(
+            List.of(RowFactory.create("MEPK-1", "OCC001", "NHMD", "AVES", "12345")),
+            materialSchema);
+
+    List<ExtendedRecord> records =
+        OccurrenceCoreBuilder.build(
+                spark, TestTableLoader.of("occurrence", occ, "material", material))
+            .collectAsList();
+
+    assertEquals(1, records.size());
+    Map<String, String> coreTerms = records.get(0).getCoreTerms();
+    assertEquals("NHMD", coreTerms.get(DwcTerm.institutionCode.qualifiedName()));
+    assertEquals("AVES", coreTerms.get(DwcTerm.collectionCode.qualifiedName()));
+    assertEquals("12345", coreTerms.get(DwcTerm.catalogNumber.qualifiedName()));
+    assertFalse(coreTerms.containsKey("evidenceForOccurrenceID"));
+  }
 }

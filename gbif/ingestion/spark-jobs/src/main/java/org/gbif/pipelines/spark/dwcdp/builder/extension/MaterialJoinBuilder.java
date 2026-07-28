@@ -1,0 +1,169 @@
+package org.gbif.pipelines.spark.dwcdp.builder.extension;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.spark.sql.Column;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.functions;
+import org.gbif.pipelines.spark.util.TableLoader;
+
+/**
+ * Enriches occurrence rows by left-joining the {@code material} table onto them, bringing in
+ * institution/collection/specimen fields occurrence never carries on its own — notably {@code
+ * institutionCode}, {@code institutionID}, {@code ownerInstitutionCode}, {@code collectionCode},
+ * {@code collectionID}, {@code catalogNumber}, {@code otherCatalogNumbers}, {@code preparations},
+ * {@code typeStatus}, {@code disposition}. These fields sit behind two real gaps in the downstream
+ * DwC-A interpretation without this join:
+ *
+ * <ul>
+ *   <li>{@code org.gbif.pipelines.core.interpreters.core.GrscicollInterpreter} reads {@code
+ *       institutionID}/{@code institutionCode}/{@code ownerInstitutionCode}/{@code collectionID}/
+ *       {@code collectionCode} straight off the record — all null for DwC-DP occurrences without
+ *       this join, so GrSciColl institution/collection matching never fires.
+ *   <li>{@code org.gbif.pipelines.core.interpreters.specific.GbifIdInterpreter}'s triplet-based
+ *       GBIF ID path builds its key from {@code institutionCode} + {@code collectionCode} + {@code
+ *       catalogNumber} — unavailable for datasets that rely on the triplet rather than {@code
+ *       occurrenceID} for identity, without this join.
+ * </ul>
+ *
+ * <p><b>Join shape differs from every other builder in this package:</b> {@code
+ * material.evidenceForOccurrenceID} is a <em>weak</em> FK straight to {@code
+ * occurrence.occurrenceID} — both natural keys, no surrogate {@code _pk}/{@code _fk} resolution
+ * needed, same shape as {@link GeologicalContextJoinBuilder}'s natural-to-natural join.
+ *
+ * <p><b>Enrichment only applies when an occurrence has exactly one material row citing it as
+ * evidence.</b> Zero (nothing to enrich from) or more than one (a specimen + a separately
+ * accessioned tissue sample, say — a real, valid scenario the schema explicitly allows) both leave
+ * the occurrence unenriched, rather than guessing at a tie-break — same rule applied to {@link
+ * IdentificationJoinBuilder} for the analogous exactly-one-accepted-identification case.
+ *
+ * <p>Columns already present on {@code occurrence} are never overwritten by material's copy — same
+ * "occurrence value wins" precedence {@link OrganismJoinBuilder} already applies (material and
+ * occurrence overlap on several fields: {@code identifiedBy}, {@code dateIdentified}, {@code
+ * taxonID}, {@code scientificName}, etc.). Internal surrogate keys ({@code materialEntity_pk},
+ * {@code collectionEvent_fk}, {@code derivationEvent_fk}, {@code provenance_fk}, {@code
+ * usagePolicy_fk}) and the join key itself are excluded from what gets added.
+ *
+ * <p>Only the direct {@code material} → {@code occurrence} link is handled here. {@code material}'s
+ * own sub-tables ({@code material-media}, {@code material-assertion}, {@code material-provenance},
+ * {@code material-usage-policy}, {@code material-protocol}, {@code material-geological-context})
+ * and its links to {@code event} ({@code collectionEvent_fk}, {@code derivationEvent_fk}) are not
+ * handled — separate, later work, same deferral pattern as {@code creator} on media.
+ */
+@Slf4j
+public class MaterialJoinBuilder {
+
+  public static final String TABLE_MATERIAL = "material";
+  static final String EVIDENCE_FOR_OCCURRENCE_ID_COLUMN = "evidenceForOccurrenceID";
+
+  private static final Set<String> EXCLUDED_MATERIAL_COLUMNS =
+      Set.of(
+          "materialEntity_pk",
+          EVIDENCE_FOR_OCCURRENCE_ID_COLUMN,
+          "collectionEvent_fk",
+          "derivationEvent_fk",
+          "provenance_fk",
+          "usagePolicy_fk");
+
+  private MaterialJoinBuilder() {}
+
+  /**
+   * Returns {@code occurrenceDf} enriched with material fields not already present on it, for
+   * occurrences with exactly one material row citing them as evidence, or the original {@code
+   * occurrenceDf} unchanged if the {@code material} table is absent, occurrence has no {@code
+   * occurrenceID} column, or material has no {@code evidenceForOccurrenceID} column.
+   */
+  public static Dataset<Row> enrichOccurrences(TableLoader loader, Dataset<Row> occurrenceDf) {
+    Optional<Dataset<Row>> materialDfOpt = loader.load(TABLE_MATERIAL);
+    if (materialDfOpt.isEmpty()) {
+      log.debug("No material table present; skipping material join");
+      return occurrenceDf;
+    }
+
+    if (!Arrays.asList(occurrenceDf.columns()).contains("occurrenceID")) {
+      log.warn("occurrence table has no occurrenceID column; skipping material join");
+      return occurrenceDf;
+    }
+
+    Dataset<Row> materialDf = materialDfOpt.get();
+    if (!Arrays.asList(materialDf.columns()).contains(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN)) {
+      log.warn(
+          "material table has no {} column; skipping material join",
+          EVIDENCE_FOR_OCCURRENCE_ID_COLUMN);
+      return occurrenceDf;
+    }
+
+    Dataset<Row> singleMaterial = singleMaterialPerOccurrence(materialDf);
+
+    return join(occurrenceDf, singleMaterial);
+  }
+
+  /**
+   * Filters {@code materialDf} to rows with a non-null {@code evidenceForOccurrenceID}, then keeps
+   * only {@code evidenceForOccurrenceID} groups with <em>exactly one</em> such row.
+   */
+  private static Dataset<Row> singleMaterialPerOccurrence(Dataset<Row> materialDf) {
+    Dataset<Row> withEvidence =
+        materialDf.filter(functions.col(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN).isNotNull());
+
+    Dataset<Row> singleLinkKeys =
+        withEvidence
+            .groupBy(functions.col(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN))
+            .count()
+            .filter(functions.col("count").equalTo(1))
+            .select(functions.col(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN).as("__single_material_key"));
+
+    return withEvidence
+        .join(
+            singleLinkKeys,
+            withEvidence
+                .col(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN)
+                .equalTo(singleLinkKeys.col("__single_material_key")),
+            "inner")
+        .drop("__single_material_key");
+  }
+
+  /**
+   * Left-joins the (already filtered to exactly-one-material-per-occurrence) material rows onto
+   * occurrence via {@code occurrenceID -> evidenceForOccurrenceID} (both natural keys), adding only
+   * columns occurrence doesn't already carry — same column-precedence policy as {@link
+   * OrganismJoinBuilder#joinOrganism}.
+   */
+  private static Dataset<Row> join(Dataset<Row> occurrenceDf, Dataset<Row> materialDf) {
+    Set<String> occurrenceCols = new HashSet<>(Arrays.asList(occurrenceDf.columns()));
+
+    List<Column> selectCols = new ArrayList<>();
+    for (String col : occurrenceDf.columns()) {
+      selectCols.add(occurrenceDf.col(col));
+    }
+    for (String col : materialDf.columns()) {
+      if (!occurrenceCols.contains(col) && !EXCLUDED_MATERIAL_COLUMNS.contains(col)) {
+        selectCols.add(materialDf.col(col));
+        log.debug("Adding material column '{}' to occurrence rows", col);
+      }
+    }
+
+    Dataset<Row> joined =
+        occurrenceDf
+            .join(
+                materialDf,
+                occurrenceDf
+                    .col("occurrenceID")
+                    .equalTo(materialDf.col(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN)),
+                "left_outer")
+            .select(selectCols.toArray(new Column[0]));
+
+    log.info(
+        "Material join complete: occurrence columns before={}, after={}",
+        occurrenceDf.columns().length,
+        joined.columns().length);
+
+    return joined;
+  }
+}
