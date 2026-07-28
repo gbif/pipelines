@@ -19,13 +19,25 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * grouped by {@code eventID}/{@code occurrenceID} directly, which also never exists on either join
  * table.)
  *
- * <p>Both methods now: (1) join to {@code media} on {@code media_fk -> media.media_pk}, then (2)
- * resolve the parent-side FK to its natural id via the {@code event}/{@code occurrence} table — the
- * same resolve-then-aggregate pattern {@link AssertionExtensionBuilder} and {@link
+ * <p>Both methods now: (1) join to {@code media} on {@code media_fk -> media.media_pk}, (2) enrich
+ * the joined media rows with {@code usage-policy} via {@link UsagePolicyJoinBuilder} — {@code
+ * license}/{@code rightsHolder} live only there, never on {@code media} itself — then (3) resolve
+ * the parent-side FK to its natural id via the {@code event}/{@code occurrence} table — the
+ * resolve-then-aggregate pattern {@link AssertionExtensionBuilder} and {@link
  * HumboldtExtensionBuilder} already use — before aggregating.
  *
  * <p>Both methods return {@link Optional#empty()} when any required source table is absent — media
- * attachment is always optional in a DwC-DP package.
+ * attachment is always optional in a DwC-DP package. {@code usage-policy} is more optional still:
+ * its absence only means {@code license}/{@code rightsHolder} stay unpopulated, not that the whole
+ * media extension is skipped.
+ *
+ * <p>Target extension row type: this maps to DwC-A's Simple Multimedia extension ({@code
+ * Extension.MULTIMEDIA}), not Audubon Core — confirmed against the project's own DwC-DP→DwC-A
+ * field-mapping notes. {@code ROW_TYPE_MULTIMEDIA}'s value below previously held Audubon's row type
+ * by mistake (TDWG's own URI for Audubon Core happens to contain the literal substring {@code
+ * ac/terms/Multimedia}, which is what caused the mix-up) — media data written under the old value
+ * was never visible to {@code MultimediaInterpreter} at all, since it filters on {@code
+ * Extension.MULTIMEDIA.getRowType()} exactly.
  */
 @Slf4j
 public class MediaExtensionBuilder {
@@ -34,7 +46,8 @@ public class MediaExtensionBuilder {
   public static final String TABLE_EVENT_MEDIA = "event-media";
   public static final String TABLE_OCCURRENCE_MEDIA = "occurrence-media";
 
-  public static final String ROW_TYPE_MULTIMEDIA = "http://rs.tdwg.org/ac/terms/Multimedia";
+  /** Extension.MULTIMEDIA.getRowType() — the real Simple Multimedia extension row type. */
+  public static final String ROW_TYPE_MULTIMEDIA = "http://rs.gbif.org/terms/1.0/Multimedia";
 
   public static final String COL_MEDIA_EXT_JSON = "mediaExtJson";
 
@@ -48,7 +61,7 @@ public class MediaExtensionBuilder {
       SparkSession spark, TableLoader loader) {
 
     Optional<Dataset<Row>> eventMediaDfOpt = loader.load(TABLE_EVENT_MEDIA);
-    Optional<Dataset<Row>> mediaDfOpt = loader.load(TABLE_MEDIA);
+    Optional<Dataset<Row>> mediaDfOpt = loadEnrichedMedia(loader);
     Optional<Dataset<Row>> eventDfOpt = loader.load("event");
 
     if (eventMediaDfOpt.isEmpty() || mediaDfOpt.isEmpty() || eventDfOpt.isEmpty()) {
@@ -77,7 +90,7 @@ public class MediaExtensionBuilder {
       SparkSession spark, TableLoader loader) {
 
     Optional<Dataset<Row>> occMediaDfOpt = loader.load(TABLE_OCCURRENCE_MEDIA);
-    Optional<Dataset<Row>> mediaDfOpt = loader.load(TABLE_MEDIA);
+    Optional<Dataset<Row>> mediaDfOpt = loadEnrichedMedia(loader);
     Optional<Dataset<Row>> occurrenceDfOpt = loader.load("occurrence");
 
     if (occMediaDfOpt.isEmpty() || mediaDfOpt.isEmpty() || occurrenceDfOpt.isEmpty()) {
@@ -101,6 +114,18 @@ public class MediaExtensionBuilder {
             withOccurrenceId.columns(),
             "occurrenceID",
             COL_MEDIA_EXT_JSON));
+  }
+
+  /**
+   * Loads {@code media} and, if {@code usage-policy} is present, enriches it via {@link
+   * UsagePolicyJoinBuilder#enrichMedia} before either caller joins it to its own event/occurrence
+   * side. Centralised here so both callers get the enrichment identically rather than each needing
+   * to remember to apply it.
+   */
+  private static Optional<Dataset<Row>> loadEnrichedMedia(TableLoader loader) {
+    return loader
+        .load(TABLE_MEDIA)
+        .map(mediaDf -> UsagePolicyJoinBuilder.enrichMedia(loader, mediaDf));
   }
 
   /**

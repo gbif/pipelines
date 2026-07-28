@@ -346,4 +346,33 @@ class OccurrenceExtensionBuilderTest {
     // media nesting (runs after) — must not be clobbered by the organism join
     assertNotNull(occ.get(MediaExtensionBuilder.COL_MEDIA_EXT_JSON));
   }
+
+  // ---- occurrence_pk surrogate must never leak ----
+
+  @Test
+  void occurrencePkSurrogate_neverLeaksIntoNestedTermMap() throws Exception {
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> occDf =
+        occurrencePkDf(List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "Parus major")));
+    Dataset<Row> mediaDf =
+        mediaDf(List.of(RowFactory.create("MPK-001", "https://example.com/img1.jpg")));
+    Dataset<Row> occMediaDf = occurrenceMediaDf(List.of(RowFactory.create("OPK-001", "MPK-001")));
+
+    Optional<Dataset<Row>> resultOpt =
+        OccurrenceExtensionBuilder.build(
+            spark,
+            TestTableLoader.of(
+                "event", eventDf,
+                "occurrence", occDf,
+                "media", mediaDf,
+                "occurrence-media", occMediaDf));
+
+    assertTrue(resultOpt.isPresent());
+    Map<String, String> occ = singleOccurrence(resultOpt.get().collectAsList().get(0));
+    assertFalse(
+        occ.containsKey("occurrence_pk"),
+        "occurrence_pk is a surrogate key with no DwC term — it must never appear nested "
+            + "inside occurrenceExtJson, even though MediaExtensionBuilder needed it internally "
+            + "to resolve occurrence_fk");
+  }
 }

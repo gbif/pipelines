@@ -1,6 +1,7 @@
 package org.gbif.pipelines.spark.dwcdp.builder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -135,6 +136,16 @@ class EventCoreBuilderTest {
         new StructType()
             .add("survey_fk", DataTypes.StringType)
             .add("surveyTarget_fk", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> eventWithParentFkDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("event_pk", DataTypes.StringType)
+            .add("eventID", DataTypes.StringType)
+            .add("parentEvent_fk", DataTypes.StringType)
+            .add("eventDate", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
@@ -462,5 +473,75 @@ class EventCoreBuilderTest {
         "occurrence's own occurrence-media must survive nested inside the occurrence "
             + "extension when occurrence is nested under event core — this was silently "
             + "dropped before the OccurrenceExtensionBuilder fix");
+  }
+
+  @Test
+  void parentEventFk_resolvedToNaturalParentEventId() {
+    Dataset<Row> eventDf =
+        eventWithParentFkDf(
+            List.of(
+                RowFactory.create("EPK-001", "EVT001", null, "2024-06-01"),
+                RowFactory.create("EPK-002", "EVT002", "EPK-001", "2024-06-02")));
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf)).collectAsList();
+    records.sort((a, b) -> a.getId().compareTo(b.getId()));
+
+    assertEquals(2, records.size());
+    assertNull(
+        records.get(0).getCoreTerms().get(DwcTerm.parentEventID.qualifiedName()),
+        "EVT001 has no parent — parentEventID must be absent, not null-valued");
+    assertEquals(
+        "EVT001",
+        records.get(1).getCoreTerms().get(DwcTerm.parentEventID.qualifiedName()),
+        "parentEvent_fk (surrogate EPK-001) must resolve to the parent's natural eventID (EVT001), "
+            + "not the raw surrogate value");
+  }
+
+  @Test
+  void selfReferencingParentEventFk_stillResolvesToOwnEventId() {
+    // A row whose parentEvent_fk points at its own event_pk — a data-quality bug at the source,
+    // not something this builder should filter or special-case. CoreInterpreter downstream is
+    // responsible for detecting this and flagging PARENT_EVENT_INFINITE_LINEAGE; this builder's
+    // only job is to resolve the FK correctly so that detection has something to see.
+    Dataset<Row> eventDf =
+        eventWithParentFkDf(
+            List.of(RowFactory.create("EPK-001", "EVT001", "EPK-001", "2024-06-01")));
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf)).collectAsList();
+
+    assertEquals(1, records.size());
+    assertEquals(
+        "EVT001",
+        records.get(0).getCoreTerms().get(DwcTerm.parentEventID.qualifiedName()),
+        "self-referencing parentEvent_fk must still resolve, not be silently dropped");
+  }
+
+  @Test
+  void noParentEventFkColumn_parentEventIdAbsentAndNoErrors() {
+    // Uses the plain eventDf() helper already defined in this file, which has no
+    // parentEvent_fk/event_pk columns at all — the common case (no hierarchy in this dataset).
+    Dataset<Row> eventDf = eventDf(List.of(RowFactory.create("EVT001", "2024-06-01", "DK")));
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf)).collectAsList();
+
+    assertEquals(1, records.size());
+    assertNull(records.get(0).getCoreTerms().get(DwcTerm.parentEventID.qualifiedName()));
+  }
+
+  @Test
+  void bareEventPkSurrogate_neverLeaksIntoCoreTerms() {
+    Dataset<Row> eventDf =
+        eventWithParentFkDf(List.of(RowFactory.create("EPK-001", "EVT001", null, "2024-06-01")));
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf)).collectAsList();
+
+    assertEquals(1, records.size());
+    assertFalse(
+        records.get(0).getCoreTerms().containsKey("event_pk"),
+        "event_pk is a surrogate key with no DwC term — it must never appear in coreTerms");
   }
 }

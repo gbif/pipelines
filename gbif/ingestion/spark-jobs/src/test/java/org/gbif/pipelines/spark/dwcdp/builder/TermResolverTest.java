@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.Stream;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -25,7 +26,9 @@ class TermResolverTest {
     return Stream.of(
         Arguments.of("occurrenceReferences", DwcTerm.associatedReferences.qualifiedName()),
         Arguments.of("eventConductedBy", DwcTerm.recordedBy.qualifiedName()),
-        Arguments.of("eventConductedByID", DwcTerm.recordedByID.qualifiedName()));
+        Arguments.of("eventConductedByID", DwcTerm.recordedByID.qualifiedName()),
+        Arguments.of("accessURI", DcTerm.identifier.qualifiedName()),
+        Arguments.of("mediaType", DcTerm.type.qualifiedName()));
   }
 
   @ParameterizedTest(name = "{0} → {1}")
@@ -79,5 +82,24 @@ class TermResolverTest {
   @MethodSource("fallThroughCases")
   void unresolvable_fallsThroughToRawColumnName(String input) {
     assertEquals(input, TermResolver.resolve(input));
+  }
+
+  /**
+   * DwC-DP media field names that are expected to already resolve correctly via TermFactory with no
+   * rename needed, because they match their target DcTerm's simple name exactly. Confirming this in
+   * a test rather than assuming it — unlike accessURI/mediaType above, these were never verified
+   * against the actual TermFactory behavior, only assumed to "probably just work."
+   */
+  static Stream<Arguments> dcTermFactoryCases() {
+    return Stream.of(
+        Arguments.of("format", DcTerm.format.qualifiedName()),
+        Arguments.of("title", DcTerm.title.qualifiedName()),
+        Arguments.of("description", DcTerm.description.qualifiedName()));
+  }
+
+  @ParameterizedTest(name = "{0} → {1}")
+  @MethodSource("dcTermFactoryCases")
+  void termFactory_resolvesDcTermsToQualifiedUri(String input, String expected) {
+    assertEquals(expected, TermResolver.resolve(input));
   }
 }

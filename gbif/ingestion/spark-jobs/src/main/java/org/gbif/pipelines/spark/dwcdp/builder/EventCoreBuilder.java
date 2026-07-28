@@ -1,6 +1,7 @@
 package org.gbif.pipelines.spark.dwcdp.builder;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import org.apache.spark.sql.SparkSession;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.GeologicalContextJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.HumboldtExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.OccurrenceExtensionBuilder;
@@ -28,6 +30,12 @@ import org.gbif.pipelines.spark.util.TableLoader;
  *
  * <ol>
  *   <li>Load the required {@code event} table — throws if absent (routing error).
+ *   <li>Resolve {@code parentEvent_fk} (a surrogate self-reference to {@code event.event_pk}) to
+ *       the parent's natural {@code eventID}, so {@code
+ *       org.gbif.pipelines.core.interpreters.core.CoreInterpreter#interpretParentEventID} has
+ *       something to read. See {@link #resolveParentEventId}.
+ *   <li>Enrich with {@code geological-context} via {@link GeologicalContextJoinBuilder} — skipped
+ *       if absent or {@code event} has no {@code geologicalContextID} column.
  *   <li>Build the Occurrence extension via {@link OccurrenceExtensionBuilder} — skipped if the
  *       occurrence table is absent or has no {@code eventID} column. Organism fields, and the
  *       occurrence's own {@code occurrence-media}/{@code occurrence-assertion} rows, are already
@@ -46,6 +54,11 @@ public class EventCoreBuilder {
 
   private static final String CORE_ROW_TYPE = DwcTerm.Event.qualifiedName();
   private static final String ROW_TYPE_OCCURRENCE = DwcTerm.Occurrence.qualifiedName();
+
+  private static final String EVENT_PK_COLUMN = "event_pk";
+  private static final String PARENT_EVENT_FK_COLUMN = "parentEvent_fk";
+  private static final String PARENT_EVENT_ID_COLUMN = "parentEventID";
+  private static final String PARENT_JOIN_ALIAS_COLUMN = "__parent_event_pk";
 
   private EventCoreBuilder() {}
 
@@ -66,6 +79,9 @@ public class EventCoreBuilder {
                 () ->
                     new IllegalStateException(
                         "event table missing — orchestrator should not have routed here"));
+
+    eventDf = resolveParentEventId(eventDf);
+    eventDf = GeologicalContextJoinBuilder.enrichEvents(loader, eventDf);
 
     Optional<Dataset<Row>> occurrenceExtDf = OccurrenceExtensionBuilder.build(spark, loader);
     Optional<Dataset<Row>> mediaExtDf =
@@ -94,6 +110,47 @@ public class EventCoreBuilder {
                         row, eventColumns, hasOccExt, hasMediaExt, hasAssertionExt, hasHumboldtExt),
             Encoders.bean(ExtendedRecord.class))
         .filter((FilterFunction<ExtendedRecord>) r -> r != null);
+  }
+
+  /**
+   * Resolves {@code parentEvent_fk} (a surrogate self-reference to {@code event.event_pk}) to the
+   * parent event's natural {@code eventID}, replacing it with a column literally named {@code
+   * parentEventID} — which {@code TermFactory} already resolves directly to {@code
+   * DwcTerm.parentEventID}, so no {@link DwcDpTermMappings} entry is needed. The original {@code
+   * parentEvent_fk} and the bare {@code event_pk} surrogate (needed only for this join, never a
+   * real DwC term) are dropped afterwards — in both the resolved and the no-parent-column branches,
+   * since {@code event_pk} has no business leaking into {@code coreTerms} either way.
+   *
+   * <p>Does not filter or otherwise treat self-referencing rows (a row whose {@code parentEvent_fk}
+   * happens to point at its own {@code event_pk}) specially — {@code DwcTerm.parentEventID} still
+   * gets resolved to that row's own {@code eventID}, and it's {@code
+   * CoreInterpreter.interpretParentEventID}'s job downstream to detect that and flag {@code
+   * PARENT_EVENT_INFINITE_LINEAGE}. Resolving it correctly here is what lets that detection fire at
+   * all.
+   *
+   * <p>Skips the join itself (but still drops {@code event_pk} if present) when {@code eventDf} has
+   * no {@code parentEvent_fk} column (most events have no parent-child hierarchy) or no {@code
+   * event_pk} column to resolve against.
+   */
+  private static Dataset<Row> resolveParentEventId(Dataset<Row> eventDf) {
+    List<String> columns = Arrays.asList(eventDf.columns());
+    if (!columns.contains(PARENT_EVENT_FK_COLUMN) || !columns.contains(EVENT_PK_COLUMN)) {
+      return eventDf.drop(EVENT_PK_COLUMN);
+    }
+
+    Dataset<Row> parentIds =
+        eventDf.select(
+            eventDf.col(EVENT_PK_COLUMN).as(PARENT_JOIN_ALIAS_COLUMN),
+            eventDf.col("eventID").as(PARENT_EVENT_ID_COLUMN));
+
+    return eventDf
+        .join(
+            parentIds,
+            eventDf.col(PARENT_EVENT_FK_COLUMN).equalTo(parentIds.col(PARENT_JOIN_ALIAS_COLUMN)),
+            "left_outer")
+        .drop(PARENT_JOIN_ALIAS_COLUMN)
+        .drop(eventDf.col(PARENT_EVENT_FK_COLUMN))
+        .drop(EVENT_PK_COLUMN);
   }
 
   private static ExtendedRecord toExtendedRecord(

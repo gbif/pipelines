@@ -99,14 +99,14 @@ class DwcDpVerbatimConverterTest {
         schema(
             "event_pk",
             "eventID",
-            "parentEventID",
+            "parentEvent_fk",
             "eventDate",
             "country",
             "decimalLatitude",
             "decimalLongitude"),
         List.of(
             RowFactory.create("EPK-001", "EVT001", null, "2024-06-01", "DK", "55.6", "12.5"),
-            RowFactory.create("EPK-002", "EVT002", "EVT001", "2024-06-02", "DK", "55.7", "12.6")));
+            RowFactory.create("EPK-002", "EVT002", "EPK-001", "2024-06-02", "DK", "55.7", "12.6")));
 
     // occurrence carries event_fk (surrogate ref to event.event_pk), never a literal eventID.
     // associatedOrganisms is NOT a DwC-DP occurrence field — contributed by organism join only

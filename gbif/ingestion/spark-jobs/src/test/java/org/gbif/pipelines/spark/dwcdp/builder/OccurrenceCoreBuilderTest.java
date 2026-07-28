@@ -1,6 +1,7 @@
 package org.gbif.pipelines.spark.dwcdp.builder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -184,5 +185,19 @@ class OccurrenceCoreBuilderTest {
     assertEquals("Mass", emof.get(0).get(DwcTerm.measurementType.qualifiedName()));
     assertEquals("3.2", emof.get(0).get(DwcTerm.measurementValue.qualifiedName()));
     assertEquals("g", emof.get(0).get(DwcTerm.measurementUnit.qualifiedName()));
+  }
+
+  @Test
+  void occurrencePkSurrogate_neverLeaksIntoCoreTerms() {
+    Dataset<Row> occ =
+        occurrencePkDf(List.of(RowFactory.create("OPK-001", "OCC001", "Quercus robur")));
+
+    List<ExtendedRecord> records =
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ)).collectAsList();
+
+    assertEquals(1, records.size());
+    assertFalse(
+        records.get(0).getCoreTerms().containsKey("occurrence_pk"),
+        "occurrence_pk is a surrogate key with no DwC term — it must never appear in coreTerms");
   }
 }

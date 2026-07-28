@@ -43,6 +43,7 @@ public class OccurrenceExtensionBuilder {
   public static final String COL_OCCURRENCE_EXT_JSON = "occurrenceExtJson";
 
   private static final String OCCURRENCE_ID_COLUMN = "occurrenceID";
+  private static final String OCCURRENCE_PK_COLUMN = "occurrence_pk";
 
   private OccurrenceExtensionBuilder() {}
 
@@ -75,6 +76,10 @@ public class OccurrenceExtensionBuilder {
 
     Dataset<Row> enriched = OrganismJoinBuilder.enrichOccurrences(loader, occurrenceDf);
 
+    // Attach the occurrence's own media/assertion extensions before resolving event_fk and
+    // aggregating, so they ride along as nested JSON on each occurrence's term map — the same
+    // way OccurrenceCoreBuilder attaches them when occurrence is core, rather than being
+    // silently dropped when occurrence is nested under an event core instead.
     Optional<Dataset<Row>> occMediaExtDf =
         MediaExtensionBuilder.buildOccurrenceMediaExtension(spark, loader);
     Optional<Dataset<Row>> occAssertionExtDf =
@@ -84,6 +89,11 @@ public class OccurrenceExtensionBuilder {
         DatasetJoins.leftJoinIfPresent(enriched, occMediaExtDf, OCCURRENCE_ID_COLUMN);
     withOwnExtensions =
         DatasetJoins.leftJoinIfPresent(withOwnExtensions, occAssertionExtDf, OCCURRENCE_ID_COLUMN);
+    // occurrence_pk was needed only for MediaExtensionBuilder/AssertionExtensionBuilder's own
+    // independent occurrence_fk resolution above (each reloads "occurrence" fresh from the
+    // loader for that) — it has no DwC term of its own and must not survive into this
+    // occurrence's nested term map inside occurrenceExtJson.
+    withOwnExtensions = withOwnExtensions.drop(OCCURRENCE_PK_COLUMN);
 
     Dataset<Row> withEventId =
         withOwnExtensions

@@ -1,6 +1,7 @@
 package org.gbif.pipelines.spark.dwcdp.builder;
 
 import java.util.Map;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 
 /**
@@ -12,7 +13,9 @@ import org.gbif.dwc.terms.DwcTerm;
  * provides the explicit mapping.
  *
  * <p>{@link TermResolver} consults this map before calling {@code TermFactory}, so any field name
- * listed here is resolved to the correct qualified URI regardless of what the library knows.
+ * listed here is resolved to the correct qualified URI regardless of what the library knows —
+ * including cases where {@code TermFactory} *does* resolve the name, just to the wrong term (see
+ * {@code accessURI} below): this map is checked first and short-circuits, so it always wins.
  *
  * <h2>What belongs here</h2>
  *
@@ -20,9 +23,10 @@ import org.gbif.dwc.terms.DwcTerm;
  *
  * <ol>
  *   <li>The DwC-DP field name differs from the target DwC-A term's simple name, AND
- *   <li>{@code TermFactory} does not already recognise the DwC-DP name as an alternative for the
- *       target term (i.e. it is not registered as an {@code alternativeName} in the {@code DwcTerm}
- *       enum or any other loaded term vocabulary).
+ *   <li>{@code TermFactory} does not already correctly resolve the DwC-DP name to the intended
+ *       target term (either because it doesn't recognize the name at all, or — as with {@code
+ *       accessURI} — because it resolves the name to a different, real term that isn't the one
+ *       intended for this mapping).
  * </ol>
  *
  * <h2>What does NOT belong here</h2>
@@ -57,7 +61,23 @@ public final class DwcDpTermMappings {
           // DwC-DP uses eventConductedBy / eventConductedByID on the event table where DwC-A
           // uses recordedBy / recordedByID. Source: ingestion guide section 1.
           "eventConductedBy", DwcTerm.recordedBy.qualifiedName(),
-          "eventConductedByID", DwcTerm.recordedByID.qualifiedName());
+          "eventConductedByID", DwcTerm.recordedByID.qualifiedName(),
+
+          // media.accessURI is DwC-DP/Audubon Core's name for the media resource's location.
+          // The Simple Multimedia extension (the confirmed DwC-DP→DwC-A media target — see
+          // project mapping notes) expects this under dc:identifier, which is what
+          // MultimediaInterpreter actually reads. Without this rename, TermFactory resolves
+          // "accessURI" to ac:accessURI (Audubon Core's own term) instead — a real term, just
+          // the wrong one for this target, so this isn't a case TermFactory would ever fix on
+          // its own even with a library upgrade.
+          "accessURI", DcTerm.identifier.qualifiedName(),
+
+          // media.mediaType is DwC-DP's name for the media's high-level kind (StillImage,
+          // MovingImage, Sound, ...). MultimediaInterpreter reads this via dc:type
+          // (MultimediaInterpreter.parseAndSetType). "mediaType" doesn't match dc:type's simple
+          // name, so TermFactory would never resolve it — it would fall through to the raw
+          // column name and be invisible to interpretation.
+          "mediaType", DcTerm.type.qualifiedName());
 
   private DwcDpTermMappings() {}
 }

@@ -29,6 +29,11 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * <ol>
  *   <li>Load the required {@code occurrence} table — throws if absent (routing error).
  *   <li>Left-join {@code organism} via {@link OrganismJoinBuilder} — skipped if absent.
+ *   <li>Drop the bare {@code occurrence_pk} surrogate — it's needed only so {@link
+ *       MediaExtensionBuilder}/{@link AssertionExtensionBuilder} can resolve their own {@code
+ *       occurrence_fk} against it (each reloads {@code occurrence} fresh from the loader for that,
+ *       independently of this local Dataset), and has no DwC term of its own, so it must not
+ *       survive into {@code coreTerms}.
  *   <li>Left-join {@code occurrence-media} + {@code media} via {@link MediaExtensionBuilder} and
  *       attach as Multimedia extension — skipped if either table is absent.
  *   <li>Build the eMoF extension via {@link AssertionExtensionBuilder} — skipped if {@code
@@ -41,6 +46,7 @@ import org.gbif.pipelines.spark.util.TableLoader;
 public class OccurrenceCoreBuilder {
 
   private static final String CORE_ROW_TYPE = DwcTerm.Occurrence.qualifiedName();
+  private static final String OCCURRENCE_PK_COLUMN = "occurrence_pk";
 
   private OccurrenceCoreBuilder() {}
 
@@ -63,6 +69,7 @@ public class OccurrenceCoreBuilder {
                         "occurrence table missing — orchestrator should not have routed here"));
 
     Dataset<Row> enriched = OrganismJoinBuilder.enrichOccurrences(loader, occurrenceDf);
+    enriched = enriched.drop(OCCURRENCE_PK_COLUMN);
 
     Optional<Dataset<Row>> mediaExtDf =
         MediaExtensionBuilder.buildOccurrenceMediaExtension(spark, loader);

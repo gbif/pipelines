@@ -1,6 +1,7 @@
 package org.gbif.pipelines.spark.dwcdp;
 
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 
 /**
  * Qualified row type URIs used when building and reading {@link
@@ -18,7 +19,7 @@ public final class DwcDpRowTypes {
   public static final String ROW_TYPE_OCCURRENCE = DwcTerm.Occurrence.qualifiedName();
 
   /** Extension row type for multimedia records. */
-  public static final String ROW_TYPE_MULTIMEDIA = "http://rs.tdwg.org/ac/terms/Multimedia";
+  public static final String ROW_TYPE_MULTIMEDIA = MediaExtensionBuilder.ROW_TYPE_MULTIMEDIA;
 
   private DwcDpRowTypes() {}
 }
