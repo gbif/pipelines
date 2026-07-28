@@ -15,6 +15,7 @@ package org.gbif.pipelines.coordinator;
 
 import java.sql.Timestamp;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -127,6 +128,15 @@ public class ValidatorStatusService {
   private Status resolveMainStatus(Validation validation, StepType stepType, Status stepStatus) {
     if (stepStatus != Status.FINISHED) {
       return stepStatus;
+    }
+
+    if (log.isDebugEnabled()) {
+      List<String> steps =
+          validation.getMetrics().getStepTypes().stream()
+              .filter(step -> !step.getStepType().equals(stepType.name()))
+              .map(step -> step.getStepType() + ": " + step.getStatus())
+              .toList();
+      log.debug("Status of each step: {}", steps);
     }
 
     boolean hasUnfinishedSteps =
