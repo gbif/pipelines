@@ -87,9 +87,7 @@ public abstract class ValidatorCallback<
 
   protected abstract String getMetaFileName();
 
-  public O createOutgoingMessage(I message) {
-    return null;
-  }
+  public abstract O createOutgoingMessage(I message) ;
 
   protected abstract void runPipeline(I message) throws Exception;
 
