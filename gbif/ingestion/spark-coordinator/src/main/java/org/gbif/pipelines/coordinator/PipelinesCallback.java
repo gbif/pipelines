@@ -334,47 +334,47 @@ public abstract class PipelinesCallback<
 
     if (log.isDebugEnabled()) {
       log.debug(
-              "Execution ID {}, steps size: {}, steps: {}",
-              trackingInfo.executionId,
-              executionPipelineSteps.size(),
-              executionPipelineSteps.stream()
-                      .map(ps -> ps.getType().name())
-                      .collect(Collectors.joining(", ")));
+          "Execution ID {}, steps size: {}, steps: {}",
+          trackingInfo.executionId,
+          executionPipelineSteps.size(),
+          executionPipelineSteps.stream()
+              .map(ps -> ps.getType().name())
+              .collect(Collectors.joining(", ")));
     }
 
-      List<PipelineStep> thisPipelineStep =
-          executionPipelineSteps.stream().filter(ps -> ps.getType() != getStepType()).toList();
+    List<PipelineStep> thisPipelineStep =
+        executionPipelineSteps.stream().filter(ps -> ps.getType() != getStepType()).toList();
 
-      if (thisPipelineStep.isEmpty()) {
-        // expected when we opt to only execute one step with &onlyRequestedStep=true
-        log.warn(
-            "Execution ID {}, current step {} is not found in the execution steps, won't send outgoing message. Available steps: {}",
+    if (thisPipelineStep.isEmpty()) {
+      // expected when we opt to only execute one step with &onlyRequestedStep=true
+      log.warn(
+          "Execution ID {}, current step {} is not found in the execution steps, won't send outgoing message. Available steps: {}",
+          trackingInfo.executionId,
+          getStepType(),
+          executionPipelineSteps.stream()
+              .map(ps -> ps.getType().name())
+              .collect(Collectors.joining(", ")));
+      return;
+    }
+
+    // if there is no more steps in the execution to run, don't send messages
+    if (!executionPipelineSteps.isEmpty()) {
+      // are there any incomplete steps left in the execution? if not,
+      // don't send message to balancer, just mark execution as finished
+      Set<PipelineStep> unprocessed =
+          executionPipelineSteps.stream()
+              .filter(ps -> !PROCESSED_STATE_SET.contains(ps.getState()))
+              .collect(Collectors.toSet());
+      if (unprocessed.isEmpty()) {
+        log.info(
+            "Execution ID {}, all steps are processed for execution, won't send outgoing message. Steps: {}",
             trackingInfo.executionId,
-            getStepType(),
             executionPipelineSteps.stream()
-                .map(ps -> ps.getType().name())
+                .map(ps -> ps.getType().name() + ":" + ps.getState().name())
                 .collect(Collectors.joining(", ")));
         return;
       }
-
-      // if there is no more steps in the execution to run, don't send messages
-      if (!executionPipelineSteps.isEmpty()) {
-        // are there any incomplete steps left in the execution? if not,
-        // don't send message to balancer, just mark execution as finished
-        Set<PipelineStep> unprocessed =
-            executionPipelineSteps.stream()
-                .filter(ps -> !PROCESSED_STATE_SET.contains(ps.getState()))
-                .collect(Collectors.toSet());
-        if (unprocessed.isEmpty()) {
-          log.info(
-              "Execution ID {}, all steps are processed for execution, won't send outgoing message. Steps: {}",
-              trackingInfo.executionId,
-              executionPipelineSteps.stream()
-                  .map(ps -> ps.getType().name() + ":" + ps.getState().name())
-                  .collect(Collectors.joining(", ")));
-          return;
-        }
-      }
+    }
 
     // Create and send outgoing message
     O outgoingMessage;

@@ -119,7 +119,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
       List<IssueInfo> issueInfos = new ArrayList<>();
       // Validate XML file
       issueInfos.addAll(schemaValidatorFactory.validate(xmlDoc));
-      // Check license, authors and etc
+      // Check licence, authors and etc
       issueInfos.addAll(BasicMetadataEvaluator.evaluate(xmlDoc));
 
       return fileInfoBuilder
