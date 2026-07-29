@@ -108,6 +108,30 @@ class MediaExtensionBuilderTest {
     return spark.createDataFrame(rows, schema);
   }
 
+  private Dataset<Row> materialMediaDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("materialEntity_fk", DataTypes.StringType)
+            .add("media_fk", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> occurrenceForMaterialDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("occurrence_pk", DataTypes.StringType)
+            .add("occurrenceID", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> materialDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("materialEntity_pk", DataTypes.StringType)
+            .add("evidenceForOccurrenceID", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
   // ---- row type ----
 
   @Test
@@ -227,6 +251,105 @@ class MediaExtensionBuilderTest {
     assertEquals(
         "https://example.com/img.jpg", mediaExt.get(0).get(DcTerm.identifier.qualifiedName()));
     assertTrue(mediaExt.get(0).get(DcTerm.license.qualifiedName()) == null);
+  }
+
+  // ---- material-media merge (occurrence path only) ----
+
+  @Test
+  void materialMedia_mergedIntoOccurrenceMediaExtensionWhenNoDirectMedia() throws Exception {
+    Dataset<Row> occ = occurrenceForMaterialDf(List.of(RowFactory.create("OPK-001", "OCC001")));
+    Dataset<Row> material = materialDf(List.of(RowFactory.create("MEPK-1", "OCC001")));
+    Dataset<Row> mediaDf =
+        mediaNoUsagePolicyDf(
+            List.of(RowFactory.create("MPK-001", "https://example.com/specimen.jpg")));
+    Dataset<Row> materialMediaDf = materialMediaDf(List.of(RowFactory.create("MEPK-1", "MPK-001")));
+
+    Optional<Dataset<Row>> resultOpt =
+        MediaExtensionBuilder.buildOccurrenceMediaExtension(
+            spark,
+            TestTableLoader.of(
+                "occurrence",
+                occ,
+                MaterialJoinBuilder.TABLE_MATERIAL,
+                material,
+                MediaExtensionBuilder.TABLE_MEDIA,
+                mediaDf,
+                MediaExtensionBuilder.TABLE_MATERIAL_MEDIA,
+                materialMediaDf));
+
+    assertTrue(
+        resultOpt.isPresent(),
+        "a specimen photo must still produce a media extension even with no direct "
+            + "occurrence-media at all");
+    List<Map<String, String>> mediaExt = parseMediaJson(resultOpt.get().collectAsList().get(0));
+    assertEquals(1, mediaExt.size());
+    assertEquals(
+        "https://example.com/specimen.jpg", mediaExt.get(0).get(DcTerm.identifier.qualifiedName()));
+  }
+
+  @Test
+  void directAndMaterialMedia_bothPresent_unionedTogether() throws Exception {
+    Dataset<Row> occ = occurrenceForMaterialDf(List.of(RowFactory.create("OPK-001", "OCC001")));
+    Dataset<Row> material = materialDf(List.of(RowFactory.create("MEPK-1", "OCC001")));
+    Dataset<Row> mediaDf =
+        mediaNoUsagePolicyDf(
+            List.of(
+                RowFactory.create("MPK-001", "https://example.com/occurrence-photo.jpg"),
+                RowFactory.create("MPK-002", "https://example.com/specimen-photo.jpg")));
+    Dataset<Row> occMediaDf = occurrenceMediaDf(List.of(RowFactory.create("OPK-001", "MPK-001")));
+    Dataset<Row> materialMediaDf = materialMediaDf(List.of(RowFactory.create("MEPK-1", "MPK-002")));
+
+    Optional<Dataset<Row>> resultOpt =
+        MediaExtensionBuilder.buildOccurrenceMediaExtension(
+            spark,
+            TestTableLoader.of(
+                "occurrence",
+                occ,
+                MaterialJoinBuilder.TABLE_MATERIAL,
+                material,
+                MediaExtensionBuilder.TABLE_MEDIA,
+                mediaDf,
+                MediaExtensionBuilder.TABLE_OCCURRENCE_MEDIA,
+                occMediaDf,
+                MediaExtensionBuilder.TABLE_MATERIAL_MEDIA,
+                materialMediaDf));
+
+    assertTrue(resultOpt.isPresent());
+    List<Map<String, String>> mediaExt = parseMediaJson(resultOpt.get().collectAsList().get(0));
+    assertEquals(
+        2, mediaExt.size(), "both the occurrence's own and the specimen's photo must appear");
+  }
+
+  @Test
+  void materialMedia_notMergedWhenOccurrenceHasAmbiguousMaterial() {
+    Dataset<Row> occ = occurrenceForMaterialDf(List.of(RowFactory.create("OPK-001", "OCC001")));
+    // Two material records citing the same occurrence — MaterialJoinBuilder's exactly-one rule
+    // excludes both from singleMaterialOccurrenceLinks, so neither's media should merge in.
+    Dataset<Row> material =
+        materialDf(
+            List.of(RowFactory.create("MEPK-1", "OCC001"), RowFactory.create("MEPK-2", "OCC001")));
+    Dataset<Row> mediaDf =
+        mediaNoUsagePolicyDf(
+            List.of(RowFactory.create("MPK-001", "https://example.com/specimen.jpg")));
+    Dataset<Row> materialMediaDf = materialMediaDf(List.of(RowFactory.create("MEPK-1", "MPK-001")));
+
+    Optional<Dataset<Row>> resultOpt =
+        MediaExtensionBuilder.buildOccurrenceMediaExtension(
+            spark,
+            TestTableLoader.of(
+                "occurrence",
+                occ,
+                MaterialJoinBuilder.TABLE_MATERIAL,
+                material,
+                MediaExtensionBuilder.TABLE_MEDIA,
+                mediaDf,
+                MediaExtensionBuilder.TABLE_MATERIAL_MEDIA,
+                materialMediaDf));
+
+    assertTrue(
+        resultOpt.isEmpty(),
+        "with no direct occurrence-media and an ambiguous (two-record) material link, there is "
+            + "nothing unambiguous to merge in at all");
   }
 
   // ---- helper ----

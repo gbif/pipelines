@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.functions;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
@@ -18,14 +19,26 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * human-readable description via the {@code protocol} table, and renames all DwC-DP assertion
  * column names to their DwC-A eMoF equivalents before aggregating into a JSON column.
  *
- * <p>Both methods return {@link Optional#empty()} when the assertion or parent entity table is
- * absent from the package.
+ * <p>{@code buildOccurrenceAssertionExtension} additionally merges in {@code material-assertion} —
+ * measurements/facts about the specimen that's exactly-one evidence for the occurrence (resolved
+ * via {@link MaterialJoinBuilder#singleMaterialOccurrenceLinks}) — into the same eMoF extension as
+ * the occurrence's own direct {@code occurrence-assertion} rows, same reasoning as {@link
+ * MediaExtensionBuilder}'s equivalent merge: once {@link MaterialJoinBuilder} has established a 1:1
+ * occurrence/material relationship, a specimen measurement and an occurrence measurement both just
+ * describe the same real-world thing. Both paths reuse the same generic {@link
+ * #resolveAssertionLinks}/{@link #remapAssertionColumns} — only the FK column and parent table
+ * differ — so both produce an identical eMoF-renamed column shape, safe to union before
+ * aggregating.
+ *
+ * <p>Both {@code build*Extension} methods return {@link Optional#empty()} when nothing on either
+ * side contributes any rows.
  */
 @Slf4j
 public class AssertionExtensionBuilder {
 
   static final String TABLE_EVENT_ASSERTION = "event-assertion";
   static final String TABLE_OCCURRENCE_ASSERTION = "occurrence-assertion";
+  static final String TABLE_MATERIAL_ASSERTION = "material-assertion";
   static final String TABLE_PROTOCOL = "protocol";
 
   public static final String ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT =
@@ -33,7 +46,8 @@ public class AssertionExtensionBuilder {
   public static final String COL_ASSERTION_EXT_JSON = "assertionExtJson";
 
   // DwC-DP assertion column names → DwC-A eMoF term names.
-  // The FK columns (event_fk / occurrence_fk) are handled separately in resolveAssertionLinks.
+  // The FK columns (event_fk / occurrence_fk / materialEntity_fk) are handled separately in
+  // resolveAssertionLinks.
   // assertionProtocol_fk → measurementMethod is lossy: the FK value (an ID string) is stored as
   // free text because a protocol lookup table is not always available at this stage.
   private static final Map<String, String> ASSERTION_TO_EMOF_COLUMNS =
@@ -85,21 +99,43 @@ public class AssertionExtensionBuilder {
   }
 
   /**
-   * Returns a two-column Dataset {@code (occurrenceID, assertionExtJson)} built from the {@code
-   * occurrence-assertion} table. {@code occurrence_fk} is resolved to the natural {@code
-   * occurrenceID} via the {@code occurrence} table; {@code assertionProtocol_fk} is resolved to
-   * {@code measurementMethod} via the {@code protocol} table when available. Empty if either the
-   * {@code occurrence-assertion} or {@code occurrence} table is absent.
+   * Returns a two-column Dataset {@code (occurrenceID, assertionExtJson)}, merging {@code
+   * occurrence-assertion} rows with {@code material-assertion} rows from the occurrence's own
+   * material. {@code assertionProtocol_fk} is resolved to {@code measurementMethod} via the {@code
+   * protocol} table when available, on both sides independently. Empty only if neither source
+   * contributes anything.
    */
   public static Optional<Dataset<Row>> buildOccurrenceAssertionExtension(
       SparkSession spark, TableLoader loader) {
 
+    Optional<Dataset<Row>> fromOccurrenceAssertion = buildDirectOccurrenceAssertionRows(loader);
+    Optional<Dataset<Row>> fromMaterialAssertion = buildMaterialAssertionRows(loader);
+
+    Optional<Dataset<Row>> combined =
+        unionIfBothPresent(fromOccurrenceAssertion, fromMaterialAssertion);
+    if (combined.isEmpty()) {
+      log.debug(
+          "Skipping occurrence assertion extension: no direct or material-linked assertions found");
+      return Optional.empty();
+    }
+
+    Dataset<Row> df = combined.get();
+    return Optional.of(
+        ExtensionAggregator.aggregateAsJsonByKey(
+            spark, df, df.columns(), "occurrenceID", COL_ASSERTION_EXT_JSON));
+  }
+
+  /**
+   * Row-level (pre-aggregation, already eMoF-remapped) rows from the direct {@code
+   * occurrence-assertion} link.
+   */
+  private static Optional<Dataset<Row>> buildDirectOccurrenceAssertionRows(TableLoader loader) {
     Optional<Dataset<Row>> assertionDfOpt = loader.load(TABLE_OCCURRENCE_ASSERTION);
     Optional<Dataset<Row>> occurrenceDfOpt = loader.load("occurrence");
 
     if (assertionDfOpt.isEmpty() || occurrenceDfOpt.isEmpty()) {
       log.debug(
-          "Skipping occurrence assertion extension: occurrence-assertion present={}, occurrence present={}",
+          "Skipping direct occurrence-assertion rows: occurrence-assertion present={}, occurrence present={}",
           assertionDfOpt.isPresent(),
           occurrenceDfOpt.isPresent());
       return Optional.empty();
@@ -114,17 +150,69 @@ public class AssertionExtensionBuilder {
                 occurrenceDfOpt.get(),
                 "occurrence_pk",
                 "occurrenceID"));
+    return Optional.of(df);
+  }
 
-    return Optional.of(
-        ExtensionAggregator.aggregateAsJsonByKey(
-            spark, df, df.columns(), "occurrenceID", COL_ASSERTION_EXT_JSON));
+  /**
+   * Row-level (pre-aggregation, already eMoF-remapped) rows from {@code material-assertion},
+   * resolved through {@link MaterialJoinBuilder#singleMaterialOccurrenceLinks} down to the
+   * occurrence the material record is exactly-one evidence for. Reuses the same {@link
+   * #resolveAssertionLinks}/{@link #remapAssertionColumns} as the direct path, just with {@code
+   * materialEntity_fk}/{@code materialEntity_pk} instead of {@code occurrence_fk}/{@code
+   * occurrence_pk} — identical output column shape, safe to union with {@link
+   * #buildDirectOccurrenceAssertionRows}.
+   */
+  private static Optional<Dataset<Row>> buildMaterialAssertionRows(TableLoader loader) {
+    Optional<Dataset<Row>> materialAssertionDfOpt = loader.load(TABLE_MATERIAL_ASSERTION);
+    if (materialAssertionDfOpt.isEmpty()) {
+      log.debug("No material-assertion table present; skipping material-assertion merge");
+      return Optional.empty();
+    }
+
+    Optional<Dataset<Row>> materialLinksOpt =
+        MaterialJoinBuilder.singleMaterialOccurrenceLinks(loader);
+    if (materialLinksOpt.isEmpty()) {
+      log.debug(
+          "No single-material-per-occurrence links available; skipping material-assertion merge");
+      return Optional.empty();
+    }
+
+    Dataset<Row> df =
+        remapAssertionColumns(
+            resolveAssertionLinks(
+                loader,
+                materialAssertionDfOpt.get(),
+                "materialEntity_fk",
+                materialLinksOpt.get(),
+                "materialEntity_pk",
+                "occurrenceID"));
+    return Optional.of(df);
+  }
+
+  /**
+   * Unions two optional row-sets when both are present, returns whichever one is present otherwise,
+   * or {@link Optional#empty()} if neither is.
+   */
+  private static Optional<Dataset<Row>> unionIfBothPresent(
+      Optional<Dataset<Row>> a, Optional<Dataset<Row>> b) {
+    if (a.isPresent() && b.isPresent()) {
+      return Optional.of(a.get().unionByName(b.get()));
+    }
+    return a.isPresent() ? a : b;
   }
 
   /**
    * Joins an assertion Dataset against its parent entity table to replace the internal FK with the
-   * natural DwC identifier. Optionally joins the {@code protocol} table — if present — to resolve
-   * {@code assertionProtocol_fk} into a human-readable {@code measurementMethod} string; when the
-   * protocol table is absent the raw FK value is kept under {@code assertionProtocol_fk} and {@link
+   * natural DwC identifier. Rows where {@code parentIdColumn} comes back null (the FK didn't match
+   * any row in {@code parentDf} at all — a genuinely dangling reference, or, for the
+   * material-assertion merge, an entity {@link MaterialJoinBuilder}'s exactly-one rule deliberately
+   * excluded) are dropped rather than allowed through: a left-outer join by itself would let such a
+   * row survive with a null id, which {@link ExtensionAggregator#aggregateAsJsonByKey} would then
+   * group under a null key — a real but meaningless output row, not nothing.
+   *
+   * <p>Optionally joins the {@code protocol} table — if present — to resolve {@code
+   * assertionProtocol_fk} into a human-readable {@code measurementMethod} string; when the protocol
+   * table is absent the raw FK value is kept under {@code assertionProtocol_fk} and {@link
    * #remapAssertionColumns} will rename it to {@code measurementMethod} as a fallback.
    */
   private static Dataset<Row> resolveAssertionLinks(
@@ -142,7 +230,8 @@ public class AssertionExtensionBuilder {
                 assertionDf.col(fkColumn).equalTo(parentDf.col(parentPkColumn)),
                 "left_outer")
             .drop(parentDf.col(parentPkColumn))
-            .drop(assertionDf.col(fkColumn));
+            .drop(assertionDf.col(fkColumn))
+            .filter(functions.col(parentIdColumn).isNotNull());
 
     Optional<Dataset<Row>> protocolDfOpt = loader.load(TABLE_PROTOCOL);
     if (protocolDfOpt.isPresent()

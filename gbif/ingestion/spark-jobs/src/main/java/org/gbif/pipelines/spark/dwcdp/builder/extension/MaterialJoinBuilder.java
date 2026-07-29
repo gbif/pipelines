@@ -50,11 +50,15 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * {@code collectionEvent_fk}, {@code derivationEvent_fk}, {@code provenance_fk}, {@code
  * usagePolicy_fk}) and the join key itself are excluded from what gets added.
  *
- * <p>Only the direct {@code material} → {@code occurrence} link is handled here. {@code material}'s
- * own sub-tables ({@code material-media}, {@code material-assertion}, {@code material-provenance},
- * {@code material-usage-policy}, {@code material-protocol}, {@code material-geological-context})
- * and its links to {@code event} ({@code collectionEvent_fk}, {@code derivationEvent_fk}) are not
- * handled — separate, later work, same deferral pattern as {@code creator} on media.
+ * <p>Only the direct {@code material} → {@code occurrence} flat-field link is handled in this
+ * class. {@code material-media} and {@code material-assertion} are handled separately, merged into
+ * occurrence's own Multimedia/eMoF extensions by {@link MediaExtensionBuilder} and {@link
+ * AssertionExtensionBuilder} respectively — see {@link #singleMaterialOccurrenceLinks}, which both
+ * reuse. {@code material}'s remaining sub-tables ({@code material-identifier}, {@code
+ * material-provenance}, {@code material-usage-policy}, {@code material-protocol}, {@code
+ * material-geological-context}) and its links to {@code event} ({@code collectionEvent_fk}, {@code
+ * derivationEvent_fk}) are still not handled — separate, later work, same deferral pattern as
+ * {@code creator} on media.
  */
 @Slf4j
 public class MaterialJoinBuilder {
@@ -107,8 +111,13 @@ public class MaterialJoinBuilder {
   /**
    * Filters {@code materialDf} to rows with a non-null {@code evidenceForOccurrenceID}, then keeps
    * only {@code evidenceForOccurrenceID} groups with <em>exactly one</em> such row.
+   *
+   * <p>Package-private rather than private: {@link MediaExtensionBuilder} and {@link
+   * AssertionExtensionBuilder} reuse this directly via {@link #singleMaterialOccurrenceLinks} to
+   * merge {@code material-media}/{@code material-assertion} into occurrence's own Multimedia/eMoF
+   * extensions, applying the identical exactly-one-material rule rather than a second copy of it.
    */
-  private static Dataset<Row> singleMaterialPerOccurrence(Dataset<Row> materialDf) {
+  static Dataset<Row> singleMaterialPerOccurrence(Dataset<Row> materialDf) {
     Dataset<Row> withEvidence =
         materialDf.filter(functions.col(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN).isNotNull());
 
@@ -127,6 +136,53 @@ public class MaterialJoinBuilder {
                 .equalTo(singleLinkKeys.col("__single_material_key")),
             "inner")
         .drop("__single_material_key");
+  }
+
+  /**
+   * Returns a two-column Dataset {@code (occurrenceID, materialEntity_pk)} — one row per occurrence
+   * with exactly one material record citing it as evidence — for other builders that need to
+   * resolve a material-side surrogate FK (e.g. {@code material-media.materialEntity_fk}, {@code
+   * material-assertion.materialEntity_fk}) down to the occurrence it ultimately belongs to, using
+   * this same exactly-one-material rule rather than a separate, potentially inconsistent one.
+   *
+   * <p>Returns {@link Optional#empty()} if {@code material} or {@code occurrence} is absent, {@code
+   * material} is missing {@code evidenceForOccurrenceID} or {@code materialEntity_pk}, or —
+   * critically — if no occurrence actually has an unambiguous single material link at all (e.g.
+   * every occurrence in the package has zero or multiple material rows citing it): an empty result
+   * here must look identical to "material absent" to every caller, or a left-outer join against a
+   * genuinely zero-row Dataset can silently produce a null-keyed row downstream instead of
+   * correctly contributing nothing.
+   */
+  public static Optional<Dataset<Row>> singleMaterialOccurrenceLinks(TableLoader loader) {
+    Optional<Dataset<Row>> materialDfOpt = loader.load(TABLE_MATERIAL);
+    if (materialDfOpt.isEmpty()) {
+      log.debug("No material table present; skipping material-linked occurrence resolution");
+      return Optional.empty();
+    }
+
+    Dataset<Row> materialDf = materialDfOpt.get();
+    List<String> materialCols = Arrays.asList(materialDf.columns());
+    if (!materialCols.contains(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN)
+        || !materialCols.contains("materialEntity_pk")) {
+      log.debug(
+          "material table missing {} or materialEntity_pk column; skipping material-linked "
+              + "occurrence resolution",
+          EVIDENCE_FOR_OCCURRENCE_ID_COLUMN);
+      return Optional.empty();
+    }
+
+    Dataset<Row> single = singleMaterialPerOccurrence(materialDf);
+    if (single.isEmpty()) {
+      log.debug(
+          "No occurrence has an unambiguous single material link; skipping material-linked "
+              + "occurrence resolution entirely");
+      return Optional.empty();
+    }
+
+    return Optional.of(
+        single.select(
+            functions.col(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN).as("occurrenceID"),
+            functions.col("materialEntity_pk")));
   }
 
   /**

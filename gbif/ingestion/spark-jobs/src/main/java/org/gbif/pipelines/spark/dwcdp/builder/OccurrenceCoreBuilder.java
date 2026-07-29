@@ -17,6 +17,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentificationExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentificationJoinBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentifierExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.OrganismJoinBuilder;
@@ -55,6 +56,8 @@ import org.gbif.pipelines.spark.util.TableLoader;
  *   <li>Build the Identification History extension via {@link IdentificationExtensionBuilder} —
  *       every {@code identification} row linked to the occurrence, accepted or not; distinct from
  *       the single-accepted flattening onto core terms two steps above.
+ *   <li>Build the Identifier extension via {@link IdentifierExtensionBuilder} — merges {@code
+ *       occurrence-identifier} with {@code material-identifier}, same exactly-one-material rule.
  *   <li>Map each enriched row to an {@link ExtendedRecord} with {@code coreRowType =
  *       dwc:Occurrence}.
  * </ol>
@@ -99,23 +102,31 @@ public class OccurrenceCoreBuilder {
         AssertionExtensionBuilder.buildOccurrenceAssertionExtension(spark, loader);
     Optional<Dataset<Row>> identificationExtDf =
         IdentificationExtensionBuilder.build(spark, loader);
+    Optional<Dataset<Row>> identifierExtDf = IdentifierExtensionBuilder.build(spark, loader);
 
     Dataset<Row> joined = enriched;
     joined = DatasetJoins.leftJoinIfPresent(joined, mediaExtDf, "occurrenceID");
     joined = DatasetJoins.leftJoinIfPresent(joined, assertionExtDf, "occurrenceID");
     joined = DatasetJoins.leftJoinIfPresent(joined, identificationExtDf, "occurrenceID");
+    joined = DatasetJoins.leftJoinIfPresent(joined, identifierExtDf, "occurrenceID");
 
     final String[] occColumns = enriched.columns();
     final boolean hasMediaExt = mediaExtDf.isPresent();
     final boolean hasAssertionExt = assertionExtDf.isPresent();
     final boolean hasIdentificationExt = identificationExtDf.isPresent();
+    final boolean hasIdentifierExt = identifierExtDf.isPresent();
 
     return joined
         .map(
             (MapFunction<Row, ExtendedRecord>)
                 row ->
                     toExtendedRecord(
-                        row, occColumns, hasMediaExt, hasAssertionExt, hasIdentificationExt),
+                        row,
+                        occColumns,
+                        hasMediaExt,
+                        hasAssertionExt,
+                        hasIdentificationExt,
+                        hasIdentifierExt),
             Encoders.bean(ExtendedRecord.class))
         .filter((FilterFunction<ExtendedRecord>) r -> r != null);
   }
@@ -125,7 +136,8 @@ public class OccurrenceCoreBuilder {
       String[] occColumns,
       boolean hasMediaExt,
       boolean hasAssertionExt,
-      boolean hasIdentificationExt)
+      boolean hasIdentificationExt,
+      boolean hasIdentifierExt)
       throws IOException {
 
     String occurrenceId = RowTermMapper.safeGet(row, "occurrenceID");
@@ -154,6 +166,12 @@ public class OccurrenceCoreBuilder {
         hasIdentificationExt,
         IdentificationExtensionBuilder.COL_IDENTIFICATION_EXT_JSON,
         IdentificationExtensionBuilder.ROW_TYPE_IDENTIFICATION);
+    CoreBuilderSupport.addExtensionIfPresent(
+        row,
+        extensions,
+        hasIdentifierExt,
+        IdentifierExtensionBuilder.COL_IDENTIFIER_EXT_JSON,
+        IdentifierExtensionBuilder.ROW_TYPE_IDENTIFIER);
 
     return ExtendedRecord.newBuilder()
         .setId(occurrenceId)

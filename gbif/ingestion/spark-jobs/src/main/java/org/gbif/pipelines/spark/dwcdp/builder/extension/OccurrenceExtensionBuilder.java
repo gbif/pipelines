@@ -18,13 +18,14 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * IdentificationJoinBuilder} and {@link MaterialJoinBuilder} likewise add the taxonomic rank
  * hierarchy and institution/collection/specimen fields respectively, each restricted to its own
  * exactly-one-match rule. The occurrence's own {@code occurrence-media}, {@code
- * occurrence-assertion}, and identification history rows are likewise folded in as nested JSON
- * columns ({@link MediaExtensionBuilder#COL_MEDIA_EXT_JSON}, {@link
+ * occurrence-assertion}, identification history, and identifier rows are likewise folded in as
+ * nested JSON columns ({@link MediaExtensionBuilder#COL_MEDIA_EXT_JSON}, {@link
  * AssertionExtensionBuilder#COL_ASSERTION_EXT_JSON}, {@link
- * IdentificationExtensionBuilder#COL_IDENTIFICATION_EXT_JSON}) before aggregation, so that data
- * attached directly to an occurrence isn't lost just because that occurrence is nested under an
- * event core rather than being core itself — {@link
- * org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilder} already attaches all three when
+ * IdentificationExtensionBuilder#COL_IDENTIFICATION_EXT_JSON}, {@link
+ * IdentifierExtensionBuilder#COL_IDENTIFIER_EXT_JSON}) before aggregation, so that data attached
+ * directly to an occurrence isn't lost just because that occurrence is nested under an event core
+ * rather than being core itself — {@link
+ * org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilder} already attaches all four when
  * occurrence is core; this mirrors that for the nested case, using the same {@link
  * org.gbif.pipelines.spark.util.DatasetJoins#leftJoinIfPresent} helper both builders rely on.
  *
@@ -92,6 +93,7 @@ public class OccurrenceExtensionBuilder {
         AssertionExtensionBuilder.buildOccurrenceAssertionExtension(spark, loader);
     Optional<Dataset<Row>> occIdentificationExtDf =
         IdentificationExtensionBuilder.build(spark, loader);
+    Optional<Dataset<Row>> occIdentifierExtDf = IdentifierExtensionBuilder.build(spark, loader);
 
     Dataset<Row> withOwnExtensions =
         DatasetJoins.leftJoinIfPresent(enriched, occMediaExtDf, OCCURRENCE_ID_COLUMN);
@@ -100,11 +102,14 @@ public class OccurrenceExtensionBuilder {
     withOwnExtensions =
         DatasetJoins.leftJoinIfPresent(
             withOwnExtensions, occIdentificationExtDf, OCCURRENCE_ID_COLUMN);
+    withOwnExtensions =
+        DatasetJoins.leftJoinIfPresent(withOwnExtensions, occIdentifierExtDf, OCCURRENCE_ID_COLUMN);
     // occurrence_pk was needed by IdentificationJoinBuilder above (directly, on this local
     // Dataset) and by MediaExtensionBuilder/AssertionExtensionBuilder/
-    // IdentificationExtensionBuilder's own independent occurrence_fk resolution (each reloads
-    // "occurrence" fresh from the loader for that) — it has no DwC term of its own and must not
-    // survive into this occurrence's nested term map inside occurrenceExtJson.
+    // IdentificationExtensionBuilder/IdentifierExtensionBuilder's own independent occurrence_fk
+    // resolution (each reloads "occurrence" fresh from the loader for that) — it has no DwC term
+    // of its own and must not survive into this occurrence's nested term map inside
+    // occurrenceExtJson.
     withOwnExtensions = withOwnExtensions.drop(OCCURRENCE_PK_COLUMN);
 
     Dataset<Row> withEventId =

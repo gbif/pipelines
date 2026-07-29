@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.functions;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
@@ -38,6 +39,13 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * ac/terms/Multimedia}, which is what caused the mix-up) — media data written under the old value
  * was never visible to {@code MultimediaInterpreter} at all, since it filters on {@code
  * Extension.MULTIMEDIA.getRowType()} exactly.
+ *
+ * <p>{@code buildOccurrenceMediaExtension} additionally merges in {@code material-media} — photos
+ * of the specimen that's exactly-one evidence for the occurrence (resolved via {@link
+ * MaterialJoinBuilder#singleMaterialOccurrenceLinks}) — into the same Multimedia extension as the
+ * occurrence's own direct {@code occurrence-media} photos, rather than a separate structure: once
+ * {@link MaterialJoinBuilder} has established a 1:1 occurrence/material relationship, a specimen
+ * photo and an occurrence photo both just describe the same real-world thing.
  */
 @Slf4j
 public class MediaExtensionBuilder {
@@ -45,6 +53,7 @@ public class MediaExtensionBuilder {
   public static final String TABLE_MEDIA = "media";
   public static final String TABLE_EVENT_MEDIA = "event-media";
   public static final String TABLE_OCCURRENCE_MEDIA = "occurrence-media";
+  public static final String TABLE_MATERIAL_MEDIA = "material-media";
 
   /** Extension.MULTIMEDIA.getRowType() — the real Simple Multimedia extension row type. */
   public static final String ROW_TYPE_MULTIMEDIA = "http://rs.gbif.org/terms/1.0/Multimedia";
@@ -83,30 +92,27 @@ public class MediaExtensionBuilder {
   }
 
   /**
-   * Returns a two-column Dataset {@code (occurrenceID, mediaExtJson)}, or empty if {@code
-   * occurrence-media}, {@code media}, or {@code occurrence} is absent.
+   * Returns a two-column Dataset {@code (occurrenceID, mediaExtJson)}, merging {@code
+   * occurrence-media} rows with {@code material-media} rows from the occurrence's own material (via
+   * {@link MaterialJoinBuilder#singleMaterialOccurrenceLinks} — same exactly-one-material rule
+   * {@link MaterialJoinBuilder} applies to its flat-field enrichment, so a specimen's photos only
+   * merge in when the occurrence has an unambiguous single material record). Returns empty only if
+   * neither source contributes anything.
    */
   public static Optional<Dataset<Row>> buildOccurrenceMediaExtension(
       SparkSession spark, TableLoader loader) {
 
-    Optional<Dataset<Row>> occMediaDfOpt = loader.load(TABLE_OCCURRENCE_MEDIA);
     Optional<Dataset<Row>> mediaDfOpt = loadEnrichedMedia(loader);
-    Optional<Dataset<Row>> occurrenceDfOpt = loader.load("occurrence");
+    Optional<Dataset<Row>> fromOccurrenceMedia = buildDirectOccurrenceMediaRows(loader, mediaDfOpt);
+    Optional<Dataset<Row>> fromMaterialMedia = buildMaterialMediaRows(loader, mediaDfOpt);
 
-    if (occMediaDfOpt.isEmpty() || mediaDfOpt.isEmpty() || occurrenceDfOpt.isEmpty()) {
-      log.debug(
-          "Skipping occurrence-media extension: occurrence-media present={}, media present={}, occurrence present={}",
-          occMediaDfOpt.isPresent(),
-          mediaDfOpt.isPresent(),
-          occurrenceDfOpt.isPresent());
+    Optional<Dataset<Row>> combined = unionIfBothPresent(fromOccurrenceMedia, fromMaterialMedia);
+    if (combined.isEmpty()) {
+      log.debug("Skipping occurrence-media extension: no direct or material-linked media found");
       return Optional.empty();
     }
 
-    Dataset<Row> mediaJoined = joinMedia(occMediaDfOpt.get(), mediaDfOpt.get());
-    Dataset<Row> withOccurrenceId =
-        resolveParentId(
-            mediaJoined, "occurrence_fk", occurrenceDfOpt.get(), "occurrence_pk", "occurrenceID");
-
+    Dataset<Row> withOccurrenceId = combined.get();
     return Optional.of(
         ExtensionAggregator.aggregateAsJsonByKey(
             spark,
@@ -114,6 +120,74 @@ public class MediaExtensionBuilder {
             withOccurrenceId.columns(),
             "occurrenceID",
             COL_MEDIA_EXT_JSON));
+  }
+
+  /** Row-level (pre-aggregation) media rows from the direct {@code occurrence-media} link. */
+  private static Optional<Dataset<Row>> buildDirectOccurrenceMediaRows(
+      TableLoader loader, Optional<Dataset<Row>> mediaDfOpt) {
+    Optional<Dataset<Row>> occMediaDfOpt = loader.load(TABLE_OCCURRENCE_MEDIA);
+    Optional<Dataset<Row>> occurrenceDfOpt = loader.load("occurrence");
+
+    if (occMediaDfOpt.isEmpty() || mediaDfOpt.isEmpty() || occurrenceDfOpt.isEmpty()) {
+      log.debug(
+          "Skipping direct occurrence-media rows: occurrence-media present={}, media present={}, occurrence present={}",
+          occMediaDfOpt.isPresent(),
+          mediaDfOpt.isPresent(),
+          occurrenceDfOpt.isPresent());
+      return Optional.empty();
+    }
+
+    Dataset<Row> mediaJoined = joinMedia(occMediaDfOpt.get(), mediaDfOpt.get());
+    return Optional.of(
+        resolveParentId(
+            mediaJoined, "occurrence_fk", occurrenceDfOpt.get(), "occurrence_pk", "occurrenceID"));
+  }
+
+  /**
+   * Row-level (pre-aggregation) media rows from {@code material-media}, resolved through {@link
+   * MaterialJoinBuilder#singleMaterialOccurrenceLinks} down to the occurrence the material record
+   * is exactly-one evidence for. Same column shape as {@link #buildDirectOccurrenceMediaRows} —
+   * both ultimately come from the same {@code media} table via {@link #joinMedia} — so the two can
+   * be unioned by name before aggregating.
+   */
+  private static Optional<Dataset<Row>> buildMaterialMediaRows(
+      TableLoader loader, Optional<Dataset<Row>> mediaDfOpt) {
+    Optional<Dataset<Row>> materialMediaDfOpt = loader.load(TABLE_MATERIAL_MEDIA);
+    if (materialMediaDfOpt.isEmpty() || mediaDfOpt.isEmpty()) {
+      log.debug(
+          "Skipping material-media rows: material-media present={}, media present={}",
+          materialMediaDfOpt.isPresent(),
+          mediaDfOpt.isPresent());
+      return Optional.empty();
+    }
+
+    Optional<Dataset<Row>> materialLinksOpt =
+        MaterialJoinBuilder.singleMaterialOccurrenceLinks(loader);
+    if (materialLinksOpt.isEmpty()) {
+      log.debug("No single-material-per-occurrence links available; skipping material-media merge");
+      return Optional.empty();
+    }
+
+    Dataset<Row> mediaJoined = joinMedia(materialMediaDfOpt.get(), mediaDfOpt.get());
+    return Optional.of(
+        resolveParentId(
+            mediaJoined,
+            "materialEntity_fk",
+            materialLinksOpt.get(),
+            "materialEntity_pk",
+            "occurrenceID"));
+  }
+
+  /**
+   * Unions two optional row-sets when both are present, returns whichever one is present otherwise,
+   * or {@link Optional#empty()} if neither is.
+   */
+  private static Optional<Dataset<Row>> unionIfBothPresent(
+      Optional<Dataset<Row>> a, Optional<Dataset<Row>> b) {
+    if (a.isPresent() && b.isPresent()) {
+      return Optional.of(a.get().unionByName(b.get()));
+    }
+    return a.isPresent() ? a : b;
   }
 
   /**
@@ -145,6 +219,13 @@ public class MediaExtensionBuilder {
    * eventID}) via a join, dropping both the parent's surrogate PK and the FK column itself so only
    * the resolved natural id remains — same shape as {@link AssertionExtensionBuilder}'s FK
    * resolution.
+   *
+   * <p>Rows where {@code parentIdColumn} comes back null (the FK didn't match any row in {@code
+   * parentDf} at all — a genuinely dangling reference, or, for the material-media/material-
+   * assertion merge, an entity that {@link MaterialJoinBuilder}'s exactly-one rule deliberately
+   * excluded) are dropped here rather than allowed through: a left-outer join by itself would let
+   * such a row survive with a null id, which {@link ExtensionAggregator#aggregateAsJsonByKey} would
+   * then group under a null key — a real but meaningless output row, not nothing.
    */
   private static Dataset<Row> resolveParentId(
       Dataset<Row> df,
@@ -157,6 +238,7 @@ public class MediaExtensionBuilder {
             df.col(fkColumn).equalTo(parentDf.col(parentPkColumn)),
             "left_outer")
         .drop(parentDf.col(parentPkColumn))
-        .drop(df.col(fkColumn));
+        .drop(df.col(fkColumn))
+        .filter(functions.col(parentIdColumn).isNotNull());
   }
 }
