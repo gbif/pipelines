@@ -80,7 +80,7 @@ public class ValidationResource {
     validationService.delete(key);
   }
 
-  /** Gets the detail of Validation. */
+  /** Updates the detail of Validation. */
   @PutMapping(
       path = "/{key}",
       consumes = {MediaType.APPLICATION_JSON_VALUE})

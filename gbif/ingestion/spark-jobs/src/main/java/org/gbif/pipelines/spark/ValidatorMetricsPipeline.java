@@ -27,7 +27,10 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
+import org.gbif.pipelines.spark.util.RetryingValidationClient;
 import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
+import org.gbif.pipelines.spark.util.ValidationClient;
+import org.gbif.pipelines.spark.util.ValidationUtil;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
@@ -192,7 +195,7 @@ public class ValidatorMetricsPipeline {
       List<TermInfo> termInfos = computeInterpretedFieldCounts(records);
       log.info("Computed interpreted counts for {} terms", termInfos.size());
 
-      Metrics result =
+      Metrics generatedMetrics =
           Metrics.builder()
               .indexeable(indexedCount > 0)
               .fileInfos(
@@ -205,11 +208,17 @@ public class ValidatorMetricsPipeline {
                           .build()))
               .build();
 
-      String json = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(result);
+      String json = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(generatedMetrics);
       //      FsUtils.createFile(fs, "/Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/" +
       // METRICS_FILENAME, json);
       FsUtils.createFile(fs, outputPath + "/" + METRICS_FILENAME, json);
       log.info("Written validator metrics to {}/{}", outputPath, METRICS_FILENAME);
+
+      // update the stored validation via the API
+      ValidationClient client = ValidationUtil.createValidationClient(config);
+      ValidationUtil.updateMetrics(
+          new RetryingValidationClient(client), UUID.fromString(datasetId), generatedMetrics);
+
     } finally {
       records.unpersist();
     }
