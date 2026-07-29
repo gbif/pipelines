@@ -15,6 +15,7 @@ import org.apache.spark.sql.SparkSession;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentificationExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentificationJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
@@ -51,6 +52,9 @@ import org.gbif.pipelines.spark.util.TableLoader;
  *       attach as Multimedia extension — skipped if either table is absent.
  *   <li>Build the eMoF extension via {@link AssertionExtensionBuilder} — skipped if {@code
  *       occurrence-assertion} is absent.
+ *   <li>Build the Identification History extension via {@link IdentificationExtensionBuilder} —
+ *       every {@code identification} row linked to the occurrence, accepted or not; distinct from
+ *       the single-accepted flattening onto core terms two steps above.
  *   <li>Map each enriched row to an {@link ExtendedRecord} with {@code coreRowType =
  *       dwc:Occurrence}.
  * </ol>
@@ -93,25 +97,35 @@ public class OccurrenceCoreBuilder {
         MediaExtensionBuilder.buildOccurrenceMediaExtension(spark, loader);
     Optional<Dataset<Row>> assertionExtDf =
         AssertionExtensionBuilder.buildOccurrenceAssertionExtension(spark, loader);
+    Optional<Dataset<Row>> identificationExtDf =
+        IdentificationExtensionBuilder.build(spark, loader);
 
     Dataset<Row> joined = enriched;
     joined = DatasetJoins.leftJoinIfPresent(joined, mediaExtDf, "occurrenceID");
     joined = DatasetJoins.leftJoinIfPresent(joined, assertionExtDf, "occurrenceID");
+    joined = DatasetJoins.leftJoinIfPresent(joined, identificationExtDf, "occurrenceID");
 
     final String[] occColumns = enriched.columns();
     final boolean hasMediaExt = mediaExtDf.isPresent();
     final boolean hasAssertionExt = assertionExtDf.isPresent();
+    final boolean hasIdentificationExt = identificationExtDf.isPresent();
 
     return joined
         .map(
             (MapFunction<Row, ExtendedRecord>)
-                row -> toExtendedRecord(row, occColumns, hasMediaExt, hasAssertionExt),
+                row ->
+                    toExtendedRecord(
+                        row, occColumns, hasMediaExt, hasAssertionExt, hasIdentificationExt),
             Encoders.bean(ExtendedRecord.class))
         .filter((FilterFunction<ExtendedRecord>) r -> r != null);
   }
 
   private static ExtendedRecord toExtendedRecord(
-      Row row, String[] occColumns, boolean hasMediaExt, boolean hasAssertionExt)
+      Row row,
+      String[] occColumns,
+      boolean hasMediaExt,
+      boolean hasAssertionExt,
+      boolean hasIdentificationExt)
       throws IOException {
 
     String occurrenceId = RowTermMapper.safeGet(row, "occurrenceID");
@@ -134,6 +148,12 @@ public class OccurrenceCoreBuilder {
         hasAssertionExt,
         AssertionExtensionBuilder.COL_ASSERTION_EXT_JSON,
         AssertionExtensionBuilder.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
+    CoreBuilderSupport.addExtensionIfPresent(
+        row,
+        extensions,
+        hasIdentificationExt,
+        IdentificationExtensionBuilder.COL_IDENTIFICATION_EXT_JSON,
+        IdentificationExtensionBuilder.ROW_TYPE_IDENTIFICATION);
 
     return ExtendedRecord.newBuilder()
         .setId(occurrenceId)
