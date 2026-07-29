@@ -41,9 +41,10 @@ public class ValidationUtil {
         .contract(new Contract.Default())
         .requestInterceptor(
             new BasicAuthRequestInterceptor(
-                config.getValidatorConfig().getUser(), config.getValidatorConfig().getPassword()))
+                config.getStandalone().getRegistry().getUser(),
+                config.getStandalone().getRegistry().getPassword()))
         .dismiss404()
-        .target(ValidationClient.class, config.getValidatorConfig().getWsUrl());
+        .target(ValidationClient.class, config.getStandalone().getRegistry().getWsUrl());
   }
 
   public static void updateMetrics(
