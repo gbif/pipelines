@@ -16,6 +16,7 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.EcoTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.DwcDpRowTypes;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
@@ -406,6 +407,68 @@ class EventCoreBuilderTest {
     assertNotNull(humboldt, "Humboldt extension must be present");
     assertEquals(2, humboldt.size());
     assertEquals("3", humboldt.get(0).get(TermResolver.resolve("siteCount")));
+  }
+
+  @Test
+  void surveyProtocols_useHumboldtTerms_andResolveFkFallbacks() {
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    StructType surveySchema =
+        new StructType()
+            .add("survey_pk", DataTypes.StringType)
+            .add("event_fk", DataTypes.StringType)
+            .add("samplingProtocol", DataTypes.StringType)
+            .add("samplingProtocol_fk", DataTypes.StringType)
+            .add("samplingEffortProtocol", DataTypes.StringType)
+            .add("samplingEffortProtocol_fk", DataTypes.StringType);
+    Dataset<Row> surveyTable =
+        spark.createDataFrame(
+            List.of(
+                RowFactory.create("SPK-001", "EPK-001", null, "P-001", null, "P-002"),
+                RowFactory.create(
+                    "SPK-002",
+                    "EPK-001",
+                    "Publisher protocol",
+                    "P-001",
+                    "Publisher effort",
+                    "P-002")),
+            surveySchema);
+    Dataset<Row> protocolTable =
+        protocolDf(
+            List.of(
+                RowFactory.create("P-001", "Resolved protocol"),
+                RowFactory.create("P-002", "Resolved effort")));
+
+    List<Map<String, String>> humboldt =
+        EventCoreBuilder.build(
+                spark,
+                TestTableLoader.of(
+                    "event", eventDf, "survey", surveyTable, "protocol", protocolTable))
+            .collectAsList()
+            .get(0)
+            .getExtensions()
+            .get(HumboldtExtensionBuilder.ROW_TYPE_HUMBOLDT);
+
+    assertEquals(2, humboldt.size());
+    Map<String, String> resolved =
+        humboldt.stream()
+            .filter(
+                row ->
+                    "Resolved protocol"
+                        .equals(row.get(EcoTerm.protocolDescriptions.qualifiedName())))
+            .findFirst()
+            .orElseThrow();
+    assertEquals("Resolved effort", resolved.get(EcoTerm.samplingEffortProtocol.qualifiedName()));
+    assertNull(resolved.get(DwcTerm.samplingProtocol.qualifiedName()));
+
+    Map<String, String> publisher =
+        humboldt.stream()
+            .filter(
+                row ->
+                    "Publisher protocol"
+                        .equals(row.get(EcoTerm.protocolDescriptions.qualifiedName())))
+            .findFirst()
+            .orElseThrow();
+    assertEquals("Publisher effort", publisher.get(EcoTerm.samplingEffortProtocol.qualifiedName()));
   }
 
   @Test

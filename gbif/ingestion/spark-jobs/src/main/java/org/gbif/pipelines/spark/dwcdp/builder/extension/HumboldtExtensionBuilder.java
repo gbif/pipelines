@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.gbif.dwc.terms.EcoTerm;
+import org.gbif.pipelines.spark.util.DatasetJoins;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
@@ -28,10 +30,11 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * </ol>
  *
  * <p>All internal PK/FK columns ({@code survey_pk}, {@code event_fk}, {@code survey_fk}, {@code
- * surveyTarget_fk}, {@code surveyTarget_pk}, {@code samplingProtocol_fk}, {@code
- * samplingEffortProtocol_fk}) are dropped before serialisation. Survey field names match Humboldt
- * Extension term names directly so no column renaming is needed. Returns {@link Optional#empty()}
- * if the {@code survey} table is absent.
+ * surveyTarget_fk}, {@code surveyTarget_pk}) are dropped before serialisation. The two survey
+ * protocol fields are mapped to their qualified Humboldt terms: {@code samplingProtocol} becomes
+ * {@code eco:protocolDescriptions}, while {@code samplingEffortProtocol} becomes {@code
+ * eco:samplingEffortProtocol}. Returns {@link Optional#empty()} if the {@code survey} table is
+ * absent.
  */
 @Slf4j
 public class HumboldtExtensionBuilder {
@@ -68,6 +71,25 @@ public class HumboldtExtensionBuilder {
     Dataset<Row> surveyDf = surveyDfOpt.get();
     Dataset<Row> eventDf = eventDfOpt.get();
 
+    // "samplingProtocol" would otherwise resolve to dwc:samplingProtocol, which is not a term
+    // consumed by the Humboldt interpreter. Keep publisher text where supplied and use the
+    // linked protocol description only as a fallback.
+    surveyDf =
+        DatasetJoins.renameIfPresent(
+            surveyDf, "samplingProtocol", EcoTerm.protocolDescriptions.qualifiedName());
+    surveyDf =
+        ProtocolJoinBuilder.resolveProtocolFkCoalesceInto(
+            loader, surveyDf, "samplingProtocol_fk", EcoTerm.protocolDescriptions.qualifiedName());
+    surveyDf =
+        DatasetJoins.renameIfPresent(
+            surveyDf, "samplingEffortProtocol", EcoTerm.samplingEffortProtocol.qualifiedName());
+    surveyDf =
+        ProtocolJoinBuilder.resolveProtocolFkCoalesceInto(
+            loader,
+            surveyDf,
+            "samplingEffortProtocol_fk",
+            EcoTerm.samplingEffortProtocol.qualifiedName());
+
     // Resolve event_fk → natural eventID; keep survey_pk for the survey-target join below
     Dataset<Row> df =
         surveyDf
@@ -76,9 +98,7 @@ public class HumboldtExtensionBuilder {
                 surveyDf.col("event_fk").equalTo(eventDf.col("event_pk")),
                 "left_outer")
             .drop(eventDf.col("event_pk"))
-            .drop(surveyDf.col("event_fk"))
-            .drop("samplingProtocol_fk")
-            .drop("samplingEffortProtocol_fk");
+            .drop(surveyDf.col("event_fk"));
 
     // Fan-out to survey-target rows via the junction table (1:many per survey)
     Optional<Dataset<Row>> junctionDfOpt = loader.load(TABLE_SURVEY_SURVEY_TARGET);

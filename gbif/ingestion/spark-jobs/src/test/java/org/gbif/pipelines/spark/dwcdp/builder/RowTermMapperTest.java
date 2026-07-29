@@ -10,6 +10,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.EcoTerm;
 import org.gbif.pipelines.spark.util.SparkTest;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.junit.jupiter.api.AfterAll;
@@ -57,6 +58,20 @@ class RowTermMapperTest {
 
     assertEquals("EVT001", terms.get(DwcTerm.eventID.qualifiedName()));
     assertEquals("DK", terms.get(DwcTerm.country.qualifiedName()));
+  }
+
+  @Test
+  void qualifiedTermColumnNames_areRetained() {
+    Dataset<Row> ds =
+        spark.createDataFrame(
+            List.of(RowFactory.create("Visual survey")),
+            SparkTest.schema(EcoTerm.protocolDescriptions.qualifiedName()));
+
+    Map<String, String> terms =
+        RowTermMapper.toTermMap(
+            ds.collectAsList().get(0), new String[] {EcoTerm.protocolDescriptions.qualifiedName()});
+
+    assertEquals("Visual survey", terms.get(EcoTerm.protocolDescriptions.qualifiedName()));
   }
 
   @Test

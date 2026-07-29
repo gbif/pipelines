@@ -23,7 +23,9 @@ public final class RowTermMapper {
     for (String col : columns) {
       String value = safeGet(row, col);
       if (value != null) {
-        terms.put(TermResolver.resolve(col), value);
+        // Builders may intentionally use qualified terms where a source column name would resolve
+        // to a term in the wrong extension vocabulary (for example, Humboldt protocol fields).
+        terms.put(isQualifiedTerm(col) ? col : TermResolver.resolve(col), value);
       }
     }
     return terms;
@@ -44,5 +46,9 @@ public final class RowTermMapper {
     } catch (IllegalArgumentException e) {
       return null;
     }
+  }
+
+  private static boolean isQualifiedTerm(String columnName) {
+    return columnName.startsWith("http://") || columnName.startsWith("https://");
   }
 }

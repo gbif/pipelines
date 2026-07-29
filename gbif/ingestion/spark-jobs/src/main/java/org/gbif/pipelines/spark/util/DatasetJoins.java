@@ -7,6 +7,15 @@ import org.apache.spark.sql.Row;
 /** Small Spark {@link Dataset} join helpers shared across the DwC-DP builder packages. */
 public final class DatasetJoins {
 
+  public static Dataset<Row> renameIfPresent(Dataset<Row> df, String source, String target) {
+    for (String column : df.columns()) {
+      if (source.equals(column)) {
+        return df.withColumnRenamed(source, target);
+      }
+    }
+    return df;
+  }
+
   private DatasetJoins() {}
 
   /**

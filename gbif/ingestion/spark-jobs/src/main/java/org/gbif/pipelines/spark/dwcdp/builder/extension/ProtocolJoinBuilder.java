@@ -107,7 +107,8 @@ public class ProtocolJoinBuilder {
         .withColumn(
             coalesceIntoColumn,
             functions.coalesce(
-                withResolved.col(coalesceIntoColumn), withResolved.col(TEMP_RESOLVED_COLUMN)))
+                withResolved.col(quotedColumn(coalesceIntoColumn)),
+                withResolved.col(TEMP_RESOLVED_COLUMN)))
         .drop(TEMP_RESOLVED_COLUMN);
   }
 
@@ -238,6 +239,11 @@ public class ProtocolJoinBuilder {
 
   private static boolean hasColumns(Dataset<Row> df, String... columns) {
     return Arrays.asList(df.columns()).containsAll(Arrays.asList(columns));
+  }
+
+  /** Quotes a Spark column identifier so qualified term URIs remain a single field name. */
+  private static String quotedColumn(String columnName) {
+    return "`" + columnName.replace("`", "``") + "`";
   }
 
   private static Dataset<Row> joinAndRename(
