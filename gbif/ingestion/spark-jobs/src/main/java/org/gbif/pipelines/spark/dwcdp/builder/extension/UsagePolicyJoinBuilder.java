@@ -13,21 +13,23 @@ import org.apache.spark.sql.Row;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
- * Enriches {@code media} rows by left-joining the {@code usage-policy} table onto them.
+ * Enriches rows by left-joining the {@code usage-policy} table onto them.
  *
  * <p>Like {@link OrganismJoinBuilder} and {@link GeologicalContextJoinBuilder}, this denormalizes a
  * related table's fields directly onto the row rather than producing a separate extension row type
  * — {@code license} and {@code rightsHolder} (the two fields {@link
  * org.gbif.pipelines.core.interpreters.extension.MultimediaInterpreter} reads via {@code
- * DcTerm.license}/{@code DcTerm.rightsHolder}) exist only on {@code usage-policy}, never on {@code
- * media} itself — {@code media} only carries the surrogate {@code usagePolicy_fk}.
+ * DcTerm.license}/{@code DcTerm.rightsHolder}) exist only on {@code usage-policy}, never on the
+ * entity's own table — {@code media} and {@code material} both only carry the surrogate {@code
+ * usagePolicy_fk}.
  *
  * <p>Both {@code license} and {@code rightsHolder} match their target DwC-A terms' simple names
  * directly, so once joined they resolve correctly via {@code TermFactory} with no rename needed —
  * only the join itself was missing.
  *
- * <p>Only {@code media} is handled here. {@code material} also carries a {@code usagePolicy_fk} per
- * the DwC-DP schema, but {@code material} itself isn't joined anywhere in this pipeline yet.
+ * <p>Entity-agnostic: nothing in {@link #enrich}/{@link #join} is specific to {@code media} —
+ * originally written for it (hence the historical method name below), now used identically for
+ * {@code material} too, rather than duplicating the same join logic under a second name.
  */
 @Slf4j
 public class UsagePolicyJoinBuilder {
@@ -39,27 +41,27 @@ public class UsagePolicyJoinBuilder {
   private UsagePolicyJoinBuilder() {}
 
   /**
-   * Returns {@code mediaDf} enriched with usage-policy columns (notably {@code license}, {@code
-   * rightsHolder}), or the original {@code mediaDf} unchanged if the usage-policy table is absent
-   * or {@code media} carries no {@code usagePolicy_fk} column.
+   * Returns {@code df} enriched with usage-policy columns (notably {@code license}, {@code
+   * rightsHolder}), or the original {@code df} unchanged if the usage-policy table is absent or
+   * {@code df} carries no {@code usagePolicy_fk} column.
    *
    * @param loader table loader — returns {@link Optional#empty()} when usage-policy is absent
-   * @param mediaDf the media Dataset to enrich
-   * @return media rows with additional usage-policy fields merged in
+   * @param df the Dataset to enrich (e.g. {@code media} or {@code material})
+   * @return rows with additional usage-policy fields merged in
    */
-  public static Dataset<Row> enrichMedia(TableLoader loader, Dataset<Row> mediaDf) {
+  public static Dataset<Row> enrich(TableLoader loader, Dataset<Row> df) {
     Optional<Dataset<Row>> usagePolicyDf = loader.load(TABLE_USAGE_POLICY);
     if (usagePolicyDf.isEmpty()) {
       log.debug("No usage-policy table present; skipping usage policy join");
-      return mediaDf;
+      return df;
     }
 
-    if (!Arrays.asList(mediaDf.columns()).contains(USAGE_POLICY_FK_COLUMN)) {
-      log.warn("media table has no {} column; skipping usage policy join", USAGE_POLICY_FK_COLUMN);
-      return mediaDf;
+    if (!Arrays.asList(df.columns()).contains(USAGE_POLICY_FK_COLUMN)) {
+      log.debug("no {} column present; skipping usage policy join", USAGE_POLICY_FK_COLUMN);
+      return df;
     }
 
-    return join(mediaDf, usagePolicyDf.get());
+    return join(df, usagePolicyDf.get());
   }
 
   /**
@@ -67,40 +69,35 @@ public class UsagePolicyJoinBuilder {
    * Datasets, same shape as {@link OrganismJoinBuilder#joinOrganism} and {@link
    * GeologicalContextJoinBuilder#join}.
    *
-   * <p>Columns already present on {@code mediaDf} are never overwritten by usage-policy columns
-   * (media's own {@code license}/{@code rightsHolder} columns don't exist per the current schema,
-   * but the guard is kept for the same defensive consistency the other join builders apply). Both
-   * the join key ({@code usagePolicy_fk} on the media side, resolved against {@code
+   * <p>Columns already present on {@code df} are never overwritten by usage-policy columns. Both
+   * the join key ({@code usagePolicy_fk} on {@code df}'s side, resolved against {@code
    * usagePolicy_pk}) and usage-policy's own surrogate PK are dropped afterwards.
    */
-  static Dataset<Row> join(Dataset<Row> mediaDf, Dataset<Row> usagePolicyDf) {
-    Set<String> mediaCols = new HashSet<>(Arrays.asList(mediaDf.columns()));
+  static Dataset<Row> join(Dataset<Row> df, Dataset<Row> usagePolicyDf) {
+    Set<String> existingCols = new HashSet<>(Arrays.asList(df.columns()));
 
     List<Column> selectCols = new ArrayList<>();
-    for (String col : mediaDf.columns()) {
-      selectCols.add(mediaDf.col(col));
+    for (String col : df.columns()) {
+      selectCols.add(df.col(col));
     }
     for (String col : usagePolicyDf.columns()) {
-      if (!mediaCols.contains(col) && !col.equals(USAGE_POLICY_PK_COLUMN)) {
+      if (!existingCols.contains(col) && !col.equals(USAGE_POLICY_PK_COLUMN)) {
         selectCols.add(usagePolicyDf.col(col));
-        log.debug("Adding usage-policy column '{}' to media rows", col);
+        log.debug("Adding usage-policy column '{}' to rows", col);
       }
     }
 
     Dataset<Row> joined =
-        mediaDf
-            .join(
+        df.join(
                 usagePolicyDf,
-                mediaDf
-                    .col(USAGE_POLICY_FK_COLUMN)
-                    .equalTo(usagePolicyDf.col(USAGE_POLICY_PK_COLUMN)),
+                df.col(USAGE_POLICY_FK_COLUMN).equalTo(usagePolicyDf.col(USAGE_POLICY_PK_COLUMN)),
                 "left_outer")
             .select(selectCols.toArray(new Column[0]))
             .drop(USAGE_POLICY_FK_COLUMN);
 
     log.info(
-        "Usage policy join complete: media columns before={}, after={}",
-        mediaDf.columns().length,
+        "Usage policy join complete: columns before={}, after={}",
+        df.columns().length,
         joined.columns().length);
 
     return joined;

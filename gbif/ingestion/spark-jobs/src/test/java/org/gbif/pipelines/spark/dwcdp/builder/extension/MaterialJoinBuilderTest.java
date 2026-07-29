@@ -256,4 +256,47 @@ class MaterialJoinBuilderTest {
         occ002.isNullAt(occ002.fieldIndex("institutionCode")),
         "OCC002 has two material rows, so it must not be enriched");
   }
+
+  // ---- usage-policy enrichment flows through onto occurrence ----
+
+  @Test
+  void materialUsagePolicy_licenseAndRightsHolderFlowThroughOntoOccurrence() {
+    Dataset<Row> occ = occurrenceDf(List.of(RowFactory.create("OCC001", "Parus major")));
+    Dataset<Row> material =
+        materialDf(
+            List.of(RowFactory.create("MEPK-1", "OCC001", "NHMD", "AVES", "12345", "Parus major")));
+    StructType materialWithUsagePolicySchema =
+        new StructType()
+            .add("materialEntity_pk", DataTypes.StringType)
+            .add("evidenceForOccurrenceID", DataTypes.StringType)
+            .add("usagePolicy_fk", DataTypes.StringType)
+            .add("institutionCode", DataTypes.StringType);
+    Dataset<Row> materialWithUsagePolicy =
+        spark.createDataFrame(
+            List.of(RowFactory.create("MEPK-1", "OCC001", "UP-1", "NHMD")),
+            materialWithUsagePolicySchema);
+    StructType usagePolicySchema =
+        new StructType()
+            .add("usagePolicy_pk", DataTypes.StringType)
+            .add("license", DataTypes.StringType)
+            .add("rightsHolder", DataTypes.StringType);
+    Dataset<Row> usagePolicy =
+        spark.createDataFrame(
+            List.of(RowFactory.create("UP-1", "CC_BY_4_0", "Natural History Museum Denmark")),
+            usagePolicySchema);
+
+    Dataset<Row> result =
+        MaterialJoinBuilder.enrichOccurrences(
+            TestTableLoader.of(
+                MaterialJoinBuilder.TABLE_MATERIAL, materialWithUsagePolicy,
+                UsagePolicyJoinBuilder.TABLE_USAGE_POLICY, usagePolicy),
+            occ);
+
+    Row row = result.first();
+    assertEquals("CC_BY_4_0", row.getAs("license"));
+    assertEquals("Natural History Museum Denmark", row.getAs("rightsHolder"));
+    assertFalse(
+        Arrays.asList(result.columns()).contains("usagePolicy_fk"),
+        "the join FK must not survive, same as every other surrogate key");
+  }
 }

@@ -17,7 +17,8 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * OrganismJoinBuilder} before aggregation, so they are preserved on the extension rows. {@link
  * IdentificationJoinBuilder} and {@link MaterialJoinBuilder} likewise add the taxonomic rank
  * hierarchy and institution/collection/specimen fields respectively, each restricted to its own
- * exactly-one-match rule. The occurrence's own {@code occurrence-media}, {@code
+ * exactly-one-match rule. {@link MaterialProvenanceJoinBuilder} likewise adds the occurrence's own
+ * material's provenance attribution fields. The occurrence's own {@code occurrence-media}, {@code
  * occurrence-assertion}, identification history, and identifier rows are likewise folded in as
  * nested JSON columns ({@link MediaExtensionBuilder#COL_MEDIA_EXT_JSON}, {@link
  * AssertionExtensionBuilder#COL_ASSERTION_EXT_JSON}, {@link
@@ -82,6 +83,7 @@ public class OccurrenceExtensionBuilder {
     Dataset<Row> enriched = OrganismJoinBuilder.enrichOccurrences(loader, occurrenceDf);
     enriched = IdentificationJoinBuilder.enrichOccurrences(loader, enriched);
     enriched = MaterialJoinBuilder.enrichOccurrences(loader, enriched);
+    enriched = MaterialProvenanceJoinBuilder.enrichOccurrences(loader, enriched);
 
     // Attach the occurrence's own media/assertion extensions before resolving event_fk and
     // aggregating, so they ride along as nested JSON on each occurrence's term map — the same

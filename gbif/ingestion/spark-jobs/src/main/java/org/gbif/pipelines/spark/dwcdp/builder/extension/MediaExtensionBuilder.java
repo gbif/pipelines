@@ -192,14 +192,12 @@ public class MediaExtensionBuilder {
 
   /**
    * Loads {@code media} and, if {@code usage-policy} is present, enriches it via {@link
-   * UsagePolicyJoinBuilder#enrichMedia} before either caller joins it to its own event/occurrence
-   * side. Centralised here so both callers get the enrichment identically rather than each needing
-   * to remember to apply it.
+   * UsagePolicyJoinBuilder#enrich} before either caller joins it to its own event/occurrence side.
+   * Centralised here so both callers get the enrichment identically rather than each needing to
+   * remember to apply it.
    */
   private static Optional<Dataset<Row>> loadEnrichedMedia(TableLoader loader) {
-    return loader
-        .load(TABLE_MEDIA)
-        .map(mediaDf -> UsagePolicyJoinBuilder.enrichMedia(loader, mediaDf));
+    return loader.load(TABLE_MEDIA).map(mediaDf -> UsagePolicyJoinBuilder.enrich(loader, mediaDf));
   }
 
   /**

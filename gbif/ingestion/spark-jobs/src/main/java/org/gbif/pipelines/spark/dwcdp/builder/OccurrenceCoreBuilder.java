@@ -19,6 +19,7 @@ import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentificationExtensionB
 import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentificationJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentifierExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialJoinBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialProvenanceJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.OrganismJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.ProtocolJoinBuilder;
@@ -38,9 +39,14 @@ import org.gbif.pipelines.spark.util.TableLoader;
  *       rank hierarchy occurrence never carries on its own; only applies when an occurrence has
  *       exactly one accepted identification, skipped otherwise.
  *   <li>Left-join {@code material} via {@link MaterialJoinBuilder} — adds institution/collection/
- *       specimen fields (institutionCode, catalogNumber, preparations, typeStatus, ...); only
- *       applies when an occurrence has exactly one material row citing it as evidence, skipped
- *       otherwise.
+ *       specimen fields (institutionCode, catalogNumber, preparations, typeStatus, ..., plus
+ *       license/rightsHolder from {@code usage-policy}); only applies when an occurrence has
+ *       exactly one material row citing it as evidence, skipped otherwise.
+ *   <li>Enrich with {@code fundingAttribution}/{@code fundingAttributionID}/{@code projectID}/
+ *       {@code projectTitle} via {@link MaterialProvenanceJoinBuilder} — the occurrence's own
+ *       material's provenance attribution, same exactly-one-material rule, same aggregation logic
+ *       {@link org.gbif.pipelines.spark.dwcdp.builder.extension.ProvenanceJoinBuilder} applies for
+ *       {@code event}.
  *   <li>Resolve {@code occurrenceProtocol_fk} → new {@code samplingProtocol} column via {@link
  *       ProtocolJoinBuilder} — previously leaked as a raw surrogate value under its own column
  *       name.
@@ -91,6 +97,7 @@ public class OccurrenceCoreBuilder {
     Dataset<Row> enriched = OrganismJoinBuilder.enrichOccurrences(loader, occurrenceDf);
     enriched = IdentificationJoinBuilder.enrichOccurrences(loader, enriched);
     enriched = MaterialJoinBuilder.enrichOccurrences(loader, enriched);
+    enriched = MaterialProvenanceJoinBuilder.enrichOccurrences(loader, enriched);
     enriched =
         ProtocolJoinBuilder.resolveProtocolFk(
             loader, enriched, "occurrenceProtocol_fk", "samplingProtocol");

@@ -112,7 +112,7 @@ public class ProvenanceJoinBuilder {
                 "left_outer")
             .drop(provenanceDf.col(PROVENANCE_PK_COLUMN));
 
-    Dataset<Row> aggregated = aggregate(joined);
+    Dataset<Row> aggregated = aggregateProvenanceFields(joined, "eventID");
 
     return withDirectFkDropped
         .join(
@@ -180,21 +180,26 @@ public class ProvenanceJoinBuilder {
   }
 
   /**
-   * Groups {@code joined} (event/provenance links already joined to the {@code provenance} table)
-   * by {@code eventID}, and for each of {@link #AGGREGATED_FIELDS} that's actually present on
-   * {@code joined}, collects the values sorted by {@code provenanceID}, drops nulls, and pipe-joins
-   * them. None of these four fields are marked required in the DwC-DP schema, so a given dataset's
-   * {@code provenance} table may genuinely arrive without one of them altogether — not just
-   * null-valued, but the column itself absent after schema inference — so each is checked for
-   * presence first, same defensive pattern {@link GeologicalContextJoinBuilder} and {@link
-   * UsagePolicyJoinBuilder} already apply to their own optional columns.
+   * Groups {@code joined} (links already joined to the {@code provenance} table) by {@code
+   * keyColumn}, and for each of {@link #AGGREGATED_FIELDS} that's actually present on {@code
+   * joined}, collects the values sorted by {@code provenanceID}, drops nulls, and pipe-joins them.
+   * None of these four fields are marked required in the DwC-DP schema, so a given dataset's {@code
+   * provenance} table may genuinely arrive without one of them altogether — not just null-valued,
+   * but the column itself absent after schema inference — so each is checked for presence first,
+   * same defensive pattern {@link GeologicalContextJoinBuilder} and {@link UsagePolicyJoinBuilder}
+   * already apply to their own optional columns.
    *
-   * <p>An event whose linked provenance records all have a null value for a given field ends up
-   * with an empty array after the null drop — {@code array_join} on that yields {@code ""}, not
-   * {@code null}, so each result is explicitly nulled back out when empty, matching this codebase's
+   * <p>A row whose linked provenance records all have a null value for a given field ends up with
+   * an empty array after the null drop — {@code array_join} on that yields {@code ""}, not {@code
+   * null}, so each result is explicitly nulled back out when empty, matching this codebase's
    * convention of an absent field rather than an empty-string one.
+   *
+   * <p>Package-private rather than private, and parameterized by {@code keyColumn} rather than
+   * hardcoding {@code eventID}: {@link MaterialProvenanceJoinBuilder} reuses this identical
+   * aggregation logic (grouping by {@code materialEntity_pk} instead) rather than duplicating the
+   * struct-sort-transform-filter-join expression a second time.
    */
-  private static Dataset<Row> aggregate(Dataset<Row> joined) {
+  static Dataset<Row> aggregateProvenanceFields(Dataset<Row> joined, String keyColumn) {
     List<String> joinedColumns = Arrays.asList(joined.columns());
     List<Column> aggs = new ArrayList<>();
     for (String field : AGGREGATED_FIELDS) {
@@ -212,13 +217,13 @@ public class ProvenanceJoinBuilder {
 
     if (aggs.isEmpty()) {
       // None of the four fields are present on this dataset's provenance table at all — still
-      // return distinct eventIDs so enrichEvents' left-outer join has something valid to join
-      // against (a harmless no-op enrichment rather than an empty aggregation).
-      return joined.select(col("eventID")).distinct();
+      // return distinct keys so the caller's left-outer join has something valid to join against
+      // (a harmless no-op enrichment rather than an empty aggregation).
+      return joined.select(col(keyColumn)).distinct();
     }
 
     return joined
-        .groupBy(col("eventID"))
+        .groupBy(col(keyColumn))
         .agg(aggs.get(0), aggs.subList(1, aggs.size()).toArray(new Column[0]));
   }
 }

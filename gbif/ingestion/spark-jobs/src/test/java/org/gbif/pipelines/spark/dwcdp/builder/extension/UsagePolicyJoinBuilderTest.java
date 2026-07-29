@@ -60,7 +60,7 @@ class UsagePolicyJoinBuilderTest {
     Dataset<Row> media =
         mediaDf(List.of(RowFactory.create("MPK-001", "UP-1", "https://example.com/img.jpg")));
 
-    Dataset<Row> result = UsagePolicyJoinBuilder.enrichMedia(TestTableLoader.of(), media);
+    Dataset<Row> result = UsagePolicyJoinBuilder.enrich(TestTableLoader.of(), media);
 
     assertEquals(media.columns().length, result.columns().length);
     assertEquals(1L, result.count());
@@ -78,7 +78,7 @@ class UsagePolicyJoinBuilderTest {
     Dataset<Row> upDf = usagePolicyDf(List.of(RowFactory.create("UP-1", "CC_BY_4_0", "Museum X")));
 
     Dataset<Row> result =
-        UsagePolicyJoinBuilder.enrichMedia(
+        UsagePolicyJoinBuilder.enrich(
             TestTableLoader.of(UsagePolicyJoinBuilder.TABLE_USAGE_POLICY, upDf), media);
 
     assertEquals(2, result.columns().length, "should be original columns only");
@@ -92,7 +92,7 @@ class UsagePolicyJoinBuilderTest {
     Dataset<Row> upDf = usagePolicyDf(List.of(RowFactory.create("UP-1", "CC_BY_4_0", "Museum X")));
 
     Dataset<Row> result =
-        UsagePolicyJoinBuilder.enrichMedia(
+        UsagePolicyJoinBuilder.enrich(
             TestTableLoader.of(UsagePolicyJoinBuilder.TABLE_USAGE_POLICY, upDf), media);
 
     List<String> cols = Arrays.asList(result.columns());
@@ -112,7 +112,7 @@ class UsagePolicyJoinBuilderTest {
     Dataset<Row> upDf = usagePolicyDf(List.of(RowFactory.create("UP-1", "CC_BY_4_0", "Museum X")));
 
     Dataset<Row> result =
-        UsagePolicyJoinBuilder.enrichMedia(
+        UsagePolicyJoinBuilder.enrich(
             TestTableLoader.of(UsagePolicyJoinBuilder.TABLE_USAGE_POLICY, upDf), media);
 
     List<String> cols = Arrays.asList(result.columns());
@@ -131,7 +131,7 @@ class UsagePolicyJoinBuilderTest {
     Dataset<Row> upDf = usagePolicyDf(List.of(RowFactory.create("UP-1", "CC_BY_4_0", "Museum X")));
 
     Dataset<Row> result =
-        UsagePolicyJoinBuilder.enrichMedia(
+        UsagePolicyJoinBuilder.enrich(
             TestTableLoader.of(UsagePolicyJoinBuilder.TABLE_USAGE_POLICY, upDf), media);
 
     assertEquals(1L, result.count(), "media row must survive left join even with no match");

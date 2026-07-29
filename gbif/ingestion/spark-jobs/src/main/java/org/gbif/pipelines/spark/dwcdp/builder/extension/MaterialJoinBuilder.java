@@ -50,6 +50,11 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * {@code collectionEvent_fk}, {@code derivationEvent_fk}, {@code provenance_fk}, {@code
  * usagePolicy_fk}) and the join key itself are excluded from what gets added.
  *
+ * <p>Before the exactly-one filtering, {@code material} is also enriched with {@code
+ * license}/{@code rightsHolder} from {@code usage-policy} via {@link UsagePolicyJoinBuilder#enrich}
+ * — the same generic helper originally written for {@code media} — so those two fields flow through
+ * onto occurrence via the ordinary column-bring-in logic below with no separate wiring needed.
+ *
  * <p>Only the direct {@code material} → {@code occurrence} flat-field link is handled in this
  * class. {@code material-media} and {@code material-assertion} are handled separately, merged into
  * occurrence's own Multimedia/eMoF extensions by {@link MediaExtensionBuilder} and {@link
@@ -102,6 +107,14 @@ public class MaterialJoinBuilder {
           EVIDENCE_FOR_OCCURRENCE_ID_COLUMN);
       return occurrenceDf;
     }
+
+    // license/rightsHolder live only on usage-policy, never on material itself — enrich before
+    // the exactly-one filtering and join so they flow through the existing generic "bring in
+    // whatever material columns occurrence doesn't already have" logic in join() below, without
+    // needing separate wiring. usagePolicy_fk is dropped internally by
+    // UsagePolicyJoinBuilder.enrich itself, so EXCLUDED_MATERIAL_COLUMNS' entry for it is a
+    // harmless no-op from this point on rather than doing double duty.
+    materialDf = UsagePolicyJoinBuilder.enrich(loader, materialDf);
 
     Dataset<Row> singleMaterial = singleMaterialPerOccurrence(materialDf);
 
