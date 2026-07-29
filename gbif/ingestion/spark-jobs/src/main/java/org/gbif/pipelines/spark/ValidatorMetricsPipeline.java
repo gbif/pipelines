@@ -174,8 +174,7 @@ public class ValidatorMetricsPipeline {
       SparkSession spark, FileSystem fs, PipelinesConfig config, String datasetId, Integer attempt)
       throws IOException {
 
-    //    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
-    String outputPath = "/Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/metrics";
+    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
     log.info("Running ValidatorMetricsPipeline for {}", outputPath);
 
     Dataset<OccurrenceJsonRecord> records =
@@ -214,11 +213,7 @@ public class ValidatorMetricsPipeline {
           Metrics.builder().indexeable(indexedCount > 0).fileInfos(all).build();
 
       String json = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(generatedMetrics);
-      FsUtils.createFile(
-          fs,
-          "/Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/" + METRICS_FILENAME,
-          json);
-      //      FsUtils.createFile(fs, outputPath + "/" + METRICS_FILENAME, json);
+      FsUtils.createFile(fs, outputPath + "/" + METRICS_FILENAME, json);
       log.info("Written validator metrics to {}/{}", outputPath, METRICS_FILENAME);
 
       // update the stored validation via the API
