@@ -65,6 +65,15 @@ class MediaExtensionBuilderTest {
     return spark.createDataFrame(rows, schema);
   }
 
+  private Dataset<Row> occurrenceEventDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("occurrence_pk", DataTypes.StringType)
+            .add("occurrenceID", DataTypes.StringType)
+            .add("event_fk", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
   private Dataset<Row> mediaDf(List<Row> rows) {
     StructType schema =
         new StructType()
@@ -251,6 +260,53 @@ class MediaExtensionBuilderTest {
     assertEquals(
         "https://example.com/img.jpg", mediaExt.get(0).get(DcTerm.identifier.qualifiedName()));
     assertTrue(mediaExt.get(0).get(DcTerm.license.qualifiedName()) == null);
+  }
+
+  @Test
+  void occurrenceAndMaterialMedia_arePromotedToEventExtensionWithoutDirectEventMedia()
+      throws Exception {
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> occurrenceDf =
+        occurrenceEventDf(List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001")));
+    Dataset<Row> materialDf = materialDf(List.of(RowFactory.create("MEPK-001", "OCC001")));
+    Dataset<Row> mediaDf =
+        mediaNoUsagePolicyDf(
+            List.of(
+                RowFactory.create("MPK-001", "https://example.com/occurrence.jpg"),
+                RowFactory.create("MPK-002", "https://example.com/material.jpg")));
+    Dataset<Row> occurrenceMediaDf =
+        occurrenceMediaDf(List.of(RowFactory.create("OPK-001", "MPK-001")));
+    Dataset<Row> materialMediaDf =
+        materialMediaDf(List.of(RowFactory.create("MEPK-001", "MPK-002")));
+
+    Optional<Dataset<Row>> resultOpt =
+        MediaExtensionBuilder.buildEventMediaExtension(
+            spark,
+            TestTableLoader.of(
+                "event",
+                eventDf,
+                "occurrence",
+                occurrenceDf,
+                MaterialJoinBuilder.TABLE_MATERIAL,
+                materialDf,
+                MediaExtensionBuilder.TABLE_MEDIA,
+                mediaDf,
+                MediaExtensionBuilder.TABLE_OCCURRENCE_MEDIA,
+                occurrenceMediaDf,
+                MediaExtensionBuilder.TABLE_MATERIAL_MEDIA,
+                materialMediaDf));
+
+    assertTrue(resultOpt.isPresent());
+    List<Map<String, String>> mediaExt = parseMediaJson(resultOpt.get().collectAsList().get(0));
+    assertEquals(2, mediaExt.size());
+    assertTrue(
+        mediaExt.stream()
+            .map(row -> row.get(DcTerm.identifier.qualifiedName()))
+            .anyMatch("https://example.com/occurrence.jpg"::equals));
+    assertTrue(
+        mediaExt.stream()
+            .map(row -> row.get(DcTerm.identifier.qualifiedName()))
+            .anyMatch("https://example.com/material.jpg"::equals));
   }
 
   // ---- material-media merge (occurrence path only) ----

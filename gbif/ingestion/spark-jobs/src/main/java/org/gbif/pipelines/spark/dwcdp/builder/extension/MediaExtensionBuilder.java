@@ -40,6 +40,12 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * was never visible to {@code MultimediaInterpreter} at all, since it filters on {@code
  * Extension.MULTIMEDIA.getRowType()} exactly.
  *
+ * <p>For event-core datasets, {@code buildEventMediaExtension} promotes direct occurrence and
+ * material media to the event's top-level Multimedia extension. DwC-A has no way to attach a
+ * multimedia extension row to a nested occurrence extension, and the target interpreter only reads
+ * top-level extensions. The occurrence/material ownership relationship is therefore intentionally
+ * lossy here, but the media remains visible and indexed.
+ *
  * <p>{@code buildOccurrenceMediaExtension} additionally merges in {@code material-media} — photos
  * of the specimen that's exactly-one evidence for the occurrence (resolved via {@link
  * MaterialJoinBuilder#singleMaterialOccurrenceLinks}) — into the same Multimedia extension as the
@@ -63,32 +69,94 @@ public class MediaExtensionBuilder {
   private MediaExtensionBuilder() {}
 
   /**
-   * Returns a two-column Dataset {@code (eventID, mediaExtJson)}, or empty if {@code event-media},
-   * {@code media}, or {@code event} is absent.
+   * Returns a two-column Dataset {@code (eventID, mediaExtJson)}, combining direct {@code
+   * event-media}, {@code occurrence-media} resolved through their occurrence's event, and {@code
+   * material-media} resolved through their exactly-one evidence occurrence and then its event.
+   * Returns empty if {@code media}/{@code event} is absent or none of the three link paths can
+   * contribute a row.
    */
   public static Optional<Dataset<Row>> buildEventMediaExtension(
       SparkSession spark, TableLoader loader) {
 
-    Optional<Dataset<Row>> eventMediaDfOpt = loader.load(TABLE_EVENT_MEDIA);
     Optional<Dataset<Row>> mediaDfOpt = loadEnrichedMedia(loader);
     Optional<Dataset<Row>> eventDfOpt = loader.load("event");
 
-    if (eventMediaDfOpt.isEmpty() || mediaDfOpt.isEmpty() || eventDfOpt.isEmpty()) {
+    if (mediaDfOpt.isEmpty() || eventDfOpt.isEmpty()) {
       log.debug(
-          "Skipping event-media extension: event-media present={}, media present={}, event present={}",
-          eventMediaDfOpt.isPresent(),
+          "Skipping event multimedia extension: media present={}, event present={}",
           mediaDfOpt.isPresent(),
           eventDfOpt.isPresent());
       return Optional.empty();
     }
 
-    Dataset<Row> mediaJoined = joinMedia(eventMediaDfOpt.get(), mediaDfOpt.get());
-    Dataset<Row> withEventId =
-        resolveParentId(mediaJoined, "event_fk", eventDfOpt.get(), "event_pk", "eventID");
+    Optional<Dataset<Row>> directEventMedia =
+        buildDirectEventMediaRows(loader, mediaDfOpt.get(), eventDfOpt.get());
+    Optional<Dataset<Row>> occurrenceMedia =
+        buildOccurrenceMediaRowsForEvents(loader, mediaDfOpt.get(), eventDfOpt.get());
+    Optional<Dataset<Row>> materialMedia =
+        buildMaterialMediaRowsForEvents(loader, mediaDfOpt.get(), eventDfOpt.get());
+    Optional<Dataset<Row>> combined =
+        unionIfBothPresent(unionIfBothPresent(directEventMedia, occurrenceMedia), materialMedia);
+    if (combined.isEmpty()) {
+      log.debug("Skipping event multimedia extension: no direct or promoted media found");
+      return Optional.empty();
+    }
+
+    Dataset<Row> withEventId = combined.get().dropDuplicates();
 
     return Optional.of(
         ExtensionAggregator.aggregateAsJsonByKey(
             spark, withEventId, withEventId.columns(), "eventID", COL_MEDIA_EXT_JSON));
+  }
+
+  private static Optional<Dataset<Row>> buildDirectEventMediaRows(
+      TableLoader loader, Dataset<Row> mediaDf, Dataset<Row> eventDf) {
+    Optional<Dataset<Row>> eventMediaDfOpt = loader.load(TABLE_EVENT_MEDIA);
+    if (eventMediaDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        resolveParentId(
+            joinMedia(eventMediaDfOpt.get(), mediaDf), "event_fk", eventDf, "event_pk", "eventID"));
+  }
+
+  private static Optional<Dataset<Row>> buildOccurrenceMediaRowsForEvents(
+      TableLoader loader, Dataset<Row> mediaDf, Dataset<Row> eventDf) {
+    Optional<Dataset<Row>> occurrenceMediaRows =
+        buildDirectOccurrenceMediaRows(loader, Optional.of(mediaDf));
+    return occurrenceMediaRows.map(rows -> resolveOccurrenceRowsToEventId(rows, loader, eventDf));
+  }
+
+  private static Optional<Dataset<Row>> buildMaterialMediaRowsForEvents(
+      TableLoader loader, Dataset<Row> mediaDf, Dataset<Row> eventDf) {
+    Optional<Dataset<Row>> materialMediaRows = buildMaterialMediaRows(loader, Optional.of(mediaDf));
+    return materialMediaRows.map(rows -> resolveOccurrenceRowsToEventId(rows, loader, eventDf));
+  }
+
+  /**
+   * Resolves rows already carrying occurrenceID to an eventID, then removes occurrence ownership.
+   */
+  private static Dataset<Row> resolveOccurrenceRowsToEventId(
+      Dataset<Row> rows, TableLoader loader, Dataset<Row> eventDf) {
+    Optional<Dataset<Row>> occurrenceDfOpt = loader.load("occurrence");
+    if (occurrenceDfOpt.isEmpty()) {
+      return rows.limit(0);
+    }
+
+    Dataset<Row> occurrenceToEvent =
+        occurrenceDfOpt
+            .get()
+            .select(
+                functions.col("occurrenceID").alias("__media_occurrence_id"),
+                functions.col("event_fk"));
+    Dataset<Row> withEventFk =
+        rows.join(
+                occurrenceToEvent,
+                rows.col("occurrenceID").equalTo(occurrenceToEvent.col("__media_occurrence_id")),
+                "left_outer")
+            .drop(occurrenceToEvent.col("__media_occurrence_id"))
+            .drop(rows.col("occurrenceID"));
+    return resolveParentId(withEventFk, "event_fk", eventDf, "event_pk", "eventID");
   }
 
   /**
