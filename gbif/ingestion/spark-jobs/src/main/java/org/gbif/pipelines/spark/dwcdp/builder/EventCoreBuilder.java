@@ -18,6 +18,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.GeologicalContextJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.HumboldtExtensionBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentifierExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.OccurrenceExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.ProtocolJoinBuilder;
@@ -54,6 +55,8 @@ import org.gbif.pipelines.spark.util.TableLoader;
  *       event-media} or {@code media} is absent.
  *   <li>Build the eMoF extension via {@link AssertionExtensionBuilder} — skipped if {@code
  *       event-assertion} is absent.
+ *   <li>Build the Identifier extension via {@link IdentifierExtensionBuilder} — skipped if {@code
+ *       event-identifier} is absent.
  *   <li>Build the Humboldt extension via {@link HumboldtExtensionBuilder} — skipped if {@code
  *       survey} is absent.
  *   <li>Map each joined row to an {@link ExtendedRecord} with {@code coreRowType = dwc:Event}.
@@ -105,18 +108,21 @@ public class EventCoreBuilder {
         MediaExtensionBuilder.buildEventMediaExtension(spark, loader);
     Optional<Dataset<Row>> assertionExtDf =
         AssertionExtensionBuilder.buildEventAssertionExtension(spark, loader);
+    Optional<Dataset<Row>> identifierExtDf = IdentifierExtensionBuilder.buildEvent(spark, loader);
     Optional<Dataset<Row>> humboldtExtDf = HumboldtExtensionBuilder.build(spark, loader);
 
     Dataset<Row> joined = eventDf;
     joined = DatasetJoins.leftJoinIfPresent(joined, occurrenceExtDf, "eventID");
     joined = DatasetJoins.leftJoinIfPresent(joined, mediaExtDf, "eventID");
     joined = DatasetJoins.leftJoinIfPresent(joined, assertionExtDf, "eventID");
+    joined = DatasetJoins.leftJoinIfPresent(joined, identifierExtDf, "eventID");
     joined = DatasetJoins.leftJoinIfPresent(joined, humboldtExtDf, "eventID");
 
     final String[] eventColumns = eventDf.columns();
     final boolean hasOccExt = occurrenceExtDf.isPresent();
     final boolean hasMediaExt = mediaExtDf.isPresent();
     final boolean hasAssertionExt = assertionExtDf.isPresent();
+    final boolean hasIdentifierExt = identifierExtDf.isPresent();
     final boolean hasHumboldtExt = humboldtExtDf.isPresent();
 
     return joined
@@ -124,7 +130,13 @@ public class EventCoreBuilder {
             (MapFunction<Row, ExtendedRecord>)
                 row ->
                     toExtendedRecord(
-                        row, eventColumns, hasOccExt, hasMediaExt, hasAssertionExt, hasHumboldtExt),
+                        row,
+                        eventColumns,
+                        hasOccExt,
+                        hasMediaExt,
+                        hasAssertionExt,
+                        hasIdentifierExt,
+                        hasHumboldtExt),
             Encoders.bean(ExtendedRecord.class))
         .filter((FilterFunction<ExtendedRecord>) r -> r != null);
   }
@@ -176,6 +188,7 @@ public class EventCoreBuilder {
       boolean hasOccExt,
       boolean hasMediaExt,
       boolean hasAssertionExt,
+      boolean hasIdentifierExt,
       boolean hasHumboldtExt)
       throws IOException {
 
@@ -205,6 +218,12 @@ public class EventCoreBuilder {
         hasAssertionExt,
         AssertionExtensionBuilder.COL_ASSERTION_EXT_JSON,
         AssertionExtensionBuilder.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
+    CoreBuilderSupport.addExtensionIfPresent(
+        row,
+        extensions,
+        hasIdentifierExt,
+        IdentifierExtensionBuilder.COL_IDENTIFIER_EXT_JSON,
+        IdentifierExtensionBuilder.ROW_TYPE_IDENTIFIER);
     CoreBuilderSupport.addExtensionIfPresent(
         row,
         extensions,

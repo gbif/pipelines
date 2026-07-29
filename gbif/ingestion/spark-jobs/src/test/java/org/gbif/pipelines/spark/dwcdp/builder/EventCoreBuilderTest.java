@@ -20,6 +20,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.DwcDpRowTypes;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.HumboldtExtensionBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentifierExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TestTableLoader;
@@ -99,6 +100,15 @@ class EventCoreBuilderTest {
         new StructType()
             .add("event_fk", DataTypes.StringType)
             .add("media_fk", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> eventIdentifierDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("event_fk", DataTypes.StringType)
+            .add("identifier", DataTypes.StringType)
+            .add("identifierType", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
@@ -210,6 +220,29 @@ class EventCoreBuilderTest {
         EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf)).collectAsList();
 
     assertTrue(records.get(0).getExtensions().isEmpty());
+  }
+
+  @Test
+  void eventIdentifierTable_attachedAsExtension() {
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> identifierDf =
+        eventIdentifierDf(
+            List.of(RowFactory.create("EPK-001", "https://example.org/event/1", "URI")));
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(
+                spark,
+                TestTableLoader.of(
+                    "event",
+                    eventDf,
+                    IdentifierExtensionBuilder.TABLE_EVENT_IDENTIFIER,
+                    identifierDf))
+            .collectAsList();
+
+    List<Map<String, String>> identifiers =
+        records.get(0).getExtensions().get(IdentifierExtensionBuilder.ROW_TYPE_IDENTIFIER);
+    assertNotNull(identifiers, "identifier extension must be present");
+    assertEquals(1, identifiers.size());
   }
 
   // ---- occurrence extension wiring ----

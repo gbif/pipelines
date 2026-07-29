@@ -47,6 +47,21 @@ class IdentifierExtensionBuilderTest {
     return spark.createDataFrame(rows, schema);
   }
 
+  private Dataset<Row> eventPkDf(List<Row> rows) {
+    StructType schema =
+        new StructType().add("event_pk", DataTypes.StringType).add("eventID", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> eventIdentifierDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("event_fk", DataTypes.StringType)
+            .add("identifier", DataTypes.StringType)
+            .add("identifierType", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
   private Dataset<Row> occurrenceIdentifierDf(List<Row> rows) {
     StructType schema =
         new StructType()
@@ -81,6 +96,44 @@ class IdentifierExtensionBuilderTest {
 
     Optional<Dataset<Row>> result =
         IdentifierExtensionBuilder.build(spark, TestTableLoader.of("occurrence", occ));
+
+    assertTrue(result.isEmpty());
+  }
+
+  // ---- event-identifier ----
+
+  @Test
+  void directEventIdentifiers_areResolvedAndAggregated() throws Exception {
+    Dataset<Row> event = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> identifiers =
+        eventIdentifierDf(
+            List.of(
+                RowFactory.create("EPK-001", "https://example.org/event/1", "URI"),
+                RowFactory.create("EPK-001", "urn:event:1", "internal")));
+
+    Optional<Dataset<Row>> result =
+        IdentifierExtensionBuilder.buildEvent(
+            spark,
+            TestTableLoader.of(
+                "event", event, IdentifierExtensionBuilder.TABLE_EVENT_IDENTIFIER, identifiers));
+
+    assertTrue(result.isPresent());
+    List<Map<String, String>> ext = parseIdentifierJson(result.get().collectAsList().get(0));
+    assertEquals(2, ext.size());
+  }
+
+  @Test
+  void danglingEventIdentifier_isDropped() {
+    Dataset<Row> event = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> identifiers =
+        eventIdentifierDf(
+            List.of(RowFactory.create("EPK-DANGLING", "https://example.org/event/x", "URI")));
+
+    Optional<Dataset<Row>> result =
+        IdentifierExtensionBuilder.buildEvent(
+            spark,
+            TestTableLoader.of(
+                "event", event, IdentifierExtensionBuilder.TABLE_EVENT_IDENTIFIER, identifiers));
 
     assertTrue(result.isEmpty());
   }
@@ -194,7 +247,7 @@ class IdentifierExtensionBuilderTest {
             + "is nothing unambiguous to merge in at all");
   }
 
-  // ---- dangling FK safety (the general fix applied to resolveToOccurrenceId) ----
+  // ---- dangling FK safety (the general fix applied to resolveToParentId) ----
 
   @Test
   void danglingOccurrenceFk_rowDroppedNotNullKeyed() {

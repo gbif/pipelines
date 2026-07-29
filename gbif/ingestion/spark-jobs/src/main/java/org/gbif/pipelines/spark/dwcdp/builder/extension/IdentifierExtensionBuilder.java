@@ -10,13 +10,10 @@ import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
  * Builds Identifier extension Datasets — {@code Extension.IDENTIFIER} ({@code
- * http://rs.gbif.org/terms/1.0/Identifier}) — for the occurrence-core path, merging {@code
- * occurrence-identifier} (direct) with {@code material-identifier} (via {@link
- * MaterialJoinBuilder#singleMaterialOccurrenceLinks}) into one extension, same architecture and
- * same reasoning as {@link MediaExtensionBuilder}/{@link AssertionExtensionBuilder}'s equivalent
- * merges: once {@link MaterialJoinBuilder} has established a 1:1 occurrence/material relationship,
- * an alternate identifier for the specimen and one for the occurrence both just identify the same
- * real-world thing.
+ * http://rs.gbif.org/terms/1.0/Identifier}) — for the occurrence-core and event-core paths. The
+ * occurrence path merges {@code occurrence-identifier} (direct) with {@code material-identifier}
+ * (via {@link MaterialJoinBuilder#singleMaterialOccurrenceLinks}); the event path maps direct
+ * {@code event-identifier} rows.
  *
  * <p><b>Two things are less certain here than for the other extensions built this session, and
  * worth being explicit about:</b>
@@ -31,13 +28,11 @@ import org.gbif.pipelines.spark.util.TableLoader;
  *       invented rename scheme — there is no confirmed field-level mapping to verify against, the
  *       way there was for the media renames.
  * </ul>
- *
- * <p>{@code event-identifier} is a separate, still-unbuilt gap — it attaches to {@code event}, not
- * {@code material}/{@code occurrence}, so it isn't part of this merge.
  */
 @Slf4j
 public class IdentifierExtensionBuilder {
 
+  public static final String TABLE_EVENT_IDENTIFIER = "event-identifier";
   static final String TABLE_OCCURRENCE_IDENTIFIER = "occurrence-identifier";
   static final String TABLE_MATERIAL_IDENTIFIER = "material-identifier";
 
@@ -70,6 +65,35 @@ public class IdentifierExtensionBuilder {
             spark, df, df.columns(), "occurrenceID", COL_IDENTIFIER_EXT_JSON));
   }
 
+  /**
+   * Returns a two-column Dataset {@code (eventID, identifierExtJson)} from direct {@code
+   * event-identifier} rows, or {@link Optional#empty()} when either required table is absent or no
+   * identifier row resolves to an event.
+   */
+  public static Optional<Dataset<Row>> buildEvent(SparkSession spark, TableLoader loader) {
+    Optional<Dataset<Row>> identifierDfOpt = loader.load(TABLE_EVENT_IDENTIFIER);
+    Optional<Dataset<Row>> eventDfOpt = loader.load("event");
+
+    if (identifierDfOpt.isEmpty() || eventDfOpt.isEmpty()) {
+      log.debug(
+          "Skipping event identifier extension: event-identifier present={}, event present={}",
+          identifierDfOpt.isPresent(),
+          eventDfOpt.isPresent());
+      return Optional.empty();
+    }
+
+    Dataset<Row> resolved =
+        resolveToParentId(
+            identifierDfOpt.get(), "event_fk", eventDfOpt.get(), "event_pk", "eventID");
+    if (resolved.isEmpty()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(
+        ExtensionAggregator.aggregateAsJsonByKey(
+            spark, resolved, resolved.columns(), "eventID", COL_IDENTIFIER_EXT_JSON));
+  }
+
   /** Row-level (pre-aggregation) rows from the direct {@code occurrence-identifier} link. */
   private static Optional<Dataset<Row>> buildDirectOccurrenceIdentifierRows(TableLoader loader) {
     Optional<Dataset<Row>> identifierDfOpt = loader.load(TABLE_OCCURRENCE_IDENTIFIER);
@@ -84,8 +108,12 @@ public class IdentifierExtensionBuilder {
     }
 
     Dataset<Row> resolved =
-        resolveToOccurrenceId(
-            identifierDfOpt.get(), "occurrence_fk", occurrenceDfOpt.get(), "occurrence_pk");
+        resolveToParentId(
+            identifierDfOpt.get(),
+            "occurrence_fk",
+            occurrenceDfOpt.get(),
+            "occurrence_pk",
+            "occurrenceID");
     return resolved.isEmpty() ? Optional.empty() : Optional.of(resolved);
   }
 
@@ -114,31 +142,36 @@ public class IdentifierExtensionBuilder {
     }
 
     Dataset<Row> resolved =
-        resolveToOccurrenceId(
+        resolveToParentId(
             materialIdentifierDfOpt.get(),
             "materialEntity_fk",
             materialLinksOpt.get(),
-            "materialEntity_pk");
+            "materialEntity_pk",
+            "occurrenceID");
     return resolved.isEmpty() ? Optional.empty() : Optional.of(resolved);
   }
 
   /**
-   * Resolves {@code identifierDf}'s surrogate FK to {@code occurrenceID} via {@code parentDf},
-   * dropping the FK and the parent's surrogate PK, and dropping any row whose FK didn't resolve to
-   * a real parent — same null-drop policy {@link MediaExtensionBuilder}/{@link
+   * Resolves {@code identifierDf}'s surrogate FK to a natural parent identifier via {@code
+   * parentDf}, dropping the FK and the parent's surrogate PK, and dropping any row whose FK didn't
+   * resolve to a real parent — same null-drop policy {@link MediaExtensionBuilder}/{@link
    * AssertionExtensionBuilder} apply in their own resolution helpers, for the same reason: a
    * left-outer join alone would let such a row survive with a null key into the aggregation step.
    */
-  private static Dataset<Row> resolveToOccurrenceId(
-      Dataset<Row> identifierDf, String fkColumn, Dataset<Row> parentDf, String parentPkColumn) {
+  private static Dataset<Row> resolveToParentId(
+      Dataset<Row> identifierDf,
+      String fkColumn,
+      Dataset<Row> parentDf,
+      String parentPkColumn,
+      String parentIdColumn) {
     return identifierDf
         .join(
-            parentDf.select(parentPkColumn, "occurrenceID"),
+            parentDf.select(parentPkColumn, parentIdColumn),
             identifierDf.col(fkColumn).equalTo(parentDf.col(parentPkColumn)),
             "left_outer")
         .drop(parentDf.col(parentPkColumn))
         .drop(identifierDf.col(fkColumn))
-        .filter(functions.col("occurrenceID").isNotNull());
+        .filter(functions.col(parentIdColumn).isNotNull());
   }
 
   /**
