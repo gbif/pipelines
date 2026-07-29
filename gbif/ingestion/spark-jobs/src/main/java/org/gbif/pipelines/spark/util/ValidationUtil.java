@@ -57,7 +57,7 @@ public class ValidationUtil {
     }
     Metrics metrics =
         Optional.ofNullable(validation.getMetrics()).orElse(Metrics.builder().build());
-    validation.setMetrics(metrics);
+    metrics.setFileInfos(generatedMetrics.getFileInfos());
     validationClient.update(key, validation);
   }
 }
