@@ -99,6 +99,14 @@ public class EventCoreBuilder {
         ProtocolJoinBuilder.resolveProtocolFk(
             loader, eventDf, "eventProtocol_fk", "samplingProtocol");
     eventDf =
+        ProtocolJoinBuilder.mergeJunctionProtocolsInto(
+            eventDf,
+            ProtocolJoinBuilder.aggregateJunctionProtocolDescriptions(
+                loader, "event-protocol", "event_fk", "event", "event_pk", "eventID"),
+            "eventID",
+            "eventID",
+            "samplingProtocol");
+    eventDf =
         ProtocolJoinBuilder.resolveProtocolFkCoalesceInto(
             loader, eventDf, "georeferenceProtocol_fk", "georeferenceProtocol");
     eventDf = ProvenanceJoinBuilder.enrichEvents(loader, eventDf);

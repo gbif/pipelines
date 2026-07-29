@@ -84,6 +84,7 @@ public class OccurrenceExtensionBuilder {
     enriched = IdentificationJoinBuilder.enrichOccurrences(loader, enriched);
     enriched = MaterialJoinBuilder.enrichOccurrences(loader, enriched);
     enriched = MaterialProvenanceJoinBuilder.enrichOccurrences(loader, enriched);
+    enriched = MaterialProtocolJoinBuilder.enrichOccurrences(loader, enriched);
 
     // Attach the occurrence's own media/assertion extensions before resolving event_fk and
     // aggregating, so they ride along as nested JSON on each occurrence's term map — the same

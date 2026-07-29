@@ -123,6 +123,22 @@ class EventCoreBuilderTest {
     return spark.createDataFrame(rows, schema);
   }
 
+  private Dataset<Row> protocolDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("protocol_pk", DataTypes.StringType)
+            .add("protocolDescription", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> eventProtocolDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("event_fk", DataTypes.StringType)
+            .add("protocol_fk", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
   private Dataset<Row> surveyDf(List<Row> rows) {
     StructType schema =
         new StructType()
@@ -599,6 +615,41 @@ class EventCoreBuilderTest {
     // no protocol table in this fixture, so the raw FK values are the documented fallback
     assertEquals("PROTO-001", coreTerms.get(DwcTerm.samplingProtocol.qualifiedName()));
     assertEquals("PROTO-002", coreTerms.get(DwcTerm.georeferenceProtocol.qualifiedName()));
+  }
+
+  @Test
+  void eventProtocolJunction_aggregatesAndMergesWithDirectProtocol() {
+    StructType eventSchema =
+        new StructType()
+            .add("event_pk", DataTypes.StringType)
+            .add("eventID", DataTypes.StringType)
+            .add("eventProtocol_fk", DataTypes.StringType);
+    Dataset<Row> eventDf =
+        spark.createDataFrame(
+            List.of(RowFactory.create("EPK-001", "EVT001", "PPK-1")), eventSchema);
+    Dataset<Row> protocols =
+        protocolDf(
+            List.of(
+                RowFactory.create("PPK-1", "Direct protocol"),
+                RowFactory.create("PPK-2", "Junction protocol A"),
+                RowFactory.create("PPK-3", "Junction protocol B")));
+    Dataset<Row> eventProtocols =
+        eventProtocolDf(
+            List.of(
+                RowFactory.create("EPK-001", "PPK-3"),
+                RowFactory.create("EPK-001", "PPK-2"),
+                RowFactory.create("EPK-001", "PPK-2")));
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(
+                spark,
+                TestTableLoader.of(
+                    "event", eventDf, "protocol", protocols, "event-protocol", eventProtocols))
+            .collectAsList();
+
+    assertEquals(
+        "Direct protocol|Junction protocol A|Junction protocol B",
+        records.get(0).getCoreTerms().get(DwcTerm.samplingProtocol.qualifiedName()));
   }
 
   @Test

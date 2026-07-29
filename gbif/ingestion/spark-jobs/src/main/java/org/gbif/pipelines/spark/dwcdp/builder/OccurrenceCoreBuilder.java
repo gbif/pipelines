@@ -19,6 +19,7 @@ import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentificationExtensionB
 import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentificationJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentifierExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialJoinBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialProtocolJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialProvenanceJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.OrganismJoinBuilder;
@@ -101,6 +102,7 @@ public class OccurrenceCoreBuilder {
     enriched =
         ProtocolJoinBuilder.resolveProtocolFk(
             loader, enriched, "occurrenceProtocol_fk", "samplingProtocol");
+    enriched = MaterialProtocolJoinBuilder.enrichOccurrences(loader, enriched);
     enriched = enriched.drop(OCCURRENCE_PK_COLUMN);
 
     Optional<Dataset<Row>> mediaExtDf =

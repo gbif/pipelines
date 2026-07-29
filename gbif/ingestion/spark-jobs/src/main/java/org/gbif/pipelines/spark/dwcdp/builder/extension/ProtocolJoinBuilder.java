@@ -37,6 +37,9 @@ public class ProtocolJoinBuilder {
   public static final String TABLE_PROTOCOL = "protocol";
   static final String PROTOCOL_PK_COLUMN = "protocol_pk";
   static final String PROTOCOL_DESCRIPTION_COLUMN = "protocolDescription";
+  private static final String PROTOCOL_FK_COLUMN = "protocol_fk";
+  private static final String AGGREGATED_PROTOCOLS_COLUMN = "__aggregated_protocol_descriptions";
+  private static final String AGGREGATED_JOIN_KEY_COLUMN = "__aggregated_protocol_parent_key";
   private static final String TEMP_RESOLVED_COLUMN = "__resolved_protocol_description";
 
   private ProtocolJoinBuilder() {}
@@ -106,6 +109,135 @@ public class ProtocolJoinBuilder {
             functions.coalesce(
                 withResolved.col(coalesceIntoColumn), withResolved.col(TEMP_RESOLVED_COLUMN)))
         .drop(TEMP_RESOLVED_COLUMN);
+  }
+
+  /**
+   * Resolves a protocol junction table into one deterministic pipe-delimited description list per
+   * parent. When the protocol lookup table is absent, protocol FK values are retained as the same
+   * fallback used by {@link #resolveProtocolFk}; when it is present, dangling protocol FKs do not
+   * contribute a value.
+   *
+   * <p>The returned Dataset contains {@code parentIdColumn} and an internal description-list column
+   * intended for {@link #mergeJunctionProtocolsInto}. Empty signals that a required table or column
+   * is absent, rather than an empty junction table.
+   */
+  public static Optional<Dataset<Row>> aggregateJunctionProtocolDescriptions(
+      TableLoader loader,
+      String junctionTable,
+      String junctionParentFkColumn,
+      String parentTable,
+      String parentPkColumn,
+      String parentIdColumn) {
+    Optional<Dataset<Row>> junctionDfOpt = loader.load(junctionTable);
+    Optional<Dataset<Row>> parentDfOpt = loader.load(parentTable);
+    if (junctionDfOpt.isEmpty() || parentDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Dataset<Row> junctionDf = junctionDfOpt.get();
+    Dataset<Row> parentDf = parentDfOpt.get();
+    if (!hasColumns(junctionDf, junctionParentFkColumn, PROTOCOL_FK_COLUMN)
+        || !hasColumns(parentDf, parentPkColumn, parentIdColumn)) {
+      log.warn("Cannot resolve {}: required junction or parent columns are absent", junctionTable);
+      return Optional.empty();
+    }
+
+    Dataset<Row> links =
+        junctionDf
+            .join(
+                parentDf.select(parentPkColumn, parentIdColumn),
+                junctionDf.col(junctionParentFkColumn).equalTo(parentDf.col(parentPkColumn)),
+                "inner")
+            .select(parentDf.col(parentIdColumn), junctionDf.col(PROTOCOL_FK_COLUMN));
+
+    Optional<Dataset<Row>> protocolDfOpt = loader.load(TABLE_PROTOCOL);
+    Dataset<Row> descriptions;
+    if (protocolDfOpt.isEmpty()) {
+      descriptions = links.withColumnRenamed(PROTOCOL_FK_COLUMN, PROTOCOL_DESCRIPTION_COLUMN);
+    } else {
+      Dataset<Row> protocolDf = protocolDfOpt.get();
+      if (!hasColumns(protocolDf, PROTOCOL_PK_COLUMN, PROTOCOL_DESCRIPTION_COLUMN)) {
+        log.warn("protocol table is missing required columns; using protocol FK fallback");
+        descriptions = links.withColumnRenamed(PROTOCOL_FK_COLUMN, PROTOCOL_DESCRIPTION_COLUMN);
+      } else {
+        descriptions =
+            links
+                .join(
+                    protocolDf.select(PROTOCOL_PK_COLUMN, PROTOCOL_DESCRIPTION_COLUMN),
+                    links.col(PROTOCOL_FK_COLUMN).equalTo(protocolDf.col(PROTOCOL_PK_COLUMN)),
+                    "inner")
+                .select(links.col(parentIdColumn), protocolDf.col(PROTOCOL_DESCRIPTION_COLUMN));
+      }
+    }
+
+    Dataset<Row> aggregated =
+        descriptions
+            .filter(functions.col(PROTOCOL_DESCRIPTION_COLUMN).isNotNull())
+            .groupBy(functions.col(parentIdColumn))
+            .agg(
+                functions
+                    .array_join(
+                        functions.array_sort(
+                            functions.collect_set(functions.col(PROTOCOL_DESCRIPTION_COLUMN))),
+                        "|")
+                    .as(AGGREGATED_PROTOCOLS_COLUMN));
+    return Optional.of(aggregated);
+  }
+
+  /**
+   * Merges aggregated junction protocol descriptions into a pipe-delimited target field. Existing
+   * direct values are preserved, duplicate values are removed, and all values are sorted for
+   * deterministic output.
+   */
+  public static Dataset<Row> mergeJunctionProtocolsInto(
+      Dataset<Row> df,
+      Optional<Dataset<Row>> aggregatedProtocols,
+      String dfKeyColumn,
+      String aggregatedKeyColumn,
+      String targetColumn) {
+    if (aggregatedProtocols.isEmpty() || !Arrays.asList(df.columns()).contains(dfKeyColumn)) {
+      return df;
+    }
+
+    Dataset<Row> aggregate =
+        aggregatedProtocols
+            .get()
+            .withColumnRenamed(aggregatedKeyColumn, AGGREGATED_JOIN_KEY_COLUMN);
+    Dataset<Row> joined =
+        df.join(
+            aggregate,
+            df.col(dfKeyColumn).equalTo(aggregate.col(AGGREGATED_JOIN_KEY_COLUMN)),
+            "left_outer");
+
+    if (!Arrays.asList(joined.columns()).contains(targetColumn)) {
+      return joined
+          .withColumnRenamed(AGGREGATED_PROTOCOLS_COLUMN, targetColumn)
+          .drop(AGGREGATED_JOIN_KEY_COLUMN);
+    }
+
+    var values =
+        functions.filter(
+            functions.array_union(
+                functions.split(
+                    functions.coalesce(joined.col(targetColumn), functions.lit("")), "\\|"),
+                functions.split(
+                    functions.coalesce(joined.col(AGGREGATED_PROTOCOLS_COLUMN), functions.lit("")),
+                    "\\|")),
+            value -> value.isNotNull().and(functions.length(value).gt(0)));
+    var merged = functions.array_join(functions.array_sort(values), "|");
+
+    return joined
+        .withColumn(
+            targetColumn,
+            functions
+                .when(functions.length(merged).equalTo(0), functions.lit(null))
+                .otherwise(merged))
+        .drop(AGGREGATED_JOIN_KEY_COLUMN)
+        .drop(AGGREGATED_PROTOCOLS_COLUMN);
+  }
+
+  private static boolean hasColumns(Dataset<Row> df, String... columns) {
+    return Arrays.asList(df.columns()).containsAll(Arrays.asList(columns));
   }
 
   private static Dataset<Row> joinAndRename(
