@@ -1,13 +1,6 @@
 package org.gbif.pipelines.spark;
 
-import static org.apache.spark.sql.functions.col;
-import static org.apache.spark.sql.functions.collect_list;
-import static org.apache.spark.sql.functions.count;
-import static org.apache.spark.sql.functions.element_at;
-import static org.apache.spark.sql.functions.explode;
-import static org.apache.spark.sql.functions.row_number;
-import static org.apache.spark.sql.functions.struct;
-import static org.apache.spark.sql.functions.when;
+import static org.apache.spark.sql.functions.*;
 import static org.gbif.pipelines.spark.Directories.OCCURRENCE_JSON;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
@@ -17,13 +10,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
@@ -47,6 +34,8 @@ import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.IssueInfo;
 import org.gbif.validator.api.Metrics.IssueSample;
 import org.gbif.validator.api.Metrics.TermInfo;
+import scala.collection.JavaConverters;
+import scala.collection.mutable.WrappedArray;
 
 /**
  * Spark pipeline that computes validator metrics directly from interpreted occurrence Parquet
@@ -183,6 +172,7 @@ public class ValidatorMetricsPipeline {
       throws IOException {
 
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
+    //    String outputPath = "/Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/metrics";
     log.info("Running ValidatorMetricsPipeline for {}", outputPath);
 
     Dataset<OccurrenceJsonRecord> records =
@@ -204,6 +194,7 @@ public class ValidatorMetricsPipeline {
 
       Metrics result =
           Metrics.builder()
+              .indexeable(indexedCount > 0)
               .fileInfos(
                   Collections.singletonList(
                       FileInfo.builder()
@@ -214,7 +205,9 @@ public class ValidatorMetricsPipeline {
                           .build()))
               .build();
 
-      String json = MAPPER.writeValueAsString(result);
+      String json = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(result);
+      //      FsUtils.createFile(fs, "/Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/" +
+      // METRICS_FILENAME, json);
       FsUtils.createFile(fs, outputPath + "/" + METRICS_FILENAME, json);
       log.info("Written validator metrics to {}/{}", outputPath, METRICS_FILENAME);
     } finally {
@@ -322,16 +315,99 @@ public class ValidatorMetricsPipeline {
       }
     }
 
-    Row countRow = records.agg(firstAgg, restAggs.toArray(new Column[0])).first();
+    Row interpretedRowCount = records.agg(firstAgg, restAggs.toArray(new Column[0])).first();
 
     List<TermInfo> result = new ArrayList<>();
     for (int i = 0; i < termQualifiedNames.size(); i++) {
+
+      String term = termQualifiedNames.get(i);
+      Column colExpr = resolveColumn(TERM_TO_COLUMN.get(term));
+
+      Dataset<Row> interpretedUniqueValueCountDf =
+          records.groupBy(colExpr).agg(countDistinct(colExpr).alias("uniqueCount"));
+
+      Long interpretedUniqueValueCount =
+          interpretedUniqueValueCountDf
+              .select("uniqueCount")
+              .as(Encoders.LONG())
+              .collectAsList()
+              .stream()
+              .findFirst()
+              .orElseGet(
+                  () -> {
+                    log.warn("No unique interpreted values found for term {}", term);
+                    return 0L;
+                  });
+
+      Map<String, Long> topValuesMap = Map.of();
+
+      if (interpretedUniqueValueCount > 0) {
+        // get the top 10 by count
+        Dataset<Row> topValues =
+            records
+                .filter(colExpr.isNotNull())
+                .groupBy(colExpr)
+                .agg(count(colExpr).alias("counts"))
+                .orderBy(col("counts").desc())
+                .filter(col("counts").gt(0))
+                .limit(10);
+
+        topValuesMap =
+            topValues.collectAsList().stream()
+                .collect(
+                    Collectors.toMap(
+                        row -> {
+                          Object key = row.get(0);
+                          if (key instanceof WrappedArray<?> wa) {
+                            return JavaConverters.seqAsJavaList(wa).stream()
+                                .map(Object::toString)
+                                .collect(Collectors.joining(","));
+                          }
+                          return key.toString();
+                        },
+                        row -> row.getAs("counts")));
+      }
+
       result.add(
           TermInfo.builder()
               .term(termQualifiedNames.get(i))
-              .interpretedIndexed(countRow.getLong(i))
+              .interpretedIndexed(interpretedRowCount.getLong(i))
+              .uniqueInterpretedValues(interpretedUniqueValueCount)
+              .sampleInterpretedValuesMap(topValuesMap)
               .build());
     }
+
+    Dataset<Row> exploded = records.select(col("id"), explode(col("verbatim.core")));
+
+    exploded.count();
+
+    Dataset<Row> termCounts = exploded.groupBy("key").agg(count("*"));
+
+    // get the count of unique values for each term
+    Dataset<Row> termUniqueCounts =
+        exploded.groupBy("key").agg(countDistinct("value").alias("uniqueCount"));
+
+    for (TermInfo termInfo : result) {
+      // add the verbatim value count
+      termCounts
+          .filter(col("key").equalTo(termInfo.getTerm()))
+          .select("count(1)")
+          .as(Encoders.LONG())
+          .collectAsList()
+          .stream()
+          .findFirst()
+          .ifPresentOrElse(termInfo::setRawIndexed, () -> termInfo.setRawIndexed(0L));
+
+      termUniqueCounts
+          .filter(col("key").equalTo(termInfo.getTerm()))
+          .select("uniqueCount")
+          .as(Encoders.LONG())
+          .collectAsList()
+          .stream()
+          .findFirst()
+          .ifPresentOrElse(termInfo::setUniqueRawValues, () -> termInfo.setUniqueRawValues(0L));
+    }
+
     return result;
   }
 

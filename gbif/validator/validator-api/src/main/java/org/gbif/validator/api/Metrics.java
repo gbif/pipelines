@@ -73,7 +73,10 @@ public class Metrics {
   public static class TermInfo {
     private String term;
     private Long rawIndexed;
+    private Long uniqueRawValues;
     private Long interpretedIndexed;
+    private Long uniqueInterpretedValues;
+    private Map<String, Long> sampleInterpretedValuesMap;
   }
 
   @Data
