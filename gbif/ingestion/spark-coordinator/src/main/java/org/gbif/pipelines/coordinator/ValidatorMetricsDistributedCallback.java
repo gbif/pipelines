@@ -42,7 +42,7 @@ public class ValidatorMetricsDistributedCallback extends ValidatorMetricsCallbac
         pipelinesConfig,
         message,
         "validator-metrics",
-        pipelinesConfig.getAirflowConfig().validatorInterpretationDag,
+        pipelinesConfig.getAirflowConfig().validatorMetricsDag,
         StepType.VALIDATOR_COLLECT_METRICS,
         recordsNumber,
         List.of());
