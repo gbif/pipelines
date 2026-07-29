@@ -174,8 +174,8 @@ public class ValidatorMetricsPipeline {
       SparkSession spark, FileSystem fs, PipelinesConfig config, String datasetId, Integer attempt)
       throws IOException {
 
-    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
-    //    String outputPath = "/Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/metrics";
+    //    String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
+    String outputPath = "/Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/metrics";
     log.info("Running ValidatorMetricsPipeline for {}", outputPath);
 
     Dataset<OccurrenceJsonRecord> records =
@@ -195,23 +195,30 @@ public class ValidatorMetricsPipeline {
       List<TermInfo> termInfos = computeInterpretedFieldCounts(records);
       log.info("Computed interpreted counts for {} terms", termInfos.size());
 
-      Metrics generatedMetrics =
-          Metrics.builder()
-              .indexeable(indexedCount > 0)
-              .fileInfos(
-                  Collections.singletonList(
-                      FileInfo.builder()
-                          .rowType(DwcTerm.Occurrence.qualifiedName())
-                          .indexedCount(indexedCount)
-                          .issues(issues)
-                          .terms(termInfos)
-                          .build()))
+      // add extensions
+      FileInfo coreFileInfo =
+          FileInfo.builder()
+              .rowType(DwcTerm.Occurrence.qualifiedName())
+              .indexedCount(indexedCount)
+              .issues(issues)
+              .terms(termInfos)
               .build();
 
+      List<FileInfo> extensions = computeExtensions(records);
+
+      List<FileInfo> all = new ArrayList<>();
+      all.add(coreFileInfo);
+      all.addAll(extensions);
+
+      Metrics generatedMetrics =
+          Metrics.builder().indexeable(indexedCount > 0).fileInfos(all).build();
+
       String json = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(generatedMetrics);
-      //      FsUtils.createFile(fs, "/Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/" +
-      // METRICS_FILENAME, json);
-      FsUtils.createFile(fs, outputPath + "/" + METRICS_FILENAME, json);
+      FsUtils.createFile(
+          fs,
+          "/Users/djtfmartin/dev/pipelines/gbif/ingestion/spark-jobs/" + METRICS_FILENAME,
+          json);
+      //      FsUtils.createFile(fs, outputPath + "/" + METRICS_FILENAME, json);
       log.info("Written validator metrics to {}/{}", outputPath, METRICS_FILENAME);
 
       // update the stored validation via the API
@@ -222,6 +229,80 @@ public class ValidatorMetricsPipeline {
     } finally {
       records.unpersist();
     }
+  }
+
+  private static List<FileInfo> computeExtensions(Dataset<OccurrenceJsonRecord> records) {
+
+    List<String> extensionUris =
+        records
+            .select(
+                explode(col("verbatim.extensions")).as(new String[] {"extensionUri", "records"}))
+            .select("extensionUri")
+            .distinct()
+            .as(Encoders.STRING())
+            .collectAsList();
+    ;
+
+    List<FileInfo> extensionFileInfos = new ArrayList<>();
+
+    for (String extensionUri : extensionUris) {
+      Dataset<Row> extension =
+          records
+              .select(
+                  col("verbatim.coreId").as("coreId"),
+                  explode(col("verbatim.extensions")).as(new String[] {"extensionUri", "records"}))
+              .filter(col("extensionUri").equalTo(extensionUri))
+              .select(explode(col("records")).as("records"));
+      Dataset<Row> extensionKeyValues = extension.select(explode(col("records")));
+
+      Dataset<Row> termCounts = extensionKeyValues.groupBy("key").agg(count("*"));
+
+      // get the count of unique values for each term
+      Dataset<Row> termUniqueCounts =
+          extensionKeyValues.groupBy("key").agg(countDistinct("value").alias("uniqueCount"));
+
+      List<String> termUris = termCounts.select("key").as(Encoders.STRING()).collectAsList();
+
+      List<TermInfo> termInfos = new ArrayList<>();
+
+      for (String termUri : termUris) {
+
+        TermInfo termInfo = new TermInfo();
+
+        termInfo.setTerm(termUri);
+
+        termCounts
+            .filter(col("key").equalTo(termUri))
+            .select("count(1)")
+            .as(Encoders.LONG())
+            .collectAsList()
+            .stream()
+            .findFirst()
+            .ifPresentOrElse(termInfo::setRawIndexed, () -> termInfo.setRawIndexed(0L));
+
+        termUniqueCounts
+            .filter(col("key").equalTo(termUri))
+            .select("uniqueCount")
+            .as(Encoders.LONG())
+            .collectAsList()
+            .stream()
+            .findFirst()
+            .ifPresentOrElse(termInfo::setUniqueRawValues, () -> termInfo.setUniqueRawValues(0L));
+
+        termInfos.add(termInfo);
+      }
+
+      FileInfo extensionFileInfo =
+          FileInfo.builder()
+              .rowType(extensionUri)
+              .indexedCount(extension.count())
+              .terms(termInfos)
+              .build();
+
+      extensionFileInfos.add(extensionFileInfo);
+    }
+
+    return extensionFileInfos;
   }
 
   /**
@@ -387,9 +468,6 @@ public class ValidatorMetricsPipeline {
     }
 
     Dataset<Row> exploded = records.select(col("id"), explode(col("verbatim.core")));
-
-    exploded.count();
-
     Dataset<Row> termCounts = exploded.groupBy("key").agg(count("*"));
 
     // get the count of unique values for each term
