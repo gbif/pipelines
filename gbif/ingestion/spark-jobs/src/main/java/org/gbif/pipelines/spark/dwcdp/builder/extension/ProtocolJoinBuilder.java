@@ -3,14 +3,15 @@ package org.gbif.pipelines.spark.dwcdp.builder.extension;
 import java.util.Arrays;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.functions;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
- * Resolves {@code protocol_pk}-referencing surrogate FK columns to the linked protocol's {@code
- * protocolDescription}.
+ * Resolves {@code protocol_pk}-referencing surrogate FK columns to the linked protocol's display
+ * label.
  *
  * <p>DwC-DP carries several protocol references as bare surrogate FKs with no accompanying text:
  * {@code event.eventProtocol_fk}, {@code occurrence.occurrenceProtocol_fk}. Left unresolved, these
@@ -37,6 +38,8 @@ public class ProtocolJoinBuilder {
   public static final String TABLE_PROTOCOL = "protocol";
   static final String PROTOCOL_PK_COLUMN = "protocol_pk";
   static final String PROTOCOL_DESCRIPTION_COLUMN = "protocolDescription";
+  static final String PROTOCOL_TYPE_COLUMN = "protocolType";
+  static final String PROTOCOL_NAME_COLUMN = "protocolName";
   private static final String PROTOCOL_FK_COLUMN = "protocol_fk";
   private static final String AGGREGATED_PROTOCOLS_COLUMN = "__aggregated_protocol_descriptions";
   private static final String AGGREGATED_JOIN_KEY_COLUMN = "__aggregated_protocol_parent_key";
@@ -46,9 +49,9 @@ public class ProtocolJoinBuilder {
 
   /**
    * Resolves {@code fkColumn} to a new column named {@code targetColumnName} holding the linked
-   * protocol's {@code protocolDescription} — or, when the {@code protocol} table is absent, {@code
-   * fkColumn}'s raw value under that same new name. Returns {@code df} unchanged if it has no
-   * {@code fkColumn} column at all.
+   * protocol's display label — or, when the {@code protocol} table is absent, {@code fkColumn}'s
+   * raw value under that same new name. Returns {@code df} unchanged if it has no {@code fkColumn}
+   * column at all.
    *
    * @param loader table loader — returns {@link Optional#empty()} when {@code protocol} is absent
    * @param df the Dataset to resolve the FK on (typically {@code event} or {@code occurrence})
@@ -113,14 +116,14 @@ public class ProtocolJoinBuilder {
   }
 
   /**
-   * Resolves a protocol junction table into one deterministic pipe-delimited description list per
+   * Resolves a protocol junction table into one deterministic pipe-delimited display-label list per
    * parent. When the protocol lookup table is absent, protocol FK values are retained as the same
    * fallback used by {@link #resolveProtocolFk}; when it is present, dangling protocol FKs do not
    * contribute a value.
    *
-   * <p>The returned Dataset contains {@code parentIdColumn} and an internal description-list column
-   * intended for {@link #mergeJunctionProtocolsInto}. Empty signals that a required table or column
-   * is absent, rather than an empty junction table.
+   * <p>The returned Dataset contains {@code parentIdColumn} and an internal display-label-list
+   * column intended for {@link #mergeJunctionProtocolsInto}. Empty signals that a required table or
+   * column is absent, rather than an empty junction table.
    */
   public static Optional<Dataset<Row>> aggregateJunctionProtocolDescriptions(
       TableLoader loader,
@@ -157,17 +160,21 @@ public class ProtocolJoinBuilder {
       descriptions = links.withColumnRenamed(PROTOCOL_FK_COLUMN, PROTOCOL_DESCRIPTION_COLUMN);
     } else {
       Dataset<Row> protocolDf = protocolDfOpt.get();
-      if (!hasColumns(protocolDf, PROTOCOL_PK_COLUMN, PROTOCOL_DESCRIPTION_COLUMN)) {
-        log.warn("protocol table is missing required columns; using protocol FK fallback");
+      if (!hasColumns(protocolDf, PROTOCOL_PK_COLUMN)) {
+        log.warn("protocol table is missing its primary-key column; using protocol FK fallback");
         descriptions = links.withColumnRenamed(PROTOCOL_FK_COLUMN, PROTOCOL_DESCRIPTION_COLUMN);
       } else {
+        Dataset<Row> protocolSelect =
+            protocolDf.select(
+                protocolDf.col(PROTOCOL_PK_COLUMN),
+                protocolDisplayColumn(protocolDf).as(PROTOCOL_DESCRIPTION_COLUMN));
         descriptions =
             links
                 .join(
-                    protocolDf.select(PROTOCOL_PK_COLUMN, PROTOCOL_DESCRIPTION_COLUMN),
-                    links.col(PROTOCOL_FK_COLUMN).equalTo(protocolDf.col(PROTOCOL_PK_COLUMN)),
+                    protocolSelect,
+                    links.col(PROTOCOL_FK_COLUMN).equalTo(protocolSelect.col(PROTOCOL_PK_COLUMN)),
                     "inner")
-                .select(links.col(parentIdColumn), protocolDf.col(PROTOCOL_DESCRIPTION_COLUMN));
+                .select(links.col(parentIdColumn), protocolSelect.col(PROTOCOL_DESCRIPTION_COLUMN));
       }
     }
 
@@ -186,7 +193,7 @@ public class ProtocolJoinBuilder {
   }
 
   /**
-   * Merges aggregated junction protocol descriptions into a pipe-delimited target field. Existing
+   * Merges aggregated junction protocol display labels into a pipe-delimited target field. Existing
    * direct values are preserved, duplicate values are removed, and all values are sorted for
    * deterministic output.
    */
@@ -248,15 +255,53 @@ public class ProtocolJoinBuilder {
 
   private static Dataset<Row> joinAndRename(
       Dataset<Row> df, Dataset<Row> protocolDf, String fkColumn, String targetColumnName) {
+    if (!hasColumns(protocolDf, PROTOCOL_PK_COLUMN)) {
+      log.warn(
+          "protocol table is missing its primary-key column; keeping raw {} value as fallback",
+          fkColumn);
+      return df.withColumnRenamed(fkColumn, targetColumnName);
+    }
+
     Dataset<Row> protocolSelect =
-        protocolDf.select(PROTOCOL_PK_COLUMN, PROTOCOL_DESCRIPTION_COLUMN);
+        protocolDf.select(
+            protocolDf.col(PROTOCOL_PK_COLUMN),
+            protocolDisplayColumn(protocolDf).as(targetColumnName));
 
     return df.join(
             protocolSelect,
             df.col(fkColumn).equalTo(protocolSelect.col(PROTOCOL_PK_COLUMN)),
             "left_outer")
         .drop(protocolSelect.col(PROTOCOL_PK_COLUMN))
-        .drop(df.col(fkColumn))
-        .withColumnRenamed(PROTOCOL_DESCRIPTION_COLUMN, targetColumnName);
+        .drop(df.col(fkColumn));
+  }
+
+  /**
+   * Builds the human-readable representation used by DwC-A's scalar protocol fields. A named
+   * protocol is represented as {@code "type: name"} where the type is available; an unnamed
+   * protocol falls back to its free-text description.
+   */
+  private static Column protocolDisplayColumn(Dataset<Row> protocolDf) {
+    boolean hasName = Arrays.asList(protocolDf.columns()).contains(PROTOCOL_NAME_COLUMN);
+    boolean hasType = Arrays.asList(protocolDf.columns()).contains(PROTOCOL_TYPE_COLUMN);
+    boolean hasDescription =
+        Arrays.asList(protocolDf.columns()).contains(PROTOCOL_DESCRIPTION_COLUMN);
+
+    if (!hasName) {
+      return hasDescription
+          ? protocolDf.col(PROTOCOL_DESCRIPTION_COLUMN)
+          : functions.lit(null).cast("string");
+    }
+
+    Column name = protocolDf.col(PROTOCOL_NAME_COLUMN);
+    Column namedDisplay =
+        hasType ? functions.concat_ws(": ", protocolDf.col(PROTOCOL_TYPE_COLUMN), name) : name;
+
+    return hasDescription
+        ? functions
+            .when(name.isNotNull(), namedDisplay)
+            .otherwise(protocolDf.col(PROTOCOL_DESCRIPTION_COLUMN))
+        : functions
+            .when(name.isNotNull(), namedDisplay)
+            .otherwise(functions.lit(null).cast("string"));
   }
 }

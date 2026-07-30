@@ -66,6 +66,16 @@ class ProtocolJoinBuilderTest {
     return spark.createDataFrame(rows, schema);
   }
 
+  private Dataset<Row> namedProtocolDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("protocol_pk", DataTypes.StringType)
+            .add("protocolType", DataTypes.StringType)
+            .add("protocolName", DataTypes.StringType)
+            .add("protocolDescription", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
   // ---- resolveProtocolFk: absent-column / absent-table cases ----
 
   @Test
@@ -109,6 +119,25 @@ class ProtocolJoinBuilderTest {
     assertFalse(Arrays.asList(result.columns()).contains("eventProtocol_fk"));
     Row row = result.first();
     assertEquals("Point count survey", row.getAs("samplingProtocol"));
+  }
+
+  @Test
+  void resolveProtocolFk_protocolNameUsesTypedDisplayLabel() {
+    Dataset<Row> event = eventWithProtocolFkDf(List.of(RowFactory.create("EVT001", "PROTO-001")));
+    Dataset<Row> protocol =
+        namedProtocolDf(
+            List.of(
+                RowFactory.create(
+                    "PROTO-001", "sampling", "Point count survey", "Longer description")));
+
+    Dataset<Row> result =
+        ProtocolJoinBuilder.resolveProtocolFk(
+            TestTableLoader.of(ProtocolJoinBuilder.TABLE_PROTOCOL, protocol),
+            event,
+            "eventProtocol_fk",
+            "samplingProtocol");
+
+    assertEquals("sampling: Point count survey", result.first().getAs("samplingProtocol"));
   }
 
   @Test
@@ -181,6 +210,26 @@ class ProtocolJoinBuilderTest {
 
     Row row = result.first();
     assertEquals("Resolved protocol text", row.getAs("georeferenceProtocol"));
+  }
+
+  @Test
+  void coalesceInto_georeferenceProtocolUsesTypedProtocolName() {
+    Dataset<Row> event =
+        eventWithGeoreferenceProtocolDf(List.of(RowFactory.create("EVT001", null, "PROTO-001")));
+    Dataset<Row> protocol =
+        namedProtocolDf(
+            List.of(
+                RowFactory.create("PROTO-001", "georeferencing", "Hand-held GPS receiver", null)));
+
+    Dataset<Row> result =
+        ProtocolJoinBuilder.resolveProtocolFkCoalesceInto(
+            TestTableLoader.of(ProtocolJoinBuilder.TABLE_PROTOCOL, protocol),
+            event,
+            "georeferenceProtocol_fk",
+            "georeferenceProtocol");
+
+    assertEquals(
+        "georeferencing: Hand-held GPS receiver", result.first().getAs("georeferenceProtocol"));
   }
 
   @Test

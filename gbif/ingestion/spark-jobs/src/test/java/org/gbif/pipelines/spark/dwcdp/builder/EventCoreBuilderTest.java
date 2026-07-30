@@ -681,6 +681,35 @@ class EventCoreBuilderTest {
   }
 
   @Test
+  void eventGeoreferenceProtocolFk_usesTypedProtocolName() {
+    StructType eventSchema =
+        new StructType()
+            .add("eventID", DataTypes.StringType)
+            .add("georeferenceProtocol_fk", DataTypes.StringType);
+    Dataset<Row> eventDf =
+        spark.createDataFrame(List.of(RowFactory.create("EVT001", "PROTO-001")), eventSchema);
+    StructType protocolSchema =
+        new StructType()
+            .add("protocol_pk", DataTypes.StringType)
+            .add("protocolType", DataTypes.StringType)
+            .add("protocolName", DataTypes.StringType)
+            .add("protocolDescription", DataTypes.StringType);
+    Dataset<Row> protocolDf =
+        spark.createDataFrame(
+            List.of(
+                RowFactory.create("PROTO-001", "georeferencing", "Hand-held GPS receiver", null)),
+            protocolSchema);
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf, "protocol", protocolDf))
+            .collectAsList();
+
+    assertEquals(
+        "georeferencing: Hand-held GPS receiver",
+        records.get(0).getCoreTerms().get(DwcTerm.georeferenceProtocol.qualifiedName()));
+  }
+
+  @Test
   void eventProtocolJunction_aggregatesAndMergesWithDirectProtocol() {
     StructType eventSchema =
         new StructType()
