@@ -1,6 +1,6 @@
 package org.gbif.pipelines.coordinator;
 
-import static org.gbif.pipelines.coordinator.PrometheusMetrics.CONCURRENT_DATASETS;
+import static org.gbif.pipelines.coordinator.PrometheusMetrics.*;
 import static org.gbif.pipelines.util.CallbackUtil.checkIfPaused;
 
 import feign.Contract;
@@ -127,8 +127,14 @@ public abstract class ValidatorCallback<
 
   public void handleMessage(I message) {
     log.debug("Received message: {}", message);
+    runningCounter.incrementAndGet();
+
     try {
       checkIfPaused();
+
+      LAST_CONSUMED_MESSAGE_FROM_QUEUE_MS.set(System.currentTimeMillis());
+      MESSAGES_READ_FROM_QUEUE.inc();
+
       ThreadContext.put(
           "datasetKey",
           message.getDatasetUuid() != null ? message.getDatasetUuid().toString() : "NO_DATASET");
@@ -153,8 +159,10 @@ public abstract class ValidatorCallback<
 
         updateValidatorStatus(message, Validation.Status.RUNNING, null);
 
+        CONCURRENT_DATASETS.inc();
         // Run pipeline for this callback
         runPipeline(message);
+        COMPLETED_DATASETS.inc();
 
         updateValidatorStatus(message, Validation.Status.FINISHED, null);
 
@@ -171,6 +179,8 @@ public abstract class ValidatorCallback<
         log.error(
             "Failed to update tracking status for datasetKey - " + message.getDatasetUuid(), ex);
         updateValidatorStatus(message, Validation.Status.FAILED, ex.getMessage());
+        DATASETS_ERRORED_COUNT.inc();
+        LAST_DATASETS_ERROR.set(System.currentTimeMillis());
       } finally {
         CONCURRENT_DATASETS.dec();
       }
