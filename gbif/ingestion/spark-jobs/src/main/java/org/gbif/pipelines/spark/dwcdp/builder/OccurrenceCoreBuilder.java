@@ -18,6 +18,7 @@ import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilde
 import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentificationExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentificationJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentifierExtensionBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialGeologicalContextJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialProtocolJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialProvenanceJoinBuilder;
@@ -98,6 +99,7 @@ public class OccurrenceCoreBuilder {
     Dataset<Row> enriched = OrganismJoinBuilder.enrichOccurrences(loader, occurrenceDf);
     enriched = IdentificationJoinBuilder.enrichOccurrences(loader, enriched);
     enriched = MaterialJoinBuilder.enrichOccurrences(loader, enriched);
+    enriched = MaterialGeologicalContextJoinBuilder.enrichOccurrences(loader, enriched);
     enriched = MaterialProvenanceJoinBuilder.enrichOccurrences(loader, enriched);
     enriched =
         ProtocolJoinBuilder.resolveProtocolFk(

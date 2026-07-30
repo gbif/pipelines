@@ -29,9 +29,9 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * joins in this codebase), so no surrogate {@code _pk}/{@code _fk} resolution step is needed here,
  * just a direct join on the shared natural key.
  *
- * <p>Only {@code event} is handled here. {@code material} can also link to a geological context via
- * the {@code material-geological-context} join table, but {@code material} itself isn't joined
- * anywhere in this pipeline yet — that's separate, larger work.
+ * <p>Material-linked geological context is handled separately by {@link
+ * MaterialGeologicalContextJoinBuilder}, because its junction-table cardinality needs an explicit
+ * unambiguous-link policy before fields can be flattened onto an occurrence.
  */
 @Slf4j
 public class GeologicalContextJoinBuilder {

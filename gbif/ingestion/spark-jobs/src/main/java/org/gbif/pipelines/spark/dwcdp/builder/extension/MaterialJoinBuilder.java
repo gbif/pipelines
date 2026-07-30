@@ -60,9 +60,9 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * occurrence's own Multimedia/eMoF extensions by {@link MediaExtensionBuilder} and {@link
  * AssertionExtensionBuilder} respectively — see {@link #singleMaterialOccurrenceLinks}, which both
  * reuse. {@code material}'s remaining sub-tables ({@code material-identifier}, {@code
- * material-provenance}, {@code material-usage-policy}, {@code material-geological-context}) and its
- * links to {@code event} ({@code collectionEvent_fk}, {@code derivationEvent_fk}) are still not
- * handled — separate, later work, same deferral pattern as {@code creator} on media.
+ * material-provenance}, {@code material-usage-policy}) and its links to {@code event} ({@code
+ * collectionEvent_fk}, {@code derivationEvent_fk}) are still not handled — separate, later work,
+ * same deferral pattern as {@code creator} on media.
  */
 @Slf4j
 public class MaterialJoinBuilder {

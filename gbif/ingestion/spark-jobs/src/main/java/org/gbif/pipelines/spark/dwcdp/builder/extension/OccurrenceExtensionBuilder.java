@@ -83,6 +83,7 @@ public class OccurrenceExtensionBuilder {
     Dataset<Row> enriched = OrganismJoinBuilder.enrichOccurrences(loader, occurrenceDf);
     enriched = IdentificationJoinBuilder.enrichOccurrences(loader, enriched);
     enriched = MaterialJoinBuilder.enrichOccurrences(loader, enriched);
+    enriched = MaterialGeologicalContextJoinBuilder.enrichOccurrences(loader, enriched);
     enriched = MaterialProvenanceJoinBuilder.enrichOccurrences(loader, enriched);
     enriched = MaterialProtocolJoinBuilder.enrichOccurrences(loader, enriched);
 
