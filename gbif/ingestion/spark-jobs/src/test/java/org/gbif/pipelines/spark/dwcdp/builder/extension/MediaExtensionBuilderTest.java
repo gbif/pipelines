@@ -408,6 +408,44 @@ class MediaExtensionBuilderTest {
             + "nothing unambiguous to merge in at all");
   }
 
+  @Test
+  void virtualMaterialMedia_promotedDirectlyToCollectionEvent() throws Exception {
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    StructType materialSchema =
+        new StructType()
+            .add("materialEntity_pk", DataTypes.StringType)
+            .add("materialEntityID", DataTypes.StringType)
+            .add("evidenceForOccurrenceID", DataTypes.StringType)
+            .add("collectionEvent_fk", DataTypes.StringType);
+    Dataset<Row> materialDf =
+        spark.createDataFrame(
+            List.of(RowFactory.create("MEPK-1", "MAT001", null, "EPK-001")), materialSchema);
+    Dataset<Row> mediaDf =
+        mediaNoUsagePolicyDf(
+            List.of(RowFactory.create("MPK-001", "https://example.com/specimen.jpg")));
+    Dataset<Row> materialMediaDf = materialMediaDf(List.of(RowFactory.create("MEPK-1", "MPK-001")));
+
+    Optional<Dataset<Row>> resultOpt =
+        MediaExtensionBuilder.buildEventMediaExtension(
+            spark,
+            TestTableLoader.of(
+                "event",
+                eventDf,
+                MaterialJoinBuilder.TABLE_MATERIAL,
+                materialDf,
+                MediaExtensionBuilder.TABLE_MEDIA,
+                mediaDf,
+                MediaExtensionBuilder.TABLE_MATERIAL_MEDIA,
+                materialMediaDf));
+
+    assertTrue(resultOpt.isPresent());
+    Row result = resultOpt.get().collectAsList().get(0);
+    assertEquals("EVT001", result.getAs("eventID"));
+    assertEquals(
+        "https://example.com/specimen.jpg",
+        parseMediaJson(result).get(0).get(DcTerm.identifier.qualifiedName()));
+  }
+
   // ---- helper ----
 
   @SuppressWarnings("unchecked")

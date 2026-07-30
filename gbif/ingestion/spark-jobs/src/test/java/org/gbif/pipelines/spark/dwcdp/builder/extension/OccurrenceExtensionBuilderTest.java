@@ -109,6 +109,43 @@ class OccurrenceExtensionBuilderTest {
     return spark.createDataFrame(rows, schema);
   }
 
+  private Dataset<Row> materialDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("materialEntity_pk", DataTypes.StringType)
+            .add("materialEntityID", DataTypes.StringType)
+            .add("evidenceForOccurrenceID", DataTypes.StringType)
+            .add("collectionEvent_fk", DataTypes.StringType)
+            .add("catalogNumber", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> materialMediaDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("materialEntity_fk", DataTypes.StringType)
+            .add("media_fk", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> materialAssertionDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("assertionID", DataTypes.StringType)
+            .add("materialEntity_fk", DataTypes.StringType)
+            .add("assertionType", DataTypes.StringType)
+            .add("assertionValue", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> materialIdentifierDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("materialEntity_fk", DataTypes.StringType)
+            .add("identifier", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
   // ---- JSON helpers ----
 
   private List<Map<String, String>> parseOccurrenceExtJson(Row row) throws Exception {
@@ -374,5 +411,88 @@ class OccurrenceExtensionBuilderTest {
         "occurrence_pk is a surrogate key with no DwC term — it must never appear nested "
             + "inside occurrenceExtJson, even though MediaExtensionBuilder needed it internally "
             + "to resolve occurrence_fk");
+  }
+
+  @Test
+  void unlinkedMaterial_becomesVirtualOccurrenceWithMaterialChildren() throws Exception {
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> materialDf =
+        materialDf(List.of(RowFactory.create("MPK-001", "MAT001", null, "EPK-001", "CAT001")));
+    Dataset<Row> mediaDf =
+        mediaDf(List.of(RowFactory.create("MEDIA-001", "https://example.com/material.jpg")));
+    Dataset<Row> materialMediaDf =
+        materialMediaDf(List.of(RowFactory.create("MPK-001", "MEDIA-001")));
+    Dataset<Row> materialAssertionDf =
+        materialAssertionDf(List.of(RowFactory.create("A001", "MPK-001", "Mass", "3.2")));
+    Dataset<Row> materialIdentifierDf =
+        materialIdentifierDf(List.of(RowFactory.create("MPK-001", "barcode-001")));
+
+    Optional<Dataset<Row>> resultOpt =
+        OccurrenceExtensionBuilder.build(
+            spark,
+            TestTableLoader.of(
+                "event", eventDf,
+                "material", materialDf,
+                "media", mediaDf,
+                "material-media", materialMediaDf,
+                "material-assertion", materialAssertionDf,
+                "material-identifier", materialIdentifierDf));
+
+    assertTrue(resultOpt.isPresent());
+    Row eventRow = resultOpt.get().collectAsList().get(0);
+    assertEquals("EVT001", eventRow.getAs("eventID"));
+    Map<String, String> occurrence = singleOccurrence(eventRow);
+    assertEquals("MAT001", occurrence.get(DwcTerm.occurrenceID.qualifiedName()));
+    assertEquals("MAT001", occurrence.get(DwcTerm.materialSampleID.qualifiedName()));
+    assertEquals("MaterialSample", occurrence.get(DwcTerm.basisOfRecord.qualifiedName()));
+    assertEquals("present", occurrence.get(DwcTerm.occurrenceStatus.qualifiedName()));
+    assertEquals("CAT001", occurrence.get(DwcTerm.catalogNumber.qualifiedName()));
+    assertFalse(occurrence.containsKey("materialEntity_pk"));
+
+    assertEquals(
+        "https://example.com/material.jpg",
+        parseNestedJson(occurrence.get(MediaExtensionBuilder.COL_MEDIA_EXT_JSON))
+            .get(0)
+            .get(TermResolver.resolve("accessURI")));
+    assertEquals(
+        "Mass",
+        parseNestedJson(occurrence.get(AssertionExtensionBuilder.COL_ASSERTION_EXT_JSON))
+            .get(0)
+            .get(DwcTerm.measurementType.qualifiedName()));
+    assertEquals(
+        "barcode-001",
+        parseNestedJson(occurrence.get(IdentifierExtensionBuilder.COL_IDENTIFIER_EXT_JSON))
+            .get(0)
+            .get(TermResolver.resolve("identifier")));
+  }
+
+  @Test
+  void unlinkedMaterialWithoutMaterialEntityId_usesStableUrnFallback() throws Exception {
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> materialDf =
+        materialDf(List.of(RowFactory.create("MPK-001", null, null, "EPK-001", "CAT001")));
+
+    Optional<Dataset<Row>> resultOpt =
+        OccurrenceExtensionBuilder.build(
+            spark, TestTableLoader.of("event", eventDf, "material", materialDf));
+
+    assertTrue(resultOpt.isPresent());
+    assertEquals(
+        "urn:gbif:dwcdp:material:MPK-001",
+        singleOccurrence(resultOpt.get().collectAsList().get(0))
+            .get(DwcTerm.occurrenceID.qualifiedName()));
+  }
+
+  @Test
+  void materialWithEvidenceOccurrence_isNotDuplicatedAsVirtualOccurrence() throws Exception {
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> materialDf =
+        materialDf(List.of(RowFactory.create("MPK-001", "MAT001", "OCC001", "EPK-001", "CAT001")));
+
+    Optional<Dataset<Row>> resultOpt =
+        OccurrenceExtensionBuilder.build(
+            spark, TestTableLoader.of("event", eventDf, "material", materialDf));
+
+    assertTrue(resultOpt.isEmpty());
   }
 }

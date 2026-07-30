@@ -1141,6 +1141,40 @@ class DwcDpVerbatimConverterTest {
     assertEquals(3L, metrics.largestFileCount());
   }
 
+  @Test
+  void writeMetrics_eventMaterialWithoutOccurrence_countsVirtualOccurrences(@TempDir Path dir)
+      throws Exception {
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", "EVT001")));
+    writeParquet(
+        dir,
+        "data/material.parquet",
+        schema(
+            "materialEntity_pk",
+            "materialEntityID",
+            "evidenceForOccurrenceID",
+            "collectionEvent_fk"),
+        List.of(
+            RowFactory.create("MPK-001", "MAT001", null, "EPK-001"),
+            RowFactory.create("MPK-002", null, null, "EPK-001"),
+            RowFactory.create("MPK-003", "MAT003", "OCC001", "EPK-001")));
+
+    var metrics =
+        DwcDpVerbatimConverter.writeMetrics(
+            spark,
+            DataPackageFixtures.withEventAndMaterial(),
+            "file://" + dir,
+            FileSystem.getLocal(new Configuration()),
+            "test-dataset");
+
+    assertEquals(2L, metrics.occurrenceCount());
+    assertEquals(1L, metrics.eventCount());
+    assertEquals(3L, metrics.largestFileCount());
+  }
+
   // ---- helpers ----
 
   private void writeParquet(Path dir, String relativePath, StructType schema, List<Row> rows) {

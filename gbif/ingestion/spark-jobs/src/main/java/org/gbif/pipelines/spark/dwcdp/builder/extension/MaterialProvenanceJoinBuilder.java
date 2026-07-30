@@ -1,8 +1,11 @@
 package org.gbif.pipelines.spark.dwcdp.builder.extension;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.functions;
@@ -113,13 +116,23 @@ public class MaterialProvenanceJoinBuilder {
             // to survive as a null-keyed row, same policy applied throughout this session.
             .filter(functions.col("occurrenceID").isNotNull());
 
-    return occurrenceDf
-        .join(
+    Dataset<Row> joinedOccurrence =
+        occurrenceDf.join(
             aggregatedByOccurrence,
             occurrenceDf.col("occurrenceID").equalTo(aggregatedByOccurrence.col("occurrenceID")),
-            "left_outer")
-        .drop(aggregatedByOccurrence.col("occurrenceID"))
-        .drop(MATERIAL_ENTITY_PK_COLUMN);
+            "left_outer");
+    List<Column> columns = new ArrayList<>();
+    for (String column : occurrenceDf.columns()) {
+      columns.add(occurrenceDf.col(column));
+    }
+    for (String column : aggregatedByOccurrence.columns()) {
+      if (!"occurrenceID".equals(column)
+          && !MATERIAL_ENTITY_PK_COLUMN.equals(column)
+          && !Arrays.asList(occurrenceDf.columns()).contains(column)) {
+        columns.add(aggregatedByOccurrence.col(column));
+      }
+    }
+    return joinedOccurrence.select(columns.toArray(new Column[0]));
   }
 
   /**

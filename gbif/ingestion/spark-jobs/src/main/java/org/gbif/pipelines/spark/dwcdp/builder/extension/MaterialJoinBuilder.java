@@ -69,6 +69,10 @@ public class MaterialJoinBuilder {
 
   public static final String TABLE_MATERIAL = "material";
   static final String EVIDENCE_FOR_OCCURRENCE_ID_COLUMN = "evidenceForOccurrenceID";
+  private static final String MATERIAL_ENTITY_PK_COLUMN = "materialEntity_pk";
+  private static final String MATERIAL_ENTITY_ID_COLUMN = "materialEntityID";
+  private static final String COLLECTION_EVENT_FK_COLUMN = "collectionEvent_fk";
+  private static final String VIRTUAL_OCCURRENCE_ID_PREFIX = "urn:gbif:dwcdp:material:";
 
   private static final Set<String> EXCLUDED_MATERIAL_COLUMNS =
       Set.of(
@@ -184,17 +188,115 @@ public class MaterialJoinBuilder {
     }
 
     Dataset<Row> single = singleMaterialPerOccurrence(materialDf);
-    if (single.isEmpty()) {
+    Optional<Dataset<Row>> virtualLinks = virtualMaterialOccurrenceLinks(loader);
+    if (single.isEmpty() && virtualLinks.isEmpty()) {
       log.debug(
           "No occurrence has an unambiguous single material link; skipping material-linked "
               + "occurrence resolution entirely");
       return Optional.empty();
     }
 
-    return Optional.of(
-        single.select(
-            functions.col(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN).as("occurrenceID"),
-            functions.col("materialEntity_pk")));
+    Optional<Dataset<Row>> evidenceLinks =
+        single.isEmpty()
+            ? Optional.empty()
+            : Optional.of(
+                single.select(
+                    functions.col(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN).as("occurrenceID"),
+                    functions.col(MATERIAL_ENTITY_PK_COLUMN)));
+    if (evidenceLinks.isEmpty()) {
+      return virtualLinks.map(links -> links.drop("eventID"));
+    }
+    if (virtualLinks.isEmpty()) {
+      return evidenceLinks;
+    }
+    return Optional.of(evidenceLinks.get().unionByName(virtualLinks.get().drop("eventID")));
+  }
+
+  /**
+   * Builds event-core occurrence rows for material records which have no evidence occurrence but do
+   * have a resolvable collection event. Their material entity identifier is reused as the
+   * occurrence identifier when available; the stable material surrogate key supplies the fallback.
+   */
+  public static Optional<Dataset<Row>> virtualMaterialOccurrences(TableLoader loader) {
+    Optional<Dataset<Row>> materialDfOpt = loader.load(TABLE_MATERIAL);
+    Optional<Dataset<Row>> eventDfOpt = loader.load("event");
+    if (materialDfOpt.isEmpty() || eventDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Dataset<Row> materialDf = materialDfOpt.get();
+    Dataset<Row> eventDf = eventDfOpt.get();
+    List<String> materialColumns = Arrays.asList(materialDf.columns());
+    if (!materialColumns.contains(MATERIAL_ENTITY_PK_COLUMN)
+        || !materialColumns.contains(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN)
+        || !materialColumns.contains(COLLECTION_EVENT_FK_COLUMN)
+        || !Arrays.asList(eventDf.columns()).contains("event_pk")
+        || !Arrays.asList(eventDf.columns()).contains("eventID")) {
+      log.debug("Material/event tables lack the columns needed for virtual material occurrences");
+      return Optional.empty();
+    }
+
+    Dataset<Row> linked =
+        UsagePolicyJoinBuilder.enrich(loader, materialDf)
+            .filter(
+                functions
+                    .col(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN)
+                    .isNull()
+                    .and(functions.col(COLLECTION_EVENT_FK_COLUMN).isNotNull()))
+            .join(
+                eventDf.select(
+                    functions.col("event_pk").as("__collection_event_pk"),
+                    functions.col("eventID")),
+                functions
+                    .col(COLLECTION_EVENT_FK_COLUMN)
+                    .equalTo(functions.col("__collection_event_pk")),
+                "inner");
+    if (linked.isEmpty()) {
+      return Optional.empty();
+    }
+
+    List<Column> columns = new ArrayList<>();
+    Column occurrenceId =
+        materialColumns.contains(MATERIAL_ENTITY_ID_COLUMN)
+            ? functions.coalesce(
+                functions.col(MATERIAL_ENTITY_ID_COLUMN),
+                functions.concat(
+                    functions.lit(VIRTUAL_OCCURRENCE_ID_PREFIX),
+                    functions.col(MATERIAL_ENTITY_PK_COLUMN)))
+            : functions.concat(
+                functions.lit(VIRTUAL_OCCURRENCE_ID_PREFIX),
+                functions.col(MATERIAL_ENTITY_PK_COLUMN));
+    columns.add(occurrenceId.as("occurrenceID"));
+    columns.add(functions.col("eventID"));
+    // Retained only while occurrence-side builders resolve material children; callers must drop it
+    // before serialising the DwC occurrence term map.
+    columns.add(functions.col(MATERIAL_ENTITY_PK_COLUMN));
+    columns.add(functions.lit("MaterialSample").as("basisOfRecord"));
+    columns.add(functions.lit("present").as("occurrenceStatus"));
+    if (materialColumns.contains("materialSampleID")) {
+      columns.add(functions.col("materialSampleID"));
+    } else if (materialColumns.contains(MATERIAL_ENTITY_ID_COLUMN)) {
+      columns.add(functions.col(MATERIAL_ENTITY_ID_COLUMN).as("materialSampleID"));
+    }
+    for (String column : materialDf.columns()) {
+      if (!EXCLUDED_MATERIAL_COLUMNS.contains(column)
+          && !MATERIAL_ENTITY_ID_COLUMN.equals(column)
+          && !"materialSampleID".equals(column)) {
+        columns.add(functions.col(column));
+      }
+    }
+    return Optional.of(linked.select(columns.toArray(new Column[0])));
+  }
+
+  /** Returns virtual material ownership links, including the parent event identifier. */
+  static Optional<Dataset<Row>> virtualMaterialOccurrenceLinks(TableLoader loader) {
+    return virtualMaterialOccurrences(loader)
+        .map(
+            occurrences ->
+                occurrences.select(
+                    functions.col("occurrenceID"),
+                    functions.col(MATERIAL_ENTITY_PK_COLUMN),
+                    functions.col("eventID")));
   }
 
   /**

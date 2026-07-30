@@ -45,6 +45,18 @@ class DataPackageFixtures {
             "occurrence", "data/occurrence.parquet", "occurrenceID", "event_fk", "scientificName"));
   }
 
+  static DataPackage withEventAndMaterial() {
+    return build(
+        resource("event", "data/event.parquet", "event_pk", "eventID"),
+        resource(
+            "material",
+            "data/material.parquet",
+            "materialEntity_pk",
+            "materialEntityID",
+            "evidenceForOccurrenceID",
+            "collectionEvent_fk"));
+  }
+
   static DataPackage withEventOccurrenceOrganismAndMedia() {
     return build(
         resource(

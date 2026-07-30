@@ -130,7 +130,32 @@ public class MediaExtensionBuilder {
   private static Optional<Dataset<Row>> buildMaterialMediaRowsForEvents(
       TableLoader loader, Dataset<Row> mediaDf, Dataset<Row> eventDf) {
     Optional<Dataset<Row>> materialMediaRows = buildMaterialMediaRows(loader, Optional.of(mediaDf));
-    return materialMediaRows.map(rows -> resolveOccurrenceRowsToEventId(rows, loader, eventDf));
+    Optional<Dataset<Row>> evidenceRows =
+        materialMediaRows.map(rows -> resolveOccurrenceRowsToEventId(rows, loader, eventDf));
+    Optional<Dataset<Row>> virtualRows = buildVirtualMaterialMediaRowsForEvents(loader, mediaDf);
+    return unionIfBothPresent(evidenceRows, virtualRows);
+  }
+
+  /**
+   * Promotes media belonging to a virtual material occurrence directly to its collection event.
+   * There is no real occurrence row to resolve through in this case.
+   */
+  private static Optional<Dataset<Row>> buildVirtualMaterialMediaRowsForEvents(
+      TableLoader loader, Dataset<Row> mediaDf) {
+    Optional<Dataset<Row>> materialMediaDfOpt = loader.load(TABLE_MATERIAL_MEDIA);
+    Optional<Dataset<Row>> virtualLinksOpt =
+        MaterialJoinBuilder.virtualMaterialOccurrenceLinks(loader);
+    if (materialMediaDfOpt.isEmpty() || virtualLinksOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    Dataset<Row> mediaJoined = joinMedia(materialMediaDfOpt.get(), mediaDf);
+    return Optional.of(
+        resolveParentId(
+            mediaJoined,
+            "materialEntity_fk",
+            virtualLinksOpt.get(),
+            "materialEntity_pk",
+            "eventID"));
   }
 
   /**
@@ -140,7 +165,11 @@ public class MediaExtensionBuilder {
       Dataset<Row> rows, TableLoader loader, Dataset<Row> eventDf) {
     Optional<Dataset<Row>> occurrenceDfOpt = loader.load("occurrence");
     if (occurrenceDfOpt.isEmpty()) {
-      return rows.limit(0);
+      // Keep an empty Dataset in the event-media shape: callers may union it with media resolved
+      // through a virtual material occurrence, which is already keyed by eventID.
+      return rows.limit(0)
+          .drop("occurrenceID")
+          .withColumn("eventID", functions.lit(null).cast("string"));
     }
 
     Dataset<Row> occurrenceToEvent =

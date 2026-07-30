@@ -39,8 +39,8 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * the occurrence extension never attached to any event-core dataset.)
  *
  * <p>Returns a two-column Dataset {@code (eventID, occurrenceExtJson)} where the JSON is a
- * serialised list of term maps grouped by {@code eventID}. Returns {@link Optional#empty()} if the
- * occurrence table is absent, has no {@code event_fk} column, or the event table is absent.
+ * serialised list of term maps grouped by {@code eventID}. Materials without an evidence occurrence
+ * are represented as virtual occurrences when they resolve through {@code collectionEvent_fk}.
  */
 @Slf4j
 public class OccurrenceExtensionBuilder {
@@ -58,34 +58,36 @@ public class OccurrenceExtensionBuilder {
    *
    * @param spark active SparkSession (needed by {@link ExtensionAggregator})
    * @param loader table loader — returns {@link Optional#empty()} when a table is absent
-   * @return two-column Dataset {@code (eventID, occurrenceExtJson)}, or empty if occurrence or
-   *     event is absent, or occurrence has no {@code event_fk} column
+   * @return two-column Dataset {@code (eventID, occurrenceExtJson)}, or empty if no real or virtual
+   *     occurrence resolves to an event
    */
   public static Optional<Dataset<Row>> build(SparkSession spark, TableLoader loader) {
-    Optional<Dataset<Row>> occurrenceDfOpt = loader.load(TABLE_OCCURRENCE);
-    if (occurrenceDfOpt.isEmpty()) {
-      log.debug("No occurrence table present; skipping occurrence extension");
-      return Optional.empty();
-    }
-
-    Dataset<Row> occurrenceDf = occurrenceDfOpt.get();
-    if (!Arrays.asList(occurrenceDf.columns()).contains("event_fk")) {
-      log.warn("occurrence table has no event_fk column; skipping occurrence extension");
-      return Optional.empty();
-    }
-
     Optional<Dataset<Row>> eventDfOpt = loader.load("event");
     if (eventDfOpt.isEmpty()) {
       log.debug("No event table present; skipping occurrence extension");
       return Optional.empty();
     }
 
-    Dataset<Row> enriched = OrganismJoinBuilder.enrichOccurrences(loader, occurrenceDf);
-    enriched = IdentificationJoinBuilder.enrichOccurrences(loader, enriched);
-    enriched = MaterialJoinBuilder.enrichOccurrences(loader, enriched);
-    enriched = MaterialGeologicalContextJoinBuilder.enrichOccurrences(loader, enriched);
-    enriched = MaterialProvenanceJoinBuilder.enrichOccurrences(loader, enriched);
-    enriched = MaterialProtocolJoinBuilder.enrichOccurrences(loader, enriched);
+    Optional<Dataset<Row>> realOccurrences = buildRealOccurrences(loader, eventDfOpt.get());
+    Optional<Dataset<Row>> virtualOccurrences =
+        MaterialJoinBuilder.virtualMaterialOccurrences(loader);
+    if (realOccurrences.isEmpty() && virtualOccurrences.isEmpty()) {
+      log.debug("No real or virtual occurrence rows available for event-core extension");
+      return Optional.empty();
+    }
+
+    Dataset<Row> occurrences =
+        realOccurrences
+            .map(
+                real ->
+                    virtualOccurrences.map(virtual -> real.unionByName(virtual, true)).orElse(real))
+            .orElseGet(virtualOccurrences::get);
+
+    // Virtual rows already carry their material fields. The three material child joins use the
+    // shared material-to-occurrence links, which include those virtual rows.
+    occurrences = MaterialGeologicalContextJoinBuilder.enrichOccurrences(loader, occurrences);
+    occurrences = MaterialProvenanceJoinBuilder.enrichOccurrences(loader, occurrences);
+    occurrences = MaterialProtocolJoinBuilder.enrichOccurrences(loader, occurrences);
 
     // Attach the occurrence's own media/assertion extensions before resolving event_fk and
     // aggregating, so they ride along as nested JSON on each occurrence's term map — the same
@@ -100,7 +102,7 @@ public class OccurrenceExtensionBuilder {
     Optional<Dataset<Row>> occIdentifierExtDf = IdentifierExtensionBuilder.build(spark, loader);
 
     Dataset<Row> withOwnExtensions =
-        DatasetJoins.leftJoinIfPresent(enriched, occMediaExtDf, OCCURRENCE_ID_COLUMN);
+        DatasetJoins.leftJoinIfPresent(occurrences, occMediaExtDf, OCCURRENCE_ID_COLUMN);
     withOwnExtensions =
         DatasetJoins.leftJoinIfPresent(withOwnExtensions, occAssertionExtDf, OCCURRENCE_ID_COLUMN);
     withOwnExtensions =
@@ -114,19 +116,36 @@ public class OccurrenceExtensionBuilder {
     // resolution (each reloads "occurrence" fresh from the loader for that) — it has no DwC term
     // of its own and must not survive into this occurrence's nested term map inside
     // occurrenceExtJson.
-    withOwnExtensions = withOwnExtensions.drop(OCCURRENCE_PK_COLUMN);
-
     Dataset<Row> withEventId =
-        withOwnExtensions
-            .join(
-                eventDfOpt.get().select("event_pk", "eventID"),
-                withOwnExtensions.col("event_fk").equalTo(eventDfOpt.get().col("event_pk")),
-                "left_outer")
-            .drop(eventDfOpt.get().col("event_pk"))
-            .drop(withOwnExtensions.col("event_fk"));
+        withOwnExtensions.drop(OCCURRENCE_PK_COLUMN).drop("materialEntity_pk");
 
     return Optional.of(
         ExtensionAggregator.aggregateAsJsonByKey(
             spark, withEventId, withEventId.columns(), "eventID", COL_OCCURRENCE_EXT_JSON));
+  }
+
+  private static Optional<Dataset<Row>> buildRealOccurrences(
+      TableLoader loader, Dataset<Row> eventDf) {
+    Optional<Dataset<Row>> occurrenceDfOpt = loader.load(TABLE_OCCURRENCE);
+    if (occurrenceDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    Dataset<Row> occurrenceDf = occurrenceDfOpt.get();
+    if (!Arrays.asList(occurrenceDf.columns()).contains("event_fk")) {
+      log.warn("occurrence table has no event_fk column; skipping real occurrence extension");
+      return Optional.empty();
+    }
+
+    Dataset<Row> enriched = OrganismJoinBuilder.enrichOccurrences(loader, occurrenceDf);
+    enriched = IdentificationJoinBuilder.enrichOccurrences(loader, enriched);
+    enriched = MaterialJoinBuilder.enrichOccurrences(loader, enriched);
+    return Optional.of(
+        enriched
+            .join(
+                eventDf.select("event_pk", "eventID"),
+                enriched.col("event_fk").equalTo(eventDf.col("event_pk")),
+                "inner")
+            .drop(eventDf.col("event_pk"))
+            .drop(enriched.col("event_fk")));
   }
 }

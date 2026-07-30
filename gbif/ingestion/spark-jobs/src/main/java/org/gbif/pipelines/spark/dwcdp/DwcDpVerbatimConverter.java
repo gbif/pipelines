@@ -21,6 +21,7 @@ import org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.TermResolver;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.HumboldtExtensionBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackageResource;
 import org.gbif.pipelines.spark.util.PathUtil;
@@ -182,11 +183,24 @@ public class DwcDpVerbatimConverter {
       FileSystem fileSystem,
       String datasetId) {
 
-    long occurrenceCount =
+    long physicalOccurrenceCount =
         dataPackage
             .findResource("occurrence")
             .map(r -> countRows(spark, datasetBasePath, r))
             .orElse(0L);
+
+    // Event-core packages can materialise additional occurrence extension rows from material
+    // records. This count is consumed by the coordinator and balancer to decide whether the
+    // occurrence workflow must run, so it must describe the transformed archive rather than only
+    // the physical occurrence resource.
+    TableLoader loader =
+        tableName ->
+            dataPackage
+                .findResource(tableName)
+                .map(r -> spark.read().parquet(datasetBasePath + "/" + r.getPath()));
+    long virtualOccurrenceCount =
+        MaterialJoinBuilder.virtualMaterialOccurrences(loader).map(Dataset::count).orElse(0L);
+    long occurrenceCount = physicalOccurrenceCount + virtualOccurrenceCount;
 
     long eventCount =
         dataPackage.findResource("event").map(r -> countRows(spark, datasetBasePath, r)).orElse(0L);

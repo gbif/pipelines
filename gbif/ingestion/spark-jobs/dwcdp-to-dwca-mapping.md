@@ -16,7 +16,7 @@ DwC-DP package
 │   ├── event-media + occurrence-media + material-media ───────────────► Multimedia
 │   ├── event-assertion ───────────────────────────────────────────────► eMoF
 │   ├── event-identifier ──────────────────────────────────────────────► Identifier
-│   ├── occurrence ────────────────────────────────────────────────────► Occurrence extension
+│   ├── occurrence + unlinked collection material ─────────────────────► Occurrence extension
 │   └── survey + survey-target ─────────────────────────────────────────► Humboldt Event
 │
 └── occurrence ────────────────────────────────────────────────────────► DwC Occurrence core
@@ -53,6 +53,7 @@ extension.
 | `event-assertion` | eMoF extension | Assertion fields form eMoF rows; linked assertion protocols are resolved before serialisation. |
 | `event-identifier` | Identifier extension | One identifier extension row per source row, attached to `eventID`. |
 | `occurrence` | DwC Occurrence extension | Occurrences are resolved from `event_fk` to `eventID` and grouped below the event. The occurrence enrichments described below are applied first. |
+| `material` without `evidenceForOccurrenceID`, with `collectionEvent_fk → event` | DwC Occurrence extension | A virtual occurrence is created below the collection event. `occurrenceID` is `materialEntityID`, or `urn:gbif:dwcdp:material:<materialEntity_pk>` when it is absent; `materialSampleID` retains `materialEntityID`, `basisOfRecord` is `MaterialSample`, and `occurrenceStatus` is `present`. Material terms and material child extensions use this same virtual occurrence. |
 | `survey`, `survey-survey-target`, `survey-target` | Humboldt Event extension | Survey rows attach to their event. A linked survey target fans out into one Humboldt row per target. |
 | `survey.samplingProtocol[_fk]` | `eco:protocolDescriptions` | Supplied text wins; linked `protocolType: protocolName` is a fallback, then `protocolDescription`. |
 | `survey.samplingEffortProtocol[_fk]` | `eco:samplingEffortProtocol` | Supplied text wins; linked `protocolType: protocolName` is a fallback, then `protocolDescription`. |
@@ -96,6 +97,7 @@ that occurrence rather than choosing arbitrarily.
 | Multiple materials per occurrence | Material-derived fields and material-derived extensions are not flattened. |
 | Multiple material geological contexts | Geological-context fields are not flattened. This also avoids adding null-only columns when no context is usable. |
 | Multiple linked provenance or protocol records | Values are retained as deterministic pipe-delimited lists where the target term is list-valued. |
+| Material with no evidence occurrence but a resolvable collection event | Represented as a virtual `MaterialSample` occurrence under that event. Materials with an evidence link, including a dangling one, are not synthesised to avoid later duplication. Derivation-event links are not used. |
 
 ## Implementation entry points
 
