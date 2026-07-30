@@ -71,7 +71,7 @@ public class Coordinator {
     Mode mode = Mode.valueOf(args.mode);
     PipelinesConfig config = loadConfig(args.config);
 
-    JvmMetrics.builder().register();
+    JvmMetrics.builder().register(PrometheusMetrics.PROMETHEUS_REGISTRY);
 
     // start Prometheus HTTP server
     if (args.prometheusPort > 0) {
