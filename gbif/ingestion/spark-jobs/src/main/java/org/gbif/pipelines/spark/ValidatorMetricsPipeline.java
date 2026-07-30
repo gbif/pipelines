@@ -31,6 +31,7 @@ import org.gbif.pipelines.spark.util.RetryingValidationClient;
 import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.spark.util.ValidationClient;
 import org.gbif.pipelines.spark.util.ValidationUtil;
+import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
@@ -197,6 +198,7 @@ public class ValidatorMetricsPipeline {
       // add extensions
       FileInfo coreFileInfo =
           FileInfo.builder()
+              .fileType(DwcFileType.CORE)
               .rowType(DwcTerm.Occurrence.qualifiedName())
               .indexedCount(indexedCount)
               .issues(issues)
@@ -289,6 +291,7 @@ public class ValidatorMetricsPipeline {
 
       FileInfo extensionFileInfo =
           FileInfo.builder()
+              .fileType(DwcFileType.EXTENSION)
               .rowType(extensionUri)
               .indexedCount(extension.count())
               .terms(termInfos)
