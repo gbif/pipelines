@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>4.0.30-SNAPSHOT</version>
+  <version>4.0.31-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -217,7 +217,7 @@
     <jakarta-annotation.version>3.0.0</jakarta-annotation.version>
     <super-csv.version>2.4.0</super-csv.version>
     <lz4.version>1.3.0</lz4.version>
-    <hdfs-tables.version>1.3.8</hdfs-tables.version>
+    <hdfs-tables.version>1.3.9</hdfs-tables.version>
   </properties>
 
   <build>
