@@ -14,6 +14,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.ConnectionParameters;
@@ -76,7 +77,7 @@ public class Coordinator {
     // start Prometheus HTTP server
     if (args.prometheusPort > 0) {
       log.info("Starting Prometheus HTTP server on port {}", args.prometheusPort);
-      try (HTTPServer httpServer = HTTPServer.builder().port(args.prometheusPort).buildAndStart()) {
+      try (HTTPServer httpServer = HTTPServer.builder().registry(PrometheusMetrics.PROMETHEUS_REGISTRY).port(args.prometheusPort).buildAndStart()) {
         new Coordinator()
             .start(
                 mode,
