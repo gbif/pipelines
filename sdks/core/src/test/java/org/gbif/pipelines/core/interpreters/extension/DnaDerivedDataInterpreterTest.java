@@ -158,7 +158,7 @@ public class DnaDerivedDataInterpreterTest {
         .create()
         .interpret(er, dr);
 
-    // Should - duplicates should be removed, leaving 2 items
+    // Should - duplicates should be removed, leaving 5 items
     assertEquals(5, dr.getDnaDerivedDataItems().size());
 
     long seqValid1Count =
