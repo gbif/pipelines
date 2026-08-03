@@ -125,7 +125,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     try {
       validateRequest(validationRequest);
 
-      log.info("Staring validation for the URL {}", fileURL);
+      log.info("Starting validation for the URL {}", fileURL);
       UUID key = UUID.randomUUID();
       String encodedFileURL = EncodingUtil.encode(fileURL);
       Optional<String> redirectedUrl = EncodingUtil.getRedirectedUrl(encodedFileURL);
