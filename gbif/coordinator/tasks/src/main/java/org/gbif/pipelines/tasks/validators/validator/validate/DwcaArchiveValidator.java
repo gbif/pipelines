@@ -78,6 +78,9 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     validateOccurrenceFile()
         .ifPresent(occurrenceFile -> Validations.mergeFileInfo(validation, occurrenceFile));
 
+    // Add FileInfo for other extensions
+    addExtensionFileInfo(validation);
+
     log.info("Update validation key {}", message.getDatasetUuid());
     validationClient.update(validation);
 
@@ -89,6 +92,30 @@ public class DwcaArchiveValidator implements ArchiveValidator {
             .anyMatch(x -> x.equals(Level.FATAL.name()));
     if (hasFatalIssues) {
       throw new IllegalArgumentException("Discovered fatal issue");
+    }
+  }
+
+  private void addExtensionFileInfo(Validation validation) {
+    try {
+      log.info("Running DWCA validation for {}", message.getDatasetUuid());
+      Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
+      Archive archive = DwcaUtils.fromLocation(inputPath);
+      archive
+          .getExtensions()
+          .forEach(
+              ext -> {
+                if (ext.getRowType() != DwcTerm.Occurrence) {
+                  FileInfo extensionFileInfo =
+                      FileInfo.builder()
+                          .fileType(DwcFileType.EXTENSION)
+                          .fileName(ext.getFirstLocationFile().getName())
+                          .rowType(ext.getRowType().qualifiedName())
+                          .build();
+                  validation.getMetrics().getFileInfos().add(extensionFileInfo);
+                }
+              });
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
   }
 
