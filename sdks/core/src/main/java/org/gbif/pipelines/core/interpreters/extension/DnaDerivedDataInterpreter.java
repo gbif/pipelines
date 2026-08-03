@@ -50,8 +50,9 @@ public class DnaDerivedDataInterpreter {
       dr.getIssues().getIssueList().addAll(result.getIssuesAsList());
     }
     if (dedupResult.hasDuplicates) {
-      // TODO: create issue in gbif-api
-      dr.getIssues().getIssueList().add("DNA_DERIVED_DATA_DUPLICATE");
+      dr.getIssues()
+          .getIssueList()
+          .add(OccurrenceIssue.DUPLICATE_NUCLEOTIDE_SEQUENCES_COLLAPSED.name());
     }
   }
 
@@ -139,20 +140,12 @@ public class DnaDerivedDataInterpreter {
   private String createDeduplicationKey(DnaDerivedData item) {
     String nucleotideSequenceID =
         item.getNucleotideSequenceID() != null ? item.getNucleotideSequenceID() : "";
-    String targetGene = "";
-    if (item.getTargetGene() != null && item.getTargetGene().getConcept() != null) {
-      targetGene = item.getTargetGene().getConcept();
-    }
+    String targetGene =
+        item.getTargetGene() != null && item.getTargetGene().getConcept() != null
+            ? item.getTargetGene().getConcept()
+            : "";
     return nucleotideSequenceID + "|" + targetGene;
   }
 
-  private static class DeduplicationResult {
-    final List<DnaDerivedData> dedupedItems;
-    final boolean hasDuplicates;
-
-    DeduplicationResult(List<DnaDerivedData> dedupedItems, boolean hasDuplicates) {
-      this.dedupedItems = dedupedItems;
-      this.hasDuplicates = hasDuplicates;
-    }
-  }
+  private record DeduplicationResult(List<DnaDerivedData> dedupedItems, boolean hasDuplicates) {}
 }
