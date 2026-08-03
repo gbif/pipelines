@@ -81,7 +81,7 @@ public class ArchiveValidatorCallbackIT {
     // Result
     Validation validation = validationClient.getValidation();
 
-    assertEquals(2, validation.getMetrics().getFileInfos().size());
+    assertEquals(3, validation.getMetrics().getFileInfos().size());
 
     // Meta
     Optional<FileInfo> metaOpt = validationClient.getFileInfoByFileType(DwcFileType.METADATA);
@@ -151,7 +151,7 @@ public class ArchiveValidatorCallbackIT {
     // Result
     Validation validation = validationClient.getValidation();
 
-    assertEquals(2, validation.getMetrics().getFileInfos().size());
+    assertEquals(3, validation.getMetrics().getFileInfos().size());
 
     // Meta
     Optional<FileInfo> metaOpt = validationClient.getFileInfoByFileType(DwcFileType.METADATA);
