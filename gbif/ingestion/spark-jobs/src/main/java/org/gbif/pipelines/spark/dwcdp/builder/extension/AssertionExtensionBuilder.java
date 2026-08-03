@@ -8,6 +8,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.functions;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
@@ -42,7 +43,7 @@ public class AssertionExtensionBuilder {
   static final String TABLE_PROTOCOL = "protocol";
 
   public static final String ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT =
-      "http://rs.iobis.org/obis/terms/ExtendedMeasurementOrFact";
+      Extension.EXTENDED_MEASUREMENT_OR_FACT.getRowType();
   public static final String COL_ASSERTION_EXT_JSON = "assertionExtJson";
 
   // DwC-DP assertion column names → DwC-A eMoF term names.

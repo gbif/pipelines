@@ -6,6 +6,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.functions;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
@@ -36,8 +37,7 @@ public class IdentifierExtensionBuilder {
   static final String TABLE_OCCURRENCE_IDENTIFIER = "occurrence-identifier";
   static final String TABLE_MATERIAL_IDENTIFIER = "material-identifier";
 
-  /** Extension.IDENTIFIER.getRowType(). */
-  public static final String ROW_TYPE_IDENTIFIER = "http://rs.gbif.org/terms/1.0/Identifier";
+  public static final String ROW_TYPE_IDENTIFIER = Extension.IDENTIFIER.getRowType();
 
   public static final String COL_IDENTIFIER_EXT_JSON = "identifierExtJson";
 

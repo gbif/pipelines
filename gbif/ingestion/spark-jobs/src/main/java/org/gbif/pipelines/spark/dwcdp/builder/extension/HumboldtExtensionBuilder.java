@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.EcoTerm;
 import org.gbif.pipelines.spark.util.DatasetJoins;
 import org.gbif.pipelines.spark.util.TableLoader;
@@ -43,7 +44,11 @@ public class HumboldtExtensionBuilder {
   static final String TABLE_SURVEY_SURVEY_TARGET = "survey-survey-target";
   static final String TABLE_SURVEY_TARGET = "survey-target";
 
-  public static final String ROW_TYPE_HUMBOLDT = "http://rs.tdwg.org/eco/terms/Event";
+  // Derived from the real gbif-api enum rather than a hardcoded literal: this is the same value
+  // HumboldtTransform.hasExtension(source, Extension.HUMBOLDT) checks against downstream, so
+  // there's no longer a second copy of this URI that could silently drift out of sync — if this
+  // ever changes upstream, both sides move together automatically.
+  public static final String ROW_TYPE_HUMBOLDT = Extension.HUMBOLDT.getRowType();
   public static final String COL_HUMBOLDT_EXT_JSON = "humboldtExtJson";
 
   private HumboldtExtensionBuilder() {}

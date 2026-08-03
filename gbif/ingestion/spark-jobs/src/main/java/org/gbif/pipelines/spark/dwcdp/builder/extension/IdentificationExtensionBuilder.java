@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
@@ -33,9 +34,7 @@ public class IdentificationExtensionBuilder {
 
   public static final String TABLE_IDENTIFICATION = "identification";
 
-  /** Extension.IDENTIFICATION.getRowType(). */
-  public static final String ROW_TYPE_IDENTIFICATION =
-      "http://rs.tdwg.org/dwc/terms/Identification";
+  public static final String ROW_TYPE_IDENTIFICATION = Extension.IDENTIFICATION.getRowType();
 
   public static final String COL_IDENTIFICATION_EXT_JSON = "identificationExtJson";
 

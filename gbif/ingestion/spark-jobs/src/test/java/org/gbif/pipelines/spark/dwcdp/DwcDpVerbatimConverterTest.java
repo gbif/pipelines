@@ -15,10 +15,12 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -1264,6 +1266,138 @@ class DwcDpVerbatimConverterTest {
     assertEquals(1, occExt.size());
     assertEquals("MAT001", occExt.get(0).get(DwcTerm.occurrenceID.qualifiedName()));
     assertEquals("MaterialSample", occExt.get(0).get(DwcTerm.basisOfRecord.qualifiedName()));
+  }
+
+  // ---- conversion report ----
+
+  @Test
+  void writeMetrics_writesConversionReportWithMaterialFunnelBreakdown(@TempDir Path dir)
+      throws Exception {
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", "EVT001")));
+    writeParquet(
+        dir,
+        "data/material.parquet",
+        schema(
+            "materialEntity_pk",
+            "materialEntityID",
+            "evidenceForOccurrenceID",
+            "collectionEvent_fk"),
+        List.of(
+            // no evidence, resolves via collectionEvent_fk -> virtual occurrence
+            RowFactory.create("MPK-001", "MAT001", null, "EPK-001"),
+            // no evidence, no collectionEvent_fk -> unresolved, dropped
+            RowFactory.create("MPK-002", null, null, null),
+            // has evidence, but shares it with MPK-004 below -> ambiguous, dropped
+            RowFactory.create("MPK-003", "MAT003", "OCC001", "EPK-001"),
+            RowFactory.create("MPK-004", "MAT004", "OCC001", "EPK-001"),
+            // has evidence, sole claimant -> enriched onto the real occurrence
+            RowFactory.create("MPK-005", "MAT005", "OCC002", "EPK-001")));
+
+    FileSystem fs = FileSystem.getLocal(new Configuration());
+    String datasetBasePath = "file://" + dir;
+
+    DwcDpVerbatimConverter.writeMetrics(
+        spark, DataPackageFixtures.withEventAndMaterial(), datasetBasePath, fs, "test-dataset");
+
+    org.apache.hadoop.fs.Path reportPath =
+        new org.apache.hadoop.fs.Path(datasetBasePath + "/conversion-report.txt");
+    assertTrue(fs.exists(reportPath), "conversion-report.txt should have been written");
+
+    String report;
+    try (var reader =
+        new BufferedReader(new InputStreamReader(fs.open(reportPath), StandardCharsets.UTF_8))) {
+      report = reader.lines().collect(Collectors.joining("\n"));
+    }
+
+    // 5 material rows total: 1 virtual, 1 unresolved (dropped), 2 ambiguous (dropped), 1 enriched
+    assertEquals(5, extractTrailingLong(report, "material rows (total):"));
+    assertEquals(2, extractTrailingLong(report, "without evidence:"));
+    assertEquals(1, extractTrailingLong(report, "became virtual occurrence:"));
+    assertEquals(1, extractTrailingLong(report, "unresolved, DROPPED:"));
+    assertEquals(3, extractTrailingLong(report, "with evidence:"));
+    assertEquals(1, extractTrailingLong(report, "enriched real occurrence:"));
+    assertEquals(2, extractTrailingLong(report, "ambiguous, DROPPED:"));
+  }
+
+  /**
+   * Finds the line in {@code report} containing {@code label} and returns the trailing integer on
+   * that line — avoids brittle exact-whitespace matching against the report's hand-aligned
+   * formatting (several labels are prefixed with {@code "-> "}, so this searches for the label
+   * anywhere in the line rather than requiring it at the start).
+   */
+  private static long extractTrailingLong(String report, String label) {
+    return report
+        .lines()
+        .filter(line -> line.contains(label))
+        .map(line -> line.substring(line.indexOf(label) + label.length()).trim())
+        .mapToLong(Long::parseLong)
+        .findFirst()
+        .orElseThrow(
+            () -> new AssertionError("Line containing '" + label + "' not found in:\n" + report));
+  }
+
+  @Test
+  void writeMetrics_extensionSummarySectionReflectsWrittenRecords(@TempDir Path dir)
+      throws Exception {
+    writeParquet(
+        dir, "data/event.parquet", schema("eventID"), List.of(RowFactory.create("EVT001")));
+
+    DataPackage dp = DataPackageFixtures.withEvent("eventID");
+    FileSystem fs = FileSystem.getLocal(new Configuration());
+    String datasetBasePath = "file://" + dir;
+
+    ExtendedRecord withMedia =
+        ExtendedRecord.newBuilder()
+            .setId("EVT001")
+            .setCoreId(null)
+            .setCoreRowType(DwcDpVerbatimConverter.CORE_ROW_TYPE_EVENT)
+            .setCoreTerms(Map.of())
+            .setExtensions(
+                Map.of(
+                    DwcDpVerbatimConverter.ROW_TYPE_MULTIMEDIA,
+                    List.of(Map.of("k", "v1"), Map.of("k", "v2"))))
+            .build();
+    ExtendedRecord withoutExtensions =
+        ExtendedRecord.newBuilder()
+            .setId("EVT002")
+            .setCoreId(null)
+            .setCoreRowType(DwcDpVerbatimConverter.CORE_ROW_TYPE_EVENT)
+            .setCoreTerms(Map.of())
+            .setExtensions(Map.of())
+            .build();
+
+    Dataset<ExtendedRecord> records =
+        spark.createDataset(
+            List.of(withMedia, withoutExtensions), Encoders.bean(ExtendedRecord.class));
+
+    DwcDpVerbatimConverter.writeMetrics(
+        spark, dp, datasetBasePath, fs, "test-dataset", Optional.of(records));
+
+    org.apache.hadoop.fs.Path reportPath =
+        new org.apache.hadoop.fs.Path(datasetBasePath + "/conversion-report.txt");
+    String report;
+    try (var reader =
+        new BufferedReader(new InputStreamReader(fs.open(reportPath), StandardCharsets.UTF_8))) {
+      report = reader.lines().collect(Collectors.joining("\n"));
+    }
+
+    assertTrue(report.contains("source tables (raw row counts):"), report);
+    assertTrue(report.contains("output extensions (rows actually written):"), report);
+    assertTrue(report.contains(DwcDpVerbatimConverter.ROW_TYPE_MULTIMEDIA), report);
+
+    String multimediaLine =
+        report
+            .lines()
+            .filter(line -> line.contains(DwcDpVerbatimConverter.ROW_TYPE_MULTIMEDIA))
+            .findFirst()
+            .orElseThrow();
+    assertTrue(multimediaLine.contains("rows=2"), multimediaLine);
+    assertTrue(multimediaLine.contains("records-with-this-ext=1"), multimediaLine);
+    assertEquals(2L, extractTrailingLong(report, "core records written:"));
   }
 
   // ---- helpers ----

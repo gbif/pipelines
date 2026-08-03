@@ -290,6 +290,70 @@ public class MaterialJoinBuilder {
     return Optional.of(linked.select(columns.toArray(new Column[0])));
   }
 
+  /**
+   * Breakdown of what happened to every {@code material} row during conversion — for diagnostics
+   * and the conversion report, not for production logic. Every material row falls into exactly one
+   * bucket below (the four leaf counts sum to {@code total}):
+   *
+   * <ul>
+   *   <li>{@code enrichedOntoRealOccurrence} — had evidence, exactly one match, enriched a real
+   *       occurrence row via {@link #enrichOccurrences}.
+   *   <li>{@code evidenceAmbiguous} — had evidence, but zero or more-than-one material rows cited
+   *       the same occurrence, so none of them were used (see {@link
+   *       #singleMaterialPerOccurrence}).
+   *   <li>{@code virtual} — no evidence, but {@code collectionEvent_fk} resolved to a real event,
+   *       so it became a virtual occurrence via {@link #virtualMaterialOccurrences}.
+   *   <li>{@code unresolved} — no evidence, and either no {@code collectionEvent_fk} or one that
+   *       doesn't resolve to any event in this package. This row is silently dropped — it appears
+   *       nowhere in the output. This is the bucket to watch when occurrences seem to go missing.
+   * </ul>
+   */
+  public record MaterialFunnel(
+      long total,
+      long withEvidence,
+      long enrichedOntoRealOccurrence,
+      long evidenceAmbiguous,
+      long withoutEvidence,
+      long virtual,
+      long unresolved) {}
+
+  /**
+   * Computes the {@link MaterialFunnel} breakdown for this package's {@code material} table. Reuses
+   * {@link #singleMaterialPerOccurrence} and {@link #virtualMaterialOccurrences} directly rather
+   * than re-implementing their filtering logic, so the report can't drift from what conversion
+   * actually does. Returns {@link Optional#empty()} if there is no {@code material} table or it
+   * lacks {@code evidenceForOccurrenceID}.
+   */
+  public static Optional<MaterialFunnel> computeFunnel(TableLoader loader) {
+    Optional<Dataset<Row>> materialDfOpt = loader.load(TABLE_MATERIAL);
+    if (materialDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    Dataset<Row> materialDf = materialDfOpt.get();
+    if (!Arrays.asList(materialDf.columns()).contains(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN)) {
+      return Optional.empty();
+    }
+
+    long total = materialDf.count();
+    long withEvidence =
+        materialDf.filter(functions.col(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN).isNotNull()).count();
+    long enriched = singleMaterialPerOccurrence(materialDf).count();
+    long evidenceAmbiguous = withEvidence - enriched;
+    long withoutEvidence = total - withEvidence;
+    long virtualCount = virtualMaterialOccurrences(loader).map(Dataset::count).orElse(0L);
+    long unresolved = withoutEvidence - virtualCount;
+
+    return Optional.of(
+        new MaterialFunnel(
+            total,
+            withEvidence,
+            enriched,
+            evidenceAmbiguous,
+            withoutEvidence,
+            virtualCount,
+            unresolved));
+  }
+
   /** Returns virtual material ownership links, including the parent event identifier. */
   static Optional<Dataset<Row>> virtualMaterialOccurrenceLinks(TableLoader loader) {
     return virtualMaterialOccurrences(loader)

@@ -1,11 +1,17 @@
 package org.gbif.pipelines.spark.dwcdp;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.logging.log4j.ThreadContext;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SaveMode;
@@ -14,6 +20,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.core.utils.MetricsUtil;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.builder.EventCoreBuilder;
@@ -26,6 +33,7 @@ import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackageResource;
 import org.gbif.pipelines.spark.util.PathUtil;
 import org.gbif.pipelines.spark.util.TableLoader;
+import scala.Tuple2;
 
 /**
  * Converts DwC-DP Parquet files (written by DataPackageConversionPipeline) into verbatim.avro.
@@ -133,8 +141,27 @@ public class DwcDpVerbatimConverter {
 
     mergeToSingleFile(fileSystem, tempOutputPath, verbatimOutputPath);
 
+    // Re-read the already-written output rather than reusing the lazy `records` Dataset: `records`
+    // is an unevaluated pipeline (EventCoreBuilder/OccurrenceCoreBuilder's joins), so passing it
+    // to writeMetrics for the extension summary below would re-run the entire build from scratch a
+    // second time. Reading back the single merged Avro file is a cheap re-scan of
+    // already-materialised
+    // output instead.
+    Dataset<ExtendedRecord> writtenRecords =
+        spark
+            .read()
+            .format("avro")
+            .load(verbatimOutputPath)
+            .as(Encoders.bean(ExtendedRecord.class));
+
     VerbatimConversionMetrics metrics =
-        writeMetrics(spark, dataPackage, parquetBasePath, fileSystem, datasetId);
+        writeMetrics(
+            spark,
+            dataPackage,
+            parquetBasePath,
+            fileSystem,
+            datasetId,
+            Optional.of(writtenRecords));
 
     log.info(
         "DwcDpVerbatimConverter completed for dataset {} attempt {} in {}ms, metrics: {}",
@@ -182,6 +209,24 @@ public class DwcDpVerbatimConverter {
       String datasetBasePath,
       FileSystem fileSystem,
       String datasetId) {
+    return writeMetrics(
+        spark, dataPackage, datasetBasePath, fileSystem, datasetId, Optional.empty());
+  }
+
+  /**
+   * Overload used by {@link #convert} once the {@link ExtendedRecord} dataset has been built, so
+   * the conversion report can include a section on what actually ended up in the written output —
+   * not just what the source tables contained. The 5-arg {@link #writeMetrics} overload (used
+   * directly by tests that don't build a full {@code records} dataset) delegates here with {@code
+   * records} absent, in which case the report simply omits that section.
+   */
+  static VerbatimConversionMetrics writeMetrics(
+      SparkSession spark,
+      DataPackage dataPackage,
+      String datasetBasePath,
+      FileSystem fileSystem,
+      String datasetId,
+      Optional<Dataset<ExtendedRecord>> records) {
 
     long physicalOccurrenceCount =
         dataPackage
@@ -213,11 +258,33 @@ public class DwcDpVerbatimConverter {
     long eventCount =
         dataPackage.findResource("event").map(r -> countRows(spark, datasetBasePath, r)).orElse(0L);
 
+    // Raw row count for every table declared in datapackage.json, regardless of whether this
+    // conversion's builder path actually reads it — this is the "what did we start with" half of
+    // the report, independent of any specific extension's join/filter logic.
+    Map<String, Long> tableRowCounts = new LinkedHashMap<>();
+    for (DataPackageResource resource : dataPackage.getResources()) {
+      tableRowCounts.put(resource.getName(), countRows(spark, datasetBasePath, resource));
+    }
     long largestFileCount =
-        dataPackage.getResources().stream()
-            .mapToLong(r -> countRows(spark, datasetBasePath, r))
-            .max()
-            .orElse(0L);
+        tableRowCounts.values().stream().mapToLong(Long::longValue).max().orElse(0L);
+
+    Optional<MaterialJoinBuilder.MaterialFunnel> materialFunnel =
+        MaterialJoinBuilder.computeFunnel(loader);
+    Optional<Map<String, long[]>> extensionSummary =
+        records.map(DwcDpVerbatimConverter::summarizeExtensions);
+    Optional<Long> coreRecordCount = records.map(Dataset::count);
+
+    writeConversionReport(
+        fileSystem,
+        datasetBasePath,
+        datasetId,
+        tableRowCounts,
+        eventCount,
+        physicalOccurrenceCount,
+        virtualOccurrenceCount,
+        materialFunnel,
+        coreRecordCount,
+        extensionSummary);
 
     Map<String, Long> metrics =
         Map.of(
@@ -231,6 +298,144 @@ public class DwcDpVerbatimConverter {
     MetricsUtil.writeMetricsYaml(fileSystem, metrics, metricsPath);
 
     return new VerbatimConversionMetrics(0L, occurrenceCount, eventCount, largestFileCount);
+  }
+
+  /**
+   * Distributed summary of what actually ended up in the written {@link ExtendedRecord}s: for each
+   * extension row type present anywhere in the dataset, the total number of extension rows across
+   * all core records and how many core records carry at least one row of that type. Computed
+   * directly from the built dataset rather than from source tables or join logic, so it reflects
+   * the true output regardless of which builder produced it — this is the "what did we end up with"
+   * half of the report, to compare against {@code tableRowCounts}.
+   *
+   * <p>Deliberately uses the plain RDD API ({@code flatMapToPair}/{@code reduceByKey}) rather than
+   * building a {@code Dataset<Row>}: constructing a bare {@code Row} encoder by hand ({@code
+   * RowEncoder.apply}/{@code encoderFor}) has churned across Spark 3.x versions and isn't reliably
+   * Java-callable. The RDD API needs no {@link org.apache.spark.sql.Encoder} at all, so it's immune
+   * to that churn.
+   */
+  private static Map<String, long[]> summarizeExtensions(Dataset<ExtendedRecord> records) {
+    JavaPairRDD<String, long[]> perRecordCounts =
+        records
+            .toJavaRDD()
+            .flatMapToPair(
+                (PairFlatMapFunction<ExtendedRecord, String, long[]>)
+                    r -> {
+                      List<Tuple2<String, long[]>> out = new ArrayList<>();
+                      Map<String, List<Map<String, String>>> ext = r.getExtensions();
+                      if (ext != null) {
+                        for (Map.Entry<String, List<Map<String, String>>> e : ext.entrySet()) {
+                          int size = e.getValue() == null ? 0 : e.getValue().size();
+                          if (size > 0) {
+                            // [rows contributed by this record, 1 record carrying this extension]
+                            out.add(new Tuple2<>(e.getKey(), new long[] {size, 1}));
+                          }
+                        }
+                      }
+                      return out.iterator();
+                    });
+
+    Map<String, long[]> summary = new LinkedHashMap<>();
+    for (Tuple2<String, long[]> entry :
+        perRecordCounts.reduceByKey((a, b) -> new long[] {a[0] + b[0], a[1] + b[1]}).collect()) {
+      summary.put(entry._1(), entry._2());
+    }
+    return summary;
+  }
+
+  /**
+   * Renders and persists a human-readable conversion report covering the whole conversion, not just
+   * the material/virtual-occurrence path:
+   *
+   * <ul>
+   *   <li>raw row counts for every table declared in {@code datapackage.json}
+   *   <li>core output counts (events, physical/virtual occurrences)
+   *   <li>the {@link MaterialJoinBuilder.MaterialFunnel} breakdown, when a {@code material} table
+   *       is present
+   *   <li>a summary of every extension row type that actually made it into the written {@link
+   *       ExtendedRecord}s, when that dataset was available to {@link #writeMetrics}
+   * </ul>
+   *
+   * <p>Purely diagnostic: written to {@code conversion-report.txt} alongside {@code
+   * archive-to-verbatim.yml}, and logged at INFO whenever a material funnel or extension summary is
+   * present (the cases where rows can silently go missing), DEBUG otherwise. Never read by the
+   * coordinator or balancer, so it's safe to extend without touching routing behaviour.
+   */
+  private static void writeConversionReport(
+      FileSystem fileSystem,
+      String datasetBasePath,
+      String datasetId,
+      Map<String, Long> tableRowCounts,
+      long eventCount,
+      long physicalOccurrenceCount,
+      long virtualOccurrenceCount,
+      Optional<MaterialJoinBuilder.MaterialFunnel> materialFunnel,
+      Optional<Long> coreRecordCount,
+      Optional<Map<String, long[]>> extensionSummary) {
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("Conversion report for dataset ").append(datasetId).append(":\n");
+
+    sb.append("  source tables (raw row counts):\n");
+    tableRowCounts.forEach(
+        (name, count) -> sb.append(String.format("    %-28s%d%n", name + ":", count)));
+
+    sb.append("  core output:\n");
+    sb.append(String.format("    %-28s%d%n", "events:", eventCount));
+    sb.append(String.format("    %-28s%d%n", "occurrences (physical):", physicalOccurrenceCount));
+    sb.append(String.format("    %-28s%d%n", "occurrences (virtual):", virtualOccurrenceCount));
+    sb.append(
+        String.format(
+            "    %-28s%d%n",
+            "occurrences (total):", physicalOccurrenceCount + virtualOccurrenceCount));
+    coreRecordCount.ifPresent(
+        c -> sb.append(String.format("    %-28s%d%n", "core records written:", c)));
+
+    materialFunnel.ifPresent(
+        f -> {
+          sb.append("  material funnel:\n");
+          sb.append(String.format("    %-28s%d%n", "material rows (total):", f.total()));
+          sb.append(String.format("    %-28s%d%n", "  with evidence:", f.withEvidence()));
+          sb.append(
+              String.format(
+                  "    %-28s%d%n",
+                  "    -> enriched real occurrence:", f.enrichedOntoRealOccurrence()));
+          sb.append(
+              String.format("    %-28s%d%n", "    -> ambiguous, DROPPED:", f.evidenceAmbiguous()));
+          sb.append(String.format("    %-28s%d%n", "  without evidence:", f.withoutEvidence()));
+          sb.append(
+              String.format("    %-28s%d%n", "    -> became virtual occurrence:", f.virtual()));
+          sb.append(String.format("    %-28s%d%n", "    -> unresolved, DROPPED:", f.unresolved()));
+        });
+
+    extensionSummary.ifPresent(
+        summary -> {
+          sb.append("  output extensions (rows actually written):\n");
+          if (summary.isEmpty()) {
+            sb.append("    (none)\n");
+          }
+          summary.forEach(
+              (rowType, counts) ->
+                  sb.append(
+                      String.format(
+                          "    %-42s rows=%-8d records-with-this-ext=%d%n",
+                          rowType + ":", counts[0], counts[1])));
+        });
+
+    String report = sb.toString();
+    boolean noteworthy = materialFunnel.isPresent() || extensionSummary.isPresent();
+    if (noteworthy) {
+      log.info("\n{}", report);
+    } else {
+      log.debug("\n{}", report);
+    }
+
+    String reportPath = datasetBasePath + "/conversion-report.txt";
+    try {
+      FsUtils.createFile(fileSystem, reportPath, report);
+    } catch (IOException e) {
+      log.warn("Failed to write conversion report to {}", reportPath, e);
+    }
   }
 
   static void mergeToSingleFile(FileSystem fileSystem, String tempPath, String targetPath)

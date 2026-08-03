@@ -6,6 +6,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.functions;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
@@ -61,8 +62,7 @@ public class MediaExtensionBuilder {
   public static final String TABLE_OCCURRENCE_MEDIA = "occurrence-media";
   public static final String TABLE_MATERIAL_MEDIA = "material-media";
 
-  /** Extension.MULTIMEDIA.getRowType() — the real Simple Multimedia extension row type. */
-  public static final String ROW_TYPE_MULTIMEDIA = "http://rs.gbif.org/terms/1.0/Multimedia";
+  public static final String ROW_TYPE_MULTIMEDIA = Extension.MULTIMEDIA.getRowType();
 
   public static final String COL_MEDIA_EXT_JSON = "mediaExtJson";
 
