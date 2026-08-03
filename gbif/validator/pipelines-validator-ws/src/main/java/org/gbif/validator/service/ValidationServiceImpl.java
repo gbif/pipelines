@@ -139,8 +139,16 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
               encodedFileURL,
               key.toString(),
               resultDataFile -> {
+                if (resultDataFile == null) {
+                  log.error("Downloaded file is null for URL {}, key {}", fileURL, key);
+                  updateFailedValidation(key, "Downloaded file from " + fileURL + " is null");
+                  return;
+                }
                 log.info(
-                    "File has been uploded and decompressed from URL {}, key {}", fileURL, key);
+                    "File has been downloaded and decompressed from URL {}, key {} to path {}",
+                    fileURL,
+                    key,
+                    resultDataFile.getFilePath().toAbsolutePath());
                 updateAndNotifySubmitted(key, resultDataFile);
               },
               err -> {
@@ -262,6 +270,8 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       // Set future steps
       v.setStatus(Status.QUEUED);
       v.setFileFormat(dataFile.getFileFormat());
+      v.setFileSize(dataFile.getFilePath().toFile().length());
+      v.setFile(dataFile.getSourceFileName());
       v.getMetrics().setStepTypes(StepsMapper.mapToValidationSteps(pipelinesSteps));
       v.setDataset(readEml(dataFile.getFilePath().getParent()));
 
