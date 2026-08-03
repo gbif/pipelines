@@ -66,7 +66,10 @@ public class ValidationUtil {
             generatedFileInfo -> {
               Optional<Metrics.FileInfo> existingFileInfo =
                   metrics.getFileInfos().stream()
-                      .filter(f -> f.getFileName().equals(generatedFileInfo.getFileName()))
+                      .filter(
+                          f ->
+                              f.getRowType() != null
+                                  && f.getRowType().equals(generatedFileInfo.getRowType()))
                       .findFirst();
               if (existingFileInfo.isPresent()) {
                 existingFileInfo.get().setIndexedCount(generatedFileInfo.getIndexedCount());
