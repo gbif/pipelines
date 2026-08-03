@@ -1,6 +1,9 @@
 <#-- @ftlvariable name="" type="org.gbif.mail.validator.ValidatorTemplateDataModel" -->
 <#include "header.ftl">
 
+<#assign systemHealthUrl>${portalUrl?replace("/+$", "", "r")}/system-health</#assign>
+<#assign validationUrl>${validatorUrl?replace("/+$", "", "r")}/tools/data-validator/${validation.key}</#assign>
+
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Hello ${validation.username},</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
@@ -8,7 +11,7 @@
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    Please see <a href="${portalUrl}tools/data-validator/${validation.key}" style="color: #4ba2ce;text-decoration: none;">${portalUrl}tools/data-validator/${validation.key}</a> for more details, <a href="${portalUrl}system-health" style="color: #4ba2ce;text-decoration: none;">${portalUrl}system-health</a> for the current status of GBIF.org's systems, and try again in a few minutes.
+    Please see <a href="${validationUrl}" style="color: #4ba2ce;text-decoration: none;">${validationUrl}</a> for more details, <a href="${systemHealthUrl}" style="color: #4ba2ce;text-decoration: none;">${systemHealthUrl}</a> for the current status of GBIF.org's systems, and try again in a few minutes.
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
