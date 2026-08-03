@@ -144,11 +144,16 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
                   updateFailedValidation(key, "Downloaded file from " + fileURL + " is null");
                   return;
                 }
-                log.info(
-                    "File has been downloaded and decompressed from URL {}, key {} to path {}",
-                    fileURL,
-                    key,
-                    resultDataFile.getFilePath().toAbsolutePath());
+                try {
+                  log.info(
+                      "File has been downloaded and decompressed from URL {}, key {} to path {} with size {} bytes",
+                      fileURL,
+                      key,
+                      resultDataFile.getFilePath().toAbsolutePath(),
+                      Files.size(resultDataFile.getFilePath()));
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
                 updateAndNotifySubmitted(key, resultDataFile);
               },
               err -> {
@@ -270,7 +275,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
       // Set future steps
       v.setStatus(Status.QUEUED);
       v.setFileFormat(dataFile.getFileFormat());
-      v.setFileSize(dataFile.getFilePath().toFile().length());
+      v.setFileSize(Files.size(dataFile.getFilePath()));
       v.setFile(dataFile.getSourceFileName());
       v.getMetrics().setStepTypes(StepsMapper.mapToValidationSteps(pipelinesSteps));
       v.setDataset(readEml(dataFile.getFilePath().getParent()));
