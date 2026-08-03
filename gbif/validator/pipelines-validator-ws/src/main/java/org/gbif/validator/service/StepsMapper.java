@@ -1,6 +1,7 @@
 package org.gbif.validator.service;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,6 +30,7 @@ public class StepsMapper {
                         .executionOrder(PipelinesWorkflow.getValidatorWorkflow().getLevel(st))
                         .stepType(st.name())
                         .build())
+            .sorted(Comparator.comparingInt(ValidationStep::getExecutionOrder))
             .collect(Collectors.toList());
 
     collect.add(
