@@ -18,11 +18,10 @@ import org.gbif.validator.api.Validation;
 public class StepsMapper {
 
   /** Maps raw step types to ValidationSteps. */
-  public static List<ValidationStep> mapToValidationSteps(Set<String> stepTypes) {
+  public static List<ValidationStep> mapToValidationSteps(Set<StepType> stepTypes) {
 
     List<ValidationStep> collect =
         stepTypes.stream()
-            .map(StepType::valueOf)
             .filter(st -> st != StepType.VALIDATOR_UPLOAD_ARCHIVE)
             .map(
                 st ->
