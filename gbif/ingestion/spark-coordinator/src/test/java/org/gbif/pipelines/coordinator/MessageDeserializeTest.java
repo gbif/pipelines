@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Set;
 import java.util.UUID;
 import org.gbif.common.messaging.api.messages.DwcDpStageMessage;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MessageDeserializeTest {
 

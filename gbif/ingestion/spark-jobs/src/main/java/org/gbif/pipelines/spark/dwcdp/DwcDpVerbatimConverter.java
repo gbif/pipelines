@@ -201,6 +201,14 @@ public class DwcDpVerbatimConverter {
     long virtualOccurrenceCount =
         MaterialJoinBuilder.virtualMaterialOccurrences(loader).map(Dataset::count).orElse(0L);
     long occurrenceCount = physicalOccurrenceCount + virtualOccurrenceCount;
+    if (log.isDebugEnabled()) {
+      log.debug(
+          "Occurrence counts for dataset {}: physical={}, virtual={}, total={}",
+          datasetId,
+          physicalOccurrenceCount,
+          virtualOccurrenceCount,
+          occurrenceCount);
+    }
 
     long eventCount =
         dataPackage.findResource("event").map(r -> countRows(spark, datasetBasePath, r)).orElse(0L);
@@ -219,7 +227,7 @@ public class DwcDpVerbatimConverter {
             Metrics.ARCHIVE_TO_LARGEST_FILE_COUNT, largestFileCount);
 
     String metricsPath = datasetBasePath + "/" + Pipeline.ARCHIVE_TO_VERBATIM + ".yml";
-    log.info("Writing verbatim metrics for dataset {}: {}", datasetId, metrics);
+    log.debug("Writing verbatim metrics for dataset {}: {}", datasetId, metrics);
     MetricsUtil.writeMetricsYaml(fileSystem, metrics, metricsPath);
 
     return new VerbatimConversionMetrics(0L, occurrenceCount, eventCount, largestFileCount);

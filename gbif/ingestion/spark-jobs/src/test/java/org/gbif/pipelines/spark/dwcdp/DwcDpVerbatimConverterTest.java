@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -26,11 +27,13 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.StructType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.builder.EventCoreBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.TermResolver;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
+import org.gbif.pipelines.spark.util.MapperUtil;
 import org.gbif.pipelines.spark.util.SparkTest;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TableLoader;
@@ -1173,6 +1176,94 @@ class DwcDpVerbatimConverterTest {
     assertEquals(2L, metrics.occurrenceCount());
     assertEquals(1L, metrics.eventCount());
     assertEquals(3L, metrics.largestFileCount());
+  }
+
+  // ---- convert() end-to-end ----
+
+  /**
+   * Exercises {@link DwcDpVerbatimConverter#convert} itself for the virtual-occurrence-only
+   * scenario, rather than the builder or {@code writeMetrics} in isolation like the other tests in
+   * this class.
+   *
+   * <p>Every other "round trip" test in this file (e.g. {@code
+   * eventCore_fullPackage_roundTripAvroWriteAndRead}) calls {@link EventCoreBuilder#build} directly
+   * and writes Avro by hand — none of them go through {@code convert()}'s own {@code
+   * datapackage.json} reading ({@link DataPackageDescriptorReader}), path resolution ({@link
+   * org.gbif.pipelines.spark.util.PathUtil#interpretedAttemptPath}), single-file merge, or {@code
+   * writeMetrics} call. This test does, so it's the one place proving those pieces agree with each
+   * other for a package with no physical {@code occurrence} table — only {@code event} + {@code
+   * material} — where the only occurrence rows that exist are the virtual ones {@link
+   * org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialJoinBuilder} synthesises.
+   */
+  @Test
+  void convert_eventMaterialWithoutOccurrence_producesVirtualOccurrenceAndMatchingMetrics(
+      @TempDir Path dir) throws Exception {
+    String datasetId = UUID.randomUUID().toString();
+    int attempt = 1;
+    Path attemptDir = dir.resolve(datasetId).resolve(String.valueOf(attempt));
+
+    writeParquet(
+        attemptDir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", "EVT001")));
+    writeParquet(
+        attemptDir,
+        "data/material.parquet",
+        schema(
+            "materialEntity_pk",
+            "materialEntityID",
+            "evidenceForOccurrenceID",
+            "collectionEvent_fk",
+            "catalogNumber"),
+        List.of(RowFactory.create("MPK-001", "MAT001", null, "EPK-001", "CAT001")));
+
+    DataPackage dp = DataPackageFixtures.withEventAndMaterial();
+    MapperUtil.MAPPER.writeValue(attemptDir.resolve("datapackage.json").toFile(), dp);
+
+    PipelinesConfig config = new PipelinesConfig();
+    config.setOutputPath("file://" + dir);
+    config.setInputPath("file://" + dir);
+    FileSystem fs = FileSystem.getLocal(new Configuration());
+
+    DwcDpVerbatimConverter.VerbatimConversionMetrics metrics =
+        DwcDpVerbatimConverter.convert(
+            spark,
+            fs,
+            config,
+            datasetId,
+            attempt,
+            /* containsEvents= */ true,
+            /* containsOccurrences= */ false);
+
+    assertEquals(1L, metrics.occurrenceCount(), "the one virtual occurrence must be counted");
+    assertEquals(1L, metrics.eventCount());
+
+    // metrics returned by convert() must match what it actually wrote to archive-to-verbatim.yml
+    Map<String, Long> writtenMetrics =
+        org.gbif.pipelines.core.utils.MetricsUtil.readMetricsYaml(
+            fs, "file://" + attemptDir + "/archive-to-verbatim.yml");
+    assertEquals(1L, writtenMetrics.get(Metrics.ARCHIVE_TO_OCC_COUNT));
+
+    List<ExtendedRecord> records =
+        spark
+            .read()
+            .format("avro")
+            .load("file://" + attemptDir + "/verbatim.avro")
+            .as(Encoders.bean(ExtendedRecord.class))
+            .collectAsList();
+
+    assertEquals(1, records.size());
+    ExtendedRecord eventRecord = records.get(0);
+    assertEquals("EVT001", eventRecord.getId());
+
+    List<Map<String, String>> occExt =
+        eventRecord.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_OCCURRENCE);
+    assertNotNull(
+        occExt, "virtual occurrence must be present as an extension on the written record");
+    assertEquals(1, occExt.size());
+    assertEquals("MAT001", occExt.get(0).get(DwcTerm.occurrenceID.qualifiedName()));
+    assertEquals("MaterialSample", occExt.get(0).get(DwcTerm.basisOfRecord.qualifiedName()));
   }
 
   // ---- helpers ----

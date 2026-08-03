@@ -252,6 +252,8 @@ public class MaterialJoinBuilder {
                     .equalTo(functions.col("__collection_event_pk")),
                 "inner");
     if (linked.isEmpty()) {
+      log.debug(
+          "No virtual material occurrences resolved for this dataset (material/event present but no unresolved-evidence rows with a resolvable collectionEvent_fk)");
       return Optional.empty();
     }
 
