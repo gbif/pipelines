@@ -58,6 +58,8 @@ public class ValidationUtil {
     Metrics metrics =
         Optional.ofNullable(validation.getMetrics()).orElse(Metrics.builder().build());
     metrics.setFileInfos(generatedMetrics.getFileInfos());
+    // if we have made it to metrics, it should be indexable
+    metrics.setIndexeable(true);
     validationClient.update(key, validation);
   }
 }
