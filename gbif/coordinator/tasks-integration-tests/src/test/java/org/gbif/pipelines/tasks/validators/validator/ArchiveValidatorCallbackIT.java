@@ -151,7 +151,7 @@ public class ArchiveValidatorCallbackIT {
     // Result
     Validation validation = validationClient.getValidation();
 
-    assertEquals(3, validation.getMetrics().getFileInfos().size());
+    assertEquals(4, validation.getMetrics().getFileInfos().size());
 
     // Meta
     Optional<FileInfo> metaOpt = validationClient.getFileInfoByFileType(DwcFileType.METADATA);
@@ -216,7 +216,7 @@ public class ArchiveValidatorCallbackIT {
     // Result
     Validation validation = validationClient.getValidation();
 
-    assertEquals(2, validation.getMetrics().getFileInfos().size());
+    assertEquals(3, validation.getMetrics().getFileInfos().size());
 
     // Meta
     Optional<FileInfo> metaOpt = validationClient.getFileInfoByFileType(DwcFileType.METADATA);
@@ -377,8 +377,7 @@ public class ArchiveValidatorCallbackIT {
             .filter(x -> x.getRowType().equals(DwcTerm.Occurrence.qualifiedName()))
             .findFirst();
 
-    assertTrue(occurrenceFile.isPresent());
-    assertFalse(occurrenceFile.get().getIssues().isEmpty());
+    assertFalse(occurrenceFile.isPresent());
 
     assertTrue(PUBLISHER.getMessages().isEmpty());
   }
