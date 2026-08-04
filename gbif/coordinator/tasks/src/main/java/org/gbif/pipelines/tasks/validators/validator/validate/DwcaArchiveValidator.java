@@ -229,7 +229,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
   /**
    * Generate counts for core and extensions.
    *
-   * @param archive to read
+   * @param path to archive to read
    * @return counts for core and extensions
    */
   private DwcaCounts generateCounts(Path path) {
