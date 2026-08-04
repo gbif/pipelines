@@ -114,11 +114,11 @@ public class DwcaArchiveValidatorTest {
 
     // When
     PipelinesDwcaMessage result =
-        DwcaArchiveValidator.builder()
-            .message(message)
-            .config(config)
-            .build()
-            .createOutgoingMessage();
+      (PipelinesDwcaMessage) DwcaArchiveValidator.builder()
+          .message(message)
+          .config(config)
+          .build()
+          .createOutgoingMessage();
 
     PipelinesDwcaMessage dValue =
         new ObjectMapper().readValue(result.toString(), PipelinesDwcaMessage.class);
