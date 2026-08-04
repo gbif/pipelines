@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.expressions.Window;
+import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.functions;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.spark.util.TableLoader;
@@ -68,6 +70,9 @@ public class MediaExtensionBuilder {
 
   public static final String COL_MEDIA_EXT_JSON = "mediaExtJson";
 
+  /** Maximum number of media rows promoted to a single event-core record. */
+  private static final int MAX_MEDIA_PER_EVENT = 50;
+
   private MediaExtensionBuilder() {}
 
   /**
@@ -110,10 +115,38 @@ public class MediaExtensionBuilder {
     }
 
     Dataset<Row> withEventId = combined.get().dropDuplicates();
+    Dataset<Row> limited = limitMediaPerEvent(withEventId);
 
     return Optional.of(
         ExtensionAggregator.aggregateAsJsonByKey(
-            spark, withEventId, withEventId.columns(), "eventID", COL_MEDIA_EXT_JSON));
+            spark, limited, limited.columns(), "eventID", COL_MEDIA_EXT_JSON));
+  }
+
+  /**
+   * Limits the lossy event-level media promotion to a deterministic subset.
+   *
+   * <p>Occurrence-level media is not limited here: this applies only to media promoted to the event
+   * core because DwC-A cannot preserve its ownership by a nested occurrence extension.
+   */
+  private static Dataset<Row> limitMediaPerEvent(Dataset<Row> rows) {
+    String[] mediaColumns =
+        Arrays.stream(rows.columns())
+            .filter(column -> !column.equals("eventID"))
+            .toArray(String[]::new);
+
+    org.apache.spark.sql.Column[] stableValueColumns =
+        Arrays.stream(mediaColumns)
+            .sorted()
+            .map(functions::col)
+            .toArray(org.apache.spark.sql.Column[]::new);
+
+    WindowSpec eventWindow =
+        Window.partitionBy("eventID")
+            .orderBy(functions.sha2(functions.to_json(functions.struct(stableValueColumns)), 256));
+
+    return rows.withColumn("__media_rank", functions.row_number().over(eventWindow))
+        .filter(functions.col("__media_rank").leq(MAX_MEDIA_PER_EVENT))
+        .drop("__media_rank");
   }
 
   private static Optional<Dataset<Row>> buildDirectEventMediaRows(
