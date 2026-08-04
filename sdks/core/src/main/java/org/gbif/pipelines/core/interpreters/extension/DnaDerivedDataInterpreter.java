@@ -1,7 +1,9 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -42,9 +44,15 @@ public class DnaDerivedDataInterpreter {
             .map(MixsTerm.target_gene, this::interpretTargetGene)
             .convert(er);
 
-    dr.setDnaDerivedDataItems(result.getList());
+    DeduplicationResult dedupResult = deduplicateDnaDerivedData(result.getList());
+    dr.setDnaDerivedDataItems(dedupResult.dedupedItems);
     if (result.getIssues() != null) {
       dr.getIssues().getIssueList().addAll(result.getIssuesAsList());
+    }
+    if (dedupResult.hasDuplicates) {
+      dr.getIssues()
+          .getIssueList()
+          .add(OccurrenceIssue.DUPLICATE_NUCLEOTIDE_SEQUENCES_COLLAPSED.name());
     }
   }
 
@@ -110,4 +118,34 @@ public class DnaDerivedDataInterpreter {
 
     return issues;
   }
+
+  private DeduplicationResult deduplicateDnaDerivedData(List<DnaDerivedData> items) {
+    if (items == null || items.isEmpty()) {
+      return new DeduplicationResult(items, false);
+    }
+
+    Map<String, DnaDerivedData> deduplicatedMap = new LinkedHashMap<>();
+    boolean hasDuplicates = false;
+    for (DnaDerivedData item : items) {
+      String key = createDeduplicationKey(item);
+      if (deduplicatedMap.containsKey(key)) {
+        hasDuplicates = true;
+      }
+      deduplicatedMap.putIfAbsent(key, item);
+    }
+
+    return new DeduplicationResult(new ArrayList<>(deduplicatedMap.values()), hasDuplicates);
+  }
+
+  private String createDeduplicationKey(DnaDerivedData item) {
+    String nucleotideSequenceID =
+        item.getNucleotideSequenceID() != null ? item.getNucleotideSequenceID() : "";
+    String targetGene =
+        item.getTargetGene() != null && item.getTargetGene().getConcept() != null
+            ? item.getTargetGene().getConcept()
+            : "";
+    return nucleotideSequenceID + "|" + targetGene;
+  }
+
+  private record DeduplicationResult(List<DnaDerivedData> dedupedItems, boolean hasDuplicates) {}
 }
