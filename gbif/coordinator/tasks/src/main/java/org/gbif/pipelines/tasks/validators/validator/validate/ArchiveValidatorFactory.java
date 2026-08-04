@@ -1,6 +1,8 @@
 package org.gbif.pipelines.tasks.validators.validator.validate;
 
+import java.util.Optional;
 import lombok.Builder;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
@@ -16,6 +18,18 @@ public class ArchiveValidatorFactory {
   private final PipelinesArchiveValidatorMessage message;
 
   public ArchiveValidator create() {
+
+    Optional<DatasetType> datasetTypeOpt =
+        DatasetTypeUtils.getDatasetType(config.archiveRepository, message.getDatasetUuid());
+
+    if (datasetTypeOpt.isPresent() && datasetTypeOpt.get() == DatasetType.CHECKLIST) {
+      return ChecklistDwcaArchiveValidator.builder()
+          .validationClient(validationClient)
+          .config(config)
+          .message(message)
+          .schemaValidatorFactory(schemaValidatorFactory)
+          .build();
+    }
 
     // DWCA
     if (FileFormat.DWCA.name().equals(message.getFileFormat())) {
