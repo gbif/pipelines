@@ -45,7 +45,7 @@ import org.gbif.utils.file.ClosableIterator;
 import org.gbif.validator.api.Metrics.IssueInfo;
 
 /**
- *  This performs the validity checking for DwC-A for the purposes <em>of deciding if the archive is
+ * This performs the validity checking for DwC-A for the purposes <em>of deciding if the archive is
  * valid to continue in GBIF indexing only</em>. It is not intended to be a validity checker for a
  * wider community who should impose stricter checking than this offers.
  *
