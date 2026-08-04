@@ -30,11 +30,6 @@ public class ValidationWsClientStub implements ValidationWsClient {
   }
 
   @Override
-  public Validation submitFile(File file) {
-    return validation;
-  }
-
-  @Override
   public Validation validateFile(File file, ValidationRequest validationRequest) {
     return validation;
   }
