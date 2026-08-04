@@ -73,9 +73,14 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     FileInfo emlFile = validateEmlFile();
     Validations.mergeFileInfo(validation, emlFile);
 
+    // Generate counts
+    DwcaCounts dwcaCounts =
+        generateCounts(buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()));
+
     // Core file (Occurrence, Event or Checklist) and, when present, the Occurrence extension
     // (e.g. attached to a Sampling Event dataset)
-    validateDwcaFiles().forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
+    validateDwcaFiles(dwcaCounts)
+        .forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
 
     // Add FileInfo for other extensions
     addExtensionFileInfo(validation, dwcaCounts);
@@ -175,7 +180,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
    * Validates the DwC-A core file (Occurrence, Event or Checklist) and, when present, the
    * Occurrence extension attached to a non-Occurrence core (e.g. a Sampling Event dataset).
    */
-  private List<FileInfo> validateDwcaFiles() {
+  private List<FileInfo> validateDwcaFiles(DwcaCounts dwcaCounts) {
     try {
       log.info("Running DWCA validation for {}", message.getDatasetUuid());
       Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
@@ -206,6 +211,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
               .rowType(archive.getCore().getRowType().qualifiedName())
               .fileType(CORE)
               .fileName(archive.getCore().getFirstLocationFile().getName())
+              .count(dwcaCounts.coreCount)
               .issues(coreIssues)
               .build());
 
@@ -216,6 +222,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
                 .rowType(DwcTerm.Occurrence.qualifiedName())
                 .fileType(DwcFileType.EXTENSION)
                 .fileName(archive.getExtension(DwcTerm.Occurrence).getFirstLocationFile().getName())
+                .count(dwcaCounts.extensionCounts.get(DwcTerm.Occurrence.qualifiedName()))
                 .issues(DwcaValidator.occurrenceIssues(report.getOccurrenceReport()))
                 .build());
       }
