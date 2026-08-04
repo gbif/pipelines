@@ -73,17 +73,12 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     FileInfo emlFile = validateEmlFile();
     Validations.mergeFileInfo(validation, emlFile);
 
-    // Generate counts
-    DwcaCounts dwcaCounts =
-        generateCounts(buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()));
-
     // Core file (Occurrence, Event or Checklist) and, when present, the Occurrence extension
     // (e.g. attached to a Sampling Event dataset)
+    DwcaCounts dwcaCounts =
+            generateCounts(buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()));
     validateDwcaFiles(dwcaCounts)
         .forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
-
-    // Add FileInfo for other extensions
-    addExtensionFileInfo(validation, dwcaCounts);
 
     log.info("Update validation key {}", message.getDatasetUuid());
     validationClient.update(validation);
@@ -97,6 +92,9 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     if (hasFatalIssues) {
       throw new IllegalArgumentException("Discovered fatal issue");
     }
+
+    // Add FileInfo for other extensions
+    addExtensionFileInfo(validation, dwcaCounts);
   }
 
   private void addExtensionFileInfo(Validation validation, DwcaCounts dwcaCounts) {
@@ -124,7 +122,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
               });
 
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      log.error("Unable to read archive", e);
     }
   }
 
