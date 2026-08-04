@@ -245,8 +245,10 @@ public class DwcaArchiveValidator implements ArchiveValidator {
           starRecord
               .extensions()
               .forEach(
-                  (term, records) ->
-                      extensionCounts.put(term.qualifiedName(), (long) records.size()));
+                  (term, records) -> {
+                    Long count = extensionCounts.getOrDefault(term.qualifiedName(), 0L);
+                    extensionCounts.put(term.qualifiedName(), count + records.size());
+                  });
         }
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
