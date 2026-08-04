@@ -165,7 +165,15 @@ public class ArchiveValidatorCallbackIT {
     assertEquals(0, meta.getIssues().size());
     assertEquals(DwcFileType.METADATA, meta.getFileType());
 
-    // Core
+    // Event core
+    Optional<FileInfo> eventCoreOpt = validationClient.getFileInfo(DwcFileType.CORE, DwcTerm.Event);
+    assertTrue(eventCoreOpt.isPresent());
+
+    FileInfo eventCore = eventCoreOpt.get();
+    assertEquals("event.txt", eventCore.getFileName());
+    assertEquals(DwcFileType.CORE, eventCore.getFileType());
+
+    // Occurrence extension
     Optional<FileInfo> coreOpt =
         validationClient.getFileInfo(DwcFileType.EXTENSION, DwcTerm.Occurrence);
     assertTrue(coreOpt.isPresent());
@@ -231,7 +239,15 @@ public class ArchiveValidatorCallbackIT {
     assertEquals(0, meta.getIssues().size());
     assertEquals(DwcFileType.METADATA, meta.getFileType());
 
-    // Core
+    // Taxon core
+    Optional<FileInfo> taxonCoreOpt = validationClient.getFileInfo(DwcFileType.CORE, DwcTerm.Taxon);
+    assertTrue(taxonCoreOpt.isPresent());
+
+    FileInfo taxonCore = taxonCoreOpt.get();
+    assertEquals("taxon.txt", taxonCore.getFileName());
+    assertEquals(DwcFileType.CORE, taxonCore.getFileType());
+
+    // Occurrence extension
     Optional<FileInfo> coreOpt =
         validationClient.getFileInfo(DwcFileType.EXTENSION, DwcTerm.Occurrence);
     assertTrue(coreOpt.isPresent());
@@ -371,13 +387,13 @@ public class ArchiveValidatorCallbackIT {
 
     // Should
     Validation validation = validationClient.getValidation();
-    Optional<FileInfo> occurrenceFile =
+    Optional<FileInfo> unsupportedArchiveFile =
         validation.getMetrics().getFileInfos().stream()
-            .filter(x -> x.getRowType() != null)
-            .filter(x -> x.getRowType().equals(DwcTerm.Occurrence.qualifiedName()))
+            .filter(x -> !x.getIssues().isEmpty())
             .findFirst();
 
-    assertFalse(occurrenceFile.isPresent());
+    assertTrue(unsupportedArchiveFile.isPresent());
+    assertFalse(unsupportedArchiveFile.get().getIssues().isEmpty());
 
     assertTrue(PUBLISHER.getMessages().isEmpty());
   }
