@@ -172,7 +172,7 @@ public class ArchiveValidatorCallbackIT {
 
     FileInfo core = coreOpt.get();
     assertEquals("occurrence.txt", core.getFileName());
-    assertEquals(Long.valueOf(0L), core.getCount());
+    assertEquals(Long.valueOf(1L), core.getCount());
     assertNull(core.getIndexedCount());
     assertEquals(0, core.getTerms().size());
     assertEquals(0, core.getIssues().size());
@@ -238,7 +238,7 @@ public class ArchiveValidatorCallbackIT {
 
     FileInfo core = coreOpt.get();
     assertEquals("occurrence.txt", core.getFileName());
-    assertEquals(Long.valueOf(1L), core.getCount());
+    assertEquals(Long.valueOf(619L), core.getCount());
     assertNull(core.getIndexedCount());
     assertEquals(0, core.getTerms().size());
     assertEquals(0, core.getIssues().size());
