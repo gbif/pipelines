@@ -75,9 +75,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
 
     // Generate counts
     DwcaCounts dwcaCounts =
-        generateCounts(
-            DwcaUtils.fromLocation(
-                buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid())));
+        generateCounts(buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()));
 
     // Occurrence
     validateOccurrenceFile(dwcaCounts)
@@ -234,22 +232,27 @@ public class DwcaArchiveValidator implements ArchiveValidator {
    * @param archive to read
    * @return counts for core and extensions
    */
-  private DwcaCounts generateCounts(Archive archive) {
+  private DwcaCounts generateCounts(Path path) {
     // record count
     long coreCount = 0;
     Map<String, Long> extensionCounts = new HashMap<>();
-    try (ClosableIterator<org.gbif.dwc.record.StarRecord> iterator = archive.iterator()) {
-      while (iterator.hasNext()) {
-        coreCount++;
-        StarRecord starRecord = iterator.next();
-        starRecord
-            .extensions()
-            .forEach(
-                (term, records) ->
-                    extensionCounts.put(term.qualifiedName(), (long) records.size()));
+    try {
+      Archive archive = DwcaUtils.fromLocation(path);
+      try (ClosableIterator<org.gbif.dwc.record.StarRecord> iterator = archive.iterator()) {
+        while (iterator.hasNext()) {
+          coreCount++;
+          StarRecord starRecord = iterator.next();
+          starRecord
+              .extensions()
+              .forEach(
+                  (term, records) ->
+                      extensionCounts.put(term.qualifiedName(), (long) records.size()));
+        }
+      } catch (Exception ex) {
+        log.error(ex.getMessage(), ex);
       }
-    } catch (Exception ex) {
-      log.error(ex.getMessage());
+    } catch (Exception e) {
+      log.error("Unable to read archive", e);
     }
     return DwcaCounts.builder().coreCount(coreCount).extensionCounts(extensionCounts).build();
   }

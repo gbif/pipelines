@@ -108,7 +108,7 @@ public class ArchiveValidatorCallbackIT {
 
     FileInfo core = coreOpt.get();
     assertEquals("occurrence.txt", core.getFileName());
-    assertNull(core.getCount());
+    assertEquals(Long.valueOf(1534L), core.getCount());
     assertNull(core.getIndexedCount());
     assertEquals(0, core.getTerms().size());
     assertEquals(0, core.getIssues().size());
@@ -172,7 +172,7 @@ public class ArchiveValidatorCallbackIT {
 
     FileInfo core = coreOpt.get();
     assertEquals("occurrence.txt", core.getFileName());
-    assertNull(core.getCount());
+    assertEquals(Long.valueOf(0L), core.getCount());
     assertNull(core.getIndexedCount());
     assertEquals(0, core.getTerms().size());
     assertEquals(0, core.getIssues().size());
@@ -224,6 +224,7 @@ public class ArchiveValidatorCallbackIT {
 
     FileInfo meta = metaOpt.get();
     assertEquals("eml.xml", meta.getFileName());
+
     assertNull(meta.getCount());
     assertNull(meta.getIndexedCount());
     assertEquals(0, meta.getTerms().size());
@@ -237,7 +238,7 @@ public class ArchiveValidatorCallbackIT {
 
     FileInfo core = coreOpt.get();
     assertEquals("occurrence.txt", core.getFileName());
-    assertNull(core.getCount());
+    assertEquals(Long.valueOf(1L), core.getCount());
     assertNull(core.getIndexedCount());
     assertEquals(0, core.getTerms().size());
     assertEquals(0, core.getIssues().size());
