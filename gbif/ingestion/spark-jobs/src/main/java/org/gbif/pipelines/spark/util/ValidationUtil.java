@@ -58,6 +58,8 @@ public class ValidationUtil {
     Metrics metrics =
         Optional.ofNullable(validation.getMetrics()).orElse(Metrics.builder().build());
 
+    log.debug("Received fileinfos {}", metrics.getFileInfos());
+
     // where possible, update existing fileInfos to preserve filenames and other properties
     // set downstream
     generatedMetrics
@@ -72,10 +74,17 @@ public class ValidationUtil {
                                   && f.getRowType().equals(generatedFileInfo.getRowType()))
                       .findFirst();
               if (existingFileInfo.isPresent()) {
+                log.info(
+                    "Updating metrics for file {}, rowType {}",
+                    existingFileInfo.get().getFileName(),
+                    existingFileInfo.get().getRowType());
                 existingFileInfo.get().setIndexedCount(generatedFileInfo.getIndexedCount());
                 existingFileInfo.get().setTerms(generatedFileInfo.getTerms());
                 existingFileInfo.get().setIssues(generatedFileInfo.getIssues());
               } else {
+                log.warn(
+                    "Add file info for rowType {} which wasnt found",
+                    generatedFileInfo.getRowType());
                 metrics.getFileInfos().add(generatedFileInfo);
               }
             });

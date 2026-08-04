@@ -7,10 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.extern.jackson.Jacksonized;
 import org.gbif.validator.api.Validation.Status;
 
@@ -55,6 +52,7 @@ public class Metrics {
   @Jacksonized
   @NoArgsConstructor
   @AllArgsConstructor
+  @ToString
   public static class FileInfo {
     private String fileName;
     private DwcFileType fileType;
