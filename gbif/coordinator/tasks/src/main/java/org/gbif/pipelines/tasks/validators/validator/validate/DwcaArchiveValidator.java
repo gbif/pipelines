@@ -76,7 +76,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     // Core file (Occurrence, Event or Checklist) and, when present, the Occurrence extension
     // (e.g. attached to a Sampling Event dataset)
     DwcaCounts dwcaCounts =
-            generateCounts(buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()));
+        generateCounts(buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()));
     validateDwcaFiles(dwcaCounts)
         .forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
 
