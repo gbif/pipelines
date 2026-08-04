@@ -14,7 +14,9 @@ import org.gbif.api.model.crawler.DwcaValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
+import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.UnsupportedArchiveException;
@@ -31,6 +33,7 @@ import org.gbif.pipelines.validator.rules.BasicMetadataEvaluator;
 import org.gbif.utils.file.ClosableIterator;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationType;
+import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Level;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.FileInfo.FileInfoBuilder;
@@ -49,7 +52,20 @@ public class DwcaArchiveValidator implements ArchiveValidator {
 
   @Override
   @SneakyThrows
-  public PipelinesDwcaMessage createOutgoingMessage() {
+  public PipelineBasedMessage createOutgoingMessage() {
+    Optional<DatasetType> datasetTypeOpt = getDatasetType();
+
+    if (datasetTypeOpt.isPresent() && datasetTypeOpt.get() == DatasetType.CHECKLIST) {
+      PipelinesChecklistValidatorMessage m =
+          new PipelinesChecklistValidatorMessage(
+              message.getDatasetUuid(),
+              message.getAttempt(),
+              message.getPipelineSteps(),
+              message.getExecutionId(),
+              FileFormat.DWCA.name());
+      return m;
+    }
+
     PipelinesDwcaMessage m = new PipelinesDwcaMessage();
     m.setDatasetUuid(message.getDatasetUuid());
     m.setAttempt(message.getAttempt());
@@ -59,7 +75,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
             message.getDatasetUuid(), new OccurrenceValidationReport(1, 1, 0, 1, 0, true)));
     m.setPipelineSteps(message.getPipelineSteps());
     m.setExecutionId(message.getExecutionId());
-    getDatasetType().ifPresent(m::setDatasetType);
+    datasetTypeOpt.ifPresent(m::setDatasetType);
     m.setEndpointType(EndpointType.DWC_ARCHIVE);
     return m;
   }
