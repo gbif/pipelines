@@ -35,6 +35,9 @@ public class ValidatorEmailServiceImpl implements ValidatorEmailService {
   @Value("${gbif.portal.url}")
   private final String portalUrl;
 
+  @Value("${gbif.validator.url}")
+  private final String validatorUrl;
+
   @Override
   public void sendEmailNotification(Validation validation) {
     buildEmailModel(validation).ifPresent(emailSender::send);
@@ -61,6 +64,7 @@ public class ValidatorEmailServiceImpl implements ValidatorEmailService {
           ValidatorTemplateDataModel.modelBuilder()
               .validation(validation)
               .portalUrl(portalUrl)
+              .validatorUrl(validatorUrl)
               .build(),
           getLocale(user));
     } catch (IOException | TemplateException ex) {

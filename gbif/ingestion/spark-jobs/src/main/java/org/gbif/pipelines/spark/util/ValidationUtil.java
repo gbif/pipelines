@@ -57,7 +57,31 @@ public class ValidationUtil {
     }
     Metrics metrics =
         Optional.ofNullable(validation.getMetrics()).orElse(Metrics.builder().build());
-    metrics.setFileInfos(generatedMetrics.getFileInfos());
+
+    // where possible, update existing fileInfos to preserve filenames and other properties
+    // set downstream
+    generatedMetrics
+        .getFileInfos()
+        .forEach(
+            generatedFileInfo -> {
+              Optional<Metrics.FileInfo> existingFileInfo =
+                  metrics.getFileInfos().stream()
+                      .filter(
+                          f ->
+                              f.getRowType() != null
+                                  && f.getRowType().equals(generatedFileInfo.getRowType()))
+                      .findFirst();
+              if (existingFileInfo.isPresent()) {
+                existingFileInfo.get().setIndexedCount(generatedFileInfo.getIndexedCount());
+                existingFileInfo.get().setTerms(generatedFileInfo.getTerms());
+                existingFileInfo.get().setIssues(generatedFileInfo.getIssues());
+              } else {
+                metrics.getFileInfos().add(generatedFileInfo);
+              }
+            });
+
+    // if we have made it to metrics, it should be indexable
+    metrics.setIndexeable(true);
     validationClient.update(key, validation);
   }
 }
