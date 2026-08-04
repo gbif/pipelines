@@ -89,6 +89,11 @@ public class AssertionExtensionBuilder {
       return Optional.empty();
     }
 
+    if (!Arrays.asList(eventDfOpt.get().columns()).contains("eventID")) {
+      log.warn("event table has no eventID column; skipping event assertion extension");
+      return Optional.empty();
+    }
+
     Dataset<Row> df =
         remapAssertionColumns(
             resolveAssertionLinks(

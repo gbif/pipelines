@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark.dwcdp.builder.extension;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -452,5 +453,32 @@ class MediaExtensionBuilderTest {
   private List<Map<String, String>> parseMediaJson(Row row) throws Exception {
     String json = row.getAs(MediaExtensionBuilder.COL_MEDIA_EXT_JSON);
     return MapperUtil.MAPPER.readValue(json, new TypeReference<List<Map<String, String>>>() {});
+  }
+
+  @Test
+  void eventTableWithNoEventIdColumn_doesNotThrow() throws Exception {
+    // eventID has no `required: true` constraint in the DwC-DP profile — a package that never
+    // populated it can legitimately arrive with the column absent entirely.
+    StructType schema = new StructType().add("event_pk", DataTypes.StringType);
+    Dataset<Row> eventDf = spark.createDataFrame(List.of(RowFactory.create("EPK-001")), schema);
+    Dataset<Row> mediaDf =
+        mediaNoUsagePolicyDf(List.of(RowFactory.create("MPK-001", "https://example.com/x.jpg")));
+    Dataset<Row> eventMediaDf = eventMediaDf(List.of(RowFactory.create("EPK-001", "MPK-001")));
+
+    Optional<Dataset<Row>> result =
+        assertDoesNotThrow(
+            () ->
+                MediaExtensionBuilder.buildEventMediaExtension(
+                    spark,
+                    TestTableLoader.of(
+                        "event",
+                        eventDf,
+                        MediaExtensionBuilder.TABLE_MEDIA,
+                        mediaDf,
+                        MediaExtensionBuilder.TABLE_EVENT_MEDIA,
+                        eventMediaDf)),
+            "a missing eventID column must not crash the event multimedia extension");
+
+    assertTrue(result.isEmpty());
   }
 }

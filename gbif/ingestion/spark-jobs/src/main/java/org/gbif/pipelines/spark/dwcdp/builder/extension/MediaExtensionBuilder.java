@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark.dwcdp.builder.extension;
 
+import java.util.Arrays;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
@@ -62,6 +63,7 @@ public class MediaExtensionBuilder {
   public static final String TABLE_OCCURRENCE_MEDIA = "occurrence-media";
   public static final String TABLE_MATERIAL_MEDIA = "material-media";
 
+  /** Extension.MULTIMEDIA.getRowType() — the real Simple Multimedia extension row type. */
   public static final String ROW_TYPE_MULTIMEDIA = Extension.MULTIMEDIA.getRowType();
 
   public static final String COL_MEDIA_EXT_JSON = "mediaExtJson";
@@ -86,6 +88,11 @@ public class MediaExtensionBuilder {
           "Skipping event multimedia extension: media present={}, event present={}",
           mediaDfOpt.isPresent(),
           eventDfOpt.isPresent());
+      return Optional.empty();
+    }
+
+    if (!Arrays.asList(eventDfOpt.get().columns()).contains("eventID")) {
+      log.warn("event table has no eventID column; skipping event multimedia extension");
       return Optional.empty();
     }
 

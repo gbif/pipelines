@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark.dwcdp.builder.extension;
 
+import java.util.Arrays;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
@@ -70,6 +71,11 @@ public class HumboldtExtensionBuilder {
           "Skipping Humboldt extension: survey present={}, event present={}",
           surveyDfOpt.isPresent(),
           eventDfOpt.isPresent());
+      return Optional.empty();
+    }
+
+    if (!Arrays.asList(eventDfOpt.get().columns()).contains("eventID")) {
+      log.warn("event table has no eventID column; skipping Humboldt extension");
       return Optional.empty();
     }
 

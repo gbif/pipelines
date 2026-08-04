@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark.dwcdp.builder;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -655,6 +656,67 @@ class EventCoreBuilderTest {
     assertFalse(
         records.get(0).getCoreTerms().containsKey("event_pk"),
         "event_pk is a surrogate key with no DwC term — it must never appear in coreTerms");
+  }
+
+  @Test
+  void eventPkAndParentEventFkPresentButNoEventIdColumnAtAll_fallsBackToEventPk() {
+    // eventID has no `required: true` constraint in the DwC-DP profile (only event_pk does), so
+    // a package that never populated it can legitimately arrive with the column absent from the
+    // Parquet schema entirely — not merely null-valued. build() must not crash, and — since
+    // event_pk is required+unique — must not silently drop the record either: it falls back to
+    // using event_pk as the record's eventID (see EventCoreBuilder.withEventIdFallback).
+    StructType schema =
+        new StructType()
+            .add("event_pk", DataTypes.StringType)
+            .add("parentEvent_fk", DataTypes.StringType)
+            .add("locality", DataTypes.StringType);
+    Dataset<Row> eventDf =
+        spark.createDataFrame(List.of(RowFactory.create("EPK-001", null, "Some locality")), schema);
+
+    List<ExtendedRecord> records =
+        assertDoesNotThrow(
+            () ->
+                EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf)).collectAsList(),
+            "a missing eventID column must not crash the whole conversion");
+
+    assertEquals(1, records.size());
+    assertEquals("EPK-001", records.get(0).getId());
+    assertEquals(
+        "Some locality", records.get(0).getCoreTerms().get(DwcTerm.locality.qualifiedName()));
+    assertFalse(
+        records.get(0).getCoreTerms().containsKey("event_pk"),
+        "event_pk is a surrogate key with no DwC term — it must never appear in coreTerms, "
+            + "even when it's also serving as the eventID fallback");
+  }
+
+  @Test
+  void eventIdFallback_alsoReachesSubBuildersThroughTheSharedLoader() throws Exception {
+    // event-media resolves via event_fk -> event.event_pk -> eventID internally
+    // (MediaExtensionBuilder reloads "event" from the same loader independently of this class's
+    // own eventDf) — this proves the fallback wrap in EventCoreBuilder.build() actually reaches
+    // every downstream consumer of "event", not just the core record built directly in this class.
+    StructType schema = new StructType().add("event_pk", DataTypes.StringType);
+    Dataset<Row> eventDf = spark.createDataFrame(List.of(RowFactory.create("EPK-001")), schema);
+    Dataset<Row> mediaDf =
+        mediaDf(List.of(RowFactory.create("MPK-001", "https://example.com/x.jpg")));
+    Dataset<Row> eventMediaDf = eventMediaDf(List.of(RowFactory.create("EPK-001", "MPK-001")));
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(
+                spark,
+                TestTableLoader.of(
+                    "event", eventDf,
+                    "media", mediaDf,
+                    "event-media", eventMediaDf))
+            .collectAsList();
+
+    assertEquals(1, records.size());
+    assertEquals("EPK-001", records.get(0).getId());
+    assertTrue(
+        records.get(0).getExtensions().containsKey(MediaExtensionBuilder.ROW_TYPE_MULTIMEDIA),
+        "the multimedia extension must have resolved despite event having no natural eventID, "
+            + "proving MediaExtensionBuilder saw the fallback too, not just this class's own "
+            + "eventDf");
   }
 
   @Test

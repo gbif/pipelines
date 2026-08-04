@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark.dwcdp.builder.extension;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -277,5 +278,29 @@ class IdentifierExtensionBuilderTest {
   private List<Map<String, String>> parseIdentifierJson(Row row) throws Exception {
     String json = row.getAs(IdentifierExtensionBuilder.COL_IDENTIFIER_EXT_JSON);
     return MapperUtil.MAPPER.readValue(json, new TypeReference<List<Map<String, String>>>() {});
+  }
+
+  @Test
+  void eventTableWithNoEventIdColumn_doesNotThrow() {
+    // eventID has no `required: true` constraint in the DwC-DP profile — a package that never
+    // populated it can legitimately arrive with the column absent entirely.
+    StructType schema = new StructType().add("event_pk", DataTypes.StringType);
+    Dataset<Row> eventDf = spark.createDataFrame(List.of(RowFactory.create("EPK-001")), schema);
+    Dataset<Row> identifierDf =
+        eventIdentifierDf(List.of(RowFactory.create("EPK-001", "barcode-001", "barcode")));
+
+    Optional<Dataset<Row>> result =
+        assertDoesNotThrow(
+            () ->
+                IdentifierExtensionBuilder.buildEvent(
+                    spark,
+                    TestTableLoader.of(
+                        "event",
+                        eventDf,
+                        IdentifierExtensionBuilder.TABLE_EVENT_IDENTIFIER,
+                        identifierDf)),
+            "a missing eventID column must not crash the event identifier extension");
+
+    assertTrue(result.isEmpty());
   }
 }

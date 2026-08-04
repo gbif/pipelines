@@ -68,6 +68,11 @@ public class OccurrenceExtensionBuilder {
       return Optional.empty();
     }
 
+    if (!Arrays.asList(eventDfOpt.get().columns()).contains("eventID")) {
+      log.warn("event table has no eventID column; skipping occurrence extension");
+      return Optional.empty();
+    }
+
     Optional<Dataset<Row>> realOccurrences = buildRealOccurrences(loader, eventDfOpt.get());
     Optional<Dataset<Row>> virtualOccurrences =
         MaterialJoinBuilder.virtualMaterialOccurrences(loader);

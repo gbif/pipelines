@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark.dwcdp.builder.extension;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -274,5 +275,30 @@ class AssertionExtensionBuilderTest {
   private List<Map<String, String>> parseAssertionJson(Row row) throws Exception {
     String json = row.getAs(AssertionExtensionBuilder.COL_ASSERTION_EXT_JSON);
     return MapperUtil.MAPPER.readValue(json, new TypeReference<List<Map<String, String>>>() {});
+  }
+
+  @Test
+  void eventTableWithNoEventIdColumn_doesNotThrow() {
+    // eventID has no `required: true` constraint in the DwC-DP profile — a package that never
+    // populated it can legitimately arrive with the column absent entirely.
+    StructType schema = new StructType().add("event_pk", DataTypes.StringType);
+    Dataset<Row> eventDf = spark.createDataFrame(List.of(RowFactory.create("EPK-001")), schema);
+    Dataset<Row> assertionDf =
+        eventAssertionDf(
+            List.of(RowFactory.create("A001", "EPK-001", "Temperature", "25.0", "Celsius")));
+
+    Optional<Dataset<Row>> result =
+        assertDoesNotThrow(
+            () ->
+                AssertionExtensionBuilder.buildEventAssertionExtension(
+                    spark,
+                    TestTableLoader.of(
+                        "event",
+                        eventDf,
+                        AssertionExtensionBuilder.TABLE_EVENT_ASSERTION,
+                        assertionDf)),
+            "a missing eventID column must not crash the event assertion extension");
+
+    assertTrue(result.isEmpty());
   }
 }

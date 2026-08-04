@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark.dwcdp.builder.extension;
 
+import java.util.Arrays;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
@@ -37,6 +38,7 @@ public class IdentifierExtensionBuilder {
   static final String TABLE_OCCURRENCE_IDENTIFIER = "occurrence-identifier";
   static final String TABLE_MATERIAL_IDENTIFIER = "material-identifier";
 
+  /** Extension.IDENTIFIER.getRowType(). */
   public static final String ROW_TYPE_IDENTIFIER = Extension.IDENTIFIER.getRowType();
 
   public static final String COL_IDENTIFIER_EXT_JSON = "identifierExtJson";
@@ -79,6 +81,11 @@ public class IdentifierExtensionBuilder {
           "Skipping event identifier extension: event-identifier present={}, event present={}",
           identifierDfOpt.isPresent(),
           eventDfOpt.isPresent());
+      return Optional.empty();
+    }
+
+    if (!Arrays.asList(eventDfOpt.get().columns()).contains("eventID")) {
+      log.warn("event table has no eventID column; skipping event identifier extension");
       return Optional.empty();
     }
 

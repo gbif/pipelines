@@ -85,6 +85,15 @@ public class EventCoreBuilder {
    */
   public static Dataset<ExtendedRecord> build(SparkSession spark, TableLoader loader) {
 
+    // event_pk is required+unique per the DwC-DP profile; eventID is not. A package that never
+    // populated eventID can legitimately arrive with that column absent entirely — falling back
+    // to event_pk here, once, means every downstream consumer of "event" (this method's own
+    // eventDf below, plus OccurrenceExtensionBuilder/MediaExtensionBuilder/
+    // AssertionExtensionBuilder/IdentifierExtensionBuilder/HumboldtExtensionBuilder, which each
+    // independently reload "event" from this same loader) sees a usable eventID automatically,
+    // rather than each of them separately having to abandon and lose the dataset's records.
+    loader = withEventIdFallback(loader);
+
     Dataset<Row> eventDf =
         loader
             .load("event")
@@ -150,6 +159,55 @@ public class EventCoreBuilder {
   }
 
   /**
+   * Wraps {@code loader} so that every load of the {@code event} table falls back to using {@code
+   * event_pk} (copied into a real {@code eventID} column) when the natural {@code eventID} column
+   * is entirely absent — rather than {@code null}, which would make it indistinguishable from a row
+   * that simply has no value there.
+   *
+   * <p>{@code event_pk} is {@code required: true, unique: true} in the DwC-DP profile; {@code
+   * eventID} carries no such constraint, so a package that never populated it arrives with the
+   * column missing from the schema entirely, not merely null-valued. Every downstream consumer of
+   * "event" through this loader — this class's own {@code eventDf}, plus each of {@link
+   * OccurrenceExtensionBuilder}, {@link MediaExtensionBuilder}, {@link AssertionExtensionBuilder},
+   * {@link IdentifierExtensionBuilder}, {@link HumboldtExtensionBuilder}, which each independently
+   * reload "event" rather than reusing a shared {@code Dataset} — sees the fallback transparently.
+   *
+   * <p>One caveat worth being aware of: unlike {@code eventID} (required by the profile to be
+   * preserved across aggregation), {@code event_pk} <em>may</em> be reassigned by the aggregator
+   * between crawls. For a package that only ever supplies {@code event_pk}, this means the
+   * resulting record identity — and everything downstream keyed on it — isn't guaranteed stable run
+   * to run, the way a publisher-controlled {@code eventID} would be. That's an inherent property of
+   * the source data lacking a stable identifier, not something this fallback can fix; the
+   * alternative (dropping the whole dataset, as before) has no such instability but also no data at
+   * all, which is the worse trade.
+   */
+  private static TableLoader withEventIdFallback(TableLoader loader) {
+    return tableName -> {
+      Optional<Dataset<Row>> dfOpt = loader.load(tableName);
+      if (!"event".equals(tableName) || dfOpt.isEmpty()) {
+        return dfOpt;
+      }
+
+      Dataset<Row> df = dfOpt.get();
+      List<String> columns = Arrays.asList(df.columns());
+      if (columns.contains("eventID")) {
+        return dfOpt;
+      }
+      if (!columns.contains(EVENT_PK_COLUMN)) {
+        // Nothing usable to fall back to either — leave as-is; each consumer's own eventID guard
+        // will no-op gracefully rather than throw.
+        return dfOpt;
+      }
+
+      log.warn(
+          "event table has no eventID column; falling back to event_pk as the record "
+              + "identifier (event_pk is required+unique per the DwC-DP profile, eventID is "
+              + "not — a legitimate, if unusual, package shape)");
+      return Optional.of(df.withColumn("eventID", df.col(EVENT_PK_COLUMN)));
+    };
+  }
+
+  /**
    * Resolves {@code parentEvent_fk} (a surrogate self-reference to {@code event.event_pk}) to the
    * parent event's natural {@code eventID}, replacing it with a column literally named {@code
    * parentEventID} — which {@code TermFactory} already resolves directly to {@code
@@ -171,7 +229,9 @@ public class EventCoreBuilder {
    */
   private static Dataset<Row> resolveParentEventId(Dataset<Row> eventDf) {
     List<String> columns = Arrays.asList(eventDf.columns());
-    if (!columns.contains(PARENT_EVENT_FK_COLUMN) || !columns.contains(EVENT_PK_COLUMN)) {
+    if (!columns.contains(PARENT_EVENT_FK_COLUMN)
+        || !columns.contains(EVENT_PK_COLUMN)
+        || !columns.contains("eventID")) {
       return eventDf.drop(EVENT_PK_COLUMN);
     }
 
