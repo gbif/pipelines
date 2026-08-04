@@ -67,7 +67,14 @@ class MaterialProtocolJoinBuilderTest {
     Dataset<Row> result =
         MaterialProtocolJoinBuilder.enrichOccurrences(
             TestTableLoader.of(
-                "material", material, "material-protocol", materialProtocol, "protocol", protocol),
+                "material",
+                material,
+                "material-protocol",
+                materialProtocol,
+                "protocol",
+                protocol,
+                "occurrence",
+                occurrence),
             occurrence);
 
     assertEquals(

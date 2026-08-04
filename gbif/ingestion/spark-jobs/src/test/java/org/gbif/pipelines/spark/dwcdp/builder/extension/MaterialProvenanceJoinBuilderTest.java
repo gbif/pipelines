@@ -129,8 +129,12 @@ class MaterialProvenanceJoinBuilderTest {
     Dataset<Row> result =
         MaterialProvenanceJoinBuilder.enrichOccurrences(
             TestTableLoader.of(
-                MaterialJoinBuilder.TABLE_MATERIAL, material,
-                ProvenanceJoinBuilder.TABLE_PROVENANCE, provenance),
+                MaterialJoinBuilder.TABLE_MATERIAL,
+                material,
+                ProvenanceJoinBuilder.TABLE_PROVENANCE,
+                provenance,
+                "occurrence",
+                occ),
             occ);
 
     Row row = result.first();
@@ -151,8 +155,12 @@ class MaterialProvenanceJoinBuilderTest {
     Dataset<Row> result =
         MaterialProvenanceJoinBuilder.enrichOccurrences(
             TestTableLoader.of(
-                MaterialJoinBuilder.TABLE_MATERIAL, material,
-                ProvenanceJoinBuilder.TABLE_PROVENANCE, provenance),
+                MaterialJoinBuilder.TABLE_MATERIAL,
+                material,
+                ProvenanceJoinBuilder.TABLE_PROVENANCE,
+                provenance,
+                "occurrence",
+                occ),
             occ);
 
     assertFalse(Arrays.asList(result.columns()).contains("materialEntity_pk"));
@@ -177,9 +185,14 @@ class MaterialProvenanceJoinBuilderTest {
     Dataset<Row> result =
         MaterialProvenanceJoinBuilder.enrichOccurrences(
             TestTableLoader.of(
-                MaterialJoinBuilder.TABLE_MATERIAL, material,
-                MaterialProvenanceJoinBuilder.TABLE_MATERIAL_PROVENANCE, junction,
-                ProvenanceJoinBuilder.TABLE_PROVENANCE, provenance),
+                MaterialJoinBuilder.TABLE_MATERIAL,
+                material,
+                MaterialProvenanceJoinBuilder.TABLE_MATERIAL_PROVENANCE,
+                junction,
+                ProvenanceJoinBuilder.TABLE_PROVENANCE,
+                provenance,
+                "occurrence",
+                occ),
             occ);
 
     Row row = result.first();

@@ -91,7 +91,9 @@ class MaterialGeologicalContextJoinBuilderTest {
                 MaterialGeologicalContextJoinBuilder.TABLE_MATERIAL_GEOLOGICAL_CONTEXT,
                 materialGeo,
                 GeologicalContextJoinBuilder.TABLE_GEOLOGICAL_CONTEXT,
-                geo),
+                geo,
+                "occurrence",
+                occurrence),
             occurrence);
 
     Row row = result.first();
@@ -118,7 +120,9 @@ class MaterialGeologicalContextJoinBuilderTest {
                 MaterialGeologicalContextJoinBuilder.TABLE_MATERIAL_GEOLOGICAL_CONTEXT,
                 materialGeo,
                 GeologicalContextJoinBuilder.TABLE_GEOLOGICAL_CONTEXT,
-                geo),
+                geo,
+                "occurrence",
+                occurrence),
             occurrence);
 
     assertEquals("Occurrence formation", result.first().getAs("formation"));

@@ -73,7 +73,8 @@ public class DistributedUtil {
         .submitAwaitVoid();
 
     ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
-    log.info(timeAndRecPerSecond(jobName, start, recordsNumber));
+    Long updatedrecordsNumber = getRecordsNumber(pipelinesConfig, message, fileSystem);
+    log.info(timeAndRecPerSecond(jobName, start, updatedrecordsNumber));
   }
 
   private static void validateSparkConf(SparkConfUtil.Conf conf, String sparkAppName) {

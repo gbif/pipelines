@@ -484,7 +484,8 @@ class OccurrenceExtensionBuilderTest {
   }
 
   @Test
-  void materialWithEvidenceOccurrence_isNotDuplicatedAsVirtualOccurrence() throws Exception {
+  void materialWithEvidenceForOccurrenceOutsidePackage_stillBecomesVirtualOccurrence()
+      throws Exception {
     Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
     Dataset<Row> materialDf =
         materialDf(List.of(RowFactory.create("MPK-001", "MAT001", "OCC001", "EPK-001", "CAT001")));
@@ -493,6 +494,39 @@ class OccurrenceExtensionBuilderTest {
         OccurrenceExtensionBuilder.build(
             spark, TestTableLoader.of("event", eventDf, "material", materialDf));
 
-    assertTrue(resultOpt.isEmpty());
+    // There's no local occurrence table for "OCC001" to be evidence for — evidenceForOccurrenceID
+    // is a weak FK, so this legitimately references an occurrence outside this package. With
+    // nothing local for it to duplicate, the material must still be promoted to a virtual
+    // occurrence via its resolvable collectionEvent_fk, same as unlinked material would be.
+    assertTrue(resultOpt.isPresent());
+    Row eventRow = resultOpt.get().collectAsList().get(0);
+    assertEquals("EVT001", eventRow.getAs("eventID"));
+    Map<String, String> occurrence = singleOccurrence(eventRow);
+    assertEquals("MAT001", occurrence.get(DwcTerm.occurrenceID.qualifiedName()));
+    assertEquals("MaterialSample", occurrence.get(DwcTerm.basisOfRecord.qualifiedName()));
+  }
+
+  @Test
+  void materialWithEvidenceForLocalOccurrence_enrichesItWithoutDuplicating() throws Exception {
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> occDf =
+        occurrencePkDf(List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "Parus major")));
+    Dataset<Row> materialDf =
+        materialDf(List.of(RowFactory.create("MPK-001", "MAT001", "OCC001", "EPK-001", "CAT001")));
+
+    Optional<Dataset<Row>> resultOpt =
+        OccurrenceExtensionBuilder.build(
+            spark,
+            TestTableLoader.of("event", eventDf, "occurrence", occDf, "material", materialDf));
+
+    // OCC001 is a real local occurrence — evidence resolves to it, so the material must enrich
+    // that occurrence (e.g. catalogNumber) rather than also spawning a duplicate virtual one.
+    // singleOccurrence itself asserts there's exactly one occurrence in the extension.
+    assertTrue(resultOpt.isPresent());
+    Row eventRow = resultOpt.get().collectAsList().get(0);
+    Map<String, String> occurrence = singleOccurrence(eventRow);
+    assertEquals("OCC001", occurrence.get(DwcTerm.occurrenceID.qualifiedName()));
+    assertEquals("Parus major", occurrence.get(DwcTerm.scientificName.qualifiedName()));
+    assertEquals("CAT001", occurrence.get(DwcTerm.catalogNumber.qualifiedName()));
   }
 }

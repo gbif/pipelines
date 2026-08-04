@@ -68,6 +68,8 @@ import org.gbif.pipelines.spark.util.TableLoader;
 public class MaterialJoinBuilder {
 
   public static final String TABLE_MATERIAL = "material";
+  private static final String TABLE_OCCURRENCE = "occurrence";
+  private static final String OCCURRENCE_ID_COLUMN = "occurrenceID";
   static final String EVIDENCE_FOR_OCCURRENCE_ID_COLUMN = "evidenceForOccurrenceID";
   private static final String MATERIAL_ENTITY_PK_COLUMN = "materialEntity_pk";
   private static final String MATERIAL_ENTITY_ID_COLUMN = "materialEntityID";
@@ -84,6 +86,70 @@ public class MaterialJoinBuilder {
           "usagePolicy_fk");
 
   private MaterialJoinBuilder() {}
+
+  /**
+   * Left-anti-joins {@code materialDf} against the local {@code occurrence} table's {@code
+   * occurrenceID} (when one is present), returning the rows whose {@code evidenceForOccurrenceID}
+   * does <em>not</em> resolve to a real local occurrence.
+   *
+   * <p>This includes rows with a null {@code evidenceForOccurrenceID} (which can never match
+   * anything) and rows whose value legitimately references an occurrence outside this package —
+   * {@code evidenceForOccurrenceID} is a weak foreign key in the DwC-DP spec, not required to
+   * resolve locally. If there is no local {@code occurrence} table (or it has no {@code
+   * occurrenceID} column) at all, nothing can possibly resolve, so every row is returned unchanged.
+   *
+   * <p>Used by {@link #virtualMaterialOccurrences} to decide eligibility, and by {@link
+   * #singleMaterialOccurrenceLinks} (via its complement, {@link #withEvidenceResolvedLocally}) to
+   * keep evidence-based and virtual occurrence links mutually exclusive — a single source of truth
+   * for "does this reference resolve locally" so the two can't drift apart.
+   */
+  private static Dataset<Row> withoutLocallyResolvedEvidence(
+      TableLoader loader, Dataset<Row> materialDf) {
+    Optional<Dataset<Row>> localOccurrenceIds = localOccurrenceIds(loader);
+    if (localOccurrenceIds.isEmpty()) {
+      return materialDf;
+    }
+    return materialDf.join(
+        localOccurrenceIds.get(),
+        materialDf
+            .col(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN)
+            .equalTo(localOccurrenceIds.get().col("__local_occurrence_id")),
+        "left_anti");
+  }
+
+  /**
+   * The complement of {@link #withoutLocallyResolvedEvidence}: rows whose {@code
+   * evidenceForOccurrenceID} <em>does</em> resolve to a real local occurrence. Returns an empty
+   * (zero-row, correctly-schema'd) dataset if there is no local {@code occurrence} table to resolve
+   * against — nothing can resolve in that case, matching {@link #withoutLocallyResolvedEvidence}
+   * returning everything unchanged.
+   */
+  private static Dataset<Row> withEvidenceResolvedLocally(
+      TableLoader loader, Dataset<Row> materialDf) {
+    Optional<Dataset<Row>> localOccurrenceIds = localOccurrenceIds(loader);
+    if (localOccurrenceIds.isEmpty()) {
+      return materialDf.filter(functions.lit(false));
+    }
+    return materialDf.join(
+        localOccurrenceIds.get(),
+        materialDf
+            .col(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN)
+            .equalTo(localOccurrenceIds.get().col("__local_occurrence_id")),
+        "left_semi");
+  }
+
+  private static Optional<Dataset<Row>> localOccurrenceIds(TableLoader loader) {
+    Optional<Dataset<Row>> occurrenceDfOpt = loader.load(TABLE_OCCURRENCE);
+    if (occurrenceDfOpt.isEmpty()
+        || !Arrays.asList(occurrenceDfOpt.get().columns()).contains(OCCURRENCE_ID_COLUMN)) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        occurrenceDfOpt
+            .get()
+            .select(functions.col(OCCURRENCE_ID_COLUMN).as("__local_occurrence_id"))
+            .distinct());
+  }
 
   /**
    * Returns {@code occurrenceDf} enriched with material fields not already present on it, for
@@ -187,7 +253,12 @@ public class MaterialJoinBuilder {
       return Optional.empty();
     }
 
-    Dataset<Row> single = singleMaterialPerOccurrence(materialDf);
+    // Restrict to evidence that resolves to a real local occurrence — evidence pointing outside
+    // this package is already covered by virtualLinks below (see virtualMaterialOccurrences), so
+    // including it here too would attach the same material's children under two different,
+    // non-matching occurrenceIDs.
+    Dataset<Row> single =
+        withEvidenceResolvedLocally(loader, singleMaterialPerOccurrence(materialDf));
     Optional<Dataset<Row>> virtualLinks = virtualMaterialOccurrenceLinks(loader);
     if (single.isEmpty() && virtualLinks.isEmpty()) {
       log.debug(
@@ -213,9 +284,12 @@ public class MaterialJoinBuilder {
   }
 
   /**
-   * Builds event-core occurrence rows for material records which have no evidence occurrence but do
-   * have a resolvable collection event. Their material entity identifier is reused as the
-   * occurrence identifier when available; the stable material surrogate key supplies the fallback.
+   * Builds event-core occurrence rows for material records whose {@code evidenceForOccurrenceID}
+   * doesn't resolve to a real local occurrence — either because it's null, or because it references
+   * an occurrence outside this package (a legitimate case: {@code evidenceForOccurrenceID} is a
+   * weak foreign key in the DwC-DP spec, not required to resolve locally) — and which do have a
+   * resolvable collection event. Their material entity identifier is reused as the occurrence
+   * identifier when available; the stable material surrogate key supplies the fallback.
    */
   public static Optional<Dataset<Row>> virtualMaterialOccurrences(TableLoader loader) {
     Optional<Dataset<Row>> materialDfOpt = loader.load(TABLE_MATERIAL);
@@ -236,13 +310,10 @@ public class MaterialJoinBuilder {
       return Optional.empty();
     }
 
+    Dataset<Row> eligible = withoutLocallyResolvedEvidence(loader, materialDf);
     Dataset<Row> linked =
-        UsagePolicyJoinBuilder.enrich(loader, materialDf)
-            .filter(
-                functions
-                    .col(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN)
-                    .isNull()
-                    .and(functions.col(COLLECTION_EVENT_FK_COLUMN).isNotNull()))
+        UsagePolicyJoinBuilder.enrich(loader, eligible)
+            .filter(functions.col(COLLECTION_EVENT_FK_COLUMN).isNotNull())
             .join(
                 eventDf.select(
                     functions.col("event_pk").as("__collection_event_pk"),
@@ -292,20 +363,23 @@ public class MaterialJoinBuilder {
 
   /**
    * Breakdown of what happened to every {@code material} row during conversion — for diagnostics
-   * and the conversion report, not for production logic. Every material row falls into exactly one
-   * bucket below (the four leaf counts sum to {@code total}):
+   * and the conversion report, not for production logic. The four leaf buckets are mutually
+   * exclusive and sum to {@code total}:
    *
    * <ul>
-   *   <li>{@code enrichedOntoRealOccurrence} — had evidence, exactly one match, enriched a real
-   *       occurrence row via {@link #enrichOccurrences}.
-   *   <li>{@code evidenceAmbiguous} — had evidence, but zero or more-than-one material rows cited
-   *       the same occurrence, so none of them were used (see {@link
+   *   <li>{@code enrichedOntoRealOccurrence} — evidence resolves to a real local occurrence, and is
+   *       its sole claimant; enriched that occurrence row via {@link #enrichOccurrences}.
+   *   <li>{@code evidenceAmbiguous} — evidence resolves to a real local occurrence, but more than
+   *       one material row claims the same one, so none of them were used (see {@link
    *       #singleMaterialPerOccurrence}).
-   *   <li>{@code virtual} — no evidence, but {@code collectionEvent_fk} resolved to a real event,
-   *       so it became a virtual occurrence via {@link #virtualMaterialOccurrences}.
-   *   <li>{@code unresolved} — no evidence, and either no {@code collectionEvent_fk} or one that
-   *       doesn't resolve to any event in this package. This row is silently dropped — it appears
-   *       nowhere in the output. This is the bucket to watch when occurrences seem to go missing.
+   *   <li>{@code virtual} — evidence does <em>not</em> resolve to a real local occurrence (either
+   *       null, or a weak reference to something outside this package — see {@link
+   *       #virtualMaterialOccurrences}), but {@code collectionEvent_fk} resolved to a real event,
+   *       so it became a virtual occurrence.
+   *   <li>{@code unresolved} — evidence doesn't resolve locally, and {@code collectionEvent_fk} is
+   *       either absent or doesn't resolve to any event in this package either. This row is
+   *       silently dropped — it appears nowhere in the output. The bucket to watch when occurrences
+   *       seem to go missing.
    * </ul>
    */
   public record MaterialFunnel(
@@ -319,10 +393,10 @@ public class MaterialJoinBuilder {
 
   /**
    * Computes the {@link MaterialFunnel} breakdown for this package's {@code material} table. Reuses
-   * {@link #singleMaterialPerOccurrence} and {@link #virtualMaterialOccurrences} directly rather
-   * than re-implementing their filtering logic, so the report can't drift from what conversion
-   * actually does. Returns {@link Optional#empty()} if there is no {@code material} table or it
-   * lacks {@code evidenceForOccurrenceID}.
+   * {@link #singleMaterialPerOccurrence}, {@link #withEvidenceResolvedLocally}, and {@link
+   * #virtualMaterialOccurrences} directly rather than re-implementing their filtering logic, so the
+   * report can't drift from what conversion actually does. Returns {@link Optional#empty()} if
+   * there is no {@code material} table or it lacks {@code evidenceForOccurrenceID}.
    */
   public static Optional<MaterialFunnel> computeFunnel(TableLoader loader) {
     Optional<Dataset<Row>> materialDfOpt = loader.load(TABLE_MATERIAL);
@@ -337,11 +411,19 @@ public class MaterialJoinBuilder {
     long total = materialDf.count();
     long withEvidence =
         materialDf.filter(functions.col(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN).isNotNull()).count();
-    long enriched = singleMaterialPerOccurrence(materialDf).count();
-    long evidenceAmbiguous = withEvidence - enriched;
     long withoutEvidence = total - withEvidence;
+
+    // "Enriched"/"ambiguous" only make sense for evidence that actually resolves to a real local
+    // occurrence — evidence pointing outside this package competes for nothing local, so multiple
+    // materials citing the same external value isn't ambiguity, it's just several independent
+    // virtual occurrences (see virtualMaterialOccurrences).
+    long enriched =
+        withEvidenceResolvedLocally(loader, singleMaterialPerOccurrence(materialDf)).count();
+    long resolvedLocally = withEvidenceResolvedLocally(loader, materialDf).count();
+    long evidenceAmbiguous = resolvedLocally - enriched;
+
     long virtualCount = virtualMaterialOccurrences(loader).map(Dataset::count).orElse(0L);
-    long unresolved = withoutEvidence - virtualCount;
+    long unresolved = total - enriched - evidenceAmbiguous - virtualCount;
 
     return Optional.of(
         new MaterialFunnel(

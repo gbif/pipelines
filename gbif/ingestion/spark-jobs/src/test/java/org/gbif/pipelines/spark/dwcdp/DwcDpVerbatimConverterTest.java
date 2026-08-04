@@ -1165,6 +1165,9 @@ class DwcDpVerbatimConverterTest {
         List.of(
             RowFactory.create("MPK-001", "MAT001", null, "EPK-001"),
             RowFactory.create("MPK-002", null, null, "EPK-001"),
+            // has evidence, but there's no local occurrence table at all for it to resolve
+            // against — evidenceForOccurrenceID is a weak FK, so this legitimately references
+            // an occurrence outside this package; it's still eligible for virtual promotion
             RowFactory.create("MPK-003", "MAT003", "OCC001", "EPK-001")));
 
     var metrics =
@@ -1175,9 +1178,53 @@ class DwcDpVerbatimConverterTest {
             FileSystem.getLocal(new Configuration()),
             "test-dataset");
 
-    assertEquals(2L, metrics.occurrenceCount());
+    assertEquals(3L, metrics.occurrenceCount());
     assertEquals(1L, metrics.eventCount());
     assertEquals(3L, metrics.largestFileCount());
+  }
+
+  @Test
+  void writeMetrics_materialEvidenceReferencesOccurrenceOutsidePackage_becomesVirtual(
+      @TempDir Path dir) throws Exception {
+    writeParquet(
+        dir,
+        "data/event.parquet",
+        schema("event_pk", "eventID"),
+        List.of(RowFactory.create("EPK-001", "EVT001")));
+    // Only OCC-LOCAL exists in this package's own occurrence table.
+    writeParquet(
+        dir,
+        "data/occurrence.parquet",
+        schema("occurrence_pk", "occurrenceID", "event_fk"),
+        List.of(RowFactory.create("OPK-LOCAL", "OCC-LOCAL", "EPK-001")));
+    writeParquet(
+        dir,
+        "data/material.parquet",
+        schema(
+            "materialEntity_pk",
+            "materialEntityID",
+            "evidenceForOccurrenceID",
+            "collectionEvent_fk"),
+        List.of(
+            // resolves to the real local occurrence -> enriches it, not virtual
+            RowFactory.create("MPK-001", "MAT001", "OCC-LOCAL", "EPK-001"),
+            // evidenceForOccurrenceID is a weak FK — this legitimately references an occurrence
+            // that simply isn't part of this package, so it's still eligible for virtual
+            // promotion via its resolvable collectionEvent_fk
+            RowFactory.create("MPK-002", "MAT002", "OCC-ELSEWHERE", "EPK-001")));
+
+    var metrics =
+        DwcDpVerbatimConverter.writeMetrics(
+            spark,
+            DataPackageFixtures.withEventOccurrenceAndMaterial(),
+            "file://" + dir,
+            FileSystem.getLocal(new Configuration()),
+            "test-dataset");
+
+    assertEquals(
+        2L,
+        metrics.occurrenceCount(),
+        "1 physical (enriched OCC-LOCAL) + 1 virtual (MPK-002, evidence doesn't resolve locally)");
   }
 
   // ---- convert() end-to-end ----
@@ -1278,6 +1325,16 @@ class DwcDpVerbatimConverterTest {
         "data/event.parquet",
         schema("event_pk", "eventID"),
         List.of(RowFactory.create("EPK-001", "EVT001")));
+    // OCC001 and OCC002 both exist locally, so evidence pointing at either one resolves — that's
+    // what makes the ambiguous/enriched buckets below meaningful (they only apply to evidence
+    // that actually resolves to a real local occurrence).
+    writeParquet(
+        dir,
+        "data/occurrence.parquet",
+        schema("occurrence_pk", "occurrenceID", "event_fk"),
+        List.of(
+            RowFactory.create("OPK-001", "OCC001", "EPK-001"),
+            RowFactory.create("OPK-002", "OCC002", "EPK-001")));
     writeParquet(
         dir,
         "data/material.parquet",
@@ -1291,17 +1348,22 @@ class DwcDpVerbatimConverterTest {
             RowFactory.create("MPK-001", "MAT001", null, "EPK-001"),
             // no evidence, no collectionEvent_fk -> unresolved, dropped
             RowFactory.create("MPK-002", null, null, null),
-            // has evidence, but shares it with MPK-004 below -> ambiguous, dropped
+            // evidence resolves locally (OCC001 exists), but shares it with MPK-004 below ->
+            // ambiguous, dropped
             RowFactory.create("MPK-003", "MAT003", "OCC001", "EPK-001"),
             RowFactory.create("MPK-004", "MAT004", "OCC001", "EPK-001"),
-            // has evidence, sole claimant -> enriched onto the real occurrence
+            // evidence resolves locally (OCC002 exists), sole claimant -> enriched onto it
             RowFactory.create("MPK-005", "MAT005", "OCC002", "EPK-001")));
 
     FileSystem fs = FileSystem.getLocal(new Configuration());
     String datasetBasePath = "file://" + dir;
 
     DwcDpVerbatimConverter.writeMetrics(
-        spark, DataPackageFixtures.withEventAndMaterial(), datasetBasePath, fs, "test-dataset");
+        spark,
+        DataPackageFixtures.withEventOccurrenceAndMaterial(),
+        datasetBasePath,
+        fs,
+        "test-dataset");
 
     org.apache.hadoop.fs.Path reportPath =
         new org.apache.hadoop.fs.Path(datasetBasePath + "/conversion-report.txt");
