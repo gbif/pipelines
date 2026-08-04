@@ -6,10 +6,7 @@ import static org.gbif.validator.api.DwcFileType.CORE;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +18,7 @@ import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.UnsupportedArchiveException;
+import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwca.validation.MetadataPath;
@@ -30,6 +28,7 @@ import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfigurati
 import org.gbif.pipelines.validator.DwcaValidator;
 import org.gbif.pipelines.validator.Validations;
 import org.gbif.pipelines.validator.rules.BasicMetadataEvaluator;
+import org.gbif.utils.file.ClosableIterator;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationType;
 import org.gbif.validator.api.Level;
@@ -74,12 +73,18 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     FileInfo emlFile = validateEmlFile();
     Validations.mergeFileInfo(validation, emlFile);
 
+    // Generate counts
+    DwcaCounts dwcaCounts =
+        generateCounts(
+            DwcaUtils.fromLocation(
+                buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid())));
+
     // Occurrence
-    validateOccurrenceFile()
+    validateOccurrenceFile(dwcaCounts)
         .ifPresent(occurrenceFile -> Validations.mergeFileInfo(validation, occurrenceFile));
 
     // Add FileInfo for other extensions
-    addExtensionFileInfo(validation);
+    addExtensionFileInfo(validation, dwcaCounts);
 
     log.info("Update validation key {}", message.getDatasetUuid());
     validationClient.update(validation);
@@ -95,7 +100,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     }
   }
 
-  private void addExtensionFileInfo(Validation validation) {
+  private void addExtensionFileInfo(Validation validation, DwcaCounts dwcaCounts) {
     try {
       log.info("Running DWCA validation for {}", message.getDatasetUuid());
       Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
@@ -105,15 +110,20 @@ public class DwcaArchiveValidator implements ArchiveValidator {
           .forEach(
               ext -> {
                 if (ext.getRowType() != DwcTerm.Occurrence) {
+                  Long extensionCount =
+                      dwcaCounts.extensionCounts.putIfAbsent(ext.getRowType().qualifiedName(), 0L);
                   FileInfo extensionFileInfo =
                       FileInfo.builder()
                           .fileType(DwcFileType.EXTENSION)
                           .fileName(ext.getFirstLocationFile().getName())
                           .rowType(ext.getRowType().qualifiedName())
+                          .count(extensionCount)
                           .build();
+
                   validation.getMetrics().getFileInfos().add(extensionFileInfo);
                 }
               });
+
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -167,7 +177,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     }
   }
 
-  private Optional<FileInfo> validateOccurrenceFile() {
+  private Optional<FileInfo> validateOccurrenceFile(DwcaCounts dwcaCounts) {
 
     FileInfoBuilder fileInfoBuilder =
         FileInfo.builder().rowType(DwcTerm.Occurrence.qualifiedName());
@@ -189,17 +199,25 @@ public class DwcaArchiveValidator implements ArchiveValidator {
 
       String fileName;
       DwcFileType dwcFileType;
+      Long occurrenceCount;
       if (archive.getCore().getRowType() == DwcTerm.Occurrence) {
         fileName = archive.getCore().getFirstLocationFile().getName();
         dwcFileType = CORE;
+        occurrenceCount = dwcaCounts.coreCount;
       } else if (archive.getExtension(DwcTerm.Occurrence) != null) {
         fileName = archive.getExtension(DwcTerm.Occurrence).getFirstLocationFile().getName();
         dwcFileType = DwcFileType.EXTENSION;
+        occurrenceCount = dwcaCounts.extensionCounts.get(DwcTerm.Occurrence.qualifiedName());
       } else {
         return Optional.empty();
       }
 
-      fileInfoBuilder.fileType(dwcFileType).fileName(fileName).issues(issueInfos).build();
+      fileInfoBuilder
+          .fileType(dwcFileType)
+          .fileName(fileName)
+          .count(occurrenceCount)
+          .issues(issueInfos)
+          .build();
 
     } catch (UnsupportedArchiveException ex) {
       fileInfoBuilder.issues(
@@ -208,6 +226,32 @@ public class DwcaArchiveValidator implements ArchiveValidator {
                   EvaluationType.UNHANDLED_ERROR, Level.FATAL.name(), ex.getLocalizedMessage())));
     }
     return Optional.of(fileInfoBuilder.build());
+  }
+
+  /**
+   * Generate counts for core and extensions.
+   *
+   * @param archive to read
+   * @return counts for core and extensions
+   */
+  private DwcaCounts generateCounts(Archive archive) {
+    // record count
+    long coreCount = 0;
+    Map<String, Long> extensionCounts = new HashMap<>();
+    try (ClosableIterator<org.gbif.dwc.record.StarRecord> iterator = archive.iterator()) {
+      while (iterator.hasNext()) {
+        coreCount++;
+        StarRecord starRecord = iterator.next();
+        starRecord
+            .extensions()
+            .forEach(
+                (term, records) ->
+                    extensionCounts.put(term.qualifiedName(), (long) records.size()));
+      }
+    } catch (Exception ex) {
+      log.error(ex.getMessage());
+    }
+    return DwcaCounts.builder().coreCount(coreCount).extensionCounts(extensionCounts).build();
   }
 
   /** Gets the dataset type from the Archive parameter. */
@@ -233,5 +277,11 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     } catch (Exception ex) {
       return Optional.empty();
     }
+  }
+
+  @Builder
+  static class DwcaCounts {
+    long coreCount = -1;
+    Map<String, Long> extensionCounts = new HashMap<>();
   }
 }
