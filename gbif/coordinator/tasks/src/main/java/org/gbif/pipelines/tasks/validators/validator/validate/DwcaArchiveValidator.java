@@ -77,9 +77,10 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     DwcaCounts dwcaCounts =
         generateCounts(buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()));
 
-    // Occurrence
-    validateOccurrenceFile(dwcaCounts)
-        .ifPresent(occurrenceFile -> Validations.mergeFileInfo(validation, occurrenceFile));
+    // Core file (Occurrence, Event or Checklist) and, when present, the Occurrence extension
+    // (e.g. attached to a Sampling Event dataset)
+    validateDwcaFiles(dwcaCounts)
+        .forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
 
     // Add FileInfo for other extensions
     addExtensionFileInfo(validation, dwcaCounts);
@@ -175,55 +176,70 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     }
   }
 
-  private Optional<FileInfo> validateOccurrenceFile(DwcaCounts dwcaCounts) {
-
-    FileInfoBuilder fileInfoBuilder =
-        FileInfo.builder().rowType(DwcTerm.Occurrence.qualifiedName());
-
+  /**
+   * Validates the DwC-A core file (Occurrence, Event or Checklist) and, when present, the
+   * Occurrence extension attached to a non-Occurrence core (e.g. a Sampling Event dataset).
+   */
+  private List<FileInfo> validateDwcaFiles(DwcaCounts dwcaCounts) {
     try {
       log.info("Running DWCA validation for {}", message.getDatasetUuid());
       Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
       Archive archive = DwcaUtils.fromLocation(inputPath);
+      DatasetType datasetType = getDatasetType(archive);
 
-      List<IssueInfo> issueInfos =
+      DwcaValidationReport report =
           DwcaValidator.builder()
               .archive(archive)
               .datasetKey(message.getDatasetUuid())
-              .datasetType(getDatasetType(archive))
+              .datasetType(datasetType)
               .maxExampleErrors(config.maxExampleErrors)
               .maxRecords(config.maxRecords)
               .build()
-              .validate();
+              .validateAsReport();
 
-      String fileName;
-      DwcFileType dwcFileType;
-      Long occurrenceCount;
-      if (archive.getCore().getRowType() == DwcTerm.Occurrence) {
-        fileName = archive.getCore().getFirstLocationFile().getName();
-        dwcFileType = CORE;
-        occurrenceCount = dwcaCounts.coreCount;
-      } else if (archive.getExtension(DwcTerm.Occurrence) != null) {
-        fileName = archive.getExtension(DwcTerm.Occurrence).getFirstLocationFile().getName();
-        dwcFileType = DwcFileType.EXTENSION;
-        occurrenceCount = dwcaCounts.extensionCounts.get(DwcTerm.Occurrence.qualifiedName());
-      } else {
-        return Optional.empty();
+      List<FileInfo> fileInfos = new ArrayList<>();
+
+      // Core file: Occurrence core uses the occurrence report, Event/Checklist core uses the
+      // generic report
+      boolean isOccurrenceCore = archive.getCore().getRowType() == DwcTerm.Occurrence;
+      List<IssueInfo> coreIssues =
+          isOccurrenceCore
+              ? DwcaValidator.occurrenceIssues(report.getOccurrenceReport())
+              : DwcaValidator.genericIssues(report.getGenericReport());
+      fileInfos.add(
+          FileInfo.builder()
+              .rowType(archive.getCore().getRowType().qualifiedName())
+              .fileType(CORE)
+              .fileName(archive.getCore().getFirstLocationFile().getName())
+              .count(dwcaCounts.coreCount)
+              .issues(coreIssues)
+              .build());
+
+      // Occurrence extension, e.g. attached to a Sampling Event dataset
+      if (!isOccurrenceCore && archive.getExtension(DwcTerm.Occurrence) != null) {
+        fileInfos.add(
+            FileInfo.builder()
+                .rowType(DwcTerm.Occurrence.qualifiedName())
+                .fileType(DwcFileType.EXTENSION)
+                .fileName(archive.getExtension(DwcTerm.Occurrence).getFirstLocationFile().getName())
+                .count(dwcaCounts.extensionCounts.get(DwcTerm.Occurrence.qualifiedName()))
+                .issues(DwcaValidator.occurrenceIssues(report.getOccurrenceReport()))
+                .build());
       }
 
-      fileInfoBuilder
-          .fileType(dwcFileType)
-          .fileName(fileName)
-          .count(occurrenceCount)
-          .issues(issueInfos)
-          .build();
+      return fileInfos;
 
     } catch (UnsupportedArchiveException ex) {
-      fileInfoBuilder.issues(
-          Collections.singletonList(
-              IssueInfo.create(
-                  EvaluationType.UNHANDLED_ERROR, Level.FATAL.name(), ex.getLocalizedMessage())));
+      return Collections.singletonList(
+          FileInfo.builder()
+              .issues(
+                  Collections.singletonList(
+                      IssueInfo.create(
+                          EvaluationType.UNHANDLED_ERROR,
+                          Level.FATAL.name(),
+                          ex.getLocalizedMessage())))
+              .build());
     }
-    return Optional.of(fileInfoBuilder.build());
   }
 
   /**
