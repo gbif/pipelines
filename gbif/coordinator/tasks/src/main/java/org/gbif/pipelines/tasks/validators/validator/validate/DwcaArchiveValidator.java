@@ -79,6 +79,8 @@ public class DwcaArchiveValidator implements ArchiveValidator {
         generateCounts(buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()));
     validateDwcaFiles(dwcaCounts)
         .forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
+    // Add FileInfo for other extensions
+    addExtensionFileInfo(validation, dwcaCounts);
 
     log.info("Update validation key {}", message.getDatasetUuid());
     validationClient.update(validation);
@@ -92,9 +94,6 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     if (hasFatalIssues) {
       throw new IllegalArgumentException("Discovered fatal issue");
     }
-
-    // Add FileInfo for other extensions
-    addExtensionFileInfo(validation, dwcaCounts);
   }
 
   private void addExtensionFileInfo(Validation validation, DwcaCounts dwcaCounts) {
