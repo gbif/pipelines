@@ -309,6 +309,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
       Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
       return Optional.of(getDatasetType(DwcaUtils.fromLocation(inputPath)));
     } catch (Exception ex) {
+      log.error("Couldn't get dataset type for validation {}", message.getDatasetUuid(), ex);
       return Optional.empty();
     }
   }
