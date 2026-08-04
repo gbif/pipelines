@@ -58,7 +58,7 @@ public class ValidationUtil {
     Metrics metrics =
         Optional.ofNullable(validation.getMetrics()).orElse(Metrics.builder().build());
 
-    log.debug("Received fileinfos {}", metrics.getFileInfos());
+    log.debug("Received file infos {}", metrics.getFileInfos());
 
     // where possible, update existing fileInfos to preserve filenames and other properties
     // set downstream
