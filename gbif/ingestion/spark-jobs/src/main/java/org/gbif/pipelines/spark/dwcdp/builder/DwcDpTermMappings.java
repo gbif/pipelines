@@ -3,6 +3,8 @@ package org.gbif.pipelines.spark.dwcdp.builder;
 import java.util.Map;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifDnaTerm;
+import org.gbif.dwc.terms.MixsTerm;
 
 /**
  * Explicit field name renames from DwC-DP to DwC-A.
@@ -53,15 +55,15 @@ public final class DwcDpTermMappings {
    * <p>Keyed by the exact column name as it appears in the DwC-DP Parquet file.
    */
   public static final Map<String, String> RENAMES =
-      Map.of(
+      Map.ofEntries(
           // DwC-DP renamed dwc:associatedReferences to occurrenceReferences on the occurrence
           // table. Source: ingestion guide section 2, DwC-DP occurrence schema.
-          "occurrenceReferences", DwcTerm.associatedReferences.qualifiedName(),
+          Map.entry("occurrenceReferences", DwcTerm.associatedReferences.qualifiedName()),
 
           // DwC-DP uses eventConductedBy / eventConductedByID on the event table where DwC-A
           // uses recordedBy / recordedByID. Source: ingestion guide section 1.
-          "eventConductedBy", DwcTerm.recordedBy.qualifiedName(),
-          "eventConductedByID", DwcTerm.recordedByID.qualifiedName(),
+          Map.entry("eventConductedBy", DwcTerm.recordedBy.qualifiedName()),
+          Map.entry("eventConductedByID", DwcTerm.recordedByID.qualifiedName()),
 
           // media.accessURI is DwC-DP/Audubon Core's name for the media resource's location.
           // The Simple Multimedia extension (the confirmed DwC-DP→DwC-A media target — see
@@ -70,14 +72,36 @@ public final class DwcDpTermMappings {
           // "accessURI" to ac:accessURI (Audubon Core's own term) instead — a real term, just
           // the wrong one for this target, so this isn't a case TermFactory would ever fix on
           // its own even with a library upgrade.
-          "accessURI", DcTerm.identifier.qualifiedName(),
+          Map.entry("accessURI", DcTerm.identifier.qualifiedName()),
 
           // media.mediaType is DwC-DP's name for the media's high-level kind (StillImage,
           // MovingImage, Sound, ...). MultimediaInterpreter reads this via dc:type
           // (MultimediaInterpreter.parseAndSetType). "mediaType" doesn't match dc:type's simple
           // name, so TermFactory would never resolve it — it would fall through to the raw
           // column name and be invisible to interpretation.
-          "mediaType", DcTerm.type.qualifiedName());
+          Map.entry("mediaType", DcTerm.type.qualifiedName()),
+
+          // nucleotide-sequence.sequence is the raw DNA/RNA sequence string. TermFactory *does*
+          // resolve "sequence" — but to ggbn:sequence (org.gbif.dwc.terms.GgbnTerm.sequence is a
+          // real, registered term with that exact simple name), not the term the DNA Derived
+          // Data extension interpreter actually reads
+          // (org.gbif.pipelines.core.interpreters.extension.DnaDerivedDataInterpreter maps
+          // GbifDnaTerm.dna_sequence). Same "resolves to a real term, just the wrong one" shape as
+          // accessURI above — confirmed via dwc-api javadoc: GbifDnaTerm has no "sequence"
+          // constant (only dna_sequence, pcr_primer_forward/reverse/name_forward/name_reverse/
+          // reference), so this rename is needed regardless of any future GgbnTerm changes.
+          Map.entry("sequence", GbifDnaTerm.dna_sequence.qualifiedName()),
+
+          // molecular-protocol.single_cell_lysis_appr / single_cell_lysis_prot are DwC-DP's names
+          // for the MIxS single-cell lysis fields — but org.gbif.dwc.terms.MixsTerm registers
+          // these under the abbreviated MIxS field IDs sc_lysis_approach / sc_lysis_method
+          // instead (confirmed via dwc-api javadoc: MixsTerm has no
+          // single_cell_lysis_appr/single_cell_lysis_prot constants at all), so TermFactory would
+          // never resolve the DwC-DP names on its own — every other molecular-protocol column
+          // observed matches its MixsTerm/GbifDnaTerm simple name exactly and needs no entry
+          // here; these two are the only confirmed exceptions.
+          Map.entry("single_cell_lysis_appr", MixsTerm.sc_lysis_approach.qualifiedName()),
+          Map.entry("single_cell_lysis_prot", MixsTerm.sc_lysis_method.qualifiedName()));
 
   private DwcDpTermMappings() {}
 }

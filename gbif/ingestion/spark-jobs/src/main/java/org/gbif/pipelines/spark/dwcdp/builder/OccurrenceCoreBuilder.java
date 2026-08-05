@@ -24,6 +24,7 @@ import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialProtocolJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialProvenanceJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.NucleotideExtensionBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.OrganismJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.ProtocolJoinBuilder;
 import org.gbif.pipelines.spark.util.DatasetJoins;
@@ -70,6 +71,10 @@ import org.gbif.pipelines.spark.util.TableLoader;
  *       the single-accepted flattening onto core terms two steps above.
  *   <li>Build the Identifier extension via {@link IdentifierExtensionBuilder} — merges {@code
  *       occurrence-identifier} with {@code material-identifier}, same exactly-one-material rule.
+ *   <li>Build the DNA Derived Data extension via {@link NucleotideExtensionBuilder} — {@code
+ *       nucleotide-analysis} rows resolved through {@code materialEntity_fk} to this same
+ *       exactly-one-material occurrence (real or virtual — {@link NucleotideExtensionBuilder}
+ *       reuses whichever {@link MaterialJoinBuilder} already resolved, not a separate rule).
  *   <li>Map each enriched row to an {@link ExtendedRecord} with {@code coreRowType =
  *       dwc:Occurrence}.
  * </ol>
@@ -124,18 +129,21 @@ public class OccurrenceCoreBuilder {
     Optional<Dataset<Row>> identificationExtDf =
         IdentificationExtensionBuilder.build(spark, loader);
     Optional<Dataset<Row>> identifierExtDf = IdentifierExtensionBuilder.build(spark, loader);
+    Optional<Dataset<Row>> dnaExtDf = NucleotideExtensionBuilder.buildOccurrence(spark, loader);
 
     Dataset<Row> joined = enriched;
     joined = DatasetJoins.leftJoinIfPresent(joined, mediaExtDf, "occurrenceID");
     joined = DatasetJoins.leftJoinIfPresent(joined, assertionExtDf, "occurrenceID");
     joined = DatasetJoins.leftJoinIfPresent(joined, identificationExtDf, "occurrenceID");
     joined = DatasetJoins.leftJoinIfPresent(joined, identifierExtDf, "occurrenceID");
+    joined = DatasetJoins.leftJoinIfPresent(joined, dnaExtDf, "occurrenceID");
 
     final String[] occColumns = enriched.columns();
     final boolean hasMediaExt = mediaExtDf.isPresent();
     final boolean hasAssertionExt = assertionExtDf.isPresent();
     final boolean hasIdentificationExt = identificationExtDf.isPresent();
     final boolean hasIdentifierExt = identifierExtDf.isPresent();
+    final boolean hasDnaExt = dnaExtDf.isPresent();
 
     return joined
         .map(
@@ -147,7 +155,8 @@ public class OccurrenceCoreBuilder {
                         hasMediaExt,
                         hasAssertionExt,
                         hasIdentificationExt,
-                        hasIdentifierExt),
+                        hasIdentifierExt,
+                        hasDnaExt),
             Encoders.bean(ExtendedRecord.class))
         .filter((FilterFunction<ExtendedRecord>) r -> r != null);
   }
@@ -158,7 +167,8 @@ public class OccurrenceCoreBuilder {
       boolean hasMediaExt,
       boolean hasAssertionExt,
       boolean hasIdentificationExt,
-      boolean hasIdentifierExt)
+      boolean hasIdentifierExt,
+      boolean hasDnaExt)
       throws IOException {
 
     String occurrenceId = RowTermMapper.safeGet(row, "occurrenceID");
@@ -193,6 +203,12 @@ public class OccurrenceCoreBuilder {
         hasIdentifierExt,
         IdentifierExtensionBuilder.COL_IDENTIFIER_EXT_JSON,
         IdentifierExtensionBuilder.ROW_TYPE_IDENTIFIER);
+    CoreBuilderSupport.addExtensionIfPresent(
+        row,
+        extensions,
+        hasDnaExt,
+        NucleotideExtensionBuilder.COL_DNA_EXT_JSON,
+        NucleotideExtensionBuilder.ROW_TYPE_DNA_DERIVED_DATA);
 
     return ExtendedRecord.newBuilder()
         .setId(occurrenceId)

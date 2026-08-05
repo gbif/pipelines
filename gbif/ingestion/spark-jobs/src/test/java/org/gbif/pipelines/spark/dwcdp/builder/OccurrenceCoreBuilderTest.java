@@ -234,4 +234,55 @@ class OccurrenceCoreBuilderTest {
     assertEquals("12345", coreTerms.get(DwcTerm.catalogNumber.qualifiedName()));
     assertFalse(coreTerms.containsKey("evidenceForOccurrenceID"));
   }
+
+  @Test
+  void nucleotideAnalysis_reachesOccurrenceViaMaterialLink() {
+    Dataset<Row> occ = occurrencePkDf(List.of(RowFactory.create("OPK-001", "OCC001", "sp")));
+
+    StructType materialSchema =
+        new StructType()
+            .add("materialEntity_pk", DataTypes.StringType)
+            .add("evidenceForOccurrenceID", DataTypes.StringType);
+    Dataset<Row> material =
+        spark.createDataFrame(List.of(RowFactory.create("MEPK-1", "OCC001")), materialSchema);
+
+    StructType analysisSchema =
+        new StructType()
+            .add("nucleotideAnalysis_pk", DataTypes.StringType)
+            .add("materialEntity_fk", DataTypes.StringType)
+            .add("molecularProtocol_fk", DataTypes.StringType)
+            .add("nucleotideSequence_fk", DataTypes.StringType);
+    Dataset<Row> analysis =
+        spark.createDataFrame(
+            List.of(RowFactory.create("NAPK-1", "MEPK-1", "MPPK-1", "NSPK-1")), analysisSchema);
+
+    StructType sequenceSchema =
+        new StructType()
+            .add("nucleotideSequence_pk", DataTypes.StringType)
+            .add("sequence", DataTypes.StringType);
+    Dataset<Row> sequence =
+        spark.createDataFrame(List.of(RowFactory.create("NSPK-1", "ACGT")), sequenceSchema);
+
+    List<ExtendedRecord> records =
+        OccurrenceCoreBuilder.build(
+                spark,
+                TestTableLoader.of(
+                    "occurrence", occ,
+                    "material", material,
+                    "nucleotide-analysis", analysis,
+                    "nucleotide-sequence", sequence))
+            .collectAsList();
+
+    assertEquals(1, records.size());
+    List<Map<String, String>> dna =
+        records
+            .get(0)
+            .getExtensions()
+            .get(
+                org.gbif.pipelines.spark.dwcdp.builder.extension.NucleotideExtensionBuilder
+                    .ROW_TYPE_DNA_DERIVED_DATA);
+    assertNotNull(dna, "DNA Derived Data extension must be present");
+    assertEquals(1, dna.size());
+    assertTrue(dna.get(0).containsValue("ACGT"));
+  }
 }

@@ -1047,4 +1047,58 @@ class EventCoreBuilderTest {
     assertEquals("AGT-001", coreTerms.get(DwcTerm.recordedByID.qualifiedName()));
     assertEquals("AGT-002", coreTerms.get("georeferencedByID"));
   }
+
+  // ---- DNA Derived Data: nucleotide-analysis reachable directly via event_fk (eDNA path) ----
+
+  @Test
+  void nucleotideAnalysis_eventOnlyPath_reachesEventDirectly() {
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+
+    StructType analysisSchema =
+        new StructType()
+            .add("nucleotideAnalysis_pk", DataTypes.StringType)
+            .add("event_fk", DataTypes.StringType)
+            .add("molecularProtocol_fk", DataTypes.StringType)
+            .add("nucleotideSequence_fk", DataTypes.StringType);
+    Dataset<Row> analysis =
+        spark.createDataFrame(
+            List.of(RowFactory.create("NAPK-1", "EPK-001", "MPPK-1", "NSPK-1")), analysisSchema);
+
+    StructType sequenceSchema =
+        new StructType()
+            .add("nucleotideSequence_pk", DataTypes.StringType)
+            .add("sequence", DataTypes.StringType);
+    Dataset<Row> sequence =
+        spark.createDataFrame(List.of(RowFactory.create("NSPK-1", "GGCCTTAA")), sequenceSchema);
+
+    StructType protocolSchema =
+        new StructType()
+            .add("molecularProtocol_pk", DataTypes.StringType)
+            .add("target_gene", DataTypes.StringType);
+    Dataset<Row> protocol =
+        spark.createDataFrame(List.of(RowFactory.create("MPPK-1", "COI")), protocolSchema);
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(
+                spark,
+                TestTableLoader.of(
+                    "event", eventDf,
+                    "nucleotide-analysis", analysis,
+                    "nucleotide-sequence", sequence,
+                    "molecular-protocol", protocol))
+            .collectAsList();
+
+    assertEquals(1, records.size());
+    List<Map<String, String>> dna =
+        records
+            .get(0)
+            .getExtensions()
+            .get(
+                org.gbif.pipelines.spark.dwcdp.builder.extension.NucleotideExtensionBuilder
+                    .ROW_TYPE_DNA_DERIVED_DATA);
+    assertNotNull(dna, "DNA Derived Data extension must be present on the event directly");
+    assertEquals(1, dna.size());
+    assertTrue(dna.get(0).containsValue("GGCCTTAA"));
+    assertTrue(dna.get(0).containsValue("COI"));
+  }
 }
