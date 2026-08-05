@@ -38,6 +38,11 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * column on {@code occurrence} and bailed when it wasn't there — which per the schema is always, so
  * the occurrence extension never attached to any event-core dataset.)
  *
+ * <p>{@link AgentJoinBuilder} resolves {@code recordedByID}/{@code identifiedByID} to {@code
+ * recordedBy}/{@code identifiedBy} on real occurrence rows, same as {@link
+ * org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilder}'s own resolution when occurrence is
+ * core.
+ *
  * <p>Returns a two-column Dataset {@code (eventID, occurrenceExtJson)} where the JSON is a
  * serialised list of term maps grouped by {@code eventID}. Materials without an evidence occurrence
  * are represented as virtual occurrences when they resolve through {@code collectionEvent_fk}.
@@ -144,6 +149,12 @@ public class OccurrenceExtensionBuilder {
     Dataset<Row> enriched = OrganismJoinBuilder.enrichOccurrences(loader, occurrenceDf);
     enriched = IdentificationJoinBuilder.enrichOccurrences(loader, enriched);
     enriched = MaterialJoinBuilder.enrichOccurrences(loader, enriched);
+    enriched =
+        AgentJoinBuilder.resolveAgentNameCoalesceInto(
+            loader, enriched, "recordedByID", "recordedBy");
+    enriched =
+        AgentJoinBuilder.resolveAgentNameCoalesceInto(
+            loader, enriched, "identifiedByID", "identifiedBy");
     return Optional.of(
         enriched
             .join(

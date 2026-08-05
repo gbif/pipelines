@@ -167,6 +167,24 @@ class EventCoreBuilderTest {
     return spark.createDataFrame(rows, schema);
   }
 
+  private Dataset<Row> surveyProtocolDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("survey_fk", DataTypes.StringType)
+            .add("protocol_fk", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> namedProtocolDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("protocol_pk", DataTypes.StringType)
+            .add("protocolType", DataTypes.StringType)
+            .add("protocolName", DataTypes.StringType)
+            .add("protocolDescription", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
   private Dataset<Row> eventWithParentFkDf(List<Row> rows) {
     StructType schema =
         new StructType()
@@ -835,5 +853,181 @@ class EventCoreBuilderTest {
     Map<String, String> coreTerms = records.get(0).getCoreTerms();
     assertEquals("NSF Grant 123", coreTerms.get(DwcTerm.fundingAttribution.qualifiedName()));
     assertFalse(coreTerms.containsKey("provenance_fk"));
+  }
+
+  // ---- survey-protocol: protocols reached only via the event's survey ----
+
+  @Test
+  void surveyProtocolJunction_reachesSamplingProtocolViaSurveyEventLink() {
+    // event -> survey (event_fk) -> survey-protocol (survey_fk) -> protocol
+    // no direct event-protocol link at all — this is exactly the previously-unmapped gap.
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> surveyDf = surveyDf(List.of(RowFactory.create("SPK-1", "EPK-001", "1", "Clear")));
+    Dataset<Row> surveyProtocols = surveyProtocolDf(List.of(RowFactory.create("SPK-1", "PPK-1")));
+    Dataset<Row> protocols =
+        protocolDf(List.of(RowFactory.create("PPK-1", "Vegetation plot (Rel\u00e9v\u00e9)")));
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(
+                spark,
+                TestTableLoader.of(
+                    "event", eventDf,
+                    "survey", surveyDf,
+                    "survey-protocol", surveyProtocols,
+                    "protocol", protocols))
+            .collectAsList();
+
+    assertEquals(1, records.size());
+    assertEquals(
+        "Vegetation plot (Rel\u00e9v\u00e9)",
+        records.get(0).getCoreTerms().get(DwcTerm.samplingProtocol.qualifiedName()));
+  }
+
+  @Test
+  void surveyProtocolAndEventProtocol_bothMergeIntoSamplingProtocol() {
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> surveyDf = surveyDf(List.of(RowFactory.create("SPK-1", "EPK-001", "1", "Clear")));
+    Dataset<Row> surveyProtocols = surveyProtocolDf(List.of(RowFactory.create("SPK-1", "PPK-1")));
+    Dataset<Row> eventProtocols = eventProtocolDf(List.of(RowFactory.create("EPK-001", "PPK-2")));
+    Dataset<Row> protocols =
+        protocolDf(
+            List.of(
+                RowFactory.create("PPK-1", "Vegetation plot (Rel\u00e9v\u00e9)"),
+                RowFactory.create(
+                    "PPK-2", "2 observers sampled until no new species found for >=5 min")));
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(
+                spark,
+                TestTableLoader.of(
+                    "event", eventDf,
+                    "survey", surveyDf,
+                    "survey-protocol", surveyProtocols,
+                    "event-protocol", eventProtocols,
+                    "protocol", protocols))
+            .collectAsList();
+
+    assertEquals(
+        "2 observers sampled until no new species found for >=5 min"
+            + "|Vegetation plot (Rel\u00e9v\u00e9)",
+        records.get(0).getCoreTerms().get(DwcTerm.samplingProtocol.qualifiedName()));
+  }
+
+  @Test
+  void georeferenceTypedEventProtocol_alsoCoalescesIntoGeoreferenceProtocol() {
+    // A protocol linked via the plain event-protocol junction (not the dedicated
+    // georeferenceProtocol_fk field) but classified as protocolType "georeference"/
+    // "georeferencing" must additionally reach dwc:georeferenceProtocol, while still
+    // contributing to dwc:samplingProtocol like every other linked protocol.
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> eventProtocols =
+        eventProtocolDf(
+            List.of(RowFactory.create("EPK-001", "PPK-1"), RowFactory.create("EPK-001", "PPK-2")));
+    Dataset<Row> protocols =
+        namedProtocolDf(
+            List.of(
+                RowFactory.create("PPK-1", "georeferencing", "Hand-held GPS receiver", null),
+                RowFactory.create(
+                    "PPK-2", "sampling", "Vegetation plot (Rel\u00e9v\u00e9)", null)));
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(
+                spark,
+                TestTableLoader.of(
+                    "event", eventDf, "event-protocol", eventProtocols, "protocol", protocols))
+            .collectAsList();
+
+    Map<String, String> coreTerms = records.get(0).getCoreTerms();
+    assertEquals(
+        "georeferencing: Hand-held GPS receiver",
+        coreTerms.get(DwcTerm.georeferenceProtocol.qualifiedName()));
+    assertEquals(
+        "georeferencing: Hand-held GPS receiver|sampling: Vegetation plot (Rel\u00e9v\u00e9)",
+        coreTerms.get(DwcTerm.samplingProtocol.qualifiedName()));
+  }
+
+  @Test
+  void georeferenceTypedSurveyProtocol_alsoCoalescesIntoGeoreferenceProtocol() {
+    // Reproduces the exact scenario reported: a "georeference"-typed protocol reachable only
+    // through event -> survey -> survey-protocol (no direct event-protocol link at all) must
+    // still reach dwc:georeferenceProtocol, alongside the sampling/samplingEffort protocols
+    // contributing to dwc:samplingProtocol.
+    Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> surveyDf = surveyDf(List.of(RowFactory.create("SPK-1", "EPK-001", "1", "Clear")));
+    Dataset<Row> surveyProtocols =
+        surveyProtocolDf(
+            List.of(
+                RowFactory.create("SPK-1", "PPK-1"),
+                RowFactory.create("SPK-1", "PPK-2"),
+                RowFactory.create("SPK-1", "PPK-3")));
+    Dataset<Row> protocols =
+        namedProtocolDf(
+            List.of(
+                RowFactory.create("PPK-1", "georeferencing", "Hand-held GPS receiver", null),
+                RowFactory.create("PPK-2", "sampling", "Vegetation plot (Rel\u00e9v\u00e9)", null),
+                RowFactory.create(
+                    "PPK-3",
+                    "samplingEffort",
+                    "2 observers sampled until no new species found in the plot for >=5 min",
+                    null)));
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(
+                spark,
+                TestTableLoader.of(
+                    "event", eventDf,
+                    "survey", surveyDf,
+                    "survey-protocol", surveyProtocols,
+                    "protocol", protocols))
+            .collectAsList();
+
+    Map<String, String> coreTerms = records.get(0).getCoreTerms();
+    assertEquals(
+        "georeferencing: Hand-held GPS receiver",
+        coreTerms.get(DwcTerm.georeferenceProtocol.qualifiedName()));
+    assertEquals(
+        "georeferencing: Hand-held GPS receiver"
+            + "|samplingEffort: 2 observers sampled until no new species found in the plot for"
+            + " >=5 min"
+            + "|sampling: Vegetation plot (Rel\u00e9v\u00e9)",
+        coreTerms.get(DwcTerm.samplingProtocol.qualifiedName()));
+  }
+
+  // ---- Agent: recordedByID/georeferencedByID/eventConductedByID resolution ----
+
+  @Test
+  void eventConductedByIdAndGeoreferencedById_resolvedFromAgentTable() {
+    StructType eventSchema =
+        new StructType()
+            .add("eventID", DataTypes.StringType)
+            .add("eventConductedByID", DataTypes.StringType)
+            .add("georeferencedByID", DataTypes.StringType);
+    Dataset<Row> eventDf =
+        spark.createDataFrame(
+            List.of(RowFactory.create("EVT001", "AGT-001", "AGT-002")), eventSchema);
+    StructType agentSchema =
+        new StructType()
+            .add("agentID", DataTypes.StringType)
+            .add("preferredAgentName", DataTypes.StringType);
+    Dataset<Row> agentDf =
+        spark.createDataFrame(
+            List.of(
+                RowFactory.create("AGT-001", "Jane Doe"), RowFactory.create("AGT-002", "John Roe")),
+            agentSchema);
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf, "agent", agentDf))
+            .collectAsList();
+
+    Map<String, String> coreTerms = records.get(0).getCoreTerms();
+    // eventConductedBy/eventConductedByID are DwC-DP's names for what DwC-A calls
+    // recordedBy/recordedByID on the event table (see DwcDpTermMappings) — the agent resolution
+    // fills the raw eventConductedBy* column, and that rename happens afterwards during term
+    // mapping, so the resolved value surfaces under dwc:recordedBy here.
+    assertEquals("Jane Doe", coreTerms.get(DwcTerm.recordedBy.qualifiedName()));
+    assertEquals("John Roe", coreTerms.get(DwcTerm.georeferencedBy.qualifiedName()));
+    // the ID fields themselves are real DwC terms and must survive alongside the resolved names
+    assertEquals("AGT-001", coreTerms.get(DwcTerm.recordedByID.qualifiedName()));
+    assertEquals("AGT-002", coreTerms.get(DwcTerm.georeferencedByID.qualifiedName()));
   }
 }

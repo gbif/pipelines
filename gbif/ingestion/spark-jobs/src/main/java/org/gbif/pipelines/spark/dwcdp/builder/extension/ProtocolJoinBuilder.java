@@ -2,6 +2,7 @@ package org.gbif.pipelines.spark.dwcdp.builder.extension;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
@@ -44,6 +45,15 @@ public class ProtocolJoinBuilder {
   private static final String AGGREGATED_PROTOCOLS_COLUMN = "__aggregated_protocol_descriptions";
   private static final String AGGREGATED_JOIN_KEY_COLUMN = "__aggregated_protocol_parent_key";
   private static final String TEMP_RESOLVED_COLUMN = "__resolved_protocol_description";
+
+  /**
+   * Controlled-vocabulary {@code protocolType} values (compared case-insensitively) that identify a
+   * protocol as a georeferencing protocol, for routing into {@code dwc:georeferenceProtocol} rather
+   * than (or in addition to) {@code dwc:samplingProtocol}. Both spellings seen in DwC-DP packages
+   * are accepted; extend this set if a dataset uses a different literal.
+   */
+  public static final Set<String> GEOREFERENCE_PROTOCOL_TYPES =
+      Set.of("georeference", "georeferencing");
 
   private ProtocolJoinBuilder() {}
 
@@ -132,14 +142,55 @@ public class ProtocolJoinBuilder {
       String parentTable,
       String parentPkColumn,
       String parentIdColumn) {
-    Optional<Dataset<Row>> junctionDfOpt = loader.load(junctionTable);
     Optional<Dataset<Row>> parentDfOpt = loader.load(parentTable);
-    if (junctionDfOpt.isEmpty() || parentDfOpt.isEmpty()) {
+    if (parentDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    return aggregateJunctionProtocolDescriptions(
+        loader,
+        junctionTable,
+        junctionParentFkColumn,
+        parentDfOpt.get(),
+        parentPkColumn,
+        parentIdColumn,
+        null);
+  }
+
+  /**
+   * Same as {@link #aggregateJunctionProtocolDescriptions(TableLoader, String, String, String,
+   * String, String)}, but takes an already-resolved {@code parentDf} directly rather than a table
+   * name to load — needed when the junction's parent isn't itself the final grouping key (e.g.
+   * {@code survey-protocol} links to {@code survey}, which must first be resolved to its owning
+   * {@code event} before grouping by {@code eventID}; the caller builds that resolved {@code
+   * (survey_pk, eventID)} Dataset and passes it here as {@code parentDf}), and optionally restricts
+   * which protocols contribute by {@code protocolType}.
+   *
+   * @param allowedProtocolTypesLowercase when non-null and non-empty, only protocols whose {@code
+   *     protocolType} (lower-cased) is in this set contribute a value — e.g. {@link
+   *     #GEOREFERENCE_PROTOCOL_TYPES} to isolate georeferencing protocols for {@code
+   *     dwc:georeferenceProtocol}. When {@code null}, every linked protocol contributes, regardless
+   *     of type — the shape used for {@code dwc:samplingProtocol}, where all protocols concatenate
+   *     together. If a type filter is requested but the {@code protocol} table is absent (or lacks
+   *     a {@code protocolType} column), nothing can be classified, so this returns {@link
+   *     Optional#empty()} rather than guessing.
+   */
+  public static Optional<Dataset<Row>> aggregateJunctionProtocolDescriptions(
+      TableLoader loader,
+      String junctionTable,
+      String junctionParentFkColumn,
+      Dataset<Row> parentDf,
+      String parentPkColumn,
+      String parentIdColumn,
+      Set<String> allowedProtocolTypesLowercase) {
+    boolean hasTypeFilter =
+        allowedProtocolTypesLowercase != null && !allowedProtocolTypesLowercase.isEmpty();
+
+    Optional<Dataset<Row>> junctionDfOpt = loader.load(junctionTable);
+    if (junctionDfOpt.isEmpty()) {
       return Optional.empty();
     }
 
     Dataset<Row> junctionDf = junctionDfOpt.get();
-    Dataset<Row> parentDf = parentDfOpt.get();
     if (!hasColumns(junctionDf, junctionParentFkColumn, PROTOCOL_FK_COLUMN)
         || !hasColumns(parentDf, parentPkColumn, parentIdColumn)) {
       log.warn("Cannot resolve {}: required junction or parent columns are absent", junctionTable);
@@ -157,24 +208,55 @@ public class ProtocolJoinBuilder {
     Optional<Dataset<Row>> protocolDfOpt = loader.load(TABLE_PROTOCOL);
     Dataset<Row> descriptions;
     if (protocolDfOpt.isEmpty()) {
+      if (hasTypeFilter) {
+        log.debug(
+            "protocol table absent; cannot apply protocolType filter for {}, contributing nothing",
+            junctionTable);
+        return Optional.empty();
+      }
       descriptions = links.withColumnRenamed(PROTOCOL_FK_COLUMN, PROTOCOL_DESCRIPTION_COLUMN);
     } else {
       Dataset<Row> protocolDf = protocolDfOpt.get();
-      if (!hasColumns(protocolDf, PROTOCOL_PK_COLUMN)) {
+      boolean hasType = hasColumns(protocolDf, PROTOCOL_TYPE_COLUMN);
+      if (!hasColumns(protocolDf, PROTOCOL_PK_COLUMN) || (hasTypeFilter && !hasType)) {
+        if (hasTypeFilter) {
+          log.debug(
+              "protocol table has no {} column; cannot apply protocolType filter for {}, "
+                  + "contributing nothing",
+              PROTOCOL_TYPE_COLUMN,
+              junctionTable);
+          return Optional.empty();
+        }
         log.warn("protocol table is missing its primary-key column; using protocol FK fallback");
         descriptions = links.withColumnRenamed(PROTOCOL_FK_COLUMN, PROTOCOL_DESCRIPTION_COLUMN);
       } else {
         Dataset<Row> protocolSelect =
-            protocolDf.select(
-                protocolDf.col(PROTOCOL_PK_COLUMN),
-                protocolDisplayColumn(protocolDf).as(PROTOCOL_DESCRIPTION_COLUMN));
+            hasType
+                ? protocolDf.select(
+                    protocolDf.col(PROTOCOL_PK_COLUMN),
+                    protocolDf.col(PROTOCOL_TYPE_COLUMN),
+                    protocolDisplayColumn(protocolDf).as(PROTOCOL_DESCRIPTION_COLUMN))
+                : protocolDf.select(
+                    protocolDf.col(PROTOCOL_PK_COLUMN),
+                    protocolDisplayColumn(protocolDf).as(PROTOCOL_DESCRIPTION_COLUMN));
+
+        Dataset<Row> joined =
+            links.join(
+                protocolSelect,
+                links.col(PROTOCOL_FK_COLUMN).equalTo(protocolSelect.col(PROTOCOL_PK_COLUMN)),
+                "inner");
+
+        if (hasTypeFilter) {
+          joined =
+              joined.filter(
+                  functions
+                      .lower(joined.col(PROTOCOL_TYPE_COLUMN))
+                      .isin(allowedProtocolTypesLowercase.toArray()));
+        }
+
         descriptions =
-            links
-                .join(
-                    protocolSelect,
-                    links.col(PROTOCOL_FK_COLUMN).equalTo(protocolSelect.col(PROTOCOL_PK_COLUMN)),
-                    "inner")
-                .select(links.col(parentIdColumn), protocolSelect.col(PROTOCOL_DESCRIPTION_COLUMN));
+            joined.select(
+                links.col(parentIdColumn), protocolSelect.col(PROTOCOL_DESCRIPTION_COLUMN));
       }
     }
 

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -63,6 +64,20 @@ class ProtocolJoinBuilderTest {
         new StructType()
             .add("protocol_pk", DataTypes.StringType)
             .add("protocolDescription", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> eventPkDf(List<Row> rows) {
+    StructType schema =
+        new StructType().add("event_pk", DataTypes.StringType).add("eventID", DataTypes.StringType);
+    return spark.createDataFrame(rows, schema);
+  }
+
+  private Dataset<Row> eventProtocolJunctionDf(List<Row> rows) {
+    StructType schema =
+        new StructType()
+            .add("event_fk", DataTypes.StringType)
+            .add("protocol_fk", DataTypes.StringType);
     return spark.createDataFrame(rows, schema);
   }
 
@@ -289,5 +304,159 @@ class ProtocolJoinBuilderTest {
 
     Row row = result.first();
     assertEquals("Resolved protocol text", row.getAs("georeferenceProtocol"));
+  }
+
+  // ---- aggregateJunctionProtocolDescriptions: protocolType filter ----
+
+  @Test
+  void aggregateWithTypeFilter_onlyMatchingTypeContributes() {
+    Dataset<Row> event = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> junction =
+        eventProtocolJunctionDf(
+            List.of(RowFactory.create("EPK-001", "PPK-1"), RowFactory.create("EPK-001", "PPK-2")));
+    Dataset<Row> protocol =
+        namedProtocolDf(
+            List.of(
+                RowFactory.create("PPK-1", "georeferencing", "Hand-held GPS receiver", null),
+                RowFactory.create("PPK-2", "sampling", "Vegetation plot", null)));
+
+    var result =
+        ProtocolJoinBuilder.aggregateJunctionProtocolDescriptions(
+            TestTableLoader.of(
+                ProtocolJoinBuilder.TABLE_PROTOCOL, protocol, "event-protocol", junction),
+            "event-protocol",
+            "event_fk",
+            event,
+            "event_pk",
+            "eventID",
+            ProtocolJoinBuilder.GEOREFERENCE_PROTOCOL_TYPES);
+
+    assertTrue(result.isPresent());
+    Row row = result.get().first();
+    assertEquals("EVT001", row.getAs("eventID"));
+    assertEquals(
+        "georeferencing: Hand-held GPS receiver",
+        row.getAs("__aggregated_protocol_descriptions"),
+        "only the georeferencing-typed protocol should contribute; the sampling one must not");
+  }
+
+  @Test
+  void aggregateWithTypeFilter_caseInsensitiveMatch() {
+    Dataset<Row> event = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> junction = eventProtocolJunctionDf(List.of(RowFactory.create("EPK-001", "PPK-1")));
+    Dataset<Row> protocol =
+        namedProtocolDf(
+            List.of(RowFactory.create("PPK-1", "GeoReference", "Hand-held GPS receiver", null)));
+
+    var result =
+        ProtocolJoinBuilder.aggregateJunctionProtocolDescriptions(
+            TestTableLoader.of(
+                ProtocolJoinBuilder.TABLE_PROTOCOL, protocol, "event-protocol", junction),
+            "event-protocol",
+            "event_fk",
+            event,
+            "event_pk",
+            "eventID",
+            ProtocolJoinBuilder.GEOREFERENCE_PROTOCOL_TYPES);
+
+    assertTrue(result.isPresent());
+    assertEquals(1L, result.get().count());
+  }
+
+  @Test
+  void aggregateWithTypeFilter_noMatchingType_emptyOptional() {
+    Dataset<Row> event = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> junction = eventProtocolJunctionDf(List.of(RowFactory.create("EPK-001", "PPK-1")));
+    Dataset<Row> protocol =
+        namedProtocolDf(List.of(RowFactory.create("PPK-1", "sampling", "Vegetation plot", null)));
+
+    var result =
+        ProtocolJoinBuilder.aggregateJunctionProtocolDescriptions(
+            TestTableLoader.of(
+                ProtocolJoinBuilder.TABLE_PROTOCOL, protocol, "event-protocol", junction),
+            "event-protocol",
+            "event_fk",
+            event,
+            "event_pk",
+            "eventID",
+            ProtocolJoinBuilder.GEOREFERENCE_PROTOCOL_TYPES);
+
+    assertTrue(result.isPresent(), "aggregation runs, it just produces no rows for this event");
+    assertEquals(0L, result.get().count());
+  }
+
+  @Test
+  void aggregateWithTypeFilter_protocolTableAbsent_returnsEmptyOptional() {
+    Dataset<Row> event = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> junction = eventProtocolJunctionDf(List.of(RowFactory.create("EPK-001", "PPK-1")));
+
+    var result =
+        ProtocolJoinBuilder.aggregateJunctionProtocolDescriptions(
+            TestTableLoader.of("event-protocol", junction),
+            "event-protocol",
+            "event_fk",
+            event,
+            "event_pk",
+            "eventID",
+            ProtocolJoinBuilder.GEOREFERENCE_PROTOCOL_TYPES);
+
+    assertTrue(
+        result.isEmpty(),
+        "cannot classify by protocolType without the protocol table; must not guess");
+  }
+
+  @Test
+  void aggregateWithTypeFilter_protocolTypeColumnAbsent_returnsEmptyOptional() {
+    Dataset<Row> event = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> junction = eventProtocolJunctionDf(List.of(RowFactory.create("EPK-001", "PPK-1")));
+    Dataset<Row> protocol = protocolDf(List.of(RowFactory.create("PPK-1", "Vegetation plot")));
+
+    var result =
+        ProtocolJoinBuilder.aggregateJunctionProtocolDescriptions(
+            TestTableLoader.of(
+                ProtocolJoinBuilder.TABLE_PROTOCOL, protocol, "event-protocol", junction),
+            "event-protocol",
+            "event_fk",
+            event,
+            "event_pk",
+            "eventID",
+            ProtocolJoinBuilder.GEOREFERENCE_PROTOCOL_TYPES);
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void aggregateNoTypeFilter_everyLinkedProtocolContributes() {
+    Dataset<Row> event = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> junction =
+        eventProtocolJunctionDf(
+            List.of(RowFactory.create("EPK-001", "PPK-1"), RowFactory.create("EPK-001", "PPK-2")));
+    Dataset<Row> protocol =
+        namedProtocolDf(
+            List.of(
+                RowFactory.create("PPK-1", "georeferencing", "Hand-held GPS receiver", null),
+                RowFactory.create("PPK-2", "sampling", "Vegetation plot", null)));
+
+    var result =
+        ProtocolJoinBuilder.aggregateJunctionProtocolDescriptions(
+            TestTableLoader.of(
+                ProtocolJoinBuilder.TABLE_PROTOCOL, protocol, "event-protocol", junction),
+            "event-protocol",
+            "event_fk",
+            event,
+            "event_pk",
+            "eventID",
+            null);
+
+    assertTrue(result.isPresent());
+    assertEquals(
+        "georeferencing: Hand-held GPS receiver|sampling: Vegetation plot",
+        result.get().first().getAs("__aggregated_protocol_descriptions"));
+  }
+
+  @Test
+  void georeferenceProtocolTypesConstant_containsBothSpellings() {
+    assertEquals(
+        Set.of("georeference", "georeferencing"), ProtocolJoinBuilder.GEOREFERENCE_PROTOCOL_TYPES);
   }
 }
