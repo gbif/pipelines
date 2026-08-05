@@ -81,7 +81,7 @@ public class ArchiveValidatorCallbackIT {
     // Result
     Validation validation = validationClient.getValidation();
 
-    assertEquals(3, validation.getMetrics().getFileInfos().size());
+    assertEquals(4, validation.getMetrics().getFileInfos().size());
 
     // Meta
     Optional<FileInfo> metaOpt = validationClient.getFileInfoByFileType(DwcFileType.METADATA);
@@ -110,7 +110,7 @@ public class ArchiveValidatorCallbackIT {
     assertEquals("occurrence.txt", core.getFileName());
     assertEquals(Long.valueOf(1534L), core.getCount());
     assertNull(core.getIndexedCount());
-    assertEquals(0, core.getTerms().size());
+    assertEquals(235, core.getTerms().size());
     assertEquals(0, core.getIssues().size());
     assertEquals(DwcFileType.CORE, core.getFileType());
   }
@@ -182,7 +182,7 @@ public class ArchiveValidatorCallbackIT {
     assertEquals("occurrence.txt", core.getFileName());
     assertEquals(Long.valueOf(1L), core.getCount());
     assertNull(core.getIndexedCount());
-    assertEquals(0, core.getTerms().size());
+    assertEquals(21, core.getTerms().size());
     assertEquals(0, core.getIssues().size());
     assertEquals(DwcFileType.EXTENSION, core.getFileType());
   }
@@ -256,7 +256,7 @@ public class ArchiveValidatorCallbackIT {
     assertEquals("occurrence.txt", core.getFileName());
     assertEquals(Long.valueOf(619L), core.getCount());
     assertNull(core.getIndexedCount());
-    assertEquals(0, core.getTerms().size());
+    assertEquals(25, core.getTerms().size());
     assertEquals(0, core.getIssues().size());
     assertEquals(DwcFileType.EXTENSION, core.getFileType());
   }
