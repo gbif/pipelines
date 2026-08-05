@@ -302,7 +302,6 @@ public class MaterialJoinBuilder {
     Dataset<Row> eventDf = eventDfOpt.get();
     List<String> materialColumns = Arrays.asList(materialDf.columns());
     if (!materialColumns.contains(MATERIAL_ENTITY_PK_COLUMN)
-        || !materialColumns.contains(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN)
         || !materialColumns.contains(COLLECTION_EVENT_FK_COLUMN)
         || !Arrays.asList(eventDf.columns()).contains("event_pk")
         || !Arrays.asList(eventDf.columns()).contains("eventID")) {
@@ -310,7 +309,12 @@ public class MaterialJoinBuilder {
       return Optional.empty();
     }
 
-    Dataset<Row> eligible = withoutLocallyResolvedEvidence(loader, materialDf);
+    // evidenceForOccurrenceID is optional. When the column is absent, no material row can resolve
+    // to a local occurrence, so all material rows are eligible for virtual-occurrence generation.
+    Dataset<Row> eligible =
+        materialColumns.contains(EVIDENCE_FOR_OCCURRENCE_ID_COLUMN)
+            ? withoutLocallyResolvedEvidence(loader, materialDf)
+            : materialDf;
     Dataset<Row> linked =
         UsagePolicyJoinBuilder.enrich(loader, eligible)
             .filter(functions.col(COLLECTION_EVENT_FK_COLUMN).isNotNull())
