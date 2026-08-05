@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.functions;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
@@ -106,5 +107,62 @@ public class OrganismJoinBuilder {
         joined.columns().length);
 
     return joined;
+  }
+
+  /**
+   * Computes a {@link JoinFunnel} breakdown of {@code occurrence.organismID} resolution, mirroring
+   * {@link #enrichOccurrences}'s decision logic. Buckets are mutually exclusive and sum to the
+   * candidate count — same three-bucket shape as {@link
+   * GeologicalContextJoinBuilder#computeFunnel}, since both are 1:1 natural-key joins with the same
+   * failure modes (source table absent vs. dangling reference).
+   *
+   * @return empty if {@code occurrence} is absent, or present but missing {@code organismID}
+   *     entirely
+   */
+  public static Optional<JoinFunnel> computeFunnel(TableLoader loader) {
+    Optional<Dataset<Row>> occurrenceDfOpt = loader.load("occurrence");
+    if (occurrenceDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    Dataset<Row> occurrenceDf = occurrenceDfOpt.get();
+    if (!Arrays.asList(occurrenceDf.columns()).contains(JOIN_KEY)) {
+      return Optional.empty();
+    }
+
+    String label = "OrganismJoinBuilder (occurrence." + JOIN_KEY + ")";
+    long candidates = occurrenceDf.filter(functions.col(JOIN_KEY).isNotNull()).count();
+    if (candidates == 0L) {
+      return Optional.of(new JoinFunnel(label, List.of(new JoinFunnel.Bucket("candidates", 0L))));
+    }
+
+    Optional<Dataset<Row>> organismDfOpt = loader.load(TABLE_ORGANISM);
+    if (organismDfOpt.isEmpty()) {
+      return Optional.of(
+          new JoinFunnel(
+              label,
+              List.of(
+                  new JoinFunnel.Bucket("candidates (" + JOIN_KEY + " set)", candidates),
+                  new JoinFunnel.Bucket("organism table absent, unresolved", candidates))));
+    }
+
+    Dataset<Row> organismIds =
+        organismDfOpt.get().select(functions.col(JOIN_KEY).as("__organism_funnel_key")).distinct();
+    long resolved =
+        occurrenceDf
+            .filter(functions.col(JOIN_KEY).isNotNull())
+            .join(
+                organismIds,
+                occurrenceDf.col(JOIN_KEY).equalTo(organismIds.col("__organism_funnel_key")),
+                "left_semi")
+            .count();
+    long unresolved = candidates - resolved;
+
+    return Optional.of(
+        new JoinFunnel(
+            label,
+            List.of(
+                new JoinFunnel.Bucket("candidates (" + JOIN_KEY + " set)", candidates),
+                new JoinFunnel.Bucket("resolved", resolved),
+                new JoinFunnel.Bucket("no matching organismID, unresolved", unresolved))));
   }
 }

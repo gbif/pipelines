@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.functions;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
@@ -104,5 +105,70 @@ public class GeologicalContextJoinBuilder {
         joined.columns().length);
 
     return joined;
+  }
+
+  /**
+   * Computes a {@link JoinFunnel} breakdown of {@code event.geologicalContextID} resolution,
+   * mirroring {@link #enrichEvents}'s decision logic. Buckets are mutually exclusive and sum to the
+   * candidate count:
+   *
+   * <ul>
+   *   <li><b>geological-context table absent, unresolved</b> — {@link #enrichEvents} is a no-op for
+   *       every candidate row in this case
+   *   <li><b>resolved</b> — {@code geologicalContextID} matched a row in {@code geological-context}
+   *   <li><b>no matching geologicalContextID, unresolved</b> — populated but no match; {@code
+   *       geologicalContextID} itself is a natural key shared on both sides, so this is a dangling
+   *       reference rather than an FK-resolution gap
+   * </ul>
+   *
+   * @return empty if {@code event} is absent, or present but missing {@code geologicalContextID}
+   *     entirely
+   */
+  public static Optional<JoinFunnel> computeFunnel(TableLoader loader) {
+    Optional<Dataset<Row>> eventDfOpt = loader.load("event");
+    if (eventDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    Dataset<Row> eventDf = eventDfOpt.get();
+    if (!Arrays.asList(eventDf.columns()).contains(JOIN_KEY)) {
+      return Optional.empty();
+    }
+
+    String label = "GeologicalContextJoinBuilder (event." + JOIN_KEY + ")";
+    long candidates = eventDf.filter(functions.col(JOIN_KEY).isNotNull()).count();
+    if (candidates == 0L) {
+      return Optional.of(new JoinFunnel(label, List.of(new JoinFunnel.Bucket("candidates", 0L))));
+    }
+
+    Optional<Dataset<Row>> geoDfOpt = loader.load(TABLE_GEOLOGICAL_CONTEXT);
+    if (geoDfOpt.isEmpty()) {
+      return Optional.of(
+          new JoinFunnel(
+              label,
+              List.of(
+                  new JoinFunnel.Bucket("candidates (" + JOIN_KEY + " set)", candidates),
+                  new JoinFunnel.Bucket(
+                      "geological-context table absent, unresolved", candidates))));
+    }
+
+    Dataset<Row> geoIds =
+        geoDfOpt.get().select(functions.col(JOIN_KEY).as("__geo_context_funnel_key")).distinct();
+    long resolved =
+        eventDf
+            .filter(functions.col(JOIN_KEY).isNotNull())
+            .join(
+                geoIds,
+                eventDf.col(JOIN_KEY).equalTo(geoIds.col("__geo_context_funnel_key")),
+                "left_semi")
+            .count();
+    long unresolved = candidates - resolved;
+
+    return Optional.of(
+        new JoinFunnel(
+            label,
+            List.of(
+                new JoinFunnel.Bucket("candidates (" + JOIN_KEY + " set)", candidates),
+                new JoinFunnel.Bucket("resolved", resolved),
+                new JoinFunnel.Bucket("no matching geologicalContextID, unresolved", unresolved))));
   }
 }

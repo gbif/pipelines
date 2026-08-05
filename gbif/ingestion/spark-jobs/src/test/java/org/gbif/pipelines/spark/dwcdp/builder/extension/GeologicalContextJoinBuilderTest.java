@@ -176,4 +176,60 @@ class GeologicalContextJoinBuilderTest {
     assertEquals(
         result.columns().length, distinctColCount, "result must have no duplicate column names");
   }
+
+  // ---- computeFunnel ----
+
+  @Test
+  void computeFunnel_eventTableAbsent_returnsEmpty() {
+    var result = GeologicalContextJoinBuilder.computeFunnel(TestTableLoader.of());
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_joinKeyColumnAbsent_returnsEmpty() {
+    StructType schema = new StructType().add("eventID", DataTypes.StringType);
+    Dataset<Row> event = spark.createDataFrame(List.of(RowFactory.create("EVT001")), schema);
+
+    var result = GeologicalContextJoinBuilder.computeFunnel(TestTableLoader.of("event", event));
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_geoContextTableAbsent_allCandidatesUnresolved() {
+    Dataset<Row> event = eventDf(List.of(RowFactory.create("EVT001", "GEO-1", "2024-06-01")));
+
+    var result = GeologicalContextJoinBuilder.computeFunnel(TestTableLoader.of("event", event));
+
+    assertTrue(result.isPresent());
+    var buckets = result.get().buckets();
+    assertEquals(2, buckets.size());
+    assertEquals(1L, buckets.get(0).count(), "candidates");
+    assertEquals(1L, buckets.get(1).count(), "geological-context table absent");
+  }
+
+  @Test
+  void computeFunnel_resolvedAndUnresolvedSplitCorrectly() {
+    Dataset<Row> event =
+        eventDf(
+            List.of(
+                RowFactory.create("EVT001", "GEO-1", "2024-06-01"),
+                RowFactory.create("EVT002", "GEO-UNKNOWN", "2024-06-02"),
+                RowFactory.create("EVT003", null, "2024-06-03")));
+    Dataset<Row> geoDf =
+        geoContextDf(List.of(RowFactory.create("GCPK-1", "GEO-1", "Phanerozoic", "Formation X")));
+
+    var result =
+        GeologicalContextJoinBuilder.computeFunnel(
+            TestTableLoader.of(
+                "event", event, GeologicalContextJoinBuilder.TABLE_GEOLOGICAL_CONTEXT, geoDf));
+
+    assertTrue(result.isPresent());
+    var buckets = result.get().buckets();
+    assertEquals(3, buckets.size());
+    assertEquals(2L, buckets.get(0).count(), "candidates — EVT003 excluded");
+    assertEquals(1L, buckets.get(1).count(), "resolved — EVT001");
+    assertEquals(1L, buckets.get(2).count(), "unresolved — EVT002");
+  }
 }

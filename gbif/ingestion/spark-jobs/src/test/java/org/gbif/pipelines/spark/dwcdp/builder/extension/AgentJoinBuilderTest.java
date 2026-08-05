@@ -246,4 +246,83 @@ class AgentJoinBuilderTest {
             .anyMatch(c -> c.contains("__agent_join_id") || c.contains("__resolved_agent_name")),
         "internal join/coalesce temp columns must not survive into the result");
   }
+
+  // ---- computeFunnel ----
+
+  @Test
+  void computeFunnel_coreTableAbsent_returnsEmpty() {
+    var result =
+        AgentJoinBuilder.computeFunnel(
+            TestTableLoader.of(), "occurrence", "recordedByID", "recordedBy");
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_idColumnAbsent_returnsEmpty() {
+    Dataset<Row> occ = occurrenceNoRecordedByIdDf(List.of(RowFactory.create("OCC001")));
+
+    var result =
+        AgentJoinBuilder.computeFunnel(
+            TestTableLoader.of("occurrence", occ), "occurrence", "recordedByID", "recordedBy");
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_noCandidates_singleZeroBucket() {
+    Dataset<Row> occ = occurrenceWithRecordedByIdDf(List.of(RowFactory.create("OCC001", null)));
+
+    var result =
+        AgentJoinBuilder.computeFunnel(
+            TestTableLoader.of("occurrence", occ), "occurrence", "recordedByID", "recordedBy");
+
+    assertTrue(result.isPresent());
+    assertEquals(1, result.get().buckets().size());
+    assertEquals(0L, result.get().buckets().get(0).count());
+  }
+
+  @Test
+  void computeFunnel_agentTableAbsent_allCandidatesUnresolvedBucket() {
+    Dataset<Row> occ =
+        occurrenceWithRecordedByIdDf(List.of(RowFactory.create("OCC001", "AGT-001")));
+
+    var result =
+        AgentJoinBuilder.computeFunnel(
+            TestTableLoader.of("occurrence", occ), "occurrence", "recordedByID", "recordedBy");
+
+    assertTrue(result.isPresent());
+    var buckets = result.get().buckets();
+    assertEquals(3, buckets.size());
+    assertEquals(1L, buckets.get(0).count(), "candidates");
+    assertEquals(0L, buckets.get(1).count(), "already had recordedBy");
+    assertEquals(1L, buckets.get(2).count(), "agent table absent, unresolved");
+  }
+
+  @Test
+  void computeFunnel_mixOfAlreadyHadResolvedAndUnresolved() {
+    Dataset<Row> occ =
+        occurrenceWithRecordedByAndIdDf(
+            List.of(
+                RowFactory.create("OCC001", "Publisher text", "AGT-001"),
+                RowFactory.create("OCC002", null, "AGT-002"),
+                RowFactory.create("OCC003", null, "AGT-UNKNOWN"),
+                RowFactory.create("OCC004", null, null)));
+    Dataset<Row> agent = agentDf(List.of(RowFactory.create("AGT-002", "Jane Doe")));
+
+    var result =
+        AgentJoinBuilder.computeFunnel(
+            TestTableLoader.of("occurrence", occ, AgentJoinBuilder.TABLE_AGENT, agent),
+            "occurrence",
+            "recordedByID",
+            "recordedBy");
+
+    assertTrue(result.isPresent());
+    var buckets = result.get().buckets();
+    assertEquals(4, buckets.size());
+    assertEquals(3L, buckets.get(0).count(), "candidates (recordedByID set) — OCC004 excluded");
+    assertEquals(1L, buckets.get(1).count(), "already had recordedBy — OCC001");
+    assertEquals(1L, buckets.get(2).count(), "resolved, filled recordedBy — OCC002");
+    assertEquals(1L, buckets.get(3).count(), "no matching agentID, unresolved — OCC003");
+  }
 }

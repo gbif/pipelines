@@ -153,4 +153,59 @@ class OrganismJoinBuilderTest {
     assertEquals(
         result.columns().length, distinctColCount, "Result must have no duplicate column names");
   }
+
+  // ---- computeFunnel ----
+
+  @Test
+  void computeFunnel_occurrenceTableAbsent_returnsEmpty() {
+    var result = OrganismJoinBuilder.computeFunnel(TestTableLoader.of());
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_joinKeyColumnAbsent_returnsEmpty() {
+    StructType schema = new StructType().add("occurrenceID", DataTypes.StringType);
+    Dataset<Row> occ = spark.createDataFrame(List.of(RowFactory.create("occ-1")), schema);
+
+    var result = OrganismJoinBuilder.computeFunnel(TestTableLoader.of("occurrence", occ));
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_organismTableAbsent_allCandidatesUnresolved() {
+    Dataset<Row> occ =
+        occurrenceDf(List.of(RowFactory.create("occ-1", "evt-1", "org-1", "Parus major")));
+
+    var result = OrganismJoinBuilder.computeFunnel(TestTableLoader.of("occurrence", occ));
+
+    assertTrue(result.isPresent());
+    var buckets = result.get().buckets();
+    assertEquals(2, buckets.size());
+    assertEquals(1L, buckets.get(0).count(), "candidates");
+    assertEquals(1L, buckets.get(1).count(), "organism table absent");
+  }
+
+  @Test
+  void computeFunnel_resolvedAndUnresolvedSplitCorrectly() {
+    Dataset<Row> occ =
+        occurrenceDf(
+            List.of(
+                RowFactory.create("occ-1", "evt-1", "org-1", "Parus major"),
+                RowFactory.create("occ-2", "evt-1", "org-unknown", "Turdus merula"),
+                RowFactory.create("occ-3", "evt-1", null, "Corvus corax")));
+    Dataset<Row> orgDf = organismDf(List.of(RowFactory.create("org-1", "Blue tit", null)));
+
+    var result =
+        OrganismJoinBuilder.computeFunnel(
+            TestTableLoader.of("occurrence", occ, OrganismJoinBuilder.TABLE_ORGANISM, orgDf));
+
+    assertTrue(result.isPresent());
+    var buckets = result.get().buckets();
+    assertEquals(3, buckets.size());
+    assertEquals(2L, buckets.get(0).count(), "candidates — occ-3 excluded");
+    assertEquals(1L, buckets.get(1).count(), "resolved — occ-1");
+    assertEquals(1L, buckets.get(2).count(), "unresolved — occ-2");
+  }
 }

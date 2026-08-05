@@ -460,4 +460,67 @@ class ProtocolJoinBuilderTest {
     assertEquals(
         Set.of("georeference", "georeferencing"), ProtocolJoinBuilder.GEOREFERENCE_PROTOCOL_TYPES);
   }
+
+  // ---- computeFunnel ----
+
+  @Test
+  void computeFunnel_coreTableAbsent_returnsEmpty() {
+    var result =
+        ProtocolJoinBuilder.computeFunnel(
+            TestTableLoader.of(), "event", "eventProtocol_fk", "samplingProtocol");
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_fkColumnAbsent_returnsEmpty() {
+    Dataset<Row> event = eventNoProtocolFkDf(List.of(RowFactory.create("EVT001")));
+
+    var result =
+        ProtocolJoinBuilder.computeFunnel(
+            TestTableLoader.of("event", event), "event", "eventProtocol_fk", "samplingProtocol");
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_protocolTableAbsent_allCandidatesFallbackBucket() {
+    Dataset<Row> event = eventWithProtocolFkDf(List.of(RowFactory.create("EVT001", "PROTO-001")));
+
+    var result =
+        ProtocolJoinBuilder.computeFunnel(
+            TestTableLoader.of("event", event), "event", "eventProtocol_fk", "samplingProtocol");
+
+    assertTrue(result.isPresent());
+    var buckets = result.get().buckets();
+    assertEquals(2, buckets.size());
+    assertEquals(1L, buckets.get(0).count(), "candidates");
+    assertEquals(1L, buckets.get(1).count(), "protocol table absent, fallback");
+  }
+
+  @Test
+  void computeFunnel_resolvedAndDanglingSplitCorrectly() {
+    Dataset<Row> event =
+        eventWithProtocolFkDf(
+            List.of(
+                RowFactory.create("EVT001", "PROTO-001"),
+                RowFactory.create("EVT002", "PROTO-UNKNOWN"),
+                RowFactory.create("EVT003", null)));
+    Dataset<Row> protocol =
+        protocolDf(List.of(RowFactory.create("PROTO-001", "Point count survey")));
+
+    var result =
+        ProtocolJoinBuilder.computeFunnel(
+            TestTableLoader.of("event", event, ProtocolJoinBuilder.TABLE_PROTOCOL, protocol),
+            "event",
+            "eventProtocol_fk",
+            "samplingProtocol");
+
+    assertTrue(result.isPresent());
+    var buckets = result.get().buckets();
+    assertEquals(3, buckets.size());
+    assertEquals(2L, buckets.get(0).count(), "candidates — EVT003 excluded");
+    assertEquals(1L, buckets.get(1).count(), "resolved — EVT001");
+    assertEquals(1L, buckets.get(2).count(), "dangling FK — EVT002");
+  }
 }

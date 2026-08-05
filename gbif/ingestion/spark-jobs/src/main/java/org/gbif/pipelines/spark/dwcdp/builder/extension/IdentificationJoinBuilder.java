@@ -166,4 +166,66 @@ public class IdentificationJoinBuilder {
 
     return joined;
   }
+
+  /**
+   * Computes a {@link JoinFunnel} breakdown of {@code identification} rows, mirroring {@link
+   * #enrichOccurrences}'s decision logic — reuses {@link #singleAcceptedPerOccurrence} directly so
+   * the two can't drift apart. Unlike the other join builders in this commit, this one has genuine
+   * many-rows-compete-for-one-slot ambiguity (like {@link MaterialJoinBuilder.MaterialFunnel}), so
+   * it funnels over {@code identification} rows rather than a single candidates/resolved/unresolved
+   * split. Buckets are mutually exclusive and sum to the total row count:
+   *
+   * <ul>
+   *   <li><b>not accepted, ignored</b> — {@code isAcceptedIdentification != true}
+   *   <li><b>accepted, no occurrence_fk, ignored</b> — accepted but not linked to any occurrence
+   *   <li><b>accepted with occurrence_fk, used for enrichment</b> — the sole accepted
+   *       identification for its occurrence; that occurrence's rank hierarchy gets filled in
+   *   <li><b>accepted with occurrence_fk, ambiguous (&gt;1 per occurrence), DROPPED</b> — more than
+   *       one accepted identification links to the same occurrence, so per {@link
+   *       #singleAcceptedPerOccurrence} none of them are used — the occurrence is left unenriched
+   *       rather than the join guessing at a tie-break
+   * </ul>
+   *
+   * @return empty if {@code identification} is absent, or missing {@code occurrence_fk} or {@code
+   *     isAcceptedIdentification} entirely
+   */
+  public static Optional<JoinFunnel> computeFunnel(TableLoader loader) {
+    Optional<Dataset<Row>> identificationDfOpt = loader.load(TABLE_IDENTIFICATION);
+    if (identificationDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    Dataset<Row> identificationDf = identificationDfOpt.get();
+    List<String> cols = Arrays.asList(identificationDf.columns());
+    if (!cols.contains(OCCURRENCE_FK_COLUMN) || !cols.contains(IS_ACCEPTED_COLUMN)) {
+      return Optional.empty();
+    }
+
+    String label = "IdentificationJoinBuilder (occurrence taxonomic rank enrichment)";
+    long total = identificationDf.count();
+
+    Dataset<Row> accepted =
+        identificationDf.filter(functions.col(IS_ACCEPTED_COLUMN).equalTo(true));
+    long acceptedCount = accepted.count();
+    long notAccepted = total - acceptedCount;
+
+    long acceptedWithFkCount =
+        accepted.filter(functions.col(OCCURRENCE_FK_COLUMN).isNotNull()).count();
+    long acceptedNoFk = acceptedCount - acceptedWithFkCount;
+
+    long usedForEnrichment = singleAcceptedPerOccurrence(identificationDf).count();
+    long ambiguousDropped = acceptedWithFkCount - usedForEnrichment;
+
+    return Optional.of(
+        new JoinFunnel(
+            label,
+            List.of(
+                new JoinFunnel.Bucket("identification rows (total)", total),
+                new JoinFunnel.Bucket("not accepted, ignored", notAccepted),
+                new JoinFunnel.Bucket("accepted, no occurrence_fk, ignored", acceptedNoFk),
+                new JoinFunnel.Bucket(
+                    "accepted with occurrence_fk, used for enrichment", usedForEnrichment),
+                new JoinFunnel.Bucket(
+                    "accepted with occurrence_fk, ambiguous (>1 per occurrence), DROPPED",
+                    ambiguousDropped))));
+  }
 }

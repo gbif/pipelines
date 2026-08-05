@@ -26,9 +26,20 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.builder.EventCoreBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.TermResolver;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.AgentJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.GeologicalContextJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.HumboldtExtensionBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.IdentificationJoinBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.JoinFunnel;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialGeologicalContextJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialJoinBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialProtocolJoinBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialProvenanceJoinBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.OrganismJoinBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.ProtocolJoinBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.ProvenanceJoinBuilder;
+import org.gbif.pipelines.spark.dwcdp.builder.extension.UsagePolicyJoinBuilder;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackageResource;
 import org.gbif.pipelines.spark.util.PathUtil;
@@ -76,6 +87,32 @@ public class DwcDpVerbatimConverter {
 
   public record VerbatimConversionMetrics(
       long erCount, long occurrenceCount, long eventCount, long largestFileCount) {}
+
+  /**
+   * Everything {@link #writeConversionReport} needs to render {@code conversion-report.txt},
+   * bundled into one holder instead of individual positional parameters. This is what keeps the
+   * report appendable: adding a new section (e.g. a new builder's {@link JoinFunnel}) means adding
+   * an entry to {@code joinFunnels} at the {@link #writeMetrics} call site — {@link
+   * #writeConversionReport}'s signature never needs to change again to accommodate it.
+   *
+   * @param joinFunnels one entry per join/enrichment builder that was able to compute a funnel
+   *     (empty unless {@code detailedReportEnabled}); order is preserved in the rendered report
+   * @param detailedReportEnabled mirrors {@code PipelinesConfig#isDwcdpDetailedConversionReport()}
+   *     — governs only whether {@link #writeMetrics} attempted to compute {@code joinFunnels}, not
+   *     whether the report itself is written; recorded here so the report can tell a reader
+   *     "nothing to show" apart from "detail was never turned on"
+   */
+  private record ConversionReportData(
+      String datasetId,
+      Map<String, Long> tableRowCounts,
+      long eventCount,
+      long physicalOccurrenceCount,
+      long virtualOccurrenceCount,
+      Optional<MaterialJoinBuilder.MaterialFunnel> materialFunnel,
+      Optional<Long> coreRecordCount,
+      Optional<Map<String, long[]>> extensionSummary,
+      List<JoinFunnel> joinFunnels,
+      boolean detailedReportEnabled) {}
 
   public static VerbatimConversionMetrics convert(
       SparkSession spark,
@@ -161,7 +198,8 @@ public class DwcDpVerbatimConverter {
             parquetBasePath,
             fileSystem,
             datasetId,
-            Optional.of(writtenRecords));
+            Optional.of(writtenRecords),
+            config.isDwcdpDetailedConversionReport());
 
     log.info(
         "DwcDpVerbatimConverter completed for dataset {} attempt {} in {}ms, metrics: {}",
@@ -210,7 +248,7 @@ public class DwcDpVerbatimConverter {
       FileSystem fileSystem,
       String datasetId) {
     return writeMetrics(
-        spark, dataPackage, datasetBasePath, fileSystem, datasetId, Optional.empty());
+        spark, dataPackage, datasetBasePath, fileSystem, datasetId, Optional.empty(), false);
   }
 
   /**
@@ -219,6 +257,10 @@ public class DwcDpVerbatimConverter {
    * not just what the source tables contained. The 5-arg {@link #writeMetrics} overload (used
    * directly by tests that don't build a full {@code records} dataset) delegates here with {@code
    * records} absent, in which case the report simply omits that section.
+   *
+   * <p>Detailed join-builder funnels are off ({@code detailedReport=false}) via this overload —
+   * existing callers (tests included) that don't care about join funnels keep working unchanged.
+   * Use the 7-arg overload to opt in.
    */
   static VerbatimConversionMetrics writeMetrics(
       SparkSession spark,
@@ -227,6 +269,23 @@ public class DwcDpVerbatimConverter {
       FileSystem fileSystem,
       String datasetId,
       Optional<Dataset<ExtendedRecord>> records) {
+    return writeMetrics(spark, dataPackage, datasetBasePath, fileSystem, datasetId, records, false);
+  }
+
+  /**
+   * Full overload — adds {@code detailedReport}, which gates computation of the per-builder {@link
+   * JoinFunnel} breakdowns (see {@link PipelinesConfig#isDwcdpDetailedConversionReport()}). Each
+   * funnel is an extra Spark pass purely for reporting, so it's opt-in rather than always computed
+   * alongside the material funnel and extension summary, which are cheap enough to always include.
+   */
+  static VerbatimConversionMetrics writeMetrics(
+      SparkSession spark,
+      DataPackage dataPackage,
+      String datasetBasePath,
+      FileSystem fileSystem,
+      String datasetId,
+      Optional<Dataset<ExtendedRecord>> records,
+      boolean detailedReport) {
 
     long physicalOccurrenceCount =
         dataPackage
@@ -274,17 +333,27 @@ public class DwcDpVerbatimConverter {
         records.map(DwcDpVerbatimConverter::summarizeExtensions);
     Optional<Long> coreRecordCount = records.map(Dataset::count);
 
+    // Each join builder's computeFunnel is an extra Spark pass purely for reporting, so it's only
+    // run when detailedReport is turned on for this dataset/attempt — see
+    // PipelinesConfig#isDwcdpDetailedConversionReport(). No builders wired in yet; each gets
+    // appended here as its computeFunnel method is added, with no change needed to
+    // writeConversionReport's signature.
+    List<JoinFunnel> joinFunnels = detailedReport ? computeJoinFunnels(loader) : List.of();
+
     writeConversionReport(
         fileSystem,
         datasetBasePath,
-        datasetId,
-        tableRowCounts,
-        eventCount,
-        physicalOccurrenceCount,
-        virtualOccurrenceCount,
-        materialFunnel,
-        coreRecordCount,
-        extensionSummary);
+        new ConversionReportData(
+            datasetId,
+            tableRowCounts,
+            eventCount,
+            physicalOccurrenceCount,
+            virtualOccurrenceCount,
+            materialFunnel,
+            coreRecordCount,
+            extensionSummary,
+            joinFunnels,
+            detailedReport));
 
     Map<String, Long> metrics =
         Map.of(
@@ -354,76 +423,99 @@ public class DwcDpVerbatimConverter {
    *       is present
    *   <li>a summary of every extension row type that actually made it into the written {@link
    *       ExtendedRecord}s, when that dataset was available to {@link #writeMetrics}
+   *   <li>one block per entry in {@code data.joinFunnels()}, when detailed reporting was enabled
    * </ul>
    *
    * <p>Purely diagnostic: written to {@code conversion-report.txt} alongside {@code
-   * archive-to-verbatim.yml}, and logged at INFO whenever a material funnel or extension summary is
-   * present (the cases where rows can silently go missing), DEBUG otherwise. Never read by the
-   * coordinator or balancer, so it's safe to extend without touching routing behaviour.
+   * archive-to-verbatim.yml}, and logged at INFO whenever a material funnel, extension summary, or
+   * join funnel is present (the cases where rows can silently go missing), DEBUG otherwise. Never
+   * read by the coordinator or balancer, so it's safe to extend without touching routing behaviour.
+   *
+   * <p>Takes a single {@link ConversionReportData} rather than individual parameters specifically
+   * so that adding a new report section — most likely a new entry in {@code joinFunnels} — never
+   * requires touching this method's signature again.
    */
   private static void writeConversionReport(
-      FileSystem fileSystem,
-      String datasetBasePath,
-      String datasetId,
-      Map<String, Long> tableRowCounts,
-      long eventCount,
-      long physicalOccurrenceCount,
-      long virtualOccurrenceCount,
-      Optional<MaterialJoinBuilder.MaterialFunnel> materialFunnel,
-      Optional<Long> coreRecordCount,
-      Optional<Map<String, long[]>> extensionSummary) {
+      FileSystem fileSystem, String datasetBasePath, ConversionReportData data) {
 
     StringBuilder sb = new StringBuilder();
-    sb.append("Conversion report for dataset ").append(datasetId).append(":\n");
+    sb.append("Conversion report for dataset ").append(data.datasetId()).append(":\n");
 
     sb.append("  source tables (raw row counts):\n");
-    tableRowCounts.forEach(
-        (name, count) -> sb.append(String.format("    %-28s%d%n", name + ":", count)));
+    data.tableRowCounts()
+        .forEach((name, count) -> sb.append(String.format("    %-28s%d%n", name + ":", count)));
 
     sb.append("  core output:\n");
-    sb.append(String.format("    %-28s%d%n", "events:", eventCount));
-    sb.append(String.format("    %-28s%d%n", "occurrences (physical):", physicalOccurrenceCount));
-    sb.append(String.format("    %-28s%d%n", "occurrences (virtual):", virtualOccurrenceCount));
+    sb.append(String.format("    %-28s%d%n", "events:", data.eventCount()));
+    sb.append(
+        String.format("    %-28s%d%n", "occurrences (physical):", data.physicalOccurrenceCount()));
+    sb.append(
+        String.format("    %-28s%d%n", "occurrences (virtual):", data.virtualOccurrenceCount()));
     sb.append(
         String.format(
             "    %-28s%d%n",
-            "occurrences (total):", physicalOccurrenceCount + virtualOccurrenceCount));
-    coreRecordCount.ifPresent(
-        c -> sb.append(String.format("    %-28s%d%n", "core records written:", c)));
+            "occurrences (total):",
+            data.physicalOccurrenceCount() + data.virtualOccurrenceCount()));
+    data.coreRecordCount()
+        .ifPresent(c -> sb.append(String.format("    %-28s%d%n", "core records written:", c)));
 
-    materialFunnel.ifPresent(
-        f -> {
-          sb.append("  material funnel:\n");
-          sb.append(String.format("    %-28s%d%n", "material rows (total):", f.total()));
-          sb.append(String.format("    %-28s%d%n", "  with evidence:", f.withEvidence()));
-          sb.append(
-              String.format(
-                  "    %-28s%d%n",
-                  "    -> enriched real occurrence:", f.enrichedOntoRealOccurrence()));
-          sb.append(
-              String.format("    %-28s%d%n", "    -> ambiguous, DROPPED:", f.evidenceAmbiguous()));
-          sb.append(String.format("    %-28s%d%n", "  without evidence:", f.withoutEvidence()));
-          sb.append(
-              String.format("    %-28s%d%n", "    -> became virtual occurrence:", f.virtual()));
-          sb.append(String.format("    %-28s%d%n", "    -> unresolved, DROPPED:", f.unresolved()));
-        });
+    data.materialFunnel()
+        .ifPresent(
+            f -> {
+              sb.append("  material funnel:\n");
+              sb.append(String.format("    %-28s%d%n", "material rows (total):", f.total()));
+              sb.append(String.format("    %-28s%d%n", "  with evidence:", f.withEvidence()));
+              sb.append(
+                  String.format(
+                      "    %-28s%d%n",
+                      "    -> enriched real occurrence:", f.enrichedOntoRealOccurrence()));
+              sb.append(
+                  String.format(
+                      "    %-28s%d%n", "    -> ambiguous, DROPPED:", f.evidenceAmbiguous()));
+              sb.append(String.format("    %-28s%d%n", "  without evidence:", f.withoutEvidence()));
+              sb.append(
+                  String.format("    %-28s%d%n", "    -> became virtual occurrence:", f.virtual()));
+              sb.append(
+                  String.format("    %-28s%d%n", "    -> unresolved, DROPPED:", f.unresolved()));
+            });
 
-    extensionSummary.ifPresent(
-        summary -> {
-          sb.append("  output extensions (rows actually written):\n");
-          if (summary.isEmpty()) {
-            sb.append("    (none)\n");
-          }
-          summary.forEach(
-              (rowType, counts) ->
-                  sb.append(
-                      String.format(
-                          "    %-42s rows=%-8d records-with-this-ext=%d%n",
-                          rowType + ":", counts[0], counts[1])));
-        });
+    data.extensionSummary()
+        .ifPresent(
+            summary -> {
+              sb.append("  output extensions (rows actually written):\n");
+              if (summary.isEmpty()) {
+                sb.append("    (none)\n");
+              }
+              summary.forEach(
+                  (rowType, counts) ->
+                      sb.append(
+                          String.format(
+                              "    %-42s rows=%-8d records-with-this-ext=%d%n",
+                              rowType + ":", counts[0], counts[1])));
+            });
+
+    if (data.detailedReportEnabled()) {
+      sb.append("  join funnels (detailed reporting enabled):\n");
+      if (data.joinFunnels().isEmpty()) {
+        sb.append("    (none of the join builders had a computable funnel for this dataset)\n");
+      }
+      for (JoinFunnel funnel : data.joinFunnels()) {
+        sb.append("    ").append(funnel.label()).append(":\n");
+        for (JoinFunnel.Bucket bucket : funnel.buckets()) {
+          sb.append(String.format("      %-26s%d%n", bucket.name() + ":", bucket.count()));
+        }
+      }
+    } else {
+      sb.append(
+          "  join funnels: not computed (set dwcdpDetailedConversionReport: true to enable "
+              + "for this dataset/attempt)\n");
+    }
 
     String report = sb.toString();
-    boolean noteworthy = materialFunnel.isPresent() || extensionSummary.isPresent();
+    boolean noteworthy =
+        data.materialFunnel().isPresent()
+            || data.extensionSummary().isPresent()
+            || !data.joinFunnels().isEmpty();
     if (noteworthy) {
       log.info("\n{}", report);
     } else {
@@ -436,6 +528,48 @@ public class DwcDpVerbatimConverter {
     } catch (IOException e) {
       log.warn("Failed to write conversion report to {}", reportPath, e);
     }
+  }
+
+  /**
+   * Computes the {@link JoinFunnel} breakdown for every join/enrichment builder that supports one,
+   * skipping any builder whose relevant source table is absent from this package (each {@code
+   * computeFunnel} already returns {@link Optional#empty()} in that case). Only called when {@code
+   * detailedReport} is enabled — see {@link #writeMetrics}.
+   *
+   * <p>This is the single place a new builder's funnel gets appended as it's implemented, with no
+   * change required anywhere else in this class.
+   */
+  private static List<JoinFunnel> computeJoinFunnels(TableLoader loader) {
+    List<JoinFunnel> funnels = new ArrayList<>();
+
+    AgentJoinBuilder.computeFunnel(loader, "event", "eventConductedByID", "eventConductedBy")
+        .ifPresent(funnels::add);
+    AgentJoinBuilder.computeFunnel(loader, "event", "georeferencedByID", "georeferencedBy")
+        .ifPresent(funnels::add);
+    AgentJoinBuilder.computeFunnel(loader, "occurrence", "recordedByID", "recordedBy")
+        .ifPresent(funnels::add);
+    AgentJoinBuilder.computeFunnel(loader, "occurrence", "identifiedByID", "identifiedBy")
+        .ifPresent(funnels::add);
+
+    ProtocolJoinBuilder.computeFunnel(loader, "event", "eventProtocol_fk", "samplingProtocol")
+        .ifPresent(funnels::add);
+    ProtocolJoinBuilder.computeFunnel(
+            loader, "occurrence", "occurrenceProtocol_fk", "samplingProtocol")
+        .ifPresent(funnels::add);
+
+    ProvenanceJoinBuilder.computeFunnel(loader).ifPresent(funnels::add);
+
+    GeologicalContextJoinBuilder.computeFunnel(loader).ifPresent(funnels::add);
+    OrganismJoinBuilder.computeFunnel(loader).ifPresent(funnels::add);
+    UsagePolicyJoinBuilder.computeFunnel(loader, "media").ifPresent(funnels::add);
+    UsagePolicyJoinBuilder.computeFunnel(loader, "material").ifPresent(funnels::add);
+    IdentificationJoinBuilder.computeFunnel(loader).ifPresent(funnels::add);
+
+    MaterialProtocolJoinBuilder.computeFunnel(loader).ifPresent(funnels::add);
+    MaterialProvenanceJoinBuilder.computeFunnel(loader).ifPresent(funnels::add);
+    MaterialGeologicalContextJoinBuilder.computeFunnel(loader).ifPresent(funnels::add);
+
+    return funnels;
   }
 
   static void mergeToSingleFile(FileSystem fileSystem, String tempPath, String targetPath)

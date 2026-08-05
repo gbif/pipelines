@@ -2,6 +2,7 @@ package org.gbif.pipelines.spark.dwcdp.builder.extension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
@@ -248,5 +249,95 @@ class MaterialProvenanceJoinBuilderTest {
 
     assertEquals(1L, result.count());
     assertEquals("OCC001", result.first().getAs("occurrenceID"));
+  }
+
+  // ---- computeFunnel ----
+
+  @Test
+  void computeFunnel_provenanceTableAbsent_returnsEmpty() {
+    Dataset<Row> material =
+        materialWithDirectFkDf(List.of(RowFactory.create("MEPK-1", "OCC001", "PPK-1")));
+
+    var result =
+        MaterialProvenanceJoinBuilder.computeFunnel(
+            TestTableLoader.of(MaterialJoinBuilder.TABLE_MATERIAL, material));
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_noSingleMaterialLinks_returnsEmpty() {
+    Dataset<Row> provenance =
+        provenanceDf(
+            List.of(RowFactory.create("PPK-1", "PROV-1", "Grant A", "FID-A", "PID-A", "Proj A")));
+
+    var result =
+        MaterialProvenanceJoinBuilder.computeFunnel(
+            TestTableLoader.of(ProvenanceJoinBuilder.TABLE_PROVENANCE, provenance));
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_noProvenanceLinkAtAll_baseAllInNoLinkBucket() {
+    Dataset<Row> occ = occurrenceDf(List.of(RowFactory.create("OCC001")));
+    Dataset<Row> material =
+        materialNoProvenanceFkDf(List.of(RowFactory.create("MEPK-1", "OCC001")));
+    Dataset<Row> provenance =
+        provenanceDf(
+            List.of(RowFactory.create("PPK-1", "PROV-1", "Grant A", "FID-A", "PID-A", "Proj A")));
+
+    var result =
+        MaterialProvenanceJoinBuilder.computeFunnel(
+            TestTableLoader.of(
+                "occurrence",
+                occ,
+                MaterialJoinBuilder.TABLE_MATERIAL,
+                material,
+                ProvenanceJoinBuilder.TABLE_PROVENANCE,
+                provenance));
+
+    assertTrue(result.isPresent());
+    var buckets = result.get().buckets();
+    assertEquals(2, buckets.size());
+    assertEquals(1L, buckets.get(0).count(), "unambiguous single-material links (base)");
+    assertEquals(1L, buckets.get(1).count(), "no material-provenance link");
+  }
+
+  @Test
+  void computeFunnel_mixOfAttributedDanglingAndUnlinked() {
+    Dataset<Row> occ =
+        occurrenceDf(
+            List.of(
+                RowFactory.create("OCC001"),
+                RowFactory.create("OCC002"),
+                RowFactory.create("OCC003")));
+    Dataset<Row> material =
+        materialWithDirectFkDf(
+            List.of(
+                RowFactory.create("MEPK-1", "OCC001", "PPK-1"),
+                RowFactory.create("MEPK-2", "OCC002", "PPK-UNKNOWN"),
+                RowFactory.create("MEPK-3", "OCC003", null)));
+    Dataset<Row> provenance =
+        provenanceDf(
+            List.of(RowFactory.create("PPK-1", "PROV-1", "Grant A", "FID-A", "PID-A", "Proj A")));
+
+    var result =
+        MaterialProvenanceJoinBuilder.computeFunnel(
+            TestTableLoader.of(
+                "occurrence",
+                occ,
+                MaterialJoinBuilder.TABLE_MATERIAL,
+                material,
+                ProvenanceJoinBuilder.TABLE_PROVENANCE,
+                provenance));
+
+    assertTrue(result.isPresent());
+    var buckets = result.get().buckets();
+    assertEquals(4, buckets.size());
+    assertEquals(3L, buckets.get(0).count(), "unambiguous single-material links (base)");
+    assertEquals(1L, buckets.get(1).count(), "no material-provenance link — OCC003");
+    assertEquals(1L, buckets.get(2).count(), "linked, attribution merged — OCC001");
+    assertEquals(1L, buckets.get(3).count(), "linked, all dangling — OCC002");
   }
 }

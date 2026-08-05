@@ -297,4 +297,55 @@ class IdentificationJoinBuilderTest {
         occ002.isNullAt(occ002.fieldIndex("kingdom")),
         "OCC002 has two accepted identifications, so it must not be enriched");
   }
+
+  // ---- computeFunnel ----
+
+  @Test
+  void computeFunnel_identificationTableAbsent_returnsEmpty() {
+    var result = IdentificationJoinBuilder.computeFunnel(TestTableLoader.of());
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_requiredColumnsAbsent_returnsEmpty() {
+    StructType schema = new StructType().add("identification_pk", DataTypes.StringType);
+    Dataset<Row> identification =
+        spark.createDataFrame(List.of(RowFactory.create("IPK-1")), schema);
+
+    var result =
+        IdentificationJoinBuilder.computeFunnel(
+            TestTableLoader.of(IdentificationJoinBuilder.TABLE_IDENTIFICATION, identification));
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_fullMixOfAllFiveBuckets() {
+    Dataset<Row> identification =
+        identificationDf(
+            List.of(
+                // OCC001: single accepted -> used for enrichment
+                RowFactory.create("IPK-1", "OCC001", true, "Parus major", "Animalia", "F", "G"),
+                // OCC002: two accepted -> ambiguous, dropped (both rows)
+                RowFactory.create("IPK-2", "OCC002", true, "Turdus merula", "Animalia", "F", "G"),
+                RowFactory.create("IPK-3", "OCC002", true, "Turdus iliacus", "Animalia", "F", "G"),
+                // not accepted -> ignored
+                RowFactory.create("IPK-4", "OCC003", false, "Corvus corax", "Animalia", "F", "G"),
+                // accepted, no occurrence_fk -> ignored
+                RowFactory.create("IPK-5", null, true, "Pica pica", "Animalia", "F", "G")));
+
+    var result =
+        IdentificationJoinBuilder.computeFunnel(
+            TestTableLoader.of(IdentificationJoinBuilder.TABLE_IDENTIFICATION, identification));
+
+    assertTrue(result.isPresent());
+    var buckets = result.get().buckets();
+    assertEquals(5, buckets.size());
+    assertEquals(5L, buckets.get(0).count(), "identification rows (total)");
+    assertEquals(1L, buckets.get(1).count(), "not accepted, ignored — IPK-4");
+    assertEquals(1L, buckets.get(2).count(), "accepted, no occurrence_fk, ignored — IPK-5");
+    assertEquals(1L, buckets.get(3).count(), "used for enrichment — IPK-1 (OCC001)");
+    assertEquals(2L, buckets.get(4).count(), "ambiguous, DROPPED — IPK-2 and IPK-3 (OCC002)");
+  }
 }

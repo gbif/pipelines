@@ -1,6 +1,7 @@
 package org.gbif.pipelines.spark.dwcdp.builder.extension;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +46,7 @@ public class ProtocolJoinBuilder {
   private static final String AGGREGATED_PROTOCOLS_COLUMN = "__aggregated_protocol_descriptions";
   private static final String AGGREGATED_JOIN_KEY_COLUMN = "__aggregated_protocol_parent_key";
   private static final String TEMP_RESOLVED_COLUMN = "__resolved_protocol_description";
+  private static final String FUNNEL_PROTOCOL_PK_ALIAS = "__funnel_protocol_pk";
 
   /**
    * Controlled-vocabulary {@code protocolType} values (compared case-insensitively) that identify a
@@ -333,6 +335,101 @@ public class ProtocolJoinBuilder {
   /** Quotes a Spark column identifier so qualified term URIs remain a single field name. */
   private static String quotedColumn(String columnName) {
     return "`" + columnName.replace("`", "``") + "`";
+  }
+
+  /**
+   * Computes a {@link JoinFunnel} breakdown for one direct {@code fkColumn} → {@code
+   * targetColumnName} resolution, mirroring {@link #resolveProtocolFk}'s decision logic. Covers
+   * only the direct-FK-to-new-column path used for {@code eventProtocol_fk}/{@code
+   * occurrenceProtocol_fk} — not {@link #resolveProtocolFkCoalesceInto} (used for {@code
+   * georeferenceProtocol_fk}, where an existing free-text column takes precedence) and not the
+   * junction-table aggregation path ({@code event-protocol}/{@code survey-protocol}/{@code
+   * material-protocol}), which has its own multi-row-per-parent semantics a single funnel can't
+   * represent cleanly. Buckets are mutually exclusive and sum to the candidate count:
+   *
+   * <ul>
+   *   <li><b>protocol table absent, raw FK kept as fallback</b> — {@link #resolveProtocolFk} keeps
+   *       the surrogate FK value verbatim under {@code targetColumnName} rather than dropping it
+   *   <li><b>protocol table missing primary key, raw FK kept as fallback</b> — same fallback, but
+   *       because the {@code protocol} table itself is malformed rather than absent
+   *   <li><b>resolved to protocol description</b> — {@code fkColumn} matched a {@code protocol_pk}
+   *   <li><b>dangling FK, no matching protocol_pk (value dropped)</b> — {@code fkColumn} is
+   *       populated but doesn't match any row in {@code protocol}; {@link #resolveProtocolFk}'s
+   *       left-outer join leaves {@code targetColumnName} null for these rows, unlike the two
+   *       fallback buckets above
+   * </ul>
+   *
+   * <p>Reloads {@code coreTable} fresh via {@code loader}, same caveat as {@link
+   * AgentJoinBuilder#computeFunnel} — valid because {@code fkColumn} is a raw DwC-DP column, not
+   * one introduced by an earlier step in the builder chain.
+   *
+   * @return empty if {@code coreTable} is absent, or present but missing {@code fkColumn} entirely
+   */
+  public static Optional<JoinFunnel> computeFunnel(
+      TableLoader loader, String coreTable, String fkColumn, String targetColumnName) {
+    Optional<Dataset<Row>> coreDfOpt = loader.load(coreTable);
+    if (coreDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    Dataset<Row> coreDf = coreDfOpt.get();
+    if (!Arrays.asList(coreDf.columns()).contains(fkColumn)) {
+      return Optional.empty();
+    }
+
+    String label =
+        "ProtocolJoinBuilder (" + coreTable + "." + fkColumn + " -> " + targetColumnName + ")";
+    long candidates = coreDf.filter(functions.col(fkColumn).isNotNull()).count();
+    if (candidates == 0L) {
+      return Optional.of(
+          new JoinFunnel(label, List.of(bucket("candidates (" + fkColumn + " set)", 0L))));
+    }
+
+    Optional<Dataset<Row>> protocolDfOpt = loader.load(TABLE_PROTOCOL);
+    if (protocolDfOpt.isEmpty()) {
+      return Optional.of(
+          new JoinFunnel(
+              label,
+              List.of(
+                  bucket("candidates (" + fkColumn + " set)", candidates),
+                  bucket("protocol table absent, raw FK kept as fallback", candidates))));
+    }
+
+    Dataset<Row> protocolDf = protocolDfOpt.get();
+    if (!hasColumns(protocolDf, PROTOCOL_PK_COLUMN)) {
+      return Optional.of(
+          new JoinFunnel(
+              label,
+              List.of(
+                  bucket("candidates (" + fkColumn + " set)", candidates),
+                  bucket(
+                      "protocol table missing primary key, raw FK kept as fallback", candidates))));
+    }
+
+    Dataset<Row> protocolIds =
+        protocolDf
+            .select(functions.col(PROTOCOL_PK_COLUMN).as(FUNNEL_PROTOCOL_PK_ALIAS))
+            .distinct();
+    long resolved =
+        coreDf
+            .filter(functions.col(fkColumn).isNotNull())
+            .join(
+                protocolIds,
+                coreDf.col(fkColumn).equalTo(protocolIds.col(FUNNEL_PROTOCOL_PK_ALIAS)),
+                "left_semi")
+            .count();
+    long danglingFk = candidates - resolved;
+
+    return Optional.of(
+        new JoinFunnel(
+            label,
+            List.of(
+                bucket("candidates (" + fkColumn + " set)", candidates),
+                bucket("resolved to protocol description", resolved),
+                bucket("dangling FK, no matching protocol_pk (value dropped)", danglingFk))));
+  }
+
+  private static JoinFunnel.Bucket bucket(String name, long count) {
+    return new JoinFunnel.Bucket(name, count);
   }
 
   private static Dataset<Row> joinAndRename(

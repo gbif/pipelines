@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.functions;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
@@ -101,5 +102,71 @@ public class UsagePolicyJoinBuilder {
         joined.columns().length);
 
     return joined;
+  }
+
+  /**
+   * Computes a {@link JoinFunnel} breakdown of {@code usagePolicy_fk} resolution for one entity
+   * table (e.g. {@code "media"} or {@code "material"} — {@link #enrich} is entity-agnostic, so this
+   * is too), mirroring {@link #enrich}'s decision logic. Buckets are mutually exclusive and sum to
+   * the candidate count.
+   *
+   * @param entityTable the table {@code usagePolicy_fk} lives on, e.g. {@code "media"} or {@code
+   *     "material"}
+   * @return empty if {@code entityTable} is absent, or present but missing {@code usagePolicy_fk}
+   *     entirely
+   */
+  public static Optional<JoinFunnel> computeFunnel(TableLoader loader, String entityTable) {
+    Optional<Dataset<Row>> entityDfOpt = loader.load(entityTable);
+    if (entityDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    Dataset<Row> entityDf = entityDfOpt.get();
+    if (!Arrays.asList(entityDf.columns()).contains(USAGE_POLICY_FK_COLUMN)) {
+      return Optional.empty();
+    }
+
+    String label = "UsagePolicyJoinBuilder (" + entityTable + "." + USAGE_POLICY_FK_COLUMN + ")";
+    long candidates = entityDf.filter(functions.col(USAGE_POLICY_FK_COLUMN).isNotNull()).count();
+    if (candidates == 0L) {
+      return Optional.of(new JoinFunnel(label, List.of(new JoinFunnel.Bucket("candidates", 0L))));
+    }
+
+    Optional<Dataset<Row>> usagePolicyDfOpt = loader.load(TABLE_USAGE_POLICY);
+    if (usagePolicyDfOpt.isEmpty()) {
+      return Optional.of(
+          new JoinFunnel(
+              label,
+              List.of(
+                  new JoinFunnel.Bucket(
+                      "candidates (" + USAGE_POLICY_FK_COLUMN + " set)", candidates),
+                  new JoinFunnel.Bucket("usage-policy table absent, unresolved", candidates))));
+    }
+
+    Dataset<Row> usagePolicyIds =
+        usagePolicyDfOpt
+            .get()
+            .select(functions.col(USAGE_POLICY_PK_COLUMN).as("__usage_policy_funnel_key"))
+            .distinct();
+    long resolved =
+        entityDf
+            .filter(functions.col(USAGE_POLICY_FK_COLUMN).isNotNull())
+            .join(
+                usagePolicyIds,
+                entityDf
+                    .col(USAGE_POLICY_FK_COLUMN)
+                    .equalTo(usagePolicyIds.col("__usage_policy_funnel_key")),
+                "left_semi")
+            .count();
+    long unresolved = candidates - resolved;
+
+    return Optional.of(
+        new JoinFunnel(
+            label,
+            List.of(
+                new JoinFunnel.Bucket(
+                    "candidates (" + USAGE_POLICY_FK_COLUMN + " set)", candidates),
+                new JoinFunnel.Bucket("resolved", resolved),
+                new JoinFunnel.Bucket(
+                    "dangling FK, no matching usagePolicy_pk (value dropped)", unresolved))));
   }
 }

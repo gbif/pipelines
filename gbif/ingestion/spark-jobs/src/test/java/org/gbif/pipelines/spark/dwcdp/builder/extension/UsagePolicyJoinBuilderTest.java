@@ -151,4 +151,61 @@ class UsagePolicyJoinBuilderTest {
     assertEquals(
         result.columns().length, distinctColCount, "result must have no duplicate column names");
   }
+
+  // ---- computeFunnel ----
+
+  @Test
+  void computeFunnel_entityTableAbsent_returnsEmpty() {
+    var result = UsagePolicyJoinBuilder.computeFunnel(TestTableLoader.of(), "media");
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_fkColumnAbsent_returnsEmpty() {
+    StructType schema = new StructType().add("media_pk", DataTypes.StringType);
+    Dataset<Row> media = spark.createDataFrame(List.of(RowFactory.create("MED-1")), schema);
+
+    var result = UsagePolicyJoinBuilder.computeFunnel(TestTableLoader.of("media", media), "media");
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_usagePolicyTableAbsent_allCandidatesUnresolved() {
+    Dataset<Row> media = mediaDf(List.of(RowFactory.create("MED-1", "UP-1", "http://x")));
+
+    var result = UsagePolicyJoinBuilder.computeFunnel(TestTableLoader.of("media", media), "media");
+
+    assertTrue(result.isPresent());
+    var buckets = result.get().buckets();
+    assertEquals(2, buckets.size());
+    assertEquals(1L, buckets.get(0).count(), "candidates");
+    assertEquals(1L, buckets.get(1).count(), "usage-policy table absent");
+  }
+
+  @Test
+  void computeFunnel_resolvedAndUnresolvedSplitCorrectly() {
+    Dataset<Row> media =
+        mediaDf(
+            List.of(
+                RowFactory.create("MED-1", "UP-1", "http://x"),
+                RowFactory.create("MED-2", "UP-UNKNOWN", "http://y"),
+                RowFactory.create("MED-3", null, "http://z")));
+    Dataset<Row> usagePolicy =
+        usagePolicyDf(List.of(RowFactory.create("UP-1", "CC-BY 4.0", "Rights Holder A")));
+
+    var result =
+        UsagePolicyJoinBuilder.computeFunnel(
+            TestTableLoader.of(
+                "media", media, UsagePolicyJoinBuilder.TABLE_USAGE_POLICY, usagePolicy),
+            "media");
+
+    assertTrue(result.isPresent());
+    var buckets = result.get().buckets();
+    assertEquals(3, buckets.size());
+    assertEquals(2L, buckets.get(0).count(), "candidates — MED-3 excluded");
+    assertEquals(1L, buckets.get(1).count(), "resolved — MED-1");
+    assertEquals(1L, buckets.get(2).count(), "dangling FK — MED-2");
+  }
 }

@@ -1,6 +1,7 @@
 package org.gbif.pipelines.spark.dwcdp.builder.extension;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Column;
@@ -117,6 +118,105 @@ public class AgentJoinBuilder {
     return Arrays.asList(agentDf.columns()).contains(AGENT_NAME_COLUMN)
         ? agentDf.col(AGENT_NAME_COLUMN)
         : functions.lit(null).cast("string");
+  }
+
+  /**
+   * Computes a {@link JoinFunnel} breakdown for one {@code idColumn}/{@code nameColumn} pair (e.g.
+   * {@code "recordedByID"}/{@code "recordedBy"}), mirroring {@link #resolveAgentNameCoalesceInto}'s
+   * exact decision logic so the two can't drift apart. Buckets are mutually exclusive and sum to
+   * the candidate count:
+   *
+   * <ul>
+   *   <li><b>already had {@code nameColumn}</b> — publisher-supplied free text was already present;
+   *       agent resolution is moot for that row (coalesce would keep the existing value regardless)
+   *   <li><b>resolved, filled {@code nameColumn}</b> — {@code nameColumn} was null and the agent
+   *       table had a matching {@code agentID}
+   *   <li><b>no matching agentID, unresolved</b> — {@code nameColumn} was null, the agent table is
+   *       present and usable, but no row's {@code agentID} matched
+   * </ul>
+   *
+   * <p>Reloads {@code coreTable} fresh via {@code loader} rather than taking the already-enriched
+   * Dataset {@link #resolveAgentNameCoalesceInto} actually ran against — {@code idColumn}/{@code
+   * nameColumn} are raw DwC-DP columns already present on {@code event}/{@code occurrence}, not
+   * created by an earlier join, so this reload is equivalent for these specific columns. It would
+   * not be equivalent for a column introduced by a prior enrichment step in the same builder chain.
+   *
+   * @param coreTable the table {@code idColumn}/{@code nameColumn} live on, e.g. {@code "event"} or
+   *     {@code "occurrence"}
+   * @return empty if {@code coreTable} is absent, or present but missing {@code idColumn} entirely
+   *     — same "nothing to report" cases {@link #resolveAgentNameCoalesceInto} treats as a no-op
+   */
+  public static Optional<JoinFunnel> computeFunnel(
+      TableLoader loader, String coreTable, String idColumn, String nameColumn) {
+    Optional<Dataset<Row>> coreDfOpt = loader.load(coreTable);
+    if (coreDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    Dataset<Row> coreDf = coreDfOpt.get();
+    if (!Arrays.asList(coreDf.columns()).contains(idColumn)) {
+      return Optional.empty();
+    }
+
+    String label = "AgentJoinBuilder (" + coreTable + "." + idColumn + " -> " + nameColumn + ")";
+    boolean hasNameColumn = Arrays.asList(coreDf.columns()).contains(nameColumn);
+
+    long candidates = coreDf.filter(functions.col(idColumn).isNotNull()).count();
+    if (candidates == 0L) {
+      return Optional.of(
+          new JoinFunnel(label, List.of(bucket("candidates (" + idColumn + " set)", 0L))));
+    }
+
+    Column needsResolutionCond =
+        hasNameColumn
+            ? functions.col(idColumn).isNotNull().and(functions.col(nameColumn).isNull())
+            : functions.col(idColumn).isNotNull();
+    long needsResolution = coreDf.filter(needsResolutionCond).count();
+    long alreadyHadName = candidates - needsResolution;
+
+    Optional<Dataset<Row>> agentDfOpt = loader.load(TABLE_AGENT);
+    boolean agentTableUsable =
+        agentDfOpt.isPresent()
+            && Arrays.asList(agentDfOpt.get().columns()).contains(AGENT_ID_COLUMN);
+
+    if (!agentTableUsable) {
+      return Optional.of(
+          new JoinFunnel(
+              label,
+              List.of(
+                  bucket("candidates (" + idColumn + " set)", candidates),
+                  bucket("already had " + nameColumn, alreadyHadName),
+                  bucket("agent table absent/unusable, left unresolved", needsResolution))));
+    }
+
+    Dataset<Row> agentIds =
+        agentDfOpt
+            .get()
+            .select(functions.col(AGENT_ID_COLUMN).as(AGENT_JOIN_ALIAS_COLUMN))
+            .distinct();
+    long resolvedNewName =
+        needsResolution == 0L
+            ? 0L
+            : coreDf
+                .filter(needsResolutionCond)
+                .join(
+                    agentIds,
+                    coreDf.col(idColumn).equalTo(agentIds.col(AGENT_JOIN_ALIAS_COLUMN)),
+                    "left_semi")
+                .count();
+    long unresolvedNoMatch = needsResolution - resolvedNewName;
+
+    return Optional.of(
+        new JoinFunnel(
+            label,
+            List.of(
+                bucket("candidates (" + idColumn + " set)", candidates),
+                bucket("already had " + nameColumn, alreadyHadName),
+                bucket("resolved, filled " + nameColumn, resolvedNewName),
+                bucket("no matching agentID, unresolved", unresolvedNoMatch))));
+  }
+
+  private static JoinFunnel.Bucket bucket(String name, long count) {
+    return new JoinFunnel.Bucket(name, count);
   }
 
   /** Quotes a Spark column identifier so qualified term URIs remain a single field name. */

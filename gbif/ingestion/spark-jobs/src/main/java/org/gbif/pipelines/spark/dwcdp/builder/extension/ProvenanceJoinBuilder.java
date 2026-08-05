@@ -226,4 +226,82 @@ public class ProvenanceJoinBuilder {
         .groupBy(col(keyColumn))
         .agg(aggs.get(0), aggs.subList(1, aggs.size()).toArray(new Column[0]));
   }
+
+  /**
+   * Computes a {@link JoinFunnel} breakdown of event → provenance attribution linking, mirroring
+   * {@link #enrichEvents}'s decision logic (reusing {@link #collectLinks} directly so the two can't
+   * drift apart). Buckets are mutually exclusive and sum to the total event count:
+   *
+   * <ul>
+   *   <li><b>no provenance link</b> — no direct {@code provenance_fk} and no {@code
+   *       event-provenance} junction row for this event
+   *   <li><b>linked, attribution merged</b> — at least one link resolves to a real {@code
+   *       provenance} row, so {@link #enrichEvents} merges at least some attribution data in
+   *   <li><b>linked, but all links dangling (no attribution)</b> — every link this event has points
+   *       at a {@code provenance_pk} that doesn't exist; {@link #enrichEvents}'s left-outer join
+   *       still produces a row for it, but with nulls for every provenance-side field
+   * </ul>
+   *
+   * <p>Reloads {@code event} fresh via {@code loader} rather than taking an already-enriched
+   * Dataset — note this means the candidate/total count reflects the raw {@code event} table as
+   * declared in {@code datapackage.json}, not any {@code eventID} null-fallback applied later in
+   * {@code EventCoreBuilder} before this join actually runs in production.
+   *
+   * @return empty if {@code provenance} is absent, {@code event} is absent, or {@code event} has no
+   *     {@code eventID} column — same cases {@link #enrichEvents} treats as a no-op
+   */
+  public static Optional<JoinFunnel> computeFunnel(TableLoader loader) {
+    Optional<Dataset<Row>> provenanceDfOpt = loader.load(TABLE_PROVENANCE);
+    if (provenanceDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    Optional<Dataset<Row>> eventDfOpt = loader.load("event");
+    if (eventDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    Dataset<Row> eventDf = eventDfOpt.get();
+    if (!Arrays.asList(eventDf.columns()).contains("eventID")) {
+      return Optional.empty();
+    }
+
+    String label = "ProvenanceJoinBuilder (event funding/project attribution)";
+    long totalEvents = eventDf.count();
+
+    Dataset<Row> links = collectLinks(loader, eventDf);
+    if (links == null) {
+      return Optional.of(
+          new JoinFunnel(
+              label,
+              List.of(
+                  new JoinFunnel.Bucket("events (total)", totalEvents),
+                  new JoinFunnel.Bucket(
+                      "no provenance link (no direct FK, no junction)", totalEvents))));
+    }
+
+    long linkedEvents = links.select("eventID").distinct().count();
+    long unlinkedEvents = totalEvents - linkedEvents;
+
+    Dataset<Row> provenanceDf = provenanceDfOpt.get();
+    long eventsWithAttribution =
+        links
+            .join(
+                provenanceDf,
+                links.col(PROVENANCE_PK_COLUMN).equalTo(provenanceDf.col(PROVENANCE_PK_COLUMN)),
+                "left_semi")
+            .select("eventID")
+            .distinct()
+            .count();
+    long eventsLinkedButAllDangling = linkedEvents - eventsWithAttribution;
+
+    return Optional.of(
+        new JoinFunnel(
+            label,
+            List.of(
+                new JoinFunnel.Bucket("events (total)", totalEvents),
+                new JoinFunnel.Bucket("no provenance link", unlinkedEvents),
+                new JoinFunnel.Bucket("linked, attribution merged", eventsWithAttribution),
+                new JoinFunnel.Bucket(
+                    "linked, but all links dangling (no attribution)",
+                    eventsLinkedButAllDangling))));
+  }
 }

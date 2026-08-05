@@ -304,4 +304,72 @@ class ProvenanceJoinBuilderTest {
     Row row = result.first();
     assertEquals("EVT001", row.getAs("eventID"));
   }
+
+  // ---- computeFunnel ----
+
+  @Test
+  void computeFunnel_provenanceTableAbsent_returnsEmpty() {
+    Dataset<Row> event =
+        eventWithDirectFkDf(List.of(RowFactory.create("EPK-001", "EVT001", "PPK-1")));
+
+    var result = ProvenanceJoinBuilder.computeFunnel(TestTableLoader.of("event", event));
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_eventTableAbsent_returnsEmpty() {
+    Dataset<Row> provenance =
+        provenanceDf(
+            List.of(RowFactory.create("PPK-1", "PROV-1", "Grant A", "FID-A", "PID-A", "Proj A")));
+
+    var result =
+        ProvenanceJoinBuilder.computeFunnel(
+            TestTableLoader.of(ProvenanceJoinBuilder.TABLE_PROVENANCE, provenance));
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void computeFunnel_noLinksAtAll_everyEventInNoLinkBucket() {
+    Dataset<Row> event = eventNoLinksDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    Dataset<Row> provenance =
+        provenanceDf(
+            List.of(RowFactory.create("PPK-1", "PROV-1", "Grant A", "FID-A", "PID-A", "Proj A")));
+
+    var result =
+        ProvenanceJoinBuilder.computeFunnel(
+            TestTableLoader.of("event", event, ProvenanceJoinBuilder.TABLE_PROVENANCE, provenance));
+
+    assertTrue(result.isPresent());
+    var buckets = result.get().buckets();
+    assertEquals(2, buckets.size());
+    assertEquals(1L, buckets.get(0).count(), "events (total)");
+    assertEquals(1L, buckets.get(1).count(), "no provenance link");
+  }
+
+  @Test
+  void computeFunnel_mixOfAttributedDanglingAndUnlinked() {
+    Dataset<Row> event =
+        eventWithDirectFkDf(
+            List.of(
+                RowFactory.create("EPK-001", "EVT001", "PPK-1"),
+                RowFactory.create("EPK-002", "EVT002", "PPK-UNKNOWN"),
+                RowFactory.create("EPK-003", "EVT003", null)));
+    Dataset<Row> provenance =
+        provenanceDf(
+            List.of(RowFactory.create("PPK-1", "PROV-1", "Grant A", "FID-A", "PID-A", "Proj A")));
+
+    var result =
+        ProvenanceJoinBuilder.computeFunnel(
+            TestTableLoader.of("event", event, ProvenanceJoinBuilder.TABLE_PROVENANCE, provenance));
+
+    assertTrue(result.isPresent());
+    var buckets = result.get().buckets();
+    assertEquals(4, buckets.size());
+    assertEquals(3L, buckets.get(0).count(), "events (total)");
+    assertEquals(1L, buckets.get(1).count(), "no provenance link — EVT003");
+    assertEquals(1L, buckets.get(2).count(), "linked, attribution merged — EVT001");
+    assertEquals(1L, buckets.get(3).count(), "linked, all dangling — EVT002");
+  }
 }

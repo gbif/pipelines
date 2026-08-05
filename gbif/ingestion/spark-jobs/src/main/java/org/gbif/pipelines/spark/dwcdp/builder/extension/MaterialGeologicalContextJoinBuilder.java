@@ -168,4 +168,132 @@ public class MaterialGeologicalContextJoinBuilder {
   private static boolean hasColumns(Dataset<Row> df, String... columns) {
     return Arrays.asList(df.columns()).containsAll(Arrays.asList(columns));
   }
+
+  /**
+   * Computes a {@link JoinFunnel} breakdown of occurrence geological-context enrichment via single
+   * material evidence, mirroring {@link #enrichOccurrences}'s decision logic. Unlike {@link
+   * MaterialProtocolJoinBuilder} and {@link MaterialProvenanceJoinBuilder}, {@code
+   * material-geological-context} can genuinely link one material to more than one distinct
+   * geological-context row — {@link #enrichOccurrences} requires that link to be unambiguous too
+   * (see class Javadoc), so this funnel has an ambiguity bucket like {@link
+   * MaterialJoinBuilder.MaterialFunnel} and {@link IdentificationJoinBuilder#computeFunnel}, unlike
+   * the other two material-side funnels. Buckets are mutually exclusive and sum to the base count:
+   *
+   * <ul>
+   *   <li><b>base</b> — occurrences with exactly one material citing them as evidence
+   *   <li><b>no material-geological-context link</b> — that material has no linked
+   *       geological-context row at all
+   *   <li><b>single geological-context link, resolved, enriched</b> — exactly one distinct link,
+   *       and it resolves to a real {@code geological-context} row
+   *   <li><b>single geological-context link, dangling FK, DROPPED</b> — exactly one distinct link,
+   *       but it doesn't resolve to any {@code geological-context} row
+   *   <li><b>multiple distinct geological-context links, ambiguous, DROPPED</b> — more than one
+   *       distinct {@code geologicalContext_fk} links to the same material
+   * </ul>
+   *
+   * @return empty if {@code material-geological-context}, {@code geological-context}, or any
+   *     unambiguous single-material occurrence link is absent — same no-op cases {@link
+   *     #enrichOccurrences} treats as absent
+   */
+  public static Optional<JoinFunnel> computeFunnel(TableLoader loader) {
+    Optional<Dataset<Row>> materialGeoDfOpt = loader.load(TABLE_MATERIAL_GEOLOGICAL_CONTEXT);
+    Optional<Dataset<Row>> geoDfOpt =
+        loader.load(GeologicalContextJoinBuilder.TABLE_GEOLOGICAL_CONTEXT);
+    Optional<Dataset<Row>> materialLinksOpt =
+        MaterialJoinBuilder.singleMaterialOccurrenceLinks(loader);
+    if (materialGeoDfOpt.isEmpty() || geoDfOpt.isEmpty() || materialLinksOpt.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Dataset<Row> materialGeoDf = materialGeoDfOpt.get();
+    Dataset<Row> geoDf = geoDfOpt.get();
+    if (!hasColumns(materialGeoDf, MATERIAL_ENTITY_FK_COLUMN, GEOLOGICAL_CONTEXT_FK_COLUMN)
+        || !hasColumns(geoDf, GEOLOGICAL_CONTEXT_PK_COLUMN)) {
+      return Optional.empty();
+    }
+
+    String label =
+        "MaterialGeologicalContextJoinBuilder (occurrence geological-context via single "
+            + "material)";
+    Dataset<Row> materialLinks = materialLinksOpt.get();
+    long base = materialLinks.count();
+    if (base == 0L) {
+      return Optional.of(
+          new JoinFunnel(
+              label,
+              List.of(new JoinFunnel.Bucket("unambiguous single-material links (base)", 0L))));
+    }
+
+    Dataset<Row> linksByOccurrence =
+        materialGeoDf
+            .select(
+                functions.col(MATERIAL_ENTITY_FK_COLUMN),
+                functions.col(GEOLOGICAL_CONTEXT_FK_COLUMN))
+            .filter(
+                functions
+                    .col(MATERIAL_ENTITY_FK_COLUMN)
+                    .isNotNull()
+                    .and(functions.col(GEOLOGICAL_CONTEXT_FK_COLUMN).isNotNull()))
+            .distinct()
+            .join(
+                materialLinks,
+                functions
+                    .col(MATERIAL_ENTITY_FK_COLUMN)
+                    .equalTo(materialLinks.col(MATERIAL_ENTITY_PK_COLUMN)),
+                "inner")
+            .select(
+                materialLinks.col(OCCURRENCE_ID_COLUMN),
+                functions.col(GEOLOGICAL_CONTEXT_FK_COLUMN));
+
+    Dataset<Row> countsPerOccurrence =
+        linksByOccurrence.groupBy(functions.col(OCCURRENCE_ID_COLUMN)).count();
+    long occurrencesWithLinks = countsPerOccurrence.count();
+    long noLink = base - occurrencesWithLinks;
+
+    long ambiguousMultipleContexts =
+        countsPerOccurrence.filter(functions.col("count").gt(1)).count();
+    long singleContext = occurrencesWithLinks - ambiguousMultipleContexts;
+
+    Dataset<Row> singleContextOccurrences =
+        countsPerOccurrence
+            .filter(functions.col("count").equalTo(1))
+            .select(functions.col(OCCURRENCE_ID_COLUMN));
+    Dataset<Row> oneContextPerOccurrence =
+        linksByOccurrence
+            .as("material_geo_link")
+            .join(
+                singleContextOccurrences.as("single_context_occurrence"),
+                functions
+                    .col("material_geo_link." + OCCURRENCE_ID_COLUMN)
+                    .equalTo(functions.col("single_context_occurrence." + OCCURRENCE_ID_COLUMN)),
+                "inner")
+            .select(
+                functions.col("material_geo_link." + OCCURRENCE_ID_COLUMN),
+                functions.col("material_geo_link." + GEOLOGICAL_CONTEXT_FK_COLUMN));
+
+    long resolvedEnriched =
+        oneContextPerOccurrence
+            .join(
+                geoDf,
+                oneContextPerOccurrence
+                    .col(GEOLOGICAL_CONTEXT_FK_COLUMN)
+                    .equalTo(geoDf.col(GEOLOGICAL_CONTEXT_PK_COLUMN)),
+                "left_semi")
+            .count();
+    long danglingSingleContext = singleContext - resolvedEnriched;
+
+    return Optional.of(
+        new JoinFunnel(
+            label,
+            List.of(
+                new JoinFunnel.Bucket("unambiguous single-material links (base)", base),
+                new JoinFunnel.Bucket("no material-geological-context link", noLink),
+                new JoinFunnel.Bucket(
+                    "single geological-context link, resolved, enriched", resolvedEnriched),
+                new JoinFunnel.Bucket(
+                    "single geological-context link, dangling FK, DROPPED", danglingSingleContext),
+                new JoinFunnel.Bucket(
+                    "multiple distinct geological-context links, ambiguous, DROPPED",
+                    ambiguousMultipleContexts))));
+  }
 }

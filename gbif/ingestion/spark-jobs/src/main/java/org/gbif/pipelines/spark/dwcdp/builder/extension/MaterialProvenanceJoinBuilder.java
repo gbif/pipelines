@@ -183,4 +183,98 @@ public class MaterialProvenanceJoinBuilder {
     }
     return direct.unionByName(junction).distinct();
   }
+
+  /**
+   * Computes a {@link JoinFunnel} breakdown of occurrence funding/project attribution via single
+   * material evidence, mirroring {@link #enrichOccurrences}'s decision logic (reuses {@link
+   * #collectMaterialProvenanceLinks} directly). Same three-bucket shape as {@link
+   * ProvenanceJoinBuilder#computeFunnel}, but based on the {@code materialEntity_pk} → {@code
+   * occurrenceID} resolution from {@link MaterialJoinBuilder#singleMaterialOccurrenceLinks} rather
+   * than events directly. Buckets are mutually exclusive and sum to the base count.
+   *
+   * @return empty if {@code provenance}, the {@code material} table, or any unambiguous
+   *     single-material occurrence link is absent — same no-op cases {@link #enrichOccurrences}
+   *     treats as absent
+   */
+  public static Optional<JoinFunnel> computeFunnel(TableLoader loader) {
+    Optional<Dataset<Row>> provenanceDfOpt = loader.load(ProvenanceJoinBuilder.TABLE_PROVENANCE);
+    if (provenanceDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    Optional<Dataset<Row>> materialLinksOpt =
+        MaterialJoinBuilder.singleMaterialOccurrenceLinks(loader);
+    if (materialLinksOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    Optional<Dataset<Row>> materialDfOpt = loader.load(MaterialJoinBuilder.TABLE_MATERIAL);
+    if (materialDfOpt.isEmpty()) {
+      return Optional.empty();
+    }
+
+    String label =
+        "MaterialProvenanceJoinBuilder (occurrence funding/project attribution via single "
+            + "material)";
+    Dataset<Row> materialLinks = materialLinksOpt.get();
+    long base = materialLinks.count();
+    if (base == 0L) {
+      return Optional.of(
+          new JoinFunnel(
+              label,
+              List.of(new JoinFunnel.Bucket("unambiguous single-material links (base)", 0L))));
+    }
+
+    Dataset<Row> links = collectMaterialProvenanceLinks(loader, materialDfOpt.get());
+    if (links == null) {
+      return Optional.of(
+          new JoinFunnel(
+              label,
+              List.of(
+                  new JoinFunnel.Bucket("unambiguous single-material links (base)", base),
+                  new JoinFunnel.Bucket("no material-provenance link", base))));
+    }
+
+    Dataset<Row> linkedMaterials = links.select(MATERIAL_ENTITY_PK_COLUMN).distinct();
+    long linkedOccurrences =
+        linkedMaterials
+            .join(
+                materialLinks,
+                linkedMaterials
+                    .col(MATERIAL_ENTITY_PK_COLUMN)
+                    .equalTo(materialLinks.col(MATERIAL_ENTITY_PK_COLUMN)),
+                "left_semi")
+            .count();
+    long noLink = base - linkedOccurrences;
+
+    Dataset<Row> provenanceDf = provenanceDfOpt.get();
+    Dataset<Row> resolvedMaterials =
+        links
+            .join(
+                provenanceDf,
+                links
+                    .col(ProvenanceJoinBuilder.PROVENANCE_PK_COLUMN)
+                    .equalTo(provenanceDf.col(ProvenanceJoinBuilder.PROVENANCE_PK_COLUMN)),
+                "left_semi")
+            .select(MATERIAL_ENTITY_PK_COLUMN)
+            .distinct();
+    long occurrencesWithAttribution =
+        resolvedMaterials
+            .join(
+                materialLinks,
+                resolvedMaterials
+                    .col(MATERIAL_ENTITY_PK_COLUMN)
+                    .equalTo(materialLinks.col(MATERIAL_ENTITY_PK_COLUMN)),
+                "left_semi")
+            .count();
+    long linkedButAllDangling = linkedOccurrences - occurrencesWithAttribution;
+
+    return Optional.of(
+        new JoinFunnel(
+            label,
+            List.of(
+                new JoinFunnel.Bucket("unambiguous single-material links (base)", base),
+                new JoinFunnel.Bucket("no material-provenance link", noLink),
+                new JoinFunnel.Bucket("linked, attribution merged", occurrencesWithAttribution),
+                new JoinFunnel.Bucket(
+                    "linked, but all links dangling (no attribution)", linkedButAllDangling))));
+  }
 }
