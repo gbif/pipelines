@@ -449,9 +449,10 @@ class ProtocolJoinBuilderTest {
             null);
 
     assertTrue(result.isPresent());
+    String actual = result.get().first().getAs("__aggregated_protocol_descriptions");
     assertEquals(
-        "georeferencing: Hand-held GPS receiver|sampling: Vegetation plot",
-        result.get().first().getAs("__aggregated_protocol_descriptions"));
+        Set.of("georeferencing: Hand-held GPS receiver", "sampling: Vegetation plot"),
+        Set.of(actual.split("\\|")));
   }
 
   @Test
