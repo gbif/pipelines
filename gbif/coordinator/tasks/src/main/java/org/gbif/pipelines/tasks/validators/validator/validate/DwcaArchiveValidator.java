@@ -16,7 +16,6 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
-import org.gbif.common.messaging.api.messages.PipelinesChecklistValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.UnsupportedArchiveException;
@@ -30,11 +29,11 @@ import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfigurati
 import org.gbif.pipelines.validator.DwcaFileTermCounter;
 import org.gbif.pipelines.validator.DwcaValidator;
 import org.gbif.pipelines.validator.Validations;
+import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.pipelines.validator.rules.BasicMetadataEvaluator;
 import org.gbif.utils.file.ClosableIterator;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationType;
-import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.api.Level;
 import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.FileInfo.FileInfoBuilder;
@@ -50,23 +49,12 @@ public class DwcaArchiveValidator implements ArchiveValidator {
   private final ValidationWsClient validationClient;
   private final SchemaValidatorFactory schemaValidatorFactory;
   private final PipelinesArchiveValidatorMessage message;
+  private final ChecklistValidator checklistValidator;
 
   @Override
   @SneakyThrows
   public PipelineBasedMessage createOutgoingMessage() {
     Optional<DatasetType> datasetTypeOpt = getDatasetType();
-
-    if (datasetTypeOpt.isPresent() && datasetTypeOpt.get() == DatasetType.CHECKLIST) {
-      PipelinesChecklistValidatorMessage m =
-          new PipelinesChecklistValidatorMessage(
-              message.getDatasetUuid(),
-              message.getAttempt(),
-              message.getPipelineSteps(),
-              message.getExecutionId(),
-              FileFormat.DWCA.name());
-      return m;
-    }
-
     PipelinesDwcaMessage m = new PipelinesDwcaMessage();
     m.setDatasetUuid(message.getDatasetUuid());
     m.setAttempt(message.getAttempt());
@@ -102,6 +90,20 @@ public class DwcaArchiveValidator implements ArchiveValidator {
                 buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid())));
     termCounts.forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
 
+    // Is this a checklist archive ? if so use CLB API to validate it
+    Optional<DatasetType> datasetTypeOpt = getDatasetType();
+    if (datasetTypeOpt.isPresent() && datasetTypeOpt.get() == DatasetType.CHECKLIST) {
+      try {
+        List<FileInfo> result =
+            checklistValidator.evaluate(
+                buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()));
+        result.forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
+      } catch (Exception ex) {
+        log.error("Error validating Checklist DWCA archive", ex);
+        validation.setStatus(Validation.Status.FAILED);
+      }
+    }
+
     log.info("Update validation key {}", message.getDatasetUuid());
     validationClient.update(validation);
 
@@ -113,35 +115,6 @@ public class DwcaArchiveValidator implements ArchiveValidator {
             .anyMatch(x -> x.equals(Level.FATAL.name()));
     if (hasFatalIssues) {
       throw new IllegalArgumentException("Discovered fatal issue");
-    }
-  }
-
-  private void addExtensionFileInfo(Validation validation, DwcaCounts dwcaCounts) {
-    try {
-      log.info("Running DWCA validation for {}", message.getDatasetUuid());
-      Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
-      Archive archive = DwcaUtils.fromLocation(inputPath);
-      archive
-          .getExtensions()
-          .forEach(
-              ext -> {
-                if (ext.getRowType() != DwcTerm.Occurrence) {
-                  Long extensionCount =
-                      dwcaCounts.extensionCounts.putIfAbsent(ext.getRowType().qualifiedName(), 0L);
-                  FileInfo extensionFileInfo =
-                      FileInfo.builder()
-                          .fileType(DwcFileType.EXTENSION)
-                          .fileName(ext.getFirstLocationFile().getName())
-                          .rowType(ext.getRowType().qualifiedName())
-                          .count(extensionCount)
-                          .build();
-
-                  validation.getMetrics().getFileInfos().add(extensionFileInfo);
-                }
-              });
-
-    } catch (Exception e) {
-      log.error("Unable to read archive", e);
     }
   }
 

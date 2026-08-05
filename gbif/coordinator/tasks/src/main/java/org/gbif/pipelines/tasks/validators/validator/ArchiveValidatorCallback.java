@@ -14,6 +14,7 @@ import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.modes.CallbackModeType;
 import org.gbif.pipelines.tasks.validators.validator.validate.ArchiveValidatorFactory;
+import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -68,6 +69,8 @@ public class ArchiveValidatorCallback
           .config(config)
           .message(message)
           .schemaValidatorFactory(schemaValidatorFactory)
+          .checklistValidator(
+              new ChecklistValidator(config.clbApiUrl, config.clbApiUser, config.clbApiPassword))
           .build()
           .create()
           .validate();

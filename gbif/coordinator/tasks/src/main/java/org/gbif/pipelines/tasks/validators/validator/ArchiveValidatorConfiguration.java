@@ -5,6 +5,7 @@ import com.beust.jcommander.ParametersDelegate;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.ToString;
+import org.gbif.cli.PropertyName;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
@@ -30,6 +31,18 @@ public class ArchiveValidatorConfiguration implements BaseConfiguration {
 
   @Parameter(names = "--validator-only")
   public boolean validatorOnly = false;
+
+  @Parameter(names = "--clb-api-url")
+  @PropertyName("clb.api.url")
+  public String clbApiUrl;
+
+  @Parameter(names = "--clb-api-user")
+  @PropertyName("clb.api.user")
+  public String clbApiUser;
+
+  @Parameter(names = "--clb-api-password")
+  @PropertyName("clb.api.password")
+  public String clbApiPassword;
 
   @Override
   public String getHdfsSiteConfig() {

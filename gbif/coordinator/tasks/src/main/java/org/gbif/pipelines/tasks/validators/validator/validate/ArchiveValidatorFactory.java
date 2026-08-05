@@ -4,6 +4,7 @@ import lombok.Builder;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
+import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.validator.api.FileFormat;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
@@ -14,6 +15,7 @@ public class ArchiveValidatorFactory {
   private final ValidationWsClient validationClient;
   private final SchemaValidatorFactory schemaValidatorFactory;
   private final PipelinesArchiveValidatorMessage message;
+  private final ChecklistValidator checklistValidator;
 
   public ArchiveValidator create() {
 
@@ -24,6 +26,7 @@ public class ArchiveValidatorFactory {
           .config(config)
           .message(message)
           .schemaValidatorFactory(schemaValidatorFactory)
+          .checklistValidator(checklistValidator)
           .build();
     }
 
