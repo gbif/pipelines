@@ -27,6 +27,7 @@ import org.gbif.dwca.validation.MetadataPath;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
+import org.gbif.pipelines.validator.DwcaFileTermCounter;
 import org.gbif.pipelines.validator.DwcaValidator;
 import org.gbif.pipelines.validator.Validations;
 import org.gbif.pipelines.validator.rules.BasicMetadataEvaluator;
@@ -91,12 +92,15 @@ public class DwcaArchiveValidator implements ArchiveValidator {
 
     // Core file (Occurrence, Event or Checklist) and, when present, the Occurrence extension
     // (e.g. attached to a Sampling Event dataset)
-    DwcaCounts dwcaCounts =
-        generateCounts(buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()));
-    validateDwcaFiles(dwcaCounts)
-        .forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
-    // Add FileInfo for other extensions
-    addExtensionFileInfo(validation, dwcaCounts);
+    List<FileInfo> validatedFileInfos = validateDwcaFiles();
+    validatedFileInfos.forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
+
+    // add term counts
+    List<FileInfo> termCounts =
+        DwcaFileTermCounter.process(
+            DwcaUtils.fromLocation(
+                buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid())));
+    termCounts.forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
 
     log.info("Update validation key {}", message.getDatasetUuid());
     validationClient.update(validation);
@@ -193,7 +197,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
    * Validates the DwC-A core file (Occurrence, Event or Checklist) and, when present, the
    * Occurrence extension attached to a non-Occurrence core (e.g. a Sampling Event dataset).
    */
-  private List<FileInfo> validateDwcaFiles(DwcaCounts dwcaCounts) {
+  private List<FileInfo> validateDwcaFiles() {
     try {
       log.info("Running DWCA validation for {}", message.getDatasetUuid());
       Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
@@ -224,7 +228,6 @@ public class DwcaArchiveValidator implements ArchiveValidator {
               .rowType(archive.getCore().getRowType().qualifiedName())
               .fileType(CORE)
               .fileName(archive.getCore().getFirstLocationFile().getName())
-              .count(dwcaCounts.coreCount)
               .issues(coreIssues)
               .build());
 
@@ -235,7 +238,6 @@ public class DwcaArchiveValidator implements ArchiveValidator {
                 .rowType(DwcTerm.Occurrence.qualifiedName())
                 .fileType(DwcFileType.EXTENSION)
                 .fileName(archive.getExtension(DwcTerm.Occurrence).getFirstLocationFile().getName())
-                .count(dwcaCounts.extensionCounts.get(DwcTerm.Occurrence.qualifiedName()))
                 .issues(DwcaValidator.occurrenceIssues(report.getOccurrenceReport()))
                 .build());
       }
