@@ -52,6 +52,9 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
+    config.clbApiUrl = "https://api.col.plus/v1";
+    config.clbApiPassword = "XXXXXX";
+    config.clbApiUser = "XXXXXX";
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -122,6 +125,9 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
+    config.clbApiUrl = "https://api.col.plus/v1";
+    config.clbApiPassword = "XXXXXX";
+    config.clbApiUser = "XXXXXX";
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -194,6 +200,9 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
+    config.clbApiUrl = "https://api.col.plus/v1";
+    config.clbApiPassword = "XXXXXX";
+    config.clbApiUser = "XXXXXX";
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -268,6 +277,9 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
+    config.clbApiUrl = "https://api.col.plus/v1";
+    config.clbApiPassword = "XXXXXX";
+    config.clbApiUser = "XXXXXX";
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -300,6 +312,9 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
+    config.clbApiUrl = "https://api.col.plus/v1";
+    config.clbApiPassword = "XXXXXX";
+    config.clbApiUser = "XXXXXX";
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -332,6 +347,9 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
+    config.clbApiUrl = "https://api.col.plus/v1";
+    config.clbApiPassword = "XXXXXX";
+    config.clbApiUser = "XXXXXX";
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -364,6 +382,9 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
+    config.clbApiUrl = "https://api.col.plus/v1";
+    config.clbApiPassword = "XXXXXX";
+    config.clbApiUser = "XXXXXX";
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
