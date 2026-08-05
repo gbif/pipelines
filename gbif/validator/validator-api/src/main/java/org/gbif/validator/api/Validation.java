@@ -23,7 +23,12 @@ import org.gbif.api.model.registry.Dataset;
 public class Validation {
 
   private static final EnumSet<Status> EXECUTING_STATUSES =
-      EnumSet.of(Status.SUBMITTED, Status.DOWNLOADING, Status.RUNNING, Status.QUEUED);
+      EnumSet.of(
+          Status.SUBMITTED,
+          Status.DOWNLOADING,
+          Status.RUNNING,
+          Status.QUEUED,
+          Status.WAITING_FOR_CHECKLISTBANK);
 
   private static final EnumSet<Status> FINISHED_STATUSES =
       EnumSet.of(Status.FINISHED, Status.FAILED, Status.ABORTED);
@@ -35,7 +40,8 @@ public class Validation {
     FINISHED,
     ABORTED,
     FAILED,
-    QUEUED
+    QUEUED,
+    WAITING_FOR_CHECKLISTBANK
   }
 
   /** Validation key/identifier. */

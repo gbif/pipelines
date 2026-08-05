@@ -11,7 +11,6 @@ import lombok.AllArgsConstructor;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.pipelines.tasks.client.RetryingValidationClient;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Metrics.FileInfo;
@@ -59,11 +58,10 @@ public class ValidationsTest {
             .build();
 
     ValidationWsClientStub wsClientStub = ValidationWsClientStub.create(validation);
-    RetryingValidationClient retryingValidationClient = new RetryingValidationClient(wsClientStub);
     StepType stepType = StepType.VALIDATOR_COLLECT_METRICS;
     Status status = Status.FINISHED;
 
-    Validations.updateStatus(retryingValidationClient, uuid, stepType, status);
+    Validations.updateStatus(wsClientStub, uuid, stepType, status);
 
     Validation result = wsClientStub.get(uuid);
     Assert.assertTrue(
@@ -104,11 +102,10 @@ public class ValidationsTest {
             .build();
 
     ValidationWsClientStub wsClientStub = ValidationWsClientStub.create(validation);
-    RetryingValidationClient retryingValidationClient = new RetryingValidationClient(wsClientStub);
     StepType stepType = StepType.VALIDATOR_COLLECT_METRICS;
     Status status = Status.FAILED;
 
-    Validations.updateStatus(retryingValidationClient, uuid, stepType, status);
+    Validations.updateStatus(wsClientStub, uuid, stepType, status);
 
     Validation result = wsClientStub.get(uuid);
     Assert.assertEquals(

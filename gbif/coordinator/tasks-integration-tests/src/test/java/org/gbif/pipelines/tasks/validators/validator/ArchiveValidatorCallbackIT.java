@@ -15,6 +15,7 @@ import java.util.UUID;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
+import org.gbif.pipelines.common.configs.ChecklistBankConfiguration;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.ValidationWsClientStub;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -52,9 +53,8 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
-    config.clbApiUrl = "https://api.col.plus/v1";
-    config.clbApiPassword = "XXXXXX";
-    config.clbApiUser = "XXXXXX";
+    config.clbConfig =
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -125,9 +125,8 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
-    config.clbApiUrl = "https://api.col.plus/v1";
-    config.clbApiPassword = "XXXXXX";
-    config.clbApiUser = "XXXXXX";
+    config.clbConfig =
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -200,9 +199,8 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
-    config.clbApiUrl = "https://api.col.plus/v1";
-    config.clbApiPassword = "XXXXXX";
-    config.clbApiUser = "XXXXXX";
+    config.clbConfig =
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -277,9 +275,8 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
-    config.clbApiUrl = "https://api.col.plus/v1";
-    config.clbApiPassword = "XXXXXX";
-    config.clbApiUser = "XXXXXX";
+    config.clbConfig =
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -312,9 +309,8 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
-    config.clbApiUrl = "https://api.col.plus/v1";
-    config.clbApiPassword = "XXXXXX";
-    config.clbApiUser = "XXXXXX";
+    config.clbConfig =
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -347,9 +343,8 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
-    config.clbApiUrl = "https://api.col.plus/v1";
-    config.clbApiPassword = "XXXXXX";
-    config.clbApiUser = "XXXXXX";
+    config.clbConfig =
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -382,9 +377,8 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
-    config.clbApiUrl = "https://api.col.plus/v1";
-    config.clbApiPassword = "XXXXXX";
-    config.clbApiUser = "XXXXXX";
+    config.clbConfig =
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 

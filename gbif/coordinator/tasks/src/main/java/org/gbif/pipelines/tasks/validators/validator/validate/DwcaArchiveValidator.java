@@ -6,12 +6,14 @@ import static org.gbif.validator.api.DwcFileType.CORE;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.crawler.DwcaValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
@@ -94,9 +96,25 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     Optional<DatasetType> datasetTypeOpt = getDatasetType();
     if (datasetTypeOpt.isPresent() && datasetTypeOpt.get() == DatasetType.CHECKLIST) {
       try {
+        log.info("Validating DWCA checklist archive - calling checklistbank");
+        org.gbif.pipelines.tasks.Validations.updateStatus(
+            validationClient,
+            message.getDatasetUuid(),
+            StepType.VALIDATOR_VALIDATE_ARCHIVE,
+            Validation.Status.WAITING_FOR_CHECKLISTBANK);
         List<FileInfo> result =
             checklistValidator.evaluate(
-                buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid()));
+                Paths.get(
+                    buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid())
+                        .toString(),
+                    validation.getFile()));
+        org.gbif.pipelines.tasks.Validations.updateStatus(
+            validationClient,
+            message.getDatasetUuid(),
+            StepType.VALIDATOR_VALIDATE_ARCHIVE,
+            Validation.Status.RUNNING);
+        log.info(
+            "Validating DWCA checklist archive - finished calling checklistbank, merging results");
         result.forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
       } catch (Exception ex) {
         log.error("Error validating Checklist DWCA archive", ex);
