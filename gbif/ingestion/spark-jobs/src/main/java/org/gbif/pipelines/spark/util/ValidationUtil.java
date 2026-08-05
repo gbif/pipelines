@@ -8,6 +8,8 @@ import feign.httpclient.ApacheHttpClient;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -101,64 +103,48 @@ public class ValidationUtil {
 
   private static void mergeTerms(
       Metrics.FileInfo originalFileInfo, Metrics.FileInfo generatedFileInfo) {
-    if (originalFileInfo.getTerms() == null || originalFileInfo.getTerms().isEmpty()) {
+
+    List<Metrics.TermInfo> originalTerms = originalFileInfo.getTerms();
+    if (originalTerms == null || originalTerms.isEmpty()) {
       return;
     }
 
-    List<Metrics.TermInfo> mergedTerms = new ArrayList(originalFileInfo.getTerms());
+    List<Metrics.TermInfo> mergedTerms = new ArrayList<>(originalTerms);
 
-    List<Metrics.TermInfo> originalTerms = originalFileInfo.getTerms();
-    List<Metrics.TermInfo> generatedTerms = generatedFileInfo.getTerms();
+    Map<Object, Metrics.TermInfo> termsByName =
+        originalTerms.stream()
+            .collect(Collectors.toMap(Metrics.TermInfo::getTerm, Function.identity()));
 
-    // for each term in the originalFileInfo, find the equivalent in the generatedFileInfo
-    // and set the following:
-    // uniqueRawValues;
-    // interpretedIndexed;
-    // uniqueInterpretedValues;
-    // sampleInterpretedValuesMap;
-    // for terms not in the original (i.e. interpreted only, add these as well
+    for (Metrics.TermInfo generatedTerm : generatedFileInfo.getTerms()) {
+      Metrics.TermInfo existingTerm = termsByName.get(generatedTerm.getTerm());
 
-    generatedTerms.forEach(
-        generatedTerm -> {
-          Optional<Metrics.TermInfo> existingTerm =
-              originalTerms.stream()
-                  .filter(t -> t.getTerm().equals(generatedTerm.getTerm()))
-                  .findFirst();
-          if (existingTerm.isPresent()) {
-            Metrics.TermInfo termInfo = existingTerm.get();
-            termInfo.setUniqueRawValues(generatedTerm.getUniqueRawValues());
-            termInfo.setInterpretedIndexed(generatedTerm.getInterpretedIndexed());
-            termInfo.setUniqueInterpretedValues(generatedTerm.getUniqueInterpretedValues());
-            termInfo.setSampleInterpretedValuesMap(generatedTerm.getSampleInterpretedValuesMap());
-          } else {
-            log.debug("Add term info for term {} which wasnt found", generatedTerm.getTerm());
-            mergedTerms.add(generatedTerm);
-          }
-        });
+      if (existingTerm != null) {
+        existingTerm.setUniqueRawValues(generatedTerm.getUniqueRawValues());
+        existingTerm.setInterpretedIndexed(generatedTerm.getInterpretedIndexed());
+        existingTerm.setUniqueInterpretedValues(generatedTerm.getUniqueInterpretedValues());
+        existingTerm.setSampleInterpretedValuesMap(generatedTerm.getSampleInterpretedValuesMap());
+      } else {
+        log.debug("Add term info for term {} which wasn't found", generatedTerm.getTerm());
+        mergedTerms.add(generatedTerm);
+      }
+    }
+
     originalFileInfo.setTerms(mergedTerms);
   }
 
   private static void mergeIssues(Metrics.FileInfo fileInfo, Metrics.FileInfo generatedFileInfo) {
+    List<Metrics.IssueInfo> mergedIssues = new ArrayList<>(fileInfo.getIssues());
 
-    List<Metrics.IssueInfo> mergedIssues = new ArrayList(fileInfo.getIssues());
-    List<Metrics.IssueInfo> generatedIssues = generatedFileInfo.getIssues();
-    generatedIssues.forEach(
-        generatedIssue -> {
-          // find the existing in mergedIssues
-          // if not there, add it
-          mergedIssues.stream()
-              .filter(i -> i.getIssue().equals(generatedIssue.getIssue()))
-              .findFirst()
-              .ifPresentOrElse(
-                  existingIssue -> {
-                    // TODO  - does it make sense to merge ?
-                  },
-                  () -> {
-                    log.debug(
-                        "Add issue info for issue {} which wasnt found", generatedIssue.getIssue());
-                    mergedIssues.add(generatedIssue);
-                  });
-        });
+    Set<Object> existingIssues =
+        mergedIssues.stream().map(Metrics.IssueInfo::getIssue).collect(Collectors.toSet());
+
+    for (Metrics.IssueInfo generatedIssue : generatedFileInfo.getIssues()) {
+      if (existingIssues.add(generatedIssue.getIssue())) {
+        log.debug("Add issue info for issue {} which wasn't found", generatedIssue.getIssue());
+        mergedIssues.add(generatedIssue);
+      }
+    }
+
     fileInfo.setIssues(mergedIssues);
   }
 }
