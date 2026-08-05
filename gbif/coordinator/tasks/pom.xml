@@ -98,6 +98,12 @@
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>validator-checklists</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- GBIF -->
