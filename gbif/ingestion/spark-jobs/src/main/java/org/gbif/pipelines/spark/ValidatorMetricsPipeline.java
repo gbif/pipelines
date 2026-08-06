@@ -27,7 +27,6 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
-import org.gbif.pipelines.spark.util.RetryingValidationClient;
 import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
 import org.gbif.pipelines.spark.util.ValidationClient;
 import org.gbif.pipelines.spark.util.ValidationUtil;
@@ -220,8 +219,7 @@ public class ValidatorMetricsPipeline {
 
       // update the stored validation via the API
       ValidationClient client = ValidationUtil.createValidationClient(config);
-      ValidationUtil.updateMetrics(
-          new RetryingValidationClient(client), UUID.fromString(datasetId), generatedMetrics);
+      ValidationUtil.updateMetrics(client, UUID.fromString(datasetId), generatedMetrics);
 
     } finally {
       records.unpersist();

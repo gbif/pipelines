@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark.util;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Contract;
 import feign.Feign;
@@ -7,7 +8,13 @@ import feign.auth.BasicAuthRequestInterceptor;
 import feign.httpclient.ApacheHttpClient;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
+import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import java.io.IOException;
+import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -23,6 +30,17 @@ import org.gbif.validator.api.Validation;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ValidationUtil {
+
+  private static final Retry RETRY =
+      Retry.of(
+          "validatorCall",
+          RetryConfig.custom()
+              .maxAttempts(15)
+              .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
+              .intervalFunction(
+                  IntervalFunction.ofExponentialBackoff(
+                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(30)))
+              .build());
 
   static ObjectMapper objectMapper = new ObjectMapper();
 
@@ -49,7 +67,7 @@ public class ValidationUtil {
   }
 
   public static void updateMetrics(
-      RetryingValidationClient validationClient, UUID key, Metrics generatedMetrics) {
+      ValidationClient validationClient, UUID key, Metrics generatedMetrics) {
 
     Validation validation = validationClient.get(key);
     if (validation == null) {
@@ -98,7 +116,7 @@ public class ValidationUtil {
 
     // if we have made it to metrics, it should be indexable
     metrics.setIndexeable(true);
-    validationClient.update(key, validation);
+    Retry.decorateRunnable(RETRY, () -> validationClient.update(key, validation)).run();
   }
 
   private static void mergeTerms(
