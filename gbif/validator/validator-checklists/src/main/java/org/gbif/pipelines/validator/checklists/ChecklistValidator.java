@@ -176,6 +176,13 @@ public class ChecklistValidator {
     VerbatimResponse verbatimResponse =
         checklistbankWsClient.getVerbatim(
             datasetKey, DwcTerm.Taxon.simpleName(), issue, SAMPLE_ISSUES_SIZE);
+    if (verbatimResponse == null
+        || verbatimResponse.getResult() == null
+        || verbatimResponse.getResult().isEmpty()) {
+      log.warn("No samples found for issue {} in dataset {}.", issue, datasetKey);
+      return List.of();
+    }
+
     return verbatimResponse.getResult().stream()
         .map(
             r -> {
