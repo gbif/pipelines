@@ -692,6 +692,55 @@ class EventCoreBuilderTest {
   }
 
   @Test
+  void materialEntityIdOnEventTable_neverLeaksIntoCoreTerms() {
+    // materialEntityID belongs nested per-occurrence inside occurrenceExtJson, never as a raw
+    // Event-core scalar — confirmed in production as the source of an O(N²) blowup in a
+    // downstream event→occurrence explode step (a single large event-level value copied onto
+    // every one of that event's resulting occurrence rows). This simulates it somehow ending up
+    // directly on the raw "event" table itself; regardless of how it got there, it must be
+    // dropped before coreTerms is built.
+    StructType schema =
+        new StructType()
+            .add("event_pk", DataTypes.StringType)
+            .add("eventID", DataTypes.StringType)
+            .add("materialEntityID", DataTypes.StringType);
+    Dataset<Row> eventDf =
+        spark.createDataFrame(
+            List.of(RowFactory.create("EPK-001", "EVT001", "MAT001|MAT002|MAT003")), schema);
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf)).collectAsList();
+
+    assertEquals(1, records.size());
+    assertFalse(
+        records.get(0).getCoreTerms().containsKey("materialEntityID"),
+        "materialEntityID must never appear as a raw scalar on the Event core");
+  }
+
+  @Test
+  void aggregatedMaterialEntityIdsOnEventTable_neverLeaksIntoCoreTerms() {
+    // Same guarantee, for the plural/aggregated-list naming an event-level join might
+    // realistically produce (a concatenated or collected list of every material entity linked to
+    // the event) — this is the shape that actually caused the O(N²) blowup in production.
+    StructType schema =
+        new StructType()
+            .add("event_pk", DataTypes.StringType)
+            .add("eventID", DataTypes.StringType)
+            .add("materialEntityIDs", DataTypes.StringType);
+    Dataset<Row> eventDf =
+        spark.createDataFrame(
+            List.of(RowFactory.create("EPK-001", "EVT001", "MAT001|MAT002|MAT003")), schema);
+
+    List<ExtendedRecord> records =
+        EventCoreBuilder.build(spark, TestTableLoader.of("event", eventDf)).collectAsList();
+
+    assertEquals(1, records.size());
+    assertFalse(
+        records.get(0).getCoreTerms().containsKey("materialEntityIDs"),
+        "materialEntityIDs (aggregated) must never appear as a raw scalar on the Event core");
+  }
+
+  @Test
   void eventPkAndParentEventFkPresentButNoEventIdColumnAtAll_fallsBackToEventPk() {
     // eventID has no `required: true` constraint in the DwC-DP profile (only event_pk does), so
     // a package that never populated it can legitimately arrive with the column absent from the

@@ -178,6 +178,17 @@ public class EventCoreBuilder {
         AgentJoinBuilder.resolveAgentNameCoalesceInto(
             loader, eventDf, "georeferencedByID", "georeferencedBy");
 
+    // materialEntityID belongs nested per-occurrence inside occurrenceExtJson (via
+    // OccurrenceExtensionBuilder/MaterialJoinBuilder), never as a raw scalar/aggregated-list
+    // column directly on the Event core — a single event-level copy would duplicate data already
+    // present per-occurrence, and for an event with many occurrences can carry an enormous payload
+    // (confirmed in production: a downstream event→occurrence "explode" step that copies Event
+    // coreTerms onto each resulting occurrence row turned one such value into an O(N²) blowup —
+    // 776 KB repeated 48,514 times for one event). Dropped here, defensively, right before
+    // eventColumns is captured for coreTerms — both a singular and an aggregated-list naming are
+    // covered, since either is a no-op to drop if absent.
+    eventDf = eventDf.drop("materialEntityID").drop("materialEntityIDs");
+
     Optional<Dataset<Row>> occurrenceExtDf = OccurrenceExtensionBuilder.build(spark, loader);
     Optional<Dataset<Row>> mediaExtDf =
         MediaExtensionBuilder.buildEventMediaExtension(spark, loader);
