@@ -202,6 +202,32 @@ class OccurrenceCoreBuilderTest {
   }
 
   @Test
+  void occurrencePkPresentButNoOccurrenceIdColumnAtAll_fallsBackToOccurrencePk() {
+    // occurrenceID has no `required: true` constraint in the DwC-DP profile (only occurrence_pk
+    // does), so a package that never populated it can legitimately arrive with the column absent
+    // from the Parquet schema entirely — not merely null-valued. build() must not crash, and —
+    // since occurrence_pk is required+unique — must not silently drop the record either: it falls
+    // back to a synthesised "urn:gbif:dwcdp:occurrence:" + occurrence_pk id (see
+    // CoreBuilderSupport.withIdFallback).
+    StructType schema =
+        new StructType()
+            .add("occurrence_pk", DataTypes.StringType)
+            .add("scientificName", DataTypes.StringType);
+    Dataset<Row> occ =
+        spark.createDataFrame(List.of(RowFactory.create("OPK-001", "Quercus robur")), schema);
+
+    List<ExtendedRecord> records =
+        OccurrenceCoreBuilder.build(spark, TestTableLoader.of("occurrence", occ)).collectAsList();
+
+    assertEquals(1, records.size());
+    assertEquals("urn:gbif:dwcdp:occurrence:OPK-001", records.get(0).getId());
+    assertFalse(
+        records.get(0).getCoreTerms().containsKey("occurrence_pk"),
+        "occurrence_pk is a surrogate key with no DwC term — it must never appear in coreTerms, "
+            + "even when it's also serving as the occurrenceID fallback");
+  }
+
+  @Test
   void materialFields_flowThroughToCoreTermsForGrscicollAndTripletId() {
     StructType occSchema =
         new StructType()

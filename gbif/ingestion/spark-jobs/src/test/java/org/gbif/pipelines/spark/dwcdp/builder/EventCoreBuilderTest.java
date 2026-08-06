@@ -697,7 +697,8 @@ class EventCoreBuilderTest {
     // a package that never populated it can legitimately arrive with the column absent from the
     // Parquet schema entirely — not merely null-valued. build() must not crash, and — since
     // event_pk is required+unique — must not silently drop the record either: it falls back to
-    // using event_pk as the record's eventID (see EventCoreBuilder.withEventIdFallback).
+    // a synthesised "urn:gbif:dwcdp:event:" + event_pk id (see
+    // CoreBuilderSupport.withIdFallback).
     StructType schema =
         new StructType()
             .add("event_pk", DataTypes.StringType)
@@ -713,7 +714,7 @@ class EventCoreBuilderTest {
             "a missing eventID column must not crash the whole conversion");
 
     assertEquals(1, records.size());
-    assertEquals("EPK-001", records.get(0).getId());
+    assertEquals("urn:gbif:dwcdp:event:EPK-001", records.get(0).getId());
     assertEquals(
         "Some locality", records.get(0).getCoreTerms().get(DwcTerm.locality.qualifiedName()));
     assertFalse(
@@ -744,7 +745,7 @@ class EventCoreBuilderTest {
             .collectAsList();
 
     assertEquals(1, records.size());
-    assertEquals("EPK-001", records.get(0).getId());
+    assertEquals("urn:gbif:dwcdp:event:EPK-001", records.get(0).getId());
     assertTrue(
         records.get(0).getExtensions().containsKey(MediaExtensionBuilder.ROW_TYPE_MULTIMEDIA),
         "the multimedia extension must have resolved despite event having no natural eventID, "

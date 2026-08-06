@@ -14,7 +14,6 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.functions;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.builder.extension.AgentJoinBuilder;
@@ -80,6 +79,7 @@ public class EventCoreBuilder {
   private static final String ROW_TYPE_OCCURRENCE = DwcTerm.Occurrence.qualifiedName();
 
   private static final String EVENT_PK_COLUMN = "event_pk";
+  private static final String OCCURRENCE_PK_COLUMN = "occurrence_pk";
   private static final String PARENT_EVENT_FK_COLUMN = "parentEvent_fk";
   private static final String PARENT_EVENT_ID_COLUMN = "parentEventID";
   private static final String PARENT_JOIN_ALIAS_COLUMN = "__parent_event_pk";
@@ -96,14 +96,26 @@ public class EventCoreBuilder {
    */
   public static Dataset<ExtendedRecord> build(SparkSession spark, TableLoader loader) {
 
-    // event_pk is required+unique per the DwC-DP profile; eventID is not. A package that never
-    // populated eventID can legitimately arrive with that column absent entirely — falling back
-    // to event_pk here, once, means every downstream consumer of "event" (this method's own
-    // eventDf below, plus OccurrenceExtensionBuilder/MediaExtensionBuilder/
-    // AssertionExtensionBuilder/IdentifierExtensionBuilder/HumboldtExtensionBuilder, which each
-    // independently reload "event" from this same loader) sees a usable eventID automatically,
-    // rather than each of them separately having to abandon and lose the dataset's records.
-    loader = withEventIdFallback(loader);
+    // event_pk/occurrence_pk are required+unique per the DwC-DP profile; eventID/occurrenceID are
+    // not. A package that never populated one can legitimately arrive with that column absent
+    // entirely — falling back once here, at the loader level, means every downstream consumer of
+    // "event" or "occurrence" (this method's own eventDf below, OccurrenceExtensionBuilder's
+    // real-occurrence path, plus MediaExtensionBuilder/AssertionExtensionBuilder/
+    // IdentifierExtensionBuilder/IdentificationExtensionBuilder/NucleotideExtensionBuilder/
+    // MaterialJoinBuilder/HumboldtExtensionBuilder, which each independently reload "event" and/or
+    // "occurrence" from this same loader) sees a usable id automatically — both as a record
+    // identity and as a join/group key — rather than each of them separately failing to match or
+    // losing records. See CoreBuilderSupport#withIdFallback.
+    loader =
+        CoreBuilderSupport.withIdFallback(
+            loader, "event", EVENT_PK_COLUMN, "eventID", CoreBuilderSupport.EVENT_URN_PREFIX);
+    loader =
+        CoreBuilderSupport.withIdFallback(
+            loader,
+            "occurrence",
+            OCCURRENCE_PK_COLUMN,
+            "occurrenceID",
+            CoreBuilderSupport.OCCURRENCE_URN_PREFIX);
 
     Dataset<Row> eventDf =
         loader
@@ -206,41 +218,6 @@ public class EventCoreBuilder {
                         hasDnaExt),
             Encoders.bean(ExtendedRecord.class))
         .filter((FilterFunction<ExtendedRecord>) r -> r != null);
-  }
-
-  /**
-   * Wraps the loader so every event-table load has a usable eventID. Existing eventID values are
-   * retained; null values are filled from event_pk; and a missing eventID column is created from
-   * event_pk.
-   */
-  private static TableLoader withEventIdFallback(TableLoader loader) {
-    return tableName -> {
-      Optional<Dataset<Row>> dfOpt = loader.load(tableName);
-      if (!"event".equals(tableName) || dfOpt.isEmpty()) {
-        return dfOpt;
-      }
-
-      Dataset<Row> df = dfOpt.get();
-      List<String> columns = Arrays.asList(df.columns());
-      if (!columns.contains(EVENT_PK_COLUMN)) {
-        return dfOpt;
-      }
-
-      if (columns.contains("eventID")) {
-        log.warn(
-            "event table contains null eventID values; filling those values from event_pk "
-                + "(existing eventID values are preserved)");
-        return Optional.of(
-            df.withColumn(
-                "eventID", functions.coalesce(df.col("eventID"), df.col(EVENT_PK_COLUMN))));
-      }
-
-      log.warn(
-          "event table has no eventID column; falling back to event_pk as the record "
-              + "identifier (event_pk is required+unique per the DwC-DP profile, eventID is "
-              + "not — a legitimate, if unusual, package shape)");
-      return Optional.of(df.withColumn("eventID", df.col(EVENT_PK_COLUMN)));
-    };
   }
 
   /**

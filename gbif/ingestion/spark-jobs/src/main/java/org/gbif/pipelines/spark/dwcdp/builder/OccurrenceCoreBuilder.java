@@ -97,6 +97,21 @@ public class OccurrenceCoreBuilder {
    */
   public static Dataset<ExtendedRecord> build(SparkSession spark, TableLoader loader) {
 
+    // occurrence_pk is required+unique per the DwC-DP profile; occurrenceID is not. Falling back
+    // once here, at the loader level, means every downstream consumer of "occurrence" (this
+    // method's own occurrenceDf below, plus OrganismJoinBuilder/IdentificationJoinBuilder/
+    // MaterialJoinBuilder/MediaExtensionBuilder/AssertionExtensionBuilder/
+    // IdentificationExtensionBuilder/IdentifierExtensionBuilder/NucleotideExtensionBuilder, which
+    // each independently reload "occurrence" from this same loader) sees a usable occurrenceID
+    // automatically. See CoreBuilderSupport#withIdFallback.
+    loader =
+        CoreBuilderSupport.withIdFallback(
+            loader,
+            "occurrence",
+            OCCURRENCE_PK_COLUMN,
+            "occurrenceID",
+            CoreBuilderSupport.OCCURRENCE_URN_PREFIX);
+
     Dataset<Row> occurrenceDf =
         loader
             .load("occurrence")
