@@ -43,9 +43,8 @@ import org.gbif.pipelines.common.process.RecordCountReader;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.DwcaUtils;
-import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
-import org.gbif.pipelines.tasks.modes.CallbackModeType;
+import org.gbif.pipelines.tasks.ValidatorCallback;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.validator.ws.client.ValidationWsClient;
@@ -65,13 +64,11 @@ public class ValidatorDwcaToAvroCallback extends AbstractMessageCallback<Pipelin
   @Override
   public void handleMessage(PipelinesDwcaMessage message) {
     log.debug("Handling DwcaToAvroValidatorCallback for message: {}", message);
-    PipelinesCallback.<PipelinesDwcaMessage, PipelinesVerbatimMessage>builder()
-        .historyClient(historyClient)
+    ValidatorCallback.<PipelinesDwcaMessage, PipelinesVerbatimMessage>builder()
         .datasetClient(datasetClient)
         .validationClient(validationClient)
         .config(config)
         .stepType(StepType.VALIDATOR_DWCA_TO_VERBATIM)
-        .callbackModeType(CallbackModeType.VALIDATOR)
         .publisher(publisher)
         .message(message)
         .handler(this)

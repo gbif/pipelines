@@ -57,7 +57,6 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     PipelinesCallback.<PipelinesDwcaMessage, PipelinesVerbatimMessage>builder()
         .historyClient(historyClient)
         .datasetClient(datasetClient)
-        .validationClient(validationClient)
         .config(config)
         .stepType(StepType.DWCA_TO_VERBATIM)
         .publisher(publisher)

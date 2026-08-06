@@ -10,10 +10,9 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
-import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
 import org.gbif.pipelines.tasks.Validations;
-import org.gbif.pipelines.tasks.modes.CallbackModeType;
+import org.gbif.pipelines.tasks.ValidatorCallback;
 import org.gbif.pipelines.tasks.validators.validator.validate.ArchiveValidatorFactory;
 import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -35,12 +34,10 @@ public class ArchiveValidatorCallback
 
   @Override
   public void handleMessage(PipelinesArchiveValidatorMessage message) {
-    PipelinesCallback.<PipelinesArchiveValidatorMessage, PipelineBasedMessage>builder()
-        .historyClient(historyClient)
+    ValidatorCallback.<PipelinesArchiveValidatorMessage, PipelineBasedMessage>builder()
         .validationClient(validationClient)
         .config(config)
         .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
-        .callbackModeType(CallbackModeType.VALIDATOR)
         .publisher(publisher)
         .message(message)
         .handler(this)

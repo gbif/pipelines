@@ -22,10 +22,10 @@ import org.gbif.api.model.pipelines.PipelinesWorkflow;
 import org.gbif.api.model.pipelines.PipelinesWorkflow.Graph;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
-import org.gbif.pipelines.tasks.client.RetryingValidationClient;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 import org.gbif.validator.api.Validation.Status;
+import org.gbif.validator.ws.client.ValidationWsClient;
 
 /**
  * Manages validation status updates in the validation service for a dataset being processed by the
@@ -46,7 +46,7 @@ import org.gbif.validator.api.Validation.Status;
 @RequiredArgsConstructor
 public class ValidatorStatusService {
 
-  private final RetryingValidationClient validationClient;
+  private final ValidationWsClient validationClient;
 
   /**
    * Returns {@code true} when the validation is in a state that should prevent further processing:
