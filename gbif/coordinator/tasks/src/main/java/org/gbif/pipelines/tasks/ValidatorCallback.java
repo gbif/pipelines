@@ -29,9 +29,9 @@ import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
 
 /**
- * Common class for building and handling a validator step.
- * This differs from the PipelinesCallback in that it doesnt communicate with
- * the registry to track the execution. Instead it calls the validation ws.
+ * Common class for building and handling a validator step. This differs from the PipelinesCallback
+ * in that it doesnt communicate with the registry to track the execution. Instead it calls the
+ * validation ws.
  */
 @Slf4j
 @Builder
