@@ -201,14 +201,23 @@ public class ProvenanceJoinBuilder {
    */
   static Dataset<Row> aggregateProvenanceFields(Dataset<Row> joined, String keyColumn) {
     List<String> joinedColumns = Arrays.asList(joined.columns());
+
+    // provenanceID has no `required: true` constraint in the DwC-DP profile (only provenance_pk
+    // does), so a dataset's provenance table can legitimately arrive without it — not merely
+    // null-valued, absent from the schema entirely, same situation as eventID/occurrenceID
+    // elsewhere in this codebase. Falling back to provenance_pk (guaranteed present here via
+    // `links`, for both this method's callers — see class javadoc) only affects the deterministic
+    // *order* of the pipe-delimited output, never which values end up in it.
+    String sortKeyColumn =
+        joinedColumns.contains(PROVENANCE_ID_COLUMN) ? PROVENANCE_ID_COLUMN : PROVENANCE_PK_COLUMN;
+
     List<Column> aggs = new ArrayList<>();
     for (String field : AGGREGATED_FIELDS) {
       if (!joinedColumns.contains(field)) {
         log.debug("provenance table has no '{}' column; skipping its aggregation", field);
         continue;
       }
-      Column sortedStructs =
-          array_sort(collect_list(struct(col(PROVENANCE_ID_COLUMN), col(field))));
+      Column sortedStructs = array_sort(collect_list(struct(col(sortKeyColumn), col(field))));
       Column sortedValues = transform(sortedStructs, x -> x.getField(field));
       Column nonNullValues = filter(sortedValues, Column::isNotNull);
       Column joinedString = array_join(nonNullValues, DELIMITER);

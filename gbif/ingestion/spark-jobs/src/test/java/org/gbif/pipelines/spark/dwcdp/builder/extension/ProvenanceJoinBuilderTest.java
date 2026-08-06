@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark.dwcdp.builder.extension;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -181,6 +182,77 @@ class ProvenanceJoinBuilderTest {
     Row row = result.first();
     assertEquals("Grant A|Grant B|Grant C", row.getAs("fundingAttribution"));
     assertEquals("Project A|Project B|Project C", row.getAs("projectTitle"));
+  }
+
+  @Test
+  void provenanceTableWithNoProvenanceIdColumn_doesNotThrow() {
+    // provenanceID has no `required: true` constraint in the DwC-DP profile (only provenance_pk
+    // does), so a dataset's provenance table can legitimately arrive without it — not merely
+    // null-valued, absent from the schema entirely. Confirmed in production: a real provenance
+    // table with only (provenance_pk, projectID, projectTitle) crashed the whole conversion job
+    // with an UNRESOLVED_COLUMN AnalysisException on `provenanceID`, since it was hardcoded as
+    // the sort key regardless of whether it actually existed.
+    Dataset<Row> event =
+        eventWithDirectFkDf(List.of(RowFactory.create("EPK-001", "EVT001", "PPK-1")));
+    StructType schema =
+        new StructType()
+            .add("provenance_pk", DataTypes.StringType)
+            .add("projectID", DataTypes.StringType)
+            .add("projectTitle", DataTypes.StringType);
+    Dataset<Row> provenance =
+        spark.createDataFrame(List.of(RowFactory.create("PPK-1", "PID-1", "Survey X")), schema);
+
+    Dataset<Row> result =
+        assertDoesNotThrow(
+            () ->
+                ProvenanceJoinBuilder.enrichEvents(
+                    TestTableLoader.of(ProvenanceJoinBuilder.TABLE_PROVENANCE, provenance), event),
+            "a provenance table with no provenanceID column must not crash the provenance "
+                + "attribution join");
+
+    Row row = result.first();
+    assertEquals("PID-1", row.getAs("projectID"));
+    assertEquals("Survey X", row.getAs("projectTitle"));
+  }
+
+  @Test
+  void multipleLinkedProvenanceWithNoProvenanceIdColumn_fallsBackToSortingByProvenancePk() {
+    // Same missing-provenanceID scenario as above, but with multiple linked records — confirms
+    // the fallback to provenance_pk as the sort key still produces deterministic output, not
+    // just that it avoids crashing.
+    Dataset<Row> event = eventNoLinksDf(List.of(RowFactory.create("EPK-001", "EVT001")));
+    // Deliberately inserted out of provenance_pk order to confirm the output order is driven by
+    // sorting, not by row/partition order.
+    Dataset<Row> junction =
+        eventProvenanceJunctionDf(
+            List.of(
+                RowFactory.create("EPK-001", "PPK-3"),
+                RowFactory.create("EPK-001", "PPK-1"),
+                RowFactory.create("EPK-001", "PPK-2")));
+    StructType schema =
+        new StructType()
+            .add("provenance_pk", DataTypes.StringType)
+            .add("projectTitle", DataTypes.StringType);
+    Dataset<Row> provenance =
+        spark.createDataFrame(
+            List.of(
+                RowFactory.create("PPK-3", "Project C"),
+                RowFactory.create("PPK-1", "Project A"),
+                RowFactory.create("PPK-2", "Project B")),
+            schema);
+
+    Dataset<Row> result =
+        ProvenanceJoinBuilder.enrichEvents(
+            TestTableLoader.of(
+                "event",
+                event,
+                ProvenanceJoinBuilder.TABLE_PROVENANCE,
+                provenance,
+                ProvenanceJoinBuilder.TABLE_EVENT_PROVENANCE,
+                junction),
+            event);
+
+    assertEquals("Project A|Project B|Project C", result.first().getAs("projectTitle"));
   }
 
   @Test
