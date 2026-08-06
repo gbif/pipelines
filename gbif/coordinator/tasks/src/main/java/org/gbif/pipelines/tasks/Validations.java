@@ -50,7 +50,7 @@ public class Validations {
       Status status,
       String message) {
 
-    Validation validation = validationClient.get(key);
+    Validation validation = Retry.decorateFunction(RETRY, validationClient::get).apply(key);
     if (validation == null) {
       log.warn("Can't find validation data key {}, please check that record exists", key);
       return;
