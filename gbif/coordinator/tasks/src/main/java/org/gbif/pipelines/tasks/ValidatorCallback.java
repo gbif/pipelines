@@ -29,9 +29,9 @@ import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
 
 /**
- * Common class for building and handling a pipeline step. Contains {@link Builder} to simplify the
- * creation process and main handling process. Please see the main method {@link
- * PipelinesCallback#handleMessage}
+ * Common class for building and handling a validator step.
+ * This differs from the PipelinesCallback in that it doesnt communicate with
+ * the registry to track the execution. Instead it calls the validation ws.
  */
 @Slf4j
 @Builder
@@ -40,7 +40,7 @@ public class ValidatorCallback<I extends PipelineBasedMessage, O extends Pipelin
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final Retry RETRY =
       Retry.of(
-          "registryCall",
+          "validationCall",
           RetryConfig.custom()
               .maxAttempts(15)
               .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
@@ -72,7 +72,6 @@ public class ValidatorCallback<I extends PipelineBasedMessage, O extends Pipelin
    * <pre>
    *   1) Receives a MQ message
    *   2) Updates Zookeeper start date monitoring metrics
-   *   3) Create pipeline step in tracking service
    *   4) Runs runnable function, which is the main message processing logic
    *   5) Updates Zookeeper end date monitoring metrics
    *   6) Update status in tracking service

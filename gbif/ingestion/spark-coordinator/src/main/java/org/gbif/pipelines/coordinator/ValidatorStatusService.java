@@ -46,7 +46,7 @@ import org.gbif.validator.api.Validation.Status;
 @RequiredArgsConstructor
 public class ValidatorStatusService {
 
-  private final RetryingValidationClient validationClient;
+  private final ValidationClient validationClient;
 
   /**
    * Returns {@code true} when the validation is in a state that should prevent further processing:

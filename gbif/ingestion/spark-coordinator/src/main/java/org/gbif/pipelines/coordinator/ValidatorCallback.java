@@ -79,8 +79,7 @@ public abstract class ValidatorCallback<
             .dismiss404()
             .target(
                 ValidationClient.class, pipelinesConfig.getStandalone().getRegistry().getWsUrl());
-    this.validatorStatusService =
-        new ValidatorStatusService(new RetryingValidationClient(validationClient));
+    this.validatorStatusService = new ValidatorStatusService(validationClient);
   }
 
   protected abstract StepType getStepType();

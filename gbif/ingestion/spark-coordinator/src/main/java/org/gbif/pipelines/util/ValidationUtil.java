@@ -1,15 +1,22 @@
 package org.gbif.pipelines.util;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import java.io.IOException;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.PipelinesWorkflow;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.pipelines.coordinator.RetryingValidationClient;
+import org.gbif.pipelines.coordinator.ValidationClient;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
 
@@ -17,16 +24,24 @@ import org.gbif.validator.api.Validation;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ValidationUtil {
 
+  private static final Retry RETRY =
+      Retry.of(
+          "validationCall",
+          RetryConfig.custom()
+              .maxAttempts(15)
+              .retryExceptions(JsonParseException.class, IOException.class, TimeoutException.class)
+              .intervalFunction(
+                  IntervalFunction.ofExponentialBackoff(
+                      Duration.ofSeconds(1), 2d, Duration.ofSeconds(30)))
+              .build());
+
   public static void updateStatus(
-      RetryingValidationClient validationClient,
-      UUID key,
-      StepType stepType,
-      Validation.Status status) {
+      ValidationClient validationClient, UUID key, StepType stepType, Validation.Status status) {
     updateStatus(validationClient, key, stepType, status, null);
   }
 
   public static void updateStatus(
-      RetryingValidationClient validationClient,
+      ValidationClient validationClient,
       UUID key,
       StepType stepType,
       Validation.Status status,
@@ -96,6 +111,7 @@ public class ValidationUtil {
         mainStatus,
         newStatus,
         message);
-    validationClient.update(key, validation);
+
+    Retry.decorateRunnable(RETRY, () -> validationClient.update(key, validation)).run();
   }
 }
