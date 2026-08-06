@@ -4,8 +4,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
     <changeSet id="2" author="dave">
         <sql>
-            DROP TYPE IF EXISTS enum_validation_status;
-            CREATE TYPE enum_validation_status AS ENUM ('DOWNLOADING','SUBMITTED', 'RUNNING', 'FINISHED', 'ABORTED', 'FAILED', 'QUEUED', 'WAITING_FOR_CHECKLISTBANK');
+            ALTER TYPE enum_validation_status ADD VALUE IF NOT EXISTS 'WAITING_FOR_CHECKLISTBANK';
         </sql>
     </changeSet>
 </databaseChangeLog>
