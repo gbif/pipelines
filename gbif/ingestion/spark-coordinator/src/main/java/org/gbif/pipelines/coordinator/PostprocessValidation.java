@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
@@ -219,15 +218,31 @@ public class PostprocessValidation {
   /** Get number of record using Occurrence API */
   @SneakyThrows
   public long getIndexSize(HttpClient httpClient, String datasetId) {
-    int nano = LocalDateTime.now().getNano();
     String url =
         config.getRegistry().getWsUrl()
             + "/occurrence/search?limit=0&datasetKey="
             + datasetId
-            + "&_"
-            + nano;
-    HttpResponse response = executeGet(httpClient, url);
-    return MAPPER.readTree(response.getEntity().getContent()).findValue("count").asLong();
+            + "&_="
+            + System.nanoTime();
+
+    HttpResponse response =
+        Retry.decorateSupplier(
+                RETRY,
+                () -> {
+                  try {
+                    return httpClient.execute(new HttpGet(url));
+                  } catch (IOException e) {
+                    throw new PipelinesException(e);
+                  }
+                })
+            .get();
+
+    try {
+      return MAPPER.readTree(response.getEntity().getContent()).findValue("count").asLong();
+    } catch (Exception e) {
+      throw new PipelinesException(
+          "Problem retrieving dataset count from index. " + e.getMessage(), e);
+    }
   }
 
   @SneakyThrows
