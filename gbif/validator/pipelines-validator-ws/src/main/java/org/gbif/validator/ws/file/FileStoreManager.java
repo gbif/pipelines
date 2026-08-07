@@ -7,12 +7,16 @@ import static org.gbif.validator.ws.file.SupportedMediaTypes.COMPRESS_CONTENT_TY
 
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.Builder;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -131,10 +135,13 @@ public class FileStoreManager {
               + ". The resource is not reachable. Please check that the URL is correct");
     }
 
-    String fileName = getFileName(url);
+    // extract the file name from http headers if available
+    String headerFileName = getFileNameFromContentDisposition(url);
+    final String fileName = headerFileName != null ? headerFileName : getFileName(url);
     Path destinationFolder = getDestinationPath(targetDirectory);
     createIfNotExists(destinationFolder);
     Path dataFilePath = getDestinationPath(targetDirectory).resolve(fileName);
+
     return AsyncDownloadResult.builder()
         .dataFile(DataFile.builder().sourceFileName(fileName).filePath(dataFilePath).build())
         .downloadTask(
@@ -146,6 +153,35 @@ public class FileStoreManager {
                         extractAndGetFileInfo(dataFilePath, destinationFolder, fileName)),
                 errorCallback))
         .build();
+  }
+
+  public String getFileNameFromContentDisposition(String url) throws IOException {
+    HttpURLConnection connection = null;
+    try {
+      connection = (HttpURLConnection) new URL(url).openConnection();
+      connection.setInstanceFollowRedirects(true);
+      connection.setConnectTimeout(10_000);
+      connection.setReadTimeout(10_000);
+      connection.setRequestMethod("HEAD");
+      // Force the request so headers are available
+      connection.getResponseCode();
+      String contentDisposition = connection.getHeaderField("Content-Disposition");
+      return extractFileName(contentDisposition);
+    } finally {
+      if (connection != null) {
+        connection.disconnect();
+      }
+    }
+  }
+
+  private String extractFileName(String contentDisposition) {
+    if (contentDisposition == null) {
+      return null;
+    }
+
+    Matcher matcher = Pattern.compile("filename=\"?([^\";]+)\"?").matcher(contentDisposition);
+
+    return matcher.find() ? Paths.get(matcher.group(1)).getFileName().toString() : null;
   }
 
   @SneakyThrows

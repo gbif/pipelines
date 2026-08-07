@@ -4,33 +4,36 @@ import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 import static org.gbif.validator.api.DwcFileType.CORE;
 
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.nio.file.Paths;
+import java.util.*;
 import lombok.Builder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.crawler.DwcaValidationReport;
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.UnsupportedArchiveException;
+import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwca.validation.MetadataPath;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
 import org.gbif.pipelines.core.utils.DwcaUtils;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorConfiguration;
+import org.gbif.pipelines.validator.DwcaFileTermCounter;
 import org.gbif.pipelines.validator.DwcaValidator;
 import org.gbif.pipelines.validator.Validations;
+import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.pipelines.validator.rules.BasicMetadataEvaluator;
+import org.gbif.utils.file.ClosableIterator;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationType;
 import org.gbif.validator.api.Level;
@@ -48,10 +51,12 @@ public class DwcaArchiveValidator implements ArchiveValidator {
   private final ValidationWsClient validationClient;
   private final SchemaValidatorFactory schemaValidatorFactory;
   private final PipelinesArchiveValidatorMessage message;
+  private final ChecklistValidator checklistValidator;
 
   @Override
   @SneakyThrows
-  public PipelinesDwcaMessage createOutgoingMessage() {
+  public PipelineBasedMessage createOutgoingMessage() {
+    Optional<DatasetType> datasetTypeOpt = getDatasetType();
     PipelinesDwcaMessage m = new PipelinesDwcaMessage();
     m.setDatasetUuid(message.getDatasetUuid());
     m.setAttempt(message.getAttempt());
@@ -61,7 +66,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
             message.getDatasetUuid(), new OccurrenceValidationReport(1, 1, 0, 1, 0, true)));
     m.setPipelineSteps(message.getPipelineSteps());
     m.setExecutionId(message.getExecutionId());
-    getDatasetType().ifPresent(m::setDatasetType);
+    datasetTypeOpt.ifPresent(m::setDatasetType);
     m.setEndpointType(EndpointType.DWC_ARCHIVE);
     return m;
   }
@@ -75,9 +80,47 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     FileInfo emlFile = validateEmlFile();
     Validations.mergeFileInfo(validation, emlFile);
 
-    // Occurrence
-    validateOccurrenceFile()
-        .ifPresent(occurrenceFile -> Validations.mergeFileInfo(validation, occurrenceFile));
+    // Core file (Occurrence, Event or Checklist) and, when present, the Occurrence extension
+    // (e.g. attached to a Sampling Event dataset)
+    List<FileInfo> validatedFileInfos = validateDwcaFiles();
+    validatedFileInfos.forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
+
+    // add term counts
+    List<FileInfo> termCounts =
+        DwcaFileTermCounter.process(
+            DwcaUtils.fromLocation(
+                buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid())));
+    termCounts.forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
+
+    // Is this a checklist archive ? if so use CLB API to validate it
+    Optional<DatasetType> datasetTypeOpt = getDatasetType();
+    if (datasetTypeOpt.isPresent() && datasetTypeOpt.get() == DatasetType.CHECKLIST) {
+      try {
+        log.info("Validating DWCA checklist archive - calling checklistbank");
+        org.gbif.pipelines.tasks.Validations.updateStatus(
+            validationClient,
+            message.getDatasetUuid(),
+            StepType.VALIDATOR_VALIDATE_ARCHIVE,
+            Validation.Status.WAITING_FOR_CHECKLISTBANK);
+        List<FileInfo> result =
+            checklistValidator.evaluate(
+                Paths.get(
+                    buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid())
+                        .toString(),
+                    validation.getFile()));
+        org.gbif.pipelines.tasks.Validations.updateStatus(
+            validationClient,
+            message.getDatasetUuid(),
+            StepType.VALIDATOR_VALIDATE_ARCHIVE,
+            Validation.Status.RUNNING);
+        log.info(
+            "Validating DWCA checklist archive - finished calling checklistbank, merging results");
+        result.forEach(fileInfo -> Validations.mergeFileInfo(validation, fileInfo));
+      } catch (Exception ex) {
+        log.error("Error validating Checklist DWCA archive", ex);
+        validation.setStatus(Validation.Status.FAILED);
+      }
+    }
 
     log.info("Update validation key {}", message.getDatasetUuid());
     validationClient.update(validation);
@@ -103,7 +146,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
 
     FileInfoBuilder fileInfoBuilder = FileInfo.builder().fileType(DwcFileType.METADATA);
 
-    if (!emlPath.isPresent()) {
+    if (emlPath.isEmpty()) {
       return fileInfoBuilder
           .issues(
               Collections.singletonList(
@@ -115,7 +158,7 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     }
 
     try {
-      String xmlDoc = new String(Files.readAllBytes(emlPath.get()), StandardCharsets.UTF_8);
+      String xmlDoc = Files.readString(emlPath.get());
 
       List<IssueInfo> issueInfos = new ArrayList<>();
       // Validate XML file
@@ -141,47 +184,101 @@ public class DwcaArchiveValidator implements ArchiveValidator {
     }
   }
 
-  private Optional<FileInfo> validateOccurrenceFile() {
-
-    FileInfoBuilder fileInfoBuilder =
-        FileInfo.builder().rowType(DwcTerm.Occurrence.qualifiedName());
-
+  /**
+   * Validates the DwC-A core file (Occurrence, Event or Checklist) and, when present, the
+   * Occurrence extension attached to a non-Occurrence core (e.g. a Sampling Event dataset).
+   */
+  private List<FileInfo> validateDwcaFiles() {
     try {
       log.info("Running DWCA validation for {}", message.getDatasetUuid());
       Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
       Archive archive = DwcaUtils.fromLocation(inputPath);
+      DatasetType datasetType = getDatasetType(archive);
 
-      List<IssueInfo> issueInfos =
+      DwcaValidationReport report =
           DwcaValidator.builder()
               .archive(archive)
               .datasetKey(message.getDatasetUuid())
-              .datasetType(getDatasetType(archive))
+              .datasetType(datasetType)
               .maxExampleErrors(config.maxExampleErrors)
               .maxRecords(config.maxRecords)
               .build()
-              .validate();
+              .validateAsReport();
 
-      String fileName;
-      DwcFileType dwcFileType;
-      if (archive.getCore().getRowType() == DwcTerm.Occurrence) {
-        fileName = archive.getCore().getFirstLocationFile().getName();
-        dwcFileType = CORE;
-      } else if (archive.getExtension(DwcTerm.Occurrence) != null) {
-        fileName = archive.getExtension(DwcTerm.Occurrence).getFirstLocationFile().getName();
-        dwcFileType = DwcFileType.EXTENSION;
-      } else {
-        return Optional.empty();
+      List<FileInfo> fileInfos = new ArrayList<>();
+
+      // Core file: Occurrence core uses the occurrence report, Event/Checklist core uses the
+      // generic report
+      boolean isOccurrenceCore = archive.getCore().getRowType() == DwcTerm.Occurrence;
+      List<IssueInfo> coreIssues =
+          isOccurrenceCore
+              ? DwcaValidator.occurrenceIssues(report.getOccurrenceReport())
+              : DwcaValidator.genericIssues(report.getGenericReport());
+      fileInfos.add(
+          FileInfo.builder()
+              .rowType(archive.getCore().getRowType().qualifiedName())
+              .fileType(CORE)
+              .fileName(archive.getCore().getFirstLocationFile().getName())
+              .issues(coreIssues)
+              .build());
+
+      // Occurrence extension, e.g. attached to a Sampling Event dataset
+      if (!isOccurrenceCore && archive.getExtension(DwcTerm.Occurrence) != null) {
+        fileInfos.add(
+            FileInfo.builder()
+                .rowType(DwcTerm.Occurrence.qualifiedName())
+                .fileType(DwcFileType.EXTENSION)
+                .fileName(archive.getExtension(DwcTerm.Occurrence).getFirstLocationFile().getName())
+                .issues(DwcaValidator.occurrenceIssues(report.getOccurrenceReport()))
+                .build());
       }
 
-      fileInfoBuilder.fileType(dwcFileType).fileName(fileName).issues(issueInfos).build();
+      return fileInfos;
 
     } catch (UnsupportedArchiveException ex) {
-      fileInfoBuilder.issues(
-          Collections.singletonList(
-              IssueInfo.create(
-                  EvaluationType.UNHANDLED_ERROR, Level.FATAL.name(), ex.getLocalizedMessage())));
+      return Collections.singletonList(
+          FileInfo.builder()
+              .issues(
+                  Collections.singletonList(
+                      IssueInfo.create(
+                          EvaluationType.UNHANDLED_ERROR,
+                          Level.FATAL.name(),
+                          ex.getLocalizedMessage())))
+              .build());
     }
-    return Optional.of(fileInfoBuilder.build());
+  }
+
+  /**
+   * Generate counts for core and extensions.
+   *
+   * @param path to archive to read
+   * @return counts for core and extensions
+   */
+  private DwcaCounts generateCounts(Path path) {
+    // record count
+    long coreCount = 0;
+    Map<String, Long> extensionCounts = new HashMap<>();
+    try {
+      Archive archive = DwcaUtils.fromLocation(path);
+      try (ClosableIterator<org.gbif.dwc.record.StarRecord> iterator = archive.iterator()) {
+        while (iterator.hasNext()) {
+          coreCount++;
+          StarRecord starRecord = iterator.next();
+          starRecord
+              .extensions()
+              .forEach(
+                  (term, records) -> {
+                    Long count = extensionCounts.getOrDefault(term.qualifiedName(), 0L);
+                    extensionCounts.put(term.qualifiedName(), count + records.size());
+                  });
+        }
+      } catch (Exception ex) {
+        log.error(ex.getMessage(), ex);
+      }
+    } catch (Exception e) {
+      log.error("Unable to read archive", e);
+    }
+    return DwcaCounts.builder().coreCount(coreCount).extensionCounts(extensionCounts).build();
   }
 
   /** Gets the dataset type from the Archive parameter. */
@@ -205,7 +302,14 @@ public class DwcaArchiveValidator implements ArchiveValidator {
       Path inputPath = buildDwcaInputPath(config.archiveRepository, message.getDatasetUuid());
       return Optional.of(getDatasetType(DwcaUtils.fromLocation(inputPath)));
     } catch (Exception ex) {
+      log.error("Couldn't get dataset type for validation {}", message.getDatasetUuid(), ex);
       return Optional.empty();
     }
+  }
+
+  @Builder
+  static class DwcaCounts {
+    long coreCount = -1;
+    Map<String, Long> extensionCounts = new HashMap<>();
   }
 }

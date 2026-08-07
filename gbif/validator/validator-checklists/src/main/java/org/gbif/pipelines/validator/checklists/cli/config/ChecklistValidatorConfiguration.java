@@ -5,7 +5,6 @@ import com.beust.jcommander.ParametersDelegate;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import java.io.File;
 import lombok.ToString;
 import org.gbif.cli.PropertyName;
 import org.gbif.common.messaging.config.MessagingConfiguration;
@@ -36,19 +35,15 @@ public class ChecklistValidatorConfiguration {
   @NotNull
   public String archiveRepository;
 
-  @Parameter(names = "--neo-repository")
-  public File neoRepository = new File("/tmp/neo");
+  @Parameter(names = "--clb-api-url")
+  @PropertyName("clb.api.url")
+  public String clbApiUrl;
 
-  @Parameter(names = "--gbif-api-url")
-  @PropertyName("gbif.api.url")
-  public String gbifApiUrl;
+  @Parameter(names = "--clb-api-user")
+  @PropertyName("clb.api.user")
+  public String clbApiUser;
 
-  @Parameter(names = "--neo-batch-size")
-  public int neoBatchSize = 10000;
-
-  @Parameter(names = "--neo-mapped-memory")
-  public int neoMappedMemory = 128;
-
-  @Parameter(names = "--neo-port")
-  public int neoPort = 1337;
+  @Parameter(names = "--clb-api-password")
+  @PropertyName("clb.api.password")
+  public String clbApiPassword;
 }

@@ -1,3 +1,16 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.pipelines.tasks;
 
 import static org.gbif.common.messaging.api.messages.OccurrenceDeletionReason.NOT_SEEN_IN_LAST_CRAWL;
@@ -54,9 +67,6 @@ import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.utils.file.properties.PropertiesUtil;
-import org.gbif.validator.api.Validation;
-import org.gbif.validator.api.Validation.Status;
-import org.gbif.validator.ws.client.ValidationWsClient;
 import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
 
@@ -116,8 +126,6 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   @NonNull private final BaseConfiguration config;
   @NonNull private final I message;
   @NonNull private final StepHandler<I, O> handler;
-  private final ValidationWsClient validationClient;
-  @Builder.Default private final boolean isValidator = false;
 
   static {
     try {
@@ -152,7 +160,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         MDCCloseable mdc1 = MDC.putCloseable("attempt", message.getAttempt().toString());
         MDCCloseable mdc2 = MDC.putCloseable("step", stepType.name())) {
 
-      if (!handler.isMessageCorrect(message) || isProcessingStopped() || isValidatorAborted()) {
+      if (!handler.isMessageCorrect(message) || isProcessingStopped()) {
         log.info(
             "Skip the message, please check that message is correct/runner/validation info/etc, exit from handler");
         return;
@@ -193,8 +201,6 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         info.ifPresent(this::updateQueuedStatus);
       }
 
-      updateValidatorInfoStatus(Status.FINISHED);
-
     } catch (Exception ex) {
       String error = "Error for datasetKey - " + datasetKey + " : " + ex.getMessage();
       log.error(error, ex);
@@ -202,12 +208,6 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       // update tracking status
       info.ifPresent(i -> updateTrackingStatus(i, PipelineStep.Status.FAILED));
 
-      // update validator info
-      String errorMessage = null;
-      if (ex.getCause() instanceof PipelinesException) {
-        errorMessage = ((PipelinesException) ex.getCause()).getShortMessage();
-      }
-      updateValidatorInfoStatus(Status.FAILED, errorMessage);
     } finally {
       if (message.getExecutionId() != null) {
         log.info("Mark execution as FINISHED if all steps are FINISHED");
@@ -225,35 +225,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     log.info("Message handler ended - {}", message);
   }
 
-  private boolean isValidatorAborted() {
-    if (isValidator) {
-      Function<UUID, Validation> getValidationFn =
-          key -> {
-            log.info("Validation client: get validation by datasetKey {}", key);
-            return validationClient.get(key);
-          };
-      Validation validation =
-          Retry.decorateFunction(RETRY, getValidationFn).apply(message.getDatasetUuid());
-      if (validation != null) {
-        Status status = validation.getStatus();
-        return status == Status.ABORTED
-            || status == Status.FINISHED
-            || status == Status.FAILED
-            || status == Status.DOWNLOADING;
-      } else {
-        log.warn(
-            "Can't find validation data key {}, please check that record exists",
-            message.getDatasetUuid());
-      }
-    }
-    return false;
-  }
-
   private boolean isProcessingStopped() {
-    if (isValidator) {
-      return false;
-    }
-
     Long currentKey = message.getExecutionId();
 
     Supplier<Long> s = () -> historyClient.getRunningExecutionKey(message.getDatasetUuid());
@@ -281,16 +253,6 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
     return !currentKey.equals(runningKey);
   }
 
-  private void updateValidatorInfoStatus(Status status) {
-    updateValidatorInfoStatus(status, null);
-  }
-
-  private void updateValidatorInfoStatus(Status status, String text) {
-    if (isValidator) {
-      Validations.updateStatus(validationClient, message.getDatasetUuid(), stepType, status, text);
-    }
-  }
-
   private boolean containsEvents() {
     DatasetInfo datasetInfo = message.getDatasetInfo();
     boolean containsEvents = false;
@@ -302,11 +264,6 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
   private Optional<TrackingInfo> trackPipelineStep() {
     try {
-
-      if (isValidator) {
-        log.info("Skiping status updating, isValidator {}", isValidator);
-        return Optional.empty();
-      }
 
       // create pipeline process. If it already exists it returns the existing one (the db query
       // does an upsert).
@@ -415,15 +372,11 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   }
 
   private void updateQueuedStatus(TrackingInfo info) {
-    List<Graph<StepType>.Edge> nodeEdges;
-    if (isValidator) {
-      nodeEdges = PipelinesWorkflow.getValidatorWorkflow().getNodeEdges(stepType);
-    } else {
-      boolean containsEvents = containsEvents();
-      boolean containsOccurrences = message.getDatasetInfo().isContainsOccurrences();
-      Graph<StepType> workflow = PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents);
-      nodeEdges = workflow.getNodeEdges(stepType);
-    }
+
+    boolean containsEvents = containsEvents();
+    boolean containsOccurrences = message.getDatasetInfo().isContainsOccurrences();
+    Graph<StepType> workflow = PipelinesWorkflow.getWorkflow(containsOccurrences, containsEvents);
+    List<Graph<StepType>.Edge> nodeEdges = workflow.getNodeEdges(stepType);
 
     for (Graph<StepType>.Edge e : nodeEdges) {
       PipelineStep step = info.pipelineStepMap.get(e.getNode());

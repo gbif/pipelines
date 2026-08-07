@@ -2,23 +2,20 @@ package org.gbif.validator.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.extern.jackson.Jacksonized;
 import org.gbif.validator.api.Validation.Status;
 
 @Data
 @Builder
+@Jacksonized
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonDeserialize(builder = Metrics.MetricsBuilder.class)
 public class Metrics {
 
   private boolean indexeable;
@@ -33,23 +30,29 @@ public class Metrics {
 
   @Data
   @Builder
+  @Jacksonized
   @NoArgsConstructor
   @AllArgsConstructor
-  @JsonDeserialize(builder = ValidationStep.ValidationStepBuilder.class)
-  public static class ValidationStep {
+  public static class ValidationStep implements Comparable<ValidationStep> {
 
     // Keep stepType as String to prevent a clash between validation-api and gbif-api StepType enums
     private String stepType;
     private Status status;
     private String message;
     private int executionOrder;
+
+    @Override
+    public int compareTo(ValidationStep other) {
+      return Integer.compare(this.executionOrder, other.executionOrder);
+    }
   }
 
   @Data
   @Builder
+  @Jacksonized
   @NoArgsConstructor
   @AllArgsConstructor
-  @JsonDeserialize(builder = FileInfo.FileInfoBuilder.class)
+  @ToString
   public static class FileInfo {
     private String fileName;
     private DwcFileType fileType;
@@ -62,20 +65,23 @@ public class Metrics {
 
   @Data
   @Builder
+  @Jacksonized
   @NoArgsConstructor
   @AllArgsConstructor
-  @JsonDeserialize(builder = TermInfo.TermInfoBuilder.class)
   public static class TermInfo {
     private String term;
     private Long rawIndexed;
+    private Long uniqueRawValues;
     private Long interpretedIndexed;
+    private Long uniqueInterpretedValues;
+    private Map<String, Long> sampleInterpretedValuesMap;
   }
 
   @Data
   @Builder
+  @Jacksonized
   @NoArgsConstructor
   @AllArgsConstructor
-  @JsonDeserialize(builder = IssueInfo.IssueInfoBuilder.class)
   public static class IssueInfo {
     private String issue;
     private EvaluationCategory issueCategory;
@@ -102,9 +108,9 @@ public class Metrics {
 
   @Data
   @Builder
+  @Jacksonized
   @NoArgsConstructor
   @AllArgsConstructor
-  @JsonDeserialize(builder = IssueSample.IssueSampleBuilder.class)
   public static class IssueSample {
     private String recordId;
     private Map<String, String> relatedData = Collections.emptyMap();

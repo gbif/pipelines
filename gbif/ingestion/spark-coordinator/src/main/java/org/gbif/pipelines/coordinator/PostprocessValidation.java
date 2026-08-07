@@ -51,6 +51,13 @@ public class PostprocessValidation {
   private final FileSystem fileSystem;
   private final String outputPath;
 
+  /**
+   * Validator runs use ephemeral validation UUIDs that are not registered datasets, so the registry
+   * lookups below (machine tags, installation key, indexed occurrence count) don't apply. When
+   * true, skip them and fall back to defaults.
+   */
+  private final boolean bypassRegistry;
+
   private static final Retry RETRY =
       Retry.of(
           "apiCall",
@@ -161,6 +168,9 @@ public class PostprocessValidation {
 
   @SneakyThrows
   private Optional<Double> getThresholdTagValue() {
+    if (bypassRegistry) {
+      return Optional.empty();
+    }
     String datasetKey = message.getDatasetUuid().toString();
     return getMachineTagValue(httpClient, datasetKey, "id_threshold_percent")
         .map(Double::parseDouble);
@@ -168,6 +178,9 @@ public class PostprocessValidation {
 
   @SneakyThrows
   private boolean useThresholdSkipTagValue() {
+    if (bypassRegistry) {
+      return false;
+    }
     String datasetKey = message.getDatasetUuid().toString();
     return getMachineTagValue(httpClient, datasetKey, "id_threshold_skip")
         .map(Boolean::parseBoolean)
@@ -176,6 +189,9 @@ public class PostprocessValidation {
 
   @SneakyThrows
   private boolean skipInstallationKey() {
+    if (bypassRegistry) {
+      return false;
+    }
     String datasetKey = message.getDatasetUuid().toString();
     String installationKey = getInstallationKey(httpClient, datasetKey);
     boolean r = config.getSkipInstallationsList().contains(installationKey);
@@ -191,6 +207,10 @@ public class PostprocessValidation {
 
   @SneakyThrows
   private long getApiRecords() {
+    if (bypassRegistry) {
+      // Validator datasets are not indexed, so there are no API/occurrence records.
+      return 0;
+    }
     String datasetKey = message.getDatasetUuid().toString();
     return getIndexSize(httpClient, datasetKey);
   }

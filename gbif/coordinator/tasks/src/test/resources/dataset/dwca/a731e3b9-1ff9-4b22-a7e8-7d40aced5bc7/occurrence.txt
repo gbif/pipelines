@@ -1,0 +1,2 @@
+coreid	basisOfRecord	scientificName	occurrenceID
+EVT001	HumanObservation	Passer domesticus	OCC001

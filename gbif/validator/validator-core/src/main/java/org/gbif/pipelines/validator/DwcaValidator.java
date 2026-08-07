@@ -141,9 +141,17 @@ public class DwcaValidator {
     DwcaValidationReport report = validateAsReport();
 
     List<IssueInfo> issueInfos = new ArrayList<>();
+    issueInfos.addAll(genericIssues(report.getGenericReport()));
+    issueInfos.addAll(occurrenceIssues(report.getOccurrenceReport()));
+    return issueInfos;
+  }
 
-    // Generic report
-    GenericValidationReport genericReport = report.getGenericReport();
+  /**
+   * Builds the issues found in the generic core report, e.g. duplicate or missing eventID/taxonID
+   * in an Event or Checklist core.
+   */
+  public static List<IssueInfo> genericIssues(@Nullable GenericValidationReport genericReport) {
+    List<IssueInfo> issueInfos = new ArrayList<>();
     if (genericReport != null && !genericReport.isValid()) {
       if (!genericReport.getDuplicateIds().isEmpty()) {
         issueInfos.add(IssueInfo.create(RECORD_NOT_UNIQUELY_IDENTIFIED));
@@ -152,13 +160,19 @@ public class DwcaValidator {
         issueInfos.add(IssueInfo.create(RECORD_REFERENTIAL_INTEGRITY_VIOLATION));
       }
     }
+    return issueInfos;
+  }
 
-    // Occurrence report
-    OccurrenceValidationReport occurrenceReport = report.getOccurrenceReport();
+  /**
+   * Builds the issues found in the occurrence report, either from an Occurrence core or an
+   * Occurrence extension (e.g. attached to a Sampling Event dataset).
+   */
+  public static List<IssueInfo> occurrenceIssues(
+      @Nullable OccurrenceValidationReport occurrenceReport) {
+    List<IssueInfo> issueInfos = new ArrayList<>();
     if (occurrenceReport != null && !occurrenceReport.isValid()) {
       issueInfos.add(IssueInfo.create(OCCURRENCE_NOT_UNIQUELY_IDENTIFIED));
     }
-
     return issueInfos;
   }
 

@@ -5,6 +5,13 @@ import static org.gbif.ws.security.UserRoles.APP_ROLE;
 import static org.gbif.ws.security.UserRoles.IPT_ROLE;
 import static org.gbif.ws.security.UserRoles.USER_ROLE;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -33,8 +40,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Validation resource services, it allows validating files (synchronous) and url (asynchronously).
- * Aditional it provides services to list and retrieve validations statuses.
+ * Additional it provides services to list and retrieve validations statuses.
  */
+@Tag(
+    name = "Validation",
+    description =
+        "Operations for submitting files/URLs for validation and managing validation jobs")
 @Slf4j
 @RestController
 @RequestMapping(value = "validation", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -47,45 +58,106 @@ public class ValidationResource {
   private final ErrorMapper errorMapper;
 
   /** Uploads a file and starts the validation process. */
+  @Operation(
+      summary = "Upload a file and start validation",
+      description = "Uploads a file and starts synchronous validation.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Validation started",
+        content = @Content(schema = @Schema(implementation = Validation.class))),
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+  })
   @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   public Validation submitFile(
-      @RequestParam("file") MultipartFile file, @Valid ValidationRequest validationRequest) {
+      @Parameter(description = "File to validate") @RequestParam("file") MultipartFile file,
+      @Valid ValidationRequest validationRequest) {
     return validationService.validateFile(file, validationRequest);
   }
 
   /** Asynchronously downloads a file from a URL and starts the validation process. */
+  @Operation(
+      summary = "Submit a URL for validation",
+      description = "Asynchronously downloads a file from the provided URL and starts validation.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Validation job accepted",
+        content = @Content(schema = @Schema(implementation = Validation.class))),
+    @ApiResponse(responseCode = "400", description = "Invalid URL or request")
+  })
   @PostMapping(
       path = "/url",
       consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
   public Validation submitUrl(
-      @RequestParam("fileUrl") String fileURL, @Valid ValidationRequest validationRequest) {
+      @Parameter(description = "URL of the file to validate") @RequestParam("fileUrl")
+          String fileURL,
+      @Valid ValidationRequest validationRequest) {
     return validationService.validateFileFromUrl(fileURL, validationRequest);
   }
 
   /** Gets the detail of Validation. */
+  @Operation(
+      summary = "Get validation details",
+      description = "Retrieve details for a specific validation job.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Validation found",
+        content = @Content(schema = @Schema(implementation = Validation.class))),
+    @ApiResponse(responseCode = "404", description = "Validation not found")
+  })
   @GetMapping(path = "/{key}")
-  public Validation get(@PathVariable("key") UUID key) {
+  public Validation get(@Parameter(description = "Validation key") @PathVariable("key") UUID key) {
     return validationService.get(key);
   }
 
   /** Cancels a Validation. */
+  @Operation(
+      summary = "Cancel validation",
+      description = "Cancel a running or queued validation job.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Validation cancelled",
+        content = @Content(schema = @Schema(implementation = Validation.class))),
+    @ApiResponse(responseCode = "404", description = "Validation not found")
+  })
   @PutMapping(path = "/{key}/cancel")
-  public Validation cancel(@PathVariable("key") UUID key) {
+  public Validation cancel(
+      @Parameter(description = "Validation key") @PathVariable("key") UUID key) {
     return validationService.cancel(key);
   }
 
   /** Deletes a Validation. */
+  @Operation(
+      summary = "Delete validation",
+      description = "Delete a validation job and its results.")
+  @ApiResponses({
+    @ApiResponse(responseCode = "204", description = "Validation deleted"),
+    @ApiResponse(responseCode = "404", description = "Validation not found")
+  })
   @DeleteMapping(path = "/{key}")
-  public void delete(@PathVariable("key") UUID key) {
+  public void delete(@Parameter(description = "Validation key") @PathVariable("key") UUID key) {
     validationService.delete(key);
   }
 
-  /** Gets the detail of Validation. */
+  /** Updates the detail of Validation. */
+  @Operation(summary = "Update validation", description = "Update the details of a validation job.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Validation updated",
+        content = @Content(schema = @Schema(implementation = Validation.class))),
+    @ApiResponse(responseCode = "400", description = "Invalid request"),
+    @ApiResponse(responseCode = "404", description = "Validation not found")
+  })
   @PutMapping(
       path = "/{key}",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
   public Validation update(
-      @PathVariable("key") UUID key, @RequestBody @Valid @NotNull Validation validation) {
+      @Parameter(description = "Validation key") @PathVariable("key") UUID key,
+      @RequestBody @Valid @NotNull Validation validation) {
     if (!key.equals(validation.getKey())) {
       throw errorMapper.apply(Validation.ErrorCode.WRONG_KEY_IN_REQUEST);
     }
@@ -93,12 +165,31 @@ public class ValidationResource {
   }
 
   /** Get EML data */
+  @Operation(
+      summary = "Get EML data",
+      description = "Return EML (metadata) for a validation's dataset.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "EML returned",
+        content = @Content(schema = @Schema(implementation = Dataset.class))),
+    @ApiResponse(responseCode = "404", description = "Dataset not found")
+  })
   @GetMapping(path = "/{key}/eml")
-  public Dataset getEml(@PathVariable("key") UUID key) {
+  public Dataset getEml(@Parameter(description = "Validation key") @PathVariable("key") UUID key) {
     return validationService.getDataset(key);
   }
 
   /** Lists the validations of a user. */
+  @Operation(
+      summary = "List validations",
+      description = "List validations for the current user with paging and filters.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "List returned",
+        content = @Content(schema = @Schema(implementation = PagingResponse.class)))
+  })
   @GetMapping
   public PagingResponse<Validation> list(@Valid ValidationSearchRequest validationSearchRequest) {
     return validationService.list(validationSearchRequest);
@@ -106,8 +197,19 @@ public class ValidationResource {
 
   /** Returns list of validations running for more than specified time in min. */
   @Secured({ADMIN_ROLE})
+  @Operation(
+      summary = "Get long-running validations",
+      description =
+          "Returns list of validation keys running longer than the specified minutes (admin only).")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "List returned",
+        content = @Content(schema = @Schema(implementation = UUID.class)))
+  })
   @GetMapping(path = "/running")
-  public List<UUID> getRunningValidations(@RequestParam("min") int min) {
+  public List<UUID> getRunningValidations(
+      @Parameter(description = "Minimum running time in minutes") @RequestParam("min") int min) {
     return validationService.getRunningValidations(min);
   }
 }
