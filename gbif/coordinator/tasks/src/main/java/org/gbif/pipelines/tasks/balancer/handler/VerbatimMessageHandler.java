@@ -136,7 +136,7 @@ public class VerbatimMessageHandler {
 
       ValidationResult result = m.getValidationResult();
       if (result != null) {
-        if (result.getNumberOfRecords() == null || isValidator(m.getPipelineSteps())) {
+        if (result.getNumberOfRecords() == null) {
           result.setNumberOfRecords(recordsNumber);
         }
       }

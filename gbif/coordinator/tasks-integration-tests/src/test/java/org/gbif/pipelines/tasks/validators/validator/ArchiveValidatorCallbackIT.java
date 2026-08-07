@@ -15,6 +15,7 @@ import java.util.UUID;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
+import org.gbif.pipelines.common.configs.ChecklistBankConfiguration;
 import org.gbif.pipelines.tasks.MessagePublisherStub;
 import org.gbif.pipelines.tasks.ValidationWsClientStub;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
@@ -52,6 +53,8 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
+    config.clbConfig =
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -81,7 +84,7 @@ public class ArchiveValidatorCallbackIT {
     // Result
     Validation validation = validationClient.getValidation();
 
-    assertEquals(2, validation.getMetrics().getFileInfos().size());
+    assertEquals(4, validation.getMetrics().getFileInfos().size());
 
     // Meta
     Optional<FileInfo> metaOpt = validationClient.getFileInfoByFileType(DwcFileType.METADATA);
@@ -108,9 +111,9 @@ public class ArchiveValidatorCallbackIT {
 
     FileInfo core = coreOpt.get();
     assertEquals("occurrence.txt", core.getFileName());
-    assertNull(core.getCount());
+    assertEquals(Long.valueOf(1534L), core.getCount());
     assertNull(core.getIndexedCount());
-    assertEquals(0, core.getTerms().size());
+    assertEquals(235, core.getTerms().size());
     assertEquals(0, core.getIssues().size());
     assertEquals(DwcFileType.CORE, core.getFileType());
   }
@@ -122,6 +125,8 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
+    config.clbConfig =
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -151,7 +156,7 @@ public class ArchiveValidatorCallbackIT {
     // Result
     Validation validation = validationClient.getValidation();
 
-    assertEquals(2, validation.getMetrics().getFileInfos().size());
+    assertEquals(4, validation.getMetrics().getFileInfos().size());
 
     // Meta
     Optional<FileInfo> metaOpt = validationClient.getFileInfoByFileType(DwcFileType.METADATA);
@@ -165,16 +170,24 @@ public class ArchiveValidatorCallbackIT {
     assertEquals(0, meta.getIssues().size());
     assertEquals(DwcFileType.METADATA, meta.getFileType());
 
-    // Core
+    // Event core
+    Optional<FileInfo> eventCoreOpt = validationClient.getFileInfo(DwcFileType.CORE, DwcTerm.Event);
+    assertTrue(eventCoreOpt.isPresent());
+
+    FileInfo eventCore = eventCoreOpt.get();
+    assertEquals("event.txt", eventCore.getFileName());
+    assertEquals(DwcFileType.CORE, eventCore.getFileType());
+
+    // Occurrence extension
     Optional<FileInfo> coreOpt =
         validationClient.getFileInfo(DwcFileType.EXTENSION, DwcTerm.Occurrence);
     assertTrue(coreOpt.isPresent());
 
     FileInfo core = coreOpt.get();
     assertEquals("occurrence.txt", core.getFileName());
-    assertNull(core.getCount());
+    assertEquals(Long.valueOf(1L), core.getCount());
     assertNull(core.getIndexedCount());
-    assertEquals(0, core.getTerms().size());
+    assertEquals(21, core.getTerms().size());
     assertEquals(0, core.getIssues().size());
     assertEquals(DwcFileType.EXTENSION, core.getFileType());
   }
@@ -186,6 +199,8 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
+    config.clbConfig =
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -216,7 +231,7 @@ public class ArchiveValidatorCallbackIT {
     // Result
     Validation validation = validationClient.getValidation();
 
-    assertEquals(2, validation.getMetrics().getFileInfos().size());
+    assertEquals(3, validation.getMetrics().getFileInfos().size());
 
     // Meta
     Optional<FileInfo> metaOpt = validationClient.getFileInfoByFileType(DwcFileType.METADATA);
@@ -224,22 +239,31 @@ public class ArchiveValidatorCallbackIT {
 
     FileInfo meta = metaOpt.get();
     assertEquals("eml.xml", meta.getFileName());
+
     assertNull(meta.getCount());
     assertNull(meta.getIndexedCount());
     assertEquals(0, meta.getTerms().size());
     assertEquals(0, meta.getIssues().size());
     assertEquals(DwcFileType.METADATA, meta.getFileType());
 
-    // Core
+    // Taxon core
+    Optional<FileInfo> taxonCoreOpt = validationClient.getFileInfo(DwcFileType.CORE, DwcTerm.Taxon);
+    assertTrue(taxonCoreOpt.isPresent());
+
+    FileInfo taxonCore = taxonCoreOpt.get();
+    assertEquals("taxon.txt", taxonCore.getFileName());
+    assertEquals(DwcFileType.CORE, taxonCore.getFileType());
+
+    // Occurrence extension
     Optional<FileInfo> coreOpt =
         validationClient.getFileInfo(DwcFileType.EXTENSION, DwcTerm.Occurrence);
     assertTrue(coreOpt.isPresent());
 
     FileInfo core = coreOpt.get();
     assertEquals("occurrence.txt", core.getFileName());
-    assertNull(core.getCount());
+    assertEquals(Long.valueOf(619L), core.getCount());
     assertNull(core.getIndexedCount());
-    assertEquals(0, core.getTerms().size());
+    assertEquals(25, core.getTerms().size());
     assertEquals(0, core.getIssues().size());
     assertEquals(DwcFileType.EXTENSION, core.getFileType());
   }
@@ -251,6 +275,8 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
+    config.clbConfig =
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -283,6 +309,8 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
+    config.clbConfig =
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -315,6 +343,8 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
+    config.clbConfig =
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -347,6 +377,8 @@ public class ArchiveValidatorCallbackIT {
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.validatorOnly = true;
+    config.clbConfig =
+        new ChecklistBankConfiguration("https://api.col.plus/v1", "XXXXXX", "XXXXXX");
 
     ValidationWsClientStub validationClient = ValidationWsClientStub.create();
 
@@ -370,14 +402,13 @@ public class ArchiveValidatorCallbackIT {
 
     // Should
     Validation validation = validationClient.getValidation();
-    Optional<FileInfo> occurrenceFile =
+    Optional<FileInfo> unsupportedArchiveFile =
         validation.getMetrics().getFileInfos().stream()
-            .filter(x -> x.getRowType() != null)
-            .filter(x -> x.getRowType().equals(DwcTerm.Occurrence.qualifiedName()))
+            .filter(x -> !x.getIssues().isEmpty())
             .findFirst();
 
-    assertTrue(occurrenceFile.isPresent());
-    assertFalse(occurrenceFile.get().getIssues().isEmpty());
+    assertTrue(unsupportedArchiveFile.isPresent());
+    assertFalse(unsupportedArchiveFile.get().getIssues().isEmpty());
 
     assertTrue(PUBLISHER.getMessages().isEmpty());
   }

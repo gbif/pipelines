@@ -53,7 +53,6 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
   public void handleMessage(PipelinesAbcdMessage message) {
     PipelinesCallback.<PipelinesAbcdMessage, PipelinesVerbatimMessage>builder()
         .historyClient(historyClient)
-        .validationClient(validationClient)
         .datasetClient(datasetClient)
         .config(config)
         .stepType(StepType.ABCD_TO_VERBATIM)

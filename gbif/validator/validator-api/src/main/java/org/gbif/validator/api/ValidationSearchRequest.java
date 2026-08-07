@@ -1,7 +1,6 @@
 package org.gbif.validator.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.validation.constraints.Min;
 import java.util.ArrayList;
 import java.util.Date;
@@ -11,12 +10,13 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.extern.jackson.Jacksonized;
 import org.gbif.api.annotation.PartialDate;
 
 @Data
 @Builder
+@Jacksonized
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonDeserialize(builder = ValidationSearchRequest.ValidationSearchRequestBuilder.class)
 @AllArgsConstructor
 public class ValidationSearchRequest {
 
@@ -27,8 +27,8 @@ public class ValidationSearchRequest {
 
   @Data
   @Builder
+  @Jacksonized
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  @JsonDeserialize(builder = SortBy.SortByBuilder.class)
   public static class SortBy {
 
     /** Field to order by. */

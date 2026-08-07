@@ -9,11 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -125,7 +122,7 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
     try {
       validateRequest(validationRequest);
 
-      log.info("Staring validation for the URL {}", fileURL);
+      log.info("Starting validation for the URL {}", fileURL);
       UUID key = UUID.randomUUID();
       String encodedFileURL = EncodingUtil.encode(fileURL);
       Optional<String> redirectedUrl = EncodingUtil.getRedirectedUrl(encodedFileURL);
@@ -139,8 +136,21 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
               encodedFileURL,
               key.toString(),
               resultDataFile -> {
-                log.info(
-                    "File has been uploded and decompressed from URL {}, key {}", fileURL, key);
+                if (resultDataFile == null) {
+                  log.error("Downloaded file is null for URL {}, key {}", fileURL, key);
+                  updateFailedValidation(key, "Downloaded file from " + fileURL + " is null");
+                  return;
+                }
+                try {
+                  log.info(
+                      "File has been downloaded and decompressed from URL {}, key {} to path {} with size {} bytes",
+                      fileURL,
+                      key,
+                      resultDataFile.getFilePath().toAbsolutePath(),
+                      Files.size(resultDataFile.getFilePath()));
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
                 updateAndNotifySubmitted(key, resultDataFile);
               },
               err -> {
@@ -257,11 +267,13 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
           Optional.ofNullable(validationMapper.get(key))
               .orElse(newValidationInstance(key, dataFile, Status.QUEUED));
 
-      Set<String> pipelinesSteps = getPipelineSteps(dataFile);
+      Set<StepType> pipelinesSteps = getPipelineSteps(dataFile);
 
       // Set future steps
       v.setStatus(Status.QUEUED);
       v.setFileFormat(dataFile.getFileFormat());
+      v.setFileSize(Files.size(dataFile.getFilePath()));
+      v.setFile(dataFile.getSourceFileName());
       v.getMetrics().setStepTypes(StepsMapper.mapToValidationSteps(pipelinesSteps));
       v.setDataset(readEml(dataFile.getFilePath().getParent()));
 
@@ -321,38 +333,40 @@ public class ValidationServiceImpl implements ValidationService<MultipartFile> {
 
   /** Notifies when the file is submitted. */
   @SneakyThrows
-  private void notify(UUID key, DataFile dataFile, Set<String> pipelinesSteps) {
+  private void notify(UUID key, DataFile dataFile, Set<StepType> pipelinesSteps) {
 
     PipelinesArchiveValidatorMessage message = new PipelinesArchiveValidatorMessage();
     message.setDatasetUuid(key);
     message.setAttempt(1);
     message.setExecutionId(1L);
-    message.setPipelineSteps(pipelinesSteps);
+    message.setPipelineSteps(pipelinesSteps.stream().map(Enum::name).collect(Collectors.toSet()));
     message.setFileFormat(dataFile.getFileFormat().name());
 
     log.info("Send the MQ message to the validator queue for key - {}", key);
     messagePublisher.send(message);
   }
 
-  private Set<String> getPipelineSteps(DataFile dataFile) {
-    String stepType;
+  private Set<StepType> getPipelineSteps(DataFile dataFile) {
+    StepType stepType;
     if (dataFile.getFileFormat() == FileFormat.DWCA
         || dataFile.getFileFormat() == FileFormat.TABULAR
         || dataFile.getFileFormat() == FileFormat.SPREADSHEET) {
-      stepType = StepType.VALIDATOR_DWCA_TO_VERBATIM.name();
+      stepType = StepType.VALIDATOR_DWCA_TO_VERBATIM;
     } else if (dataFile.getFileFormat() == FileFormat.XML) {
-      stepType = StepType.VALIDATOR_XML_TO_VERBATIM.name();
+      stepType = StepType.VALIDATOR_XML_TO_VERBATIM;
     } else {
       throw new IllegalArgumentException(
           dataFile.getFileFormat()
               + " file format is not supported, file name: "
               + dataFile.getSourceFileName());
     }
-    return Set.of(
-        StepType.VALIDATOR_VALIDATE_ARCHIVE.name(),
-        stepType,
-        StepType.VALIDATOR_VERBATIM_TO_INTERPRETED.name(),
-        StepType.VALIDATOR_INTERPRETED_TO_INDEX.name(),
-        StepType.VALIDATOR_COLLECT_METRICS.name());
+
+    return new LinkedHashSet<>(
+        List.of(
+            StepType.VALIDATOR_VALIDATE_ARCHIVE,
+            stepType,
+            StepType.VALIDATOR_VERBATIM_TO_IDENTIFIER,
+            StepType.VALIDATOR_VERBATIM_TO_INTERPRETED,
+            StepType.VALIDATOR_COLLECT_METRICS));
   }
 }
