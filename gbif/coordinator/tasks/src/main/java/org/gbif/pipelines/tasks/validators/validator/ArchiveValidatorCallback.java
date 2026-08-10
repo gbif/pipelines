@@ -10,13 +10,12 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesArchiveValidatorMessage;
 import org.gbif.dwca.validation.xml.SchemaValidatorFactory;
+import org.gbif.pipelines.tasks.PipelinesCallback;
 import org.gbif.pipelines.tasks.StepHandler;
-import org.gbif.pipelines.tasks.Validations;
 import org.gbif.pipelines.tasks.ValidatorCallback;
 import org.gbif.pipelines.tasks.validators.validator.validate.ArchiveValidatorFactory;
 import org.gbif.pipelines.validator.checklists.ChecklistValidator;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
-import org.gbif.validator.api.Validation;
 import org.gbif.validator.ws.client.ValidationWsClient;
 
 /** Callback that is called when the {@link PipelinesArchiveValidatorMessage} is received. */
@@ -34,15 +33,28 @@ public class ArchiveValidatorCallback
 
   @Override
   public void handleMessage(PipelinesArchiveValidatorMessage message) {
-    ValidatorCallback.<PipelinesArchiveValidatorMessage, PipelineBasedMessage>builder()
-        .validationClient(validationClient)
-        .config(config)
-        .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
-        .publisher(publisher)
-        .message(message)
-        .handler(this)
-        .build()
-        .handleMessage();
+
+    if (config.validatorOnly) {
+      ValidatorCallback.<PipelinesArchiveValidatorMessage, PipelineBasedMessage>builder()
+          .validationClient(validationClient)
+          .config(config)
+          .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
+          .publisher(publisher)
+          .message(message)
+          .handler(this)
+          .build()
+          .handleMessage();
+    } else {
+      PipelinesCallback.<PipelinesArchiveValidatorMessage, PipelineBasedMessage>builder()
+          .historyClient(historyClient)
+          .config(config)
+          .stepType(StepType.VALIDATOR_VALIDATE_ARCHIVE)
+          .publisher(publisher)
+          .message(message)
+          .handler(this)
+          .build()
+          .handleMessage();
+    }
   }
 
   @Override
@@ -63,11 +75,6 @@ public class ArchiveValidatorCallback
   public Runnable createRunnable(PipelinesArchiveValidatorMessage message) {
     return () -> {
       log.info("Running validation for {}", message.getDatasetUuid());
-      Validations.updateStatus(
-          validationClient,
-          message.getDatasetUuid(),
-          StepType.VALIDATOR_VALIDATE_ARCHIVE,
-          Validation.Status.RUNNING);
       ArchiveValidatorFactory.builder()
           .validationClient(validationClient)
           .config(config)
@@ -79,11 +86,6 @@ public class ArchiveValidatorCallback
           .build()
           .create()
           .validate();
-      Validations.updateStatus(
-          validationClient,
-          message.getDatasetUuid(),
-          StepType.VALIDATOR_VALIDATE_ARCHIVE,
-          Validation.Status.FINISHED);
     };
   }
 

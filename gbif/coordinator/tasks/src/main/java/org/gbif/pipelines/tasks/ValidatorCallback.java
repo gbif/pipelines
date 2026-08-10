@@ -30,7 +30,7 @@ import org.slf4j.MDC.MDCCloseable;
 
 /**
  * Common class for building and handling a validator step. This differs from the PipelinesCallback
- * in that it doesnt communicate with the registry to track the execution. Instead it calls the
+ * in that it does not communicate with the registry to track the execution. Instead it calls the
  * validation ws.
  */
 @Slf4j
@@ -95,12 +95,18 @@ public class ValidatorCallback<I extends PipelineBasedMessage, O extends Pipelin
         return;
       }
 
+      Validations.updateStatus(
+          validationClient, message.getDatasetUuid(), stepType, Validation.Status.RUNNING);
+
       log.info("Message handler began - {}", message);
       Runnable runnable = handler.createRunnable(message);
 
       log.info("Handler has been started, datasetKey - {}", datasetKey);
       runnable.run();
       log.info("Handler has been finished, datasetKey - {}", datasetKey);
+
+      Validations.updateStatus(
+          validationClient, message.getDatasetUuid(), stepType, Validation.Status.FINISHED);
 
       // Send a wrapped outgoing message to Balancer queue
       O outgoingMessage = handler.createOutgoingMessage(message);
