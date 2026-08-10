@@ -20,6 +20,7 @@ public class HumboldtJsonView {
   private Map<String, Map<String, List<String>>> excludedTaxonomicScope = new HashMap<>();
   private Map<String, Map<String, List<String>>> absentTaxa = new HashMap<>();
   private Map<String, Map<String, List<String>>> nonTargetTaxa = new HashMap<>();
+  private Double humboldtEventDurationValueInMinutes;
 
   @Data
   public static final class VocabularyList {
