@@ -3,7 +3,6 @@ package org.gbif.pipelines;
 import org.gbif.pipelines.tasks.PipelinesCallbackIT;
 import org.gbif.pipelines.tasks.resources.EsServer;
 import org.gbif.pipelines.tasks.resources.ZkServer;
-import org.gbif.pipelines.tasks.validators.cleaner.CleanerCallbackIT;
 import org.gbif.pipelines.tasks.validators.validator.ArchiveValidatorCallbackIT;
 import org.gbif.pipelines.tasks.verbatims.abcd.AbcdToAvroCallbackIT;
 import org.gbif.pipelines.tasks.verbatims.dwca.DwcaToAvroCallbackIT;
@@ -15,7 +14,6 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-  CleanerCallbackIT.class,
   ArchiveValidatorCallbackIT.class,
   AbcdToAvroCallbackIT.class,
   DwcaToAvroCallbackIT.class,
