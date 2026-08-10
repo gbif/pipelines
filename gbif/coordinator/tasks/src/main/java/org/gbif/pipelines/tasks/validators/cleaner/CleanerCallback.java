@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 import lombok.AllArgsConstructor;
@@ -15,8 +14,6 @@ import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.messages.PipelinesCleanerMessage;
 import org.gbif.pipelines.core.pojo.HdfsConfigs;
 import org.gbif.pipelines.core.utils.FsUtils;
-import org.gbif.pipelines.estools.EsIndex;
-import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.validator.ws.client.ValidationWsClient;
 import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
@@ -41,7 +38,6 @@ public class CleanerCallback extends AbstractMessageCallback<PipelinesCleanerMes
 
       deleteFsData(datasetUuid);
       deleteHdfsData(datasetUuid);
-      deleteEsData(datasetUuid);
       markDataAsDeleted(datasetUuid);
     }
   }
@@ -78,28 +74,6 @@ public class CleanerCallback extends AbstractMessageCallback<PipelinesCleanerMes
       log.info("Dataset files was deleted successfully from HDFS!");
     } else {
       log.warn("Dataset files was NOT deleted from HDFS!");
-    }
-  }
-
-  private void deleteEsData(UUID datasetUuid) {
-    log.info("Delete elasticsearch index/documents");
-
-    EsConfig esConfig = EsConfig.from(config.esHosts);
-
-    // Delete records by delete query and return list of indices names
-    Set<String> indices =
-        EsIndex.deleteRecordsByDatasetId(
-            esConfig,
-            config.esAliases,
-            datasetUuid.toString(),
-            idxName -> !idxName.startsWith("."),
-            config.esSearchQueryTimeoutSec,
-            config.esSearchQueryAttempts);
-
-    if (indices.isEmpty()) {
-      log.warn("Dataset index/records was NOT deleted from elasticsearch!");
-    } else {
-      log.info("Dataset index/records was deleted successfully from elasticsearch!");
     }
   }
 
