@@ -42,6 +42,7 @@ import org.gbif.pipelines.spark.util.TableLoader;
 import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.io.TempDir;
@@ -1146,6 +1147,9 @@ class DwcDpVerbatimConverterTest {
     assertEquals(3L, metrics.largestFileCount());
   }
 
+  @Disabled(
+      "Material -> virtual occurrence synthesis is paused; see "
+          + "MaterialJoinBuilder#VIRTUAL_MATERIAL_OCCURRENCES_ENABLED")
   @Test
   void writeMetrics_eventMaterialWithoutOccurrence_countsVirtualOccurrences(@TempDir Path dir)
       throws Exception {
@@ -1183,6 +1187,9 @@ class DwcDpVerbatimConverterTest {
     assertEquals(3L, metrics.largestFileCount());
   }
 
+  @Disabled(
+      "Material -> virtual occurrence synthesis is paused; see "
+          + "MaterialJoinBuilder#VIRTUAL_MATERIAL_OCCURRENCES_ENABLED")
   @Test
   void writeMetrics_materialEvidenceReferencesOccurrenceOutsidePackage_becomesVirtual(
       @TempDir Path dir) throws Exception {
@@ -1244,6 +1251,9 @@ class DwcDpVerbatimConverterTest {
    * material} — where the only occurrence rows that exist are the virtual ones {@link
    * org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialJoinBuilder} synthesises.
    */
+  @Disabled(
+      "Material -> virtual occurrence synthesis is paused; see "
+          + "MaterialJoinBuilder#VIRTUAL_MATERIAL_OCCURRENCES_ENABLED")
   @Test
   void convert_eventMaterialWithoutOccurrence_producesVirtualOccurrenceAndMatchingMetrics(
       @TempDir Path dir) throws Exception {
@@ -1375,11 +1385,13 @@ class DwcDpVerbatimConverterTest {
       report = reader.lines().collect(Collectors.joining("\n"));
     }
 
-    // 5 material rows total: 1 virtual, 1 unresolved (dropped), 2 ambiguous (dropped), 1 enriched
+    // 5 material rows total: 1 unresolved (dropped, virtual promotion is currently paused — see
+    // MaterialJoinBuilder#VIRTUAL_MATERIAL_OCCURRENCES_ENABLED), 1 unresolved (dropped, no
+    // collectionEvent_fk either way), 2 ambiguous (dropped), 1 enriched
     assertEquals(5, extractTrailingLong(report, "material rows (total):"));
     assertEquals(2, extractTrailingLong(report, "without evidence:"));
-    assertEquals(1, extractTrailingLong(report, "became virtual occurrence:"));
-    assertEquals(1, extractTrailingLong(report, "unresolved, DROPPED:"));
+    assertEquals(0, extractTrailingLong(report, "became virtual occurrence:"));
+    assertEquals(2, extractTrailingLong(report, "unresolved, DROPPED:"));
     assertEquals(3, extractTrailingLong(report, "with evidence:"));
     assertEquals(1, extractTrailingLong(report, "enriched real occurrence:"));
     assertEquals(2, extractTrailingLong(report, "ambiguous, DROPPED:"));

@@ -22,6 +22,7 @@ import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -413,6 +414,9 @@ class OccurrenceExtensionBuilderTest {
             + "to resolve occurrence_fk");
   }
 
+  @Disabled(
+      "Material -> virtual occurrence synthesis is paused; see "
+          + "MaterialJoinBuilder#VIRTUAL_MATERIAL_OCCURRENCES_ENABLED")
   @Test
   void unlinkedMaterial_becomesVirtualOccurrenceWithMaterialChildren() throws Exception {
     Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
@@ -466,6 +470,9 @@ class OccurrenceExtensionBuilderTest {
             .get(TermResolver.resolve("identifier")));
   }
 
+  @Disabled(
+      "Material -> virtual occurrence synthesis is paused; see "
+          + "MaterialJoinBuilder#VIRTUAL_MATERIAL_OCCURRENCES_ENABLED")
   @Test
   void unlinkedMaterialWithoutMaterialEntityId_usesStableUrnFallback() throws Exception {
     Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));
@@ -483,6 +490,9 @@ class OccurrenceExtensionBuilderTest {
             .get(DwcTerm.occurrenceID.qualifiedName()));
   }
 
+  @Disabled(
+      "Material -> virtual occurrence synthesis is paused; see "
+          + "MaterialJoinBuilder#VIRTUAL_MATERIAL_OCCURRENCES_ENABLED")
   @Test
   void materialWithEvidenceForOccurrenceOutsidePackage_stillBecomesVirtualOccurrence()
       throws Exception {

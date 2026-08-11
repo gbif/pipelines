@@ -21,6 +21,7 @@ import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -409,6 +410,9 @@ class MediaExtensionBuilderTest {
             + "nothing unambiguous to merge in at all");
   }
 
+  @Disabled(
+      "Material -> virtual occurrence synthesis is paused; see "
+          + "MaterialJoinBuilder#VIRTUAL_MATERIAL_OCCURRENCES_ENABLED")
   @Test
   void virtualMaterialMedia_promotedDirectlyToCollectionEvent() throws Exception {
     Dataset<Row> eventDf = eventPkDf(List.of(RowFactory.create("EPK-001", "EVT001")));

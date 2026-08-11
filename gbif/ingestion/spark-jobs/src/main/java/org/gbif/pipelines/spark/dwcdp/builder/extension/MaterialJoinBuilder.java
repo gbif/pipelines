@@ -76,6 +76,20 @@ public class MaterialJoinBuilder {
   private static final String COLLECTION_EVENT_FK_COLUMN = "collectionEvent_fk";
   private static final String VIRTUAL_OCCURRENCE_ID_PREFIX = "urn:gbif:dwcdp:material:";
 
+  /**
+   * PAUSED: material -&gt; virtual occurrence synthesis is disabled for now — the identity/mapping
+   * story around it (stable IDs across schema revisions, interaction with the upcoming
+   * mapping-format rework) needs more thought before it goes further. This is the single choke
+   * point every other virtual-occurrence code path in this class runs through ({@link
+   * #virtualMaterialOccurrenceLinks}, {@link #singleMaterialOccurrenceLinks}, {@link
+   * #computeFunnel}) as well as external callers ({@code OccurrenceExtensionBuilder}), so flipping
+   * this back to {@code true} is sufficient to re-enable it — no other change needed here. While
+   * paused, materials that would have become virtual occurrences fall into {@link
+   * MaterialFunnel#unresolved} instead and are silently dropped, same as any other unresolved
+   * material row.
+   */
+  private static final boolean VIRTUAL_MATERIAL_OCCURRENCES_ENABLED = false;
+
   private static final Set<String> EXCLUDED_MATERIAL_COLUMNS =
       Set.of(
           "materialEntity_pk",
@@ -292,6 +306,11 @@ public class MaterialJoinBuilder {
    * identifier when available; the stable material surrogate key supplies the fallback.
    */
   public static Optional<Dataset<Row>> virtualMaterialOccurrences(TableLoader loader) {
+    if (!VIRTUAL_MATERIAL_OCCURRENCES_ENABLED) {
+      log.debug("Virtual material occurrence synthesis is currently paused; skipping");
+      return Optional.empty();
+    }
+
     Optional<Dataset<Row>> materialDfOpt = loader.load(TABLE_MATERIAL);
     Optional<Dataset<Row>> eventDfOpt = loader.load("event");
     if (materialDfOpt.isEmpty() || eventDfOpt.isEmpty()) {
