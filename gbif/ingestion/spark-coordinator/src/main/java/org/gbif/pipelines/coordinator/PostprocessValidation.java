@@ -39,6 +39,7 @@ import org.gbif.pipelines.common.PipelinesException;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.core.config.model.StandaloneConfig;
 import org.gbif.pipelines.spark.IdentifiersPipeline;
+import org.gbif.pipelines.util.CallbackUtil;
 
 @Slf4j
 @Builder
@@ -218,6 +219,11 @@ public class PostprocessValidation {
   /** Get number of record using Occurrence API */
   @SneakyThrows
   public long getIndexSize(HttpClient httpClient, String datasetId) {
+
+    if (CallbackUtil.simulateBackendFail()) {
+      throw new PipelinesException("Simulated backend failure for testing");
+    }
+
     String url =
         config.getRegistry().getWsUrl()
             + "/occurrence/search?limit=0&datasetKey="
@@ -236,7 +242,6 @@ public class PostprocessValidation {
                   }
                 })
             .get();
-
     try {
       return MAPPER.readTree(response.getEntity().getContent()).findValue("count").asLong();
     } catch (Exception e) {
