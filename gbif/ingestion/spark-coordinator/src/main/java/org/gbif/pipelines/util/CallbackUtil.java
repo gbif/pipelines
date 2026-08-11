@@ -8,6 +8,7 @@ public class CallbackUtil {
 
   public static final String PAUSE_FILE_PATH = "/tmp/pause_message_processing";
   public static final String SHUTDOWN_FILE_PATH = "/tmp/shutdown_now";
+  public static final String SIMULATE_BACKEND_FAIL_PATH = "/tmp/backend_fail";
 
   public static void checkIfPaused() {
     while (new File(PAUSE_FILE_PATH).exists()) {
@@ -22,6 +23,14 @@ public class CallbackUtil {
         return;
       }
     }
+  }
+
+  public static boolean simulateBackendFail() {
+    boolean enabled = new File(SIMULATE_BACKEND_FAIL_PATH).exists();
+    if (enabled) {
+      log.warn("Simulating backend failure ({} exists)", SIMULATE_BACKEND_FAIL_PATH);
+    }
+    return enabled;
   }
 
   public static boolean isRunning() {
