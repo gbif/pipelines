@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
-
 import java.io.*;
 import java.time.Duration;
 import java.util.List;
@@ -224,45 +223,44 @@ public class PostprocessValidation {
     }
 
     String url =
-            config.getRegistry().getWsUrl()
-                    + "/occurrence/search?limit=0&datasetKey="
-                    + datasetId
-                    + "&_="
-                    + System.nanoTime();
+        config.getRegistry().getWsUrl()
+            + "/occurrence/search?limit=0&datasetKey="
+            + datasetId
+            + "&_="
+            + System.nanoTime();
 
     try {
       HttpResponse response =
-              Retry.decorateSupplier(
-                              RETRY,
-                              () -> {
-                                try {
-                                  HttpResponse httpResponse = httpClient.execute(new HttpGet(url));
+          Retry.decorateSupplier(
+                  RETRY,
+                  () -> {
+                    try {
+                      HttpResponse httpResponse = httpClient.execute(new HttpGet(url));
 
-                                  if (httpResponse == null) {
-                                    throw new PipelinesException(
-                                            "Backend returned a null HTTP response");
-                                  }
+                      if (httpResponse == null) {
+                        throw new PipelinesException("Backend returned a null HTTP response");
+                      }
 
-                                  int statusCode = httpResponse.getStatusLine().getStatusCode();
-                                  if (statusCode < 200 || statusCode >= 300) {
-                                    throw new PipelinesException(
-                                            "Backend returned HTTP status "
-                                                    + statusCode
-                                                    + " "
-                                                    + httpResponse.getStatusLine().getReasonPhrase());
-                                  }
+                      int statusCode = httpResponse.getStatusLine().getStatusCode();
+                      if (statusCode < 200 || statusCode >= 300) {
+                        throw new PipelinesException(
+                            "Backend returned HTTP status "
+                                + statusCode
+                                + " "
+                                + httpResponse.getStatusLine().getReasonPhrase());
+                      }
 
-                                  return httpResponse;
-                                } catch (IOException e) {
-                                  throw new PipelinesException(
-                                          "Failed to execute request to retrieve dataset count", e);
-                                }
-                              })
-                      .get();
+                      return httpResponse;
+                    } catch (IOException e) {
+                      throw new PipelinesException(
+                          "Failed to execute request to retrieve dataset count", e);
+                    }
+                  })
+              .get();
 
       if (response.getEntity() == null) {
         throw new PipelinesException(
-                "Backend returned an empty response while retrieving dataset count");
+            "Backend returned an empty response while retrieving dataset count");
       }
 
       JsonNode root;
@@ -272,26 +270,25 @@ public class PostprocessValidation {
 
       if (root == null || root.isNull()) {
         throw new PipelinesException(
-                "Backend returned an empty or invalid JSON response while retrieving dataset count");
+            "Backend returned an empty or invalid JSON response while retrieving dataset count");
       }
 
       JsonNode countNode = root.get("count");
 
       if (countNode == null || countNode.isNull()) {
-        throw new PipelinesException(
-                "Backend response does not contain a 'count' field");
+        throw new PipelinesException("Backend response does not contain a 'count' field");
       }
 
       if (!countNode.isNumber()) {
         throw new PipelinesException(
-                "Backend response contains an invalid 'count' field: " + countNode);
+            "Backend response contains an invalid 'count' field: " + countNode);
       }
 
       return countNode.asLong();
 
     } catch (Exception e) {
       throw new PipelinesException(
-              "Problem retrieving dataset count from index for dataset " + datasetId, e);
+          "Problem retrieving dataset count from index for dataset " + datasetId, e);
     }
   }
 
