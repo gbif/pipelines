@@ -6,14 +6,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Serializable;
+
+import java.io.*;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -225,28 +224,74 @@ public class PostprocessValidation {
     }
 
     String url =
-        config.getRegistry().getWsUrl()
-            + "/occurrence/search?limit=0&datasetKey="
-            + datasetId
-            + "&_="
-            + System.nanoTime();
+            config.getRegistry().getWsUrl()
+                    + "/occurrence/search?limit=0&datasetKey="
+                    + datasetId
+                    + "&_="
+                    + System.nanoTime();
 
-    HttpResponse response =
-        Retry.decorateSupplier(
-                RETRY,
-                () -> {
-                  try {
-                    return httpClient.execute(new HttpGet(url));
-                  } catch (IOException e) {
-                    throw new PipelinesException(e);
-                  }
-                })
-            .get();
     try {
-      return MAPPER.readTree(response.getEntity().getContent()).findValue("count").asLong();
+      HttpResponse response =
+              Retry.decorateSupplier(
+                              RETRY,
+                              () -> {
+                                try {
+                                  HttpResponse httpResponse = httpClient.execute(new HttpGet(url));
+
+                                  if (httpResponse == null) {
+                                    throw new PipelinesException(
+                                            "Backend returned a null HTTP response");
+                                  }
+
+                                  int statusCode = httpResponse.getStatusLine().getStatusCode();
+                                  if (statusCode < 200 || statusCode >= 300) {
+                                    throw new PipelinesException(
+                                            "Backend returned HTTP status "
+                                                    + statusCode
+                                                    + " "
+                                                    + httpResponse.getStatusLine().getReasonPhrase());
+                                  }
+
+                                  return httpResponse;
+                                } catch (IOException e) {
+                                  throw new PipelinesException(
+                                          "Failed to execute request to retrieve dataset count", e);
+                                }
+                              })
+                      .get();
+
+      if (response.getEntity() == null) {
+        throw new PipelinesException(
+                "Backend returned an empty response while retrieving dataset count");
+      }
+
+      JsonNode root;
+      try (InputStream content = response.getEntity().getContent()) {
+        root = MAPPER.readTree(content);
+      }
+
+      if (root == null || root.isNull()) {
+        throw new PipelinesException(
+                "Backend returned an empty or invalid JSON response while retrieving dataset count");
+      }
+
+      JsonNode countNode = root.get("count");
+
+      if (countNode == null || countNode.isNull()) {
+        throw new PipelinesException(
+                "Backend response does not contain a 'count' field");
+      }
+
+      if (!countNode.isNumber()) {
+        throw new PipelinesException(
+                "Backend response contains an invalid 'count' field: " + countNode);
+      }
+
+      return countNode.asLong();
+
     } catch (Exception e) {
       throw new PipelinesException(
-          "Problem retrieving dataset count from index. " + e.getMessage(), e);
+              "Problem retrieving dataset count from index for dataset " + datasetId, e);
     }
   }
 
