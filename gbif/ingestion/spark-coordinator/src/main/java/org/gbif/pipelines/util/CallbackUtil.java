@@ -26,8 +26,11 @@ public class CallbackUtil {
   }
 
   public static boolean simulateBackendFail() {
-    log.warn("Simulating backend failure");
-    return new File(SIMULATE_BACKEND_FAIL_PATH).exists();
+    boolean enabled = new File(SIMULATE_BACKEND_FAIL_PATH).exists();
+    if (enabled) {
+      log.warn("Simulating backend failure ({} exists)", SIMULATE_BACKEND_FAIL_PATH);
+    }
+    return enabled;
   }
 
   public static boolean isRunning() {
