@@ -346,8 +346,6 @@ public class ValidatorMetricsPipeline {
         Arrays.asList(records.schema().fieldNames()); // force schema evaluation
     log.info("Interpreted fields: {}", columnNames);
 
-    Map<String, String> simpleNameToURI = new HashMap<>();
-
     // find the occurrence CORE or EXTENSION which is rowType == occurrence
     List<String> suppliedTermsURIs =
         validation.getMetrics().getFileInfos().stream()
@@ -358,9 +356,6 @@ public class ValidatorMetricsPipeline {
             .flatMap(fileInfo -> fileInfo.getTerms().stream())
             .map(TermInfo::getTerm)
             .toList();
-
-    // add to the map of simpleName -> URI for later use in building TermInfo objects
-    suppliedTermsURIs.forEach(uri -> simpleNameToURI.put(convertSimpleName(uri), uri));
 
     // build a list of expected columns
     List<String> termURIsToCheck = new ArrayList<>();
@@ -378,14 +373,9 @@ public class ValidatorMetricsPipeline {
 
     for (int i = 0; i < termURIsToCheck.size(); i++) {
       String termURI = termURIsToCheck.get(i);
-      Column colExpr = null;
-      if (columnNames.contains(convertSimpleName(termURI))) {
-        colExpr = col(convertSimpleName(termURI));
-      } else if (isTaxonomic(termURI)) {
-        colExpr = resolveColumn(termURI);
-      }
+      Column colExpr = resolveColumn(termURI);
       log.debug("Term URI: " + termURI + ", Column Expression: " + colExpr);
-      //      Column colExpr = resolveColumn(termURI);
+
       if (colExpr != null) {
         Column agg = count(when(colExpr.isNotNull(), 1)).alias("t" + i);
         if (i == 0) {
@@ -402,12 +392,7 @@ public class ValidatorMetricsPipeline {
     for (int i = 0; i < termURIsToCheck.size(); i++) {
 
       String termURI = termURIsToCheck.get(i);
-      Column colExpr = null;
-      if (columnNames.contains(convertSimpleName(termURI))) {
-        colExpr = col(convertSimpleName(termURI));
-      } else if (isTaxonomic(termURI)) {
-        colExpr = resolveColumn(termURI);
-      }
+      Column colExpr = resolveColumn(termURI);
 
       if (colExpr == null) {
         log.warn("No column found for term {}", termURI);
@@ -504,18 +489,10 @@ public class ValidatorMetricsPipeline {
   }
 
   /**
-   * Returns {@code true} if {@code termURI} is a taxonomic classification or accepted-usage field
-   * that must be resolved via {@link #resolveColumn(String)} rather than a direct column lookup.
-   */
-  private static boolean isTaxonomic(String termURI) {
-    return classificationFields.contains(termURI) || acceptedUsageFields.containsKey(termURI);
-  }
-
-  /**
-   * Resolves a taxonomic term URI to a Spark {@link Column}.
-   *
-   * <p>Classification fields are resolved to {@code classifications["GBIF"].classification[rank]};
-   * accepted-usage fields are resolved to {@code classifications["GBIF"].acceptedUsage[field]}.
+   * Resolves a {@code termURI} to a Spark {@link Column} expression. For non-taxonomic terms, this is a
+   * direct column lookup via {@code col(convertSimpleName(termURI))}. For taxonomic terms, the
+   * column is resolved from the nested {@code classifications} map, which is keyed by dataset key and
+   * contains a {@code classification} map and an {@code acceptedUsage} map.
    */
   private static Column resolveColumn(String termURI) {
     if (classificationFields.contains(termURI)) {
