@@ -310,6 +310,9 @@ public class ValidatorMetricsPipeline {
   private static List<TermInfo> computeInterpretedFieldCounts(
       Dataset<OccurrenceJsonRecord> records, Validation validation) {
 
+    List<String> fields = Arrays.asList(records.schema().fieldNames()); // force schema evaluation
+    log.info("Interpreted fields: {}", fields);
+
     // find the occurrence CORE or EXTENSION which is rowType == occurrence
     List<String> termQualifiedNames =
         validation.getMetrics().getFileInfos().stream()
@@ -320,6 +323,7 @@ public class ValidatorMetricsPipeline {
             .flatMap(fileInfo -> fileInfo.getTerms().stream())
             .map(TermInfo::getTerm)
             .map(ValidatorMetricsPipeline::convertSimpleName)
+            .filter(fields::contains)
             .toList();
 
     // Build one count(when(col.isNotNull, 1)) per term, aliased by ordinal index
