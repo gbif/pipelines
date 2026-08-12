@@ -346,13 +346,13 @@ public class ValidatorMetricsPipeline {
             .flatMap(fileInfo -> fileInfo.getTerms().stream())
             .map(TermInfo::getTerm)
             .map(ValidatorMetricsPipeline::convertSimpleName)
-            .filter(fields::contains)
             .toList();
 
     // add alwaysShow
     List<String> combined = new ArrayList<>(suppliedTerms);
     combined.addAll(alwaysShow);
-    List<String> termsToCheck = new ArrayList<>(combined.stream().collect(Collectors.toSet()));
+
+    List<String> termsToCheck = combined.stream().filter(fields::contains).distinct().toList();
 
     // Build one count(when(col.isNotNull, 1)) per term, aliased by ordinal index
     Column firstAgg = null;
