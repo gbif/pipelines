@@ -312,7 +312,10 @@ public class ValidatorMetricsPipeline {
     // find the occurrence CORE or EXTENSION which is rowType == occurrence
     List<String> termQualifiedNames =
         validation.getMetrics().getFileInfos().stream()
-            .filter(fileInfo -> fileInfo.getRowType().equals(DwcTerm.Occurrence.qualifiedName()))
+            .filter(
+                fileInfo ->
+                    fileInfo.getRowType() != null
+                        && fileInfo.getRowType().equals(DwcTerm.Occurrence.qualifiedName()))
             .flatMap(fileInfo -> fileInfo.getTerms().stream())
             .map(TermInfo::getTerm)
             .toList();
