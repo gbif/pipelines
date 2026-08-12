@@ -38,6 +38,7 @@ import org.gbif.validator.api.Metrics.IssueInfo;
 import org.gbif.validator.api.Metrics.IssueSample;
 import org.gbif.validator.api.Metrics.TermInfo;
 import org.gbif.validator.api.Validation;
+import org.jspecify.annotations.NonNull;
 import scala.collection.JavaConverters;
 import scala.collection.mutable.WrappedArray;
 
@@ -318,6 +319,7 @@ public class ValidatorMetricsPipeline {
                         && fileInfo.getRowType().equals(DwcTerm.Occurrence.qualifiedName()))
             .flatMap(fileInfo -> fileInfo.getTerms().stream())
             .map(TermInfo::getTerm)
+            .map(ValidatorMetricsPipeline::convertSimpleName)
             .toList();
 
     // Build one count(when(col.isNotNull, 1)) per term, aliased by ordinal index
@@ -425,5 +427,10 @@ public class ValidatorMetricsPipeline {
     }
 
     return result;
+  }
+
+  private static @NonNull String convertSimpleName(String termUri) {
+    int lastIndex = termUri.lastIndexOf('/');
+    return termUri.substring(lastIndex + 1);
   }
 }
