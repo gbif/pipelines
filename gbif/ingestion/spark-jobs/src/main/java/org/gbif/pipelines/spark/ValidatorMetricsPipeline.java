@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.sql.Column;
@@ -55,11 +56,33 @@ public class ValidatorMetricsPipeline {
   private static final int MAX_SAMPLES = 5;
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  /** Marker prefix for taxonomy column references that need special Spark access. */
-  private static final String TAXONOMY_PREFIX = "TAXONOMY:";
-
   @Parameters(separators = "=")
   private static class Args extends SingleDatasetPipelineArgs {}
+
+  private static List<String> alwaysShow =
+      Stream.of(
+              DwcTerm.scientificName,
+              DwcTerm.kingdom,
+              DwcTerm.phylum,
+              DwcTerm.class_,
+              DwcTerm.order,
+              DwcTerm.superfamily,
+              DwcTerm.family,
+              DwcTerm.subfamily,
+              DwcTerm.genus,
+              DwcTerm.subgenus,
+              DwcTerm.specificEpithet,
+              DwcTerm.infraspecificEpithet,
+              DwcTerm.taxonRank,
+              DwcTerm.basisOfRecord,
+              DwcTerm.occurrenceStatus,
+              DwcTerm.year,
+              DwcTerm.month,
+              DwcTerm.day,
+              DwcTerm.countryCode,
+              DwcTerm.stateProvince)
+          .map(Term::simpleName)
+          .toList();
 
   public static void main(String[] argsv) throws Exception {
     Args args = new Args();
@@ -314,7 +337,7 @@ public class ValidatorMetricsPipeline {
     log.info("Interpreted fields: {}", fields);
 
     // find the occurrence CORE or EXTENSION which is rowType == occurrence
-    List<String> termQualifiedNames =
+    List<String> suppliedTerms =
         validation.getMetrics().getFileInfos().stream()
             .filter(
                 fileInfo ->
@@ -326,11 +349,16 @@ public class ValidatorMetricsPipeline {
             .filter(fields::contains)
             .toList();
 
+    // add alwaysShow
+    List<String> combined = new ArrayList<>(suppliedTerms);
+    combined.addAll(alwaysShow);
+    List<String> termsToCheck = new ArrayList<>(combined.stream().collect(Collectors.toSet()));
+
     // Build one count(when(col.isNotNull, 1)) per term, aliased by ordinal index
     Column firstAgg = null;
     List<Column> restAggs = new ArrayList<>();
-    for (int i = 0; i < termQualifiedNames.size(); i++) {
-      String term = termQualifiedNames.get(i);
+    for (int i = 0; i < termsToCheck.size(); i++) {
+      String term = termsToCheck.get(i);
       Column colExpr = col(term);
       Column agg = count(when(colExpr.isNotNull(), 1)).alias("t" + i);
       if (i == 0) {
@@ -343,9 +371,9 @@ public class ValidatorMetricsPipeline {
     Row interpretedRowCount = records.agg(firstAgg, restAggs.toArray(new Column[0])).first();
 
     List<TermInfo> result = new ArrayList<>();
-    for (int i = 0; i < termQualifiedNames.size(); i++) {
+    for (int i = 0; i < termsToCheck.size(); i++) {
 
-      String term = termQualifiedNames.get(i);
+      String term = termsToCheck.get(i);
       Column colExpr = col(term);
 
       Dataset<Row> interpretedUniqueValueCountDf =
@@ -395,7 +423,7 @@ public class ValidatorMetricsPipeline {
 
       result.add(
           TermInfo.builder()
-              .term(termQualifiedNames.get(i))
+              .term(termsToCheck.get(i))
               .interpretedIndexed(interpretedRowCount.getLong(i))
               .uniqueInterpretedValues(interpretedUniqueValueCount)
               .sampleInterpretedValuesMap(topValuesMap)
