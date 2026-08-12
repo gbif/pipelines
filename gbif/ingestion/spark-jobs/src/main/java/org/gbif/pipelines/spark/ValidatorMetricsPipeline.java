@@ -489,10 +489,10 @@ public class ValidatorMetricsPipeline {
   }
 
   /**
-   * Resolves a {@code termURI} to a Spark {@link Column} expression. For non-taxonomic terms, this is a
-   * direct column lookup via {@code col(convertSimpleName(termURI))}. For taxonomic terms, the
-   * column is resolved from the nested {@code classifications} map, which is keyed by dataset key and
-   * contains a {@code classification} map and an {@code acceptedUsage} map.
+   * Resolves a {@code termURI} to a Spark {@link Column} expression. For non-taxonomic terms, this
+   * is a direct column lookup via {@code col(convertSimpleName(termURI))}. For taxonomic terms, the
+   * column is resolved from the nested {@code classifications} map, which is keyed by dataset key
+   * and contains a {@code classification} map and an {@code acceptedUsage} map.
    */
   private static Column resolveColumn(String termURI) {
     if (classificationFields.contains(termURI)) {
