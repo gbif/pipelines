@@ -514,9 +514,8 @@ public class ValidatorMetricsPipeline {
   /**
    * Resolves a taxonomic term URI to a Spark {@link Column}.
    *
-   * <p>Classification fields are resolved to {@code
-   * classifications["GBIF"].classification[rank]}; accepted-usage fields are resolved to {@code
-   * classifications["GBIF"].acceptedUsage[field]}.
+   * <p>Classification fields are resolved to {@code classifications["GBIF"].classification[rank]};
+   * accepted-usage fields are resolved to {@code classifications["GBIF"].acceptedUsage[field]}.
    */
   private static Column resolveColumn(String termURI) {
     if (classificationFields.contains(termURI)) {
