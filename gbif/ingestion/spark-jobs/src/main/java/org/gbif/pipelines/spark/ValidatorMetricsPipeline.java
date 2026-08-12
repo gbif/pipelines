@@ -10,7 +10,6 @@ import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -31,6 +30,8 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
+import org.gbif.pipelines.spark.util.ValidationClient;
+import org.gbif.pipelines.spark.util.ValidationUtil;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;
@@ -135,14 +136,9 @@ public class ValidatorMetricsPipeline {
 
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
     log.info("Running ValidatorMetricsPipeline for {}", outputPath);
-    //    ValidationClient client = ValidationUtil.createValidationClient(config);
-    //    Validation validation = client.get(UUID.fromString(datasetId));
 
-    ObjectMapper mapper = new ObjectMapper();
-    Validation validation =
-        mapper.readValue(
-            new FileInputStream("/Users/djtfmartin/dev/pipelines/validator-test/pre-metrics.json"),
-            Validation.class);
+    ValidationClient client = ValidationUtil.createValidationClient(config);
+    Validation validation = client.get(UUID.fromString(datasetId));
 
     Dataset<OccurrenceJsonRecord> records =
         spark
@@ -185,7 +181,7 @@ public class ValidatorMetricsPipeline {
       log.info("Written validator metrics to {}/{}", outputPath, METRICS_FILENAME);
 
       // update the stored validation via the API
-      //      ValidationUtil.updateMetrics(client, UUID.fromString(datasetId), generatedMetrics);
+      ValidationUtil.updateMetrics(client, UUID.fromString(datasetId), generatedMetrics);
 
     } finally {
       records.unpersist();
@@ -202,7 +198,6 @@ public class ValidatorMetricsPipeline {
             .distinct()
             .as(Encoders.STRING())
             .collectAsList();
-    ;
 
     List<FileInfo> extensionFileInfos = new ArrayList<>();
 
@@ -509,20 +504,19 @@ public class ValidatorMetricsPipeline {
   }
 
   /**
-   * Resolves a column specifier from {@link #TERM_TO_COLUMN} to a Spark {@link Column}.
-   *
-   * <p>Taxonomy specifiers use the form {@code TAXONOMY:<rank>} and are resolved to {@code
-   * classifications["GBIF"].classification[rank]}.
+   * Returns {@code true} if {@code termURI} is a taxonomic classification or accepted-usage field
+   * that must be resolved via {@link #resolveColumn(String)} rather than a direct column lookup.
    */
   private static boolean isTaxonomic(String termURI) {
     return classificationFields.contains(termURI) || acceptedUsageFields.containsKey(termURI);
   }
 
   /**
-   * Resolves a column specifier from {@link #TERM_TO_COLUMN} to a Spark {@link Column}.
+   * Resolves a taxonomic term URI to a Spark {@link Column}.
    *
-   * <p>Taxonomy specifiers use the form {@code TAXONOMY:<rank>} and are resolved to {@code
-   * classifications["GBIF"].classification[rank]}.
+   * <p>Classification fields are resolved to {@code
+   * classifications["GBIF"].classification[rank]}; accepted-usage fields are resolved to {@code
+   * classifications["GBIF"].acceptedUsage[field]}.
    */
   private static Column resolveColumn(String termURI) {
     if (classificationFields.contains(termURI)) {
@@ -538,16 +532,6 @@ public class ValidatorMetricsPipeline {
           .getField("acceptedUsage")
           .getField(fieldToUse);
     }
-
-    //      return element_at(
-    //              element_at(
-    //                element_at(
-    //                        col("classifications"),
-    //                        COL_DATASET_KEY.toString()
-    //                ),
-    //          "acceptedUsage"
-    //              ),
-    //              fieldToUse);
 
     return col(convertSimpleName(termURI));
   }
