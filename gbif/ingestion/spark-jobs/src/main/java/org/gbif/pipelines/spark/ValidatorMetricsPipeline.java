@@ -10,6 +10,7 @@ import static org.gbif.pipelines.spark.util.SparkUtil.getSparkSession;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,8 +31,6 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.io.avro.json.OccurrenceJsonRecord;
 import org.gbif.pipelines.spark.util.SingleDatasetPipelineArgs;
-import org.gbif.pipelines.spark.util.ValidationClient;
-import org.gbif.pipelines.spark.util.ValidationUtil;
 import org.gbif.validator.api.DwcFileType;
 import org.gbif.validator.api.EvaluationCategory;
 import org.gbif.validator.api.Metrics;
@@ -71,15 +70,15 @@ public class ValidatorMetricsPipeline {
               DwcTerm.subfamily,
               DwcTerm.genus,
               DwcTerm.subgenus)
-          .map(Term::simpleName)
+          .map(Term::qualifiedName)
           .toList();
 
   private static final Map<String, String> acceptedUsageFields =
       Map.of(
-          DwcTerm.specificEpithet.simpleName(), "specificEpithet",
-          DwcTerm.infraspecificEpithet.simpleName(), "infraspecificEpithet",
-          DwcTerm.taxonRank.simpleName(), "rank",
-          DwcTerm.scientificName.simpleName(), "name");
+          DwcTerm.specificEpithet.qualifiedName(), "specificEpithet",
+          DwcTerm.infraspecificEpithet.qualifiedName(), "infraspecificEpithet",
+          DwcTerm.taxonRank.qualifiedName(), "rank",
+          DwcTerm.scientificName.qualifiedName(), "name");
 
   private static List<String> alwaysShow =
       Stream.of(
@@ -90,7 +89,7 @@ public class ValidatorMetricsPipeline {
               DwcTerm.day,
               DwcTerm.countryCode,
               DwcTerm.stateProvince)
-          .map(Term::simpleName)
+          .map(Term::qualifiedName)
           .toList();
 
   public static void main(String[] argsv) throws Exception {
@@ -136,8 +135,14 @@ public class ValidatorMetricsPipeline {
 
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
     log.info("Running ValidatorMetricsPipeline for {}", outputPath);
-    ValidationClient client = ValidationUtil.createValidationClient(config);
-    Validation validation = client.get(UUID.fromString(datasetId));
+    //    ValidationClient client = ValidationUtil.createValidationClient(config);
+    //    Validation validation = client.get(UUID.fromString(datasetId));
+
+    ObjectMapper mapper = new ObjectMapper();
+    Validation validation =
+        mapper.readValue(
+            new FileInputStream("/Users/djtfmartin/dev/pipelines/validator-test/pre-metrics.json"),
+            Validation.class);
 
     Dataset<OccurrenceJsonRecord> records =
         spark
@@ -180,7 +185,7 @@ public class ValidatorMetricsPipeline {
       log.info("Written validator metrics to {}/{}", outputPath, METRICS_FILENAME);
 
       // update the stored validation via the API
-      ValidationUtil.updateMetrics(client, UUID.fromString(datasetId), generatedMetrics);
+      //      ValidationUtil.updateMetrics(client, UUID.fromString(datasetId), generatedMetrics);
 
     } finally {
       records.unpersist();
@@ -342,11 +347,14 @@ public class ValidatorMetricsPipeline {
   private static List<TermInfo> computeInterpretedFieldCounts(
       Dataset<OccurrenceJsonRecord> records, Validation validation) {
 
-    List<String> fields = Arrays.asList(records.schema().fieldNames()); // force schema evaluation
-    log.info("Interpreted fields: {}", fields);
+    List<String> columnNames =
+        Arrays.asList(records.schema().fieldNames()); // force schema evaluation
+    log.info("Interpreted fields: {}", columnNames);
+
+    Map<String, String> simpleNameToURI = new HashMap<>();
 
     // find the occurrence CORE or EXTENSION which is rowType == occurrence
-    List<String> suppliedTerms =
+    List<String> suppliedTermsURIs =
         validation.getMetrics().getFileInfos().stream()
             .filter(
                 fileInfo ->
@@ -354,39 +362,62 @@ public class ValidatorMetricsPipeline {
                         && fileInfo.getRowType().equals(DwcTerm.Occurrence.qualifiedName()))
             .flatMap(fileInfo -> fileInfo.getTerms().stream())
             .map(TermInfo::getTerm)
-            .map(ValidatorMetricsPipeline::convertSimpleName)
             .toList();
 
-    // add alwaysShow
-    List<String> combined = new ArrayList<>(suppliedTerms);
-    combined.addAll(classificationFields);
-    combined.addAll(acceptedUsageFields.keySet());
-    combined.addAll(alwaysShow);
+    // add to the map of simpleName -> URI for later use in building TermInfo objects
+    suppliedTermsURIs.forEach(uri -> simpleNameToURI.put(convertSimpleName(uri), uri));
 
-    List<String> termsToCheck = combined.stream().filter(fields::contains).distinct().toList();
+    // build a list of expected columns
+    List<String> termURIsToCheck = new ArrayList<>();
+    termURIsToCheck.addAll(
+        suppliedTermsURIs.stream()
+            .filter(uri -> columnNames.contains(convertSimpleName(uri)))
+            .collect(Collectors.toSet()));
+    termURIsToCheck.addAll(classificationFields);
+    termURIsToCheck.addAll(acceptedUsageFields.keySet());
+    termURIsToCheck.addAll(alwaysShow);
 
     // Build one count(when(col.isNotNull, 1)) per term, aliased by ordinal index
     Column firstAgg = null;
     List<Column> restAggs = new ArrayList<>();
-    for (int i = 0; i < termsToCheck.size(); i++) {
-      String term = termsToCheck.get(i);
-      Column colExpr = resolveColumn(term);
-      Column agg = count(when(colExpr.isNotNull(), 1)).alias("t" + i);
-      if (i == 0) {
-        firstAgg = agg;
-      } else {
-        restAggs.add(agg);
+
+    for (int i = 0; i < termURIsToCheck.size(); i++) {
+      String termURI = termURIsToCheck.get(i);
+      Column colExpr = null;
+      if (columnNames.contains(convertSimpleName(termURI))) {
+        colExpr = col(convertSimpleName(termURI));
+      } else if (isTaxonomic(termURI)) {
+        colExpr = resolveColumn(termURI);
+      }
+      log.debug("Term URI: " + termURI + ", Column Expression: " + colExpr);
+      //      Column colExpr = resolveColumn(termURI);
+      if (colExpr != null) {
+        Column agg = count(when(colExpr.isNotNull(), 1)).alias("t" + i);
+        if (i == 0) {
+          firstAgg = agg;
+        } else {
+          restAggs.add(agg);
+        }
       }
     }
 
     Row interpretedRowCount = records.agg(firstAgg, restAggs.toArray(new Column[0])).first();
 
     List<TermInfo> result = new ArrayList<>();
-    for (int i = 0; i < termsToCheck.size(); i++) {
+    for (int i = 0; i < termURIsToCheck.size(); i++) {
 
-      String term = termsToCheck.get(i);
-      Column colExpr = col(term);
+      String termURI = termURIsToCheck.get(i);
+      Column colExpr = null;
+      if (columnNames.contains(convertSimpleName(termURI))) {
+        colExpr = col(convertSimpleName(termURI));
+      } else if (isTaxonomic(termURI)) {
+        colExpr = resolveColumn(termURI);
+      }
 
+      if (colExpr == null) {
+        log.warn("No column found for term {}", termURI);
+        continue;
+      }
       Dataset<Row> interpretedUniqueValueCountDf =
           records.groupBy(colExpr).agg(countDistinct(colExpr).alias("uniqueCount"));
 
@@ -399,7 +430,7 @@ public class ValidatorMetricsPipeline {
               .findFirst()
               .orElseGet(
                   () -> {
-                    log.warn("No unique interpreted values found for term {}", term);
+                    log.warn("No unique interpreted values found for term {}", termURI);
                     return 0L;
                   });
 
@@ -434,7 +465,7 @@ public class ValidatorMetricsPipeline {
 
       result.add(
           TermInfo.builder()
-              .term(termsToCheck.get(i))
+              .term(termURIsToCheck.get(i))
               .interpretedIndexed(interpretedRowCount.getLong(i))
               .uniqueInterpretedValues(interpretedUniqueValueCount)
               .sampleInterpretedValuesMap(topValuesMap)
@@ -483,20 +514,41 @@ public class ValidatorMetricsPipeline {
    * <p>Taxonomy specifiers use the form {@code TAXONOMY:<rank>} and are resolved to {@code
    * classifications["GBIF"].classification[rank]}.
    */
-  private static Column resolveColumn(String fieldName) {
-    if (classificationFields.contains(fieldName)) {
+  private static boolean isTaxonomic(String termURI) {
+    return classificationFields.contains(termURI) || acceptedUsageFields.containsKey(termURI);
+  }
+
+  /**
+   * Resolves a column specifier from {@link #TERM_TO_COLUMN} to a Spark {@link Column}.
+   *
+   * <p>Taxonomy specifiers use the form {@code TAXONOMY:<rank>} and are resolved to {@code
+   * classifications["GBIF"].classification[rank]}.
+   */
+  private static Column resolveColumn(String termURI) {
+    if (classificationFields.contains(termURI)) {
+
       return element_at(
-          element_at(col("classifications"), COL_DATASET_KEY).getField("classification"),
-          fieldName.toUpperCase(Locale.ROOT));
+          element_at(col("classifications"), COL_DATASET_KEY.toString()).getField("classification"),
+          convertSimpleName(termURI).toUpperCase(Locale.ROOT));
     }
 
-    if (acceptedUsageFields.containsKey(fieldName)) {
-      String fieldToUse = acceptedUsageFields.get(fieldName);
-      return element_at(
-          element_at(col("classifications"), COL_DATASET_KEY).getField("acceptedUsage"),
-          fieldToUse);
+    if (acceptedUsageFields.containsKey(termURI)) {
+      String fieldToUse = acceptedUsageFields.get(termURI);
+      return element_at(col("classifications"), COL_DATASET_KEY.toString())
+          .getField("acceptedUsage")
+          .getField(fieldToUse);
     }
 
-    return col(fieldName);
+    //      return element_at(
+    //              element_at(
+    //                element_at(
+    //                        col("classifications"),
+    //                        COL_DATASET_KEY.toString()
+    //                ),
+    //          "acceptedUsage"
+    //              ),
+    //              fieldToUse);
+
+    return col(convertSimpleName(termURI));
   }
 }
