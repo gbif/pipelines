@@ -37,6 +37,7 @@ import org.gbif.validator.api.Metrics.FileInfo;
 import org.gbif.validator.api.Metrics.IssueInfo;
 import org.gbif.validator.api.Metrics.IssueSample;
 import org.gbif.validator.api.Metrics.TermInfo;
+import org.gbif.validator.api.Validation;
 import scala.collection.JavaConverters;
 import scala.collection.mutable.WrappedArray;
 
@@ -55,8 +56,6 @@ public class ValidatorMetricsPipeline {
 
   /** Marker prefix for taxonomy column references that need special Spark access. */
   private static final String TAXONOMY_PREFIX = "TAXONOMY:";
-
-  private static final String GBIF_CHECKLIST_KEY = "GBIF";
 
   @Parameters(separators = "=")
   private static class Args extends SingleDatasetPipelineArgs {}
@@ -95,78 +94,6 @@ public class ValidatorMetricsPipeline {
   }
 
   /**
-   * Maps DWC term qualified names to a column specifier. Non-taxonomy entries use the direct
-   * OccurrenceJsonRecord field name; taxonomy entries use {@code TAXONOMY:<rank>} to indicate the
-   * value lives in {@code classifications["GBIF"].classification[rank]}.
-   */
-  private static final Map<String, String> TERM_TO_COLUMN = buildTermToColumn();
-
-  private static Map<String, String> buildTermToColumn() {
-    Map<String, String> m = new LinkedHashMap<>();
-    m.put("http://rs.tdwg.org/dwc/terms/basisOfRecord", "basisOfRecord");
-    m.put("http://rs.tdwg.org/dwc/terms/sex", "sex");
-    m.put("http://rs.tdwg.org/dwc/terms/lifeStage", "lifeStage");
-    m.put("http://rs.tdwg.org/dwc/terms/establishmentMeans", "establishmentMeans");
-    m.put("http://rs.tdwg.org/dwc/terms/individualCount", "individualCount");
-    m.put("http://rs.tdwg.org/dwc/terms/typeStatus", "typeStatus");
-    m.put("http://purl.org/dc/terms/references", "references");
-    m.put("http://rs.tdwg.org/dwc/terms/preparations", "preparations");
-    m.put("http://rs.tdwg.org/dwc/terms/minimumElevationInMeters", "minimumElevationInMeters");
-    m.put("http://rs.tdwg.org/dwc/terms/maximumElevationInMeters", "maximumElevationInMeters");
-    m.put("http://rs.tdwg.org/dwc/terms/minimumDepthInMeters", "minimumDepthInMeters");
-    m.put("http://rs.tdwg.org/dwc/terms/maximumDepthInMeters", "maximumDepthInMeters");
-    m.put(
-        "http://rs.tdwg.org/dwc/terms/minimumDistanceAboveSurfaceInMeters",
-        "minimumDistanceAboveSurfaceInMeters");
-    m.put(
-        "http://rs.tdwg.org/dwc/terms/maximumDistanceAboveSurfaceInMeters",
-        "maximumDistanceAboveSurfaceInMeters");
-    m.put(
-        "http://rs.tdwg.org/dwc/terms/coordinateUncertaintyInMeters",
-        "coordinateUncertaintyInMeters");
-    m.put("http://rs.tdwg.org/dwc/terms/coordinatePrecision", "coordinatePrecision");
-    m.put("http://rs.tdwg.org/dwc/terms/decimalLatitude", "decimalLatitude");
-    m.put("http://rs.tdwg.org/dwc/terms/decimalLongitude", "decimalLongitude");
-    m.put("http://rs.tdwg.org/dwc/terms/year", "year");
-    m.put("http://rs.tdwg.org/dwc/terms/month", "month");
-    m.put("http://rs.tdwg.org/dwc/terms/day", "day");
-    m.put("http://rs.tdwg.org/dwc/terms/startDayOfYear", "startDayOfYear");
-    m.put("http://rs.tdwg.org/dwc/terms/endDayOfYear", "endDayOfYear");
-    m.put("http://purl.org/dc/terms/modified", "modified");
-    m.put("http://rs.tdwg.org/dwc/terms/dateIdentified", "dateIdentified");
-    m.put("http://rs.tdwg.org/dwc/terms/eventDate", "eventDateSingle");
-    m.put("http://rs.tdwg.org/dwc/terms/occurrenceStatus", "occurrenceStatus");
-    m.put("http://rs.tdwg.org/dwc/terms/organismQuantity", "organismQuantity");
-    m.put("http://rs.tdwg.org/dwc/terms/organismQuantityType", "organismQuantityType");
-    m.put("http://rs.tdwg.org/dwc/terms/sampleSizeUnit", "sampleSizeUnit");
-    m.put("http://rs.tdwg.org/dwc/terms/sampleSizeValue", "sampleSizeValue");
-    m.put("http://rs.tdwg.org/dwc/terms/continent", "continent");
-    m.put("http://rs.tdwg.org/dwc/terms/recordedBy", "recordedBy");
-    m.put("http://rs.tdwg.org/dwc/terms/identifiedBy", "identifiedBy");
-    m.put("http://rs.tdwg.org/dwc/terms/recordNumber", "recordNumber");
-    m.put("http://rs.tdwg.org/dwc/terms/organismID", "organismId");
-    m.put("http://rs.tdwg.org/dwc/terms/samplingProtocol", "samplingProtocol");
-    m.put("http://rs.tdwg.org/dwc/terms/eventID", "eventId");
-    m.put("http://rs.tdwg.org/dwc/terms/parentEventID", "parentEventId");
-    m.put("http://rs.tdwg.org/dwc/terms/institutionCode", "institutionCode");
-    m.put("http://rs.tdwg.org/dwc/terms/locality", "locality");
-    m.put("http://rs.tdwg.org/dwc/terms/occurrenceID", "occurrenceId");
-    m.put("http://rs.tdwg.org/dwc/terms/waterBody", "waterBody");
-    m.put("http://rs.tdwg.org/dwc/terms/countryCode", "countryCode");
-    m.put("http://rs.tdwg.org/dwc/terms/country", "country");
-    m.put("http://rs.tdwg.org/dwc/terms/stateProvince", "stateProvince");
-    // Taxonomy fields - stored under classifications["GBIF"].classification[rank]
-    m.put("http://rs.tdwg.org/dwc/terms/kingdom", TAXONOMY_PREFIX + "kingdom");
-    m.put("http://rs.tdwg.org/dwc/terms/phylum", TAXONOMY_PREFIX + "phylum");
-    m.put("http://rs.tdwg.org/dwc/terms/class", TAXONOMY_PREFIX + "class");
-    m.put("http://rs.tdwg.org/dwc/terms/order", TAXONOMY_PREFIX + "order");
-    m.put("http://rs.tdwg.org/dwc/terms/family", TAXONOMY_PREFIX + "family");
-    m.put("http://rs.tdwg.org/dwc/terms/genus", TAXONOMY_PREFIX + "genus");
-    m.put("http://rs.tdwg.org/dwc/terms/taxonID", TAXONOMY_PREFIX + "taxonID");
-    return Collections.unmodifiableMap(m);
-  }
-
-  /**
    * Runs the pipeline: reads interpreted occurrence JSON Parquet from {@code outputPath/json},
    * computes metrics, and writes them as JSON to {@code outputPath/collect-metrics.json}.
    */
@@ -176,6 +103,8 @@ public class ValidatorMetricsPipeline {
 
     String outputPath = String.format("%s/%s/%d", config.getOutputPath(), datasetId, attempt);
     log.info("Running ValidatorMetricsPipeline for {}", outputPath);
+    ValidationClient client = ValidationUtil.createValidationClient(config);
+    Validation validation = client.get(UUID.fromString(datasetId));
 
     Dataset<OccurrenceJsonRecord> records =
         spark
@@ -191,7 +120,7 @@ public class ValidatorMetricsPipeline {
       List<IssueInfo> issues = computeIssues(records);
       log.info("Computed {} distinct issues", issues.size());
 
-      List<TermInfo> termInfos = computeInterpretedFieldCounts(records);
+      List<TermInfo> termInfos = computeInterpretedFieldCounts(records, validation);
       log.info("Computed interpreted counts for {} terms", termInfos.size());
 
       // add extensions
@@ -218,7 +147,6 @@ public class ValidatorMetricsPipeline {
       log.info("Written validator metrics to {}/{}", outputPath, METRICS_FILENAME);
 
       // update the stored validation via the API
-      ValidationClient client = ValidationUtil.createValidationClient(config);
       ValidationUtil.updateMetrics(client, UUID.fromString(datasetId), generatedMetrics);
 
     } finally {
@@ -374,25 +302,27 @@ public class ValidatorMetricsPipeline {
   }
 
   /**
-   * Counts non-null interpreted values for each term in {@link #TERM_TO_COLUMN} in a single Spark
-   * aggregation pass. Returns a {@link TermInfo} per term with only {@code interpretedIndexed} set;
-   * {@code rawIndexed} is left null and filled in by {@code SparkMetricsCollector} from the
-   * archive.
+   * Counts non-null interpreted values for each term in a single Spark aggregation pass. Returns a
+   * {@link TermInfo} per term with only {@code interpretedIndexed} set; {@code rawIndexed} is left
+   * null and filled in by {@code SparkMetricsCollector} from the archive.
    */
   private static List<TermInfo> computeInterpretedFieldCounts(
-      Dataset<OccurrenceJsonRecord> records) {
+      Dataset<OccurrenceJsonRecord> records, Validation validation) {
 
-    List<String> termQualifiedNames = new ArrayList<>(TERM_TO_COLUMN.keySet());
-    if (termQualifiedNames.isEmpty()) {
-      return Collections.emptyList();
-    }
+    // find the occurrence CORE or EXTENSION which is rowType == occurrence
+    List<String> termQualifiedNames =
+        validation.getMetrics().getFileInfos().stream()
+            .filter(fileInfo -> fileInfo.getRowType().equals(DwcTerm.Occurrence.qualifiedName()))
+            .flatMap(fileInfo -> fileInfo.getTerms().stream())
+            .map(TermInfo::getTerm)
+            .toList();
 
     // Build one count(when(col.isNotNull, 1)) per term, aliased by ordinal index
     Column firstAgg = null;
     List<Column> restAggs = new ArrayList<>();
     for (int i = 0; i < termQualifiedNames.size(); i++) {
       String term = termQualifiedNames.get(i);
-      Column colExpr = resolveColumn(TERM_TO_COLUMN.get(term));
+      Column colExpr = col(term);
       Column agg = count(when(colExpr.isNotNull(), 1)).alias("t" + i);
       if (i == 0) {
         firstAgg = agg;
@@ -407,7 +337,7 @@ public class ValidatorMetricsPipeline {
     for (int i = 0; i < termQualifiedNames.size(); i++) {
 
       String term = termQualifiedNames.get(i);
-      Column colExpr = resolveColumn(TERM_TO_COLUMN.get(term));
+      Column colExpr = col(term);
 
       Dataset<Row> interpretedUniqueValueCountDf =
           records.groupBy(colExpr).agg(countDistinct(colExpr).alias("uniqueCount"));
@@ -492,20 +422,5 @@ public class ValidatorMetricsPipeline {
     }
 
     return result;
-  }
-
-  /**
-   * Resolves a column specifier from {@link #TERM_TO_COLUMN} to a Spark {@link Column}.
-   *
-   * <p>Taxonomy specifiers use the form {@code TAXONOMY:<rank>} and are resolved to {@code
-   * classifications["GBIF"].classification[rank]}.
-   */
-  private static Column resolveColumn(String columnSpec) {
-    if (columnSpec.startsWith(TAXONOMY_PREFIX)) {
-      String rank = columnSpec.substring(TAXONOMY_PREFIX.length());
-      return element_at(
-          element_at(col("classifications"), GBIF_CHECKLIST_KEY).getField("classification"), rank);
-    }
-    return col(columnSpec);
   }
 }
