@@ -487,7 +487,7 @@ public class ValidatorMetricsPipeline {
     if (classificationFields.contains(fieldName)) {
       return element_at(
           element_at(col("classifications"), COL_DATASET_KEY).getField("classification"),
-          fieldName);
+          fieldName.toUpperCase(Locale.ROOT));
     }
 
     if (acceptedUsageFields.containsKey(fieldName)) {
