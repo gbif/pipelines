@@ -1,6 +1,7 @@
 package org.gbif.pipelines.spark;
 
 import static org.apache.spark.sql.functions.*;
+import static org.gbif.api.model.Constants.COL_DATASET_KEY;
 import static org.gbif.pipelines.spark.Directories.OCCURRENCE_JSON;
 import static org.gbif.pipelines.spark.util.PipelinesConfigUtil.loadConfig;
 import static org.gbif.pipelines.spark.util.SparkUtil.getFileSystem;
@@ -59,9 +60,8 @@ public class ValidatorMetricsPipeline {
   @Parameters(separators = "=")
   private static class Args extends SingleDatasetPipelineArgs {}
 
-  private static List<String> alwaysShow =
+  private static final List<String> classificationFields =
       Stream.of(
-              DwcTerm.scientificName,
               DwcTerm.kingdom,
               DwcTerm.phylum,
               DwcTerm.class_,
@@ -70,10 +70,19 @@ public class ValidatorMetricsPipeline {
               DwcTerm.family,
               DwcTerm.subfamily,
               DwcTerm.genus,
-              DwcTerm.subgenus,
-              DwcTerm.specificEpithet,
-              DwcTerm.infraspecificEpithet,
-              DwcTerm.taxonRank,
+              DwcTerm.subgenus)
+          .map(Term::simpleName)
+          .toList();
+
+  private static final Map<String, String> acceptedUsageFields =
+      Map.of(
+          DwcTerm.specificEpithet.simpleName(), "specificEpithet",
+          DwcTerm.infraspecificEpithet.simpleName(), "infraspecificEpithet",
+          DwcTerm.taxonRank.simpleName(), "rank",
+          DwcTerm.scientificName.simpleName(), "name");
+
+  private static List<String> alwaysShow =
+      Stream.of(
               DwcTerm.basisOfRecord,
               DwcTerm.occurrenceStatus,
               DwcTerm.year,
@@ -350,6 +359,8 @@ public class ValidatorMetricsPipeline {
 
     // add alwaysShow
     List<String> combined = new ArrayList<>(suppliedTerms);
+    combined.addAll(classificationFields);
+    combined.addAll(acceptedUsageFields.keySet());
     combined.addAll(alwaysShow);
 
     List<String> termsToCheck = combined.stream().filter(fields::contains).distinct().toList();
@@ -359,7 +370,7 @@ public class ValidatorMetricsPipeline {
     List<Column> restAggs = new ArrayList<>();
     for (int i = 0; i < termsToCheck.size(); i++) {
       String term = termsToCheck.get(i);
-      Column colExpr = col(term);
+      Column colExpr = resolveColumn(term);
       Column agg = count(when(colExpr.isNotNull(), 1)).alias("t" + i);
       if (i == 0) {
         firstAgg = agg;
@@ -464,5 +475,28 @@ public class ValidatorMetricsPipeline {
   private static @NonNull String convertSimpleName(String termUri) {
     int lastIndex = termUri.lastIndexOf('/');
     return termUri.substring(lastIndex + 1);
+  }
+
+  /**
+   * Resolves a column specifier from {@link #TERM_TO_COLUMN} to a Spark {@link Column}.
+   *
+   * <p>Taxonomy specifiers use the form {@code TAXONOMY:<rank>} and are resolved to {@code
+   * classifications["GBIF"].classification[rank]}.
+   */
+  private static Column resolveColumn(String fieldName) {
+    if (classificationFields.contains(fieldName)) {
+      return element_at(
+          element_at(col("classifications"), COL_DATASET_KEY).getField("classification"),
+          fieldName);
+    }
+
+    if (acceptedUsageFields.containsKey(fieldName)) {
+      String fieldToUse = acceptedUsageFields.get(fieldName);
+      return element_at(
+          element_at(col("classifications"), COL_DATASET_KEY).getField("acceptedUsage"),
+          fieldToUse);
+    }
+
+    return col(fieldName);
   }
 }
