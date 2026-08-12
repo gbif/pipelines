@@ -10,43 +10,20 @@ import org.gbif.pipelines.spark.util.DatasetJoins;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
- * Builds the Occurrence extension Dataset for the event-core path.
+ * Builds the Occurrence extension Dataset for the event-core path (occurrences nested under event
+ * rather than being core themselves).
  *
- * <p>When a DwC-DP dataset is ingested as event-core, occurrences become an extension rather than
- * the core. Organism fields are denormalized onto each occurrence row via {@link
- * OrganismJoinBuilder} before aggregation, so they are preserved on the extension rows. {@link
- * IdentificationJoinBuilder} and {@link MaterialJoinBuilder} likewise add the taxonomic rank
- * hierarchy and institution/collection/specimen fields respectively, each restricted to its own
- * exactly-one-match rule. {@link MaterialProvenanceJoinBuilder} likewise adds the occurrence's own
- * material's provenance attribution fields. The occurrence's own {@code occurrence-media}, {@code
- * occurrence-assertion}, identification history, and identifier rows are likewise folded in as
- * nested JSON columns ({@link MediaExtensionBuilder#COL_MEDIA_EXT_JSON}, {@link
- * AssertionExtensionBuilder#COL_ASSERTION_EXT_JSON}, {@link
- * IdentificationExtensionBuilder#COL_IDENTIFICATION_EXT_JSON}, {@link
- * IdentifierExtensionBuilder#COL_IDENTIFIER_EXT_JSON}, {@link
- * NucleotideExtensionBuilder#COL_DNA_EXT_JSON}) before aggregation, so that data attached directly
- * to an occurrence isn't lost just because that occurrence is nested under an event core rather
- * than being core itself — {@link org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilder}
- * already attaches all four when occurrence is core; this mirrors that for the nested case, using
- * the same {@link org.gbif.pipelines.spark.util.DatasetJoins#leftJoinIfPresent} helper both
- * builders rely on.
+ * <p><b>Joins:</b> mirrors {@link org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilder} —
+ * {@link OrganismJoinBuilder}, {@link IdentificationJoinBuilder}, {@link MaterialJoinBuilder} (+
+ * satellites), {@link AgentJoinBuilder}; folds in occurrence-media/assertion/identification-history/
+ * identifier as nested JSON before aggregation.
  *
- * <p>{@code occurrence} only ever carries {@code event_fk} — a surrogate reference to {@code
- * event.event_pk} — it never carries a literal {@code eventID} column in the 1.0_DEV profile. This
- * builder resolves that FK to the natural {@code eventID} via the {@code event} table before
- * aggregating, the same pattern {@link AssertionExtensionBuilder} and {@link
- * HumboldtExtensionBuilder} already use. (Previously this checked for a literal {@code eventID}
- * column on {@code occurrence} and bailed when it wasn't there — which per the schema is always, so
- * the occurrence extension never attached to any event-core dataset.)
+ * <p>occurrence.event_fk = event.event_pk (left outer) resolved to natural eventID before
+ * aggregating.
  *
- * <p>{@link AgentJoinBuilder} resolves {@code recordedByID}/{@code identifiedByID} to {@code
- * recordedBy}/{@code identifiedBy} on real occurrence rows, same as {@link
- * org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilder}'s own resolution when occurrence is
- * core.
- *
- * <p>Returns a two-column Dataset {@code (eventID, occurrenceExtJson)} where the JSON is a
- * serialised list of term maps grouped by {@code eventID}. Materials without an evidence occurrence
- * are represented as virtual occurrences when they resolve through {@code collectionEvent_fk}.
+ * <p>Returns a two-column Dataset {@code (eventID, occurrenceExtJson)}. Materials without an
+ * evidence occurrence are represented as virtual occurrences when {@code collectionEvent_fk}
+ * resolves — currently paused, see mapping doc §3.5.
  */
 @Slf4j
 public class OccurrenceExtensionBuilder {
@@ -59,14 +36,7 @@ public class OccurrenceExtensionBuilder {
 
   private OccurrenceExtensionBuilder() {}
 
-  /**
-   * Builds the occurrence extension Dataset.
-   *
-   * @param spark active SparkSession (needed by {@link ExtensionAggregator})
-   * @param loader table loader — returns {@link Optional#empty()} when a table is absent
-   * @return two-column Dataset {@code (eventID, occurrenceExtJson)}, or empty if no real or virtual
-   *     occurrence resolves to an event
-   */
+  /** Empty if event is absent, or no real/virtual occurrence resolves to one. */
   public static Optional<Dataset<Row>> build(SparkSession spark, TableLoader loader) {
     Optional<Dataset<Row>> eventDfOpt = loader.load("event");
     if (eventDfOpt.isEmpty()) {

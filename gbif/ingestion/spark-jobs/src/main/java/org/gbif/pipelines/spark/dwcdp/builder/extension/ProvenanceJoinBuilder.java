@@ -22,29 +22,20 @@ import org.apache.spark.sql.Row;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
- * Resolves event → provenance links — the direct {@code event.provenance_fk} plus the many-to-many
- * {@code event-provenance} junction table, unioned and deduplicated — and aggregates the
- * list-valued attribution fields onto each event as pipe-delimited strings, sorted by {@code
- * provenanceID} for deterministic output regardless of Spark's internal shuffle order.
+ * Resolves event → provenance links to list-valued attribution fields.
  *
- * <p>Only four provenance fields are handled: {@code fundingAttribution}, {@code
- * fundingAttributionID}, {@code projectID}, {@code projectTitle}. These are confirmed list-valued
- * downstream — {@code CoreInterpreter.interpretFundingAttribution}/{@code
- * interpretFundingAttributionID}/{@code interpretProjectID}/{@code interpretProjectTitle} all call
- * {@code extractListValue} (via {@code interpretStringList}), the same pipe-delimited convention
- * used elsewhere in DwC (e.g. {@code recordedBy}) — so aggregating across every linked provenance
- * record and pipe-joining is a faithful fit for the field, not a lossy compromise.
+ * <p><b>Joins:</b>
  *
- * <p>{@code provenance.references} is deliberately left untouched: {@code
- * CoreInterpreter.interpretReferences} reads that term as a single value ({@code extractValue}, not
- * {@code extractListValue}), and {@code event.eventReferences} already populates it directly —
- * pipe-joining provenance's copy in would corrupt a single-valued field and create an unresolved
- * precedence question against the existing source. {@code datasetID} is likewise left alone, since
- * it's already sourced directly from {@code event.datasetID}. The remaining provenance fields
- * ({@code source}, {@code creator}, {@code providerLiteral}, {@code metadataCreatorLiteral}, {@code
- * metadataProviderLiteral}, {@code furtherInformationURL}, {@code feedbackURL}, {@code
- * bibliographicCitation}, and their {@code *ID} counterparts) have no confirmed downstream
- * interpreter target and are not handled here — same situation as {@code creator} on media.
+ * <ul>
+ *   <li>event.provenance_fk = provenance.provenance_pk (left outer, direct)
+ *   <li>event-provenance = provenance.provenance_pk (left outer, junction)
+ *   <li>→ unioned, deduped, aggregated (pipe-delimited, sorted by provenanceID) into
+ *       fundingAttribution, fundingAttributionID, projectID, projectTitle
+ * </ul>
+ *
+ * <p><b>Deferred:</b> {@code provenance.source/creator/providerLiteral/metadataCreatorLiteral/
+ * metadataProviderLiteral/furtherInformationURL/feedbackURL/bibliographicCitation} (+ {@code *ID}
+ * counterparts); {@code media-provenance}. See mapping doc §4.3.
  */
 @Slf4j
 public class ProvenanceJoinBuilder {

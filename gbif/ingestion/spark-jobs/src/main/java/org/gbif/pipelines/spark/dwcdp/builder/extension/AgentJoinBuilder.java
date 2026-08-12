@@ -11,34 +11,21 @@ import org.apache.spark.sql.functions;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
- * Resolves {@code agent.agentID}-referencing surrogate FK columns (e.g. {@code recordedByID},
- * {@code georeferencedByID}, {@code collectedByID}) to the linked agent's {@code
- * preferredAgentName}, coalescing the result into an existing paired free-text field (e.g. {@code
- * recordedBy}, {@code georeferencedBy}, {@code collectedBy}) — only where that field is currently
- * null, so publisher-supplied free text always wins.
+ * Resolves {@code agent.agentID}-referencing FK columns to the linked agent's {@code
+ * preferredAgentName}.
  *
- * <p>Unlike {@link ProtocolJoinBuilder}, which resolves and then discards its surrogate FK column
- * (the FK itself carries no DwC term of its own), the {@code *ID} agent columns handled here
- * <em>are</em> legitimate DwC terms in their own right (e.g. {@code dwc:recordedByID}) and must
- * survive into {@code coreTerms}/extension rows unchanged — this builder only ever adds or fills
- * the paired name column, never touches the ID column itself.
+ * <p><b>Joins:</b>
  *
- * <p>Scope: this covers only the explicit {@code *ID}/{@code *By}-style field pairs already present
- * on the core tables. Per the DwC-DP data mapping guide: "Some Agent roles are explicit in DwC-DP.
- * Most of these are simply fields for the name of the Agent fulfilling the role (e.g.,
- * georeferencedBy), while others are fields for an identifier for the Agent (e.g., recordedByID).
- * Separate AgentRole records are not necessary for these explicit relationships." The {@code
- * *-agent-role} junction tables (roles with no dedicated DwC-A field, e.g. photographer,
- * preparator) are a separate, deliberately out-of-scope concern for this builder — there is no
- * confirmed DwC-A home for them the way there is for {@code recordedBy}/{@code georeferencedBy}.
+ * <ul>
+ *   <li>{@code idColumn} = agent.agentID (left outer, coalesce-if-null) → {@code nameColumn}
+ * </ul>
  *
- * <p>Also unlike {@code protocol_fk}/{@code protocol_pk} (both internal surrogate keys), the agent
- * reference here is against {@code agent.agentID} — a natural, publisher-supplied identifier, not
- * {@code agent.agent_pk}. {@code agentID} carries no {@code uniq} constraint in the DwC-DP profile
- * ({@link #AGENT_ID_COLUMN} is the table's {@code weakPk}, not its {@code pk}), so a package
- * publishing duplicate {@code agentID}s would fan out this join; this builder does not attempt to
- * deduplicate that case — the same trust-the-profile stance {@link ProtocolJoinBuilder} takes for
- * its own required+unique surrogate keys.
+ * <p><b>Wired for:</b> event.eventConductedByID→eventConductedBy,
+ * event.georeferencedByID→georeferencedBy, occurrence.recordedByID→recordedBy,
+ * occurrence.identifiedByID→identifiedBy.
+ *
+ * <p><b>Deferred:</b> {@code *-agent-role} junction tables; {@code
+ * identification.identifiedByID}. See mapping doc §4.1 for rationale and design decisions.
  */
 @Slf4j
 public class AgentJoinBuilder {
@@ -52,19 +39,8 @@ public class AgentJoinBuilder {
   private AgentJoinBuilder() {}
 
   /**
-   * Resolves {@code idColumn} (e.g. {@code "recordedByID"}) against the {@code agent} table and
-   * coalesces the result into {@code nameColumn} (e.g. {@code "recordedBy"}) — only where {@code
-   * nameColumn} is currently null. Creates {@code nameColumn} if it isn't already present on {@code
-   * df}. {@code idColumn} itself is always left untouched.
-   *
-   * <p>Returns {@code df} unchanged if it has no {@code idColumn} column, or if the {@code agent}
-   * table is absent or missing {@code agentID} — logged at debug/warn respectively, never thrown,
-   * matching {@link ProtocolJoinBuilder}'s never-drop-the-dataset policy for optional enrichments.
-   *
-   * @param loader table loader — returns {@link Optional#empty()} when {@code agent} is absent
-   * @param df the Dataset to resolve the FK on (event, occurrence, material, ...)
-   * @param idColumn the agent-referencing FK column to resolve, e.g. {@code "recordedByID"}
-   * @param nameColumn the paired free-text column to fill, e.g. {@code "recordedBy"}
+   * {@code idColumn} left untouched; {@code df} unchanged if {@code idColumn} or {@code agent} is
+   * absent.
    */
   public static Dataset<Row> resolveAgentNameCoalesceInto(
       TableLoader loader, Dataset<Row> df, String idColumn, String nameColumn) {
@@ -121,30 +97,11 @@ public class AgentJoinBuilder {
   }
 
   /**
-   * Computes a {@link JoinFunnel} breakdown for one {@code idColumn}/{@code nameColumn} pair (e.g.
-   * {@code "recordedByID"}/{@code "recordedBy"}), mirroring {@link #resolveAgentNameCoalesceInto}'s
-   * exact decision logic so the two can't drift apart. Buckets are mutually exclusive and sum to
-   * the candidate count:
+   * Buckets: already had {@code nameColumn} / resolved / no matching {@code agentID}, mirroring
+   * {@link #resolveAgentNameCoalesceInto}'s decision logic.
    *
-   * <ul>
-   *   <li><b>already had {@code nameColumn}</b> — publisher-supplied free text was already present;
-   *       agent resolution is moot for that row (coalesce would keep the existing value regardless)
-   *   <li><b>resolved, filled {@code nameColumn}</b> — {@code nameColumn} was null and the agent
-   *       table had a matching {@code agentID}
-   *   <li><b>no matching agentID, unresolved</b> — {@code nameColumn} was null, the agent table is
-   *       present and usable, but no row's {@code agentID} matched
-   * </ul>
-   *
-   * <p>Reloads {@code coreTable} fresh via {@code loader} rather than taking the already-enriched
-   * Dataset {@link #resolveAgentNameCoalesceInto} actually ran against — {@code idColumn}/{@code
-   * nameColumn} are raw DwC-DP columns already present on {@code event}/{@code occurrence}, not
-   * created by an earlier join, so this reload is equivalent for these specific columns. It would
-   * not be equivalent for a column introduced by a prior enrichment step in the same builder chain.
-   *
-   * @param coreTable the table {@code idColumn}/{@code nameColumn} live on, e.g. {@code "event"} or
-   *     {@code "occurrence"}
-   * @return empty if {@code coreTable} is absent, or present but missing {@code idColumn} entirely
-   *     — same "nothing to report" cases {@link #resolveAgentNameCoalesceInto} treats as a no-op
+   * <p>Reloads {@code coreTable} fresh — valid here since {@code idColumn}/{@code nameColumn} are
+   * raw DwC-DP columns, not introduced by an earlier step in the chain.
    */
   public static Optional<JoinFunnel> computeFunnel(
       TableLoader loader, String coreTable, String idColumn, String nameColumn) {

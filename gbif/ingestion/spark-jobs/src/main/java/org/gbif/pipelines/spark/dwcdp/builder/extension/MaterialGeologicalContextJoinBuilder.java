@@ -16,12 +16,14 @@ import org.gbif.pipelines.spark.util.TableLoader;
 /**
  * Adds Darwin Core geological-context terms to an occurrence from its single material evidence.
  *
- * <p>The target fields ({@code formation}, {@code bed}, chronostratigraphic ranges, etc.) are
- * single-valued in a DwC-A record, whereas DwC-DP permits a material to have multiple rows in
- * {@code material-geological-context}. This builder therefore applies the fields only when both
- * relationships are unambiguous: the occurrence has exactly one evidence material, and that
- * material has exactly one distinct geological-context link. Existing occurrence values always take
- * precedence.
+ * <p><b>Joins:</b>
+ *
+ * <ul>
+ *   <li>material-geological-context = geological-context.geologicalContext_pk (left outer,
+ *       junction), gated to exactly-one-material AND exactly-one-geological-context
+ * </ul>
+ *
+ * <p>Existing occurrence values always take precedence. See mapping doc §4.4.
  */
 @Slf4j
 public class MaterialGeologicalContextJoinBuilder {
@@ -170,30 +172,10 @@ public class MaterialGeologicalContextJoinBuilder {
   }
 
   /**
-   * Computes a {@link JoinFunnel} breakdown of occurrence geological-context enrichment via single
-   * material evidence, mirroring {@link #enrichOccurrences}'s decision logic. Unlike {@link
-   * MaterialProtocolJoinBuilder} and {@link MaterialProvenanceJoinBuilder}, {@code
-   * material-geological-context} can genuinely link one material to more than one distinct
-   * geological-context row — {@link #enrichOccurrences} requires that link to be unambiguous too
-   * (see class Javadoc), so this funnel has an ambiguity bucket like {@link
-   * MaterialJoinBuilder.MaterialFunnel} and {@link IdentificationJoinBuilder#computeFunnel}, unlike
-   * the other two material-side funnels. Buckets are mutually exclusive and sum to the base count:
-   *
-   * <ul>
-   *   <li><b>base</b> — occurrences with exactly one material citing them as evidence
-   *   <li><b>no material-geological-context link</b> — that material has no linked
-   *       geological-context row at all
-   *   <li><b>single geological-context link, resolved, enriched</b> — exactly one distinct link,
-   *       and it resolves to a real {@code geological-context} row
-   *   <li><b>single geological-context link, dangling FK, DROPPED</b> — exactly one distinct link,
-   *       but it doesn't resolve to any {@code geological-context} row
-   *   <li><b>multiple distinct geological-context links, ambiguous, DROPPED</b> — more than one
-   *       distinct {@code geologicalContext_fk} links to the same material
-   * </ul>
-   *
-   * @return empty if {@code material-geological-context}, {@code geological-context}, or any
-   *     unambiguous single-material occurrence link is absent — same no-op cases {@link
-   *     #enrichOccurrences} treats as absent
+   * Has an ambiguity bucket (unlike {@link MaterialProtocolJoinBuilder}/{@link
+   * MaterialProvenanceJoinBuilder}) — a material can genuinely link to more than one distinct
+   * geological-context row. Buckets: base / no link / resolved / dangling FK (dropped) / ambiguous
+   * (dropped).
    */
   public static Optional<JoinFunnel> computeFunnel(TableLoader loader) {
     Optional<Dataset<Row>> materialGeoDfOpt = loader.load(TABLE_MATERIAL_GEOLOGICAL_CONTEXT);

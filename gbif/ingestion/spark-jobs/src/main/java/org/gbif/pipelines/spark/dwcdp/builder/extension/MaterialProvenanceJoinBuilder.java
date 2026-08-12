@@ -12,27 +12,21 @@ import org.apache.spark.sql.functions;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
- * Resolves material → provenance links — the direct {@code material.provenance_fk} plus the
- * many-to-many {@code material-provenance} junction table, unioned and deduplicated — aggregates
- * the same four list-valued attribution fields {@link ProvenanceJoinBuilder} handles for {@code
- * event} (reusing {@link ProvenanceJoinBuilder#aggregateProvenanceFields} directly rather than
- * duplicating that struct-sort-transform-filter-join logic), and finally resolves the aggregated
- * result down to the occurrence the material record is exactly-one evidence for (via {@link
- * MaterialJoinBuilder#singleMaterialOccurrenceLinks}) before left-joining onto occurrence.
+ * Resolves material → provenance attribution fields onto occurrence.
  *
- * <p>Simpler than the event case in one respect: {@code material-provenance.materialEntity_fk}
- * already equals {@code material.materialEntity_pk} directly — no extra hop through a freshly
- * reloaded parent table is needed to resolve the junction table's own FK, unlike {@code
- * event-provenance.event_fk}, which needs an {@code event} reload to get from the surrogate {@code
- * event_pk} to the natural {@code eventID}. Here, staying in {@code materialEntity_pk} surrogate
- * space until the final resolution step is exactly what's needed anyway, since {@link
- * MaterialJoinBuilder#singleMaterialOccurrenceLinks} itself expects a {@code materialEntity_pk} key
- * to resolve against.
+ * <p><b>Joins:</b>
  *
- * <p>No precedence conflict to resolve here, unlike most other material enrichments: {@code
- * occurrence} has no {@code fundingAttribution}/{@code fundingAttributionID}/{@code projectID}/
- * {@code projectTitle} fields of its own at all (only {@code event}/{@code provenance} do), so
- * there's nothing on the occurrence side these could ever collide with.
+ * <ul>
+ *   <li>material.provenance_fk = provenance.provenance_pk (left outer, direct)
+ *   <li>material-provenance.materialEntity_fk = material.materialEntity_pk (left outer, junction)
+ *   <li>→ unioned, deduped, aggregated (pipe-delimited) via {@link
+ *       ProvenanceJoinBuilder#aggregateProvenanceFields} into fundingAttribution,
+ *       fundingAttributionID, projectID, projectTitle
+ *   <li>materialEntity_pk → occurrenceID (left outer, via {@link
+ *       MaterialJoinBuilder#singleMaterialOccurrenceLinks})
+ * </ul>
+ *
+ * <p>See mapping doc §4.3.
  */
 @Slf4j
 public class MaterialProvenanceJoinBuilder {
@@ -42,14 +36,7 @@ public class MaterialProvenanceJoinBuilder {
 
   private MaterialProvenanceJoinBuilder() {}
 
-  /**
-   * Returns {@code occurrenceDf} enriched with pipe-delimited {@code fundingAttribution}, {@code
-   * fundingAttributionID}, {@code projectID}, and {@code projectTitle} columns, aggregated across
-   * every provenance record linked to the occurrence's own material (direct FK and/or junction
-   * table on {@code material}, deduplicated, sorted by {@code provenanceID}, resolved through the
-   * same exactly-one-material rule {@link MaterialJoinBuilder} applies elsewhere). Returns {@code
-   * occurrenceDf} unchanged if {@code provenance} or a usable material/occurrence link is absent.
-   */
+  /** {@code occurrenceDf} unchanged if provenance or a usable material link is absent. */
   public static Dataset<Row> enrichOccurrences(TableLoader loader, Dataset<Row> occurrenceDf) {
     Optional<Dataset<Row>> provenanceDfOpt = loader.load(ProvenanceJoinBuilder.TABLE_PROVENANCE);
     if (provenanceDfOpt.isEmpty()) {
@@ -135,15 +122,7 @@ public class MaterialProvenanceJoinBuilder {
     return joinedOccurrence.select(columns.toArray(new Column[0]));
   }
 
-  /**
-   * Builds a two-column {@code (materialEntity_pk, provenance_pk)} Dataset — one row per distinct
-   * material/provenance link — from the direct FK, the junction table, or both (deduplicated via
-   * {@code union().distinct()}). Returns {@code null} if neither source of links is present at all.
-   *
-   * <p>Unlike {@link ProvenanceJoinBuilder}'s equivalent, the junction table needs no extra hop
-   * through a freshly reloaded parent table — {@code material-provenance.materialEntity_fk} already
-   * equals {@code material.materialEntity_pk} directly.
-   */
+  /** {@code (materialEntity_pk, provenance_pk)}, direct FK ∪ junction, deduplicated. {@code null} if neither source is present. */
   private static Dataset<Row> collectMaterialProvenanceLinks(
       TableLoader loader, Dataset<Row> materialDf) {
     boolean hasDirectFk =
@@ -184,18 +163,7 @@ public class MaterialProvenanceJoinBuilder {
     return direct.unionByName(junction).distinct();
   }
 
-  /**
-   * Computes a {@link JoinFunnel} breakdown of occurrence funding/project attribution via single
-   * material evidence, mirroring {@link #enrichOccurrences}'s decision logic (reuses {@link
-   * #collectMaterialProvenanceLinks} directly). Same three-bucket shape as {@link
-   * ProvenanceJoinBuilder#computeFunnel}, but based on the {@code materialEntity_pk} → {@code
-   * occurrenceID} resolution from {@link MaterialJoinBuilder#singleMaterialOccurrenceLinks} rather
-   * than events directly. Buckets are mutually exclusive and sum to the base count.
-   *
-   * @return empty if {@code provenance}, the {@code material} table, or any unambiguous
-   *     single-material occurrence link is absent — same no-op cases {@link #enrichOccurrences}
-   *     treats as absent
-   */
+  /** Same three-bucket shape as {@link ProvenanceJoinBuilder#computeFunnel}, keyed via {@link MaterialJoinBuilder#singleMaterialOccurrenceLinks}. */
   public static Optional<JoinFunnel> computeFunnel(TableLoader loader) {
     Optional<Dataset<Row>> provenanceDfOpt = loader.load(ProvenanceJoinBuilder.TABLE_PROVENANCE);
     if (provenanceDfOpt.isEmpty()) {

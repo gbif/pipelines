@@ -14,23 +14,14 @@ import org.apache.spark.sql.functions;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
- * Enriches rows by left-joining the {@code usage-policy} table onto them.
+ * Enriches rows with {@code license}/{@code rightsHolder} from {@code usage-policy}. Entity-agnostic
+ * — used for both {@code media} and {@code material}.
  *
- * <p>Like {@link OrganismJoinBuilder} and {@link GeologicalContextJoinBuilder}, this denormalizes a
- * related table's fields directly onto the row rather than producing a separate extension row type
- * — {@code license} and {@code rightsHolder} (the two fields {@link
- * org.gbif.pipelines.core.interpreters.extension.MultimediaInterpreter} reads via {@code
- * DcTerm.license}/{@code DcTerm.rightsHolder}) exist only on {@code usage-policy}, never on the
- * entity's own table — {@code media} and {@code material} both only carry the surrogate {@code
- * usagePolicy_fk}.
+ * <p><b>Joins:</b>
  *
- * <p>Both {@code license} and {@code rightsHolder} match their target DwC-A terms' simple names
- * directly, so once joined they resolve correctly via {@code TermFactory} with no rename needed —
- * only the join itself was missing.
- *
- * <p>Entity-agnostic: nothing in {@link #enrich}/{@link #join} is specific to {@code media} —
- * originally written for it (hence the historical method name below), now used identically for
- * {@code material} too, rather than duplicating the same join logic under a second name.
+ * <ul>
+ *   <li>usagePolicy_fk = usage-policy.usagePolicy_pk (left outer)
+ * </ul>
  */
 @Slf4j
 public class UsagePolicyJoinBuilder {
@@ -41,15 +32,7 @@ public class UsagePolicyJoinBuilder {
 
   private UsagePolicyJoinBuilder() {}
 
-  /**
-   * Returns {@code df} enriched with usage-policy columns (notably {@code license}, {@code
-   * rightsHolder}), or the original {@code df} unchanged if the usage-policy table is absent or
-   * {@code df} carries no {@code usagePolicy_fk} column.
-   *
-   * @param loader table loader — returns {@link Optional#empty()} when usage-policy is absent
-   * @param df the Dataset to enrich (e.g. {@code media} or {@code material})
-   * @return rows with additional usage-policy fields merged in
-   */
+  /** {@code df} unchanged if usage-policy is absent, or {@code df} lacks {@code usagePolicy_fk}. */
   public static Dataset<Row> enrich(TableLoader loader, Dataset<Row> df) {
     Optional<Dataset<Row>> usagePolicyDf = loader.load(TABLE_USAGE_POLICY);
     if (usagePolicyDf.isEmpty()) {
@@ -65,15 +48,7 @@ public class UsagePolicyJoinBuilder {
     return join(df, usagePolicyDf.get());
   }
 
-  /**
-   * Pure join transform — separated from I/O so it can be unit tested directly with in-memory
-   * Datasets, same shape as {@link OrganismJoinBuilder#joinOrganism} and {@link
-   * GeologicalContextJoinBuilder#join}.
-   *
-   * <p>Columns already present on {@code df} are never overwritten by usage-policy columns. Both
-   * the join key ({@code usagePolicy_fk} on {@code df}'s side, resolved against {@code
-   * usagePolicy_pk}) and usage-policy's own surrogate PK are dropped afterwards.
-   */
+  /** Pure join transform, separated from I/O for direct unit testing. */
   static Dataset<Row> join(Dataset<Row> df, Dataset<Row> usagePolicyDf) {
     Set<String> existingCols = new HashSet<>(Arrays.asList(df.columns()));
 
@@ -104,17 +79,7 @@ public class UsagePolicyJoinBuilder {
     return joined;
   }
 
-  /**
-   * Computes a {@link JoinFunnel} breakdown of {@code usagePolicy_fk} resolution for one entity
-   * table (e.g. {@code "media"} or {@code "material"} — {@link #enrich} is entity-agnostic, so this
-   * is too), mirroring {@link #enrich}'s decision logic. Buckets are mutually exclusive and sum to
-   * the candidate count.
-   *
-   * @param entityTable the table {@code usagePolicy_fk} lives on, e.g. {@code "media"} or {@code
-   *     "material"}
-   * @return empty if {@code entityTable} is absent, or present but missing {@code usagePolicy_fk}
-   *     entirely
-   */
+  /** Entity-agnostic, same as {@link #enrich}. */
   public static Optional<JoinFunnel> computeFunnel(TableLoader loader, String entityTable) {
     Optional<Dataset<Row>> entityDfOpt = loader.load(entityTable);
     if (entityDfOpt.isEmpty()) {

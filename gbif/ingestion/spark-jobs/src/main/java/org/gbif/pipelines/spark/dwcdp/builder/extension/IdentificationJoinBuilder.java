@@ -14,37 +14,21 @@ import org.apache.spark.sql.functions;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
- * Enriches occurrence rows by left-joining the {@code identification} table onto them, bringing in
- * the taxonomic rank hierarchy — {@code kingdom}, {@code phylum}, {@code class}, {@code order},
- * {@code superfamily}, {@code family}, {@code subfamily}, {@code tribe}, {@code subtribe}, {@code
- * genus}, {@code genericName}, {@code subgenus}, {@code specificEpithet}, {@code
- * infraspecificEpithet} — that {@code occurrence} never carries on its own. {@code
- * org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter#createNameUsageMatchRequest} builds
- * its {@code NameUsageMatchRequest} with all of these fields currently null for every DwC-DP
- * occurrence, which measurably degrades match confidence — {@code checkFuzzy} specifically treats
- * an all-empty higher-taxa set as a signal to downgrade a {@code VARIANT} match down to {@code
- * NONE}.
+ * Enriches occurrence rows with the taxonomic rank hierarchy from {@code identification} (feeds
+ * {@code TaxonomyInterpreter}'s name-usage match confidence).
  *
- * <p><b>Only the {@code identification.occurrence_fk} path is handled here.</b> {@code
- * identification} also carries {@code materialEntity_fk}/{@code media_fk}/{@code organism_fk}/
- * nucleotide FKs — per the schema, only one of these is populated on a given row depending on what
- * the identification is actually about — but {@code material} isn't joined anywhere in this
- * pipeline yet, so a material-sourced identification has nothing on the occurrence side to attach
- * to regardless. That path is naturally bundled into whenever {@code material} itself gets joined.
+ * <p><b>Joins:</b>
  *
- * <p><b>Enrichment only applies when an occurrence has exactly one {@code identification} row with
- * {@code isAcceptedIdentification = true}.</b> Zero accepted rows (nothing to enrich from) or more
- * than one (a data-quality issue the schema doesn't prevent — re-identification history without a
- * single clear "current" row) both leave the occurrence unenriched entirely, rather than guessing
- * at a tie-break; its own existing {@code scientificName}/{@code taxonID}/etc. fields remain the
- * only source.
+ * <ul>
+ *   <li>identification.occurrence_fk = occurrence.occurrence_pk (left outer), gated to exactly-one
+ *       {@code isAcceptedIdentification = true} row
+ * </ul>
  *
- * <p>Columns already present on {@code occurrence} are never overwritten by identification's copy —
- * same "occurrence value wins" precedence {@link OrganismJoinBuilder} already applies. Only fields
- * occurrence doesn't have at all (principally the rank hierarchy) are added. Internal surrogate
- * keys ({@code identification_pk}, every {@code *_fk} column on {@code identification}, and {@code
- * isAcceptedIdentification} itself, which was only a filter criterion) are excluded from what gets
- * added.
+ * <p>Occurrence's own value always wins on overlapping fields; only fields occurrence lacks
+ * entirely (principally the rank hierarchy) are added.
+ *
+ * <p><b>Deferred:</b> {@code identification.materialEntity_fk} path; {@code
+ * identification-agent-role}, {@code identification-reference}. See mapping doc §4.8.
  */
 @Slf4j
 public class IdentificationJoinBuilder {
@@ -68,12 +52,7 @@ public class IdentificationJoinBuilder {
 
   private IdentificationJoinBuilder() {}
 
-  /**
-   * Returns {@code occurrenceDf} enriched with identification fields not already present on it, for
-   * occurrences with exactly one accepted identification, or the original {@code occurrenceDf}
-   * unchanged if the {@code identification} table is absent, occurrence has no {@code
-   * occurrence_pk} column, or identification is missing the columns this join needs.
-   */
+  /** {@code occurrenceDf} unchanged if identification is absent or missing needed columns. */
   public static Dataset<Row> enrichOccurrences(TableLoader loader, Dataset<Row> occurrenceDf) {
     Optional<Dataset<Row>> identificationDfOpt = loader.load(TABLE_IDENTIFICATION);
     if (identificationDfOpt.isEmpty()) {
@@ -103,11 +82,7 @@ public class IdentificationJoinBuilder {
     return join(occurrenceDf, singleAccepted);
   }
 
-  /**
-   * Filters {@code identificationDf} to {@code isAcceptedIdentification = true} rows with a
-   * non-null {@code occurrence_fk}, then keeps only {@code occurrence_fk} groups with <em>exactly
-   * one</em> such row.
-   */
+  /** Filters to {@code isAcceptedIdentification = true}, non-null {@code occurrence_fk}, keeps only groups of exactly one. */
   private static Dataset<Row> singleAcceptedPerOccurrence(Dataset<Row> identificationDf) {
     Dataset<Row> accepted =
         identificationDf
@@ -129,12 +104,7 @@ public class IdentificationJoinBuilder {
         .drop("__single_accepted_fk");
   }
 
-  /**
-   * Left-joins the (already filtered to exactly-one-accepted-per-occurrence) identification rows
-   * onto occurrence via {@code occurrence_fk -> occurrence_pk}, adding only columns occurrence
-   * doesn't already carry — same column-precedence policy as {@link
-   * OrganismJoinBuilder#joinOrganism}.
-   */
+  /** Pure join transform, occurrence value wins on overlap. */
   private static Dataset<Row> join(Dataset<Row> occurrenceDf, Dataset<Row> identificationDf) {
     Set<String> occurrenceCols = new HashSet<>(Arrays.asList(occurrenceDf.columns()));
 
@@ -167,28 +137,7 @@ public class IdentificationJoinBuilder {
     return joined;
   }
 
-  /**
-   * Computes a {@link JoinFunnel} breakdown of {@code identification} rows, mirroring {@link
-   * #enrichOccurrences}'s decision logic — reuses {@link #singleAcceptedPerOccurrence} directly so
-   * the two can't drift apart. Unlike the other join builders in this commit, this one has genuine
-   * many-rows-compete-for-one-slot ambiguity (like {@link MaterialJoinBuilder.MaterialFunnel}), so
-   * it funnels over {@code identification} rows rather than a single candidates/resolved/unresolved
-   * split. Buckets are mutually exclusive and sum to the total row count:
-   *
-   * <ul>
-   *   <li><b>not accepted, ignored</b> — {@code isAcceptedIdentification != true}
-   *   <li><b>accepted, no occurrence_fk, ignored</b> — accepted but not linked to any occurrence
-   *   <li><b>accepted with occurrence_fk, used for enrichment</b> — the sole accepted
-   *       identification for its occurrence; that occurrence's rank hierarchy gets filled in
-   *   <li><b>accepted with occurrence_fk, ambiguous (&gt;1 per occurrence), DROPPED</b> — more than
-   *       one accepted identification links to the same occurrence, so per {@link
-   *       #singleAcceptedPerOccurrence} none of them are used — the occurrence is left unenriched
-   *       rather than the join guessing at a tie-break
-   * </ul>
-   *
-   * @return empty if {@code identification} is absent, or missing {@code occurrence_fk} or {@code
-   *     isAcceptedIdentification} entirely
-   */
+  /** Funnels over identification rows, not candidates — genuine many-compete-for-one-slot ambiguity, like {@link MaterialJoinBuilder.MaterialFunnel}. Buckets: not accepted / accepted no FK / used / ambiguous (dropped). */
   public static Optional<JoinFunnel> computeFunnel(TableLoader loader) {
     Optional<Dataset<Row>> identificationDfOpt = loader.load(TABLE_IDENTIFICATION);
     if (identificationDfOpt.isEmpty()) {

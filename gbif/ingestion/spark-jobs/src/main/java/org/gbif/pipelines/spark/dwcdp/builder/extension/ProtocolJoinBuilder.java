@@ -12,27 +12,24 @@ import org.apache.spark.sql.functions;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
- * Resolves {@code protocol_pk}-referencing surrogate FK columns to the linked protocol's display
- * label.
+ * Resolves {@code protocol_pk}-referencing FK columns and junction tables to the linked protocol's
+ * display label ({@code "type: name"}, or description as fallback).
  *
- * <p>DwC-DP carries several protocol references as bare surrogate FKs with no accompanying text:
- * {@code event.eventProtocol_fk}, {@code occurrence.occurrenceProtocol_fk}. Left unresolved, these
- * fall through {@code TermResolver} under their own raw column names — meaningless internal IDs
- * masquerading as term values, the same class of leak {@code AssertionExtensionBuilder} already
- * solves for {@code assertionProtocol_fk}. This builder applies the same policy generally: resolve
- * via the {@code protocol} table when present, fall back to the raw FK value when it's absent
- * (better than nothing — mirrors {@code AssertionExtensionBuilder}'s own tested fallback for {@code
- * assertionProtocol_fk}), never silently drop the column.
+ * <p><b>Joins:</b>
  *
- * <p>{@code event.georeferenceProtocol_fk} is a related but distinct case, handled by {@link
- * #resolveProtocolFkCoalesceInto}: {@code event} already carries a literal {@code
- * georeferenceProtocol} text field alongside the FK, so publisher-supplied free text must win where
- * present — the FK is only a supplementary source used to fill gaps, never to overwrite.
+ * <ul>
+ *   <li>event.eventProtocol_fk / occurrence.occurrenceProtocol_fk = protocol.protocol_pk (left
+ *       outer, direct) → samplingProtocol — {@link #resolveProtocolFk}
+ *   <li>event.georeferenceProtocol_fk = protocol.protocol_pk (left outer, coalesce-if-null) →
+ *       georeferenceProtocol — {@link #resolveProtocolFkCoalesceInto}
+ *   <li>event-protocol / survey-protocol / material-protocol = protocol.protocol_pk (inner,
+ *       junction, optional protocolType filter) → aggregated pipe-delimited list — {@link
+ *       #aggregateJunctionProtocolDescriptions} + {@link #mergeJunctionProtocolsInto}
+ * </ul>
  *
- * <p>The mapping of {@code eventProtocol_fk}/{@code occurrenceProtocol_fk} to {@code
- * dwc:samplingProtocol} is this project's best inference from the DwC-DP schema — no DwC-DP field
- * maps to {@code dwc:samplingProtocol} otherwise, but it hasn't been independently confirmed
- * against a mapping document the way the media field renames were.
+ * <p><b>Fallback:</b> protocol table absent/malformed → raw FK value kept, never dropped.
+ *
+ * <p>See mapping doc §4.2 for design rationale and known gaps.
  */
 @Slf4j
 public class ProtocolJoinBuilder {
@@ -59,18 +56,7 @@ public class ProtocolJoinBuilder {
 
   private ProtocolJoinBuilder() {}
 
-  /**
-   * Resolves {@code fkColumn} to a new column named {@code targetColumnName} holding the linked
-   * protocol's display label — or, when the {@code protocol} table is absent, {@code fkColumn}'s
-   * raw value under that same new name. Returns {@code df} unchanged if it has no {@code fkColumn}
-   * column at all.
-   *
-   * @param loader table loader — returns {@link Optional#empty()} when {@code protocol} is absent
-   * @param df the Dataset to resolve the FK on (typically {@code event} or {@code occurrence})
-   * @param fkColumn the surrogate FK column to resolve, e.g. {@code "eventProtocol_fk"}
-   * @param targetColumnName the new column name to hold the resolved value, e.g. {@code
-   *     "samplingProtocol"}
-   */
+  /** {@code df} unchanged if it has no {@code fkColumn}. */
   public static Dataset<Row> resolveProtocolFk(
       TableLoader loader, Dataset<Row> df, String fkColumn, String targetColumnName) {
     if (!Arrays.asList(df.columns()).contains(fkColumn)) {
@@ -89,19 +75,7 @@ public class ProtocolJoinBuilder {
     return joinAndRename(df, protocolDfOpt.get(), fkColumn, targetColumnName);
   }
 
-  /**
-   * Resolves {@code fkColumn} the same way as {@link #resolveProtocolFk}, but instead of creating a
-   * new column, coalesces the resolved (or fallback raw) value into an <em>existing</em> column
-   * ({@code coalesceIntoColumn}) — only where that column is currently null. An existing
-   * publisher-supplied value in {@code coalesceIntoColumn} is never overwritten.
-   *
-   * <p>Returns {@code df} unchanged if it has no {@code fkColumn} column at all. If {@code df} also
-   * has no {@code coalesceIntoColumn} column, one is created holding just the resolved/fallback
-   * value (nothing to coalesce against).
-   *
-   * @param coalesceIntoColumn an existing text column that should take precedence when populated,
-   *     e.g. {@code "georeferenceProtocol"}
-   */
+  /** Same resolution as {@link #resolveProtocolFk}, coalesced into an existing column — publisher value wins. */
   public static Dataset<Row> resolveProtocolFkCoalesceInto(
       TableLoader loader, Dataset<Row> df, String fkColumn, String coalesceIntoColumn) {
     if (!Arrays.asList(df.columns()).contains(fkColumn)) {
@@ -127,16 +101,7 @@ public class ProtocolJoinBuilder {
         .drop(TEMP_RESOLVED_COLUMN);
   }
 
-  /**
-   * Resolves a protocol junction table into one deterministic pipe-delimited display-label list per
-   * parent. When the protocol lookup table is absent, protocol FK values are retained as the same
-   * fallback used by {@link #resolveProtocolFk}; when it is present, dangling protocol FKs do not
-   * contribute a value.
-   *
-   * <p>The returned Dataset contains {@code parentIdColumn} and an internal display-label-list
-   * column intended for {@link #mergeJunctionProtocolsInto}. Empty signals that a required table or
-   * column is absent, rather than an empty junction table.
-   */
+  /** One row per {@code parentIdColumn}, ready for {@link #mergeJunctionProtocolsInto}. Empty means a required table/column is absent, not "no matches." */
   public static Optional<Dataset<Row>> aggregateJunctionProtocolDescriptions(
       TableLoader loader,
       String junctionTable,
@@ -159,22 +124,13 @@ public class ProtocolJoinBuilder {
   }
 
   /**
-   * Same as {@link #aggregateJunctionProtocolDescriptions(TableLoader, String, String, String,
-   * String, String)}, but takes an already-resolved {@code parentDf} directly rather than a table
-   * name to load — needed when the junction's parent isn't itself the final grouping key (e.g.
-   * {@code survey-protocol} links to {@code survey}, which must first be resolved to its owning
-   * {@code event} before grouping by {@code eventID}; the caller builds that resolved {@code
-   * (survey_pk, eventID)} Dataset and passes it here as {@code parentDf}), and optionally restricts
-   * which protocols contribute by {@code protocolType}.
+   * Same as the {@code (TableLoader, String, String, String, String, String)} overload, but takes
+   * an already-resolved {@code parentDf} (e.g. survey-protocol needs survey resolved to its
+   * owning event first) and an optional {@code protocolType} filter.
    *
-   * @param allowedProtocolTypesLowercase when non-null and non-empty, only protocols whose {@code
-   *     protocolType} (lower-cased) is in this set contribute a value — e.g. {@link
-   *     #GEOREFERENCE_PROTOCOL_TYPES} to isolate georeferencing protocols for {@code
-   *     dwc:georeferenceProtocol}. When {@code null}, every linked protocol contributes, regardless
-   *     of type — the shape used for {@code dwc:samplingProtocol}, where all protocols concatenate
-   *     together. If a type filter is requested but the {@code protocol} table is absent (or lacks
-   *     a {@code protocolType} column), nothing can be classified, so this returns {@link
-   *     Optional#empty()} rather than guessing.
+   * @param allowedProtocolTypesLowercase null = every linked protocol contributes; non-empty =
+   *     only matching {@code protocolType} contributes (e.g. {@link #GEOREFERENCE_PROTOCOL_TYPES}).
+   *     A filter that can't be evaluated returns empty rather than guessing.
    */
   public static Optional<Dataset<Row>> aggregateJunctionProtocolDescriptions(
       TableLoader loader,
@@ -276,11 +232,7 @@ public class ProtocolJoinBuilder {
     return Optional.of(aggregated);
   }
 
-  /**
-   * Merges aggregated junction protocol display labels into a pipe-delimited target field. Existing
-   * direct values are preserved, duplicate values are removed, and all values are sorted for
-   * deterministic output.
-   */
+  /** Merges {@link #aggregateJunctionProtocolDescriptions} output into {@code targetColumn}, deduped and sorted. */
   public static Dataset<Row> mergeJunctionProtocolsInto(
       Dataset<Row> df,
       Optional<Dataset<Row>> aggregatedProtocols,
@@ -338,32 +290,9 @@ public class ProtocolJoinBuilder {
   }
 
   /**
-   * Computes a {@link JoinFunnel} breakdown for one direct {@code fkColumn} → {@code
-   * targetColumnName} resolution, mirroring {@link #resolveProtocolFk}'s decision logic. Covers
-   * only the direct-FK-to-new-column path used for {@code eventProtocol_fk}/{@code
-   * occurrenceProtocol_fk} — not {@link #resolveProtocolFkCoalesceInto} (used for {@code
-   * georeferenceProtocol_fk}, where an existing free-text column takes precedence) and not the
-   * junction-table aggregation path ({@code event-protocol}/{@code survey-protocol}/{@code
-   * material-protocol}), which has its own multi-row-per-parent semantics a single funnel can't
-   * represent cleanly. Buckets are mutually exclusive and sum to the candidate count:
-   *
-   * <ul>
-   *   <li><b>protocol table absent, raw FK kept as fallback</b> — {@link #resolveProtocolFk} keeps
-   *       the surrogate FK value verbatim under {@code targetColumnName} rather than dropping it
-   *   <li><b>protocol table missing primary key, raw FK kept as fallback</b> — same fallback, but
-   *       because the {@code protocol} table itself is malformed rather than absent
-   *   <li><b>resolved to protocol description</b> — {@code fkColumn} matched a {@code protocol_pk}
-   *   <li><b>dangling FK, no matching protocol_pk (value dropped)</b> — {@code fkColumn} is
-   *       populated but doesn't match any row in {@code protocol}; {@link #resolveProtocolFk}'s
-   *       left-outer join leaves {@code targetColumnName} null for these rows, unlike the two
-   *       fallback buckets above
-   * </ul>
-   *
-   * <p>Reloads {@code coreTable} fresh via {@code loader}, same caveat as {@link
-   * AgentJoinBuilder#computeFunnel} — valid because {@code fkColumn} is a raw DwC-DP column, not
-   * one introduced by an earlier step in the builder chain.
-   *
-   * @return empty if {@code coreTable} is absent, or present but missing {@code fkColumn} entirely
+   * Covers only the direct-FK path ({@link #resolveProtocolFk}) — not the coalesce path or the
+   * junction-aggregation path, which have different bucket shapes. Buckets: table absent/malformed
+   * (raw FK fallback) / resolved / dangling FK (dropped).
    */
   public static Optional<JoinFunnel> computeFunnel(
       TableLoader loader, String coreTable, String fkColumn, String targetColumnName) {
@@ -454,11 +383,7 @@ public class ProtocolJoinBuilder {
         .drop(df.col(fkColumn));
   }
 
-  /**
-   * Builds the human-readable representation used by DwC-A's scalar protocol fields. A named
-   * protocol is represented as {@code "type: name"} where the type is available; an unnamed
-   * protocol falls back to its free-text description.
-   */
+  /** {@code "type: name"} where available, else {@code protocolDescription}. */
   private static Column protocolDisplayColumn(Dataset<Row> protocolDf) {
     boolean hasName = Arrays.asList(protocolDf.columns()).contains(PROTOCOL_NAME_COLUMN);
     boolean hasType = Arrays.asList(protocolDf.columns()).contains(PROTOCOL_TYPE_COLUMN);

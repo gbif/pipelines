@@ -32,45 +32,11 @@ import org.gbif.pipelines.spark.util.TableLoader;
 /**
  * Builds a distributed Dataset of event-core {@link ExtendedRecord}s from DwC-DP Parquet files.
  *
- * <p>Pipeline:
- *
- * <ol>
- *   <li>Load the required {@code event} table — throws if absent (routing error).
- *   <li>Resolve {@code parentEvent_fk} (a surrogate self-reference to {@code event.event_pk}) to
- *       the parent's natural {@code eventID}, so {@code
- *       org.gbif.pipelines.core.interpreters.core.CoreInterpreter#interpretParentEventID} has
- *       something to read. See {@link #resolveParentEventId}.
- *   <li>Enrich with {@code geological-context} via {@link GeologicalContextJoinBuilder} — skipped
- *       if absent or {@code event} has no {@code geologicalContextID} column.
- *   <li>Resolve {@code eventProtocol_fk} → new {@code samplingProtocol} column, and coalesce {@code
- *       georeferenceProtocol_fk} into the existing {@code georeferenceProtocol} text field (only
- *       where it's null) via {@link ProtocolJoinBuilder} — previously both FKs leaked as raw
- *       surrogate values under their own column names.
- *   <li>Enrich with {@code fundingAttribution}/{@code fundingAttributionID}/{@code projectID}/
- *       {@code projectTitle} via {@link ProvenanceJoinBuilder} — aggregated, pipe-delimited, across
- *       every linked {@code provenance} record (direct FK and/or {@code event-provenance} junction
- *       table), sorted by {@code provenanceID} for deterministic output.
- *   <li>Resolve {@code eventConductedByID} → {@code eventConductedBy} and {@code georeferencedByID}
- *       → {@code georeferencedBy} via {@link AgentJoinBuilder} — only where those free-text fields
- *       are currently null; publisher-supplied text always wins.
- *   <li>Build the Occurrence extension via {@link OccurrenceExtensionBuilder} — skipped if the
- *       occurrence table is absent or has no {@code eventID} column. Organism fields, and the
- *       occurrence's own {@code occurrence-media}/{@code occurrence-assertion} rows, are already
- *       denormalized/nested onto occurrence rows inside that builder.
- *   <li>Build the Multimedia extension via {@link MediaExtensionBuilder} — skipped if either {@code
- *       event-media} or {@code media} is absent.
- *   <li>Build the eMoF extension via {@link AssertionExtensionBuilder} — skipped if {@code
- *       event-assertion} is absent.
- *   <li>Build the Identifier extension via {@link IdentifierExtensionBuilder} — skipped if {@code
- *       event-identifier} is absent.
- *   <li>Build the Humboldt extension via {@link HumboldtExtensionBuilder} — skipped if {@code
- *       survey} is absent.
- *   <li>Build the DNA Derived Data extension via {@link NucleotideExtensionBuilder} — only {@code
- *       nucleotide-analysis} rows with {@code event_fk} populated and no {@code materialEntity_fk}
- *       (the eDNA/metabarcoding path with no physical specimen); the material-linked path is
- *       handled inside {@link OccurrenceExtensionBuilder} instead.
- *   <li>Map each joined row to an {@link ExtendedRecord} with {@code coreRowType = dwc:Event}.
- * </ol>
+ * <p>Enriches via {@link GeologicalContextJoinBuilder}, {@link ProtocolJoinBuilder}, {@link
+ * ProvenanceJoinBuilder}, {@link AgentJoinBuilder}; attaches extensions via {@link
+ * OccurrenceExtensionBuilder}, {@link MediaExtensionBuilder}, {@link AssertionExtensionBuilder},
+ * {@link IdentifierExtensionBuilder}, {@link HumboldtExtensionBuilder}, {@link
+ * NucleotideExtensionBuilder}. Full call sequence and skip conditions: mapping doc §3.2/§3.3.
  */
 @Slf4j
 public class EventCoreBuilder {

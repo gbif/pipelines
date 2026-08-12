@@ -11,25 +11,18 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
- * Builds Identifier extension Datasets — {@code Extension.IDENTIFIER} ({@code
- * http://rs.gbif.org/terms/1.0/Identifier}) — for the occurrence-core and event-core paths. The
- * occurrence path merges {@code occurrence-identifier} (direct) with {@code material-identifier}
- * (via {@link MaterialJoinBuilder#singleMaterialOccurrenceLinks}); the event path maps direct
- * {@code event-identifier} rows.
+ * Builds {@code Extension.IDENTIFIER} Datasets for the occurrence-core and event-core paths.
  *
- * <p><b>Two things are less certain here than for the other extensions built this session, and
- * worth being explicit about:</b>
+ * <p><b>Joins:</b>
  *
  * <ul>
- *   <li>{@code Extension.IDENTIFIER}'s row type is confirmed to exist, but there is no confirmed
- *       evidence (in anything reviewed so far) of a downstream interpreter that actually reads it —
- *       unlike Multimedia/eMoF/Humboldt/Identification, none of which had this gap.
- *   <li>The DwC-DP fields ({@code identifier}, {@code identifierType}, {@code identifierTypeIRI},
- *       {@code identifierTypeSource}, {@code identifierLanguage}) are passed through via the normal
- *       {@code TermResolver} machinery (TermFactory match, then raw-name fallback) rather than an
- *       invented rename scheme — there is no confirmed field-level mapping to verify against, the
- *       way there was for the media renames.
+ *   <li>occurrence-identifier (direct) + material-identifier (via {@link
+ *       MaterialJoinBuilder#singleMaterialOccurrenceLinks}) → occurrence path, merged
+ *   <li>event-identifier (direct) → event path
  * </ul>
+ *
+ * <p>Row type is confirmed to exist; no confirmed downstream interpreter reads it (unlike
+ * Multimedia/eMoF/Humboldt/Identification). See mapping doc §4.7.
  */
 @Slf4j
 public class IdentifierExtensionBuilder {
@@ -124,15 +117,7 @@ public class IdentifierExtensionBuilder {
     return resolved.isEmpty() ? Optional.empty() : Optional.of(resolved);
   }
 
-  /**
-   * Row-level (pre-aggregation) rows from {@code material-identifier}, resolved through {@link
-   * MaterialJoinBuilder#singleMaterialOccurrenceLinks} down to the occurrence the material record
-   * is exactly-one evidence for. Same output column shape as {@link
-   * #buildDirectOccurrenceIdentifierRows} — both share the same generic {@code identifier}/{@code
-   * identifierType}/{@code identifierTypeIRI}/{@code identifierTypeSource}/{@code
-   * identifierLanguage} fields per the DwC-DP schema's shared "*-identifier" pattern — so safe to
-   * union before aggregating.
-   */
+  /** Resolved via {@link MaterialJoinBuilder#singleMaterialOccurrenceLinks}; same column shape as {@link #buildDirectOccurrenceIdentifierRows}, safe to union. */
   private static Optional<Dataset<Row>> buildMaterialIdentifierRows(TableLoader loader) {
     Optional<Dataset<Row>> materialIdentifierDfOpt = loader.load(TABLE_MATERIAL_IDENTIFIER);
     if (materialIdentifierDfOpt.isEmpty()) {
@@ -158,13 +143,7 @@ public class IdentifierExtensionBuilder {
     return resolved.isEmpty() ? Optional.empty() : Optional.of(resolved);
   }
 
-  /**
-   * Resolves {@code identifierDf}'s surrogate FK to a natural parent identifier via {@code
-   * parentDf}, dropping the FK and the parent's surrogate PK, and dropping any row whose FK didn't
-   * resolve to a real parent — same null-drop policy {@link MediaExtensionBuilder}/{@link
-   * AssertionExtensionBuilder} apply in their own resolution helpers, for the same reason: a
-   * left-outer join alone would let such a row survive with a null key into the aggregation step.
-   */
+  /** Drops FK, parent PK, and any row whose FK didn't resolve — never leaves a null-keyed row for aggregation. */
   private static Dataset<Row> resolveToParentId(
       Dataset<Row> identifierDf,
       String fkColumn,

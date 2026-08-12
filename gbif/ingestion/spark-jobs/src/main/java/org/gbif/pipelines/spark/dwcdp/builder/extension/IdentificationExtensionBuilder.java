@@ -11,23 +11,19 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
- * Builds the Identification History extension Dataset — {@code Extension.IDENTIFICATION} ({@code
- * http://rs.tdwg.org/dwc/terms/Identification}) — holding every {@code identification} row linked
- * to an occurrence, accepted or not, as that occurrence's full re-identification history.
+ * Builds the Identification History extension — every {@code identification} row linked to an
+ * occurrence, accepted or not, as its full re-identification history. Distinct from {@link
+ * IdentificationJoinBuilder}, which flattens only the single current identification onto core
+ * terms; both read the same rows independently.
  *
- * <p>Distinct from {@link IdentificationJoinBuilder}, which flattens only the single current
- * identification ({@code isAcceptedIdentification = true}, exactly one) directly onto occurrence's
- * own core terms. Per project mapping notes, a current identification is "either flattened onto
- * Occurrence.identifiedBy/Occurrence.dateIdentified... or pushed to the Identification History
- * extension (if historical)" — this builder is the "pushed to history" half; {@link
- * IdentificationJoinBuilder} is the "flattened" half. Both read the same underlying {@code
- * identification} rows independently: a row that happens to be the sole accepted one is both
- * flattened onto occurrence core by that builder <em>and</em> still present in the full history
- * list built here, since the history is a complete audit trail, not just the superseded entries.
+ * <p><b>Joins:</b>
  *
- * <p>Only the {@code identification.occurrence_fk} link is handled here, same scope restriction as
- * {@link IdentificationJoinBuilder} — {@code materialEntity_fk}-linked identifications are deferred
- * pending {@code material}'s own extension/history work.
+ * <ul>
+ *   <li>identification.occurrence_fk = occurrence.occurrence_pk (left outer) → history extension row
+ * </ul>
+ *
+ * <p><b>Deferred:</b> {@code identification.materialEntity_fk} path — pending {@code material}'s
+ * own extension/history work. See mapping doc §4.8.
  */
 @Slf4j
 public class IdentificationExtensionBuilder {

@@ -14,55 +14,27 @@ import org.apache.spark.sql.functions;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
- * Enriches occurrence rows by left-joining the {@code material} table onto them, bringing in
- * institution/collection/specimen fields occurrence never carries on its own — notably {@code
- * institutionCode}, {@code institutionID}, {@code ownerInstitutionCode}, {@code collectionCode},
- * {@code collectionID}, {@code catalogNumber}, {@code otherCatalogNumbers}, {@code preparations},
- * {@code typeStatus}, {@code disposition}. These fields sit behind two real gaps in the downstream
- * DwC-A interpretation without this join:
+ * Enriches occurrence rows with institution/collection/specimen fields from {@code material}
+ * (feeds GrSciColl matching and the institutionCode+collectionCode+catalogNumber GBIF ID triplet).
+ *
+ * <p><b>Joins:</b>
  *
  * <ul>
- *   <li>{@code org.gbif.pipelines.core.interpreters.core.GrscicollInterpreter} reads {@code
- *       institutionID}/{@code institutionCode}/{@code ownerInstitutionCode}/{@code collectionID}/
- *       {@code collectionCode} straight off the record — all null for DwC-DP occurrences without
- *       this join, so GrSciColl institution/collection matching never fires.
- *   <li>{@code org.gbif.pipelines.core.interpreters.specific.GbifIdInterpreter}'s triplet-based
- *       GBIF ID path builds its key from {@code institutionCode} + {@code collectionCode} + {@code
- *       catalogNumber} — unavailable for datasets that rely on the triplet rather than {@code
- *       occurrenceID} for identity, without this join.
+ *   <li>material.evidenceForOccurrenceID = occurrence.occurrenceID (left outer, natural-key, weak
+ *       FK), gated to exactly-one-material-per-occurrence
+ *   <li>material enriched with usage-policy (license/rightsHolder) via {@link
+ *       UsagePolicyJoinBuilder#enrich} before the above
  * </ul>
  *
- * <p><b>Join shape differs from every other builder in this package:</b> {@code
- * material.evidenceForOccurrenceID} is a <em>weak</em> FK straight to {@code
- * occurrence.occurrenceID} — both natural keys, no surrogate {@code _pk}/{@code _fk} resolution
- * needed, same shape as {@link GeologicalContextJoinBuilder}'s natural-to-natural join.
+ * <p>Occurrence's own value always wins on overlapping fields. {@code
+ * materialEntity_pk}/{@code collectionEvent_fk}/{@code derivationEvent_fk}/{@code
+ * provenance_fk}/{@code usagePolicy_fk} are excluded from what gets copied over.
  *
- * <p><b>Enrichment only applies when an occurrence has exactly one material row citing it as
- * evidence.</b> Zero (nothing to enrich from) or more than one (a specimen + a separately
- * accessioned tissue sample, say — a real, valid scenario the schema explicitly allows) both leave
- * the occurrence unenriched, rather than guessing at a tie-break — same rule applied to {@link
- * IdentificationJoinBuilder} for the analogous exactly-one-accepted-identification case.
- *
- * <p>Columns already present on {@code occurrence} are never overwritten by material's copy — same
- * "occurrence value wins" precedence {@link OrganismJoinBuilder} already applies (material and
- * occurrence overlap on several fields: {@code identifiedBy}, {@code dateIdentified}, {@code
- * taxonID}, {@code scientificName}, etc.). Internal surrogate keys ({@code materialEntity_pk},
- * {@code collectionEvent_fk}, {@code derivationEvent_fk}, {@code provenance_fk}, {@code
- * usagePolicy_fk}) and the join key itself are excluded from what gets added.
- *
- * <p>Before the exactly-one filtering, {@code material} is also enriched with {@code
- * license}/{@code rightsHolder} from {@code usage-policy} via {@link UsagePolicyJoinBuilder#enrich}
- * — the same generic helper originally written for {@code media} — so those two fields flow through
- * onto occurrence via the ordinary column-bring-in logic below with no separate wiring needed.
- *
- * <p>Only the direct {@code material} → {@code occurrence} flat-field link is handled in this
- * class. {@code material-media} and {@code material-assertion} are handled separately, merged into
- * occurrence's own Multimedia/eMoF extensions by {@link MediaExtensionBuilder} and {@link
- * AssertionExtensionBuilder} respectively — see {@link #singleMaterialOccurrenceLinks}, which both
- * reuse. {@code material}'s remaining sub-tables ({@code material-identifier}, {@code
- * material-provenance}, {@code material-usage-policy}) and its links to {@code event} ({@code
- * collectionEvent_fk}, {@code derivationEvent_fk}) are still not handled — separate, later work,
- * same deferral pattern as {@code creator} on media.
+ * <p>{@code material-media}/{@code material-assertion}/{@code material-identifier}/{@code
+ * material-provenance}/{@code material-protocol}/{@code material-geological-context} are handled
+ * by other builders reusing {@link #singleMaterialOccurrenceLinks} — see mapping doc §4.4 for the
+ * full list and current gaps ({@code collectionEvent_fk}/{@code derivationEvent_fk} excluded
+ * unconditionally; virtual-occurrence synthesis currently paused, §3.5).
  */
 @Slf4j
 public class MaterialJoinBuilder {
@@ -77,16 +49,11 @@ public class MaterialJoinBuilder {
   private static final String VIRTUAL_OCCURRENCE_ID_PREFIX = "urn:gbif:dwcdp:material:";
 
   /**
-   * PAUSED: material -&gt; virtual occurrence synthesis is disabled for now — the identity/mapping
-   * story around it (stable IDs across schema revisions, interaction with the upcoming
-   * mapping-format rework) needs more thought before it goes further. This is the single choke
-   * point every other virtual-occurrence code path in this class runs through ({@link
+   * PAUSED — single choke point for every virtual-occurrence path in this class ({@link
    * #virtualMaterialOccurrenceLinks}, {@link #singleMaterialOccurrenceLinks}, {@link
-   * #computeFunnel}) as well as external callers ({@code OccurrenceExtensionBuilder}), so flipping
-   * this back to {@code true} is sufficient to re-enable it — no other change needed here. While
-   * paused, materials that would have become virtual occurrences fall into {@link
-   * MaterialFunnel#unresolved} instead and are silently dropped, same as any other unresolved
-   * material row.
+   * #computeFunnel}) and external callers. Flipping to {@code true} is sufficient to re-enable;
+   * no other change needed. While paused, affected materials fall into {@link
+   * MaterialFunnel#unresolved}. See mapping doc §3.5.
    */
   private static final boolean VIRTUAL_MATERIAL_OCCURRENCES_ENABLED = false;
 
@@ -102,20 +69,10 @@ public class MaterialJoinBuilder {
   private MaterialJoinBuilder() {}
 
   /**
-   * Left-anti-joins {@code materialDf} against the local {@code occurrence} table's {@code
-   * occurrenceID} (when one is present), returning the rows whose {@code evidenceForOccurrenceID}
-   * does <em>not</em> resolve to a real local occurrence.
-   *
-   * <p>This includes rows with a null {@code evidenceForOccurrenceID} (which can never match
-   * anything) and rows whose value legitimately references an occurrence outside this package —
-   * {@code evidenceForOccurrenceID} is a weak foreign key in the DwC-DP spec, not required to
-   * resolve locally. If there is no local {@code occurrence} table (or it has no {@code
-   * occurrenceID} column) at all, nothing can possibly resolve, so every row is returned unchanged.
-   *
-   * <p>Used by {@link #virtualMaterialOccurrences} to decide eligibility, and by {@link
-   * #singleMaterialOccurrenceLinks} (via its complement, {@link #withEvidenceResolvedLocally}) to
-   * keep evidence-based and virtual occurrence links mutually exclusive — a single source of truth
-   * for "does this reference resolve locally" so the two can't drift apart.
+   * Rows whose {@code evidenceForOccurrenceID} does not resolve to a real local occurrence
+   * (includes null and out-of-package references — a weak FK, not required to resolve locally).
+   * Used by {@link #virtualMaterialOccurrences} and (via its complement below) {@link
+   * #singleMaterialOccurrenceLinks}, so the two stay mutually exclusive.
    */
   private static Dataset<Row> withoutLocallyResolvedEvidence(
       TableLoader loader, Dataset<Row> materialDf) {
@@ -131,13 +88,7 @@ public class MaterialJoinBuilder {
         "left_anti");
   }
 
-  /**
-   * The complement of {@link #withoutLocallyResolvedEvidence}: rows whose {@code
-   * evidenceForOccurrenceID} <em>does</em> resolve to a real local occurrence. Returns an empty
-   * (zero-row, correctly-schema'd) dataset if there is no local {@code occurrence} table to resolve
-   * against — nothing can resolve in that case, matching {@link #withoutLocallyResolvedEvidence}
-   * returning everything unchanged.
-   */
+  /** Complement of {@link #withoutLocallyResolvedEvidence}. */
   private static Dataset<Row> withEvidenceResolvedLocally(
       TableLoader loader, Dataset<Row> materialDf) {
     Optional<Dataset<Row>> localOccurrenceIds = localOccurrenceIds(loader);
@@ -165,12 +116,7 @@ public class MaterialJoinBuilder {
             .distinct());
   }
 
-  /**
-   * Returns {@code occurrenceDf} enriched with material fields not already present on it, for
-   * occurrences with exactly one material row citing them as evidence, or the original {@code
-   * occurrenceDf} unchanged if the {@code material} table is absent, occurrence has no {@code
-   * occurrenceID} column, or material has no {@code evidenceForOccurrenceID} column.
-   */
+  /** {@code occurrenceDf} unchanged if material is absent, or the natural keys are missing on either side. */
   public static Dataset<Row> enrichOccurrences(TableLoader loader, Dataset<Row> occurrenceDf) {
     Optional<Dataset<Row>> materialDfOpt = loader.load(TABLE_MATERIAL);
     if (materialDfOpt.isEmpty()) {
@@ -205,13 +151,9 @@ public class MaterialJoinBuilder {
   }
 
   /**
-   * Filters {@code materialDf} to rows with a non-null {@code evidenceForOccurrenceID}, then keeps
-   * only {@code evidenceForOccurrenceID} groups with <em>exactly one</em> such row.
-   *
-   * <p>Package-private rather than private: {@link MediaExtensionBuilder} and {@link
-   * AssertionExtensionBuilder} reuse this directly via {@link #singleMaterialOccurrenceLinks} to
-   * merge {@code material-media}/{@code material-assertion} into occurrence's own Multimedia/eMoF
-   * extensions, applying the identical exactly-one-material rule rather than a second copy of it.
+   * Filters to non-null {@code evidenceForOccurrenceID}, keeps only groups of exactly one. Reused
+   * by {@link MediaExtensionBuilder}/{@link AssertionExtensionBuilder} via {@link
+   * #singleMaterialOccurrenceLinks}.
    */
   static Dataset<Row> singleMaterialPerOccurrence(Dataset<Row> materialDf) {
     Dataset<Row> withEvidence =
@@ -235,19 +177,13 @@ public class MaterialJoinBuilder {
   }
 
   /**
-   * Returns a two-column Dataset {@code (occurrenceID, materialEntity_pk)} — one row per occurrence
-   * with exactly one material record citing it as evidence — for other builders that need to
-   * resolve a material-side surrogate FK (e.g. {@code material-media.materialEntity_fk}, {@code
-   * material-assertion.materialEntity_fk}) down to the occurrence it ultimately belongs to, using
-   * this same exactly-one-material rule rather than a separate, potentially inconsistent one.
+   * {@code (occurrenceID, materialEntity_pk)} — one row per occurrence with exactly one material
+   * citing it as evidence, unioned with virtual-occurrence links. Reused by other builders to
+   * resolve a material-side FK down to its owning occurrence.
    *
-   * <p>Returns {@link Optional#empty()} if {@code material} or {@code occurrence} is absent, {@code
-   * material} is missing {@code evidenceForOccurrenceID} or {@code materialEntity_pk}, or —
-   * critically — if no occurrence actually has an unambiguous single material link at all (e.g.
-   * every occurrence in the package has zero or multiple material rows citing it): an empty result
-   * here must look identical to "material absent" to every caller, or a left-outer join against a
-   * genuinely zero-row Dataset can silently produce a null-keyed row downstream instead of
-   * correctly contributing nothing.
+   * <p>Returns empty (not a zero-row Dataset) when nothing resolves at all — must look identical to
+   * "material absent" to every caller, or a left-outer join against a genuinely zero-row Dataset
+   * can silently produce a null-keyed row downstream instead of contributing nothing.
    */
   public static Optional<Dataset<Row>> singleMaterialOccurrenceLinks(TableLoader loader) {
     Optional<Dataset<Row>> materialDfOpt = loader.load(TABLE_MATERIAL);
@@ -298,12 +234,8 @@ public class MaterialJoinBuilder {
   }
 
   /**
-   * Builds event-core occurrence rows for material records whose {@code evidenceForOccurrenceID}
-   * doesn't resolve to a real local occurrence — either because it's null, or because it references
-   * an occurrence outside this package (a legitimate case: {@code evidenceForOccurrenceID} is a
-   * weak foreign key in the DwC-DP spec, not required to resolve locally) — and which do have a
-   * resolvable collection event. Their material entity identifier is reused as the occurrence
-   * identifier when available; the stable material surrogate key supplies the fallback.
+   * Materials with no locally-resolving evidence link but a resolvable {@code collectionEvent_fk}
+   * → synthesised occurrence under that event. See mapping doc §3.5 (paused).
    */
   public static Optional<Dataset<Row>> virtualMaterialOccurrences(TableLoader loader) {
     if (!VIRTUAL_MATERIAL_OCCURRENCES_ENABLED) {
@@ -385,25 +317,10 @@ public class MaterialJoinBuilder {
   }
 
   /**
-   * Breakdown of what happened to every {@code material} row during conversion — for diagnostics
-   * and the conversion report, not for production logic. The four leaf buckets are mutually
-   * exclusive and sum to {@code total}:
-   *
-   * <ul>
-   *   <li>{@code enrichedOntoRealOccurrence} — evidence resolves to a real local occurrence, and is
-   *       its sole claimant; enriched that occurrence row via {@link #enrichOccurrences}.
-   *   <li>{@code evidenceAmbiguous} — evidence resolves to a real local occurrence, but more than
-   *       one material row claims the same one, so none of them were used (see {@link
-   *       #singleMaterialPerOccurrence}).
-   *   <li>{@code virtual} — evidence does <em>not</em> resolve to a real local occurrence (either
-   *       null, or a weak reference to something outside this package — see {@link
-   *       #virtualMaterialOccurrences}), but {@code collectionEvent_fk} resolved to a real event,
-   *       so it became a virtual occurrence.
-   *   <li>{@code unresolved} — evidence doesn't resolve locally, and {@code collectionEvent_fk} is
-   *       either absent or doesn't resolve to any event in this package either. This row is
-   *       silently dropped — it appears nowhere in the output. The bucket to watch when occurrences
-   *       seem to go missing.
-   * </ul>
+   * Buckets sum to {@code total}: {@code enrichedOntoRealOccurrence} (sole claimant of a real local
+   * occurrence), {@code evidenceAmbiguous} (multiple materials claim the same occurrence — none
+   * used), {@code virtual} (no local occurrence, but collectionEvent_fk resolved), {@code
+   * unresolved} (dropped — the bucket to watch when occurrences go missing).
    */
   public record MaterialFunnel(
       long total,
@@ -414,13 +331,7 @@ public class MaterialJoinBuilder {
       long virtual,
       long unresolved) {}
 
-  /**
-   * Computes the {@link MaterialFunnel} breakdown for this package's {@code material} table. Reuses
-   * {@link #singleMaterialPerOccurrence}, {@link #withEvidenceResolvedLocally}, and {@link
-   * #virtualMaterialOccurrences} directly rather than re-implementing their filtering logic, so the
-   * report can't drift from what conversion actually does. Returns {@link Optional#empty()} if
-   * there is no {@code material} table or it lacks {@code evidenceForOccurrenceID}.
-   */
+  /** Reuses production filtering logic directly, so the report can't drift from actual conversion. */
   public static Optional<MaterialFunnel> computeFunnel(TableLoader loader) {
     Optional<Dataset<Row>> materialDfOpt = loader.load(TABLE_MATERIAL);
     if (materialDfOpt.isEmpty()) {
@@ -470,12 +381,7 @@ public class MaterialJoinBuilder {
                     functions.col("eventID")));
   }
 
-  /**
-   * Left-joins the (already filtered to exactly-one-material-per-occurrence) material rows onto
-   * occurrence via {@code occurrenceID -> evidenceForOccurrenceID} (both natural keys), adding only
-   * columns occurrence doesn't already carry — same column-precedence policy as {@link
-   * OrganismJoinBuilder#joinOrganism}.
-   */
+  /** Pure join transform, occurrence value wins on overlap. */
   private static Dataset<Row> join(Dataset<Row> occurrenceDf, Dataset<Row> materialDf) {
     Set<String> occurrenceCols = new HashSet<>(Arrays.asList(occurrenceDf.columns()));
 

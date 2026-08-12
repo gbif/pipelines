@@ -13,49 +13,24 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
- * Builds Multimedia extension Datasets for the event-core and occurrence-core paths.
+ * Builds Simple Multimedia extension Datasets ({@code Extension.MULTIMEDIA}, not Audubon Core) for
+ * the event-core and occurrence-core paths.
  *
- * <p>DwC-DP expresses media attachment via two join tables: {@code event-media} ({@code event_fk},
- * {@code media_fk}) and {@code occurrence-media} ({@code occurrence_fk}, {@code media_fk}). Neither
- * join table carries a natural {@code eventID}/{@code occurrenceID} column, and neither carries
- * {@code mediaID} either — only the surrogate {@code _fk} columns, per the 1.0_DEV profile.
- * (Previously both methods here joined to {@code media} on {@code "mediaID" = "mediaID"}, which
- * doesn't exist on either join table at all — a hard join failure, not a silent one — and then
- * grouped by {@code eventID}/{@code occurrenceID} directly, which also never exists on either join
- * table.)
+ * <p><b>Joins:</b>
  *
- * <p>Both methods now: (1) join to {@code media} on {@code media_fk -> media.media_pk}, (2) enrich
- * the joined media rows with {@code usage-policy} via {@link UsagePolicyJoinBuilder} — {@code
- * license}/{@code rightsHolder} live only there, never on {@code media} itself — then (3) resolve
- * the parent-side FK to its natural id via the {@code event}/{@code occurrence} table — the
- * resolve-then-aggregate pattern {@link AssertionExtensionBuilder} and {@link
- * HumboldtExtensionBuilder} already use — before aggregating.
+ * <ul>
+ *   <li>event-media / occurrence-media = media.media_pk (left outer), then resolved to
+ *       eventID/occurrenceID
+ *   <li>media enriched with usage-policy (license/rightsHolder) via {@link UsagePolicyJoinBuilder}
+ *       before resolution
+ *   <li>material-media (via {@link MaterialJoinBuilder#singleMaterialOccurrenceLinks}) merged into
+ *       the occurrence path alongside direct occurrence-media
+ * </ul>
  *
- * <p>Both methods return {@link Optional#empty()} when any required source table is absent — media
- * attachment is always optional in a DwC-DP package. {@code usage-policy} is more optional still:
- * its absence only means {@code license}/{@code rightsHolder} stay unpopulated, not that the whole
- * media extension is skipped.
+ * <p>Event-core: occurrence/material media is promoted to the event's top-level extension — DwC-A
+ * can't attach multimedia to a nested occurrence extension row (lossy; see mapping doc §7).
  *
- * <p>Target extension row type: this maps to DwC-A's Simple Multimedia extension ({@code
- * Extension.MULTIMEDIA}), not Audubon Core — confirmed against the project's own DwC-DP→DwC-A
- * field-mapping notes. {@code ROW_TYPE_MULTIMEDIA}'s value below previously held Audubon's row type
- * by mistake (TDWG's own URI for Audubon Core happens to contain the literal substring {@code
- * ac/terms/Multimedia}, which is what caused the mix-up) — media data written under the old value
- * was never visible to {@code MultimediaInterpreter} at all, since it filters on {@code
- * Extension.MULTIMEDIA.getRowType()} exactly.
- *
- * <p>For event-core datasets, {@code buildEventMediaExtension} promotes direct occurrence and
- * material media to the event's top-level Multimedia extension. DwC-A has no way to attach a
- * multimedia extension row to a nested occurrence extension, and the target interpreter only reads
- * top-level extensions. The occurrence/material ownership relationship is therefore intentionally
- * lossy here, but the media remains visible and indexed.
- *
- * <p>{@code buildOccurrenceMediaExtension} additionally merges in {@code material-media} — photos
- * of the specimen that's exactly-one evidence for the occurrence (resolved via {@link
- * MaterialJoinBuilder#singleMaterialOccurrenceLinks}) — into the same Multimedia extension as the
- * occurrence's own direct {@code occurrence-media} photos, rather than a separate structure: once
- * {@link MaterialJoinBuilder} has established a 1:1 occurrence/material relationship, a specimen
- * photo and an occurrence photo both just describe the same real-world thing.
+ * <p><b>Deferred:</b> {@code media.creator}, {@code media-agent-role}. See mapping doc §4.5.
  */
 @Slf4j
 public class MediaExtensionBuilder {
@@ -76,11 +51,8 @@ public class MediaExtensionBuilder {
   private MediaExtensionBuilder() {}
 
   /**
-   * Returns a two-column Dataset {@code (eventID, mediaExtJson)}, combining direct {@code
-   * event-media}, {@code occurrence-media} resolved through their occurrence's event, and {@code
-   * material-media} resolved through their exactly-one evidence occurrence and then its event.
-   * Returns empty if {@code media}/{@code event} is absent or none of the three link paths can
-   * contribute a row.
+   * Three merged link paths: direct event-media, occurrence-media resolved through its event,
+   * material-media resolved through its evidence occurrence (or virtual occurrence) then its event.
    */
   public static Optional<Dataset<Row>> buildEventMediaExtension(
       SparkSession spark, TableLoader loader) {
@@ -228,14 +200,7 @@ public class MediaExtensionBuilder {
     return resolveParentId(withEventFk, "event_fk", eventDf, "event_pk", "eventID");
   }
 
-  /**
-   * Returns a two-column Dataset {@code (occurrenceID, mediaExtJson)}, merging {@code
-   * occurrence-media} rows with {@code material-media} rows from the occurrence's own material (via
-   * {@link MaterialJoinBuilder#singleMaterialOccurrenceLinks} — same exactly-one-material rule
-   * {@link MaterialJoinBuilder} applies to its flat-field enrichment, so a specimen's photos only
-   * merge in when the occurrence has an unambiguous single material record). Returns empty only if
-   * neither source contributes anything.
-   */
+  /** Merges occurrence-media with material-media via {@link MaterialJoinBuilder#singleMaterialOccurrenceLinks}. */
   public static Optional<Dataset<Row>> buildOccurrenceMediaExtension(
       SparkSession spark, TableLoader loader) {
 

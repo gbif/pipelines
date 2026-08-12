@@ -14,29 +14,19 @@ import org.gbif.pipelines.spark.util.TableLoader;
 /**
  * Builds the Humboldt Ecological Inventory Extension Dataset for the event-core path.
  *
- * <p>DwC-DP expresses survey-level inventory metadata via a {@code survey} table that links to the
- * {@code event} table via a surrogate FK ({@code event_fk → event_pk}). This builder resolves that
- * FK to the natural {@code eventID}, optionally fans out to per-survey-target rows via the {@code
- * survey-survey-target} and {@code survey-target} junction tables, and aggregates all rows per
- * {@code eventID} into a JSON column suitable for the Humboldt Extension.
+ * <p><b>Joins:</b>
  *
- * <p>Join strategy:
+ * <ul>
+ *   <li>survey.event_fk = event.event_pk (left outer) → resolved to natural eventID
+ *   <li>survey-survey-target / survey-target (junction) → fanned out, one row per linked target;
+ *       surveys with no target produce a single row
+ * </ul>
  *
- * <ol>
- *   <li>{@code survey.event_fk} is resolved to the natural {@code eventID} via the {@code event}
- *       table ({@code event_fk → event_pk → eventID}).
- *   <li>When both {@code survey-survey-target} and {@code survey-target} are present, the survey
- *       rows are fanned out — one output row per linked survey-target — so each survey-target's
- *       fields ({@code surveyTargetDescription}, etc.) appear as a separate Humboldt extension row
- *       under the same {@code eventID}. Surveys with no survey-target produce a single row.
- * </ol>
+ * <p>{@code samplingProtocol} → {@code eco:protocolDescriptions}; {@code samplingEffortProtocol} →
+ * {@code eco:samplingEffortProtocol}.
  *
- * <p>All internal PK/FK columns ({@code survey_pk}, {@code event_fk}, {@code survey_fk}, {@code
- * surveyTarget_fk}, {@code surveyTarget_pk}) are dropped before serialisation. The two survey
- * protocol fields are mapped to their qualified Humboldt terms: {@code samplingProtocol} becomes
- * {@code eco:protocolDescriptions}, while {@code samplingEffortProtocol} becomes {@code
- * eco:samplingEffortProtocol}. Returns {@link Optional#empty()} if the {@code survey} table is
- * absent.
+ * <p><b>Deferred:</b> {@code survey-agent-role}, {@code survey-assertion}, {@code
+ * survey-identifier}, {@code survey-reference}. See mapping doc §4.10.
  */
 @Slf4j
 public class HumboldtExtensionBuilder {
@@ -54,14 +44,7 @@ public class HumboldtExtensionBuilder {
 
   private HumboldtExtensionBuilder() {}
 
-  /**
-   * Builds the Humboldt extension Dataset.
-   *
-   * @param spark active SparkSession (needed by {@link ExtensionAggregator})
-   * @param loader table loader — returns {@link Optional#empty()} when a table is absent
-   * @return two-column Dataset {@code (eventID, humboldtExtJson)}, or empty if the survey table is
-   *     absent
-   */
+  /** Empty if survey is absent. */
   public static Optional<Dataset<Row>> build(SparkSession spark, TableLoader loader) {
     Optional<Dataset<Row>> surveyDfOpt = loader.load(TABLE_SURVEY);
     Optional<Dataset<Row>> eventDfOpt = loader.load("event");

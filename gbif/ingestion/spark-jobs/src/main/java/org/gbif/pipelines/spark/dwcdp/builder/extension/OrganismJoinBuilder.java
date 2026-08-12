@@ -14,28 +14,17 @@ import org.apache.spark.sql.functions;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
- * Enriches occurrence rows by left-joining the {@code organism} table onto them.
+ * Enriches occurrence rows with fields from {@code organism} (no DwC-A Organism extension exists —
+ * fields must be denormalized directly onto the core row).
  *
- * <p><b>This is not a DwC-A extension builder.</b> DwC-A has no Organism extension; organism fields
- * must be denormalized directly onto each Occurrence core row. This join produces that
- * denormalization in a distributed Spark step.
+ * <p><b>Joins:</b>
  *
- * <p>The join key is {@code organismID}, which the DwC-DP occurrence schema carries as a direct FK
- * to the organism table's primary key. The result is a many:1 collapse: if 5 occurrence rows
- * reference the same organism, all 5 will carry the same organism field values after the join.
- * Uniqueness of {@code organism.organismID} is guaranteed by the upstream DwC-DP validation step,
- * which rejects datasets where the primary key constraint is violated — so no defensive dedup is
- * needed here.
+ * <ul>
+ *   <li>occurrence.organismID = organism.organismID (left outer, direct FK)
+ * </ul>
  *
- * <p><b>Column precedence policy:</b> the DwC-DP occurrence schema declares several organism fields
- * ({@code organismID}, {@code organismScope}, {@code organismName}, {@code causeOfDeath}, {@code
- * organismRemarks}) as denormalized columns directly on the occurrence table. When both occurrence
- * and organism carry a value for the same field (e.g. a publisher populates both {@code
- * occurrence.organismName} and {@code organism.organismName}), the <em>occurrence value silently
- * wins</em> — the organism column is excluded from the select because it is already present on
- * occurrence. Only columns present in the organism table but absent from the occurrence table (most
- * notably {@code associatedOrganisms}) are added. This policy is intentional: the occurrence row is
- * the authoritative source for occurrence-level organism attributes.
+ * <p>Occurrence's own value always wins on overlapping fields (e.g. {@code organismName}); only
+ * columns organism has that occurrence doesn't (notably {@code associatedOrganisms}) are added.
  */
 @Slf4j
 public class OrganismJoinBuilder {
@@ -45,15 +34,7 @@ public class OrganismJoinBuilder {
 
   private OrganismJoinBuilder() {}
 
-  /**
-   * Returns {@code occurrenceDf} enriched with organism columns, or the original {@code
-   * occurrenceDf} unchanged if the organism table is absent or the occurrence table carries no
-   * {@code organismID} column.
-   *
-   * @param loader table loader — returns {@link Optional#empty()} when organism table is absent
-   * @param occurrenceDf the occurrence Dataset to enrich
-   * @return occurrence rows with additional organism fields merged in
-   */
+  /** {@code occurrenceDf} unchanged if organism is absent, or occurrence lacks {@code organismID}. */
   public static Dataset<Row> enrichOccurrences(TableLoader loader, Dataset<Row> occurrenceDf) {
     Optional<Dataset<Row>> organismDf = loader.load(TABLE_ORGANISM);
     if (organismDf.isEmpty()) {
@@ -69,16 +50,7 @@ public class OrganismJoinBuilder {
     return joinOrganism(occurrenceDf, organismDf.get());
   }
 
-  /**
-   * Pure join transform — separated from I/O so it can be unit tested directly with in-memory
-   * Datasets without any filesystem involvement.
-   *
-   * <p>Columns already present on {@code occurrenceDf} are never overwritten by organism columns —
-   * see class-level Javadoc for the precedence policy. The join key {@code organismID} is also
-   * excluded from the organism side of the select to avoid ambiguity; the occurrence's own {@code
-   * organismID} column is preserved and will appear in {@code coreTerms} so downstream
-   * interpretation can follow the FK if needed.
-   */
+  /** Pure join transform, separated from I/O for direct unit testing. */
   static Dataset<Row> joinOrganism(Dataset<Row> occurrenceDf, Dataset<Row> organismDf) {
     Set<String> occurrenceCols = new HashSet<>(Arrays.asList(occurrenceDf.columns()));
 
@@ -109,16 +81,7 @@ public class OrganismJoinBuilder {
     return joined;
   }
 
-  /**
-   * Computes a {@link JoinFunnel} breakdown of {@code occurrence.organismID} resolution, mirroring
-   * {@link #enrichOccurrences}'s decision logic. Buckets are mutually exclusive and sum to the
-   * candidate count — same three-bucket shape as {@link
-   * GeologicalContextJoinBuilder#computeFunnel}, since both are 1:1 natural-key joins with the same
-   * failure modes (source table absent vs. dangling reference).
-   *
-   * @return empty if {@code occurrence} is absent, or present but missing {@code organismID}
-   *     entirely
-   */
+  /** Same three-bucket shape as {@link GeologicalContextJoinBuilder#computeFunnel}. */
   public static Optional<JoinFunnel> computeFunnel(TableLoader loader) {
     Optional<Dataset<Row>> occurrenceDfOpt = loader.load("occurrence");
     if (occurrenceDfOpt.isEmpty()) {

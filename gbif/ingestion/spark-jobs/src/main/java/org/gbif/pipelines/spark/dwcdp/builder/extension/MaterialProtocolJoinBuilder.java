@@ -10,9 +10,14 @@ import org.gbif.pipelines.spark.util.TableLoader;
 /**
  * Enriches occurrences with protocol descriptions linked through their single material evidence.
  *
- * <p>A material protocol has no direct DwC-A home. When exactly one material record identifies an
- * occurrence as evidence, its protocol descriptions are merged into that occurrence's {@code
- * samplingProtocol}, using the same unambiguous-material rule as the other material joins.
+ * <p><b>Joins:</b>
+ *
+ * <ul>
+ *   <li>material-protocol (via {@link MaterialJoinBuilder#singleMaterialOccurrenceLinks}) =
+ *       protocol.protocol_pk (inner, junction) → merged into occurrence's samplingProtocol
+ * </ul>
+ *
+ * <p>See mapping doc §4.2.
  */
 @Slf4j
 public class MaterialProtocolJoinBuilder {
@@ -60,27 +65,7 @@ public class MaterialProtocolJoinBuilder {
         "samplingProtocol");
   }
 
-  /**
-   * Computes a {@link JoinFunnel} breakdown of {@code samplingProtocol} enrichment via single
-   * material evidence, mirroring {@link #enrichOccurrences}'s decision logic. Unlike {@link
-   * ProtocolJoinBuilder#computeFunnel}, there's no "dangling FK" bucket here — {@link
-   * ProtocolJoinBuilder#aggregateJunctionProtocolDescriptions} already only returns rows for
-   * materials with at least one protocol description that actually resolved, so a material either
-   * contributes a resolved value or it doesn't. Buckets are mutually exclusive and sum to the base
-   * count:
-   *
-   * <ul>
-   *   <li><b>base</b> — occurrences with exactly one material citing them as evidence (per {@link
-   *       MaterialJoinBuilder#singleMaterialOccurrenceLinks}) — the population {@link
-   *       #enrichOccurrences} can possibly enrich at all
-   *   <li><b>resolved, samplingProtocol merged</b> — that material has {@code material-protocol}
-   *       data
-   *   <li><b>no material-protocol data for this material, unresolved</b> — that material has none
-   * </ul>
-   *
-   * @return empty if there are no unambiguous single-material occurrence links at all (same no-op
-   *     case {@link #enrichOccurrences} treats as absent)
-   */
+  /** No "dangling FK" bucket, unlike {@link ProtocolJoinBuilder#computeFunnel} — a material either resolves or doesn't. */
   public static Optional<JoinFunnel> computeFunnel(TableLoader loader) {
     Optional<Dataset<Row>> materialLinksOpt =
         MaterialJoinBuilder.singleMaterialOccurrenceLinks(loader);

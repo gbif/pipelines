@@ -34,50 +34,13 @@ import org.gbif.pipelines.spark.util.TableLoader;
  * Builds a distributed Dataset of occurrence-core {@link ExtendedRecord}s from DwC-DP Parquet
  * files.
  *
- * <p>Pipeline:
- *
- * <ol>
- *   <li>Load the required {@code occurrence} table — throws if absent (routing error).
- *   <li>Left-join {@code organism} via {@link OrganismJoinBuilder} — skipped if absent.
- *   <li>Left-join {@code identification} via {@link IdentificationJoinBuilder} — adds the taxonomic
- *       rank hierarchy occurrence never carries on its own; only applies when an occurrence has
- *       exactly one accepted identification, skipped otherwise.
- *   <li>Left-join {@code material} via {@link MaterialJoinBuilder} — adds institution/collection/
- *       specimen fields (institutionCode, catalogNumber, preparations, typeStatus, ..., plus
- *       license/rightsHolder from {@code usage-policy}); only applies when an occurrence has
- *       exactly one material row citing it as evidence, skipped otherwise.
- *   <li>Enrich with {@code fundingAttribution}/{@code fundingAttributionID}/{@code projectID}/
- *       {@code projectTitle} via {@link MaterialProvenanceJoinBuilder} — the occurrence's own
- *       material's provenance attribution, same exactly-one-material rule, same aggregation logic
- *       {@link org.gbif.pipelines.spark.dwcdp.builder.extension.ProvenanceJoinBuilder} applies for
- *       {@code event}.
- *   <li>Resolve {@code occurrenceProtocol_fk} → new {@code samplingProtocol} column via {@link
- *       ProtocolJoinBuilder} — previously leaked as a raw surrogate value under its own column
- *       name.
- *   <li>Resolve {@code recordedByID} → {@code recordedBy} and {@code identifiedByID} → {@code
- *       identifiedBy} via {@link AgentJoinBuilder} — only where those free-text fields are
- *       currently null; publisher-supplied text always wins.
- *   <li>Drop the bare {@code occurrence_pk} surrogate — it's needed only so {@link
- *       MediaExtensionBuilder}/{@link AssertionExtensionBuilder} can resolve their own {@code
- *       occurrence_fk} against it (each reloads {@code occurrence} fresh from the loader for that,
- *       independently of this local Dataset), and has no DwC term of its own, so it must not
- *       survive into {@code coreTerms}.
- *   <li>Left-join {@code occurrence-media} + {@code media} via {@link MediaExtensionBuilder} and
- *       attach as Multimedia extension — skipped if either table is absent.
- *   <li>Build the eMoF extension via {@link AssertionExtensionBuilder} — skipped if {@code
- *       occurrence-assertion} is absent.
- *   <li>Build the Identification History extension via {@link IdentificationExtensionBuilder} —
- *       every {@code identification} row linked to the occurrence, accepted or not; distinct from
- *       the single-accepted flattening onto core terms two steps above.
- *   <li>Build the Identifier extension via {@link IdentifierExtensionBuilder} — merges {@code
- *       occurrence-identifier} with {@code material-identifier}, same exactly-one-material rule.
- *   <li>Build the DNA Derived Data extension via {@link NucleotideExtensionBuilder} — {@code
- *       nucleotide-analysis} rows resolved through {@code materialEntity_fk} to this same
- *       exactly-one-material occurrence (real or virtual — {@link NucleotideExtensionBuilder}
- *       reuses whichever {@link MaterialJoinBuilder} already resolved, not a separate rule).
- *   <li>Map each enriched row to an {@link ExtendedRecord} with {@code coreRowType =
- *       dwc:Occurrence}.
- * </ol>
+ * <p>Enriches via {@link OrganismJoinBuilder}, {@link IdentificationJoinBuilder}, {@link
+ * MaterialJoinBuilder} (+ its {@link MaterialGeologicalContextJoinBuilder}/{@link
+ * MaterialProvenanceJoinBuilder}/{@link MaterialProtocolJoinBuilder} satellites), {@link
+ * ProtocolJoinBuilder}, {@link AgentJoinBuilder}; attaches extensions via {@link
+ * MediaExtensionBuilder}, {@link AssertionExtensionBuilder}, {@link
+ * IdentificationExtensionBuilder}, {@link IdentifierExtensionBuilder}, {@link
+ * NucleotideExtensionBuilder}. Full call sequence and skip conditions: mapping doc §3.1.
  */
 @Slf4j
 public class OccurrenceCoreBuilder {
