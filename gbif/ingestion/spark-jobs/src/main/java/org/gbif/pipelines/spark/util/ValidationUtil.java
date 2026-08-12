@@ -23,6 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.validator.api.Metrics;
 import org.gbif.validator.api.Validation;
@@ -43,6 +46,7 @@ public class ValidationUtil {
               .build());
 
   static ObjectMapper objectMapper = new ObjectMapper();
+  static TermFactory termFactory = TermFactory.instance();
 
   public static ValidationClient createValidationClient(PipelinesConfig config) {
     CloseableHttpClient httpClient =
@@ -79,6 +83,13 @@ public class ValidationUtil {
 
     log.debug("Received file infos {}", metrics.getFileInfos());
 
+    Metrics mergedMetrics = mergeMetrics(generatedMetrics, metrics);
+    validation.setMetrics(mergedMetrics);
+
+    Retry.decorateRunnable(RETRY, () -> validationClient.update(key, validation)).run();
+  }
+
+  public static Metrics mergeMetrics(Metrics generatedMetrics, Metrics metrics) {
     // where possible, update existing fileInfos to preserve filenames and other properties
     // set downstream
     generatedMetrics
@@ -108,7 +119,7 @@ public class ValidationUtil {
                 mergeIssues(fileInfo, generatedFileInfo);
               } else {
                 log.warn(
-                    "Add file info for rowType {} which wasnt found",
+                    "Add file info for rowType {} which was not found",
                     generatedFileInfo.getRowType());
                 metrics.getFileInfos().add(generatedFileInfo);
               }
@@ -116,7 +127,7 @@ public class ValidationUtil {
 
     // if we have made it to metrics, it should be indexable
     metrics.setIndexeable(true);
-    Retry.decorateRunnable(RETRY, () -> validationClient.update(key, validation)).run();
+    return metrics;
   }
 
   private static void mergeTerms(
@@ -146,8 +157,39 @@ public class ValidationUtil {
         mergedTerms.add(generatedTerm);
       }
     }
+    mergedTerms.forEach(ValidationUtil::setTermGroupAndOrdinal);
+    originalFileInfo.setTerms(sortTerms(mergedTerms));
+  }
 
-    originalFileInfo.setTerms(mergedTerms);
+  private static List<Metrics.TermInfo> sortTerms(List<Metrics.TermInfo> mergedTerms) {
+    return mergedTerms.stream()
+        .sorted(
+            Comparator.comparing(
+                    Metrics.TermInfo::getTermGroup, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(
+                    Metrics.TermInfo::getTermIndex,
+                    Comparator.nullsLast(Comparator.naturalOrder())))
+        .collect(Collectors.toList());
+  }
+
+  private static void setTermGroupAndOrdinal(Metrics.TermInfo term) {
+
+    Term recognisedTerm = termFactory.findTerm(term.getTerm());
+    if (recognisedTerm != null) {
+      if (recognisedTerm instanceof DwcTerm dwcTerm) {
+        term.setTermGroup(dwcTerm.prefix() + "_" + dwcTerm.getGroup());
+        term.setTermIndex(dwcTerm.ordinal());
+      } else if (recognisedTerm instanceof Enum<?> enumTerm) {
+        term.setTermGroup(recognisedTerm.getClass().getSimpleName());
+        term.setTermIndex(enumTerm.ordinal());
+      } else {
+        term.setTermGroup(recognisedTerm.getClass().getSimpleName());
+        term.setTermIndex(-1);
+      }
+    } else {
+      term.setTermGroup("UNRECOGNISED");
+      term.setTermIndex(-1);
+    }
   }
 
   private static void mergeIssues(Metrics.FileInfo fileInfo, Metrics.FileInfo generatedFileInfo) {
