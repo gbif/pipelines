@@ -1,6 +1,8 @@
 package org.gbif.pipelines.spark.dwcdp.mapping;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import org.apache.spark.sql.Dataset;
@@ -9,6 +11,10 @@ import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
+
+import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingCompilationException;
+import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingCompiler;
+import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingDecisionType;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TestTableLoader;
 import org.junit.jupiter.api.AfterAll;
@@ -119,6 +125,44 @@ class SparkExtensionMaterializerTest {
             .sorted()
             .toList();
     assertEquals(List.of("All birds", "All mammals"), descriptions);
+  }
+
+  @Test
+  void duplicateTargetErrorReportsBothProducersAndPhysicalSourceAliases() {
+    SchemaPath surveyPath = SchemaPath.root("survey");
+
+    ExtensionFragment first =
+        ExtensionFragmentBuilder.extensionFragment("first-fragment", HUMBOLDT, "survey")
+            .rowIdentity("survey_pk")
+            .field(
+                TargetFieldMapping.oneOf(
+                    TERM_SITE_COUNT,
+                    ValueAggregation.firstNonNull(),
+                    surveyPath.field("siteCount")))
+            .build();
+
+    ExtensionFragment second =
+        ExtensionFragmentBuilder.extensionFragment("second-fragment", HUMBOLDT, "survey")
+            .field(
+                TargetFieldMapping.oneOf(
+                    TERM_SITE_COUNT,
+                    ValueAggregation.firstNonNull(),
+                    surveyPath.field("event_fk")))
+            .build();
+
+    ExtensionMapping extension = new ExtensionMapping(HUMBOLDT, List.of(first, second));
+
+    IllegalArgumentException error =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new SparkExtensionMaterializer(graph)
+                    .materialize(TestTableLoader.of("survey", survey()), extension));
+
+    assertTrue(error instanceof MappingCompilationException);
+    MappingCompilationException mappingException = (MappingCompilationException) error;
+    assertEquals(1, mappingException.problems().size());
+    assertEquals(MappingDecisionType.AMBIGUOUS_MULTIPLE_EXPLICIT, mappingException.problems().get(0).type());
   }
 
   private Dataset<Row> survey() {

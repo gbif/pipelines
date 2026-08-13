@@ -129,7 +129,7 @@ class SparkMappingPathExecutorTest {
   }
 
   @Test
-  void optionalMissingResourceStopsPathWithoutFailing() {
+  void optionalMissingResourcePreservesSourceAndMaterializesNullTargetPath() {
     Mapping mapping =
         MappingBuilder.mapping("optional-agents", "survey")
             .join("survey-agent-role")
@@ -139,9 +139,15 @@ class SparkMappingPathExecutorTest {
     MappingExecutionResult result =
         executor().execute(TestTableLoader.of("survey", survey()), mapping);
 
-    assertFalse(result.completePath());
+    assertTrue(result.completePath());
     assertEquals(1, result.pathResult().dataset().count());
     assertTrue(result.metrics().get(0).skipped());
+
+    SchemaRelation relation = graph.resolve("survey", "survey-agent-role", "survey_fk");
+    SchemaPath rolePath = SchemaPath.root("survey").append(relation);
+    Row row = result.pathResult().dataset().first();
+    String agentRole = row.getAs(result.pathResult().columnName(rolePath.field("agentRole")));
+    assertNull(agentRole);
   }
 
   @Test

@@ -57,6 +57,8 @@ public final class ExtensionFragmentBuilder {
     public RelationBuilder filter(FilterExpression filter) { step = step.filter(filter); return this; }
     public RelationBuilder fanOut() { step = step.with(CardinalityStrategy.fanOut()); return this; }
     public RelationBuilder exactlyOne() { step = step.with(CardinalityStrategy.exactlyOne()); return this; }
+    public RelationBuilder optional() { step = step.requirement(RelationRequirement.OPTIONAL); return this; }
+    public RelationBuilder required() { step = step.requirement(RelationRequirement.REQUIRED); return this; }
     public RelationBuilder select(String selector) { step = step.with(CardinalityStrategy.select(selector)); return this; }
     public RelationBuilder combine(ValueAggregation aggregation) { step = step.with(CardinalityStrategy.combine(aggregation)); return this; }
 

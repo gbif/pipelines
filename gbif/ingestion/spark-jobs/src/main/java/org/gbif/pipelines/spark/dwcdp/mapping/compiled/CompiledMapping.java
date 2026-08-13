@@ -1,0 +1,33 @@
+package org.gbif.pipelines.spark.dwcdp.mapping.compiled;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import org.gbif.pipelines.spark.dwcdp.mapping.CoreType;
+
+/**
+ * Schema-resolved, ambiguity-checked, engine-neutral mapping between configuration and execution.
+ */
+public record CompiledMapping(
+    String name,
+    CoreType coreType,
+    String coreSourceResource,
+    List<CompiledTargetProducer> coreTargets,
+    List<CompiledExtension> extensions,
+    List<MappingDecision> coreDecisions) {
+
+  public CompiledMapping {
+    Objects.requireNonNull(name, "name");
+    Objects.requireNonNull(coreType, "coreType");
+    Objects.requireNonNull(coreSourceResource, "coreSourceResource");
+    coreTargets = List.copyOf(coreTargets);
+    extensions = List.copyOf(extensions);
+    coreDecisions = List.copyOf(coreDecisions);
+  }
+
+  public List<MappingDecision> decisions() {
+    List<MappingDecision> all = new ArrayList<>(coreDecisions);
+    extensions.forEach(extension -> all.addAll(extension.decisions()));
+    return List.copyOf(all);
+  }
+}

@@ -58,25 +58,36 @@ public final class SparkMappingPathExecutor {
               step.schemaPredicate().orElse(null));
 
       Optional<Dataset<Row>> targetRawOpt = loader.load(relation.targetResource());
+      long inputRows = current.count();
+      SchemaPath targetPath = currentPath.append(relation);
       if (targetRawOpt.isEmpty()) {
         if (step.requirement() == RelationRequirement.REQUIRED) {
           throw new IllegalArgumentException(
               "Required path resource is absent: " + relation.targetResource());
         }
+        current = addNullResource(current, targetPath, relation.targetResource(), aliases);
         metrics.add(
             RelationExecutionMetrics.skipped(
-                relation.sourceResource(), relation.targetResource(), current.count()));
-        return new MappingExecutionResult(new SparkPathResult(current, aliases), metrics, false);
+                relation.sourceResource(), relation.targetResource(), inputRows));
+        currentPath = targetPath;
+        continue;
       }
 
-      long inputRows = current.count();
       String sourceAlias = aliases.get(currentPath.field(relation.sourceColumn()));
       if (sourceAlias == null) {
-        throw new IllegalArgumentException(
-            "Loaded dataset "
-                + relation.sourceResource()
-                + " is missing join column "
-                + relation.sourceColumn());
+        if (step.requirement() == RelationRequirement.REQUIRED) {
+          throw new IllegalArgumentException(
+              "Loaded dataset "
+                  + relation.sourceResource()
+                  + " is missing required join column "
+                  + relation.sourceColumn());
+        }
+        current = addNullResource(current, targetPath, relation.targetResource(), aliases);
+        metrics.add(
+            RelationExecutionMetrics.skipped(
+                relation.sourceResource(), relation.targetResource(), inputRows));
+        currentPath = targetPath;
+        continue;
       }
       long sourceKeyPresentRows = current.filter(col(sourceAlias).isNotNull()).count();
 
@@ -89,17 +100,18 @@ public final class SparkMappingPathExecutor {
                   + "."
                   + relation.targetColumn());
         }
+        current = addNullResource(current, targetPath, relation.targetResource(), aliases);
         metrics.add(
             RelationExecutionMetrics.skipped(
                 relation.sourceResource(), relation.targetResource(), inputRows));
-        return new MappingExecutionResult(new SparkPathResult(current, aliases), metrics, false);
+        currentPath = targetPath;
+        continue;
       }
 
       long targetRowsBeforeFilter = targetRaw.count();
       Dataset<Row> filteredTarget = applyFilter(targetRaw, step.filter());
       long targetRowsAfterFilter = filteredTarget.count();
 
-      SchemaPath targetPath = currentPath.append(relation);
       Map<FieldRef, String> targetAliases = new LinkedHashMap<>();
       Dataset<Row> target = aliasResource(filteredTarget, targetPath, targetAliases);
       String targetAlias = targetAliases.get(targetPath.field(relation.targetColumn()));
@@ -193,6 +205,24 @@ public final class SparkMappingPathExecutor {
     }
 
     throw new IllegalArgumentException("Unsupported cardinality strategy: " + strategy);
+  }
+
+
+  private Dataset<Row> addNullResource(
+      Dataset<Row> dataset, SchemaPath path, String resource, Map<FieldRef, String> aliases) {
+    SchemaResource schemaResource =
+        graph.resource(resource)
+            .orElseThrow(() -> new IllegalArgumentException("Unknown schema resource: " + resource));
+    Dataset<Row> out = dataset;
+    for (String raw : schemaResource.fields().keySet()) {
+      FieldRef ref = path.field(raw);
+      String alias = SparkSchemaPathExecutor.physicalAlias(ref);
+      aliases.put(ref, alias);
+      if (!hasColumn(out, alias)) {
+        out = out.withColumn(alias, lit(null));
+      }
+    }
+    return out;
   }
 
   private static Dataset<Row> applyFilter(Dataset<Row> target, FilterExpression filter) {

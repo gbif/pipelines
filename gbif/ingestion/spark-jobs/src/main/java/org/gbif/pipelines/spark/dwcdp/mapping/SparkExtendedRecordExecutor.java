@@ -23,6 +23,10 @@ import org.apache.spark.sql.Row;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.util.TableLoader;
+import org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledExtension;
+import org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledTargetProducer;
+import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingCompiler;
 
 /**
  * First end-to-end compiler from a {@link MappingPlan} to {@link ExtendedRecord}.
@@ -45,6 +49,10 @@ public final class SparkExtendedRecordExecutor {
   }
 
   public Dataset<ExtendedRecord> execute(TableLoader loader, MappingPlan plan) {
+    return execute(loader, new MappingCompiler(graph).compile(plan));
+  }
+
+  public Dataset<ExtendedRecord> execute(TableLoader loader, CompiledMapping plan) {
     SchemaResource coreResource =
         graph.resource(plan.coreSourceResource())
             .orElseThrow(
@@ -68,7 +76,7 @@ public final class SparkExtendedRecordExecutor {
     Dataset<Row> assembled = coreProjection.dataset();
 
     Map<String, ExtensionColumns> extensionColumns = new LinkedHashMap<>();
-    for (ExtensionMapping extension : plan.extensions()) {
+    for (CompiledExtension extension : plan.extensions()) {
       if (extension.fragments().isEmpty()) {
         continue;
       }
@@ -165,13 +173,14 @@ public final class SparkExtendedRecordExecutor {
         .filter((FilterFunction<ExtendedRecord>) record -> record != null);
   }
 
-  private CoreProjection projectCore(Dataset<Row> rawCore, MappingPlan plan) {
+  private CoreProjection projectCore(Dataset<Row> rawCore, CompiledMapping plan) {
     List<Column> selected = new ArrayList<>();
     selected.add(rawCore.col(coreIdColumn(plan.coreType())).cast("string").as(CORE_ID));
     Map<String, String> targetColumns = new LinkedHashMap<>();
 
-    for (TargetFieldMapping field : plan.coreFields()) {
-      for (FieldRef source : field.sources()) {
+    for (CompiledTargetProducer field : plan.coreTargets()) {
+      for (var compiledSource : field.sources()) {
+        FieldRef source = compiledSource.field();
         if (!source.path().relations().isEmpty()
             || !source.path().rootResource().equals(plan.coreSourceResource())) {
           throw new UnsupportedOperationException(
@@ -182,7 +191,7 @@ public final class SparkExtendedRecordExecutor {
 
       String alias = targetAlias(field.targetTerm());
       targetColumns.put(field.targetTerm(), alias);
-      List<Column> sources = field.sources().stream().map(s -> rawCore.col(s.column()).cast("string")).toList();
+      List<Column> sources = field.sources().stream().map(s -> rawCore.col(s.field().column()).cast("string")).toList();
       Column value;
       if (field.aggregation() instanceof ValueAggregation.FirstNonNull) {
         value = coalesce(sources.toArray(Column[]::new));
@@ -200,7 +209,7 @@ public final class SparkExtendedRecordExecutor {
 
   private Dataset<Row> attachmentBridge(
       TableLoader loader,
-      MappingPlan plan,
+      CompiledMapping plan,
       String sourceResource,
       String naturalId,
       String corePk) {
