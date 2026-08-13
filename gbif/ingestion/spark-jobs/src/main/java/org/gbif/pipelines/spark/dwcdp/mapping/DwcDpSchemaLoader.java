@@ -2,12 +2,11 @@ package org.gbif.pipelines.spark.dwcdp.mapping;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.logging.log4j.util.Strings;
-import org.json4s.jackson.Json;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +38,7 @@ public final class DwcDpSchemaLoader {
       }
     }
     if (latest.size() != 1) {
-      throw new IllegalStateException(
-          "Expected exactly one latest DwC-DP schema bundle, found " + latest);
+      throw new IllegalStateException("Expected exactly one latest DwC-DP schema bundle, found " + latest);
     }
     return loadVersionBase(latest.get(0));
   }
@@ -61,30 +59,22 @@ public final class DwcDpSchemaLoader {
       for (JsonNode field : schema.path("fields")) {
         JsonNode constraints = field.path("constraints");
         String name = text(field, "name");
-        fields.put(
-            name,
-            new SchemaField(
-                name,
-                constraints.path("required").asBoolean(false),
-                constraints.path("unique").asBoolean(false)));
+        fields.put(name, new SchemaField(name,
+            constraints.path("required").asBoolean(false),
+            constraints.path("unique").asBoolean(false)));
       }
-      resources.put(
-          resourceName,
-          new SchemaResource(
-              resourceName,
-              fields,
-              optionalText(schema, "primaryKey"),
-              optionalText(schema, "weakPrimaryKey")));
+      resources.put(resourceName,
+          new SchemaResource(resourceName, fields,
+              optionalText(schema, "primaryKey"), optionalText(schema, "weakPrimaryKey")));
 
       for (JsonNode fk : schema.path("foreignKeys")) {
         JsonNode reference = fk.path("reference");
-        foreignKeys.add(
-            new PendingForeignKey(
-                resourceName,
-                scalarField(fk.path("fields")),
-                text(reference, "resource", resourceName),
-                scalarField(reference.path("fields")),
-                optionalText(fk, "predicate").orElse(null)));
+        foreignKeys.add(new PendingForeignKey(
+            resourceName,
+            scalarField(fk.path("fields")),
+            text(reference, "resource", resourceName),
+            scalarField(reference.path("fields")),
+            optionalText(fk, "predicate").orElse(null)));
       }
     }
 
@@ -92,26 +82,18 @@ public final class DwcDpSchemaLoader {
     for (PendingForeignKey fk : foreignKeys) {
       SchemaField sourceField = requireField(resources, fk.sourceResource, fk.sourceField);
       requireField(resources, fk.targetResource, fk.targetField);
-      RelationCardinality forward =
-          sourceField.unique() ? RelationCardinality.ONE_TO_ONE : RelationCardinality.MANY_TO_ONE;
-      RelationCardinality reverse =
-          sourceField.unique() ? RelationCardinality.ONE_TO_ONE : RelationCardinality.ONE_TO_MANY;
-      relations.add(
-          SchemaRelation.relation(
-              fk.sourceResource,
-              fk.sourceField,
-              fk.targetResource,
-              fk.targetField,
-              fk.predicate,
-              forward));
-      relations.add(
-          SchemaRelation.relation(
-              fk.targetResource,
-              fk.targetField,
-              fk.sourceResource,
-              fk.sourceField,
-              fk.predicate,
-              reverse));
+      RelationCardinality forward = sourceField.unique()
+          ? RelationCardinality.ONE_TO_ONE
+          : RelationCardinality.MANY_TO_ONE;
+      RelationCardinality reverse = sourceField.unique()
+          ? RelationCardinality.ONE_TO_ONE
+          : RelationCardinality.ONE_TO_MANY;
+      relations.add(SchemaRelation.relation(
+          fk.sourceResource, fk.sourceField, fk.targetResource, fk.targetField,
+          fk.predicate, forward));
+      relations.add(SchemaRelation.relation(
+          fk.targetResource, fk.targetField, fk.sourceResource, fk.sourceField,
+          fk.predicate, reverse));
     }
     return new OfficialSchemaGraph(resources, relations);
   }
@@ -124,8 +106,7 @@ public final class DwcDpSchemaLoader {
     }
     SchemaField f = r.fields().get(field);
     if (f == null) {
-      throw new IllegalStateException(
-          "Foreign key references unknown field " + resource + "." + field);
+      throw new IllegalStateException("Foreign key references unknown field " + resource + "." + field);
     }
     return f;
   }
@@ -148,24 +129,25 @@ public final class DwcDpSchemaLoader {
     if (node.isArray() && node.size() == 1) {
       return node.get(0).asText();
     }
-    throw new IllegalStateException(
-        "Composite FK fields are not supported by this first executor slice: " + node);
-  }
-
-  private static String text(JsonNode node, String field, String defaultValue) {
-    if( !node.has(field) || Strings.isBlank(node.path(field).asText())) {
-      return defaultValue;
-    }
-    return node.get(field).asText();
+    throw new IllegalStateException("Composite FK fields are not supported by this first executor slice: " + node);
   }
 
   private static String text(JsonNode node, String field) {
     String value = node.path(field).asText(null);
     if (value == null || value.isBlank()) {
-      throw new IllegalStateException(
-          "Missing required schema property '" + field + "' in " + node);
+      throw new IllegalStateException("Missing required schema property '" + field + "' in " + node);
     }
     return value;
+  }
+
+  /**
+   * Reads an optional schema property with a contextual fallback. Frictionless self-referencing
+   * foreign keys may omit reference.resource; in that case the reference targets the current
+   * resource.
+   */
+  private static String text(JsonNode node, String field, String defaultValue) {
+    String value = node.path(field).asText(null);
+    return value == null || value.isBlank() ? defaultValue : value;
   }
 
   private static Optional<String> optionalText(JsonNode node, String field) {
@@ -174,9 +156,7 @@ public final class DwcDpSchemaLoader {
   }
 
   private record PendingForeignKey(
-      String sourceResource,
-      String sourceField,
-      String targetResource,
-      String targetField,
+      String sourceResource, String sourceField,
+      String targetResource, String targetField,
       String predicate) {}
 }

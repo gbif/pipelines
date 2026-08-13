@@ -53,8 +53,23 @@ public final class MappingBuilder {
       return this;
     }
 
-    public RelationBuilder filter(RowFilter filter) {
+    public RelationBuilder filter(FilterExpression filter) {
       step = step.filter(filter);
+      return this;
+    }
+
+    public RelationBuilder optional() {
+      step = step.requirement(RelationRequirement.OPTIONAL);
+      return this;
+    }
+
+    public RelationBuilder required() {
+      step = step.requirement(RelationRequirement.REQUIRED);
+      return this;
+    }
+
+    public RelationBuilder predicate(String predicate) {
+      step = step.predicate(predicate);
       return this;
     }
 

@@ -14,8 +14,7 @@ public record SparkPathResult(Dataset<Row> dataset, Map<FieldRef, String> aliase
   public String columnName(FieldRef field) {
     String name = aliases.get(field);
     if (name == null) {
-      throw new IllegalArgumentException(
-          "Field is not materialized by this path: " + field.qualifiedName());
+      throw new IllegalArgumentException("Field is not materialized by this path: " + field.qualifiedName());
     }
     return name;
   }

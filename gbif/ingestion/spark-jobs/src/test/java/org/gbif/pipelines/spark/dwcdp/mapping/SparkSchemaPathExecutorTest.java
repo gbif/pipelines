@@ -34,50 +34,46 @@ class SparkSchemaPathExecutorTest {
 
   @Test
   void executesRealSchemaPathAndKeepsPathQualifiedFieldsDistinct() {
-    Dataset<Row> survey =
-        spark.createDataFrame(
-            List.of(RowFactory.create("S1", "E1")),
-            new StructType()
-                .add("survey_pk", DataTypes.StringType)
-                .add("event_fk", DataTypes.StringType));
-    Dataset<Row> roles =
-        spark.createDataFrame(
-            List.of(RowFactory.create("S1", "A1", "collector", 1)),
-            new StructType()
-                .add("survey_fk", DataTypes.StringType)
-                .add("agent_fk", DataTypes.StringType)
-                .add("agentRole", DataTypes.StringType)
-                .add("agentRoleOrder", DataTypes.IntegerType));
-    Dataset<Row> agents =
-        spark.createDataFrame(
-            List.of(RowFactory.create("A1", "agent-public-id", "Ada Collector")),
-            new StructType()
-                .add("agent_pk", DataTypes.StringType)
-                .add("agentID", DataTypes.StringType)
-                .add("preferredAgentName", DataTypes.StringType));
+    Dataset<Row> survey = spark.createDataFrame(
+        List.of(RowFactory.create("S1", "E1")),
+        new StructType().add("survey_pk", DataTypes.StringType).add("event_fk", DataTypes.StringType));
+    Dataset<Row> roles = spark.createDataFrame(
+        List.of(RowFactory.create("S1", "A1", "collector", 1)),
+        new StructType()
+            .add("survey_fk", DataTypes.StringType)
+            .add("agent_fk", DataTypes.StringType)
+            .add("agentRole", DataTypes.StringType)
+            .add("agentRoleOrder", DataTypes.IntegerType));
+    Dataset<Row> agents = spark.createDataFrame(
+        List.of(RowFactory.create("A1", "agent-public-id", "Ada Collector")),
+        new StructType()
+            .add("agent_pk", DataTypes.StringType)
+            .add("agentID", DataTypes.StringType)
+            .add("preferredAgentName", DataTypes.StringType));
 
     SchemaRelation surveyRoles = graph.resolve("survey", "survey-agent-role", "survey_fk");
     SchemaRelation roleAgent = graph.resolve("survey-agent-role", "agent", "agent_fk");
     SchemaPath path = SchemaPath.root("survey").append(surveyRoles).append(roleAgent);
 
-    SparkPathResult result =
-        new SparkSchemaPathExecutor(graph)
-            .execute(
-                TestTableLoader.of(
-                    "survey", survey,
-                    "survey-agent-role", roles,
-                    "agent", agents),
-                path);
+    SparkPathResult result = new SparkSchemaPathExecutor(graph).execute(
+        TestTableLoader.of(
+            "survey", survey,
+            "survey-agent-role", roles,
+            "agent", agents),
+        path);
 
     Row row = result.dataset().first();
     FieldRef surveyPk = SchemaPath.root("survey").field("survey_pk");
     SchemaPath rolePath = SchemaPath.root("survey").append(surveyRoles);
     SchemaPath agentPath = rolePath.append(roleAgent);
 
-    assertEquals("S1", row.getAs(result.columnName(surveyPk)));
-    assertEquals("collector", row.getAs(result.columnName(rolePath.field("agentRole"))));
-    assertEquals(
-        "Ada Collector", row.getAs(result.columnName(agentPath.field("preferredAgentName"))));
+    String surveyId = row.getAs(result.columnName(surveyPk));
+    String agentRole = row.getAs(result.columnName(rolePath.field("agentRole")));
+    String preferredAgentName =
+        row.getAs(result.columnName(agentPath.field("preferredAgentName")));
+    assertEquals("S1", surveyId);
+    assertEquals("collector", agentRole);
+    assertEquals("Ada Collector", preferredAgentName);
     assertNotEquals(
         result.columnName(rolePath.field("agent_fk")),
         result.columnName(agentPath.field("agent_pk")));
@@ -85,19 +81,15 @@ class SparkSchemaPathExecutorTest {
 
   @Test
   void missingPathResourceFailsWithTheResourceName() {
-    Dataset<Row> survey =
-        spark.createDataFrame(
-            List.of(RowFactory.create("S1")),
-            new StructType().add("survey_pk", DataTypes.StringType));
+    Dataset<Row> survey = spark.createDataFrame(
+        List.of(RowFactory.create("S1")),
+        new StructType().add("survey_pk", DataTypes.StringType));
     SchemaRelation relation = graph.resolve("survey", "survey-agent-role", "survey_fk");
     SchemaPath path = SchemaPath.root("survey").append(relation);
 
-    IllegalArgumentException ex =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                new SparkSchemaPathExecutor(graph)
-                    .execute(TestTableLoader.of("survey", survey), path));
+    IllegalArgumentException ex = assertThrows(
+        IllegalArgumentException.class,
+        () -> new SparkSchemaPathExecutor(graph).execute(TestTableLoader.of("survey", survey), path));
     assertTrue(ex.getMessage().contains("survey-agent-role"));
   }
 }

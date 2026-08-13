@@ -54,7 +54,7 @@ public final class ExtensionFragmentBuilder {
 
     public RelationBuilder via(String column) { step = step.via(column); return this; }
     public RelationBuilder predicate(String predicate) { step = step.predicate(predicate); return this; }
-    public RelationBuilder filter(RowFilter filter) { step = step.filter(filter); return this; }
+    public RelationBuilder filter(FilterExpression filter) { step = step.filter(filter); return this; }
     public RelationBuilder fanOut() { step = step.with(CardinalityStrategy.fanOut()); return this; }
     public RelationBuilder exactlyOne() { step = step.with(CardinalityStrategy.exactlyOne()); return this; }
     public RelationBuilder select(String selector) { step = step.with(CardinalityStrategy.select(selector)); return this; }

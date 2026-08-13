@@ -33,9 +33,9 @@ class ClasspathSchemaGraphTest {
 
   @Test
   void agentAgentRoleToAgentIsAmbiguousWithoutRelationHint() {
-    IllegalArgumentException ex =
-        assertThrows(
-            IllegalArgumentException.class, () -> graph.resolve("agent-agent-role", "agent"));
+    IllegalArgumentException ex = assertThrows(
+        IllegalArgumentException.class,
+        () -> graph.resolve("agent-agent-role", "agent"));
     assertTrue(ex.getMessage().contains("Ambiguous"));
   }
 }

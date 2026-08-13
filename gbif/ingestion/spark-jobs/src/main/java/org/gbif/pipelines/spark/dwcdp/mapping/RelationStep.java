@@ -8,38 +8,51 @@ public record RelationStep(
     String targetResource,
     Optional<String> viaColumn,
     Optional<String> schemaPredicate,
-    RowFilter filter,
-    Optional<CardinalityStrategy> cardinalityStrategy) {
+    FilterExpression filter,
+    Optional<CardinalityStrategy> cardinalityStrategy,
+    RelationRequirement requirement) {
 
   public RelationStep {
     Objects.requireNonNull(targetResource, "targetResource");
     viaColumn = viaColumn == null ? Optional.empty() : viaColumn;
     schemaPredicate = schemaPredicate == null ? Optional.empty() : schemaPredicate;
-    filter = filter == null ? RowFilter.none() : filter;
+    filter = filter == null ? FilterExpression.none() : filter;
     cardinalityStrategy = cardinalityStrategy == null ? Optional.empty() : cardinalityStrategy;
+    requirement = requirement == null ? RelationRequirement.OPTIONAL : requirement;
   }
 
   public static RelationStep inferred(String targetResource) {
     return new RelationStep(
-        targetResource, Optional.empty(), Optional.empty(), RowFilter.none(), Optional.empty());
+        targetResource,
+        Optional.empty(),
+        Optional.empty(),
+        FilterExpression.none(),
+        Optional.empty(),
+        RelationRequirement.OPTIONAL);
   }
 
   public RelationStep via(String column) {
     return new RelationStep(
-        targetResource, Optional.of(column), schemaPredicate, filter, cardinalityStrategy);
+        targetResource, Optional.of(column), schemaPredicate, filter, cardinalityStrategy, requirement);
   }
 
   public RelationStep predicate(String predicate) {
     return new RelationStep(
-        targetResource, viaColumn, Optional.of(predicate), filter, cardinalityStrategy);
+        targetResource, viaColumn, Optional.of(predicate), filter, cardinalityStrategy, requirement);
   }
 
-  public RelationStep filter(RowFilter newFilter) {
+  public RelationStep filter(FilterExpression newFilter) {
     return new RelationStep(
-        targetResource, viaColumn, schemaPredicate, newFilter, cardinalityStrategy);
+        targetResource, viaColumn, schemaPredicate, newFilter, cardinalityStrategy, requirement);
   }
 
   public RelationStep with(CardinalityStrategy strategy) {
-    return new RelationStep(targetResource, viaColumn, schemaPredicate, filter, Optional.of(strategy));
+    return new RelationStep(
+        targetResource, viaColumn, schemaPredicate, filter, Optional.of(strategy), requirement);
+  }
+
+  public RelationStep requirement(RelationRequirement newRequirement) {
+    return new RelationStep(
+        targetResource, viaColumn, schemaPredicate, filter, cardinalityStrategy, newRequirement);
   }
 }

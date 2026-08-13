@@ -4,10 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Logical lineage through DwC-DP resources. Relation identity, not column aliases, defines the
- * path.
- */
+/** Logical lineage through DwC-DP resources. Relation identity, not column aliases, defines the path. */
 public record SchemaPath(String rootResource, List<SchemaRelation> relations) {
   public SchemaPath {
     Objects.requireNonNull(rootResource, "rootResource");
@@ -30,9 +27,7 @@ public record SchemaPath(String rootResource, List<SchemaRelation> relations) {
   }
 
   public String currentResource() {
-    return relations.isEmpty()
-        ? rootResource
-        : relations.get(relations.size() - 1).targetResource();
+    return relations.isEmpty() ? rootResource : relations.get(relations.size() - 1).targetResource();
   }
 
   public FieldRef field(String column) {
