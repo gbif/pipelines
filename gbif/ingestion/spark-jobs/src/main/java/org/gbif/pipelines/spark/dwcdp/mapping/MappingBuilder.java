@@ -53,6 +53,12 @@ public final class MappingBuilder {
       return this;
     }
 
+    /** Declares an explicit source-column -> target-column relation (for weak/natural-key links). */
+    public RelationBuilder on(String sourceColumn, String targetColumn) {
+      step = step.on(sourceColumn, targetColumn);
+      return this;
+    }
+
     public RelationBuilder filter(FilterExpression filter) {
       step = step.filter(filter);
       return this;

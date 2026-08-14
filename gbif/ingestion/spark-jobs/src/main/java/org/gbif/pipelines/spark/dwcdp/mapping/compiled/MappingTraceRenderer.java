@@ -25,6 +25,9 @@ public final class MappingTraceRenderer {
 
     for (CompiledExtension extension : mapping.extensions()) {
       out.append("\nExtension: ").append(extension.rowType()).append('\n');
+      out.append("  Row composition: ").append(extension.rowComposition()).append('\n');
+      extension.maxRowsPerParent().ifPresent(
+          limit -> out.append("  Max rows per parent: ").append(limit).append('\n'));
       if (!extension.decisions().isEmpty()) {
         out.append("  Decisions:\n");
         for (MappingDecision decision : extension.decisions()) {

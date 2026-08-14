@@ -11,6 +11,7 @@ import org.gbif.pipelines.spark.dwcdp.mapping.SchemaRelation;
 /** Schema-resolved relation plus the execution semantics declared by the mapping. */
 public record CompiledRelationStep(
     SchemaRelation relation,
+    boolean explicitColumns,
     RelationRequirement requirement,
     Optional<CardinalityStrategy> cardinalityStrategy,
     FilterExpression filter) {
@@ -23,10 +24,27 @@ public record CompiledRelationStep(
   }
 
   public RelationStep toRelationStep() {
+    if (explicitColumns) {
+      return new RelationStep(
+          relation.targetResource(),
+          Optional.empty(),
+          relation.predicate(),
+          Optional.of(relation.sourceColumn()),
+          Optional.of(relation.targetColumn()),
+          filter,
+          cardinalityStrategy,
+          requirement);
+    }
+
+    // Schema-declared relations must be re-resolved through SchemaGraph during execution.
+    // Reconstructing them as explicit column relations loses schema relation metadata such as
+    // cardinality, which is part of SchemaPath identity and breaks compiled FieldRef bindings.
     return new RelationStep(
         relation.targetResource(),
         Optional.of(relation.sourceColumn()),
         relation.predicate(),
+        Optional.empty(),
+        Optional.empty(),
         filter,
         cardinalityStrategy,
         requirement);

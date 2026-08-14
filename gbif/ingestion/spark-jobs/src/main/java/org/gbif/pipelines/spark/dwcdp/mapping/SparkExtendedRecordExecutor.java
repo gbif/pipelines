@@ -80,13 +80,11 @@ public final class SparkExtendedRecordExecutor {
       if (extension.fragments().isEmpty()) {
         continue;
       }
-      String sourceResource = extension.fragments().get(0).sourceResource();
-      if (loader.load(sourceResource).isEmpty()) {
-        // DwC-A extensions are conditional on their source resource. A missing extension root is
-        // therefore an absent extension, not a failed core conversion. This decision belongs at
-        // the extension-attachment layer: a Mapping executed directly still has a required root.
-        // Dataset-specific mapping resolution will eventually make this explicit before Spark
-        // execution.
+      boolean anySourcePresent =
+          extension.fragments().stream()
+              .anyMatch(fragment -> loader.load(fragment.sourceResource()).isPresent());
+      if (!anySourcePresent) {
+        // Extension roots are optional. For UNION composition any one branch can contribute.
         continue;
       }
 
@@ -95,11 +93,13 @@ public final class SparkExtendedRecordExecutor {
       if (materialized.targetColumns().isEmpty()) {
         continue;
       }
+      String attachmentSourceResource =
+          materialized.parentKeySource().path().rootResource();
       Dataset<Row> bridge =
           attachmentBridge(
               loader,
               plan,
-              sourceResource,
+              attachmentSourceResource,
               materialized.parentKeySource(),
               naturalId,
               corePk);

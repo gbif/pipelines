@@ -12,6 +12,8 @@ public final class MappingPlanBuilder {
   private final String coreSourceResource;
   private final List<TargetFieldMapping> coreFields = new ArrayList<>();
   private final Map<String, List<ExtensionFragment>> extensions = new LinkedHashMap<>();
+  private final Map<String, ExtensionRowComposition> extensionCompositions = new LinkedHashMap<>();
+  private final Map<String, Integer> extensionRowLimits = new LinkedHashMap<>();
 
   private MappingPlanBuilder(String name, CoreType coreType, String coreSourceResource) {
     this.name = name;
@@ -36,7 +38,14 @@ public final class MappingPlanBuilder {
   public MappingPlan build() {
     List<ExtensionMapping> builtExtensions =
         extensions.entrySet().stream()
-            .map(e -> new ExtensionMapping(e.getKey(), e.getValue()))
+            .map(
+                e ->
+                    new ExtensionMapping(
+                        e.getKey(),
+                        extensionCompositions.getOrDefault(
+                            e.getKey(), ExtensionRowComposition.ENRICH),
+                        java.util.Optional.ofNullable(extensionRowLimits.get(e.getKey())),
+                        e.getValue()))
             .toList();
     return new MappingPlan(name, coreType, coreSourceResource, coreFields, builtExtensions);
   }
@@ -48,6 +57,21 @@ public final class MappingPlanBuilder {
     private ExtensionBuilder(MappingPlanBuilder parent, String rowType) {
       this.parent = parent;
       this.rowType = rowType;
+    }
+
+    /** Makes every imported fragment an independent row producer whose rows are unioned. */
+    public ExtensionBuilder unionRows() {
+      parent.extensionCompositions.put(rowType, ExtensionRowComposition.UNION);
+      return this;
+    }
+
+    /** Limits the number of serialized extension rows retained for each parent record. */
+    public ExtensionBuilder limitRowsPerParent(int maxRows) {
+      if (maxRows <= 0) {
+        throw new IllegalArgumentException("maxRows must be > 0");
+      }
+      parent.extensionRowLimits.put(rowType, maxRows);
+      return this;
     }
 
     /** Imports a reusable fragment into this extension. */

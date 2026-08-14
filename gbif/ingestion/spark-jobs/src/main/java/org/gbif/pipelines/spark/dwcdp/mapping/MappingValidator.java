@@ -24,11 +24,7 @@ public final class MappingValidator {
     for (RelationStep step : mapping.relations()) {
       SchemaRelation relation;
       try {
-        relation = graph.resolve(
-            currentResource,
-            step.targetResource(),
-            step.viaColumn().orElse(null),
-            step.schemaPredicate().orElse(null));
+        relation = resolveRelation(graph, currentResource, step);
       } catch (IllegalArgumentException e) {
         error(issues, e.getMessage());
         currentResource = step.targetResource();
@@ -75,6 +71,37 @@ public final class MappingValidator {
     }
 
     return new ValidationResult(issues);
+  }
+
+  private static SchemaRelation resolveRelation(
+      SchemaGraph graph, String sourceResource, RelationStep step) {
+    if (step.explicitColumns()) {
+      String sourceColumn = step.sourceColumn().orElseThrow();
+      String targetColumn = step.targetColumn().orElseThrow();
+      if (!graph.hasResource(step.targetResource())) {
+        throw new IllegalArgumentException("Unknown relation target resource: " + step.targetResource());
+      }
+      if (!graph.hasColumn(sourceResource, sourceColumn)) {
+        throw new IllegalArgumentException(
+            "Explicit relation references unknown source field: " + sourceResource + "." + sourceColumn);
+      }
+      if (!graph.hasColumn(step.targetResource(), targetColumn)) {
+        throw new IllegalArgumentException(
+            "Explicit relation references unknown target field: " + step.targetResource() + "." + targetColumn);
+      }
+      return SchemaRelation.relation(
+          sourceResource,
+          sourceColumn,
+          step.targetResource(),
+          targetColumn,
+          step.schemaPredicate().orElse(null),
+          RelationCardinality.UNKNOWN);
+    }
+    return graph.resolve(
+        sourceResource,
+        step.targetResource(),
+        step.viaColumn().orElse(null),
+        step.schemaPredicate().orElse(null));
   }
 
   private static void error(List<ValidationIssue> issues, String message) {

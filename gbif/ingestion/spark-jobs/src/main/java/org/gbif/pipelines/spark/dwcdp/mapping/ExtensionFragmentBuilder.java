@@ -69,6 +69,12 @@ public final class ExtensionFragmentBuilder {
       return this;
     }
 
+    /** Declares an explicit source-column -> target-column relation (for weak/natural-key links). */
+    public RelationBuilder on(String sourceColumn, String targetColumn) {
+      step = step.on(sourceColumn, targetColumn);
+      return this;
+    }
+
     public RelationBuilder predicate(String predicate) {
       step = step.predicate(predicate);
       return this;
@@ -107,6 +113,12 @@ public final class ExtensionFragmentBuilder {
     public RelationBuilder combine(ValueAggregation aggregation) {
       step = step.with(CardinalityStrategy.combine(aggregation));
       return this;
+    }
+
+    /** Commits this relation and returns to the fragment builder. */
+    public ExtensionFragmentBuilder endJoin() {
+      commit();
+      return parent;
     }
 
     public RelationBuilder join(String targetResource) {

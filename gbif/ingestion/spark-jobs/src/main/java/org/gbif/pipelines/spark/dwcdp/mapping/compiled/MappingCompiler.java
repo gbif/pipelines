@@ -11,6 +11,7 @@ import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.MappingPlan;
+import org.gbif.pipelines.spark.dwcdp.mapping.RelationCardinality;
 import org.gbif.pipelines.spark.dwcdp.mapping.RelationStep;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaPath;
@@ -78,10 +79,40 @@ public final class MappingCompiler {
 
   private CompiledExtension compileExtensionInternal(ExtensionMapping extension) {
     Objects.requireNonNull(extension, "extension");
-    List<CompiledFragment> rawFragments = extension.fragments().stream().map(this::compileFragment).toList();
-    List<CompiledTargetProducer> candidates = rawFragments.stream()
-        .flatMap(fragment -> fragment.targets().stream())
-        .toList();
+    List<CompiledFragment> rawFragments =
+        extension.fragments().stream().map(this::compileFragment).toList();
+
+    if (extension.rowComposition()
+        == org.gbif.pipelines.spark.dwcdp.mapping.ExtensionRowComposition.UNION) {
+      List<CompiledFragment> resolvedFragments = new ArrayList<>();
+      List<MappingDecision> decisions = new ArrayList<>();
+      for (CompiledFragment fragment : rawFragments) {
+        Resolution resolution =
+            resolveTargets(
+                "extension:" + extension.rowType() + "/fragment:" + fragment.name(),
+                fragment.targets());
+        decisions.addAll(resolution.decisions());
+        resolvedFragments.add(
+            new CompiledFragment(
+                fragment.name(),
+                fragment.rowType(),
+                fragment.sourceResource(),
+                fragment.path(),
+                fragment.relations(),
+                fragment.scopeKey(),
+                fragment.rowIdentity(),
+                resolution.selected()));
+      }
+      return new CompiledExtension(
+          extension.rowType(),
+          extension.rowComposition(),
+          extension.maxRowsPerParent(),
+          resolvedFragments,
+          decisions);
+    }
+
+    List<CompiledTargetProducer> candidates =
+        rawFragments.stream().flatMap(fragment -> fragment.targets().stream()).toList();
     Resolution resolution = resolveTargets("extension:" + extension.rowType(), candidates);
 
     List<CompiledTargetProducer> selected = resolution.selected();
@@ -97,7 +128,12 @@ public final class MappingCompiler {
             fragment.targets().stream().filter(selected::contains).toList()))
         .toList();
 
-    return new CompiledExtension(extension.rowType(), resolvedFragments, resolution.decisions());
+    return new CompiledExtension(
+        extension.rowType(),
+        extension.rowComposition(),
+        extension.maxRowsPerParent(),
+        resolvedFragments,
+        resolution.decisions());
   }
 
   private List<MappingDecision> validateFragmentScopes(List<ExtensionMapping> extensions) {
@@ -131,15 +167,14 @@ public final class MappingCompiler {
     SchemaPath path = SchemaPath.root(fragment.sourceResource());
     List<CompiledRelationStep> relations = new ArrayList<>();
     for (RelationStep step : fragment.relations()) {
-      SchemaRelation relation =
-          graph.resolve(
-              path.currentResource(),
-              step.targetResource(),
-              step.viaColumn().orElse(null),
-              step.schemaPredicate().orElse(null));
+      SchemaRelation relation = resolveRelation(path.currentResource(), step);
       relations.add(
           new CompiledRelationStep(
-              relation, step.requirement(), step.cardinalityStrategy(), step.filter()));
+              relation,
+              step.explicitColumns(),
+              step.requirement(),
+              step.cardinalityStrategy(),
+              step.filter()));
       path = path.append(relation);
     }
 
@@ -265,6 +300,43 @@ public final class MappingCompiler {
         candidates,
         "Multiple inferred producers have the same closest path depth (" + minimumDepth
             + "); an explicit mapping is required.");
+  }
+
+  private SchemaRelation resolveRelation(String sourceResource, RelationStep step) {
+    if (step.explicitColumns()) {
+      String sourceColumn = step.sourceColumn().orElseThrow();
+      String targetColumn = step.targetColumn().orElseThrow();
+      if (!graph.hasResource(step.targetResource())) {
+        throw new IllegalArgumentException(
+            "Unknown relation target resource: " + step.targetResource());
+      }
+      if (!graph.hasColumn(sourceResource, sourceColumn)) {
+        throw new IllegalArgumentException(
+            "Explicit relation references unknown source field: "
+                + sourceResource
+                + "."
+                + sourceColumn);
+      }
+      if (!graph.hasColumn(step.targetResource(), targetColumn)) {
+        throw new IllegalArgumentException(
+            "Explicit relation references unknown target field: "
+                + step.targetResource()
+                + "."
+                + targetColumn);
+      }
+      return SchemaRelation.relation(
+          sourceResource,
+          sourceColumn,
+          step.targetResource(),
+          targetColumn,
+          step.schemaPredicate().orElse(null),
+          RelationCardinality.UNKNOWN);
+    }
+    return graph.resolve(
+        sourceResource,
+        step.targetResource(),
+        step.viaColumn().orElse(null),
+        step.schemaPredicate().orElse(null));
   }
 
   private record Resolution(

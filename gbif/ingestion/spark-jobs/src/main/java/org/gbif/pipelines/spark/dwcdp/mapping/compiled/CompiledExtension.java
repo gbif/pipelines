@@ -2,12 +2,20 @@ package org.gbif.pipelines.spark.dwcdp.mapping.compiled;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionRowComposition;
 
 /** Compiled extension specification after target-producer precedence has been resolved. */
 public record CompiledExtension(
-    String rowType, List<CompiledFragment> fragments, List<MappingDecision> decisions) {
+    String rowType,
+    ExtensionRowComposition rowComposition,
+    Optional<Integer> maxRowsPerParent,
+    List<CompiledFragment> fragments,
+    List<MappingDecision> decisions) {
   public CompiledExtension {
     Objects.requireNonNull(rowType, "rowType");
+    Objects.requireNonNull(rowComposition, "rowComposition");
+    maxRowsPerParent = Objects.requireNonNull(maxRowsPerParent, "maxRowsPerParent");
     fragments = List.copyOf(fragments);
     decisions = List.copyOf(decisions);
   }

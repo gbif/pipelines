@@ -50,12 +50,7 @@ public final class SparkMappingPathExecutor {
     List<RelationExecutionMetrics> metrics = new ArrayList<>();
 
     for (RelationStep step : mapping.relations()) {
-      SchemaRelation relation =
-          graph.resolve(
-              currentPath.currentResource(),
-              step.targetResource(),
-              step.viaColumn().orElse(null),
-              step.schemaPredicate().orElse(null));
+      SchemaRelation relation = resolveRelation(currentPath.currentResource(), step);
 
       Optional<Dataset<Row>> targetRawOpt = loader.load(relation.targetResource());
       long inputRows = current.count();
@@ -174,11 +169,23 @@ public final class SparkMappingPathExecutor {
     }
 
     if (strategy instanceof CardinalityStrategy.ExactlyOne) {
-      Dataset<Row> out = joined;
-      for (String alias : targetAliases.values()) {
-        out = out.withColumn(alias, when(col(INTERNAL_MATCH_COUNT).equalTo(1L), col(alias)).otherwise(lit(null)));
-      }
-      return out.dropDuplicates(INTERNAL_PARENT_ID);
+      // Rewrite all target columns in one projection. Chaining one withColumn per target field
+      // creates a deeply nested logical plan for wide DwC-DP resources such as material and can
+      // exhaust driver memory during Spark analysis.
+      java.util.Set<String> targetAliasNames =
+          new java.util.HashSet<>(targetAliases.values());
+      Column[] projected =
+          java.util.Arrays.stream(joined.columns())
+              .map(
+                  name ->
+                      targetAliasNames.contains(name)
+                          ? when(col(quote(name)).isNotNull().and(col(INTERNAL_MATCH_COUNT).equalTo(1L)),
+                                  col(quote(name)))
+                              .otherwise(lit(null))
+                              .as(name)
+                          : col(quote(name)))
+              .toArray(Column[]::new);
+      return joined.select(projected).dropDuplicates(INTERNAL_PARENT_ID);
     }
 
     if (strategy instanceof CardinalityStrategy.Select select) {
@@ -208,21 +215,42 @@ public final class SparkMappingPathExecutor {
   }
 
 
+  private SchemaRelation resolveRelation(String sourceResource, RelationStep step) {
+    if (step.explicitColumns()) {
+      return SchemaRelation.relation(
+          sourceResource,
+          step.sourceColumn().orElseThrow(),
+          step.targetResource(),
+          step.targetColumn().orElseThrow(),
+          step.schemaPredicate().orElse(null),
+          RelationCardinality.UNKNOWN);
+    }
+    return graph.resolve(
+        sourceResource,
+        step.targetResource(),
+        step.viaColumn().orElse(null),
+        step.schemaPredicate().orElse(null));
+  }
+
   private Dataset<Row> addNullResource(
       Dataset<Row> dataset, SchemaPath path, String resource, Map<FieldRef, String> aliases) {
     SchemaResource schemaResource =
         graph.resource(resource)
             .orElseThrow(() -> new IllegalArgumentException("Unknown schema resource: " + resource));
-    Dataset<Row> out = dataset;
+    List<Column> selected =
+        java.util.Arrays.stream(dataset.columns())
+            .map(name -> col(quote(name)))
+            .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+    java.util.Set<String> existing = new java.util.HashSet<>(java.util.Arrays.asList(dataset.columns()));
     for (String raw : schemaResource.fields().keySet()) {
       FieldRef ref = path.field(raw);
       String alias = SparkSchemaPathExecutor.physicalAlias(ref);
       aliases.put(ref, alias);
-      if (!hasColumn(out, alias)) {
-        out = out.withColumn(alias, lit(null));
+      if (!existing.contains(alias)) {
+        selected.add(lit(null).as(alias));
       }
     }
-    return out;
+    return dataset.select(selected.toArray(Column[]::new));
   }
 
   private static Dataset<Row> applyFilter(Dataset<Row> target, FilterExpression filter) {

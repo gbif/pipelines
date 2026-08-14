@@ -31,6 +31,21 @@ public final class EventDwcaMapping {
     return humboldt.build();
   }
 
+  /**
+   * Event-level Multimedia behaviour: direct event media plus occurrence and unambiguous
+   * material media promoted to the event.
+   */
+  public static MappingPlan withMultimedia(SchemaGraph graph) {
+    return eventBase("event-core:multimedia")
+        .extension(MultimediaMapping.ROW_TYPE_MULTIMEDIA)
+        .unionRows()
+        .limitRowsPerParent(50)
+        .importFragment(MultimediaMapping.eventMedia(graph))
+        .importFragment(MultimediaMapping.occurrenceMediaForEvent(graph))
+        .importFragment(MultimediaMapping.materialMediaForEvent(graph))
+        .build();
+  }
+
   /** Current legacy direct event-identifier behaviour. */
   public static MappingPlan withIdentifier(SchemaGraph graph) {
     return eventBase("event-core:identifier")

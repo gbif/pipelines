@@ -23,6 +23,7 @@ import java.util.Optional;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.expressions.Window;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledExtension;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledTargetProducer;
@@ -63,13 +64,19 @@ public final class SparkExtensionMaterializer {
     if (extension.fragments().isEmpty()) {
       throw new IllegalArgumentException("Extension has no fragments: " + extension.rowType());
     }
+    return extension.rowComposition() == ExtensionRowComposition.UNION
+        ? materializeUnion(loader, extension)
+        : materializeEnriched(loader, extension);
+  }
 
+  private ExtensionMaterializationResult materializeEnriched(
+      TableLoader loader, CompiledExtension extension) {
     List<CompiledFragment> rowFragments =
         extension.fragments().stream().filter(f -> f.rowIdentity().isPresent()).toList();
     if (rowFragments.size() > 1) {
       throw new IllegalArgumentException(
           "Extension " + extension.rowType()
-              + " has multiple row-defining fragments; explicit row-set composition is not supported yet: "
+              + " has multiple row-defining fragments; declare UNION row composition when fragments are independent row sets: "
               + rowFragments.stream().map(CompiledFragment::name).toList());
     }
 
@@ -78,19 +85,19 @@ public final class SparkExtensionMaterializer {
     for (CompiledFragment fragment : extension.fragments()) {
       if (!base.sourceResource().equals(fragment.sourceResource())) {
         throw new IllegalArgumentException(
-            "Fragments currently need the same source resource so parent keys share one scope: "
+            "ENRICH fragments need the same source resource: "
                 + base.name() + " starts at " + base.sourceResource()
                 + ", but " + fragment.name() + " starts at " + fragment.sourceResource());
       }
       if (!base.scopeKey().equals(fragment.scopeKey())) {
         throw new IllegalArgumentException(
-            "Fragments currently need the same scope key: "
+            "ENRICH fragments need the same scope key: "
                 + base.name() + " uses " + base.scopeKey().qualifiedName()
                 + ", but " + fragment.name() + " uses " + fragment.scopeKey().qualifiedName());
       }
     }
 
-    FragmentResult materializedBase = materializeFragment(loader, base, true);
+    FragmentResult materializedBase = materializeFragment(loader, base, true, false);
     Dataset<Row> current = materializedBase.dataset();
     Map<String, MaterializedTarget> targets =
         new LinkedHashMap<>(materializedBase.targets());
@@ -101,10 +108,10 @@ public final class SparkExtensionMaterializer {
       }
       if (fragment.rowIdentity().isPresent()) {
         throw new IllegalArgumentException(
-            "Only one row-defining fragment is supported per extension for now: " + fragment.name());
+            "Only one row-defining fragment is supported for ENRICH composition: " + fragment.name());
       }
 
-      FragmentResult enrichment = materializeFragment(loader, fragment, false);
+      FragmentResult enrichment = materializeFragment(loader, fragment, false, false);
       ensureNoDuplicateTargets(targets, enrichment.targets());
 
       Dataset<Row> enrichmentForJoin = enrichment.dataset().drop(COL_ROW_KEY);
@@ -119,12 +126,118 @@ public final class SparkExtensionMaterializer {
 
     Map<String, String> targetColumns = new LinkedHashMap<>();
     targets.forEach((term, target) -> targetColumns.put(term, target.physicalColumn()));
+    current = filterEmptyPayloadRows(current, targetColumns.values().stream().toList());
+    current = applyRowLimit(current, targetColumns.values().stream().toList(), extension.maxRowsPerParent());
     return new ExtensionMaterializationResult(
         current, COL_PARENT_KEY, materializedBase.parentKeySource(), COL_ROW_KEY, targetColumns);
   }
 
+  private ExtensionMaterializationResult materializeUnion(
+      TableLoader loader, CompiledExtension extension) {
+    List<FragmentResult> rows = new ArrayList<>();
+    Map<String, MaterializedTarget> targets = new LinkedHashMap<>();
+
+    for (CompiledFragment fragment : extension.fragments()) {
+      if (loader.load(fragment.sourceResource()).isEmpty()) {
+        continue;
+      }
+      FragmentResult materialized = materializeFragment(loader, fragment, true, true);
+      rows.add(materialized);
+      materialized.targets().forEach(targets::putIfAbsent);
+    }
+
+    if (rows.isEmpty()) {
+      CompiledFragment first = extension.fragments().get(0);
+      Dataset<Row> empty =
+          loader.load(first.sourceResource())
+              .map(df -> df.limit(0).select(
+                  lit(null).cast("string").as(COL_PARENT_KEY),
+                  lit(null).cast("string").as(COL_ROW_KEY)))
+              .orElseThrow(
+                  () -> new IllegalArgumentException(
+                      "No UNION fragment source is present for extension " + extension.rowType()));
+      return new ExtensionMaterializationResult(
+          empty, COL_PARENT_KEY, first.scopeKey(), COL_ROW_KEY, Map.of());
+    }
+
+    Dataset<Row> combined = rows.get(0).dataset();
+    for (int i = 1; i < rows.size(); i++) {
+      combined = combined.unionByName(rows.get(i).dataset(), true);
+    }
+
+    // UNION row identity is the visible extension payload within one parent, matching the legacy
+    // media path's dropDuplicates() behaviour. Synthetic execution row keys must not make otherwise
+    // identical rows look distinct.
+    List<String> dedupeColumns = new ArrayList<>();
+    dedupeColumns.add(COL_PARENT_KEY);
+    targets.values().stream()
+        .map(MaterializedTarget::physicalColumn)
+        .sorted()
+        .forEach(dedupeColumns::add);
+    combined = combined.dropDuplicates(dedupeColumns.toArray(String[]::new));
+
+    Map<String, String> targetColumns = new LinkedHashMap<>();
+    targets.forEach((term, target) -> targetColumns.put(term, target.physicalColumn()));
+    combined =
+        applyRowLimit(
+            combined, targetColumns.values().stream().toList(), extension.maxRowsPerParent());
+    return new ExtensionMaterializationResult(
+        combined,
+        COL_PARENT_KEY,
+        rows.get(0).parentKeySource(),
+        COL_ROW_KEY,
+        targetColumns);
+  }
+
+
+  private static Dataset<Row> filterEmptyPayloadRows(
+      Dataset<Row> rows, List<String> targetColumns) {
+    if (targetColumns.isEmpty()) {
+      return rows.limit(0);
+    }
+    Column hasPayload = null;
+    for (String targetColumn : targetColumns) {
+      Column present = col(targetColumn).isNotNull();
+      hasPayload = hasPayload == null ? present : hasPayload.or(present);
+    }
+    return rows.filter(hasPayload);
+  }
+
+  /**
+   * Applies a deterministic per-parent cap using only visible target payload. Execution-only row
+   * identity is deliberately excluded from ordering so the policy is stable across retries and does
+   * not leak physical Spark identity into mapping semantics.
+   */
+  private static Dataset<Row> applyRowLimit(
+      Dataset<Row> rows, List<String> targetColumns, Optional<Integer> maxRowsPerParent) {
+    if (maxRowsPerParent.isEmpty()) {
+      return rows;
+    }
+
+    List<String> stableColumns = targetColumns.stream().sorted().toList();
+    Column stableRow =
+        stableColumns.isEmpty()
+            ? lit("")
+            : org.apache.spark.sql.functions.to_json(
+                org.apache.spark.sql.functions.struct(
+                    stableColumns.stream().map(org.apache.spark.sql.functions::col).toArray(Column[]::new)));
+    Column stableHash = org.apache.spark.sql.functions.sha2(stableRow, 256);
+    String rankColumn = "__dwca_parent_row_rank";
+
+    return rows.withColumn(
+            rankColumn,
+            org.apache.spark.sql.functions
+                .row_number()
+                .over(Window.partitionBy(COL_PARENT_KEY).orderBy(stableHash, stableRow)))
+        .filter(col(rankColumn).leq(maxRowsPerParent.get()))
+        .drop(rankColumn);
+  }
+
   private FragmentResult materializeFragment(
-      TableLoader loader, CompiledFragment fragment, boolean rowProducing) {
+      TableLoader loader,
+      CompiledFragment fragment,
+      boolean rowProducing,
+      boolean filterEmptyPayload) {
     graph.resource(fragment.sourceResource())
         .orElseThrow(
             () ->
@@ -222,6 +335,16 @@ public final class SparkExtensionMaterializer {
       grouped = grouped.withColumn(COL_ROW_KEY, col(COL_PARENT_KEY).cast("string"));
     }
     grouped = grouped.withColumn(COL_PARENT_KEY, col(COL_PARENT_KEY).cast("string"));
+
+    // UNION branches are independent row sets, so a branch rooted above optional links must not
+    // contribute a synthetic empty row when none of its payload-producing paths resolve. ENRICH
+    // filtering happens only after every enrichment fragment has been joined, otherwise a base row
+    // can be removed before another fragment supplies its payload (e.g. Humboldt protocol fields).
+    if (rowProducing && filterEmptyPayload) {
+      grouped =
+          filterEmptyPayloadRows(
+              grouped, targets.values().stream().map(MaterializedTarget::physicalColumn).toList());
+    }
     return new FragmentResult(grouped, parentKeySource, targets);
   }
 
