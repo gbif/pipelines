@@ -35,6 +35,73 @@ public final class AssertionMapping {
             .exactlyOne()
             .endJoin();
 
+    addAssertionFields(builder, assertion, protocol);
+    return builder.build();
+  }
+
+  /** Direct occurrence assertions attached to Occurrence core. */
+  public static ExtensionFragment occurrenceAssertions(SchemaGraph graph) {
+    SchemaPath assertion = SchemaPath.root("occurrence-assertion");
+    SchemaPath protocol =
+        assertion.append(
+            graph.resolve("occurrence-assertion", "protocol", "assertionProtocol_fk", null));
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment(
+                "occurrence-assertions", ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT, "occurrence-assertion")
+            .scopeKey("occurrence_fk")
+            .rowIdentity(assertion.field("assertionID"))
+            .join("protocol")
+            .via("assertionProtocol_fk")
+            .optional()
+            .exactlyOne()
+            .endJoin();
+
+    addAssertionFields(builder, assertion, protocol);
+    return builder.build();
+  }
+
+  /**
+   * Material assertions attached to Occurrence core only when the occurrence has exactly one
+   * evidence material.
+   */
+  public static ExtensionFragment materialAssertionsForOccurrence(SchemaGraph graph) {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    SchemaPath material =
+        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID", null));
+    SchemaPath assertion =
+        material.append(
+            graph.resolve("material", "material-assertion", "materialEntity_fk", null));
+    SchemaPath protocol =
+        assertion.append(
+            graph.resolve("material-assertion", "protocol", "assertionProtocol_fk", null));
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment(
+                "material-assertions-for-occurrence",
+                ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT,
+                "occurrence")
+            .scopeKey("occurrence_pk")
+            .join("material")
+            .via("evidenceForOccurrenceID")
+            .optional()
+            .exactlyOne()
+            .join("material-assertion")
+            .via("materialEntity_fk")
+            .optional()
+            .fanOut()
+            .join("protocol")
+            .via("assertionProtocol_fk")
+            .optional()
+            .exactlyOne()
+            .endJoin();
+
+    addAssertionFields(builder, assertion, protocol);
+    return builder.build();
+  }
+
+  private static void addAssertionFields(
+      ExtensionFragmentBuilder builder, SchemaPath assertion, SchemaPath protocol) {
     explicit(builder, assertion, "assertionID", "measurementID");
     explicit(builder, assertion, "assertionType", "measurementType");
     explicit(builder, assertion, "assertionTypeIRI", "measurementTypeID");
@@ -53,8 +120,6 @@ public final class AssertionMapping {
             ValueAggregation.firstNonNull(),
             protocol.field("protocolDescription"),
             assertion.field("assertionProtocol_fk")));
-
-    return builder.build();
   }
 
   private static void explicit(

@@ -30,6 +30,16 @@ public final class OccurrenceDwcaMapping {
     return currentCoreBase(graph, "occurrence-core:current-enrichment").build();
   }
 
+  /** Current Occurrence-core enrichments plus direct and material-linked eMoF assertion rows. */
+  public static MappingPlan withAssertions(SchemaGraph graph) {
+    return currentCoreBase(graph, "occurrence-core:assertions")
+        .extension(AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT)
+        .unionRows()
+        .importFragment(AssertionMapping.occurrenceAssertions(graph))
+        .importFragment(AssertionMapping.materialAssertionsForOccurrence(graph))
+        .build();
+  }
+
   /** Current Occurrence-core enrichments plus direct and material-linked Multimedia rows. */
   public static MappingPlan withMultimedia(SchemaGraph graph) {
     return currentCoreBase(graph, "occurrence-core:multimedia")
