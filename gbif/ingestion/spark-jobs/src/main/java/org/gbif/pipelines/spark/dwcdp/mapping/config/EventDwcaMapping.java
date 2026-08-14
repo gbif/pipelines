@@ -16,26 +16,29 @@ public final class EventDwcaMapping {
 
   private EventDwcaMapping() {}
 
-  /** Current legacy Humboldt behaviour for packages using survey-target fan-out. */
-  public static MappingPlan withHumboldtSurveyTargets(SchemaGraph graph) {
-    MappingPlanBuilder.ExtensionBuilder humboldt = eventBase("event-core:humboldt-targets")
-        .extension(HumboldtMapping.ROW_TYPE_HUMBOLDT)
-        .importFragment(HumboldtMapping.surveyTargets(graph))
-        .importFragment(HumboldtMapping.surveyFields(graph))
-        .importFragment(HumboldtMapping.samplingProtocol(graph))
-        .importFragment(HumboldtMapping.samplingEffortProtocol(graph));
+  /**
+   * Current legacy Humboldt behaviour. The survey-target path is optional, so one governing plan
+   * covers datasets with targets, without targets, and with either optional target table absent.
+   */
+  public static MappingPlan withHumboldt(SchemaGraph graph) {
+    MappingPlanBuilder.ExtensionBuilder humboldt =
+        eventBase("event-core:humboldt")
+            .extension(HumboldtMapping.ROW_TYPE_HUMBOLDT)
+            .importFragment(HumboldtMapping.surveyTargets(graph))
+            .importFragment(HumboldtMapping.surveyFields(graph))
+            .importFragment(HumboldtMapping.samplingProtocol(graph))
+            .importFragment(HumboldtMapping.samplingEffortProtocol(graph));
     return humboldt.build();
   }
 
-  /** Current legacy Humboldt behaviour for survey packages without survey-target rows. */
+  /** Compatibility alias retained while the parity migration is in progress. */
+  public static MappingPlan withHumboldtSurveyTargets(SchemaGraph graph) {
+    return withHumboldt(graph);
+  }
+
+  /** Compatibility alias retained while the parity migration is in progress. */
   public static MappingPlan withHumboldtSurveyOnly(SchemaGraph graph) {
-    MappingPlanBuilder.ExtensionBuilder humboldt = eventBase("event-core:humboldt-survey-only")
-        .extension(HumboldtMapping.ROW_TYPE_HUMBOLDT)
-        .importFragment(HumboldtMapping.surveyRows())
-        .importFragment(HumboldtMapping.surveyFields(graph))
-        .importFragment(HumboldtMapping.samplingProtocol(graph))
-        .importFragment(HumboldtMapping.samplingEffortProtocol(graph));
-    return humboldt.build();
+    return withHumboldt(graph);
   }
 
   private static MappingPlanBuilder eventBase(String name) {

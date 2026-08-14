@@ -11,9 +11,7 @@ import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
-
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingCompilationException;
-import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingCompiler;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingDecisionType;
 import org.gbif.pipelines.spark.util.SparkTestSession;
 import org.gbif.pipelines.spark.util.TestTableLoader;
@@ -162,7 +160,9 @@ class SparkExtensionMaterializerTest {
     assertTrue(error instanceof MappingCompilationException);
     MappingCompilationException mappingException = (MappingCompilationException) error;
     assertEquals(1, mappingException.problems().size());
-    assertEquals(MappingDecisionType.AMBIGUOUS_MULTIPLE_EXPLICIT, mappingException.problems().get(0).type());
+    assertEquals(
+        MappingDecisionType.AMBIGUOUS_MULTIPLE_EXPLICIT,
+        mappingException.problems().get(0).type());
   }
 
   private Dataset<Row> survey() {

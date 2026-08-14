@@ -15,7 +15,7 @@ import org.gbif.pipelines.spark.dwcdp.mapping.ValueAggregation;
 public final class HumboldtMapping {
 
   /** DwC-A Humboldt Ecological Inventory extension row type. */
-  public static final String ROW_TYPE_HUMBOLDT = "http://rs.gbif.org/terms/1.0/Humboldt";
+  public static final String ROW_TYPE_HUMBOLDT = "http://rs.tdwg.org/eco/terms/Event";
 
   private HumboldtMapping() {}
 
