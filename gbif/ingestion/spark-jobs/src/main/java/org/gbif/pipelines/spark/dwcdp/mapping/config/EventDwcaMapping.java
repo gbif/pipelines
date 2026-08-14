@@ -16,6 +16,63 @@ public final class EventDwcaMapping {
 
   private EventDwcaMapping() {}
 
+
+  /** Canonical currently migrated Event-core mapping used for inspection and replacement wiring. */
+  public static MappingPlan current(SchemaGraph graph) {
+    MappingPlanBuilder builder = eventDirectBase(graph, "event-core:current")
+        .mergeCoreTarget(DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
+        .mergeCoreTarget(DwcTerm.georeferenceProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
+        .mergeCoreTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
+        .mergeCoreTarget(TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
+        .mergeCoreTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
+        .mergeCoreTarget(TargetTerms.resolve("projectTitle"), ValueAggregation.pipeDelimited())
+        .importCoreFragment(EventCoreMapping.parentEvent(graph))
+        .importCoreFragment(EventCoreMapping.geologicalContext(graph))
+        .importCoreFragment(EventCoreMapping.eventConductedBy(graph))
+        .importCoreFragment(EventCoreMapping.georeferencedBy(graph))
+        .importCoreFragment(EventCoreMapping.directSamplingProtocol(graph))
+        .importCoreFragment(EventCoreMapping.directGeoreferenceProtocol(graph))
+        .importCoreFragment(EventCoreMapping.eventProtocols(graph))
+        .importCoreFragment(EventCoreMapping.surveyProtocols(graph))
+        .importCoreFragment(EventCoreMapping.eventGeoreferenceProtocols(graph))
+        .importCoreFragment(EventCoreMapping.surveyGeoreferenceProtocols(graph))
+        .importCoreFragment(EventCoreMapping.directProvenance(graph))
+        .importCoreFragment(EventCoreMapping.eventProvenance(graph));
+
+    builder
+        .extension(OccurrenceMapping.ROW_TYPE_OCCURRENCE)
+        .mergeTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
+        .mergeTarget(TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
+        .mergeTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
+        .mergeTarget(TargetTerms.resolve("projectTitle"), ValueAggregation.pipeDelimited())
+        .importFragment(OccurrenceMapping.directOccurrence(graph))
+        .importFragment(OccurrenceMapping.organism(graph))
+        .importFragment(OccurrenceMapping.acceptedIdentification(graph))
+        .importFragment(OccurrenceMapping.material(graph))
+        .importFragment(OccurrenceMapping.materialDirectProvenance(graph))
+        .importFragment(OccurrenceMapping.materialProvenance(graph))
+        .endExtension()
+        .extension(MultimediaMapping.ROW_TYPE_MULTIMEDIA)
+        .unionRows()
+        .limitRowsPerParent(50)
+        .importFragment(MultimediaMapping.eventMedia(graph))
+        .importFragment(MultimediaMapping.occurrenceMediaForEvent(graph))
+        .importFragment(MultimediaMapping.materialMediaForEvent(graph))
+        .endExtension()
+        .extension(AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT)
+        .importFragment(AssertionMapping.eventAssertions(graph))
+        .endExtension()
+        .extension(IdentifierMapping.ROW_TYPE_IDENTIFIER)
+        .importFragment(IdentifierMapping.eventIdentifiers(graph))
+        .endExtension()
+        .extension(HumboldtMapping.ROW_TYPE_HUMBOLDT)
+        .importFragment(HumboldtMapping.surveyTargets(graph))
+        .importFragment(HumboldtMapping.surveyFields(graph))
+        .importFragment(HumboldtMapping.samplingProtocol(graph))
+        .importFragment(HumboldtMapping.samplingEffortProtocol(graph));
+    return builder.build();
+  }
+
   /**
    * Current legacy Humboldt behaviour. The survey-target path is optional, so one governing plan
    * covers datasets with targets, without targets, and with either optional target table absent.

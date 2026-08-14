@@ -30,6 +30,42 @@ public final class OccurrenceDwcaMapping {
     return currentCoreBase(graph, "occurrence-core:current-enrichment").build();
   }
 
+
+  /** Current Occurrence-core enrichments plus direct and material-linked Identifier rows. */
+  public static MappingPlan withIdentifiers(SchemaGraph graph) {
+    return currentCoreBase(graph, "occurrence-core:identifiers")
+        .extension(IdentifierMapping.ROW_TYPE_IDENTIFIER)
+        .unionRows()
+        .importFragment(IdentifierMapping.occurrenceIdentifiers(graph))
+        .importFragment(IdentifierMapping.materialIdentifiersForOccurrence(graph))
+        .build();
+  }
+
+  /** Canonical currently migrated Occurrence-core mapping used for inspection and replacement wiring. */
+  public static MappingPlan current(SchemaGraph graph) {
+    MappingPlanBuilder builder = currentCoreBase(graph, "occurrence-core:current");
+    builder
+        .extension(MultimediaMapping.ROW_TYPE_MULTIMEDIA)
+        .unionRows()
+        .limitRowsPerParent(50)
+        .importFragment(MultimediaMapping.occurrenceMedia(graph))
+        .importFragment(MultimediaMapping.materialMediaForOccurrence(graph))
+        .endExtension()
+        .extension(AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT)
+        .unionRows()
+        .importFragment(AssertionMapping.occurrenceAssertions(graph))
+        .importFragment(AssertionMapping.materialAssertionsForOccurrence(graph))
+        .endExtension()
+        .extension(IdentificationMapping.ROW_TYPE_IDENTIFICATION)
+        .importFragment(IdentificationMapping.occurrenceHistory(graph))
+        .endExtension()
+        .extension(IdentifierMapping.ROW_TYPE_IDENTIFIER)
+        .unionRows()
+        .importFragment(IdentifierMapping.occurrenceIdentifiers(graph))
+        .importFragment(IdentifierMapping.materialIdentifiersForOccurrence(graph));
+    return builder.build();
+  }
+
   /** Current Occurrence-core enrichments plus direct and material-linked eMoF assertion rows. */
   public static MappingPlan withAssertions(SchemaGraph graph) {
     return currentCoreBase(graph, "occurrence-core:assertions")
