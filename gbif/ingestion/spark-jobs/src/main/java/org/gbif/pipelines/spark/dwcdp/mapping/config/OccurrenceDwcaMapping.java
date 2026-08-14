@@ -62,8 +62,23 @@ public final class OccurrenceDwcaMapping {
         .extension(IdentifierMapping.ROW_TYPE_IDENTIFIER)
         .unionRows()
         .importFragment(IdentifierMapping.occurrenceIdentifiers(graph))
-        .importFragment(IdentifierMapping.materialIdentifiersForOccurrence(graph));
+        .importFragment(IdentifierMapping.materialIdentifiersForOccurrence(graph))
+        .endExtension()
+        .extension(NucleotideMapping.ROW_TYPE_DNA_DERIVED_DATA)
+        .importFragment(NucleotideMapping.materialAnalysesForOccurrence(graph))
+        .importFragment(NucleotideMapping.materialAnalysisSequenceForOccurrence(graph))
+        .importFragment(NucleotideMapping.materialAnalysisProtocolForOccurrence(graph));
     return builder.build();
+  }
+
+  /** Current Occurrence-core enrichments plus DNA analyses linked through the evidence material. */
+  public static MappingPlan withNucleotide(SchemaGraph graph) {
+    return currentCoreBase(graph, "occurrence-core:nucleotide")
+        .extension(NucleotideMapping.ROW_TYPE_DNA_DERIVED_DATA)
+        .importFragment(NucleotideMapping.materialAnalysesForOccurrence(graph))
+        .importFragment(NucleotideMapping.materialAnalysisSequenceForOccurrence(graph))
+        .importFragment(NucleotideMapping.materialAnalysisProtocolForOccurrence(graph))
+        .build();
   }
 
   /** Current Occurrence-core enrichments plus direct and material-linked eMoF assertion rows. */

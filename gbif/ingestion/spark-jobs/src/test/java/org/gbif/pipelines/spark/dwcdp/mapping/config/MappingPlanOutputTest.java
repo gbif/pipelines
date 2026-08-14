@@ -49,5 +49,6 @@ class MappingPlanOutputTest {
     assertTrue(trace.contains("Extension: " + AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT));
     assertTrue(trace.contains("Extension: " + IdentificationMapping.ROW_TYPE_IDENTIFICATION));
     assertTrue(trace.contains("Extension: " + IdentifierMapping.ROW_TYPE_IDENTIFIER));
+    assertTrue(trace.contains("Extension: " + NucleotideMapping.ROW_TYPE_DNA_DERIVED_DATA));
   }
 }
