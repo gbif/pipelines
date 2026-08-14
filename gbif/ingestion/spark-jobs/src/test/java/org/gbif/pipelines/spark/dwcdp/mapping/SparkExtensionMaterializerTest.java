@@ -165,6 +165,58 @@ class SparkExtensionMaterializerTest {
         mappingException.problems().get(0).type());
   }
 
+  @Test
+  void explicitlyMergedExtensionTargetCombinesIndependentProducers() {
+    SchemaPath surveyPath = SchemaPath.root("survey");
+
+    ExtensionFragment first =
+        ExtensionFragmentBuilder.extensionFragment("first-fragment", HUMBOLDT, "survey")
+            .rowIdentity(surveyPath.field("survey_pk"))
+            .field(
+                TargetFieldMapping.oneOf(
+                    TERM_SITE_COUNT,
+                    ValueAggregation.firstNonNull(),
+                    surveyPath.field("siteCount")))
+            .build();
+
+    ExtensionFragment second =
+        ExtensionFragmentBuilder.extensionFragment("second-fragment", HUMBOLDT, "survey")
+            .field(
+                TargetFieldMapping.oneOf(
+                    TERM_SITE_COUNT,
+                    ValueAggregation.firstNonNull(),
+                    surveyPath.field("event_fk")))
+            .build();
+
+    ExtensionMapping extension =
+        new ExtensionMapping(
+            HUMBOLDT,
+            ExtensionRowComposition.ENRICH,
+            java.util.Optional.empty(),
+            List.of(new TargetMerge(TERM_SITE_COUNT, ValueAggregation.pipeDelimitedDistinct())),
+            List.of(first, second));
+
+    org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledExtension compiled =
+        new org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingCompiler(graph).compile(extension);
+    assertEquals(1, compiled.targetMerges().size());
+    assertEquals(
+        MappingDecisionType.EXPLICIT_MERGE,
+        compiled.decisions().stream()
+            .filter(decision -> decision.targetTerm().equals(TERM_SITE_COUNT))
+            .findFirst()
+            .orElseThrow()
+            .type());
+
+    ExtensionMaterializationResult result =
+        new SparkExtensionMaterializer(graph)
+            .materialize(TestTableLoader.of("survey", survey()), compiled);
+
+    List<Row> rows = result.dataset().collectAsList();
+    assertEquals(1, rows.size());
+    String merged = rows.get(0).getAs(result.columnName(TERM_SITE_COUNT));
+    assertEquals("3|E1", merged);
+  }
+
   private Dataset<Row> survey() {
     return spark.createDataFrame(
         List.of(RowFactory.create("S1", "E1", "3")),

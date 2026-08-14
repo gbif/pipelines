@@ -16,6 +16,32 @@ public final class MappingTraceRenderer {
       }
     }
 
+    for (CompiledCoreFragment fragment : mapping.coreFragments()) {
+      out.append("\nCore fragment: ").append(fragment.name()).append('\n');
+      out.append("  Source: ").append(fragment.sourceResource()).append('\n');
+      if (!fragment.relations().isEmpty()) {
+        out.append("  Path:\n");
+        for (CompiledRelationStep relation : fragment.relations()) {
+          out.append("    - ").append(relation.describe()).append('\n');
+        }
+      }
+      for (CompiledTargetProducer target : fragment.targets()) {
+        renderTarget(out, target, "  ");
+      }
+    }
+
+    if (!mapping.coreTargetMerges().isEmpty()) {
+      out.append("\nCore target merges:\n");
+      for (CompiledTargetMerge merge : mapping.coreTargetMerges()) {
+        out.append("  Target: ").append(merge.targetTerm()).append('\n');
+        out.append("    Aggregation: ").append(merge.aggregation()).append('\n');
+        out.append("    Producers:\n");
+        for (CompiledTargetProducer producer : merge.producers()) {
+          out.append("      - ").append(producer.owner()).append('\n');
+        }
+      }
+    }
+
     if (!mapping.coreDecisions().isEmpty()) {
       out.append("\nCore decisions:\n");
       for (MappingDecision decision : mapping.coreDecisions()) {
@@ -28,6 +54,13 @@ public final class MappingTraceRenderer {
       out.append("  Row composition: ").append(extension.rowComposition()).append('\n');
       extension.maxRowsPerParent().ifPresent(
           limit -> out.append("  Max rows per parent: ").append(limit).append('\n'));
+      if (!extension.targetMerges().isEmpty()) {
+        out.append("  Target merges:\n");
+        for (CompiledTargetMerge merge : extension.targetMerges()) {
+          out.append("    Target: ").append(merge.targetTerm()).append('\n');
+          out.append("      Aggregation: ").append(merge.aggregation()).append('\n');
+        }
+      }
       if (!extension.decisions().isEmpty()) {
         out.append("  Decisions:\n");
         for (MappingDecision decision : extension.decisions()) {

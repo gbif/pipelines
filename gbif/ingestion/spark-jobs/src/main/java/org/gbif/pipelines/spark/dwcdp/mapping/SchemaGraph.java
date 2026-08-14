@@ -21,7 +21,12 @@ public interface SchemaGraph {
       String sourceResource, String targetResource, String viaColumn, String predicate) {
     List<SchemaRelation> candidates = relations(sourceResource, targetResource);
     if (viaColumn != null) {
-      candidates = candidates.stream().filter(r -> r.usesColumn(viaColumn)).toList();
+      List<SchemaRelation> sourceMatches =
+          candidates.stream().filter(r -> r.sourceColumn().equals(viaColumn)).toList();
+      candidates =
+          sourceMatches.isEmpty()
+              ? candidates.stream().filter(r -> r.usesColumn(viaColumn)).toList()
+              : sourceMatches;
     }
     if (predicate != null) {
       candidates = candidates.stream()

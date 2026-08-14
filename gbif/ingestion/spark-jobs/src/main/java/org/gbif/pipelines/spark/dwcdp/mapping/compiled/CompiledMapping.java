@@ -5,14 +5,14 @@ import java.util.List;
 import java.util.Objects;
 import org.gbif.pipelines.spark.dwcdp.mapping.CoreType;
 
-/**
- * Schema-resolved, ambiguity-checked, engine-neutral mapping between configuration and execution.
- */
+/** Schema-resolved, ambiguity-checked, engine-neutral mapping between configuration and execution. */
 public record CompiledMapping(
     String name,
     CoreType coreType,
     String coreSourceResource,
     List<CompiledTargetProducer> coreTargets,
+    List<CompiledCoreFragment> coreFragments,
+    List<CompiledTargetMerge> coreTargetMerges,
     List<CompiledExtension> extensions,
     List<MappingDecision> coreDecisions) {
 
@@ -21,6 +21,8 @@ public record CompiledMapping(
     Objects.requireNonNull(coreType, "coreType");
     Objects.requireNonNull(coreSourceResource, "coreSourceResource");
     coreTargets = List.copyOf(coreTargets);
+    coreFragments = List.copyOf(coreFragments);
+    coreTargetMerges = List.copyOf(coreTargetMerges);
     extensions = List.copyOf(extensions);
     coreDecisions = List.copyOf(coreDecisions);
   }

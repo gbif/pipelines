@@ -38,4 +38,12 @@ class ClasspathSchemaGraphTest {
         () -> graph.resolve("agent-agent-role", "agent"));
     assertTrue(ex.getMessage().contains("Ambiguous"));
   }
+  @Test
+  void selfReferenceViaColumnPrefersForwardTraversal() {
+    SchemaRelation relation = graph.resolve("event", "event", "parentEvent_fk");
+    assertEquals("parentEvent_fk", relation.sourceColumn());
+    assertEquals("event_pk", relation.targetColumn());
+    assertEquals(RelationCardinality.MANY_TO_ONE, relation.cardinality());
+  }
+
 }

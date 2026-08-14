@@ -9,6 +9,8 @@ public record MappingPlan(
     CoreType coreType,
     String coreSourceResource,
     List<TargetFieldMapping> coreFields,
+    List<CoreFragment> coreFragments,
+    List<TargetMerge> coreTargetMerges,
     List<ExtensionMapping> extensions) {
 
   public MappingPlan {
@@ -16,6 +18,8 @@ public record MappingPlan(
     Objects.requireNonNull(coreType, "coreType");
     Objects.requireNonNull(coreSourceResource, "coreSourceResource");
     coreFields = List.copyOf(coreFields);
+    coreFragments = List.copyOf(coreFragments);
+    coreTargetMerges = List.copyOf(coreTargetMerges);
     extensions = List.copyOf(extensions);
   }
 }

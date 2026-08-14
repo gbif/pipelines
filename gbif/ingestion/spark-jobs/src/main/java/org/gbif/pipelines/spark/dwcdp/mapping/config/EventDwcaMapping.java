@@ -62,6 +62,25 @@ public final class EventDwcaMapping {
         .build();
   }
 
+  /** Direct Event fields plus the non-aggregating Event-core enrichments. */
+  public static MappingPlan withCoreEnrichments(SchemaGraph graph) {
+    MappingPlanBuilder builder = eventDirectBase(graph, "event-core:core-enrichments");
+    return builder
+        .mergeCoreTarget(DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
+        .mergeCoreTarget(DwcTerm.georeferenceProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
+        .importCoreFragment(EventCoreMapping.parentEvent(graph))
+        .importCoreFragment(EventCoreMapping.geologicalContext(graph))
+        .importCoreFragment(EventCoreMapping.eventConductedBy(graph))
+        .importCoreFragment(EventCoreMapping.georeferencedBy(graph))
+        .importCoreFragment(EventCoreMapping.directSamplingProtocol(graph))
+        .importCoreFragment(EventCoreMapping.directGeoreferenceProtocol(graph))
+        .importCoreFragment(EventCoreMapping.eventProtocols(graph))
+        .importCoreFragment(EventCoreMapping.surveyProtocols(graph))
+        .importCoreFragment(EventCoreMapping.eventGeoreferenceProtocols(graph))
+        .importCoreFragment(EventCoreMapping.surveyGeoreferenceProtocols(graph))
+        .build();
+  }
+
   /** Compatibility alias retained while the parity migration is in progress. */
   public static MappingPlan withHumboldtSurveyTargets(SchemaGraph graph) {
     return withHumboldt(graph);
@@ -70,6 +89,12 @@ public final class EventDwcaMapping {
   /** Compatibility alias retained while the parity migration is in progress. */
   public static MappingPlan withHumboldtSurveyOnly(SchemaGraph graph) {
     return withHumboldt(graph);
+  }
+
+  private static MappingPlanBuilder eventDirectBase(SchemaGraph graph, String name) {
+    MappingPlanBuilder builder = eventBase(name);
+    DirectFieldMappings.from(graph, "event", SchemaPath.root("event")).addTo(builder);
+    return builder;
   }
 
   private static MappingPlanBuilder eventBase(String name) {

@@ -11,9 +11,12 @@ public final class MappingPlanBuilder {
   private final CoreType coreType;
   private final String coreSourceResource;
   private final List<TargetFieldMapping> coreFields = new ArrayList<>();
+  private final List<CoreFragment> coreFragments = new ArrayList<>();
+  private final Map<String, TargetMerge> coreTargetMerges = new LinkedHashMap<>();
   private final Map<String, List<ExtensionFragment>> extensions = new LinkedHashMap<>();
   private final Map<String, ExtensionRowComposition> extensionCompositions = new LinkedHashMap<>();
   private final Map<String, Integer> extensionRowLimits = new LinkedHashMap<>();
+  private final Map<String, Map<String, TargetMerge>> extensionTargetMerges = new LinkedHashMap<>();
 
   private MappingPlanBuilder(String name, CoreType coreType, String coreSourceResource) {
     this.name = name;
@@ -31,6 +34,20 @@ public final class MappingPlanBuilder {
     return this;
   }
 
+  public MappingPlanBuilder importCoreFragment(CoreFragment fragment) {
+    coreFragments.add(fragment);
+    return this;
+  }
+
+  /** Explicitly allows independent producers to contribute additively to one core target. */
+  public MappingPlanBuilder mergeCoreTarget(String targetTerm, ValueAggregation aggregation) {
+    TargetMerge previous = coreTargetMerges.put(targetTerm, new TargetMerge(targetTerm, aggregation));
+    if (previous != null && !previous.aggregation().equals(aggregation)) {
+      throw new IllegalArgumentException("Conflicting merge semantics for core target: " + targetTerm);
+    }
+    return this;
+  }
+
   public ExtensionBuilder extension(String rowType) {
     return new ExtensionBuilder(this, rowType);
   }
@@ -45,9 +62,12 @@ public final class MappingPlanBuilder {
                         extensionCompositions.getOrDefault(
                             e.getKey(), ExtensionRowComposition.ENRICH),
                         java.util.Optional.ofNullable(extensionRowLimits.get(e.getKey())),
+                        new ArrayList<>(extensionTargetMerges.getOrDefault(e.getKey(), Map.of()).values()),
                         e.getValue()))
             .toList();
-    return new MappingPlan(name, coreType, coreSourceResource, coreFields, builtExtensions);
+    return new MappingPlan(
+        name, coreType, coreSourceResource, coreFields, coreFragments,
+        new ArrayList<>(coreTargetMerges.values()), builtExtensions);
   }
 
   public static final class ExtensionBuilder {
@@ -71,6 +91,18 @@ public final class MappingPlanBuilder {
         throw new IllegalArgumentException("maxRows must be > 0");
       }
       parent.extensionRowLimits.put(rowType, maxRows);
+      return this;
+    }
+
+    /** Explicitly allows independent producers to contribute additively to one extension target. */
+    public ExtensionBuilder mergeTarget(String targetTerm, ValueAggregation aggregation) {
+      Map<String, TargetMerge> merges =
+          parent.extensionTargetMerges.computeIfAbsent(rowType, ignored -> new LinkedHashMap<>());
+      TargetMerge previous = merges.put(targetTerm, new TargetMerge(targetTerm, aggregation));
+      if (previous != null && !previous.aggregation().equals(aggregation)) {
+        throw new IllegalArgumentException(
+            "Conflicting merge semantics for extension target " + rowType + ": " + targetTerm);
+      }
       return this;
     }
 

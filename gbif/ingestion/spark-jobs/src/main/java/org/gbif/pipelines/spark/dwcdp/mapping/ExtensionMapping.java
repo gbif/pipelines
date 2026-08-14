@@ -9,21 +9,23 @@ public record ExtensionMapping(
     String rowType,
     ExtensionRowComposition rowComposition,
     Optional<Integer> maxRowsPerParent,
+    List<TargetMerge> targetMerges,
     List<ExtensionFragment> fragments) {
 
   public ExtensionMapping(String rowType, List<ExtensionFragment> fragments) {
-    this(rowType, ExtensionRowComposition.ENRICH, Optional.empty(), fragments);
+    this(rowType, ExtensionRowComposition.ENRICH, Optional.empty(), List.of(), fragments);
   }
 
   public ExtensionMapping(
       String rowType, ExtensionRowComposition rowComposition, List<ExtensionFragment> fragments) {
-    this(rowType, rowComposition, Optional.empty(), fragments);
+    this(rowType, rowComposition, Optional.empty(), List.of(), fragments);
   }
 
   public ExtensionMapping {
     Objects.requireNonNull(rowType, "rowType");
     Objects.requireNonNull(rowComposition, "rowComposition");
     maxRowsPerParent = Objects.requireNonNull(maxRowsPerParent, "maxRowsPerParent");
+    targetMerges = List.copyOf(targetMerges);
     maxRowsPerParent.ifPresent(
         limit -> {
           if (limit <= 0) {

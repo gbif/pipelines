@@ -10,12 +10,14 @@ public record CompiledExtension(
     String rowType,
     ExtensionRowComposition rowComposition,
     Optional<Integer> maxRowsPerParent,
+    List<CompiledTargetMerge> targetMerges,
     List<CompiledFragment> fragments,
     List<MappingDecision> decisions) {
   public CompiledExtension {
     Objects.requireNonNull(rowType, "rowType");
     Objects.requireNonNull(rowComposition, "rowComposition");
     maxRowsPerParent = Objects.requireNonNull(maxRowsPerParent, "maxRowsPerParent");
+    targetMerges = List.copyOf(targetMerges);
     fragments = List.copyOf(fragments);
     decisions = List.copyOf(decisions);
   }

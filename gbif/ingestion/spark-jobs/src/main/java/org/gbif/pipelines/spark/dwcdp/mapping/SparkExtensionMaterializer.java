@@ -20,6 +20,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.HashSet;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -97,10 +99,15 @@ public final class SparkExtensionMaterializer {
       }
     }
 
-    FragmentResult materializedBase = materializeFragment(loader, base, true, false);
+    Set<String> mergeTerms =
+        extension.targetMerges().stream()
+            .map(org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledTargetMerge::targetTerm)
+            .collect(java.util.stream.Collectors.toCollection(HashSet::new));
+    FragmentResult materializedBase = materializeFragment(loader, base, true, false, mergeTerms);
     Dataset<Row> current = materializedBase.dataset();
-    Map<String, MaterializedTarget> targets =
-        new LinkedHashMap<>(materializedBase.targets());
+    Map<String, MaterializedTarget> targets = new LinkedHashMap<>();
+    Map<String, List<MaterializedTarget>> mergeContributions = new LinkedHashMap<>();
+    collectTargets(materializedBase.targets(), mergeTerms, targets, mergeContributions);
 
     for (CompiledFragment fragment : extension.fragments()) {
       if (fragment == base) {
@@ -111,8 +118,8 @@ public final class SparkExtensionMaterializer {
             "Only one row-defining fragment is supported for ENRICH composition: " + fragment.name());
       }
 
-      FragmentResult enrichment = materializeFragment(loader, fragment, false, false);
-      ensureNoDuplicateTargets(targets, enrichment.targets());
+      FragmentResult enrichment = materializeFragment(loader, fragment, false, false, mergeTerms);
+      ensureNoDuplicateTargets(targets, enrichment.targets(), mergeTerms);
 
       Dataset<Row> enrichmentForJoin = enrichment.dataset().drop(COL_ROW_KEY);
       current =
@@ -121,11 +128,21 @@ public final class SparkExtensionMaterializer {
                   current.col(COL_PARENT_KEY).equalTo(enrichmentForJoin.col(COL_PARENT_KEY)),
                   "left_outer")
               .drop(enrichmentForJoin.col(COL_PARENT_KEY));
-      targets.putAll(enrichment.targets());
+      collectTargets(enrichment.targets(), mergeTerms, targets, mergeContributions);
     }
 
     Map<String, String> targetColumns = new LinkedHashMap<>();
     targets.forEach((term, target) -> targetColumns.put(term, target.physicalColumn()));
+    for (org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledTargetMerge merge : extension.targetMerges()) {
+      List<MaterializedTarget> contributions =
+          mergeContributions.getOrDefault(merge.targetTerm(), List.of());
+      if (contributions.isEmpty()) {
+        continue;
+      }
+      String alias = targetAlias(merge.targetTerm());
+      current = current.withColumn(alias, mergeExpression(merge, contributions));
+      targetColumns.put(merge.targetTerm(), alias);
+    }
     current = filterEmptyPayloadRows(current, targetColumns.values().stream().toList());
     current = applyRowLimit(current, targetColumns.values().stream().toList(), extension.maxRowsPerParent());
     return new ExtensionMaterializationResult(
@@ -141,7 +158,7 @@ public final class SparkExtensionMaterializer {
       if (loader.load(fragment.sourceResource()).isEmpty()) {
         continue;
       }
-      FragmentResult materialized = materializeFragment(loader, fragment, true, true);
+      FragmentResult materialized = materializeFragment(loader, fragment, true, true, Set.of());
       rows.add(materialized);
       materialized.targets().forEach(targets::putIfAbsent);
     }
@@ -237,7 +254,8 @@ public final class SparkExtensionMaterializer {
       TableLoader loader,
       CompiledFragment fragment,
       boolean rowProducing,
-      boolean filterEmptyPayload) {
+      boolean filterEmptyPayload,
+      Set<String> mergeTerms) {
     graph.resource(fragment.sourceResource())
         .orElseThrow(
             () ->
@@ -271,7 +289,7 @@ public final class SparkExtensionMaterializer {
     Map<String, MaterializedTarget> targets = new LinkedHashMap<>();
     List<Column> aggregates = new ArrayList<>();
     for (CompiledTargetProducer target : fragment.targets()) {
-      String alias = targetAlias(target.targetTerm());
+      String alias = targetAlias(target.targetTerm(), target.owner(), mergeTerms);
       MaterializedTarget materializedTarget = bindTarget(target, alias, pathResult);
       MaterializedTarget previous = targets.putIfAbsent(target.targetTerm(), materializedTarget);
       if (previous != null) {
@@ -294,7 +312,7 @@ public final class SparkExtensionMaterializer {
       selected.add(col(parentAlias).cast("string").as(COL_PARENT_KEY));
       selected.add(monotonically_increasing_id().cast("string").as(COL_ROW_KEY));
       for (CompiledTargetProducer target : fragment.targets()) {
-        selected.add(rowExpression(target, pathResult).as(targetAlias(target.targetTerm())));
+        selected.add(rowExpression(target, pathResult).as(targetAlias(target.targetTerm(), target.owner(), mergeTerms)));
       }
       grouped = pathResult.dataset().select(selected.toArray(Column[]::new));
     } else if (aggregates.isEmpty()) {
@@ -406,13 +424,60 @@ public final class SparkExtensionMaterializer {
   }
 
   private static void ensureNoDuplicateTargets(
-      Map<String, MaterializedTarget> existing, Map<String, MaterializedTarget> incoming) {
+      Map<String, MaterializedTarget> existing,
+      Map<String, MaterializedTarget> incoming,
+      Set<String> mergeTerms) {
     for (Map.Entry<String, MaterializedTarget> entry : incoming.entrySet()) {
+      if (mergeTerms.contains(entry.getKey())) {
+        continue;
+      }
       MaterializedTarget previous = existing.get(entry.getKey());
       if (previous != null) {
         throw duplicateTargetException(entry.getKey(), previous, entry.getValue());
       }
     }
+  }
+
+  private static void collectTargets(
+      Map<String, MaterializedTarget> incoming,
+      Set<String> mergeTerms,
+      Map<String, MaterializedTarget> ordinary,
+      Map<String, List<MaterializedTarget>> merged) {
+    incoming.forEach(
+        (term, target) -> {
+          if (mergeTerms.contains(term)) {
+            merged.computeIfAbsent(term, ignored -> new ArrayList<>()).add(target);
+          } else {
+            ordinary.put(term, target);
+          }
+        });
+  }
+
+  private static Column mergeExpression(
+      org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledTargetMerge merge,
+      List<MaterializedTarget> contributions) {
+    if (merge.aggregation() instanceof ValueAggregation.Delimited delimited) {
+      Column values = array(
+          contributions.stream()
+              .map(target -> col(target.physicalColumn()).cast("string"))
+              .toArray(Column[]::new));
+      if (delimited.distinct()) {
+        values = array_distinct(values);
+      }
+      Column hasValue = null;
+      for (MaterializedTarget contribution : contributions) {
+        Column value = col(contribution.physicalColumn()).cast("string");
+        Column present = value.isNotNull().and(value.notEqual(""));
+        hasValue = hasValue == null ? present : hasValue.or(present);
+      }
+      return org.apache.spark.sql.functions.when(
+          hasValue, concat_ws(delimited.delimiter(), sort_array(values)));
+    }
+    throw new UnsupportedOperationException(
+        "Unsupported extension target merge aggregation: "
+            + merge.targetTerm()
+            + " / "
+            + merge.aggregation());
   }
 
   private static IllegalStateException duplicateTargetException(
@@ -431,6 +496,12 @@ public final class SparkExtensionMaterializer {
 
   private static String targetAlias(String term) {
     return "__dwca_term__" + shortHash(term);
+  }
+
+  private static String targetAlias(String term, String owner, Set<String> mergeTerms) {
+    return mergeTerms.contains(term)
+        ? "__dwca_term_contribution__" + shortHash(term + "|" + owner)
+        : targetAlias(term);
   }
 
   private static String shortHash(String value) {

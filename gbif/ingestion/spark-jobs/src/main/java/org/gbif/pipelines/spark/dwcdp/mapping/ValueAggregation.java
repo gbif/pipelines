@@ -7,6 +7,8 @@ public sealed interface ValueAggregation
     permits ValueAggregation.FirstNonNull,
         ValueAggregation.ExactlyOne,
         ValueAggregation.Delimited,
+        ValueAggregation.LabeledOrFallback,
+        ValueAggregation.PreferredLabeledOrFallback,
         ValueAggregation.Named {
 
   record FirstNonNull() implements ValueAggregation {}
@@ -16,6 +18,20 @@ public sealed interface ValueAggregation
   record Delimited(String delimiter, boolean distinct) implements ValueAggregation {
     public Delimited {
       Objects.requireNonNull(delimiter, "delimiter");
+    }
+  }
+
+  /** Uses label + separator + name when both are present, otherwise the fallback source. */
+  record LabeledOrFallback(String separator) implements ValueAggregation {
+    public LabeledOrFallback {
+      Objects.requireNonNull(separator, "separator");
+    }
+  }
+
+  /** Preferred source wins; otherwise uses label + separator + name, then fallbacks in order. */
+  record PreferredLabeledOrFallback(String separator) implements ValueAggregation {
+    public PreferredLabeledOrFallback {
+      Objects.requireNonNull(separator, "separator");
     }
   }
 
@@ -35,6 +51,14 @@ public sealed interface ValueAggregation
 
   static ValueAggregation pipeDelimitedDistinct() {
     return new Delimited("|", true);
+  }
+
+  static ValueAggregation labeledOrFallback(String separator) {
+    return new LabeledOrFallback(separator);
+  }
+
+  static ValueAggregation preferredLabeledOrFallback(String separator) {
+    return new PreferredLabeledOrFallback(separator);
   }
 
   static ValueAggregation named(String name) {

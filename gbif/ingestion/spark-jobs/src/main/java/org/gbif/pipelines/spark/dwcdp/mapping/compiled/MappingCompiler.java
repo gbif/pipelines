@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.gbif.pipelines.spark.dwcdp.mapping.CoreFragment;
+import org.gbif.pipelines.spark.dwcdp.mapping.TargetMerge;
 import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.FieldRef;
@@ -37,14 +39,68 @@ public final class MappingCompiler {
       throw new MappingCompilationException(structuralProblems);
     }
 
-    Resolution core = resolveTargets(
-        "core:" + plan.coreSourceResource(),
-        plan.coreFields().stream().map(field -> compileTarget("core", field)).toList());
+    List<CompiledTargetProducer> rootCoreTargets =
+        plan.coreFields().stream().map(field -> compileTarget("core", field)).toList();
+    List<CompiledCoreFragment> rawCoreFragments =
+        plan.coreFragments().stream().map(this::compileCoreFragment).toList();
+    List<CompiledTargetProducer> coreCandidates = new ArrayList<>(rootCoreTargets);
+    rawCoreFragments.forEach(fragment -> coreCandidates.addAll(fragment.targets()));
+
+    Map<String, TargetMerge> mergeDeclarations =
+        plan.coreTargetMerges().stream()
+            .collect(Collectors.toMap(
+                TargetMerge::targetTerm,
+                merge -> merge,
+                (left, right) -> left,
+                LinkedHashMap::new));
+    List<CompiledTargetMerge> coreTargetMerges = new ArrayList<>();
+    List<MappingDecision> mergeDecisions = new ArrayList<>();
+    for (TargetMerge merge : mergeDeclarations.values()) {
+      List<CompiledTargetProducer> producers =
+          coreCandidates.stream()
+              .filter(candidate -> candidate.targetTerm().equals(merge.targetTerm()))
+              .toList();
+      if (!producers.isEmpty()) {
+        coreTargetMerges.add(
+            new CompiledTargetMerge(merge.targetTerm(), merge.aggregation(), producers));
+        mergeDecisions.add(
+            new MappingDecision(
+                "core:" + plan.coreSourceResource(),
+                merge.targetTerm(),
+                MappingDecisionType.EXPLICIT_MERGE,
+                Optional.empty(),
+                producers,
+                "Independent core producers are merged using explicitly declared semantics: "
+                    + merge.aggregation()));
+      }
+    }
+
+    List<CompiledTargetProducer> nonMergeCandidates =
+        coreCandidates.stream()
+            .filter(candidate -> !mergeDeclarations.containsKey(candidate.targetTerm()))
+            .toList();
+    Resolution core = resolveTargets("core:" + plan.coreSourceResource(), nonMergeCandidates);
+    List<CompiledTargetProducer> selectedCore = new ArrayList<>(core.selected());
+    coreTargetMerges.forEach(merge -> selectedCore.addAll(merge.producers()));
+    List<CompiledTargetProducer> selectedRootCoreTargets =
+        rootCoreTargets.stream().filter(selectedCore::contains).toList();
+    List<CompiledCoreFragment> coreFragments =
+        rawCoreFragments.stream()
+            .map(
+                fragment ->
+                    new CompiledCoreFragment(
+                        fragment.name(),
+                        fragment.sourceResource(),
+                        fragment.path(),
+                        fragment.relations(),
+                        fragment.targets().stream().filter(selectedCore::contains).toList()))
+            .toList();
 
     List<CompiledExtension> extensions =
         plan.extensions().stream().map(extension -> compileExtensionInternal(extension)).toList();
     List<MappingDecision> problems = new ArrayList<>();
     problems.addAll(core.decisions().stream().filter(MappingDecision::problem).toList());
+    problems.addAll(mergeDecisions.stream().filter(MappingDecision::problem).toList());
     extensions.forEach(
         extension -> problems.addAll(
             extension.decisions().stream().filter(MappingDecision::problem).toList()));
@@ -56,9 +112,11 @@ public final class MappingCompiler {
         plan.name(),
         plan.coreType(),
         plan.coreSourceResource(),
-        core.selected(),
+        selectedRootCoreTargets,
+        coreFragments,
+        coreTargetMerges,
         extensions,
-        core.decisions());
+        java.util.stream.Stream.concat(core.decisions().stream(), mergeDecisions.stream()).toList());
   }
 
   public CompiledExtension compile(ExtensionMapping extension) {
@@ -81,6 +139,14 @@ public final class MappingCompiler {
     Objects.requireNonNull(extension, "extension");
     List<CompiledFragment> rawFragments =
         extension.fragments().stream().map(this::compileFragment).toList();
+
+    Map<String, TargetMerge> mergeDeclarations =
+        extension.targetMerges().stream()
+            .collect(Collectors.toMap(
+                TargetMerge::targetTerm,
+                merge -> merge,
+                (left, right) -> left,
+                LinkedHashMap::new));
 
     if (extension.rowComposition()
         == org.gbif.pipelines.spark.dwcdp.mapping.ExtensionRowComposition.UNION) {
@@ -107,15 +173,41 @@ public final class MappingCompiler {
           extension.rowType(),
           extension.rowComposition(),
           extension.maxRowsPerParent(),
+          List.of(),
           resolvedFragments,
           decisions);
     }
 
     List<CompiledTargetProducer> candidates =
         rawFragments.stream().flatMap(fragment -> fragment.targets().stream()).toList();
-    Resolution resolution = resolveTargets("extension:" + extension.rowType(), candidates);
+    List<CompiledTargetMerge> targetMerges = new ArrayList<>();
+    List<MappingDecision> mergeDecisions = new ArrayList<>();
+    for (TargetMerge merge : mergeDeclarations.values()) {
+      List<CompiledTargetProducer> producers =
+          candidates.stream()
+              .filter(candidate -> candidate.targetTerm().equals(merge.targetTerm()))
+              .toList();
+      if (!producers.isEmpty()) {
+        targetMerges.add(new CompiledTargetMerge(merge.targetTerm(), merge.aggregation(), producers));
+        mergeDecisions.add(
+            new MappingDecision(
+                "extension:" + extension.rowType(),
+                merge.targetTerm(),
+                MappingDecisionType.EXPLICIT_MERGE,
+                Optional.empty(),
+                producers,
+                "Independent extension producers are merged using explicitly declared semantics: "
+                    + merge.aggregation()));
+      }
+    }
 
-    List<CompiledTargetProducer> selected = resolution.selected();
+    List<CompiledTargetProducer> nonMergeCandidates =
+        candidates.stream()
+            .filter(candidate -> !mergeDeclarations.containsKey(candidate.targetTerm()))
+            .toList();
+    Resolution resolution = resolveTargets("extension:" + extension.rowType(), nonMergeCandidates);
+    List<CompiledTargetProducer> selected = new ArrayList<>(resolution.selected());
+    targetMerges.forEach(merge -> selected.addAll(merge.producers()));
     List<CompiledFragment> resolvedFragments = rawFragments.stream()
         .map(fragment -> new CompiledFragment(
             fragment.name(),
@@ -132,8 +224,9 @@ public final class MappingCompiler {
         extension.rowType(),
         extension.rowComposition(),
         extension.maxRowsPerParent(),
+        targetMerges,
         resolvedFragments,
-        resolution.decisions());
+        java.util.stream.Stream.concat(resolution.decisions().stream(), mergeDecisions.stream()).toList());
   }
 
   private List<MappingDecision> validateFragmentScopes(List<ExtensionMapping> extensions) {
@@ -160,6 +253,27 @@ public final class MappingCompiler {
       }
     }
     return problems;
+  }
+
+  private CompiledCoreFragment compileCoreFragment(CoreFragment fragment) {
+    Objects.requireNonNull(fragment, "fragment");
+    SchemaPath path = SchemaPath.root(fragment.sourceResource());
+    List<CompiledRelationStep> relations = new ArrayList<>();
+    for (RelationStep step : fragment.relations()) {
+      SchemaRelation relation = resolveRelation(path.currentResource(), step);
+      relations.add(
+          new CompiledRelationStep(
+              relation,
+              step.explicitColumns(),
+              step.requirement(),
+              step.cardinalityStrategy(),
+              step.filter()));
+      path = path.append(relation);
+    }
+    List<CompiledTargetProducer> targets =
+        fragment.fields().stream().map(field -> compileTarget(fragment.name(), field)).toList();
+    return new CompiledCoreFragment(
+        fragment.name(), fragment.sourceResource(), path, relations, targets);
   }
 
   private CompiledFragment compileFragment(ExtensionFragment fragment) {

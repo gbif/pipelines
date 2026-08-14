@@ -1,6 +1,8 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
+import org.gbif.pipelines.spark.dwcdp.mapping.CoreFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.MappingPlanBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaResource;
@@ -35,6 +37,28 @@ final class DirectFieldMappings {
         continue;
       }
       builder.field(
+          TargetFieldMapping.inferredOneOf(
+              TargetTerms.resolve(column), ValueAggregation.firstNonNull(), path.field(column)));
+    }
+  }
+
+  void addTo(CoreFragmentBuilder builder) {
+    for (String column : resource.fields().keySet()) {
+      if (isStructural(column)) {
+        continue;
+      }
+      builder.field(
+          TargetFieldMapping.inferredOneOf(
+              TargetTerms.resolve(column), ValueAggregation.firstNonNull(), path.field(column)));
+    }
+  }
+
+  void addTo(MappingPlanBuilder builder) {
+    for (String column : resource.fields().keySet()) {
+      if (isStructural(column)) {
+        continue;
+      }
+      builder.coreField(
           TargetFieldMapping.inferredOneOf(
               TargetTerms.resolve(column), ValueAggregation.firstNonNull(), path.field(column)));
     }
