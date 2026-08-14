@@ -11,6 +11,7 @@ public final class ExtensionFragmentBuilder {
   private final String sourceResource;
   private final List<RelationStep> relations = new ArrayList<>();
   private final List<TargetFieldMapping> fields = new ArrayList<>();
+  private Optional<String> scopeKeyColumn = Optional.empty();
   private Optional<String> rowIdentityColumn = Optional.empty();
 
   private ExtensionFragmentBuilder(String name, String rowType, String sourceResource) {
@@ -28,6 +29,16 @@ public final class ExtensionFragmentBuilder {
     return new RelationBuilder(this, RelationStep.inferred(targetResource));
   }
 
+  /**
+   * Sets the source-scope key used to attach/materialize this fragment. Defaults to the source
+   * resource primary key when one exists. Keyless child/junction resources can point at the FK
+   * identifying their parent scope instead.
+   */
+  public ExtensionFragmentBuilder scopeKey(String column) {
+    this.scopeKeyColumn = Optional.of(column);
+    return this;
+  }
+
   public ExtensionFragmentBuilder rowIdentity(String column) {
     this.rowIdentityColumn = Optional.of(column);
     return this;
@@ -39,7 +50,8 @@ public final class ExtensionFragmentBuilder {
   }
 
   public ExtensionFragment build() {
-    return new ExtensionFragment(name, rowType, sourceResource, relations, rowIdentityColumn, fields);
+    return new ExtensionFragment(
+        name, rowType, sourceResource, relations, scopeKeyColumn, rowIdentityColumn, fields);
   }
 
   public static final class RelationBuilder {
@@ -52,19 +64,59 @@ public final class ExtensionFragmentBuilder {
       this.step = step;
     }
 
-    public RelationBuilder via(String column) { step = step.via(column); return this; }
-    public RelationBuilder predicate(String predicate) { step = step.predicate(predicate); return this; }
-    public RelationBuilder filter(FilterExpression filter) { step = step.filter(filter); return this; }
-    public RelationBuilder fanOut() { step = step.with(CardinalityStrategy.fanOut()); return this; }
-    public RelationBuilder exactlyOne() { step = step.with(CardinalityStrategy.exactlyOne()); return this; }
-    public RelationBuilder optional() { step = step.requirement(RelationRequirement.OPTIONAL); return this; }
-    public RelationBuilder required() { step = step.requirement(RelationRequirement.REQUIRED); return this; }
-    public RelationBuilder select(String selector) { step = step.with(CardinalityStrategy.select(selector)); return this; }
-    public RelationBuilder combine(ValueAggregation aggregation) { step = step.with(CardinalityStrategy.combine(aggregation)); return this; }
+    public RelationBuilder via(String column) {
+      step = step.via(column);
+      return this;
+    }
+
+    public RelationBuilder predicate(String predicate) {
+      step = step.predicate(predicate);
+      return this;
+    }
+
+    public RelationBuilder filter(FilterExpression filter) {
+      step = step.filter(filter);
+      return this;
+    }
+
+    public RelationBuilder fanOut() {
+      step = step.with(CardinalityStrategy.fanOut());
+      return this;
+    }
+
+    public RelationBuilder exactlyOne() {
+      step = step.with(CardinalityStrategy.exactlyOne());
+      return this;
+    }
+
+    public RelationBuilder optional() {
+      step = step.requirement(RelationRequirement.OPTIONAL);
+      return this;
+    }
+
+    public RelationBuilder required() {
+      step = step.requirement(RelationRequirement.REQUIRED);
+      return this;
+    }
+
+    public RelationBuilder select(String selector) {
+      step = step.with(CardinalityStrategy.select(selector));
+      return this;
+    }
+
+    public RelationBuilder combine(ValueAggregation aggregation) {
+      step = step.with(CardinalityStrategy.combine(aggregation));
+      return this;
+    }
 
     public RelationBuilder join(String targetResource) {
       commit();
       return parent.join(targetResource);
+    }
+
+    public ExtensionFragmentBuilder scopeKey(String column) {
+      commit();
+      return parent.scopeKey(column);
     }
 
     public ExtensionFragmentBuilder rowIdentity(String column) {

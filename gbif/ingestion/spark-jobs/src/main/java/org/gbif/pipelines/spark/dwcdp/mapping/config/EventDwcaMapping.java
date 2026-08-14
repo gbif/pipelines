@@ -31,6 +31,14 @@ public final class EventDwcaMapping {
     return humboldt.build();
   }
 
+  /** Current legacy direct event-identifier behaviour. */
+  public static MappingPlan withIdentifier(SchemaGraph graph) {
+    return eventBase("event-core:identifier")
+        .extension(IdentifierMapping.ROW_TYPE_IDENTIFIER)
+        .importFragment(IdentifierMapping.eventIdentifiers(graph))
+        .build();
+  }
+
   /** Compatibility alias retained while the parity migration is in progress. */
   public static MappingPlan withHumboldtSurveyTargets(SchemaGraph graph) {
     return withHumboldt(graph);

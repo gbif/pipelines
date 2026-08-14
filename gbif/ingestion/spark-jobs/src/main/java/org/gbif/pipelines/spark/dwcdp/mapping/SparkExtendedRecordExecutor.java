@@ -95,7 +95,14 @@ public final class SparkExtendedRecordExecutor {
       if (materialized.targetColumns().isEmpty()) {
         continue;
       }
-      Dataset<Row> bridge = attachmentBridge(loader, plan, sourceResource, naturalId, corePk);
+      Dataset<Row> bridge =
+          attachmentBridge(
+              loader,
+              plan,
+              sourceResource,
+              materialized.parentKeySource(),
+              naturalId,
+              corePk);
       Dataset<Row> attached =
           bridge
               .join(
@@ -220,21 +227,60 @@ public final class SparkExtendedRecordExecutor {
       TableLoader loader,
       CompiledMapping plan,
       String sourceResource,
+      FieldRef sourceScopeKey,
       String naturalId,
       String corePk) {
     SchemaResource source =
         graph.resource(sourceResource)
-            .orElseThrow(() -> new IllegalArgumentException("Unknown extension source: " + sourceResource));
-    String sourcePk =
-        source.primaryKey()
             .orElseThrow(
-                () -> new IllegalArgumentException("Extension source has no primary key: " + sourceResource));
+                () -> new IllegalArgumentException("Unknown extension source: " + sourceResource));
+
+    if (!sourceScopeKey.path().rootResource().equals(sourceResource)
+        || !sourceScopeKey.path().relations().isEmpty()) {
+      throw new UnsupportedOperationException(
+          "Extension scope key must currently be a field on the fragment root resource: "
+              + sourceScopeKey.qualifiedName());
+    }
 
     if (sourceResource.equals(plan.coreSourceResource())) {
       Dataset<Row> core = loader.load(sourceResource).orElseThrow();
       return core.select(
           core.col(naturalId).cast("string").as(CORE_ID),
+          core.col(sourceScopeKey.column()).cast("string").as("__dwca_source_pk"));
+    }
+
+    // A keyless child table can scope itself directly by its FK to the core, e.g.
+    // event-identifier.event_fk -> event.event_pk. In that case there is no source PK to bridge
+    // through: the materialized parent key already has the same value domain as the core PK.
+    List<SchemaRelation> directScopeRelations =
+        graph.relations(sourceResource, plan.coreSourceResource()).stream()
+            .filter(relation -> relation.sourceColumn().equals(sourceScopeKey.column()))
+            .filter(relation -> relation.targetColumn().equals(corePk))
+            .toList();
+    if (directScopeRelations.size() == 1) {
+      Dataset<Row> core = loader.load(plan.coreSourceResource()).orElseThrow();
+      return core.select(
+          core.col(naturalId).cast("string").as(CORE_ID),
           core.col(corePk).cast("string").as("__dwca_source_pk"));
+    }
+    if (directScopeRelations.size() > 1) {
+      throw new IllegalArgumentException(
+          "Ambiguous direct extension scope relation for " + sourceScopeKey.qualifiedName());
+    }
+
+    String sourcePk =
+        source.primaryKey()
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Extension source has no primary key and its scope key does not reference the core directly: "
+                            + sourceResource
+                            + "."
+                            + sourceScopeKey.column()));
+    if (!sourcePk.equals(sourceScopeKey.column())) {
+      throw new UnsupportedOperationException(
+          "Non-primary source scope keys are currently supported only when they reference the core directly: "
+              + sourceScopeKey.qualifiedName());
     }
 
     SchemaRelation attachment = graph.resolve(plan.coreSourceResource(), sourceResource);

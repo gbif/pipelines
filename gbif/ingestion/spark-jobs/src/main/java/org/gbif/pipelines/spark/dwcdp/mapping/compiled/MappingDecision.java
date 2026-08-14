@@ -22,6 +22,12 @@ public record MappingDecision(
     Objects.requireNonNull(explanation, "explanation");
   }
 
+  public boolean problem() {
+    return type == MappingDecisionType.MISSING_FRAGMENT_SCOPE
+        || type == MappingDecisionType.AMBIGUOUS_MULTIPLE_EXPLICIT
+        || type == MappingDecisionType.AMBIGUOUS_EQUAL_DEPTH;
+  }
+
   public boolean ambiguous() {
     return type == MappingDecisionType.AMBIGUOUS_MULTIPLE_EXPLICIT
         || type == MappingDecisionType.AMBIGUOUS_EQUAL_DEPTH;

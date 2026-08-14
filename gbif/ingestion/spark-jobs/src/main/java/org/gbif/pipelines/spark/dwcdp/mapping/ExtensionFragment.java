@@ -13,6 +13,7 @@ public record ExtensionFragment(
     String rowType,
     String sourceResource,
     List<RelationStep> relations,
+    Optional<String> scopeKeyColumn,
     Optional<String> rowIdentityColumn,
     List<TargetFieldMapping> fields) {
 
@@ -21,6 +22,7 @@ public record ExtensionFragment(
     Objects.requireNonNull(rowType, "rowType");
     Objects.requireNonNull(sourceResource, "sourceResource");
     relations = List.copyOf(relations);
+    scopeKeyColumn = scopeKeyColumn == null ? Optional.empty() : scopeKeyColumn;
     rowIdentityColumn = rowIdentityColumn == null ? Optional.empty() : rowIdentityColumn;
     fields = List.copyOf(fields);
   }

@@ -31,10 +31,12 @@ class MappingCompilerPrecedenceTest {
 
     ExtensionFragment inferred =
         ExtensionFragmentBuilder.extensionFragment("inferred", ROW_TYPE, "survey")
+            .scopeKey("survey_pk")
             .field(TargetFieldMapping.inferredOneOf(TARGET, ValueAggregation.firstNonNull(), survey.field("direct")))
             .build();
     ExtensionFragment explicit =
         ExtensionFragmentBuilder.extensionFragment("explicit", ROW_TYPE, "survey")
+            .scopeKey("survey_pk")
             .field(TargetFieldMapping.oneOf(TARGET, ValueAggregation.firstNonNull(), survey.field("explicit")))
             .build();
 
@@ -58,10 +60,12 @@ class MappingCompilerPrecedenceTest {
 
     ExtensionFragment direct =
         ExtensionFragmentBuilder.extensionFragment("direct", ROW_TYPE, "root")
+            .scopeKey("root_pk")
             .field(TargetFieldMapping.inferredOneOf(TARGET, ValueAggregation.firstNonNull(), root.field("value")))
             .build();
     ExtensionFragment related =
         ExtensionFragmentBuilder.extensionFragment("related", ROW_TYPE, "root")
+            .scopeKey("root_pk")
             .join("child")
             .via("child_fk")
             .optional()
@@ -81,15 +85,17 @@ class MappingCompilerPrecedenceTest {
 
   @Test
   void equalDepthInferredProducersFailBeforeExecution() {
-    InMemorySchemaGraph graph = new InMemorySchemaGraph().resource("root", "a", "b");
+    InMemorySchemaGraph graph = new InMemorySchemaGraph().resource("root", "root_pk", "a", "b");
     SchemaPath root = SchemaPath.root("root");
 
     ExtensionFragment first =
         ExtensionFragmentBuilder.extensionFragment("first", ROW_TYPE, "root")
+            .scopeKey("root_pk")
             .field(TargetFieldMapping.inferredOneOf(TARGET, ValueAggregation.firstNonNull(), root.field("a")))
             .build();
     ExtensionFragment second =
         ExtensionFragmentBuilder.extensionFragment("second", ROW_TYPE, "root")
+            .scopeKey("root_pk")
             .field(TargetFieldMapping.inferredOneOf(TARGET, ValueAggregation.firstNonNull(), root.field("b")))
             .build();
 
@@ -102,21 +108,45 @@ class MappingCompilerPrecedenceTest {
 
   @Test
   void multipleExplicitProducersStillFail() {
-    InMemorySchemaGraph graph = new InMemorySchemaGraph().resource("root", "a", "b");
+    InMemorySchemaGraph graph = new InMemorySchemaGraph().resource("root", "root_pk", "a", "b");
     SchemaPath root = SchemaPath.root("root");
 
     ExtensionFragment first =
         ExtensionFragmentBuilder.extensionFragment("first", ROW_TYPE, "root")
+            .scopeKey("root_pk")
             .field(TargetFieldMapping.oneOf(TARGET, ValueAggregation.firstNonNull(), root.field("a")))
             .build();
     ExtensionFragment second =
         ExtensionFragmentBuilder.extensionFragment("second", ROW_TYPE, "root")
+            .scopeKey("root_pk")
             .field(TargetFieldMapping.oneOf(TARGET, ValueAggregation.firstNonNull(), root.field("b")))
             .build();
 
     MappingCompilationException error =
         assertThrows(MappingCompilationException.class, () -> new MappingCompiler(graph).compile(plan(first, second)));
     assertTrue(error.getMessage().contains("AMBIGUOUS_MULTIPLE_EXPLICIT"));
+  }
+
+
+  @Test
+  void missingFragmentScopeIsReportedAsCompilationProblem() {
+    InMemorySchemaGraph graph = new InMemorySchemaGraph().resource("root", "value");
+    SchemaPath root = SchemaPath.root("root");
+
+    ExtensionFragment fragment =
+        ExtensionFragmentBuilder.extensionFragment("keyless", ROW_TYPE, "root")
+            .field(
+                TargetFieldMapping.oneOf(
+                    TARGET, ValueAggregation.firstNonNull(), root.field("value")))
+            .build();
+
+    MappingCompilationException error =
+        assertThrows(
+            MappingCompilationException.class,
+            () -> new MappingCompiler(graph).compile(plan(fragment)));
+
+    assertEquals(1, error.problems().size());
+    assertEquals(MappingDecisionType.MISSING_FRAGMENT_SCOPE, error.problems().get(0).type());
   }
 
   private static MappingPlan plan(ExtensionFragment... fragments) {

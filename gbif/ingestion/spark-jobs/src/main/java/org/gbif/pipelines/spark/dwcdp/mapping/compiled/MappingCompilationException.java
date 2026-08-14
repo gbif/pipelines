@@ -2,7 +2,7 @@ package org.gbif.pipelines.spark.dwcdp.mapping.compiled;
 
 import java.util.List;
 
-/** Raised when the governing mapping contains ambiguity that cannot be resolved deterministically. */
+/** Raised when the governing mapping contains one or more problems that prevent compilation. */
 public final class MappingCompilationException extends IllegalArgumentException {
   private final List<MappingDecision> problems;
 
@@ -16,7 +16,7 @@ public final class MappingCompilationException extends IllegalArgumentException 
   }
 
   private static String render(List<MappingDecision> problems) {
-    StringBuilder out = new StringBuilder("Mapping compilation failed with unresolved ambiguity:\n");
+    StringBuilder out = new StringBuilder("Mapping compilation failed with unresolved problems:\n");
     for (MappingDecision problem : problems) {
       out.append("\nScope: ").append(problem.scope()).append('\n');
       out.append("Target: ").append(problem.targetTerm()).append('\n');

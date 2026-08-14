@@ -9,19 +9,22 @@ import org.apache.spark.sql.Row;
 /**
  * Materialized extension rows before they are attached to an Event/Occurrence core.
  *
- * <p>Each row has an internal parent key (the source resource PK), an extension row key, and one
+ * <p>Each row has an internal parent/scope key, its logical source {@link FieldRef}, an extension
+ * row key, and one
  * physical Spark column per mapped DwC-A term. Consumers use {@link #column(String)} rather than
  * depending on those physical aliases.
  */
 public record ExtensionMaterializationResult(
     Dataset<Row> dataset,
     String parentKeyColumn,
+    FieldRef parentKeySource,
     String rowKeyColumn,
     Map<String, String> targetColumns) {
 
   public ExtensionMaterializationResult {
     Objects.requireNonNull(dataset, "dataset");
     Objects.requireNonNull(parentKeyColumn, "parentKeyColumn");
+    Objects.requireNonNull(parentKeySource, "parentKeySource");
     Objects.requireNonNull(rowKeyColumn, "rowKeyColumn");
     targetColumns = Map.copyOf(targetColumns);
   }

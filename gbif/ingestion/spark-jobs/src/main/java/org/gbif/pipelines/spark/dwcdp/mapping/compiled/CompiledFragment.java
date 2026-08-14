@@ -13,6 +13,7 @@ public record CompiledFragment(
     String sourceResource,
     SchemaPath path,
     List<CompiledRelationStep> relations,
+    FieldRef scopeKey,
     Optional<FieldRef> rowIdentity,
     List<CompiledTargetProducer> targets) {
 
@@ -22,6 +23,7 @@ public record CompiledFragment(
     Objects.requireNonNull(sourceResource, "sourceResource");
     Objects.requireNonNull(path, "path");
     relations = List.copyOf(relations);
+    Objects.requireNonNull(scopeKey, "scopeKey");
     rowIdentity = rowIdentity == null ? Optional.empty() : rowIdentity;
     targets = List.copyOf(targets);
   }

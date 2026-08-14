@@ -9,6 +9,7 @@ import static org.apache.spark.sql.functions.concat_ws;
 import static org.apache.spark.sql.functions.first;
 import static org.apache.spark.sql.functions.flatten;
 import static org.apache.spark.sql.functions.lit;
+import static org.apache.spark.sql.functions.monotonically_increasing_id;
 import static org.apache.spark.sql.functions.sort_array;
 
 import java.nio.charset.StandardCharsets;
@@ -81,6 +82,12 @@ public final class SparkExtensionMaterializer {
                 + base.name() + " starts at " + base.sourceResource()
                 + ", but " + fragment.name() + " starts at " + fragment.sourceResource());
       }
+      if (!base.scopeKey().equals(fragment.scopeKey())) {
+        throw new IllegalArgumentException(
+            "Fragments currently need the same scope key: "
+                + base.name() + " uses " + base.scopeKey().qualifiedName()
+                + ", but " + fragment.name() + " uses " + fragment.scopeKey().qualifiedName());
+      }
     }
 
     FragmentResult materializedBase = materializeFragment(loader, base, true);
@@ -113,21 +120,16 @@ public final class SparkExtensionMaterializer {
     Map<String, String> targetColumns = new LinkedHashMap<>();
     targets.forEach((term, target) -> targetColumns.put(term, target.physicalColumn()));
     return new ExtensionMaterializationResult(
-        current, COL_PARENT_KEY, COL_ROW_KEY, targetColumns);
+        current, COL_PARENT_KEY, materializedBase.parentKeySource(), COL_ROW_KEY, targetColumns);
   }
 
   private FragmentResult materializeFragment(
       TableLoader loader, CompiledFragment fragment, boolean rowProducing) {
-    SchemaResource source =
-        graph.resource(fragment.sourceResource())
-            .orElseThrow(
-                () -> new IllegalArgumentException(
+    graph.resource(fragment.sourceResource())
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException(
                     "Unknown fragment source resource: " + fragment.sourceResource()));
-    String sourcePk =
-        source.primaryKey()
-            .orElseThrow(
-                () -> new IllegalArgumentException(
-                    "Fragment source has no primary key: " + fragment.sourceResource()));
 
     Mapping mapping =
         new Mapping(
@@ -143,16 +145,15 @@ public final class SparkExtensionMaterializer {
               .select(
                   lit(null).cast("string").as(COL_PARENT_KEY),
                   lit(null).cast("string").as(COL_ROW_KEY));
-      return new FragmentResult(empty, Map.of());
+      return new FragmentResult(empty, fragment.scopeKey(), Map.of());
     }
 
     SparkPathResult pathResult = execution.pathResult();
-    SchemaPath sourcePath = SchemaPath.root(fragment.sourceResource());
-    String parentAlias = pathResult.columnName(sourcePath.field(sourcePk));
+    FieldRef parentKeySource = fragment.scopeKey();
+    String parentAlias = pathResult.columnName(parentKeySource);
 
     Optional<FieldRef> identity = fragment.rowIdentity();
-    String identityAlias =
-        identity.map(pathResult::columnName).orElse(parentAlias);
+    String identityAlias = identity.map(pathResult::columnName).orElse(parentAlias);
 
     Map<String, MaterializedTarget> targets = new LinkedHashMap<>();
     List<Column> aggregates = new ArrayList<>();
@@ -163,13 +164,27 @@ public final class SparkExtensionMaterializer {
       if (previous != null) {
         throw duplicateTargetException(target.targetTerm(), previous, materializedTarget);
       }
-      aggregates.add(aggregateExpression(target, pathResult).as(alias));
+      if (!(rowProducing && fragment.rowIdentity().isEmpty())) {
+        aggregates.add(aggregateExpression(target, pathResult).as(alias));
+      }
     }
 
     boolean distinctRowIdentity =
         rowProducing && identity.isPresent() && !identityAlias.equals(parentAlias);
     Dataset<Row> grouped;
-    if (aggregates.isEmpty()) {
+    if (rowProducing && identity.isEmpty()) {
+      // No declared logical key means each physical source/result row is an extension row. This is
+      // important for legitimate keyless child tables such as event-identifier: grouping only by
+      // the parent scope would incorrectly collapse all identifiers into one row. The synthetic
+      // row key is execution-internal only; it is never emitted as a DwC-A term.
+      List<Column> selected = new ArrayList<>();
+      selected.add(col(parentAlias).cast("string").as(COL_PARENT_KEY));
+      selected.add(monotonically_increasing_id().cast("string").as(COL_ROW_KEY));
+      for (CompiledTargetProducer target : fragment.targets()) {
+        selected.add(rowExpression(target, pathResult).as(targetAlias(target.targetTerm())));
+      }
+      grouped = pathResult.dataset().select(selected.toArray(Column[]::new));
+    } else if (aggregates.isEmpty()) {
       if (distinctRowIdentity) {
         grouped =
             pathResult.dataset()
@@ -207,7 +222,7 @@ public final class SparkExtensionMaterializer {
       grouped = grouped.withColumn(COL_ROW_KEY, col(COL_PARENT_KEY).cast("string"));
     }
     grouped = grouped.withColumn(COL_PARENT_KEY, col(COL_PARENT_KEY).cast("string"));
-    return new FragmentResult(grouped, targets);
+    return new FragmentResult(grouped, parentKeySource, targets);
   }
 
   private static MaterializedTarget bindTarget(
@@ -220,6 +235,26 @@ public final class SparkExtensionMaterializer {
                         source, Optional.ofNullable(pathResult.aliases().get(source.field()))))
             .toList();
     return new MaterializedTarget(target, targetAlias, sources);
+  }
+
+  private Column rowExpression(
+      CompiledTargetProducer target, SparkPathResult pathResult) {
+    List<Column> sources =
+        target.sources().stream().map(source -> pathResult.columnOrNull(source.field())).toList();
+
+    if (target.sourceMode() == TargetFieldMapping.SourceMode.ONE_OF
+        && target.aggregation() instanceof ValueAggregation.FirstNonNull) {
+      return coalesce(sources.toArray(Column[]::new));
+    }
+    if (target.aggregation() instanceof ValueAggregation.ExactlyOne && sources.size() == 1) {
+      return sources.get(0);
+    }
+
+    throw new UnsupportedOperationException(
+        "Unsupported row-level target aggregation for "
+            + target.targetTerm()
+            + ": "
+            + target.aggregation());
   }
 
   private Column aggregateExpression(
@@ -298,5 +333,6 @@ public final class SparkExtensionMaterializer {
     return false;
   }
 
-  private record FragmentResult(Dataset<Row> dataset, Map<String, MaterializedTarget> targets) {}
+  private record FragmentResult(
+      Dataset<Row> dataset, FieldRef parentKeySource, Map<String, MaterializedTarget> targets) {}
 }

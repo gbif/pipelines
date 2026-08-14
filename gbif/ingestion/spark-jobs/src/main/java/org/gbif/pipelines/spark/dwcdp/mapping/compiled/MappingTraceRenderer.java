@@ -34,6 +34,7 @@ public final class MappingTraceRenderer {
       for (CompiledFragment fragment : extension.fragments()) {
         out.append("  Fragment: ").append(fragment.name()).append('\n');
         out.append("    Source: ").append(fragment.sourceResource()).append('\n');
+        out.append("    Scope key: ").append(fragment.scopeKey().qualifiedName()).append('\n');
         if (!fragment.relations().isEmpty()) {
           out.append("    Path:\n");
           for (CompiledRelationStep relation : fragment.relations()) {

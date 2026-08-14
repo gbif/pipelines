@@ -31,6 +31,11 @@ public final class MappingCompiler {
   public CompiledMapping compile(MappingPlan plan) {
     Objects.requireNonNull(plan, "plan");
 
+    List<MappingDecision> structuralProblems = validateFragmentScopes(plan.extensions());
+    if (!structuralProblems.isEmpty()) {
+      throw new MappingCompilationException(structuralProblems);
+    }
+
     Resolution core = resolveTargets(
         "core:" + plan.coreSourceResource(),
         plan.coreFields().stream().map(field -> compileTarget("core", field)).toList());
@@ -38,10 +43,10 @@ public final class MappingCompiler {
     List<CompiledExtension> extensions =
         plan.extensions().stream().map(extension -> compileExtensionInternal(extension)).toList();
     List<MappingDecision> problems = new ArrayList<>();
-    problems.addAll(core.decisions().stream().filter(MappingDecision::ambiguous).toList());
+    problems.addAll(core.decisions().stream().filter(MappingDecision::problem).toList());
     extensions.forEach(
         extension -> problems.addAll(
-            extension.decisions().stream().filter(MappingDecision::ambiguous).toList()));
+            extension.decisions().stream().filter(MappingDecision::problem).toList()));
     if (!problems.isEmpty()) {
       throw new MappingCompilationException(problems);
     }
@@ -56,9 +61,14 @@ public final class MappingCompiler {
   }
 
   public CompiledExtension compile(ExtensionMapping extension) {
+    Objects.requireNonNull(extension, "extension");
+    List<MappingDecision> structuralProblems = validateFragmentScopes(List.of(extension));
+    if (!structuralProblems.isEmpty()) {
+      throw new MappingCompilationException(structuralProblems);
+    }
     CompiledExtension compiled = compileExtensionInternal(extension);
     List<MappingDecision> problems = compiled.decisions().stream()
-        .filter(MappingDecision::ambiguous)
+        .filter(MappingDecision::problem)
         .toList();
     if (!problems.isEmpty()) {
       throw new MappingCompilationException(problems);
@@ -82,11 +92,38 @@ public final class MappingCompiler {
             fragment.sourceResource(),
             fragment.path(),
             fragment.relations(),
+            fragment.scopeKey(),
             fragment.rowIdentity(),
             fragment.targets().stream().filter(selected::contains).toList()))
         .toList();
 
     return new CompiledExtension(extension.rowType(), resolvedFragments, resolution.decisions());
+  }
+
+  private List<MappingDecision> validateFragmentScopes(List<ExtensionMapping> extensions) {
+    List<MappingDecision> problems = new ArrayList<>();
+    for (ExtensionMapping extension : extensions) {
+      for (ExtensionFragment fragment : extension.fragments()) {
+        if (fragment.scopeKeyColumn().isPresent()) {
+          continue;
+        }
+        boolean hasPrimaryKey =
+            graph.resource(fragment.sourceResource()).flatMap(resource -> resource.primaryKey()).isPresent();
+        if (!hasPrimaryKey) {
+          problems.add(
+              new MappingDecision(
+                  "fragment:" + fragment.name(),
+                  "<scope>",
+                  MappingDecisionType.MISSING_FRAGMENT_SCOPE,
+                  Optional.empty(),
+                  List.of(),
+                  "Fragment source '"
+                      + fragment.sourceResource()
+                      + "' has no primary key and no explicit scope key."));
+        }
+      }
+    }
+    return problems;
   }
 
   private CompiledFragment compileFragment(ExtensionFragment fragment) {
@@ -106,6 +143,22 @@ public final class MappingCompiler {
       path = path.append(relation);
     }
 
+    SchemaPath sourcePath = SchemaPath.root(fragment.sourceResource());
+    FieldRef scopeKey =
+        fragment
+            .scopeKeyColumn()
+            .map(sourcePath::field)
+            .orElseGet(
+                () ->
+                    graph
+                        .resource(fragment.sourceResource())
+                        .flatMap(resource -> resource.primaryKey())
+                        .map(sourcePath::field)
+                        .orElseThrow(
+                            () ->
+                                new IllegalStateException(
+                                    "Fragment scope validation did not run for source: "
+                                        + fragment.sourceResource())));
     Optional<FieldRef> rowIdentity = fragment.rowIdentityColumn().map(path::field);
     List<CompiledTargetProducer> targets =
         fragment.fields().stream().map(field -> compileTarget(fragment.name(), field)).toList();
@@ -116,6 +169,7 @@ public final class MappingCompiler {
         fragment.sourceResource(),
         path,
         relations,
+        scopeKey,
         rowIdentity,
         targets);
   }
