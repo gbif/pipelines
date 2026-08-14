@@ -27,8 +27,23 @@ public final class OccurrenceDwcaMapping {
 
   /** Direct Occurrence fields plus organism, accepted identification, material/usage-policy, and protocol enrichment. */
   public static MappingPlan withCurrentCoreEnrichment(SchemaGraph graph) {
+    return currentCoreBase(graph, "occurrence-core:current-enrichment").build();
+  }
+
+  /** Current Occurrence-core enrichments plus direct and material-linked Multimedia rows. */
+  public static MappingPlan withMultimedia(SchemaGraph graph) {
+    return currentCoreBase(graph, "occurrence-core:multimedia")
+        .extension(MultimediaMapping.ROW_TYPE_MULTIMEDIA)
+        .unionRows()
+        .limitRowsPerParent(50)
+        .importFragment(MultimediaMapping.occurrenceMedia(graph))
+        .importFragment(MultimediaMapping.materialMediaForOccurrence(graph))
+        .build();
+  }
+
+  private static MappingPlanBuilder currentCoreBase(SchemaGraph graph, String name) {
     MappingPlanBuilder builder =
-        mappingPlan("occurrence-core:current-enrichment", CoreType.OCCURRENCE, "occurrence");
+        mappingPlan(name, CoreType.OCCURRENCE, "occurrence");
     DirectFieldMappings.from(graph, "occurrence", SchemaPath.root("occurrence")).addTo(builder);
     return builder
         .importCoreFragment(OccurrenceCoreMapping.organism(graph))
@@ -40,8 +55,7 @@ public final class OccurrenceDwcaMapping {
         .mergeCoreTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
         .mergeCoreTarget(TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
         .mergeCoreTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
-        .mergeCoreTarget(TargetTerms.resolve("projectTitle"), ValueAggregation.pipeDelimited())
-        .build();
+        .mergeCoreTarget(TargetTerms.resolve("projectTitle"), ValueAggregation.pipeDelimited());
   }
 }
 

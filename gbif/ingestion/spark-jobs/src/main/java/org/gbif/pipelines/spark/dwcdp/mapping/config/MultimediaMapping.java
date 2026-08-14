@@ -40,6 +40,74 @@ public final class MultimediaMapping {
     return builder.build();
   }
 
+
+  /** Direct occurrence-media rows attached to Occurrence core. */
+  public static ExtensionFragment occurrenceMedia(SchemaGraph graph) {
+    SchemaPath link = SchemaPath.root("occurrence-media");
+    SchemaPath media =
+        link.append(graph.resolve("occurrence-media", "media", "media_fk", null));
+    SchemaPath usagePolicy =
+        media.append(graph.resolve("media", "usage-policy", "usagePolicy_fk", null));
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment("occurrence-media", ROW_TYPE_MULTIMEDIA, "occurrence-media")
+            .scopeKey("occurrence_fk")
+            .join("media")
+            .via("media_fk")
+            .optional()
+            .exactlyOne()
+            .join("usage-policy")
+            .via("usagePolicy_fk")
+            .optional()
+            .exactlyOne()
+            .endJoin();
+
+    DirectFieldMappings.from(graph, "media", media).addTo(builder);
+    DirectFieldMappings.from(graph, "usage-policy", usagePolicy).addTo(builder);
+    return builder.build();
+  }
+
+  /**
+   * Material media attached to Occurrence core only when the occurrence has exactly one evidence
+   * material.
+   */
+  public static ExtensionFragment materialMediaForOccurrence(SchemaGraph graph) {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    SchemaPath material =
+        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID", null));
+    SchemaPath link =
+        material.append(graph.resolve("material", "material-media", "materialEntity_fk", null));
+    SchemaPath media =
+        link.append(graph.resolve("material-media", "media", "media_fk", null));
+    SchemaPath usagePolicy =
+        media.append(graph.resolve("media", "usage-policy", "usagePolicy_fk", null));
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment("material-media-for-occurrence", ROW_TYPE_MULTIMEDIA, "occurrence")
+            .scopeKey("occurrence_pk")
+            .join("material")
+            .via("evidenceForOccurrenceID")
+            .optional()
+            .exactlyOne()
+            .join("material-media")
+            .via("materialEntity_fk")
+            .optional()
+            .fanOut()
+            .join("media")
+            .via("media_fk")
+            .optional()
+            .exactlyOne()
+            .join("usage-policy")
+            .via("usagePolicy_fk")
+            .optional()
+            .exactlyOne()
+            .endJoin();
+
+    DirectFieldMappings.from(graph, "media", media).addTo(builder);
+    DirectFieldMappings.from(graph, "usage-policy", usagePolicy).addTo(builder);
+    return builder.build();
+  }
+
   /** Occurrence media promoted to the owning event's top-level Multimedia extension. */
   public static ExtensionFragment occurrenceMediaForEvent(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
