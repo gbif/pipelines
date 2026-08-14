@@ -13,6 +13,7 @@ public final class ExtensionFragmentBuilder {
   private final List<TargetFieldMapping> fields = new ArrayList<>();
   private Optional<String> scopeKeyColumn = Optional.empty();
   private Optional<FieldRef> rowIdentity = Optional.empty();
+  private Optional<FieldRef> rowMatch = Optional.empty();
 
   private ExtensionFragmentBuilder(String name, String rowType, String sourceResource) {
     this.name = name;
@@ -44,6 +45,12 @@ public final class ExtensionFragmentBuilder {
     return this;
   }
 
+  /** Declares the existing extension-row identity this enrichment fragment matches. */
+  public ExtensionFragmentBuilder rowMatch(FieldRef field) {
+    this.rowMatch = Optional.of(field);
+    return this;
+  }
+
   public ExtensionFragmentBuilder field(TargetFieldMapping field) {
     fields.add(field);
     return this;
@@ -51,7 +58,7 @@ public final class ExtensionFragmentBuilder {
 
   public ExtensionFragment build() {
     return new ExtensionFragment(
-        name, rowType, sourceResource, relations, scopeKeyColumn, rowIdentity, fields);
+        name, rowType, sourceResource, relations, scopeKeyColumn, rowIdentity, rowMatch, fields);
   }
 
   public static final class RelationBuilder {
@@ -134,6 +141,11 @@ public final class ExtensionFragmentBuilder {
     public ExtensionFragmentBuilder rowIdentity(FieldRef field) {
       commit();
       return parent.rowIdentity(field);
+    }
+
+    public ExtensionFragmentBuilder rowMatch(FieldRef field) {
+      commit();
+      return parent.rowMatch(field);
     }
 
     public ExtensionFragmentBuilder field(TargetFieldMapping field) {

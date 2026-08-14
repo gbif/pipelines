@@ -167,6 +167,7 @@ public final class MappingCompiler {
                 fragment.relations(),
                 fragment.scopeKey(),
                 fragment.rowIdentity(),
+                fragment.rowMatch(),
                 resolution.selected()));
       }
       return new CompiledExtension(
@@ -217,6 +218,7 @@ public final class MappingCompiler {
             fragment.relations(),
             fragment.scopeKey(),
             fragment.rowIdentity(),
+            fragment.rowMatch(),
             fragment.targets().stream().filter(selected::contains).toList()))
         .toList();
 
@@ -260,7 +262,7 @@ public final class MappingCompiler {
     SchemaPath path = SchemaPath.root(fragment.sourceResource());
     List<CompiledRelationStep> relations = new ArrayList<>();
     for (RelationStep step : fragment.relations()) {
-      SchemaRelation relation = resolveRelation(path.currentResource(), step);
+      SchemaRelation relation = resolveRelation("core-fragment:" + fragment.name(), path.currentResource(), step);
       relations.add(
           new CompiledRelationStep(
               relation,
@@ -281,7 +283,7 @@ public final class MappingCompiler {
     SchemaPath path = SchemaPath.root(fragment.sourceResource());
     List<CompiledRelationStep> relations = new ArrayList<>();
     for (RelationStep step : fragment.relations()) {
-      SchemaRelation relation = resolveRelation(path.currentResource(), step);
+      SchemaRelation relation = resolveRelation("extension-fragment:" + fragment.name(), path.currentResource(), step);
       relations.add(
           new CompiledRelationStep(
               relation,
@@ -309,6 +311,7 @@ public final class MappingCompiler {
                                     "Fragment scope validation did not run for source: "
                                         + fragment.sourceResource())));
     Optional<FieldRef> rowIdentity = fragment.rowIdentity();
+    Optional<FieldRef> rowMatch = fragment.rowMatch();
     List<CompiledTargetProducer> targets =
         fragment.fields().stream().map(field -> compileTarget(fragment.name(), field)).toList();
 
@@ -320,6 +323,7 @@ public final class MappingCompiler {
         relations,
         scopeKey,
         rowIdentity,
+        rowMatch,
         targets);
   }
 
@@ -330,7 +334,9 @@ public final class MappingCompiler {
         field.sourceMode(),
         field.aggregation(),
         field.sources().stream().map(CompiledSourceField::new).toList(),
-        field.origin());
+        field.origin(),
+        field.contributionIdentity().map(CompiledSourceField::new),
+        field.orderBy().map(CompiledSourceField::new));
   }
 
   private static Resolution resolveTargets(String scope, List<CompiledTargetProducer> candidates) {
@@ -416,41 +422,86 @@ public final class MappingCompiler {
             + "); an explicit mapping is required.");
   }
 
-  private SchemaRelation resolveRelation(String sourceResource, RelationStep step) {
-    if (step.explicitColumns()) {
-      String sourceColumn = step.sourceColumn().orElseThrow();
-      String targetColumn = step.targetColumn().orElseThrow();
-      if (!graph.hasResource(step.targetResource())) {
-        throw new IllegalArgumentException(
-            "Unknown relation target resource: " + step.targetResource());
+  private SchemaRelation resolveRelation(String scope, String sourceResource, RelationStep step) {
+    try {
+      if (step.explicitColumns()) {
+        String sourceColumn = step.sourceColumn().orElseThrow();
+        String targetColumn = step.targetColumn().orElseThrow();
+        if (!graph.hasResource(step.targetResource())) {
+          throw new IllegalArgumentException(
+              "Unknown relation target resource: " + step.targetResource());
+        }
+        if (!graph.hasColumn(sourceResource, sourceColumn)) {
+          throw new IllegalArgumentException(
+              "Explicit relation references unknown source field: "
+                  + sourceResource
+                  + "."
+                  + sourceColumn);
+        }
+        if (!graph.hasColumn(step.targetResource(), targetColumn)) {
+          throw new IllegalArgumentException(
+              "Explicit relation references unknown target field: "
+                  + step.targetResource()
+                  + "."
+                  + targetColumn);
+        }
+        return SchemaRelation.relation(
+            sourceResource,
+            sourceColumn,
+            step.targetResource(),
+            targetColumn,
+            step.schemaPredicate().orElse(null),
+            RelationCardinality.UNKNOWN);
       }
-      if (!graph.hasColumn(sourceResource, sourceColumn)) {
-        throw new IllegalArgumentException(
-            "Explicit relation references unknown source field: "
-                + sourceResource
-                + "."
-                + sourceColumn);
-      }
-      if (!graph.hasColumn(step.targetResource(), targetColumn)) {
-        throw new IllegalArgumentException(
-            "Explicit relation references unknown target field: "
-                + step.targetResource()
-                + "."
-                + targetColumn);
-      }
-      return SchemaRelation.relation(
+      return graph.resolve(
           sourceResource,
-          sourceColumn,
           step.targetResource(),
-          targetColumn,
-          step.schemaPredicate().orElse(null),
-          RelationCardinality.UNKNOWN);
+          step.viaColumn().orElse(null),
+          step.schemaPredicate().orElse(null));
+    } catch (IllegalArgumentException error) {
+      throw relationCompilationException(scope, sourceResource, step, error);
     }
-    return graph.resolve(
-        sourceResource,
-        step.targetResource(),
-        step.viaColumn().orElse(null),
-        step.schemaPredicate().orElse(null));
+  }
+
+  private MappingCompilationException relationCompilationException(
+      String scope, String sourceResource, RelationStep step, IllegalArgumentException cause) {
+    StringBuilder explanation = new StringBuilder(cause.getMessage());
+    List<SchemaRelation> direct = graph.relationsFrom(sourceResource);
+    if (!direct.isEmpty()) {
+      explanation.append("\nDirect relations from ").append(sourceResource).append(':');
+      direct.stream().limit(10).forEach(r -> explanation.append("\n  - ").append(describeRelation(r)));
+    }
+    List<List<SchemaRelation>> hints =
+        graph.nearbyPaths(sourceResource, step.targetResource(), 3, 10);
+    if (!hints.isEmpty()) {
+      explanation.append("\nNearby schema paths (diagnostic hints only):");
+      for (List<SchemaRelation> path : hints) {
+        explanation.append("\n  - ")
+            .append(path.stream().map(MappingCompiler::describeRelation).collect(Collectors.joining(" ; ")));
+      }
+    }
+    MappingDecision problem =
+        new MappingDecision(
+            scope,
+            "<relation:" + sourceResource + "->" + step.targetResource() + ">",
+            MappingDecisionType.INVALID_RELATION,
+            Optional.empty(),
+            List.of(),
+            explanation.toString());
+    MappingCompilationException exception = new MappingCompilationException(List.of(problem));
+    exception.initCause(cause);
+    return exception;
+  }
+
+  private static String describeRelation(SchemaRelation relation) {
+    return relation.sourceResource()
+        + "."
+        + relation.sourceColumn()
+        + " -> "
+        + relation.targetResource()
+        + "."
+        + relation.targetColumn()
+        + relation.predicate().map(p -> " [predicate=" + p + "]").orElse("");
   }
 
   private record Resolution(

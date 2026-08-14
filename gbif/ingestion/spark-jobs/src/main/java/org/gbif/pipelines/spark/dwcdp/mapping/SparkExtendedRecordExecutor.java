@@ -1,14 +1,17 @@
 package org.gbif.pipelines.spark.dwcdp.mapping;
 
 import static org.apache.spark.sql.functions.array_distinct;
+import static org.apache.spark.sql.functions.array_join;
 import static org.apache.spark.sql.functions.coalesce;
 import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.concat_ws;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.collect_list;
+import static org.apache.spark.sql.functions.filter;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.sort_array;
 import static org.apache.spark.sql.functions.struct;
+import static org.apache.spark.sql.functions.transform;
 import static org.apache.spark.sql.functions.when;
 
 import java.nio.charset.StandardCharsets;
@@ -153,9 +156,9 @@ public final class SparkExtendedRecordExecutor {
 
               Map<String, String> coreTerms = new HashMap<>();
               for (Map.Entry<String, String> target : coreTargetColumns.entrySet()) {
-                String value = row.getAs(target.getValue());
+                Object value = row.getAs(target.getValue());
                 if (value != null) {
-                  coreTerms.put(target.getKey(), value);
+                  coreTerms.put(target.getKey(), termValue(value));
                 }
               }
 
@@ -170,9 +173,9 @@ public final class SparkExtendedRecordExecutor {
                 for (Row extensionRow : extensionRows) {
                   Map<String, String> mapped = new HashMap<>();
                   for (TermColumn target : extension.getValue().terms()) {
-                    String value = extensionRow.getAs(target.column());
+                    Object value = extensionRow.getAs(target.column());
                     if (value != null) {
-                      mapped.put(target.term(), value);
+                      mapped.put(target.term(), termValue(value));
                     }
                   }
                   if (!mapped.isEmpty()) {
@@ -301,13 +304,28 @@ public final class SparkExtendedRecordExecutor {
       CompiledTargetMerge merge,
       String corePk) {
     Dataset<Row> contributions = null;
+    boolean anyOrdered = merge.producers().stream().anyMatch(p -> p.orderBy().isPresent());
+    boolean allOrdered = merge.producers().stream().allMatch(p -> p.orderBy().isPresent());
+    if (anyOrdered && !allOrdered) {
+      throw new IllegalArgumentException(
+          "Merged target mixes ordered and unordered producers: " + merge.targetTerm());
+    }
+
     for (CompiledTargetProducer producer : merge.producers()) {
       Dataset<Row> contribution;
       if (producer.owner().equals("core")) {
         contribution =
             rawCore.select(
                 rawCore.col(corePk).cast("string").as("__dwca_merge_core_pk"),
-                coreTargetExpression(producer, rawCore).cast("string").as("__dwca_merge_value"));
+                coreTargetExpression(producer, rawCore).cast("string").as("__dwca_merge_value"),
+                producer.contributionIdentity()
+                    .map(source -> columnOrNull(rawCore, source.field()).cast("string"))
+                    .orElse(lit(null).cast("string"))
+                    .as("__dwca_merge_identity"),
+                producer.orderBy()
+                    .map(source -> columnOrNull(rawCore, source.field()).cast("string"))
+                    .orElse(lit(null).cast("string"))
+                    .as("__dwca_merge_order"));
       } else {
         CompiledCoreFragment fragment =
             plan.coreFragments().stream()
@@ -339,7 +357,15 @@ public final class SparkExtendedRecordExecutor {
                     pathResult.dataset().col(corePkAlias).cast("string").as("__dwca_merge_core_pk"),
                     coreTargetExpression(producer, pathResult)
                         .cast("string")
-                        .as("__dwca_merge_value"));
+                        .as("__dwca_merge_value"),
+                    producer.contributionIdentity()
+                        .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
+                        .orElse(lit(null).cast("string"))
+                        .as("__dwca_merge_identity"),
+                    producer.orderBy()
+                        .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
+                        .orElse(lit(null).cast("string"))
+                        .as("__dwca_merge_order"));
       }
       contribution =
           contribution.filter(
@@ -351,7 +377,37 @@ public final class SparkExtendedRecordExecutor {
     if (contributions == null) {
       return null;
     }
+
+    boolean anyIdentity = merge.producers().stream().anyMatch(p -> p.contributionIdentity().isPresent());
+    boolean allIdentity = merge.producers().stream().allMatch(p -> p.contributionIdentity().isPresent());
+    if (anyIdentity && !allIdentity) {
+      throw new IllegalArgumentException(
+          "Merged target mixes identified and unidentified contributions: " + merge.targetTerm());
+    }
+    if (allIdentity) {
+      contributions =
+          contributions.dropDuplicates(
+              "__dwca_merge_core_pk", "__dwca_merge_identity", "__dwca_merge_value");
+    }
+
     if (merge.aggregation() instanceof ValueAggregation.Delimited delimited) {
+      if (allOrdered) {
+        Column ordered =
+            sort_array(
+                collect_list(
+                    struct(
+                        col("__dwca_merge_order").as("order"),
+                        col("__dwca_merge_value").as("value"))));
+        Column values = transform(ordered, entry -> entry.getField("value"));
+        values = filter(values, Column::isNotNull);
+        if (delimited.distinct()) {
+          values = array_distinct(values);
+        }
+        return contributions
+            .groupBy("__dwca_merge_core_pk")
+            .agg(array_join(values, delimited.delimiter()).as(targetAlias(merge.targetTerm())));
+      }
+
       Column values = collect_list(col("__dwca_merge_value"));
       if (delimited.distinct()) {
         values = array_distinct(values);
@@ -364,6 +420,12 @@ public final class SparkExtendedRecordExecutor {
     }
     throw new UnsupportedOperationException(
         "Unsupported core target merge aggregation: " + merge.targetTerm() + " / " + merge.aggregation());
+  }
+
+  private static Column columnOrNull(Dataset<Row> dataset, FieldRef field) {
+    return hasColumn(dataset, field.column())
+        ? dataset.col(field.column())
+        : lit(null).cast("string");
   }
 
   private Column coreTargetExpression(CompiledTargetProducer target, Dataset<Row> root) {
@@ -569,6 +631,11 @@ public final class SparkExtendedRecordExecutor {
     } catch (NoSuchAlgorithmException e) {
       throw new IllegalStateException("SHA-256 unavailable", e);
     }
+  }
+
+  /** Converts a materialized scalar term value to the textual ExtendedRecord representation. */
+  private static String termValue(Object value) {
+    return value instanceof String stringValue ? stringValue : String.valueOf(value);
   }
 
   private record CoreProjection(Dataset<Row> dataset, Map<String, String> targetColumns) {}

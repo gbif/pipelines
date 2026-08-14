@@ -5,10 +5,8 @@ import static org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder.ex
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.RelationCardinality;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaRelation;
 
 /** Declarative mappings for the Simple Multimedia extension. */
 public final class MultimediaMapping {
@@ -77,21 +75,13 @@ public final class MultimediaMapping {
 
   /**
    * Material media promoted through an occurrence only when that occurrence has exactly one
-   * evidence material. The occurrence->material relation is mapping-defined because DwC-DP models
-   * it as the weak/natural-key pair occurrenceID = evidenceForOccurrenceID rather than a declared
-   * surrogate FK.
+   * evidence material. The occurrence->material relation is the reverse traversal of the schema-
+   * declared weak FK material.evidenceForOccurrenceID -> occurrence.occurrenceID.
    */
   public static ExtensionFragment materialMediaForEvent(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
     SchemaPath material =
-        occurrence.append(
-            SchemaRelation.relation(
-                "occurrence",
-                "occurrenceID",
-                "material",
-                "evidenceForOccurrenceID",
-                null,
-                RelationCardinality.UNKNOWN));
+        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID", null));
     SchemaPath link =
         material.append(graph.resolve("material", "material-media", "materialEntity_fk", null));
     SchemaPath media =
@@ -103,7 +93,7 @@ public final class MultimediaMapping {
         extensionFragment("material-media-promoted-to-event", ROW_TYPE_MULTIMEDIA, "occurrence")
             .scopeKey("event_fk")
             .join("material")
-            .on("occurrenceID", "evidenceForOccurrenceID")
+            .via("evidenceForOccurrenceID")
             .optional()
             .exactlyOne()
             .join("material-media")

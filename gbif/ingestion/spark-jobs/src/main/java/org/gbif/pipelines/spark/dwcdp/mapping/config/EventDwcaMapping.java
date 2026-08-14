@@ -62,12 +62,33 @@ public final class EventDwcaMapping {
         .build();
   }
 
+  /** Direct occurrence rows nested below Event core. */
+  public static MappingPlan withOccurrenceExtension(SchemaGraph graph) {
+    return eventBase("event-core:occurrence")
+        .extension(OccurrenceMapping.ROW_TYPE_OCCURRENCE)
+        .mergeTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
+        .mergeTarget(TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
+        .mergeTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
+        .mergeTarget(TargetTerms.resolve("projectTitle"), ValueAggregation.pipeDelimited())
+        .importFragment(OccurrenceMapping.directOccurrence(graph))
+        .importFragment(OccurrenceMapping.organism(graph))
+        .importFragment(OccurrenceMapping.acceptedIdentification(graph))
+        .importFragment(OccurrenceMapping.material(graph))
+        .importFragment(OccurrenceMapping.materialDirectProvenance(graph))
+        .importFragment(OccurrenceMapping.materialProvenance(graph))
+        .build();
+  }
+
   /** Direct Event fields plus the non-aggregating Event-core enrichments. */
   public static MappingPlan withCoreEnrichments(SchemaGraph graph) {
     MappingPlanBuilder builder = eventDirectBase(graph, "event-core:core-enrichments");
     return builder
         .mergeCoreTarget(DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
         .mergeCoreTarget(DwcTerm.georeferenceProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
+        .mergeCoreTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
+        .mergeCoreTarget(TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
+        .mergeCoreTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
+        .mergeCoreTarget(TargetTerms.resolve("projectTitle"), ValueAggregation.pipeDelimited())
         .importCoreFragment(EventCoreMapping.parentEvent(graph))
         .importCoreFragment(EventCoreMapping.geologicalContext(graph))
         .importCoreFragment(EventCoreMapping.eventConductedBy(graph))
@@ -78,6 +99,8 @@ public final class EventDwcaMapping {
         .importCoreFragment(EventCoreMapping.surveyProtocols(graph))
         .importCoreFragment(EventCoreMapping.eventGeoreferenceProtocols(graph))
         .importCoreFragment(EventCoreMapping.surveyGeoreferenceProtocols(graph))
+        .importCoreFragment(EventCoreMapping.directProvenance(graph))
+        .importCoreFragment(EventCoreMapping.eventProvenance(graph))
         .build();
   }
 

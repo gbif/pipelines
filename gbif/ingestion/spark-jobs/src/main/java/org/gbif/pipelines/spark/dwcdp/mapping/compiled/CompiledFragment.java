@@ -15,6 +15,7 @@ public record CompiledFragment(
     List<CompiledRelationStep> relations,
     FieldRef scopeKey,
     Optional<FieldRef> rowIdentity,
+    Optional<FieldRef> rowMatch,
     List<CompiledTargetProducer> targets) {
 
   public CompiledFragment {
@@ -25,6 +26,7 @@ public record CompiledFragment(
     relations = List.copyOf(relations);
     Objects.requireNonNull(scopeKey, "scopeKey");
     rowIdentity = rowIdentity == null ? Optional.empty() : rowIdentity;
+    rowMatch = rowMatch == null ? Optional.empty() : rowMatch;
     targets = List.copyOf(targets);
   }
 }

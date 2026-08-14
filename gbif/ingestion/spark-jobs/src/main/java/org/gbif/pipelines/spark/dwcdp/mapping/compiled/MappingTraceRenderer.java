@@ -110,6 +110,12 @@ public final class MappingTraceRenderer {
     out.append(indent).append("Target: ").append(target.targetTerm()).append('\n');
     out.append(indent).append("  Strategy: ").append(target.sourceMode()).append(" / ")
         .append(target.aggregation()).append('\n');
+    target.contributionIdentity().ifPresent(
+        identity -> out.append(indent).append("  Contribution identity: ")
+            .append(identity.describe()).append('\n'));
+    target.orderBy().ifPresent(
+        order -> out.append(indent).append("  Order by: ")
+            .append(order.describe()).append('\n'));
     out.append(indent).append("  Sources:\n");
     for (CompiledSourceField source : target.sources()) {
       out.append(indent).append("    - ").append(source.describe()).append('\n');

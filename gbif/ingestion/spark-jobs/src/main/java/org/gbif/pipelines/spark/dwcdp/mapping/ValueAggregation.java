@@ -49,6 +49,10 @@ public sealed interface ValueAggregation
     return new ExactlyOne();
   }
 
+  static ValueAggregation pipeDelimited() {
+    return new Delimited("|", false);
+  }
+
   static ValueAggregation pipeDelimitedDistinct() {
     return new Delimited("|", true);
   }

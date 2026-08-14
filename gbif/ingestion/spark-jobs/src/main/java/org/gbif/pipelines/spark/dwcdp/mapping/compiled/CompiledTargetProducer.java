@@ -2,6 +2,7 @@ package org.gbif.pipelines.spark.dwcdp.mapping.compiled;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.gbif.pipelines.spark.dwcdp.mapping.TargetFieldMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.ValueAggregation;
 
@@ -15,7 +16,9 @@ public record CompiledTargetProducer(
     TargetFieldMapping.SourceMode sourceMode,
     ValueAggregation aggregation,
     List<CompiledSourceField> sources,
-    TargetFieldMapping.Origin origin) {
+    TargetFieldMapping.Origin origin,
+    Optional<CompiledSourceField> contributionIdentity,
+    Optional<CompiledSourceField> orderBy) {
 
   public CompiledTargetProducer {
     Objects.requireNonNull(targetTerm, "targetTerm");
@@ -24,6 +27,8 @@ public record CompiledTargetProducer(
     Objects.requireNonNull(aggregation, "aggregation");
     sources = List.copyOf(sources);
     Objects.requireNonNull(origin, "origin");
+    contributionIdentity = contributionIdentity == null ? Optional.empty() : contributionIdentity;
+    orderBy = orderBy == null ? Optional.empty() : orderBy;
     if (sources.isEmpty()) {
       throw new IllegalArgumentException("Compiled target producer requires at least one source");
     }
@@ -48,6 +53,8 @@ public record CompiledTargetProducer(
     if (origin == TargetFieldMapping.Origin.INFERRED) {
       out.append("inferred path depth: ").append(pathDepth()).append('\n');
     }
+    contributionIdentity.ifPresent(source -> out.append("contribution identity: ").append(source.describe()).append('\n'));
+    orderBy.ifPresent(source -> out.append("order by: ").append(source.describe()).append('\n'));
     out.append("sources:");
     for (CompiledSourceField source : sources) {
       out.append("\n  - ").append(source.describe());

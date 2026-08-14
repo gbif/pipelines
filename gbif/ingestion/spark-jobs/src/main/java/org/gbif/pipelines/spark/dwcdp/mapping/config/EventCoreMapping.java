@@ -216,6 +216,57 @@ public final class EventCoreMapping {
         .build();
   }
 
+
+  /** Direct event.provenance_fk -> provenance contribution rows. */
+  public static CoreFragment directProvenance(SchemaGraph graph) {
+    SchemaPath event = SchemaPath.root("event");
+    SchemaPath provenance =
+        event.append(graph.resolve("event", "provenance", "provenance_fk", null));
+    CoreFragmentBuilder builder =
+        coreFragment("event-direct-provenance", "event")
+            .join("provenance")
+            .via("provenance_fk")
+            .optional()
+            .exactlyOne()
+            .endJoin();
+    addProvenanceTargets(builder, provenance);
+    return builder.build();
+  }
+
+  /** event -> event-provenance -> provenance contribution rows. */
+  public static CoreFragment eventProvenance(SchemaGraph graph) {
+    SchemaPath event = SchemaPath.root("event");
+    SchemaPath link =
+        event.append(graph.resolve("event", "event-provenance", "event_fk", null));
+    SchemaPath provenance =
+        link.append(graph.resolve("event-provenance", "provenance", "provenance_fk", null));
+    CoreFragmentBuilder builder =
+        coreFragment("event-provenance", "event")
+            .join("event-provenance")
+            .via("event_fk")
+            .optional()
+            .fanOut()
+            .join("provenance")
+            .via("provenance_fk")
+            .optional()
+            .exactlyOne()
+            .endJoin();
+    addProvenanceTargets(builder, provenance);
+    return builder.build();
+  }
+
+  private static void addProvenanceTargets(CoreFragmentBuilder builder, SchemaPath provenance) {
+    for (String field :
+        java.util.List.of("fundingAttribution", "fundingAttributionID", "projectID", "projectTitle")) {
+      builder.field(
+          TargetFieldMapping.oneOf(
+                  TargetTerms.resolve(field),
+                  ValueAggregation.firstNonNull(),
+                  provenance.field(field))
+              .contributionIdentity(provenance.field("provenance_pk"))
+              .orderBy(provenance.field("provenanceID")));
+    }
+  }
   private static CoreFragment agentName(
       String name, String idColumn, String valueColumn, String targetTerm) {
     SchemaPath event = SchemaPath.root("event");

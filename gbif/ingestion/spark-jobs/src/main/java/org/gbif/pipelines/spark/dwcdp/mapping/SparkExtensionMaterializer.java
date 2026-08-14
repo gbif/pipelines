@@ -121,26 +121,31 @@ public final class SparkExtensionMaterializer {
       FragmentResult enrichment = materializeFragment(loader, fragment, false, false, mergeTerms);
       ensureNoDuplicateTargets(targets, enrichment.targets(), mergeTerms);
 
-      Dataset<Row> enrichmentForJoin = enrichment.dataset().drop(COL_ROW_KEY);
-      current =
-          current.join(
-                  enrichmentForJoin,
-                  current.col(COL_PARENT_KEY).equalTo(enrichmentForJoin.col(COL_PARENT_KEY)),
-                  "left_outer")
-              .drop(enrichmentForJoin.col(COL_PARENT_KEY));
+      Dataset<Row> enrichmentForJoin = enrichment.dataset();
+      Column joinCondition =
+          current.col(COL_PARENT_KEY).equalTo(enrichmentForJoin.col(COL_PARENT_KEY));
+      if (fragment.rowMatch().isPresent()) {
+        joinCondition =
+            joinCondition.and(current.col(COL_ROW_KEY).equalTo(enrichmentForJoin.col(COL_ROW_KEY)));
+      }
+      current = current.join(enrichmentForJoin, joinCondition, "left_outer")
+          .drop(enrichmentForJoin.col(COL_PARENT_KEY))
+          .drop(enrichmentForJoin.col(COL_ROW_KEY));
       collectTargets(enrichment.targets(), mergeTerms, targets, mergeContributions);
     }
 
     Map<String, String> targetColumns = new LinkedHashMap<>();
     targets.forEach((term, target) -> targetColumns.put(term, target.physicalColumn()));
     for (org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledTargetMerge merge : extension.targetMerges()) {
-      List<MaterializedTarget> contributions =
-          mergeContributions.getOrDefault(merge.targetTerm(), List.of());
-      if (contributions.isEmpty()) {
-        continue;
-      }
+      Dataset<Row> merged = materializeExtensionTargetMerge(loader, extension, merge);
       String alias = targetAlias(merge.targetTerm());
-      current = current.withColumn(alias, mergeExpression(merge, contributions));
+      Column joinCondition =
+          current.col(COL_PARENT_KEY).equalTo(merged.col(COL_PARENT_KEY))
+              .and(current.col(COL_ROW_KEY).equalTo(merged.col(COL_ROW_KEY)));
+      current =
+          current.join(merged, joinCondition, "left_outer")
+              .drop(merged.col(COL_PARENT_KEY))
+              .drop(merged.col(COL_ROW_KEY));
       targetColumns.put(merge.targetTerm(), alias);
     }
     current = filterEmptyPayloadRows(current, targetColumns.values().stream().toList());
@@ -283,7 +288,8 @@ public final class SparkExtensionMaterializer {
     FieldRef parentKeySource = fragment.scopeKey();
     String parentAlias = pathResult.columnName(parentKeySource);
 
-    Optional<FieldRef> identity = fragment.rowIdentity();
+    Optional<FieldRef> identity =
+        rowProducing ? fragment.rowIdentity() : fragment.rowMatch();
     String identityAlias = identity.map(pathResult::columnName).orElse(parentAlias);
 
     Map<String, MaterializedTarget> targets = new LinkedHashMap<>();
@@ -301,7 +307,7 @@ public final class SparkExtensionMaterializer {
     }
 
     boolean distinctRowIdentity =
-        rowProducing && identity.isPresent() && !identityAlias.equals(parentAlias);
+        identity.isPresent() && !identityAlias.equals(parentAlias);
     Dataset<Row> grouped;
     if (rowProducing && identity.isEmpty()) {
       // No declared logical key means each physical source/result row is an extension row. This is
@@ -451,6 +457,120 @@ public final class SparkExtensionMaterializer {
             ordinary.put(term, target);
           }
         });
+  }
+
+
+  /**
+   * Materializes an extension target merge from raw contribution rows rather than from each
+   * fragment's already-aggregated value. This is the extension analogue of core target merging and
+   * preserves contribution identity and ordering across independent relation paths.
+   */
+  private Dataset<Row> materializeExtensionTargetMerge(
+      TableLoader loader,
+      CompiledExtension extension,
+      org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledTargetMerge merge) {
+    Dataset<Row> contributions = null;
+    boolean anyOrdered = merge.producers().stream().anyMatch(p -> p.orderBy().isPresent());
+    boolean allOrdered = merge.producers().stream().allMatch(p -> p.orderBy().isPresent());
+    if (anyOrdered && !allOrdered) {
+      throw new IllegalArgumentException(
+          "Merged extension target mixes ordered and unordered producers: " + merge.targetTerm());
+    }
+
+    for (CompiledTargetProducer producer : merge.producers()) {
+      CompiledFragment fragment =
+          extension.fragments().stream()
+              .filter(candidate -> candidate.name().equals(producer.owner()))
+              .findFirst()
+              .orElseThrow(
+                  () ->
+                      new IllegalStateException(
+                          "Merged extension producer references unknown fragment: "
+                              + producer.owner()));
+
+      Mapping mapping =
+          new Mapping(
+              "extension-merge:" + fragment.name(),
+              fragment.sourceResource(),
+              fragment.relations().stream().map(r -> r.toRelationStep()).toList(),
+              List.of(),
+              Projection.none());
+      SparkPathResult pathResult = pathExecutor.execute(loader, mapping).pathResult();
+      FieldRef parentKey = fragment.scopeKey();
+      FieldRef rowKey =
+          fragment.rowIdentity().orElseGet(() -> fragment.rowMatch().orElse(parentKey));
+
+      Dataset<Row> contribution =
+          pathResult
+              .dataset()
+              .select(
+                  pathResult.columnOrNull(parentKey).cast("string").as(COL_PARENT_KEY),
+                  pathResult.columnOrNull(rowKey).cast("string").as(COL_ROW_KEY),
+                  rowExpression(producer, pathResult).cast("string").as("__dwca_merge_value"),
+                  producer.contributionIdentity()
+                      .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
+                      .orElse(lit(null).cast("string"))
+                      .as("__dwca_merge_identity"),
+                  producer.orderBy()
+                      .map(source -> pathResult.columnOrNull(source.field()).cast("string"))
+                      .orElse(lit(null).cast("string"))
+                      .as("__dwca_merge_order"))
+              .filter(
+                  col("__dwca_merge_value")
+                      .isNotNull()
+                      .and(col("__dwca_merge_value").notEqual("")));
+      contributions =
+          contributions == null ? contribution : contributions.unionByName(contribution);
+    }
+
+    boolean anyIdentity =
+        merge.producers().stream().anyMatch(p -> p.contributionIdentity().isPresent());
+    boolean allIdentity =
+        merge.producers().stream().allMatch(p -> p.contributionIdentity().isPresent());
+    if (anyIdentity && !allIdentity) {
+      throw new IllegalArgumentException(
+          "Merged extension target mixes identified and unidentified contributions: "
+              + merge.targetTerm());
+    }
+    if (allIdentity) {
+      contributions =
+          contributions.dropDuplicates(
+              COL_PARENT_KEY, COL_ROW_KEY, "__dwca_merge_identity", "__dwca_merge_value");
+    }
+
+    String alias = targetAlias(merge.targetTerm());
+    if (merge.aggregation() instanceof ValueAggregation.Delimited delimited) {
+      if (allOrdered) {
+        Column ordered =
+            sort_array(
+                collect_list(
+                    org.apache.spark.sql.functions.struct(
+                        col("__dwca_merge_order").as("order"),
+                        col("__dwca_merge_value").as("value"))));
+        Column values =
+            org.apache.spark.sql.functions.transform(ordered, entry -> entry.getField("value"));
+        values = org.apache.spark.sql.functions.filter(values, Column::isNotNull);
+        if (delimited.distinct()) {
+          values = array_distinct(values);
+        }
+        return contributions
+            .groupBy(COL_PARENT_KEY, COL_ROW_KEY)
+            .agg(org.apache.spark.sql.functions.array_join(values, delimited.delimiter()).as(alias));
+      }
+
+      Column values = collect_list(col("__dwca_merge_value"));
+      if (delimited.distinct()) {
+        values = array_distinct(values);
+      }
+      return contributions
+          .groupBy(COL_PARENT_KEY, COL_ROW_KEY)
+          .agg(concat_ws(delimited.delimiter(), sort_array(values)).as(alias));
+    }
+    throw new UnsupportedOperationException(
+        "Unsupported extension target merge aggregation: "
+            + merge.targetTerm()
+            + " / "
+            + merge.aggregation());
   }
 
   private static Column mergeExpression(

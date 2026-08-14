@@ -15,6 +15,7 @@ public record ExtensionFragment(
     List<RelationStep> relations,
     Optional<String> scopeKeyColumn,
     Optional<FieldRef> rowIdentity,
+    Optional<FieldRef> rowMatch,
     List<TargetFieldMapping> fields) {
 
   public ExtensionFragment {
@@ -24,6 +25,7 @@ public record ExtensionFragment(
     relations = List.copyOf(relations);
     scopeKeyColumn = scopeKeyColumn == null ? Optional.empty() : scopeKeyColumn;
     rowIdentity = rowIdentity == null ? Optional.empty() : rowIdentity;
+    rowMatch = rowMatch == null ? Optional.empty() : rowMatch;
     fields = List.copyOf(fields);
   }
 }

@@ -1,7 +1,11 @@
 package org.gbif.pipelines.spark.dwcdp.mapping;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /** Read-only graph of navigable relationships derived from the official DwC-DP schemas. */
 public interface SchemaGraph {
@@ -16,6 +20,49 @@ public interface SchemaGraph {
 
   /** Relations are returned in traversal direction, including reverse traversal of declared FKs. */
   List<SchemaRelation> relations(String sourceResource, String targetResource);
+
+  /** All outgoing relations in traversal direction from a resource. */
+  default List<SchemaRelation> relationsFrom(String sourceResource) {
+    return List.of();
+  }
+
+  /**
+   * Bounded breadth-first diagnostic search. These are hints only; callers must never use them to
+   * infer or select a mapping relation.
+   */
+  default List<List<SchemaRelation>> nearbyPaths(
+      String sourceResource, String targetResource, int maxDepth, int maxResults) {
+    if (maxDepth < 1 || maxResults < 1) {
+      return List.of();
+    }
+    record Candidate(String resource, List<SchemaRelation> path, Set<String> visited) {}
+    ArrayDeque<Candidate> queue = new ArrayDeque<>();
+    queue.add(new Candidate(sourceResource, List.of(), Set.of(sourceResource)));
+    List<List<SchemaRelation>> results = new ArrayList<>();
+    while (!queue.isEmpty() && results.size() < maxResults) {
+      Candidate candidate = queue.removeFirst();
+      if (candidate.path().size() >= maxDepth) {
+        continue;
+      }
+      for (SchemaRelation relation : relationsFrom(candidate.resource())) {
+        if (candidate.visited().contains(relation.targetResource())) {
+          continue;
+        }
+        List<SchemaRelation> nextPath = new ArrayList<>(candidate.path());
+        nextPath.add(relation);
+        if (relation.targetResource().equals(targetResource)) {
+          results.add(List.copyOf(nextPath));
+          if (results.size() >= maxResults) {
+            break;
+          }
+        }
+        Set<String> visited = new HashSet<>(candidate.visited());
+        visited.add(relation.targetResource());
+        queue.addLast(new Candidate(relation.targetResource(), List.copyOf(nextPath), Set.copyOf(visited)));
+      }
+    }
+    return List.copyOf(results);
+  }
 
   default SchemaRelation resolve(
       String sourceResource, String targetResource, String viaColumn, String predicate) {
@@ -40,6 +87,13 @@ public interface SchemaGraph {
               + (predicate == null ? "" : " predicate " + predicate));
     }
     if (candidates.size() > 1) {
+      List<SchemaRelation> strongCandidates = candidates.stream().filter(r -> !r.weak()).toList();
+      if (strongCandidates.size() == 1) {
+        return strongCandidates.get(0);
+      }
+      if (!strongCandidates.isEmpty()) {
+        candidates = strongCandidates;
+      }
       throw new IllegalArgumentException(
           "Ambiguous schema relation from " + sourceResource + " to " + targetResource
               + ": " + candidates);

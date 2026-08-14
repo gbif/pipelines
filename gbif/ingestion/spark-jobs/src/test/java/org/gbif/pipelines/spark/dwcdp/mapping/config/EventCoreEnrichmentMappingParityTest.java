@@ -269,10 +269,147 @@ class EventCoreEnrichmentMappingParityTest {
         mapped.getCoreTerms().get(DwcTerm.georeferenceProtocol.qualifiedName()));
   }
 
+
+  @Test
+  void directProvenanceFieldsMatchLegacy() {
+    Dataset<Row> event =
+        spark.createDataFrame(
+            List.of(RowFactory.create("EPK-1", "EVT001", "PPK-1")),
+            new StructType()
+                .add("event_pk", DataTypes.StringType)
+                .add("eventID", DataTypes.StringType)
+                .add("provenance_fk", DataTypes.StringType));
+    Dataset<Row> provenance =
+        provenance(
+            RowFactory.create(
+                "PPK-1", "PROV-1", "NSF Grant 123", "FID-1", "PID-1", "Survey X"));
+    TableLoader loader = TestTableLoader.of("event", event, "provenance", provenance);
+
+    ExtendedRecord legacy = only(EventCoreBuilder.build(spark, loader).collectAsList());
+    ExtendedRecord mapped = only(engine.execute(loader, plan).collectAsList());
+
+    for (String term :
+        List.of(
+            DwcTerm.fundingAttribution.qualifiedName(),
+            DwcTerm.fundingAttributionID.qualifiedName(),
+            DwcTerm.projectID.qualifiedName(),
+            DwcTerm.projectTitle.qualifiedName())) {
+      assertEquals(legacy.getCoreTerms().get(term), mapped.getCoreTerms().get(term));
+    }
+  }
+
+  @Test
+  void provenanceJunctionIsOrderedByProvenanceId() {
+    Dataset<Row> event =
+        spark.createDataFrame(
+            List.of(RowFactory.create("EPK-1", "EVT001")),
+            new StructType()
+                .add("event_pk", DataTypes.StringType)
+                .add("eventID", DataTypes.StringType));
+    Dataset<Row> links =
+        spark.createDataFrame(
+            List.of(
+                RowFactory.create("EPK-1", "PPK-3"),
+                RowFactory.create("EPK-1", "PPK-1"),
+                RowFactory.create("EPK-1", "PPK-2")),
+            new StructType()
+                .add("event_fk", DataTypes.StringType)
+                .add("provenance_fk", DataTypes.StringType));
+    Dataset<Row> provenance =
+        provenance(
+            RowFactory.create("PPK-3", "PROV-3", "Grant C", "FID-C", "PID-C", "Project C"),
+            RowFactory.create("PPK-1", "PROV-1", "Grant A", "FID-A", "PID-A", "Project A"),
+            RowFactory.create("PPK-2", "PROV-2", "Grant B", "FID-B", "PID-B", "Project B"));
+    TableLoader loader =
+        TestTableLoader.of(
+            "event", event, "event-provenance", links, "provenance", provenance);
+
+    ExtendedRecord legacy = only(EventCoreBuilder.build(spark, loader).collectAsList());
+    ExtendedRecord mapped = only(engine.execute(loader, plan).collectAsList());
+
+    assertEquals("Grant A|Grant B|Grant C", mapped.getCoreTerms().get(DwcTerm.fundingAttribution.qualifiedName()));
+    assertEquals(
+        legacy.getCoreTerms().get(DwcTerm.fundingAttribution.qualifiedName()),
+        mapped.getCoreTerms().get(DwcTerm.fundingAttribution.qualifiedName()));
+    assertEquals("Project A|Project B|Project C", mapped.getCoreTerms().get(DwcTerm.projectTitle.qualifiedName()));
+  }
+
+  @Test
+  void sameProvenanceLinkedDirectlyAndThroughJunctionIsNotDuplicated() {
+    Dataset<Row> event =
+        spark.createDataFrame(
+            List.of(RowFactory.create("EPK-1", "EVT001", "PPK-1")),
+            new StructType()
+                .add("event_pk", DataTypes.StringType)
+                .add("eventID", DataTypes.StringType)
+                .add("provenance_fk", DataTypes.StringType));
+    Dataset<Row> links =
+        spark.createDataFrame(
+            List.of(RowFactory.create("EPK-1", "PPK-1")),
+            new StructType()
+                .add("event_fk", DataTypes.StringType)
+                .add("provenance_fk", DataTypes.StringType));
+    Dataset<Row> provenance =
+        provenance(RowFactory.create("PPK-1", "PROV-1", "Grant A", null, null, null));
+    TableLoader loader =
+        TestTableLoader.of(
+            "event", event, "event-provenance", links, "provenance", provenance);
+
+    ExtendedRecord legacy = only(EventCoreBuilder.build(spark, loader).collectAsList());
+    ExtendedRecord mapped = only(engine.execute(loader, plan).collectAsList());
+
+    assertEquals("Grant A", mapped.getCoreTerms().get(DwcTerm.fundingAttribution.qualifiedName()));
+    assertEquals(
+        legacy.getCoreTerms().get(DwcTerm.fundingAttribution.qualifiedName()),
+        mapped.getCoreTerms().get(DwcTerm.fundingAttribution.qualifiedName()));
+  }
+
+  @Test
+  void identicalValuesFromDifferentProvenanceRecordsArePreserved() {
+    Dataset<Row> event =
+        spark.createDataFrame(
+            List.of(RowFactory.create("EPK-1", "EVT001")),
+            new StructType()
+                .add("event_pk", DataTypes.StringType)
+                .add("eventID", DataTypes.StringType));
+    Dataset<Row> links =
+        spark.createDataFrame(
+            List.of(
+                RowFactory.create("EPK-1", "PPK-1"),
+                RowFactory.create("EPK-1", "PPK-2")),
+            new StructType()
+                .add("event_fk", DataTypes.StringType)
+                .add("provenance_fk", DataTypes.StringType));
+    Dataset<Row> provenance =
+        provenance(
+            RowFactory.create("PPK-1", "PROV-1", "Same grant", null, null, null),
+            RowFactory.create("PPK-2", "PROV-2", "Same grant", null, null, null));
+    TableLoader loader =
+        TestTableLoader.of(
+            "event", event, "event-provenance", links, "provenance", provenance);
+
+    ExtendedRecord legacy = only(EventCoreBuilder.build(spark, loader).collectAsList());
+    ExtendedRecord mapped = only(engine.execute(loader, plan).collectAsList());
+
+    assertEquals("Same grant|Same grant", mapped.getCoreTerms().get(DwcTerm.fundingAttribution.qualifiedName()));
+    assertEquals(
+        legacy.getCoreTerms().get(DwcTerm.fundingAttribution.qualifiedName()),
+        mapped.getCoreTerms().get(DwcTerm.fundingAttribution.qualifiedName()));
+  }
+
   @Test
   void compilerRecordsProtocolTargetsAsExplicitMerges() {
     CompiledMapping compiled = engine.compile(plan);
-    assertEquals(2, compiled.coreTargetMerges().size());
+
+    long protocolMergeCount =
+        compiled.coreTargetMerges().stream()
+            .filter(
+                merge ->
+                    merge.targetTerm().equals(DwcTerm.samplingProtocol.qualifiedName())
+                        || merge.targetTerm().equals(DwcTerm.georeferenceProtocol.qualifiedName()))
+            .count();
+    assertEquals(2L, protocolMergeCount);
+
     assertTrue(
         compiled.coreDecisions().stream()
             .anyMatch(
@@ -280,12 +417,19 @@ class EventCoreEnrichmentMappingParityTest {
                     decision.type()
                             == org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingDecisionType.EXPLICIT_MERGE
                         && decision.targetTerm().equals(DwcTerm.samplingProtocol.qualifiedName())));
+    assertTrue(
+        compiled.coreDecisions().stream()
+            .anyMatch(
+                decision ->
+                    decision.type()
+                            == org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingDecisionType.EXPLICIT_MERGE
+                        && decision.targetTerm().equals(DwcTerm.georeferenceProtocol.qualifiedName())));
   }
 
   @Test
   void compiledCoreFragmentsRetainStructuredLineage() {
     CompiledMapping compiled = engine.compile(plan);
-    assertEquals(10, compiled.coreFragments().size());
+    assertEquals(12, compiled.coreFragments().size());
 
     CompiledCoreFragment parent =
         compiled.coreFragments().stream()
@@ -305,6 +449,22 @@ class EventCoreEnrichmentMappingParityTest {
             .orElseThrow();
     assertTrue(geology.relations().get(0).explicitColumns());
     assertEquals("geologicalContextID", geology.relations().get(0).relation().sourceColumn());
+
+    CompiledCoreFragment provenance =
+        compiled.coreFragments().stream()
+            .filter(fragment -> fragment.name().equals("event-provenance"))
+            .findFirst()
+            .orElseThrow();
+    assertEquals(2, provenance.relations().size());
+    var funding =
+        provenance.targets().stream()
+            .filter(target -> target.targetTerm().equals(DwcTerm.fundingAttribution.qualifiedName()))
+            .findFirst()
+            .orElseThrow();
+    assertTrue(funding.contributionIdentity().isPresent());
+    assertEquals("provenance_pk", funding.contributionIdentity().orElseThrow().field().column());
+    assertTrue(funding.orderBy().isPresent());
+    assertEquals("provenanceID", funding.orderBy().orElseThrow().field().column());
   }
 
   private Dataset<Row> events(Row... rows) {
@@ -352,6 +512,19 @@ class EventCoreEnrichmentMappingParityTest {
             .add("protocolType", DataTypes.StringType)
             .add("protocolName", DataTypes.StringType)
             .add("protocolDescription", DataTypes.StringType);
+    return spark.createDataFrame(List.of(rows), schema);
+  }
+
+
+  private Dataset<Row> provenance(Row... rows) {
+    StructType schema =
+        new StructType()
+            .add("provenance_pk", DataTypes.StringType)
+            .add("provenanceID", DataTypes.StringType)
+            .add("fundingAttribution", DataTypes.StringType)
+            .add("fundingAttributionID", DataTypes.StringType)
+            .add("projectID", DataTypes.StringType)
+            .add("projectTitle", DataTypes.StringType);
     return spark.createDataFrame(List.of(rows), schema);
   }
 

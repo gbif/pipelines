@@ -67,15 +67,8 @@ public final class DwcDpSchemaLoader {
           new SchemaResource(resourceName, fields,
               optionalText(schema, "primaryKey"), optionalText(schema, "weakPrimaryKey")));
 
-      for (JsonNode fk : schema.path("foreignKeys")) {
-        JsonNode reference = fk.path("reference");
-        foreignKeys.add(new PendingForeignKey(
-            resourceName,
-            scalarField(fk.path("fields")),
-            text(reference, "resource", resourceName),
-            scalarField(reference.path("fields")),
-            optionalText(fk, "predicate").orElse(null)));
-      }
+      collectForeignKeys(schema.path("foreignKeys"), resourceName, false, foreignKeys);
+      collectForeignKeys(schema.path("weakForeignKeys"), resourceName, true, foreignKeys);
     }
 
     List<SchemaRelation> relations = new ArrayList<>();
@@ -90,12 +83,30 @@ public final class DwcDpSchemaLoader {
           : RelationCardinality.ONE_TO_MANY;
       relations.add(SchemaRelation.relation(
           fk.sourceResource, fk.sourceField, fk.targetResource, fk.targetField,
-          fk.predicate, forward));
+          fk.predicate, forward, fk.weak));
       relations.add(SchemaRelation.relation(
           fk.targetResource, fk.targetField, fk.sourceResource, fk.sourceField,
-          fk.predicate, reverse));
+          fk.predicate, reverse, fk.weak));
     }
     return new OfficialSchemaGraph(resources, relations);
+  }
+
+  private static void collectForeignKeys(
+      JsonNode foreignKeyArray,
+      String resourceName,
+      boolean weak,
+      List<PendingForeignKey> foreignKeys) {
+    for (JsonNode fk : foreignKeyArray) {
+      JsonNode reference = fk.path("reference");
+      foreignKeys.add(
+          new PendingForeignKey(
+              resourceName,
+              scalarField(fk.path("fields")),
+              text(reference, "resource", resourceName),
+              scalarField(reference.path("fields")),
+              optionalText(fk, "predicate").orElse(null),
+              weak));
+    }
   }
 
   private SchemaField requireField(
@@ -158,5 +169,5 @@ public final class DwcDpSchemaLoader {
   private record PendingForeignKey(
       String sourceResource, String sourceField,
       String targetResource, String targetField,
-      String predicate) {}
+      String predicate, boolean weak) {}
 }

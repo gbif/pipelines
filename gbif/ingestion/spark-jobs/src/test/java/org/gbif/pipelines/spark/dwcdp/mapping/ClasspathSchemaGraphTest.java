@@ -46,4 +46,39 @@ class ClasspathSchemaGraphTest {
     assertEquals(RelationCardinality.MANY_TO_ONE, relation.cardinality());
   }
 
+  @Test
+  void resolvesDeclaredWeakOccurrenceOrganismRelation() {
+    SchemaRelation relation = graph.resolve("occurrence", "organism", "organismID");
+    assertEquals("organismID", relation.sourceColumn());
+    assertEquals("organismID", relation.targetColumn());
+    assertTrue(relation.weak());
+  }
+
+  @Test
+  void strongRelationWinsWhenStrongAndWeakCandidatesOtherwiseMatch() {
+    SchemaGraph candidateGraph =
+        new InMemorySchemaGraph()
+            .relation(
+                SchemaRelation.relation(
+                    "source",
+                    "reference",
+                    "target",
+                    "target_pk",
+                    null,
+                    RelationCardinality.MANY_TO_ONE,
+                    true))
+            .relation(
+                SchemaRelation.relation(
+                    "source",
+                    "reference",
+                    "target",
+                    "target_pk",
+                    null,
+                    RelationCardinality.MANY_TO_ONE,
+                    false));
+
+    SchemaRelation relation = candidateGraph.resolve("source", "target", "reference");
+    assertFalse(relation.weak());
+  }
+
 }
