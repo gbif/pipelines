@@ -69,7 +69,12 @@ public final class EventDwcaMapping {
         .importFragment(HumboldtMapping.surveyTargets(graph))
         .importFragment(HumboldtMapping.surveyFields(graph))
         .importFragment(HumboldtMapping.samplingProtocol(graph))
-        .importFragment(HumboldtMapping.samplingEffortProtocol(graph));
+        .importFragment(HumboldtMapping.samplingEffortProtocol(graph))
+        .endExtension()
+        .extension(NucleotideMapping.ROW_TYPE_DNA_DERIVED_DATA)
+        .importFragment(NucleotideMapping.eventAnalyses(graph))
+        .importFragment(NucleotideMapping.eventAnalysisSequence(graph))
+        .importFragment(NucleotideMapping.eventAnalysisProtocol(graph));
     return builder.build();
   }
 
@@ -108,6 +113,16 @@ public final class EventDwcaMapping {
     return eventBase("event-core:assertions")
         .extension(AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT)
         .importFragment(AssertionMapping.eventAssertions(graph))
+        .build();
+  }
+
+  /** Direct Event-owned DNA analyses (eDNA/metabarcoding path). */
+  public static MappingPlan withNucleotide(SchemaGraph graph) {
+    return eventDirectBase(graph, "event-core:nucleotide")
+        .extension(NucleotideMapping.ROW_TYPE_DNA_DERIVED_DATA)
+        .importFragment(NucleotideMapping.eventAnalyses(graph))
+        .importFragment(NucleotideMapping.eventAnalysisSequence(graph))
+        .importFragment(NucleotideMapping.eventAnalysisProtocol(graph))
         .build();
   }
 
