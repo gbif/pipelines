@@ -194,7 +194,7 @@ public final class MappingCompiler {
                                 new IllegalStateException(
                                     "Fragment scope validation did not run for source: "
                                         + fragment.sourceResource())));
-    Optional<FieldRef> rowIdentity = fragment.rowIdentityColumn().map(path::field);
+    Optional<FieldRef> rowIdentity = fragment.rowIdentity();
     List<CompiledTargetProducer> targets =
         fragment.fields().stream().map(field -> compileTarget(fragment.name(), field)).toList();
 

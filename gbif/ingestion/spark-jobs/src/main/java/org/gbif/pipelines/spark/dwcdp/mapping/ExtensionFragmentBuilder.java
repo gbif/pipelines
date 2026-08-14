@@ -12,7 +12,7 @@ public final class ExtensionFragmentBuilder {
   private final List<RelationStep> relations = new ArrayList<>();
   private final List<TargetFieldMapping> fields = new ArrayList<>();
   private Optional<String> scopeKeyColumn = Optional.empty();
-  private Optional<String> rowIdentityColumn = Optional.empty();
+  private Optional<FieldRef> rowIdentity = Optional.empty();
 
   private ExtensionFragmentBuilder(String name, String rowType, String sourceResource) {
     this.name = name;
@@ -39,8 +39,8 @@ public final class ExtensionFragmentBuilder {
     return this;
   }
 
-  public ExtensionFragmentBuilder rowIdentity(String column) {
-    this.rowIdentityColumn = Optional.of(column);
+  public ExtensionFragmentBuilder rowIdentity(FieldRef field) {
+    this.rowIdentity = Optional.of(field);
     return this;
   }
 
@@ -51,7 +51,7 @@ public final class ExtensionFragmentBuilder {
 
   public ExtensionFragment build() {
     return new ExtensionFragment(
-        name, rowType, sourceResource, relations, scopeKeyColumn, rowIdentityColumn, fields);
+        name, rowType, sourceResource, relations, scopeKeyColumn, rowIdentity, fields);
   }
 
   public static final class RelationBuilder {
@@ -131,9 +131,9 @@ public final class ExtensionFragmentBuilder {
       return parent.scopeKey(column);
     }
 
-    public ExtensionFragmentBuilder rowIdentity(String column) {
+    public ExtensionFragmentBuilder rowIdentity(FieldRef field) {
       commit();
-      return parent.rowIdentity(column);
+      return parent.rowIdentity(field);
     }
 
     public ExtensionFragmentBuilder field(TargetFieldMapping field) {

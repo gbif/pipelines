@@ -60,7 +60,7 @@ class SparkExtendedRecordExecutorTest {
             .join("survey-target")
             .via("surveyTarget_fk")
             .exactlyOne()
-            .rowIdentity("surveyTarget_pk")
+            .rowIdentity(targetPath.field("surveyTarget_pk"))
             .field(
                 TargetFieldMapping.oneOf(
                     TERM_SITE_COUNT,

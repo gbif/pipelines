@@ -58,7 +58,7 @@ class SparkExtensionMaterializerTest {
             .join("survey-target")
             .via("surveyTarget_fk")
             .exactlyOne()
-            .rowIdentity("surveyTarget_pk")
+            .rowIdentity(targetPath.field("surveyTarget_pk"))
             .field(
                 TargetFieldMapping.oneOf(
                     TERM_SITE_COUNT,
@@ -131,7 +131,7 @@ class SparkExtensionMaterializerTest {
 
     ExtensionFragment first =
         ExtensionFragmentBuilder.extensionFragment("first-fragment", HUMBOLDT, "survey")
-            .rowIdentity("survey_pk")
+            .rowIdentity(SchemaPath.root("survey").field("survey_pk"))
             .field(
                 TargetFieldMapping.oneOf(
                     TERM_SITE_COUNT,

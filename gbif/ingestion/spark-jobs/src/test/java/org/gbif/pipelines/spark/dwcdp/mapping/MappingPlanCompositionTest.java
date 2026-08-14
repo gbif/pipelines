@@ -14,7 +14,7 @@ class MappingPlanCompositionTest {
   void sameExtensionFragmentCanBeImportedByEventAndOccurrencePlans() {
     ExtensionFragment media =
         ExtensionFragmentBuilder.extensionFragment("media", MULTIMEDIA, "media")
-            .rowIdentity("media_pk")
+            .rowIdentity(SchemaPath.root("media").field("media_pk"))
             .build();
 
     MappingPlan event =

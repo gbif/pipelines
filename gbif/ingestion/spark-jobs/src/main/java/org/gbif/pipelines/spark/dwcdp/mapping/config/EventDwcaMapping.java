@@ -46,6 +46,14 @@ public final class EventDwcaMapping {
         .build();
   }
 
+  /** Current legacy event assertion -> eMoF behaviour. */
+  public static MappingPlan withAssertions(SchemaGraph graph) {
+    return eventBase("event-core:assertions")
+        .extension(AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT)
+        .importFragment(AssertionMapping.eventAssertions(graph))
+        .build();
+  }
+
   /** Current legacy direct event-identifier behaviour. */
   public static MappingPlan withIdentifier(SchemaGraph graph) {
     return eventBase("event-core:identifier")

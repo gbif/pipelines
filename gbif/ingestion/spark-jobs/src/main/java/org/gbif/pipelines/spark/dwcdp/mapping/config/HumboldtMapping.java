@@ -40,7 +40,7 @@ public final class HumboldtMapping {
             .join("survey-target")
             .via("surveyTarget_fk")
             .exactlyOne()
-            .rowIdentity("surveyTarget_pk");
+            .rowIdentity(target.field("surveyTarget_pk"));
 
     SchemaResource targetResource = requiredResource(graph, "survey-target");
     for (String column : targetResource.fields().keySet()) {
@@ -56,8 +56,9 @@ public final class HumboldtMapping {
 
   /** Defines a single Humboldt row per survey when there is no survey-target fan-out. */
   public static ExtensionFragment surveyRows() {
+    SchemaPath survey = SchemaPath.root("survey");
     return extensionFragment("humboldt-survey-row", ROW_TYPE_HUMBOLDT, "survey")
-        .rowIdentity("survey_pk")
+        .rowIdentity(survey.field("survey_pk"))
         .build();
   }
 
