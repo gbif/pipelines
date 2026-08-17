@@ -201,7 +201,7 @@ public final class EventCoreMapping {
       protocolJoin =
           protocolJoin.filter(
               cols ->
-                  cols.col("protocolType")
+                  cols.colOrNull("protocolType")
                       .isin("georeferencing", "georeference"));
     }
 

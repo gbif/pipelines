@@ -32,4 +32,22 @@ public final class FieldColumns implements Serializable {
     }
     return dataset.col(fieldName);
   }
+
+  /**
+   * Resolves an optional physical column, returning a null literal when the current package omitted
+   * it. Mapping definitions still refer to fields from the official schema, but optional schema
+   * fields are not guaranteed to be materialized in every Parquet table.
+   */
+  public Column colOrNull(String fieldName) {
+    Objects.requireNonNull(fieldName, "fieldName");
+    if (fieldName.isBlank()) {
+      throw new IllegalArgumentException("fieldName must not be blank");
+    }
+    for (String column : dataset.columns()) {
+      if (column.equals(fieldName)) {
+        return dataset.col(fieldName);
+      }
+    }
+    return org.apache.spark.sql.functions.lit(null);
+  }
 }

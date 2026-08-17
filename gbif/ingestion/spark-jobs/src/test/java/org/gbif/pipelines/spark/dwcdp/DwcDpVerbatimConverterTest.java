@@ -337,8 +337,8 @@ class DwcDpVerbatimConverterTest {
     writeParquet(
         dir,
         "data/occurrence.parquet",
-        schema("occurrenceID", "event_fk", "scientificName"),
-        List.of(RowFactory.create("OCC001", "EPK-001", "Quercus robur")));
+        schema("occurrence_pk", "occurrenceID", "event_fk", "scientificName"),
+        List.of(RowFactory.create("OPK-001", "OCC001", "EPK-001", "Quercus robur")));
 
     DataPackage dp = DataPackageFixtures.withEventAndOccurrence();
 
@@ -386,8 +386,8 @@ class DwcDpVerbatimConverterTest {
     writeParquet(
         dir,
         "data/occurrence.parquet",
-        schema("occurrence_pk", "occurrenceID", "scientificName", "decimalLatitude"),
-        List.of(RowFactory.create("OPK-001", "OCC001", "Pinus sylvestris", "60.2")));
+        schema("occurrence_pk", "occurrenceID", "scientificName", "sex"),
+        List.of(RowFactory.create("OPK-001", "OCC001", "Pinus sylvestris", "female")));
 
     writeParquet(
         dir,
@@ -419,7 +419,7 @@ class DwcDpVerbatimConverterTest {
     assertNull(r.getCoreId());
     assertEquals(DwcDpVerbatimConverter.CORE_ROW_TYPE_OCCURRENCE, r.getCoreRowType());
     assertEquals("Pinus sylvestris", r.getCoreTerms().get(DwcTerm.scientificName.qualifiedName()));
-    assertEquals("60.2", r.getCoreTerms().get(DwcTerm.decimalLatitude.qualifiedName()));
+    assertEquals("female", r.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
     List<Map<String, String>> emof =
         r.getExtensions().get(DwcDpVerbatimConverter.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT);
     assertNotNull(emof, "eMoF extension must be present");
