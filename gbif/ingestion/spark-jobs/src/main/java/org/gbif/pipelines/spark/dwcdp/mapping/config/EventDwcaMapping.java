@@ -41,6 +41,7 @@ public final class EventDwcaMapping {
 
     builder
         .extension(OccurrenceMapping.ROW_TYPE_OCCURRENCE)
+        .mergeTarget(DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
         .mergeTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
         .mergeTarget(TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
         .mergeTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
@@ -51,6 +52,10 @@ public final class EventDwcaMapping {
         .importFragment(OccurrenceMapping.material(graph))
         .importFragment(OccurrenceMapping.materialDirectProvenance(graph))
         .importFragment(OccurrenceMapping.materialProvenance(graph))
+        .importFragment(OccurrenceMapping.recordedBy(graph))
+        .importFragment(OccurrenceMapping.identifiedBy(graph))
+        .importFragment(OccurrenceMapping.materialGeologicalContext(graph))
+        .importFragment(OccurrenceMapping.materialProtocols(graph))
         .endExtension()
         .extension(MultimediaMapping.ROW_TYPE_MULTIMEDIA)
         .unionRows()
@@ -138,6 +143,7 @@ public final class EventDwcaMapping {
   public static MappingPlan withOccurrenceExtension(SchemaGraph graph) {
     return eventBase("event-core:occurrence")
         .extension(OccurrenceMapping.ROW_TYPE_OCCURRENCE)
+        .mergeTarget(DwcTerm.samplingProtocol.qualifiedName(), ValueAggregation.pipeDelimitedDistinct())
         .mergeTarget(TargetTerms.resolve("fundingAttribution"), ValueAggregation.pipeDelimited())
         .mergeTarget(TargetTerms.resolve("fundingAttributionID"), ValueAggregation.pipeDelimited())
         .mergeTarget(TargetTerms.resolve("projectID"), ValueAggregation.pipeDelimited())
@@ -148,6 +154,10 @@ public final class EventDwcaMapping {
         .importFragment(OccurrenceMapping.material(graph))
         .importFragment(OccurrenceMapping.materialDirectProvenance(graph))
         .importFragment(OccurrenceMapping.materialProvenance(graph))
+        .importFragment(OccurrenceMapping.recordedBy(graph))
+        .importFragment(OccurrenceMapping.identifiedBy(graph))
+        .importFragment(OccurrenceMapping.materialGeologicalContext(graph))
+        .importFragment(OccurrenceMapping.materialProtocols(graph))
         .build();
   }
 

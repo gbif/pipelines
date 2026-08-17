@@ -429,6 +429,13 @@ public final class SparkExtendedRecordExecutor {
   }
 
   private Column coreTargetExpression(CompiledTargetProducer target, Dataset<Row> root) {
+    if (target.aggregation() instanceof ValueAggregation.PresentOrFallback) {
+      return target.sources().stream()
+          .filter(source -> hasColumn(root, source.field().column()))
+          .findFirst()
+          .map(source -> root.col(source.field().column()).cast("string"))
+          .orElse(lit(null).cast("string"));
+    }
     List<Column> sources =
         target.sources().stream()
             .map(
@@ -441,6 +448,13 @@ public final class SparkExtendedRecordExecutor {
   }
 
   private Column coreTargetExpression(CompiledTargetProducer target, SparkPathResult pathResult) {
+    if (target.aggregation() instanceof ValueAggregation.PresentOrFallback) {
+      return target.sources().stream()
+          .filter(source -> pathResult.aliases().containsKey(source.field()))
+          .findFirst()
+          .map(source -> pathResult.column(source.field()).cast("string"))
+          .orElse(lit(null).cast("string"));
+    }
     List<Column> sources =
         target.sources().stream()
             .map(source -> pathResult.columnOrNull(source.field()).cast("string"))

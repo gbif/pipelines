@@ -114,6 +114,31 @@ class OccurrenceCoreMappingParityTest {
   }
 
   @Test
+  void organismFieldFallsBackOnlyWhenOccurrencePhysicalColumnIsAbsent() {
+    StructType occurrenceSchema =
+        new StructType()
+            .add("occurrence_pk", DataTypes.StringType)
+            .add("occurrenceID", DataTypes.StringType)
+            .add("organismID", DataTypes.StringType);
+    Dataset<Row> occurrence =
+        spark.createDataFrame(
+            List.of(RowFactory.create("OPK-1", "OCC001", "ORG-1")), occurrenceSchema);
+    TableLoader loader =
+        TestTableLoader.of(
+            "occurrence",
+            occurrence,
+            "organism",
+            organisms(RowFactory.create("ORG-1", "Organism oak", "Organism scope", "oak-associate")));
+
+    ExtendedRecord legacy = only(OccurrenceCoreBuilder.build(spark, loader).collectAsList());
+    ExtendedRecord mapped = only(engine.execute(loader, plan).collectAsList());
+
+    String organismName = DwcTerm.organismName.qualifiedName();
+    assertEquals("Organism oak", legacy.getCoreTerms().get(organismName));
+    assertEquals(legacy.getCoreTerms().get(organismName), mapped.getCoreTerms().get(organismName));
+  }
+
+  @Test
   void multipleAcceptedIdentificationsContributeNothingAndMatchLegacy() {
     TableLoader loader =
         TestTableLoader.of(
@@ -234,6 +259,66 @@ class OccurrenceCoreMappingParityTest {
     assertNull(mapped.get(1).getCoreTerms().get(projectTitle));
   }
 
+
+  @Test
+  void agentIdsResolveNamesKeepIdsAndMatchLegacy() {
+    TableLoader loader =
+        TestTableLoader.of(
+            "occurrence",
+            occurrencesWithAgents(
+                RowFactory.create(
+                    "OPK-1", "OCC001", "AGT-1", "AGT-2", null, null)),
+            "agent",
+            agents(
+                RowFactory.create("AGT-1", "Jane Collector"),
+                RowFactory.create("AGT-2", "Alex Identifier")));
+
+    ExtendedRecord legacy = only(OccurrenceCoreBuilder.build(spark, loader).collectAsList());
+    ExtendedRecord mapped = only(engine.execute(loader, plan).collectAsList());
+
+    assertEquals(
+        legacy.getCoreTerms().get(DwcTerm.recordedBy.qualifiedName()),
+        mapped.getCoreTerms().get(DwcTerm.recordedBy.qualifiedName()));
+    assertEquals(
+        legacy.getCoreTerms().get(DwcTerm.identifiedBy.qualifiedName()),
+        mapped.getCoreTerms().get(DwcTerm.identifiedBy.qualifiedName()));
+    assertEquals("Jane Collector", mapped.getCoreTerms().get(DwcTerm.recordedBy.qualifiedName()));
+    assertEquals("Alex Identifier", mapped.getCoreTerms().get(DwcTerm.identifiedBy.qualifiedName()));
+    assertEquals("AGT-1", mapped.getCoreTerms().get(DwcTerm.recordedByID.qualifiedName()));
+    assertEquals("AGT-2", mapped.getCoreTerms().get(DwcTerm.identifiedByID.qualifiedName()));
+  }
+
+  @Test
+  void publisherAgentNamesWinOverResolvedNames() {
+    TableLoader loader =
+        TestTableLoader.of(
+            "occurrence",
+            occurrencesWithAgents(
+                RowFactory.create(
+                    "OPK-1",
+                    "OCC001",
+                    "AGT-1",
+                    "AGT-2",
+                    "Publisher recorder",
+                    "Publisher identifier")),
+            "agent",
+            agents(
+                RowFactory.create("AGT-1", "Jane Collector"),
+                RowFactory.create("AGT-2", "Alex Identifier")));
+
+    ExtendedRecord legacy = only(OccurrenceCoreBuilder.build(spark, loader).collectAsList());
+    ExtendedRecord mapped = only(engine.execute(loader, plan).collectAsList());
+
+    assertEquals(
+        legacy.getCoreTerms().get(DwcTerm.recordedBy.qualifiedName()),
+        mapped.getCoreTerms().get(DwcTerm.recordedBy.qualifiedName()));
+    assertEquals(
+        legacy.getCoreTerms().get(DwcTerm.identifiedBy.qualifiedName()),
+        mapped.getCoreTerms().get(DwcTerm.identifiedBy.qualifiedName()));
+    assertEquals("Publisher recorder", mapped.getCoreTerms().get(DwcTerm.recordedBy.qualifiedName()));
+    assertEquals("Publisher identifier", mapped.getCoreTerms().get(DwcTerm.identifiedBy.qualifiedName()));
+  }
+
   @Test
   void governingMaterialProvenanceFragmentsUseContributionIdentityAndSchemaPaths() {
     List<CompiledCoreFragment> fragments = engine.compile(plan).coreFragments();
@@ -259,7 +344,101 @@ class OccurrenceCoreMappingParityTest {
     assertEquals("materialEntity_fk", junction.path().relations().get(1).targetColumn());
     assertEquals("provenance_fk", junction.path().relations().get(2).sourceColumn());
 
-    assertEquals(4, engine.compile(plan).coreTargetMerges().size());
+    assertEquals(5, engine.compile(plan).coreTargetMerges().size());
+  }
+
+  @Test
+  void materialGeologicalContextMatchesLegacyAndRequiresExactlyOneContext() {
+    TableLoader loader =
+        TestTableLoader.of(
+            "occurrence",
+            occurrencesForMaterial(
+                RowFactory.create("OPK-1", "OCC001", "Occurrence oak"),
+                RowFactory.create("OPK-2", "OCC002", "Occurrence pine")),
+            "material",
+            materialsForContext(
+                RowFactory.create("MEPK-1", "OCC001"),
+                RowFactory.create("MEPK-2", "OCC002")),
+            "material-geological-context",
+            materialGeologicalContexts(
+                RowFactory.create("MEPK-1", "GCPK-1"),
+                RowFactory.create("MEPK-2", "GCPK-1"),
+                RowFactory.create("MEPK-2", "GCPK-2")),
+            "geological-context",
+            geologicalContexts(
+                RowFactory.create("GCPK-1", "GEO-1", "Morrison", "Brushy Basin"),
+                RowFactory.create("GCPK-2", "GEO-2", "Chinle", "Petrified Forest")));
+
+    List<ExtendedRecord> legacy =
+        OccurrenceCoreBuilder.build(spark, loader).collectAsList().stream()
+            .sorted(java.util.Comparator.comparing(ExtendedRecord::getId))
+            .toList();
+    List<ExtendedRecord> mapped =
+        engine.execute(loader, plan).collectAsList().stream()
+            .sorted(java.util.Comparator.comparing(ExtendedRecord::getId))
+            .toList();
+
+    String formation = DwcTerm.formation.qualifiedName();
+    String bed = DwcTerm.bed.qualifiedName();
+    assertEquals(legacy.get(0).getCoreTerms().get(formation), mapped.get(0).getCoreTerms().get(formation));
+    assertEquals("Morrison", mapped.get(0).getCoreTerms().get(formation));
+    assertEquals("Brushy Basin", mapped.get(0).getCoreTerms().get(bed));
+    assertEquals(legacy.get(1).getCoreTerms().get(formation), mapped.get(1).getCoreTerms().get(formation));
+    assertNull(mapped.get(1).getCoreTerms().get(formation));
+    assertNull(mapped.get(1).getCoreTerms().get(bed));
+  }
+
+  @Test
+  void materialProtocolsMergeWithDirectSamplingProtocolAndMatchLegacy() {
+    TableLoader loader =
+        TestTableLoader.of(
+            "occurrence",
+            occurrences(RowFactory.create("OPK-1", "OCC001", "PPK-D", "Occurrence oak")),
+            "material",
+            materialsForContext(RowFactory.create("MEPK-1", "OCC001")),
+            "material-protocol",
+            materialProtocols(
+                RowFactory.create("MEPK-1", "PPK-B"),
+                RowFactory.create("MEPK-1", "PPK-A")),
+            "protocol",
+            protocols(
+                RowFactory.create("PPK-D", null, null, "Direct sampling"),
+                RowFactory.create("PPK-A", null, null, "Material A"),
+                RowFactory.create("PPK-B", null, null, "Material B")));
+
+    ExtendedRecord legacy = only(OccurrenceCoreBuilder.build(spark, loader).collectAsList());
+    ExtendedRecord mapped = only(engine.execute(loader, plan).collectAsList());
+
+    String target = DwcTerm.samplingProtocol.qualifiedName();
+    assertEquals(legacy.getCoreTerms().get(target), mapped.getCoreTerms().get(target));
+    assertEquals("Direct sampling|Material A|Material B", mapped.getCoreTerms().get(target));
+  }
+
+  @Test
+  void governingMaterialContextAndProtocolFragmentsUseSingleMaterialGate() {
+    List<CompiledCoreFragment> fragments = engine.compile(plan).coreFragments();
+
+    CompiledCoreFragment context =
+        fragments.stream()
+            .filter(f -> f.name().equals("occurrence-core-material-geological-context"))
+            .findFirst()
+            .orElseThrow();
+    assertEquals("geological-context", context.path().currentResource());
+    assertEquals(3, context.path().relations().size());
+    assertEquals("evidenceForOccurrenceID", context.path().relations().get(0).targetColumn());
+    assertEquals("materialEntity_fk", context.path().relations().get(1).targetColumn());
+    assertEquals("geologicalContext_fk", context.path().relations().get(2).sourceColumn());
+
+    CompiledCoreFragment protocols =
+        fragments.stream()
+            .filter(f -> f.name().equals("occurrence-core-material-protocols"))
+            .findFirst()
+            .orElseThrow();
+    assertEquals("protocol", protocols.path().currentResource());
+    assertEquals(3, protocols.path().relations().size());
+    assertEquals("materialEntity_fk", protocols.path().relations().get(1).targetColumn());
+    assertEquals("protocol_fk", protocols.path().relations().get(2).sourceColumn());
+    assertEquals(DwcTerm.samplingProtocol.qualifiedName(), protocols.targets().get(0).targetTerm());
   }
 
   @Test
@@ -298,6 +477,31 @@ class OccurrenceCoreMappingParityTest {
     assertEquals("occurrence_fk", identification.path().relations().get(0).targetColumn());
   }
 
+
+  @Test
+  void governingAgentFragmentsUseDeclaredMappingRelationsAndOneOfTargets() {
+    List<CompiledCoreFragment> fragments = engine.compile(plan).coreFragments();
+
+    CompiledCoreFragment recordedBy =
+        fragments.stream()
+            .filter(f -> f.name().equals("occurrence-recorded-by-agent"))
+            .findFirst()
+            .orElseThrow();
+    CompiledCoreFragment identifiedBy =
+        fragments.stream()
+            .filter(f -> f.name().equals("occurrence-identified-by-agent"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("recordedByID", recordedBy.path().relations().get(0).sourceColumn());
+    assertEquals("agentID", recordedBy.path().relations().get(0).targetColumn());
+    assertEquals(DwcTerm.recordedBy.qualifiedName(), recordedBy.targets().get(0).targetTerm());
+
+    assertEquals("identifiedByID", identifiedBy.path().relations().get(0).sourceColumn());
+    assertEquals("agentID", identifiedBy.path().relations().get(0).targetColumn());
+    assertEquals(DwcTerm.identifiedBy.qualifiedName(), identifiedBy.targets().get(0).targetTerm());
+  }
+
   @Test
   void governingProtocolFragmentUsesSchemaBackedOccurrenceFk() {
     CompiledCoreFragment fragment =
@@ -321,6 +525,27 @@ class OccurrenceCoreMappingParityTest {
     return spark.createDataFrame(List.of(rows), schema);
   }
 
+
+
+  private Dataset<Row> occurrencesWithAgents(Row... rows) {
+    StructType schema =
+        new StructType()
+            .add("occurrence_pk", DataTypes.StringType)
+            .add("occurrenceID", DataTypes.StringType)
+            .add("recordedByID", DataTypes.StringType)
+            .add("identifiedByID", DataTypes.StringType)
+            .add("recordedBy", DataTypes.StringType)
+            .add("identifiedBy", DataTypes.StringType);
+    return spark.createDataFrame(List.of(rows), schema);
+  }
+
+  private Dataset<Row> agents(Row... rows) {
+    StructType schema =
+        new StructType()
+            .add("agentID", DataTypes.StringType)
+            .add("preferredAgentName", DataTypes.StringType);
+    return spark.createDataFrame(List.of(rows), schema);
+  }
 
   private Dataset<Row> occurrencesWithOrganism(Row... rows) {
     StructType schema =
@@ -411,6 +636,40 @@ class OccurrenceCoreMappingParityTest {
             .add("fundingAttributionID", DataTypes.StringType)
             .add("projectID", DataTypes.StringType)
             .add("projectTitle", DataTypes.StringType);
+    return spark.createDataFrame(List.of(rows), schema);
+  }
+
+  private Dataset<Row> materialsForContext(Row... rows) {
+    StructType schema =
+        new StructType()
+            .add("materialEntity_pk", DataTypes.StringType)
+            .add("evidenceForOccurrenceID", DataTypes.StringType);
+    return spark.createDataFrame(List.of(rows), schema);
+  }
+
+  private Dataset<Row> materialGeologicalContexts(Row... rows) {
+    StructType schema =
+        new StructType()
+            .add("materialEntity_fk", DataTypes.StringType)
+            .add("geologicalContext_fk", DataTypes.StringType);
+    return spark.createDataFrame(List.of(rows), schema);
+  }
+
+  private Dataset<Row> geologicalContexts(Row... rows) {
+    StructType schema =
+        new StructType()
+            .add("geologicalContext_pk", DataTypes.StringType)
+            .add("geologicalContextID", DataTypes.StringType)
+            .add("formation", DataTypes.StringType)
+            .add("bed", DataTypes.StringType);
+    return spark.createDataFrame(List.of(rows), schema);
+  }
+
+  private Dataset<Row> materialProtocols(Row... rows) {
+    StructType schema =
+        new StructType()
+            .add("materialEntity_fk", DataTypes.StringType)
+            .add("protocol_fk", DataTypes.StringType);
     return spark.createDataFrame(List.of(rows), schema);
   }
 

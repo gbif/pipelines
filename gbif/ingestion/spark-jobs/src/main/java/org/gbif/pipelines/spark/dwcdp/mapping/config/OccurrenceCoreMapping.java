@@ -6,6 +6,8 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.CoreFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.CoreFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.SchemaRelation;
+import org.gbif.pipelines.spark.dwcdp.mapping.RelationCardinality;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaResource;
 import org.gbif.pipelines.spark.dwcdp.mapping.TargetFieldMapping;
@@ -30,7 +32,7 @@ public final class OccurrenceCoreMapping {
             .optional()
             .exactlyOne()
             .endJoin();
-    DirectFieldMappings.from(graph, "organism", organism).addTo(builder);
+    addOrganismTargets(graph, builder, occurrence, organism);
     return builder.build();
   }
 
@@ -122,6 +124,88 @@ public final class OccurrenceCoreMapping {
 
 
 
+
+  /** Geological-context fields from one unambiguous context on one evidence material. */
+  public static CoreFragment materialGeologicalContext(SchemaGraph graph) {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    SchemaPath material =
+        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID"));
+    SchemaPath link =
+        material.append(
+            graph.resolve("material", "material-geological-context", "materialEntity_fk"));
+    SchemaPath geologicalContext =
+        link.append(
+            graph.resolve(
+                "material-geological-context", "geological-context", "geologicalContext_fk"));
+
+    CoreFragmentBuilder builder =
+        coreFragment("occurrence-core-material-geological-context", "occurrence")
+            .join("material")
+            .via("evidenceForOccurrenceID")
+            .optional()
+            .exactlyOne()
+            .join("material-geological-context")
+            .via("materialEntity_fk")
+            .optional()
+            .exactlyOne()
+            .join("geological-context")
+            .via("geologicalContext_fk")
+            .optional()
+            .exactlyOne()
+            .endJoin();
+
+    SchemaResource resource =
+        graph.resource("geological-context")
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "DwC-DP schema has no resource geological-context"));
+    for (String column : resource.fields().keySet()) {
+      if (column.endsWith("_pk") || column.endsWith("_fk") || column.equals("geologicalContextID")) {
+        continue;
+      }
+      builder.field(
+          TargetFieldMapping.inferredOneOf(
+              TargetTerms.resolve(column),
+              ValueAggregation.firstNonNull(),
+              geologicalContext.field(column)));
+    }
+    return builder.build();
+  }
+
+  /** Material-linked protocols contribute to occurrence samplingProtocol for one evidence material. */
+  public static CoreFragment materialProtocols(SchemaGraph graph) {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    SchemaPath material =
+        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID"));
+    SchemaPath link =
+        material.append(graph.resolve("material", "material-protocol", "materialEntity_fk"));
+    SchemaPath protocol =
+        link.append(graph.resolve("material-protocol", "protocol", "protocol_fk"));
+
+    return coreFragment("occurrence-core-material-protocols", "occurrence")
+        .join("material")
+        .via("evidenceForOccurrenceID")
+        .optional()
+        .exactlyOne()
+        .join("material-protocol")
+        .via("materialEntity_fk")
+        .optional()
+        .fanOut()
+        .join("protocol")
+        .via("protocol_fk")
+        .optional()
+        .exactlyOne()
+        .field(
+            TargetFieldMapping.oneOf(
+                DwcTerm.samplingProtocol.qualifiedName(),
+                ValueAggregation.labeledOrFallback(": "),
+                protocol.field("protocolType"),
+                protocol.field("protocolName"),
+                protocol.field("protocolDescription")))
+        .build();
+  }
+
   /** Direct material.provenance_fk contributions for an unambiguous evidence material. */
   public static CoreFragment materialDirectProvenance(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
@@ -187,6 +271,25 @@ public final class OccurrenceCoreMapping {
     }
   }
 
+
+  /** Resolves recordedByID through agent.agentID while preserving an explicit publisher value. */
+  public static CoreFragment recordedBy(SchemaGraph graph) {
+    return agentName(
+        "occurrence-recorded-by-agent",
+        "recordedByID",
+        "recordedBy",
+        DwcTerm.recordedBy.qualifiedName());
+  }
+
+  /** Resolves identifiedByID through agent.agentID while preserving an explicit publisher value. */
+  public static CoreFragment identifiedBy(SchemaGraph graph) {
+    return agentName(
+        "occurrence-identified-by-agent",
+        "identifiedByID",
+        "identifiedBy",
+        DwcTerm.identifiedBy.qualifiedName());
+  }
+
   /** Direct occurrenceProtocol_fk -> samplingProtocol, with raw-FK fallback if protocol is absent. */
   public static CoreFragment directSamplingProtocol(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
@@ -208,6 +311,72 @@ public final class OccurrenceCoreMapping {
                 occurrence.field("occurrenceProtocol_fk")))
         .build();
   }
+
+  private static CoreFragment agentName(
+      String name, String idColumn, String valueColumn, String targetTerm) {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    SchemaPath agent =
+        occurrence.append(
+            SchemaRelation.relation(
+                "occurrence", idColumn, "agent", "agentID", null, RelationCardinality.UNKNOWN));
+
+    return coreFragment(name, "occurrence")
+        .join("agent")
+        .on(idColumn, "agentID")
+        .optional()
+        .fanOut()
+        .field(
+            TargetFieldMapping.oneOf(
+                targetTerm,
+                ValueAggregation.firstNonNull(),
+                occurrence.field(valueColumn),
+                agent.field("preferredAgentName")))
+        .build();
+  }
+
+  private static void addOrganismTargets(
+      SchemaGraph graph,
+      CoreFragmentBuilder builder,
+      SchemaPath occurrence,
+      SchemaPath organism) {
+    SchemaResource resource =
+        graph.resource("organism")
+            .orElseThrow(
+                () -> new IllegalArgumentException("DwC-DP schema has no resource organism"));
+    for (String column : resource.fields().keySet()) {
+      if (column.endsWith("_pk") || column.endsWith("_fk")) {
+        continue;
+      }
+      String target = TargetTerms.resolve(column);
+      String occurrenceColumn = sourceColumnForTarget(graph, "occurrence", target);
+      builder.field(
+          occurrenceColumn == null
+              ? TargetFieldMapping.inferredOneOf(
+                  target, ValueAggregation.firstNonNull(), organism.field(column))
+              : TargetFieldMapping.oneOf(
+                  target,
+                  ValueAggregation.presentOrFallback(),
+                  occurrence.field(occurrenceColumn),
+                  organism.field(column)));
+    }
+  }
+
+  private static String sourceColumnForTarget(
+      SchemaGraph graph, String resourceName, String target) {
+    SchemaResource resource =
+        graph.resource(resourceName)
+            .orElseThrow(
+                () -> new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
+    for (String column : resource.fields().keySet()) {
+      if (!column.endsWith("_pk")
+          && !column.endsWith("_fk")
+          && TargetTerms.resolve(column).equals(target)) {
+        return column;
+      }
+    }
+    return null;
+  }
+
   private static Set<String> targetTerms(SchemaGraph graph, String resourceName) {
     SchemaResource resource =
         graph.resource(resourceName)

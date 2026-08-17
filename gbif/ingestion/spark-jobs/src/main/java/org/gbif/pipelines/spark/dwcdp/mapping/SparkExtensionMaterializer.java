@@ -5,12 +5,14 @@ import static org.apache.spark.sql.functions.array_distinct;
 import static org.apache.spark.sql.functions.coalesce;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.collect_list;
+import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.concat_ws;
 import static org.apache.spark.sql.functions.first;
 import static org.apache.spark.sql.functions.flatten;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.monotonically_increasing_id;
 import static org.apache.spark.sql.functions.sort_array;
+import static org.apache.spark.sql.functions.when;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -301,7 +303,8 @@ public final class SparkExtensionMaterializer {
       if (previous != null) {
         throw duplicateTargetException(target.targetTerm(), previous, materializedTarget);
       }
-      if (!(rowProducing && fragment.rowIdentity().isEmpty())) {
+      if (!mergeTerms.contains(target.targetTerm())
+          && !(rowProducing && fragment.rowIdentity().isEmpty())) {
         aggregates.add(aggregateExpression(target, pathResult).as(alias));
       }
     }
@@ -318,7 +321,11 @@ public final class SparkExtensionMaterializer {
       selected.add(col(parentAlias).cast("string").as(COL_PARENT_KEY));
       selected.add(monotonically_increasing_id().cast("string").as(COL_ROW_KEY));
       for (CompiledTargetProducer target : fragment.targets()) {
-        selected.add(rowExpression(target, pathResult).as(targetAlias(target.targetTerm(), target.owner(), mergeTerms)));
+        if (!mergeTerms.contains(target.targetTerm())) {
+          selected.add(
+              rowExpression(target, pathResult)
+                  .as(targetAlias(target.targetTerm(), target.owner(), mergeTerms)));
+        }
       }
       grouped = pathResult.dataset().select(selected.toArray(Column[]::new));
     } else if (aggregates.isEmpty()) {
@@ -386,6 +393,13 @@ public final class SparkExtensionMaterializer {
 
   private Column rowExpression(
       CompiledTargetProducer target, SparkPathResult pathResult) {
+    if (target.aggregation() instanceof ValueAggregation.PresentOrFallback) {
+      return target.sources().stream()
+          .filter(source -> pathResult.aliases().containsKey(source.field()))
+          .findFirst()
+          .map(source -> pathResult.column(source.field()))
+          .orElse(lit(null));
+    }
     List<Column> sources =
         target.sources().stream().map(source -> pathResult.columnOrNull(source.field())).toList();
 
@@ -395,6 +409,42 @@ public final class SparkExtensionMaterializer {
     }
     if (target.aggregation() instanceof ValueAggregation.ExactlyOne && sources.size() == 1) {
       return sources.get(0);
+    }
+    if (target.aggregation() instanceof ValueAggregation.LabeledOrFallback labeled) {
+      if (sources.size() < 3) {
+        throw new IllegalArgumentException(
+            "LabeledOrFallback requires [label, name, fallback...] sources for "
+                + target.targetTerm());
+      }
+      Column labeledValue =
+          when(
+                  sources.get(0).isNotNull().and(sources.get(1).isNotNull()),
+                  concat(sources.get(0), lit(labeled.separator()), sources.get(1)))
+              .otherwise(sources.get(2));
+      if (sources.size() == 3) {
+        return labeledValue;
+      }
+      List<Column> fallback = new ArrayList<>();
+      fallback.add(labeledValue);
+      fallback.addAll(sources.subList(3, sources.size()));
+      return coalesce(fallback.toArray(Column[]::new));
+    }
+    if (target.aggregation() instanceof ValueAggregation.PreferredLabeledOrFallback labeled) {
+      if (sources.size() < 4) {
+        throw new IllegalArgumentException(
+            "PreferredLabeledOrFallback requires [preferred, label, name, fallback...] sources for "
+                + target.targetTerm());
+      }
+      Column labeledValue =
+          when(
+                  sources.get(1).isNotNull().and(sources.get(2).isNotNull()),
+                  concat(sources.get(1), lit(labeled.separator()), sources.get(2)))
+              .otherwise(sources.get(3));
+      List<Column> values = new ArrayList<>();
+      values.add(sources.get(0));
+      values.add(labeledValue);
+      values.addAll(sources.subList(4, sources.size()));
+      return coalesce(values.toArray(Column[]::new));
     }
 
     throw new UnsupportedOperationException(
@@ -406,6 +456,15 @@ public final class SparkExtensionMaterializer {
 
   private Column aggregateExpression(
       CompiledTargetProducer target, SparkPathResult pathResult) {
+    if (target.aggregation() instanceof ValueAggregation.PresentOrFallback) {
+      Column selected =
+          target.sources().stream()
+              .filter(source -> pathResult.aliases().containsKey(source.field()))
+              .findFirst()
+              .map(source -> pathResult.column(source.field()))
+              .orElse(lit(null));
+      return first(selected, false);
+    }
     List<Column> sources =
         target.sources().stream().map(source -> pathResult.columnOrNull(source.field())).toList();
 

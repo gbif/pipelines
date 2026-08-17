@@ -22,6 +22,7 @@ import org.gbif.pipelines.spark.dwcdp.builder.EventCoreBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.DwcDpSchemaLoader;
 import org.gbif.pipelines.spark.dwcdp.mapping.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledExtension;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledMapping;
@@ -83,11 +84,26 @@ class OccurrenceMappingParityTest {
     assertTrue(organism.rowIdentity().isEmpty());
     assertEquals(
         "occurrence.occurrence_pk", organism.rowMatch().orElseThrow().qualifiedName());
+    SchemaPath occurrencePath = SchemaPath.root("occurrence");
     assertTrue(
         organism.targets().stream()
             .flatMap(target -> target.sources().stream())
-            .allMatch(source -> source.field().path().equals(organism.path())),
-        "organism target FieldRefs must use the same schema-resolved path as the compiled fragment");
+            .allMatch(
+                source ->
+                    source.field().path().equals(organism.path())
+                        || source.field().path().equals(occurrencePath)),
+        "organism targets may source from the organism path or direct occurrence path for "
+            + "column-presence precedence");
+    assertTrue(
+        organism.targets().stream()
+            .filter(target -> target.sources().size() > 1)
+            .allMatch(
+                target ->
+                    target.sources().stream()
+                        .map(source -> source.field().path())
+                        .collect(java.util.stream.Collectors.toSet())
+                        .equals(java.util.Set.of(occurrencePath, organism.path()))),
+        "overlapping organism targets must explicitly carry both occurrence and organism paths");
   }
 
   @Test

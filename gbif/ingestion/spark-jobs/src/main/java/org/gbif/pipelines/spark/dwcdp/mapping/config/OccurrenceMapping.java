@@ -8,6 +8,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragment;
 import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.RelationCardinality;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaPath;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaRelation;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaResource;
@@ -49,7 +50,7 @@ public final class OccurrenceMapping {
             .optional()
             .exactlyOne()
             .endJoin();
-    DirectFieldMappings.from(graph, "organism", organism).addTo(builder);
+    addOrganismTargets(graph, builder, occurrence, organism);
     return builder.build();
   }
 
@@ -205,6 +206,136 @@ public final class OccurrenceMapping {
     return builder.build();
   }
 
+  /** Resolves recordedByID through agent.agentID for an Event-nested Occurrence row. */
+  public static ExtensionFragment recordedBy(SchemaGraph graph) {
+    return agentName(
+        "occurrence-recorded-by-agent",
+        "recordedByID",
+        "recordedBy",
+        DwcTerm.recordedBy.qualifiedName());
+  }
+
+  /** Resolves identifiedByID through agent.agentID for an Event-nested Occurrence row. */
+  public static ExtensionFragment identifiedBy(SchemaGraph graph) {
+    return agentName(
+        "occurrence-identified-by-agent",
+        "identifiedByID",
+        "identifiedBy",
+        DwcTerm.identifiedBy.qualifiedName());
+  }
+
+  /** Geological-context fields from one context on one unambiguous evidence material. */
+  public static ExtensionFragment materialGeologicalContext(SchemaGraph graph) {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    SchemaPath material =
+        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID"));
+    SchemaPath link =
+        material.append(
+            graph.resolve("material", "material-geological-context", "materialEntity_fk"));
+    SchemaPath geologicalContext =
+        link.append(
+            graph.resolve(
+                "material-geological-context", "geological-context", "geologicalContext_fk"));
+
+    ExtensionFragmentBuilder builder =
+        extensionFragment(
+                "occurrence-material-geological-context", ROW_TYPE_OCCURRENCE, "occurrence")
+            .scopeKey("event_fk")
+            .rowMatch(occurrence.field("occurrence_pk"))
+            .join("material")
+            .via("evidenceForOccurrenceID")
+            .optional()
+            .exactlyOne()
+            .join("material-geological-context")
+            .via("materialEntity_fk")
+            .optional()
+            .exactlyOne()
+            .join("geological-context")
+            .via("geologicalContext_fk")
+            .optional()
+            .exactlyOne()
+            .endJoin();
+
+    SchemaResource resource =
+        graph.resource("geological-context")
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "DwC-DP schema has no resource geological-context"));
+    for (String column : resource.fields().keySet()) {
+      if (column.endsWith("_pk")
+          || column.endsWith("_fk")
+          || column.equals("geologicalContextID")) {
+        continue;
+      }
+      builder.field(
+          TargetFieldMapping.inferredOneOf(
+              TargetTerms.resolve(column),
+              ValueAggregation.firstNonNull(),
+              geologicalContext.field(column)));
+    }
+    return builder.build();
+  }
+
+  /** Material-linked protocols contribute to samplingProtocol on an Event-nested Occurrence row. */
+  public static ExtensionFragment materialProtocols(SchemaGraph graph) {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    SchemaPath material =
+        occurrence.append(graph.resolve("occurrence", "material", "evidenceForOccurrenceID"));
+    SchemaPath link =
+        material.append(graph.resolve("material", "material-protocol", "materialEntity_fk"));
+    SchemaPath protocol =
+        link.append(graph.resolve("material-protocol", "protocol", "protocol_fk"));
+
+    return extensionFragment("occurrence-material-protocols", ROW_TYPE_OCCURRENCE, "occurrence")
+        .scopeKey("event_fk")
+        .rowMatch(occurrence.field("occurrence_pk"))
+        .join("material")
+        .via("evidenceForOccurrenceID")
+        .optional()
+        .exactlyOne()
+        .join("material-protocol")
+        .via("materialEntity_fk")
+        .optional()
+        .fanOut()
+        .join("protocol")
+        .via("protocol_fk")
+        .optional()
+        .exactlyOne()
+        .field(
+            TargetFieldMapping.oneOf(
+                DwcTerm.samplingProtocol.qualifiedName(),
+                ValueAggregation.labeledOrFallback(": "),
+                protocol.field("protocolType"),
+                protocol.field("protocolName"),
+                protocol.field("protocolDescription")))
+        .build();
+  }
+
+  private static ExtensionFragment agentName(
+      String name, String idColumn, String valueColumn, String targetTerm) {
+    SchemaPath occurrence = SchemaPath.root("occurrence");
+    SchemaPath agent =
+        occurrence.append(
+            SchemaRelation.relation(
+                "occurrence", idColumn, "agent", "agentID", null, RelationCardinality.UNKNOWN));
+
+    return extensionFragment(name, ROW_TYPE_OCCURRENCE, "occurrence")
+        .scopeKey("event_fk")
+        .rowMatch(occurrence.field("occurrence_pk"))
+        .join("agent")
+        .on(idColumn, "agentID")
+        .optional()
+        .fanOut()
+        .field(
+            TargetFieldMapping.oneOf(
+                targetTerm,
+                ValueAggregation.firstNonNull(),
+                occurrence.field(valueColumn),
+                agent.field("preferredAgentName")))
+        .build();
+  }
+
   private static void addProvenanceTargets(
       ExtensionFragmentBuilder builder, SchemaPath provenance) {
     for (String field :
@@ -217,6 +348,49 @@ public final class OccurrenceMapping {
               .contributionIdentity(provenance.field("provenance_pk"))
               .orderBy(provenance.field("provenanceID")));
     }
+  }
+
+  private static void addOrganismTargets(
+      SchemaGraph graph,
+      ExtensionFragmentBuilder builder,
+      SchemaPath occurrence,
+      SchemaPath organism) {
+    SchemaResource resource =
+        graph.resource("organism")
+            .orElseThrow(
+                () -> new IllegalArgumentException("DwC-DP schema has no resource organism"));
+    for (String column : resource.fields().keySet()) {
+      if (column.endsWith("_pk") || column.endsWith("_fk")) {
+        continue;
+      }
+      String target = TargetTerms.resolve(column);
+      String occurrenceColumn = sourceColumnForTarget(graph, "occurrence", target);
+      builder.field(
+          occurrenceColumn == null
+              ? TargetFieldMapping.inferredOneOf(
+                  target, ValueAggregation.firstNonNull(), organism.field(column))
+              : TargetFieldMapping.oneOf(
+                  target,
+                  ValueAggregation.presentOrFallback(),
+                  occurrence.field(occurrenceColumn),
+                  organism.field(column)));
+    }
+  }
+
+  private static String sourceColumnForTarget(
+      SchemaGraph graph, String resourceName, String target) {
+    SchemaResource resource =
+        graph.resource(resourceName)
+            .orElseThrow(
+                () -> new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
+    for (String column : resource.fields().keySet()) {
+      if (!column.endsWith("_pk")
+          && !column.endsWith("_fk")
+          && TargetTerms.resolve(column).equals(target)) {
+        return column;
+      }
+    }
+    return null;
   }
 
   private static Set<String> targetTerms(SchemaGraph graph, String resourceName) {
