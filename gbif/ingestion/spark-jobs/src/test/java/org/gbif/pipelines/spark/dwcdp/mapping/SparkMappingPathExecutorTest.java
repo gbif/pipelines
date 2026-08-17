@@ -108,6 +108,39 @@ class SparkMappingPathExecutorTest {
     assertNull(agentRole);
   }
 
+
+  @Test
+  void exactlyOneIgnoresDuplicateIdenticalTargetRows() {
+    Mapping mapping =
+        MappingBuilder.mapping("exactly-one-duplicate-role", "survey")
+            .join("survey-agent-role")
+            .exactlyOne()
+            .build();
+
+    Dataset<Row> duplicateRoles =
+        spark.createDataFrame(
+            List.of(
+                RowFactory.create("S1", "A1", "collector", 1),
+                RowFactory.create("S1", "A1", "collector", 1)),
+            new StructType()
+                .add("survey_fk", DataTypes.StringType)
+                .add("agent_fk", DataTypes.StringType)
+                .add("agentRole", DataTypes.StringType)
+                .add("agentRoleOrder", DataTypes.IntegerType));
+
+    MappingExecutionResult result =
+        executor().execute(
+            TestTableLoader.of("survey", survey(), "survey-agent-role", duplicateRoles), mapping);
+
+    SchemaRelation relation = graph.resolve("survey", "survey-agent-role", "survey_fk");
+    SchemaPath rolePath = SchemaPath.root("survey").append(relation);
+    Row row = result.pathResult().dataset().first();
+    String agentRole = row.getAs(result.pathResult().columnName(rolePath.field("agentRole")));
+
+    assertEquals("collector", agentRole);
+    assertEquals(0, result.metrics().get(0).multipleMatchParentRows());
+  }
+
   @Test
   void selectorPicksOneTargetRowDeterministically() {
     Mapping mapping =

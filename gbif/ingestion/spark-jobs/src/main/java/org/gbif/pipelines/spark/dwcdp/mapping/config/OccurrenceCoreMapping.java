@@ -295,7 +295,7 @@ public final class OccurrenceCoreMapping {
         DwcTerm.identifiedBy.qualifiedName());
   }
 
-  /** Direct occurrenceProtocol_fk -> samplingProtocol, with raw-FK fallback if protocol is absent. */
+  /** Direct occurrenceProtocol_fk -> resolved samplingProtocol when the protocol exists. */
   public static CoreFragment directSamplingProtocol(SchemaGraph graph) {
     SchemaPath occurrence = SchemaPath.root("occurrence");
     SchemaPath protocol =
@@ -312,8 +312,7 @@ public final class OccurrenceCoreMapping {
                 ValueAggregation.labeledOrFallback(": "),
                 protocol.field("protocolType"),
                 protocol.field("protocolName"),
-                protocol.field("protocolDescription"),
-                occurrence.field("occurrenceProtocol_fk")))
+                protocol.field("protocolDescription")))
         .build();
   }
 
@@ -362,7 +361,7 @@ public final class OccurrenceCoreMapping {
                             target, ValueAggregation.firstNonNull(), organism.field(column))
                         : TargetFieldMapping.oneOf(
                             target,
-                            ValueAggregation.presentOrFallback(),
+                            ValueAggregation.firstNonNull(),
                             occurrence.field(occurrenceColumn),
                             organism.field(column)));
               });

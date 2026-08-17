@@ -105,10 +105,17 @@ public final class SparkMappingPathExecutor {
 
       long targetRowsBeforeFilter = targetRaw.count();
       Dataset<Row> filteredTarget = applyFilter(targetRaw, step.filter());
+      CardinalityStrategy strategy =
+          step.cardinalityStrategy().orElseGet(CardinalityStrategy::exactlyOne);
+      // Cardinality is about distinct related records, not duplicate physical rows.
+      // This is especially important for junction tables where the same relationship may be
+      // repeated verbatim; two identical links must not turn EXACTLY_ONE into ambiguity.
       long targetRowsAfterFilter = filteredTarget.count();
+      Dataset<Row> cardinalityTarget =
+          strategy instanceof CardinalityStrategy.ExactlyOne ? filteredTarget.distinct() : filteredTarget;
 
       Map<FieldRef, String> targetAliases = new LinkedHashMap<>();
-      Dataset<Row> target = aliasResource(filteredTarget, targetPath, targetAliases);
+      Dataset<Row> target = aliasResource(cardinalityTarget, targetPath, targetAliases);
       String targetAlias = targetAliases.get(targetPath.field(relation.targetColumn()));
 
       Dataset<Row> parent = current.withColumn(INTERNAL_PARENT_ID, monotonically_increasing_id());
@@ -130,8 +137,6 @@ public final class SparkMappingPathExecutor {
               .distinct()
               .count();
 
-      CardinalityStrategy strategy =
-          step.cardinalityStrategy().orElseGet(CardinalityStrategy::exactlyOne);
       joined = applyCardinality(joined, targetAliases, targetPath, strategy, parentWindow);
       joined = joined.drop(INTERNAL_PARENT_ID).drop(INTERNAL_MATCH_COUNT).drop(INTERNAL_ROW_NUMBER);
 

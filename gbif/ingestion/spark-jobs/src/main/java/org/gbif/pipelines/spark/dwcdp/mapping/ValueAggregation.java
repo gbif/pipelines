@@ -9,7 +9,6 @@ public sealed interface ValueAggregation
         ValueAggregation.Delimited,
         ValueAggregation.LabeledOrFallback,
         ValueAggregation.PreferredLabeledOrFallback,
-        ValueAggregation.PresentOrFallback,
         ValueAggregation.Named {
 
   record FirstNonNull() implements ValueAggregation {}
@@ -35,13 +34,6 @@ public sealed interface ValueAggregation
       Objects.requireNonNull(separator, "separator");
     }
   }
-
-
-  /**
-   * Uses the first source whose physical column is present in the package schema, regardless of
-   * whether that row value is null. This preserves legacy column-presence precedence.
-   */
-  record PresentOrFallback() implements ValueAggregation {}
 
   record Named(String name) implements ValueAggregation {
     public Named {
@@ -71,10 +63,6 @@ public sealed interface ValueAggregation
 
   static ValueAggregation preferredLabeledOrFallback(String separator) {
     return new PreferredLabeledOrFallback(separator);
-  }
-
-  static ValueAggregation presentOrFallback() {
-    return new PresentOrFallback();
   }
 
   static ValueAggregation named(String name) {

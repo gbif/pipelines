@@ -118,8 +118,7 @@ public final class AssertionMapping {
         TargetFieldMapping.oneOf(
             TargetTerms.resolve("measurementMethod"),
             ValueAggregation.firstNonNull(),
-            protocol.field("protocolDescription"),
-            assertion.field("assertionProtocol_fk")));
+            protocol.field("protocolDescription")));
   }
 
   private static void explicit(

@@ -131,7 +131,7 @@ class DwcDpVerbatimConverterTest {
                 "org-1",
                 "Parus major",
                 "multicellular organism",
-                "Blue tit",
+                null,
                 null,
                 "detected",
                 "female"),
@@ -544,7 +544,7 @@ class DwcDpVerbatimConverterTest {
     assertEquals(
         "Blue tit",
         occ001.getCoreTerms().get(DwcTerm.organismName.qualifiedName()),
-        "occurrence value wins for overlapping organism field");
+        "organism value fills an overlapping occurrence field when the occurrence value is null");
     assertEquals(
         "multicellular organism",
         occ001.getCoreTerms().get(DwcTerm.organismScope.qualifiedName()),
@@ -714,7 +714,7 @@ class DwcDpVerbatimConverterTest {
   }
 
   @Test
-  void assertionProtocolFkUsedAsFallbackMeasurementMethodWhenProtocolTableAbsent(@TempDir Path dir)
+  void assertionProtocolFkDoesNotLeakWhenProtocolTableAbsent(@TempDir Path dir)
       throws Exception {
     writeParquet(
         dir,
@@ -743,8 +743,9 @@ class DwcDpVerbatimConverterTest {
     assertNotNull(emof);
 
     Map<String, String> row = emof.get(0);
-    // raw FK value is kept as measurementMethod when no protocol table is available
-    assertEquals("PROTO-001", row.get(DwcTerm.measurementMethod.qualifiedName()));
+    // Surrogate protocol FKs are transport keys, not DwC-A values.
+    assertFalse(row.containsKey(DwcTerm.measurementMethod.qualifiedName()));
+    assertFalse(row.containsKey("assertionProtocol_fk"));
   }
 
   // ---- Humboldt Ecological Inventory Extension ----

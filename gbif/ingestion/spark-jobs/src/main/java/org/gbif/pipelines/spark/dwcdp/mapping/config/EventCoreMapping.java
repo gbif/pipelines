@@ -77,7 +77,7 @@ public final class EventCoreMapping {
   }
 
 
-  /** Direct eventProtocol_fk -> protocolDescription, falling back to the raw FK when absent. */
+  /** Direct eventProtocol_fk -> resolved samplingProtocol when the referenced protocol exists. */
   public static CoreFragment directSamplingProtocol(SchemaGraph graph) {
     SchemaPath event = SchemaPath.root("event");
     SchemaPath protocol =
@@ -93,12 +93,11 @@ public final class EventCoreMapping {
                 ValueAggregation.labeledOrFallback(": "),
                 protocol.field("protocolType"),
                 protocol.field("protocolName"),
-                protocol.field("protocolDescription"),
-                event.field("eventProtocol_fk")))
+                protocol.field("protocolDescription")))
         .build();
   }
 
-  /** Publisher georeferenceProtocol wins; resolved description/raw FK only fills a gap. */
+  /** Publisher georeferenceProtocol wins; otherwise use the resolved protocol value. */
   public static CoreFragment directGeoreferenceProtocol(SchemaGraph graph) {
     SchemaPath event = SchemaPath.root("event");
     SchemaPath protocol =
@@ -115,8 +114,7 @@ public final class EventCoreMapping {
                 event.field("georeferenceProtocol"),
                 protocol.field("protocolType"),
                 protocol.field("protocolName"),
-                protocol.field("protocolDescription"),
-                event.field("georeferenceProtocol_fk")))
+                protocol.field("protocolDescription")))
         .build();
   }
 

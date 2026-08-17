@@ -393,13 +393,6 @@ public final class SparkExtensionMaterializer {
 
   private Column rowExpression(
       CompiledTargetProducer target, SparkPathResult pathResult) {
-    if (target.aggregation() instanceof ValueAggregation.PresentOrFallback) {
-      return target.sources().stream()
-          .filter(source -> pathResult.aliases().containsKey(source.field()))
-          .findFirst()
-          .map(source -> pathResult.column(source.field()))
-          .orElse(lit(null));
-    }
     List<Column> sources =
         target.sources().stream().map(source -> pathResult.columnOrNull(source.field())).toList();
 
@@ -456,15 +449,6 @@ public final class SparkExtensionMaterializer {
 
   private Column aggregateExpression(
       CompiledTargetProducer target, SparkPathResult pathResult) {
-    if (target.aggregation() instanceof ValueAggregation.PresentOrFallback) {
-      Column selected =
-          target.sources().stream()
-              .filter(source -> pathResult.aliases().containsKey(source.field()))
-              .findFirst()
-              .map(source -> pathResult.column(source.field()))
-              .orElse(lit(null));
-      return first(selected, false);
-    }
     List<Column> sources =
         target.sources().stream().map(source -> pathResult.columnOrNull(source.field())).toList();
 

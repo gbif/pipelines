@@ -378,7 +378,7 @@ public final class OccurrenceMapping {
                             target, ValueAggregation.firstNonNull(), organism.field(column))
                         : TargetFieldMapping.oneOf(
                             target,
-                            ValueAggregation.presentOrFallback(),
+                            ValueAggregation.firstNonNull(),
                             occurrence.field(occurrenceColumn),
                             organism.field(column)));
               });

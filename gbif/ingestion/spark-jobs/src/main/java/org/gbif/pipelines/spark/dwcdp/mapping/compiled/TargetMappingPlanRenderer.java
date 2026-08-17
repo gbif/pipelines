@@ -363,9 +363,6 @@ public final class TargetMappingPlanRenderer {
     if (aggregation instanceof ValueAggregation.PreferredLabeledOrFallback preferred) {
       return "PREFERRED_LABELED_OR_FALLBACK('" + preferred.separator() + "')";
     }
-    if (aggregation instanceof ValueAggregation.PresentOrFallback) {
-      return "PRESENT_OR_FALLBACK";
-    }
     if (aggregation instanceof ValueAggregation.Named named) {
       return named.name();
     }
