@@ -23,6 +23,9 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
+import org.apache.spark.sql.types.DataType;
+import org.apache.spark.sql.types.StringType;
+import org.apache.spark.sql.types.StructField;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
@@ -398,29 +401,40 @@ public class ValidatorMetricsPipeline {
         log.warn("No column found for term {}", termURI);
         continue;
       }
-      Dataset<Row> interpretedUniqueValueCountDf =
-          records.groupBy(colExpr).agg(countDistinct(colExpr).alias("uniqueCount"));
 
-      Long interpretedUniqueValueCount =
-          interpretedUniqueValueCountDf
-              .select("uniqueCount")
-              .as(Encoders.LONG())
-              .collectAsList()
-              .stream()
-              .findFirst()
-              .orElseGet(
-                  () -> {
-                    log.warn("No unique interpreted values found for term {}", termURI);
-                    return 0L;
-                  });
+      Column filteredColExpr = colExpr.isNotNull();
+
+      log.debug("Term URI: " + termURI + ", Column Expression: " + colExpr);
+      List<StructField> fields =
+          Stream.of(records.schema().fields())
+              .filter(st -> st.name().equals(colExpr.toString().replace("`", "")))
+              .toList();
+
+      if (!fields.isEmpty()) {
+        DataType dataType = fields.get(0).dataType();
+        if (dataType instanceof StringType) {
+          filteredColExpr = colExpr.isNotNull().and(colExpr.notEqual(""));
+        } else if (dataType instanceof org.apache.spark.sql.types.ArrayType) {
+          filteredColExpr = colExpr.isNotNull().and(size(colExpr).gt(0));
+        }
+      }
+
+      Dataset<Row> interpretedUniqueValueCountDf =
+          records
+              .filter(filteredColExpr)
+              .groupBy(colExpr)
+              .agg(countDistinct(colExpr).alias("uniqueCount"));
+
+      Long interpretedUniqueValueCount = interpretedUniqueValueCountDf.count();
 
       Map<String, Long> topValuesMap = Map.of();
 
       if (interpretedUniqueValueCount > 0) {
+
         // get the top 10 by count
         Dataset<Row> topValues =
             records
-                .filter(colExpr.isNotNull())
+                .filter(filteredColExpr)
                 .groupBy(colExpr)
                 .agg(count(colExpr).alias("counts"))
                 .orderBy(col("counts").desc())

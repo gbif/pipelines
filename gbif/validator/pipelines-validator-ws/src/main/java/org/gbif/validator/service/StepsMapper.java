@@ -33,6 +33,7 @@ public class StepsMapper {
             .collect(Collectors.toList());
 
     collect.add(
+        0,
         Metrics.ValidationStep.builder()
             .stepType(StepType.VALIDATOR_UPLOAD_ARCHIVE.name())
             .status(Validation.Status.FINISHED)

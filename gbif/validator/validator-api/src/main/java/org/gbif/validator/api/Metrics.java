@@ -70,6 +70,8 @@ public class Metrics {
   @AllArgsConstructor
   public static class TermInfo {
     private String term;
+    private String termGroup;
+    private Integer termIndex; // for ordering terms in the same group
     private Long rawIndexed;
     private Long uniqueRawValues;
     private Long interpretedIndexed;
