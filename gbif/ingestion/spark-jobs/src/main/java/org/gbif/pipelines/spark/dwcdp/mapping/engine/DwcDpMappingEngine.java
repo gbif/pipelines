@@ -10,6 +10,10 @@ import org.gbif.pipelines.spark.dwcdp.mapping.SparkExtendedRecordExecutor;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingCompiler;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingTraceRenderer;
+import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingDatasetScope;
+import org.gbif.pipelines.spark.dwcdp.mapping.compiled.TargetMappingPlanRenderer;
+import org.gbif.pipelines.spark.dwcdp.mapping.compiled.TargetMappingPlanRenderer.Detail;
+import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.util.TableLoader;
 
 /**
@@ -47,6 +51,28 @@ public final class DwcDpMappingEngine {
   /** Human-readable full mapping trace, including all configured branches and schema paths. */
   public String trace(MappingPlan plan) {
     return MappingTraceRenderer.render(compile(plan));
+  }
+
+  /** Target-first compact view across the complete official schema. */
+  public String targetPlan(MappingPlan plan) {
+    return TargetMappingPlanRenderer.render(compile(plan), Detail.COMPACT);
+  }
+
+  /** Target-first detailed view across the complete official schema. */
+  public String targetPlanDetailed(MappingPlan plan) {
+    return TargetMappingPlanRenderer.render(compile(plan), Detail.DETAILED);
+  }
+
+  /** Target-first compact view pruned to resources and fields declared by one datapackage.json. */
+  public String targetPlan(MappingPlan plan, DataPackage dataPackage) {
+    return TargetMappingPlanRenderer.render(
+        compile(plan), MappingDatasetScope.from(dataPackage), Detail.COMPACT);
+  }
+
+  /** Target-first detailed view pruned to resources and fields declared by one datapackage.json. */
+  public String targetPlanDetailed(MappingPlan plan, DataPackage dataPackage) {
+    return TargetMappingPlanRenderer.render(
+        compile(plan), MappingDatasetScope.from(dataPackage), Detail.DETAILED);
   }
 
   public Dataset<ExtendedRecord> execute(TableLoader loader, MappingPlan plan) {

@@ -32,6 +32,9 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.spark.dwcdp.mapping.MappingPlan;
+import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.engine.DwcDpMappingEngine;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.util.MapperUtil;
 import org.gbif.pipelines.spark.util.SparkTest;
@@ -1400,6 +1403,29 @@ class DwcDpVerbatimConverterTest {
   }
 
   @Test
+  void writeIngestPlans_writesDatasetScopedCompactAndDetailedViews(@TempDir Path dir)
+      throws Exception {
+    DataPackage dp = DataPackageFixtures.withEvent("event_pk", "eventID");
+    DwcDpMappingEngine engine = DwcDpMappingEngine.currentSchema();
+    MappingPlan plan = EventDwcaMapping.current(engine.schemaGraph());
+    FileSystem fs = FileSystem.getLocal(new Configuration());
+    String datasetBasePath = "file://" + dir;
+
+    DwcDpVerbatimConverter.writeIngestPlans(fs, datasetBasePath, engine, plan, dp);
+
+    String compact =
+        readTextFile(fs, datasetBasePath + "/" + DwcDpVerbatimConverter.INGEST_PLAN_COMPACT);
+    String detailed =
+        readTextFile(fs, datasetBasePath + "/" + DwcDpVerbatimConverter.INGEST_PLAN_DETAILED);
+
+    assertTrue(compact.contains("View: dataset / compact"), compact);
+    assertTrue(compact.contains("Target: " + DwcTerm.eventID.qualifiedName()), compact);
+    assertTrue(detailed.contains("View: dataset / detailed"), detailed);
+    assertTrue(detailed.contains("Target: " + DwcTerm.eventID.qualifiedName()), detailed);
+    assertTrue(detailed.contains("Producer:"), detailed);
+  }
+
+  @Test
   void writeMetrics_extensionSummarySectionReflectsWrittenRecords(@TempDir Path dir)
       throws Exception {
     writeParquet(
@@ -1460,6 +1486,16 @@ class DwcDpVerbatimConverterTest {
   }
 
   // ---- helpers ----
+
+
+  private static String readTextFile(FileSystem fs, String path) throws Exception {
+    try (var reader =
+        new BufferedReader(
+            new InputStreamReader(
+                fs.open(new org.apache.hadoop.fs.Path(path)), StandardCharsets.UTF_8))) {
+      return reader.lines().collect(Collectors.joining("\n"));
+    }
+  }
 
   private void writeParquet(Path dir, String relativePath, StructType schema, List<Row> rows) {
     SparkTest.writeParquet(spark, dir, relativePath, schema, rows);

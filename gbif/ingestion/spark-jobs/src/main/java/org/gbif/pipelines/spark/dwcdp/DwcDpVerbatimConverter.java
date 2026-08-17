@@ -29,6 +29,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.utils.MetricsUtil;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.spark.dwcdp.mapping.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.AssertionMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.HumboldtMapping;
@@ -75,6 +76,8 @@ public class DwcDpVerbatimConverter {
 
   private static final org.apache.avro.Schema EXTENDED_RECORD_SCHEMA = loadExtendedRecordSchema();
   static final String AVRO_EXTENDED_RECORD_AVSC = "avro/extended-record.avsc";
+  static final String INGEST_PLAN_COMPACT = "dwcdp-ingest-plan-compact.txt";
+  static final String INGEST_PLAN_DETAILED = "dwcdp-ingest-plan-detailed.txt";
 
   private DwcDpVerbatimConverter() {}
 
@@ -121,20 +124,25 @@ public class DwcDpVerbatimConverter {
 
     Dataset<ExtendedRecord> records;
     DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.currentSchema();
+    MappingPlan ingestPlan = null;
 
     if (containsEvents && dataPackage.findResource("event").isPresent()) {
       log.info("Building event-core ExtendedRecords with declarative mapping engine");
-      records =
-          mappingEngine.execute(loader, EventDwcaMapping.current(mappingEngine.schemaGraph()));
+      ingestPlan = EventDwcaMapping.current(mappingEngine.schemaGraph());
+      records = mappingEngine.execute(loader, ingestPlan);
     } else if (containsOccurrences && dataPackage.findResource("occurrence").isPresent()) {
       log.info("Building occurrence-core ExtendedRecords with declarative mapping engine");
-      records =
-          mappingEngine.execute(loader, OccurrenceDwcaMapping.current(mappingEngine.schemaGraph()));
+      ingestPlan = OccurrenceDwcaMapping.current(mappingEngine.schemaGraph());
+      records = mappingEngine.execute(loader, ingestPlan);
     } else {
       log.warn(
           "Dataset {} has no event or occurrence table in datapackage.json; writing empty verbatim",
           datasetId);
       records = spark.emptyDataset(Encoders.bean(ExtendedRecord.class));
+    }
+
+    if (ingestPlan != null) {
+      writeIngestPlans(fileSystem, parquetBasePath, mappingEngine, ingestPlan, dataPackage);
     }
 
     String tempOutputPath = verbatimOutputPath + ".parts";
@@ -203,6 +211,37 @@ public class DwcDpVerbatimConverter {
         dataPackage
             .findResource(tableName)
             .map(r -> spark.read().parquet(basePath + "/" + r.getPath()));
+  }
+
+  static void writeIngestPlans(
+      FileSystem fileSystem,
+      String datasetBasePath,
+      DwcDpMappingEngine mappingEngine,
+      MappingPlan plan,
+      DataPackage dataPackage) {
+    writeTextFile(
+        fileSystem,
+        datasetBasePath + "/" + INGEST_PLAN_COMPACT,
+        mappingEngine.targetPlan(plan, dataPackage));
+    writeTextFile(
+        fileSystem,
+        datasetBasePath + "/" + INGEST_PLAN_DETAILED,
+        mappingEngine.targetPlanDetailed(plan, dataPackage));
+  }
+
+  private static void writeTextFile(FileSystem fileSystem, String path, String content) {
+    org.apache.hadoop.fs.Path outputPath = new org.apache.hadoop.fs.Path(path);
+    try (BufferedWriter writer =
+        new BufferedWriter(
+            new OutputStreamWriter(
+                fileSystem.create(outputPath, true), StandardCharsets.UTF_8))) {
+      writer.write(content);
+      if (!content.endsWith("\n")) {
+        writer.newLine();
+      }
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to write DwC-DP ingest plan " + path, e);
+    }
   }
 
   static VerbatimConversionMetrics writeMetrics(
