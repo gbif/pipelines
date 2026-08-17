@@ -304,8 +304,9 @@ public class ValidationResourceIT {
         validationWsClient.list(
             ValidationSearchRequest.builder()
                 .offset(0L)
-                .limit(10)
+                .limit(50)
                 .status(Validation.finishedStatuses())
+                .sortByCreated(ValidationSearchRequest.SortOrder.DESC)
                 .build());
 
     //    System.out.println("Finished validations: " + validations.getCount());

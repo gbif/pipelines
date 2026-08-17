@@ -49,8 +49,10 @@ public class EsServer extends ExternalResource {
     if (COUNTER.get() == 0) {
       embeddedElastic =
           new ElasticsearchContainer(
-                  DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss")
+                  DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch")
                       .withTag(getEsVersion()))
+              .withEnv("xpack.security.enabled", "false")
+              .withEnv("xpack.security.http.ssl.enabled", "false")
               .withReuse(true);
 
       embeddedElastic.start();

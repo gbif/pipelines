@@ -1,11 +1,13 @@
 package org.gbif.pipelines.validator.factory;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
 import java.util.Arrays;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
 
 @Slf4j
 public class ElasticsearchClientFactory {
@@ -14,15 +16,17 @@ public class ElasticsearchClientFactory {
 
   private static final Object MUTEX = new Object();
 
-  private final RestHighLevelClient client;
+  private final ElasticsearchClient client;
 
   private ElasticsearchClientFactory(String[] esHosts) {
     log.info("Create ES client");
     HttpHost[] hosts = Arrays.stream(esHosts).map(HttpHost::create).toArray(HttpHost[]::new);
-    this.client = new RestHighLevelClient(RestClient.builder(hosts));
+    this.client =
+        new ElasticsearchClient(
+            new RestClientTransport(RestClient.builder(hosts).build(), new JacksonJsonpMapper()));
   }
 
-  public static RestHighLevelClient getInstance(String... esHosts) {
+  public static ElasticsearchClient getInstance(String... esHosts) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {

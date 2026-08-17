@@ -236,7 +236,6 @@
         <dependency>
             <groupId>org.elasticsearch</groupId>
             <artifactId>elasticsearch-spark-30_${scala.binary.version}</artifactId>
-            <version>${elasticsearch-spark.version}</version>
         </dependency>
         <dependency>
             <groupId>com.beust</groupId>

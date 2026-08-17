@@ -23,6 +23,7 @@ import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsConstants.Field;
+import org.gbif.pipelines.estools.service.EsQueryBoosts;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.spark.IndexingPipeline;
 import org.gbif.wrangler.lock.Mutex;
@@ -99,6 +100,9 @@ public class EsIndexUtils {
         Field.INDEX_ANALYSIS, org.gbif.pipelines.estools.service.EsConstants.Indexing.ANALYSIS);
     settings.put(Field.INDEX_MAX_RESULT_WINDOW, options.getIndexMaxResultWindow().toString());
     settings.put(Field.INDEX_UNASSIGNED_NODE_DELAY, options.getUnassignedNodeDelay());
+    settings.put(
+        Field.INDEX_QUERY_DEFAULT_FIELD,
+        EsQueryBoosts.defaultFieldSetting(options.getEsSchemaPath()));
 
     if (options.getUseSlowlog()) {
       settings.put(
@@ -113,7 +117,6 @@ public class EsIndexUtils {
       settings.put(
           Field.INDEX_SEARCH_SLOWLOG_THRESHOLD_FETCH_INFO,
           options.getIndexSearchSlowlogThresholdFetchInfo());
-      settings.put(Field.INDEX_SEARCH_SLOWLOG_LEVEL, options.getIndexSearchSlowlogLevel());
     }
 
     return IndexParams.builder()
