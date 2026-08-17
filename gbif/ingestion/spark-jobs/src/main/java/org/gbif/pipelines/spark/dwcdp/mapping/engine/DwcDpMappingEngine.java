@@ -8,9 +8,12 @@ import org.gbif.pipelines.spark.dwcdp.mapping.MappingPlan;
 import org.gbif.pipelines.spark.dwcdp.mapping.ExecutionMetricsCollector;
 import org.gbif.pipelines.spark.dwcdp.mapping.MappingExecutionOutput;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.ProjectedTableLoader;
 import org.gbif.pipelines.spark.dwcdp.mapping.SparkExtendedRecordExecutor;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingCompiler;
+import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingInputRequirements;
+import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingInputRequirementsAnalyzer;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingTraceRenderer;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingDatasetScope;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.TargetMappingPlanRenderer;
@@ -75,6 +78,11 @@ public final class DwcDpMappingEngine {
         compile(plan), MappingDatasetScope.from(dataPackage), Detail.DETAILED);
   }
 
+  /** Physical resources and columns required by the compiled canonical plan. */
+  public MappingInputRequirements inputRequirements(MappingPlan plan) {
+    return new MappingInputRequirementsAnalyzer(schemaGraph).analyze(compile(plan));
+  }
+
   public Dataset<ExtendedRecord> execute(TableLoader loader, MappingPlan plan) {
     return executeWithMetrics(loader, plan).records();
   }
@@ -82,9 +90,14 @@ public final class DwcDpMappingEngine {
   /** Executes the mapping and exposes the relation-branch diagnostics already gathered by the Spark path executor. */
   public MappingExecutionOutput executeWithMetrics(TableLoader loader, MappingPlan plan) {
     Objects.requireNonNull(loader, "loader");
+    CompiledMapping compiled = compile(plan);
+    MappingInputRequirements requirements =
+        new MappingInputRequirementsAnalyzer(schemaGraph).analyze(compiled);
+    TableLoader projectedLoader = ProjectedTableLoader.wrap(loader, requirements);
+
     ExecutionMetricsCollector collector = new ExecutionMetricsCollector();
     SparkExtendedRecordExecutor executor = new SparkExtendedRecordExecutor(schemaGraph, collector);
-    Dataset<ExtendedRecord> records = executor.execute(loader, compile(plan));
+    Dataset<ExtendedRecord> records = executor.execute(projectedLoader, compiled);
     return new MappingExecutionOutput(records, collector.snapshot());
   }
 }
