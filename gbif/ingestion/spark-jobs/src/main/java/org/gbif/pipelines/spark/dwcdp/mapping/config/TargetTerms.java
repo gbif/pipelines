@@ -1,23 +1,29 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import org.gbif.pipelines.spark.dwcdp.builder.TermResolver;
+import org.gbif.dwc.terms.DcTerm;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.TermFactory;
+import org.gbif.dwc.terms.UnknownTerm;
 
-/**
- * Migration boundary for translating DwC-DP field names to qualified DwC/DwC-A terms.
- *
- * <p>Generic schema-driven copying is intentionally strict: if the legacy resolver falls back to
- * the raw source column name, that field is dropped unless it is explicitly listed in
- * {@link #RAW_OUTPUT_ALLOWLIST}. This prevents internal or otherwise unresolved DwC-DP columns from
- * silently becoming output terms.
- */
+/** Migration boundary for translating DwC-DP field names to qualified DwC/DwC-A terms. */
 final class TargetTerms {
 
-  /**
-   * Raw extension keys deliberately retained because existing downstream extension handling consumes
-   * them as part of the extension contract even though {@link TermResolver} does not qualify them.
-   */
+  private static final TermFactory TERM_FACTORY = TermFactory.instance();
+
+  /** Confirmed DwC-DP source-name to DwC-A target-term renames. */
+  private static final Map<String, String> RENAMES =
+      Map.of(
+          "occurrenceReferences", DwcTerm.associatedReferences.qualifiedName(),
+          "eventConductedBy", DwcTerm.recordedBy.qualifiedName(),
+          "eventConductedByID", DwcTerm.recordedByID.qualifiedName(),
+          "accessURI", DcTerm.identifier.qualifiedName(),
+          "mediaType", DcTerm.type.qualifiedName());
+
+  /** Raw extension keys deliberately retained as part of their current extension contracts. */
   private static final Set<String> RAW_OUTPUT_ALLOWLIST =
       Set.of(
           "identifierType",
@@ -33,44 +39,52 @@ final class TargetTerms {
   static final Set<String> EVENT_CORE_RAW_OUTPUTS = Set.of("georeferencedByID");
 
   static final Set<String> OCCURRENCE_ENRICHMENT_RAW_OUTPUTS =
-      Set.of("typeStatus", "geoName", "typeDesignationType", "geoClassificationCode");
+      Set.of("geoName", "typeDesignationType", "geoClassificationCode");
 
   private TargetTerms() {}
 
   /** Resolves a target named explicitly by a mapping definition. */
   static String resolve(String column) {
-    return TermResolver.resolve(column);
+    return resolveKnown(column).orElse(column);
   }
 
-  /**
-   * Resolves a field for generic schema-driven copying.
-   *
-   * <p>An unresolved legacy fallback is recognizable because {@link TermResolver} returns the input
-   * column name unchanged. Those values are pruned unless explicitly allowlisted.
-   */
   static Optional<String> resolveOutput(String column) {
     return resolveOutput(column, Set.of());
   }
 
   static Optional<String> resolveOutput(String column, Set<String> retainedRawOutputs) {
-    String resolved = TermResolver.resolve(column);
-    if (!resolved.equals(column)
-        || RAW_OUTPUT_ALLOWLIST.contains(column)
-        || retainedRawOutputs.contains(column)) {
-      return Optional.of(resolved);
+    Optional<String> resolved = resolveKnown(column);
+    if (resolved.isPresent()) {
+      return resolved;
+    }
+    if (RAW_OUTPUT_ALLOWLIST.contains(column) || retainedRawOutputs.contains(column)) {
+      return Optional.of(column);
     }
     return Optional.empty();
   }
 
-  /**
-   * Humboldt survey resources are themselves an extension-shaped contract: non-structural field
-   * names are intentional Humboldt output keys even when the legacy resolver does not qualify them.
-   */
+  /** Humboldt resource fields form an extension contract; known terms are qualified, others retained. */
   static Optional<String> resolveHumboldtOutput(String column) {
-    return Optional.of(TermResolver.resolve(column));
+    return Optional.of(resolveKnown(column).orElse(column));
   }
 
   static boolean isAllowedRawOutput(String column) {
     return RAW_OUTPUT_ALLOWLIST.contains(column);
+  }
+
+  private static Optional<String> resolveKnown(String column) {
+    String renamed = RENAMES.get(column);
+    if (renamed != null) {
+      return Optional.of(renamed);
+    }
+    try {
+      Term term = TERM_FACTORY.findTerm(column);
+      if (term != null && !(term instanceof UnknownTerm)) {
+        return Optional.of(term.qualifiedName());
+      }
+    } catch (RuntimeException ignored) {
+      // Unknown names are handled by the caller's explicit raw-output policy.
+    }
+    return Optional.empty();
   }
 }

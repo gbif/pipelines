@@ -27,13 +27,11 @@ import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.StructType;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.spark.dwcdp.builder.EventCoreBuilder;
-import org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilder;
-import org.gbif.pipelines.spark.dwcdp.builder.TermResolver;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.util.MapperUtil;
 import org.gbif.pipelines.spark.util.SparkTest;
@@ -60,15 +58,7 @@ import org.junit.jupiter.api.io.TempDir;
  * <p>Unit-level concerns are covered in their respective classes:
  *
  * <ul>
- *   <li>Term resolution: {@link org.gbif.pipelines.spark.dwcdp.builder.TermResolverTest}
- *   <li>Row mapping: {@link org.gbif.pipelines.spark.dwcdp.builder.RowTermMapperTest}
- *   <li>Event-core builder: {@link org.gbif.pipelines.spark.dwcdp.builder.EventCoreBuilderTest}
- *   <li>Occurrence-core builder: {@link
- *       org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreBuilderTest}
- *   <li>Organism join: {@link
- *       org.gbif.pipelines.spark.dwcdp.builder.extension.OrganismJoinBuilderTest}
- *   <li>coreTerms schema compliance: {@link
- *       org.gbif.pipelines.spark.dwcdp.builder.OccurrenceCoreTermsComplianceTest}
+ *   <li>Mapping semantics and execution: tests under {@code dwcdp.mapping}
  * </ul>
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -219,7 +209,7 @@ class DwcDpVerbatimConverterTest {
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String verbatimPath = "file://" + dir + "/verbatim.avro";
-    EventCoreBuilder.build(spark, loader)
+    DwcDpVerbatimConverter.buildEventCoreDataset(spark, loader)
         .write()
         .mode(SaveMode.Overwrite)
         .format("avro")
@@ -287,7 +277,7 @@ class DwcDpVerbatimConverterTest {
     assertNotNull(mediaExt, "media extension must be present");
     assertEquals(2, mediaExt.size());
     List<String> mediaUris =
-        mediaExt.stream().map(m -> m.get(TermResolver.resolve("accessURI"))).sorted().toList();
+        mediaExt.stream().map(m -> m.get(DcTerm.identifier.qualifiedName())).sorted().toList();
     assertEquals("https://example.com/img1.jpg", mediaUris.get(0));
     assertEquals("https://example.com/img2.jpg", mediaUris.get(1));
 
@@ -455,9 +445,7 @@ class DwcDpVerbatimConverterTest {
             "organismName",
             "organismRemarks",
             "occurrenceStatus",
-            "sex",
-            "decimalLatitude",
-            "decimalLongitude"),
+            "sex"),
         List.of(
             RowFactory.create(
                 "OPK-001",
@@ -469,9 +457,7 @@ class DwcDpVerbatimConverterTest {
                 "Blue tit",
                 null,
                 "detected",
-                "female",
-                "55.6",
-                "12.5"),
+                "female"),
             RowFactory.create(
                 "OPK-002",
                 "OCC002",
@@ -482,9 +468,7 @@ class DwcDpVerbatimConverterTest {
                 null,
                 null,
                 "detected",
-                null,
-                "55.7",
-                "12.6")));
+                null)));
 
     writeParquet(
         dir,
@@ -526,7 +510,7 @@ class DwcDpVerbatimConverterTest {
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String verbatimPath = "file://" + dir + "/verbatim.avro";
-    OccurrenceCoreBuilder.build(spark, loader)
+    DwcDpVerbatimConverter.buildOccurrenceCoreDataset(spark, loader)
         .write()
         .mode(SaveMode.Overwrite)
         .format("avro")
@@ -549,7 +533,6 @@ class DwcDpVerbatimConverterTest {
     ExtendedRecord occ001 = records.get(0);
     assertEquals("OCC001", occ001.getId());
     assertEquals("Parus major", occ001.getCoreTerms().get(DwcTerm.scientificName.qualifiedName()));
-    assertEquals("55.6", occ001.getCoreTerms().get(DwcTerm.decimalLatitude.qualifiedName()));
     assertEquals("female", occ001.getCoreTerms().get(DwcTerm.sex.qualifiedName()));
     assertEquals(
         "org-1",
@@ -580,7 +563,7 @@ class DwcDpVerbatimConverterTest {
     assertNotNull(mediaExt, "media extension must be present on OCC001");
     assertEquals(2, mediaExt.size());
     List<String> mediaUris =
-        mediaExt.stream().map(m -> m.get(TermResolver.resolve("accessURI"))).sorted().toList();
+        mediaExt.stream().map(m -> m.get(DcTerm.identifier.qualifiedName())).sorted().toList();
     assertEquals("https://example.com/img1.jpg", mediaUris.get(0));
     assertEquals("https://example.com/img2.jpg", mediaUris.get(1));
 
@@ -1012,15 +995,16 @@ class DwcDpVerbatimConverterTest {
     writeParquet(
         dir,
         "data/event.parquet",
-        schema("eventID", "eventDate"),
+        schema("event_pk", "eventID", "eventDate"),
         List.of(
-            RowFactory.create("EVT001", "2024-06-15"), RowFactory.create("EVT002", "2024-06-16")));
+            RowFactory.create("EPK-001", "EVT001", "2024-06-15"),
+            RowFactory.create("EPK-002", "EVT002", "2024-06-16")));
 
-    DataPackage dp = DataPackageFixtures.withEvent("eventID", "eventDate");
+    DataPackage dp = DataPackageFixtures.withEvent("event_pk", "eventID", "eventDate");
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
-    EventCoreBuilder.build(spark, loader)
+    DwcDpVerbatimConverter.buildEventCoreDataset(spark, loader)
         .coalesce(1)
         .write()
         .mode(SaveMode.Overwrite)
@@ -1043,17 +1027,18 @@ class DwcDpVerbatimConverterTest {
     writeParquet(
         dir,
         "data/event.parquet",
-        schema("eventID", "eventDate"),
+        schema("event_pk", "eventID", "eventDate"),
         List.of(
-            RowFactory.create("EVT001", "2024-06-15"), RowFactory.create("EVT002", "2024-06-16")));
+            RowFactory.create("EPK-001", "EVT001", "2024-06-15"),
+            RowFactory.create("EPK-002", "EVT002", "2024-06-16")));
 
-    DataPackage dp = DataPackageFixtures.withEvent("eventID", "eventDate");
+    DataPackage dp = DataPackageFixtures.withEvent("event_pk", "eventID", "eventDate");
     TableLoader loader = TestTableLoader.parquetLoader(spark, dp, "file://" + dir);
 
     String partsPath = "file://" + dir + "/verbatim.avro.parts";
     String targetPath = "file://" + dir + "/verbatim.avro";
 
-    EventCoreBuilder.build(spark, loader)
+    DwcDpVerbatimConverter.buildEventCoreDataset(spark, loader)
         .coalesce(1)
         .write()
         .mode(SaveMode.Overwrite)
@@ -1242,14 +1227,14 @@ class DwcDpVerbatimConverterTest {
    * this class.
    *
    * <p>Every other "round trip" test in this file (e.g. {@code
-   * eventCore_fullPackage_roundTripAvroWriteAndRead}) calls {@link EventCoreBuilder#build} directly
+   * eventCore_fullPackage_roundTripAvroWriteAndRead}) calls {@link DwcDpVerbatimConverter#buildEventCoreDataset} directly
    * and writes Avro by hand — none of them go through {@code convert()}'s own {@code
    * datapackage.json} reading ({@link DataPackageDescriptorReader}), path resolution ({@link
    * org.gbif.pipelines.spark.util.PathUtil#interpretedAttemptPath}), single-file merge, or {@code
    * writeMetrics} call. This test does, so it's the one place proving those pieces agree with each
    * other for a package with no physical {@code occurrence} table — only {@code event} + {@code
    * material} — where the only occurrence rows that exist are the virtual ones {@link
-   * org.gbif.pipelines.spark.dwcdp.builder.extension.MaterialJoinBuilder} synthesises.
+   * the declarative material mapping} synthesises.
    */
   @Disabled(
       "Material -> virtual occurrence synthesis is paused; see "

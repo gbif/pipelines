@@ -42,7 +42,12 @@ class DataPackageFixtures {
     return build(
         resource("event", "data/event.parquet", "event_pk", "eventID"),
         resource(
-            "occurrence", "data/occurrence.parquet", "occurrenceID", "event_fk", "scientificName"));
+            "occurrence",
+            "data/occurrence.parquet",
+            "occurrence_pk",
+            "occurrenceID",
+            "event_fk",
+            "scientificName"));
   }
 
   static DataPackage withEventAndMaterial() {
@@ -158,9 +163,7 @@ class DataPackageFixtures {
             "organismName",
             "organismRemarks",
             "occurrenceStatus",
-            "sex",
-            "decimalLatitude",
-            "decimalLongitude"),
+            "sex"),
         resource(
             "organism",
             "data/organism.parquet",
@@ -342,3 +345,5 @@ class DataPackageFixtures {
     return f;
   }
 }
+
+

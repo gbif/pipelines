@@ -21,15 +21,18 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.functions;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.TermFactory;
+import org.gbif.dwc.terms.UnknownTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.utils.MetricsUtil;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.spark.dwcdp.builder.TermResolver;
-import org.gbif.pipelines.spark.dwcdp.builder.extension.AssertionExtensionBuilder;
-import org.gbif.pipelines.spark.dwcdp.builder.extension.HumboldtExtensionBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.config.AssertionMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.config.HumboldtMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.config.MultimediaMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.OccurrenceDwcaMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.engine.DwcDpMappingEngine;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
@@ -64,12 +67,11 @@ public class DwcDpVerbatimConverter {
   // Extension row type for occurrences attached to an event core
   public static final String ROW_TYPE_OCCURRENCE = DwcTerm.Occurrence.qualifiedName();
 
-  // Extension row type URIs — forwarded from builder classes for callers that import this class
-  public static final String ROW_TYPE_MULTIMEDIA =
-      org.gbif.pipelines.spark.dwcdp.builder.extension.MediaExtensionBuilder.ROW_TYPE_MULTIMEDIA;
+  // Extension row type URIs — owned by the declarative mapping configuration.
+  public static final String ROW_TYPE_MULTIMEDIA = MultimediaMapping.ROW_TYPE_MULTIMEDIA;
   public static final String ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT =
-      AssertionExtensionBuilder.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT;
-  public static final String ROW_TYPE_HUMBOLDT = HumboldtExtensionBuilder.ROW_TYPE_HUMBOLDT;
+      AssertionMapping.ROW_TYPE_EXTENDED_MEASUREMENT_OR_FACT;
+  public static final String ROW_TYPE_HUMBOLDT = HumboldtMapping.ROW_TYPE_HUMBOLDT;
 
   private static final org.apache.avro.Schema EXTENDED_RECORD_SCHEMA = loadExtendedRecordSchema();
   static final String AVRO_EXTENDED_RECORD_AVSC = "avro/extended-record.avsc";
@@ -171,7 +173,11 @@ public class DwcDpVerbatimConverter {
    */
   static Dataset<ExtendedRecord> buildEventCoreDataset(
       SparkSession spark, DataPackage dataPackage, String basePath) {
-    TableLoader loader = parquetTableLoader(spark, dataPackage, basePath);
+    return buildEventCoreDataset(spark, parquetTableLoader(spark, dataPackage, basePath));
+  }
+
+  /** Executes the canonical Event mapping plan using an already constructed table loader. */
+  static Dataset<ExtendedRecord> buildEventCoreDataset(SparkSession spark, TableLoader loader) {
     DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.currentSchema();
     return mappingEngine.execute(loader, EventDwcaMapping.current(mappingEngine.schemaGraph()));
   }
@@ -182,7 +188,11 @@ public class DwcDpVerbatimConverter {
    */
   static Dataset<ExtendedRecord> buildOccurrenceCoreDataset(
       SparkSession spark, DataPackage dataPackage, String basePath) {
-    TableLoader loader = parquetTableLoader(spark, dataPackage, basePath);
+    return buildOccurrenceCoreDataset(spark, parquetTableLoader(spark, dataPackage, basePath));
+  }
+
+  /** Executes the canonical Occurrence mapping plan using an already constructed table loader. */
+  static Dataset<ExtendedRecord> buildOccurrenceCoreDataset(SparkSession spark, TableLoader loader) {
     DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.currentSchema();
     return mappingEngine.execute(loader, OccurrenceDwcaMapping.current(mappingEngine.schemaGraph()));
   }
@@ -410,9 +420,10 @@ public class DwcDpVerbatimConverter {
     return EXTENDED_RECORD_SCHEMA.toString();
   }
 
-  /** Resolves a column name to a qualified term URI. Delegates to {@link TermResolver#resolve}. */
+  /** Resolves known term names for converter-level tests; unknown extension keys remain raw. */
   static String resolveTermUri(String columnName) {
-    return TermResolver.resolve(columnName);
+    Term term = TermFactory.instance().findTerm(columnName);
+    return term != null && !(term instanceof UnknownTerm) ? term.qualifiedName() : columnName;
   }
 
   private static org.apache.avro.Schema loadExtendedRecordSchema() {

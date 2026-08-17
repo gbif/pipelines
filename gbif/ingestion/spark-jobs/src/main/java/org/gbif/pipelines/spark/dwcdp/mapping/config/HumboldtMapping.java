@@ -1,5 +1,7 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
+import org.gbif.api.vocabulary.Extension;
+
 import static org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder.extensionFragment;
 
 import org.gbif.dwc.terms.EcoTerm;
@@ -15,7 +17,7 @@ import org.gbif.pipelines.spark.dwcdp.mapping.ValueAggregation;
 public final class HumboldtMapping {
 
   /** DwC-A Humboldt Ecological Inventory extension row type. */
-  public static final String ROW_TYPE_HUMBOLDT = "http://rs.tdwg.org/eco/terms/Event";
+  public static final String ROW_TYPE_HUMBOLDT = Extension.HUMBOLDT.getRowType();
 
   private HumboldtMapping() {}
 
