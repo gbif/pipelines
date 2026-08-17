@@ -51,11 +51,11 @@ public final class TermResolver {
         return term.qualifiedName();
       }
     } catch (Exception e) {
-      log.debug("TermFactory could not resolve '{}', falling through to raw name", columnName);
+      log.trace("TermFactory could not resolve '{}', falling through to raw name", columnName);
     }
 
     // Step 3: fall-through — return raw column name
-    log.debug("No resolution found for '{}', keeping raw column name", columnName);
+    log.trace("No resolution found for '{}', keeping raw column name", columnName);
     return columnName;
   }
 }

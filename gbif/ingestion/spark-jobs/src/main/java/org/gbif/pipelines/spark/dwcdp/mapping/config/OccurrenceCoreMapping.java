@@ -65,15 +65,18 @@ public final class OccurrenceCoreMapping {
           || column.equals("isAcceptedIdentification")) {
         continue;
       }
-      String target = TargetTerms.resolve(column);
-      boolean identificationPrecedesMaterial =
-          materialTargets.contains(target) && !occurrenceTargets.contains(target);
-      builder.field(
-          identificationPrecedesMaterial
-              ? TargetFieldMapping.oneOf(
-                  target, ValueAggregation.firstNonNull(), identification.field(column))
-              : TargetFieldMapping.inferredOneOf(
-                  target, ValueAggregation.firstNonNull(), identification.field(column)));
+      TargetTerms.resolveOutput(column, TargetTerms.OCCURRENCE_ENRICHMENT_RAW_OUTPUTS)
+          .ifPresent(
+              target -> {
+                boolean identificationPrecedesMaterial =
+                    materialTargets.contains(target) && !occurrenceTargets.contains(target);
+                builder.field(
+                    identificationPrecedesMaterial
+                        ? TargetFieldMapping.oneOf(
+                            target, ValueAggregation.firstNonNull(), identification.field(column))
+                        : TargetFieldMapping.inferredOneOf(
+                            target, ValueAggregation.firstNonNull(), identification.field(column)));
+              });
     }
     return builder.build();
   }
@@ -112,11 +115,12 @@ public final class OccurrenceCoreMapping {
           || column.equals("evidenceForOccurrenceID")) {
         continue;
       }
-      builder.field(
-          TargetFieldMapping.inferredOneOf(
-              TargetTerms.resolve(column),
-              ValueAggregation.firstNonNull(),
-              material.field(column)));
+      TargetTerms.resolveOutput(column, TargetTerms.OCCURRENCE_ENRICHMENT_RAW_OUTPUTS)
+          .ifPresent(
+              target ->
+                  builder.field(
+                      TargetFieldMapping.inferredOneOf(
+                          target, ValueAggregation.firstNonNull(), material.field(column))));
     }
     DirectFieldMappings.from(graph, "usage-policy", usagePolicy).addTo(builder);
     return builder.build();
@@ -164,11 +168,12 @@ public final class OccurrenceCoreMapping {
       if (column.endsWith("_pk") || column.endsWith("_fk") || column.equals("geologicalContextID")) {
         continue;
       }
-      builder.field(
-          TargetFieldMapping.inferredOneOf(
-              TargetTerms.resolve(column),
-              ValueAggregation.firstNonNull(),
-              geologicalContext.field(column)));
+      TargetTerms.resolveOutput(column)
+          .ifPresent(
+              target ->
+                  builder.field(
+                      TargetFieldMapping.inferredOneOf(
+                          target, ValueAggregation.firstNonNull(), geologicalContext.field(column))));
     }
     return builder.build();
   }
@@ -347,17 +352,20 @@ public final class OccurrenceCoreMapping {
       if (column.endsWith("_pk") || column.endsWith("_fk")) {
         continue;
       }
-      String target = TargetTerms.resolve(column);
-      String occurrenceColumn = sourceColumnForTarget(graph, "occurrence", target);
-      builder.field(
-          occurrenceColumn == null
-              ? TargetFieldMapping.inferredOneOf(
-                  target, ValueAggregation.firstNonNull(), organism.field(column))
-              : TargetFieldMapping.oneOf(
-                  target,
-                  ValueAggregation.presentOrFallback(),
-                  occurrence.field(occurrenceColumn),
-                  organism.field(column)));
+      TargetTerms.resolveOutput(column)
+          .ifPresent(
+              target -> {
+                String occurrenceColumn = sourceColumnForTarget(graph, "occurrence", target);
+                builder.field(
+                    occurrenceColumn == null
+                        ? TargetFieldMapping.inferredOneOf(
+                            target, ValueAggregation.firstNonNull(), organism.field(column))
+                        : TargetFieldMapping.oneOf(
+                            target,
+                            ValueAggregation.presentOrFallback(),
+                            occurrence.field(occurrenceColumn),
+                            organism.field(column)));
+              });
     }
   }
 
@@ -368,10 +376,11 @@ public final class OccurrenceCoreMapping {
             .orElseThrow(
                 () -> new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
     for (String column : resource.fields().keySet()) {
-      if (!column.endsWith("_pk")
-          && !column.endsWith("_fk")
-          && TargetTerms.resolve(column).equals(target)) {
-        return column;
+      if (!column.endsWith("_pk") && !column.endsWith("_fk")) {
+        String resolved = TargetTerms.resolveOutput(column).orElse(null);
+        if (target.equals(resolved)) {
+          return column;
+        }
       }
     }
     return null;
@@ -385,7 +394,12 @@ public final class OccurrenceCoreMapping {
     Set<String> targets = new HashSet<>();
     for (String column : resource.fields().keySet()) {
       if (!column.endsWith("_pk") && !column.endsWith("_fk")) {
-        targets.add(TargetTerms.resolve(column));
+        TargetTerms.resolveOutput(
+                column,
+                java.util.Set.of("occurrence", "identification", "material").contains(resourceName)
+                    ? TargetTerms.OCCURRENCE_ENRICHMENT_RAW_OUTPUTS
+                    : java.util.Set.of())
+            .ifPresent(targets::add);
       }
     }
     return targets;

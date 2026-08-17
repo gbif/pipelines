@@ -1,5 +1,6 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
+import java.util.Set;
 import org.gbif.pipelines.spark.dwcdp.mapping.CoreFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder;
 import org.gbif.pipelines.spark.dwcdp.mapping.MappingPlanBuilder;
@@ -17,10 +18,18 @@ final class DirectFieldMappings {
 
   private final SchemaResource resource;
   private final SchemaPath path;
+  private final Set<String> retainedRawOutputs;
+  private final boolean humboldtRawContract;
 
-  private DirectFieldMappings(SchemaResource resource, SchemaPath path) {
+  private DirectFieldMappings(
+      SchemaResource resource,
+      SchemaPath path,
+      Set<String> retainedRawOutputs,
+      boolean humboldtRawContract) {
     this.resource = resource;
     this.path = path;
+    this.retainedRawOutputs = retainedRawOutputs;
+    this.humboldtRawContract = humboldtRawContract;
   }
 
   static DirectFieldMappings from(SchemaGraph graph, String resourceName, SchemaPath path) {
@@ -28,7 +37,25 @@ final class DirectFieldMappings {
         graph.resource(resourceName)
             .orElseThrow(
                 () -> new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
-    return new DirectFieldMappings(resource, path);
+    return new DirectFieldMappings(resource, path, Set.of(), false);
+  }
+
+  static DirectFieldMappings from(
+      SchemaGraph graph, String resourceName, SchemaPath path, Set<String> retainedRawOutputs) {
+    SchemaResource resource =
+        graph.resource(resourceName)
+            .orElseThrow(
+                () -> new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
+    return new DirectFieldMappings(resource, path, Set.copyOf(retainedRawOutputs), false);
+  }
+
+  static DirectFieldMappings humboldt(
+      SchemaGraph graph, String resourceName, SchemaPath path) {
+    SchemaResource resource =
+        graph.resource(resourceName)
+            .orElseThrow(
+                () -> new IllegalArgumentException("DwC-DP schema has no resource " + resourceName));
+    return new DirectFieldMappings(resource, path, Set.of(), true);
   }
 
   void addTo(ExtensionFragmentBuilder builder) {
@@ -36,9 +63,12 @@ final class DirectFieldMappings {
       if (isStructural(column)) {
         continue;
       }
-      builder.field(
-          TargetFieldMapping.inferredOneOf(
-              TargetTerms.resolve(column), ValueAggregation.firstNonNull(), path.field(column)));
+      resolveOutput(column)
+          .ifPresent(
+              target ->
+                  builder.field(
+                      TargetFieldMapping.inferredOneOf(
+                          target, ValueAggregation.firstNonNull(), path.field(column))));
     }
   }
 
@@ -47,9 +77,12 @@ final class DirectFieldMappings {
       if (isStructural(column)) {
         continue;
       }
-      builder.field(
-          TargetFieldMapping.inferredOneOf(
-              TargetTerms.resolve(column), ValueAggregation.firstNonNull(), path.field(column)));
+      resolveOutput(column)
+          .ifPresent(
+              target ->
+                  builder.field(
+                      TargetFieldMapping.inferredOneOf(
+                          target, ValueAggregation.firstNonNull(), path.field(column))));
     }
   }
 
@@ -58,10 +91,19 @@ final class DirectFieldMappings {
       if (isStructural(column)) {
         continue;
       }
-      builder.coreField(
-          TargetFieldMapping.inferredOneOf(
-              TargetTerms.resolve(column), ValueAggregation.firstNonNull(), path.field(column)));
+      resolveOutput(column)
+          .ifPresent(
+              target ->
+                  builder.coreField(
+                      TargetFieldMapping.inferredOneOf(
+                          target, ValueAggregation.firstNonNull(), path.field(column))));
     }
+  }
+
+  private java.util.Optional<String> resolveOutput(String column) {
+    return humboldtRawContract
+        ? TargetTerms.resolveHumboldtOutput(column)
+        : TargetTerms.resolveOutput(column, retainedRawOutputs);
   }
 
   private static boolean isStructural(String column) {

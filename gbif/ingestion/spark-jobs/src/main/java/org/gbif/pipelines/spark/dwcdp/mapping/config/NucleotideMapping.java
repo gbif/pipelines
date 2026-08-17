@@ -218,7 +218,8 @@ public final class NucleotideMapping {
       if (isStructural(column) || column.equals("sequence")) {
         continue;
       }
-      builder.field(inferred(TargetTerms.resolve(column), sequence.field(column)));
+      TargetTerms.resolveOutput(column)
+          .ifPresent(target -> builder.field(inferred(target, sequence.field(column))));
     }
     builder.field(inferred(GbifDnaTerm.dna_sequence.qualifiedName(), sequence.field("sequence")));
   }
@@ -228,13 +229,12 @@ public final class NucleotideMapping {
     SchemaResource resource = requiredResource(graph, "molecular-protocol");
     String dnaSequenceTarget = GbifDnaTerm.dna_sequence.qualifiedName();
     for (String column : resource.fields().keySet()) {
-      String target = TargetTerms.resolve(column);
-      if (isStructural(column)
-          || column.equals("target_gene")
-          || target.equals(dnaSequenceTarget)) {
+      if (isStructural(column) || column.equals("target_gene")) {
         continue;
       }
-      builder.field(inferred(target, protocol.field(column)));
+      TargetTerms.resolveOutput(column)
+          .filter(target -> !target.equals(dnaSequenceTarget))
+          .ifPresent(target -> builder.field(inferred(target, protocol.field(column))));
     }
     builder.field(inferred(MixsTerm.target_gene.qualifiedName(), protocol.field("target_gene")));
   }

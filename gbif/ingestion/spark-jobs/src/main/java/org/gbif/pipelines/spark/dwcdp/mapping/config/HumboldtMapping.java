@@ -47,9 +47,12 @@ public final class HumboldtMapping {
       if (isStructural(column)) {
         continue;
       }
-      builder.field(
-          TargetFieldMapping.oneOf(
-              TargetTerms.resolve(column), ValueAggregation.firstNonNull(), target.field(column)));
+      TargetTerms.resolveHumboldtOutput(column)
+          .ifPresent(
+              targetTerm ->
+                  builder.field(
+                      TargetFieldMapping.oneOf(
+                          targetTerm, ValueAggregation.firstNonNull(), target.field(column))));
     }
     return builder.build();
   }
@@ -72,7 +75,7 @@ public final class HumboldtMapping {
     ExtensionFragmentBuilder builder =
         extensionFragment("humboldt-survey-fields", ROW_TYPE_HUMBOLDT, "survey");
 
-    DirectFieldMappings.from(graph, "survey", survey).addTo(builder);
+    DirectFieldMappings.humboldt(graph, "survey", survey).addTo(builder);
     return builder.build();
   }
 

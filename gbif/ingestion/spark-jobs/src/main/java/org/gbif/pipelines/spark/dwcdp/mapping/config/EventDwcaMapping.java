@@ -198,7 +198,9 @@ public final class EventDwcaMapping {
 
   private static MappingPlanBuilder eventDirectBase(SchemaGraph graph, String name) {
     MappingPlanBuilder builder = eventBase(name);
-    DirectFieldMappings.from(graph, "event", SchemaPath.root("event")).addTo(builder);
+    DirectFieldMappings.from(
+            graph, "event", SchemaPath.root("event"), TargetTerms.EVENT_CORE_RAW_OUTPUTS)
+        .addTo(builder);
     return builder;
   }
 
