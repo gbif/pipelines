@@ -253,6 +253,10 @@ public abstract class PipelinesCallback<
 
         CONCURRENT_DATASETS.inc();
 
+        if (CallbackUtil.simulatePipelineStepFail()) {
+          throw new PipelinesException("Simulated backend failure");
+        }
+
         // Run pipeline for this callback
         runPipeline(message);
 
@@ -265,6 +269,8 @@ public abstract class PipelinesCallback<
         sendOutgoingMessage(trackingInfo, message);
 
         log.info("Finished processing datasetKey: {}", message.getDatasetUuid());
+
+        markAsFinishedIfComplete(message);
 
       } catch (Exception ex) {
 
@@ -292,28 +298,30 @@ public abstract class PipelinesCallback<
       } finally {
 
         CONCURRENT_DATASETS.dec();
-
-        if (message.getExecutionId() != null) {
-          ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
-          log.debug("Mark execution as FINISHED if all steps are FINISHED");
-          Runnable r =
-              () -> {
-                log.debug(
-                    "History client: mark pipeline execution if finished, executionId {}",
-                    message.getExecutionId());
-                historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
-              };
-          Retry.decorateRunnable(RETRY, r).run();
-        } else {
-          log.warn(
-              "Execution id is null for datasetKey {}, can't mark execution as FINISHED if all steps are FINISHED",
-              message.getDatasetUuid());
-        }
       }
     } catch (Exception e) {
       log.error("Error while processing execution", e);
     } finally {
       runningCounter.decrementAndGet();
+    }
+  }
+
+  private void markAsFinishedIfComplete(I message) {
+    if (message.getExecutionId() != null) {
+      ThreadContext.put("datasetKey", message.getDatasetUuid().toString());
+      log.debug("Mark execution as FINISHED if all steps are FINISHED");
+      Runnable r =
+          () -> {
+            log.debug(
+                "History client: mark pipeline execution if finished, executionId {}",
+                message.getExecutionId());
+            historyClient.markPipelineExecutionIfFinished(message.getExecutionId());
+          };
+      Retry.decorateRunnable(RETRY, r).run();
+    } else {
+      log.warn(
+          "Execution id is null for datasetKey {}, can't mark execution as FINISHED if all steps are FINISHED",
+          message.getDatasetUuid());
     }
   }
 
