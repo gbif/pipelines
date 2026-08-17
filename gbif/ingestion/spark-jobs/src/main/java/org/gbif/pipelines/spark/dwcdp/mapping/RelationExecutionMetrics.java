@@ -4,6 +4,9 @@ package org.gbif.pipelines.spark.dwcdp.mapping;
 public record RelationExecutionMetrics(
     String sourceResource,
     String targetResource,
+    String cardinality,
+    String requirement,
+    boolean filtered,
     long inputRows,
     long sourceKeyPresentRows,
     long targetRowsBeforeFilter,
@@ -15,10 +18,16 @@ public record RelationExecutionMetrics(
     boolean skipped) {
 
   static RelationExecutionMetrics skipped(
-      String sourceResource, String targetResource, long inputRows) {
+      String sourceResource,
+      String targetResource,
+      RelationStep step,
+      long inputRows) {
     return new RelationExecutionMetrics(
         sourceResource,
         targetResource,
+        cardinalityName(step),
+        step.requirement().name(),
+        step.filter().isPresent(),
         inputRows,
         0L,
         0L,
@@ -28,5 +37,23 @@ public record RelationExecutionMetrics(
         0L,
         inputRows,
         true);
+  }
+
+  static String cardinalityName(RelationStep step) {
+    CardinalityStrategy strategy =
+        step.cardinalityStrategy().orElseGet(CardinalityStrategy::exactlyOne);
+    if (strategy instanceof CardinalityStrategy.ExactlyOne) {
+      return "EXACTLY_ONE";
+    }
+    if (strategy instanceof CardinalityStrategy.FanOut) {
+      return "FAN_OUT";
+    }
+    if (strategy instanceof CardinalityStrategy.Select select) {
+      return "SELECT(" + select.selector() + ")";
+    }
+    if (strategy instanceof CardinalityStrategy.Combine) {
+      return "COMBINE";
+    }
+    return strategy.getClass().getSimpleName();
   }
 }

@@ -1,10 +1,12 @@
 package org.gbif.pipelines.spark.dwcdp.mapping;
 
 import static org.apache.spark.sql.functions.col;
+import static org.apache.spark.sql.functions.coalesce;
 import static org.apache.spark.sql.functions.count;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.monotonically_increasing_id;
 import static org.apache.spark.sql.functions.row_number;
+import static org.apache.spark.sql.functions.sum;
 import static org.apache.spark.sql.functions.when;
 
 import java.util.ArrayList;
@@ -31,9 +33,15 @@ public final class SparkMappingPathExecutor {
   private static final String INTERNAL_ROW_NUMBER = "__dwcdp_row_number";
 
   private final SchemaGraph graph;
+  private final ExecutionMetricsCollector metricsCollector;
 
   public SparkMappingPathExecutor(SchemaGraph graph) {
+    this(graph, new ExecutionMetricsCollector());
+  }
+
+  SparkMappingPathExecutor(SchemaGraph graph, ExecutionMetricsCollector metricsCollector) {
     this.graph = graph;
+    this.metricsCollector = metricsCollector;
   }
 
   public MappingExecutionResult execute(TableLoader loader, Mapping mapping) {
@@ -53,9 +61,9 @@ public final class SparkMappingPathExecutor {
       SchemaRelation relation = resolveRelation(currentPath.currentResource(), step);
 
       Optional<Dataset<Row>> targetRawOpt = loader.load(relation.targetResource());
-      long inputRows = current.count();
       SchemaPath targetPath = currentPath.append(relation);
       if (targetRawOpt.isEmpty()) {
+        long inputRows = current.count();
         if (step.requirement() == RelationRequirement.REQUIRED) {
           throw new IllegalArgumentException(
               "Required path resource is absent: " + relation.targetResource());
@@ -63,13 +71,14 @@ public final class SparkMappingPathExecutor {
         current = addNullResource(current, targetPath, relation.targetResource(), aliases);
         metrics.add(
             RelationExecutionMetrics.skipped(
-                relation.sourceResource(), relation.targetResource(), inputRows));
+                relation.sourceResource(), relation.targetResource(), step, inputRows));
         currentPath = targetPath;
         continue;
       }
 
       String sourceAlias = aliases.get(currentPath.field(relation.sourceColumn()));
       if (sourceAlias == null) {
+        long inputRows = current.count();
         if (step.requirement() == RelationRequirement.REQUIRED) {
           throw new IllegalArgumentException(
               "Loaded dataset "
@@ -80,14 +89,13 @@ public final class SparkMappingPathExecutor {
         current = addNullResource(current, targetPath, relation.targetResource(), aliases);
         metrics.add(
             RelationExecutionMetrics.skipped(
-                relation.sourceResource(), relation.targetResource(), inputRows));
+                relation.sourceResource(), relation.targetResource(), step, inputRows));
         currentPath = targetPath;
         continue;
       }
-      long sourceKeyPresentRows = current.filter(col(sourceAlias).isNotNull()).count();
-
       Dataset<Row> targetRaw = targetRawOpt.get();
       if (!hasColumn(targetRaw, relation.targetColumn())) {
+        long inputRows = current.count();
         if (step.requirement() == RelationRequirement.REQUIRED) {
           throw new IllegalArgumentException(
               "Required target join column is absent: "
@@ -98,19 +106,42 @@ public final class SparkMappingPathExecutor {
         current = addNullResource(current, targetPath, relation.targetResource(), aliases);
         metrics.add(
             RelationExecutionMetrics.skipped(
-                relation.sourceResource(), relation.targetResource(), inputRows));
+                relation.sourceResource(), relation.targetResource(), step, inputRows));
         currentPath = targetPath;
         continue;
       }
 
-      long targetRowsBeforeFilter = targetRaw.count();
-      Dataset<Row> filteredTarget = applyFilter(targetRaw, step.filter());
+      Row parentStats =
+          current
+              .agg(
+                  count(lit(1)).alias("inputRows"),
+                  coalesce(
+                          sum(when(col(sourceAlias).isNotNull(), 1L).otherwise(0L)), lit(0L))
+                      .alias("sourceKeyPresentRows"))
+              .first();
+      long inputRows = parentStats.getLong(parentStats.fieldIndex("inputRows"));
+      long sourceKeyPresentRows =
+          parentStats.getLong(parentStats.fieldIndex("sourceKeyPresentRows"));
+
+      Column filterPredicate =
+          step.filter().isPresent() ? step.filter().build(FieldColumns.of(targetRaw)) : lit(true);
+      Row targetStats =
+          targetRaw
+              .agg(
+                  count(lit(1)).alias("beforeFilter"),
+                  coalesce(
+                          sum(when(filterPredicate, 1L).otherwise(0L)), lit(0L))
+                      .alias("afterFilter"))
+              .first();
+      long targetRowsBeforeFilter = targetStats.getLong(targetStats.fieldIndex("beforeFilter"));
+      long targetRowsAfterFilter = targetStats.getLong(targetStats.fieldIndex("afterFilter"));
+      Dataset<Row> filteredTarget =
+          step.filter().isPresent() ? targetRaw.filter(filterPredicate) : targetRaw;
       CardinalityStrategy strategy =
           step.cardinalityStrategy().orElseGet(CardinalityStrategy::exactlyOne);
       // Cardinality is about distinct related records, not duplicate physical rows.
       // This is especially important for junction tables where the same relationship may be
       // repeated verbatim; two identical links must not turn EXACTLY_ONE into ambiguity.
-      long targetRowsAfterFilter = filteredTarget.count();
       Dataset<Row> cardinalityTarget =
           strategy instanceof CardinalityStrategy.ExactlyOne ? filteredTarget.distinct() : filteredTarget;
 
@@ -125,26 +156,41 @@ public final class SparkMappingPathExecutor {
       WindowSpec parentWindow = Window.partitionBy(col(INTERNAL_PARENT_ID));
       joined = joined.withColumn(INTERNAL_MATCH_COUNT, count(col(targetAlias)).over(parentWindow));
 
-      long matchedParentRows =
-          joined.filter(col(INTERNAL_MATCH_COUNT).gt(0))
-              .select(INTERNAL_PARENT_ID)
-              .distinct()
-              .count();
+      Row joinStats =
+          joined
+              .select(INTERNAL_PARENT_ID, INTERNAL_MATCH_COUNT)
+              .dropDuplicates(INTERNAL_PARENT_ID)
+              .agg(
+                  coalesce(
+                          sum(when(col(INTERNAL_MATCH_COUNT).gt(0), 1L).otherwise(0L)), lit(0L))
+                      .alias("matchedParents"),
+                  coalesce(
+                          sum(when(col(INTERNAL_MATCH_COUNT).gt(1), 1L).otherwise(0L)), lit(0L))
+                      .alias("multipleParents"),
+                  coalesce(
+                          sum(
+                              when(col(INTERNAL_MATCH_COUNT).gt(0), col(INTERNAL_MATCH_COUNT))
+                                  .otherwise(1L)),
+                          lit(0L))
+                      .alias("fanOutRows"))
+              .first();
+      long matchedParentRows = joinStats.getLong(joinStats.fieldIndex("matchedParents"));
       long unmatchedParentRows = inputRows - matchedParentRows;
-      long multipleMatchParentRows =
-          joined.filter(col(INTERNAL_MATCH_COUNT).gt(1))
-              .select(INTERNAL_PARENT_ID)
-              .distinct()
-              .count();
+      long multipleMatchParentRows = joinStats.getLong(joinStats.fieldIndex("multipleParents"));
+      long fanOutRows = joinStats.getLong(joinStats.fieldIndex("fanOutRows"));
 
       joined = applyCardinality(joined, targetAliases, targetPath, strategy, parentWindow);
       joined = joined.drop(INTERNAL_PARENT_ID).drop(INTERNAL_MATCH_COUNT).drop(INTERNAL_ROW_NUMBER);
 
-      long outputRows = joined.count();
+      long outputRows =
+          strategy instanceof CardinalityStrategy.FanOut ? fanOutRows : inputRows;
       metrics.add(
           new RelationExecutionMetrics(
               relation.sourceResource(),
               relation.targetResource(),
+              RelationExecutionMetrics.cardinalityName(step),
+              step.requirement().name(),
+              step.filter().isPresent(),
               inputRows,
               sourceKeyPresentRows,
               targetRowsBeforeFilter,
@@ -160,6 +206,7 @@ public final class SparkMappingPathExecutor {
       currentPath = targetPath;
     }
 
+    metricsCollector.record(mapping.name(), metrics);
     return new MappingExecutionResult(new SparkPathResult(current, aliases), metrics, true);
   }
 

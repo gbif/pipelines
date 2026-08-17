@@ -53,9 +53,14 @@ public final class SparkExtendedRecordExecutor {
   private final SparkMappingPathExecutor pathExecutor;
 
   public SparkExtendedRecordExecutor(SchemaGraph graph) {
+    this(graph, new ExecutionMetricsCollector());
+  }
+
+  public SparkExtendedRecordExecutor(
+      SchemaGraph graph, ExecutionMetricsCollector metricsCollector) {
     this.graph = graph;
-    this.extensionMaterializer = new SparkExtensionMaterializer(graph);
-    this.pathExecutor = new SparkMappingPathExecutor(graph);
+    this.extensionMaterializer = new SparkExtensionMaterializer(graph, metricsCollector);
+    this.pathExecutor = new SparkMappingPathExecutor(graph, metricsCollector);
   }
 
   public Dataset<ExtendedRecord> execute(TableLoader loader, MappingPlan plan) {

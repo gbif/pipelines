@@ -5,6 +5,8 @@ import org.apache.spark.sql.Dataset;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.mapping.DwcDpSchemaLoader;
 import org.gbif.pipelines.spark.dwcdp.mapping.MappingPlan;
+import org.gbif.pipelines.spark.dwcdp.mapping.ExecutionMetricsCollector;
+import org.gbif.pipelines.spark.dwcdp.mapping.MappingExecutionOutput;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.SparkExtendedRecordExecutor;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledMapping;
@@ -26,12 +28,10 @@ import org.gbif.pipelines.spark.util.TableLoader;
 public final class DwcDpMappingEngine {
   private final SchemaGraph schemaGraph;
   private final MappingCompiler compiler;
-  private final SparkExtendedRecordExecutor executor;
 
   public DwcDpMappingEngine(SchemaGraph schemaGraph) {
     this.schemaGraph = Objects.requireNonNull(schemaGraph, "schemaGraph");
     this.compiler = new MappingCompiler(schemaGraph);
-    this.executor = new SparkExtendedRecordExecutor(schemaGraph);
   }
 
   /** Engine backed by the classpath bundle marked {@code isLatest=true}. */
@@ -76,7 +76,15 @@ public final class DwcDpMappingEngine {
   }
 
   public Dataset<ExtendedRecord> execute(TableLoader loader, MappingPlan plan) {
+    return executeWithMetrics(loader, plan).records();
+  }
+
+  /** Executes the mapping and exposes the relation-branch diagnostics already gathered by the Spark path executor. */
+  public MappingExecutionOutput executeWithMetrics(TableLoader loader, MappingPlan plan) {
     Objects.requireNonNull(loader, "loader");
-    return executor.execute(loader, compile(plan));
+    ExecutionMetricsCollector collector = new ExecutionMetricsCollector();
+    SparkExtendedRecordExecutor executor = new SparkExtendedRecordExecutor(schemaGraph, collector);
+    Dataset<ExtendedRecord> records = executor.execute(loader, compile(plan));
+    return new MappingExecutionOutput(records, collector.snapshot());
   }
 }

@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -20,6 +21,7 @@ import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.functions;
+import org.apache.spark.storage.StorageLevel;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
@@ -30,6 +32,9 @@ import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.core.utils.MetricsUtil;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.mapping.MappingPlan;
+import org.gbif.pipelines.spark.dwcdp.mapping.MappingExecutionOutput;
+import org.gbif.pipelines.spark.dwcdp.mapping.MappingBranchExecutionMetrics;
+import org.gbif.pipelines.spark.dwcdp.mapping.RelationExecutionMetrics;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.AssertionMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.HumboldtMapping;
@@ -123,17 +128,22 @@ public class DwcDpVerbatimConverter {
                 .map(r -> spark.read().parquet(parquetBasePath + "/" + r.getPath()));
 
     Dataset<ExtendedRecord> records;
+    List<MappingBranchExecutionMetrics> branchMetrics = List.of();
     DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.currentSchema();
     MappingPlan ingestPlan = null;
 
     if (containsEvents && dataPackage.findResource("event").isPresent()) {
       log.info("Building event-core ExtendedRecords with declarative mapping engine");
       ingestPlan = EventDwcaMapping.current(mappingEngine.schemaGraph());
-      records = mappingEngine.execute(loader, ingestPlan);
+      MappingExecutionOutput execution = mappingEngine.executeWithMetrics(loader, ingestPlan);
+      records = execution.records();
+      branchMetrics = execution.branchMetrics();
     } else if (containsOccurrences && dataPackage.findResource("occurrence").isPresent()) {
       log.info("Building occurrence-core ExtendedRecords with declarative mapping engine");
       ingestPlan = OccurrenceDwcaMapping.current(mappingEngine.schemaGraph());
-      records = mappingEngine.execute(loader, ingestPlan);
+      MappingExecutionOutput execution = mappingEngine.executeWithMetrics(loader, ingestPlan);
+      records = execution.records();
+      branchMetrics = execution.branchMetrics();
     } else {
       log.warn(
           "Dataset {} has no event or occurrence table in datapackage.json; writing empty verbatim",
@@ -145,25 +155,32 @@ public class DwcDpVerbatimConverter {
       writeIngestPlans(fileSystem, parquetBasePath, mappingEngine, ingestPlan, dataPackage);
     }
 
-    String tempOutputPath = verbatimOutputPath + ".parts";
-    records
-        .coalesce(1)
-        .write()
-        .mode(SaveMode.Overwrite)
-        .format("avro")
-        .option("avroSchema", EXTENDED_RECORD_SCHEMA.toString())
-        .save(tempOutputPath);
+    records.persist(StorageLevel.MEMORY_AND_DISK());
+    VerbatimConversionMetrics metrics;
+    try {
+      String tempOutputPath = verbatimOutputPath + ".parts";
+      records
+          .coalesce(1)
+          .write()
+          .mode(SaveMode.Overwrite)
+          .format("avro")
+          .option("avroSchema", EXTENDED_RECORD_SCHEMA.toString())
+          .save(tempOutputPath);
 
-    mergeToSingleFile(fileSystem, tempOutputPath, verbatimOutputPath);
+      mergeToSingleFile(fileSystem, tempOutputPath, verbatimOutputPath);
 
-    VerbatimConversionMetrics metrics =
-        writeMetrics(
-            spark,
-            dataPackage,
-            parquetBasePath,
-            fileSystem,
-            datasetId,
-            Optional.of(records));
+      metrics =
+          writeMetrics(
+              spark,
+              dataPackage,
+              parquetBasePath,
+              fileSystem,
+              datasetId,
+              Optional.of(records),
+              branchMetrics);
+    } finally {
+      records.unpersist(false);
+    }
 
     log.info(
         "DwcDpVerbatimConverter completed for dataset {} attempt {} in {}ms, metrics: {}",
@@ -251,7 +268,13 @@ public class DwcDpVerbatimConverter {
       FileSystem fileSystem,
       String datasetId) {
     return writeMetrics(
-        spark, dataPackage, datasetBasePath, fileSystem, datasetId, Optional.empty());
+        spark,
+        dataPackage,
+        datasetBasePath,
+        fileSystem,
+        datasetId,
+        Optional.empty(),
+        List.of());
   }
 
   static VerbatimConversionMetrics writeMetrics(
@@ -261,21 +284,29 @@ public class DwcDpVerbatimConverter {
       FileSystem fileSystem,
       String datasetId,
       Optional<Dataset<ExtendedRecord>> verbatimDataset) {
+    return writeMetrics(
+        spark,
+        dataPackage,
+        datasetBasePath,
+        fileSystem,
+        datasetId,
+        verbatimDataset,
+        List.of());
+  }
 
-    long occurrenceCount =
-        dataPackage
-            .findResource("occurrence")
-            .map(r -> countRows(spark, datasetBasePath, r))
-            .orElse(0L);
+  static VerbatimConversionMetrics writeMetrics(
+      SparkSession spark,
+      DataPackage dataPackage,
+      String datasetBasePath,
+      FileSystem fileSystem,
+      String datasetId,
+      Optional<Dataset<ExtendedRecord>> verbatimDataset,
+      List<MappingBranchExecutionMetrics> branchMetrics) {
 
-    long eventCount =
-        dataPackage.findResource("event").map(r -> countRows(spark, datasetBasePath, r)).orElse(0L);
-
-    long largestFileCount =
-        dataPackage.getResources().stream()
-            .mapToLong(r -> countRows(spark, datasetBasePath, r))
-            .max()
-            .orElse(0L);
+    Map<String, Long> sourceCounts = sourceCounts(spark, dataPackage, datasetBasePath);
+    long occurrenceCount = sourceCounts.getOrDefault("occurrence", 0L);
+    long eventCount = sourceCounts.getOrDefault("event", 0L);
+    long largestFileCount = sourceCounts.values().stream().mapToLong(Long::longValue).max().orElse(0L);
 
     Map<String, Long> metrics =
         Map.of(
@@ -288,34 +319,48 @@ public class DwcDpVerbatimConverter {
     log.info("Writing verbatim metrics for dataset {}: {}", datasetId, metrics);
     MetricsUtil.writeMetricsYaml(fileSystem, metrics, metricsPath);
     writeConversionReport(
-        spark, dataPackage, datasetBasePath, fileSystem, datasetId, verbatimDataset);
+        dataPackage,
+        datasetBasePath,
+        fileSystem,
+        datasetId,
+        sourceCounts,
+        verbatimDataset,
+        branchMetrics);
 
     return new VerbatimConversionMetrics(0L, occurrenceCount, eventCount, largestFileCount);
   }
 
+  private static Map<String, Long> sourceCounts(
+      SparkSession spark, DataPackage dataPackage, String datasetBasePath) {
+    Map<String, Long> counts = new LinkedHashMap<>();
+    dataPackage.getResources().stream()
+        .sorted(Comparator.comparing(DataPackageResource::getName))
+        .forEach(
+            resource -> counts.put(resource.getName(), countRows(spark, datasetBasePath, resource)));
+    return counts;
+  }
+
   private static void writeConversionReport(
-      SparkSession spark,
       DataPackage dataPackage,
       String datasetBasePath,
       FileSystem fileSystem,
       String datasetId,
-      Optional<Dataset<ExtendedRecord>> verbatimDataset) {
+      Map<String, Long> sourceCounts,
+      Optional<Dataset<ExtendedRecord>> verbatimDataset,
+      List<MappingBranchExecutionMetrics> branchMetrics) {
     List<String> lines = new ArrayList<>();
     lines.add("DwC-DP conversion report: " + datasetId);
     lines.add("");
     lines.add("source tables (raw row counts):");
+    sourceCounts.forEach((resource, count) -> lines.add("  " + resource + ": " + count));
 
-    dataPackage.getResources().stream()
-        .sorted(Comparator.comparing(DataPackageResource::getName))
-        .forEach(
-            resource ->
-                lines.add(
-                    "  "
-                        + resource.getName()
-                        + ": "
-                        + countRows(spark, datasetBasePath, resource)));
-
-    appendMaterialFunnel(spark, dataPackage, datasetBasePath, lines);
+    lines.add("");
+    lines.add("mapping branches (execution funnels):");
+    if (branchMetrics.isEmpty()) {
+      lines.add("  (execution metrics not supplied)");
+    } else {
+      appendBranchMetrics(lines, branchMetrics);
+    }
 
     lines.add("");
     lines.add("output extensions (rows actually written):");
@@ -362,67 +407,50 @@ public class DwcDpVerbatimConverter {
     }
   }
 
-  private static void appendMaterialFunnel(
-      SparkSession spark, DataPackage dataPackage, String datasetBasePath, List<String> lines) {
-    Optional<DataPackageResource> materialResource = dataPackage.findResource("material");
-    if (materialResource.isEmpty()) {
-      return;
-    }
-
-    Dataset<Row> material =
-        spark.read().parquet(datasetBasePath + "/" + materialResource.get().getPath());
-    long total = material.count();
-    boolean hasEvidence = Arrays.asList(material.columns()).contains("evidenceForOccurrenceID");
-
-    Dataset<Row> withEvidence =
-        hasEvidence
-            ? material.filter(
-                functions.col("evidenceForOccurrenceID").isNotNull()
-                    .and(functions.length(functions.trim(functions.col("evidenceForOccurrenceID"))).gt(0)))
-            : material.limit(0);
-    long withEvidenceCount = withEvidence.count();
-    long withoutEvidenceCount = total - withEvidenceCount;
-
-    long enriched = 0L;
-    long ambiguous = 0L;
-    if (hasEvidence && dataPackage.findResource("occurrence").isPresent()) {
-      DataPackageResource occurrenceResource = dataPackage.findResource("occurrence").orElseThrow();
-      Dataset<Row> occurrence =
-          spark.read().parquet(datasetBasePath + "/" + occurrenceResource.getPath());
-      if (Arrays.asList(occurrence.columns()).contains("occurrenceID")) {
-        Dataset<Row> localEvidence =
-            withEvidence
-                .join(
-                    occurrence.select(functions.col("occurrenceID").alias("__local_occurrence_id")),
-                    withEvidence
-                        .col("evidenceForOccurrenceID")
-                        .equalTo(functions.col("__local_occurrence_id")),
-                    "inner")
-                .drop("__local_occurrence_id");
-        Dataset<Row> evidenceCounts =
-            localEvidence.groupBy("evidenceForOccurrenceID").count();
-        enriched = evidenceCounts.filter(functions.col("count").equalTo(1)).count();
-        ambiguous =
-            evidenceCounts
-                .filter(functions.col("count").gt(1))
-                .agg(functions.coalesce(functions.sum("count"), functions.lit(0L)).alias("n"))
-                .first()
-                .getLong(0);
+  private static void appendBranchMetrics(
+      List<String> lines, List<MappingBranchExecutionMetrics> branchMetrics) {
+    for (MappingBranchExecutionMetrics branch : branchMetrics) {
+      lines.add("  " + branch.branchName());
+      int relationNumber = 1;
+      for (RelationExecutionMetrics relation : branch.relations()) {
+        long singleMatch =
+            Math.max(0L, relation.matchedParentRows() - relation.multipleMatchParentRows());
+        lines.add(
+            "    "
+                + relationNumber++
+                + ". "
+                + relation.sourceResource()
+                + " -> "
+                + relation.targetResource()
+                + " ["
+                + relation.cardinality()
+                + ", "
+                + relation.requirement()
+                + (relation.filtered() ? ", FILTERED" : "")
+                + (relation.skipped() ? ", SKIPPED" : "")
+                + "]");
+        lines.add(
+            "       parents: input="
+                + relation.inputRows()
+                + ", key-present="
+                + relation.sourceKeyPresentRows()
+                + ", matched="
+                + relation.matchedParentRows()
+                + ", single-match="
+                + singleMatch
+                + ", multi-match="
+                + relation.multipleMatchParentRows()
+                + ", unmatched="
+                + relation.unmatchedParentRows());
+        lines.add(
+            "       target: before-filter="
+                + relation.targetRowsBeforeFilter()
+                + ", after-filter="
+                + relation.targetRowsAfterFilter()
+                + ", output-rows="
+                + relation.outputRows());
       }
     }
-
-    long virtual = 0L; // Virtual material occurrences are intentionally paused.
-    long unresolvedWithoutEvidence = withoutEvidenceCount - virtual;
-
-    lines.add("");
-    lines.add("material funnel:");
-    lines.add("  material rows (total): " + total);
-    lines.add("  without evidence: " + withoutEvidenceCount);
-    lines.add("    -> became virtual occurrence: " + virtual);
-    lines.add("    -> unresolved, DROPPED: " + unresolvedWithoutEvidence);
-    lines.add("  with evidence: " + withEvidenceCount);
-    lines.add("    -> enriched real occurrence: " + enriched);
-    lines.add("    -> ambiguous, DROPPED: " + ambiguous);
   }
 
   static void mergeToSingleFile(FileSystem fileSystem, String tempPath, String targetPath)

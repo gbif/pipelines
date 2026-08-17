@@ -33,6 +33,8 @@ import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.spark.dwcdp.mapping.MappingPlan;
+import org.gbif.pipelines.spark.dwcdp.mapping.MappingBranchExecutionMetrics;
+import org.gbif.pipelines.spark.dwcdp.mapping.RelationExecutionMetrics;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.engine.DwcDpMappingEngine;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
@@ -1317,16 +1319,12 @@ class DwcDpVerbatimConverterTest {
   // ---- conversion report ----
 
   @Test
-  void writeMetrics_writesConversionReportWithMaterialFunnelBreakdown(@TempDir Path dir)
-      throws Exception {
+  void writeMetrics_writesGenericMappingBranchFunnels(@TempDir Path dir) throws Exception {
     writeParquet(
         dir,
         "data/event.parquet",
         schema("event_pk", "eventID"),
         List.of(RowFactory.create("EPK-001", "EVT001")));
-    // OCC001 and OCC002 both exist locally, so evidence pointing at either one resolves — that's
-    // what makes the ambiguous/enriched buckets below meaningful (they only apply to evidence
-    // that actually resolves to a real local occurrence).
     writeParquet(
         dir,
         "data/occurrence.parquet",
@@ -1334,56 +1332,49 @@ class DwcDpVerbatimConverterTest {
         List.of(
             RowFactory.create("OPK-001", "OCC001", "EPK-001"),
             RowFactory.create("OPK-002", "OCC002", "EPK-001")));
-    writeParquet(
-        dir,
-        "data/material.parquet",
-        schema(
-            "materialEntity_pk",
-            "materialEntityID",
-            "evidenceForOccurrenceID",
-            "collectionEvent_fk"),
-        List.of(
-            // no evidence, resolves via collectionEvent_fk -> virtual occurrence
-            RowFactory.create("MPK-001", "MAT001", null, "EPK-001"),
-            // no evidence, no collectionEvent_fk -> unresolved, dropped
-            RowFactory.create("MPK-002", null, null, null),
-            // evidence resolves locally (OCC001 exists), but shares it with MPK-004 below ->
-            // ambiguous, dropped
-            RowFactory.create("MPK-003", "MAT003", "OCC001", "EPK-001"),
-            RowFactory.create("MPK-004", "MAT004", "OCC001", "EPK-001"),
-            // evidence resolves locally (OCC002 exists), sole claimant -> enriched onto it
-            RowFactory.create("MPK-005", "MAT005", "OCC002", "EPK-001")));
 
     FileSystem fs = FileSystem.getLocal(new Configuration());
     String datasetBasePath = "file://" + dir;
+    List<MappingBranchExecutionMetrics> branchMetrics =
+        List.of(
+            new MappingBranchExecutionMetrics(
+                "extension-fragment:event-occurrences",
+                List.of(
+                    new RelationExecutionMetrics(
+                        "event",
+                        "occurrence",
+                        "FAN_OUT",
+                        "OPTIONAL",
+                        false,
+                        1L,
+                        1L,
+                        2L,
+                        2L,
+                        1L,
+                        0L,
+                        1L,
+                        2L,
+                        false))));
 
     DwcDpVerbatimConverter.writeMetrics(
         spark,
-        DataPackageFixtures.withEventOccurrenceAndMaterial(),
+        DataPackageFixtures.withEventAndOccurrence(),
         datasetBasePath,
         fs,
-        "test-dataset");
+        "test-dataset",
+        Optional.empty(),
+        branchMetrics);
 
-    org.apache.hadoop.fs.Path reportPath =
-        new org.apache.hadoop.fs.Path(datasetBasePath + "/conversion-report.txt");
-    assertTrue(fs.exists(reportPath), "conversion-report.txt should have been written");
+    String report = readTextFile(fs, datasetBasePath + "/conversion-report.txt");
 
-    String report;
-    try (var reader =
-        new BufferedReader(new InputStreamReader(fs.open(reportPath), StandardCharsets.UTF_8))) {
-      report = reader.lines().collect(Collectors.joining("\n"));
-    }
-
-    // 5 material rows total: 1 unresolved (dropped, virtual promotion is currently paused — see
-    // MaterialJoinBuilder#VIRTUAL_MATERIAL_OCCURRENCES_ENABLED), 1 unresolved (dropped, no
-    // collectionEvent_fk either way), 2 ambiguous (dropped), 1 enriched
-    assertEquals(5, extractTrailingLong(report, "material rows (total):"));
-    assertEquals(2, extractTrailingLong(report, "without evidence:"));
-    assertEquals(0, extractTrailingLong(report, "became virtual occurrence:"));
-    assertEquals(2, extractTrailingLong(report, "unresolved, DROPPED:"));
-    assertEquals(3, extractTrailingLong(report, "with evidence:"));
-    assertEquals(1, extractTrailingLong(report, "enriched real occurrence:"));
-    assertEquals(2, extractTrailingLong(report, "ambiguous, DROPPED:"));
+    assertTrue(report.contains("mapping branches (execution funnels):"), report);
+    assertTrue(report.contains("extension-fragment:event-occurrences"), report);
+    assertTrue(report.contains("event -> occurrence [FAN_OUT, OPTIONAL]"), report);
+    assertTrue(report.contains("input=1"), report);
+    assertTrue(report.contains("key-present=1"), report);
+    assertTrue(report.contains("matched=1"), report);
+    assertTrue(report.contains("multi-match=1"), report);
+    assertTrue(report.contains("output-rows=2"), report);
   }
 
   /**

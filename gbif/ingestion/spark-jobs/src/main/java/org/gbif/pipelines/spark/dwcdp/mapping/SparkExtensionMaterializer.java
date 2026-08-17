@@ -51,8 +51,12 @@ public final class SparkExtensionMaterializer {
   private final MappingCompiler compiler;
 
   public SparkExtensionMaterializer(SchemaGraph graph) {
+    this(graph, new ExecutionMetricsCollector());
+  }
+
+  SparkExtensionMaterializer(SchemaGraph graph, ExecutionMetricsCollector metricsCollector) {
     this.graph = graph;
-    this.pathExecutor = new SparkMappingPathExecutor(graph);
+    this.pathExecutor = new SparkMappingPathExecutor(graph, metricsCollector);
     this.compiler = new MappingCompiler(graph);
   }
 
