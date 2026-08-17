@@ -1,6 +1,7 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.compiled;
 
 import java.util.Objects;
+import java.util.Optional;
 import org.gbif.pipelines.spark.dwcdp.mapping.FieldRef;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.SchemaRelation;
@@ -8,9 +9,20 @@ import org.gbif.pipelines.spark.dwcdp.mapping.SchemaRelation;
 /** Derives the minimal safe physical input projection for a compiled mapping. */
 public final class MappingInputRequirementsAnalyzer {
   private final SchemaGraph graph;
+  private final Optional<MappingDatasetScope> datasetScope;
 
   public MappingInputRequirementsAnalyzer(SchemaGraph graph) {
+    this(graph, Optional.empty());
+  }
+
+  public MappingInputRequirementsAnalyzer(SchemaGraph graph, MappingDatasetScope datasetScope) {
+    this(graph, Optional.of(Objects.requireNonNull(datasetScope, "datasetScope")));
+  }
+
+  private MappingInputRequirementsAnalyzer(
+      SchemaGraph graph, Optional<MappingDatasetScope> datasetScope) {
     this.graph = Objects.requireNonNull(graph, "graph");
+    this.datasetScope = Objects.requireNonNull(datasetScope, "datasetScope");
   }
 
   public MappingInputRequirements analyze(CompiledMapping mapping) {
@@ -18,9 +30,9 @@ public final class MappingInputRequirementsAnalyzer {
     MappingInputRequirements.Builder out = new MappingInputRequirements.Builder();
 
     String core = mapping.coreSourceResource();
-    out.use(core);
+    use(out, core);
     addResourceIdentity(out, core);
-    out.column(core, coreNaturalId(mapping));
+    column(out, core, coreNaturalId(mapping));
 
     mapping.coreTargets().forEach(target -> addProducer(out, target));
     mapping.coreFragments().forEach(fragment -> addCoreFragment(out, core, fragment));
@@ -39,7 +51,7 @@ public final class MappingInputRequirementsAnalyzer {
 
   private void addCoreFragment(
       MappingInputRequirements.Builder out, String core, CompiledCoreFragment fragment) {
-    out.use(fragment.sourceResource());
+    use(out, fragment.sourceResource());
     addResourceIdentity(out, fragment.sourceResource());
     fragment.relations().forEach(relation -> addRelation(out, relation));
     fragment.targets().forEach(target -> addProducer(out, target));
@@ -50,7 +62,7 @@ public final class MappingInputRequirementsAnalyzer {
 
   private void addExtensionFragment(
       MappingInputRequirements.Builder out, String core, CompiledFragment fragment) {
-    out.use(fragment.sourceResource());
+    use(out, fragment.sourceResource());
     addResourceIdentity(out, fragment.sourceResource());
     fragment.relations().forEach(relation -> addRelation(out, relation));
     addField(out, fragment.scopeKey());
@@ -72,36 +84,78 @@ public final class MappingInputRequirementsAnalyzer {
   }
 
   private void addField(MappingInputRequirements.Builder out, FieldRef field) {
-    out.use(field.path().rootResource());
+    if (!supports(field)) {
+      return;
+    }
+    use(out, field.path().rootResource());
     for (SchemaRelation relation : field.path().relations()) {
       addSchemaRelation(out, relation);
     }
-    out.column(field.path().currentResource(), field.column());
+    column(out, field.path().currentResource(), field.column());
   }
 
   private void addRelation(
       MappingInputRequirements.Builder out, CompiledRelationStep relationStep) {
+    if (!supports(relationStep)) {
+      return;
+    }
     addSchemaRelation(out, relationStep.relation());
     if (relationStep.filter().isPresent()) {
       // FilterExpression currently exposes an arbitrary Spark lambda. Until filters carry explicit
       // field dependencies, retaining the complete target resource is the only sound projection.
-      out.allColumns(relationStep.relation().targetResource());
+      allColumns(out, relationStep.relation().targetResource());
     }
   }
 
-  private static void addSchemaRelation(
+  private void addSchemaRelation(
       MappingInputRequirements.Builder out, SchemaRelation relation) {
-    out.column(relation.sourceResource(), relation.sourceColumn());
-    out.column(relation.targetResource(), relation.targetColumn());
+    if (!hasResource(relation.sourceResource()) || !hasResource(relation.targetResource())) {
+      return;
+    }
+    column(out, relation.sourceResource(), relation.sourceColumn());
+    column(out, relation.targetResource(), relation.targetColumn());
   }
 
   private void addResourceIdentity(MappingInputRequirements.Builder out, String resourceName) {
+    if (!hasResource(resourceName)) {
+      return;
+    }
     graph.resource(resourceName)
         .ifPresent(
             resource -> {
-              resource.primaryKey().ifPresent(column -> out.column(resourceName, column));
-              resource.weakPrimaryKey().ifPresent(column -> out.column(resourceName, column));
+              resource.primaryKey().ifPresent(column -> column(out, resourceName, column));
+              resource.weakPrimaryKey().ifPresent(column -> column(out, resourceName, column));
             });
+  }
+
+  private boolean supports(FieldRef field) {
+    return datasetScope.map(scope -> scope.supports(field)).orElse(true);
+  }
+
+  private boolean supports(CompiledRelationStep relation) {
+    return datasetScope.map(scope -> scope.supports(relation)).orElse(true);
+  }
+
+  private boolean hasResource(String resource) {
+    return datasetScope.map(scope -> scope.hasResource(resource)).orElse(true);
+  }
+
+  private void use(MappingInputRequirements.Builder out, String resource) {
+    if (hasResource(resource)) {
+      out.use(resource);
+    }
+  }
+
+  private void column(MappingInputRequirements.Builder out, String resource, String column) {
+    if (hasResource(resource)) {
+      out.column(resource, column);
+    }
+  }
+
+  private void allColumns(MappingInputRequirements.Builder out, String resource) {
+    if (hasResource(resource)) {
+      out.allColumns(resource);
+    }
   }
 
   private static String coreNaturalId(CompiledMapping mapping) {

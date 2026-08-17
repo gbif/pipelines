@@ -42,24 +42,35 @@ public record MappingDatasetScope(Map<String, Set<String>> columnsByResource) {
     return columnsByResource.getOrDefault(resource, Set.of()).contains(column);
   }
 
-  /** True when the full path and final source column physically exist in this dataset. */
+  /**
+   * True when every resource traversed by this field path is present in the datapackage.
+   *
+   * <p>Descriptor field lists are not used as hard negative evidence during execution pruning.
+   * The compiled mapping already determines which columns are required, and ProjectedTableLoader
+   * intersects those requirements with the actual Spark schema after loading the resource. This
+   * keeps datapackage pruning focused on whole resources/branches and avoids dropping valid
+   * producers when a descriptor's field metadata is incomplete.
+   */
   public boolean supports(FieldRef field) {
     if (!hasResource(field.path().rootResource())) {
       return false;
     }
     for (SchemaRelation relation : field.path().relations()) {
-      if (!hasResource(relation.sourceResource())
-          || !hasResource(relation.targetResource())
-          || !hasColumn(relation.sourceResource(), relation.sourceColumn())
-          || !hasColumn(relation.targetResource(), relation.targetColumn())) {
+      if (!hasResource(relation.sourceResource()) || !hasResource(relation.targetResource())) {
         return false;
       }
     }
-    return hasColumn(field.path().currentResource(), field.column());
+    return hasResource(field.path().currentResource());
   }
 
   public boolean supports(CompiledSourceField source) {
     return supports(source.field());
+  }
+
+  /** True when both resources for one compiled relation are present in the datapackage. */
+  public boolean supports(CompiledRelationStep relationStep) {
+    SchemaRelation relation = relationStep.relation();
+    return hasResource(relation.sourceResource()) && hasResource(relation.targetResource());
   }
 
   /** A producer can contribute when at least one of its declared source alternatives is reachable. */

@@ -11,6 +11,7 @@ import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.ProjectedTableLoader;
 import org.gbif.pipelines.spark.dwcdp.mapping.SparkExtendedRecordExecutor;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledMappingDatasetPruner;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingCompiler;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingInputRequirements;
 import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingInputRequirementsAnalyzer;
@@ -51,6 +52,16 @@ public final class DwcDpMappingEngine {
     return compiler.compile(Objects.requireNonNull(plan, "plan"));
   }
 
+  /**
+   * Returns the canonical compiled mapping pruned to resources and columns declared by one dataset.
+   * Canonical producer precedence is resolved before dataset pruning.
+   */
+  public CompiledMapping compile(MappingPlan plan, DataPackage dataPackage) {
+    CompiledMapping compiled = compile(plan);
+    return new CompiledMappingDatasetPruner()
+        .prune(compiled, MappingDatasetScope.from(Objects.requireNonNull(dataPackage, "dataPackage")));
+  }
+
   /** Human-readable full mapping trace, including all configured branches and schema paths. */
   public String trace(MappingPlan plan) {
     return MappingTraceRenderer.render(compile(plan));
@@ -69,13 +80,13 @@ public final class DwcDpMappingEngine {
   /** Target-first compact view pruned to resources and fields declared by one datapackage.json. */
   public String targetPlan(MappingPlan plan, DataPackage dataPackage) {
     return TargetMappingPlanRenderer.render(
-        compile(plan), MappingDatasetScope.from(dataPackage), Detail.COMPACT);
+        compile(plan, dataPackage), MappingDatasetScope.from(dataPackage), Detail.COMPACT);
   }
 
   /** Target-first detailed view pruned to resources and fields declared by one datapackage.json. */
   public String targetPlanDetailed(MappingPlan plan, DataPackage dataPackage) {
     return TargetMappingPlanRenderer.render(
-        compile(plan), MappingDatasetScope.from(dataPackage), Detail.DETAILED);
+        compile(plan, dataPackage), MappingDatasetScope.from(dataPackage), Detail.DETAILED);
   }
 
   /** Physical resources and columns required by the compiled canonical plan. */
@@ -83,16 +94,48 @@ public final class DwcDpMappingEngine {
     return new MappingInputRequirementsAnalyzer(schemaGraph).analyze(compile(plan));
   }
 
+  /** Physical resources and columns required after pruning the canonical plan to one dataset. */
+  public MappingInputRequirements inputRequirements(MappingPlan plan, DataPackage dataPackage) {
+    MappingDatasetScope scope = MappingDatasetScope.from(dataPackage);
+    return new MappingInputRequirementsAnalyzer(schemaGraph, scope)
+        .analyze(new CompiledMappingDatasetPruner().prune(compile(plan), scope));
+  }
+
   public Dataset<ExtendedRecord> execute(TableLoader loader, MappingPlan plan) {
     return executeWithMetrics(loader, plan).records();
   }
 
+  /** Executes the canonical mapping after pruning it to one datapackage.json. */
+  public Dataset<ExtendedRecord> execute(
+      TableLoader loader, MappingPlan plan, DataPackage dataPackage) {
+    return executeWithMetrics(loader, plan, dataPackage).records();
+  }
+
   /** Executes the mapping and exposes the relation-branch diagnostics already gathered by the Spark path executor. */
   public MappingExecutionOutput executeWithMetrics(TableLoader loader, MappingPlan plan) {
+    return executeCompiled(loader, compile(plan));
+  }
+
+  /** Executes the dataset-pruned canonical mapping and exposes its relation-branch diagnostics. */
+  public MappingExecutionOutput executeWithMetrics(
+      TableLoader loader, MappingPlan plan, DataPackage dataPackage) {
+    MappingDatasetScope scope = MappingDatasetScope.from(dataPackage);
+    CompiledMapping compiled = new CompiledMappingDatasetPruner().prune(compile(plan), scope);
+    return executeCompiled(loader, compiled, scope);
+  }
+
+  private MappingExecutionOutput executeCompiled(TableLoader loader, CompiledMapping compiled) {
+    return executeCompiled(loader, compiled, null);
+  }
+
+  private MappingExecutionOutput executeCompiled(
+      TableLoader loader, CompiledMapping compiled, MappingDatasetScope datasetScope) {
     Objects.requireNonNull(loader, "loader");
-    CompiledMapping compiled = compile(plan);
-    MappingInputRequirements requirements =
-        new MappingInputRequirementsAnalyzer(schemaGraph).analyze(compiled);
+    MappingInputRequirementsAnalyzer analyzer =
+        datasetScope == null
+            ? new MappingInputRequirementsAnalyzer(schemaGraph)
+            : new MappingInputRequirementsAnalyzer(schemaGraph, datasetScope);
+    MappingInputRequirements requirements = analyzer.analyze(compiled);
     TableLoader projectedLoader = ProjectedTableLoader.wrap(loader, requirements);
 
     ExecutionMetricsCollector collector = new ExecutionMetricsCollector();

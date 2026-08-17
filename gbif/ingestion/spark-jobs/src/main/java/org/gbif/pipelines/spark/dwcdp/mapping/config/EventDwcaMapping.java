@@ -92,7 +92,7 @@ public final class EventDwcaMapping {
         eventBase("event-core:humboldt")
             .extension(HumboldtMapping.ROW_TYPE_HUMBOLDT)
             .importFragment(HumboldtMapping.surveyTargets(graph))
-            .importFragment(HumboldtMapping.surveyFields(graph))
+                .importFragment(HumboldtMapping.surveyFields(graph))
             .importFragment(HumboldtMapping.samplingProtocol(graph))
             .importFragment(HumboldtMapping.samplingEffortProtocol(graph));
     return humboldt.build();

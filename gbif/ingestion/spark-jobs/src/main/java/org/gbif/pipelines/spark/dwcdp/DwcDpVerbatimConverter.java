@@ -135,13 +135,13 @@ public class DwcDpVerbatimConverter {
     if (containsEvents && dataPackage.findResource("event").isPresent()) {
       log.info("Building event-core ExtendedRecords with declarative mapping engine");
       ingestPlan = EventDwcaMapping.current(mappingEngine.schemaGraph());
-      MappingExecutionOutput execution = mappingEngine.executeWithMetrics(loader, ingestPlan);
+      MappingExecutionOutput execution = mappingEngine.executeWithMetrics(loader, ingestPlan, dataPackage);
       records = execution.records();
       branchMetrics = execution.branchMetrics();
     } else if (containsOccurrences && dataPackage.findResource("occurrence").isPresent()) {
       log.info("Building occurrence-core ExtendedRecords with declarative mapping engine");
       ingestPlan = OccurrenceDwcaMapping.current(mappingEngine.schemaGraph());
-      MappingExecutionOutput execution = mappingEngine.executeWithMetrics(loader, ingestPlan);
+      MappingExecutionOutput execution = mappingEngine.executeWithMetrics(loader, ingestPlan, dataPackage);
       records = execution.records();
       branchMetrics = execution.branchMetrics();
     } else {
@@ -198,7 +198,11 @@ public class DwcDpVerbatimConverter {
    */
   static Dataset<ExtendedRecord> buildEventCoreDataset(
       SparkSession spark, DataPackage dataPackage, String basePath) {
-    return buildEventCoreDataset(spark, parquetTableLoader(spark, dataPackage, basePath));
+    DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.currentSchema();
+    return mappingEngine.execute(
+        parquetTableLoader(spark, dataPackage, basePath),
+        EventDwcaMapping.current(mappingEngine.schemaGraph()),
+        dataPackage);
   }
 
   /** Executes the canonical Event mapping plan using an already constructed table loader. */
@@ -213,7 +217,11 @@ public class DwcDpVerbatimConverter {
    */
   static Dataset<ExtendedRecord> buildOccurrenceCoreDataset(
       SparkSession spark, DataPackage dataPackage, String basePath) {
-    return buildOccurrenceCoreDataset(spark, parquetTableLoader(spark, dataPackage, basePath));
+    DwcDpMappingEngine mappingEngine = DwcDpMappingEngine.currentSchema();
+    return mappingEngine.execute(
+        parquetTableLoader(spark, dataPackage, basePath),
+        OccurrenceDwcaMapping.current(mappingEngine.schemaGraph()),
+        dataPackage);
   }
 
   /** Executes the canonical Occurrence mapping plan using an already constructed table loader. */
