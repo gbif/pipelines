@@ -1,15 +1,15 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
-import static org.gbif.pipelines.spark.dwcdp.mapping.MappingPlanBuilder.mappingPlan;
+import static org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder.mappingPlan;
 
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.spark.dwcdp.mapping.CoreType;
-import org.gbif.pipelines.spark.dwcdp.mapping.MappingPlan;
-import org.gbif.pipelines.spark.dwcdp.mapping.MappingPlanBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreType;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlanBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 
 /** Event-core mapping configurations assembled from reusable domain fragments. */
 public final class EventDwcaMapping {

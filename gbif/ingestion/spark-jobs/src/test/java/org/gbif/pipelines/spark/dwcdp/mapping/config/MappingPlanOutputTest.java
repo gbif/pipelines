@@ -1,14 +1,15 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.Mapping;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.spark.dwcdp.mapping.DwcDpSchemaLoader;
-import org.gbif.pipelines.spark.dwcdp.mapping.MappingPlan;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.MappingPlan;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
 import org.gbif.pipelines.spark.dwcdp.mapping.engine.DwcDpMappingEngine;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackageField;

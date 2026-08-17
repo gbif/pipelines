@@ -1,20 +1,20 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
-import static org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder.extensionFragment;
+import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder.extensionFragment;
 
 import java.util.HashSet;
 import java.util.Set;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.spark.dwcdp.mapping.FilterExpression;
-import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragment;
-import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.RelationCardinality;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaRelation;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaResource;
-import org.gbif.pipelines.spark.dwcdp.mapping.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 
 /** Reusable occurrence-row mappings shared by Occurrence core and Event -> Occurrence extension. */
 public final class OccurrenceMapping {

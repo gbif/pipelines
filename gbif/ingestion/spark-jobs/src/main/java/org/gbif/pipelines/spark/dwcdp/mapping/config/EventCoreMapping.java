@@ -1,17 +1,17 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
-import static org.gbif.pipelines.spark.dwcdp.mapping.CoreFragmentBuilder.coreFragment;
+import static org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragmentBuilder.coreFragment;
 
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.spark.dwcdp.mapping.FilterExpression;
-import org.gbif.pipelines.spark.dwcdp.mapping.CoreFragment;
-import org.gbif.pipelines.spark.dwcdp.mapping.CoreFragmentBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.RelationCardinality;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaRelation;
-import org.gbif.pipelines.spark.dwcdp.mapping.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragment;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.CoreFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.RelationCardinality;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaRelation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 
 /** Reusable Event-core enrichments, including explicit protocol contribution paths. */
 public final class EventCoreMapping {

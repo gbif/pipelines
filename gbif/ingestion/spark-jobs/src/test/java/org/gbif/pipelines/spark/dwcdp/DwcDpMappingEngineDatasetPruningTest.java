@@ -6,9 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.spark.dwcdp.mapping.ValueAggregation;
-import org.gbif.pipelines.spark.dwcdp.mapping.compiled.CompiledMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.compiled.MappingInputRequirements;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.compilation.CompiledMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.compilation.MappingInputRequirements;
 import org.gbif.pipelines.spark.dwcdp.mapping.config.EventDwcaMapping;
 import org.gbif.pipelines.spark.dwcdp.mapping.engine.DwcDpMappingEngine;
 import org.gbif.pipelines.spark.dwcdp.model.DataPackage;

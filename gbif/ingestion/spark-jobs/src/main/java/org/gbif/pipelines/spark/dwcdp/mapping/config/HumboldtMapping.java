@@ -2,16 +2,16 @@ package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
 import org.gbif.api.vocabulary.Extension;
 
-import static org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder.extensionFragment;
+import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder.extensionFragment;
 
 import org.gbif.dwc.terms.EcoTerm;
-import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragment;
-import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaResource;
-import org.gbif.pipelines.spark.dwcdp.mapping.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 
 /** Declarative mapping of the behaviour currently implemented by {@code HumboldtExtensionBuilder}. */
 public final class HumboldtMapping {

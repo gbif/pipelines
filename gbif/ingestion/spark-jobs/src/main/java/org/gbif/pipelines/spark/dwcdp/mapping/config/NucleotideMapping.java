@@ -1,19 +1,19 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
-import static org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder.extensionFragment;
+import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder.extensionFragment;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.GbifDnaTerm;
 import org.gbif.dwc.terms.MixsTerm;
-import org.gbif.pipelines.spark.dwcdp.mapping.FilterExpression;
-import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragment;
-import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.FieldRef;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaPath;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaResource;
-import org.gbif.pipelines.spark.dwcdp.mapping.TargetFieldMapping;
-import org.gbif.pipelines.spark.dwcdp.mapping.ValueAggregation;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FilterExpression;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.FieldRef;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaResource;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ValueAggregation;
 
 /** Declarative mappings for the GBIF DNA Derived Data extension. */
 public final class NucleotideMapping {

@@ -1,11 +1,11 @@
 package org.gbif.pipelines.spark.dwcdp.mapping.config;
 
-import static org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder.extensionFragment;
+import static org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder.extensionFragment;
 
-import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragment;
-import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragmentBuilder;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaPath;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragmentBuilder;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaPath;
 
 /** Declarative mappings for DwC Identification extension rows. */
 public final class IdentificationMapping {

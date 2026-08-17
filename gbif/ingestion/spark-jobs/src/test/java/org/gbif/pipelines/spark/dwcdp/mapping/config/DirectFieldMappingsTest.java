@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.gbif.pipelines.spark.dwcdp.mapping.DwcDpSchemaLoader;
-import org.gbif.pipelines.spark.dwcdp.mapping.ExtensionFragment;
-import org.gbif.pipelines.spark.dwcdp.mapping.SchemaGraph;
-import org.gbif.pipelines.spark.dwcdp.mapping.TargetFieldMapping;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.DwcDpSchemaLoader;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.ExtensionFragment;
+import org.gbif.pipelines.spark.dwcdp.mapping.schema.SchemaGraph;
+import org.gbif.pipelines.spark.dwcdp.mapping.definition.TargetFieldMapping;
 import org.junit.jupiter.api.Test;
 
 class DirectFieldMappingsTest {

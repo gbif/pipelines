@@ -1,9 +1,15 @@
 /**
- * Declarative DwC-DP mapping model.
+ * DwC-DP to DwC-A mapping framework.
  *
- * <p>This package intentionally models mapping semantics rather than mirroring Spark's DataFrame API:
- * schema-driven relations, predicates, explicit cardinality handling, competing/additive target
- * sources, validation and eventually instrumentation. Spark compilation belongs in a separate
- * execution layer built from these model objects.
+ * <p>The framework is organized by lifecycle:
+ *
+ * <ul>
+ *   <li>{@code definition}: declarative mapping plans and their DSL.
+ *   <li>{@code schema}: schema graph, resources, relations and paths.
+ *   <li>{@code compilation}: schema resolution, compiled mapping IR, pruning and diagnostics.
+ *   <li>{@code execution}: Spark materialization, projection, caching and execution metrics.
+ *   <li>{@code config}: GBIF's concrete DwC-DP to DwC-A mapping declarations.
+ *   <li>{@code engine}: orchestration facade used by conversion code.
+ * </ul>
  */
 package org.gbif.pipelines.spark.dwcdp.mapping;
